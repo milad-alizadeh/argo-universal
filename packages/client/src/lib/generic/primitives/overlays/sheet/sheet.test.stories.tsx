@@ -54,7 +54,7 @@ export const PagesInDrawer: Story = pagesAt(layoutWidths.phone);
 
 export const PagesInPopover: Story = pagesAt(layoutWidths.wide);
 
-const answerSheet = { name: 'Answer the Agent' };
+const answerSheet = { name: 'Sheet' };
 
 // A sheet the app opens itself, with no trigger to anchor a popover on.
 function TriggerlessSheet(props: { dismissible?: boolean }): ReactElement {
@@ -63,16 +63,16 @@ function TriggerlessSheet(props: { dismissible?: boolean }): ReactElement {
 
   return (
     <View>
-      <Button label="Answer" onPress={() => setOpen(true)} />
+      <Button label="Open" onPress={() => setOpen(true)} />
       {closed ? <Text>Closed</Text> : null}
       <Sheet
         open={open}
         onOpenChange={setOpen}
         onClosed={() => setClosed(true)}
-        label="Answer the Agent"
+        label="Sheet"
         dismissible={props.dismissible}
       >
-        <Text>The Agent asks which branch to use.</Text>
+        <Text>Sheet content</Text>
       </Sheet>
     </View>
   );
@@ -89,7 +89,7 @@ function triggerlessAt(layout: keyof typeof layoutWidths): Story {
     render: () => <TriggerlessSheet />,
     beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
     play: async ({ canvas, userEvent }) => {
-      await userEvent.click(canvas.getByRole('button', { name: 'Answer' }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
       const dialog = await body.findByRole('dialog', answerSheet);
       await expect(isDrawer(dialog)).toBe(layout === 'phone');
       await userEvent.keyboard('{Escape}');
@@ -110,7 +110,7 @@ export const TriggerlessModalKeepsInput: Story = {
   render: () => <TriggerlessSheet dismissible={false} />,
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.tablet),
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Answer' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
     await body.findByRole('dialog', answerSheet);
     const backdrop = document.elementFromPoint(4, 4);
 

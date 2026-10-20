@@ -15,10 +15,10 @@ export const Contents: StoryObj<typeof meta> = {
   ...Overview,
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('progressbar', { name: 'Session plan' }),
+      canvas.getByRole('progressbar', { name: 'Plan' }),
     ).toHaveAttribute(valueAttribute, '40');
     await expect(
-      canvas.getByRole('progressbar', { name: 'CI jobs' }),
+      canvas.getByRole('progressbar', { name: 'Jobs' }),
     ).toHaveAttribute(valueAttribute, '75');
     await expect(
       canvas.getByRole('progressbar', { name: 'Queued' }),

@@ -31,9 +31,7 @@ export const DoneStepsShowTheAccount: Story = {
     await expect(
       canvas.getByRole('heading', { name: 'Set up Argo', level: 1 }),
     ).toBeVisible();
-    await expect(
-      canvas.getByText(`Server running on ${serverName}`),
-    ).toBeVisible();
+    await expect(canvas.getByText(new RegExp(serverName))).toBeVisible();
     await expect(
       canvas.getByRole('heading', { name: 'Agent Setup' }),
     ).toBeVisible();
@@ -91,7 +89,7 @@ export const UnbuiltActionsAreDisabled: Story = {
 export const ServerNameWaitsForTheServer: Story = {
   args: { serverName: undefined },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByText(/Server running on/)).toBeNull();
+    await expect(canvas.queryByText(new RegExp(serverName))).toBeNull();
     await expect(
       canvas.getByRole('heading', { name: 'Set up Argo', level: 1 }),
     ).toBeVisible();

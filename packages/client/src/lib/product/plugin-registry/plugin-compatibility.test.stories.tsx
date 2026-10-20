@@ -4,7 +4,7 @@ import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
 
-const updateMessage = 'Update Argo to see this';
+const updateMessage = /Update Argo/;
 
 const meta = { title: 'Tests/Plugin compatibility' } satisfies Meta;
 

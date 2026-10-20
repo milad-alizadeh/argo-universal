@@ -5,17 +5,17 @@ import { EmptyState } from './empty-state';
 
 const onPress = fn();
 
-const session = {
+const content = {
   icon: 'sessions',
-  title: 'No Sessions yet',
-  description: 'Start a Session to work with an Agent.',
-  action: <Button label="New Session" onPress={onPress} />,
+  title: 'Title',
+  description: 'Description',
+  action: <Button label="Action" onPress={onPress} />,
 };
 
 const meta = {
   title: 'Tests/EmptyState',
   component: EmptyState,
-  args: session,
+  args: content,
 } satisfies Meta<typeof EmptyState>;
 
 export default meta;
@@ -25,64 +25,43 @@ type Story = StoryObj<typeof meta>;
 export const ContentAndAction: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(
-      canvas.getByRole('heading', { name: session.title }),
+      canvas.getByRole('heading', { name: content.title }),
     ).toBeVisible();
-    await expect(canvas.getByText(session.description)).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'New Session' }));
+    await expect(canvas.getByText(content.description)).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Action' }));
     await expect(onPress).toHaveBeenCalledOnce();
   },
 };
 
 export const NoAction: Story = {
-  args: {
-    title: 'Select a Session',
-    description: 'Choose a Session from the list.',
-    action: undefined,
-  },
+  args: { action: undefined },
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('heading', { name: 'Select a Session' }),
+      canvas.getByRole('heading', { name: content.title }),
     ).toBeVisible();
-    await expect(
-      canvas.getByText('Choose a Session from the list.'),
-    ).toBeVisible();
+    await expect(canvas.getByText(content.description)).toBeVisible();
     await expect(canvas.queryByRole('button')).toBeNull();
   },
 };
 
 export const TitleOnly: Story = {
-  args: {
-    icon: undefined,
-    title: 'No Plugins added',
-    description: undefined,
-    action: undefined,
-  },
+  args: { icon: undefined, description: undefined, action: undefined },
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('heading', { name: 'No Plugins added' }),
+      canvas.getByRole('heading', { name: content.title }),
     ).toBeVisible();
-    await expect(canvas.queryByText(session.description)).toBeNull();
+    await expect(canvas.queryByText(content.description)).toBeNull();
     await expect(canvas.queryByRole('button')).toBeNull();
   },
 };
 
 export const Search: Story = {
-  args: {
-    icon: 'search',
-    title: 'No matching Sessions',
-    description:
-      'Nothing in all Sessions matches “deploy”. Try a different title.',
-    action: undefined,
-  },
+  args: { icon: 'search', action: undefined },
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('heading', { name: 'No matching Sessions' }),
+      canvas.getByRole('heading', { name: content.title }),
     ).toBeVisible();
-    await expect(
-      canvas.getByText(
-        'Nothing in all Sessions matches “deploy”. Try a different title.',
-      ),
-    ).toBeVisible();
+    await expect(canvas.getByText(content.description)).toBeVisible();
     await expect(canvas.queryByRole('button')).toBeNull();
   },
 };

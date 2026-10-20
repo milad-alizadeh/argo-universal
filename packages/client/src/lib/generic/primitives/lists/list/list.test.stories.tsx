@@ -79,9 +79,7 @@ export const Section: Story = {
 export const Contents: Story = {
   ...Overview,
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findAllByText('Build the Session layout'),
-    ).toHaveLength(3);
+    await expect(await canvas.findAllByText('Item')).toHaveLength(9);
   },
 };
 
@@ -135,19 +133,13 @@ export const SelectAndDeselectMultiple: Story = {
 export const LoadingSection: Story = {
   render: () => (
     <List appearance="cards">
-      <List.Section
-        isLoading
-        title="Example Project"
-        onExpandedChange={() => {}}
-      >
-        <ListItem isLoading title="Build the Session layout" />
+      <List.Section isLoading title="Section" onExpandedChange={() => {}}>
+        <ListItem isLoading title="Item" />
       </List.Section>
     </List>
   ),
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText('Example Project'),
-    ).toBeInTheDocument();
+    await expect(await canvas.findByText('Section')).toBeInTheDocument();
     await expect(canvas.queryByRole('button')).toBeNull();
     await expect(canvas.queryByRole('heading')).toBeNull();
   },

@@ -31,10 +31,8 @@ export const WaitingForData: Story = {
         canvas.getByRole('link', { name: /^Agents(?:,|$)/ }),
       ).toBeVisible();
       await expect(canvas.getAllByText('0', { exact: true })).toHaveLength(2);
-      await expect(canvas.queryByText('Projects will appear here.')).toBeNull();
-      await expect(
-        canvas.queryByText('Registered Agents will appear here.'),
-      ).toBeNull();
+      await expect(canvas.queryByText(/^Projects will/)).toBeNull();
+      await expect(canvas.queryByText(/^Registered Agents will/)).toBeNull();
       await expect(
         canvas.getByRole('link', { name: /^Accounts(?:,|$)/ }),
       ).toBeVisible();

@@ -7,7 +7,7 @@ import { TextInput } from './text-input';
 
 const label = 'Executable';
 
-const failure = 'One path or command, without spaces.';
+const failure = 'Error message';
 
 type Variant = 'standalone' | 'row';
 

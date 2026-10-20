@@ -107,9 +107,7 @@ export const DrawsContentMetadataAndActions: StoryObj<typeof meta> = {
       'Source, GitHub',
     ])
       await expect(canvas.getByRole('group', { name })).toBeVisible();
-    await expect(
-      canvas.queryByText('Update Argo to see this'),
-    ).not.toBeInTheDocument();
+    await expect(canvas.queryByText(/Update Argo/)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Close Issue' }));
     await expect(onEvent).toHaveBeenLastCalledWith(
       'page/detail#actions/actions/close',

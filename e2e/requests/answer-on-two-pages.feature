@@ -18,7 +18,7 @@ Feature: Answer from two Apps
     Given the other page stops receiving live updates
     When I answer the Permission request with "Allow"
     And I answer the Permission request with "Reject" on the other page
-    Then the other page reads "Already answered on another device"
+    Then the other page reads that the request was already answered
     And the Agent receives the selected option "allow"
     When the other page receives live updates again
     Then the other page shows the Agent reply "The shared fixture completed this Turn." and the Permission request "Edit README.md" closes

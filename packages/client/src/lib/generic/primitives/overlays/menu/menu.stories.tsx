@@ -8,14 +8,14 @@ import { ViewOptionsMenu } from './menu-groups.mocks';
 import { MenuTrigger } from './menu-trigger';
 
 const choices = [
-  { value: 'default', label: 'Default' },
-  { value: 'ask', label: 'Ask before changes' },
-  { value: 'full', label: 'Full access' },
+  { value: 'default', label: 'Option one' },
+  { value: 'ask', label: 'Option two' },
+  { value: 'full', label: 'Option three' },
 ] as const;
 
 type Permission = (typeof choices)[number]['value'];
 
-// Full access is shown but cannot be chosen, as when the Project does not allow it.
+// The third option is shown but cannot be chosen.
 const limitedChoices = choices.map((choice) => ({
   ...choice,
   disabled: choice.value === 'full',
@@ -33,7 +33,7 @@ function PermissionsMenu(props: PermissionsMenuProps): React.JSX.Element {
 
   return (
     <Menu
-      accessibilityLabel="Permissions"
+      accessibilityLabel="Options"
       value={value}
       options={props.options ?? choices}
       onValueChange={setValue}
@@ -94,7 +94,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const permissionStates: { label: string; props: PermissionsMenuProps }[] = [
-  { label: 'Permissions', props: {} },
+  { label: 'Options', props: {} },
   { label: 'Disabled', props: { disabled: true } },
   { label: 'Disabled option', props: { options: limitedChoices } },
   { label: 'Loading', props: { loading: true } },

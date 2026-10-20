@@ -13,21 +13,21 @@ export default meta;
 
 const samples: { label: string; props: ProgressBarProps }[] = [
   {
-    label: 'Session running',
+    label: 'Running',
     props: {
       value: 0.4,
       tone: 'success',
       active: true,
-      accessibilityLabel: 'Session plan',
+      accessibilityLabel: 'Plan',
     },
   },
   {
-    label: 'CI waiting',
+    label: 'Waiting',
     props: {
       value: 0.75,
       tone: 'warning',
       active: true,
-      accessibilityLabel: 'CI jobs',
+      accessibilityLabel: 'Jobs',
     },
   },
   {

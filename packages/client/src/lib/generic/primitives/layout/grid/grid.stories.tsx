@@ -14,7 +14,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const summaries = ['CI', 'Pull request', 'Files', 'Comments'];
+const summaries = ['One', 'Two', 'Three', 'Four'];
 
 function SummaryGrid(props: Omit<GridProps, 'children'>): React.JSX.Element {
   return (

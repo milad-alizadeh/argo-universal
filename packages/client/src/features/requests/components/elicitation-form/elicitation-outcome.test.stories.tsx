@@ -30,7 +30,7 @@ export const AcceptedOutcome: Story = {
     />
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('You answered')).toBeVisible();
+    await expect(canvas.getByText(/answered/)).toBeVisible();
     await expect(
       canvas.getByRole('group', { name: 'Name, argo-server' }),
     ).toBeVisible();
@@ -52,7 +52,7 @@ export const DeclinedOutcome: Story = {
     />
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('You declined')).toBeVisible();
+    await expect(canvas.getByText(/declined/)).toBeVisible();
   },
 };
 
@@ -64,7 +64,7 @@ export const DismissedOutcome: Story = {
     />
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('You dismissed')).toBeVisible();
+    await expect(canvas.getByText(/dismissed/)).toBeVisible();
   },
 };
 

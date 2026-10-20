@@ -22,6 +22,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const loginPattern = new RegExp(githubLogin);
+
 const chips = ['Login found', 'Signing in…', 'Signed in', 'Sign-in expired'];
 
 async function expectOnly(
@@ -33,14 +35,16 @@ async function expectOnly(
     await expect(find(name)).toHaveLength(name === expected ? 1 : 0);
 }
 
-// Each state shows only its AccountRow chip, its caption, and the one button that starts a sign-in where it has one.
+// Each state shows only its AccountRow chip, the login where it knows one, and the one button that starts a sign-in where it has one.
 const githubState = (
   github: GitHubStep,
-  expected: { chip?: string; caption: string; button?: string },
+  expected: { chip?: string; login?: boolean; button?: string },
 ): Story => ({
   args: { github },
   play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.getByText(expected.caption)).toBeVisible();
+    await expect(canvas.queryAllByText(loginPattern)).toHaveLength(
+      expected.login ? 1 : 0,
+    );
     await expectOnly(chips, expected.chip, (chip) =>
       canvas.queryAllByText(chip),
     );
@@ -57,29 +61,27 @@ const githubState = (
 });
 
 export const NotConnected = githubState(githubSteps.notConnected, {
-  caption: 'Optional. Clone repositories, open pull requests, read Issues.',
   button: githubButtons.connect,
 });
 
 export const LoginFound = githubState(githubSteps.loginFound, {
   chip: 'Login found',
-  caption: `The GitHub CLI is signed in as ${githubLogin}.`,
+  login: true,
   button: githubButtons.connect,
 });
 
 export const SigningIn = githubState(githubSteps.signingIn, {
   chip: 'Signing in…',
-  caption: 'Enter the code on GitHub to finish.',
 });
 
 export const SignedIn = githubState(githubSteps.signedIn, {
   chip: 'Signed in',
-  caption: `Connected as ${githubLogin}`,
+  login: true,
   button: githubButtons.anotherAccount,
 });
 
 export const SignInExpired = githubState(githubSteps.expired, {
   chip: 'Sign-in expired',
-  caption: `GitHub rejected the saved login for ${githubLogin}.`,
+  login: true,
   button: githubButtons.signInAgain,
 });

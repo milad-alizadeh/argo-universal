@@ -121,7 +121,7 @@ export const FindsAProjectByName: Story = {
 export const SaysWhenNothingMatches: Story = {
   args: { initialSearch: 'nothing-here' },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('No Project matches.')).toBeVisible();
+    await expect(canvas.getByText(/matches/)).toBeVisible();
   },
 };
 

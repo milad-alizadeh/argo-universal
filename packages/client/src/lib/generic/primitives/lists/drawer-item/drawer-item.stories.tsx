@@ -25,24 +25,24 @@ interface Destination {
   badge?: BadgeCount;
 }
 
-// Sessions counts 2 that need attention; Issues has more than a badge shows, so it reads 99+.
+// Inbox counts 2 that need attention; Tasks has more than a badge shows, so it reads 99+.
 const destinations: Destination[] = [
   {
-    title: 'Sessions',
+    title: 'Inbox',
     icon: 'sessions',
-    badge: { count: 2, label: '2 Sessions need attention' },
+    badge: { count: 2, label: '2 items need attention' },
   },
   {
-    title: 'Issues',
+    title: 'Tasks',
     icon: 'issue',
-    badge: { count: 120, label: '120 open Issues' },
+    badge: { count: 120, label: '120 open items' },
   },
   { title: 'Settings', icon: 'settings' },
 ];
 
 // A drawer's destinations: pressing one makes it the current one; two carry a count.
 function Drawer(): React.JSX.Element {
-  const [current, setCurrent] = useState('Sessions');
+  const [current, setCurrent] = useState('Inbox');
 
   return (
     <View className="w-72 gap-1">

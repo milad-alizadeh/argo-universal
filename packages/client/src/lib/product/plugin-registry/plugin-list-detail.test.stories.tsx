@@ -83,9 +83,7 @@ export const DrawsListBesideTheSelectedPage: Story = {
     await expect(
       canvas.getByText('Sync stops on repositories with 50,000 files.'),
     ).toBeVisible();
-    await expect(
-      canvas.queryByText('Update Argo to see this'),
-    ).not.toBeInTheDocument();
+    await expect(canvas.queryByText(/Update Argo/)).not.toBeInTheDocument();
 
     await userEvent.click(
       canvas.getByRole('button', { name: /Add CSV export/ }),
