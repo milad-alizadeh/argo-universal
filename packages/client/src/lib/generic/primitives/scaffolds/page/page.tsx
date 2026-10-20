@@ -30,10 +30,11 @@ export function Page(props: PageProps): ReactElement {
 function PageSurface(props: PageProps): ReactElement {
   const header = usePageActions();
 
+  // Web: the window paints the content colour, so the sidebar's shadow falls on it uncovered.
   return (
     <View
       testID={props.testID}
-      className="min-h-0 flex-1 bg-content wide:mt-frame-inset"
+      className="min-h-0 flex-1 bg-content wide:mt-frame-inset web:bg-transparent"
     >
       <OwnActions register={header.register} actions={props.actions} />
       <PageNavigation {...props} header={header} />

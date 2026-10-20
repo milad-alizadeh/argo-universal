@@ -12,6 +12,7 @@ import {
   useHostedInspector,
 } from './inspector-host';
 import { InspectorPane, type InspectorPaneProps } from './inspector-pane';
+import type { InspectorTab, InspectorTabsProps } from './inspector-props';
 
 const ignore = (): void => {};
 
@@ -132,6 +133,46 @@ const paneOf = (props: ExamplePaneProps): InspectorPaneProps => ({
   expanded: props.expanded,
   actions: props.actions && copyPath,
 });
+
+export const exampleTabs: readonly InspectorTab[] = [
+  { key: 'changes', label: 'Changes', icon: 'diff' },
+  {
+    key: 'subagents',
+    label: 'Subagents',
+    icon: 'agent',
+    count: 3,
+    countTone: 'success',
+  },
+  { key: 'shells', label: 'Shells', icon: 'terminal', count: 2 },
+];
+
+function useExampleTabs(): InspectorTabsProps {
+  const [items, setItems] = useState(exampleTabs);
+  const [selected, onSelect] = useState('changes');
+
+  const onClose = (key: string): void => {
+    const rest = items.filter((tab) => tab.key !== key);
+
+    setItems(rest);
+
+    onSelect(rest[0]?.key ?? '');
+  };
+
+  return { items, selected, onSelect, onClose };
+}
+
+// The pane with tabs in place of its title, as a Session's Inspector draws Changes, Subagents and Shells.
+export function ExampleTabsPane(props: { narrow?: boolean }): ReactElement {
+  const tabs = useExampleTabs();
+
+  return (
+    <View className={props.narrow ? 'h-60 w-72' : 'h-120 w-frame-inspector'}>
+      <InspectorPane {...paneOf({})} tabs={tabs}>
+        <InspectorContent />
+      </InspectorPane>
+    </View>
+  );
+}
 
 // The pane alone, as the wide column draws it.
 export function ExamplePane(props: ExamplePaneProps): ReactElement {

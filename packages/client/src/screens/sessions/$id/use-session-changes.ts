@@ -1,9 +1,13 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import type { ChangesComparison, ChangesViewProps } from '#features/changes';
-import type { SessionHeaderProps } from '#features/sessions';
+import {
+  type SessionHeaderProps,
+  type SessionPanels,
+} from '#features/sessions';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { useChangesData, useRefreshChanges } from './use-changes-data';
+import { useInspectorPanels } from './use-inspector-panels';
 
 type SessionChanges = {
   header: NonNullable<SessionHeaderProps['changes']>;
@@ -18,14 +22,12 @@ type SessionChangesSource = {
 type State<T> = [T, Dispatch<SetStateAction<T>>];
 
 type Selection = {
-  open: State<boolean>;
   comparison: State<ChangesComparison>;
   viewed: State<readonly string[]>;
 };
 
 function useSelection(): Selection {
   return {
-    open: useState(false),
     comparison: useState<ChangesComparison>({ kind: 'main' }),
     viewed: useState<readonly string[]>([]),
   };
@@ -65,30 +67,61 @@ function selectionProps(state: Selection): SelectionProps {
 export function useSessionChanges(
   sessionId: string,
   source: SessionChangesSource,
+  panels: SessionPanels,
 ): SessionChanges {
-  const state = useSelection();
-  const [open, onOpenChange] = state.open;
-  const selection = selectionProps(state);
-  const input = { sessionId, open, comparison: selection.comparison };
+  const header = changesHeader(panels, source);
+
+  const selection = selectionProps(useSelection());
+  const input = { sessionId, ...changesInput(header, selection) };
+
   const data = useChangesData(input);
   useRefreshChanges(input, source);
 
   return {
-    header: { open, onOpenChange, summary: source.snapshot?.changes },
+    header,
     view: { ...selection, ...data },
   };
 }
+
+const changesInput = (
+  header: SessionChanges['header'],
+  selection: SelectionProps,
+): Pick<Parameters<typeof useChangesData>[0], 'open' | 'comparison'> => ({
+  open: header.open,
+  comparison: selection.comparison,
+});
+
+const changesHeader = (
+  panels: SessionPanels,
+  source: SessionChangesSource,
+): SessionChanges['header'] => ({
+  open: panels.state.shown === 'changes',
+  onOpenChange: (shown) =>
+    shown ? panels.select('changes') : panels.close('changes'),
+  summary: source.snapshot?.changes,
+});
 
 export function useChangedSession(
   sessionId: string,
   props: SessionDetailViewProps,
   feed: SessionChangesSource,
 ): SessionDetailViewProps {
-  const changes = useSessionChanges(sessionId, feed);
+  const panels = useInspectorPanels(props.state === 'open' ? props : {});
 
+  const changes = useSessionChanges(sessionId, feed, panels);
+
+  return changedSession(props, panels, changes);
+}
+
+function changedSession(
+  props: SessionDetailViewProps,
+  panels: SessionPanels,
+  changes: SessionChanges,
+): SessionDetailViewProps {
   return props.state === 'open'
     ? {
         ...props,
+        inspectorPanels: panels,
         changes: changes.view,
         header: { ...props.header, changes: changes.header },
       }

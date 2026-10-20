@@ -1,15 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/actions/button';
-import { IconButton } from '#primitives/actions/icon-button';
 import type { MergeMethod } from '../stores/merge-method';
 import { MergePrButton, type MergePrButtonProps } from './merge-pr-button';
-import {
-  headerActionAppearance,
-  SessionHeaderMenu,
-} from './session-header-menu';
+import { SessionHeaderMenu } from './session-header-menu';
 import type { SessionHeaderProps } from './session-header-props';
 import type { SessionMenu } from './session-menu-items';
+import { SessionPanelTriggers } from './session-panel-triggers';
 import type { SessionPullRequest } from './session-pull-request';
 
 export type SessionHeaderActionsProps = Pick<
@@ -19,7 +15,7 @@ export type SessionHeaderActionsProps = Pick<
   shown: SessionPullRequest | undefined;
   onMerge: SessionHeaderProps['onMerge'];
   menu?: SessionMenu;
-  changes?: SessionHeaderProps['changes'];
+  panels?: SessionHeaderProps['panels'];
 };
 
 function mergeShown({
@@ -47,80 +43,14 @@ function ShownMergeButton(
   );
 }
 
-type InspectorToggle = Pick<
-  React.ComponentProps<typeof IconButton>,
-  'aria-expanded' | 'onPress'
->;
-
-function inspectorToggle(
-  changes: SessionHeaderProps['changes'],
-): InspectorToggle {
-  if (!changes) return { 'aria-expanded': false };
-
-  return {
-    'aria-expanded': changes.open,
-    onPress: () => changes.onOpenChange(!changes.open),
-  };
-}
-
-function ChangesButton({
-  changes,
-}: Pick<SessionHeaderActionsProps, 'changes'>): React.JSX.Element {
-  if (changes?.summary)
-    return <CountedChanges changes={changes} summary={changes.summary} />;
-
-  return (
-    <IconButton
-      {...headerActionAppearance}
-      accessibilityLabel="Changes"
-      {...inspectorToggle(changes)}
-      icon="diff"
-    />
-  );
-}
-
-type CountedChangesProps = {
-  changes: NonNullable<SessionHeaderProps['changes']>;
-  summary: NonNullable<NonNullable<SessionHeaderProps['changes']>['summary']>;
-};
-
-function CountedChanges({
-  changes,
-  summary,
-}: CountedChangesProps): React.JSX.Element {
-  return (
-    <Button
-      variant="ghost"
-      size="xs"
-      icon="diff"
-      {...countedChangeLabels(summary)}
-      {...inspectorToggle(changes)}
-    />
-  );
-}
-
-function countedChangeLabels({
-  files,
-  additions,
-  deletions,
-}: CountedChangesProps['summary']): Pick<
-  React.ComponentProps<typeof Button>,
-  'label' | 'accessibilityLabel'
-> {
-  return {
-    label: `${files} +${additions} −${deletions}`,
-    accessibilityLabel: `Changed files · ${files}, +${additions}, −${deletions}`,
-  };
-}
-
-// Merge PR for the shown PR, Changes, and the Session menu.
+// Merge PR for the shown PR, the Inspector's panel triggers, and the Session menu.
 export function SessionHeaderActions(
   props: SessionHeaderActionsProps,
 ): React.JSX.Element {
   return (
     <View className="-mt-1 flex-row items-center gap-3">
       <ShownMergeButton {...props} />
-      <ChangesButton changes={props.changes} />
+      <SessionPanelTriggers panels={props.panels} />
       {props.menu && <SessionHeaderMenu menu={props.menu} />}
     </View>
   );

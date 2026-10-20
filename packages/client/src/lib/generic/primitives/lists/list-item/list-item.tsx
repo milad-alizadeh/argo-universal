@@ -9,7 +9,7 @@ import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { useGroupPosition } from './list-item-group';
-import { hasLeading, LinkAccessory } from './list-item-parts';
+import { hasLeading, LinkAccessory, separatorClass } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import type { ListItemProps } from './list-item-props';
@@ -38,7 +38,10 @@ function ItemSeparator(props: ListItemProps): ReactNode {
   const separator = itemSeparator(useItemDrawing(), hasLeading(props));
 
   return separator && !covered ? (
-    <View className={separator} style={hairline} />
+    <View
+      className={separatorClass(separator, props.leadingSize)}
+      style={hairline}
+    />
   ) : null;
 }
 

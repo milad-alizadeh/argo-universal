@@ -9,7 +9,7 @@ import {
 import { toFeedView } from './to-feed-view';
 
 it.each(workMocks)(
-  'uses Thinking for a streaming thought after a Tool call for $agent',
+  'leaves the Tool call group settled while the Live header owns thinking for $agent',
   ({ rows, snapshot }) => {
     const source = recordedFeedMocks
       .flatMap((mock) => mock.rows)
@@ -23,15 +23,14 @@ it.each(workMocks)(
       {
         type: 'group',
         id: row.id,
-        title: 'Thinking',
-        state: 'open',
+        title: 'Ran 1 command',
+        state: 'settled',
         items: [
           { type: 'tool_call', row },
           { type: 'thought', row: thought },
         ],
       },
     ]);
-    expect(view.items[0]).not.toHaveProperty('live');
   },
 );
 

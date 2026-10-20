@@ -15,6 +15,7 @@ import {
   pullRequestMocks,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
+import { subagentsSession } from './session-detail-view-subagents.mocks';
 import {
   emptySession,
   idleSession,
@@ -156,4 +157,10 @@ export const Elicitation: Story = {
     },
   },
   render: ({ view }): React.JSX.Element => <ElicitationPreview {...view} />,
+};
+
+// The header opens the same Subagents list as the phone Composer, inside the Frame's Inspector.
+export const Subagents: Story = {
+  args: { view: subagentsSession },
+  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
 };

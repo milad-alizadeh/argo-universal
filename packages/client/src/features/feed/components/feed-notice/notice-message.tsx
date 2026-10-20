@@ -28,6 +28,8 @@ export interface NoticeMessageProps {
   severity: string;
   title: string;
   description?: string;
+  // Turn-end reasons follow the title and wrap with it on narrow windows.
+  inlineDescription?: boolean;
   excerpt?: string;
   // Replaces the severity's icon, for status rows such as Compaction.
   icon?: IconName;
@@ -58,18 +60,30 @@ function NoticeIcon({ icon, color }: Appearance): React.JSX.Element {
   );
 }
 
-function NoticeTitle({
-  title,
-  live,
-  color,
-}: Pick<NoticeMessageProps, 'title' | 'live'> & {
+type NoticeTitleProps = Pick<
+  NoticeMessageProps,
+  'title' | 'live' | 'description' | 'inlineDescription'
+> & {
   color: string;
-}): React.JSX.Element {
-  if (live) return <ShimmerText text={title} className="type-body" />;
+};
+
+function InlineDescription(props: NoticeTitleProps): React.JSX.Element | null {
+  if (!props.inlineDescription || !props.description) return null;
+
+  return <Text tone="muted">{` · ${props.description}`}</Text>;
+}
+
+function NoticeTitle(props: NoticeTitleProps): React.JSX.Element {
+  if (props.live)
+    return <ShimmerText text={props.title} className="type-body" />;
 
   return (
-    <Text numberOfLines={1} className={color}>
-      {title}
+    <Text
+      numberOfLines={props.inlineDescription ? undefined : 1}
+      className={props.color}
+    >
+      {props.title}
+      <InlineDescription {...props} />
     </Text>
   );
 }
@@ -107,7 +121,9 @@ export function NoticeMessage(props: NoticeMessageProps): React.JSX.Element {
       <NoticeIcon {...appearance} />
       <View className="min-w-0 flex-1 gap-0.5">
         <NoticeTitle {...props} color={appearance.color} />
-        <NoticeDescription description={props.description} />
+        {!props.inlineDescription && (
+          <NoticeDescription description={props.description} />
+        )}
         <NoticeExcerpt excerpt={props.excerpt} />
       </View>
     </View>

@@ -9,6 +9,7 @@ import { FeedNotice } from './feed-notice/feed-notice';
 import { renderToolCallSlot, renderMessageSlot } from './replaceable-feed-item';
 import { ToolCallGroup } from './tool-call-group/tool-call-group';
 import { ToolCallRow } from './tool-call-row/tool-call-row';
+import { TurnEndRow, turnEndNotice } from './turn-end/turn-end';
 
 export interface FeedItemProps {
   item: FeedViewItem;
@@ -70,12 +71,14 @@ const renderActivity = (activity: FeedActivity): React.JSX.Element => (
 );
 
 // Items the Feed draws whatever they hold; a row draws when `drawnRows` holds its update.
-const drawnItemTypes: Record<Exclude<FeedViewItem['type'], 'row'>, boolean> = {
+const drawnItemTypes: Record<
+  Exclude<FeedViewItem['type'], 'row' | 'turn_end'>,
+  boolean
+> = {
   group: true,
   exploration: true,
   tool_call: true,
   thought: false,
-  turn_end: false,
 };
 
 const drawnRows = new Set<string>([
@@ -89,6 +92,8 @@ const drawnRows = new Set<string>([
 export function isDrawnFeedItem(item: FeedViewItem): boolean {
   if (item.type === 'row') return drawnRows.has(item.row.sessionUpdate);
 
+  if (item.type === 'turn_end') return turnEndNotice(item.end) !== null;
+
   return drawnItemTypes[item.type];
 }
 
@@ -99,7 +104,11 @@ export const FeedItem = memo(function FeedItem({
 }: FeedItemProps) {
   return (
     <FeedImageUrlContext.Provider value={imageUrl}>
-      {item.type === 'turn_end' ? null : renderFeedItem(item, imageUrl)}
+      {item.type === 'turn_end' ? (
+        <TurnEndRow end={item.end} />
+      ) : (
+        renderFeedItem(item, imageUrl)
+      )}
     </FeedImageUrlContext.Provider>
   );
 });

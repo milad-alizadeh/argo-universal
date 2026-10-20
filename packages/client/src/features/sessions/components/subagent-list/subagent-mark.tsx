@@ -1,21 +1,42 @@
 import type { Subagent } from '@repo/contracts';
-import type { JSX } from 'react';
-import { Icon } from '#primitives/content/icon';
-import { Spinner } from '#primitives/status/spinner';
+import type { ComponentProps, JSX } from 'react';
+import { TintedAvatar } from '../../../../lib/generic/tinted-avatar';
+
+type Mark = Pick<ComponentProps<typeof TintedAvatar>, 'icon' | 'tone'>;
+
+const roles = {
+  explore: { icon: 'binoculars', tone: 'info' },
+  general: { icon: 'sparkle', tone: 'neutral' },
+  plan: { icon: 'plan-mode', tone: 'done' },
+  review: { icon: 'search', tone: 'warning' },
+  test: { icon: 'flask', tone: 'success' },
+} satisfies Record<string, Mark>;
+
+const namedRole = (name: string): Mark | undefined =>
+  Object.entries(roles).find(([key]) => key === name)?.[1];
+
+const normalizedRole = (role: Subagent['role']): string =>
+  role?.toLowerCase() ?? '';
+
+const roleMark = (role: Subagent['role']): Mark =>
+  namedRole(normalizedRole(role)) ?? roles.general;
+
+const statuses = {
+  running: { tone: 'success', accessibilityLabel: 'Running' },
+  requires_action: { tone: 'warning', accessibilityLabel: 'Needs input' },
+  idle: undefined,
+} as const;
 
 export function SubagentMark({
   subagent,
 }: {
   subagent: Subagent;
 }): JSX.Element {
-  if (subagent.state !== 'idle')
-    return <Spinner accessibilityLabel="Running" />;
-
   return (
-    <Icon
-      name={subagent.stopReason === 'cancelled' ? 'close' : 'check'}
-      role="body"
-      tone="muted"
+    <TintedAvatar
+      {...roleMark(subagent.role)}
+      dimmed={subagent.state === 'idle'}
+      status={statuses[subagent.state]}
     />
   );
 }

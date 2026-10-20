@@ -1,68 +1,75 @@
 import type { Subagent } from '@repo/contracts';
-import { type JSX } from 'react';
+import type { ComponentProps, JSX } from 'react';
+import { Platform } from 'react-native';
+import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { subagentSupporting } from './subagent-format';
-import {
-  type SubagentListProps,
-  type SubagentSection,
-  subagentSections,
-} from './subagent-list-types';
+import type { SubagentListProps } from './subagent-list-types';
 import { SubagentMark } from './subagent-mark';
 
 type PhoneProps = SubagentListProps & { now: number };
 
-type SectionProps = {
-  section: SubagentSection;
-  now: number;
-  onSelect: SubagentListProps['onSelect'];
-};
+type RowProps = Omit<PhoneProps, 'subagents'> & { subagent: Subagent };
 
-type RowProps = SectionProps & { subagent: Subagent };
+const rowPress = ({
+  subagent,
+  onSelect,
+}: RowProps): (() => void) | undefined =>
+  onSelect ? () => onSelect(subagent) : undefined;
 
-function PhoneRow({ subagent, section, now, onSelect }: RowProps): JSX.Element {
+function disclosure(onSelect: RowProps['onSelect']): JSX.Element | undefined {
+  if (!onSelect || Platform.OS !== 'android') return undefined;
+
+  return <Icon name="chevron-right" role="row" tone="muted" />;
+}
+
+const rowTones = (finished: boolean) =>
+  ({
+    titleTone: finished ? 'muted' : 'neutral',
+    subtitleDimmed: finished,
+  }) as const;
+
+function phoneRowProps(props: RowProps): ComponentProps<typeof ListItem> {
+  const { subagent, now, onSelect } = props;
   const supporting = subagentSupporting(subagent, now);
 
+  return {
+    ...rowTones(subagent.state === 'idle'),
+    title: subagent.title,
+    subtitle: supporting,
+    disclosure: Boolean(onSelect),
+    trailing: disclosure(onSelect),
+    onPress: rowPress(props),
+    accessibilityLabel: `${subagent.title}, ${supporting}`,
+  };
+}
+
+function PhoneRow(props: RowProps): JSX.Element {
   return (
     <ListItem
-      title={subagent.title}
-      subtitle={supporting}
-      leading={<SubagentMark subagent={subagent} />}
-      disclosure={Boolean(onSelect)}
-      onPress={onSelect ? () => onSelect(subagent) : undefined}
-      accessibilityLabel={`${subagent.title}, ${section.title}, ${supporting}`}
+      {...phoneRowProps(props)}
+      leading={<SubagentMark subagent={props.subagent} />}
+      leadingSize="avatar"
     />
   );
 }
 
-function phoneRows({ section, now, onSelect }: SectionProps): JSX.Element[] {
-  return section.rows.map((subagent) => (
+function phoneRows(props: PhoneProps): JSX.Element[] {
+  return props.subagents.map((subagent) => (
     <PhoneRow
       key={subagent.sessionId}
       subagent={subagent}
-      section={section}
-      now={now}
-      onSelect={onSelect}
+      onSelect={props.onSelect}
+      now={props.now}
     />
-  ));
-}
-
-function phoneSections(props: PhoneProps): JSX.Element[] {
-  return subagentSections(props.subagents).map((section) => (
-    <List.Section
-      key={section.title}
-      title={section.title}
-      count={section.rows.length}
-    >
-      {phoneRows({ section, now: props.now, onSelect: props.onSelect })}
-    </List.Section>
   ));
 }
 
 export function PhoneSubagentList(props: PhoneProps): JSX.Element {
   return (
     <List appearance="grouped" fit={false} accessibilityLabel="Subagents">
-      {phoneSections(props)}
+      <List.Section>{phoneRows(props)}</List.Section>
     </List>
   );
 }

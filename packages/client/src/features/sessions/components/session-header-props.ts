@@ -1,5 +1,6 @@
 import type { ChangesSummary, SessionStatus } from '@repo/contracts';
 import type { MergeMethod } from '../stores/merge-method';
+import type { SessionPanel } from '../stores/session-panels';
 import type { SessionMenu } from './session-menu-items';
 import type { SessionPullRequest } from './session-pull-request';
 
@@ -12,6 +13,14 @@ export interface SessionChanges {
   summary?: ChangesSummary;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+// The Inspector panels the header's triggers open: those the Session has, the one shown, and pressing a trigger.
+export interface SessionHeaderPanels {
+  offered: readonly SessionPanel[];
+  shown?: SessionPanel;
+  onToggle: (panel: SessionPanel) => void;
+  changesSummary?: ChangesSummary;
 }
 
 export interface SessionHeaderProps {
@@ -28,7 +37,8 @@ export interface SessionHeaderProps {
   onMergeMethodChange?: (method: MergeMethod) => void;
   // Rename and Archive under ⋯, as the Session's row offers them; absent where the page offers neither.
   menu?: SessionMenu;
-  // The Changes Inspector, which the Changes button opens and closes; absent where the page has none.
+  // Subagents, Shells and Changes in the Inspector, which the header's triggers open; absent where the page has none.
+  panels?: SessionHeaderPanels;
   changes?: SessionChanges;
   // Fixes the clock, for stories and tests.
   now?: number;

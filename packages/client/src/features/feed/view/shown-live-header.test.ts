@@ -32,7 +32,6 @@ const exploring: FeedViewItem = {
 describe('shownLiveHeader', () => {
   it.each([
     { source: { type: 'tool_call', toolCallId: 'tool' } as const },
-    { source: { type: 'thought' } as const },
     { source: { type: 'working' } as const },
   ])(
     'leaves a $source.type header out while the newest group is open',
@@ -45,9 +44,11 @@ describe('shownLiveHeader', () => {
   it.each([
     { source: { type: 'request' } as const },
     { source: { type: 'retry' } as const },
+    { source: { type: 'thought' } as const },
   ])('keeps a $source.type header beside an open group', ({ source }) => {
     const value = header(source, 'Awaiting approval');
     expect(shownLiveHeader([openGroup], value)).toBe(value);
+    expect(shownLiveHeader([exploring], value)).toBe(value);
   });
 
   it('shows Working when nothing open draws the work', () => {

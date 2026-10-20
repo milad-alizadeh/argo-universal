@@ -4,19 +4,20 @@ import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
 
-type SubtitleProps = Pick<ListItemProps, 'subtitleTone'> & {
+type SubtitleProps = Pick<ListItemProps, 'subtitleTone' | 'subtitleDimmed'> & {
   text?: string;
   multiline?: boolean;
 };
 
-function Subtitle({ text, multiline, subtitleTone }: SubtitleProps): ReactNode {
-  return text === undefined ? null : (
+function Subtitle(props: SubtitleProps): ReactNode {
+  return props.text === undefined ? null : (
     <Text
       role="row-detail"
-      tone={subtitleTone}
-      numberOfLines={multiline ? undefined : 1}
+      tone={props.subtitleTone}
+      dimmed={props.subtitleDimmed}
+      numberOfLines={props.multiline ? undefined : 1}
     >
-      {text}
+      {props.text}
     </Text>
   );
 }
@@ -44,7 +45,7 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   return (
     <Text
       role="row"
-      tone={props.tone}
+      tone={props.titleTone ?? props.tone}
       numberOfLines={1}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
     >
@@ -78,6 +79,7 @@ export function ItemContent(props: ListItemProps): ReactElement {
         text={props.subtitle}
         multiline={!!props.description}
         subtitleTone={props.subtitleTone ?? 'muted'}
+        subtitleDimmed={props.subtitleDimmed}
       />
       <Meta sidebar={props.sidebar !== undefined}>{props.meta}</Meta>
     </View>

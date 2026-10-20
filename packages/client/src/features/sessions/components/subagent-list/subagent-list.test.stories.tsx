@@ -2,7 +2,7 @@ import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { subagentStates } from './subagent-list.mocks';
+import { interleavedSubagents, subagentStates } from './subagent-list.mocks';
 import listMeta from './subagent-list.stories';
 
 const meta = {
@@ -28,7 +28,7 @@ export const OneRunning: Story = {
   args: { subagents: subagentStates.oneRunning },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.getByText(/Running/)).toBeVisible();
+      await expect(canvas.queryByText('Running')).toBeNull();
       await expect(
         canvas.getByRole('button', { name: /Find every Feed reader/ }),
       ).toBeVisible();
@@ -43,14 +43,15 @@ export const SeveralMixed: Story = {
   args: { subagents: subagentStates.severalMixed },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.getByText(/Running/)).toBeVisible();
-      await expect(canvas.getByText(/Finished/)).toBeVisible();
+      await expect(canvas.queryByText('Running')).toBeNull();
       await expect(
-        canvas.getByText('Opus 4.5 · 1m 02s · 21.4k tokens'),
-      ).toBeVisible();
+        canvas.queryByRole('heading', { name: 'Finished' }),
+      ).toBeNull();
       await expect(
-        canvas.getByText('Haiku 4.5 · 2m 18s · 12.9k tokens'),
+        canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
       ).toBeVisible();
+      await expect(canvas.getByText('Opus 4.5 · Needs input')).toBeVisible();
+      await expect(canvas.getByText('Cancelled · 12s')).toBeVisible();
     }),
 };
 
@@ -72,9 +73,31 @@ export const AllFinished: Story = {
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(canvas.queryByText(/Running/)).toBeNull();
-      await expect(canvas.getByText(/Finished/)).toBeVisible();
+      await expect(
+        canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
+      ).toBeVisible();
       await expect(
         canvas.getByRole('button', { name: /Port the mock CLIs/ }),
       ).toBeVisible();
+    }),
+};
+
+// A finished Subagent stays between its neighbours; the component never regroups by state.
+export const SpawnOrder: Story = {
+  args: {
+    subagents: interleavedSubagents,
+  },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(
+        canvas
+          .getAllByRole('button')
+          .map((row) => row.getAttribute('aria-label')?.split(',')[0]),
+      ).toEqual([
+        'Find every Feed reader',
+        'Draft the Plan schema',
+        'Migrate tokens to kit roles',
+        'Port the mock CLIs',
+      ]);
     }),
 };
