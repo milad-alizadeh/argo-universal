@@ -42,12 +42,12 @@ function Title({ title }: { title: string }): React.JSX.Element {
   );
 }
 
-// How the Subagent is doing, ticking while it runs.
+// How the Subagent is doing. Only a running one counts up; the others hold a settled line.
 function Meta({
   subagent,
   now,
 }: Omit<HeaderProps, 'onBack'>): React.JSX.Element {
-  const clock = useClock(subagent.state !== 'idle', now);
+  const clock = useClock(subagent.state === 'running', now);
 
   return (
     <Text role="badge" tone="muted">
