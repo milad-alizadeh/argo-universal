@@ -15,7 +15,7 @@ export interface SubagentListProps {
 type ListBodyProps = SubagentListProps & { now: number; wide: boolean };
 
 // One flat list in spawn order, as the Feed shows them: rows never regroup when a Subagent finishes.
-function SubagentRows(props: ListBodyProps): JSX.Element[] {
+function subagentRows(props: ListBodyProps): JSX.Element[] {
   return props.subagents.map((subagent) => (
     <SubagentRow
       key={subagent.sessionId}
@@ -32,7 +32,7 @@ function WideSubagentList(props: ListBodyProps): JSX.Element {
   return (
     <RowDrawingContext value="sidebar">
       <List appearance="plain" fit={false} accessibilityLabel="Subagents">
-        {SubagentRows(props)}
+        {subagentRows(props)}
       </List>
     </RowDrawingContext>
   );
@@ -41,7 +41,7 @@ function WideSubagentList(props: ListBodyProps): JSX.Element {
 function PhoneSubagentList(props: ListBodyProps): JSX.Element {
   return (
     <List appearance="grouped" fit={false} accessibilityLabel="Subagents">
-      <List.Section>{SubagentRows(props)}</List.Section>
+      <List.Section>{subagentRows(props)}</List.Section>
     </List>
   );
 }

@@ -67,7 +67,11 @@ const cancelled: Subagent = {
   tokens: 1_300,
 };
 
-const ended = (subagent: Subagent, durationMs: number, tokens: number): Subagent => ({
+const ended = (
+  subagent: Subagent,
+  durationMs: number,
+  tokens: number,
+): Subagent => ({
   ...subagent,
   state: 'idle',
   stopReason: 'end_turn',

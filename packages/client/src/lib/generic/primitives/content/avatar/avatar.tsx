@@ -72,7 +72,6 @@ function AvatarMedia(props: {
   );
 }
 
-
 function avatarContent(props: AvatarProps): React.ReactNode {
   if (props.children) return props.children;
 

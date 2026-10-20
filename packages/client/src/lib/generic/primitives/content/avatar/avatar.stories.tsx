@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Icon } from '#primitives/content/icon';
+import { Variation, Variations as VariationList } from '../../../variations';
 import { Avatar } from './avatar';
 
 const tones = [

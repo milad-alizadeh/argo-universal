@@ -50,13 +50,14 @@ function rowLabel(subagent: Subagent, role: SubagentRole, now: number): string {
     .join(', ');
 }
 
-type RowPlacement = Pick<
-  ListItemProps,
-  'sidebar' | 'disclosure' | 'onPress'
->;
+type RowPlacement = Pick<ListItemProps, 'sidebar' | 'disclosure' | 'onPress'>;
 
 // Desktop draws the row as a sidebar row, the dot ending its title line as on SessionRow; phones push a page.
-function rowPlacement({ wide, onSelect, subagent }: SubagentRowProps): RowPlacement {
+function rowPlacement({
+  wide,
+  onSelect,
+  subagent,
+}: SubagentRowProps): RowPlacement {
   const sidebar = wide ? 'regular' : undefined;
 
   if (!onSelect) return { sidebar };

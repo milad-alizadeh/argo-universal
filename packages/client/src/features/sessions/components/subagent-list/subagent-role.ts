@@ -1,6 +1,6 @@
 import type { Subagent } from '@repo/contracts';
-import type { Tone } from '#primitives/content/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
+import type { Tone } from '#primitives/content/text';
 
 export type SubagentRole = {
   name: 'Explore' | 'Plan' | 'Review' | 'Test' | 'General';
