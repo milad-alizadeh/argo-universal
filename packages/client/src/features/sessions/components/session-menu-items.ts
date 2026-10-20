@@ -6,6 +6,7 @@ export interface SessionMenu {
   // An archived Session offers neither action.
   archived: boolean;
   status: SessionStatus;
+  changes?: { files: number; onPress: () => void };
   onRename?: () => void;
   onArchive?: () => void;
 }
@@ -13,7 +14,7 @@ export interface SessionMenu {
 // One action of a Session's menus: the row's context menu and the header's Menu both take it.
 export interface SessionMenuItem {
   label: string;
-  icon: Extract<IconName, 'rename' | 'archive'>;
+  icon: Extract<IconName, 'rename' | 'archive' | 'diff'>;
   disabled: boolean;
   onPress: () => void;
 }
@@ -47,7 +48,18 @@ const isItem = (item: SessionMenuItem | undefined): item is SessionMenuItem =>
 
 // Rename, then Archive, each only when the page offers it; an archived Session offers neither.
 export function sessionMenuItems(menu: SessionMenu): SessionMenuItem[] {
-  if (menu.archived) return [];
+  const changes: SessionMenuItem[] = menu.changes
+    ? [
+        {
+          label: `Changed files · ${menu.changes.files}`,
+          icon: 'diff',
+          disabled: false,
+          onPress: menu.changes.onPress,
+        },
+      ]
+    : [];
 
-  return [renameItem(menu), archiveItem(menu)].filter(isItem);
+  return menu.archived
+    ? changes
+    : [...changes, ...[renameItem(menu), archiveItem(menu)].filter(isItem)];
 }

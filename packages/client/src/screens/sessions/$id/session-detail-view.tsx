@@ -1,6 +1,11 @@
 import type * as React from 'react';
-import { createElement, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
+import {
+  ChangesFiles,
+  ChangesToolbar,
+  type ChangesViewProps,
+} from '#features/changes';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
 import {
@@ -33,6 +38,7 @@ export interface OpenSessionViewProps {
   feed: FeedProps;
   composer: ComposerProps;
   subagents?: SubagentListProps;
+  changes?: ChangesViewProps;
   // Files dropped on the Session's pane attach to the draft.
   onDropFiles: (dropped: DroppedFiles) => void;
   elicitation?: ElicitationFormProps;
@@ -81,16 +87,37 @@ export function SessionDetailView(
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
   const [open, onOpenChange] = useState(false);
   const subagents = useSessionSubagents(props.composer, props.subagents);
-  const changes = { open, onOpenChange };
+  const changes = props.header.changes ?? { open, onOpenChange };
 
   return (
     <>
       <SessionLayout
         {...sessionParts({ ...props, composer: subagents.composer }, changes)}
       />
-      {createElement(Inspector, { title: 'Changes', ...changes })}
+      <SessionChangesInspector changes={changes} view={props.changes} />
       {subagents.sheet}
     </>
+  );
+}
+
+type ChangesInspectorProps = {
+  changes: NonNullable<SessionHeaderProps['changes']>;
+  view: ChangesViewProps | undefined;
+};
+
+function SessionChangesInspector({
+  changes,
+  view,
+}: ChangesInspectorProps): React.JSX.Element {
+  return (
+    <Inspector
+      title="Changes"
+      open={changes.open}
+      onOpenChange={changes.onOpenChange}
+      toolbar={view && <ChangesToolbar {...view} />}
+    >
+      {view && <ChangesFiles {...view} />}
+    </Inspector>
   );
 }
 

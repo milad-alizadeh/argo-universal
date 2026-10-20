@@ -1,4 +1,4 @@
-import type { SessionStatus } from '@repo/contracts';
+import type { ChangesSummary, SessionStatus } from '@repo/contracts';
 import type { MergeMethod } from '../stores/merge-method';
 import type { SessionMenu } from './session-menu-items';
 import type { SessionPullRequest } from './session-pull-request';
@@ -9,6 +9,7 @@ export type SessionHeaderStatus = Extract<
 >;
 
 export interface SessionChanges {
+  summary?: ChangesSummary;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

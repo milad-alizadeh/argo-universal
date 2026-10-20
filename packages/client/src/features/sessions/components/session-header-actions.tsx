@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
 import type { MergeMethod } from '../stores/merge-method';
 import { MergePrButton, type MergePrButtonProps } from './merge-pr-button';
@@ -65,6 +66,9 @@ function inspectorToggle(
 function ChangesButton({
   changes,
 }: Pick<SessionHeaderActionsProps, 'changes'>): React.JSX.Element {
+  if (changes?.summary)
+    return <CountedChanges changes={changes} summary={changes.summary} />;
+
   return (
     <IconButton
       {...headerActionAppearance}
@@ -73,6 +77,40 @@ function ChangesButton({
       icon="diff"
     />
   );
+}
+
+type CountedChangesProps = {
+  changes: NonNullable<SessionHeaderProps['changes']>;
+  summary: NonNullable<NonNullable<SessionHeaderProps['changes']>['summary']>;
+};
+
+function CountedChanges({
+  changes,
+  summary,
+}: CountedChangesProps): React.JSX.Element {
+  return (
+    <Button
+      variant="ghost"
+      size="xs"
+      icon="diff"
+      {...countedChangeLabels(summary)}
+      {...inspectorToggle(changes)}
+    />
+  );
+}
+
+function countedChangeLabels({
+  files,
+  additions,
+  deletions,
+}: CountedChangesProps['summary']): Pick<
+  React.ComponentProps<typeof Button>,
+  'label' | 'accessibilityLabel'
+> {
+  return {
+    label: `${files} +${additions} −${deletions}`,
+    accessibilityLabel: `Changed files · ${files}, +${additions}, −${deletions}`,
+  };
 }
 
 // Merge PR for the shown PR, Changes, and the Session menu.
