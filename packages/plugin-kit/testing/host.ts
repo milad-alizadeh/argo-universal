@@ -13,7 +13,9 @@ import {
   PluginStorage,
   type PluginRuntime,
 } from '@repo/engine/plugins';
-import { configureTest, runtimeFor } from './test-runtime';
+import { mountOpening, requireAccepted, testSession } from './test-mount';
+import { TestProjects } from './test-projects';
+import { configureTest, runtimeFor, type ConfiguredTest } from './test-runtime';
 import type { PluginTest, PluginTestOptions } from './test-types';
 import { PluginTestView, type Opening, type PluginMount } from './view';
 
@@ -26,35 +28,50 @@ export async function startPluginTest(
   const configured = await configureTest(options);
   const home = await mkdtemp(join(tmpdir(), 'argo-plugin-test-'));
 
-  return new HostedPlugin(home, configured);
+  const plugin = new HostedPlugin(home, configured);
+
+  try {
+    await plugin.startBackground();
+  } catch (cause) {
+    await plugin.close();
+    throw cause;
+  }
+
+  return plugin;
 }
 
 class HostedPlugin implements PluginTest {
+  startBackground(): Promise<void> {
+    return this.service.startBackground();
+  }
+  readonly badges: PluginTest['badges'] = (signal) =>
+    this.service.badges(signal);
+  readonly failures: PluginTest['failures'] = (signal) =>
+    this.service.failures(signal);
   private readonly runtime: PluginRuntime;
   private readonly service: PluginService;
   private readonly data: PluginStorage;
+  readonly projects;
   private readonly views = new Set<PluginTestView>();
-  readonly session = {
-    id: 'test-session',
-    projectId: 'test-project',
-    agent: 'test-agent',
-  };
+  readonly session = testSession;
   readonly clock = {
-    advance: (ms: number): Promise<void> =>
-      this.runtime.advanceClock(this.options.pluginId, ms),
+    advance: (ms: number, pluginId = this.options.pluginId): Promise<void> =>
+      this.runtime.advanceClock(pluginId, ms),
   };
   readonly storage = {
     execute: (
       queries: Parameters<PluginStorage['execute']>[1],
+      pluginId = this.options.pluginId,
     ): ReturnType<PluginStorage['execute']> =>
-      this.data.execute(this.options.pluginId, queries),
+      this.data.execute(pluginId, queries),
   };
 
   public constructor(
     private readonly home: string,
-    private readonly options: PluginTestOptions,
+    private readonly options: ConfiguredTest,
   ) {
     this.runtime = runtimeFor(home, options);
+    this.projects = new TestProjects(options, this.runtime);
     this.data = new PluginStorage(home);
     this.service = new PluginService({
       home,
@@ -80,65 +97,59 @@ class HostedPlugin implements PluginTest {
   public readonly mount = async (
     input: PluginMount,
   ): Promise<PluginTestView> => {
-    await this.activate();
+    const pluginId = input.pluginId ?? this.options.pluginId;
+    await this.activate(pluginId);
 
-    const offset = (await this.log()).length;
+    const offset = (await this.log(pluginId)).length;
 
-    const opening =
-      'page' in input
-        ? { path: input.page }
-        : { path: slotPath(input.slot), slot: input.slot };
+    const opening = mountOpening(input);
 
-    const view = this.open({ ...opening, surface: input.surface });
+    const view = this.open(opening, pluginId);
 
     await view.ready();
-    await this.requireAccepted({ offset, path: opening.path });
+    requireAccepted(await this.log(pluginId), { ...opening, offset, pluginId });
 
     return view;
   };
 
-  private async activate(): Promise<void> {
-    const status = await this.service.activate(this.options.pluginId);
+  private async activate(pluginId: string): Promise<void> {
+    const status = await this.service.activate(pluginId);
 
     if (status.state !== 'running')
       throw new Error(status.error ?? 'Plugin did not start');
   }
 
-  private async requireAccepted({
-    offset,
-    path,
-  }: {
-    offset: number;
-    path: string;
-  }): Promise<void> {
-    const refused = (await this.log())
-      .slice(offset)
-      .split('\n')
-      .find((line) =>
-        line.includes(`Plugin ${this.options.pluginId}: refused ${path}`),
-      );
+  public async log(pluginId?: string): Promise<string> {
+    const log = await readFile(join(this.home, 'logs/plugins.log'), 'utf8');
 
-    if (refused) throw new Error(refused);
+    return pluginId
+      ? log
+          .split('\n')
+          .filter((line) => line.includes(`Plugin ${pluginId}:`))
+          .join('\n')
+      : log;
   }
 
-  public log(): Promise<string> {
-    return readFile(join(this.home, 'logs/plugins.log'), 'utf8');
+  public page(
+    path = '/',
+    pluginId = this.options.pluginId,
+    projectId?: string,
+  ): PluginTestView {
+    return this.open({ path, projectId }, pluginId);
   }
 
-  public page(path = '/'): PluginTestView {
-    return this.open({ path });
+  public slot(
+    slot: PluginSlotInput,
+    pluginId = this.options.pluginId,
+  ): PluginTestView {
+    return this.open({ path: slotPath(slot), slot }, pluginId);
   }
 
-  public slot(slot: PluginSlotInput): PluginTestView {
-    return this.open({ path: slotPath(slot), slot });
-  }
-
-  private open(opening: Opening): PluginTestView {
-    const view = new PluginTestView(
-      this.service,
-      this.options.pluginId,
-      opening,
-    );
+  private open(
+    opening: Opening,
+    pluginId = this.options.pluginId,
+  ): PluginTestView {
+    const view = new PluginTestView(this.service, pluginId, opening);
 
     this.views.add(view);
 

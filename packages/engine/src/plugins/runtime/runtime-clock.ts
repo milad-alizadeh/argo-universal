@@ -1,18 +1,24 @@
-import { realClock } from '../clock';
+import { realClock, type PluginClock } from '../clock';
 import type { TestRequests } from '../host/test-requests';
 import type { TestClockState } from '../protocol/test-control';
 import { PluginTestClock, requireAdvance } from '../worker/test-clock';
 
-// Advances the runtime's deadlines and the worker realm on one configured clock.
+type WorkerClock = { pluginId: string; state: TestClockState };
+
+export function runtimeClockSource(start: number | undefined): PluginClock {
+  return start === undefined ? realClock : new PluginTestClock(start);
+}
+
+// Advances runtime deadlines and every live worker realm on one configured clock.
 export class RuntimeClock {
   readonly source;
   private activity = 0;
 
   constructor(
     private readonly requests: TestRequests,
-    start?: number,
+    clock: PluginClock = realClock,
   ) {
-    this.source = start === undefined ? realClock : new PluginTestClock(start);
+    this.source = clock;
   }
 
   workerStart(): number | undefined {
@@ -24,82 +30,97 @@ export class RuntimeClock {
   async during<T>(call: () => Promise<T>): Promise<T> {
     this.activity += 1;
 
-    const reply = await call();
-
-    this.activity += 1;
-
-    return reply;
+    try {
+      return await call();
+    } finally {
+      this.activity += 1;
+    }
   }
 
-  public async advance(pluginId: string, ms: number): Promise<void> {
+  public async advance(pluginIds: () => string[], ms: number): Promise<void> {
     const clock = this.requireClock(ms);
     const until = clock.now() + ms;
-    let worker = await this.settledClock(pluginId);
+    let workers = await this.settledClocks(pluginIds);
 
     do {
-      worker = await this.step(pluginId, { clock, worker, until });
-    } while (hasWork(clock, worker, until));
+      const at = nextTime(clock, workers, until);
+      await clock.advance(at - clock.now());
+      await this.advanceWorkers(pluginIds, at);
+      workers = await this.settledClocks(pluginIds);
+    } while (hasDueWork(clock, workers, until));
+  }
+
+  private async advanceWorkers(
+    pluginIds: () => string[],
+    at: number,
+  ): Promise<void> {
+    for (const { pluginId, state } of await this.settledClocks(pluginIds))
+      await this.requests.send(pluginId, {
+        action: 'advanceClock',
+        ms: at - state.now,
+      });
   }
 
   private requireClock(ms: number): PluginTestClock {
     if (!(this.source instanceof PluginTestClock))
       throw new Error('Plugin has no test clock');
-
     requireAdvance(ms);
 
     return this.source;
   }
 
-  private async step(
-    pluginId: string,
-    { clock, worker, until }: ClockStep,
-  ): Promise<TestClockState> {
-    const at = Math.min(until, clock.nextAt() ?? until, worker.nextAt ?? until);
-
-    await clock.advance(at - clock.now());
-    await this.requests.send(pluginId, {
-      action: 'advanceClock',
-      ms: at - worker.now,
-    });
-
-    return this.settledClock(pluginId);
-  }
-
-  /*
-   * A worker timer can start another Hook over IPC. Drain its messages before
-   * choosing the next deadline, so the runtime and worker advance together.
-   */
-  private async settledClock(pluginId: string): Promise<TestClockState> {
+  // Drain IPC before choosing the next shared deadline.
+  private async settledClocks(
+    pluginIds: () => string[],
+  ): Promise<WorkerClock[]> {
     for (;;) {
       const activity = this.activity;
+      const ids = pluginIds();
+      const states = await Promise.all(ids.map((id) => this.clockState(id)));
 
-      const state = await this.requests.send(pluginId, {
-        action: 'clockState',
-      });
-
-      if (activity === this.activity) return state;
+      if (this.stable(activity, ids, pluginIds())) return states;
     }
+  }
+
+  private stable(activity: number, before: string[], after: string[]): boolean {
+    return activity === this.activity && before.join() === after.join();
+  }
+
+  private async clockState(pluginId: string): Promise<WorkerClock> {
+    return {
+      pluginId,
+      state: await this.requests.send(pluginId, { action: 'clockState' }),
+    };
   }
 }
 
-type ClockStep = {
-  clock: PluginTestClock;
-  worker: TestClockState;
-  until: number;
-};
-
-function hasWork(
+function nextTime(
   clock: PluginTestClock,
-  worker: TestClockState,
+  workers: WorkerClock[],
   until: number,
-): boolean {
-  return clock.now() < until || due(clock.nextAt(), worker.nextAt, until);
+): number {
+  return Math.min(
+    until,
+    clock.nextAt() ?? until,
+    ...workers.map(({ state }) => state.nextAt ?? until),
+  );
 }
 
-function due(
-  runtime: number | null,
-  worker: number | null,
+function hasDueWork(
+  clock: PluginTestClock,
+  workers: WorkerClock[],
   until: number,
 ): boolean {
-  return runtime === until || worker === until;
+  return clock.now() < until || dueAt(clock, workers, until);
+}
+
+function dueAt(
+  clock: PluginTestClock,
+  workers: WorkerClock[],
+  until: number,
+): boolean {
+  return (
+    clock.nextAt() === until ||
+    workers.some(({ state }) => state.nextAt === until)
+  );
 }

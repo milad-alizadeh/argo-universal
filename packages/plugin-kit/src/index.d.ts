@@ -128,3 +128,30 @@ export type {
   StorageQuery,
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
+
+import type { FetchResponse } from '@repo/contracts/plugins/argo-api';
+import type {
+  PluginQuery,
+  ProcessResult,
+  StorageResult,
+} from '@repo/contracts/plugins/argo-calls';
+
+export type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
+
+export type QueryResult<Query extends PluginQuery> = Query extends {
+  api: 'fetch';
+}
+  ? FetchResponse
+  : Query extends { api: 'process' }
+    ? ProcessResult
+    : StorageResult[];
+
+export declare function useData<Query extends PluginQuery>(
+  query: Query | null,
+  options?: { every?: number },
+): {
+  data: QueryResult<Query> | undefined;
+  error: string | undefined;
+  stale: boolean;
+  refresh: () => Promise<void>;
+};

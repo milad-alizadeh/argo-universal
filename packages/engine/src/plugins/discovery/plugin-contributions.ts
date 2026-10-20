@@ -7,6 +7,9 @@ import type { SlotId } from '@repo/contracts/plugins/wire';
 
 type PluginDescriptor = PluginList['plugins'][number];
 
+export const runsBackground = (plugin: PluginDescriptor): boolean =>
+  plugin.enabled && plugin.manifest.contributes.background !== undefined;
+
 // A Plugin fills only the Slots its manifest declares; `argo plugin validate` reads the same rule.
 export const declaresSlot = (
   manifest: PluginManifest,

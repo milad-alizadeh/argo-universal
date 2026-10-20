@@ -8,7 +8,7 @@ export type RuntimePluginInput = {
   entry: Omit<PluginEntry, 'generation'>;
   host: HostConnection;
   // Grants the Plugin its Capabilities as each worker loads; `release` takes them away again.
-  grant: (plugin: ActivatedPlugin) => void;
+  grant: (plugin: ActivatedPlugin, generation: number) => void;
   release: () => void;
   log: (line: string) => void;
   changed: (status: PluginStatus) => void;

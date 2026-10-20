@@ -7,6 +7,7 @@ export const PluginEntry = z.object({
   generation: z.number().int().nonnegative(),
   source: z.string().optional(),
   clockStart: z.number().finite().optional(),
+  backgroundPath: z.string().optional(),
 });
 
 export type PluginEntry = z.infer<typeof PluginEntry>;

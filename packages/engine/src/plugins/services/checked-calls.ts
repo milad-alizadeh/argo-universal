@@ -36,7 +36,7 @@ export async function answerProcess(
 
   const checked = await checkedProcess(
     access,
-    await spawnHooked(call, request),
+    await spawnHooked(call, await queryProcess(call, request)),
   );
 
   call.logCall();
@@ -44,11 +44,36 @@ export async function answerProcess(
   return call.resources.process(checked);
 }
 
+async function queryProcess(
+  call: PluginCall,
+  request: ProcessCall,
+): Promise<ProcessCall> {
+  if (!call.query || !call.projectId) return request;
+
+  return inProject(request, await projectDirectory(call, call.projectId));
+}
+
+function projectDirectory(
+  call: PluginCall,
+  projectId: string,
+): Promise<string | undefined> | undefined {
+  return call.options.projectPath?.(projectId);
+}
+
+function inProject(request: ProcessCall, cwd: string | undefined): ProcessCall {
+  if (request.action !== 'run' || request.cwd !== undefined) return request;
+
+  return { ...request, cwd };
+}
+
 export async function answerFetch(
   call: PluginCall,
   request: FetchCall,
 ): Promise<PluginValue> {
   const access = call.access();
+
+  if (request.account !== undefined)
+    throw new CapabilityRefusal(`Account ${request.account} is unavailable`);
   const hop = firstHop(request);
 
   access.checkHost(hop.url);

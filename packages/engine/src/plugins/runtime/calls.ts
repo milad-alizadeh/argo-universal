@@ -1,3 +1,5 @@
+import { replyError } from '../access/capability-refusal';
+import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
 import type {
   HostMessage,
@@ -11,17 +13,50 @@ type RuntimeCalls = {
   hooks: PluginHooks;
   services: PluginServices;
   views: PluginViews;
+  data: PluginData;
 };
 
 type Call = Extract<HostMessage, { type: 'call' }>;
 
 type ServiceCall = Omit<Call, 'request'> & {
-  request: Exclude<PluginRequest, { api: 'hooks' | 'view' }>;
+  request: Exclude<PluginRequest, { api: 'hooks' | 'view' | 'data' | 'nav' }>;
+};
+
+type ViewCall = Omit<Call, 'request'> & {
+  request: Exclude<PluginRequest, { api: 'data' | 'nav' }>;
 };
 
 export async function answerPluginCall(
   runtime: RuntimeCalls,
   message: Call,
+): Promise<PluginReply> {
+  const { pluginId, generation, request } = message;
+
+  if (request.api === 'nav') return answerBadge(runtime, message, request);
+
+  if (request.api === 'data')
+    return runtime.data.handle(pluginId, generation, request);
+
+  return answerHookOrView(runtime, { ...message, request });
+}
+
+function answerBadge(
+  runtime: RuntimeCalls,
+  { pluginId, generation }: Call,
+  request: Extract<PluginRequest, { api: 'nav' }>,
+): PluginReply {
+  try {
+    runtime.data.badges.set(pluginId, generation, request);
+
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: replyError(error) };
+  }
+}
+
+function answerHookOrView(
+  runtime: RuntimeCalls,
+  message: ViewCall,
 ): Promise<PluginReply> {
   const { pluginId, generation, request } = message;
 

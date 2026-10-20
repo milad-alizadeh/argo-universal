@@ -1,4 +1,5 @@
 import type { Page, SlotContent } from '@repo/contracts/plugins/argo-api';
+import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
 import type {
   PluginEvent,
   PluginViewId,
@@ -27,11 +28,13 @@ type Dispatch = Extract<PluginEvent, { type: 'dispatch' }>;
 export interface Pages {
   register: (path: string, page: Page) => void;
   registerSlot: (slotId: SlotId, content: SlotContent) => void;
-  receive: (event: PluginEvent) => void;
+  receive: (event: Exclude<PluginEvent, { type: 'data' }>) => void;
   registerReplacement: (path: string, element: ReactNode) => void;
+  requirePage: (path: string) => void;
 }
 
 interface Hub {
+  ready: (viewId: PluginViewId) => boolean;
   send: ViewSender;
   settle: DispatchSender;
   pages: Map<string, Page>;
@@ -65,8 +68,13 @@ function openElement(hub: Hub, event: Open): void {
       viewId: event.viewId,
       element,
       replaceable: Boolean(event.renderSlot),
+      rowMeta: rowMeta(event),
     });
   missingRender(hub, event);
+}
+
+function rowMeta(event: Open): boolean {
+  return event.slot?.slotId === sessionRowSlotId;
 }
 
 function close(hub: Hub, viewId: PluginViewId): void {
@@ -90,14 +98,21 @@ async function dispatch(hub: Hub, event: Dispatch): Promise<void> {
   }
 }
 
-function receive(hub: Hub, event: PluginEvent): void {
+function receive(
+  hub: Hub,
+  event: Exclude<PluginEvent, { type: 'data' }>,
+): void {
   if (event.type === 'dispatch') void dispatch(hub, event).catch(reportFailure);
   else receiveDrawing(hub, event);
 }
 
 // A page or Slot content a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
-export function mountPages(send: ViewSender, settle: DispatchSender): Pages {
-  const hub = pageHub(send, settle);
+export function mountPages(
+  send: ViewSender,
+  settle: DispatchSender,
+  ready: Hub['ready'],
+): Pages {
+  const hub = pageHub(send, settle, ready);
 
   return {
     register: (path, page) => void hub.pages.set(path, page),
@@ -105,11 +120,22 @@ export function mountPages(send: ViewSender, settle: DispatchSender): Pages {
     receive: (event) => receive(hub, event),
     registerReplacement: (path, element) =>
       hub.replacements.register(path, element),
+    requirePage: (path) => requirePage(hub, path),
   };
 }
 
-function pageHub(send: ViewSender, settle: DispatchSender): Hub {
+function requirePage(hub: Hub, path: string): void {
+  if (!hub.pages.has(path))
+    throw new Error(`Background path ${path} is not a registered page`);
+}
+
+function pageHub(
+  send: ViewSender,
+  settle: DispatchSender,
+  ready: Hub['ready'],
+): Hub {
   return {
+    ready,
     send,
     settle,
     pages: new Map(),
@@ -121,7 +147,7 @@ function pageHub(send: ViewSender, settle: DispatchSender): Hub {
 
 function receiveDrawing(
   hub: Hub,
-  event: Exclude<PluginEvent, { type: 'dispatch' }>,
+  event: Exclude<PluginEvent, { type: 'dispatch' | 'data' }>,
 ): void {
   if (event.type === 'open') open(hub, event);
   else if (event.type === 'close') close(hub, event.viewId);

@@ -1,17 +1,13 @@
 import type { PluginSettingValue } from '@repo/contracts/plugins';
+import type { Argo, PluginProcess } from '@repo/contracts/plugins/argo-api';
 import type {
-  Argo,
-  FetchResponse,
-  PluginProcess,
-} from '@repo/contracts/plugins/argo-api';
-import type {
-  FetchReply,
   FsCall,
   ProcessCall,
   ProcessResult,
   SecretCall,
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
+import { fetchResponse } from '../kit/fetch-response';
 import { createKit, type Kit } from '../kit/plugin-kit';
 import type { PluginRequest } from '../protocol/runtime';
 import type { ArgoBridge } from './argo';
@@ -29,6 +25,7 @@ declare global {
 type PluginInbox = (json: string) => void;
 
 export type PluginRealmExports = {
+  validateBackground: (path: string) => void;
   inboxes: { pages: PluginInbox; hooks: PluginInbox };
   modules: Pick<Kit, 'exports' | 'jsxRuntime'>;
 };
@@ -55,6 +52,7 @@ const kit = createKit(
   async (requestId, result) => {
     await call({ api: 'dispatchResult', requestId, result });
   },
+  (request) => call(request),
 );
 
 const hooks = hookDispatcher(
@@ -82,15 +80,12 @@ const spawned = (id: string): PluginProcess =>
     },
   });
 
-const response = (reply: FetchReply): FetchResponse =>
-  frozen({
-    ...reply,
-    headers: frozen({ ...reply.headers }),
-    text: async () => reply.body,
-    json: async () => JSON.parse(reply.body),
-  });
-
 const argo: Argo = frozen({
+  nav: frozen({
+    badge: async (id, count) => {
+      await call({ api: 'nav', id, count });
+    },
+  }),
   assets: frozen({
     resolve: (source) => call({ api: 'assets', source }),
   }),
@@ -108,7 +103,7 @@ const argo: Argo = frozen({
       spawned(await run<string>({ action: 'spawn', argv, ...options })),
   }),
   fetch: async (url, options = {}) =>
-    response(await call({ api: 'fetch', call: { url, ...options } })),
+    fetchResponse(await call({ api: 'fetch', call: { url, ...options } })),
   storage: frozen({
     batch: (queries) => call({ api: 'storage', queries }),
     execute: async (query) =>
@@ -138,6 +133,7 @@ const argo: Argo = frozen({
 Object.assign(globalThis, {
   argo,
   __argoRealm: {
+    validateBackground: kit.requirePage,
     inboxes: { pages: kit.inbox, hooks: hooks.inbox },
     modules: { exports: kit.exports, jsxRuntime: kit.jsxRuntime },
   } satisfies PluginRealmExports,

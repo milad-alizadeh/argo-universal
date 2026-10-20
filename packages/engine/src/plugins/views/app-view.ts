@@ -5,6 +5,7 @@ import type { RpcConnection } from '../../rpc';
 import type { OpenView } from './open-view';
 import { preparedView } from './prepared-view';
 import { updateArgoLine } from './render-fallback';
+import { prepareSlotTree } from './slot-tree';
 import { messages } from './stream';
 
 export function appView(
@@ -22,9 +23,32 @@ export function appView(
     return replaceWithUpdateArgo(source);
   }
 
-  return preparedView(source, (reason) =>
-    log(`Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`),
+  return preparedSlot(view, source, log);
+}
+
+function preparedSlot(
+  view: OpenView,
+  source: AsyncIterable<ViewMessage>,
+  log: (line: string) => void,
+): AsyncGenerator<ViewMessage> {
+  return preparedView(
+    source,
+    (reason) =>
+      log(`Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`),
+    slotPreparation(view, log),
   );
+}
+
+function slotPreparation(
+  view: OpenView,
+  log: (line: string) => void,
+): NonNullable<Parameters<typeof preparedView>[2]> {
+  const slotId = view.opening.slot?.slotId;
+
+  return (root) =>
+    prepareSlotTree(slotId, root, (type) =>
+      log(`Plugin ${view.pluginId}: refused ${slotId} part ${type}`),
+    );
 }
 
 // An App older than the wire minimum sees "Update Argo" in place of the page or Slot (ADR-0034).

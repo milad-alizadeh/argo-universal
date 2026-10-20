@@ -12,10 +12,12 @@ import {
 } from '@repo/contracts/plugins/replaceable';
 import type {
   PluginFailure,
+  PluginBadge,
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
 import {
   type PluginDispatchInput,
+  type PluginViewInput,
   type PluginSlotInput,
   type SlotMessage,
   type ViewMessage,
@@ -26,6 +28,7 @@ import {
   fillsSlot,
   hooksEvent,
   rendersSlot,
+  runsBackground,
 } from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
 import {
@@ -45,6 +48,11 @@ export type { PluginServiceDeps } from './located-plugins';
 
 export class PluginService {
   constructor(private readonly deps: PluginServiceDeps) {}
+
+  async startBackground(): Promise<void> {
+    await requireRuntime(this.deps).refreshProjects();
+    await startPlugins(this.deps, ({ plugin }) => runsBackground(plugin));
+  }
 
   async list(): Promise<PluginList> {
     const result = await discoverPlugins(this.deps);
@@ -66,7 +74,9 @@ export class PluginService {
     await locatePlugin(this.deps, pluginId);
     await requireSettings(this.deps).setEnabled(pluginId, enabled);
 
-    if (!enabled) await this.deps.pluginRuntime?.deactivate(pluginId);
+    return enabled
+      ? this.startBackground()
+      : this.deps.pluginRuntime?.deactivate(pluginId);
   }
 
   settings(pluginId: string): Promise<PluginSettingsOutput> {
@@ -103,7 +113,7 @@ export class PluginService {
   }
 
   async *view(
-    { pluginId, path }: { pluginId: string; path: string },
+    { pluginId, path, projectId }: PluginViewInput,
     connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
     const status = await this.activate(pluginId);
@@ -113,7 +123,7 @@ export class PluginService {
 
     yield* requireRuntime(this.deps).views.watch(
       pluginId,
-      { path },
+      { path, projectId },
       connection,
     );
   }
@@ -159,5 +169,9 @@ export class PluginService {
 
   public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
     return requireRuntime(this.deps).watchFailures(signal);
+  }
+
+  public badges(signal: AbortSignal): AsyncGenerator<PluginBadge[]> {
+    return requireRuntime(this.deps).data.badges.watch(signal);
   }
 }

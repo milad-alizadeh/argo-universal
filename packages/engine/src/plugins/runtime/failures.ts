@@ -20,10 +20,40 @@ export class PluginFailures {
   }
 
   public update(plugin: PluginIdentity, status: PluginStatus): void {
+    if (this.keepsDrawing(plugin.pluginId, status)) return;
+
+    if (this.replace(plugin, status))
+      this.events.emit('change', [...this.current.values()]);
+  }
+
+  private keepsDrawing(pluginId: string, status: PluginStatus): boolean {
+    return (
+      status.state === 'running' &&
+      this.current.get(pluginId)?.kind === 'drawing'
+    );
+  }
+
+  private replace(plugin: PluginIdentity, status: PluginStatus): boolean {
     if (status.state === 'crashed') {
       this.current.set(plugin.pluginId, createFailure(plugin, status));
-    } else if (!this.current.delete(plugin.pluginId)) return;
 
+      return true;
+    }
+
+    return this.current.delete(plugin.pluginId);
+  }
+
+  public drawing(plugin: PluginIdentity, message: string): void {
+    if (this.current.has(plugin.pluginId)) return;
+    this.current.set(
+      plugin.pluginId,
+      PluginFailure.parse({
+        ...plugin,
+        kind: 'drawing',
+        message,
+        key: randomUUID(),
+      }),
+    );
     this.events.emit('change', [...this.current.values()]);
   }
 
@@ -49,6 +79,7 @@ function createFailure(
 ): PluginFailure {
   return PluginFailure.parse({
     ...plugin,
+    kind: 'stopped',
     message: status.error ?? 'Plugin stopped unexpectedly',
     key: randomUUID(),
   });

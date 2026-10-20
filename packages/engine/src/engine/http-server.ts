@@ -98,20 +98,20 @@ async function prepareHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpSetup & { appRouter: AppRouter }> {
   const serverId = await readServerId(options.database, options.databaseWriter);
-  const setup = prepareHttpSetup(options, serverId);
+  const setup = await prepareHttpSetup(options, serverId);
 
   return { ...setup, appRouter: createHttpRouter(options, setup) };
 }
 
-function prepareHttpSetup(
+async function prepareHttpSetup(
   options: HttpServerOptions,
   serverId: string,
-): HttpSetup {
+): Promise<HttpSetup> {
   return {
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
-    ...startPlugins(options),
+    ...(await startPlugins(options)),
   };
 }
 

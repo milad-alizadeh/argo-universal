@@ -5,6 +5,7 @@ export {
   PluginSlotInput,
   SlotId,
   projectDetailsSlotId,
+  sessionRowSlotId,
   slotPath,
 } from '#plugin-wire-slot';
 

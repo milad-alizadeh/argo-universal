@@ -76,7 +76,7 @@ it.each([
   { path: '/missing', error: 'List: every list child needs a key' },
   { path: '/duplicate', error: 'List: duplicate child key row' },
 ])(
-  'refuses $path list keys with one log line naming the Plugin',
+  'refuses $path list keys with one log line and a local drawing failure',
   async ({ path, error }) => {
     const home = await createRuntimePlugins([listFixture]);
 
@@ -84,17 +84,31 @@ it.each([
     const controller = new AbortController();
     onTestFinished(() => controller.abort());
 
-    const view = await createCaller({ signal: controller.signal }).plugins.view(
-      { pluginId: 'list', path },
-    );
+    const watching = createCaller({ signal: controller.signal });
 
-    void view[Symbol.asyncIterator]().next();
-    await expect
-      .poll(() => caller.plugins.list(), { timeout: 5000 })
-      .toMatchObject({ plugins: [{ state: 'crashed', error }] });
+    const failures = (await watching.plugins.failures())[
+      Symbol.asyncIterator
+    ]();
+
+    expect((await failures.next()).value).toEqual([]);
+    const view = await watching.plugins.view({ pluginId: 'list', path });
+
+    expect(await view[Symbol.asyncIterator]().next()).toMatchObject({
+      done: true,
+    });
+    expect((await failures.next()).value).toMatchObject([
+      { pluginId: 'list', kind: 'drawing', message: error },
+    ]);
+    expect(await caller.plugins.list()).toMatchObject({
+      plugins: [{ state: 'running', error: null }],
+    });
     const log = await readFile(join(home, 'logs/plugins.log'), 'utf8');
     expect(
-      log.split('\n').filter((line) => line.includes(`Plugin list: ${error}`)),
+      log
+        .split('\n')
+        .filter((line) =>
+          line.includes(`Plugin list: could not draw ${path}: ${error}`),
+        ),
     ).toHaveLength(1);
   },
   10_000,

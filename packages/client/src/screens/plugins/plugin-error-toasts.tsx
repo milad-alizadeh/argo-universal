@@ -17,9 +17,11 @@ export function PluginErrorToasts(): React.ReactNode {
 
   useResubscribeOnReconnect(subscription);
 
-  return failures.map((failure) => (
-    <PluginErrorToast key={failure.pluginId} failure={failure} />
-  ));
+  return failures
+    .filter((failure) => failure.kind === 'stopped')
+    .map((failure) => (
+      <PluginErrorToast key={failure.pluginId} failure={failure} />
+    ));
 }
 
 function PluginErrorToast({ failure }: { failure: PluginFailure }): null {
