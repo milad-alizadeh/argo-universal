@@ -98,7 +98,7 @@ function PhoneRow({ title }: Pick<PlanHeaderProps, 'title'>): ReactNode {
   return (
     <View className="min-h-11 flex-row items-center gap-1.5">
       <PlanTitle title={title} />
-      <Icon role="secondary" name="chevron-up" tone="muted" />
+      <Icon role="chevron" name="chevron-up" tone="muted" />
     </View>
   );
 }

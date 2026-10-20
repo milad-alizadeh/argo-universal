@@ -1,6 +1,6 @@
 import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
-import { useWindowDimensions } from 'react-native';
+import { Platform } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -16,31 +16,48 @@ export interface AgentChoiceProps {
 
 const maximumHeight = 320;
 
-const screenFraction = 0.6;
-
 const choicesTestID = 'new-session-agents-scroll';
 
+/*
+ * The same list the Combobox's choices draw: a popover on the web, and on both phones the grouped
+ * card a stock picker and our Settings pages use, filling the sheet page it was pushed onto.
+ */
 export function AgentChoices(props: AgentChoiceProps): React.JSX.Element {
-  const { height } = useWindowDimensions();
-
-  return (
-    <List
-      maxHeight={{ compact: height * screenFraction, wide: maximumHeight }}
-      testID={choicesTestID}
-    >
-      {agentRows(props)}
-    </List>
-  );
+  return <List {...listProps()}>{agentRows(props)}</List>;
 }
 
+type ChoiceListProps = Omit<
+  React.ComponentProps<typeof List>,
+  'items' | 'renderItem' | 'children'
+>;
+
+function listProps(): ChoiceListProps {
+  const web = Platform.OS === 'web';
+
+  return {
+    fit: web,
+    maxHeight: web ? maximumHeight : undefined,
+    appearance: web ? 'plain' : 'grouped',
+    testID: choicesTestID,
+  };
+}
+
+/*
+ * Add Agents opens the Agents page; it is not one of the Agents to choose between, so it sits in
+ * its own section rather than taking a check of its own in the choosing one.
+ */
 function agentRows(props: AgentChoiceProps): React.JSX.Element {
   return (
-    <List.Section {...agentSelection(props)}>
-      {props.agents.map((agent) => (
-        <AgentChoice key={agent.id} agent={agent} choices={props} />
-      ))}
-      <ListItem {...addAgentsProps(props)} />
-    </List.Section>
+    <>
+      <List.Section {...agentSelection(props)}>
+        {props.agents.map((agent) => (
+          <AgentChoice key={agent.id} agent={agent} choices={props} />
+        ))}
+      </List.Section>
+      <List.Section>
+        <ListItem {...addAgentsProps(props)} />
+      </List.Section>
+    </>
   );
 }
 

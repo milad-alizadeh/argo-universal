@@ -29,6 +29,13 @@ function CodeText({ code, textClassName }: CodeTextProps): React.JSX.Element {
   );
 }
 
+/*
+ * Declaring the bottom padding keeps a list's end gap off the code: the code's own padding belongs
+ * inside the sideways scroll, so the horizontal scrollbar sits on the card's bottom edge rather than
+ * floating above a strip of dead space.
+ */
+const codeScrollContentClassName = 'pb-0';
+
 // A vertical ScrollView grows by default; on iOS a fit-content parent such as the user message bubble then lays it out at its max height, leaving a blank area below the code.
 function CodeScroll(props: CodeTextProps): React.JSX.Element {
   return (
@@ -38,6 +45,7 @@ function CodeScroll(props: CodeTextProps): React.JSX.Element {
         testID="code-scroll"
         className="max-h-75 wide:max-h-100"
         surfaceClassName={trayCardSurface}
+        contentContainerClassName={codeScrollContentClassName}
       >
         <HorizontalCode {...props} />
       </ScrollFadeView>

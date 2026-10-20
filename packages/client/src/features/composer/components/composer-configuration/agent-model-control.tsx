@@ -123,7 +123,6 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
     label: triggerLabel(props),
     accessibilityLabel: 'Agent and model',
     labelRole: { compact: 'row', wide: 'control' },
-    variant: 'toolbar',
     size: 'md',
     disabled: props.disabled,
     leading: agentModelLeading(props),

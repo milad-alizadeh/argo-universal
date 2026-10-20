@@ -161,7 +161,8 @@ const separatorDrawing = (
 };
 
 /*
- * A selected row's tint is the same tile its hover draws, so selecting and hovering a card's row agree.
+ * A selected row's tint is the same tile its press draws, so selecting and pressing a card's row
+ * agree. Only the web insets it; both phones fill the row edge to edge.
  */
 export function selectionTint(drawing: ItemDrawing): string {
   return cn(

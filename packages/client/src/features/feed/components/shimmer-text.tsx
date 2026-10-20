@@ -24,18 +24,18 @@ const shimmerOpacity = {
 };
 
 /*
- * A word at a time, not a character: a running title is one animated node per word rather than per
- * letter, and the band is wide enough that a word still brightens and dims as it passes.
+ * A character at a time, so the band ramps across a word instead of lighting the whole of it at once.
+ * Each piece carries the spaces that follow it, so no piece is a lone space the web would collapse.
  */
-const wordsOf = (text: string): string[] => text.match(/\S+\s*|\s+/gu) ?? [];
+const piecesOf = (text: string): string[] => text.match(/\S\s*|\s+/gu) ?? [];
 
-// Where each word's centre sits along the text, in characters, which is what the band is measured in.
-function wordCentres(words: readonly string[]): number[] {
+// Where each piece's centre sits along the text, in characters, which is what the band is measured in.
+function pieceCentres(pieces: readonly string[]): number[] {
   let start = 0;
 
-  return words.map((word) => {
-    const centre = start + word.length / 2;
-    start += word.length;
+  return pieces.map((piece) => {
+    const centre = start + piece.length / 2;
+    start += piece.length;
 
     return centre;
   });
@@ -104,27 +104,27 @@ export function ShimmerText({
     <Text numberOfLines={1} selectable={false} className={className}>
       {reducedMotion
         ? text
-        : shimmered({ words: wordsOf(text), sweep, emphasized })}
+        : shimmered({ pieces: piecesOf(text), sweep, emphasized })}
     </Text>
   );
 }
 
 interface ShimmeredProps {
-  words: string[];
+  pieces: string[];
   sweep: Sweep;
   emphasized: boolean;
 }
 
 function shimmered(props: ShimmeredProps): React.JSX.Element[] {
-  const { words, sweep: sweepValues } = props;
+  const { pieces, sweep: sweepValues } = props;
   const opacity = shimmerOpacity[props.emphasized ? 'emphasized' : 'plain'];
-  const centres = wordCentres(words);
+  const centres = pieceCentres(pieces);
 
-  return withOccurrenceKeys(words, (word) => word).map(
-    ({ item: word, key }, index) => (
-      <ShimmerWord
+  return withOccurrenceKeys(pieces, (piece) => piece).map(
+    ({ item: piece, key }, index) => (
+      <ShimmerPiece
         key={key}
-        word={word}
+        piece={piece}
         shimmer={{ centre: centres[index] ?? 0, sweep: sweepValues, opacity }}
       />
     ),
@@ -173,17 +173,17 @@ function useShimmerStyle(
   );
 }
 
-interface ShimmerWordProps {
-  word: string;
+interface ShimmerPieceProps {
+  piece: string;
   shimmer: ShimmerStyleProps;
 }
 
-function ShimmerWord(props: ShimmerWordProps): React.JSX.Element {
+function ShimmerPiece(props: ShimmerPieceProps): React.JSX.Element {
   const style = useShimmerStyle(props.shimmer);
 
   return (
     <Animated.Text accessible={false} selectable={false} style={style}>
-      {props.word}
+      {props.piece}
     </Animated.Text>
   );
 }

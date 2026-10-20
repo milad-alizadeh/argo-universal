@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '#lib/generic/utils';
 import { sheetInsetClass } from './sheet-inset';
 import type { SheetProps } from './sheet-props';
@@ -18,11 +19,18 @@ type BodyProps = Pick<
   children: ReactNode;
 };
 
-// A phone sheet's React Native content: the page, scrolled unless it scrolls itself, and the footer under it.
+/*
+ * A phone sheet's React Native content: the page, scrolled unless it scrolls itself, and the footer
+ * under it. Both systems lay a sheet over the home indicator and the gesture bar, so the body holds
+ * everything it draws clear of them rather than letting its last row run under one.
+ */
 export function SheetBody(props: BodyProps): ReactElement {
+  const { bottom } = useSafeAreaInsets();
+
   return (
     <View
       className={cn(props.fill && 'flex-1')}
+      style={{ paddingBottom: bottom }}
       accessibilityLabel={props.label}
       accessibilityViewIsModal
       onAccessibilityEscape={() => escape(props)}

@@ -59,8 +59,13 @@ function ShowMore({ onPress }: { onPress: () => void }): React.JSX.Element {
   );
 }
 
+/*
+ * A bubble stops growing at a readable measure rather than at a share of the column, so a wide Feed
+ * does not stretch every prompt to the same block. A phone keeps the share, which is what leaves the
+ * gutter that tells your message from the Agent's.
+ */
 const bubbleClassName =
-  'max-w-7/10 gap-0.5 rounded-2xl bg-foreground/4 dark:bg-foreground/8 px-3.5 py-2.5 wide:px-3 wide:py-2';
+  'max-w-7/10 wide:max-w-lg gap-0.5 rounded-2xl bg-foreground/4 dark:bg-foreground/8 px-3.5 py-2.5 wide:px-3 wide:py-2';
 
 interface BubbleProps {
   text: string;

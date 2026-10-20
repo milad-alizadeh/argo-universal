@@ -37,7 +37,7 @@ export function SheetPages(props: PagesProps): ReactElement {
 
 function StackPages(props: PagesProps & { fill: boolean }): ReactElement {
   const ref = useRef<HorizontalPagerHandle>(null);
-  const pager = useSheetPager(props.stack);
+  const pager = useSheetPager(props.stack, props.open);
   usePageScroll(ref, props.stack.path.length, pager.ready);
 
   return (
@@ -76,20 +76,13 @@ function pagerPages(
 }
 
 /*
- * A root page alone is as tall as its content, so a footer under it stays in view; once a second
- * page is in the stack, the pages keep one sizing mode while Material owns the medium and large heights.
- * A List that scrolls itself in a sheet resting at medium and large has no content height to match, so it fills too.
+ * A root page alone is as tall as its content, so the sheet wraps it and a footer under it stays in view;
+ * once a second page is pushed the pages keep one sizing mode, filling a sheet Material owns the height of,
+ * because a page sized to itself inside a sheet Material has already shortened is cut off with nothing to scroll.
  */
-function fillsHeight(props: PagesProps): boolean {
-  return [
-    props.stack.pages.length > 1,
-    props.detents?.join() === 'large',
-    scrollsAtMaterialHeights(props),
-  ].includes(true);
+export function fillsHeight(props: PagesProps): boolean {
+  return props.stack.pages.length > 1 || props.detents?.join() === 'large';
 }
-
-const scrollsAtMaterialHeights = (props: PagesProps): boolean =>
-  props.contentScrolls === true && props.detents?.includes('large') === true;
 
 function sheetModifiers(fill: boolean): ModifierConfig[] {
   return fill ? [fillMaxWidth(), fillMaxHeight()] : [fillMaxWidth()];

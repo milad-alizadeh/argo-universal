@@ -1,5 +1,4 @@
 import type { ReactElement, ComponentProps } from 'react';
-import { ListItem } from '#primitives/lists/list-item';
 import { Drill } from '#primitives/overlays/drill';
 import { AgentChoices } from '../start-session-in/agent-picker-choices';
 import { AgentIcon } from './agent-icon';
@@ -14,11 +13,11 @@ type ChoicesProps = Props & {
   close: () => void;
 };
 
-export function AgentDrill(props: Props): ReactElement {
+// Only drawn where the Agent can still be chosen, so the choices are always there to drill into.
+export function AgentDrill(props: Props): ReactElement | null {
   const choices = props.configuration.agentChoices;
-  const row = agentRow(props.configuration);
 
-  if (!choices) return <ListItem title="Agent" {...row} />;
+  if (!choices) return null;
 
   return <AgentSelector {...props} choices={choices} />;
 }

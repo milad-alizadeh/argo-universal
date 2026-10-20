@@ -69,11 +69,9 @@ function SystemGlyph(props: SystemGlyphProps): React.JSX.Element {
   return <MaterialGlyph {...props} pixels={materialPixels(props)} />;
 }
 
+// Always fitted: the role's pixels are the slot, and every Material glyph fills the same share of it.
 function materialPixels(props: SystemGlyphProps): number {
-  return (
-    props.pixels *
-    (props.fitArtwork ? materialArtworkScale(props.symbol.material) : 1)
-  );
+  return props.pixels * materialArtworkScale(props.symbol.material);
 }
 
 interface AppleSymbolImageProps extends Pick<

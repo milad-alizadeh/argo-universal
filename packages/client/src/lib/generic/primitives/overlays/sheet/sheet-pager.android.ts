@@ -17,8 +17,8 @@ export interface SheetPager {
   settled: (index: number) => void;
 }
 
-export function useSheetPager(stack: SheetStack): SheetPager {
-  const [path, retain] = useRetainedPath(stack.path);
+export function useSheetPager(stack: SheetStack, open: boolean): SheetPager {
+  const [path, retain] = useRetainedPath(stack.path, open);
   const native = usePageReadiness(stack.path);
   const target = stack.path.length;
 
@@ -31,27 +31,68 @@ export function useSheetPager(stack: SheetStack): SheetPager {
   };
 }
 
+/*
+ * A popped page stays in the pager until it has slid away, so the retained path can be longer than
+ * the sheet's own. Each opening drops it: a sheet closed on a pushed page reopens on its root, as
+ * a stock sheet does, rather than coming back where it was left with nothing to go back to.
+ */
 function useRetainedPath(
   path: string[],
+  open: boolean,
 ): readonly [string[], Dispatch<SetStateAction<string[]>>] {
   const [retained, retain] = useState(path);
-
-  const next = path.every((name, index) => retained[index] === name)
-    ? retained
-    : path;
+  const next = retainedPath(retained, path, useOpening(open));
 
   if (next !== retained) retain(next);
 
   return [next, retain] as const;
 }
 
+// The sheet keeps its pages while the path it is leaving still starts with the path it is going to.
+function retainedPath(
+  retained: string[],
+  path: string[],
+  opening: boolean,
+): string[] {
+  if (opening) return path;
+
+  return path.every((name, index) => retained[index] === name)
+    ? retained
+    : path;
+}
+
+function useOpening(open: boolean): boolean {
+  const [shown, setShown] = useState(open);
+
+  if (open !== shown) setShown(open);
+
+  return open && !shown;
+}
+
+/*
+ * The pages the pager draws: the root, then the pushed pages in order. A page is drawn once, however
+ * often its name appears, because the pager keys its pages by name and React drops a repeated key.
+ */
 function pagerPages(pages: SheetPageEntry[], path: string[]): SheetPageEntry[] {
   const root = pages.slice(0, 1);
+  const drawn = new Set(root.map((page) => page.name));
 
-  return [
-    ...root,
-    ...path.flatMap((name) => pages.filter((page) => page.name === name)),
-  ];
+  return [...root, ...path.flatMap((name) => pushedPage(pages, name, drawn))];
+}
+
+function pushedPage(
+  pages: SheetPageEntry[],
+  name: string,
+  drawn: Set<string>,
+): SheetPageEntry[] {
+  const page = drawn.has(name)
+    ? undefined
+    : pages.find((entry) => entry.name === name);
+
+  if (!page) return [];
+  drawn.add(name);
+
+  return [page];
 }
 
 type Readiness = { path: string[]; ready: boolean };

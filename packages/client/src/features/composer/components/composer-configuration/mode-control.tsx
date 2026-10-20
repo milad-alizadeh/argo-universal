@@ -49,7 +49,6 @@ function ModePopover(
 const modeTriggerAppearance = {
   accessibilityLabel: 'Mode',
   labelRole: { compact: 'row', wide: 'control' },
-  variant: 'toolbar',
 } as const;
 
 // Wide, the icon, label and chevron; narrow, the icon alone. Full access reads red.

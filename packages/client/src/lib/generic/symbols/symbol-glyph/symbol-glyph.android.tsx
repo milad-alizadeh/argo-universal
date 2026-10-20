@@ -22,8 +22,9 @@ export function SymbolGlyph({
   );
 }
 
+// Always fitted, as the web's Material path is, so a glyph is the same size on Android and in a browser.
 function materialScale(props: SymbolGlyphProps): number {
-  return props.fitArtwork && props.symbol.kind === 'system'
+  return props.symbol.kind === 'system'
     ? materialArtworkScale(props.symbol.material)
     : props.glyphScale;
 }

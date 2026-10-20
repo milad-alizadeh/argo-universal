@@ -138,10 +138,9 @@
   --text-badge: var(--text-xs);
   --leading-badge: var(--leading-4);
   --font-weight-badge: var(--font-weight-medium);
-  /* Mono is the one family exception in the Feed, not a size exception: the
-     Code role matches desktop Body and sits one step under phone Body. SF Pro
-     Text and SF Mono have the same x-height, so equal sizes look equal. */
-  --text-code: var(--text-sm);
+  /* Mono reads larger than SF Pro Text at the same size, so the Code role sits
+     one step under Body rather than level with it (owner, 2026-10-20). */
+  --text-code: var(--text-xs);
   --leading-code: var(--leading-5);
   --font-weight-code: var(--font-weight-normal);
   /* The gap between paragraphs, wherever text runs to more than one. */

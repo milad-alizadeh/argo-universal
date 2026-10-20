@@ -72,10 +72,21 @@ function configurationDrills(props: ContentsProps): ReactElement {
 
   return (
     <ListSection footer={notice}>
-      <AgentDrill configuration={props.configuration} />
+      {agentRow(props)}
       {settingRows(props)}
     </ListSection>
   );
+}
+
+/*
+ * The Agent, only where it can still be chosen. Once a Session is running the Agent is fixed, and the page is already
+ * titled with its name; a row that repeats the title and does nothing collides with the Agents' own options, which
+ * are free to call themselves anything, "Agent" included (owner, 2026-10-20).
+ */
+function agentRow(props: ContentsProps): ReactElement[] {
+  if (!props.configuration.agentChoices) return [];
+
+  return [<AgentDrill key="agent" configuration={props.configuration} />];
 }
 
 /*
