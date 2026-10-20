@@ -4,7 +4,15 @@ export { SubagentList } from './components/subagent-list/subagent-list';
 
 export { type SubagentListProps } from './components/subagent-list/subagent-list';
 
-export { SubagentSheet } from './components/subagent-list/subagent-sheet';
+export {
+  SubagentSheet,
+  type SubagentSheetProps,
+} from './components/subagent-list/subagent-sheet';
+
+export {
+  SubagentFeed,
+  type SubagentFeedProps,
+} from './components/subagent-feed/subagent-feed';
 
 export { SessionHeaderBar } from './components/session-header-bar';
 
