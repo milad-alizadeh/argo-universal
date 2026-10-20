@@ -7,6 +7,7 @@ import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import type { InspectorTab, InspectorTabsProps } from './inspector-props';
+import { useTabFocus, type TabFocus } from './inspector-tab-focus';
 import { tabKeys } from './inspector-tab-keys';
 
 const tabClassName = 'h-7 flex-row items-center gap-1.5 rounded-md pl-2';
@@ -19,7 +20,10 @@ const tabState = {
   },
 } as const;
 
-function TabCount({ count, countTone }: InspectorTab): ReactElement | null {
+function TabCount({
+  count,
+  countTone,
+}: Pick<InspectorTab, 'count' | 'countTone'>): ReactElement | null {
   if (count === undefined) return null;
 
   return <CountBadge badge={{ count }} tone={countTone ?? 'muted'} />;
@@ -29,10 +33,11 @@ interface TabProps {
   tab: InspectorTab;
   selected: boolean;
   tabs: InspectorTabsProps;
+  focus: TabFocus;
 }
 
 // Closes the selected tab; a sibling of the tab's own button, never inside it.
-function CloseTab({ tab, selected, tabs }: TabProps): ReactElement | null {
+function CloseTab({ tab, selected, focus }: TabProps): ReactElement | null {
   if (!selected) return null;
 
   return (
@@ -43,13 +48,16 @@ function CloseTab({ tab, selected, tabs }: TabProps): ReactElement | null {
       className="size-5 p-0 sm:size-5"
       iconClassName="text-muted-foreground"
       accessibilityLabel={`Close ${tab.label}`}
-      onPress={() => tabs.onClose(tab.key)}
+      onPress={() => focus.close(tab.key)}
       icon="close"
     />
   );
 }
 
-function TabLabel({ tab, selected }: Omit<TabProps, 'tabs'>): ReactElement {
+function TabLabel({
+  tab,
+  selected,
+}: Pick<TabProps, 'tab' | 'selected'>): ReactElement {
   const { tone } = tabState[selected ? 'selected' : 'unselected'];
 
   return (
@@ -58,7 +66,7 @@ function TabLabel({ tab, selected }: Omit<TabProps, 'tabs'>): ReactElement {
       <Text role="body" tone={tone} numberOfLines={1} className="font-medium">
         {tab.label}
       </Text>
-      <TabCount {...tab} />
+      <TabCount count={tab.count} countTone={tab.countTone} />
     </>
   );
 }
@@ -76,11 +84,12 @@ function tabAttributes(
   };
 }
 
-function TabButton({ tab, selected, tabs }: TabProps): ReactElement {
+function TabButton({ tab, selected, tabs, focus }: TabProps): ReactElement {
   return (
     <Pressable
       {...tabAttributes(tab, selected, tabs)}
-      accessibilityLabel={tab.label}
+      ref={selected ? focus.selected : undefined}
+      accessibilityLabel={tabName(tab)}
       onPress={() => tabs.onSelect(tab.key)}
       className="h-full flex-row items-center gap-1.5 rounded-md web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2"
     >
@@ -121,16 +130,20 @@ export function InspectorTabs({
 }
 
 function TabList({ tabs }: { tabs: InspectorTabsProps }): ReactElement {
+  const focus = useTabFocus(tabs);
+
   return (
     <View role="tablist" className="flex-row items-center gap-0.5">
       {tabs.items.map((tab) => (
         <Tab
           key={tab.key}
-          tab={tab}
+          {...{ tab, tabs, focus }}
           selected={tab.key === tabs.selected}
-          tabs={tabs}
         />
       ))}
     </View>
   );
 }
+
+const tabName = ({ label, count }: InspectorTab): string =>
+  count === undefined ? label : `${label}: ${count}`;

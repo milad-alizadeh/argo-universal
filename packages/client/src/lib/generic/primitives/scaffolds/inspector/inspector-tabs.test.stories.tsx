@@ -20,7 +20,7 @@ const expandLabel = 'Expand Inspector';
 
 const changesTab = { name: 'Changes' };
 
-const subagentsTab = { name: 'Subagents' };
+const subagentsTab = { name: 'Subagents: 3' };
 
 const closeSubagents = { name: 'Close Subagents' };
 
@@ -41,13 +41,15 @@ export const WideTabsSelectAndClose: Story = {
       ...selected,
     );
 
-    await userEvent.click(canvas.getByRole('button', closeSubagents));
+    canvas.getByRole('button', closeSubagents).focus();
+    await userEvent.keyboard('{Enter}');
     await expect(
       canvas.queryByRole('tab', subagentsTab),
     ).not.toBeInTheDocument();
     await expect(canvas.getByRole('tab', changesTab)).toHaveAttribute(
       ...selected,
     );
+    await expect(canvas.getByRole('tab', changesTab)).toHaveFocus();
   },
 };
 
@@ -58,7 +60,7 @@ export const OverflowTabsStayReachable: Story = {
     const changes = await canvas.findByRole('tab', changesTab);
     changes.focus();
     await userEvent.keyboard('{End}');
-    const shells = canvas.getByRole('tab', { name: 'Shells' });
+    const shells = canvas.getByRole('tab', { name: 'Shells: 2' });
     await expect(shells).toHaveFocus();
     await expect(shells).toHaveAttribute(...selected);
     const close = canvas.getByRole('button', { name: closeLabel });

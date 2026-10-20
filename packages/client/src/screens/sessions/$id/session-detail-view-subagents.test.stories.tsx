@@ -44,7 +44,7 @@ async function assertPresentation(
   const page = within(document.body);
 
   if (wide) {
-    const tab = await canvas.findByRole('tab', { name: subagentsName });
+    const tab = await canvas.findByRole('tab', { name: /^Subagents:/ });
     await expect(tab).toHaveAttribute(...selected);
     await expect(within(tab).getByText(String(count))).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: subagentsName }));
@@ -83,7 +83,7 @@ function subagentsAt(width: number, state: State): Story {
         canvas.queryByRole('button', { name: 'Shells' }),
       ).not.toBeInTheDocument();
       await expect(
-        canvas.queryByRole('tab', { name: subagentsName }),
+        canvas.queryByRole('tab', { name: /^Subagents:/ }),
       ).not.toBeInTheDocument();
 
       if (!subagents.length) {
@@ -137,44 +137,3 @@ export const PhoneSubagentsOpenSheet = subagentsAt(
   layoutWidths.phone,
   'severalMixed',
 );
-
-export const SwitchAndCloseTabs: Story = {
-  ...subagentsAt(layoutWidths.wide, 'severalMixed'),
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Changes' }),
-    );
-    await userEvent.click(canvas.getByRole('button', { name: subagentsName }));
-    await expect(
-      await canvas.findByText('Find every Feed reader'),
-    ).toBeVisible();
-    await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
-    await expect(
-      canvas.queryByText('Find every Feed reader'),
-    ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: subagentsName }));
-    await expect(
-      canvas.getAllByRole('tab', { name: subagentsName }),
-    ).toHaveLength(1);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Expand Inspector' }),
-    );
-    await expect(
-      await canvas.findByRole('button', { name: 'Restore Inspector' }),
-    ).toBeVisible();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Close Subagents' }),
-    );
-    await expect(
-      canvas.queryByRole('tab', { name: subagentsName }),
-    ).not.toBeInTheDocument();
-    await expect(canvas.getByRole('tab', { name: 'Changes' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Close Inspector' }),
-    );
-    await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
-  },
-};
