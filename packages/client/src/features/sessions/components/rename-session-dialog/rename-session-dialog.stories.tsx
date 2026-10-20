@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { RenameSessionDialog } from './rename-session-dialog';
 
 const meta = {
-  title: 'SessionList/RenameSessionDialog',
+  title: 'Sessions/RenameSessionDialog',
   component: RenameSessionDialog,
   args: {
     title: 'Build the Session layout',

@@ -1,13 +1,13 @@
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { eachLayout } from '#lib/generic/each-layout';
-import { SessionsList } from '../../src/features/session-list/components/sessions-list/sessions-list';
-import type { SessionsListProps } from '../../src/features/session-list/components/sessions-list/sessions-list-props';
-import { sessionsListProps } from '../../src/features/session-list/components/sessions-list/sessions-list.mocks';
+import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
+import type { SessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list-props';
+import { sessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
 import {
   defaultSessionsView,
   type SessionsView,
-} from '../../src/features/session-list/stores/sessions-view';
+} from '../../src/features/sessions/stores/sessions-view';
 import {
   exampleProjectName,
   type Story,

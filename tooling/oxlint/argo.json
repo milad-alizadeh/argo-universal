@@ -131,6 +131,12 @@
       "rules": { "no-restricted-globals": "off" }
     },
     {
+      // A feature's barrel only re-exports, so its length counts the feature's surface, not anything to read or follow.
+      // Features are drawn around what a screen needs, never around a line count; the owner exempted barrels on 2026-10-20.
+      "files": ["packages/client/src/features/*/index.ts"],
+      "rules": { "max-lines": "off" }
+    },
+    {
       // #717 keeps the connection in one file; the owner approved this length exception on 2026-10-15.
       "files": ["packages/engine/src/agents/acp/connection/connection.ts"],
       "rules": { "max-lines": "off" }

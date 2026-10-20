@@ -2,8 +2,8 @@ import type { ReactElement } from 'react';
 import {
   ArchiveSessionAlert,
   RenameSessionDialog,
-} from '#features/session-list';
-import { type SessionMenu } from '#features/sessions';
+  type SessionMenu,
+} from '#features/sessions';
 import { leaveForSessions } from '#lib/product/navigation/navigation';
 import { type ArchiveSession, useArchiveSession } from '../use-archive-session';
 import {
