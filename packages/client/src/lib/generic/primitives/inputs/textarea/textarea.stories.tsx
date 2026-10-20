@@ -9,7 +9,7 @@ const examples: {
   { label: 'Empty', props: { placeholder: 'Message' } },
   {
     label: 'Filled',
-    props: { defaultValue: 'Hello from Argo.', placeholder: 'Message' },
+    props: { defaultValue: 'Hello.', placeholder: 'Message' },
   },
   { label: 'Read-only', props: { disabled: true, placeholder: 'Message' } },
   { label: 'Invalid', props: { 'aria-invalid': true, placeholder: 'Message' } },

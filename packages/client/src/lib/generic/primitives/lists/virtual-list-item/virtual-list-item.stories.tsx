@@ -11,7 +11,7 @@ import type { VirtualListPosition } from './virtual-list-item-props';
 const meta = {
   title: 'Design System/Primitives/Lists/VirtualListItem',
   component: VirtualListItem,
-  args: { title: 'Build the Session layout', onPress: action('press row') },
+  args: { title: 'Item one', onPress: action('press row') },
 } satisfies Meta<typeof VirtualListItem>;
 
 export default meta;
@@ -25,17 +25,17 @@ interface Row {
 }
 
 const section: readonly Row[] = [
-  { title: 'Build the Session layout', detail: '3/8', position: 'first' },
-  { title: 'Fix the Composer envelope', detail: '12m', position: 'middle' },
+  { title: 'Item one', detail: '3/8', position: 'first' },
+  { title: 'Item two', detail: '12m', position: 'middle' },
   {
-    title: 'Rename Projects screen to Sessions',
+    title: 'Item three',
     detail: '1h',
     position: 'last',
   },
 ];
 
 const lone: readonly Row[] = [
-  { title: 'Answer the review comments', detail: '2h', position: 'only' },
+  { title: 'Item four', detail: '2h', position: 'only' },
 ];
 
 function ListRow(props: { row: Row; selected?: string }): React.JSX.Element {

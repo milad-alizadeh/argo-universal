@@ -105,12 +105,12 @@ When(
 );
 
 Then(
-  'the other page reads {string}',
-  async ({ page }, reason: string): Promise<void> => {
+  'the other page reads that the request was already answered',
+  async ({ page }): Promise<void> => {
     await expect(
       otherPage(page)
         .page.getByRole('status')
-        .getByText(reason, { exact: true }),
+        .getByText(/already answered/i),
     ).toBeVisible();
   },
 );

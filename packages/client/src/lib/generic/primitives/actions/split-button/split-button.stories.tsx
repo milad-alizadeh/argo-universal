@@ -23,13 +23,13 @@ const scopes = [
 const mergeSplit = {
   size: 'xs',
   primary: true,
-  label: 'Merge PR',
+  label: 'Merge',
   icon: 'merged',
-  menuLabel: 'Merge options',
+  menuLabel: 'Options',
   actions: [
-    { label: 'Squash and merge', onPress: fn() },
-    { label: 'Create a merge commit', onPress: fn() },
-    { label: 'Rebase and merge', onPress: fn() },
+    { label: 'Option one', onPress: fn() },
+    { label: 'Option two', onPress: fn() },
+    { label: 'Option three', onPress: fn() },
   ],
 } as const;
 
@@ -93,23 +93,23 @@ export const Variations: Story = {
 type MergeMethod = 'squash' | 'merge' | 'rebase';
 
 const mergeMethods = [
-  { value: 'squash', label: 'Squash and merge' },
-  { value: 'merge', label: 'Create a merge commit' },
-  { value: 'rebase', label: 'Rebase and merge' },
+  { value: 'squash', label: 'Option one' },
+  { value: 'merge', label: 'Option two' },
+  { value: 'rebase', label: 'Option three' },
 ] as const;
 
-// Paper's SplitButton card: Merge PR, its method chosen from the menu.
+// Paper's SplitButton card: one action, its method chosen from the menu.
 function MergeSplit(): React.JSX.Element {
   const [method, setMethod] = useState<MergeMethod>('squash');
 
   return (
     <SplitButton
       primary
-      menuLabel="Merge options"
+      menuLabel="Options"
       options={mergeMethods}
       value={method}
       onValueChange={setMethod}
-      label="Merge PR"
+      label="Merge"
     />
   );
 }

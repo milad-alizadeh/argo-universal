@@ -21,7 +21,7 @@ const scenes = {
     camera: 'pan-zoom',
   },
   files: {
-    label: 'Project files',
+    label: 'Files',
     width: 360,
     height: 216,
     camera: 'pan-zoom',

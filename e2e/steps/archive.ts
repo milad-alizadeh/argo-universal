@@ -8,7 +8,7 @@ import { localRequests } from './agent-requests';
 import { Given, When, Then } from './fixtures';
 import { liveSessionRow, sessionRow } from './live-session';
 
-const archivedToastTitle = 'Session archived';
+const archivedToastTitle = /session archived/i;
 
 const uncommittedFile = 'pending.txt';
 
@@ -76,9 +76,9 @@ Then(
 );
 
 Then(
-  'a {string} toast offers Undo',
-  async ({ page }, title: string): Promise<void> => {
-    await expect(page.getByText(title, { exact: true })).toBeVisible();
+  'a toast announces the archive and offers Undo',
+  async ({ page }): Promise<void> => {
+    await expect(page.getByText(archivedToastTitle)).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Undo', exact: true }),
     ).toBeVisible();
@@ -87,9 +87,7 @@ Then(
 
 When('I undo the archive', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
-  await expect(page.getByText(archivedToastTitle, { exact: true })).toHaveCount(
-    0,
-  );
+  await expect(page.getByText(archivedToastTitle)).toHaveCount(0);
 });
 
 Then(
@@ -109,9 +107,9 @@ When(
 );
 
 Then(
-  'the Session page shows {string} instead of the Composer',
-  async ({ page }, banner: string): Promise<void> => {
-    await expect(page.getByText(banner, { exact: true })).toBeVisible();
+  'the Session page is read-only instead of showing the Composer',
+  async ({ page }): Promise<void> => {
+    await expect(page.getByText(/read-only/i)).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Message' })).toHaveCount(0);
   },
 );

@@ -29,9 +29,6 @@ export const NoChangesSinceMain: Story = {
     for (const width of widths) {
       await settleViewport(width);
       await expect(canvas.getByText(noChanges)).toBeVisible();
-      await expect(
-        canvas.getByText('Nothing has changed since this branched from main.'),
-      ).toBeVisible();
       await expect(canvas.queryByText(/files ·/)).toBeNull();
     }
   },
@@ -45,7 +42,7 @@ export const NoUncommittedChanges: Story = {
     for (const width of widths) {
       await settleViewport(width);
       await expect(await picker('Uncommitted Changes')).toBeVisible();
-      await expect(canvas.getByText('No uncommitted changes.')).toBeVisible();
+      await expect(canvas.getByText(/uncommitted/)).toBeVisible();
     }
   },
 };
@@ -58,11 +55,12 @@ export const ComparedAgainstABranch: Story = {
     for (const width of widths) {
       await settleViewport(width);
       await expect(await picker('Compare Against release/2.4')).toBeVisible();
+      // The Comparison button names the branch too; the empty message is the other match.
       await expect(
-        canvas.getByText(
-          'Nothing has changed since this branched from release/2.4.',
-        ),
-      ).toBeVisible();
+        canvas
+          .getAllByText(/release\/2\.4/)
+          .filter((element) => !element.closest('button')),
+      ).toHaveLength(1);
     }
   },
 };

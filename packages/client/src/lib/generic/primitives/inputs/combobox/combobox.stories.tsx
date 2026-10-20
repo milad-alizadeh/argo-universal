@@ -10,25 +10,25 @@ import { Combobox } from './combobox';
 
 const options = [
   {
-    value: 'argo',
-    label: 'argo-universal',
-    // A worktree's long path shows how a path shortens before the selected check.
+    value: 'long',
+    label: 'long-folder-name',
+    // A long path shows how a path shortens before the selected check.
     subtitle:
-      '~/Developer/worktrees/argo-universal/jovial-pelican/argo-universal',
+      '~/Folder/very/long/path/to/some/nested/location/long-folder-name',
     code: true,
     icon: 'folder',
   },
   {
     value: 'paper',
-    label: 'paper-sync',
-    subtitle: '~/Developer/paper-sync',
+    label: 'second-folder',
+    subtitle: '~/Folder/second-folder',
     code: true,
     icon: 'folder',
   },
   {
     value: 'docs',
-    label: 'docs-site',
-    subtitle: '~/Developer/docs-site',
+    label: 'third-folder',
+    subtitle: '~/Folder/third-folder',
     code: true,
     icon: 'folder',
   },
@@ -50,7 +50,7 @@ export const Variations: Story = {
 const states = [
   { label: 'Loading', loading: true },
   { label: 'Empty' },
-  { label: 'Could not load', loadError: 'Projects could not be loaded.' },
+  { label: 'Could not load', loadError: 'Folders could not be loaded.' },
 ];
 
 const examples = [
@@ -82,7 +82,7 @@ function StatusExample(props: {
     <View className="native:h-64">
       <Combobox.Content
         {...props}
-        label="Projects"
+        label="Folders"
         options={[]}
         onValueChange={() => {}}
       />
@@ -91,14 +91,14 @@ function StatusExample(props: {
 }
 
 function ProjectChoice(): ReactElement {
-  const [value, setValue] = useState('argo');
+  const [value, setValue] = useState('long');
 
   return (
     <Combobox
-      label="Project"
+      label="Folder"
       value={value}
       options={options}
-      searchPlaceholder="Find a Project…"
+      searchPlaceholder="Find a folder…"
       onValueChange={setValue}
     />
   );
@@ -110,7 +110,7 @@ function ProjectSheet(): ReactElement {
 
   return (
     <Sheet {...sheetPresentation} open={open} onOpenChange={setOpen}>
-      <Sheet.Page name="new-session" title="New Session">
+      <Sheet.Page name="new-item" title="New item">
         <ProjectRow />
       </Sheet.Page>
     </Sheet>
@@ -118,13 +118,13 @@ function ProjectSheet(): ReactElement {
 }
 
 const sheetPresentation = {
-  label: 'New Session',
+  label: 'New item',
   contentScrolls: true,
-  trigger: <MenuTrigger label="New Session" />,
+  trigger: <MenuTrigger label="New item" />,
 };
 
 function ProjectRow(): ReactElement {
-  const [value, setValue] = useState('argo');
+  const [value, setValue] = useState('long');
 
   return (
     <List appearance="grouped" fit>
@@ -137,8 +137,8 @@ function ProjectRow(): ReactElement {
 
 const rowPresentation = {
   variant: 'row',
-  label: 'Project',
-  title: 'Select Project',
+  label: 'Folder',
+  title: 'Select folder',
   options,
-  searchPlaceholder: 'Find a Project…',
+  searchPlaceholder: 'Find a folder…',
 } as const;

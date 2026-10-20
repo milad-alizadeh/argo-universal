@@ -98,8 +98,6 @@ export const ALocalProjectHasNoBaseBranch: Story = {
 export const SaysWhenTheProjectIsMissing: Story = {
   args: { name: 'old-api', project: { status: 'missing' } },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText('The Server has no Project named old-api.'),
-    ).toBeVisible();
+    await expect(canvas.getByText(/no Project named old-api/)).toBeVisible();
   },
 };

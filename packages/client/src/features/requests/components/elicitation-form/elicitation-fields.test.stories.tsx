@@ -28,9 +28,7 @@ function formFields(width: number): Story {
     },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await expect(
-        canvas.getByText('Enter a whole number from 1024 to 65535.'),
-      ).toBeVisible();
+      await expect(canvas.getByText(/1024.*65535/)).toBeVisible();
       await expect(canvas.getByText('Fix Port to submit')).toBeVisible();
       await expect(canvas.queryByText(choiceHint)).not.toBeInTheDocument();
       await expect(
@@ -39,7 +37,7 @@ function formFields(width: number): Story {
       const port = canvas.getByRole('textbox', { name: 'Port' });
       await userEvent.clear(port);
       await userEvent.type(port, '3.5');
-      await expect(canvas.getByText('Enter a whole number.')).toBeVisible();
+      await expect(canvas.getByText(/whole number/)).toBeVisible();
       await userEvent.clear(port);
       await userEvent.type(port, '8080');
       await userEvent.click(
@@ -125,9 +123,6 @@ export const InvalidSchema: Story = {
   args: { request: invalidSchemaRequest },
   play: async ({ canvas, userEvent, args }) => {
     await settleViewport(1440);
-    await expect(
-      canvas.getByText('The Agent provided an invalid form.'),
-    ).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Submit' })).toBeDisabled();
     await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });

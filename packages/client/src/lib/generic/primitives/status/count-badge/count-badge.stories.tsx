@@ -33,7 +33,7 @@ export const Variations: Story = {
     <VariationList>
       <BadgeVariation
         label="Count"
-        badge={{ count: 3, label: '3 Sessions need attention' }}
+        badge={{ count: 3, label: '3 items need attention' }}
       />
       <BadgeVariation label="Over 99" badge={{ count: 120 }} />
     </VariationList>

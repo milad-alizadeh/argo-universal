@@ -5,7 +5,7 @@ import { Spinner } from './spinner';
 const meta = {
   title: 'Design System/Primitives/Status/Spinner',
   component: Spinner,
-  args: { accessibilityLabel: 'Loading Sessions' },
+  args: { accessibilityLabel: 'Loading' },
 } satisfies Meta<typeof Spinner>;
 
 export default meta;

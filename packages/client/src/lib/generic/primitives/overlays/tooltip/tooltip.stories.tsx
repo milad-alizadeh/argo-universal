@@ -4,7 +4,7 @@ import { logoSources } from '#lib/generic/symbols/logo-source';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Tooltip } from './tooltip';
 
-const label = 'Repository';
+const label = 'Link';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Tooltip',

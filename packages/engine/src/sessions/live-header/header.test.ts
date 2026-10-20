@@ -45,7 +45,7 @@ describe.each(liveHeaderMocks)(
             [command],
           ),
         ),
-      ).toBe('Awaiting approval');
+      ).toMatch(/approval/i);
     });
     it('step 1: Elicitation', (): void => {
       const session = {

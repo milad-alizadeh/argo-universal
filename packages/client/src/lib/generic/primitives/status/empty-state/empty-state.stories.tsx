@@ -6,24 +6,24 @@ import type { EmptyStateProps } from './empty-state-props';
 
 const sessions = {
   icon: 'sessions',
-  title: 'No Sessions yet',
-  description: 'Start a Session to work with an Agent.',
-  action: <Button label="New Session" />,
+  title: 'No items yet',
+  description: 'Add an item to get started.',
+  action: <Button label="Add item" />,
 } satisfies EmptyStateProps;
 
 const issues = {
   icon: 'issue',
-  title: 'No open Issues',
+  title: 'No open items',
   description: 'All caught up.',
 } satisfies EmptyStateProps;
 
 const detail = {
-  title: 'Select a Session',
-  description: 'Choose a Session from the list.',
+  title: 'Select an item',
+  description: 'Choose an item from the list.',
 } satisfies EmptyStateProps;
 
 const plugin = {
-  title: 'No Plugins added',
+  title: 'Nothing here',
 } satisfies EmptyStateProps;
 
 const examples = [
@@ -35,12 +35,12 @@ const examples = [
     {
       ...sessions,
       icon: 'search',
-      title: 'No matching Sessions',
-      description: 'No Session has “deploy” in its title.',
+      title: 'No matching items',
+      description: 'No item has “query” in its title.',
       action: undefined,
     },
   ],
-  ['Issue tracker Plugin', issues],
+  ['Icon and description', issues],
 ] as const;
 
 const meta = {

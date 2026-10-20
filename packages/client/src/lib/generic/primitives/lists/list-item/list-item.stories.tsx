@@ -10,7 +10,7 @@ import type { ListItemProps } from './list-item-props';
 
 const meta = {
   title: 'Design System/Primitives/Lists/ListItem',
-  args: { title: 'Build the Session layout' },
+  args: { title: 'Item one' },
   component: ListItem,
 } satisfies Meta<typeof ListItem>;
 
@@ -18,30 +18,30 @@ export default meta;
 
 const rows: ListItemProps[] = [
   {
-    title: 'Build the Session layout',
+    title: 'Item one',
   },
   {
-    title: 'Answer review comments',
-    subtitle: 'Waiting for input',
+    title: 'Item two',
+    subtitle: 'Subtitle',
     selected: true,
     onPress: action('select row'),
   },
   {
-    title: 'Deploy web to production',
-    subtitle: 'main · Fix cache headers',
-    meta: <Pill text="Production" />,
+    title: 'Item three',
+    subtitle: 'Subtitle',
+    meta: <Pill text="Meta" />,
     progress: { value: 0.4, tone: 'success', active: true },
   },
   {
-    title: 'Archived Session',
+    title: 'Disabled item',
     disabled: true,
     badge: 3,
     onPress: action('select row'),
   },
   {
-    title: 'Review comments',
-    subtitle: '2 need your attention',
-    badge: { kind: 'status', tone: 'warning', label: 'Needs attention' },
+    title: 'Item four',
+    subtitle: 'Subtitle',
+    badge: { kind: 'status', tone: 'warning', label: 'Warning' },
   },
   {
     title: 'Effort',
@@ -86,9 +86,9 @@ export const Overview: StoryObj<typeof meta> = {
 function ReferenceRow(): React.JSX.Element {
   return (
     <ListItem
-      title="Deploy web to production"
-      subtitle="main · Fix cache headers"
-      meta={<Pill text="production" />}
+      title="Item three"
+      subtitle="Subtitle"
+      meta={<Pill text="Meta" />}
       progress={{ value: 7 / 12, tone: 'info' }}
     />
   );
@@ -109,11 +109,11 @@ const loadingRows = (
     <ListItem
       isLoading
       leading={null}
-      title="Build the Session layout"
-      subtitle="Claude Code · main"
-      meta="2 hours"
+      title="Item one"
+      subtitle="Subtitle"
+      meta="Meta"
     />
-    <ListItem isLoading leading={null} title="Answer review comments" />
+    <ListItem isLoading leading={null} title="Item two" />
   </>
 );
 
@@ -121,11 +121,11 @@ const loadingRows = (
 function LoadingAndEmpty(): React.JSX.Element {
   return (
     <List appearance="cards" maxHeight={400}>
-      <List.Section isLoading title="Example Project">
+      <List.Section isLoading title="Section">
         {loadingRows}
       </List.Section>
-      <List.Section title="Empty Project">
-        <ListItem title="No Sessions yet." tone="muted" />
+      <List.Section title="Empty section">
+        <ListItem title="No items" tone="muted" />
       </List.Section>
     </List>
   );

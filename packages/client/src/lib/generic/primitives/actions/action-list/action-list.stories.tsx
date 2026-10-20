@@ -37,16 +37,16 @@ const issues: DemoAction[] = [
 ];
 
 const projects: DemoAction[] = [
-  { label: 'Add Project', icon: 'add', result: 'Project added' },
+  { label: 'Add', icon: 'add', result: 'Added' },
   {
-    label: 'Create branch',
+    label: 'Create',
     icon: 'branch',
-    result: 'Branch created',
+    result: 'Created',
   },
   {
     label: 'Show archived',
     icon: 'archive',
-    result: 'Showing archived Projects',
+    result: 'Showing archived',
   },
 ];
 
@@ -63,20 +63,12 @@ const examples = [
   ['On a Page', <PageExample key="page" />],
   ['Choice (filter)', <ChoiceExample key="choice" />],
   [
-    'Argo · Session row',
-    <RowExample
-      key="session"
-      title="Build the Session layout"
-      actions={sessions}
-    />,
+    'Row, context menu',
+    <RowExample key="session" title="Item" actions={sessions} />,
   ],
   [
-    'Issue row · Sections and destructive',
-    <RowExample
-      key="issue"
-      title="Sync fails on large repos"
-      actions={issues}
-    />,
+    'Row, sections and destructive',
+    <RowExample key="issue" title="Another item" actions={issues} />,
   ],
 ] as const;
 
@@ -94,7 +86,7 @@ export const Overview: Story = {
 };
 
 function PageExample(): React.JSX.Element {
-  const [result, setResult] = useState('Projects');
+  const [result, setResult] = useState('Result');
 
   return (
     <>

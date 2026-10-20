@@ -9,7 +9,7 @@ import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { ContextMenu } from './context-menu';
 
-const rowTitle = 'Build the Session layout';
+const rowTitle = 'Item';
 
 const onRename = fn();
 
@@ -86,7 +86,7 @@ function RenameInDialog(): ReactElement {
         <Text>{rowTitle}</Text>
       </ContextMenu>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent accessibilityLabel="Rename Session">
+        <DialogContent accessibilityLabel="Dialog">
           <TextInput label="Title" value="" onChangeText={fn()} focusOnOpen />
         </DialogContent>
       </Dialog>

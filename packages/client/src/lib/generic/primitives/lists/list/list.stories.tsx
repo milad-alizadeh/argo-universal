@@ -13,15 +13,12 @@ export default meta;
 
 const sections = (
   <>
-    <List.Section title="Sessions" footer="Recent work">
-      <ListItem
-        title="Build the Session layout"
-        leading={<Icon role="body" name="agent" />}
-      />
-      <ListItem title="Answer review comments" subtitle="Waiting for input" />
+    <List.Section title="Section one" footer="Footer">
+      <ListItem title="Item" leading={<Icon role="body" name="agent" />} />
+      <ListItem title="Item" subtitle="Subtitle" />
     </List.Section>
-    <List.Section title="CI runs">
-      <ListItem title="Deploy web" subtitle="main · Fix cache headers" />
+    <List.Section title="Section two">
+      <ListItem title="Item" subtitle="Subtitle" />
     </List.Section>
   </>
 );

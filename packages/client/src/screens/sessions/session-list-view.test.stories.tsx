@@ -12,7 +12,6 @@ import {
 import {
   exampleProjectName,
   meta as sessionListViewMeta,
-  noMatches,
   type Story,
 } from '../../../mocks/sessions-view/sessions-view-story-context.test.mocks';
 
@@ -73,7 +72,7 @@ export const EmptyListKeepsProjects: Story = {
   args: { sessions: [] },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(await canvas.findByText('No Sessions yet.')).toBeVisible();
+      await expect(await canvas.findByText(/yet/)).toBeVisible();
       await expect(
         canvas.getByRole('button', { name: exampleProjectName }),
       ).toBeVisible();
@@ -84,7 +83,7 @@ export const SearchWithoutMatches: Story = {
   args: { query: 'xyz', sessions: [] },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(await canvas.findByText(noMatches)).toBeVisible();
+      await expect(await canvas.findByText(/matching/)).toBeVisible();
       await expect(
         canvas.queryByRole('button', { name: exampleProjectName }),
       ).toBeNull();

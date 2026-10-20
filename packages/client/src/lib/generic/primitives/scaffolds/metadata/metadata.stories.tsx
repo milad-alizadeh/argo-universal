@@ -43,8 +43,8 @@ export const InAGroupedList: StoryObj<typeof meta> = {
   render: () => (
     <View style={{ width: 360 }}>
       <List appearance="grouped" maxHeight={400}>
-        <Metadata title="Folder">
-          <Metadata.Label title="Path" text="~/Developer/argo-universal" />
+        <Metadata title="Section">
+          <Metadata.Label title="Path" text="~/Folder/item" />
         </Metadata>
       </List>
     </View>

@@ -12,8 +12,8 @@ export default meta;
 export const Contents: StoryObj<typeof meta> = {
   ...Overview,
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('3 Subagents')).toBeVisible();
-    await expect(canvas.getByText('2/5 jobs')).toBeVisible();
+    await expect(canvas.getByText('3 items')).toBeVisible();
+    await expect(canvas.getByText('2/5')).toBeVisible();
     await expect(canvas.getByTestId('icon-pr-open')).toBeVisible();
   },
 };

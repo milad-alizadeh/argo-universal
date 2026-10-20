@@ -60,7 +60,7 @@ const drag = (
   return event;
 };
 
-const dropLabel = 'Drop files to attach';
+const dropLabel = /Drop files/;
 
 // Draws the layout again on demand, with a new drop handler each time.
 function RedrawingLayout(

@@ -8,11 +8,11 @@ import type { AlertProps } from './alert-props';
 
 type AlertContent = Omit<AlertProps, 'open' | 'onOpenChange'>;
 
-const removeTitle = 'Remove Example ACP?';
+const removeTitle = 'Delete item?';
 
-const removeMessage = 'Sessions that use it keep their history.';
+const removeMessage = 'This cannot be undone.';
 
-const removeAgent = 'Remove Agent';
+const removeAgent = 'Delete';
 
 const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
   {
@@ -32,7 +32,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
     trigger: 'Discard changes',
     alert: {
       title: 'Discard your changes?',
-      message: 'The Agent keeps its saved launch settings.',
+      message: 'Saved settings stay as they are.',
       actions: [
         { label: 'Keep editing', role: 'cancel' },
         { label: 'Discard' },
@@ -41,10 +41,10 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
   },
   {
     state: 'Disabled answer',
-    trigger: 'Update Agent',
+    trigger: 'Update',
     alert: {
-      title: 'Update Example ACP?',
-      message: 'Stop its running Sessions before updating it.',
+      title: 'Update item?',
+      message: 'Stop running work before updating.',
       actions: [
         { label: 'Cancel', role: 'cancel' },
         { label: 'Update', disabled: true },
@@ -54,7 +54,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
   {
     // iOS hides a running alert, since SwiftUI's alert draws no progress; the screen shows it instead.
     state: 'Running answer',
-    trigger: 'Removing Agent',
+    trigger: 'Deleting',
     alert: {
       title: removeTitle,
       message: removeMessage,

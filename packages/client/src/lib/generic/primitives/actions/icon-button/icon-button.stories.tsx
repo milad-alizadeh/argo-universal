@@ -123,15 +123,15 @@ const metaLinkProps = {
   bleed: true,
 } as const;
 
-// The repository's GitHub logo and the website's symbol, as on the Agent card.
+// A logo and a symbol side by side.
 const metaLinks = (
   <>
     <IconButton
       {...metaLinkProps}
       iconSource={logoSources.github}
-      accessibilityLabel="Repository"
+      accessibilityLabel="Link"
     />
-    <IconButton {...metaLinkProps} icon="web" accessibilityLabel="Website" />
+    <IconButton {...metaLinkProps} icon="web" accessibilityLabel="Web" />
   </>
 );
 

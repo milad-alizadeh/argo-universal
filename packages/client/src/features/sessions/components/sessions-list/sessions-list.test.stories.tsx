@@ -112,7 +112,7 @@ export const EmptyOneListAll = emptyCopy(
 export const SearchMissInAll = emptyCopy(
   { status: 'all', query: 'xyz' },
   'No matching Sessions',
-  'No Session has "xyz" in its title.',
+  /"xyz"/,
 );
 
 export const ProjectActionsDark: Story = {

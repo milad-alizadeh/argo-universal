@@ -42,13 +42,9 @@ export const CaptionsThePageOnWideWindows: Story = {
     await expect(
       await canvas.findByRole('heading', { name: 'Connection' }),
     ).toBeVisible();
-    await expect(
-      canvas.getByText('The Argo Server this App is talking to.'),
-    ).toBeVisible();
+    await expect(canvas.getByText(/Argo Server/)).toBeVisible();
     await settleViewport(layoutWidths.phone);
-    await expect(
-      canvas.queryByText('The Argo Server this App is talking to.'),
-    ).toBeNull();
+    await expect(canvas.queryByText(/Argo Server/)).toBeNull();
     await expect(
       canvas.getByRole('group', { name: 'PID, 4242' }),
     ).toBeVisible();

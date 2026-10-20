@@ -29,10 +29,10 @@ function SheetVariations(): ReactElement {
   return (
     <VariationList>
       <Variation label="Fits its content">
-        <ExampleSheet label="Merge options" />
+        <ExampleSheet label="Options" />
       </Variation>
       <Variation label="With a footer">
-        <ExampleSheet label="Answer the Agent" footer={<SubmitFooter />} />
+        <ExampleSheet label="Footer" footer={<SubmitFooter />} />
       </Variation>
       <TallVariations />
     </VariationList>
@@ -43,7 +43,7 @@ function TallVariations(): ReactElement {
   return (
     <>
       <Variation label="Full height">
-        <ExampleSheet label="Plan" detents={['large']} />
+        <ExampleSheet label="Tall" detents={['large']} />
       </Variation>
       <Variation label="With pages">
         <PagedSheet />
@@ -52,11 +52,7 @@ function TallVariations(): ReactElement {
   );
 }
 
-const choices = [
-  'Create a merge commit',
-  'Squash and merge',
-  'Rebase and merge',
-];
+const choices = ['Option one', 'Option two', 'Option three'];
 
 type ExampleProps = Pick<SheetProps, 'detents' | 'footer'> & {
   label: string;
