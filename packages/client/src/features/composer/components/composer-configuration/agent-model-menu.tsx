@@ -1,9 +1,8 @@
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { Platform, View, type ViewProps } from 'react-native';
-import { Text } from '#primitives/content/text';
 import { List, ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
-import { Spinner } from '#primitives/status/spinner';
 import { AgentDrill } from './agent-drill';
 import { EffortControl, switchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -46,35 +45,8 @@ function loadingConfiguration(
   return !!configuration.opening && !configuration.configOptions.length;
 }
 
-function useMenuLayout(
-  props: ContentsProps,
-): Pick<ViewProps, 'style' | 'onLayout'> {
-  const [readyHeight, setReadyHeight] = useState<number>();
-  const loading = loadingConfiguration(props.configuration);
-  const retainHeight = props.wide && loading;
-
-  return {
-    style: retainHeight ? { minHeight: readyHeight } : undefined,
-    onLayout: (event) => {
-      if (!props.wide || loading) return;
-      setReadyHeight(event.nativeEvent.layout.height);
-    },
-  };
-}
-
 function ConfigurationStatus({ configuration }: MenuProps): ReactNode {
-  if (configuration.status != null) return configuration.status;
-
-  if (!loadingConfiguration(configuration)) return null;
-
-  return (
-    <View className="flex-row items-center gap-2 p-3">
-      <Spinner accessibilityLabel="Loading configuration…" />
-      <Text role="body" tone="muted">
-        Loading configuration…
-      </Text>
-    </View>
-  );
+  return configuration.status ?? null;
 }
 
 function hasTuning(configuration: ComposerConfigurationProps): boolean {
@@ -101,10 +73,48 @@ function configurationDrills(props: ContentsProps): ReactElement {
   return (
     <ListSection footer={notice}>
       <AgentDrill configuration={props.configuration} />
-      <ModelPicker configuration={props.configuration} />
-      {optionDrills(props)}
+      {settingRows(props)}
     </ListSection>
   );
+}
+
+/*
+ * The rows below the Agent. A newly chosen Agent's settings arrive a moment later, and until they do the rows keep
+ * their places as skeletons: the picker fills in where it stands instead of emptying and growing back (owner,
+ * 2026-10-20).
+ */
+function settingRows(props: ContentsProps): ReactElement[] {
+  if (loadingConfiguration(props.configuration)) return loadingRows();
+
+  return [
+    <ModelPicker key="model" configuration={props.configuration} />,
+    ...optionDrills(props),
+  ];
+}
+
+// The Model row's place, held until the new Agent's settings arrive.
+const loadingRows = (): ReactElement[] => [
+  <ListItem key="model" isLoading leading={null} title="Model" />,
+];
+
+/*
+ * The card keeps the height it had before the switch, so its rows fill in where they stand instead of the popover
+ * shrinking to a line and growing back (owner, 2026-10-20).
+ */
+function useMenuLayout(
+  props: ContentsProps,
+): Pick<ViewProps, 'style' | 'onLayout'> {
+  const [readyHeight, setReadyHeight] = useState<number>();
+  const loading = loadingConfiguration(props.configuration);
+  const retainHeight = props.wide && loading;
+
+  return {
+    style: retainHeight ? { minHeight: readyHeight } : undefined,
+    onLayout: (event) => {
+      if (!props.wide || loading) return;
+      setReadyHeight(event.nativeEvent.layout.height);
+    },
+  };
 }
 
 // Paper puts Effort before the switches on a desktop; a phone's sheet keeps its switches first.

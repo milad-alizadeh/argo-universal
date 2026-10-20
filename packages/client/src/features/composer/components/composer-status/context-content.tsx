@@ -1,32 +1,28 @@
 import type { JSX } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/actions/button';
-import type { ComposerContext } from '../../utils/status';
 import { compactNumber, contextZone } from '../../utils/status';
+import type { ContextSheetContentProps } from './context-sheet-content';
+import {
+  ContextSheetContent,
+  contextDescription,
+} from './context-sheet-content';
 import { ContextZones } from './context-zones';
 import { Meter } from './status-meter';
-import { unselectableTextClassName } from './status-surface';
+import { phoneSheet, unselectableTextClassName } from './status-surface';
 import { StatusText } from './status-text';
 
-interface ContextContentProps {
-  context: ComposerContext;
-  percent: number;
-  close: () => void;
-}
+type ContextContentProps = ContextSheetContentProps;
 
-// A phone's sheet page header already reads "Context window", so only the description stays.
 function ContextHeading(): JSX.Element {
   return (
     <View className="px-0 gap-0.5">
-      {Platform.OS === 'web' && (
-        <StatusText role={'heading'} className="select-none">
-          Context window
-        </StatusText>
-      )}
+      <StatusText role={'heading'} className="select-none">
+        Context window
+      </StatusText>
       <StatusText role="secondary" className="select-none">
-        Instructions, tools, files and the conversation the Agent reads for its
-        next reply.
+        {contextDescription}
       </StatusText>
     </View>
   );
@@ -105,7 +101,14 @@ function CompactContext(props: CompactContextProps): JSX.Element {
   );
 }
 
-export function ContextContent({
+// A phone's sheet draws grouped cards, as Settings does; its page header already reads "Context window".
+export function ContextContent(props: ContextContentProps): JSX.Element {
+  if (phoneSheet) return <ContextSheetContent {...props} />;
+
+  return <ContextPopoverContent {...props} />;
+}
+
+function ContextPopoverContent({
   context,
   percent,
   close,

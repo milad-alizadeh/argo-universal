@@ -1,5 +1,5 @@
 import type { StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { manyFiles } from './changes-inspector.mocks';
@@ -8,7 +8,7 @@ import {
   fewSummary,
   fileHeader,
   largeFile,
-  picker,
+  expectComparison,
   testMeta,
   widths,
 } from './changes-inspector.test.mocks';
@@ -24,6 +24,19 @@ const expanded = 'aria-expanded';
 // The last added line of the recorded long file: the Inspector shows every line of a file's diff.
 const lastAddedLine = 'new value 60';
 
+async function expectLineTotals(
+  canvas: ReturnType<typeof within>,
+  width: number,
+): Promise<void> {
+  if (width === layoutWidths.wide) {
+    await expect(canvas.getByText('+65')).toBeVisible();
+    await expect(canvas.getByText('−64')).toBeVisible();
+  } else {
+    await expect(canvas.queryByText('+65')).toBeNull();
+    await expect(canvas.queryByText('−64')).toBeNull();
+  }
+}
+
 // The toolbar counts every file and its lines; a viewed file starts folded.
 export const ShowsFilesAndTotals: Story = {
   play: async ({ canvas }) => {
@@ -31,10 +44,9 @@ export const ShowsFilesAndTotals: Story = {
 
     for (const width of widths) {
       await settleViewport(width);
-      await expect(await picker(allChanges)).toBeVisible();
+      await expectComparison(allChanges, width);
       await expect(canvas.getByText(fewSummary)).toBeVisible();
-      await expect(canvas.getByText('+65')).toBeVisible();
-      await expect(canvas.getByText('−64')).toBeVisible();
+      await expectLineTotals(canvas, width);
       await expect(canvas.getByText(lastAddedLine)).toBeVisible();
       await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'true');
       await expect(fileHeader('/repo/src/feed.ts')).toHaveAttribute(
@@ -54,7 +66,6 @@ export const ManyFilesScroll: Story = {
     for (const width of widths) {
       await settleViewport(width);
       await expect(canvas.getByText('60 files · 0 viewed')).toBeVisible();
-      await expect(canvas.getByText('+60')).toBeVisible();
       const last = fileHeader('/repo/src/module-60/index.ts');
       last.scrollIntoView();
       await waitFor(() => expect(last).toBeVisible());
@@ -91,7 +102,7 @@ export const ExpandedKeepsTheChanges: Story = {
 
     for (const width of widths) {
       await settleViewport(width);
-      await expect(await picker(allChanges)).toBeVisible();
+      await expectComparison(allChanges, width);
       await expect(canvas.getByText(fewSummary)).toBeVisible();
       await expect(fileHeader(largeFile)).toBeVisible();
       await expect(

@@ -11,6 +11,8 @@ export type SheetProps = KitProps<'Sheet'> & {
   onClosed?: () => void;
   trigger?: ReactElement<Pick<PressableProps, 'disabled' | 'onPress'>>;
   bottomEdge?: boolean;
+  // A detached phone sheet, inset from the screen edges, as the Session's Git sheet.
+  floating?: boolean;
   contentScrolls?: boolean;
   footer?: ReactNode;
   // Pads composed content, such as a form or a Plugin's, with the standard sheet inset; lists and pages that draw their own margins leave it off.
@@ -21,7 +23,16 @@ export interface SheetPageProps {
   name: string;
   // Shown in the page's title row; a pushed page also gets a back button.
   title?: string;
+  // The page's one header action, at the trailing end of its title row.
+  action?: SheetPageAction;
   children: ReactNode;
+}
+
+// A text action in a page's header, such as Stop; destructive draws it in the danger colour.
+export interface SheetPageAction {
+  label: string;
+  onPress: () => void;
+  destructive?: boolean;
 }
 
 // A row that pushes another page of the same sheet.

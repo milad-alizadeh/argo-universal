@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import {
   SessionHeaderMenu,
+  type SessionHeaderProps,
   type SessionMenu,
   SessionMenuToolbar,
 } from '#features/sessions';
@@ -13,10 +14,28 @@ import {
   sessionPageTitle,
 } from './session-detail-view';
 
-const headerMenuOf = (
-  props: SessionDetailViewProps,
-): SessionMenu | undefined =>
-  props.state === 'open' ? props.header.menu : undefined;
+function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
+  if (props.state !== 'open') return undefined;
+
+  return withChanges(props.header);
+}
+
+function withChanges(header: SessionHeaderProps): SessionMenu | undefined {
+  if (!header.menu) return undefined;
+
+  return { ...header.menu, changes: menuChanges(header.changes) };
+}
+
+function menuChanges(
+  changes: SessionHeaderProps['changes'],
+): SessionMenu['changes'] {
+  if (!changes?.summary) return undefined;
+
+  return {
+    files: changes.summary.files,
+    onPress: () => changes.onOpenChange(true),
+  };
+}
 
 // The web's narrow header: the Session's title, and ⋯ as its trailing item. Native stack headers take only the title.
 export function sessionScreenHeader(

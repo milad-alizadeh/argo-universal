@@ -22,6 +22,7 @@ import {
 import type {
   SheetLinkProps,
   SheetNavigation,
+  SheetPageAction,
   SheetPageProps,
   SheetProps,
 } from './sheet-props';
@@ -35,6 +36,7 @@ export function SheetPage(props: SheetPageProps): ReactNode {
 export interface SheetPageEntry {
   name: string;
   title?: string;
+  action?: SheetPageAction;
   content: ReactNode;
   contentScrolls?: boolean;
   onExit?: () => void;
@@ -47,6 +49,7 @@ export function sheetPages(children: ReactNode): SheetPageEntry[] {
     .map((page) => ({
       name: page.props.name,
       title: page.props.title,
+      action: page.props.action,
       content: page.props.children,
     }));
 }

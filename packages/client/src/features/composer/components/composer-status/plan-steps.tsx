@@ -20,7 +20,7 @@ const spinnerProps = {
   colorClassName: 'accent-muted-foreground wide:accent-foreground',
 } as const;
 
-function StepIndicator({ entry }: { entry: PlanEntry }): JSX.Element {
+export function StepIndicator({ entry }: { entry: PlanEntry }): JSX.Element {
   if (entry.status === 'in_progress')
     return (
       <IconSpinner

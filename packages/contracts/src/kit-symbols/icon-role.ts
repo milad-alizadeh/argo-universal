@@ -1,7 +1,9 @@
-type IconPixels = 12 | 14 | 16 | 20 | 22 | 24;
+type IconPixels = 6 | 12 | 14 | 16 | 20 | 22 | 24;
 
 // Where an icon sits decides its size. Text is a step larger on the phone, so an icon beside text steps up with it.
 export const iconRoles = {
+  // Inside a small corner disc on a tile, such as an attachment's Remove.
+  badge: { wide: 6, phone: 6 },
   // Beside Body text.
   body: { wide: 16, phone: 20 },
   // Beside Secondary text.
@@ -10,6 +12,8 @@ export const iconRoles = {
   control: { wide: 16, phone: 16 },
   // A disclosure chevron after a label: steps up with the text beside it.
   chevron: { wide: 12, phone: 14 },
+  // Beside the fixed-size mono text in a file diff.
+  code: { wide: 12, phone: 12 },
   // A shape that fills its whole box, one step inside a control's slot.
   mark: { wide: 14, phone: 14 },
   // A list row's leading icon.

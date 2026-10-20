@@ -6,6 +6,7 @@ export {
   type SheetDetent,
   type SheetDestination,
   type SheetLinkProps,
+  type SheetPageAction,
   type SheetNavigation,
   type SheetPageProps,
   type SheetProps,

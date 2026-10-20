@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { materialArtworkScale } from './material-artwork-scale';
 import { NativeSymbolView } from './native-symbol-view';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 import { TablerSymbolPath } from './tabler-symbol-path';
@@ -15,7 +16,14 @@ export function SymbolGlyph({
     <NativeSymbolView
       {...props}
       name={{ android: symbol.material }}
+      glyphScale={materialScale({ symbol, ...props })}
       filled={symbol.filled}
     />
   );
+}
+
+function materialScale(props: SymbolGlyphProps): number {
+  return props.fitArtwork && props.symbol.kind === 'system'
+    ? materialArtworkScale(props.symbol.material)
+    : props.glyphScale;
 }

@@ -1,7 +1,10 @@
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { cn } from '#lib/generic/utils';
-import { CodeBlockHeader } from '#lib/product/markdown/code-block-header';
+import {
+  CodeBlockHeader,
+  codeBlockTray,
+} from '#lib/product/markdown/code-block-header';
 import { codeBlockGroup } from '#lib/product/markdown/copy-button';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
@@ -132,11 +135,7 @@ function DiffHeader(props: DiffViewState): React.JSX.Element {
 }
 
 const diffClassName = (inline: boolean): string =>
-  cn(
-    'min-w-0',
-    codeBlockGroup,
-    inline && 'overflow-hidden rounded-2xl bg-tint px-1 pb-1',
-  );
+  cn('min-w-0', codeBlockGroup, inline && codeBlockTray);
 
 function DiffFrame(
   props: DiffViewState & { children: ReactNode },
@@ -168,5 +167,7 @@ export function DiffView(props: DiffViewProps): React.JSX.Element {
 }
 
 function diffContentClass(inline: boolean | undefined): string | undefined {
-  return inline ? 'overflow-hidden rounded-xl bg-content' : undefined;
+  return inline
+    ? 'overflow-hidden rounded-xl bg-content'
+    : 'bg-card py-2 medium:bg-content medium:py-0';
 }
