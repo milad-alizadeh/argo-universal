@@ -21,7 +21,8 @@ import {
   type SheetStack,
 } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
-import { fillsHeight, SheetPages } from './sheet-stack.android';
+import { SheetPages } from './sheet-stack.android';
+import { sheetDetents } from './sheet-state';
 import { SheetTrigger } from './sheet-trigger';
 
 type SheetRef = RefObject<ModalBottomSheetRef | null>;
@@ -46,6 +47,7 @@ function SheetRoot(props: SheetProps): ReactElement {
   );
 }
 
+// A pushed page keeps the height the sheet is already at; only a drag takes it taller (owner, 2026-10-20).
 function SheetPresentation({
   sheetRef,
   ...props
@@ -72,7 +74,7 @@ function useModalProps(props: Omit<PresentationProps, 'sheetRef'>): ModalProps {
     contentColor: roles.onSurface,
     scrimColor: roles.scrim,
     onDismissRequest: props.stack.reports.dismissed,
-    skipPartiallyExpanded: !restsHalfOpen(props) || fillsHeight(props),
+    skipPartiallyExpanded: !restsHalfOpen(props),
     // ModalBottomSheet/index.d.ts: ignored when skipPartiallyExpanded, so only a half-open sheet opens full.
     initialFullyExpanded: props.initialDetent === 'large',
     ...dismissal(props.dismissible !== false),
@@ -80,12 +82,19 @@ function useModalProps(props: Omit<PresentationProps, 'sheetRef'>): ModalProps {
 }
 
 /*
- * Only a sheet that asks for the medium height stops half open on the way up. A sheet that names no
- * heights is as tall as its own content, and Material's medium is a fraction of the screen rather
- * than a measure of that content, so stopping there would cut off whatever runs past it.
+ * Only a sheet that rests at the medium height stops half open on the way up. A sheet with pages names
+ * no heights of its own, because its pages differ in height, and resting at medium is what keeps its
+ * root page from opening as tall as the window (owner, 2026-10-20).
  */
-function restsHalfOpen(props: Pick<PresentationProps, 'detents'>): boolean {
-  return props.detents?.includes('medium') === true;
+function restsHalfOpen(
+  props: Pick<PresentationProps, 'detents' | 'stack'>,
+): boolean {
+  const detents = sheetDetents({
+    detents: props.detents,
+    paged: props.stack.pages.length > 0,
+  });
+
+  return detents?.includes('medium') === true;
 }
 
 function dismissal(

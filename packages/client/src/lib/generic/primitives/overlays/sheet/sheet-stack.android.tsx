@@ -1,124 +1,39 @@
-import { HorizontalPager, Column, RNHostView } from '@expo/ui/jetpack-compose';
-import type { HorizontalPagerHandle } from '@expo/ui/jetpack-compose';
-import {
-  type ModifierConfig,
-  onGloballyPositioned,
-  fillMaxHeight,
-  fillMaxWidth,
-  weight,
-} from '@expo/ui/jetpack-compose/modifiers';
-import { useRef, type ReactElement, type ReactNode } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { RNHostView } from '@expo/ui/jetpack-compose';
+import type { ReactElement } from 'react';
+import { View, useWindowDimensions, type ViewStyle } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { cn } from '#lib/generic/utils';
+import { Spinner } from '#primitives/status/spinner';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { SheetBody } from './sheet-body';
-import { PageHeader } from './sheet-page-header.android';
-import {
-  usePageScroll,
-  useSheetPager,
-  type SheetPager,
-} from './sheet-pager.android';
+import { backLabel } from './sheet-page-label';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
+import { fillsHeight, sheetModifiers } from './sheet-sizing.android';
+import { useRetainedPages } from './sheet-slide-pages.android';
+import { useSettled, useSlide } from './sheet-slide.android';
+import { SheetTitleRow } from './sheet-title-row';
 
 type PagesProps = SheetProps & { stack: SheetStack };
 
-export function SheetPages(props: PagesProps): ReactElement {
-  const fill = fillsHeight(props);
+type FrameProps = PagesProps & { fill: boolean; width: number };
 
-  if (props.stack.pages.length === 0)
-    return (
-      <PageContent {...props} fill={fill}>
-        {props.children}
-      </PageContent>
-    );
-
-  return <StackPages {...props} fill={fill} />;
-}
-
-function StackPages(props: PagesProps & { fill: boolean }): ReactElement {
-  const ref = useRef<HorizontalPagerHandle>(null);
-  const pager = useSheetPager(props.stack, props.open);
-  usePageScroll(ref, props.stack.path.length, pager.ready);
-
-  return (
-    <HorizontalPager ref={ref} {...pagerProps(pager, props.fill)}>
-      {pagerPages(props, pager)}
-    </HorizontalPager>
-  );
-}
-
-// The pager sizes like its pages, so a lone root page is not centred in a full-height pager.
-function pagerProps(
-  pager: SheetPager,
-  fill: boolean,
-): Omit<React.ComponentProps<typeof HorizontalPager>, 'children'> {
-  return {
-    modifiers: sheetModifiers(fill),
-    userScrollEnabled: false,
-    beyondViewportPageCount: 1,
-    onSettledPageChange: pager.settled,
-  };
-}
-
-function pagerPages(
-  props: PagesProps & { fill: boolean },
-  pager: SheetPager,
-): ReactElement[] {
-  return pager.pages.map((page, index) => (
-    <StackPage
-      key={page.name}
-      {...props}
-      page={page}
-      root={index === 0}
-      onReady={() => pager.pageReady(index)}
-    />
-  ));
-}
+type PageProps = FrameProps & { page: SheetPageEntry; root: boolean };
 
 /*
- * A root page alone is as tall as its content, so the sheet wraps it and a footer under it stays in view;
- * once a second page is pushed the pages keep one sizing mode, filling a sheet Material owns the height of,
- * because a page sized to itself inside a sheet Material has already shortened is cut off with nothing to scroll.
+ * Compose holds the sheet and nothing else: the header, the pages and the slide between them are all React
+ * Native, so a page and its title move as one and a list inside a page scrolls as a list anywhere else does
+ * — there is no Compose scroller between the finger and the rows to hand the drag to (owner, 2026-10-20).
  */
-export function fillsHeight(props: PagesProps): boolean {
-  return props.stack.pages.length > 1 || props.detents?.join() === 'large';
-}
+export function SheetPages(props: PagesProps): ReactElement {
+  const fill = fillsHeight({
+    detents: props.detents,
+    paged: props.stack.pages.length > 0,
+  });
 
-function sheetModifiers(fill: boolean): ModifierConfig[] {
-  return fill ? [fillMaxWidth(), fillMaxHeight()] : [fillMaxWidth()];
-}
-
-type PageProps = PagesProps & {
-  page: SheetPageEntry;
-  fill: boolean;
-  root: boolean;
-  onReady: () => void;
-};
-
-function StackPage(props: PageProps): ReactElement {
   return (
-    <Column modifiers={pageModifiers(props)}>
-      <PageHeader {...props} />
-      <PageContent
-        {...props}
-        contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
-      >
-        {props.page.content}
-      </PageContent>
-    </Column>
-  );
-}
-
-// React Native content in the Compose sheet: as tall as itself, or filling a full-height sheet; a phone-sized sheet on a tablet too, so compact.
-function PageContent(
-  props: PagesProps & { fill: boolean; children: ReactNode },
-): ReactElement {
-  return (
-    <RNHostView
-      matchContents={!props.fill}
-      modifiers={props.fill ? [fillMaxWidth(), weight(1)] : [fillMaxWidth()]}
-    >
-      <SheetWideBody {...props} />
+    <RNHostView matchContents={!fill} modifiers={sheetModifiers(fill)}>
+      <SheetFrame {...props} fill={fill} />
     </RNHostView>
   );
 }
@@ -126,20 +41,117 @@ function PageContent(
 // Material's BottomSheetDefaults.SheetMaxWidth, in dp: a tablet's sheet stops at it and centres.
 const materialSheetMaxWidth = 640;
 
-function SheetWideBody(
-  props: PagesProps & { fill: boolean; children: ReactNode },
-): ReactElement {
+// A phone-sized sheet on a tablet too, so compact.
+function SheetFrame(props: PagesProps & { fill: boolean }): ReactElement {
   const width = Math.min(useWindowDimensions().width, materialSheetMaxWidth);
 
   return (
-    <View style={{ width }} className={props.fill ? 'flex-1' : undefined}>
+    <View style={{ width }} className={cn(props.fill && 'flex-1')}>
       <CompactScope>
-        <SheetBody {...props} />
+        <SheetPane {...props} width={width} />
       </CompactScope>
     </View>
   );
 }
 
-function pageModifiers(props: PageProps): ModifierConfig[] {
-  return [...sheetModifiers(props.fill), onGloballyPositioned(props.onReady)];
+function SheetPane(props: FrameProps): ReactElement {
+  if (props.stack.pages.length === 0)
+    return <SheetBody {...props}>{props.children}</SheetBody>;
+
+  return <SlidingPages {...props} />;
+}
+
+function SlidingPages(props: FrameProps): ReactElement {
+  const pages = useRetainedPages(props.stack, props.open);
+  const depth = Math.min(props.stack.path.length, pages.length - 1);
+  const slide = useSlide(depth, props.width);
+
+  return (
+    <View className={cn('overflow-hidden', props.fill && 'flex-1')}>
+      <Animated.View style={[rowStyle(props, pages.length), slide]}>
+        {slidePages(props, pages)}
+      </Animated.View>
+    </View>
+  );
+}
+
+function slidePages(
+  props: FrameProps,
+  pages: SheetPageEntry[],
+): ReactElement[] {
+  return pages.map((page, index) => (
+    <SlidePage {...props} key={page.name} page={page} root={index === 0} />
+  ));
+}
+
+/*
+ * The row is as wide as all its pages together and each page keeps its own width, because a child of a row
+ * that was told to fill would share the row's width with its siblings instead of holding a screen each.
+ */
+const rowStyle = (props: FrameProps, count: number): ViewStyle => ({
+  flexDirection: 'row',
+  width: props.width * count,
+  ...(props.fill && { flex: 1 }),
+});
+
+const pageStyle = (width: number): ViewStyle => ({ width, flexShrink: 0 });
+
+function SlidePage(props: PageProps): ReactElement {
+  return (
+    <View style={pageStyle(props.width)}>
+      <PageHeader {...props} />
+      <PageContent {...props} />
+    </View>
+  );
+}
+
+// A root page with no title of its own draws no header; a pushed page always does, for its way back.
+const hideHeader = (props: PageProps): boolean =>
+  props.root && !props.page.title;
+
+const pageBackLabel = (props: PageProps): string | undefined =>
+  props.root ? undefined : backLabel(props.stack);
+
+function PageHeader(props: PageProps): ReactElement | null {
+  if (hideHeader(props)) return null;
+
+  return (
+    <SheetTitleRow
+      title={props.page.title}
+      action={props.page.action}
+      backLabel={pageBackLabel(props)}
+      onBack={props.stack.navigation.back}
+    />
+  );
+}
+
+// A pushed page shows a spinner until it has settled, so the slide lands on a list that has measured itself.
+function PageContent(props: PageProps): ReactElement {
+  const settled = useSettled(props.root);
+
+  if (!settled) return <PageSpinner {...props} />;
+
+  return (
+    <SheetBody
+      {...props}
+      contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
+    >
+      {props.page.content}
+    </SheetBody>
+  );
+}
+
+const loadingLabel = 'Loading';
+
+function PageSpinner(props: Pick<PageProps, 'fill'>): ReactElement {
+  return (
+    <View
+      className={cn(
+        'items-center justify-center py-12',
+        props.fill && 'flex-1',
+      )}
+    >
+      <Spinner accessibilityLabel={loadingLabel} />
+    </View>
+  );
 }

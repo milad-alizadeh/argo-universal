@@ -4,6 +4,7 @@ import { type AgentsFilter, agentsPage } from '#features/agents';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { AgentListView } from './agent-list-view';
+import { agentsLoadingTitle } from './catalog';
 import {
   agentListArgs,
   catalog,
@@ -109,7 +110,7 @@ export const SearchEmptyUninstalled = empty(
   /No uninstalled Agents match/,
 );
 
-// Until the Server says which Agents are installed, the page shows the Registry's loading look.
+// Until the Server says which Agents are installed, the page stands in for its cards.
 export const WaitsForInstalledAgents: Story = {
   args: {
     agents: agentsPage(
@@ -118,7 +119,7 @@ export const WaitsForInstalledAgents: Story = {
     ),
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByLabelText('Loading Registry…')).toBeVisible();
+    await expect(canvas.getByText(agentsLoadingTitle)).toBeVisible();
   },
 };
 

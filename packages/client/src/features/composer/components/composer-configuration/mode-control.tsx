@@ -14,7 +14,6 @@ import {
   selection,
 } from './configuration-values';
 import { ModeContents } from './mode-choices';
-import { modeIcon } from './mode-icon';
 import type { Mode } from './mode-types';
 
 interface ModeControlProps {
@@ -51,10 +50,12 @@ const modeTriggerAppearance = {
   labelRole: { compact: 'row', wide: 'control' },
 } as const;
 
-// Wide, the icon, label and chevron; narrow, the icon alone. Full access reads red.
-function modeTrigger(
-  props: ModeControlProps & { wide: boolean },
-): React.JSX.Element {
+/*
+ * The mode's own name, at every width. ACP sends a mode as a value, a name and a description and nothing else, so
+ * there is no icon to draw for it: every Agent names its modes itself, and Argo cannot know their shapes
+ * (owner, 2026-10-20). Full access reads red.
+ */
+function modeTrigger(props: ModeControlProps): React.JSX.Element {
   const current = selectedChoice(props.configuration, 'mode');
 
   return (
@@ -62,9 +63,7 @@ function modeTrigger(
       {...modeTriggerAppearance}
       disabled={props.disabled}
       label={modeLabel(current)}
-      icon={modeIcon(current)}
       tone={isDangerous(current) ? 'danger' : 'muted'}
-      iconOnly={!props.wide}
     />
   );
 }
