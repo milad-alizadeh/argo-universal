@@ -30,10 +30,7 @@ type PageProps = FrameProps & {
  * — there is no Compose scroller between the finger and the rows to hand the drag to (owner, 2026-10-20).
  */
 export function SheetPages(props: PagesProps): ReactElement {
-  const fill = fillsHeight({
-    detents: props.detents,
-    paged: props.stack.pages.length > 0,
-  });
+  const fill = fillsHeight(props);
 
   return (
     <RNHostView matchContents={!fill} modifiers={sheetModifiers(fill)}>
