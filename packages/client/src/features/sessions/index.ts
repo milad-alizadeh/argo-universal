@@ -8,6 +8,15 @@ export { SubagentSheet } from './components/subagent-list/subagent-sheet';
 
 export { SessionHeaderBar } from './components/session-header-bar';
 
+export { sessionPanelLabels } from './components/session-panel-triggers';
+
+export {
+  type SessionPanel,
+  sessionPanelOrder,
+  type SessionPanels,
+  useSessionPanels,
+} from './stores/session-panels';
+
 export {
   SessionsHeader,
   searchSessionsLabel,

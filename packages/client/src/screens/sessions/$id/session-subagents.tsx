@@ -1,6 +1,7 @@
-import { createElement, useState, type JSX } from 'react';
+import { createElement, type JSX } from 'react';
 import type { ComposerProps } from '#features/composer';
 import { SubagentSheet, type SubagentListProps } from '#features/sessions';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 
 type SheetProps = {
   subagents: SubagentListProps | undefined;
@@ -69,16 +70,16 @@ function SessionSubagentSheet({
 export function useSessionSubagents(
   composer: ComposerProps,
   subagents: SubagentListProps | undefined,
+  sheetProps: Pick<SheetProps, 'open' | 'onOpenChange'>,
 ): SubagentPresentation {
-  const [open, onOpenChange] = useState(false);
-  const show = (): void => onOpenChange(true);
+  const show = (): void => sheetProps.onOpenChange(true);
 
   return {
     composer: composerWithSubagents(composer, subagents, show),
-    sheet: createElement(SessionSubagentSheet, {
-      subagents,
-      open,
-      onOpenChange,
-    }),
+    sheet: (
+      <SizeClass only="compact">
+        <SessionSubagentSheet subagents={subagents} {...sheetProps} />
+      </SizeClass>
+    ),
   };
 }

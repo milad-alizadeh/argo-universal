@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { type ReactNode, useState } from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { SessionHeader } from '#features/sessions';
+import { SessionHeader, useSessionPanels } from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
 import { Inspector } from '#primitives/scaffolds/inspector';
 import { LayoutListMock } from '../components/layout-list.mocks';
@@ -12,7 +12,7 @@ import { Scaffold } from '../scaffold/scaffold';
 import { useFrameState } from './frame';
 import { FrameInspectorHost, ScreenInspector } from './frame-inspector';
 
-const expanded = 'aria-expanded';
+const expanded = 'aria-pressed';
 
 // The Frame's own sidebar and Inspector state around a page, as the App's Frame holds them.
 function FrameStatePage({
@@ -38,9 +38,12 @@ function FrameStatePage({
   );
 }
 
+const changesOnly = ['changes'] as const;
+
 // A Session page's header, whose Changes button holds its Changes Inspector open.
 function SessionPage({ title }: { title: string }): React.JSX.Element {
-  const [open, onOpenChange] = useState(false);
+  const panels = useSessionPanels(changesOnly);
+  const open = panels.state.tabs.length > 0;
 
   return (
     <>
@@ -48,9 +51,17 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
         title={title}
         status="idle"
         startedAt={null}
-        changes={{ open, onOpenChange }}
+        panels={{
+          ...panels.state,
+          offered: changesOnly,
+          onToggle: panels.toggle,
+        }}
       />
-      <Inspector title="Changes" open={open} onOpenChange={onOpenChange}>
+      <Inspector
+        title="Changes"
+        open={open}
+        onOpenChange={() => panels.closeAll()}
+      >
         {null}
       </Inspector>
     </>

@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { createElement, useState } from 'react';
 import { View } from 'react-native';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
@@ -15,7 +14,8 @@ import {
   sessionOpenFailedTitle,
   SessionHeader,
   type SessionHeaderProps,
-  type SubagentListProps,
+  type SessionPanels,
+  useSessionPanels,
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
@@ -25,14 +25,17 @@ import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { Inspector } from '#primitives/scaffolds/inspector';
+import {
+  offeredSessionPanels,
+  SessionInspector,
+  type SessionInspectorContent,
+} from './session-inspector';
 import { useSessionSubagents } from './session-subagents';
 
-export interface OpenSessionViewProps {
+export interface OpenSessionViewProps extends SessionInspectorContent {
   header: SessionHeaderProps;
   feed: FeedProps;
   composer: ComposerProps;
-  subagents?: SubagentListProps;
   // Files dropped on the Session's pane attach to the draft.
   onDropFiles: (dropped: DroppedFiles) => void;
   elicitation?: ElicitationFormProps;
@@ -77,28 +80,54 @@ export function SessionDetailView(
   return <Screen edges={['bottom']}>{null}</Screen>;
 }
 
-// The header's Changes button opens the Changes Inspector beside the Session.
+// The header's triggers open Subagents, Shells and Changes as tabs in the Inspector beside the Session.
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
-  const [open, onOpenChange] = useState(false);
-  const subagents = useSessionSubagents(props.composer, props.subagents);
-  const changes = { open, onOpenChange };
+  const panels = useSessionPanels(offeredSessionPanels(props));
+
+  const subagents = useSubagentPanel(props, panels);
 
   return (
     <>
       <SessionLayout
-        {...sessionParts({ ...props, composer: subagents.composer }, changes)}
+        {...sessionParts({ ...props, composer: subagents.composer }, panels)}
       />
-      {createElement(Inspector, { title: 'Changes', ...changes })}
+      <SessionInspector {...props} panels={panels} />
       {subagents.sheet}
     </>
   );
 }
 
+const subagentPanel =
+  (panels: SessionPanels): ((open: boolean) => void) =>
+  (open) =>
+    open ? panels.select('subagents') : panels.close('subagents');
+
+const useSubagentPanel = (
+  props: OpenSessionViewProps,
+  panels: SessionPanels,
+): ReturnType<typeof useSessionSubagents> =>
+  useSessionSubagents(props.composer, props.subagents, {
+    open: panels.state.shown === 'subagents',
+    onOpenChange: subagentPanel(panels),
+  });
+
+const headerPanels = (
+  props: OpenSessionViewProps,
+  panels: SessionPanels,
+): SessionHeaderProps['panels'] => ({
+  offered: offeredSessionPanels(props),
+  shown: panels.state.shown,
+  onToggle: (panel) =>
+    panel === 'changes' ? panels.toggle(panel) : panels.select(panel),
+});
+
 const sessionParts = (
   props: OpenSessionViewProps,
-  changes: SessionHeaderProps['changes'],
+  panels: SessionPanels,
 ): React.ComponentProps<typeof SessionLayout> => ({
-  header: <SessionHeader {...props.header} changes={changes} />,
+  header: (
+    <SessionHeader {...props.header} panels={headerPanels(props, panels)} />
+  ),
   feed: <Feed {...props.feed} />,
   composer: sessionBottom(props),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,

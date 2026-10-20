@@ -6,6 +6,7 @@ import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import type { InspectorProps } from './inspector-props';
+import { InspectorTabs } from './inspector-tabs';
 
 export type InspectorPaneProps = InspectorProps & {
   // Only the wide column expands over the detail; a sheet rests where it is.
@@ -95,10 +96,22 @@ function InspectorTitle(props: { title: string }): ReactElement {
   );
 }
 
+// Tabs take the title's place; the column's controls stay outside their scroll.
+function InspectorHeading(props: InspectorPaneProps): ReactElement {
+  if (props.tabs) return <InspectorTabs tabs={props.tabs} />;
+
+  return <InspectorTitle title={props.title} />;
+}
+
 function InspectorHeader(props: InspectorPaneProps): ReactElement {
   return (
-    <View className="mt-frame-inset h-frame-control flex-row items-center gap-1 pl-4 pr-2.5">
-      <InspectorTitle title={props.title} />
+    <View
+      className={cn(
+        'mt-frame-inset h-frame-control flex-row items-center gap-1 pr-2.5',
+        props.tabs ? 'pl-3' : 'pl-4',
+      )}
+    >
+      <InspectorHeading {...props} />
       <InspectorActions>{props.actions}</InspectorActions>
       <ExpandButton {...props} />
       <CloseButton {...props} />
