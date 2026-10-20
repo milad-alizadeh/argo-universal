@@ -25,6 +25,22 @@ describe('withOccurrenceKeys', () => {
     ).toEqual(['a', 'a#2', 'a#3']);
   });
 
+  /*
+   * A fence's syntax spans repeat one short run of text thousands of times over. Probing from the
+   * first number each time squares that; this finishes in milliseconds and times out if it ever
+   * goes back to squaring.
+   */
+  it('keys a long run of one repeated item', () => {
+    const keys = withOccurrenceKeys(
+      Array.from({ length: 20_000 }, () => 'a'),
+      (item) => item,
+    ).map(({ key }) => key);
+
+    expect(new Set(keys).size).toBe(20_000);
+    expect(keys.at(0)).toBe('a');
+    expect(keys.at(-1)).toBe('a#20000');
+  });
+
   it('keeps a key when an item is added after it', () => {
     const before = withOccurrenceKeys(['a', 'a'], (item) => item);
     const after = withOccurrenceKeys(['a', 'a', 'b'], (item) => item);

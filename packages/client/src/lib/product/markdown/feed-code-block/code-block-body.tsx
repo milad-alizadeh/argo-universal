@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
@@ -29,6 +30,10 @@ function codeContent(code: string, language: string | undefined): ReactNode {
 }
 
 function CodeText(props: CodeTextProps): React.JSX.Element {
+  const { code, language } = props;
+  // Tokenising is the one costly part of drawing a fence, and a streaming row renders many times over.
+  const content = useMemo(() => codeContent(code, language), [code, language]);
+
   return (
     <Text
       selectable
@@ -36,7 +41,7 @@ function CodeText(props: CodeTextProps): React.JSX.Element {
       testID="code-text"
       className={cn(markdownBlockClassNames.codeText, props.textClassName)}
     >
-      {codeContent(props.code, props.language)}
+      {content}
     </Text>
   );
 }

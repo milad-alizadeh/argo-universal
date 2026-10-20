@@ -20,6 +20,13 @@ import 'prismjs/components/prism-yaml.js';
 import 'prismjs/components/prism-markdown.js';
 import 'prismjs/components/prism-sql.js';
 
+/*
+ * On web the core finds a document and schedules `highlightAll()` on the next frame, which would
+ * rewrite any `<code class="language-*">` on the page. The callback reads this flag when it fires,
+ * so setting it here, before the frame, is enough. Native never reaches that branch.
+ */
+Prism.manual = true;
+
 // Tags and file extensions Agents write that Prism has no alias of its own for.
 const extraAliases = new Map([
   ['cjs', 'javascript'],
