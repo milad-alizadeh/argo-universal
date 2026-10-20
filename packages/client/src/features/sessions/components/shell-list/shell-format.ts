@@ -23,8 +23,7 @@ const stopped: ShellOutcome = {
 const lost: ShellOutcome = { label: 'Lost', tone: 'warning', icon: 'warning' };
 
 function exited(exitCode: number | null): ShellOutcome {
-  if (exitCode === null)
-    return { label: 'Exited', tone: 'muted', icon: 'check' };
+  if (exitCode === null) return { label: 'Exited', tone: 'muted' };
 
   return exitCode === 0
     ? { label: 'Exit 0', tone: 'muted', icon: 'check' }

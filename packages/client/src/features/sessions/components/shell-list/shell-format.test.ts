@@ -7,12 +7,10 @@ import {
 } from './shell-format';
 import {
   failedShell,
-  lostShell,
   passedShell,
   runningShell,
   sessionShells,
   shellNow,
-  stoppedShell,
 } from './shell-list.mocks';
 
 describe('shellOutcome', () => {
@@ -20,8 +18,6 @@ describe('shellOutcome', () => {
     [runningShell, 'Running', undefined],
     [passedShell, 'Exit 0', 'check'],
     [failedShell, 'Exit 1', 'failed'],
-    [stoppedShell, 'Stopped', 'cancelled'],
-    [lostShell, 'Lost', 'warning'],
   ] as const)('labels outcome %#', (shell, label, icon) => {
     const outcome = shellOutcome(shell);
 

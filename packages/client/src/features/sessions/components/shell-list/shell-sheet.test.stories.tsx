@@ -2,12 +2,7 @@ import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import {
-  failedOutput,
-  failedShell,
-  longRunningOutput,
-  runningShell,
-} from './shell-list.mocks';
+import { runningShell } from './shell-list.mocks';
 import sheetMeta from './shell-sheet.stories';
 
 const meta = {
@@ -46,31 +41,47 @@ export const ListsTheSessionsShells: Story = {
   },
 };
 
-// A running Shell's page is titled by its command and offers Stop.
-export const RunningShellOffersStop: Story = {
-  args: { output: longRunningOutput },
+const openShell = async (
+  command: string,
+  userEvent: { click: (element: Element) => Promise<void> },
+): Promise<void> => {
+  await settleViewport(layoutWidths.phone);
+  await userEvent.click(await shellRow(command));
+};
+
+// Opening a row names the Shell, so the caller can load its output.
+export const OpeningAShellNamesIt: Story = {
   play: async ({ args, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
-    await userEvent.click(await shellRow('pnpm dev'));
+    await openShell('pnpm dev', userEvent);
     await expect(args.onSelect).toHaveBeenCalledWith(runningShell);
+  },
+};
+
+// A Shell's page is titled by its command and shows its output.
+export const ShellPageShowsItsOutput: Story = {
+  play: async ({ userEvent }) => {
+    await openShell('pnpm dev', userEvent);
     await expect(
       await screen.findByRole('heading', { name: 'pnpm dev' }),
     ).toBeVisible();
     await expect(
       await screen.findByText('ready on localhost:8081', { exact: false }),
     ).toBeVisible();
-    await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
+  },
+};
+
+export const RunningShellOffersStop: Story = {
+  play: async ({ args, userEvent }) => {
+    await openShell('pnpm dev', userEvent);
+    await userEvent.click(await screen.findByRole('button', { name: 'Stop' }));
     await expect(args.onStop).toHaveBeenCalledWith(runningShell);
   },
 };
 
 // An exited Shell's page shows what was dropped and how it ended, and offers no Stop.
 export const ExitedShellShowsHowItEnded: Story = {
-  args: { output: failedOutput },
-  play: async ({ args, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
-    await userEvent.click(await shellRow('pnpm storybook'));
-    await expect(args.onSelect).toHaveBeenCalledWith(failedShell);
+  play: async ({ userEvent }) => {
+    await openShell('pnpm storybook', userEvent);
     await expect(
       await screen.findByText('312 earlier lines not kept'),
     ).toBeVisible();

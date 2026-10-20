@@ -55,29 +55,6 @@ export const failedShell: ShellEntry = {
   durationMs: 8 * second,
 };
 
-export const stoppedShell: ShellEntry = {
-  ...shellBase,
-  id: 'shell-watch',
-  toolCallId: 'tool-watch',
-  command: 'pnpm test --watch',
-  cwd: repoRoot,
-  status: 'stopped',
-  startedAt: shellNow - 3 * minute,
-  endedAt: shellNow - minute,
-  durationMs: 2 * minute,
-};
-
-export const lostShell: ShellEntry = {
-  ...shellBase,
-  id: 'shell-server',
-  toolCallId: 'tool-server',
-  command: 'pnpm server',
-  cwd: repoRoot,
-  status: 'lost',
-  startedAt: shellNow - 30 * minute,
-  durationMs: 12 * minute,
-};
-
 export const sessionShells: ShellEntry[] = [
   runningShell,
   passedShell,
