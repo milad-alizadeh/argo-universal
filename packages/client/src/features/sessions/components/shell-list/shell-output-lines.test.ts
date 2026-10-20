@@ -61,4 +61,18 @@ describe('shellOutputLines', () => {
       [{ text: 'next' }],
     ]);
   });
+
+  it('keeps a colour set before a carriage return for the redrawn text', () => {
+    expect(shellOutputLines(`${escape}[31mERR\rretry`)).toEqual([
+      [{ text: 'retry', tone: 'danger' }],
+    ]);
+  });
+
+  it('skips the arguments of 256-colour and RGB codes', () => {
+    expect(
+      shellOutputLines(
+        `${escape}[38;5;32mpick${escape}[0;48;2;31;32;33;31mred`,
+      ),
+    ).toEqual([[{ text: 'pick' }, { text: 'red', tone: 'danger' }]]);
+  });
 });

@@ -82,11 +82,43 @@ function applyCode(pen: Pen, code: number): Pen {
   return colour ? { ...pen, colour } : pen;
 }
 
+// 38 and 48 pick a 256-colour (`;5;n`) or RGB (`;2;r;g;b`) foreground or background, whose arguments are not codes of their own.
+const extendedForeground = 38;
+
+const extendedBackground = 48;
+
+const extendedColours = new Set([extendedForeground, extendedBackground]);
+
+const palette = { mode: 5, arguments: 1 };
+
+const rgb = { mode: 2, arguments: 3 };
+
+const argumentsByMode = new Map(
+  [palette, rgb].map((form) => [form.mode, form.arguments]),
+);
+
+// The code and its mode come before the mode's arguments.
+const leadingCodes = 2;
+
+const extendedLength = (mode = 0): number =>
+  leadingCodes + (argumentsByMode.get(mode) ?? 0);
+
+// Codes Argo draws: extended colours have no tone and drop out with their arguments.
+function plainCodes(codes: number[]): number[] {
+  const at = codes.findIndex((code) => extendedColours.has(code));
+
+  if (at === -1) return codes;
+
+  const rest = codes.slice(at + extendedLength(codes[at + 1]));
+
+  return [...codes.slice(0, at), ...plainCodes(rest)];
+}
+
 // An empty SGR resets, as `ESC[m` does.
 function applyGraphics(pen: Pen, parameters: string): Pen {
   const codes = parameters === '' ? [0] : parameters.split(';').map(Number);
 
-  return codes.reduce(applyCode, pen);
+  return plainCodes(codes).reduce(applyCode, pen);
 }
 
 type Writer = { pen: Pen; spans: ShellSpan[] };
@@ -120,7 +152,7 @@ function drawLine(writer: Writer, line: string): void {
 function redrawnLine(writer: Writer, line: string): ShellLine {
   const text = line.endsWith('\r') ? line.slice(0, -1) : line;
   const shown = text.lastIndexOf('\r') + 1;
-  drawLine({ ...writer, spans: [] }, text.slice(0, shown));
+  drawLine(writer, text.slice(0, shown));
   writer.spans = [];
   drawLine(writer, text.slice(shown));
 
