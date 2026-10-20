@@ -41,6 +41,14 @@ describe('withOccurrenceKeys', () => {
     expect(keys.at(-1)).toBe('a#20000');
   });
 
+  it('skips a number already taken when the repeat comes later', () => {
+    expect(
+      withOccurrenceKeys(['a#2', 'a', 'a'], (item) => item).map(
+        ({ key }) => key,
+      ),
+    ).toEqual(['a#2', 'a', 'a#3']);
+  });
+
   it('keeps a key when an item is added after it', () => {
     const before = withOccurrenceKeys(['a', 'a'], (item) => item);
     const after = withOccurrenceKeys(['a', 'a', 'b'], (item) => item);

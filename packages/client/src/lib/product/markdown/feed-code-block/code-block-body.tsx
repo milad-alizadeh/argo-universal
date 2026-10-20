@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
-import { useMemo } from 'react';
 import type * as React from 'react';
+import { useMemo } from 'react';
 import { View } from 'react-native';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
-import { codeSpanText } from '../../../generic/code-text/code-span';
+import { syntaxRunsText } from '../../../generic/code-text/syntax-run';
 import { ScrollFadeView } from '../../../generic/scroll-fade/scroll-fade';
-import { codeSpans } from './code-highlight/code-spans';
+import { syntaxRuns } from './code-highlight/syntax-runs';
 
 interface CodeBlockBodyProps {
   code?: string;
@@ -22,17 +22,18 @@ interface CodeTextProps {
   textClassName?: string;
 }
 
-// Coloured runs where the language is known, the code as it stands where it is not.
-function codeContent(code: string, language: string | undefined): ReactNode {
-  const spans = codeSpans(code, language);
+/*
+ * Coloured runs where the language is known, the code as it stands where it is not. Tokenising is
+ * the one costly part of drawing a fence, and a streaming row renders many times over.
+ */
+function useCodeContent(code: string, language?: string): ReactNode {
+  const runs = useMemo(() => syntaxRuns(code, language), [code, language]);
 
-  return spans === undefined ? code : codeSpanText(spans);
+  return runs === undefined ? code : syntaxRunsText(runs);
 }
 
 function CodeText(props: CodeTextProps): React.JSX.Element {
-  const { code, language } = props;
-  // Tokenising is the one costly part of drawing a fence, and a streaming row renders many times over.
-  const content = useMemo(() => codeContent(code, language), [code, language]);
+  const content = useCodeContent(props.code, props.language);
 
   return (
     <Text
@@ -91,13 +92,15 @@ function CodeDescription({
 }
 
 // Code scrolls in both directions; a resource without text shows its description instead.
-export function CodeBlockBody(
-  props: CodeBlockBodyProps,
-): React.JSX.Element | null {
-  const { code } = props;
+export function CodeBlockBody({
+  code,
+  description,
+  language,
+  textClassName,
+}: CodeBlockBodyProps): React.JSX.Element | null {
+  if (code === undefined) return <CodeDescription description={description} />;
 
-  if (code === undefined)
-    return <CodeDescription description={props.description} />;
-
-  return <CodeScroll {...props} code={code} />;
+  return (
+    <CodeScroll code={code} language={language} textClassName={textClassName} />
+  );
 }

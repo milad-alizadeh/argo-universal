@@ -1,23 +1,23 @@
 import type { Token, TokenStream } from 'prismjs';
-import {
-  type CodeSpan,
-  type SyntaxType,
-} from '../../../../generic/code-text/code-span';
+import type {
+  SyntaxRun,
+  SyntaxType,
+} from '../../../../generic/code-text/syntax-run';
 import { grammarFor, tokenize } from './grammars';
-import { syntaxTypeFor } from './syntax-types';
+import { syntaxTypeFor } from './prism-token-types';
 
 /*
  * Past this the block is already scrolling inside its own box and nobody reads the far end, while
- * the span count is what a virtualised Feed row has to lay out. Longer code draws plain.
+ * the run count is what a virtualised Feed row has to lay out. Longer code draws plain.
  */
 const maxHighlightedLength = 20_000;
 
-// Neighbours of one colour join, so a run of plain code is one span rather than one per token.
-function addSpan(spans: CodeSpan[], text: string, type?: SyntaxType): void {
-  const last = spans.at(-1);
+// Neighbours of one colour join, so a stretch of plain code is one run rather than one per token.
+function addRun(runs: SyntaxRun[], text: string, type?: SyntaxType): void {
+  const last = runs.at(-1);
 
   if (last && last.type === type) last.text += text;
-  else spans.push({ text, type });
+  else runs.push({ text, type });
 }
 
 const tokenType = (
@@ -32,39 +32,39 @@ const tokenType = (
 function addStream(
   stream: TokenStream,
   inherited: SyntaxType | undefined,
-  spans: CodeSpan[],
+  runs: SyntaxRun[],
 ): void {
-  if (typeof stream === 'string') return addSpan(spans, stream, inherited);
+  if (typeof stream === 'string') return addRun(runs, stream, inherited);
 
-  if (Array.isArray(stream)) return addEach(stream, inherited, spans);
+  if (Array.isArray(stream)) return addEach(stream, inherited, runs);
 
-  addStream(stream.content, tokenType(stream, inherited), spans);
+  addStream(stream.content, tokenType(stream, inherited), runs);
 }
 
 function addEach(
   stream: TokenStream[],
   inherited: SyntaxType | undefined,
-  spans: CodeSpan[],
+  runs: SyntaxRun[],
 ): void {
-  for (const item of stream) addStream(item, inherited, spans);
+  for (const item of stream) addStream(item, inherited, runs);
 }
 
 /*
  * The code split into coloured runs, or nothing when it draws plain: an unknown language, or a
  * block too long to be worth colouring. Synchronous, so a Feed row never reflows to pick colours up.
  */
-export function codeSpans(
+export function syntaxRuns(
   code: string,
   language: string | undefined,
-): CodeSpan[] | undefined {
+): SyntaxRun[] | undefined {
   const grammar = grammarFor(language);
 
   if (grammar === undefined || code.length > maxHighlightedLength)
     return undefined;
 
-  const spans: CodeSpan[] = [];
+  const runs: SyntaxRun[] = [];
 
-  addStream(tokenize(code, grammar), undefined, spans);
+  addStream(tokenize(code, grammar), undefined, runs);
 
-  return spans;
+  return runs;
 }

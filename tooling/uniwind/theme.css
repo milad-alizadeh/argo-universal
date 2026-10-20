@@ -361,8 +361,9 @@
       --color-tint: color-mix(in oklab, var(--color-black) 4%, transparent);
       /* Code colours, as the Foundations "Components / Code" master draws them.
          Everything else in a fence, punctuation included, stays foreground;
-         comments are also italic. Shared by Feed fences, tool output, inline
-         diffs and the Inspector. */
+         comments are also italic. One set for every place code is drawn:
+         Markdown fences, tool output, and the diff hunks the Feed shows inline
+         and the Inspector shows under a file header. */
       --color-syntax-keyword: var(--color-rose-600);
       --color-syntax-function: var(--color-violet-600);
       --color-syntax-string: var(--color-sky-900);

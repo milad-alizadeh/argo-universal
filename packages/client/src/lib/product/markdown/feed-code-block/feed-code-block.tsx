@@ -32,7 +32,7 @@ function SourceHeader(props: FeedCodeBlockProps): ReactElement {
 
   return (
     <CodeBlockHeader
-      title={headerTitle(props, props.language, props.title)}
+      title={headerTitle(props)}
       copyValue={copy.value}
       copyLabel={copy.label}
       resource={props.resource}

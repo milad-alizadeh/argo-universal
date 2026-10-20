@@ -43,16 +43,25 @@ const extraAliases = new Map([
  */
 const plainLanguages = new Set(['plain', 'plaintext', 'text', 'txt']);
 
+/*
+ * `Prism.languages` also holds its own helpers — `extend`, `insertBefore`, `DFS` — and every name
+ * on Object's prototype answers to a lookup. A grammar is a plain object; anything else is not one.
+ */
+const aliased = (name: string): string => extraAliases.get(name) ?? name;
+
 function namedGrammar(name: string): Prism.Grammar | undefined {
   if (plainLanguages.has(name)) return undefined;
 
-  return Prism.languages[extraAliases.get(name) ?? name];
+  const grammar = Prism.languages[aliased(name)];
+
+  return typeof grammar === 'object' ? grammar : undefined;
 }
 
 /*
  * A block names its language either as a tag or as the file the code came from, the same pair
- * `languageIcon` reads for the header icon. Casing never matters: `TS`, `ts` and `typescript`
- * all reach one grammar, and `Button.TSX` reaches the same one as `button.tsx`.
+ * `languageIcon` reads for the header icon. Casing never matters: `TS`, `ts` and `typescript` all
+ * reach one grammar. The whole name is tried first, so a tag that happens to hold a dot keeps its
+ * own grammar, and only then the last extension, which is what turns `Button.test.tsx` into `tsx`.
  */
 export function grammarFor(
   language: string | undefined,
@@ -61,10 +70,9 @@ export function grammarFor(
 
   const name = language.toLowerCase();
 
-  return namedGrammar(name.includes('.') ? extensionOf(name) : name);
+  return namedGrammar(name) ?? namedGrammar(extensionOf(name));
 }
 
-// `code-block-body.test.tsx` is TSX, so the grammar follows the last extension, not the first.
 const extensionOf = (fileName: string): string =>
   fileName.slice(fileName.lastIndexOf('.') + 1);
 
