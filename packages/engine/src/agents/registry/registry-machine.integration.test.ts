@@ -1,9 +1,7 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
 import { startSettledRegistryHost } from '#mocks/registry-host';
-import { requestRegistry } from './registry-machine';
-
-const hourMs = 3_600_000;
+import { hourMs, requestRegistry } from './registry-machine';
 
 const publishedFetch = (): ReturnType<typeof vi.fn<() => Promise<string>>> =>
   vi.fn<() => Promise<string>>(async () => JSON.stringify(publishedRegistry));
@@ -80,6 +78,9 @@ it('refetches on a launch check an hour after the last attempt', async () => {
     fetchAgents,
   });
 
+  now = hourMs - 1;
+  await requestRegistry(actor, 'STALE');
+  expect(fetchAgents).toHaveBeenCalledTimes(1);
   now = hourMs;
   await requestRegistry(actor, 'STALE');
   expect(fetchAgents).toHaveBeenCalledTimes(2);

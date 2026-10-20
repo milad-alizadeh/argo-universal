@@ -5,7 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { type AnyActorRef, createActor, setup } from 'xstate';
 import { z } from 'zod';
-import { engineProcess, type EngineProcessInput } from './engine-process';
+import {
+  defaultKillTimeoutMs,
+  engineProcess,
+  type EngineProcessInput,
+} from './engine-process';
 
 const entry = fileURLToPath(
   new URL('../../mocks/engine-fixture.ts', import.meta.url),
@@ -25,7 +29,7 @@ let folder: string;
 
 let events: { type: string }[];
 
-let killTimeoutMs = 25_000;
+let killTimeoutMs = defaultKillTimeoutMs;
 
 type StoppableActor = { stop: () => void };
 
@@ -80,7 +84,7 @@ const outcomes = (): string[] =>
 beforeEach((): void => {
   folder = mkdtempSync(join(tmpdir(), 'argo-engine-process-'));
   events = [];
-  killTimeoutMs = 25_000;
+  killTimeoutMs = defaultKillTimeoutMs;
   vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
   vi.stubEnv('ARGO_HOME', folder);
 });

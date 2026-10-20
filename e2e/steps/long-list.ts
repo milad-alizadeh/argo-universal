@@ -11,6 +11,8 @@ const titlePrefix = 'Long list Session';
 
 const indexWidth = 3;
 
+const SessionPage = z.object({ nextCursor: z.string().nullable() });
+
 const Projects = z.array(z.object({ id: z.string() }));
 
 function title(index: number): string {
@@ -68,26 +70,39 @@ async function startSession(
   expect(response.ok()).toBe(true);
 }
 
-async function seedSessions(
-  page: Page,
-  httpUrl: string,
-  count: number,
-): Promise<void> {
+// True once the Sessions list no longer fits on its first page.
+async function hasSecondPage(page: Page, httpUrl: string): Promise<boolean> {
+  const { nextCursor } = await query({
+    page,
+    httpUrl,
+    procedure: 'session.list',
+    input: {},
+    output: SessionPage,
+  });
+
+  return nextCursor !== null;
+}
+
+async function seedSessions(page: Page, httpUrl: string): Promise<void> {
   const projectId = await firstProjectId(page, httpUrl);
   const { id: agent } = await readAgent(page, httpUrl, 1);
 
-  for (let index = 1; index <= count; index += 1)
+  let index = 1;
+
+  while (!(await hasSecondPage(page, httpUrl))) {
     await startSession(page, httpUrl, {
       projectId,
       agent,
       title: title(index),
     });
+    index += 1;
+  }
 }
 
 Given(
-  '{int} long-list Sessions',
-  async ({ page, server }, count: number): Promise<void> => {
-    await seedSessions(page, server.httpUrl, count);
+  'more long-list Sessions than fit one page',
+  async ({ page, server }): Promise<void> => {
+    await seedSessions(page, server.httpUrl);
     await reloadApp(page);
   },
 );

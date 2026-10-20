@@ -9,7 +9,7 @@ import {
 } from '#mocks/acp-session-model';
 import type { AcpSessionLease } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
-import { sessionMachine } from './session-machine';
+import { checkoutLimit, sessionMachine } from './session-machine';
 import { sessionActorId } from './session-system';
 
 const feedFlushDelayEvent =
@@ -76,8 +76,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           ) {
             expect(step.state.status).toBe('done');
             expect(step.state.output).toEqual({
-              failure:
-                'Checkout creation exceeded checkoutLimit (10000 ms). Retry the Session.',
+              failure: `Checkout creation exceeded checkoutLimit (${checkoutLimit} ms). Retry the Session.`,
             });
           }
 

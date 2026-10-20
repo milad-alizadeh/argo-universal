@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type FakeLink, fakeLink, offlineDelayMs } from './connection.mocks.ts';
+import { offlineDelayMs, retryDelayMs } from './connection';
+import { type FakeLink, fakeLink } from './connection.mocks.ts';
 
 let link: FakeLink;
 
@@ -42,7 +43,7 @@ describe('A waiting Connection attempt', () => {
     await allowedAfter(0);
     const second = attempt();
 
-    await vi.advanceTimersByTimeAsync(999);
+    await vi.advanceTimersByTimeAsync(retryDelayMs(1) - 1);
     expect(second.allowed()).toBe(false);
     await vi.advanceTimersByTimeAsync(1);
     expect(second.allowed()).toBe(true);
@@ -52,14 +53,24 @@ describe('A waiting Connection attempt', () => {
     link.open();
     link.lose();
 
-    for (const waitMs of [500, 1000, 2000, 4000]) await allowedAfter(waitMs);
-    const fifth = attempt();
-    await vi.advanceTimersByTimeAsync(offlineDelayMs - 7500);
+    let elapsed = 0;
+    let index = 0;
+
+    while (elapsed + retryDelayMs(index) < offlineDelayMs) {
+      await allowedAfter(retryDelayMs(index));
+      elapsed += retryDelayMs(index);
+      index += 1;
+    }
+
+    const waiting = attempt();
+    await vi.advanceTimersByTimeAsync(offlineDelayMs - elapsed);
 
     expect(link.connection.state()).toBe('offline');
-    expect(fifth.allowed()).toBe(false);
-    await vi.advanceTimersByTimeAsync(8000 - (offlineDelayMs - 7500));
-    expect(fifth.allowed()).toBe(true);
+    expect(waiting.allowed()).toBe(false);
+    await vi.advanceTimersByTimeAsync(
+      retryDelayMs(index) - (offlineDelayMs - elapsed),
+    );
+    expect(waiting.allowed()).toBe(true);
   });
 
   it('goes at once when another attempt is asked for', async () => {

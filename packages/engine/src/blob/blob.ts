@@ -18,7 +18,7 @@ import {
 } from '../storage';
 import { BlobMetadataUpsertJob } from './blob-storage';
 
-const unusedBlobAge = 86_400_000;
+export const unusedBlobAge = 86_400_000;
 
 export const blobsFolderIn = (home: string): string => join(home, 'blobs');
 

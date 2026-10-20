@@ -2,8 +2,7 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { startSettledRegistryHost } from '#mocks/registry-host';
-
-const fetchTimeoutMs = 30_000;
+import { fetchTimeoutMs } from './fetch-agents';
 
 const offlineMessage = 'Registry offline';
 

@@ -10,8 +10,7 @@ import {
   scratch,
 } from '#mocks/probe-plugin';
 import { pluginLog, refusal, refusedLines, runProbe } from '#mocks/probe-run';
-
-const mebibyte = 1_048_576;
+import { argoLimitBytes } from '../plugins/services/plugin-limits';
 
 const outsideReason = 'outside';
 
@@ -23,7 +22,7 @@ it('reads a registered Project and reads, writes, lists and stats the data folde
   const project = await registeredProject();
 
   await writeFile(join(project, 'notes.md'), 'project notes');
-  await writeFile(join(project, 'big.txt'), 'x'.repeat(mebibyte + 1));
+  await writeFile(join(project, 'big.txt'), 'x'.repeat(argoLimitBytes + 1));
 
   const { results, log, data } = await runProbe({
     calls: {
@@ -33,7 +32,7 @@ it('reads a registered Project and reads, writes, lists and stats the data folde
       stat: `argo.fs.stat('$DATA/nested/a.txt')`,
       project: `argo.fs.read(${JSON.stringify(join(project, 'notes.md'))})`,
       over: `argo.fs.read(${JSON.stringify(join(project, 'big.txt'))})`,
-      tooBig: `argo.fs.write('$DATA/huge.txt', 'x'.repeat(${mebibyte + 1}))`,
+      tooBig: `argo.fs.write('$DATA/huge.txt', 'x'.repeat(${argoLimitBytes + 1}))`,
     },
   });
 

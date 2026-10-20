@@ -11,9 +11,9 @@ export type ConnectionState =
 // Reconnecting turns to offline after this long without the WebSocket.
 export const offlineDelayMs = 10_000;
 
-const retryDelayBaseMs = 500;
+export const retryDelayBaseMs = 500;
 
-const retryDelayCapMs = 30_000;
+export const retryDelayCapMs = 30_000;
 
 // createWSClient's `retryDelayMs` shape; the attempt gate waits it, so foreground and Try again can cut it short.
 export const retryDelayMs = (attemptIndex: number): number =>

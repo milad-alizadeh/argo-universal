@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
 import { PluginManifest } from '@repo/contracts/plugins';
+import { svgCharacterLimit } from '@repo/contracts/plugins/wire-limits';
 import { expect, it, onTestFinished } from 'vitest';
 
 const fixtureDirectory = fileURLToPath(
@@ -98,7 +99,7 @@ it.each([
   },
   {
     name: 'character cap',
-    xml: `<svg>${' '.repeat(131_072)}</svg>`,
+    xml: `<svg>${' '.repeat(svgCharacterLimit)}</svg>`,
     reason: 'character cap exceeded',
   },
 ])(

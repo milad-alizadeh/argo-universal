@@ -41,6 +41,8 @@ interface SessionListRowsEvent {
   rows: SessionListState;
 }
 
+export const listRefreshDelay = 100;
+
 export const sessionListMachine = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
@@ -55,7 +57,7 @@ export const sessionListMachine = setup({
         new SessionListSources(input, sendBack).start(),
     ),
   },
-  delays: { listRefreshDelay: 100 },
+  delays: { listRefreshDelay },
   actions: {
     rememberDirty: assign(
       ({ context, event }): Pick<SessionListContext, 'dirty'> => {

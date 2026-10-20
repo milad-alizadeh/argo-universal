@@ -2,8 +2,7 @@ import type { PluginCapability } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
 import { registeredProject } from '#mocks/probe-plugin';
 import { refusal, refusedLines, runProbe } from '#mocks/probe-run';
-
-const mebibyte = 1_048_576;
+import { argoLimitBytes } from '../plugins/services/plugin-limits';
 
 const exec = 'process:exec';
 
@@ -40,7 +39,7 @@ it('runs a declared command by argv with no shell, in the data folder by default
         truncated: false,
       },
     },
-    loud: { value: { truncated: true, stdout: mebibyte } },
+    loud: { value: { truncated: true, stdout: argoLimitBytes } },
     slow: { value: { timedOut: true } },
     missing: { error: expect.stringContaining('ENOENT') },
     here: { value: { stdout: `${data}\n` } },

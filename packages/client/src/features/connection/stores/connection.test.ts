@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Connection } from './connection';
-import { type FakeLink, fakeLink, offlineDelayMs } from './connection.mocks.ts';
+import {
+  type Connection,
+  offlineDelayMs,
+  retryDelayBaseMs,
+  retryDelayCapMs,
+} from './connection';
+import { type FakeLink, fakeLink } from './connection.mocks.ts';
 
 let link: FakeLink;
 
@@ -101,21 +106,27 @@ describe('Connection state', () => {
   });
 });
 
+const capSteps = retryDelayCapMs / retryDelayBaseMs;
+
 describe('Connection attempts', () => {
   it('allows the first attempt at once', async () => {
     expect(await waitForAllowedAttempt()).toBe(0);
   });
 
-  it('doubles the retry delay from 0.5 seconds to a 30-second cap', async () => {
+  it('doubles the retry delay from its base up to its cap', async () => {
     loseOpenConnection();
     const waits: number[] = [];
 
-    for (let attempt = 0; attempt < 9; attempt++)
+    for (let attempt = 0; 2 ** attempt <= 8 * capSteps; attempt++)
       waits.push(await waitForAllowedAttempt());
 
-    expect(waits).toEqual([
-      500, 1000, 2000, 4000, 8000, 16_000, 30_000, 30_000, 30_000,
-    ]);
+    expect(waits[0]).toBe(retryDelayBaseMs);
+    expect(waits.slice(1)).toEqual(
+      waits
+        .map((previous) => Math.min(previous * 2, retryDelayCapMs))
+        .slice(0, -1),
+    );
+    expect(waits.at(-1)).toBe(retryDelayCapMs);
   });
 
   it('starts the retry delay over after the Connection opens', async () => {
@@ -124,7 +135,7 @@ describe('Connection attempts', () => {
     for (let attempt = 0; attempt < 4; attempt++) await waitForAllowedAttempt();
     loseOpenConnection();
 
-    expect(await waitForAllowedAttempt()).toBe(500);
+    expect(await waitForAllowedAttempt()).toBe(retryDelayBaseMs);
   });
 
   it('allows a waiting attempt at once when the App comes to the foreground', async () => {

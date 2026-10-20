@@ -5,6 +5,8 @@ export const pluginMessageBytes = 1_048_576;
 
 export const pluginPageBytes = 1_047_552;
 
+export const svgCharacterLimit = 131_072;
+
 // Foundations / Text / Secondary, inside the existing PluginPage content surface.
 export const pluginPageFallback: WireNode = {
   type: 'Text',

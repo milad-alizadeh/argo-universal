@@ -98,6 +98,12 @@ type EngineEvent =
       error: unknown;
     };
 
+export const httpCloseLimit = 5000;
+
+export const sessionStopLimit = 10000;
+
+export const writerDrainLimit = 5000;
+
 export const engineSetup = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
@@ -153,9 +159,9 @@ export const engineSetup = setup({
   guards: { hasFailure: ({ context }): boolean => context.failure !== null },
   delays: {
     heartbeatInterval: 1000,
-    httpCloseLimit: 5000,
-    sessionStopLimit: 10000,
-    writerDrainLimit: 5000,
+    httpCloseLimit,
+    sessionStopLimit,
+    writerDrainLimit,
   },
 });
 

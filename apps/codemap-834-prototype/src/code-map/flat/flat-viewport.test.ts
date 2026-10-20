@@ -1,12 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import type { Bounds, Tile } from '../model';
-import { runCamera, type ScreenPoint } from '../viewport/viewport';
-import { createFlatViewport, type FlatViewport } from './flat-viewport';
+import { runCamera, type ScreenPoint, zoomLimits } from '../viewport/viewport';
+import {
+  createFlatViewport,
+  type FlatViewport,
+  flatFitMargin,
+} from './flat-viewport';
 
-// The extent grows to 115 × 100 units for its fit margins, so 1150 × 1000 px fits it at 10 px per unit.
 const extent: Bounds = { x: 0, y: 0, w: 100, h: 80 };
 
 const size = { width: 1150, height: 1000 };
+
+// Fit scales the extent plus its margins into the viewport and centres it.
+const fitScale = Math.min(
+  size.width / (extent.w * flatFitMargin.x),
+  size.height / (extent.h * flatFitMargin.y),
+);
+
+const fitOrigin = {
+  x: (size.width - extent.w * fitScale) / 2,
+  y: (size.height - extent.h * fitScale) / 2,
+};
 
 function tile(id: string, bounds: Bounds): Tile {
   const file = { id, path: id, area: 1, height: 1, branches: 0, tone: 'none' };
@@ -27,8 +41,14 @@ describe('flat viewport', () => {
   it('starts with the extent centred and fitted to the viewport', () => {
     const flat = viewport();
 
-    expect(flat.toScreen({ x: 0, y: 0 })).toEqual({ x: 75, y: 100 });
-    expect(flat.toScreen({ x: 100, y: 80 })).toEqual({ x: 1075, y: 900 });
+    expect(flat.toScreen({ x: 0, y: 0 })).toEqual({
+      x: fitOrigin.x,
+      y: fitOrigin.y,
+    });
+    expect(flat.toScreen({ x: 100, y: 80 })).toEqual({
+      x: fitOrigin.x + extent.w * fitScale,
+      y: fitOrigin.y + extent.h * fitScale,
+    });
   });
 
   it('returns to fit after the camera moved', () => {
@@ -37,7 +57,10 @@ describe('flat viewport', () => {
     runCamera(flat, 'in');
     runCamera(flat, 'fit');
 
-    expect(flat.toScreen({ x: 0, y: 0 })).toEqual({ x: 75, y: 100 });
+    expect(flat.toScreen({ x: 0, y: 0 })).toEqual({
+      x: fitOrigin.x,
+      y: fitOrigin.y,
+    });
   });
 
   const poses: [string, (flat: FlatViewport) => void][] = [
@@ -66,16 +89,16 @@ describe('flat viewport', () => {
   });
 
   it.each([
-    ['in', 120],
-    ['out', 2],
+    ['in', zoomLimits.max],
+    ['out', zoomLimits.min],
   ] as const)(
-    'clamps repeated zoom %s buttons to %i px per map unit',
-    (action, pixels) => {
+    'clamps repeated zoom %s buttons to the zoom limit %d',
+    (action, limit) => {
       const flat = viewport();
 
       for (let press = 0; press < 30; press += 1) runCamera(flat, action);
 
-      expect(unitWidth(flat)).toBeCloseTo(pixels);
+      expect(unitWidth(flat)).toBeCloseTo(fitScale * limit);
     },
   );
 });

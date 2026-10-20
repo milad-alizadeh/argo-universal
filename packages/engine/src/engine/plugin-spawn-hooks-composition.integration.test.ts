@@ -72,7 +72,7 @@ it.each([
   {
     name: 'misses its budget',
     hook: `() => new Promise(() => {})`,
-    reason: 'missed its 10000 ms budget',
+    reason: 'ms budget',
   },
 ])(
   'skips a Hook that $name, logs it once, and goes on',

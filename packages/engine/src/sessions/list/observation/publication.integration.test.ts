@@ -1,7 +1,7 @@
 import { afterAll, expect, it } from 'vitest';
 import { createActor, fromCallback, SimulatedClock } from 'xstate';
 import { openSessionListModel } from '#mocks/session-list-model';
-import { sessionListMachine } from './machine';
+import { listRefreshDelay, sessionListMachine } from './machine';
 
 const refreshListEvent = 'list.refresh';
 
@@ -32,7 +32,7 @@ it('ends a subscription with the projection error when the stored data cannot be
   actor.stop();
 });
 
-it('publishes once after 100 ms even when fifty refreshes arrive while pending', (): void => {
+it('publishes once after the refresh delay even when fifty refreshes arrive while pending', (): void => {
   const clock = new SimulatedClock();
   let reads = 0;
   let publications = 0;
@@ -54,7 +54,7 @@ it('publishes once after 100 ms even when fifty refreshes arrive while pending',
 
   for (let index = 0; index < 50; index++)
     actor.send({ type: refreshListEvent });
-  clock.increment(99);
+  clock.increment(listRefreshDelay - 1);
   expect([reads, publications]).toEqual([1, 1]);
   actor.send({ type: refreshListEvent });
   clock.increment(1);
