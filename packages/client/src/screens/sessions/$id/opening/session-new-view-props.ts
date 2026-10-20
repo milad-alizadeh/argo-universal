@@ -2,8 +2,8 @@ import type { AgentServer } from '@repo/contracts';
 import {
   type ChosenSettings,
   chooseAnotherProject,
-  openProblem,
-} from '#features/sessions';
+} from '#features/new-session';
+import { openProblem } from '#features/sessions';
 import type {
   SessionNewViewProps,
   ReadySessionNewViewProps,

@@ -1,6 +1,6 @@
 import { useResubscribeOnReconnect } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
-import { useSessionOptions } from '#features/sessions';
+import { useSessionOptions } from '#features/new-session';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 

@@ -2,12 +2,12 @@ import type { AgentServer, ProjectsListOutput } from '@repo/contracts';
 import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { serverSilentMessage } from '#features/new-session';
 import {
   type SessionsLoadState,
   type SessionsView,
   SessionsLoading,
 } from '#features/session-list';
-import { serverSilentMessage } from '#features/sessions';
 import { Screen } from '#lib/product/screen/screen';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { SizeClass } from '../../lib/generic/size-class/size-class';

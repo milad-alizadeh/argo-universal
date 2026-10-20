@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
-import type { OpenAttempt } from '#features/sessions';
+import type { OpenAttempt } from '#features/new-session';
 
 interface Retry {
   attempt: OpenAttempt;

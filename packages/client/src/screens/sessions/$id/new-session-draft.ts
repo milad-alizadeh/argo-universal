@@ -1,5 +1,5 @@
 import type { ComposerDraft, ComposerProps } from '#features/composer';
-import { type StartingFeed } from '#features/sessions';
+import { type StartingFeed } from '#features/new-session';
 
 type ComposerDraftProps = Pick<
   ComposerProps,

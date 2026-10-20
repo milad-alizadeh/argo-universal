@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { useConnection, useTRPCClient } from '#features/connection';
-import type { EmptySessionPorts } from '#features/sessions';
+import type { EmptySessionPorts } from '#features/new-session';
 
 // The store keeps its ports; Composer supplies the current Project draft operation.
 function useCurrentDraftClear(clearDraft: () => void): () => void {

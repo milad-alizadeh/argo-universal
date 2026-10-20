@@ -4,21 +4,23 @@ import { useResubscribeOnReconnect } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
   type OpenAttempt,
+  pastSessionDropToast,
+  type SessionProblem,
+  type SessionProblemSources,
+  sessionProblem,
+} from '#features/new-session';
+import { useConnectionDropped } from '#features/new-session';
+import {
   type PastSessionAnswers,
   type PastSessionSignIn,
   pastSessionCallout,
-  pastSessionDropToast,
   pastSessionSignIn,
   runAfterSignIn,
   type SessionAuthSubject,
   type SessionCalloutProps,
   type SessionCallouts,
-  type SessionProblem,
-  type SessionProblemSources,
-  sessionProblem,
   type SignInEffects,
   type TurnSignInRecord,
-  useConnectionDropped,
   useSessionAuth,
   useTurnSignIn,
 } from '#features/sessions';

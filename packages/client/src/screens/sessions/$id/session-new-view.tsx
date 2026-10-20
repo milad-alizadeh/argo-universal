@@ -7,13 +7,13 @@ import {
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
+import { type StartingFeed } from '#features/new-session';
+import { serverSilentMessage } from '#features/new-session';
 import {
   type SessionCalloutProps,
   SessionHeaderBar,
-  type StartingFeed,
   TerminalSignIn,
   type TerminalSignInProps,
-  serverSilentMessage,
 } from '#features/sessions';
 import { useContentWide } from '#lib/product/content-layout';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';

@@ -3,15 +3,17 @@ import { View } from 'react-native';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
 import {
+  serverSilentMessage,
+  sessionOpenFailedTitle,
+} from '#features/new-session';
+import {
   ElicitationSheet,
   type ElicitationFormProps,
 } from '#features/requests';
 import { ArchivedBanner } from '#features/session-list';
 import {
-  serverSilentMessage,
   SessionCallout,
   type SessionCalloutProps,
-  sessionOpenFailedTitle,
   SessionHeader,
   type SessionHeaderProps,
   type SessionPanels,

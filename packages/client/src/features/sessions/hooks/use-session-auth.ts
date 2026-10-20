@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { useConnectionDropped } from '#features/new-session';
 import type {
   AuthCalloutProps,
   SessionCalloutProps,
@@ -16,7 +17,6 @@ import type {
 } from '../types/session-callout';
 import { finishedSignIn } from '../utils/session-auth';
 import { type SignInRead, unreadSignIn } from '../utils/sign-in-read';
-import { useConnectionDropped } from './use-connection-dropped';
 import {
   inputOf,
   type SignInActions,
