@@ -18,22 +18,8 @@ export interface FrameMotion {
   timing: FrameTiming;
 }
 
-const paneTiming: FrameTiming = {
-  duration: motionDuration.framePane,
+// Every Frame change, the sidebar and the Inspector alike, runs this one motion, so the content squeezes at the pace the panes push it.
+export const frameTiming: FrameTiming = {
+  duration: motionDuration.frame,
   curve: easingCurve.decelerate,
 };
-
-const sidebarTimings = {
-  expand: { duration: motionDuration.expand, curve: easingCurve.easeOut },
-  collapse: { duration: motionDuration.collapse, curve: easingCurve.easeOut },
-} satisfies Record<string, FrameTiming>;
-
-// Collapsing the sidebar takes the shorter exit and expanding it the longer enter; any other Frame change, such as the Inspector, keeps the pane motion.
-export function frameTiming(
-  sidebarShownBefore: boolean,
-  sidebarShown: boolean,
-): FrameTiming {
-  if (sidebarShownBefore === sidebarShown) return paneTiming;
-
-  return sidebarShown ? sidebarTimings.expand : sidebarTimings.collapse;
-}
