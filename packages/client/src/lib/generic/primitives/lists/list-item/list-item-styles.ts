@@ -160,6 +160,19 @@ const separatorDrawing = (
     : separatorDrawings.native;
 };
 
+/*
+ * A selected row's tint is the same tile its hover draws, so selecting and hovering a card's row agree.
+ */
+export function selectionTint(drawing: ItemDrawing): string {
+  return cn(
+    'absolute inset-0 bg-selected',
+    webCardRow(drawing) && 'inset-1 rounded-xl',
+  );
+}
+
+const webCardRow = (drawing: ItemDrawing): boolean =>
+  Platform.OS === 'web' && drawing.appearance === 'grouped' && !tiled(drawing);
+
 export function itemSeparator(
   drawing: ItemDrawing,
   leading: boolean,

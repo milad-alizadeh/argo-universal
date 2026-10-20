@@ -1,5 +1,6 @@
 // Desktop and web: an ARIA multi-select listbox, drawn as Picker's Select rows with a leading check.
 import { createElement, type KeyboardEvent, type ReactElement } from 'react';
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { IconSlot } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { SelectedCheck } from '#primitives/status/selected-check';
@@ -70,6 +71,7 @@ const optionAttributes = (
   tabIndex: state.disabled ? -1 : 0,
   className: cn(
     'flex cursor-default flex-row items-center gap-2 rounded-xl px-2 py-1.5 outline-none hover:bg-hover focus-visible:bg-hover active:bg-pressed',
+    tintTransitionClassName,
     state.disabled && 'pointer-events-none opacity-50',
   ),
 });

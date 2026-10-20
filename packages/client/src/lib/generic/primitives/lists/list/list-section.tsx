@@ -13,7 +13,7 @@ import { ListContext, listPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { useSectionDrawing } from '../../../list-section-drawing';
 import { createRowGroupEnds } from '../../../row-group-ends';
-import { PressedRowProvider } from '../../../row-highlights';
+import { RowHighlightProvider } from '../../../row-highlights';
 import type { ListSectionProps } from './list-props';
 import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
@@ -87,9 +87,9 @@ function SectionBody(props: ListSectionProps & { id: string }): ReactElement {
 
   return (
     <FooterProvider value={footer}>
-      <PressedRowProvider>
+      <RowHighlightProvider>
         <Rows {...props} />
-      </PressedRowProvider>
+      </RowHighlightProvider>
     </FooterProvider>
   );
 }
