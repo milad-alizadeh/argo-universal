@@ -72,19 +72,22 @@ const feedListProps = {
 
 type RenderEntry = (entry: FeedEntry, index: number) => React.JSX.Element;
 
+// What a row needs to draw itself: its content and the motion it reports.
+type RowDrawing = EntryDrawing & RowMotion;
+
 function useRenderEntry(
   entries: FeedEntry[],
-  { imageUrl, now, onMotionChange, onGrow }: EntryDrawing & RowMotion,
+  { imageUrl, now, onOpenSubagent, onMotionChange, onGrow }: RowDrawing,
 ): RenderEntry {
   return useCallback(
     (item: FeedEntry, index: number) => (
       <FeedRow
         entry={item}
         next={entries[index + 1]}
-        {...{ imageUrl, now, onMotionChange, onGrow }}
+        {...{ imageUrl, now, onOpenSubagent, onMotionChange, onGrow }}
       />
     ),
-    [entries, imageUrl, now, onMotionChange, onGrow],
+    [entries, imageUrl, now, onOpenSubagent, onMotionChange, onGrow],
   );
 }
 

@@ -6,7 +6,7 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { ListContext, listPosition } from '../../../list-context';
-import { PressedRowProvider } from '../../../row-highlights';
+import { RowHighlightProvider } from '../../../row-highlights';
 import { trayCardClassName, trayClassName } from '../../../tray-surface';
 import { GridRow, type GridProps } from './table-grid-row';
 import { TableHeader } from './table-header';
@@ -43,7 +43,7 @@ function GridRows(props: GridProps): ReactNode {
   const list = use(ListContext);
 
   return (
-    <PressedRowProvider>
+    <RowHighlightProvider>
       {props.rows.map((row, index) => (
         <ListContext
           key={row.key}
@@ -52,6 +52,6 @@ function GridRows(props: GridProps): ReactNode {
           <GridRow {...props} row={row} />
         </ListContext>
       ))}
-    </PressedRowProvider>
+    </RowHighlightProvider>
   );
 }

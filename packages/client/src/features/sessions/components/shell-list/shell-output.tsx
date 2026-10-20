@@ -40,6 +40,13 @@ function useOutputLines(text: string | undefined): OutputLine[] {
   return useMemo(() => shellOutputLines(text ?? '').map(keyedLine), [text]);
 }
 
+// Output loaded for another Shell is not yet this one's.
+const ownOutput = ({
+  output,
+  shell,
+}: ShellOutputProps): ShellOutputText | undefined =>
+  output?.shellId === shell.id ? output : undefined;
+
 const drawnSpan = (span: KeyedSpan): JSX.Element => (
   <Text key={span.key} role="secondary-code" tone={span.tone}>
     {span.text}
@@ -106,7 +113,7 @@ function OutputLines({ list, lines, ...props }: LinesProps): JSX.Element {
       {...outputListProps}
       accessibilityLabel={`${props.shell.command} output`}
       items={lines}
-      header={<DroppedLines count={props.output?.droppedLines} />}
+      header={<DroppedLines count={ownOutput(props)?.droppedLines} />}
       endContent={<ExitLine shell={props.shell} now={now} />}
     />
   );
@@ -115,7 +122,7 @@ function OutputLines({ list, lines, ...props }: LinesProps): JSX.Element {
 // A Shell's output as its terminal coloured it, following the end while the reader stays there.
 export function ShellOutput(props: ShellOutputProps): JSX.Element {
   const list = useRef<LegendListRef>(null);
-  const lines = useOutputLines(props.output?.text);
+  const lines = useOutputLines(ownOutput(props)?.text);
 
   return (
     <View className="flex-1">

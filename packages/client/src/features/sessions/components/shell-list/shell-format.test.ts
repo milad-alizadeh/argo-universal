@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
   shellElapsed,
+  shellEnding,
+  shellHeading,
   shellOutcome,
+  shellPassed,
   shellsSummary,
   shellSupporting,
 } from './shell-format';
 import {
   failedShell,
+  lostShell,
+  noCodeShell,
   passedShell,
   runningShell,
   sessionShells,
   shellNow,
+  stoppedShell,
 } from './shell-list.mocks';
 
 describe('shellOutcome', () => {
@@ -18,6 +24,9 @@ describe('shellOutcome', () => {
     [runningShell, 'Running', undefined],
     [passedShell, 'Exit 0', 'check'],
     [failedShell, 'Exit 1', 'failed'],
+    [stoppedShell, 'Stopped', 'cancelled'],
+    [noCodeShell, 'Exited', undefined],
+    [lostShell, 'Lost', 'warning'],
   ] as const)('labels outcome %#', (shell, label, icon) => {
     const outcome = shellOutcome(shell);
 
@@ -59,5 +68,35 @@ describe('shellsSummary', () => {
   it('counts the running Shells and all of them', () => {
     expect(shellsSummary(sessionShells)).toBe('1 running · 3 in this Session');
     expect(shellsSummary([passedShell])).toBe('1 in this Session');
+  });
+});
+
+describe('shellHeading', () => {
+  it('counts a running Shell up and names how an ended one ended', () => {
+    expect(shellHeading(runningShell, shellNow).label).toBe('Running · 4m 12s');
+    expect(shellHeading(failedShell, shellNow).label).toBe('Exited');
+    expect(shellHeading(stoppedShell, shellNow).label).toBe('Stopped');
+    expect(shellHeading(lostShell, shellNow).label).toBe('Lost');
+  });
+
+  it('reads a failed exit in danger and a lost Shell as a warning', () => {
+    expect(shellHeading(failedShell, shellNow).tone).toBe('danger');
+    expect(shellHeading(lostShell, shellNow).tone).toBe('warning');
+    expect(shellHeading(noCodeShell, shellNow).tone).toBe('muted');
+  });
+});
+
+describe('shellEnding', () => {
+  it('times an ended Shell but says what became of a lost one', () => {
+    expect(shellEnding(stoppedShell, shellNow)).toBe('after 2m 14s');
+    expect(shellEnding(lostShell, shellNow)).toBe('when the Server restarted');
+  });
+});
+
+describe('shellPassed', () => {
+  it('holds only for an exit of zero', () => {
+    expect(
+      [passedShell, failedShell, noCodeShell, lostShell].map(shellPassed),
+    ).toEqual([true, false, false, false]);
   });
 });

@@ -1,10 +1,10 @@
 import { type ReactElement, type ComponentProps } from 'react';
 import { Platform, Pressable } from 'react-native';
 import { usePressRipple } from '#primitives/native/material-palette';
-import { usePressedRowHandlers } from '../../../row-highlights';
+import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
 import { linkPress } from './list-item-link-press';
-import { usePressClass } from './list-item-press-class';
+import { interactive, usePressClass } from './list-item-press-class';
 import type { ListItemProps } from './list-item-props';
 import { RadioRow } from './list-item-radio';
 import { ItemContentSlots } from './list-item-slots';
@@ -74,16 +74,19 @@ function usePressProps(props: DrawingProps): RowPressProps {
     android_ripple: usePressRipple(),
     testID: props.testID,
     ...triggerProps(props),
-    ...usePressedRowHandlers(),
+    ...useRowHighlightHandlers(hoverHandlers(props), interactive(props)),
     className: usePressClass(props),
   };
+}
+
+// The row's own hover handlers; the highlight keeps them and marks the row around them.
+function hoverHandlers(props: DrawingProps): RowPressProps {
+  return { onHoverIn: props.onHoverIn, onHoverOut: props.onHoverOut };
 }
 
 function triggerProps(props: DrawingProps): RowPressProps {
   return {
     onPointerDown: props.onPointerDown,
-    onHoverIn: props.onHoverIn,
-    onHoverOut: props.onHoverOut,
     ref: props.ref,
     href: props.href,
     'aria-haspopup': props['aria-haspopup'],

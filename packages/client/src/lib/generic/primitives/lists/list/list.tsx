@@ -2,7 +2,7 @@ import { useContext, useId, useMemo, type ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { ListContext } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
-import { PressedRowProvider } from '../../../row-highlights';
+import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { childEntries, menuEntries, type ListChild } from './list-children';
@@ -57,13 +57,13 @@ const fill = { flex: 1, minWidth: '100%' } as const;
 // Its fades blend into the surface behind the list: a popover's card, else the page.
 function DataList<Item>(props: ListProps<Item>): ReactElement {
   return (
-    <PressedRowProvider>
+    <RowHighlightProvider>
       <ScrollFadeList
         surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
         style={fill}
         {...useDataListProps(props)}
       />
-    </PressedRowProvider>
+    </RowHighlightProvider>
   );
 }
 

@@ -1,3 +1,4 @@
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 import type { LiquidGlassProps } from '#primitives/content/liquid-glass';
 import { paddingClass } from '#primitives/layout/spacing';
@@ -50,6 +51,7 @@ export function pressClass({ kind, padding = 0, fill }: SurfaceProps): string {
   return cn(
     fill && 'flex-1',
     'overflow-hidden web:hover:bg-hover web:active:bg-pressed ios:active:bg-pressed',
+    tintTransitionClassName,
     treatments[kind].radius,
     paddingClass[padding],
   );

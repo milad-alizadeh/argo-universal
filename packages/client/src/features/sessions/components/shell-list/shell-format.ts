@@ -55,6 +55,10 @@ export function shellSupporting(shell: ShellEntry): string {
   return shell.lastLine ?? shell.cwd;
 }
 
+// Whether any of the Session's Shells is still printing: its clock ticks and its count reads live.
+export const shellsRunning = (shells: Shell[]): boolean =>
+  shells.some((shell) => shell.status === 'running');
+
 // The list's heading: "1 running · 3 in this Session".
 export function shellsSummary(shells: Shell[]): string {
   const count = shells.filter((shell) => shell.status === 'running').length;
@@ -62,3 +66,44 @@ export function shellsSummary(shells: Shell[]): string {
 
   return count > 0 ? `${count} running · ${total}` : total;
 }
+
+// The word for how the Shell stands, as its output's header says it: "Exited", never the exit code.
+const statusWords = {
+  running: 'Running',
+  exited: 'Exited',
+  stopped: 'Stopped',
+  lost: 'Lost',
+} satisfies Record<Shell['status'], string>;
+
+// The output header's status: a running Shell leads with a live dot and its time so far.
+export interface ShellHeading {
+  label: string;
+  tone: Tone;
+  running: boolean;
+}
+
+export function shellHeading(shell: Shell, now: number): ShellHeading {
+  if (shell.status === 'running')
+    return {
+      label: `Running · ${shellElapsed(shell, now)}`,
+      tone: 'muted',
+      running: true,
+    };
+
+  return {
+    label: statusWords[shell.status],
+    tone: shellOutcome(shell).tone,
+    running: false,
+  };
+}
+
+// A lost Shell has no run to time: its footer says what became of it instead.
+export function shellEnding(shell: Shell, now: number): string {
+  if (shell.status === 'lost') return 'when the Server restarted';
+
+  return `after ${shellElapsed(shell, now)}`;
+}
+
+// A Shell that exited cleanly has nothing left to read: the wide list mutes its command.
+export const shellPassed = (shell: Shell): boolean =>
+  shell.status === 'exited' && shell.exitCode === 0;
