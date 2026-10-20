@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import type { FeedViewItem } from '../../view/feed-view';
-import { isDrawnFeedItem } from '../feed-item';
+import { isDrawnFeedItem } from '../drawn-feed-item';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
@@ -28,6 +28,8 @@ export interface FeedProps {
   checkoutBranch?: string;
   // Fixes the live header's clock, for stories and tests.
   now?: number;
+  // Opens a Subagent row's Feed, where the Session offers one.
+  onOpenSubagent?: (subagentSessionId: string) => void;
   // Whether the reader can see the Feed's end; an empty Feed always shows it.
   onAtEndChange?: (atEnd: boolean) => void;
 }

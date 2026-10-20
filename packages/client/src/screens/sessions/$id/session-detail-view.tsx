@@ -90,7 +90,7 @@ function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
   return (
     <>
       <SessionLayout
-        {...sessionParts({ ...props, composer: subagents.composer }, panels)}
+        {...sessionParts({ ...props, ...subagents.parts }, panels)}
       />
       <SessionInspector {...props} panels={panels} />
       {subagents.sheet}
@@ -107,7 +107,7 @@ const useSubagentPanel = (
   props: OpenSessionViewProps,
   panels: SessionPanels,
 ): ReturnType<typeof useSessionSubagents> =>
-  useSessionSubagents(props.composer, props.subagents, {
+  useSessionSubagents(props, props.subagents, {
     open: panels.state.shown === 'subagents',
     onOpenChange: subagentPanel(panels),
   });

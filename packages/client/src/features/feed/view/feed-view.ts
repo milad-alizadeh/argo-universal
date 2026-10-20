@@ -49,11 +49,25 @@ export type FeedGroup = {
     }
 );
 
+// One `subagent_update` action, drawn as a Feed row that opens the Subagent's Feed.
+export interface FeedSubagent {
+  type: 'subagent';
+  id: string;
+  subagentSessionId: string;
+  kind: 'started' | 'messaged' | 'replied';
+  // The Agent's name for the child.
+  title: string;
+  // Tints and names the row's avatar; Argo falls back to the General mark without one.
+  role: string | null;
+  // The first line of the prompt, the parent's message, or the child's reply.
+  text?: string;
+}
+
 interface FeedStandaloneRow {
   type: 'row';
   row: Exclude<
     SessionUpdate,
-    { sessionUpdate: 'tool_call_update' | 'agent_thought' }
+    { sessionUpdate: 'tool_call_update' | 'agent_thought' | 'subagent_update' }
   >;
 }
 
@@ -67,6 +81,7 @@ export type FeedViewItem =
   | FeedActivity
   | FeedGroup
   | FeedStandaloneRow
+  | FeedSubagent
   | FeedTurnEnd;
 
 // The active Plan sits above the Composer.
@@ -75,5 +90,6 @@ export interface FeedView {
   plan: Plan | null;
 }
 
+// A group, an exploration and a Subagent row carry their own id; every other item is keyed by its row.
 export const feedItemKey = (item: FeedViewItem): string =>
-  item.type === 'group' || item.type === 'exploration' ? item.id : item.row.id;
+  'id' in item ? item.id : item.row.id;

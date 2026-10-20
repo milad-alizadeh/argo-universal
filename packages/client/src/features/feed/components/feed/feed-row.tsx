@@ -16,6 +16,8 @@ export interface RowMotion {
 export interface EntryDrawing {
   imageUrl: (blob: BlobRef) => string;
   now?: number;
+  // Opens a Subagent row's Feed, where the Session offers one.
+  onOpenSubagent?: (subagentSessionId: string) => void;
 }
 
 interface FeedRowProps extends RowMotion, EntryDrawing {
@@ -46,7 +48,7 @@ function useLayoutSync(
 
 function entryContent(
   entry: FeedEntry,
-  { imageUrl, now }: EntryDrawing,
+  { now, ...drawing }: EntryDrawing,
 ): React.JSX.Element {
   return entry.type === 'live_header' ? (
     <LiveHeader
@@ -55,7 +57,7 @@ function entryContent(
       now={now}
     />
   ) : (
-    <FeedItem item={entry} imageUrl={imageUrl} />
+    <FeedItem item={entry} {...drawing} />
   );
 }
 

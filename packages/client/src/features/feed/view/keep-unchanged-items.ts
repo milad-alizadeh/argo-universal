@@ -18,8 +18,13 @@ function rowIds(item: FeedViewItem): string[] {
 
   if (item.type === 'exploration') return item.toolCalls.map((row) => row.id);
 
-  return [item.row.id];
+  return standaloneIds(item);
 }
+
+// A Subagent row stands for one row of its own; every other item carries the row it draws.
+const standaloneIds = (
+  item: Exclude<FeedViewItem, { type: 'group' | 'exploration' }>,
+): string[] => (item.type === 'subagent' ? [item.id] : [item.row.id]);
 
 function collapsibles(items: readonly FeedViewItem[]): Collapsible[] {
   return items.flatMap(nestedCollapsibles);

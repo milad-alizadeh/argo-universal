@@ -7,13 +7,16 @@ import { EditRow } from './edit-row/edit-row';
 import { FeedImageUrlContext } from './feed-image';
 import { FeedNotice } from './feed-notice/feed-notice';
 import { renderToolCallSlot, renderMessageSlot } from './replaceable-feed-item';
+import { SubagentRow } from './subagent-row/subagent-row';
 import { ToolCallGroup } from './tool-call-group/tool-call-group';
 import { ToolCallRow } from './tool-call-row/tool-call-row';
-import { TurnEndRow, turnEndNotice } from './turn-end/turn-end';
+import { TurnEndRow } from './turn-end/turn-end';
 
 export interface FeedItemProps {
   item: FeedViewItem;
   imageUrl: (blob: BlobRef) => string;
+  // Opens a Subagent row's Feed, where the Session offers one.
+  onOpenSubagent?: (subagentSessionId: string) => void;
 }
 
 type ToolCallActivity = Extract<
@@ -70,44 +73,18 @@ const renderActivity = (activity: FeedActivity): React.JSX.Element => (
   <FeedActivityRow activity={activity} />
 );
 
-// Items the Feed draws whatever they hold; a row draws when `drawnRows` holds its update.
-const drawnItemTypes: Record<
-  Exclude<FeedViewItem['type'], 'row' | 'turn_end'>,
-  boolean
-> = {
-  group: true,
-  exploration: true,
-  tool_call: true,
-  thought: false,
-};
-
-const drawnRows = new Set<string>([
-  'user_message',
-  'agent_message',
-  'notice',
-  'compaction_update',
-]);
-
-// Whether the Feed draws anything for an item yet.
-export function isDrawnFeedItem(item: FeedViewItem): boolean {
-  if (item.type === 'row') return drawnRows.has(item.row.sessionUpdate);
-
-  if (item.type === 'turn_end') return turnEndNotice(item.end) !== null;
-
-  return drawnItemTypes[item.type];
-}
-
 // One item of the Feed view, drawn by the row component for its kind.
 export const FeedItem = memo(function FeedItem({
   item,
   imageUrl,
+  onOpenSubagent,
 }: FeedItemProps) {
   return (
     <FeedImageUrlContext.Provider value={imageUrl}>
       {item.type === 'turn_end' ? (
         <TurnEndRow end={item.end} />
       ) : (
-        renderFeedItem(item, imageUrl)
+        renderFeedItem(item, { imageUrl, onOpenSubagent })
       )}
     </FeedImageUrlContext.Provider>
   );
@@ -117,7 +94,7 @@ type GroupLike = Extract<FeedViewItem, { type: 'group' | 'exploration' }>;
 
 type FeedRowItem = Extract<FeedViewItem, { type: 'row' }>['row'];
 
-type ImageUrl = FeedItemProps['imageUrl'];
+type Drawing = Pick<FeedItemProps, 'imageUrl' | 'onOpenSubagent'>;
 
 const isGroupLike = (item: FeedViewItem): item is GroupLike =>
   item.type === 'group' || item.type === 'exploration';
@@ -148,7 +125,7 @@ function noticeRow(
 
 function renderRow(
   row: FeedRowItem,
-  imageUrl: ImageUrl,
+  imageUrl: FeedItemProps['imageUrl'],
 ): React.JSX.Element | null {
   if (
     row.sessionUpdate !== 'user_message' &&
@@ -161,19 +138,28 @@ function renderRow(
 
 function renderFeedItem(
   item: Exclude<FeedViewItem, { type: 'turn_end' }>,
-  imageUrl: ImageUrl,
+  drawing: Drawing,
 ): React.JSX.Element | null {
-  if (item.type === 'row') return renderRow(item.row, imageUrl);
+  if (item.type === 'row') return renderRow(item.row, drawing.imageUrl);
 
-  return isGroupLike(item) ? (
-    <ToolCallGroup group={groupOf(item)} renderActivity={renderActivity} />
-  ) : (
-    <FeedActivityRow activity={item} />
-  );
+  if (item.type === 'subagent')
+    return <SubagentRow item={item} onOpen={drawing.onOpenSubagent} />;
+
+  return renderActivityItem(item);
 }
 
 function explorationRows(rows: ToolCall[]): React.JSX.Element[] {
   return rows.map((row) => (
     <Fragment key={row.id}>{renderToolCallSlot(row, explorationRow)}</Fragment>
   ));
+}
+
+function renderActivityItem(
+  item: Exclude<FeedViewItem, { type: 'turn_end' | 'row' | 'subagent' }>,
+): React.JSX.Element {
+  return isGroupLike(item) ? (
+    <ToolCallGroup group={groupOf(item)} renderActivity={renderActivity} />
+  ) : (
+    <FeedActivityRow activity={item} />
+  );
 }
