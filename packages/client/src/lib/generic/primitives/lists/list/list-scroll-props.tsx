@@ -43,6 +43,7 @@ function streamProps<Item>(
 ): Partial<ScrollFadeListProps<Item>> {
   return {
     initialScrollIndex: props.initialScrollIndex,
+    initialScrollAtEnd: props.initialScrollAtEnd,
     alignItemsAtEnd: props.alignItemsAtEnd,
     maintainScrollAtEnd: props.maintainScrollAtEnd,
     maintainScrollAtEndThreshold: props.maintainScrollAtEndThreshold,

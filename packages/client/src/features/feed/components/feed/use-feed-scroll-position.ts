@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useNewestKeyWhenLeftEnd } from '#lib/product/jump-to-latest';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { type FeedEntry, entryKey } from './feed-entry';
 
@@ -50,30 +51,6 @@ function useRequestsOlderNearTop(
     askedAtOldestKey.current = oldestKey;
     requestOlderIfNearTop();
   }, [oldestKey]);
-}
-
-const listenAtEnd = (
-  list: ListRef,
-  onAtEndChange: (atEnd: boolean) => void,
-): (() => void) | undefined =>
-  list.current
-    ?.getState()
-    .listen('isWithinMaintainScrollAtEndThreshold', onAtEndChange);
-
-// Null while the reader is at the end.
-function useNewestKeyWhenLeftEnd(
-  list: ListRef,
-  newestKey: string,
-): string | null {
-  const [leftEndAt, setLeftEndAt] = useState<string | null>(null);
-
-  const onAtEndChange = useEffectEvent((atEnd: boolean) =>
-    setLeftEndAt(atEnd ? null : newestKey),
-  );
-
-  useEffect(() => listenAtEnd(list, onAtEndChange), [list]);
-
-  return leftEndAt;
 }
 
 // Tells `onAtEndChange` whether the end is shown, as the Feed mounts and whenever that changes.

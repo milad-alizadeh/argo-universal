@@ -13,6 +13,7 @@ import {
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { SheetContent } from './sheet-content.ios';
+import { SheetPageToolbar } from './sheet-page-toolbar.ios';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
 
@@ -49,7 +50,17 @@ function SinglePage(props: PagesProps): ReactElement {
   );
 }
 
-function StackPage(props: PagesProps & { page: SheetPageEntry }): ReactElement {
+type PageProps = PagesProps & { page: SheetPageEntry };
+
+function StackPage(props: PageProps): ReactElement {
+  return (
+    <SheetPageToolbar page={props.page}>
+      <PageBody {...props} />
+    </SheetPageToolbar>
+  );
+}
+
+function PageBody(props: PageProps): ReactElement {
   return (
     <Group modifiers={usePageModifiers(props.page.title)}>
       <SheetContent

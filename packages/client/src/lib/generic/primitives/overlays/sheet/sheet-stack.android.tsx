@@ -97,7 +97,7 @@ type PageProps = PagesProps & {
 function StackPage(props: PageProps): ReactElement {
   return (
     <Column modifiers={pageModifiers(props)}>
-      <PageHeader {...props} title={props.page.title} />
+      <PageHeader {...props} />
       <PageContent
         {...props}
         contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
