@@ -5,7 +5,7 @@ import {
   type SessionsViewState,
   searchSessionsLabel,
   sessionsViewGroups,
-} from '#features/session-list';
+} from '#features/sessions';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Page, type PageProps } from '#primitives/scaffolds/page';

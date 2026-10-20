@@ -6,8 +6,8 @@ import {
   ElicitationSheet,
   type ElicitationFormProps,
 } from '#features/requests';
-import { ArchivedBanner } from '#features/session-list';
 import {
+  ArchivedBanner,
   serverSilentMessage,
   SessionCallout,
   type SessionCalloutProps,

@@ -5,9 +5,9 @@ import { View } from 'react-native';
 import {
   type SessionsLoadState,
   type SessionsView,
+  serverSilentMessage,
   SessionsLoading,
-} from '#features/session-list';
-import { serverSilentMessage } from '#features/sessions';
+} from '#features/sessions';
 import { Screen } from '#lib/product/screen/screen';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { SizeClass } from '../../lib/generic/size-class/size-class';

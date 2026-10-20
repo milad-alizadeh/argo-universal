@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
-import { SessionsList } from '../../src/features/session-list/components/sessions-list/sessions-list';
-import { largeSessions } from '../../src/features/session-list/components/sessions-list/sessions-list.mocks';
+import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
+import { largeSessions } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   exampleProjectName,

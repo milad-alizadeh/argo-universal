@@ -5,7 +5,7 @@ import { action } from 'storybook/actions';
 import { ProjectHeading } from './project-heading';
 
 const meta = {
-  title: 'SessionList/ProjectHeading',
+  title: 'Sessions/ProjectHeading',
   component: ProjectHeading,
   args: {
     name: 'Example Project',

@@ -7,7 +7,7 @@ import {
   type SessionsViewState,
   SessionsHeader,
   useSessionsViewState,
-} from '#features/session-list';
+} from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
 import {
   type FirstPage,

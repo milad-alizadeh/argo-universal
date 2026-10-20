@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, waitFor } from 'storybook/test';
-import { SessionsList } from '../../src/features/session-list/components/sessions-list/sessions-list';
-import { renderingSessions } from '../../src/features/session-list/components/sessions-list/sessions-rendering.mocks';
+import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
+import { renderingSessions } from '../../src/features/sessions/components/sessions-list/sessions-rendering.mocks';
 import type { Story } from './sessions-list-story-context.test.mocks';
 
 const unchangedSessionLabel = 'Unchanged Session, Idle';

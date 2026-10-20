@@ -13,7 +13,7 @@ import {
 import { paperSessionMetadata, paperSessionRows } from './session-row.mocks';
 
 const meta = {
-  title: 'SessionList/SessionRow',
+  title: 'Sessions/SessionRow',
   component: SessionRow,
   parameters: { previewPadding: false },
   args: {

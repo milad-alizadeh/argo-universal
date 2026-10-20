@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { type ClientError, useTRPC } from '#features/connection';
-import type { RenameSessionDialogProps } from '#features/session-list';
+import type { RenameSessionDialogProps } from '#features/sessions';
 
 // What the rename dialog says when the Server refuses the new title or cannot be reached.
 export const renameFailedMessage = 'Couldn’t rename the Session. Try again.';

@@ -1,6 +1,27 @@
 export { SessionHeader } from './components/session-header';
 
-export * from './components/session-work';
+export { SubagentList } from './components/subagent-list/subagent-list';
+
+export { type SubagentListProps } from './components/subagent-list/subagent-list';
+
+export {
+  SubagentSheet,
+  type SubagentSheetProps,
+} from './components/subagent-list/subagent-sheet';
+
+export {
+  SubagentFeed,
+  type SubagentFeedProps,
+} from './components/subagent-feed/subagent-feed';
+
+export {
+  ShellPanel,
+  type ShellPanelProps,
+} from './components/shell-list/shell-panel';
+
+export { ShellSheet } from './components/shell-list/shell-sheet';
+
+export { shellsRunning } from './components/shell-list/shell-format';
 
 export { SessionHeaderBar } from './components/session-header-bar';
 
@@ -13,7 +34,38 @@ export {
   useSessionPanels,
 } from './stores/session-panels';
 
-export { type StartingFeed, startingFeed } from './utils/starting-feed';
+export {
+  SessionsHeader,
+  searchSessionsLabel,
+} from './components/sessions-header';
+
+export {
+  type SessionsViewGroup,
+  sessionsViewGroups,
+} from './utils/sessions-view-menu';
+
+export {
+  type SessionsViewState,
+  useSessionsViewState,
+} from './stores/sessions-view-state';
+
+export {
+  chooseSessionsView,
+  defaultSessionsView,
+  isDefaultSessionsView,
+  type SessionsLayout,
+  type SessionsView,
+  useSessionsViewKept,
+} from './stores/sessions-view';
+
+export {
+  olderServerView,
+  sessionsListInput,
+} from './utils/sessions-list-input';
+
+export { type StartingFeed } from './utils/starting-feed';
+
+export { startingFeed } from './utils/starting-feed';
 
 export {
   decodeOpenFailure,
@@ -28,14 +80,11 @@ export { useConnectionDropped } from './hooks/use-connection-dropped';
 
 export { opensOnReconnect } from './utils/new-session-attempt';
 
-export { canOpenSession, toNewSessionInput } from './utils/open-session';
+export { canOpenSession } from './utils/open-session';
 
 export {
-  chooseAnotherProject,
-  chooseProject,
   type ChosenSettings,
-  type SessionChoices,
-  toSessionChoices,
+  chooseAnotherProject,
 } from './utils/session-choices';
 
 export { useSessionConfigChange } from './hooks/use-session-config-change';
@@ -57,6 +106,14 @@ export {
 
 export { useSessionOptions } from './hooks/use-session-options';
 
+export {
+  chooseProject,
+  type SessionChoices,
+  toSessionChoices,
+} from './utils/session-choices';
+
+export { toNewSessionInput } from './utils/open-session';
+
 export { composerStatus } from './utils/composer-status';
 
 export { toSendError } from './utils/send-error';
@@ -74,11 +131,7 @@ export {
 
 export { SessionHeaderMenu } from './components/session-header-menu';
 
-export {
-  type SessionMenu,
-  type SessionMenuItem,
-  sessionMenuItems,
-} from './components/session-menu-items';
+export { type SessionMenu } from './components/session-menu-items';
 
 export { SessionMenuToolbar } from './components/session-menu-toolbar';
 
@@ -87,6 +140,28 @@ export { type SessionPullRequest } from './components/session-pull-request';
 export { type SessionConfigChange } from './hooks/use-session-config-change';
 
 export { liveUpdatesStopped } from './utils/live-updates-stopped';
+
+export {
+  type QueryProgress,
+  sessionsLoadState,
+} from './utils/sessions-load-state';
+
+export { SessionsList } from './components/sessions-list/sessions-list';
+
+export {
+  RenameSessionDialog,
+  type RenameSessionDialogProps,
+} from './components/rename-session-dialog/rename-session-dialog';
+
+export { type SessionsListProps } from './components/sessions-list/sessions-list-props';
+
+export { SessionsLoading } from './components/sessions-loading/sessions-loading';
+
+export { type SessionsLoadState } from './utils/sessions-load-state';
+
+export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';
+
+export { createCoalescedRefetch } from './api/coalesced-refetch';
 
 export {
   type MergeMethodChoice,
@@ -132,11 +207,13 @@ export {
 export { type TurnSignInRecord, useTurnSignIn } from './hooks/use-turn-sign-in';
 
 export {
-  pullRequestAppearance,
-  PullRequestIcon,
-  PullRequestIndicator,
-  type PullRequestIndicatorProps,
-  pullRequestStatusLabels,
-} from './components/pull-request-indicator/pull-request-indicator';
+  ArchivedBanner,
+  archivedBannerText,
+} from './components/archive-session/archived-banner';
 
-export { sessionStatusDot, sessionStatusLabels } from './session-status-dot';
+export {
+  ArchiveSessionAlert,
+  type ArchiveSessionAlertProps,
+} from './components/archive-session/archive-session-alert';
+
+export { archivedToast } from './components/archive-session/archived-toast';

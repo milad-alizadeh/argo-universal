@@ -1,8 +1,8 @@
 import { type ComponentProps, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import { SessionsHeader } from '../src/features/session-list/components/sessions-header';
-import type { SessionsStatus } from '../src/features/session-list/stores/sessions-view';
-import { showsUnderStatus } from '../src/features/session-list/utils/sessions-list-input';
+import { SessionsHeader } from '../src/features/sessions/components/sessions-header';
+import type { SessionsStatus } from '../src/features/sessions/stores/sessions-view';
+import { showsUnderStatus } from '../src/features/sessions/utils/sessions-list-input';
 import { useWide } from '../src/lib/generic/use-wide/use-wide';
 import {
   SessionListView,

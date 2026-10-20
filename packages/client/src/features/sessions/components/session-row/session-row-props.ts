@@ -1,7 +1,7 @@
 import type { SessionInfo } from '@repo/contracts';
-import { sessionStatusLabels } from '#features/sessions';
-import type { PullRequestIndicatorProps } from '#features/sessions';
+import { sessionStatusLabels } from '../../session-status-dot';
 import type { SessionsLayout } from '../../stores/sessions-view';
+import type { PullRequestIndicatorProps } from '../pull-request-indicator/pull-request-indicator';
 
 export interface SessionRowProps {
   session: SessionInfo;

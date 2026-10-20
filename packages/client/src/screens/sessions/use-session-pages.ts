@@ -16,7 +16,7 @@ import {
   type SessionsView,
   sessionsListInput,
   useSessionsViewKept,
-} from '#features/session-list';
+} from '#features/sessions';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import type { SessionListViewProps } from './session-list-view';
 
