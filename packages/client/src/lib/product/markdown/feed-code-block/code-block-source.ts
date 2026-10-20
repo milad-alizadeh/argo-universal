@@ -49,5 +49,8 @@ export function headerTitle(
   language: string | undefined,
   title: string | undefined,
 ): string {
-  return sourceTitle(source) ?? title ?? language ?? '';
+  return sourceTitle(source) ?? ownTitle(title, language);
 }
+
+const ownTitle = (title?: string, language?: string): string =>
+  title ?? language ?? '';

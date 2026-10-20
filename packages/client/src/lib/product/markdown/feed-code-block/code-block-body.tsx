@@ -1,10 +1,12 @@
+import type { ReactNode } from 'react';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
+import { codeSpanText } from '../../../generic/code-text/code-span';
 import { ScrollFadeView } from '../../../generic/scroll-fade/scroll-fade';
-import { syntaxText } from './code-highlight/syntax-text';
+import { codeSpans } from './code-highlight/code-spans';
 
 interface CodeBlockBodyProps {
   code?: string;
@@ -19,19 +21,22 @@ interface CodeTextProps {
   textClassName?: string;
 }
 
-function CodeText({
-  code,
-  language,
-  textClassName,
-}: CodeTextProps): React.JSX.Element {
+// Coloured runs where the language is known, the code as it stands where it is not.
+function codeContent(code: string, language: string | undefined): ReactNode {
+  const spans = codeSpans(code, language);
+
+  return spans === undefined ? code : codeSpanText(spans);
+}
+
+function CodeText(props: CodeTextProps): React.JSX.Element {
   return (
     <Text
       selectable
       role="code"
       testID="code-text"
-      className={cn(markdownBlockClassNames.codeText, textClassName)}
+      className={cn(markdownBlockClassNames.codeText, props.textClassName)}
     >
-      {syntaxText(code, language)}
+      {codeContent(props.code, props.language)}
     </Text>
   );
 }
@@ -81,20 +86,13 @@ function CodeDescription({
 }
 
 // Code scrolls in both directions; a resource without text shows its description instead.
-export function CodeBlockBody({
-  code,
-  description,
-  language,
-  textClassName,
-}: CodeBlockBodyProps): React.JSX.Element | null {
-  if (code !== undefined)
-    return (
-      <CodeScroll
-        code={code}
-        language={language}
-        textClassName={textClassName}
-      />
-    );
+export function CodeBlockBody(
+  props: CodeBlockBodyProps,
+): React.JSX.Element | null {
+  const { code } = props;
 
-  return <CodeDescription description={description} />;
+  if (code === undefined)
+    return <CodeDescription description={props.description} />;
+
+  return <CodeScroll {...props} code={code} />;
 }

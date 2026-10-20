@@ -13,7 +13,7 @@ const source = [
 ].join('\n');
 
 const meta = {
-  title: 'Tests/SyntaxText',
+  title: 'Tests/CodeHighlight',
   component: FeedCodeBlock,
   args: { code: source, language: 'ts' },
 } satisfies Meta<typeof FeedCodeBlock>;
@@ -68,7 +68,7 @@ export const TitleIsNotALanguage: Story = {
 };
 
 // A tag with no grammar, and the plain tags Prism registers empty, draw as one undivided run.
-function drawsPlain(language: string | undefined): Story {
+function drawsPlain(language?: string): Story {
   return {
     args: { language },
     play: async ({ canvas }) => {
@@ -84,7 +84,7 @@ export const DrawsUnknownLanguagePlain = drawsPlain('brainfuck');
 
 export const DrawsPlaintextPlain = drawsPlain('plaintext');
 
-export const DrawsUntaggedFencePlain = drawsPlain(undefined);
+export const DrawsUntaggedFencePlain = drawsPlain();
 
 const longSource = `${source}\n`.repeat(600);
 

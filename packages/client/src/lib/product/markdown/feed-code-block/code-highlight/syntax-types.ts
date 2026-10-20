@@ -1,56 +1,45 @@
 import type { Token } from 'prismjs';
+import type { SyntaxType } from '../../../../generic/code-text/code-span';
 
 /*
- * The colours the "Components / Code" master draws, one --color-syntax-* token each. Prism names
- * far more than six things; everything not mapped below stays foreground, punctuation and
+ * Prism names far more than six things; everything left out here stays foreground, punctuation and
  * operators included, so a block reads as code rather than as a paint chart.
  */
-export const syntaxTypes = [
-  'keyword',
-  'function',
-  'string',
-  'constant',
-  'type',
-  'comment',
-] as const;
-
-export type SyntaxType = (typeof syntaxTypes)[number];
-
-const byPrismType: Record<string, SyntaxType> = {
-  'attr-name': 'function',
-  'attr-value': 'string',
-  'class-name': 'type',
-  'doc-comment': 'comment',
-  'maybe-class-name': 'type',
-  'string-property': 'constant',
-  'template-string': 'string',
-  atrule: 'keyword',
-  boolean: 'keyword',
-  builtin: 'type',
-  cdata: 'comment',
-  char: 'string',
-  comment: 'comment',
-  constant: 'constant',
-  function: 'function',
-  important: 'keyword',
-  interpolation: 'constant',
-  keyword: 'keyword',
-  namespace: 'type',
+const byPrismType = new Map<string, SyntaxType>([
+  ['atrule', 'keyword'],
+  ['attr-name', 'function'],
+  ['attr-value', 'string'],
+  ['boolean', 'keyword'],
+  ['builtin', 'type'],
+  ['cdata', 'comment'],
+  ['char', 'string'],
+  ['class-name', 'type'],
+  ['comment', 'comment'],
+  ['constant', 'constant'],
+  ['doc-comment', 'comment'],
+  ['function', 'function'],
+  ['important', 'keyword'],
+  ['interpolation', 'constant'],
+  ['keyword', 'keyword'],
+  ['maybe-class-name', 'type'],
+  ['namespace', 'type'],
   // A literal is a constant written out, so it takes the constant colour rather than one of its own.
-  number: 'constant',
-  parameter: 'constant',
-  prolog: 'comment',
-  property: 'constant',
-  regex: 'string',
-  rule: 'keyword',
-  selector: 'keyword',
-  shebang: 'comment',
-  string: 'string',
-  symbol: 'constant',
-  tag: 'keyword',
-  url: 'string',
-  variable: 'constant',
-};
+  ['number', 'constant'],
+  ['parameter', 'constant'],
+  ['prolog', 'comment'],
+  ['property', 'constant'],
+  ['regex', 'string'],
+  ['rule', 'keyword'],
+  ['selector', 'keyword'],
+  ['shebang', 'comment'],
+  ['string', 'string'],
+  ['string-property', 'constant'],
+  ['symbol', 'constant'],
+  ['tag', 'keyword'],
+  ['template-string', 'string'],
+  ['url', 'string'],
+  ['variable', 'constant'],
+]);
 
 function aliasNames(alias: Token['alias']): string[] {
   if (alias === undefined) return [];
@@ -58,11 +47,14 @@ function aliasNames(alias: Token['alias']): string[] {
   return Array.isArray(alias) ? alias : [alias];
 }
 
-// A token's own name decides its colour; a grammar that names a token for its place rather than its
-// kind (`punctuation` inside a tag) carries the kind as an alias instead, so aliases are the fallback.
+/*
+ * A token's own name decides its colour; a grammar that names a token for its place rather than its
+ * kind (`punctuation` inside a tag) carries the kind as an alias instead, so aliases are the
+ * fallback.
+ */
 export function syntaxTypeFor(token: Token): SyntaxType | undefined {
   for (const name of [token.type, ...aliasNames(token.alias)]) {
-    const type = byPrismType[name];
+    const type = byPrismType.get(name);
 
     if (type !== undefined) return type;
   }

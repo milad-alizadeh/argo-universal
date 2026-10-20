@@ -53,23 +53,22 @@ function ToolContentOrPlaceholder({
   );
 }
 
-function ToolContentBlock({
-  block,
-  fileName,
-}: {
+function ToolContentBlock(props: {
   block: ContentBlock;
   fileName?: string;
 }): React.JSX.Element {
-  if (block.type === 'text')
-    return (
-      <FeedCodeBlock
-        code={block.text}
-        title={fileName ?? 'Output'}
-        language={fileName}
-      />
-    );
+  const { block, fileName } = props;
 
-  return <FeedContent content={[block]} />;
+  if (block.type !== 'text') return <FeedContent content={[block]} />;
+
+  // The file's name titles the block and, by its extension, decides the highlighting.
+  return (
+    <FeedCodeBlock
+      code={block.text}
+      title={fileName ?? 'Output'}
+      language={fileName}
+    />
+  );
 }
 
 interface ToolOutputProps {

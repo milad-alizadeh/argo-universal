@@ -1,11 +1,10 @@
 import type { Token, TokenStream } from 'prismjs';
+import {
+  type CodeSpan,
+  type SyntaxType,
+} from '../../../../generic/code-text/code-span';
 import { grammarFor, tokenize } from './grammars';
-import { type SyntaxType, syntaxTypeFor } from './syntax-types';
-
-export interface CodeSpan {
-  text: string;
-  type?: SyntaxType;
-}
+import { syntaxTypeFor } from './syntax-types';
 
 /*
  * Past this the block is already scrolling inside its own box and nobody reads the far end, while
@@ -21,6 +20,11 @@ function addSpan(spans: CodeSpan[], text: string, type?: SyntaxType): void {
   else spans.push({ text, type });
 }
 
+const tokenType = (
+  token: Token,
+  inherited: SyntaxType | undefined,
+): SyntaxType | undefined => syntaxTypeFor(token) ?? inherited;
+
 /*
  * Prism nests tokens, so a leaf takes the nearest enclosing name that has a colour: a `punctuation`
  * inside a `string` stays string-coloured, and plain text between tokens keeps the foreground.
@@ -32,20 +36,17 @@ function addStream(
 ): void {
   if (typeof stream === 'string') return addSpan(spans, stream, inherited);
 
-  if (Array.isArray(stream)) {
-    for (const item of stream) addStream(item, inherited, spans);
-
-    return;
-  }
+  if (Array.isArray(stream)) return addEach(stream, inherited, spans);
 
   addStream(stream.content, tokenType(stream, inherited), spans);
 }
 
-function tokenType(
-  token: Token,
+function addEach(
+  stream: TokenStream[],
   inherited: SyntaxType | undefined,
-): SyntaxType | undefined {
-  return syntaxTypeFor(token) ?? inherited;
+  spans: CodeSpan[],
+): void {
+  for (const item of stream) addStream(item, inherited, spans);
 }
 
 /*

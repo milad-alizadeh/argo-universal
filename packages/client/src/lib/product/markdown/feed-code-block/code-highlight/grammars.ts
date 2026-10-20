@@ -21,14 +21,14 @@ import 'prismjs/components/prism-markdown.js';
 import 'prismjs/components/prism-sql.js';
 
 // Tags and file extensions Agents write that Prism has no alias of its own for.
-const extraAliases: Record<string, string> = {
-  cjs: 'javascript',
-  cts: 'typescript',
-  mjs: 'javascript',
-  mts: 'typescript',
-  rs: 'rust',
-  zsh: 'bash',
-};
+const extraAliases = new Map([
+  ['cjs', 'javascript'],
+  ['cts', 'typescript'],
+  ['mjs', 'javascript'],
+  ['mts', 'typescript'],
+  ['rs', 'rust'],
+  ['zsh', 'bash'],
+]);
 
 /*
  * Prism registers these as empty grammars, so they would tokenise to one colourless run. Naming
@@ -39,7 +39,7 @@ const plainLanguages = new Set(['plain', 'plaintext', 'text', 'txt']);
 function namedGrammar(name: string): Prism.Grammar | undefined {
   if (plainLanguages.has(name)) return undefined;
 
-  return Prism.languages[extraAliases[name] ?? name];
+  return Prism.languages[extraAliases.get(name) ?? name];
 }
 
 /*
