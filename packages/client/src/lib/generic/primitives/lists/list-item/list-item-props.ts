@@ -42,6 +42,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   emphasized?: boolean;
   // The subtitle's colour; muted unless the row says otherwise.
   subtitleTone?: Tone;
+  // A subtitle that wraps onto a second line rather than truncating, such as a Mode's description.
+  subtitleLines?: 2;
   // De-emphasized secondary text on a completed row.
   subtitleDimmed?: boolean;
   // A completed row can dim its text without losing the grouped surface.

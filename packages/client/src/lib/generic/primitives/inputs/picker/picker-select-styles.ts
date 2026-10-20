@@ -12,10 +12,10 @@ const triggerClassName =
 const plainTriggerClassName =
   'flex h-8 flex-row items-center gap-1.5 rounded-control pl-2 web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:w-fit web:whitespace-nowrap web:outline-none web:disabled:cursor-not-allowed';
 
-// A menu row, its right padding kept for the absolute check.
+// A menu row; its check leads, as every popover row (owner, 2026-10-20).
 const itemClassName = cn(
   menuRowClassName,
-  'active:bg-pressed group relative flex w-full pr-8 web:focus:bg-hover web:*:last:flex web:*:last:items-center web:*:last:gap-2 web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:**:pointer-events-none',
+  'active:bg-pressed group relative flex w-full web:focus:bg-hover web:*:last:flex web:*:last:items-center web:*:last:gap-2 web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:**:pointer-events-none',
 );
 
 type TriggerStyle = {

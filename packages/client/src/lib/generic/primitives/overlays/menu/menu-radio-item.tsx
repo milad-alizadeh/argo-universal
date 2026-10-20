@@ -57,7 +57,7 @@ export function focusTracking(focus: KeyboardFocus): FocusTracking {
   };
 }
 
-// A choice menu's radio row: its icon, label and trailing check, as Paper's Menu rows.
+// A choice menu's radio row: its leading check, icon and label, as every popover row (owner, 2026-10-20).
 function choiceItemClassName(keyboardFocus: boolean): string {
   return cn(
     choiceRowClassName,
@@ -73,9 +73,9 @@ function MenuRadioContent(props: {
 }): React.JSX.Element {
   return (
     <>
+      <RadioIndicator />
       <RadioIcon icon={props.icon} />
       <RadioLabel label={props.label} />
-      <RadioIndicator />
     </>
   );
 }
