@@ -113,20 +113,35 @@ const scrollProps = {
   contentContainerClassName: 'grow',
 };
 
+type InspectorBodyProps = InspectorProps & {
+  surface: string;
+  fitContent?: boolean;
+};
+
 export function InspectorBody({
   toolbar,
   children,
-  surface,
-}: InspectorProps & { surface: string }): ReactElement {
+  ...props
+}: InspectorBodyProps): ReactElement {
   return (
     <>
       {toolbar}
-      <ScrollFadeView {...scrollProps} surfaceClassName={surface}>
-        {children}
-      </ScrollFadeView>
+      <ScrollFadeView {...inspectorScroll(props)}>{children}</ScrollFadeView>
     </>
   );
 }
+
+const inspectorScroll = ({
+  surface,
+  fitContent,
+}: Pick<InspectorBodyProps, 'surface' | 'fitContent'>): React.ComponentProps<
+  typeof ScrollFadeView
+> => ({
+  ...scrollProps,
+  fitContent,
+  surfaceClassName: surface,
+  className: cn(scrollProps.className, fitContent && 'min-h-0 shrink'),
+});
 
 /*
  * Foundations / Inspector: its header with the title, its Actions, expand on a wide window and close, then its
@@ -134,14 +149,29 @@ export function InspectorBody({
  */
 export function InspectorPane(props: InspectorPaneProps): ReactElement {
   const surface = props.inSheet ? 'bg-content' : 'bg-tint';
+  const fittedSheet = isFittedSheet(props);
 
   return (
-    <View
-      testID={props.testID}
-      className={cn(props.inSheet ? 'h-140' : 'flex-1', surface)}
-    >
-      <InspectorHeader {...props} />
-      <InspectorBody {...props} surface={surface} />
+    <View testID={props.testID} className={cn(paneSizing(props), surface)}>
+      <PaneHeading {...props} />
+      <InspectorBody {...props} surface={surface} fitContent={fittedSheet} />
     </View>
+  );
+}
+
+const isFittedSheet = (props: InspectorPaneProps): boolean =>
+  props.inSheet === true && props.sheetHeader !== undefined;
+
+function paneSizing(props: InspectorPaneProps): string {
+  if (!props.inSheet) return 'flex-1';
+
+  return isFittedSheet(props) ? 'min-h-0 shrink' : 'h-140';
+}
+
+function PaneHeading(props: InspectorPaneProps): ReactNode {
+  return isFittedSheet(props) ? (
+    props.sheetHeader
+  ) : (
+    <InspectorHeader {...props} />
   );
 }

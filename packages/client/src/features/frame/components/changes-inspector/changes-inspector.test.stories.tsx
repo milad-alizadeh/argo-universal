@@ -8,7 +8,7 @@ import {
   fewSummary,
   fileHeader,
   largeFile,
-  picker,
+  expectComparison,
   testMeta,
   widths,
 } from './changes-inspector.test.mocks';
@@ -44,7 +44,7 @@ export const ShowsFilesAndTotals: Story = {
 
     for (const width of widths) {
       await settleViewport(width);
-      await expect(await picker(allChanges)).toBeVisible();
+      await expectComparison(allChanges, width);
       await expect(canvas.getByText(fewSummary)).toBeVisible();
       await expectLineTotals(canvas, width);
       await expect(canvas.getByText(lastAddedLine)).toBeVisible();
@@ -102,7 +102,7 @@ export const ExpandedKeepsTheChanges: Story = {
 
     for (const width of widths) {
       await settleViewport(width);
-      await expect(await picker(allChanges)).toBeVisible();
+      await expectComparison(allChanges, width);
       await expect(canvas.getByText(fewSummary)).toBeVisible();
       await expect(fileHeader(largeFile)).toBeVisible();
       await expect(

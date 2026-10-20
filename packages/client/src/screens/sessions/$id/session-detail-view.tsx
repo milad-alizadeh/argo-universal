@@ -1,11 +1,7 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import {
-  ChangesFiles,
-  ChangesToolbar,
-  type ChangesViewProps,
-} from '#features/changes';
+import type { ChangesViewProps } from '#features/changes';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
 import {
@@ -30,7 +26,7 @@ import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { Inspector } from '#primitives/scaffolds/inspector';
+import { SessionChangesInspector } from './session-changes-inspector';
 import { useSessionSubagents } from './session-subagents';
 
 export interface OpenSessionViewProps {
@@ -97,27 +93,6 @@ function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
       <SessionChangesInspector changes={changes} view={props.changes} />
       {subagents.sheet}
     </>
-  );
-}
-
-type ChangesInspectorProps = {
-  changes: NonNullable<SessionHeaderProps['changes']>;
-  view: ChangesViewProps | undefined;
-};
-
-function SessionChangesInspector({
-  changes,
-  view,
-}: ChangesInspectorProps): React.JSX.Element {
-  return (
-    <Inspector
-      title="Changes"
-      open={changes.open}
-      onOpenChange={changes.onOpenChange}
-      toolbar={view && <ChangesToolbar {...view} />}
-    >
-      {view && <ChangesFiles {...view} />}
-    </Inspector>
   );
 }
 

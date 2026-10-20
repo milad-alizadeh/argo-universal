@@ -17,10 +17,20 @@ import { ComparisonPicker } from '../comparison-picker/comparison-picker';
 export function ChangesToolbar(props: ChangesViewProps): React.JSX.Element {
   return (
     <View>
-      <View className="flex-row px-4 py-2">
-        <ComparisonPicker {...props} />
-      </View>
+      <SizeClass
+        compact={null}
+        medium={<ComparisonRow {...props} />}
+        wide={<ComparisonRow {...props} />}
+      />
       <Summary files={props.files} viewed={props.viewed} />
+    </View>
+  );
+}
+
+function ComparisonRow(props: ChangesViewProps): React.JSX.Element {
+  return (
+    <View className="flex-row px-4 py-2">
+      <ComparisonPicker {...props} />
     </View>
   );
 }
@@ -33,7 +43,7 @@ function Summary(
   const totals = changesTotals(props.files, props.viewed);
 
   return (
-    <View className="h-11 flex-row items-center gap-2 px-4 medium:bg-content medium:px-3">
+    <View className="flex-row items-center gap-2 px-4 pt-4 pb-2 medium:h-11 medium:bg-content medium:px-3 medium:py-0">
       <FileCounts {...totals} />
       <DesktopLineTotals {...totals} />
     </View>

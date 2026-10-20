@@ -11,7 +11,7 @@ Feature: Changed files on live data
     Then the changed-files entry shows 1 file while the Turn runs
     When I open the changed files
     Then the changed greeting diff opens while the Turn runs
-    When I compare the changed files against remote main
+    When I review the Frame's file comparison
     Then the changed greeting diff opens while the Turn runs
     When I stop the Turn
 

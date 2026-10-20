@@ -1,12 +1,13 @@
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
-import { Text, TextClassContext } from '#primitives/content/text';
+import { TextClassContext } from '#primitives/content/text';
 import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { FileDiff } from '../../view/file-diff';
 import { ChangeCounts } from './diff-change-counts';
+import { FilePath } from './diff-file-path';
 import { ViewedMark } from './diff-viewed-mark';
 
 export interface FileHeaderProps {
@@ -20,55 +21,13 @@ export interface FileHeaderProps {
 const toggleClassName = contentActionClass({
   variant: 'link',
   className:
-    'h-5 min-w-0 flex-1 justify-start gap-3 rounded-none p-0 sm:h-5 medium:gap-2',
+    'h-5 min-w-0 flex-1 basis-6 justify-start gap-3 rounded-none p-0 sm:h-5 medium:basis-0 medium:gap-2',
 });
-
-// Isolates the folder so the right-to-left web layout, which keeps its end in view, cannot reorder it.
-const shownFolder = (folder: string): string =>
-  Platform.OS === 'web' ? `⁦${folder}⁩` : folder;
-
-function FolderName({ folder }: { folder: string }): React.JSX.Element {
-  return (
-    <Text
-      selectable={false}
-      numberOfLines={1}
-      ellipsizeMode="head"
-      role="code"
-      className="min-w-0 shrink text-muted-foreground web:[direction:rtl] web:text-left"
-    >
-      {shownFolder(folder)}
-    </Text>
-  );
-}
-
-function FileBaseName({ name }: { name: string }): React.JSX.Element {
-  return (
-    <Text
-      selectable={false}
-      numberOfLines={1}
-      role="code"
-      className="shrink-0 text-foreground"
-    >
-      {name}
-    </Text>
-  );
-}
-
-function FilePath({ path }: { path: string }): React.JSX.Element {
-  const slash = path.lastIndexOf('/');
-
-  return (
-    <View className="min-w-0 flex-1 flex-row items-center overflow-hidden">
-      <FolderName folder={path.slice(0, slash + 1)} />
-      <FileBaseName name={path.slice(slash + 1)} />
-    </View>
-  );
-}
 
 function ToggleLabel(props: FileHeaderProps): React.JSX.Element {
   return (
     <TextClassContext.Provider value="select-none no-underline">
-      <DisclosureChevron open={props.open} role="chevron" />
+      <DisclosureChevron open={props.open} role="code" />
       <FilePath path={props.file.path} />
     </TextClassContext.Provider>
   );
@@ -117,7 +76,7 @@ function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
     <View className="bg-card">
       <View className="flex-row items-center gap-3 px-4 py-2.5">
         <FileHeaderToggle {...props} />
-        <View className="shrink-0 flex-row gap-1">
+        <View className="min-w-0 flex-1 flex-row gap-1">
           <ChangeCounts file={props.file} />
         </View>
         <ViewedMark {...props} compact />

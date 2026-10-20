@@ -129,10 +129,7 @@ Then(
     await reopenDiff(diff);
     await capture(page, 'changed-files-open-diff');
 
-    if (onPhone(page))
-      await page
-        .getByRole('button', { name: 'Close Inspector', exact: true })
-        .click();
+    if (onPhone(page)) await page.keyboard.press('Escape');
 
     await expectRunning(page);
   },

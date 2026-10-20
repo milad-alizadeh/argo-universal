@@ -46,7 +46,7 @@ function Check({
   value,
 }: Pick<CheckButtonProps, 'value'>): React.JSX.Element | null {
   return value ? (
-    <Icon name="check" role="mark" className="text-primary-foreground" />
+    <Icon name="check" role="code" className="text-primary-foreground" />
   ) : null;
 }
 

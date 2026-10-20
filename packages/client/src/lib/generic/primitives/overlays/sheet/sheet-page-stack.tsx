@@ -4,9 +4,11 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { sheetInsetClass } from './sheet-inset';
+import {
+  SheetPageContent,
+  type SheetPageContentProps,
+} from './sheet-page-content';
 import { backLabel } from './sheet-page-label';
 import {
   useLeavingPage,
@@ -19,6 +21,7 @@ import { SheetTitleRow } from './sheet-title-row';
 interface StackProps {
   hideRootTitle?: boolean;
   inset?: boolean;
+  contentScrolls?: boolean;
   stack: SheetStack;
   label?: string;
   children: ReactNode;
@@ -26,7 +29,7 @@ interface StackProps {
 
 // The web's pages: a pushed page slides in from the trailing edge over the one below, and slides back out on Back.
 export function SheetPageStack(props: StackProps): ReactElement {
-  if (props.stack.pages.length === 0) return <SheetScroll {...props} />;
+  if (props.stack.pages.length === 0) return <SheetPageContent {...props} />;
 
   return <StackPages {...props} />;
 }
@@ -101,12 +104,20 @@ function PageFrame(props: PageProps): ReactElement {
       className={pageClass(props)}
     >
       <PageHeader {...props} />
-      <SheetScroll label={props.page.title ?? props.label} inset={props.inset}>
+      <SheetPageContent {...pageContentProps(props)}>
         {props.page.content}
-      </SheetScroll>
+      </SheetPageContent>
     </div>
   );
 }
+
+const pageContentProps = (
+  props: PageProps,
+): Omit<SheetPageContentProps, 'children'> => ({
+  label: props.page.title ?? props.label,
+  inset: props.inset,
+  contentScrolls: pageScrolls(props),
+});
 
 // A leaving page reports when its slide has ended, so it can leave the tree.
 function usePageSlide(props: PageProps): RefObject<HTMLDivElement | null> {
@@ -162,17 +173,5 @@ function pageBackLabel(props: PageProps): string | undefined {
   return props.index === 0 ? undefined : backLabel(props.stack);
 }
 
-type ScrollProps = Pick<StackProps, 'label' | 'inset' | 'children'>;
-
-function SheetScroll(props: ScrollProps): ReactElement {
-  return (
-    <ScrollView
-      className="min-h-0 shrink"
-      keyboardShouldPersistTaps="handled"
-      role="region"
-      accessibilityLabel={props.label}
-    >
-      <View className={sheetInsetClass(props.inset)}>{props.children}</View>
-    </ScrollView>
-  );
-}
+const pageScrolls = (props: PageProps): boolean | undefined =>
+  props.page.contentScrolls ?? (props.index === 0 && props.contentScrolls);

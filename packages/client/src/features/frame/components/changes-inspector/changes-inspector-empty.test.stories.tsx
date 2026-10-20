@@ -8,7 +8,7 @@ import {
   largeFile,
   loadErrorTitle,
   noChanges,
-  picker,
+  expectComparison,
   testMeta,
   widths,
 } from './changes-inspector.test.mocks';
@@ -44,7 +44,7 @@ export const NoUncommittedChanges: Story = {
 
     for (const width of widths) {
       await settleViewport(width);
-      await expect(await picker('Uncommitted Changes')).toBeVisible();
+      await expectComparison('Uncommitted Changes', width);
       await expect(canvas.getByText('No uncommitted changes.')).toBeVisible();
     }
   },
@@ -57,7 +57,7 @@ export const ComparedAgainstABranch: Story = {
 
     for (const width of widths) {
       await settleViewport(width);
-      await expect(await picker('Compare Against release/2.4')).toBeVisible();
+      await expectComparison('Compare Against release/2.4', width);
       await expect(
         canvas.getByText(
           'Nothing has changed since this branched from release/2.4.',
