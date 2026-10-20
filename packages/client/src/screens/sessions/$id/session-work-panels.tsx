@@ -1,19 +1,18 @@
-import type { JSX, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { ComposerProps } from '#features/composer';
 import type { SessionPanel, SessionPanels } from '#features/sessions';
 import type { SessionInspectorContent } from './session-inspector';
-import { useSessionShells } from './session-shells';
-import { useSessionSubagents } from './session-subagents';
+import {
+  shellsPanel,
+  subagentsPanel,
+  useWorkSheet,
+  type WorkHome,
+  type WorkPresentation,
+} from './session-work-sheet';
 
 interface WorkPanels {
   composer: ComposerProps;
   sheets: ReactNode;
-}
-
-// How a panel's phone sheet opens and closes.
-interface WorkSheet {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
 }
 
 type WorkProps = SessionInspectorContent & { composer: ComposerProps };
@@ -24,9 +23,17 @@ const panelOpening =
   (open: boolean): void =>
     open ? panels.select(panel) : panels.close(panel);
 
-const sheetProps = (panels: SessionPanels, panel: SessionPanel): WorkSheet => ({
-  open: panels.state.shown === panel,
-  onOpenChange: panelOpening(panels, panel),
+// Where a panel's pill and sheet live: this Composer, and the sheet the pill opens.
+const workHome = (
+  composer: ComposerProps,
+  panels: SessionPanels,
+  panel: SessionPanel,
+): WorkHome => ({
+  composer,
+  sheet: {
+    open: panels.state.shown === panel,
+    onOpenChange: panelOpening(panels, panel),
+  },
 });
 
 /*
@@ -37,18 +44,19 @@ export function useWorkPanels(
   props: WorkProps,
   panels: SessionPanels,
 ): WorkPanels {
-  const sub = sheetProps(panels, 'subagents');
-  const subagents = useSessionSubagents(props.composer, props.subagents, sub);
-  const open = sheetProps(panels, 'shells');
-  const shells = useSessionShells(subagents.composer, props.shells, open);
+  const home = workHome(props.composer, panels, 'subagents');
+  const subagents = useWorkSheet(subagentsPanel, props.subagents, home);
+  const next = workHome(subagents.composer, panels, 'shells');
+  const shells = useWorkSheet(shellsPanel, props.shells, next);
 
   return { composer: shells.composer, sheets: bothSheets(subagents, shells) };
 }
 
-type WorkSheets = { sheet: JSX.Element | null };
-
 // Both work sheets mount together; each draws only at its own width and when its panel is shown.
-const bothSheets = (subagents: WorkSheets, shells: WorkSheets): ReactNode => (
+const bothSheets = (
+  subagents: WorkPresentation,
+  shells: WorkPresentation,
+): ReactNode => (
   <>
     {subagents.sheet}
     {shells.sheet}
