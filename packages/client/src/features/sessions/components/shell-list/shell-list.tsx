@@ -1,71 +1,21 @@
 import type { JSX } from 'react';
 import { useClock } from '#lib/generic/use-clock';
-import { List } from '#primitives/lists/list';
-import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
-import {
-  shellElapsed,
-  shellOutcome,
-  shellsSummary,
-  shellSupporting,
-} from './shell-format';
-import type { ShellEntry } from './shell-list-types';
-import { ShellMark } from './shell-mark';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
+import { PhoneShellList } from './shell-list-phone';
+import type { ShellListProps } from './shell-list-types';
+import { WideShellList } from './shell-list-wide';
 
-export interface ShellListProps {
-  shells: ShellEntry[];
-  onSelect?: (shell: ShellEntry) => void;
-  // Fixed time for stories and tests; a running Shell's time otherwise ticks.
-  now?: number;
-}
+export type { ShellListProps } from './shell-list-types';
 
-type RowProps = Pick<ShellListProps, 'onSelect'> & {
-  shell: ShellEntry;
-  now: number;
-};
-
-// A failed exit reads in the danger colour, as its mark does.
-const supportingTone = (shell: ShellEntry): 'danger' | undefined =>
-  shellOutcome(shell).tone === 'danger' ? 'danger' : undefined;
-
-// The row's lines: the command, what it last printed or how it ended, and how long it has run.
-function rowText({ shell, now }: RowProps): ListItemProps {
-  const supporting = shellSupporting(shell);
-  const elapsed = shellElapsed(shell, now);
-
-  return {
-    title: shell.command,
-    subtitle: supporting,
-    subtitleTone: supportingTone(shell),
-    value: elapsed,
-    accessibilityLabel: `${shell.command}, ${supporting}, ${elapsed}`,
-  };
-}
-
-function ShellRow(props: RowProps): JSX.Element {
-  const { shell, onSelect } = props;
-
-  return (
-    <ListItem
-      {...rowText(props)}
-      leading={<ShellMark shell={shell} />}
-      disclosure={Boolean(onSelect)}
-      onPress={onSelect ? () => onSelect(shell) : undefined}
-    />
-  );
-}
-
-// The Session's background Shells under a count of the running ones.
+// The Session's background Shells: a grouped sheet list on a phone, plain rows in the wide Inspector.
 export function ShellList(props: ShellListProps): JSX.Element {
   const running = props.shells.some((shell) => shell.status === 'running');
   const now = useClock(running, props.now);
 
   return (
-    <List appearance="grouped" fit={false} accessibilityLabel="Shells">
-      <List.Section title={shellsSummary(props.shells)}>
-        {props.shells.map((shell) => (
-          <ShellRow key={shell.id} {...props} shell={shell} now={now} />
-        ))}
-      </List.Section>
-    </List>
+    <SizeClass
+      compact={<PhoneShellList {...props} now={now} />}
+      wide={<WideShellList {...props} now={now} />}
+    />
   );
 }

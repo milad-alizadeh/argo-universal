@@ -6,6 +6,13 @@ export { type SubagentListProps } from './components/subagent-list/subagent-list
 
 export { SubagentSheet } from './components/subagent-list/subagent-sheet';
 
+export {
+  ShellPanel,
+  type ShellPanelProps,
+} from './components/shell-list/shell-panel';
+
+export { ShellSheet } from './components/shell-list/shell-sheet';
+
 export { SessionHeaderBar } from './components/session-header-bar';
 
 export { sessionPanelLabels } from './components/session-panel-triggers';

@@ -1,4 +1,4 @@
-import { type JSX, useState } from 'react';
+import type { JSX } from 'react';
 import {
   Sheet,
   type SheetPageAction,
@@ -6,19 +6,18 @@ import {
   type SheetProps,
   useSheet,
 } from '#primitives/overlays/sheet';
-import { ShellList, type ShellListProps } from './shell-list';
-import type { ShellEntry, ShellOutputText } from './shell-list-types';
+import { ShellList } from './shell-list';
+import type {
+  ShellEntry,
+  ShellListProps,
+  ShellViewProps,
+} from './shell-list-types';
 import { ShellOutput } from './shell-output';
+import { useOpenShell } from './use-open-shell';
 
-export interface ShellSheetProps {
+export interface ShellSheetProps extends ShellViewProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  shells: ShellEntry[];
-  // The open Shell's output; the caller loads it when `onSelect` names the Shell.
-  output?: ShellOutputText;
-  onSelect?: (shell: ShellEntry) => void;
-  onStop: (shell: ShellEntry) => void;
-  now?: number;
 }
 
 // A running Shell the Server can stop offers Stop; an ended one offers nothing.
@@ -47,45 +46,14 @@ function ShellRows(
   return <ShellList shells={props.shells} now={props.now} onSelect={open} />;
 }
 
-function useOpenShell(
-  props: ShellSheetProps,
-): [ShellEntry | undefined, (shell: ShellEntry) => void] {
-  const [openId, setOpenId] = useState<string>();
-  const shell = props.shells.find((entry) => entry.id === openId);
-
-  const open = (entry: ShellEntry): void => {
-    setOpenId(entry.id);
-    props.onSelect?.(entry);
-  };
-
-  return [shell, open];
-}
-
-type OutputPageProps = Pick<ShellSheetProps, 'output' | 'now'> & {
-  shell: ShellEntry;
-};
-
-// Output loaded for another Shell is not yet this one's.
-const ownOutput = ({
-  output,
-  shell,
-}: OutputPageProps): ShellOutputText | undefined =>
-  output?.shellId === shell.id ? output : undefined;
-
 function OutputPage(
-  props: Omit<OutputPageProps, 'shell'> & { shell?: ShellEntry },
+  props: Pick<ShellViewProps, 'output' | 'now'> & { shell?: ShellEntry },
 ): JSX.Element | null {
   const { shell } = props;
 
   if (!shell) return null;
 
-  return (
-    <ShellOutput
-      shell={shell}
-      output={ownOutput({ ...props, shell })}
-      now={props.now}
-    />
-  );
+  return <ShellOutput shell={shell} output={props.output} now={props.now} />;
 }
 
 // The output page's header: the command as its title, and Stop while the Shell runs.

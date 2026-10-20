@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { type ShellOutcome, shellElapsed, shellOutcome } from './shell-format';
+import { type ShellOutcome, shellEnding, shellOutcome } from './shell-format';
 import type { ShellEntry } from './shell-list-types';
 
 type ShellProps = { shell: ShellEntry };
@@ -86,7 +86,7 @@ function Outcome({ shell }: ShellProps): JSX.Element {
   );
 }
 
-// How an ended Shell ended and how long it ran: "Exit 1 after 8s".
+// How an ended Shell ended and how long it ran: "Exit 1 after 8s"; a lost one says what became of it.
 export function ExitLine({ shell, now }: EndProps): JSX.Element | null {
   if (shell.status === 'running') return null;
 
@@ -94,7 +94,7 @@ export function ExitLine({ shell, now }: EndProps): JSX.Element | null {
     <View className="h-9 flex-row items-center gap-1.5 px-4">
       <Outcome shell={shell} />
       <Text role="secondary" tone="muted">
-        {`after ${shellElapsed(shell, now)}`}
+        {shellEnding(shell, now)}
       </Text>
     </View>
   );

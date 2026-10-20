@@ -11,6 +11,8 @@ import {
   sessionPanelLabels,
   sessionPanelOrder,
   type SessionPanels,
+  ShellPanel,
+  type ShellPanelProps,
   SubagentList,
   type SubagentListProps,
 } from '#features/sessions';
@@ -21,16 +23,9 @@ import {
 } from '#primitives/scaffolds/inspector';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
 
-// A Session's Shells, which the Shells panel lists; the Shells page fills it.
-export interface SessionShellsPanel {
-  count: number;
-  running: boolean;
-  panel: ReactNode;
-}
-
 export interface SessionInspectorContent {
   subagents?: SubagentListProps;
-  shells?: SessionShellsPanel;
+  shells?: ShellPanelProps;
   // The Session's changed files; absent until the page loads them.
   changes?: ChangesViewProps;
 }
@@ -61,12 +56,14 @@ function subagentsPanel({
 function shellsPanel({
   shells,
 }: SessionInspectorContent): PanelContent | undefined {
-  if (!shells?.count) return undefined;
+  if (!shells?.shells.length) return undefined;
+
+  const running = shells.shells.some((one) => one.status === 'running');
 
   return {
-    count: shells.count,
-    countTone: runningTone(shells.running),
-    body: shells.panel,
+    count: shells.shells.length,
+    countTone: runningTone(running),
+    body: createElement(ShellPanel, shells),
   };
 }
 
@@ -144,6 +141,9 @@ const panelTitle = (shown: SessionPanel | undefined): string =>
 const changesSheetHeader = (shown: SessionPanel | undefined): ReactNode =>
   shown === 'changes' ? createElement(ChangesSheetHeader) : undefined;
 
+// Subagents and Shells have their own phone sheets, so their tabs are the wide window's alone.
+const phonePanels = new Set<SessionPanel | undefined>(['subagents', 'shells']);
+
 // The Session's Inspector: a tab for each panel opened from the header, showing one at a time.
 export function SessionInspector(
   props: SessionInspectorProps,
@@ -156,7 +156,7 @@ export function SessionInspector(
     shownPanel(props)?.body,
   );
 
-  return shown === 'subagents' ? (
+  return phonePanels.has(shown) ? (
     <SizeClass only="wide">{inspector}</SizeClass>
   ) : (
     inspector
