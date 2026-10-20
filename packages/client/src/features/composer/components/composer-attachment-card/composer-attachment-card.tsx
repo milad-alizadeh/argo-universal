@@ -38,24 +38,28 @@ const mutedClass = 'text-muted-foreground';
 
 const removeClass = 'absolute rounded-full web:rounded-full web:wide:opacity-0';
 
-// Phones draw a disc half of xs, tight in the corner, and hitSlop restores the 44 (iOS) or 48 (Android) target.
+// Phones draw a small card-coloured disc tight in the corner (Paper); hitSlop restores the 44 (iOS) or 48 (Android) target.
+const phoneRemove = {
+  variant: 'ghost',
+  iconRole: 'badge',
+  className:
+    'right-1.25 top-1.25 size-2.5 sm:size-2.5 min-h-0 min-w-0 bg-card active:bg-muted',
+} as const;
+
 const removeFit = Platform.select({
   web: {
+    variant: 'filled',
     iconRole: 'secondary',
     className: 'right-1 top-1',
     hitSlop: undefined,
   },
   android: {
-    iconRole: 'mark',
+    ...phoneRemove,
     className:
-      'right-0.5 top-0.5 size-6 sm:size-6 min-h-0 min-w-0 android:min-h-0 android:min-w-0',
-    hitSlop: 12,
+      'right-1.25 top-1.25 size-2.5 sm:size-2.5 min-h-0 min-w-0 android:min-h-0 android:min-w-0 bg-card active:bg-muted',
+    hitSlop: 19,
   },
-  default: {
-    iconRole: 'mark',
-    className: 'right-0.5 top-0.5 size-5.5 sm:size-5.5 min-h-0 min-w-0',
-    hitSlop: 11,
-  },
+  default: { ...phoneRemove, hitSlop: 17 },
 } as const);
 
 const removeHoverClass = (disabled: boolean): string =>
@@ -162,7 +166,6 @@ function RemoveButton(props: ComposerAttachmentCardProps): React.JSX.Element {
       disabled={props.disabled}
       accessibilityLabel={`Remove ${props.attachment.name}`}
       icon="close"
-      variant="filled"
       size="xs"
       className={cn(removeClass, className, removeHoverClass(props.disabled))}
       onPress={props.onRemove}
