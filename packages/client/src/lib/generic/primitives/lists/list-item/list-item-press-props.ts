@@ -1,8 +1,9 @@
 import type { ComponentProps, KeyboardEventHandler, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
+import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
 
-export interface DrawingProps extends ListItemProps {
+export interface DrawingProps extends PlacedContentProps {
   accessible?: boolean;
   accessory?: ReactNode;
   // A menu row's leading check slot.

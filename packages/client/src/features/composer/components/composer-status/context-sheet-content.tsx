@@ -1,21 +1,21 @@
 import type { JSX } from 'react';
-import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
-import { List, ListSection } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { StatusDot } from '#primitives/status/status-dot';
 import type { ComposerContext } from '../../utils/status';
 import { compactNumber, contextZone } from '../../utils/status';
 import { contextZones } from './context-zones';
 import { Meter } from './status-meter';
+import { StatusSheetList } from './status-surface';
 
-interface ContextSheetContentProps {
+export interface ContextSheetContentProps {
   context: ComposerContext;
   percent: number;
   close: () => void;
 }
 
-const description =
+export const contextDescription =
   'Instructions, tools, files and the conversation the Agent reads for its next reply.';
 
 /*
@@ -26,15 +26,13 @@ export function ContextSheetContent(
   props: ContextSheetContentProps,
 ): JSX.Element {
   return (
-    <View className="flex-1">
-      <List appearance="grouped" fit>
-        <ListSection footer={description}>
-          <TokensRow {...props} />
-        </ListSection>
-        <ZonesSection />
-        {props.context.onCompact ? <CompactSection {...props} /> : null}
-      </List>
-    </View>
+    <StatusSheetList>
+      <ListSection>
+        <TokensRow {...props} />
+      </ListSection>
+      <ZonesSection />
+      {props.context.onCompact ? <CompactSection {...props} /> : null}
+    </StatusSheetList>
   );
 }
 
@@ -64,13 +62,16 @@ function TokensRow({
     <ListItem
       title={`${compactNumber(context.used)} / ${compactNumber(context.size)} tokens`}
       value={`${percent}% · ${zone}`}
+      description={contextDescription}
       control={<Meter percent={percent} warning />}
     />
   );
 }
 
+// Row descriptions, as Settings' rows: iOS closes the card with them, Android draws them under the title.
 const compactItemProps = {
   title: 'Compact',
+  description: 'Compact before the next task.',
   leading: <Icon role="row" name="compaction" />,
 };
 
@@ -84,7 +85,7 @@ function CompactSection({
   };
 
   return (
-    <ListSection footer="Compact before the next task.">
+    <ListSection>
       <ListItem {...compactItemProps} onPress={compact} />
     </ListSection>
   );

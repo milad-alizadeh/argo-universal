@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/content/icon';
-import { List, ListSection } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import type { ComposerStatusProps, UsageLimit } from '../../utils/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';
@@ -14,6 +14,7 @@ import { Meter } from './status-meter';
 import {
   mutedTextClassName,
   phoneSheet,
+  StatusSheetList,
   unselectableTextClassName,
 } from './status-surface';
 import { StatusText } from './status-text';
@@ -62,11 +63,9 @@ function UsageHeading(): JSX.Element {
 // A phone's sheet: its page header already reads "Usage", and the limits sit in one grouped card, as Settings' rows.
 function UsageSheetContent({ usage }: Pick<UsageProps, 'usage'>): JSX.Element {
   return (
-    <View className="flex-1">
-      <List appearance="grouped" fit>
-        <ListSection>{usage.limits.map(usageLimitItem)}</ListSection>
-      </List>
-    </View>
+    <StatusSheetList>
+      <ListSection>{usage.limits.map(usageLimitItem)}</ListSection>
+    </StatusSheetList>
   );
 }
 

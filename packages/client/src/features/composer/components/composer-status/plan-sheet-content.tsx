@@ -1,11 +1,11 @@
 import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
-import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { List, ListSection } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { completedSteps } from '../../utils/status';
 import { StepIndicator } from './plan-steps';
+import { StatusSheetList } from './status-surface';
 
 interface PlanSheetContentProps {
   entries: PlanEntry[];
@@ -19,11 +19,9 @@ export function PlanSheetContent({
   const steps = withOccurrenceKeys(entries, (entry) => entry.content);
 
   return (
-    <View className="flex-1">
-      <List appearance="grouped" fit>
-        <ListSection title={title}>{steps.map(planStepItem)}</ListSection>
-      </List>
-    </View>
+    <StatusSheetList>
+      <ListSection title={title}>{steps.map(planStepItem)}</ListSection>
+    </StatusSheetList>
   );
 }
 

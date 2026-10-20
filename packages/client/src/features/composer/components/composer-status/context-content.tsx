@@ -2,19 +2,18 @@ import type { JSX } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/actions/button';
-import type { ComposerContext } from '../../utils/status';
 import { compactNumber, contextZone } from '../../utils/status';
-import { ContextSheetContent } from './context-sheet-content';
+import type { ContextSheetContentProps } from './context-sheet-content';
+import {
+  ContextSheetContent,
+  contextDescription,
+} from './context-sheet-content';
 import { ContextZones } from './context-zones';
 import { Meter } from './status-meter';
 import { phoneSheet, unselectableTextClassName } from './status-surface';
 import { StatusText } from './status-text';
 
-interface ContextContentProps {
-  context: ComposerContext;
-  percent: number;
-  close: () => void;
-}
+type ContextContentProps = ContextSheetContentProps;
 
 function ContextHeading(): JSX.Element {
   return (
@@ -23,8 +22,7 @@ function ContextHeading(): JSX.Element {
         Context window
       </StatusText>
       <StatusText role="secondary" className="select-none">
-        Instructions, tools, files and the conversation the Agent reads for its
-        next reply.
+        {contextDescription}
       </StatusText>
     </View>
   );
