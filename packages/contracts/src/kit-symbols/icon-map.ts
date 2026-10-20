@@ -4,6 +4,7 @@ import { gitSymbols } from './git-symbols';
 import { listViewSymbols } from './list-view-symbols';
 import { mediaSymbols } from './media-symbols';
 import { statusSymbols } from './status-symbols';
+import { subagentSymbols } from './subagent-symbols';
 import { timeSymbols } from './time-symbols';
 
 export const iconSymbols = {
@@ -13,6 +14,7 @@ export const iconSymbols = {
   ...listViewSymbols,
   ...mediaSymbols,
   ...statusSymbols,
+  ...subagentSymbols,
   ...timeSymbols,
   activity: { sf: 'waveform.path.ecg', material: 'monitor_heart' },
   add: { sf: 'plus', material: 'add' },
@@ -124,8 +126,6 @@ export const iconSymbols = {
   },
   sidebar: { sf: 'sidebar.left', material: 'side_navigation' },
   sparkle: { sf: 'sparkles', material: 'auto_awesome' },
-  speaker: { sf: 'speaker.wave.2', material: 'volume_up' },
-  'speaker-off': { sf: 'speaker.slash', material: 'volume_off' },
   'state-machine': { sf: 'circle.hexagonpath', material: 'hub' },
   steer: { sf: 'arrow.turn.down.right', material: 'subdirectory_arrow_right' },
   subtract: { sf: 'minus', material: 'remove' },

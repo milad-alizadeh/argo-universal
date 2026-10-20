@@ -14,6 +14,7 @@ import Reply from '@expo/material-symbols/reply.xml';
 import Route from '@expo/material-symbols/route.xml';
 import Schedule from '@expo/material-symbols/schedule.xml';
 import Schema from '@expo/material-symbols/schema.xml';
+import Science from '@expo/material-symbols/science.xml';
 import ScreenShare from '@expo/material-symbols/screen_share.xml';
 import Search from '@expo/material-symbols/search.xml';
 import Select from '@expo/material-symbols/select.xml';
@@ -33,6 +34,7 @@ import Terminal from '@expo/material-symbols/terminal.xml';
 import Timer from '@expo/material-symbols/timer.xml';
 import ToggleOn from '@expo/material-symbols/toggle_on.xml';
 import Topic from '@expo/material-symbols/topic.xml';
+import TravelExplore from '@expo/material-symbols/travel_explore.xml';
 import Tune from '@expo/material-symbols/tune.xml';
 import UnfoldMore from '@expo/material-symbols/unfold_more.xml';
 import VerifiedUser from '@expo/material-symbols/verified_user.xml';
@@ -65,6 +67,7 @@ export const materialImagesPZ = {
   route: Route,
   schedule: Schedule,
   schema: Schema,
+  science: Science,
   screen_share: ScreenShare,
   search: Search,
   select: Select,
@@ -85,6 +88,7 @@ export const materialImagesPZ = {
   toggle_on: ToggleOn,
   topic: Topic,
   tune: Tune,
+  travel_explore: TravelExplore,
   unfold_more: UnfoldMore,
   verified_user: VerifiedUser,
   vertical_align_center: VerticalAlignCenter,
