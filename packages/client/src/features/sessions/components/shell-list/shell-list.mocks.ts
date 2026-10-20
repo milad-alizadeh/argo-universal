@@ -83,7 +83,7 @@ const done = colour(35);
 const bundled = success('Web Bundled ');
 
 // What Expo prints while it serves the app, with its own colours.
-const devOutput = [
+const devStart = [
   muted('> @argo/app@0.1.0 dev'),
   muted('> expo start --web'),
   '',
@@ -96,27 +96,33 @@ const devOutput = [
   `${muted('LOG   ')}${done('[tRPC] ')}connected to ${info('ws://localhost:4310')}`,
   `${bundled}${muted('214ms ')}index.ts ${muted('(1 module)')}`,
   `${warning('WARN  ')}Route ${info('"./session/[id].tsx"')} has no default`,
+];
+
+// The newest lines, as Paper's running Shell ends.
+const devLatest = [
   `${muted('› ')}Reloading apps`,
   `${bundled}${muted('96ms ')}index.ts ${muted('(1 module)')}`,
   `${muted('LOG   ')}${done('[feed] ')}subscribe revision ${warning('42')}`,
   `${muted('LOG   ')}${done('[feed] ')}page after:${warning('41')} → ${warning('12')} rows`,
-].join('\n');
+];
 
-// More of the same, so the output scrolls on a phone.
+// Earlier revisions between start and the newest lines, so the output scrolls on a phone.
 const devReloads = Array.from(
   { length: 24 },
   (_, index) =>
-    `${muted('LOG   ')}${done('[feed] ')}subscribe revision ${warning(String(43 + index))}`,
-).join('\n');
+    `${muted('LOG   ')}${done('[feed] ')}subscribe revision ${warning(String(18 + index))}`,
+);
+
+const outputText = (lines: string[]): string => `${lines.join('\n')}\n`;
 
 export const runningOutput: ShellOutputText = {
   shellId: runningShell.id,
-  text: `${devOutput}\n`,
+  text: outputText([...devStart, ...devLatest]),
 };
 
 export const longRunningOutput: ShellOutputText = {
   shellId: runningShell.id,
-  text: `${devOutput}\n${devReloads}\n`,
+  text: outputText([...devStart, ...devReloads, ...devLatest]),
 };
 
 export const failedOutput: ShellOutputText = {

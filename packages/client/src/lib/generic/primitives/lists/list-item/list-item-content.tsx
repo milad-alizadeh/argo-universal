@@ -9,13 +9,16 @@ type SubtitleProps = Pick<ListItemProps, 'subtitleTone' | 'subtitleDimmed'> & {
   multiline?: boolean;
 };
 
+// Android places a row's value on its own line under the subtitle (list-item-placement), so each placed line keeps one.
+const lineCount = (text: string): number => text.split('\n').length;
+
 function Subtitle(props: SubtitleProps): ReactNode {
   return props.text === undefined ? null : (
     <Text
       role="row-detail"
       tone={props.subtitleTone}
       dimmed={props.subtitleDimmed}
-      numberOfLines={props.multiline ? undefined : 1}
+      numberOfLines={props.multiline ? undefined : lineCount(props.text)}
     >
       {props.text}
     </Text>

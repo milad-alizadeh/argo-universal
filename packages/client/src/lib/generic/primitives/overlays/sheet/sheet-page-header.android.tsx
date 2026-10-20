@@ -14,7 +14,6 @@ import {
   semantics,
   weight,
   size,
-  width,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
@@ -60,14 +59,14 @@ type SideProps = HeaderProps & {
   children: ReactElement;
 };
 
-// A page with an action widens both ends to the action's slot; otherwise each end is the back button's size.
+// A page with an action widens both ends to the action's slot; otherwise each end is the back button's size (`size`: native `width` fails to cast a plain number).
 function Side(props: SideProps): ReactElement {
   if (!props.page.action) return props.children;
 
   return (
     <Box
       contentAlignment={props.edge}
-      modifiers={[width(actionSlotWidth), height(headerSize)]}
+      modifiers={[size(actionSlotWidth, headerSize)]}
     >
       {props.children}
     </Box>
