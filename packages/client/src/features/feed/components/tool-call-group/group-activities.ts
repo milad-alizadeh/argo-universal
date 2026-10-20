@@ -39,10 +39,11 @@ function activityWithout(
 // The live Tool call is drawn in the group's title, so its activity leaves the list.
 export function visibleActivities(group: FeedGroup): FeedActivity[] {
   const live = liveToolCall(group);
+  const drawn = group.items.filter((activity) => activity.type !== 'thought');
 
-  if (!live) return group.items;
+  if (!live) return drawn;
 
-  return group.items.flatMap((activity) =>
+  return drawn.flatMap((activity) =>
     activityWithout(activity, live.toolCall.id),
   );
 }

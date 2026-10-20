@@ -21,11 +21,11 @@ export function shownLiveHeader(
 ): LiveHeader | null {
   if (!liveHeader || !isOpenWork(items.at(-1))) return liveHeader;
 
-  return waitingHeader(liveHeader);
+  return independentHeader(liveHeader);
 }
 
-function waitingHeader(liveHeader: LiveHeader): LiveHeader | null {
-  return ['request', 'retry'].includes(liveHeader.source.type)
+function independentHeader(liveHeader: LiveHeader): LiveHeader | null {
+  return ['request', 'retry', 'thought'].includes(liveHeader.source.type)
     ? liveHeader
     : null;
 }
