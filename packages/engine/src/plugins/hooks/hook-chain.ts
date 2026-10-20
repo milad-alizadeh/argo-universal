@@ -16,7 +16,7 @@ import {
 import { RunningHook, type HookStep } from './running-hook';
 
 // A Hook's own time, as Claude Code allows it; waits on `next` and `argo` calls don't count.
-const hookBudgetMs = 10_000;
+export const hookBudgetMs = 10_000;
 
 export type HookChainInput = {
   send: (hook: RegisteredHook, invocation: HookInvocation) => void;

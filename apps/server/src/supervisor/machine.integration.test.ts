@@ -64,7 +64,6 @@ const heartbeatDelayEvent = 'xstate.after.heartbeatTimeout.supervisor.running';
 const backoffDelayEvent =
   'xstate.after.backoff.supervisor.backingOff.delay.waiting';
 
-const maxCrashes = maxCrashesInWindow;
 
 // Doubling from the base, up to the cap.
 const backoffMs = (crashes: number): number =>
@@ -300,12 +299,12 @@ describe('supervisor model', (): void => {
         snapshot.matches({ backingOff: { engine: 'exited' } }) ? 0 : 1,
       );
       expect(latestEngine().askedToStop).toBe(true);
-      expect(snapshot.context.crashTimes.length).toBeLessThan(maxCrashes);
+      expect(snapshot.context.crashTimes.length).toBeLessThan(maxCrashesInWindow);
       expect(serverAddressRemovals).toBe(0);
     },
     failed: (snapshot: SupervisorSnapshot): void => {
       expectModelState(snapshot);
-      expect(snapshot.context.crashTimes).toHaveLength(maxCrashes);
+      expect(snapshot.context.crashTimes).toHaveLength(maxCrashesInWindow);
       expect(liveEngines()).toBe(0);
       expect(serverAddressRemovals).toBe(1);
     },
@@ -490,7 +489,7 @@ describe('supervisor', (): void => {
   it('forgets crashes older than the crash window', (): void => {
     startSupervisor();
 
-    for (let crash = 0; crash < maxCrashes - 1; crash++)
+    for (let crash = 0; crash < maxCrashesInWindow - 1; crash++)
       crashAndWaitForRestart();
     keepRunningFor(crashWindowMs);
 
@@ -501,7 +500,7 @@ describe('supervisor', (): void => {
   it('still counts crashes from within the crash window', (): void => {
     startSupervisor();
 
-    for (let crash = 0; crash < maxCrashes - 1; crash++)
+    for (let crash = 0; crash < maxCrashesInWindow - 1; crash++)
       crashAndWaitForRestart();
     keepRunningFor(crashWindowMs / 2);
     crashLatestEngine();
@@ -513,7 +512,7 @@ describe('supervisor', (): void => {
     startSupervisor();
     writeOtherServerJson();
 
-    for (let crash = 0; crash < maxCrashes - 1; crash++)
+    for (let crash = 0; crash < maxCrashesInWindow - 1; crash++)
       crashAndWaitForRestart();
     crashLatestEngine();
 

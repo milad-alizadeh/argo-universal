@@ -106,7 +106,9 @@ describe('Connection state', () => {
   });
 });
 
-const capSteps = retryDelayCapMs / retryDelayBaseMs;
+// Enough attempts to reach the cap and stay on it twice more.
+const attemptsPastCap =
+  Math.ceil(Math.log2(retryDelayCapMs / retryDelayBaseMs)) + 3;
 
 describe('Connection attempts', () => {
   it('allows the first attempt at once', async () => {
@@ -117,7 +119,7 @@ describe('Connection attempts', () => {
     loseOpenConnection();
     const waits: number[] = [];
 
-    for (let attempt = 0; 2 ** attempt <= 8 * capSteps; attempt++)
+    for (let attempt = 0; attempt < attemptsPastCap; attempt++)
       waits.push(await waitForAllowedAttempt());
 
     expect(waits[0]).toBe(retryDelayBaseMs);

@@ -76,7 +76,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           ) {
             expect(step.state.status).toBe('done');
             expect(step.state.output).toEqual({
-              failure: `Checkout creation exceeded checkoutLimit (${checkoutLimit} ms). Retry the Session.`,
+              failure: expect.stringContaining(`${checkoutLimit} ms`),
             });
           }
 

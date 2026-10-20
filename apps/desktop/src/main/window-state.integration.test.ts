@@ -40,12 +40,18 @@ it('restores saved normal bounds and maximization from disk', () => {
 it('centres a larger first window within the display work area', () => {
   const area = { x: 0, y: 25, width: 1920, height: 1055 };
 
-  expect(windowBounds(undefined, area)).toEqual({
-    x: (area.width - defaultWidth) / 2,
-    y: Math.round(area.y + (area.height - defaultHeight) / 2),
-    width: defaultWidth,
-    height: defaultHeight,
-  });
+  const bounds = windowBounds(undefined, area);
+
+  expect(bounds).toMatchObject({ width: defaultWidth, height: defaultHeight });
+  // Equal gaps either side, allowing a pixel of rounding.
+  expect(
+    Math.abs(bounds.x - area.x - (area.x + area.width - bounds.x - bounds.width)),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(
+      bounds.y - area.y - (area.y + area.height - bounds.y - bounds.height),
+    ),
+  ).toBeLessThanOrEqual(1);
 });
 
 it('keeps a window from a disconnected monitor visible on a smaller screen', () => {

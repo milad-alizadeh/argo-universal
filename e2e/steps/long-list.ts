@@ -11,6 +11,9 @@ const titlePrefix = 'Long list Session';
 
 const indexWidth = 3;
 
+// Far above any page size, so a broken cursor fails instead of hanging.
+const seedLimit = 500;
+
 const SessionPage = z.object({ nextCursor: z.string().nullable() });
 
 const Projects = z.array(z.object({ id: z.string() }));
@@ -90,6 +93,9 @@ async function seedSessions(page: Page, httpUrl: string): Promise<void> {
   let index = 1;
 
   while (!(await hasSecondPage(page, httpUrl))) {
+    if (index > seedLimit)
+      throw new Error(`Sessions list still fits one page after ${seedLimit} Sessions`);
+
     await startSession(page, httpUrl, {
       projectId,
       agent,

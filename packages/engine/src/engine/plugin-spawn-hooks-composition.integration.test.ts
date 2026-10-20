@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { refusal } from '#mocks/probe-run';
 import { appending, runWithHooks, spawnHook } from '#mocks/spawn-hooks';
+import { hookBudgetMs } from '../plugins/hooks/hook-chain';
 
 // Each journey starts the calling Plugin and every Plugin that hooks its command.
 const journeyMs = 20_000;
@@ -72,7 +73,7 @@ it.each([
   {
     name: 'misses its budget',
     hook: `() => new Promise(() => {})`,
-    reason: 'ms budget',
+    reason: `${hookBudgetMs} ms budget`,
   },
 ])(
   'skips a Hook that $name, logs it once, and goes on',

@@ -16,6 +16,7 @@ it('serves a Plugin file as immutable bytes from its content-hash URL', async ()
   expect(response.headers.get('content-type')).toBe('image/png');
   expect(response.headers.get('cache-control')).toMatch(/\bprivate\b/);
   expect(response.headers.get('cache-control')).toMatch(/\bimmutable\b/);
+  expect(response.headers.get('cache-control')).toMatch(/\bmax-age=[1-9]/);
   expect(Buffer.from(await response.arrayBuffer())).toEqual(image);
 });
 

@@ -14,6 +14,11 @@ describe('pointer press', () => {
       { x: 100, y: 100 + dragThreshold },
       false,
     ],
+    [
+      'a diagonal drag of exactly the threshold',
+      { x: 100 + dragThreshold * 0.6, y: 100 + dragThreshold * 0.8 },
+      false,
+    ],
     ['a long drag', { x: 160, y: 40 }, false],
   ])('treats %s as a press: %s', (_, up, press) => {
     expect(isPress({ x: 100, y: 100 }, up)).toBe(press);

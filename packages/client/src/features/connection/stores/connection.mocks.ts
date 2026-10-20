@@ -5,9 +5,6 @@ import {
   type LinkValue,
 } from './connection';
 
-// Written out so the tests cannot grade themselves.
-export const offlineDelayMs = 10_000;
-
 const lostError = new Error('WebSocket closed');
 
 export interface FakeLink {

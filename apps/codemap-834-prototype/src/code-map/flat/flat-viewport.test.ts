@@ -11,16 +11,6 @@ const extent: Bounds = { x: 0, y: 0, w: 100, h: 80 };
 
 const size = { width: 1150, height: 1000 };
 
-// Fit scales the extent plus its margins into the viewport and centres it.
-const fitScale = Math.min(
-  size.width / (extent.w * flatFitMargin.x),
-  size.height / (extent.h * flatFitMargin.y),
-);
-
-const fitOrigin = {
-  x: (size.width - extent.w * fitScale) / 2,
-  y: (size.height - extent.h * fitScale) / 2,
-};
 
 function tile(id: string, bounds: Bounds): Tile {
   const file = { id, path: id, area: 1, height: 1, branches: 0, tone: 'none' };
@@ -41,14 +31,19 @@ describe('flat viewport', () => {
   it('starts with the extent centred and fitted to the viewport', () => {
     const flat = viewport();
 
-    expect(flat.toScreen({ x: 0, y: 0 })).toEqual({
-      x: fitOrigin.x,
-      y: fitOrigin.y,
-    });
-    expect(flat.toScreen({ x: 100, y: 80 })).toEqual({
-      x: fitOrigin.x + extent.w * fitScale,
-      y: fitOrigin.y + extent.h * fitScale,
-    });
+    const start = flat.toScreen({ x: extent.x, y: extent.y });
+    const end = flat.toScreen({ x: extent.x + extent.w, y: extent.y + extent.h });
+    const scale = unitWidth(flat);
+
+    expect(start.x).toBeCloseTo(size.width - end.x);
+    expect(start.y).toBeCloseTo(size.height - end.y);
+    // The extent grown by its margins fills one axis exactly.
+    expect(
+      Math.max(
+        (extent.w * flatFitMargin.x * scale) / size.width,
+        (extent.h * flatFitMargin.y * scale) / size.height,
+      ),
+    ).toBeCloseTo(1);
   });
 
   it('returns to fit after the camera moved', () => {
@@ -57,10 +52,9 @@ describe('flat viewport', () => {
     runCamera(flat, 'in');
     runCamera(flat, 'fit');
 
-    expect(flat.toScreen({ x: 0, y: 0 })).toEqual({
-      x: fitOrigin.x,
-      y: fitOrigin.y,
-    });
+    expect(flat.toScreen({ x: 0, y: 0 })).toEqual(
+      viewport().toScreen({ x: 0, y: 0 }),
+    );
   });
 
   const poses: [string, (flat: FlatViewport) => void][] = [
@@ -98,7 +92,7 @@ describe('flat viewport', () => {
 
       for (let press = 0; press < 30; press += 1) runCamera(flat, action);
 
-      expect(unitWidth(flat)).toBeCloseTo(fitScale * limit);
+      expect(unitWidth(flat) / unitWidth(viewport())).toBeCloseTo(limit);
     },
   );
 });
