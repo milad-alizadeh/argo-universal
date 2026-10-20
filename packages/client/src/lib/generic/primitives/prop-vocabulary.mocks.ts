@@ -17,6 +17,7 @@ import type * as FilterPillKit from '#primitives/inputs/filter-pill';
 import type * as PickerKit from '#primitives/inputs/picker';
 import type * as RichTextareaKit from '#primitives/inputs/rich-textarea';
 import type * as SearchFieldKit from '#primitives/inputs/search-field';
+import type * as SegmentedControlKit from '#primitives/inputs/segmented-control';
 import type * as SliderKit from '#primitives/inputs/slider';
 import type * as SwitchKit from '#primitives/inputs/switch';
 import type * as TextInputKit from '#primitives/inputs/text-input';
@@ -104,6 +105,7 @@ export type Primitives = {
   PopoverTriggerProps: PopoverKit.PopoverTriggerProps;
   RichTextareaProps: RichTextareaKit.RichTextareaProps;
   SearchFieldProps: SearchFieldKit.SearchFieldProps;
+  SegmentedControlProps: SegmentedControlKit.SegmentedControlProps;
   StackProps: StackKit.StackProps;
   SectionFooter: FieldDescriptionKit.SectionFooter;
   SelectedCheckProps: SelectedCheckKit.SelectedCheckProps;

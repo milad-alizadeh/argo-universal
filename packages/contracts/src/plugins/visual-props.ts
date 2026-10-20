@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import { tones } from '../kit-tokens';
 import { svgProps } from './kit-props';
-
-const svgCharacterLimit = 131_072;
+import { svgCharacterLimit } from './wire-limits';
 
 const labelLimit = 120;
 

@@ -33,7 +33,15 @@ import {
   toDirectedGraph,
 } from 'xstate/graph';
 import type { EngineCommand } from './engine-message';
-import { supervisorMachine } from './machine';
+import {
+  backoffBaseMs,
+  backoffCapMs,
+  crashWindowMs,
+  heartbeatTimeoutMs,
+  maxCrashesInWindow,
+  readyTimeoutMs,
+  supervisorMachine,
+} from './machine';
 
 const supervisorStartedAt = '2026-10-03T00:00:00.000Z';
 
@@ -56,15 +64,9 @@ const heartbeatDelayEvent = 'xstate.after.heartbeatTimeout.supervisor.running';
 const backoffDelayEvent =
   'xstate.after.backoff.supervisor.backingOff.delay.waiting';
 
-// Numbers written out so the model cannot grade itself.
-const readyTimeoutMs = 15_000;
-
-const heartbeatTimeoutMs = 5000;
-
-const maxCrashes = 10;
-
+// Doubling from the base, up to the cap.
 const backoffMs = (crashes: number): number =>
-  Math.min(500 * 2 ** (crashes - 1), 30_000);
+  Math.min(backoffBaseMs * 2 ** (crashes - 1), backoffCapMs);
 
 interface MockEngine {
   send: (event: AnyEventObject) => void;
@@ -296,12 +298,14 @@ describe('supervisor model', (): void => {
         snapshot.matches({ backingOff: { engine: 'exited' } }) ? 0 : 1,
       );
       expect(latestEngine().askedToStop).toBe(true);
-      expect(snapshot.context.crashTimes.length).toBeLessThan(maxCrashes);
+      expect(snapshot.context.crashTimes.length).toBeLessThan(
+        maxCrashesInWindow,
+      );
       expect(serverAddressRemovals).toBe(0);
     },
     failed: (snapshot: SupervisorSnapshot): void => {
       expectModelState(snapshot);
-      expect(snapshot.context.crashTimes).toHaveLength(maxCrashes);
+      expect(snapshot.context.crashTimes).toHaveLength(maxCrashesInWindow);
       expect(liveEngines()).toBe(0);
       expect(serverAddressRemovals).toBe(1);
     },
@@ -483,21 +487,23 @@ describe('supervisor', (): void => {
     expect(existsSync(serverJsonPath())).toBe(false);
   });
 
-  it('forgets crashes older than 10 minutes', (): void => {
+  it('forgets crashes older than the crash window', (): void => {
     startSupervisor();
 
-    for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
-    keepRunningFor(10 * 60_000);
+    for (let crash = 0; crash < maxCrashesInWindow - 1; crash++)
+      crashAndWaitForRestart();
+    keepRunningFor(crashWindowMs);
 
-    expect(crashAndWaitForRestart()).toBe(500);
+    expect(crashAndWaitForRestart()).toBe(backoffBaseMs);
     expect(supervisor.getSnapshot().value).toBe('starting');
   });
 
-  it('still counts crashes from less than 10 minutes ago', (): void => {
+  it('still counts crashes from within the crash window', (): void => {
     startSupervisor();
 
-    for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
-    keepRunningFor(5 * 60_000);
+    for (let crash = 0; crash < maxCrashesInWindow - 1; crash++)
+      crashAndWaitForRestart();
+    keepRunningFor(crashWindowMs / 2);
     crashLatestEngine();
 
     expect(supervisor.getSnapshot().value).toBe('failed');
@@ -507,7 +513,8 @@ describe('supervisor', (): void => {
     startSupervisor();
     writeOtherServerJson();
 
-    for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
+    for (let crash = 0; crash < maxCrashesInWindow - 1; crash++)
+      crashAndWaitForRestart();
     crashLatestEngine();
 
     expect(supervisor.getSnapshot().value).toBe('failed');

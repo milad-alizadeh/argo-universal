@@ -4,9 +4,9 @@ import type { Tile } from '../model';
 import type { FlatContext } from './flat-context';
 import type { FlatTransform } from './flat-viewport';
 
-const minimumWidth = 100;
+export const minimumWidth = 100;
 
-const minimumHeight = 24;
+export const minimumHeight = 24;
 
 function readable(tile: Tile, scale: number): boolean {
   return tile.w * scale > minimumWidth && tile.h * scale > minimumHeight;

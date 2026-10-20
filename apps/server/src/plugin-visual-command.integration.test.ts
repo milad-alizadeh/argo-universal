@@ -1,7 +1,10 @@
+import { svgCharacterLimit } from '@repo/contracts/plugins/wire-limits';
 import { expect, it } from 'vitest';
 import { fixture, run } from '../mocks/plugin-cli';
 
-const oversizedSvg = JSON.stringify('<svg>' + ' '.repeat(131_072) + '</svg>');
+const oversizedSvg = JSON.stringify(
+  '<svg>' + ' '.repeat(svgCharacterLimit) + '</svg>',
+);
 
 it.each([
   ['Svg', 'label="Art" xml="<svg><script/></svg>"', 'element <script> refused'],

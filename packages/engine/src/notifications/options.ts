@@ -6,11 +6,11 @@ export interface NotificationOptions {
   now?: () => number;
 }
 
-const defaultAttentionLeaseMs = 30_000;
+export const defaultAttentionLeaseMs = 30_000;
 
 const defaultRetryMs = 2000;
 
-const defaultLifetimeMs = 60_000;
+export const defaultLifetimeMs = 60_000;
 
 export const notificationQueueLimit = 64;
 

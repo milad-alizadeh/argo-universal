@@ -1,4 +1,8 @@
-import type { SettingsListViewProps, SettingsRow } from './settings-list-props';
+import type {
+  SettingsGroup,
+  SettingsListViewProps,
+  SettingsRow,
+} from './settings-list-props';
 import {
   accountsRow,
   agentsRow,
@@ -11,34 +15,6 @@ import {
 const wideOnly = (wide: boolean, row: SettingsRow): SettingsRow[] =>
   wide ? [row] : [];
 
-function serverRows(
-  props: SettingsListViewProps,
-  wide: boolean,
-): SettingsRow[] {
-  return [
-    projectsRow(props),
-    agentsRow(props),
-    pluginsRow(props),
-    accountsRow(props),
-    connectionRow(props, wide),
-    ...wideOnly(wide, devicesRow(props)),
-  ];
-}
-
-function deviceRows(
-  props: SettingsListViewProps,
-  wide: boolean,
-): SettingsRow[] {
-  return [appearanceRow(props), ...wideOnly(wide, notificationsRow(props))];
-}
-
-const appearanceRow = (props: SettingsListViewProps): SettingsRow => ({
-  label: 'Appearance',
-  icon: 'appearance',
-  href: '/settings/appearance',
-  value: props.appearanceState ?? 'System',
-});
-
 const notificationsRow = (props: SettingsListViewProps): SettingsRow => ({
   label: 'Notifications',
   icon: 'notifications',
@@ -46,19 +22,49 @@ const notificationsRow = (props: SettingsListViewProps): SettingsRow => ({
   value: props.notificationsState ?? 'On',
 });
 
-// The rows whose label holds the search, ignoring case.
-function matchingRows(rows: readonly SettingsRow[], query = ''): SettingsRow[] {
-  const search = query.trim().toLowerCase();
-
-  return rows.filter(({ label }) => label.toLowerCase().includes(search));
-}
-
-export function settingsRows(
+const connectionRows = (
   props: SettingsListViewProps,
   wide: boolean,
-): SettingsRow[] {
-  return matchingRows(
-    [...serverRows(props, wide), ...deviceRows(props, wide)],
-    props.query,
-  );
+): SettingsRow[] => [
+  connectionRow(props, wide),
+  ...wideOnly(wide, devicesRow(props)),
+  ...wideOnly(wide, notificationsRow(props)),
+];
+
+// Paper's SettingsList: the pages in three groups; a phone leaves out Devices and Notifications.
+function pageGroups(
+  props: SettingsListViewProps,
+  wide: boolean,
+): SettingsGroup[] {
+  return [
+    {
+      title: 'Workspace',
+      rows: [projectsRow(props), agentsRow(props), pluginsRow(props)],
+    },
+    { title: 'Account', rows: [accountsRow(props)] },
+    { title: 'Connection', rows: connectionRows(props, wide) },
+  ];
 }
+
+// Whether a label holds the search, ignoring case.
+export function matchesSearch(label: string, query = ''): boolean {
+  return label.toLowerCase().includes(query.trim().toLowerCase());
+}
+
+// The groups narrowed to the rows the search matches; a group left with none goes.
+export function settingsGroups(
+  props: SettingsListViewProps,
+  wide: boolean,
+): SettingsGroup[] {
+  return pageGroups(props, wide)
+    .map((group) => ({
+      ...group,
+      rows: group.rows.filter((row) => matchesSearch(row.label, props.query)),
+    }))
+    .filter((group) => group.rows.length > 0);
+}
+
+export const settingsRows = (
+  props: SettingsListViewProps,
+  wide: boolean,
+): SettingsRow[] => settingsGroups(props, wide).flatMap((group) => group.rows);

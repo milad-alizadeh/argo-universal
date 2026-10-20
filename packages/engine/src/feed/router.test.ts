@@ -1,5 +1,6 @@
 import {
   type AgentMessage,
+  defaultPageRows,
   FeedPageInput,
   FeedPageOutput,
   FeedRowOutput,
@@ -34,7 +35,11 @@ it('keeps the Feed page mock and default paging aligned with the contract', (): 
   expect(FeedPageOutput.parse(page)).toEqual(page);
   expect(
     FeedPageInput.parse({ sessionId: 'session-1', direction: 'tail' }),
-  ).toEqual({ sessionId: 'session-1', direction: 'tail', limit: 40 });
+  ).toEqual({
+    sessionId: 'session-1',
+    direction: 'tail',
+    limit: defaultPageRows,
+  });
 });
 
 it('rejects a Feed page limit above 200', (): void => {

@@ -21,8 +21,6 @@ const agents = [first, second];
 
 const addAgents = fn();
 
-const loadingLabel = 'Loading configuration…';
-
 const meta = {
   ...pickerStoryMeta,
   title: 'Tests/ComposerAgentSwitch',
@@ -85,9 +83,12 @@ export const SwitchKeepsPickerOpenWhileLoading: Story = {
     );
     await waitFor(() => expect(choices).not.toBeInTheDocument());
     await expect(picker).toHaveAttribute('data-state', 'open');
-    await expect(within(picker).getByText(loadingLabel)).toBeVisible();
+    // The rows wait as placeholders: no Model row to press, and no loading line of its own.
     await expect(
       within(picker).queryByRole('button', { name: /^Model,/ }),
+    ).not.toBeInTheDocument();
+    await expect(
+      within(picker).queryByText('Loading configuration…'),
     ).not.toBeInTheDocument();
     await expect(
       within(picker).getByRole('button', { name: 'Agent, Second Agent' }),
@@ -100,9 +101,6 @@ export const SwitchKeepsPickerOpenWhileLoading: Story = {
       ).toBeVisible(),
     );
     await expect(picker).toHaveAttribute('data-state', 'open');
-    await expect(
-      within(picker).queryByText(loadingLabel),
-    ).not.toBeInTheDocument();
   },
 };
 
@@ -129,8 +127,5 @@ export const SavedOptionsStayVisibleDuringRefresh: Story = {
         within(picker).getByRole('button', { name: /^Model,/ }),
       ).toBeVisible(),
     );
-    await expect(
-      within(picker).queryByText(loadingLabel),
-    ).not.toBeInTheDocument();
   },
 };

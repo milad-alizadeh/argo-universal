@@ -5,3 +5,10 @@ export { useServerPageCaption } from './hooks/use-server-caption';
 export { useProjects } from './hooks/use-projects';
 
 export { homePath } from './utils/home-path';
+
+export {
+  useRestoredThemeChoice,
+  useThemeChoice,
+} from './hooks/use-theme-choice';
+
+export { type ThemeChoice, themeChoices } from './stores/theme-choice';

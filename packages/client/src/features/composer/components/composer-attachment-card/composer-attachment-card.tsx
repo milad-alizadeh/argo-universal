@@ -1,6 +1,6 @@
 import { isPromptImage, maxBlobUploadBytes } from '@repo/contracts';
 import type * as React from 'react';
-import { Image, View } from 'react-native';
+import { Image, Platform, View } from 'react-native';
 import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
 import { cn } from '#lib/generic/utils';
 import { IconButton } from '#primitives/actions/icon-button';
@@ -23,8 +23,10 @@ export interface ComposerAttachmentCardProps {
   onRemove: () => void;
 }
 
-const cardClass =
-  'group/attachment relative w-40 h-30 shrink-0 overflow-hidden rounded-md border bg-card';
+// The tile leaves its Remove button unclipped, so the button's hitSlop can reach past the tile's corner.
+const tileClass = 'group/attachment relative w-40 h-30 shrink-0';
+
+const cardClass = 'size-full overflow-hidden rounded-md border bg-card';
 
 const previewClass = 'h-22.5 overflow-hidden';
 
@@ -34,8 +36,31 @@ const kindClass = 'items-center justify-center gap-1 bg-muted';
 
 const mutedClass = 'text-muted-foreground';
 
-const removeClass =
-  'absolute right-1 top-1 rounded-full web:rounded-full web:wide:opacity-0';
+const removeClass = 'absolute rounded-full web:rounded-full web:wide:opacity-0';
+
+// Phones draw a small card-coloured disc tight in the corner (Paper); hitSlop restores the 44 (iOS) or 48 (Android) target.
+const phoneRemove = {
+  variant: 'ghost',
+  iconRole: 'badge',
+  className:
+    'right-1.25 top-1.25 size-2.5 sm:size-2.5 min-h-0 min-w-0 bg-card active:bg-muted',
+} as const;
+
+const removeFit = Platform.select({
+  web: {
+    variant: 'filled',
+    iconRole: 'secondary',
+    className: 'right-1 top-1',
+    hitSlop: undefined,
+  },
+  android: {
+    ...phoneRemove,
+    className:
+      'right-1.25 top-1.25 size-2.5 sm:size-2.5 min-h-0 min-w-0 android:min-h-0 android:min-w-0 bg-card active:bg-muted',
+    hitSlop: 19,
+  },
+  default: { ...phoneRemove, hitSlop: 17 },
+} as const);
 
 const removeHoverClass = (disabled: boolean): string =>
   disabled
@@ -55,8 +80,15 @@ const cardBorder = (attachment: ComposerAttachment): string =>
 export function ComposerAttachmentCard(
   props: ComposerAttachmentCardProps,
 ): React.JSX.Element {
-  const { attachment } = props;
+  return (
+    <View className={tileClass}>
+      <AttachmentFrame attachment={props.attachment} />
+      <RemoveButton {...props} />
+    </View>
+  );
+}
 
+function AttachmentFrame({ attachment }: PreviewProps): React.JSX.Element {
   const Preview = isPromptImage(attachment.mimeType)
     ? ImagePreview
     : FilePreview;
@@ -64,7 +96,6 @@ export function ComposerAttachmentCard(
   return (
     <View className={cn(cardClass, cardBorder(attachment))}>
       <Preview attachment={attachment} />
-      <RemoveButton {...props} />
     </View>
   );
 }
@@ -127,15 +158,16 @@ function FileName({ name }: { name: string }): React.JSX.Element {
 }
 
 function RemoveButton(props: ComposerAttachmentCardProps): React.JSX.Element {
+  const { className, ...fit } = removeFit;
+
   return (
     <IconButton
+      {...fit}
       disabled={props.disabled}
       accessibilityLabel={`Remove ${props.attachment.name}`}
       icon="close"
-      iconRole="secondary"
-      variant="filled"
       size="xs"
-      className={cn(removeClass, removeHoverClass(props.disabled))}
+      className={cn(removeClass, className, removeHoverClass(props.disabled))}
       onPress={props.onRemove}
     />
   );

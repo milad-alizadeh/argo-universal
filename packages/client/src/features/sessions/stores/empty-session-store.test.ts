@@ -13,6 +13,7 @@ import {
   dropped,
   serverError,
 } from '../../../../mocks/sessions/open-failure.mocks';
+import { promptShowTimeoutMs } from './empty-session-types';
 
 let h: EmptySessionHarness;
 
@@ -98,7 +99,7 @@ describe.each([local('agent-one'), worktree])(
       h.store.send(prompt);
       h.calls.open[0]?.call.resolve({ sessionId: 'session-1' });
       await settle();
-      await vi.advanceTimersByTimeAsync(3000);
+      await vi.advanceTimersByTimeAsync(promptShowTimeoutMs);
       expect(h.calls.handOff).toEqual(['session-1']);
     });
     it('does not navigate or clear the draft if the reader leaves during Send', async () => {
@@ -107,7 +108,7 @@ describe.each([local('agent-one'), worktree])(
       h.store.stop();
       h.calls.open[0]?.call.resolve({ sessionId: 'session-1' });
       await settle();
-      await vi.advanceTimersByTimeAsync(3000);
+      await vi.advanceTimersByTimeAsync(promptShowTimeoutMs);
       expect(h.calls.handOff).toEqual([]);
       expect(h.calls.clearDraft).toBe(0);
     });

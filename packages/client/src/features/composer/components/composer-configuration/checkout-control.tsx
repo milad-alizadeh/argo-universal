@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
@@ -26,7 +26,8 @@ interface ChoiceProps extends ContentsProps {
 export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 native:wide:p-3 bg-content web:wide:bg-card">
-      <List appearance="grouped" fit>
+      {/* A phone's sheet fills its height, so the List scrolls in it; a web popover fits its rows. */}
+      <List appearance="grouped" fit={Platform.OS === 'web'}>
         {checkoutChoices(props)}
       </List>
     </View>

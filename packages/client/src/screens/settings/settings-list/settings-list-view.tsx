@@ -6,15 +6,23 @@ import {
   type SettingsLayoutSections,
 } from '#primitives/scaffolds/settings-layout';
 import { EmptyState } from '#primitives/status/empty-state';
-import { settingsRows } from './settings-list-data';
+import {
+  matchesSearch,
+  settingsGroups,
+  settingsRows,
+} from './settings-list-data';
 import { settingsItem, shownRow } from './settings-list-items';
-import type { SettingsListViewProps, SettingsRow } from './settings-list-props';
+import type {
+  SettingsGroup,
+  SettingsListViewProps,
+} from './settings-list-props';
+import { themeSection } from './settings-list-theme';
 
 export type { SettingsListViewProps } from './settings-list-props';
 
 /*
- * Settings: one group of pages, without a heading, narrowed by the search, beside the page shown on a wide window.
- * A phone leaves out Devices and Notifications.
+ * Settings: the pages in Workspace, Account and Connection groups, then Theme, whose Appearance row chooses in place;
+ * narrowed by the search, beside the page shown on a wide window. A phone leaves out Devices and Notifications.
  */
 export function SettingsListView(
   props: SettingsListViewProps & { children?: ReactNode },
@@ -22,6 +30,7 @@ export function SettingsListView(
   return (
     <SettingsLayout
       {...settingsLayoutProps(props)}
+      pinned={shownTheme(props)}
       empty={<NoMatchingSettings query={props.query} />}
     >
       {props.children}
@@ -29,22 +38,26 @@ export function SettingsListView(
   );
 }
 
-const sectionsOf = (rows: SettingsRow[]): SettingsLayoutSections => [
-  { items: rows.map(settingsItem) },
-];
+// The Theme group, unless the search leaves out its one row.
+const shownTheme = (props: SettingsListViewProps): ReactNode =>
+  matchesSearch('Appearance', props.query) ? themeSection(props) : undefined;
+
+const sectionsOf = (groups: SettingsGroup[]): SettingsLayoutSections =>
+  groups.map((group) => ({
+    title: group.title,
+    items: group.rows.map(settingsItem),
+  }));
 
 // Each row's id is its path, which onSelect opens; a wide window lists every page, so its rows answer selection.
 function settingsLayoutProps(
   props: SettingsListViewProps,
 ): Pick<SettingsLayoutProps, 'sections' | 'selected' | 'onSelect'> {
-  const wide = settingsRows(props, true);
-
   return {
     sections: {
-      compact: sectionsOf(settingsRows(props, false)),
-      wide: sectionsOf(wide),
+      compact: sectionsOf(settingsGroups(props, false)),
+      wide: sectionsOf(settingsGroups(props, true)),
     },
-    selected: shownRow(wide, props.selectedPath)?.href,
+    selected: shownRow(settingsRows(props, true), props.selectedPath)?.href,
     onSelect: selectPage(props),
   };
 }

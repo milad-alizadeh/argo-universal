@@ -32,13 +32,17 @@ interface SupervisorContext extends SupervisorInput {
 
 type SupervisorEvent = EngineEvent | { type: 'server.stop' };
 
-const crashWindowMs = 600_000;
+export const crashWindowMs = 600_000;
 
-const maxCrashesInWindow = 10;
+export const maxCrashesInWindow = 10;
 
-const backoffBaseMs = 500;
+export const backoffBaseMs = 500;
 
-const backoffCapMs = 30_000;
+export const backoffCapMs = 30_000;
+
+export const heartbeatTimeoutMs = 5000;
+
+export const readyTimeoutMs = 15_000;
 
 // Remembers the port an Engine reports and publishes it in server.json.
 const rememberEngine = [
@@ -100,8 +104,8 @@ export const supervisorMachine = setup({
         backoffBaseMs * 2 ** (context.crashTimes.length - 1),
         backoffCapMs,
       ),
-    heartbeatTimeout: 5000,
-    readyTimeout: 15_000,
+    heartbeatTimeout: heartbeatTimeoutMs,
+    readyTimeout: readyTimeoutMs,
   },
 }).createMachine({
   id: 'supervisor',

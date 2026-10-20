@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { tileCorners } from '../flat/flat-labels';
+import { minimumHeight, minimumWidth, tileCorners } from '../flat/flat-labels';
 import type { Bounds, Tile } from '../model';
 import { roofCentres } from '../three/three-label-anchors';
 import type { CameraPose } from '../three/three-projection';
 import type { ScreenPoint } from '../viewport/viewport';
-import { placeLabels, type LabelScreen } from './map-labels';
+import { maximumLabels, placeLabels, type LabelScreen } from './map-labels';
 
 function tile(id: string, bounds: Bounds, area = 1): Tile {
   const file = { id, path: `src/${id}.ts`, area, height: 1, branches: 0 };
@@ -18,14 +18,25 @@ const open: LabelScreen = {
 };
 
 // One map unit is ten pixels with the map origin at the screen origin.
-const tenPixels = tileCorners({ x: 0, y: 0, scale: 10 });
+const scale = 10;
+
+const tenPixels = tileCorners({ x: 0, y: 0, scale });
+
+// Map units that land exactly on, and one unit past, a label threshold.
+const widthAtLimit = minimumWidth / scale;
+
+const heightAtLimit = minimumHeight / scale;
 
 describe('flat labels', () => {
-  it('labels a tile only when it is wider than 100 px and taller than 24 px', () => {
+  it('labels a tile only when it is wider than the minimum width and taller than the minimum height', () => {
     const tiles = [
-      tile('narrow', { x: 0, y: 0, w: 10, h: 3 }, 9),
-      tile('short', { x: 0, y: 10, w: 20, h: 2.4 }, 8),
-      tile('readable', { x: 0, y: 20, w: 11, h: 3 }, 1),
+      tile('narrow', { x: 0, y: 0, w: widthAtLimit, h: heightAtLimit + 1 }, 9),
+      tile('short', { x: 0, y: 10, w: widthAtLimit * 2, h: heightAtLimit }, 8),
+      tile(
+        'readable',
+        { x: 0, y: 20, w: widthAtLimit + 1, h: heightAtLimit + 1 },
+        1,
+      ),
     ];
 
     expect(placeLabels(tiles, tenPixels, open)).toMatchObject([
@@ -86,17 +97,20 @@ describe('label culling', () => {
     expect(ids(placeLabels(tiles, twoCandidates, open))).toEqual(['large']);
   });
 
-  // Forty readable tiles in one column, 25 px apart, so none overlap.
-  it('places at most 32 labels, the largest files first', () => {
-    const column = Array.from({ length: 40 }, (_, row) =>
+  // More readable tiles than the cap in one column, 25 px apart, so none overlap.
+  it('places at most the maximum label count, the largest files first', () => {
+    const extra = 8;
+    const total = maximumLabels + extra;
+
+    const column = Array.from({ length: total }, (_, row) =>
       tile(`row-${row}`, { x: 0, y: row * 2.5, w: 11, h: 2.5 }, row),
     );
 
     const placed = ids(placeLabels(column, tenPixels, open));
 
-    expect(placed).toHaveLength(32);
-    expect(placed).not.toContain('row-7');
-    expect(placed).toContain('row-8');
+    expect(placed).toHaveLength(maximumLabels);
+    expect(placed).not.toContain(`row-${extra - 1}`);
+    expect(placed).toContain(`row-${extra}`);
   });
 });
 

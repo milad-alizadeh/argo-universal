@@ -1,5 +1,10 @@
 import { expect, vi } from 'vitest';
 import { type EventExecutor } from 'xstate/graph';
+import {
+  httpCloseLimit,
+  sessionStopLimit,
+  writerDrainLimit,
+} from '../src/engine/setup.machine';
 import { type EngineEvent } from './engine-model-events';
 import {
   stopAllSessionsEvent,
@@ -69,15 +74,15 @@ export const executors: Record<
   'xstate.error.actor.databaseWriter': (): void =>
     model.engine.send(writerFailure),
   'xstate.after.httpCloseLimit.engine.live.stopping.closingHttp': (): void => {
-    vi.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(httpCloseLimit);
   },
   'xstate.after.sessionStopLimit.engine.live.stopping.stoppingSessions':
     (): void => {
-      vi.advanceTimersByTime(10000);
+      vi.advanceTimersByTime(sessionStopLimit);
     },
   'xstate.after.writerDrainLimit.engine.live.stopping.drainingWriter':
     (): void => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(writerDrainLimit);
     },
   'xstate.after.heartbeatInterval.engine.live.running': (): void => {
     const sent = model.messages.length;

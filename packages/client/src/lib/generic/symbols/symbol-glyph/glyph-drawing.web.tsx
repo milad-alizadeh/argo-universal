@@ -9,7 +9,8 @@ import {
 } from '../symbol-images';
 import { referenceShare } from '../symbol-path';
 import { tablerSymbolPath } from '../tabler-symbols';
-import { MaterialGlyph, materialArtworkScale } from './material-glyph.web';
+import { materialArtworkScale } from './material-artwork-scale';
+import { MaterialGlyph } from './material-glyph.web';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 import { PathMask, SymbolMask } from './symbol-mask.web';
 

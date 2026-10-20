@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { prepareWireTree } from './prepare-tree';
 import type { WireNode } from './wire';
+import { svgCharacterLimit } from './wire-limits';
 
 const svg: WireNode = {
   type: 'Svg',
@@ -22,7 +23,10 @@ describe('Svg wire part', () => {
   });
 
   it.each([
-    { ...svg, props: { ...svg.props, xml: 'x'.repeat(131_073) } },
+    {
+      ...svg,
+      props: { ...svg.props, xml: 'x'.repeat(svgCharacterLimit + 1) },
+    },
     { ...svg, props: { ...svg.props, label: '' } },
     { ...svg, props: { ...svg.props, tone: 'chart-1' } },
     { ...svg, props: { ...svg.props, aspectRatio: Number.POSITIVE_INFINITY } },

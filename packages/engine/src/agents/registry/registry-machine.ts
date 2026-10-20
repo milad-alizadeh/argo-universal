@@ -25,7 +25,7 @@ type RegistryContext = RegistryInput & {
 
 type RegistryEvent = { type: 'REFRESH' | 'STALE' | 'STOP' };
 
-const hourMs = 3_600_000;
+export const hourMs = 3_600_000;
 
 export const registryMachine = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.

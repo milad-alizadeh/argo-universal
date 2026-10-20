@@ -1,7 +1,9 @@
 import type { JSX } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/content/icon';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import type { ComposerStatusProps, UsageLimit } from '../../utils/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import {
@@ -11,6 +13,8 @@ import {
 import { Meter } from './status-meter';
 import {
   mutedTextClassName,
+  phoneSheet,
+  StatusSheetList,
   unselectableTextClassName,
 } from './status-surface';
 import { StatusText } from './status-text';
@@ -56,11 +60,33 @@ function UsageHeading(): JSX.Element {
   );
 }
 
-// A phone's sheet page header already reads "Usage".
+// A phone's sheet: its page header already reads "Usage", and the limits sit in one grouped card, as Settings' rows.
+function UsageSheetContent({ usage }: Pick<UsageProps, 'usage'>): JSX.Element {
+  return (
+    <StatusSheetList>
+      <ListSection>{usage.limits.map(usageLimitItem)}</ListSection>
+    </StatusSheetList>
+  );
+}
+
+function usageLimitItem(limit: UsageLimit): JSX.Element {
+  return (
+    <ListItem
+      key={limit.label}
+      title={limit.label}
+      value={`${limit.usedPercent}%`}
+      subtitle={limit.resets}
+      control={<Meter percent={limit.usedPercent} />}
+    />
+  );
+}
+
 function UsageContent({ usage }: Pick<UsageProps, 'usage'>): JSX.Element {
+  if (phoneSheet) return <UsageSheetContent usage={usage} />;
+
   return (
     <View className="pt-1 wide:pt-3">
-      {Platform.OS === 'web' && <UsageHeading />}
+      <UsageHeading />
       {usage.limits.map((limit) => (
         <UsageLimitRow key={limit.label} limit={limit} />
       ))}
@@ -102,6 +128,7 @@ export function UsageControl(props: UsageProps): JSX.Element {
     <ComposerPopover
       label="Usage"
       width={320}
+      listContent={phoneSheet}
       trigger={createUsageTrigger(props)}
     >
       {() => <UsageContent usage={props.usage} />}

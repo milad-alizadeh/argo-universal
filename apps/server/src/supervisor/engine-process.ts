@@ -24,7 +24,7 @@ export interface EngineProcessInput {
 }
 
 // Allow the Engine's HTTP close, Session stop, and writer drain limits, plus five seconds.
-const killTimeoutMs = 25_000;
+export const defaultKillTimeoutMs = 25_000;
 
 const releaseEngineGroups = async (
   pid: number,
@@ -97,7 +97,7 @@ export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
 
         const forceKill = setTimeout(
           (): void => void release(),
-          input.killTimeoutMs ?? killTimeoutMs,
+          input.killTimeoutMs ?? defaultKillTimeoutMs,
         );
 
         await exited;

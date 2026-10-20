@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countBadge } from './badge-count';
+import { countBadge, maximumBadgeCount } from './badge-count';
 
 describe('countBadge', () => {
   it.each([
@@ -11,8 +11,14 @@ describe('countBadge', () => {
       { count: 3, label: '3 waiting' },
       { text: '3', label: '3 waiting' },
     ],
-    [{ count: 99 }, { text: '99', label: '99' }],
-    [{ count: 100 }, { text: '99+', label: '99+' }],
+    [
+      { count: maximumBadgeCount },
+      { text: `${maximumBadgeCount}`, label: `${maximumBadgeCount}` },
+    ],
+    [
+      { count: maximumBadgeCount + 1 },
+      { text: `${maximumBadgeCount}+`, label: `${maximumBadgeCount}+` },
+    ],
   ])('%j draws %j', (badge, expected) => {
     expect(countBadge(badge)).toEqual(expected);
   });

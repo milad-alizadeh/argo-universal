@@ -5,10 +5,7 @@ import {
   type NotificationApp,
   connectNotificationApp,
 } from '#mocks/notification-app';
-
-const leaseMs = 30_000;
-
-const lifetimeMs = 60_000;
+import { defaultAttentionLeaseMs, defaultLifetimeMs } from './options';
 
 interface ManualClock {
   now: () => number;
@@ -43,7 +40,7 @@ async function endTurn(app: NotificationApp, text: string): Promise<void> {
   await expect.poll(() => app.notifications.length).toBe(before + 1);
 }
 
-it('stops suppressing a Session once its 30 second attention lease has run out', async () => {
+it('stops suppressing a Session once its attention lease has run out', async () => {
   const { clock, url } = await startTimed();
   const viewing = connectNotificationApp(url, false);
   const receiving = connectNotificationApp(url);
@@ -51,7 +48,7 @@ it('stops suppressing a Session once its 30 second attention lease has run out',
   await viewing.client.notifications.attention.mutate({
     sessionId: 'session-1',
   });
-  clock.advance(leaseMs);
+  clock.advance(defaultAttentionLeaseMs);
   await endTurn(receiving, 'Lease lapsed');
   expect(receiving.notifications[0]).toMatchObject({
     kind: 'turn_ended',
@@ -75,19 +72,19 @@ async function startWithUnacknowledgedEvent(): Promise<{
   return { app, clock, event };
 }
 
-it('redelivers an unacknowledged event 1 ms before its one minute lifetime is over', async () => {
+it('redelivers an unacknowledged event 1 ms before its lifetime is over', async () => {
   const { app, clock, event } = await startWithUnacknowledgedEvent();
 
-  clock.advance(lifetimeMs - 1);
+  clock.advance(defaultLifetimeMs - 1);
 
   await expect.poll(() => app.notifications.length).toBe(2);
   expect(app.notifications[1]).toEqual(event);
 });
 
-it('expires an unacknowledged event once its one minute lifetime is over', async () => {
+it('expires an unacknowledged event once its lifetime is over', async () => {
   const { app, clock, event } = await startWithUnacknowledgedEvent();
 
-  clock.advance(lifetimeMs);
+  clock.advance(defaultLifetimeMs);
   await endTurn(app, 'Sweep');
 
   expect(

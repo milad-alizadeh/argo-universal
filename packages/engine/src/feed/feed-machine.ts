@@ -62,6 +62,10 @@ const enqueueWriteRows = (
   for (const action of writeRows) enqueue(action);
 };
 
+export const streamBatchDelay = 60;
+
+export const storeDelay = 1000;
+
 export const feedMachine = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
@@ -172,7 +176,7 @@ export const feedMachine = setup({
     hasStreamEvents: ({ context }): boolean => context.streamEvents.length > 0,
     hasChangedRows: ({ context }): boolean => context.changedRowIds.length > 0,
   },
-  delays: { streamBatchDelay: 60, storeDelay: 1000 },
+  delays: { streamBatchDelay, storeDelay },
 }).createMachine({
   id: 'feed',
   context: ({ input }): FeedContext => ({

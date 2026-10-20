@@ -137,6 +137,7 @@ function drawerClass(props: PresentationProps): string {
     'sheet overflow-hidden fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-content pb-6 shadow-card outline-none dark:border dark:border-border',
     sheetHeightClass(props),
     props.bottomEdge && 'sheet-edge',
+    props.floating && 'sheet-floating',
   );
 }
 

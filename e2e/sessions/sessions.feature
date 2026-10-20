@@ -39,6 +39,6 @@ Feature: Live Sessions list
 
   Scenario: A long list loads more Sessions as it scrolls
     Given a wide Frame
-    And 60 long-list Sessions
+    And more long-list Sessions than fit one page
     When I scroll the Sessions list to the end
     Then the Sessions list shows the oldest Session

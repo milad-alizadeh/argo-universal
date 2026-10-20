@@ -3,6 +3,7 @@ import { formatSymbols } from './format-symbols';
 import { gitSymbols } from './git-symbols';
 import { listViewSymbols } from './list-view-symbols';
 import { mediaSymbols } from './media-symbols';
+import { settingsSymbols } from './settings-symbols';
 import { statusSymbols } from './status-symbols';
 import { subagentSymbols } from './subagent-symbols';
 import { timeSymbols } from './time-symbols';
@@ -13,6 +14,7 @@ export const iconSymbols = {
   ...gitSymbols,
   ...listViewSymbols,
   ...mediaSymbols,
+  ...settingsSymbols,
   ...statusSymbols,
   ...subagentSymbols,
   ...timeSymbols,
@@ -21,7 +23,6 @@ export const iconSymbols = {
   agent: { sf: 'custom.robot', material: 'smart_toy' },
   'all-issues': { sf: 'square.stack.3d.up', material: 'stacks' },
   'app-window': { sf: 'macwindow', material: 'web_asset' },
-  appearance: { sf: 'circle.lefthalf.filled', material: 'contrast' },
   archive: { sf: 'tray.and.arrow.down', material: 'archive' },
   'arrow-down': { sf: 'arrow.down', material: 'arrow_downward' },
   'arrow-left': { sf: 'arrow.left', material: 'arrow_back' },
@@ -96,11 +97,9 @@ export const iconSymbols = {
   mode: { sf: 'switch.2', material: 'toggle_on' },
   more: { sf: 'ellipsis', material: 'more_horiz' },
   'new-session': { sf: 'square.and.pencil', material: 'edit_square' },
-  notifications: { sf: 'bell', material: 'notifications' },
   pair: { sf: 'qrcode', material: 'qr_code' },
   phone: { sf: 'iphone', material: 'smartphone' },
   'plan-mode': { sf: 'map', material: 'map' },
-  plug: { sf: 'powerplug', material: 'power' },
   private: { sf: 'lock', material: 'lock' },
   read: { sf: 'book', material: 'menu_book' },
   rename: { sf: 'pencil', material: 'edit' },

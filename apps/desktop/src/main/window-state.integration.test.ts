@@ -2,7 +2,13 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { readWindowState, saveWindowState, windowBounds } from './window-state';
+import {
+  defaultHeight,
+  defaultWidth,
+  readWindowState,
+  saveWindowState,
+  windowBounds,
+} from './window-state';
 
 it('restores saved normal bounds and maximization from disk', () => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-window-'));
@@ -32,9 +38,22 @@ it('restores saved normal bounds and maximization from disk', () => {
 });
 
 it('centres a larger first window within the display work area', () => {
+  const area = { x: 0, y: 25, width: 1920, height: 1055 };
+
+  const bounds = windowBounds(undefined, area);
+
+  expect(bounds).toMatchObject({ width: defaultWidth, height: defaultHeight });
+  // Equal gaps either side, allowing a pixel of rounding.
   expect(
-    windowBounds(undefined, { x: 0, y: 25, width: 1920, height: 1055 }),
-  ).toEqual({ x: 260, y: 103, width: 1400, height: 900 });
+    Math.abs(
+      bounds.x - area.x - (area.x + area.width - bounds.x - bounds.width),
+    ),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(
+      bounds.y - area.y - (area.y + area.height - bounds.y - bounds.height),
+    ),
+  ).toBeLessThanOrEqual(1);
 });
 
 it('keeps a window from a disconnected monitor visible on a smaller screen', () => {

@@ -10,12 +10,10 @@ import type { Database } from '@repo/db';
 import { blob, blobRef } from '@repo/db/schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { removeUnusedBlobs } from './blob';
+import { removeUnusedBlobs, unusedBlobAge } from './blob';
 import { removeOrphanAttachments } from './blob-attachment';
 
 const newUnusedBlobId = 'new-unused';
-
-const day = 24 * 60 * 60 * 1000;
 
 let database: Database;
 
@@ -50,9 +48,9 @@ describe('removeUnusedBlobs', (): void => {
   };
 
   it('deletes a blob no prompt refers to once it is over a day old', async (): Promise<void> => {
-    storeBlob('old-unused', now - day - 1);
-    storeBlob('old-used', now - 2 * day);
-    storeBlob(newUnusedBlobId, now - day + 1);
+    storeBlob('old-unused', now - unusedBlobAge - 1);
+    storeBlob('old-used', now - 2 * unusedBlobAge);
+    storeBlob(newUnusedBlobId, now - unusedBlobAge + 1);
     database
       .insert(blobRef)
       .values({ blobId: 'old-used', sessionId: 'session-1' })
@@ -72,8 +70,8 @@ describe('removeUnusedBlobs', (): void => {
       mkdirSync(blobsFolder, { recursive: true });
 
       for (const [name, age] of [
-        [`old.${extension}`, day + 1],
-        [`new.${extension}`, day - 1000],
+        [`old.${extension}`, unusedBlobAge + 1],
+        [`new.${extension}`, unusedBlobAge - 1000],
       ] as const) {
         writeFileSync(join(blobsFolder, name), name);
         const modified = new Date(now - age);
@@ -93,7 +91,7 @@ describe('removeUnusedBlobs', (): void => {
     const blobId =
       'bb60c16478a264b151c0e6c514b2c242d89ff3f5a92b6ebc8154c479dc43d9d3';
 
-    storeBlob(blobId, uploadedAt - day - 1);
+    storeBlob(blobId, uploadedAt - unusedBlobAge - 1);
     writeFileSync(join(blobsFolder, blobId), content);
     const form = new FormData();
     form.set('file', new Blob([content]));

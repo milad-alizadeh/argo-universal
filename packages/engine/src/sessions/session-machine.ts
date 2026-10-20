@@ -271,7 +271,7 @@ export interface SessionContext extends SessionData {
   storageFailedTurn: boolean;
 }
 
-const checkoutLimit = 10_000;
+export const checkoutLimit = 10_000;
 
 const interruptedTurn = (message: string): EndTurnParameters => ({
   stopReason: 'error',

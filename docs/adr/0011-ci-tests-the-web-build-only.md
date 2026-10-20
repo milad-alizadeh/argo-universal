@@ -2,7 +2,7 @@
 
 Mobile CI costs too much for one developer. Playwright runs the full end-to-end suite against the Expo web export on every pull request that changes something the suite depends on, by turbo's task inputs, or that touches a root file, `.github/` or `patches/`; CI skips it on the others (owner, 2026-10-13). One Playwright Electron smoke spec runs only on `main` and release branches, because Electron only wraps the same web build. Mobile smoke flows on the developer machine are deferred (owner, 2026-10-03); Maestro is the likely tool when they come. Vitest covers logic; there is no Jest.
 
-The original CLI-only E2E boundary is superseded by [ADR-0018](0018-app-e2e-uses-shared-agent-fixtures.md). [Testing seams](../agents/testing-seams.md) defines the surfaces each suite proves; the external fixture exception does not establish compatibility with a running upstream Agent. Provider translation unit tests exercise real pure mappings with official typed fixtures.
+The original CLI-only E2E boundary is superseded by [ADR-0018](0018-app-e2e-uses-shared-agent-fixtures.md). The external fixture exception does not establish compatibility with a running upstream Agent. Provider translation unit tests exercise real pure mappings with official typed fixtures.
 
 ## Considered Options
 

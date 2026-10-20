@@ -4,7 +4,7 @@ import { SessionUpdate } from './session-update';
 
 const maximumPageRows = 200;
 
-const defaultPageRows = 40;
+export const defaultPageRows = 40;
 
 // Input of `feed.page`: `tail` reads the newest rows, `before` reads rows older than `cursor` (a position) from `epoch`.
 export const FeedPageInput = z.strictObject({
