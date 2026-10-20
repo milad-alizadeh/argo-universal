@@ -49,6 +49,11 @@ export class DataSubscription {
       viewId,
       watchId,
       every,
+      /*
+       * The identity is this Query's own canonical text, so reading it back is the Query itself. It is
+       * not checked against the schema here: a Query a Plugin should not have asked for is the Engine's
+       * to refuse, with an error the page can draw, not the kit's to throw inside a render.
+       */
       query: JSON.parse(identity),
     }).then(
       (state) => this.accept(state),

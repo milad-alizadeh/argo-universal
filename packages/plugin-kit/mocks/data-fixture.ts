@@ -140,6 +140,9 @@ async function startFixture(
   return kit;
 }
 
+// Booting a worker, bundling its page and running a real process outlast the one second `poll` waits by default.
+export const processWait = { timeout: 5000 };
+
 export const processQuery =
   "{ api: 'process', action: 'run', argv: ['query-fixture'] }";
 

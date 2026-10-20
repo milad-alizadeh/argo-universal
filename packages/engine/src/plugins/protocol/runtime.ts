@@ -64,7 +64,12 @@ export type PluginValue = z.infer<typeof PluginValue>;
 
 export const PluginReply = z.discriminatedUnion('ok', [
   z.object({ ok: z.literal(true), value: PluginValue }),
-  z.object({ ok: z.literal(false), error: z.string() }),
+  z.object({
+    ok: z.literal(false),
+    error: z.string(),
+    // Set when the Capability checker refused the call, so a reader never parses the message.
+    refused: z.boolean().optional(),
+  }),
 ]);
 
 export type PluginReply = z.infer<typeof PluginReply>;
@@ -158,6 +163,12 @@ export const notStarted: PluginStatus = {
   hanging: false,
   error: null,
 };
+
+export const crashed = (error: string): PluginStatus => ({
+  state: 'crashed',
+  hanging: false,
+  error,
+});
 
 export const running: PluginStatus = {
   state: 'running',

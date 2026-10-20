@@ -24,16 +24,18 @@ export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
   data: PluginData;
 };
 
+// `enter` holds the pass back while too many others are running, and answers with its release.
+type PassServices = BackgroundServices & { enter: () => Promise<() => void> };
+
 export class BackgroundPass {
   private running: RunningPass | undefined;
   private closed = false;
-  private paused = false;
   private cancel: () => void = () => {};
 
   constructor(
     readonly entry: BackgroundEntry,
     readonly projectId: string,
-    private readonly services: BackgroundServices,
+    private readonly services: PassServices,
   ) {}
 
   start(): void {
@@ -49,7 +51,7 @@ export class BackgroundPass {
   }
 
   private settle(pass: RunningPass): void {
-    pass.settled ??= this.services.data.firstQueries(pass.viewId);
+    pass.settled ??= this.services.data.queriesSettled(pass.viewId);
 
     if (pass.settled()) pass.finish();
   }
@@ -58,42 +60,37 @@ export class BackgroundPass {
     if (this.running?.viewId === viewId) this.running.finish();
   }
 
-  pause(): void {
-    this.paused = true;
-    this.cancel();
-    this.finish();
-  }
-
-  resume(): void {
-    if (!this.paused) return;
-    this.paused = false;
-    this.start();
-  }
-
   close(): void {
     this.closed = true;
-    this.pause();
-  }
-
-  private finish(): void {
+    this.cancel();
     this.running?.finish();
   }
 
   private stopped(): boolean {
-    return this.closed || this.paused;
+    return this.closed;
   }
 
   private async run(): Promise<void> {
-    try {
-      await this.entry.activate();
+    const leave = await this.services.enter();
 
-      if (this.stopped()) return;
-      await this.pass();
+    try {
+      await this.activateAndPass();
     } catch (cause) {
       this.line(`failed: ${runtimeError(cause)}`);
+    } finally {
+      leave();
     }
 
     this.schedule();
+  }
+
+  // Closing while the pass waited its turn at the gate, or while the Plugin started, ends it here.
+  private async activateAndPass(): Promise<void> {
+    if (this.stopped()) return;
+    await this.entry.activate();
+
+    if (this.stopped()) return;
+    await this.pass();
   }
 
   private schedule(): void {

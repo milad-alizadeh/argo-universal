@@ -134,3 +134,29 @@ it('shares inline Queries whose object keys and header names differ in order or 
   expect(requests).toBe(1);
   expect(JSON.stringify(second.trees[0])).toContain('"children":"answer"');
 });
+
+it('refuses a Query that borrows an Account, which no Plugin provides yet', async () => {
+  let requested = false;
+
+  const port = await httpsServer((_request, response) => {
+    requested = true;
+    response.end('answer');
+  });
+
+  const fixture = await dataFixture(
+    `import { Text, useData } from '@argo/plugin-kit';
+    export function register(argo) {
+      argo.pages.register('/', () => {
+        const { data, error } = useData({ api: 'fetch', url: 'https://localhost:${port}/', account: 'localhost:${port}' });
+        return <Text>{error ?? (data ? 'answer' : 'empty')}</Text>;
+      });
+    }`,
+    {},
+    [{ kind: 'fetch', host: `localhost:${port}`, reason: 'Fixture' }],
+  );
+
+  const kit = await fixture.start({ network: await fixtureNetwork() });
+  const page = kit.page();
+  await page.find(`Refused: Account localhost:${port} is unavailable`);
+  expect(requested).toBe(false);
+});

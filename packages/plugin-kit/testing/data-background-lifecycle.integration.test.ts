@@ -1,12 +1,14 @@
 import { appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import {
+  dataFixture,
+  dataPage,
+  dataPluginId,
+  processWait,
+} from '../mocks/data-fixture';
 
 const completedLine = 'background pass completed';
-
-const processWait = { timeout: 3000 };
-
-import { dataFixture, dataPage, dataPluginId } from '../mocks/data-fixture';
 
 it('sets a nav badge from the completed headless Query before unmounting', async () => {
   const fixture = await dataFixture(

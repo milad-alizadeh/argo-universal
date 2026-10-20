@@ -98,20 +98,20 @@ async function prepareHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpSetup & { appRouter: AppRouter }> {
   const serverId = await readServerId(options.database, options.databaseWriter);
-  const setup = await prepareHttpSetup(options, serverId);
+  const setup = prepareHttpSetup(options, serverId);
 
   return { ...setup, appRouter: createHttpRouter(options, setup) };
 }
 
-async function prepareHttpSetup(
+function prepareHttpSetup(
   options: HttpServerOptions,
   serverId: string,
-): Promise<HttpSetup> {
+): HttpSetup {
   return {
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
-    ...(await startPlugins(options)),
+    ...startPlugins(options),
   };
 }
 
@@ -140,6 +140,7 @@ const pluginDeps = (setup: HttpSetup): PluginDeps => ({
   hooks: setup.hookPort.hooks,
 });
 
+// Background Plugins start only once the port is bound, so a slow Plugin delays no App.
 async function listenWithPlugins(
   server: Server,
   port: number,
@@ -152,6 +153,8 @@ async function listenWithPlugins(
     await closePlugins(setup);
     throw error;
   }
+
+  await setup.startBackground();
 }
 
 function listenerOptions(

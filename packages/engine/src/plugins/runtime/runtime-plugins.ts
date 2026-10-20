@@ -77,11 +77,11 @@ export class RuntimePlugins {
     );
   }
 
+  // The pass owns the retry: its interval is the backoff, so a crash is not final.
   private async requireRunning(location: PluginLocation): Promise<void> {
-    const status = await this.activate(location);
+    this.plugins.get(location.entry.pluginId)?.restartAfterCrash();
 
-    if (status.state !== 'running')
-      throw new Error(status.error ?? 'Plugin did not start');
+    requireStarted(await this.activate(location));
   }
 
   private pluginInput(location: PluginLocation): RuntimePluginInput {
@@ -138,4 +138,9 @@ export class RuntimePlugins {
       [...this.plugins.values()].map((plugin) => plugin.close()),
     );
   }
+}
+
+function requireStarted(status: PluginStatus): void {
+  if (status.state !== 'running')
+    throw new Error(status.error ?? 'Plugin did not start');
 }

@@ -1,14 +1,19 @@
-import { createHash } from 'node:crypto';
-import {
-  serialisePluginQuery,
-  type PluginQuery,
-  type PluginDataRequest,
-  type PluginDataState,
+import type {
+  PluginQuery,
+  PluginDataRequest,
+  PluginDataState,
 } from '@repo/contracts/plugins/argo-calls';
 import type { PluginViewId } from '@repo/contracts/plugins/wire';
 import { runtimeError, type PluginReply } from '../protocol/runtime';
 import type { OpenView } from '../views/open-view';
 import type { PluginViews } from '../views/plugin-views';
+import {
+  dropOldest,
+  keepNewest,
+  queryKey,
+  removeProject,
+  retainedEntries,
+} from './entry-map';
 import { PluginBadges } from './plugin-badges';
 import { QueryEntry } from './query-entry';
 import { QueryIntervals } from './query-intervals';
@@ -73,16 +78,28 @@ export class PluginData {
     query: PluginQuery,
   ): QueryEntry {
     const entries = this.entriesOf(caller.pluginId);
-    const projectId = projectOf(view);
+    const { projectId } = view;
     const key = queryKey(projectId, query);
 
     const existing = entries.get(key);
 
-    if (existing) return existing;
+    if (existing) return keepNewest(entries, key, existing);
     const entry = this.createEntry({ ...caller, projectId, query });
     entries.set(key, entry);
+    this.bound(caller.pluginId, entries);
 
     return entry;
+  }
+
+  // The warm path keeps answers no view holds, so only the oldest unwatched ones go.
+  private bound(pluginId: string, entries: Map<string, QueryEntry>): void {
+    if (entries.size <= retainedEntries) return;
+    const dropped = dropOldest(entries);
+
+    if (dropped === 0) return;
+    this.services.log(
+      `Plugin ${pluginId}: dropped ${dropped} warm Query answers over the ${retainedEntries} kept`,
+    );
   }
 
   private createEntry(owner: QueryOwner): QueryEntry {
@@ -107,7 +124,7 @@ export class PluginData {
 
     const entry = this.entriesOf(pluginId)
       .values()
-      .find((entry) => entry.watchers.has(key));
+      .find((entry) => entry.owns(key));
 
     if (!entry) return;
 
@@ -141,7 +158,8 @@ export class PluginData {
       entry.suspended = false;
   }
 
-  firstQueries(viewId: PluginViewId): () => boolean {
+  // The Queries a view opened, answered as a question the caller can ask again as they settle.
+  queriesSettled(viewId: PluginViewId): () => boolean {
     const entries = this.entries()
       .filter((entry) => entry.hasView(viewId))
       .toArray();
@@ -151,29 +169,5 @@ export class PluginData {
 
   private entries(): IteratorObject<QueryEntry> {
     return this.plugins.values().flatMap((entries) => entries.values());
-  }
-}
-
-function projectOf(view: OpenView): string | undefined {
-  return view.projectId;
-}
-
-function queryKey(projectId: string | undefined, query: PluginQuery): string {
-  const hash = createHash('sha256')
-    .update(serialisePluginQuery(query))
-    .digest('hex');
-
-  return JSON.stringify([projectId ?? null, hash]);
-}
-
-function removeProject(
-  entries: Map<string, QueryEntry>,
-  projectId: string,
-): void {
-  for (const [key, entry] of entries
-    .entries()
-    .filter(([, entry]) => entry.owner.projectId === projectId)) {
-    entry.close();
-    entries.delete(key);
   }
 }

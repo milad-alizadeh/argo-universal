@@ -24,10 +24,18 @@ export type PluginSetup = {
   pluginSettings: PluginSettings;
   hookPort: HookPort;
   unwatchTurns: () => void;
+  // Run once the port is bound: a Plugin that is slow to start must not keep the Server off the air.
+  startBackground: () => Promise<void>;
 };
 
+// What the runtime is built from, before watching Turns and starting background passes attach to it.
+type PluginParts = Omit<PluginSetup, 'unwatchTurns' | 'startBackground'>;
+
+// A Plugin that never answers would hold startup open forever, so the wait is bounded and non-fatal.
+const backgroundStartLimitMs = 30000;
+
 // The Plugin runtime, with core's Hook events run through the Plugins that hook them, started on first use.
-export function startPlugins(options: HttpServerOptions): Promise<PluginSetup> {
+export function startPlugins(options: HttpServerOptions): PluginSetup {
   const hookPort = options.hookPort ?? new HookPort();
   const keychain = options.keychain ?? macKeychain;
   const pluginSettings = settingsFor(options, keychain);
@@ -69,18 +77,21 @@ function pluginProjectPath(
 }
 
 // Sessions reach Plugins through Hooks; dev Plugins reload only once every Turn has ended (ADR-0027).
-async function connectPlugins(
+function connectPlugins(
   options: HttpServerOptions,
-  setup: Omit<PluginSetup, 'unwatchTurns'>,
-): Promise<PluginSetup> {
+  setup: PluginParts,
+): PluginSetup {
   const plugins = attachHooks(options, setup);
-  await startBackground(plugins, options.home);
 
   const unwatchTurns = watchTurnActivity(options.sessions, (active) => {
     void setup.pluginRuntime.turns.changed(active);
   });
 
-  return { ...setup, unwatchTurns };
+  return {
+    ...setup,
+    unwatchTurns,
+    startBackground: () => startBackground(plugins, options.home),
+  };
 }
 
 // The runtime and the settings it answers `argo.settings` from share one Keychain.
@@ -97,7 +108,7 @@ function settingsFor(
 
 function attachHooks(
   options: HttpServerOptions,
-  setup: Omit<PluginSetup, 'unwatchTurns'>,
+  setup: PluginParts,
 ): PluginService {
   const plugins = new PluginService({ ...options, ...setup });
 
@@ -113,13 +124,24 @@ async function startBackground(
   plugins: PluginService,
   home: string,
 ): Promise<void> {
-  await plugins.startBackground().catch((cause: unknown) =>
-    writeLog({
-      home,
-      label: 'plugins',
-      line: `Background Plugins failed: ${String(cause)}`,
-    }),
-  );
+  const line = await Promise.race([
+    plugins.startBackground().then(
+      () => null,
+      (cause: unknown) => `Background Plugins failed: ${String(cause)}`,
+    ),
+    limit(
+      `Background Plugins still starting after ${backgroundStartLimitMs} ms`,
+    ),
+  ]);
+
+  if (line) writeLog({ home, label: 'plugins', line });
+}
+
+// The passes carry on starting after this resolves; only the wait for them ends.
+function limit(line: string): Promise<string> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(line), backgroundStartLimitMs).unref();
+  });
 }
 
 // Core answers alone again before the runtime closes.

@@ -44,7 +44,7 @@ export class PluginFailures {
   }
 
   public drawing(plugin: PluginIdentity, message: string): void {
-    if (this.current.has(plugin.pluginId)) return;
+    if (!this.newDrawingFailure(plugin.pluginId, message)) return;
     this.current.set(
       plugin.pluginId,
       PluginFailure.parse({
@@ -54,6 +54,22 @@ export class PluginFailures {
         key: randomUUID(),
       }),
     );
+    this.events.emit('change', [...this.current.values()]);
+  }
+
+  // A stopped Plugin outranks a drawing failure, and the same message again is not news.
+  private newDrawingFailure(pluginId: string, message: string): boolean {
+    const current = this.current.get(pluginId);
+
+    if (current?.kind !== 'drawing') return current === undefined;
+
+    return current.message !== message;
+  }
+
+  // A view that draws again clears the Plugin's drawing failure; a stopped Plugin's stays.
+  public drew(pluginId: string): void {
+    if (this.current.get(pluginId)?.kind !== 'drawing') return;
+    this.current.delete(pluginId);
     this.events.emit('change', [...this.current.values()]);
   }
 

@@ -8,7 +8,7 @@ import type {
   WireNode,
 } from '@repo/contracts/plugins/wire';
 import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
-import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
 import { testConnection } from './test-connection';
 
@@ -162,13 +162,4 @@ export class PluginTestView {
     if (this.root) this.history.push(this.root);
     this.latest = message;
   }
-}
-
-function nextRoot(
-  root: WireNode | null,
-  message: ViewMessage,
-): WireNode | null {
-  if (message.type === 'snapshot') return message.root;
-
-  return root && applyPatch(root, message.ops);
 }

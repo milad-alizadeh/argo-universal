@@ -128,6 +128,10 @@ export class QueryEntry {
     return !this.flight && this.timing.ran;
   }
 
+  owns(key: string): boolean {
+    return this.watchers.has(key);
+  }
+
   hasView(viewId: PluginViewId): boolean {
     return this.watchers.keysForView(viewId).length > 0;
   }

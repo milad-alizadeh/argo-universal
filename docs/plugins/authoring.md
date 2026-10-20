@@ -154,7 +154,7 @@ export function register(argo: Argo): void {
 }
 ```
 
-Declare the command's Capability in `plugin.json`. A process Query uses the declaring view's Project folder unless the Query specifies `cwd`.
+Declare the command's Capability in `plugin.json`. A process Query uses the declaring view's Project folder unless the Query specifies `cwd`. A direct `argo.process.run` call carries no view and Argo never tells a Plugin where a Project lives, so run it as a Query whenever it belongs in the Project's folder.
 A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
@@ -191,8 +191,9 @@ A background pass ignores a Query's `every` option. It ends after the first rend
 A refused background Query stops retrying until the Plugin is next opened.
 The optional fetch `account` field is reserved for the Account broker; it currently returns a refusal until that broker is available.
 
-A page may call `argo.nav.badge(id, count)` for a nav id its own manifest declares. Zero clears the count.
-Counts are in memory and clear when the Plugin stops or reloads. Background pages cannot raise Notifications.
+A page may call `argo.nav.badge(id, count)` to set the nav badge for a nav id its own manifest declares. Zero clears the badge.
+A background page runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
+Nav badges are in memory and clear when the Plugin stops or reloads. Background pages cannot raise Notifications.
 
 A drawing throw closes only the failed view. Other pages, Slots, Hooks, and background passes continue.
 The failure subscription records one non-fatal drawing failure per Plugin.

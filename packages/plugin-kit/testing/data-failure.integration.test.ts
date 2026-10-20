@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { dataFixture, processPage } from '../mocks/data-fixture';
+import { dataFixture, processPage, processWait } from '../mocks/data-fixture';
 
 it('reports one drawing failure while other pages, Slots, Hooks and background passes keep running', async () => {
   const fixture = await dataFixture(
@@ -13,7 +13,9 @@ it('reports one drawing failure while other pages, Slots, Hooks and background p
   );
 
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
-  await expect.poll(() => kit.log()).toContain('background pass completed');
+  await expect
+    .poll(() => kit.log(), processWait)
+    .toContain('background pass completed');
   const controller = new AbortController();
   const failures = kit.failures(controller.signal);
   expect((await failures.next()).value).toEqual([]);
@@ -42,9 +44,32 @@ it('reports one drawing failure while other pages, Slots, Hooks and background p
   await page.press('Refresh');
   await page.find('3');
   await kit.clock.advance(300000);
-  await expect.poll(() => fixture.requests()).toHaveLength(4);
+  await expect.poll(() => fixture.requests(), processWait).toHaveLength(4);
   await slot.find('4');
   expect(broken.trees).toEqual([]);
+  controller.abort();
+  await failures.return([]);
+});
+
+it("clears a Plugin's drawing failure once one of its pages draws again", async () => {
+  const fixture = await dataFixture(
+    `import { Text } from '@argo/plugin-kit';
+    export function register(argo) {
+      argo.pages.register('/', () => <Text>drawn</Text>);
+      argo.pages.register('/broken', () => { throw new Error('cannot draw'); });
+    }`,
+  );
+
+  const kit = await fixture.start();
+  const controller = new AbortController();
+  const failures = kit.failures(controller.signal);
+  expect((await failures.next()).value).toEqual([]);
+  kit.page('/broken');
+  expect((await failures.next()).value).toEqual([
+    expect.objectContaining({ kind: 'drawing', message: 'cannot draw' }),
+  ]);
+  await kit.page('/').find('drawn');
+  expect((await failures.next()).value).toEqual([]);
   controller.abort();
   await failures.return([]);
 });

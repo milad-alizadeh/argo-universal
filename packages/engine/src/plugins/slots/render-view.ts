@@ -5,9 +5,9 @@ import type {
 } from '@repo/contracts/plugins/replaceable';
 import { replacementTreeReason } from '@repo/contracts/plugins/replacement-tree';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 import type { RpcConnection } from '../../rpc';
 import type { PluginRuntime } from '../runtime/plugin-runtime';
-import { nextRoot } from '../views/messages';
 import { sanitizeTree } from '../visual/sanitize-tree';
 
 type Replacement = { pluginId: string; path: string; input: ReplaceableInput };

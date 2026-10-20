@@ -4,8 +4,9 @@ import {
   pluginPageBytes,
   pluginPageFallback,
 } from '@repo/contracts/plugins/wire-limits';
+import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 import { sanitizeTree } from '../visual/sanitize-tree';
-import { nextRoot, updateView } from './messages';
+import { updateView } from './messages';
 import type { OpenView } from './open-view';
 import { wireSizeReason } from './wire-size';
 

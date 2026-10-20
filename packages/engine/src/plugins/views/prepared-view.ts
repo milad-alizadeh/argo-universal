@@ -1,18 +1,9 @@
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
-import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 import { diff } from '../kit/diff';
 import { PreparedViewLimits } from './prepared-view-limits';
-
-function nextRoot(
-  root: WireNode | null,
-  message: ViewMessage,
-): WireNode | null {
-  if (message.type === 'snapshot') return message.root;
-
-  return root && applyPatch(root, message.ops);
-}
 
 function outgoing(
   before: WireNode | null,

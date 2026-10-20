@@ -1,6 +1,6 @@
 import type { CoreHooks, PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PluginAssetRef } from '@repo/contracts/plugins/assets';
-import { replyError } from '../access/capability-refusal';
+import { replyFailure } from '../access/capability-refusal';
 import {
   PluginAccess,
   type AccessScope,
@@ -92,7 +92,7 @@ export class PluginServices {
     } catch (error) {
       this.options.log(failureLine(pluginId, request, error));
 
-      return { ok: false, error: replyError(error) };
+      return replyFailure(error);
     }
   }
 

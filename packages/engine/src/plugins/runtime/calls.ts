@@ -1,4 +1,4 @@
-import { replyError } from '../access/capability-refusal';
+import { replyFailure } from '../access/capability-refusal';
 import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
 import type {
@@ -50,7 +50,7 @@ function answerBadge(
 
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: replyError(error) };
+    return replyFailure(error);
   }
 }
 

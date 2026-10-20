@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { dataFixture, dataPluginId } from '../mocks/data-fixture';
 
-it('publishes only its own nav counts, clears zero and refuses another nav id', async () => {
+it('publishes only its own nav badges, clears zero and refuses another nav id', async () => {
   const fixture = await dataFixture(
     `import { Text, Stack, Button, useState } from '@argo/plugin-kit';
     export function register(argo) {

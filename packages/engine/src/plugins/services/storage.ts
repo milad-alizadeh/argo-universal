@@ -130,6 +130,7 @@ function executeQueries(
   );
 }
 
+// A cheap fingerprint of the database: an unchanged stamp means the batch wrote nothing.
 function changeStamp(database: DatabaseSync): string {
   return JSON.stringify([
     database.prepare('SELECT total_changes()').get(),

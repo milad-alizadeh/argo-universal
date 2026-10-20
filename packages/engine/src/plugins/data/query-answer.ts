@@ -48,6 +48,7 @@ export function queryState(
   if (!reply.ok) return { ...previous, error: reply.error, stale: false };
 
   return PluginDataState.parse({
+    // A round trip through JSON drops what the wire cannot carry, which the schema would reject outright.
     data: JSON.parse(JSON.stringify(reply.value ?? null)),
     stale: false,
     revision: previous.revision,
@@ -62,5 +63,5 @@ export function backgroundRefusal(
 
   if (reply.ok) return false;
 
-  return reply.error.startsWith('Refused:');
+  return reply.refused === true;
 }

@@ -3,6 +3,7 @@ import { PluginBackground } from '../data/plugin-background';
 import { PluginData } from '../data/plugin-data';
 import type { QueryServices } from '../data/query-types';
 import type { PluginStatus } from '../protocol/runtime';
+import type { OpenView } from '../views/open-view';
 import { PluginViews } from '../views/plugin-views';
 import type { ViewLifecycle } from '../views/view-registry';
 import { PluginFailures } from './failures';
@@ -40,9 +41,14 @@ export class RuntimeResources {
         this.data.releaseView(viewId);
         this.background.released(viewId);
       },
-      received: (view) => this.background.rendered(view.opening.viewId),
+      received: (view) => this.drew(view),
       failed: (pluginId, message) => this.drawingFailed(pluginId, message),
     };
+  }
+
+  private drew(view: OpenView): void {
+    this.failures.drew(view.pluginId);
+    this.background.rendered(view.opening.viewId);
   }
 
   private drawingFailed(pluginId: string, message: string): void {
@@ -63,14 +69,9 @@ export class RuntimeResources {
     this.data.badges.allow(pluginId, generation, location.navIds ?? []);
   }
 
+  // A crash does not end a pass: it keeps its timer and activates the Plugin again next interval.
   changed(location: PluginLocation, status: PluginStatus): void {
-    const { pluginId } = location.entry;
-
     this.failures.update(pluginIdentity(location), status);
-
-    if (status.state === 'crashed') this.background.pause(pluginId);
-
-    if (status.state === 'running') this.background.resume(pluginId);
   }
 
   release(pluginId: string): void {

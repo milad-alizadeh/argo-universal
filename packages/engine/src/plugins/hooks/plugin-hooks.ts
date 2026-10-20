@@ -5,7 +5,7 @@ import type {
   JsonObject,
 } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
-import { replyError } from '../access/capability-refusal';
+import { replyFailure } from '../access/capability-refusal';
 import {
   runtimeError,
   type PluginReply,
@@ -46,7 +46,7 @@ export class PluginHooks {
     try {
       return { ok: true, value: await this.handle(caller, call) };
     } catch (error) {
-      return { ok: false, error: replyError(error) };
+      return replyFailure(error);
     }
   }
 

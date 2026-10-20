@@ -2,7 +2,12 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
-import { dataFixture, dataPage, dataPluginId } from '../mocks/data-fixture';
+import {
+  dataFixture,
+  dataPage,
+  dataPluginId,
+  processWait,
+} from '../mocks/data-fixture';
 
 it('keeps two Plugins isolated while advancing their worker timers and Queries together', async () => {
   const source = dataPage(undefined, '{ every: 10000 }')
@@ -38,7 +43,7 @@ it('keeps two Plugins isolated while advancing their worker timers and Queries t
   await first.find('timer:500');
   await second.find('timer:500');
   await kit.clock.advance(9500);
-  await expect.poll(() => fixture.requests()).toHaveLength(4);
+  await expect.poll(() => fixture.requests(), processWait).toHaveLength(4);
   expect(first.trees.length).toBeGreaterThan(1);
   expect(second.trees.length).toBeGreaterThan(1);
 });

@@ -1,7 +1,7 @@
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { dataFixture, dataPage } from '../mocks/data-fixture';
+import { dataFixture, dataPage, processWait } from '../mocks/data-fixture';
 
 const completedLine = 'background pass completed';
 
@@ -16,18 +16,16 @@ it.each([299999, 300000, 300001])(
       projectPaths: { one: fixture.directory },
     });
 
-    await expect
-      .poll(() => fixture.requests(), { timeout: 3000 })
-      .toHaveLength(1);
-    await expect.poll(() => kit.log()).toContain(completedLine);
+    await expect.poll(() => fixture.requests(), processWait).toHaveLength(1);
+    await expect.poll(() => kit.log(), processWait).toContain(completedLine);
     await kit.clock.advance(10_000);
     expect(await fixture.requests()).toHaveLength(1);
     const period = Math.max(interval, 300000);
     await kit.clock.advance(period - 10001);
     expect(await fixture.requests()).toHaveLength(1);
     await kit.clock.advance(1);
-    await expect.poll(() => fixture.requests()).toHaveLength(2);
-    await expect.poll(() => kit.log()).toContain(completedLine);
+    await expect.poll(() => fixture.requests(), processWait).toHaveLength(2);
+    await expect.poll(() => kit.log(), processWait).toContain(completedLine);
 
     const page = kit.slot({
       slotId: 'argo/project/details/v1',
@@ -58,7 +56,7 @@ it('starts one drifting pass for each added Project and releases a removed Proje
   await mkdir(one);
   await mkdir(two);
   const kit = await fixture.start({ projectPaths: { one } });
-  await expect.poll(() => completed(kit)).toBe(1);
+  await expect.poll(() => completed(kit), processWait).toBe(1);
   await kit.clock.advance(1000);
   await kit.projects.add({
     id: 'two',
@@ -66,13 +64,13 @@ it('starts one drifting pass for each added Project and releases a removed Proje
     originUrl: null,
     path: two,
   });
-  await expect.poll(() => completed(kit)).toBe(2);
+  await expect.poll(() => completed(kit), processWait).toBe(2);
   await kit.clock.advance(299000);
-  await expect.poll(() => completed(kit)).toBe(3);
+  await expect.poll(() => completed(kit), processWait).toBe(3);
   expect(await fixture.requests()).toHaveLength(3);
   await kit.projects.remove('one');
   await kit.clock.advance(1000);
-  await expect.poll(() => completed(kit)).toBe(4);
+  await expect.poll(() => completed(kit), processWait).toBe(4);
   await kit.clock.advance(299000);
   expect(await fixture.requests()).toHaveLength(4);
   await kit.projects.add({
@@ -108,7 +106,7 @@ it('creates no Project-less pass and starts when the first Project is added', as
     originUrl: null,
     path: fixture.directory,
   });
-  await expect.poll(() => completed(kit)).toBe(1);
+  await expect.poll(() => completed(kit), processWait).toBe(1);
   expect(await fixture.requests()).toHaveLength(1);
 });
 
@@ -128,12 +126,14 @@ it('stops a refused background Query until the Plugin is opened', async () => {
   );
 
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
-  await expect.poll(() => completed(kit)).toBe(1);
+  await expect.poll(() => completed(kit), processWait).toBe(1);
   await kit.clock.advance(600000);
   expect(refusals(await kit.log())).toHaveLength(1);
   const page = kit.page('/', undefined, 'one');
   await page.ready();
-  await expect.poll(async () => refusals(await kit.log())).toHaveLength(2);
+  await expect
+    .poll(async () => refusals(await kit.log()), processWait)
+    .toHaveLength(2);
 });
 
 function refusals(log: string): string[] {
@@ -141,3 +141,19 @@ function refusals(log: string): string[] {
     .split('\n')
     .filter((line) => line.includes('refused argo.process'));
 }
+
+it('activates a crashed Plugin again on the next background interval', async () => {
+  const fixture = await dataFixture(
+    "export function register() { throw new Error('cannot start'); }",
+    { background: { path: '/', interval: 300000 } },
+  );
+
+  const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
+  await expect
+    .poll(() => kit.log(), processWait)
+    .toContain('background pass failed');
+  await writeFile(join(fixture.directory, 'index.tsx'), dataPage());
+  await kit.clock.advance(300000);
+  await expect.poll(() => completed(kit), processWait).toBe(1);
+  expect(await fixture.requests()).toHaveLength(1);
+});
