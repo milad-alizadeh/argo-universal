@@ -23,7 +23,7 @@ function CodeBlockFrame({ children }: { children: ReactNode }): ReactElement {
       className={cn(
         codeBlockGroup,
         markdownBlockClassNames.codeBlock,
-        'cursor-auto overflow-hidden bg-tint px-1 pb-1',
+        'cursor-auto overflow-hidden border border-hairline px-1 pb-1',
       )}
     >
       {children}

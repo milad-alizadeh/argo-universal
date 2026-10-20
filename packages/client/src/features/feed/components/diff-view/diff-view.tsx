@@ -135,7 +135,8 @@ const diffClassName = (inline: boolean): string =>
   cn(
     'min-w-0',
     codeBlockGroup,
-    inline && 'overflow-hidden rounded-2xl bg-tint px-1 pb-1',
+    inline &&
+      'overflow-hidden rounded-2xl border border-hairline bg-content px-1 pb-1',
   );
 
 function DiffFrame(
