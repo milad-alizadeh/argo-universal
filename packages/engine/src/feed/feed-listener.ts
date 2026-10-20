@@ -3,6 +3,7 @@ import type { Subscription } from 'xstate';
 import type { FeedDeps } from './feed';
 import type { FeedActorRef } from './feed-machine';
 import { LiveFeedQueue, type LiveFeedEvent } from './live-feed-queue';
+import { StoredChanges } from './stored-changes';
 
 export type ClosedFeed = Extract<FeedSubscribeOutput, { type: 'closed' }>;
 
@@ -21,6 +22,7 @@ export class FeedListener {
   private snapshots: Subscription = inactiveSubscription;
   private closed: ClosedFeed | undefined;
   private failure: { error: unknown } | undefined;
+  private readonly storedChanges: StoredChanges;
   private readonly wakeOnAbort = (): void => {
     this.wake?.();
   };
@@ -29,7 +31,11 @@ export class FeedListener {
     private readonly sources: FeedDeps,
     private readonly sessionId: string,
     private readonly signal: AbortSignal | undefined,
-  ) {}
+  ) {
+    this.storedChanges = new StoredChanges(sources, sessionId, (resent) =>
+      this.receiveLive(resent),
+    );
+  }
 
   public start(): void {
     this.snapshots = this.sources.watchSessionSnapshot(this.sessionId, {
@@ -65,8 +71,9 @@ export class FeedListener {
     return this.live.shift();
   }
 
+  // A stored Feed closes right after its snapshot, so the close waits for the Checkout totals.
   public closedEvent(): ClosedFeed | undefined {
-    return this.closed;
+    return this.storedChanges.isReading() ? undefined : this.closed;
   }
 
   public async wait(): Promise<void> {
@@ -80,7 +87,12 @@ export class FeedListener {
     this.watchBatches();
 
     if (event.type === 'closed') this.closed = event;
-    else this.live.push([event]);
+    else this.live.push([this.storedChanges.apply(event)]);
+    this.wake?.();
+  }
+
+  private receiveLive(events: readonly LiveFeedEvent[]): void {
+    this.live.push(events);
     this.wake?.();
   }
 
@@ -90,9 +102,8 @@ export class FeedListener {
     if (!next || next === this.feed) return;
     this.batches.unsubscribe();
     this.feed = next;
-    this.batches = next.on('feed.batch', (batch): void => {
-      this.live.push(batch.events);
-      this.wake?.();
-    });
+    this.batches = next.on('feed.batch', (batch): void =>
+      this.receiveLive(batch.events),
+    );
   }
 }
