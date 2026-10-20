@@ -1,12 +1,14 @@
 import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { completedSteps, fullPercent } from '../../utils/status';
+import { PlanSheetContent } from './plan-sheet-content';
 import { PlanSteps } from './plan-steps';
 import { Meter } from './status-meter';
+import { phoneSheet } from './status-surface';
 
 const planHeadingProps = {
   role: 'heading',
@@ -53,20 +55,20 @@ function PlanPopoverHeading({ entries }: PlanEntriesProps): JSX.Element {
   );
 }
 
-// A wide window heads the steps with the plan's progress; a compact web window with its title alone, as a phone's sheet carries its own.
-export function PlanPopoverContent({ entries }: PlanEntriesProps): JSX.Element {
-  const heading = <PlanPopoverHeading entries={entries} />;
-
+function HeadedPlanSteps({ entries }: PlanEntriesProps): JSX.Element {
   return (
     <View>
-      {Platform.OS === 'web' ? (
-        heading
-      ) : (
-        <SizeClass only="wide">{heading}</SizeClass>
-      )}
+      <PlanPopoverHeading entries={entries} />
       <PlanSteps entries={entries} />
     </View>
   );
+}
+
+// A web popover heads the steps (with the plan's progress when wide); a native sheet carries its own title and draws the steps in a grouped card.
+export function PlanPopoverContent({ entries }: PlanEntriesProps): JSX.Element {
+  if (phoneSheet) return <PlanSheetContent entries={entries} />;
+
+  return <HeadedPlanSteps entries={entries} />;
 }
 
 function PlanCompletionMeter({
