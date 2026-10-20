@@ -23,7 +23,9 @@ The canonical files for new designs and implementation evidence:
 
 Sessions, Feed & Inspector, and Composer keep masters on `Session Components` (`p-1-0`) and flows on `Session` (`p-2-0`). Foundations has one page per family: Tokens & Type (`p-2-0`), Icons (`p-3-0`), Controls (`p-4-0`), Lists (`p-5-0`), Overlays (`p-6-0`), Layout & Shell (`p-7-0`) and Dark (Graphite) (`p-8-0`), with the old Global Components page (`p-1-0`) last. The other files use `p-1-0`.
 
-The original [Argo file](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J) is a historical archive; leave it and its existing issue approvals and links unchanged.
+The original [Argo file](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J) is a historical archive. Never open it; leave its issue approvals and links unchanged.
+
+Atlas and Voice are work in progress and excluded from paper-sync (`excludedAreas` in `tools/paper-sync/config.mts`). Do not normalise or sync excluded areas.
 
 ## Design before implementation
 
@@ -35,15 +37,28 @@ The owner is the only approver. Each ticket's Paper is approved in its issue or 
 
 - Foundations owns the global masters. Each other file owns its section masters. Domain screens embed only the global copies they use.
 - A **master** lives on a family card named `Components / <CodeName>` on its section's Components board (see Page layout). Its name is `<CodeName> / <State>`: CodeName is the PascalCase code component it becomes, and states are named for that component's props (`Toggle / Changed files (pressed)` is the `pressed` prop). A master with one state drops ` / <State>`.
+- Name cards by CodeName. A descriptive card name such as `Components / Feed messages` claims the family of its first word. State names carry no counters: `Header expanded 8` is wrong.
+- Text layers inside a master are named for their role (`Title`, `Detail`) and are unique within that master; paper-sync matches them by name.
 - A platform suffix follows the code name: `(phone)` for both phones, `(ios)` or `(android)` for one, none for desktop: `SessionRow / Done`, `SessionRow (phone) / Done`, `Switch (ios)`.
-- A page is built only from **copies** of masters: `duplicate_nodes` inside one file, Paper's native clipboard between files. A copy keeps its master's layer name: the name is the link.
+- A page is built only from **copies** of masters: `duplicate_nodes` inside one file, Paper's native clipboard between files. A copy carries its master's exact layer name: the name is the link.
 - A copy between files gets new IDs; compare its tree, tokens and screenshot with the source.
 - A copy may change its text, hide items, and switch to a named state. Any other difference from its master is **drift**.
-- To change a component, edit its master first, then every copy, found by layer name, across the relevant files. Work inside out: a master nested in another master (Session row inside List column) is changed before the masters that hold it.
 - Column masters carry content only. The surface (background, border, radius, shadow) comes from the shell's Card and Sidebar plate, so copies cannot drift on it.
-- **The state matrix lives in the child only** (owner, 2026-10-14). A state belongs to the lowest component that owns it: that card holds every state × platform. A parent card shows one example, with one copy of the child in it, to show where the child sits; it never repeats the child's states. Only a difference in the parent's own layout gets its own small card with its own matrix. Example: `Components / AgentStatusSection` holds every Agent status; `Components / Agent page` holds one state.
+- **The state matrix lives in the child only** (owner, 2026-10-14). A state belongs to the lowest component that owns it: that card holds every state × platform. A parent card shows one example, with one copy of the child in it, to show where the child sits; it never repeats the child's states. Only a difference in the parent's own layout gets its own small card with its own matrix. Screens show one state per component. Example: `Components / AgentStatusSection` holds every Agent status; `Components / Agent page` holds one state.
 - Pages and cards are built from copies of the Foundations masters (Button, GroupedListItem, GroupedListSection, Tag); nothing is hand-drawn where a master exists. A missing master is a design gap: report it.
 - When a decision supersedes a state, delete that state in every card and screen in the same pass; stale states are not kept for reference.
+- Never delete a Paper board or node the owner has not named.
+
+## Changing a design
+
+Paper-sync carries a master's changes to its copies. [`tools/paper-sync/README.md`](../../tools/paper-sync/README.md) explains what it syncs and how. Its registry (`.paper-sync/registry.json`) is local and gitignored, like Paper itself: run paper-sync from the main checkout, never from a worktree.
+
+1. Edit the master on its `Components / <CodeName>` card (Foundations or the area file) first. Never hand-edit or hand-copy screens to propagate a change, and never restyle copies by script.
+2. Run `pnpm paper:sync check`. Run `pnpm paper:sync scan` and `pnpm paper:sync enroll --rebind` first only when what is linked changed: a new master or state, new copies, or renamed or new layers and text slots. A style or text change to an enrolled master needs only `check` and `apply`.
+3. Report the drift count to the owner, then run `pnpm paper:sync apply`.
+4. Screenshot the changed copies before and after, as evidence.
+
+One agent edits a Paper file at a time. Do not run paper-sync while another agent edits Paper; apply's preflight stops on concurrent edits. Batch master edits and run one `check` and `apply` for all of them.
 
 ## Platforms
 
@@ -59,9 +74,9 @@ Argo owns its primitives (ADR-0020), so Paper designs desktop, iOS and Android.
 
 Each section uses these artboards on the pages listed in Design files, top-aligned at y 0, left to right, 400px apart. Every board is auto layout, so adding something moves its neighbours instead of overlapping them; nothing is placed by hand.
 
-- `<Section> Components`: a flex row of columns named `Column / <Group>`, each a flex column of family cards `Components / <CodeName>`. A card has its heading, a header of platform columns (see Platforms) and one row per state. A new component is a new card in a column, never a loose artboard.
+- `<Section> Components`: a flex row of columns named `Column / <Group>`, each a flex column of family cards `Components / <CodeName>`. A card has a heading and note, a `Columns` header `State | Desktop | iOS | Android` (see Platforms), and one `Row / <State>` per state holding `Cell / Desktop`, `Cell / iOS` and `Cell / Android`. A new component is a new card in a column, never a loose artboard.
 - `<Section> Desktop` and `<Section> Mobile`: a flex column of flows named `Flow / <Name>`, each a heading and a row of `Screen / <State>` frames. A screen frame holds a label, then the screen, named `<Section> — <State>`: no device word (the board says it) and no "(light)". Desktop and Mobile use the same flow names in the same order.
-- `<Section> Explorations`, only when needed: option boards, comparisons and A/B variants, wrapped like screens. Finished work never sits here. To promote an exploration frame, move it onto Components, Desktop or Mobile in card format and delete the master it replaces.
+- `<Section> Explorations`, only when needed: option boards, comparisons and A/B variants, wrapped like screens. Explorations are never drawn on masters, and finished work never sits here. Once the owner approves an exploration, put it onto the masters and run paper-sync (see Changing a design). Delete an exploration board only when the owner says so.
 - Foundations keeps its masters on the family pages; the Global Components page holds only `Column / References`.
 - Within one file, use `move_nodes` to move existing layers into place; it keeps their IDs.
 
@@ -79,7 +94,7 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - Fills that sit on the content surface (user message bubbles, the Inspector pane, an icon button's default chip) use `--color-tint`, not `--color-muted`: content and muted are both neutral-100. Tint is black 4% (dark: white 8%) mixed into content (owner, 2026-10-17).
 - Destructive hover and pressed states use a light red background, 10% of `--color-danger`, with danger text (owner, 2026-10-10).
 - Text takes one of four roles from the "Components / Text" master on the Tokens & Type page: Title, Heading, Body, Secondary. Each role is a set of tokens, `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`; desktop text uses the `-wide` size and leading (`--text-body-wide`), phone text the plain ones. Text nodes reference role tokens, never a scale step such as `--text-sm`. In code they are the `type-title`, `type-heading`, `type-body` and `type-secondary` classes in `theme.css`. Buttons, inputs, chips, the native phone header and mono code keep their own styles.
-- Token values live only in `tooling/uniwind/theme.css`, with no second copy in the repository; each Paper file holds a copy. After a token change in `theme.css`, sync that token by hand in every canonical Paper file. Paper leads how things look; `theme.css` leads token values. A Paper token missing from `theme.css` or holding a different value is drift: report it and fix Paper.
+- Token values live only in `tooling/uniwind/theme.css`, with no second copy in the repository; each Paper file holds a copy. After a token change in `theme.css`, sync that token by hand in every canonical Paper file; paper-sync does not sync tokens. Paper leads how things look; `theme.css` leads token values. A Paper token missing from `theme.css` or holding a different value is drift: report it and fix Paper.
 - Paper stores oklch with one decimal. When that rounding changes the colour, store the exact hex instead.
 - A Paper token value cannot be `color-mix()`: Paper flattens it to the opaque colour. Alpha tokens (`--color-hover`, `--color-glass`…) store the resolved value, such as `rgb(0 0 0 / 2%)`.
 - Colours come from the Tailwind palette only. Every semantic token (`--color-success`, `--color-content`) aliases a palette token.
@@ -91,6 +106,7 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - Logos, such as GitHub's Octicons mark on the Agent card, are plain SVG files in `packages/client/src/lib/generic/symbols/assets/logos` (ADR-0019). A logo layer is named `Logo / <key>`, `<key>` being its key in `logoSources` (`logo-source.ts`). Its Paper SVG copies the file, in the role's icon box with the mark filling the share `circle` fills.
 - Where SF Symbols has no symbol, Argo draws its own (`custom.<name>` in `packages/client/src/lib/generic/symbols/custom-symbol-paths.json`, ADR-0019). Its Paper SVG uses the JSON's viewBox and path, so design and app share one outline.
 - An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
+- In a copy, the glyph belongs to the copy; its size, fill and placement sync from the master (see [Icon slots](../../tools/paper-sync/README.md#icon-slots)).
 - The library is "Components / Icons" on the Icons page: one tile per app icon, a Material cell beside the SF cell. Copy icons from it.
 - `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use that viewBox, a `--color-*` fill, and the dimensions from the icon's role.
 

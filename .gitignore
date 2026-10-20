@@ -29,7 +29,6 @@ coverage/
 # Misc
 .DS_Store
 .paper-sync/*
-!.paper-sync/registry.json
 *.pem
 
 # Vitest
