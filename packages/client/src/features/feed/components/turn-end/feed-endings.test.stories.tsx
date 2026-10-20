@@ -17,7 +17,7 @@ const thought = recordedFeedMocks
   .find((row) => row.sessionUpdate === 'agent_thought');
 
 const command = recording.rows.find(
-  (row) => row.sessionUpdate === 'tool_call_update',
+  (row) => row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
 );
 
 if (!thought || !command)
