@@ -54,11 +54,11 @@ The owner is the only approver. Each ticket's Paper is approved in its issue or 
 Paper-sync carries a master's changes to its copies. [`tools/paper-sync/README.md`](../../tools/paper-sync/README.md) explains what it syncs and how.
 
 1. Edit the master on its `Components / <CodeName>` card (Foundations or the area file) first. Never hand-edit or hand-copy screens to propagate a change, and never restyle copies by script.
-2. Run `pnpm paper:sync scan`, then `pnpm paper:sync enroll --rebind`, then `pnpm paper:sync check`.
+2. Run `pnpm paper:sync check`. Run `pnpm paper:sync scan` and `pnpm paper:sync enroll --rebind` first only when what is linked changed: a new master or state, new copies, or renamed or new layers and text slots. A style or text change to an enrolled master needs only `check` and `apply`.
 3. Report the drift count to the owner, then run `pnpm paper:sync apply`.
 4. Screenshot the changed copies before and after, as evidence.
 
-One agent edits a Paper file at a time. Do not run paper-sync while another agent edits Paper; apply's preflight stops on concurrent edits. After any Paper edit, scan again before apply.
+One agent edits a Paper file at a time. Do not run paper-sync while another agent edits Paper; apply's preflight stops on concurrent edits. Batch master edits and run one `check` and `apply` for all of them.
 
 ## Platforms
 
