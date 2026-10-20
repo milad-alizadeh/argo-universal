@@ -156,8 +156,9 @@ function PageContent(props: PageProps): ReactElement {
  * The root page is drawn before the sheet is shown, and a page on standby was drawn with it, so only a page
  * the sheet mounts on the way in has anything to stand in for.
  */
-const sliding = (props: Pick<PageProps, 'root' | 'settled' | 'page'>): boolean =>
-  !props.root && !props.settled && props.page.standby !== true;
+const sliding = (
+  props: Pick<PageProps, 'root' | 'settled' | 'page'>,
+): boolean => !props.root && !props.settled && props.page.standby !== true;
 
 const loadingLabel = 'Loading';
 

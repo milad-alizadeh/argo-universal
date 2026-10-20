@@ -44,6 +44,7 @@ function AgentSelector(props: Omit<ChoicesProps, 'close'>): ReactElement {
       value={value || 'Choose Agent'}
       valueLeading={leading}
       contentScrolls
+      mount="eager"
     >
       {(close) => <AgentDrillChoices {...props} close={close} />}
     </Drill>

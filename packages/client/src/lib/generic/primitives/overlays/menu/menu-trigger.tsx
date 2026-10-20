@@ -68,9 +68,7 @@ const sizeClassNames = {
 } satisfies Record<NonNullable<MenuTriggerProps['size']>, string>;
 
 // A taller picker, such as the Composer's; the default draws nothing extra.
-function toolbarClass({
-  size = 'sm',
-}: Pick<MenuTriggerProps, 'size'>): string {
+function toolbarClass({ size = 'sm' }: Pick<MenuTriggerProps, 'size'>): string {
   return sizeClassNames[size];
 }
 

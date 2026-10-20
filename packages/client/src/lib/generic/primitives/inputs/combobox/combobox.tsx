@@ -87,8 +87,15 @@ function drillProps<Value extends string>(
     onClose: props.onBlur,
     contentScrolls: true,
     trigger: props.trigger,
-    keepOpen: props.keepOpen,
+    ...opening(props),
   };
+}
+
+// How the choices come up: whether a pick keeps them open, and when their page is drawn.
+function opening<Value extends string>(
+  props: ComboboxProps<Value>,
+): Pick<DrillProps, 'keepOpen' | 'mount'> {
+  return { keepOpen: props.keepOpen, mount: props.mount };
 }
 
 // What the options give the row: the chosen one's label, and the whole list as the page's stand-in.

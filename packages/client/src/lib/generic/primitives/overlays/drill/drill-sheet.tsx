@@ -12,6 +12,7 @@ import {
 } from '#primitives/overlays/sheet';
 import { useCompletion, type Completion } from './drill-completion';
 import type { DrillProps } from './drill-props';
+import { useStandby } from './drill-standby';
 
 type Props = DrillProps & { trigger: NonNullable<DrillProps['trigger']> };
 
@@ -57,19 +58,30 @@ type DestinationOwner = {
 
 function useLiveDestination(props: DrillProps, owner: DestinationOwner): void {
   const { parent, name, onExit } = owner;
-  const { title, contentScrolls, placeholder, children } = props;
+  const standby = useStandby(props.mount);
 
   useLayoutEffect(() => {
-    if (!parent) return;
-    parent.update({
-      name,
-      title,
-      contentScrolls,
-      placeholder,
-      onExit,
-      children: children(parent.back),
-    });
-  }, [parent, name, onExit, title, contentScrolls, placeholder, children]);
+    if (parent) hand(props, { parent, name, onExit, standby });
+  }, [props, parent, name, onExit, standby]);
+}
+
+type Live = Required<Pick<DestinationOwner, 'parent'>> &
+  Omit<DestinationOwner, 'parent'> & { standby: boolean };
+
+// A page the sheet already holds is replaced where it stands; one on standby is handed over to be held.
+function hand(props: DrillProps, live: Live): void {
+  const page = {
+    name: live.name,
+    title: props.title,
+    contentScrolls: props.contentScrolls,
+    placeholder: props.placeholder,
+    standby: live.standby,
+    onExit: live.onExit,
+    children: props.children(live.parent.back),
+  };
+
+  if (live.standby) live.parent.standby(page);
+  else live.parent.update(page);
 }
 
 function closeChoices(
@@ -113,6 +125,7 @@ function pushChoices(
     title: props.title,
     contentScrolls: props.contentScrolls,
     placeholder: props.placeholder,
+    standby: props.mount === 'eager',
     children: props.children(parent.back),
   });
 }
