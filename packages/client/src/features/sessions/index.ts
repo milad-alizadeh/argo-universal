@@ -14,6 +14,15 @@ export {
   type SubagentFeedProps,
 } from './components/subagent-feed/subagent-feed';
 
+export {
+  ShellPanel,
+  type ShellPanelProps,
+} from './components/shell-list/shell-panel';
+
+export { ShellSheet } from './components/shell-list/shell-sheet';
+
+export { shellsRunning } from './components/shell-list/shell-format';
+
 export { SessionHeaderBar } from './components/session-header-bar';
 
 export { sessionPanelLabels } from './components/session-panel-triggers';

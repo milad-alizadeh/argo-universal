@@ -9,3 +9,17 @@ export interface ShellOutputText {
   text: string;
   droppedLines?: number;
 }
+
+export interface ShellListProps {
+  shells: ShellEntry[];
+  onSelect?: (shell: ShellEntry) => void;
+  // Fixed time for stories and tests; a running Shell's time otherwise ticks.
+  now?: number;
+}
+
+// What both the phone sheet and the wide panel need: the Session's Shells, the open one's output, and Stop.
+export interface ShellViewProps extends ShellListProps {
+  // The open Shell's output; the caller loads it when `onSelect` names the Shell.
+  output?: ShellOutputText;
+  onStop: (shell: ShellEntry) => void;
+}

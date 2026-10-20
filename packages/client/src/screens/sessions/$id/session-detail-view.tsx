@@ -29,7 +29,7 @@ import {
   SessionInspector,
   type SessionInspectorContent,
 } from './session-inspector';
-import { useSessionSubagents } from './session-subagents';
+import { useWorkPanels } from './session-work-panels';
 import { useInspectorPanels } from './use-inspector-panels';
 
 export interface OpenSessionViewProps extends SessionInspectorContent {
@@ -84,33 +84,18 @@ export function SessionDetailView(
 // The header's triggers open Subagents, Shells and Changes as tabs in the Inspector beside the Session.
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
   const panels = useInspectorPanels(props);
-
-  const subagents = useSubagentPanel(props, panels);
+  const work = useWorkPanels(props, panels);
 
   return (
     <>
       <SessionLayout
-        {...sessionParts({ ...props, composer: subagents.composer }, panels)}
+        {...sessionParts({ ...props, composer: work.composer }, panels)}
       />
       <SessionInspector {...props} panels={panels} />
-      {subagents.sheet}
+      {work.sheets}
     </>
   );
 }
-
-const subagentPanel =
-  (panels: SessionPanels): ((open: boolean) => void) =>
-  (open) =>
-    open ? panels.select('subagents') : panels.close('subagents');
-
-const useSubagentPanel = (
-  props: OpenSessionViewProps,
-  panels: SessionPanels,
-): ReturnType<typeof useSessionSubagents> =>
-  useSessionSubagents(props.composer, props.subagents, {
-    open: panels.state.shown === 'subagents',
-    onOpenChange: subagentPanel(panels),
-  });
 
 const headerPanels = (
   props: OpenSessionViewProps,

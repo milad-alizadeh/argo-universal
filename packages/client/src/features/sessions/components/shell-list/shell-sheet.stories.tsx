@@ -2,12 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type JSX, useState } from 'react';
 import { action } from 'storybook/actions';
 import type { ShellEntry, ShellOutputText } from './shell-list-types';
-import {
-  failedOutput,
-  longRunningOutput,
-  sessionShells,
-  shellNow,
-} from './shell-list.mocks';
+import { sessionShells, shellNow } from './shell-list.mocks';
+import { failedOutput, longRunningOutput } from './shell-output.mocks';
 import { ShellSheet, type ShellSheetProps } from './shell-sheet';
 
 // Each mock Shell's output, as the caller loads it when a row names the Shell.
