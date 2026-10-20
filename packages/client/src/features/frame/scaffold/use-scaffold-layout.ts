@@ -3,11 +3,7 @@ import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
-import {
-  type FrameMotion,
-  type FrameTiming,
-  frameTiming,
-} from '../utils/frame-timing';
+import { type FrameMotion, frameTiming } from '../utils/frame-timing';
 import {
   type InspectorState,
   type ScaffoldGeometry,
@@ -106,38 +102,11 @@ function useScaffoldWidths(): PreferredWidths & { measures: ScaffoldMeasures } {
   return { measures, ...usePreferredWidths(measures) };
 }
 
-interface HeldTiming {
-  transitionKey: string;
-  sidebarShown: boolean;
-  timing: FrameTiming;
-}
-
-// The timing of the Frame's latest change, held until the next: the sidebar collapsing or expanding, or any other pane moving.
-function useFrameTiming(
-  transitionKey: string,
-  sidebarShown: boolean,
-): FrameTiming {
-  const [held, setHeld] = useState<HeldTiming>(() => ({
-    transitionKey,
-    sidebarShown,
-    timing: frameTiming(sidebarShown, sidebarShown),
-  }));
-
-  if (held.transitionKey === transitionKey) return held.timing;
-  const timing = frameTiming(held.sidebarShown, sidebarShown);
-  setHeld({ transitionKey, sidebarShown, timing });
-
-  return timing;
-}
-
 function useFrameMotion(
   { transitionKey }: ScaffoldGeometry,
-  { sidebarShown }: ScaffoldProps,
   resizing: boolean,
 ): FrameMotion {
-  const timing = useFrameTiming(transitionKey, sidebarShown);
-
-  return { transitionKey, animate: !resizing, timing };
+  return { transitionKey, animate: !resizing, timing: frameTiming };
 }
 
 export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
@@ -150,7 +119,7 @@ export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
     ...geometry,
     ...widths,
     ...windowWidth,
-    motion: useFrameMotion(geometry, scaffold, resizing),
+    motion: useFrameMotion(geometry, resizing),
     setResizing,
   };
 }
