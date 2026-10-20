@@ -21,6 +21,8 @@ export interface SectionDrawing {
 
 const muted = 'text-muted-foreground';
 
+const phoneMuted = 'text-tone-neutral-600';
+
 // Inset as the rows' content.
 const rowInset = { inset: 'px-4 wide:px-5', gap: 'pb-2', below: 'h-4' };
 
@@ -38,8 +40,9 @@ const drawings = {
     below: 'h-6',
   },
   phone: {
-    heading: 'text-tone-neutral-600',
-    footer: 'text-tone-neutral-600',
+    heading: phoneMuted,
+    title: phoneMuted,
+    footer: phoneMuted,
     ...rowInset,
   },
   // Paper's List / Grouped on a page: a muted heading over the rows' text, 8 above the card; cards sit 16 apart.

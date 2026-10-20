@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
@@ -95,10 +96,14 @@ export const EmptyShowsTheEmptyState = at(layoutWidths.wide, {
 const headings = (canvas: Canvas): (string | null)[] =>
   canvas.getAllByRole('heading').map((heading) => heading.textContent);
 
-// A pinned group ends the list at every width: below the pages' groups, on a wide sidebar pinned to its bottom.
+// A pinned group ends the list at every width: below the pages' groups, on a wide sidebar pinned under them.
 const pinnedEndsTheList = (width: number): Story =>
   at(width, {
-    render: () => <ExampleSettingsLayout pinned={examplePinned} />,
+    render: () => (
+      <View className="h-120">
+        <ExampleSettingsLayout pinned={examplePinned} />
+      </View>
+    ),
     play: async ({ canvas }) => {
       await expect(await canvas.findByText('Version')).toBeVisible();
       await expect(headings(canvas)).toEqual([

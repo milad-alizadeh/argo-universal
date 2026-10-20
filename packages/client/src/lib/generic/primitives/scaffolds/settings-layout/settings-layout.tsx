@@ -8,6 +8,7 @@ import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { ListDetail } from '#primitives/scaffolds/list-detail';
 import { RowDrawingContext } from '../../../row-drawing-context';
+import { SectionEndContext } from '../../../section-end-context';
 import type {
   SettingsLayoutItem,
   SettingsLayoutProps,
@@ -48,12 +49,25 @@ type Placed = Omit<SettingsLayoutProps, 'sections'> & {
   wide: boolean;
 };
 
-// A wide web sidebar pins the pinned section to its bottom, below the pages' scroll; elsewhere it ends the list.
-const pinnedPlace = (
-  pinned: ReactNode,
-  sidebar: boolean,
-): { end?: ReactNode; bottom?: ReactNode } =>
-  sidebar ? { bottom: pinned } : { end: pinned };
+/*
+ * A wide web sidebar pins the pinned section to its bottom, below the pages' scroll; elsewhere it ends the list.
+ * The sidebar's groups then fill the space above its pinned section and scroll there, rather than grow past it.
+ */
+interface Place {
+  end?: ReactNode;
+  bottom?: ReactNode;
+  fills: boolean;
+}
+
+const pinnedPlace = (pinned: ReactNode, sidebar: boolean): Place =>
+  sidebar && pinned
+    ? { bottom: <PinnedBottom>{pinned}</PinnedBottom>, fills: true }
+    : { end: pinned, fills: false };
+
+// Paper's SettingsList: the pinned section ends the sidebar, 12 above its bottom edge, with no section gap after it.
+const PinnedBottom = (props: { children: ReactNode }): ReactElement => (
+  <SectionEndContext value>{props.children}</SectionEndContext>
+);
 
 function PlacedPages({ sections, wide, ...props }: Placed): ReactElement {
   const sidebar = wide && Platform.OS === 'web';
@@ -62,7 +76,7 @@ function PlacedPages({ sections, wide, ...props }: Placed): ReactElement {
 
   return (
     <SidebarRows shown={sidebar}>
-      <SettingsGroups sections={sections} end={place.end} {...selection} />
+      <SettingsGroups sections={sections} place={place} {...selection} />
       {place.bottom}
     </SidebarRows>
   );
@@ -70,18 +84,22 @@ function PlacedPages({ sections, wide, ...props }: Placed): ReactElement {
 
 type GroupsProps = RowSelection & {
   sections: SettingsLayoutSections;
-  end?: ReactNode;
+  place: Place;
 };
 
-function SettingsGroups({ sections, end, ...rows }: GroupsProps): ReactElement {
+function SettingsGroups({
+  sections,
+  place,
+  ...rows
+}: GroupsProps): ReactElement {
   const groups = sections.map((section, index) => (
     <SettingsGroup key={section.title ?? index} section={section} {...rows} />
   ));
 
   return (
-    <List appearance="grouped">
+    <List appearance="grouped" fit={!place.fills}>
       {groups}
-      {end}
+      {place.end}
     </List>
   );
 }
