@@ -39,17 +39,16 @@ export function useWorkPanels(
 ): WorkPanels {
   const sub = sheetProps(panels, 'subagents');
   const subagents = useSessionSubagents(props.composer, props.subagents, sub);
-
   const open = sheetProps(panels, 'shells');
   const shells = useSessionShells(subagents.composer, props.shells, open);
 
-  return { composer: shells.composer, sheets: sheets(subagents, shells) };
+  return { composer: shells.composer, sheets: bothSheets(subagents, shells) };
 }
 
-const sheets = (
-  subagents: { sheet: JSX.Element | null },
-  shells: { sheet: JSX.Element | null },
-): ReactNode => (
+type WorkSheets = { sheet: JSX.Element | null };
+
+// Both work sheets mount together; each draws only at its own width and when its panel is shown.
+const bothSheets = (subagents: WorkSheets, shells: WorkSheets): ReactNode => (
   <>
     {subagents.sheet}
     {shells.sheet}

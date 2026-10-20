@@ -1,6 +1,10 @@
 import { createElement, type JSX } from 'react';
 import type { ComposerProps } from '#features/composer';
-import { ShellSheet, type ShellPanelProps } from '#features/sessions';
+import {
+  ShellSheet,
+  type ShellPanelProps,
+  shellsRunning,
+} from '#features/sessions';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
 
 type SheetProps = {
@@ -20,7 +24,7 @@ function workStatus(
 ): NonNullable<ComposerProps['status']>['shells'] {
   return {
     count: shells.shells.length,
-    running: shells.shells.some((shell) => shell.status === 'running'),
+    running: shellsRunning(shells.shells),
     onPress: open,
   };
 }

@@ -1,7 +1,6 @@
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { eachLayout } from '../../../../lib/generic/each-layout';
+import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   failedShell,
@@ -36,10 +35,10 @@ function scrollUp(scroll: HTMLElement): void {
 }
 
 // Scrolling up offers Jump to latest, which goes back to the end and hides itself.
-export const JumpsBackToTheEnd: Story = {
+const jumpsBackToTheEnd = (width: number): Story => ({
   args: { output: longRunningOutput },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleViewport(width);
     const scroll = await canvas.findByTestId('shell-output');
     await waitFor(async () => {
       scrollUp(scroll);
@@ -56,14 +55,29 @@ export const JumpsBackToTheEnd: Story = {
       ).toBeNull(),
     );
   },
+});
+
+export const JumpsBackToTheEndOnAPhone = jumpsBackToTheEnd(layoutWidths.phone);
+
+export const JumpsBackToTheEndWhenWide = jumpsBackToTheEnd(layoutWidths.wide);
+
+// Output loaded for another Shell is not this one's: the view waits rather than showing it.
+export const IgnoresAnotherShellsOutput: Story = {
+  args: { output: failedOutput },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(canvas.queryByText(/earlier lines not kept/)).toBeNull();
+      await expect(canvas.queryByText(/Using Vite builder/)).toBeNull();
+    }),
 };
 
 export const ShowsTheCommandAndFolder: Story = {
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText('$')).toBeVisible();
-    await expect(canvas.getByText('~/argo-universal/apps/app')).toBeVisible();
-    await expect(canvas.queryByText(/^after /)).toBeNull();
-  },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(canvas.getByText('$')).toBeVisible();
+      await expect(canvas.getByText('~/argo-universal/apps/app')).toBeVisible();
+      await expect(canvas.queryByText(/^after /)).toBeNull();
+    }),
 };
 
 // The footer reports an exit code, and the header says how many earlier lines the Server dropped.

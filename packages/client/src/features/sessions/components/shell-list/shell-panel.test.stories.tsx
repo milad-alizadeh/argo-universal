@@ -1,5 +1,5 @@
 import type { StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { endedShells, runningShell } from './shell-list.mocks';
@@ -33,6 +33,16 @@ export const StopsARunningShell: Story = {
       canvas.getByRole('button', { name: 'Stop pnpm dev' }),
     );
     await expect(args.onStop).toHaveBeenCalledWith(runningShell);
+  },
+};
+
+// The open Shell's output fills the tab, scrolled to the newest line the Server sent.
+export const ShowsTheOpenShellsOutput: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await openWide(canvas, userEvent, /pnpm dev/);
+    await waitFor(() =>
+      expect(canvas.getByText(/Reloading apps/)).toBeVisible(),
+    );
   },
 };
 

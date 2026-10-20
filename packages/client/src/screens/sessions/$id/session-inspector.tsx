@@ -13,6 +13,7 @@ import {
   type SessionPanels,
   ShellPanel,
   type ShellPanelProps,
+  shellsRunning,
   SubagentList,
   type SubagentListProps,
 } from '#features/sessions';
@@ -58,7 +59,7 @@ function shellsPanel({
 }: SessionInspectorContent): PanelContent | undefined {
   if (!shells?.shells.length) return undefined;
 
-  const running = shells.shells.some((one) => one.status === 'running');
+  const running = shellsRunning(shells.shells);
 
   return {
     count: shells.shells.length,

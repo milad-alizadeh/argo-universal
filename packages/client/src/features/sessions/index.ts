@@ -13,6 +13,8 @@ export {
 
 export { ShellSheet } from './components/shell-list/shell-sheet';
 
+export { shellsRunning } from './components/shell-list/shell-format';
+
 export { SessionHeaderBar } from './components/session-header-bar';
 
 export { sessionPanelLabels } from './components/session-panel-triggers';

@@ -15,10 +15,11 @@ export interface ShellOutputHeaderProps {
   now: number;
 }
 
+// Stop ends a run, so it reads as danger does everywhere: red text, no fill and no border.
 const stopAppearance = {
-  variant: 'outline',
+  variant: 'ghost',
+  tone: 'danger',
   size: 'xs',
-  icon: 'cancelled',
   label: 'Stop',
 } as const;
 

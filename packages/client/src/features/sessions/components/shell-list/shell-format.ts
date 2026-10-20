@@ -55,6 +55,10 @@ export function shellSupporting(shell: ShellEntry): string {
   return shell.lastLine ?? shell.cwd;
 }
 
+// Whether any of the Session's Shells is still printing: its clock ticks and its count reads live.
+export const shellsRunning = (shells: Shell[]): boolean =>
+  shells.some((shell) => shell.status === 'running');
+
 // The list's heading: "1 running · 3 in this Session".
 export function shellsSummary(shells: Shell[]): string {
   const count = shells.filter((shell) => shell.status === 'running').length;
