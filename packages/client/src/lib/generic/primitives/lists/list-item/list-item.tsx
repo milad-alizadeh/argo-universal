@@ -18,11 +18,8 @@ import {
   ChoiceAccessory,
   ChoiceSlot,
 } from './list-item-selection';
-import {
-  itemSeparator,
-  itemSurface,
-  type ItemDrawing,
-} from './list-item-styles';
+import { itemSeparator, type LeadingKind } from './list-item-separator';
+import { itemSurface, type ItemDrawing } from './list-item-styles';
 
 const hairline = { height: StyleSheet.hairlineWidth };
 
@@ -32,10 +29,16 @@ function useItemDrawing(): ItemDrawing {
   return { appearance, position, menu: useInMenu(), rows: useRowDrawing() };
 }
 
+function leadingKind(props: ListItemProps): LeadingKind {
+  if (props.avatar) return 'avatar';
+
+  return hasLeading(props) ? 'icon' : 'none';
+}
+
 function ItemSeparator(props: ListItemProps): ReactNode {
   const { index } = useContext(ListContext);
   const covered = useSeparatorCovered(index);
-  const separator = itemSeparator(useItemDrawing(), hasLeading(props));
+  const separator = itemSeparator(useItemDrawing(), leadingKind(props));
 
   return separator && !covered ? (
     <View className={separator} style={hairline} />

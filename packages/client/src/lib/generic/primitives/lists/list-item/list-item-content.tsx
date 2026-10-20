@@ -4,19 +4,27 @@ import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
 
-type SubtitleProps = Pick<ListItemProps, 'subtitleTone'> & {
+type SubtitleProps = Pick<ListItemProps, 'subtitleTone' | 'dimmed'> & {
   text?: string;
   multiline?: boolean;
 };
 
-function Subtitle({ text, multiline, subtitleTone }: SubtitleProps): ReactNode {
-  return text === undefined ? null : (
+// A dimmed row's subtitle steps down to tertiary, under its muted title.
+const subtitleClass = (dimmed?: boolean): string | undefined =>
+  dimmed ? 'text-tertiary' : undefined;
+
+const subtitleLines = (multiline?: boolean): number | undefined =>
+  multiline ? undefined : 1;
+
+function Subtitle(props: SubtitleProps): ReactNode {
+  return props.text === undefined ? null : (
     <Text
       role="row-detail"
-      tone={subtitleTone}
-      numberOfLines={multiline ? undefined : 1}
+      tone={props.subtitleTone}
+      numberOfLines={subtitleLines(props.multiline)}
+      className={subtitleClass(props.dimmed)}
     >
-      {text}
+      {props.text}
     </Text>
   );
 }
@@ -44,7 +52,7 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   return (
     <Text
       role="row"
-      tone={props.tone}
+      tone={props.dimmed ? 'muted' : props.tone}
       numberOfLines={1}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
     >
@@ -78,6 +86,7 @@ export function ItemContent(props: ListItemProps): ReactElement {
         text={props.subtitle}
         multiline={!!props.description}
         subtitleTone={props.subtitleTone ?? 'muted'}
+        dimmed={props.dimmed}
       />
       <Meta sidebar={props.sidebar !== undefined}>{props.meta}</Meta>
     </View>

@@ -11,21 +11,41 @@ function tokensLabel(tokens: number | null): string {
   return `${Number((tokens / thousand).toFixed(1))}k tokens`;
 }
 
-function elapsedMs(subagent: Subagent, now: number): number | null {
-  if (subagent.state === 'idle') return subagent.durationMs;
+const durationLabel = (elapsed: number | null): string =>
+  elapsed === null ? '—' : formatElapsed(elapsed);
 
-  if (subagent.startedAt === null) return null;
+const modelLabel = (subagent: Subagent): string =>
+  subagent.model ?? 'Unknown model';
 
-  return now - subagent.startedAt;
+function runningElapsed(subagent: Subagent, now: number): number | null {
+  return subagent.startedAt === null ? null : now - subagent.startedAt;
+}
+
+// Paper "Components / SubagentRow": a finished row leads with its outcome; a cancelled one drops its tokens.
+function finishedSupporting(subagent: Subagent): string {
+  const duration = durationLabel(subagent.durationMs);
+
+  if (subagent.stopReason === 'cancelled') return `Cancelled · ${duration}`;
+
+  return ['Finished', duration, tokensLabel(subagent.tokens)].join(' · ');
 }
 
 export function subagentSupporting(subagent: Subagent, now: number): string {
-  const elapsed = elapsedMs(subagent, now);
-  const duration = elapsed === null ? '—' : formatElapsed(elapsed);
+  if (subagent.state === 'idle') return finishedSupporting(subagent);
+
+  if (subagent.state === 'requires_action')
+    return `${modelLabel(subagent)} · Needs input`;
 
   return [
-    subagent.model ?? 'Unknown model',
-    duration,
+    modelLabel(subagent),
+    durationLabel(runningElapsed(subagent, now)),
     tokensLabel(subagent.tokens),
   ].join(' · ');
+}
+
+// What the row's status says aloud; a finished row's subtitle already leads with its outcome.
+export function subagentStatusLabel(subagent: Subagent): string | undefined {
+  if (subagent.state === 'requires_action') return 'Needs input';
+
+  return subagent.state === 'idle' ? undefined : 'Running';
 }

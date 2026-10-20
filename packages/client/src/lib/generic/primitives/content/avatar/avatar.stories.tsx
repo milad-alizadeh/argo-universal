@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Variation, Variations as VariationList } from '../../../variations';
+import { Icon } from '#primitives/content/icon';
 import { Avatar } from './avatar';
 
 const tones = [
@@ -40,7 +41,33 @@ function AvatarVariations({
     <VariationList>
       <AvatarInitialsExamples args={args} />
       <AvatarToneVariations />
+      <TintedVariations />
     </VariationList>
+  );
+}
+
+// A list row's medium avatar, its circle and hosted glyph tinted by tone, as a Subagent's role is.
+function TintedVariations(): React.JSX.Element {
+  return (
+    <Variation label="Tinted glyph (md)">
+      <View className="flex-row gap-3">
+        {tones.map((tone) => (
+          <TintedAvatar key={tone} tone={tone} />
+        ))}
+      </View>
+    </Variation>
+  );
+}
+
+function TintedAvatar({
+  tone,
+}: {
+  tone: (typeof tones)[number];
+}): React.JSX.Element {
+  return (
+    <Avatar size="md" tone={tone} initials="" accessibilityLabel={tone}>
+      <Icon name="sparkle" role="body" />
+    </Avatar>
   );
 }
 

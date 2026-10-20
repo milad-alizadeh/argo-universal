@@ -33,7 +33,7 @@ export const ComposerSubagentsOpenSheet: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.phone);
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Subagents: 4' }),
+      await canvas.findByRole('button', { name: 'Subagents: 5' }),
     );
     const page = within(document.body);
 

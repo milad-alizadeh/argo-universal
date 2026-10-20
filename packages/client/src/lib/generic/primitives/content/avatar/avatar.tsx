@@ -1,8 +1,13 @@
 import type * as React from 'react';
 import { Image, type ViewProps, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/content/text';
+import { Text, TextClassContext, type Tone } from '#primitives/content/text';
 import { StatusDot } from '#primitives/status/status-dot';
+import {
+  avatarClassName,
+  avatarGlyphClassName,
+  avatarMediaClassName,
+} from './avatar-drawing';
 import type { AvatarProps } from './avatar-props';
 
 export function Avatar(props: AvatarProps): React.JSX.Element {
@@ -12,7 +17,7 @@ export function Avatar(props: AvatarProps): React.JSX.Element {
 function AvatarFrame(props: AvatarProps): React.JSX.Element {
   return (
     <View {...avatarFrameProps(props)}>
-      <AvatarMedia hosted={props.children !== undefined}>
+      <AvatarMedia hosted={props.children !== undefined} tone={props.tone}>
         {avatarContent(props)}
       </AvatarMedia>
       <AvatarStatus {...props} />
@@ -53,34 +58,20 @@ function avatarAccessibleName(props: AvatarProps): string {
   return `${props.accessibilityLabel}, ${props.status.accessibilityLabel ?? props.status.tone}`;
 }
 
-function avatarClassName(size: AvatarProps['size']): string {
-  const sizeClass = avatarSizeClass(size);
-
-  return cn('relative shrink-0', sizeClass);
-}
-
-function avatarSizeClass(size: AvatarProps['size']): string {
-  if (size === 'sm') return 'size-6 wide-type:size-5';
-
-  return 'size-10';
-}
-
-// Avatar's own content sits on tint (Paper Avatar master); hosted content, the Session row's logo, keeps muted.
 function AvatarMedia(props: {
   hosted: boolean;
+  tone?: Tone;
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <View
-      className={cn(
-        'size-full items-center justify-center overflow-hidden rounded-full',
-        props.hosted ? 'bg-muted' : 'bg-tint',
-      )}
-    >
-      {props.children}
+    <View className={avatarMediaClassName(props.hosted, props.tone)}>
+      <TextClassContext value={avatarGlyphClassName(props.tone)}>
+        {props.children}
+      </TextClassContext>
     </View>
   );
 }
+
 
 function avatarContent(props: AvatarProps): React.ReactNode {
   if (props.children) return props.children;

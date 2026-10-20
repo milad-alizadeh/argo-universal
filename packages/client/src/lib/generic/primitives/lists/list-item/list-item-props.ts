@@ -42,6 +42,10 @@ export type ListItemProps = KitProps<'ListItem'> & {
   emphasized?: boolean;
   // The subtitle's colour; muted unless the row says otherwise.
   subtitleTone?: Tone;
+  // A round avatar in place of the leading icon, such as a Subagent's role: its lane fits the avatar and centres it on the row.
+  avatar?: ReactNode;
+  // A row that has finished its work, such as a done Subagent: it still opens, but its title is muted, its subtitle tertiary and its leading half opacity.
+  dimmed?: boolean;
   // A placeholder while the list loads: bars where the title, subtitle and meta will be, each as wide as its placeholder text; any `leading`, even null, becomes a round mark.
   isLoading?: boolean;
 };

@@ -15,12 +15,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const rowNames = (canvas: { getAllByRole: (role: 'button') => HTMLElement[] }) =>
+  canvas.getAllByRole('button').map((row) => row.getAttribute('aria-label'));
+
 export const None: Story = {
   args: { subagents: subagentStates.none },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.queryByText('Running')).toBeNull();
-      await expect(canvas.queryByText('Finished')).toBeNull();
+      await expect(canvas.queryByRole('button')).toBeNull();
+      await expect(canvas.queryByLabelText('Subagents')).toBeNull();
     }),
 };
 
@@ -28,29 +31,39 @@ export const OneRunning: Story = {
   args: { subagents: subagentStates.oneRunning },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.getByText(/Running/)).toBeVisible();
       await expect(
-        canvas.getByRole('button', { name: /Find every Feed reader/ }),
+        canvas.getByRole('button', {
+          name: 'Find every Feed reader, Explore, Running, Sonnet 4.5 · 34s · 8.2k tokens',
+        }),
       ).toBeVisible();
-      await expect(
-        canvas.getByText('Sonnet 4.5 · 34s · 8.2k tokens'),
-      ).toBeVisible();
-      await expect(canvas.queryByText(/Finished/)).toBeNull();
+      await expect(canvas.getAllByTestId('subagent-status')).toHaveLength(1);
     }),
 };
 
+// One flat list in spawn order: no Running or Finished sections, and finished rows keep their place.
 export const SeveralMixed: Story = {
   args: { subagents: subagentStates.severalMixed },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.getByText(/Running/)).toBeVisible();
-      await expect(canvas.getByText(/Finished/)).toBeVisible();
-      await expect(
-        canvas.getByText('Opus 4.5 · 1m 02s · 21.4k tokens'),
-      ).toBeVisible();
-      await expect(
-        canvas.getByText('Haiku 4.5 · 2m 18s · 12.9k tokens'),
-      ).toBeVisible();
+      await expect(canvas.queryByRole('heading')).toBeNull();
+      await expect(rowNames(canvas)).toEqual([
+        'Find every Feed reader, Explore, Running, Sonnet 4.5 · 34s · 8.2k tokens',
+        'Migrate tokens to kit roles, General, Needs input, Opus 4.5 · Needs input',
+        'Draft the Plan schema, Plan, Finished · 2m 18s · 12.9k tokens',
+        'Review the Shells ADR, Review, Finished · 47s · 6.1k tokens',
+        'Port the mock CLIs, Test, Cancelled · 12s',
+      ]);
+      await expect(canvas.getByText('Opus 4.5 · Needs input')).toBeVisible();
+      await expect(canvas.getByText('Cancelled · 12s')).toBeVisible();
+    }),
+};
+
+// Only running and waiting Subagents show the status dot; finished and cancelled rows have none.
+export const StatusDots: Story = {
+  args: { subagents: subagentStates.severalMixed },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(canvas.getAllByTestId('subagent-status')).toHaveLength(2);
     }),
 };
 
@@ -62,7 +75,20 @@ export const SelectFinished: Story = {
       canvas.getByRole('button', { name: /Port the mock CLIs/ }),
     );
     await expect(args.onSelect).toHaveBeenCalledWith(
-      subagentStates.severalMixed[3],
+      subagentStates.severalMixed[4],
+    );
+  },
+};
+
+export const SelectFinishedWide: Story = {
+  args: { subagents: subagentStates.severalMixed },
+  play: async ({ canvas, userEvent, args }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.click(
+      canvas.getByRole('button', { name: /Draft the Plan schema/ }),
+    );
+    await expect(args.onSelect).toHaveBeenCalledWith(
+      subagentStates.severalMixed[2],
     );
   },
 };
@@ -71,10 +97,7 @@ export const AllFinished: Story = {
   args: { subagents: subagentStates.allFinished },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.queryByText(/Running/)).toBeNull();
-      await expect(canvas.getByText(/Finished/)).toBeVisible();
-      await expect(
-        canvas.getByRole('button', { name: /Port the mock CLIs/ }),
-      ).toBeVisible();
+      await expect(canvas.queryByTestId('subagent-status')).toBeNull();
+      await expect(rowNames(canvas)).toHaveLength(5);
     }),
 };

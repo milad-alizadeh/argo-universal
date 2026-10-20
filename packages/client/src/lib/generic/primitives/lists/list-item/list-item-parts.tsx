@@ -4,6 +4,7 @@ import { Icon, IconRoleContext } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useInMenu } from '../../../menu-rows-context';
 import { useInSidebar } from '../../../row-drawing-context';
+import { cn } from '../../../utils';
 import {
   hasBadge,
   ItemBadge,
@@ -13,9 +14,13 @@ import {
 import type { ListItemProps } from './list-item-props';
 
 export function hasLeading(
-  props: Pick<ListItemProps, 'leading' | 'badge'>,
+  props: Pick<ListItemProps, 'leading' | 'badge' | 'avatar'>,
 ): boolean {
-  return [Boolean(props.leading), hasBadge(props.badge)].some(Boolean);
+  return [
+    Boolean(props.leading),
+    Boolean(props.avatar),
+    hasBadge(props.badge),
+  ].some(Boolean);
 }
 
 /*
@@ -36,7 +41,10 @@ const leadingIconRoles = {
   sidebar: undefined,
 } as const satisfies Record<LeadingLane, 'menu' | undefined>;
 
-type LeadingProps = Pick<ListItemProps, 'leading' | 'badge' | 'sidebar'>;
+type LeadingProps = Pick<
+  ListItemProps,
+  'leading' | 'badge' | 'sidebar' | 'avatar' | 'dimmed'
+>;
 
 function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
   if (menu) return 'menu';
@@ -44,20 +52,37 @@ function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
   return sidebar ? 'sidebar' : 'row';
 }
 
-export function Leading(props: LeadingProps): ReactNode {
+// A finished row's leading reads at half strength (Paper "Components / SubagentRow").
+const dimmedLeading = (dimmed?: boolean): string | undefined =>
+  dimmed ? 'opacity-50' : undefined;
+
+// An avatar is taller than the row's first line, so its lane fits it and centres it on the row.
+function AvatarLane(props: LeadingProps): ReactElement {
+  return (
+    <View className={cn('shrink-0 self-center', dimmedLeading(props.dimmed))}>
+      {props.avatar}
+    </View>
+  );
+}
+
+function IconLane(props: LeadingProps): ReactElement {
   const lane = leadingLane(useInMenu(), props.sidebar !== undefined);
   const badge = useLeadingBadge(props.badge);
 
-  if (!hasLeading(props)) return null;
-
   return (
-    <View className={leadingClasses[lane]}>
+    <View className={cn(leadingClasses[lane], dimmedLeading(props.dimmed))}>
       <IconRoleContext value={leadingIconRoles[lane]}>
         {props.leading}
       </IconRoleContext>
       <ItemBadge badge={badge} />
     </View>
   );
+}
+
+export function Leading(props: LeadingProps): ReactNode {
+  if (props.avatar) return <AvatarLane {...props} />;
+
+  return hasLeading(props) ? <IconLane {...props} /> : null;
 }
 
 type TrailingProps = Pick<
