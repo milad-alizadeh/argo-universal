@@ -56,6 +56,17 @@ function Heading({
   );
 }
 
+// A long command truncates rather than pushing Stop out of the row, which it would do natively without this.
+function Command({ command }: { command: string }): JSX.Element {
+  return (
+    <View className="min-w-0 shrink">
+      <Text role="secondary-code" numberOfLines={1}>
+        {command}
+      </Text>
+    </View>
+  );
+}
+
 const backAppearance = {
   variant: 'ghost',
   size: 'xs',
@@ -71,9 +82,7 @@ export function ShellOutputHeader(props: ShellOutputHeaderProps): JSX.Element {
     <View className="h-11 shrink-0 flex-row items-center gap-1.5 pr-2 pl-1.5">
       <IconButton {...backAppearance} onPress={props.onBack} />
       <Icon name="terminal" role="body" />
-      <Text role="secondary-code" numberOfLines={1}>
-        {props.shell.command}
-      </Text>
+      <Command command={props.shell.command} />
       <Heading shell={props.shell} now={props.now} />
       <StopButton shell={props.shell} onStop={props.onStop} />
     </View>

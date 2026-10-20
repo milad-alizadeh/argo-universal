@@ -63,9 +63,7 @@ export {
   sessionsListInput,
 } from './utils/sessions-list-input';
 
-export { type StartingFeed } from './utils/starting-feed';
-
-export { startingFeed } from './utils/starting-feed';
+export { type StartingFeed, startingFeed } from './utils/starting-feed';
 
 export {
   decodeOpenFailure,
@@ -80,11 +78,14 @@ export { useConnectionDropped } from './hooks/use-connection-dropped';
 
 export { opensOnReconnect } from './utils/new-session-attempt';
 
-export { canOpenSession } from './utils/open-session';
+export { canOpenSession, toNewSessionInput } from './utils/open-session';
 
 export {
-  type ChosenSettings,
   chooseAnotherProject,
+  chooseProject,
+  type ChosenSettings,
+  type SessionChoices,
+  toSessionChoices,
 } from './utils/session-choices';
 
 export { useSessionConfigChange } from './hooks/use-session-config-change';
@@ -105,14 +106,6 @@ export {
 } from './utils/session-option-choices';
 
 export { useSessionOptions } from './hooks/use-session-options';
-
-export {
-  chooseProject,
-  type SessionChoices,
-  toSessionChoices,
-} from './utils/session-choices';
-
-export { toNewSessionInput } from './utils/open-session';
 
 export { composerStatus } from './utils/composer-status';
 
@@ -209,11 +202,7 @@ export { type TurnSignInRecord, useTurnSignIn } from './hooks/use-turn-sign-in';
 export {
   ArchivedBanner,
   archivedBannerText,
-} from './components/archive-session/archived-banner';
-
-export {
   ArchiveSessionAlert,
   type ArchiveSessionAlertProps,
-} from './components/archive-session/archive-session-alert';
-
-export { archivedToast } from './components/archive-session/archived-toast';
+  archivedToast,
+} from './components/archive-session';
