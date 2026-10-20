@@ -1,7 +1,7 @@
 import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
-import { sessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
+import { sessionsListProps } from '../../src/features/session-list/components/sessions-list/sessions-list.mocks';
 import {
   exampleProjectName,
   onNewSession,

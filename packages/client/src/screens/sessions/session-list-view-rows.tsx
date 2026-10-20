@@ -5,7 +5,7 @@ import {
   SessionsList,
   type SessionsListProps,
   SessionsLoading,
-} from '#features/sessions';
+} from '#features/session-list';
 import type { SessionListViewProps } from './session-list-view';
 
 type ListData = Pick<

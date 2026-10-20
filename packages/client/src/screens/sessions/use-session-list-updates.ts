@@ -8,7 +8,7 @@ import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import {
   useResubscribeOnFocus,
   createCoalescedRefetch,
-} from '#features/sessions';
+} from '#features/session-list';
 
 type SessionListSubscription = TRPCSubscriptionResult<
   SessionListUpdate,

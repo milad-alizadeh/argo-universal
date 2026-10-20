@@ -12,7 +12,7 @@ import {
 } from './sessions-list.mocks';
 
 const meta = {
-  title: 'Sessions/SessionsList',
+  title: 'SessionList/SessionsList',
   component: SessionsList,
   args: {
     ...sessionsListProps,

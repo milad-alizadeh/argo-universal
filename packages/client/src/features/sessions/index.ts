@@ -34,35 +34,6 @@ export {
   useSessionPanels,
 } from './stores/session-panels';
 
-export {
-  SessionsHeader,
-  searchSessionsLabel,
-} from './components/sessions-header';
-
-export {
-  type SessionsViewGroup,
-  sessionsViewGroups,
-} from './utils/sessions-view-menu';
-
-export {
-  type SessionsViewState,
-  useSessionsViewState,
-} from './stores/sessions-view-state';
-
-export {
-  chooseSessionsView,
-  defaultSessionsView,
-  isDefaultSessionsView,
-  type SessionsLayout,
-  type SessionsView,
-  useSessionsViewKept,
-} from './stores/sessions-view';
-
-export {
-  olderServerView,
-  sessionsListInput,
-} from './utils/sessions-list-input';
-
 export { type StartingFeed, startingFeed } from './utils/starting-feed';
 
 export {
@@ -124,7 +95,11 @@ export {
 
 export { SessionHeaderMenu } from './components/session-header-menu';
 
-export { type SessionMenu } from './components/session-menu-items';
+export {
+  type SessionMenu,
+  type SessionMenuItem,
+  sessionMenuItems,
+} from './components/session-menu-items';
 
 export { SessionMenuToolbar } from './components/session-menu-toolbar';
 
@@ -133,28 +108,6 @@ export { type SessionPullRequest } from './components/session-pull-request';
 export { type SessionConfigChange } from './hooks/use-session-config-change';
 
 export { liveUpdatesStopped } from './utils/live-updates-stopped';
-
-export {
-  type QueryProgress,
-  sessionsLoadState,
-} from './utils/sessions-load-state';
-
-export { SessionsList } from './components/sessions-list/sessions-list';
-
-export {
-  RenameSessionDialog,
-  type RenameSessionDialogProps,
-} from './components/rename-session-dialog/rename-session-dialog';
-
-export { type SessionsListProps } from './components/sessions-list/sessions-list-props';
-
-export { SessionsLoading } from './components/sessions-loading/sessions-loading';
-
-export { type SessionsLoadState } from './utils/sessions-load-state';
-
-export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';
-
-export { createCoalescedRefetch } from './api/coalesced-refetch';
 
 export {
   type MergeMethodChoice,
@@ -200,9 +153,11 @@ export {
 export { type TurnSignInRecord, useTurnSignIn } from './hooks/use-turn-sign-in';
 
 export {
-  ArchivedBanner,
-  archivedBannerText,
-  ArchiveSessionAlert,
-  type ArchiveSessionAlertProps,
-  archivedToast,
-} from './components/archive-session';
+  pullRequestAppearance,
+  PullRequestIcon,
+  PullRequestIndicator,
+  type PullRequestIndicatorProps,
+  pullRequestStatusLabels,
+} from './components/pull-request-indicator/pull-request-indicator';
+
+export { sessionStatusDot, sessionStatusLabels } from './session-status-dot';

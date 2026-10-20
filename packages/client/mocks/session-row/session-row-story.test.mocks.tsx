@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Platform } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { SessionRow } from '../../src/features/sessions/components/session-row/session-row';
-import type { SessionsLayout } from '../../src/features/sessions/stores/sessions-view';
+import { SessionRow } from '../../src/features/session-list/components/session-row/session-row';
+import type { SessionsLayout } from '../../src/features/session-list/stores/sessions-view';
 import { eachLayout } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 

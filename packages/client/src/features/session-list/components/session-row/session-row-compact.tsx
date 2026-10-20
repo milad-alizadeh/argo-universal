@@ -1,12 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { PullRequestIcon, pullRequestStatusLabels } from '#features/sessions';
 import { Text } from '#primitives/content/text';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
-import {
-  PullRequestIcon,
-  pullRequestStatusLabels,
-} from '../pull-request-indicator/pull-request-indicator';
 import { SessionMark } from './session-row-mark';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { compactGlyphRole, sidebarDrawing } from './session-row-sidebar';

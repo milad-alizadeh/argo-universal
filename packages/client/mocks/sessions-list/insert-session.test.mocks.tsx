@@ -3,8 +3,8 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
-import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
-import { largeSessions } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
+import { SessionsList } from '../../src/features/session-list/components/sessions-list/sessions-list';
+import { largeSessions } from '../../src/features/session-list/components/sessions-list/sessions-list.mocks';
 import { sampleEachFrame } from '../sample-each-frame';
 import {
   exampleProjectName,

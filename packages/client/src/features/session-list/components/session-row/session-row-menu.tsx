@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { sessionMenuItems, type SessionMenuItem } from '#features/sessions';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import {
   ActionList,
@@ -6,7 +7,6 @@ import {
   type ActionListProps,
 } from '#primitives/actions/action-list';
 import { type ContextMenuTriggerProps } from '#primitives/overlays/menu';
-import { sessionMenuItems, type SessionMenuItem } from '../session-menu-items';
 import type { SessionRowProps } from './session-row-props';
 
 type SessionRowMenuProps = SessionRowProps & {
