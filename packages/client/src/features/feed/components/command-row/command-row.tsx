@@ -78,7 +78,7 @@ function CommandOutput(
   return (
     <>
       <FeedCodeBlock
-        language="Shell"
+        title="Shell"
         code={commandCode(props.terminal)}
         footer={<CommandFooter {...props.state.footer} />}
       />

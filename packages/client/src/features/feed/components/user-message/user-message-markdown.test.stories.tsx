@@ -50,23 +50,29 @@ const drawn = [
     source: '> The stored text stays exactly as typed.',
     text: 'The stored text stays exactly as typed.',
   },
-  {
-    source: '```ts\nconst text = draft.text;\n```',
-    text: 'const text = draft.text;',
-  },
 ] as const;
 
-const link = { source: '[ADR-0023](', name: 'ADR-0023' } as const;
+// Syntax colours split the fence into spans, so it is found as a block and read whole, not as one text node.
+const fence = {
+  source: '```ts\nconst text = draft.text;\n```',
+  text: 'const text = draft.text;',
+} as const;
 
-const codeLine = 'const text = draft.text;';
+const link = { source: '[ADR-0023](', name: 'ADR-0023' } as const;
 
 const promptText = recordedPrompt('agent-1', markdownPrompt)
   .content.flatMap((block) => (block.type === 'text' ? [block.text] : []))
   .join('');
 
-for (const { source } of [...drawn, link])
+for (const { source } of [...drawn, fence, link])
   if (!promptText.includes(source))
     throw new Error(`Recorded catalog needs ${source} in the markdown prompt`);
+
+async function showsWhenExpanded(element: HTMLElement): Promise<void> {
+  element.scrollIntoView({ block: 'center' });
+
+  await waitFor(() => expect(isUncovered(element)).toBe(true));
+}
 
 // Whether a person can see and point at the element's first line, rather than it being hidden by the clamp.
 function isUncovered(element: HTMLElement): boolean {
@@ -81,18 +87,17 @@ function rendersMarkdown(agent: MockAgent, width: number): Story {
     args: { row: recordedPrompt(agent, markdownPrompt) },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      const code = canvas.getByText(codeLine, { exact: true });
+      const code = canvas.getByTestId('code-text');
+      await expect(code).toHaveTextContent(fence.text);
       await expect(isUncovered(code)).toBe(false);
       await userEvent.click(
         await canvas.findByRole('button', { name: 'Show more' }),
       );
 
-      for (const { text } of drawn) {
-        const element = canvas.getByText(text, { exact: true });
-        element.scrollIntoView({ block: 'center' });
-        await waitFor(() => expect(isUncovered(element)).toBe(true));
-      }
+      for (const { text } of drawn)
+        await showsWhenExpanded(canvas.getByText(text, { exact: true }));
 
+      await showsWhenExpanded(code);
       await expect(canvas.getByRole('link', { name: link.name })).toBeVisible();
       await expect(canvas.queryByText(/\*\*|~~|```|^> /)).toBeNull();
     },
