@@ -45,7 +45,7 @@ export const WideHeaderCopiesThePath: Story = {
   },
 };
 
-// On a phone the path keeps the first line: no Copy path, and the counts sit under it.
+// Phone file headers keep the path and counts reachable without a Copy path action.
 export const PhoneHeaderHasNoCopy: Story = {
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;

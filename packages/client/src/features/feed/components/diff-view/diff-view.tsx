@@ -168,5 +168,7 @@ export function DiffView(props: DiffViewProps): React.JSX.Element {
 }
 
 function diffContentClass(inline: boolean | undefined): string | undefined {
-  return inline ? 'overflow-hidden rounded-xl bg-content' : undefined;
+  return inline
+    ? 'overflow-hidden rounded-xl bg-content'
+    : 'bg-card py-2 medium:bg-content medium:py-0';
 }

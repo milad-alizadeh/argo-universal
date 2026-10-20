@@ -63,7 +63,7 @@ function FileList(
   props: ChangesViewProps & { files: NonNullable<ChangesViewProps['files']> },
 ): React.JSX.Element {
   return (
-    <View>
+    <View className="gap-2 medium:gap-0 medium:bg-content">
       {props.files.map((file) => (
         <FileDiffRow key={file.path} {...props} file={file} />
       ))}

@@ -1,15 +1,14 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import type { IconRole } from '#lib/generic/symbols/icon-role';
 import { CopyButton } from '#lib/product/markdown/copy-button';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
 import { Text, TextClassContext } from '#primitives/content/text';
-import { Checkbox } from '#primitives/inputs/checkbox';
 import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { FileDiff } from '../../view/file-diff';
-import { ChangeCounts, hasChangeCounts } from './diff-change-counts';
+import { ChangeCounts } from './diff-change-counts';
+import { ViewedMark } from './diff-viewed-mark';
 
 export interface FileHeaderProps {
   file: FileDiff;
@@ -19,12 +18,10 @@ export interface FileHeaderProps {
   onViewedChange?: (viewed: boolean) => void;
 }
 
-// The phone header's chevron sits one size down from the Body chevron, beside the path's smaller code text.
-type FileHeaderToggleProps = FileHeaderProps & { chevron?: IconRole };
-
 const toggleClassName = contentActionClass({
   variant: 'link',
-  className: 'h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5',
+  className:
+    'h-5 min-w-0 flex-1 justify-start gap-3 rounded-none p-0 sm:h-5 medium:gap-2',
 });
 
 // Isolates the folder so the right-to-left web layout, which keeps its end in view, cannot reorder it.
@@ -69,16 +66,16 @@ function FilePath({ path }: { path: string }): React.JSX.Element {
   );
 }
 
-function ToggleLabel(props: FileHeaderToggleProps): React.JSX.Element {
+function ToggleLabel(props: FileHeaderProps): React.JSX.Element {
   return (
     <TextClassContext.Provider value="select-none no-underline">
-      <DisclosureChevron open={props.open} role={props.chevron} />
+      <DisclosureChevron open={props.open} role="chevron" />
       <FilePath path={props.file.path} />
     </TextClassContext.Provider>
   );
 }
 
-function FileHeaderToggle(props: FileHeaderToggleProps): React.JSX.Element {
+function FileHeaderToggle(props: FileHeaderProps): React.JSX.Element {
   return (
     <Pressable
       aria-label={`Diff for ${props.file.path}`}
@@ -89,19 +86,6 @@ function FileHeaderToggle(props: FileHeaderToggleProps): React.JSX.Element {
     >
       <ToggleLabel {...props} />
     </Pressable>
-  );
-}
-
-function ViewedMark(props: FileHeaderProps): React.JSX.Element | null {
-  if (!props.onViewedChange) return null;
-
-  return (
-    <Checkbox
-      label="Viewed"
-      variant="inline"
-      value={props.viewed ?? false}
-      onValueChange={props.onViewedChange}
-    />
   );
 }
 
@@ -129,19 +113,18 @@ function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   );
 }
 
-// On a phone the path keeps the whole first line, the counts sit under it, and there is no copy.
+// Paper / FileDiff: one phone row, with counts beside the path and a circular Viewed mark.
 function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
-    <View className="gap-0.5 bg-muted py-2 pr-3 pl-2">
-      <View className="min-h-5 flex-row items-center gap-2">
-        <FileHeaderToggle {...props} chevron="secondary" />
-        <ViewedMark {...props} />
-      </View>
-      {hasChangeCounts(props.file) && (
-        <View className="flex-row gap-2 pl-6">
+    <View className="bg-card">
+      <View className="flex-row items-center gap-3 px-4 py-2.5">
+        <FileHeaderToggle {...props} />
+        <View className="shrink-0 flex-row gap-1">
           <ChangeCounts file={props.file} />
         </View>
-      )}
+        <ViewedMark {...props} compact />
+      </View>
+      <View className="mr-4 ml-10 h-px bg-border" />
     </View>
   );
 }
