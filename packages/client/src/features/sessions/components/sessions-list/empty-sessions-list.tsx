@@ -15,7 +15,7 @@ interface EmptyCopy {
   grouped: string;
   // One list has no Project rows, so with nothing in it the list is out of Sessions.
   oneList: string;
-  // Which Sessions a search missed, in the line under the title.
+  // Where a search looked, in the line under the title.
   searched: string;
 }
 
@@ -23,17 +23,17 @@ const emptyCopy = {
   active: {
     grouped: 'No Projects yet',
     oneList: 'No active Sessions',
-    searched: 'No Active Session',
+    searched: 'Active Sessions',
   },
   archived: {
     grouped: 'No archived Sessions',
     oneList: 'No archived Sessions',
-    searched: 'No Archived Session',
+    searched: 'Archived Sessions',
   },
   all: {
     grouped: 'No Projects yet',
     oneList: 'No Sessions',
-    searched: 'No Session',
+    searched: 'all Sessions',
   },
 } satisfies Record<SessionsStatus, EmptyCopy>;
 
@@ -51,7 +51,7 @@ function noMatchingSession({
 }: EmptySessionsListProps): string | undefined {
   if (!query) return undefined;
 
-  return `${emptyCopy[view.status].searched} has "${query}" in its title.`;
+  return `Nothing in ${emptyCopy[view.status].searched} matches "${query}". Try a different title.`;
 }
 
 // What the Sessions list says with no rows to show, for its search, status and grouping.

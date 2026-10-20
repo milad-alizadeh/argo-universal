@@ -70,7 +70,8 @@ export const Search: Story = {
   args: {
     icon: 'search',
     title: 'No matching Sessions',
-    description: 'No Session has “deploy” in its title.',
+    description:
+      'Nothing in all Sessions matches “deploy”. Try a different title.',
     action: undefined,
   },
   play: async ({ canvas }) => {
@@ -78,7 +79,9 @@ export const Search: Story = {
       canvas.getByRole('heading', { name: 'No matching Sessions' }),
     ).toBeVisible();
     await expect(
-      canvas.getByText('No Session has “deploy” in its title.'),
+      canvas.getByText(
+        'Nothing in all Sessions matches “deploy”. Try a different title.',
+      ),
     ).toBeVisible();
     await expect(canvas.queryByRole('button')).toBeNull();
   },
