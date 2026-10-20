@@ -1,7 +1,9 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Catalog } from './catalog.mts';
+import { excludedAreas } from './config.mts';
 import type { Enrollment, Exclusion } from './enrollment-model.mts';
+import { skippedLine } from './excluded-areas.mts';
 import type { PageIndex, LocatedNode } from './index-model.mts';
 import {
   masterReports,
@@ -87,6 +89,9 @@ function markdown(data: Report): string {
   );
   lines.push(...problemLines(data));
   lines.push('## Scans', ...data.scans.map(scanLine));
+  const skipped = skippedLine(excludedAreas);
+
+  if (skipped) lines.push(skipped);
 
   return `${lines.join('\n\n')}\n`;
 }

@@ -24,6 +24,18 @@ Copies must use an exact master name. Enrollment matches text slots by layer nam
 Repeated slot names within one component prevent enrollment. Text inside a nested copy belongs to that nested copy.
 Copies can override text, swap icons, hide layers, or select another named state. Other differences are drift.
 
+## Excluding WIP areas
+
+`excludedAreas` in `config.mts` lists Paper areas that paper-sync leaves alone. Each entry names the file and a `reason`, and covers one of:
+
+- a whole file: `{ file: 'Atlas', fileId, reason: 'WIP' }`
+- a page: add `page: { name, id }`
+- a board: add `board: { name, id }`; everything inside the board is excluded too
+
+Atlas and Voice are excluded as WIP. Scan does not read excluded areas, so a master inside one is not a master and its copies are neither enrolled nor listed as unenrolled.
+Check and apply drop registry entries in excluded files. In a file with an excluded page or board, they only touch entries found in the latest scan, so run `scan` and `enroll` after adding one.
+`--file=` with an excluded file stops with an error. Every command prints one `Skipped:` line, such as `Skipped: Atlas (WIP), Voice (WIP)`, and the report repeats it.
+
 ## Icon slots
 
 An icon slot is an SVG layer named `Icon`, `Icon / <glyph>` or `Icon (ios|android|phone) / <glyph>`.
@@ -62,7 +74,7 @@ pnpm paper:sync enroll --rebind
 
 Scan caches are separate for each page. Paper currently exposes no page revision or modification timestamp.
 A scan therefore rereads every page in the selected file. It records elapsed time and MCP calls per page.
-A scan without `--file` reads all nine files.
+A scan without `--file` reads every canonical file that is not excluded.
 
 `report` reads the saved inventory and registry without contacting Paper. It writes Markdown and JSON under `.paper-sync/<timestamp>/`.
 The report lists each master's copies by file, page, board and flow, plus unenrolled matches of families that have masters, duplicate names and masters without copies.

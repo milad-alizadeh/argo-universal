@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { discover } from './catalog.mts';
 import type { PaperClient } from './client.mts';
+import { registryInScope } from './config.mts';
 import { enrollmentSchema } from './enrollment-model.mts';
 import { enrollCatalog } from './enrollment.mts';
 import type { Registry } from './model.mts';
@@ -34,8 +35,10 @@ export async function enrollCommand(
   const pages = await readIndices(options.cache);
   const catalog = discover(pages);
 
+  const prior = await previous(options.registry);
+
   const result = await enrollCatalog(client, catalog, {
-    previous: await previous(options.registry),
+    previous: registryInScope(prior, catalog.nodes),
     rebind: options.rebind,
   });
 
@@ -51,8 +54,13 @@ export async function reportCommand(options: CommandOptions): Promise<void> {
     JSON.parse(await readFile(join(options.cache, 'enrollment.json'), 'utf8')),
   );
 
-  enrollment.registry = await loadRegistry(options.registry);
-  await report(discover(pages), enrollment, {
+  const catalog = discover(pages);
+
+  enrollment.registry = registryInScope(
+    await loadRegistry(options.registry),
+    catalog.nodes,
+  );
+  await report(catalog, enrollment, {
     pages,
     directory: options.directory,
   });

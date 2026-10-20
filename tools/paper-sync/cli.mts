@@ -1,6 +1,8 @@
 import { resolve, join } from 'node:path';
 import { PaperClient } from './client.mts';
 import { enrollCommand, reportCommand } from './commands.mts';
+import { excludedAreas } from './config.mts';
+import { skippedLine } from './excluded-areas.mts';
 import { syncRegistry } from './run.mts';
 import { scan } from './scan.mts';
 
@@ -43,6 +45,10 @@ if (!['scan', 'enroll', 'report', 'check', 'verify', 'apply'].includes(command))
   throw new Error(
     'Usage: pnpm paper:sync scan|enroll|report|check|verify|apply [--file=id] [--rebind] [--registry=path] [--cache=path]',
   );
+
+const skipped = skippedLine(excludedAreas);
+
+if (skipped) console.log(skipped);
 
 await (command === 'report'
   ? reportCommand(options)
