@@ -1,3 +1,10 @@
+import {
+  includedFiles,
+  includedRegistry,
+  type ExcludedArea,
+} from './excluded-areas.mts';
+import type { Registry } from './model.mts';
+
 export const files = [
   { name: 'Foundations', id: '01M4RJ2FP7N272AE463G6PT2QD' },
   { name: 'Sessions', id: '01M4RJRP22R2R2JE20RWDNXR0Q' },
@@ -10,11 +17,22 @@ export const files = [
   { name: 'Issues', id: '01M4RJGJ2N1YKV0K3RHF80FKZP' },
 ];
 
+/*
+ * Areas paper-sync never scans, enrols, checks or applies. One entry per
+ * whole file, page ({ page: { name, id } }) or board ({ board: { name, id } }).
+ */
+export const excludedAreas: ExcludedArea[] = [
+  { file: 'Atlas', fileId: '01M4RJB4J2JMHAQCZYTSD808R7', reason: 'WIP' },
+  { file: 'Voice', fileId: '01M4RJ7EBVF0CGT31XYHHYVHYV', reason: 'WIP' },
+];
+
 export function selectedFiles(fileId?: string): typeof files {
-  if (!fileId) return files;
-  const selected = files.filter((file) => file.id === fileId);
+  return includedFiles(files, excludedAreas, fileId);
+}
 
-  if (!selected.length) throw new Error(`Not a canonical file: ${fileId}`);
-
-  return selected;
+export function registryInScope(
+  registry: Registry,
+  scannedNodes: { fileId: string; id: string }[],
+): Registry {
+  return includedRegistry(registry, excludedAreas, scannedNodes);
 }

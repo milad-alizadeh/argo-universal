@@ -1,14 +1,19 @@
 import { join } from 'node:path';
 import { z } from 'zod';
 import type { PaperClient } from './client.mts';
-import { selectedFiles } from './config.mts';
+import { excludedAreas, selectedFiles } from './config.mts';
 import { indexPage } from './discover.mts';
+import {
+  excludedBoards,
+  includedIndices,
+  includedPages,
+} from './excluded-areas.mts';
 import { fileSchema, pageIndexSchema, type PageIndex } from './index-model.mts';
 import { saveJson, loadJson } from './storage.mts';
 
 type ScanOptions = { cache: string; fileId?: string };
 
-type Page = { id: string; name: string };
+type Page = { id: string; name: string; type?: string };
 
 type PageTarget = { fileId: string; page: Page };
 
@@ -26,18 +31,25 @@ function measured(target: PageTarget, nodes: PageIndex['nodes']): PageIndex {
   };
 }
 
+async function pageNodes(
+  client: PaperClient,
+  target: PageTarget,
+): Promise<PageIndex['nodes']> {
+  const { fileId, page } = target;
+  const args = { fileId, pageId: page.id };
+  const info = await client.read('get_basic_info', args, fileSchema);
+  const boards = excludedBoards(fileId, excludedAreas);
+
+  return indexPage(client, fileId, { rootId: info.rootNodeId, boards });
+}
+
 async function scanPage(
   client: PaperClient,
   target: PageTarget,
 ): Promise<PageIndex> {
   const start = performance.now();
   const callsBefore = client.calls;
-  const { fileId, page } = target;
-
-  const args = { fileId, pageId: page.id };
-  const info = await client.read('get_basic_info', args, fileSchema);
-
-  const nodes = await indexPage(client, fileId, info.rootNodeId);
+  const nodes = await pageNodes(client, target);
   const seconds = (performance.now() - start) / 1000;
   const calls = client.calls - callsBefore;
 
@@ -50,6 +62,12 @@ function scanSummary(name: string, pages: PageIndex[]): void {
   console.log(`${name}: ${count} nodes; ${seconds.toFixed(1)}s`);
 }
 
+function scannedPages(fileId: string, entries: Page[]): Page[] {
+  const pages = entries.filter((entry) => entry.type === 'page');
+
+  return includedPages(fileId, pages, excludedAreas);
+}
+
 async function scanFile(
   client: PaperClient,
   options: { cache: string; fileId: string },
@@ -58,7 +76,7 @@ async function scanFile(
   const info = await client.read('get_basic_info', { fileId }, fileSchema);
   const pages: PageIndex[] = [];
 
-  for (const page of info.pages.filter((entry) => entry.type === 'page')) {
+  for (const page of scannedPages(fileId, info.pages)) {
     const index = await scanPage(client, { fileId, page });
     await saveJson(join(options.cache, fileId, `${page.id}.json`), index);
     pages.push(index);
@@ -101,7 +119,7 @@ export async function readIndices(cache: string): Promise<PageIndex[]> {
   for (const file of selectedFiles())
     pages.push(...(await cachedPages(cache, file.id)));
 
-  return pages;
+  return includedIndices(pages, excludedAreas);
 }
 
 async function savePageIds(

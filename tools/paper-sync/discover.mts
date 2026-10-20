@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { PaperClient } from './client.mts';
+import { insideBoards, withoutBoards } from './excluded-areas.mts';
 import type { IndexedNode } from './index-model.mts';
 import { required } from './model.mts';
 import { parseSummary } from './summary.mts';
@@ -13,6 +14,7 @@ type Walk = {
   nodes: Map<string, IndexedNode>;
   queue: string[];
   visited: Set<string>;
+  boards: Set<string>;
 };
 
 async function subtree(
@@ -35,7 +37,9 @@ async function subtree(
 function merge(walk: Walk, parsed: ReturnType<typeof parseSummary>): void {
   for (const node of parsed.nodes)
     if (!walk.nodes.has(node.id)) walk.nodes.set(node.id, node);
-  walk.queue.push(...parsed.expand);
+  walk.queue.push(
+    ...parsed.expand.filter((id) => !insideBoards(id, walk.nodes, walk.boards)),
+  );
 }
 
 async function visit(
@@ -53,13 +57,20 @@ async function visit(
 export async function indexPage(
   client: PaperClient,
   fileId: string,
-  rootId: string,
+  root: { rootId: string; boards: Set<string> },
 ): Promise<IndexedNode[]> {
-  const walk: Walk = { nodes: new Map(), queue: [rootId], visited: new Set() };
+  const { rootId, boards } = root;
+
+  const walk: Walk = {
+    nodes: new Map(),
+    queue: [rootId],
+    visited: new Set(),
+    boards,
+  };
 
   while (walk.queue.length) await visit(client, fileId, walk);
 
-  return [...walk.nodes.values()];
+  return withoutBoards([...walk.nodes.values()], boards);
 }
 
 async function summary(
