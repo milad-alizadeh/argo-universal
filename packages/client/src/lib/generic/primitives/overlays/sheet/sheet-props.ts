@@ -25,6 +25,11 @@ export interface SheetPageProps {
   title?: string;
   // The page's one header action, at the trailing end of its title row.
   action?: SheetPageAction;
+  /*
+   * The rows the page stands in for while it slides in, as bars of the width its own rows will take.
+   * Android draws it; the platforms whose pages are drawn before they move never need it.
+   */
+  placeholder?: ReactNode;
   children: ReactNode;
 }
 

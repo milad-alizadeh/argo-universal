@@ -39,6 +39,7 @@ export interface SheetPageEntry {
   name: string;
   title?: string;
   action?: SheetPageAction;
+  placeholder?: ReactNode;
   content: ReactNode;
   contentScrolls?: boolean;
   onExit?: () => void;
@@ -52,6 +53,7 @@ export function sheetPages(children: ReactNode): SheetPageEntry[] {
       name: page.props.name,
       title: page.props.title,
       action: page.props.action,
+      placeholder: page.props.placeholder,
       content: page.props.children,
     }));
 }
@@ -179,11 +181,4 @@ function navigationFor({
     back: (): void => setPath(popPage),
     close: (): void => latest().onOpenChange(false),
   };
-}
-
-export function pageTitle(
-  pages: SheetPageEntry[],
-  name: string | undefined,
-): string | undefined {
-  return pages.find((page) => page.name === name)?.title;
 }

@@ -57,7 +57,7 @@ type DestinationOwner = {
 
 function useLiveDestination(props: DrillProps, owner: DestinationOwner): void {
   const { parent, name, onExit } = owner;
-  const { title, contentScrolls, children } = props;
+  const { title, contentScrolls, placeholder, children } = props;
 
   useLayoutEffect(() => {
     if (!parent) return;
@@ -65,10 +65,11 @@ function useLiveDestination(props: DrillProps, owner: DestinationOwner): void {
       name,
       title,
       contentScrolls,
+      placeholder,
       onExit,
       children: children(parent.back),
     });
-  }, [parent, name, onExit, title, contentScrolls, children]);
+  }, [parent, name, onExit, title, contentScrolls, placeholder, children]);
 }
 
 function closeChoices(
@@ -111,6 +112,7 @@ function pushChoices(
     ...completion,
     title: props.title,
     contentScrolls: props.contentScrolls,
+    placeholder: props.placeholder,
     children: props.children(parent.back),
   });
 }

@@ -3,7 +3,6 @@ import type { ReactElement } from 'react';
 import { View, useWindowDimensions, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { cn } from '#lib/generic/utils';
-import { Spinner } from '#primitives/status/spinner';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { SheetBody } from './sheet-body';
 import { backLabel } from './sheet-page-label';
@@ -11,14 +10,19 @@ import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
 import { fillsHeight, sheetModifiers } from './sheet-sizing.android';
 import { useRetainedPages } from './sheet-slide-pages.android';
-import { useSettled, useSlide } from './sheet-slide.android';
+import { useSlide } from './sheet-slide.android';
 import { SheetTitleRow } from './sheet-title-row';
 
 type PagesProps = SheetProps & { stack: SheetStack };
 
 type FrameProps = PagesProps & { fill: boolean; width: number };
 
-type PageProps = FrameProps & { page: SheetPageEntry; root: boolean };
+type PageProps = FrameProps & {
+  page: SheetPageEntry;
+  root: boolean;
+  // False while the row is sliding: a pushed page stands in for itself until the motion stops.
+  settled: boolean;
+};
 
 /*
  * Compose holds the sheet and nothing else: the header, the pages and the slide between them are all React
@@ -68,8 +72,8 @@ function SlidingPages(props: FrameProps): ReactElement {
 
   return (
     <View className={cn('overflow-hidden', props.fill && 'flex-1')}>
-      <Animated.View style={[rowStyle(props, pages.length), slide]}>
-        {slidePages(props, pages)}
+      <Animated.View style={[rowStyle(props, pages.length), slide.style]}>
+        {slidePages(props, pages, slide.settled)}
       </Animated.View>
     </View>
   );
@@ -78,9 +82,16 @@ function SlidingPages(props: FrameProps): ReactElement {
 function slidePages(
   props: FrameProps,
   pages: SheetPageEntry[],
+  settled: boolean,
 ): ReactElement[] {
   return pages.map((page, index) => (
-    <SlidePage {...props} key={page.name} page={page} root={index === 0} />
+    <SlidePage
+      {...props}
+      key={page.name}
+      page={page}
+      root={index === 0}
+      settled={settled}
+    />
   ));
 }
 
@@ -125,11 +136,12 @@ function PageHeader(props: PageProps): ReactElement | null {
   );
 }
 
-// A pushed page shows a spinner until it has settled, so the slide lands on a list that has measured itself.
+/*
+ * A pushed page draws the rows it is about to hold until the slide has stopped, so the motion carries a page
+ * of the right shape and the list's own layout lands on a row that is standing still.
+ */
 function PageContent(props: PageProps): ReactElement {
-  const settled = useSettled(props.root);
-
-  if (!settled) return <PageSpinner {...props} />;
+  if (sliding(props)) return <PagePlaceholder {...props} />;
 
   return (
     <SheetBody
@@ -141,17 +153,25 @@ function PageContent(props: PageProps): ReactElement {
   );
 }
 
+// The root page is drawn before the sheet is shown, so only a pushed page stands in for itself.
+const sliding = (props: Pick<PageProps, 'root' | 'settled'>): boolean =>
+  !props.root && !props.settled;
+
 const loadingLabel = 'Loading';
 
-function PageSpinner(props: Pick<PageProps, 'fill'>): ReactElement {
+/*
+ * What the page stands in for while it slides: the rows it declared, drawn as bars. A page that declared
+ * none draws nothing rather than a spinner, because a spinner in a sliding page is two motions at once.
+ */
+function PagePlaceholder(
+  props: Pick<PageProps, 'fill' | 'page'>,
+): ReactElement {
   return (
     <View
-      className={cn(
-        'items-center justify-center py-12',
-        props.fill && 'flex-1',
-      )}
+      accessibilityLabel={loadingLabel}
+      className={cn('py-2', props.fill && 'flex-1')}
     >
-      <Spinner accessibilityLabel={loadingLabel} />
+      {props.page.placeholder}
     </View>
   );
 }

@@ -9,6 +9,8 @@ export interface DrillProps {
   title: string;
   trigger?: ReactElement<{ disabled?: boolean; onPress?: () => void }>;
   contentScrolls?: boolean;
+  // The rows the pushed page stands in for while it slides in; a picker passes its own choices.
+  placeholder?: ReactNode;
   onClose?: () => void;
   // Desktop: a pick leaves the choices and their menu open, so several picks run in a row; a click outside or Escape closes them. Phones go back as before.
   keepOpen?: boolean;
