@@ -45,7 +45,9 @@ it('centres a larger first window within the display work area', () => {
   expect(bounds).toMatchObject({ width: defaultWidth, height: defaultHeight });
   // Equal gaps either side, allowing a pixel of rounding.
   expect(
-    Math.abs(bounds.x - area.x - (area.x + area.width - bounds.x - bounds.width)),
+    Math.abs(
+      bounds.x - area.x - (area.x + area.width - bounds.x - bounds.width),
+    ),
   ).toBeLessThanOrEqual(1);
   expect(
     Math.abs(

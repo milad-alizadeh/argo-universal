@@ -90,19 +90,17 @@ async function seedSessions(page: Page, httpUrl: string): Promise<void> {
   const projectId = await firstProjectId(page, httpUrl);
   const { id: agent } = await readAgent(page, httpUrl, 1);
 
-  let index = 1;
-
-  while (!(await hasSecondPage(page, httpUrl))) {
-    if (index > seedLimit)
-      throw new Error(`Sessions list still fits one page after ${seedLimit} Sessions`);
+  for (let index = 1; index <= seedLimit; index += 1) {
+    if (await hasSecondPage(page, httpUrl)) return;
 
     await startSession(page, httpUrl, {
       projectId,
       agent,
       title: title(index),
     });
-    index += 1;
   }
+
+  throw new Error(`Sessions list fits one page after ${seedLimit}`);
 }
 
 Given(

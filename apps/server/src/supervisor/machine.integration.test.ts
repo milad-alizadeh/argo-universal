@@ -64,7 +64,6 @@ const heartbeatDelayEvent = 'xstate.after.heartbeatTimeout.supervisor.running';
 const backoffDelayEvent =
   'xstate.after.backoff.supervisor.backingOff.delay.waiting';
 
-
 // Doubling from the base, up to the cap.
 const backoffMs = (crashes: number): number =>
   Math.min(backoffBaseMs * 2 ** (crashes - 1), backoffCapMs);
@@ -299,7 +298,9 @@ describe('supervisor model', (): void => {
         snapshot.matches({ backingOff: { engine: 'exited' } }) ? 0 : 1,
       );
       expect(latestEngine().askedToStop).toBe(true);
-      expect(snapshot.context.crashTimes.length).toBeLessThan(maxCrashesInWindow);
+      expect(snapshot.context.crashTimes.length).toBeLessThan(
+        maxCrashesInWindow,
+      );
       expect(serverAddressRemovals).toBe(0);
     },
     failed: (snapshot: SupervisorSnapshot): void => {

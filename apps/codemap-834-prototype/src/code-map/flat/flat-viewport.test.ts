@@ -11,7 +11,6 @@ const extent: Bounds = { x: 0, y: 0, w: 100, h: 80 };
 
 const size = { width: 1150, height: 1000 };
 
-
 function tile(id: string, bounds: Bounds): Tile {
   const file = { id, path: id, area: 1, height: 1, branches: 0, tone: 'none' };
 
@@ -30,9 +29,13 @@ function viewport(): FlatViewport {
 describe('flat viewport', () => {
   it('starts with the extent centred and fitted to the viewport', () => {
     const flat = viewport();
-
     const start = flat.toScreen({ x: extent.x, y: extent.y });
-    const end = flat.toScreen({ x: extent.x + extent.w, y: extent.y + extent.h });
+
+    const end = flat.toScreen({
+      x: extent.x + extent.w,
+      y: extent.y + extent.h,
+    });
+
     const scale = unitWidth(flat);
 
     expect(start.x).toBeCloseTo(size.width - end.x);
