@@ -2,6 +2,7 @@ import {
   AppProviders,
   PortalProvider,
   NavigationProvider,
+  restoreThemeChoice,
   type DesktopBridge,
   SymbolImagesProvider,
   Toaster,
@@ -39,6 +40,9 @@ if (__DEV__ && Platform.OS !== 'web') {
 }
 
 holdPhonesInPortrait();
+
+// The theme chosen in Settings › Appearance, before the first screen draws where storage answers in time.
+void restoreThemeChoice();
 
 declare global {
   interface Window {

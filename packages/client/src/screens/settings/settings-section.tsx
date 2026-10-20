@@ -4,7 +4,11 @@ import type { ReactNode } from 'react';
 import { useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
 import { SectionListDetail, useSectionList } from '#features/frame';
-import { useProjects } from '#features/settings';
+import {
+  themeChoiceLabel,
+  useProjects,
+  useThemeChoice,
+} from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { usePluginEntries } from './plugins/use-plugins';
 import {
@@ -54,6 +58,7 @@ function useSettingsList(query?: string): SettingsListViewProps {
     query,
     onSelect: (href) => navigate(href),
     status: connectionStatus(useConnectionState()),
+    appearanceState: themeChoiceLabel(useThemeChoice().choice),
   };
 }
 

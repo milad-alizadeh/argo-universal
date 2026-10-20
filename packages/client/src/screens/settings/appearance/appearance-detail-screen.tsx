@@ -1,13 +1,15 @@
 import type * as React from 'react';
-import { PlaceholderDetailView } from '#features/settings';
-
-const title = 'Appearance';
+import { systemThemeSource, useThemeChoice } from '#features/settings';
+import { AppearanceDetailView } from './appearance-detail-view';
 
 export function AppearanceDetailScreen(): React.JSX.Element {
+  const { choice, choose } = useThemeChoice();
+
   return (
-    <PlaceholderDetailView
-      title={title}
-      description="Appearance will appear here."
+    <AppearanceDetailView
+      theme={choice}
+      onThemeChange={choose}
+      systemSource={systemThemeSource()}
     />
   );
 }
