@@ -29,7 +29,6 @@
         "packages/client/src/features/feed/components/feed-disclosure.tsx",
         "packages/client/src/features/feed/components/feed-image.tsx",
         "packages/client/src/features/feed/components/feed-notice/notice-message.tsx",
-        "packages/client/src/features/feed/components/feed/feed-overlays.tsx",
         "packages/client/src/features/feed/components/feed/feed.tsx",
         "packages/client/src/features/feed/components/live-header/live-header.tsx",
         "packages/client/src/features/feed/components/permission-outcome.tsx",
