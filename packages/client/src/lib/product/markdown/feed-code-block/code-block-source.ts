@@ -43,9 +43,11 @@ function sourceTitle({ resource, uri }: CodeBlockSource): string | undefined {
   return resource?.name ?? uri;
 }
 
+// A resource names itself; otherwise the caller's own title wins, and a plain fence falls back to its tag.
 export function headerTitle(
   source: CodeBlockSource,
   language: string | undefined,
+  title: string | undefined,
 ): string {
-  return sourceTitle(source) ?? language ?? '';
+  return sourceTitle(source) ?? title ?? language ?? '';
 }

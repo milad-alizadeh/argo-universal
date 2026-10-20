@@ -359,6 +359,16 @@
          Inspector pane, an icon button's chip. The pressed step of black, see-through
          as Paper draws it. */
       --color-tint: color-mix(in oklab, var(--color-black) 4%, transparent);
+      /* Code colours, as the Foundations "Components / Code" master draws them.
+         Everything else in a fence, punctuation included, stays foreground;
+         comments are also italic. Shared by Feed fences, tool output, inline
+         diffs and the Inspector. */
+      --color-syntax-keyword: var(--color-rose-600);
+      --color-syntax-function: var(--color-violet-600);
+      --color-syntax-string: var(--color-sky-900);
+      --color-syntax-constant: var(--color-blue-700);
+      --color-syntax-type: var(--color-orange-700);
+      --color-syntax-comment: var(--color-neutral-500);
       /* A 1px edge that gives a bare surface its shape: a Session row, the
          rail's separator. Hex, as the shadow colours are, so the inset shadow
          that draws it parses on native too. */
@@ -486,6 +496,14 @@
       --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
       --color-pressed: color-mix(in oklab, var(--color-white) 8%, transparent);
       --color-tint: color-mix(in oklab, var(--color-white) 8%, transparent);
+      /* Graphite lifts every code colour to the light end of its ramp, so each
+         one carries on the near-black ground at the same strength as light. */
+      --color-syntax-keyword: var(--color-rose-400);
+      --color-syntax-function: var(--color-violet-400);
+      --color-syntax-string: var(--color-sky-300);
+      --color-syntax-constant: var(--color-blue-400);
+      --color-syntax-type: var(--color-orange-400);
+      --color-syntax-comment: var(--color-neutral-400);
       /* 6% white, the selected tint's step: a light edge needs more than
          light's 5% black to show on a dark ground. */
       --color-hairline: #ffffff0f;

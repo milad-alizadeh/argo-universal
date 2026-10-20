@@ -64,6 +64,9 @@ catalog:
   "expo-image-picker": ~57.0.20
   "expo-clipboard": ~57.0.2
   marked: 18.1.0
+  # Code block highlighting: the core plus one grammar per language it is registered for.
+  prismjs: 1.30.0
+  "@types/prismjs": 1.26.5
   # Lexical packages move in lockstep; pin every one to the same version (ADR-0023).
   lexical: 0.52.0
   "@lexical/code": 0.52.0

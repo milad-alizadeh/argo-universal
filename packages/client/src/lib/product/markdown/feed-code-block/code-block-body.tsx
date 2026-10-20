@@ -4,26 +4,34 @@ import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
 import { ScrollFadeView } from '../../../generic/scroll-fade/scroll-fade';
+import { syntaxText } from './code-highlight/syntax-text';
 
 interface CodeBlockBodyProps {
   code?: string;
   description?: string;
+  language?: string;
   textClassName?: string;
 }
 
 interface CodeTextProps {
   code: string;
+  language?: string;
   textClassName?: string;
 }
 
-function CodeText({ code, textClassName }: CodeTextProps): React.JSX.Element {
+function CodeText({
+  code,
+  language,
+  textClassName,
+}: CodeTextProps): React.JSX.Element {
   return (
     <Text
       selectable
       role="code"
+      testID="code-text"
       className={cn(markdownBlockClassNames.codeText, textClassName)}
     >
-      {code}
+      {syntaxText(code, language)}
     </Text>
   );
 }
@@ -76,10 +84,17 @@ function CodeDescription({
 export function CodeBlockBody({
   code,
   description,
+  language,
   textClassName,
 }: CodeBlockBodyProps): React.JSX.Element | null {
   if (code !== undefined)
-    return <CodeScroll code={code} textClassName={textClassName} />;
+    return (
+      <CodeScroll
+        code={code}
+        language={language}
+        textClassName={textClassName}
+      />
+    );
 
   return <CodeDescription description={description} />;
 }
