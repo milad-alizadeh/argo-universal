@@ -1,5 +1,9 @@
 import type { ReactNode, JSX } from 'react';
+import { Platform } from 'react-native';
 import { LiquidGlass } from '#primitives/content/liquid-glass';
+
+// A phone opens the status controls in a sheet whose grouped List scrolls itself, as Settings does.
+export const phoneSheet = Platform.OS !== 'web';
 
 export const mutedTextClassName = 'text-muted-foreground';
 

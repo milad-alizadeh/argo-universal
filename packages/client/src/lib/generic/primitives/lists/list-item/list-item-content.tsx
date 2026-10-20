@@ -46,7 +46,7 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
     <Text
       role="row"
       tone={props.titleTone ?? props.tone}
-      numberOfLines={1}
+      numberOfLines={props.multiline ? undefined : 1}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
     >
       {props.title}
@@ -77,7 +77,7 @@ export function ItemContent(props: ListItemProps): ReactElement {
       <TitleLine {...props} />
       <Subtitle
         text={props.subtitle}
-        multiline={!!props.description}
+        multiline={!!props.description || props.multiline}
         subtitleTone={props.subtitleTone ?? 'muted'}
         subtitleDimmed={props.subtitleDimmed}
       />

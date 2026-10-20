@@ -8,7 +8,7 @@ import { ComposerPopover } from '../composer-popover/composer-popover';
 import { PlanPopoverContent } from './plan-popover';
 import { PlanSteps } from './plan-steps';
 import { createPlanTrigger } from './plan-trigger';
-import { ChipSurface } from './status-surface';
+import { ChipSurface, phoneSheet } from './status-surface';
 
 interface ComposerPlanProps {
   entries: PlanEntry[];
@@ -37,7 +37,12 @@ interface PhonePlanProps {
   trigger: JSX.Element;
 }
 
-const phonePopoverProps = { label: 'Plan', width: 420, className: 'h-full' };
+const phonePopoverProps = {
+  label: 'Plan',
+  width: 420,
+  className: 'h-full',
+  listContent: phoneSheet,
+};
 
 function PhonePlan({ entries, trigger }: PhonePlanProps): JSX.Element {
   return (
