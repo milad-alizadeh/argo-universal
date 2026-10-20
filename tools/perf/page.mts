@@ -44,15 +44,32 @@ export interface Target {
   session?: string;
 }
 
+// One measured interaction: it sets the page up, and hands back one pass over it to repeat.
+// What a scenario measures: `once` is the measured pass, `before` the setup each pass needs outside it.
+export interface Measured {
+  session: CDPSession;
+  once: () => Promise<void>;
+  before?: () => Promise<void>;
+}
+
+export type Scenario = (page: Page) => Promise<Measured>;
+
+// Opens the Session titled `title` from the list, on a page the App is already loaded on.
+export const openSession = (page: Page, title: string): Promise<void> =>
+  page.getByRole('button', { name: new RegExp(`^${title}, `, 'u') }).click();
+
+// Loads the App again and opens the same Session, so a scenario measures it from cold.
+export async function reopenSession(page: Page, title: string): Promise<void> {
+  await page.goto('/');
+  await openSession(page, title);
+}
+
 // Opens the App, then the Session titled `session` when one is named; returns a CDP session on the page.
 export async function openApp(page: Page, target: Target): Promise<CDPSession> {
   await load(page, target.serverUrl, target.viewport);
   const title = target.session;
 
-  if (title !== undefined)
-    await page
-      .getByRole('button', { name: new RegExp(`^${title}, `, 'u') })
-      .click();
+  if (title !== undefined) await openSession(page, title);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Performance.enable');
 

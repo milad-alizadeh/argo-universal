@@ -39,7 +39,7 @@ async function expectSummary(
   const summaryButton = feed.getByRole('button', { name: summaryName });
   await expect(summaryButton).toHaveAttribute('aria-expanded', 'false');
   await userEvent.click(summaryButton);
-  await expect(within(summaryButton).queryByText(/[+-]\d+/)).toBeNull();
+  await expect(within(summaryButton).queryByText(/[+−]\d+/u)).toBeNull();
 }
 
 const feedRight = (canvas: EditPlay['canvas']): number =>
@@ -89,8 +89,8 @@ async function playEditRow(play: EditPlay, edit: RecordedEdit): Promise<void> {
   const name = `${edit.verb} ${edit.path}`;
   const button = play.feed.getByRole('button', { name });
   await expectInsideFeed(play, button);
-  await expectCount(button, edit.added, /^\+\d+$/);
-  await expectCount(button, edit.removed, /^-\d+$/);
+  await expectCount(button, edit.added, /^\+\d+$/u);
+  await expectCount(button, edit.removed, /^−\d+$/u);
   await expectDiffToggles(play, button, edit.line);
 }
 

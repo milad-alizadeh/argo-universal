@@ -95,7 +95,7 @@ async function firstProjectId(httpUrl: string): Promise<string> {
 }
 
 async function availableAgent(httpUrl: string): Promise<string> {
-  const agents = await query(httpUrl, procedures.agents);
+  const agents = await query(httpUrl, procedures.agents, {});
   const agent = agents[0];
 
   if (!agent) throw new Error('The fixture Server has no available Agent');

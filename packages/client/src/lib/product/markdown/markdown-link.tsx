@@ -13,7 +13,7 @@ interface LinkProps {
 // Only a link resolves its underline colour, so plain text never pays for the style lookup.
 function FollowedLink({ href, children }: LinkProps): React.JSX.Element {
   const { color: underline } = useResolveClassNames(
-    markdownLinkClassNames.viewColor,
+    markdownLinkClassNames.viewUnderlineColor,
   );
 
   return (

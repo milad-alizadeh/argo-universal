@@ -26,6 +26,14 @@ const endThreshold = 0.02;
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
 
+/*
+ * What a row that has not been measured is worth. The recorded Feeds average 91px a row in the 800px
+ * column and 138px on a phone, and one number serves both, so this sits between them rather than at
+ * either. It only places rows above the opening view; each kind takes its own measured average after
+ * that.
+ */
+const estimatedRowHeight = 112;
+
 // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android. Web's list is a plain element, which takes neither.
 const keyboardProps = Platform.select({
   ios: {
@@ -47,7 +55,7 @@ const feedListProps = {
   paddingBottom: 0,
   paddingTop: { compact: 4, wide: 6 },
   keyExtractor: entryKey,
-  estimatedItemSize: 48,
+  estimatedItemSize: estimatedRowHeight,
   // Each kind keeps its own average size, so a row not yet measured lands near its real place.
   getItemType: entryType,
   // Each row keeps its own expanded state, which a recycled row would inherit.

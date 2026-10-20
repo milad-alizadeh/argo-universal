@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -23,29 +23,67 @@ const shimmerOpacity = {
   emphasized: { resting: 0.7, highlight: 0.3 },
 };
 
-const sweep = (characterCount: number): number =>
+/*
+ * A word at a time, not a character: a running title is one animated node per word rather than per
+ * letter, and the band is wide enough that a word still brightens and dims as it passes.
+ */
+const wordsOf = (text: string): string[] => text.match(/\S+\s*|\s+/gu) ?? [];
+
+// Where each word's centre sits along the text, in characters, which is what the band is measured in.
+function wordCentres(words: readonly string[]): number[] {
+  let start = 0;
+
+  return words.map((word) => {
+    const centre = start + word.length / 2;
+    start += word.length;
+
+    return centre;
+  });
+}
+
+const sweep = (): number =>
   withRepeat(
-    withTiming(characterCount + bandHalfWidth, {
-      duration: sweepMilliseconds,
-      easing: Easing.linear,
-    }),
+    withTiming(1, { duration: sweepMilliseconds, easing: Easing.linear }),
     -1,
   );
 
-function useSweepPosition(
-  characterCount: number,
-  reducedMotion: boolean,
-): SharedValue<number> {
-  const position = useSharedValue(-bandHalfWidth);
+/*
+ * The sweep runs from 0 to 1 and the text's length is read inside the worklet, so a title growing as
+ * the Agent works widens the sweep in place instead of starting it over.
+ */
+function useSweep(reducedMotion: boolean): SharedValue<number> {
+  const progress = useSharedValue(0);
   useEffect(() => {
-    position.set(-bandHalfWidth);
+    progress.set(0);
 
-    if (!reducedMotion) position.set(sweep(characterCount));
+    if (!reducedMotion) progress.set(sweep());
 
-    return (): void => cancelAnimation(position);
-  }, [characterCount, reducedMotion, position]);
+    return (): void => cancelAnimation(progress);
+  }, [reducedMotion, progress]);
 
-  return position;
+  return progress;
+}
+
+function useSweepSpan(characterCount: number): SharedValue<number> {
+  const span = useSharedValue(characterCount + bandHalfWidth * 2);
+  useEffect(() => {
+    span.set(characterCount + bandHalfWidth * 2);
+  }, [characterCount, span]);
+
+  return span;
+}
+
+interface Sweep {
+  progress: SharedValue<number>;
+  span: SharedValue<number>;
+}
+
+// One object for the sweep, so a word's worklet is built once and not again on every draw.
+function useBandSweep(reducedMotion: boolean, characterCount: number): Sweep {
+  const progress = useSweep(reducedMotion);
+  const span = useSweepSpan(characterCount);
+
+  return useMemo(() => ({ progress, span }), [progress, span]);
 }
 
 interface ShimmerTextProps {
@@ -60,71 +98,92 @@ export function ShimmerText({
   emphasized = false,
 }: ShimmerTextProps): React.JSX.Element {
   const reducedMotion = useReducedMotion();
-  const characters = Array.from(text, (character) => character);
-  const position = useSweepPosition(characters.length, reducedMotion);
+  const sweep = useBandSweep(reducedMotion, text.length);
 
   return (
     <Text numberOfLines={1} selectable={false} className={className}>
-      {reducedMotion ? text : shimmered({ characters, position, emphasized })}
+      {reducedMotion
+        ? text
+        : shimmered({ words: wordsOf(text), sweep, emphasized })}
     </Text>
   );
 }
 
 interface ShimmeredProps {
-  characters: string[];
-  position: SharedValue<number>;
+  words: string[];
+  sweep: Sweep;
   emphasized: boolean;
 }
 
 function shimmered(props: ShimmeredProps): React.JSX.Element[] {
-  const { characters, position } = props;
+  const { words, sweep: sweepValues } = props;
   const opacity = shimmerOpacity[props.emphasized ? 'emphasized' : 'plain'];
+  const centres = wordCentres(words);
 
-  return withOccurrenceKeys(characters, (character) => character).map(
-    ({ item: character, key }, index) => (
-      <ShimmerCharacter
+  return withOccurrenceKeys(words, (word) => word).map(
+    ({ item: word, key }, index) => (
+      <ShimmerWord
         key={key}
-        character={character}
-        shimmer={{ index, position, opacity }}
+        word={word}
+        shimmer={{ centre: centres[index] ?? 0, sweep: sweepValues, opacity }}
       />
     ),
   );
 }
 
+interface Opacity {
+  resting: number;
+  highlight: number;
+}
+
 interface ShimmerStyleProps {
-  index: number;
-  position: SharedValue<number>;
-  opacity: { resting: number; highlight: number };
+  centre: number;
+  sweep: Sweep;
+  opacity: Opacity;
+}
+
+// A word's opacity once the band's centre has reached `position` characters along the text.
+function bandOpacity(
+  opacity: Opacity,
+  centre: number,
+  position: number,
+): number {
+  'worklet';
+
+  const share = Math.max(0, 1 - Math.abs(centre - position) / bandHalfWidth);
+
+  return opacity.resting + opacity.highlight * share;
+}
+
+// How far the band's centre has travelled along the text, in characters.
+function bandCentre(sweep: Sweep): number {
+  'worklet';
+
+  return sweep.progress.get() * sweep.span.get() - bandHalfWidth;
 }
 
 function useShimmerStyle(
   props: ShimmerStyleProps,
 ): ReturnType<typeof useAnimatedStyle<{ opacity: number }>> {
-  const { index, position } = props;
-  const { resting, highlight } = props.opacity;
+  const { centre, opacity, sweep } = props;
 
   return useAnimatedStyle(
-    () => ({
-      opacity:
-        resting +
-        highlight *
-          Math.max(0, 1 - Math.abs(index - position.get()) / bandHalfWidth),
-    }),
-    [resting, highlight, index, position],
+    () => ({ opacity: bandOpacity(opacity, centre, bandCentre(sweep)) }),
+    [opacity, centre, sweep],
   );
 }
 
-interface ShimmerCharacterProps {
-  character: string;
+interface ShimmerWordProps {
+  word: string;
   shimmer: ShimmerStyleProps;
 }
 
-function ShimmerCharacter(props: ShimmerCharacterProps): React.JSX.Element {
+function ShimmerWord(props: ShimmerWordProps): React.JSX.Element {
   const style = useShimmerStyle(props.shimmer);
 
   return (
     <Animated.Text accessible={false} selectable={false} style={style}>
-      {props.character}
+      {props.word}
     </Animated.Text>
   );
 }

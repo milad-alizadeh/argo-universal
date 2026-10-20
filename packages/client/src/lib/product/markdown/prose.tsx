@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { type ComponentProps, useContext } from 'react';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/content/text';
+import { Text, type TextRole } from '#primitives/content/text';
 import { Caret } from './caret';
 import { useClampLeaf, useLineHeight } from './clamp-leaves';
 import { InlineTokens } from './inline-tokens';
@@ -17,7 +17,7 @@ interface ProseProps {
 
 type ProseTextProps = Pick<
   ComponentProps<typeof Text>,
-  'accessibilityRole' | 'aria-level' | 'className'
+  'accessibilityRole' | 'aria-level' | 'className' | 'role'
 >;
 
 const proseVariantClassNames: Record<MarkdownVariantName, string> = {
@@ -37,6 +37,16 @@ function proseClassName(
   );
 }
 
+/*
+ * Two heading steps, as the Markdown master draws them: # takes the Title role and
+ * ## and deeper the Heading role, so no heading invents a size of its own.
+ */
+function proseRole(headingLevel?: number): TextRole {
+  if (headingLevel === undefined) return 'body';
+
+  return headingLevel === 1 ? 'title' : 'heading';
+}
+
 // A heading is prose that also announces its level.
 function useProseTextProps(headingLevel?: number): ProseTextProps {
   const heading = headingLevel !== undefined;
@@ -44,6 +54,7 @@ function useProseTextProps(headingLevel?: number): ProseTextProps {
   return {
     accessibilityRole: heading ? 'heading' : undefined,
     'aria-level': headingLevel,
+    role: proseRole(headingLevel),
     className: proseClassName(heading, useContext(MarkdownVariant)),
   };
 }
@@ -53,7 +64,7 @@ export function Prose({
   caret,
   headingLevel,
 }: ProseProps): React.JSX.Element {
-  const leaf = useClampLeaf(useLineHeight('body'));
+  const leaf = useClampLeaf(useLineHeight(proseRole(headingLevel)));
 
   return (
     <Text ref={leaf} {...useProseTextProps(headingLevel)}>

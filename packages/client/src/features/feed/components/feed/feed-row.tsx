@@ -1,7 +1,7 @@
 import { useSyncLayout } from '@legendapp/list/react-native';
 import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { SessionColumn } from '#lib/product/session-column';
 import { CollapsibleLayoutSyncContext } from '#primitives/layout/collapsible';
 import { FeedItem } from '../feed-item';
@@ -59,8 +59,12 @@ function entryContent(
   );
 }
 
-// A row's collapsibles resize it in the list each frame they move, so the rows below move in the same frame.
-export function FeedRow(props: FeedRowProps): React.JSX.Element {
+/*
+ * A row's collapsibles resize it in the list each frame they move, so the rows below move in the
+ * same frame. A streaming commit rebuilds the list's `renderItem`, and the view keeps the entries it
+ * did not change, so a row only draws again when its own entry or the one after it changed.
+ */
+export const FeedRow = memo(function FeedRow(props: FeedRowProps) {
   const { entry, next } = props;
   const layoutSync = useLayoutSync(entryKey(entry), props);
 
@@ -74,4 +78,4 @@ export function FeedRow(props: FeedRowProps): React.JSX.Element {
       </SessionColumn>
     </CollapsibleLayoutSyncContext.Provider>
   );
-}
+});

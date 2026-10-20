@@ -30,9 +30,8 @@ function monoPart(
   key: string,
   paths: readonly string[],
 ): ReactNode {
-  // No line height of its own: a taller mono line box would push the label off the icons' centre line.
   return paths.includes(part) ? (
-    <Text key={key} role="code" className="leading-none">
+    <Text key={key} role="code">
       {part}
     </Text>
   ) : (

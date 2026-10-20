@@ -21,7 +21,7 @@ Given(
 async function openEdit(feed: Locator): Promise<void> {
   const edit = feed.getByRole('button', { name: /greeting.txt/ });
   await expect(edit).toContainText('+1');
-  await expect(edit).toContainText('-1');
+  await expect(edit).toContainText('−1');
   await edit.click();
   await expect(feed.getByText('Hello Argo', { exact: true })).toBeVisible();
 }
