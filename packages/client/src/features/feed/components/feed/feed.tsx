@@ -9,6 +9,7 @@ import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import type { FeedViewItem } from '../../view/feed-view';
 import { isDrawnFeedItem } from '../feed-item';
+import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
 import { useReportsAtEnd } from './use-feed-scroll-position';
@@ -64,7 +65,10 @@ function useFeedEntries({
   liveHeader,
   liveToolCall,
 }: FeedProps): Pick<FeedListProps, 'entries' | 'newestKey'> {
-  const drawnItems = useMemo(() => items.filter(isDrawnFeedItem), [items]);
+  const drawnItems = useMemo(
+    () => withoutDisclosedTurnEnds(items).filter(isDrawnFeedItem),
+    [items],
+  );
 
   const entries = useMemo(
     () => withLiveHeader(drawnItems, liveHeader, liveToolCall),

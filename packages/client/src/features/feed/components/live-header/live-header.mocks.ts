@@ -49,6 +49,13 @@ export const requestHeader =
   liveHeaderSteps.find((step) => step.liveHeader.source.type === 'request')
     ?.liveHeader ?? missingStep('request');
 
+// Paper's titled thought: the Feed never receives reasoning text to draw here.
+export const thoughtHeader: LiveHeader = {
+  text: 'Checking how rows merge after a reconnect',
+  source: { type: 'thought' },
+  startedAt: liveHeaderNow - 18_000,
+};
+
 function missingStep(type: string): never {
   throw new Error(`Recordings need a ${type} live header`);
 }

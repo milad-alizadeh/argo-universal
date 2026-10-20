@@ -5,6 +5,7 @@ import {
   liveHeaderNow,
   liveHeaderSteps,
   requestHeader,
+  thoughtHeader,
 } from './live-header.mocks';
 
 const meta = {
@@ -32,4 +33,8 @@ export const Overview: Story = {
       ))}
     </Variations>
   ),
+};
+
+export const Thinking: Story = {
+  args: { liveHeader: thoughtHeader },
 };
