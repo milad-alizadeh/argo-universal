@@ -17,7 +17,7 @@ const buttons: { state: string; props: ButtonProps }[] = [
   { state: 'Link', props: { label: 'Learn more', variant: 'link' } },
   {
     state: 'Destructive',
-    props: { label: 'Remove Agent', tone: 'danger', fullWidth: true },
+    props: { label: 'Delete', tone: 'danger', fullWidth: true },
   },
   {
     state: 'Extra small (a phone draws Default)',
@@ -40,7 +40,7 @@ const buttons: { state: string; props: ButtonProps }[] = [
   { state: 'Large', props: { label: saveLabel, size: 'lg' } },
   { state: 'Disabled', props: { label: saveLabel, disabled: true } },
   { state: 'Loading', props: { label: saveLabel, loading: true } },
-  { state: 'Leading icon', props: { label: 'Add Agent', icon: 'agent' } },
+  { state: 'Leading icon', props: { label: 'Add', icon: 'agent' } },
 ];
 
 const meta = {

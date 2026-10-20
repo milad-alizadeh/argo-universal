@@ -19,7 +19,7 @@ type Story = StoryObj<typeof meta>;
 
 export const States: Story = {
   name: 'Page',
-  args: { title: 'Projects' },
+  args: { title: 'Title' },
   render: () => <PageVariations />,
 };
 
@@ -71,16 +71,12 @@ function primaryAction(
   choose: (value: string) => void,
 ): PageProps['primaryAction'] {
   return shown ? (
-    <Action
-      label="Add Project"
-      icon="add"
-      onPress={() => choose('New Project')}
-    />
+    <Action label="Add" icon="add" onPress={() => choose('Added')} />
   ) : undefined;
 }
 
 function ExampleContent({ query }: { query: string }): React.JSX.Element {
-  const items = ['argo-universal', 'website']
+  const items = ['Item one', 'Item two']
     .values()
     .filter((name) => name.includes(query))
     .map((title) => <ListItem key={title} title={title} />)
@@ -121,7 +117,7 @@ function exampleAction(
 
 const exampleActions = [
   { label: 'Filters', icon: 'filters' },
-  { label: 'Archived', icon: 'archive' },
+  { label: 'Archive', icon: 'archive' },
 ] as const;
 
 interface ExampleState {
@@ -131,10 +127,10 @@ interface ExampleState {
 }
 
 function exampleProps(props: Example, state: ExampleState): PageProps {
-  const search = props.search ? { label: 'Search Projects' } : undefined;
+  const search = props.search ? { label: 'Search' } : undefined;
 
   return {
-    title: 'Projects',
+    title: 'Title',
     value: state.query,
     onChangeText: state.onChangeText,
     search,
@@ -152,7 +148,7 @@ function drillIn(
   if (!shown) return {};
 
   return {
-    caption: 'Projects on this Mac',
+    caption: 'Caption',
     onBack: () => choose('Back'),
   };
 }

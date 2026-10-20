@@ -8,22 +8,22 @@ import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { Menu } from './menu';
 
-const mergeActions = [
-  { value: 'squash', label: 'Squash and merge' },
-  { value: 'merge', label: 'Create a merge commit' },
-  { value: 'rebase', label: 'Rebase and merge' },
+const actions = [
+  { value: 'one', label: 'Action one' },
+  { value: 'two', label: 'Action two' },
+  { value: 'three', label: 'Action three' },
 ] as const;
 
-const onMergeAction = fn();
+const onAction = fn();
 
-function MergeActions(): React.JSX.Element {
+function OptionsMenu(): React.JSX.Element {
   return (
     <Menu
-      accessibilityLabel="Merge options"
-      trigger="+2 more"
-      actions={mergeActions.map(({ value, label }) => ({
+      accessibilityLabel="Options"
+      trigger="Options"
+      actions={actions.map(({ value, label }) => ({
         label,
-        onPress: () => onMergeAction(value),
+        onPress: () => onAction(value),
       }))}
     />
   );
@@ -31,8 +31,8 @@ function MergeActions(): React.JSX.Element {
 
 const meta = {
   title: 'Tests/Menu/Actions',
-  component: MergeActions,
-} satisfies Meta<typeof MergeActions>;
+  component: OptionsMenu,
+} satisfies Meta<typeof OptionsMenu>;
 
 export default meta;
 
@@ -41,18 +41,18 @@ type Story = StoryObj<typeof meta>;
 function actionSelection(width: number): Story {
   return {
     play: async ({ canvas, canvasElement, userEvent }) => {
-      onMergeAction.mockClear();
+      onAction.mockClear();
       await settleViewport(width);
       const page = within(canvasElement.ownerDocument.body);
-      const trigger = canvas.getByRole('button', { name: 'Merge options' });
-      await expect(trigger).toHaveTextContent('+2 more');
+      const trigger = canvas.getByRole('button', { name: 'Options' });
+      await expect(trigger).toHaveTextContent('Options');
       await userEvent.click(trigger);
       await expect(trigger).toHaveAttribute('aria-expanded', 'true');
       await userEvent.click(
-        await page.findByRole('menuitem', { name: 'Rebase and merge' }),
+        await page.findByRole('menuitem', { name: 'Action three' }),
       );
-      await expect(onMergeAction).toHaveBeenCalledTimes(1);
-      await expect(onMergeAction).toHaveBeenCalledWith('rebase');
+      await expect(onAction).toHaveBeenCalledTimes(1);
+      await expect(onAction).toHaveBeenCalledWith('three');
       await waitFor(() =>
         expect(page.queryByRole('menu')).not.toBeInTheDocument(),
       );
@@ -62,14 +62,14 @@ function actionSelection(width: number): Story {
       await userEvent.keyboard('{ArrowDown}');
 
       const first = await page.findByRole('menuitem', {
-        name: 'Squash and merge',
+        name: 'Action one',
       });
 
       await waitFor(() => expect(first).toHaveFocus());
       await expect(page.queryByRole('menuitemradio')).not.toBeInTheDocument();
       await userEvent.keyboard('{Enter}');
-      await expect(onMergeAction).toHaveBeenCalledTimes(2);
-      await expect(onMergeAction).toHaveBeenLastCalledWith('squash');
+      await expect(onAction).toHaveBeenCalledTimes(2);
+      await expect(onAction).toHaveBeenLastCalledWith('one');
       await waitFor(() =>
         expect(page.queryByRole('menu')).not.toBeInTheDocument(),
       );
@@ -80,7 +80,7 @@ function actionSelection(width: number): Story {
         expect(page.queryByRole('menu')).not.toBeInTheDocument(),
       );
       await waitFor(() => expect(trigger).toHaveFocus());
-      await expect(onMergeAction).toHaveBeenCalledTimes(2);
+      await expect(onAction).toHaveBeenCalledTimes(2);
     },
   };
 }

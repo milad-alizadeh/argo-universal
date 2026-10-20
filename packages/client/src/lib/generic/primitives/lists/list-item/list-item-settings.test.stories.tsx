@@ -33,7 +33,7 @@ export const StepperUpdatesValue: StoryObj<typeof meta> = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(1440);
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Increase Max Sessions' }),
+      await canvas.findByRole('button', { name: 'Increase Count' }),
     );
     await expect(canvas.getByText('5')).toBeVisible();
   },
@@ -85,13 +85,13 @@ export const PickerKeyboardSelection: StoryObj<typeof meta> = {
 };
 
 // Desktop and web draw a row's description inside its row, once, with no footer under the section.
-const fastModeDescription = "Use the Agent's faster model when it offers one.";
+const fastModeDescription = 'Description';
 
 export const DescriptionSitsInItsRow: StoryObj<typeof meta> = {
   render: Settings.render,
   play: async ({ canvas }) => {
     await settleViewport(1440);
-    const row = await canvas.findByRole('switch', { name: 'Fast mode' });
+    const row = await canvas.findByRole('switch', { name: 'Toggle' });
     await expect(within(row).getByText(fastModeDescription)).toBeVisible();
     await expect(canvas.getAllByText(fastModeDescription)).toHaveLength(1);
   },

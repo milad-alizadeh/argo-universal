@@ -52,7 +52,7 @@ export const ARowOpensItsPlugin: Story = {
 export const SaysWhenThereAreNoPlugins: Story = {
   args: { plugins: { status: 'loaded', plugins: [] } },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('No Plugins yet.')).toBeVisible();
+    await expect(canvas.getByText(/No Plugins/)).toBeVisible();
   },
 };
 

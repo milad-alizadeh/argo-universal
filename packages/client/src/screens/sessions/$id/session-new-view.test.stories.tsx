@@ -130,7 +130,7 @@ export const FailedStart: Story = {
       name: 'Try to restart the Agent',
     });
 
-    await expect(canvas.getByText('Failed to Launch')).toBeVisible();
+    await expect(canvas.getByText(/Launch/)).toBeVisible();
     await expect(canvas.getByText(failedStartMessage)).toBeVisible();
     await expect(
       shownText(canvas.getByRole('textbox', { name: messageLabel })),

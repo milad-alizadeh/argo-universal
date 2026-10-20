@@ -6,27 +6,27 @@ import { Callout } from './callout';
 import { CalloutButton } from './callout-button';
 import type { CalloutProps } from './callout-props';
 
-const stderr = `npm error code E404
-npm error 404 Not Found - GET https://registry.npmjs.org/@zed-industries%2fcodex-acp
-npm error 404 '@zed-industries/codex-acp@0.3.9' is not in this registry.`;
+const stderr = `Error: could not complete
+  at step one
+  at step two`;
 
 const info = {
-  title: 'No Agents added yet',
-  description: 'Click "Add Agent" to get started.',
-  actions: <CalloutButton label="Add Agent" />,
+  title: 'Nothing added yet',
+  description: 'Press Add to get started.',
+  actions: <CalloutButton label="Add" />,
 } satisfies CalloutProps;
 
 const error = {
   tone: 'danger',
-  title: 'Failed to Launch',
-  description: 'Agent exited with status 1',
+  title: 'Something failed',
+  description: 'Exited with status 1',
   detail: stderr,
   actions: <CalloutButton label="Retry" />,
 } satisfies CalloutProps;
 
 const busy = {
   busy: true,
-  title: 'Authenticating to Codex…',
+  title: 'Working…',
   actions: <CalloutButton variant="secondary" label="Cancel" />,
 } satisfies CalloutProps;
 

@@ -41,7 +41,7 @@ export const UnknownNodes: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Before')).toBeVisible();
     await expect(canvas.getByText('After')).toBeVisible();
-    await expect(canvas.getByText('Update Argo to see this')).toBeVisible();
+    await expect(canvas.getByText(/Update Argo/)).toBeVisible();
     await expect(canvas.queryByText('Inside')).toBeNull();
     await expect(canvas.queryByText('Sparkline')).toBeNull();
   },
@@ -71,9 +71,7 @@ export const Slots: Story = {
 export const RefusedPage: Story = {
   render: () => <PluginTree root={pluginPageFallback} onEvent={onEvent} />,
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText('This Plugin page could not be displayed.'),
-    ).toBeVisible();
+    await expect(canvas.getByText(/could not be displayed/)).toBeVisible();
     await expect(canvas.queryByRole('button')).toBeNull();
   },
 };

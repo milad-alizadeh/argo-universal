@@ -3,7 +3,7 @@ import { Variation, Variations } from '../../../variations';
 import { Label } from './label';
 import type { LabelProps } from './label-props';
 
-const subagents = '3 Subagents';
+const subagents = '3 items';
 
 const meta = {
   title: 'Design System/Primitives/Content/Label',
@@ -14,15 +14,15 @@ const meta = {
 export default meta;
 
 const samples: { label: string; props: LabelProps }[] = [
-  { label: 'Session Subagents', props: { icon: 'agent', text: subagents } },
+  { label: 'Count', props: { icon: 'agent', text: subagents } },
   {
-    label: 'Session PR',
+    label: 'Success',
     props: { icon: 'pr-open', text: '#45', tone: 'success' },
   },
-  { label: 'CI run', props: { icon: 'check', text: '2/5 jobs', tone: 'info' } },
+  { label: 'Info', props: { icon: 'check', text: '2/5', tone: 'info' } },
   {
-    label: 'CI failed',
-    props: { icon: 'warning', text: 'Build failed', tone: 'danger' },
+    label: 'Danger',
+    props: { icon: 'warning', text: 'Failed', tone: 'danger' },
   },
   { label: 'Merged', props: { icon: 'pr-merged', text: '#46', tone: 'done' } },
   {

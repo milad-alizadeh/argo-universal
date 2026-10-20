@@ -13,29 +13,29 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const states: { label: string; props: MenuTriggerProps }[] = [
-  { label: 'Default', props: { label: 'argo-universal', icon: 'folder' } },
+  { label: 'Default', props: { label: 'Item', icon: 'folder' } },
   {
     label: 'Muted',
-    props: { label: 'New worktree', icon: 'branch', tone: 'muted' },
+    props: { label: 'Muted', icon: 'branch', tone: 'muted' },
   },
   {
     label: 'Danger',
-    props: { label: 'Full access', icon: 'private', tone: 'danger' },
+    props: { label: 'Danger', icon: 'private', tone: 'danger' },
   },
-  { label: 'No icon', props: { label: 'Settings', tone: 'muted' } },
+  { label: 'No icon', props: { label: 'No icon', tone: 'muted' } },
   {
     label: 'Disabled',
-    props: { label: 'Local', icon: 'folder', tone: 'muted', disabled: true },
+    props: { label: 'Disabled', icon: 'folder', tone: 'muted', disabled: true },
   },
   {
     label: 'Icon only',
-    props: { label: 'Mode', icon: 'plan-mode', iconOnly: true },
+    props: { label: 'Options', icon: 'plan-mode', iconOnly: true },
   },
   {
     label: 'With leading',
     props: {
-      label: 'Opus 4.5',
-      leading: <Spinner accessibilityLabel="Opening the Session" />,
+      label: 'Label',
+      leading: <Spinner accessibilityLabel="Loading" />,
     },
   },
 ];

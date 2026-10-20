@@ -93,15 +93,13 @@ export const Invalid: Story = {
     <Field
       value="2026-10-18"
       required
-      errors={[{ message: 'Pick today or a later date.' }]}
+      errors={[{ message: 'Error message' }]}
     />
   ),
   play: async ({ canvas }) => {
     const input = canvas.getByLabelText(LABEL);
     await expect(input).toHaveAttribute('aria-invalid', 'true');
     await expect(input).toBeRequired();
-    await expect(input).toHaveAccessibleDescription(
-      'Pick today or a later date.',
-    );
+    await expect(input).toHaveAccessibleDescription('Error message');
   },
 };

@@ -4,7 +4,7 @@ import { Text } from '#primitives/content/text';
 import { ListItem } from './index';
 import { Overview } from './list-item.stories';
 
-const title = 'Deploy web';
+const title = 'Item one';
 
 const meta = {
   title: 'Tests/Design System/Primitives/ListItem',
@@ -42,13 +42,11 @@ export const Disabled: Story = {
 export const SlottedAnatomy: Story = {
   render: Overview.render,
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText('Deploy web to production'),
-    ).toBeVisible();
-    await expect(canvas.getByLabelText('Needs attention')).toBeVisible();
+    await expect(await canvas.findByText('Item three')).toBeVisible();
+    await expect(canvas.getByLabelText('Warning')).toBeVisible();
     await expect(canvas.getByLabelText('3')).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: 'Archived Session' }),
+      canvas.getByRole('button', { name: 'Disabled item' }),
     ).toHaveAttribute('aria-disabled', 'true');
   },
 };
@@ -63,7 +61,7 @@ export const Value: Story = {
 export const StepperBounds: Story = {
   render: () => (
     <ListItem.Stepper
-      title="Max Sessions"
+      title="Count"
       value={1}
       min={1}
       max={2}
@@ -72,10 +70,10 @@ export const StepperBounds: Story = {
   ),
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('button', { name: 'Decrease Max Sessions' }),
+      canvas.getByRole('button', { name: 'Decrease Count' }),
     ).toBeDisabled();
     await expect(
-      canvas.getByRole('button', { name: 'Increase Max Sessions' }),
+      canvas.getByRole('button', { name: 'Increase Count' }),
     ).toBeEnabled();
   },
 };

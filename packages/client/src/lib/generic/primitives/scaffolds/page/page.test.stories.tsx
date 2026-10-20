@@ -9,20 +9,20 @@ import { atWidth, pageWidths as widths } from './page-widths.mocks';
 const meta = {
   title: 'Tests/Page',
   component: Page,
-  args: { title: 'Projects' },
+  args: { title: 'Title' },
 } satisfies Meta<typeof Page>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const project = 'argo-universal';
+const project = 'Content';
 
 const titleAndContent: Story = {
-  args: { title: 'Projects', children: <Text>{project}</Text> },
+  args: { title: 'Title', children: <Text>{project}</Text> },
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('heading', { level: 1, name: 'Projects' }),
+      canvas.getByRole('heading', { level: 1, name: 'Title' }),
     ).toBeVisible();
     await expect(canvas.getByText(project)).toBeVisible();
     await expect(
@@ -34,16 +34,16 @@ const titleAndContent: Story = {
 
 const changed = fn();
 
-const searchLabel = 'Search Projects';
+const searchLabel = 'Search';
 
-const primaryLabel = 'Add Project';
+const primaryLabel = 'Add';
 
 function SearchablePage(): React.JSX.Element {
   const [value, onChangeText] = useState('');
 
   return (
     <Page
-      title="Projects"
+      title="Title"
       search={{ label: searchLabel }}
       value={value}
       onChangeText={(text) => {
@@ -51,7 +51,7 @@ function SearchablePage(): React.JSX.Element {
         changed(text);
       }}
     >
-      <Text>{value || 'All Projects'}</Text>
+      <Text>{value || 'All'}</Text>
     </Page>
   );
 }
@@ -62,7 +62,7 @@ export const TitleAndContentWide = atWidth(widths.Wide, titleAndContent);
 
 const returned = fn();
 
-const caption = 'The Argo Server this App is talking to.';
+const caption = 'Caption';
 
 const drillIn = {
   title: project,
@@ -101,16 +101,16 @@ const searchAndClear: Story = {
     await userEvent.click(canvas.getByRole('button', { name: searchLabel }));
     await userEvent.type(
       canvas.getByRole('textbox', { name: searchLabel }),
-      'argo',
+      'query',
     );
-    await expect(canvas.getByText('argo')).toBeVisible();
-    await expect(changed).toHaveBeenLastCalledWith('argo');
+    await expect(canvas.getByText('query')).toBeVisible();
+    await expect(changed).toHaveBeenLastCalledWith('query');
     await userEvent.click(canvas.getByRole('button', { name: 'Close search' }));
     await waitFor(() =>
-      expect(canvas.getByRole('heading', { name: 'Projects' })).toBeVisible(),
+      expect(canvas.getByRole('heading', { name: 'Title' })).toBeVisible(),
     );
     await expect(canvas.queryByRole('textbox')).toBeNull();
-    await expect(canvas.getByText('All Projects')).toBeVisible();
+    await expect(canvas.getByText('All')).toBeVisible();
     await expect(changed).toHaveBeenLastCalledWith('');
   },
 };
@@ -124,7 +124,7 @@ const chosen = fn();
 // ActionList's own suite covers disabled and overflow Actions; this checks the Page draws and runs both kinds.
 const headerActions: Story = {
   args: {
-    title: 'Projects',
+    title: 'Title',
     primaryAction: (
       <Action label={primaryLabel} icon="add" onPress={() => chosen('add')} />
     ),
@@ -153,7 +153,7 @@ export const HeaderActionsWide = atWidth(widths.Wide, headerActions);
 
 export const DisabledPrimary: Story = {
   args: {
-    title: 'Projects',
+    title: 'Title',
     primaryAction: (
       <Action label={primaryLabel} icon="add" disabled onPress={chosen} />
     ),

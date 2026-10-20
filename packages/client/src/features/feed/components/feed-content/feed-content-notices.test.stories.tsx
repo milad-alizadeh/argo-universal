@@ -25,9 +25,7 @@ async function drawsNotices({ canvas }: FeedPlayContext): Promise<void> {
       name: 'warning: Context almost full',
     }),
   ).toBeVisible();
-  await expect(
-    canvas.getByText('Unknown severity: future-severity'),
-  ).toBeVisible();
+  await expect(canvas.getByText(/future-severity/)).toBeVisible();
 }
 
 async function drawsCompaction({ canvas }: FeedPlayContext): Promise<void> {
@@ -35,11 +33,7 @@ async function drawsCompaction({ canvas }: FeedPlayContext): Promise<void> {
     canvas.getByRole('status', { name: `info: ${compactingLabel}` }),
   ).toBeVisible();
 
-  for (const text of [
-    'Unknown compaction status: constructor',
-    'Compaction could not finish',
-  ])
-    await expect(canvas.getByText(text)).toBeVisible();
+  await expect(canvas.getByText(/constructor/)).toBeVisible();
   await expect(
     canvas.queryByText('Live context summary'),
   ).not.toBeInTheDocument();

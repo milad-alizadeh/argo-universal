@@ -15,7 +15,7 @@ const examples = [
   { label: 'Inline code', value: 'Run `pnpm test` before you push.' },
   {
     label: 'Link',
-    value: 'Read the [Composer spec](https://argo.dev/spec) before you start.',
+    value: 'Read the [the guide](https://example.com/guide) before you start.',
   },
   {
     label: 'Three lines',

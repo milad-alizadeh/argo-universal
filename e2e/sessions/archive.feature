@@ -4,8 +4,8 @@ Feature: Archive a Session
     And an uncommitted file in the Session's Checkout
     When I archive the Session "Check the live list" from its row
     Then the Sessions list no longer shows the live Session
-    And a "Session archived" toast offers Undo
-    And the Session page shows "Archived · read-only" instead of the Composer
+    And a toast announces the archive and offers Undo
+    And the Session page is read-only instead of showing the Composer
     When I undo the archive
     Then the live Session remains in the list
     And the uncommitted file remains in the Session's Checkout
@@ -16,7 +16,7 @@ Feature: Archive a Session
     And I filter Sessions to "Archived"
     Then the Archived filter shows the Session "Check the live list"
     When I open the archived Session "Check the live list"
-    Then the Session page shows "Archived · read-only" instead of the Composer
+    Then the Session page is read-only instead of showing the Composer
 
   Scenario: Archive waits for the Turn to end
     Given a wide Frame

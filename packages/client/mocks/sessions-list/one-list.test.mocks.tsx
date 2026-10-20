@@ -50,7 +50,7 @@ export function emptyCopy(
   }: Partial<Pick<SessionsView, 'group' | 'status'>> &
     Pick<Partial<SessionsListProps>, 'query'>,
   title: string,
-  message?: string,
+  message?: string | RegExp,
 ): Story {
   return {
     args: {

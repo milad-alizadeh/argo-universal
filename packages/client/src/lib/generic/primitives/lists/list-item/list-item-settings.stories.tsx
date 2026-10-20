@@ -38,12 +38,12 @@ export const RowDescription: StoryObj<typeof meta> = {
 
 function SplitSection(): React.JSX.Element {
   return (
-    <List.Section title="New Sessions">
+    <List.Section title="Section">
       <ListItem.Toggle
-        title="Start in a new worktree"
+        title="Toggle"
         value
-        onValueChange={action('start in')}
-        description="A new worktree keeps each Session's files apart."
+        onValueChange={action('toggle')}
+        description="Description"
       />
       <PickerExample />
       <StepperExample />
@@ -55,7 +55,7 @@ function SettingsRows(): React.JSX.Element {
   return (
     <List appearance="grouped" maxHeight={1000}>
       <List.Section>
-        <ProjectLink />
+        <LinkExample />
         <ToggleExample />
       </List.Section>
       <ControlSection />
@@ -70,10 +70,10 @@ function ToggleExample(): React.JSX.Element {
 
   return (
     <ListItem.Toggle
-      title="Fast mode"
+      title="Toggle"
       value={value}
       onValueChange={onValueChange}
-      description="Use the Agent's faster model when it offers one."
+      description="Description"
     />
   );
 }
@@ -101,7 +101,7 @@ function StepperExample(): React.JSX.Element {
 
   return (
     <ListItem.Stepper
-      title="Max Sessions"
+      title="Count"
       value={value}
       min={1}
       max={8}
@@ -111,7 +111,7 @@ function StepperExample(): React.JSX.Element {
 }
 
 function FieldExample(): React.JSX.Element {
-  const [value, onChangeText] = useState('Argo');
+  const [value, onChangeText] = useState('Value');
 
   return (
     <ListItem.TextField
@@ -125,8 +125,8 @@ function FieldExample(): React.JSX.Element {
 function Actions(): React.JSX.Element {
   return (
     <>
-      <ActionSection title="Sign in to GitHub" tone="accent" />
-      <ActionSection title="Remove Project" tone="danger" />
+      <ActionSection title="Accent action" tone="accent" />
+      <ActionSection title="Danger action" tone="danger" />
     </>
   );
 }
@@ -142,13 +142,9 @@ function ActionSection(props: {
   );
 }
 
-function ProjectLink(): React.JSX.Element {
+function LinkExample(): React.JSX.Element {
   return (
-    <ListItem.Link
-      title="Project"
-      value="Argo"
-      onPress={action('open Project')}
-    />
+    <ListItem.Link title="Link" value="Value" onPress={action('open link')} />
   );
 }
 

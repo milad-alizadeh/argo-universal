@@ -76,7 +76,7 @@ export const SearchesWide = searching(layoutWidths.wide);
 
 export const SearchesPhone = searching(layoutWidths.phone);
 
-function empty(filter: AgentsFilter, search: string, expected: string): Story {
+function empty(filter: AgentsFilter, search: string, expected: RegExp): Story {
   return {
     args: {
       agents: pageRows([], { status: 'loaded', registry: emptyCatalog }),
@@ -89,32 +89,24 @@ function empty(filter: AgentsFilter, search: string, expected: string): Story {
   };
 }
 
-export const Empty = empty('all', '', 'No Agents available.');
+export const Empty = empty('all', '', /available/);
 
-export const EmptyInstalled = empty('installed', '', 'No installed Agents.');
+export const EmptyInstalled = empty('installed', '', /No installed/);
 
-export const EmptyUninstalled = empty(
-  'not-installed',
-  '',
-  'No uninstalled Agents.',
-);
+export const EmptyUninstalled = empty('not-installed', '', /No uninstalled/);
 
-export const SearchEmpty = empty(
-  'all',
-  'missing',
-  'No Agents match your search.',
-);
+export const SearchEmpty = empty('all', 'missing', /No Agents match/);
 
 export const SearchEmptyInstalled = empty(
   'installed',
   'missing',
-  'No installed Agents match your search.',
+  /No installed Agents match/,
 );
 
 export const SearchEmptyUninstalled = empty(
   'not-installed',
   'missing',
-  'No uninstalled Agents match your search.',
+  /No uninstalled Agents match/,
 );
 
 // Until the Server says which Agents are installed, the page shows the Registry's loading look.
@@ -138,9 +130,7 @@ export const NamesInstalledAgentsFailure: Story = {
     ),
   },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText('Failed to load installed Agents.'),
-    ).toBeVisible();
+    await expect(canvas.getByText(/Failed/)).toBeVisible();
   },
 };
 

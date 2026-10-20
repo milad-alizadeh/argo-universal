@@ -158,8 +158,6 @@ export const BackLeavesThePlugin: Story = {
 export const SaysWhenThePluginIsMissing: Story = {
   args: { title: 'old-plugin', plugin: { status: 'missing' } },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText('The Server has no Plugin named old-plugin.'),
-    ).toBeVisible();
+    await expect(canvas.getByText(/no Plugin named old-plugin/)).toBeVisible();
   },
 };

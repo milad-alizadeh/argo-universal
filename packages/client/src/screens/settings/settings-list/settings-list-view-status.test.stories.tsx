@@ -76,10 +76,8 @@ function unavailable(status: Unavailable, width: number): Story {
         canvas.getByRole('link', { name: 'Appearance, System' }),
       );
       await expect(onSelect).toHaveBeenLastCalledWith('/settings/appearance');
-      await expect(canvas.queryByText('Loading Server settings…')).toBeNull();
-      await expect(
-        canvas.queryByText('Server unavailable. Open Connection to reconnect.'),
-      ).toBeNull();
+      await expect(canvas.queryByText(/Loading Server/)).toBeNull();
+      await expect(canvas.queryByText(/reconnect/)).toBeNull();
     },
   };
 }

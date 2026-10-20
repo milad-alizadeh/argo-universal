@@ -46,15 +46,15 @@ function Padding(): React.JSX.Element {
 }
 
 function InteractiveSurface(): React.JSX.Element {
-  const [status, setStatus] = useState('Open the Session');
+  const [status, setStatus] = useState('Press the surface');
 
-  const actions = archiveActions(() => setStatus('Session archived'));
+  const actions = archiveActions(() => setStatus('Archived'));
 
   return (
     <Surface
       kind="card"
       padding={4}
-      onPress={() => setStatus('Session opened')}
+      onPress={() => setStatus('Pressed')}
       actions={actions}
     >
       <Text>{status}</Text>
