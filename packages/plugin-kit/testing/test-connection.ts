@@ -10,13 +10,22 @@ type TestConnection = {
   surface: PluginSurface;
 };
 
+type ConnectionOptions = {
+  surface?: Pick<PluginSurface, 'platform'>;
+  connectionId?: string;
+};
+
 export function testConnection(
   signal: AbortSignal,
-  surface: Pick<PluginSurface, 'platform'> | undefined,
+  { surface, connectionId }: ConnectionOptions,
 ): TestConnection {
   return {
-    id: randomUUID(),
+    id: connectionId ?? randomUUID(),
     signal,
-    surface: currentPluginSurface(surface?.platform ?? 'web'),
+    surface: surfaceOf(surface),
   };
+}
+
+function surfaceOf(surface: ConnectionOptions['surface']): PluginSurface {
+  return currentPluginSurface(surface?.platform ?? 'web');
 }

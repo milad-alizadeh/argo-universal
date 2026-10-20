@@ -35,6 +35,7 @@ export class RuntimeResources {
 
   private lifecycle(): ViewLifecycle {
     return {
+      opened: (pluginId) => this.data.opened(pluginId),
       released: (viewId) => {
         this.data.releaseView(viewId);
         this.background.released(viewId);

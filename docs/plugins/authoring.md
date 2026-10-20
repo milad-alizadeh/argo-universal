@@ -106,6 +106,10 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 `find` matches a label, title, text, text content, or accessible label. It waits up to three seconds.
 The chosen surface sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
+`mount` accepts `projectId` for a Project page.
+Use the same `connectionId` on overlapping mounts to model subscriptions from one App Connection. Omitting it creates a fresh Connection.
+Closing a view releases only its subscription.
+
 For a Project details Slot, use the same input that the Server receives:
 
 ```ts

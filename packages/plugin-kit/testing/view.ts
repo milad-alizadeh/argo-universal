@@ -20,12 +20,14 @@ export type Opening = {
   slot?: PluginSlotInput;
   surface?: MountSurface;
   projectId?: string;
+  connectionId?: string;
 };
 
 export type PluginMount = {
   surface: MountSurface;
   pluginId?: string;
   projectId?: string;
+  connectionId?: string;
 } & ({ page: string } | { slot: PluginSlotInput });
 
 const viewLimitMs = 3000;
@@ -48,7 +50,7 @@ export class PluginTestView {
     private readonly pluginId: string,
     opening: Opening,
   ) {
-    this.connection = testConnection(this.controller.signal, opening.surface);
+    this.connection = testConnection(this.controller.signal, opening);
     this.path = opening.path;
     this.projectId = opening.projectId;
     void this.receive(opening).catch((error: Error) => {

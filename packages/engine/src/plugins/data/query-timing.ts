@@ -5,6 +5,7 @@ export class QueryTiming {
   private cancel: () => void = () => {};
   private lastAt: number | null = null;
   private dueAt = 0;
+  private remountDue = false;
 
   constructor(
     private readonly clock: PluginClock,
@@ -20,14 +21,19 @@ export class QueryTiming {
 
   makeDue(): void {
     this.dueAt = this.clock.now();
+    this.remountDue = true;
   }
 
   started(): void {
     this.cancel();
+    this.remountDue = false;
   }
 
   finished(watchers: QueryWatchers): void {
     this.lastAt = this.clock.now();
+
+    if (this.remountDue && !watchers.active) return;
+    this.remountDue = false;
     this.dueAt = this.lastAt + watchers.backgroundPeriod;
   }
 

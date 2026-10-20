@@ -31,12 +31,16 @@ export function createOpenView(
 ): OpenView {
   return {
     pluginId,
-    projectId: opening.slot?.context.projectId ?? opening.projectId,
+    projectId: projectOfOpening(opening),
     connectionId,
     events: viewEvents(),
     opening: { ...opening, type: 'open', viewId: createPluginViewId() },
     ...blankView(),
   };
+}
+
+export function projectOfOpening(opening: Opening): string | undefined {
+  return opening.slot?.context.projectId ?? opening.projectId;
 }
 
 function viewEvents(): OpenView['events'] {

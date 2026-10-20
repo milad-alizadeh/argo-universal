@@ -149,6 +149,7 @@ export class PluginViews {
     opening: Opening,
     connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
+    this.lifecycle.opened(pluginId);
     const reported = { ...opening, surface: connection.surface };
 
     const view = this.views.acquire(pluginId, reported, connection.id);

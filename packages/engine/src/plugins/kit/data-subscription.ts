@@ -27,6 +27,7 @@ export class DataSubscription {
   private pending = true;
   private latest = 0;
   private revision = -1;
+  private answer: PluginDataState['data'];
   seen = 0;
 
   constructor(
@@ -60,9 +61,11 @@ export class DataSubscription {
     this.pending = false;
 
     if (state.revision <= this.revision) return;
+    const published = withStableAnswer(state, this.answer);
+    this.answer = published.data;
     this.revision = state.revision;
     this.latest += 1;
-    this.changed({ state, version: this.latest });
+    this.changed({ state: published, version: this.latest });
   }
 
   private failed(error: Error): void {
@@ -77,4 +80,17 @@ export class DataSubscription {
       () => {},
     );
   }
+}
+
+function withStableAnswer(
+  state: PluginDataState,
+  answer: PluginDataState['data'],
+): PluginDataState {
+  if (answer === undefined) return state;
+
+  return metadataUpdate(state) ? { ...state, data: answer } : state;
+}
+
+function metadataUpdate(state: PluginDataState): boolean {
+  return state.stale || state.error !== undefined;
 }

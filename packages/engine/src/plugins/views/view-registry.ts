@@ -1,19 +1,30 @@
 import { PluginViewId } from '@repo/contracts/plugins/wire';
-import type { PluginEvent } from '@repo/contracts/plugins/wire';
+import type {
+  PluginEvent,
+  PluginViewInput,
+  PluginDispatchInput,
+} from '@repo/contracts/plugins/wire';
 import {
   createOpenView,
   createPluginViewId,
+  projectOfOpening,
   type OpenView,
   type Opening,
 } from './open-view';
 
+type ViewIdentity = Pick<PluginViewInput, 'pluginId' | 'path' | 'projectId'>;
+
+type ViewTarget = Pick<PluginDispatchInput, 'pluginId' | 'path' | 'viewId'>;
+
 export type ViewLifecycle = {
+  opened: (pluginId: string) => void;
   released: (viewId: PluginViewId) => void;
   received: (view: OpenView) => void;
   failed: (pluginId: string, message: string) => void;
 };
 
 export const noViewLifecycle: ViewLifecycle = {
+  opened: (): void => {},
   released: (): void => {},
   received: (): void => {},
   failed: (): void => {},
@@ -44,21 +55,30 @@ export class ViewRegistry {
     return this.views.get(viewId);
   }
 
-  find(
-    connectionId: string,
-    input: { pluginId: string; path: string },
-  ): OpenView | undefined {
-    return this.values().find((view) => matches(view, connectionId, input));
+  find(connectionId: string, input: ViewTarget): OpenView | undefined {
+    const view = this.get(input.viewId);
+
+    return view && matches(view, connectionId, input) ? view : undefined;
   }
 
   acquire(pluginId: string, opening: Opening, connectionId: string): OpenView {
     const view =
-      this.find(connectionId, { pluginId, path: opening.path }) ??
-      this.open(pluginId, opening, connectionId);
+      this.page(connectionId, {
+        pluginId,
+        path: opening.path,
+        projectId: projectOfOpening(opening),
+      }) ?? this.open(pluginId, opening, connectionId);
 
     view.watchers += 1;
 
     return view;
+  }
+
+  private page(
+    connectionId: string,
+    identity: ViewIdentity,
+  ): OpenView | undefined {
+    return this.values().find((view) => samePage(view, connectionId, identity));
   }
 
   open(pluginId: string, opening: Opening, connectionId: string): OpenView {
@@ -92,10 +112,21 @@ export class ViewRegistry {
   }
 }
 
+function samePage(
+  view: OpenView,
+  connectionId: string,
+  identity: ViewIdentity,
+): boolean {
+  return (
+    matches(view, connectionId, identity) &&
+    view.projectId === identity.projectId
+  );
+}
+
 function matches(
   view: OpenView,
   connectionId: string,
-  input: { pluginId: string; path: string },
+  input: Pick<ViewIdentity, 'pluginId' | 'path'>,
 ): boolean {
   return (
     view.connectionId === connectionId &&

@@ -64,8 +64,6 @@ export class PluginData {
     view: OpenView,
     request: QueryWatch,
   ): PluginDataState {
-    if (view.backgroundInterval === undefined) this.mounted(caller.pluginId);
-
     return this.entry(caller, view, request.query).watch(view, request);
   }
 
@@ -138,7 +136,7 @@ export class PluginData {
       entry.storageWritten();
   }
 
-  mounted(pluginId: string): void {
+  opened(pluginId: string): void {
     for (const entry of this.entriesOf(pluginId).values())
       entry.suspended = false;
   }
