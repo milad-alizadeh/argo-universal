@@ -45,7 +45,10 @@ export const FocusExistingTab: Story = {
 
     await openBoth(context);
     await userEvent.click(canvas.getByRole('tab', changesName));
-    await expect(canvas.queryByText(firstTitle)).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('tabpanel', subagentsName),
+    ).not.toBeInTheDocument();
+    await expect(canvas.getByRole('tabpanel', changesName)).toBeVisible();
     await userEvent.click(canvas.getByRole('button', subagentsName));
     await expect(canvas.getAllByRole('tab', subagentsTab)).toHaveLength(1);
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
