@@ -47,11 +47,15 @@ const phoneRemove = {
 } as const;
 
 const removeFit = Platform.select({
+  /*
+   * Paper's disc, the one the phones took: 10 with its 6 mark, tight in the corner, rather than the xs button that
+   * stood a third as wide as the tile. hitSlop keeps a pointer's target; the web's own disc stays filled.
+   */
   web: {
     variant: 'filled',
-    iconRole: 'secondary',
-    className: 'right-1 top-1',
-    hitSlop: undefined,
+    iconRole: 'badge',
+    className: 'right-1.25 top-1.25 size-2.5 sm:size-2.5 min-h-0 min-w-0',
+    hitSlop: 9,
   },
   android: {
     ...phoneRemove,
