@@ -12,7 +12,6 @@ import {
 import { ElicitationPreview } from './session-detail-view-elicitation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
-  pullRequestMocks,
   severalPullRequests,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
@@ -36,37 +35,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = { name: 'SessionDetailScreen' };
-
-export const ChecksRunning: Story = {
-  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(runningSession, [pullRequestMocks.checksRunning]),
-    },
-  },
-};
-
-export const ChecksFailing: Story = {
-  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(runningSession, [pullRequestMocks.checksFailing]),
-    },
-  },
-};
-
-// Every check passed, so Merge PR is ready.
-export const ChecksPassed: Story = {
-  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
-    },
-  },
-};
 
 export const SeveralPullRequests: Story = {
   render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
