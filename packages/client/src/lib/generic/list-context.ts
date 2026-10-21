@@ -1,6 +1,5 @@
 import type { KitSchemaProps } from '@repo/contracts/kit-props';
 import { createContext } from 'react';
-import type { RowGroupEnds } from './row-group-ends';
 
 export type ListAppearance = NonNullable<KitSchemaProps['List']['appearance']>;
 
@@ -20,8 +19,6 @@ export const ListContext = createContext<
     inList?: boolean;
     // The row's place among its List's rows, for the separators a pressed neighbour covers.
     index?: number;
-    // The List's rows that end their group, so the row after one opens a new group.
-    groupEnds?: RowGroupEnds;
   }
 >({ appearance: 'plain', position: 'only' });
 

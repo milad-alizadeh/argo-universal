@@ -1,14 +1,13 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { useListItemGroup } from '#primitives/lists/list';
 import { ProgressBar } from '#primitives/status/progress-bar';
-import { ListContext, type ListPosition } from '../../../list-context';
-import { ListFooter } from '../../../list-footer';
+import { ListContext } from '../../../list-context';
 import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
-import { useGroupPosition } from './list-item-group';
 import { hasLeading, LinkAccessory, separatorClass } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
@@ -74,35 +73,15 @@ function Selection({
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
-  const list = useContext(ListContext);
-  const position = useGroupPosition(props.description);
+  const { context, footer } = useListItemGroup(props.description);
 
   return (
     <InListItem value>
-      <ListContext value={{ ...list, position }}>
+      <ListContext value={context}>
         <ItemSurface {...props} />
       </ListContext>
-      <RowFooter description={props.description} position={list.position} />
+      {footer}
     </InListItem>
-  );
-}
-
-const sectionEnds = new Set<ListPosition>(['last', 'only']);
-
-const footerGap = (position: ListPosition): string | undefined =>
-  sectionEnds.has(position) ? undefined : 'mb-4';
-
-// iOS: a row's description closes its group; a section's gap separates it from the group after it.
-function RowFooter(props: {
-  description?: string;
-  position: ListPosition;
-}): ReactNode {
-  if (!props.description || Platform.OS !== 'ios') return null;
-
-  return (
-    <View className={footerGap(props.position)}>
-      <ListFooter text={props.description} />
-    </View>
   );
 }
 

@@ -1,12 +1,12 @@
-import { useContext, useId, useMemo, type ReactElement } from 'react';
+import { useId, useMemo, type ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { ListContext } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { childEntries, menuEntries, type ListChild } from './list-children';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
+import { ListGrouping, FixedListRow } from './list-grouping';
 import { ListKeyboard } from './list-keyboard';
 import { ListMenuRows } from './list-menu-rows';
 import type { ListProps } from './list-props';
@@ -57,45 +57,16 @@ const fill = { flex: 1, minWidth: '100%' } as const;
 // Its fades blend into the surface behind the list: a popover's card, else the page.
 function DataList<Item>(props: ListProps<Item>): ReactElement {
   return (
-    <RowHighlightProvider>
-      <ScrollFadeList
-        surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
-        style={fill}
-        {...useDataListProps(props)}
-      />
-    </RowHighlightProvider>
+    <ListGrouping list={props}>
+      <RowHighlightProvider>
+        <ScrollFadeList
+          surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
+          style={fill}
+          {...useDataListProps(props)}
+        />
+      </RowHighlightProvider>
+    </ListGrouping>
   );
-}
-
-function ChildRow({
-  item,
-  appearance,
-}: {
-  item: ListChild;
-  appearance: ListProps<never>['appearance'];
-}): ReactElement {
-  // Keeps the row's index from the List's own row.
-  const row = useContext(ListContext);
-
-  return (
-    <ListContext value={{ ...row, ...childContext(item, appearance) }}>
-      {item.content}
-    </ListContext>
-  );
-}
-
-function childContext(
-  item: ListChild,
-  appearance: ListProps<never>['appearance'],
-): React.ContextType<typeof ListContext> {
-  return {
-    appearance: appearance ?? 'plain',
-    position: item.position,
-    inList: true,
-    selectionMode: item.selectionMode,
-    selection: item.selection,
-    onSelectionChange: item.onSelectionChange,
-  };
 }
 
 function useChildEntries(children: ChildrenOptions['children']): ListChild[] {
@@ -130,7 +101,7 @@ function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
 function childRenderer(
   appearance: ListProps<never>['appearance'],
 ): (item: ListChild) => ReactElement {
-  return (item) => <ChildRow item={item} appearance={appearance} />;
+  return (item) => <FixedListRow item={item} appearance={appearance} />;
 }
 
 function childMaxHeight(

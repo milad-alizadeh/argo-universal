@@ -2,15 +2,12 @@ import { isValidElement, type ReactNode, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import { FooterProvider } from '#primitives/fields/field-description';
 import { flattenedChildren } from '../../../flattened-children';
-import {
-  listPosition,
-  type ListPosition,
-  type ListSelection,
-} from '../../../list-context';
+import { type ListPosition, type ListSelection } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { useSectionDrawing } from '../../../list-section-drawing';
 import { useInMenu } from '../../../menu-rows-context';
 import type { ListSectionProps } from './list-props';
+import { rowPosition } from './list-row-position';
 import { ListSection } from './list-section';
 import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
@@ -121,7 +118,7 @@ export function childEntries(children: ReactNode, prefix = ''): ListChild[] {
     entriesOf(
       child,
       entryKey(child, prefix, index),
-      listPosition(index === 0, index === entries.length - 1),
+      rowPosition(index, entries.length),
     ),
   );
 }
