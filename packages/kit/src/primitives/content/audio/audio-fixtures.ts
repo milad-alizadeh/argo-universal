@@ -10,8 +10,3 @@ export const pausedAudio = {
   source: chime,
   accessibilityLabel: 'Chime',
 } satisfies AudioProps;
-
-export const failedAudio = {
-  source: chime,
-  accessibilityLabel: 'Chime',
-} satisfies AudioProps;

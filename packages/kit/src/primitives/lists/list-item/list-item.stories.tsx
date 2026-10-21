@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { kitArgTypes } from '#kit/kit-arg-types';
+import { effortSlider } from '#kit/primitives/inputs/slider/slider-fixtures';
 import { Slider } from '#primitives/inputs/slider';
 import { List } from '#primitives/lists/list';
 import { ListItem } from './index';
@@ -10,7 +11,6 @@ import {
   controlListItem,
   defaultListItem,
   disabledListItem,
-  effortSlider,
   loadingListItem,
   mutedListItem,
   progressListItem,

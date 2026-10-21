@@ -5,7 +5,11 @@ import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { SplitButton } from './split-button';
-import { actionsSplitButton } from './split-button-fixtures';
+import {
+  actionsSplitButton,
+  choicesSplitButton,
+  narrowSplitButton,
+} from './split-button-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Actions/SplitButton',
@@ -26,34 +30,22 @@ export default meta;
 // SplitButtonProps is a union (an acting half or a menu-only split), so stories type against the component.
 type Story = StoryObj<typeof SplitButton>;
 
-type MergeMethod = 'squash' | 'merge' | 'rebase';
+type ChoicesProps = typeof choicesSplitButton & { fullWidth?: boolean };
 
-const mergeMethods = [
-  { value: 'squash', label: 'Option one' },
-  { value: 'merge', label: 'Option two' },
-  { value: 'rebase', label: 'Option three' },
-] as const;
+// The chosen method is controlled by the story, so each state keeps a render.
+function MergeSplit(props: ChoicesProps): React.JSX.Element {
+  const [method, setMethod] = useState('squash');
 
-// One action, its method chosen from the menu: the value is controlled, so this keeps a render.
-function MergeSplit(props: { narrow?: boolean }): React.JSX.Element {
-  const [method, setMethod] = useState<MergeMethod>('squash');
-
-  return (
-    <SplitButton
-      primary
-      fullWidth={props.narrow}
-      menuLabel="Options"
-      options={mergeMethods}
-      value={method}
-      onValueChange={setMethod}
-      label="Merge"
-    />
-  );
+  return <SplitButton {...props} value={method} onValueChange={setMethod} />;
 }
 
-export const Choices: Story = { render: () => <MergeSplit /> };
+export const Choices: Story = {
+  render: () => <MergeSplit {...choicesSplitButton} />,
+};
 
-export const Narrow: Story = { render: () => <MergeSplit narrow /> };
+export const Narrow: Story = {
+  render: () => <MergeSplit {...narrowSplitButton} />,
+};
 
 export const Actions: Story = {
   args: {

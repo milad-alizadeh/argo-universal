@@ -8,11 +8,21 @@ import { Picker } from './picker';
 import {
   disabledPicker,
   loadingOptionsPicker,
+  multipleDisabledPicker,
+  multipleInvalidPicker,
+  multipleLoadingOptionsPicker,
+  multipleNoOptionsPicker,
+  multipleNoneSelectedPicker,
+  multipleOneSelectedPicker,
+  multipleOptionsUnavailablePicker,
+  multiplePreviousChoiceUnavailablePicker,
+  multipleSeveralSelectedPicker,
   noOptionsPicker,
   optionsUnavailablePicker,
   placeholderPicker,
   previousChoiceUnavailablePicker,
   requiredWithErrorPicker,
+  rowPicker,
   searchableListPicker,
   selectedPicker,
 } from './picker-fixtures';
@@ -56,7 +66,7 @@ export const Row: Story = {
       <ListSection title="ListItem accessory">
         <ListItem
           title="Effort"
-          trailing={<PickerExample {...args} value="medium" variant="row" />}
+          trailing={<PickerExample {...args} {...rowPicker} />}
         />
       </ListSection>
     </List>
@@ -93,48 +103,55 @@ export const SearchableList: Story = {
 };
 
 export const MultipleNoneSelected: Story = {
-  render: (): React.JSX.Element => <MultipleExample />,
+  render: (): React.JSX.Element => (
+    <MultipleExample {...multipleNoneSelectedPicker} />
+  ),
 };
 
 export const MultipleOneSelected: Story = {
-  render: (): React.JSX.Element => <MultipleExample value={['bug']} />,
+  render: (): React.JSX.Element => (
+    <MultipleExample {...multipleOneSelectedPicker} />
+  ),
 };
 
 export const MultipleSeveralSelected: Story = {
   render: (): React.JSX.Element => (
-    <MultipleExample value={['bug', 'feature', 'docs']} />
+    <MultipleExample {...multipleSeveralSelectedPicker} />
   ),
 };
 
 export const MultipleDisabled: Story = {
   render: (): React.JSX.Element => (
-    <MultipleExample value={['bug', 'feature']} disabled />
+    <MultipleExample {...multipleDisabledPicker} />
   ),
 };
 
 export const MultipleLoadingOptions: Story = {
-  render: (): React.JSX.Element => <MultipleExample loading />,
+  render: (): React.JSX.Element => (
+    <MultipleExample {...multipleLoadingOptionsPicker} />
+  ),
 };
 
 export const MultipleNoOptions: Story = {
-  render: (): React.JSX.Element => <MultipleExample options={[]} />,
+  render: (): React.JSX.Element => (
+    <MultipleExample {...multipleNoOptionsPicker} />
+  ),
 };
 
 export const MultipleOptionsUnavailable: Story = {
   render: (): React.JSX.Element => (
-    <MultipleExample loadError="Could not load labels" />
+    <MultipleExample {...multipleOptionsUnavailablePicker} />
   ),
 };
 
 export const MultiplePreviousChoiceUnavailable: Story = {
-  render: (): React.JSX.Element => <MultipleExample value={['removed']} />,
+  render: (): React.JSX.Element => (
+    <MultipleExample {...multiplePreviousChoiceUnavailablePicker} />
+  ),
 };
 
 export const MultipleInvalid: Story = {
   render: (): React.JSX.Element => (
-    <MultipleExample
-      required
-      errors={[{ message: 'Choose at least one label.' }]}
-    />
+    <MultipleExample {...multipleInvalidPicker} />
   ),
 };

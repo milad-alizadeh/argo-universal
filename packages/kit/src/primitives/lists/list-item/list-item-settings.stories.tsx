@@ -5,6 +5,7 @@ import { action } from 'storybook/actions';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from '#primitives/lists/list';
 import { ListItem } from './index';
+import { settingsList } from './list-item-settings-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Lists/ListItem/Settings',
@@ -31,7 +32,7 @@ export const Settings: StoryObj<typeof meta> = {
 export const RowDescription: StoryObj<typeof meta> = {
   render: () => (
     <View className="w-90 flex-1">
-      <List appearance="grouped" maxHeight={1000}>
+      <List {...settingsList}>
         <SplitSection />
       </List>
     </View>
@@ -55,7 +56,7 @@ function SplitSection(): React.JSX.Element {
 
 function SettingsRows(): React.JSX.Element {
   return (
-    <List appearance="grouped" maxHeight={1000}>
+    <List {...settingsList}>
       <List.Section>
         <LinkExample />
         <ToggleExample />

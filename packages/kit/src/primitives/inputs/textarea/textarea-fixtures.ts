@@ -13,3 +13,8 @@ export const readOnlyTextarea = {
   placeholder,
   disabled: true,
 } satisfies TextareaProps;
+
+// React Native declares no invalid attribute, so the box reads the web one, outside the props type.
+export const invalidTextarea = {
+  'aria-invalid': true,
+} satisfies TextareaProps & { 'aria-invalid'?: boolean };

@@ -1,9 +1,9 @@
-import { serviceMapXml } from '#kit/primitives/visual/svg-fixtures';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
 import { Pill } from '#primitives/status/pill';
 import { Svg } from '#primitives/visual';
+import { serviceMapXml } from '../../../../mocks/service-map-svg';
 import type { CardProps } from './card-props';
 
 export const titleOnlyCard = { title: 'api-gateway' } satisfies CardProps;

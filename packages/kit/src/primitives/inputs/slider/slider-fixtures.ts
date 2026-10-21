@@ -27,3 +27,13 @@ export const disabledSlider = {
   value: 1,
   disabled: true,
 } satisfies SliderFixture;
+
+// The effort row's slider, which the ListItem Control story draws.
+export const effortSlider = {
+  accessibilityLabel: 'Effort',
+  valueLabel: 'High',
+  minimumValue: 0,
+  maximumValue: 3,
+  step: 1,
+  value: 2,
+} satisfies SliderFixture;

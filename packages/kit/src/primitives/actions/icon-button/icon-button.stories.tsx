@@ -2,11 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { logoSources } from '../../../symbols/logo-source';
 import { Text } from '../../content/text';
 import { IconButton } from './icon-button';
 import {
   badgeIconButton,
+  bleedLogoIconButton,
+  bleedWebIconButton,
   defaultIconButton,
   disabledIconButton,
   extraLargeIconButton,
@@ -58,13 +59,6 @@ export const Loading: Story = { args: loadingIconButton };
 
 export const Badge: Story = { args: badgeIconButton };
 
-const metaLinkProps = {
-  size: 'xs',
-  variant: 'ghost',
-  iconTone: 'muted',
-  bleed: true,
-} as const;
-
 /*
  * Each glyph sits on the text line and the row's gap; its hit area bleeds past it.
  * A logo and a symbol side by side, so the row keeps its own render.
@@ -75,12 +69,8 @@ export const Bleed: Story = {
       <Text role="secondary" tone="muted">
         v1.0.0
       </Text>
-      <IconButton
-        {...metaLinkProps}
-        iconSource={logoSources.github}
-        accessibilityLabel="Link"
-      />
-      <IconButton {...metaLinkProps} icon="web" accessibilityLabel="Web" />
+      <IconButton {...bleedLogoIconButton} />
+      <IconButton {...bleedWebIconButton} />
     </View>
   ),
 };

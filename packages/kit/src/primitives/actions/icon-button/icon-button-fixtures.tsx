@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { logoSources } from '../../../symbols/logo-source';
 import type { IconButtonProps } from './icon-button-props';
 
 const filterDot: React.JSX.Element = (
@@ -58,6 +59,25 @@ export const disabledIconButton = {
 export const loadingIconButton = {
   ...defaultIconButton,
   loading: true,
+} satisfies IconButtonProps;
+
+const bleed = {
+  size: 'xs',
+  variant: 'ghost',
+  iconTone: 'muted',
+  bleed: true,
+} as const;
+
+export const bleedLogoIconButton = {
+  ...bleed,
+  iconSource: logoSources.github,
+  accessibilityLabel: 'Link',
+} satisfies IconButtonProps;
+
+export const bleedWebIconButton = {
+  ...bleed,
+  icon: 'web',
+  accessibilityLabel: 'Web',
 } satisfies IconButtonProps;
 
 export const badgeIconButton = {

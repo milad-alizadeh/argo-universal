@@ -1,4 +1,3 @@
-import { Slider } from '#primitives/inputs/slider';
 import { Pill } from '#primitives/status/pill';
 import type { ListItemProps } from './list-item-props';
 
@@ -28,15 +27,6 @@ export const statusBadgeListItem = {
   subtitle: 'Subtitle',
   badge: { kind: 'status', tone: 'warning', label: 'Warning' },
 } satisfies ListItemProps;
-
-export const effortSlider = {
-  accessibilityLabel: 'Effort',
-  valueLabel: 'High',
-  minimumValue: 0,
-  maximumValue: 3,
-  step: 1,
-  value: 2,
-} satisfies Omit<React.ComponentProps<typeof Slider>, 'onValueChange'>;
 
 export const controlListItem = {
   title: 'Effort',

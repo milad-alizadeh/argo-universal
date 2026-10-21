@@ -5,9 +5,9 @@ import { Textarea } from './textarea';
 import {
   emptyTextarea,
   filledTextarea,
+  invalidTextarea,
   readOnlyTextarea,
 } from './textarea-fixtures';
-import type { TextareaProps } from './textarea-props';
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Textarea',
@@ -27,11 +27,8 @@ export const Filled: Story = { args: filledTextarea };
 
 export const ReadOnly: Story = { args: readOnlyTextarea };
 
-// React Native declares no invalid attribute, so the box reads the web one, outside the props type.
-const invalid: TextareaProps & { 'aria-invalid'?: boolean } = {
-  'aria-invalid': true,
-};
-
 export const Invalid: Story = {
-  render: (args): React.JSX.Element => <Textarea {...args} {...invalid} />,
+  render: (args): React.JSX.Element => (
+    <Textarea {...args} {...invalidTextarea} />
+  ),
 };

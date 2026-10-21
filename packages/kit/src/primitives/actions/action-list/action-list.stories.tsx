@@ -3,52 +3,13 @@ import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { ListItem } from '#primitives/lists/list-item';
 import { ChoiceExample } from './action-list-choice.mocks';
-import { Action, ActionList, type PressActionProps } from './index';
-
-interface DemoAction extends Omit<PressActionProps, 'onPress'> {
-  result: string;
-}
-
-const sessions: DemoAction[] = [
-  {
-    label: 'Rename',
-    icon: 'rename',
-    shortcut: { modifiers: [], key: 'Enter' },
-    result: 'Ready to rename',
-  },
-  {
-    label: 'Copy link',
-    icon: 'copy',
-    shortcut: { modifiers: ['meta', 'shift'], key: 'c' },
-    result: 'Link copied',
-  },
-  {
-    label: 'Archive',
-    icon: 'archive',
-    shortcut: { modifiers: ['meta'], key: 'Backspace' },
-    result: 'Archived',
-  },
-];
-
-const issues: DemoAction[] = [
-  { label: 'Assign', icon: 'agent', result: 'Assigned to you' },
-  { label: 'Change status', icon: 'check', disabled: true, result: '' },
-  { label: 'Delete', icon: 'delete', tone: 'danger', result: 'Deleted' },
-];
-
-const projects: DemoAction[] = [
-  { label: 'Add', icon: 'add', result: 'Added' },
-  {
-    label: 'Create',
-    icon: 'branch',
-    result: 'Created',
-  },
-  {
-    label: 'Show archived',
-    icon: 'archive',
-    result: 'Showing archived',
-  },
-];
+import {
+  contextMenuActionList,
+  type DemoAction,
+  destructiveActionList,
+  pageActions,
+} from './action-list-fixtures';
+import { Action, ActionList } from './index';
 
 const meta = {
   title: 'Design System/Primitives/Actions/ActionList',
@@ -75,7 +36,7 @@ export const Choice: Story = {
 };
 
 export const ContextMenu: Story = {
-  render: () => <RowExample title="Item" actions={sessions} />,
+  render: () => <RowExample {...contextMenuActionList} />,
   parameters: {
     docs: {
       description: {
@@ -86,7 +47,7 @@ export const ContextMenu: Story = {
 };
 
 export const Destructive: Story = {
-  render: () => <RowExample title="Another item" actions={issues} />,
+  render: () => <RowExample {...destructiveActionList} />,
   parameters: {
     docs: {
       description: {
@@ -102,7 +63,7 @@ function PageExample(): React.JSX.Element {
   return (
     <>
       <ListItem title={result} />
-      <ActionList>{demoActions(projects, setResult)}</ActionList>
+      <ActionList>{demoActions(pageActions, setResult)}</ActionList>
     </>
   );
 }

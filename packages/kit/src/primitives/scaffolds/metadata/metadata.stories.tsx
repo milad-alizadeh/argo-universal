@@ -4,7 +4,11 @@ import { Platform, View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from '#primitives/lists/list';
 import { Metadata } from './metadata';
-import { longPathMetadata, readOnlyFieldsMetadata } from './metadata-fixtures';
+import {
+  groupedPathMetadata,
+  longPathMetadata,
+  readOnlyFieldsMetadata,
+} from './metadata-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Metadata',
@@ -34,9 +38,7 @@ export const LongPath: Story = {
 export const InAGroupedList: Story = {
   render: () => (
     <List appearance="grouped" maxHeight={400}>
-      <Metadata title="Section">
-        <Metadata.Label title="Path" text="~/Folder/item" />
-      </Metadata>
+      <Metadata {...groupedPathMetadata} />
     </List>
   ),
 };

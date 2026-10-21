@@ -1,6 +1,6 @@
 import type { ComboboxProps } from './combobox-props';
 
-export const options = [
+const options = [
   {
     value: 'long',
     label: 'long-folder-name',
@@ -31,4 +31,10 @@ export const defaultCombobox = {
   value: 'long',
   options,
   searchPlaceholder: 'Find a folder…',
+} satisfies Omit<ComboboxProps<string>, 'onValueChange'>;
+
+export const rowCombobox = {
+  ...defaultCombobox,
+  variant: 'row',
+  title: 'Select folder',
 } satisfies Omit<ComboboxProps<string>, 'onValueChange'>;

@@ -2,19 +2,17 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
 import { Audio } from './audio';
-import { failedAudio, pausedAudio } from './audio-fixtures';
-import { AudioTransport, type AudioTransportProps } from './audio-transport';
+import { pausedAudio } from './audio-fixtures';
+import { AudioTransport } from './audio-transport';
+import {
+  loadingAudioTransport,
+  playingAudioTransport,
+} from './audio-transport-fixtures';
 
 // A source the browser refuses at once, with no network.
 const missing: MediaUrl = () => 'data:audio/mpeg;base64,AAAA';
 
 const ignore = (): void => undefined;
-
-const transport = {
-  label: 'Chime',
-  onToggle: ignore,
-  onSeek: ignore,
-} satisfies Partial<AudioTransportProps>;
 
 const meta = {
   title: 'Design System/Primitives/Content/Audio',
@@ -36,10 +34,9 @@ export const Paused: Story = { args: pausedAudio };
 export const Playing: Story = {
   render: () => (
     <AudioTransport
-      {...transport}
-      phase="playing"
-      currentTime={47}
-      duration={192}
+      {...playingAudioTransport}
+      onToggle={ignore}
+      onSeek={ignore}
     />
   ),
 };
@@ -47,16 +44,15 @@ export const Playing: Story = {
 export const Loading: Story = {
   render: () => (
     <AudioTransport
-      {...transport}
-      phase="loading"
-      currentTime={0}
-      duration={0}
+      {...loadingAudioTransport}
+      onToggle={ignore}
+      onSeek={ignore}
     />
   ),
 };
 
 export const Failed: Story = {
-  args: failedAudio,
+  args: pausedAudio,
   render: (args) => (
     <MediaUrlContext.Provider value={missing}>
       <Audio {...args} />

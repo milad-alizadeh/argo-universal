@@ -1,4 +1,4 @@
-import type { SinglePickerProps } from './picker-props';
+import type { MultiplePickerProps, SinglePickerProps } from './picker-props';
 
 type PickerFixture = Omit<SinglePickerProps<string>, 'onValueChange'>;
 
@@ -74,3 +74,72 @@ export const searchableListPicker = {
   label,
   options: longOptions,
 } satisfies PickerFixture;
+
+export const rowPicker = {
+  label,
+  options,
+  value: 'medium',
+  variant: 'row',
+} satisfies PickerFixture;
+
+type MultiplePickerFixture = Omit<MultiplePickerProps<string>, 'onValueChange'>;
+
+const labels = [
+  { value: 'bug', label: 'Bug' },
+  { value: 'feature', label: 'Feature' },
+  { value: 'docs', label: 'Docs' },
+  { value: 'chore', label: 'Chore' },
+] as const;
+
+const multiple = {
+  label: 'Labels',
+  placeholder: 'Choose labels',
+  options: labels,
+  multiple: true,
+} as const;
+
+export const multipleNoneSelectedPicker = {
+  ...multiple,
+} satisfies MultiplePickerFixture;
+
+export const multipleOneSelectedPicker = {
+  ...multiple,
+  value: ['bug'],
+} satisfies MultiplePickerFixture;
+
+export const multipleSeveralSelectedPicker = {
+  ...multiple,
+  value: ['bug', 'feature', 'docs'],
+} satisfies MultiplePickerFixture;
+
+export const multipleDisabledPicker = {
+  ...multiple,
+  value: ['bug', 'feature'],
+  disabled: true,
+} satisfies MultiplePickerFixture;
+
+export const multipleLoadingOptionsPicker = {
+  ...multiple,
+  loading: true,
+} satisfies MultiplePickerFixture;
+
+export const multipleNoOptionsPicker = {
+  ...multiple,
+  options: [],
+} satisfies MultiplePickerFixture;
+
+export const multipleOptionsUnavailablePicker = {
+  ...multiple,
+  loadError: 'Could not load labels',
+} satisfies MultiplePickerFixture;
+
+export const multiplePreviousChoiceUnavailablePicker = {
+  ...multiple,
+  value: ['removed'],
+} satisfies MultiplePickerFixture;
+
+export const multipleInvalidPicker = {
+  ...multiple,
+  required: true,
+  errors: [{ message: 'Choose at least one label.' }],
+} satisfies MultiplePickerFixture;

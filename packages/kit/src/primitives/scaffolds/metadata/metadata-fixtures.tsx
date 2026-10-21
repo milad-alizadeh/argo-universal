@@ -10,3 +10,8 @@ export const readOnlyFieldsMetadata = { ...fields } satisfies MetadataProps;
 export const longPathMetadata = {
   children: <Metadata.Label title="Path" text={longPath} />,
 } satisfies MetadataProps;
+
+export const groupedPathMetadata = {
+  title: 'Section',
+  children: <Metadata.Label title="Path" text="~/Folder/item" />,
+} satisfies MetadataProps;
