@@ -6,7 +6,7 @@ import type { OpenSessionViewProps } from './session-detail-view';
 const sessionPullRequest = {
   number: 45,
   title: 'Build the Session layout from spec 0003',
-  status: 'open',
+  stage: 'open',
   mergeable: false,
 } satisfies SessionPullRequest;
 
@@ -27,7 +27,8 @@ export const pullRequestMocks = {
   followUp: {
     number: 46,
     title: 'Wire the Inspector to the changed files',
-    status: 'draft',
+    stage: 'open',
+    modifier: 'draft',
     mergeable: false,
   },
 } satisfies Record<string, SessionPullRequest>;

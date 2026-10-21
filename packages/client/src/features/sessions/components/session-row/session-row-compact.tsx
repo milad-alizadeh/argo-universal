@@ -3,10 +3,8 @@ import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
-import {
-  PullRequestIcon,
-  pullRequestStatusLabels,
-} from '../pull-request-indicator/pull-request-indicator';
+import { ChangeStageIcon } from '../change-stage/change-stage';
+import { changeDescription } from '../change-stage/change-stage-model';
 import { SessionMark } from './session-row-mark';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { compactGlyphRole, sidebarDrawing } from './session-row-sidebar';
@@ -14,12 +12,10 @@ import { compactStatusDot } from './session-row-status';
 
 type CompactEndProps = Pick<SessionRowProps, 'session' | 'pullRequest' | 'age'>;
 
-// Its PR's glyph, without the number; with no PR, how long ago the Session was active.
+// Its Change's glyph, without the number; with no Change, how long ago the Session was active.
 function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
   if (pullRequest)
-    return (
-      <PullRequestIcon status={pullRequest.status} role={compactGlyphRole} />
-    );
+    return <ChangeStageIcon {...pullRequest} role={compactGlyphRole} />;
 
   return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
 }
@@ -39,14 +35,14 @@ function compactTrailing(props: CompactEndProps): React.ReactNode {
   );
 }
 
-// The glyph carries no text, so the row's label names the PR's state.
+// The glyph carries no text, so the row's label names the Change's state.
 function compactLabel(props: SessionRowProps): string {
   const label = sessionRowLabel(props.session);
   const { pullRequest } = props;
 
   if (!pullRequest) return label;
 
-  return `${label}, ${pullRequestStatusLabels[pullRequest.status]} PR`;
+  return `${label}, ${changeDescription(pullRequest)} Change`;
 }
 
 // The row opens its Session; Android's context menu hands it its long press.
