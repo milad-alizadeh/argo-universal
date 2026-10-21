@@ -11,6 +11,8 @@ interface Props {
   icon: IconName;
   onOpen: () => void;
   collapsible?: boolean;
+  summary?: ReactNode;
+  interactive?: boolean;
   testID: string;
   children: ReactNode;
 }
@@ -40,7 +42,8 @@ function CardContents(props: HeadingProps): ReactElement {
   return (
     <View className="gap-2">
       <WorkbenchHeading {...props} />
-      {props.open && <BodyAction {...props} />}
+      {props.open &&
+        (props.interactive ? props.children : <BodyAction {...props} />)}
     </View>
   );
 }
@@ -62,6 +65,8 @@ function WorkbenchHeading(props: HeadingProps): ReactElement {
     <View className="flex-row items-center gap-2 pt-3 pr-4 pl-1">
       <HeadingAction {...props} />
       {props.collapsible && <Disclosure {...props} />}
+      <View className="flex-1" />
+      {props.summary}
     </View>
   );
 }

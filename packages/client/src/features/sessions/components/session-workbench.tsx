@@ -1,12 +1,15 @@
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import type { SessionPanel } from '../stores/session-panels';
-import { PullRequestChecks } from './pull-request-checks';
 import type { SessionHeaderPanels } from './session-header-props';
 import { sessionPanelLabels } from './session-panel-triggers';
 import { WorkbenchAgents } from './session-workbench-agents';
 import { WorkbenchCard } from './session-workbench-card';
+import {
+  WorkbenchChangesSection,
+  WorkbenchChangesTotal,
+} from './session-workbench-change-section';
 
 // ADR-0039: a summary per section; its list lives in the Stage tab that pressing the card opens.
 export function SessionWorkbench({
@@ -27,22 +30,55 @@ export function SessionWorkbench({
 
 type SectionProps = { panel: SessionPanel; panels: SessionHeaderPanels };
 
-function SectionCard({ panel, panels }: SectionProps): ReactElement {
-  const title =
-    panel === 'subagents' ? 'Agents' : sessionPanelLabels[panel].label;
-
+function SectionCard(props: SectionProps): ReactElement {
   return (
-    <WorkbenchCard
-      title={title}
-      icon={sessionPanelLabels[panel].icon}
-      onOpen={() => (panels.onSelect ?? panels.onToggle)(panel)}
-      collapsible={panel === 'subagents'}
-      testID={`workbench-${panel}`}
-    >
-      <SectionSummary panel={panel} panels={panels} />
+    <WorkbenchCard {...sectionCardProps(props)}>
+      <SectionSummary {...props} />
     </WorkbenchCard>
   );
 }
+
+function sectionCardProps({
+  panel,
+  panels,
+}: SectionProps): Omit<ComponentProps<typeof WorkbenchCard>, 'children'> {
+  return {
+    title: panel === 'subagents' ? 'Agents' : sessionPanelLabels[panel].label,
+    icon: sessionPanelLabels[panel].icon,
+    onOpen: (): void => openSection(panel, panels),
+    collapsible: panel !== 'shells',
+    interactive: panel === 'changes' && hasPreview(panels),
+    summary: <SectionHeaderSummary panel={panel} panels={panels} />,
+    testID: `workbench-${panel}`,
+  };
+}
+
+function SectionHeaderSummary({
+  panel,
+  panels,
+}: SectionProps): ReactElement | null {
+  return panel === 'changes' ? <WorkbenchChangesTotal panels={panels} /> : null;
+}
+
+const hasPreview = (panels: SessionHeaderPanels): boolean =>
+  !!panels.pullRequests?.length;
+
+function openSection(panel: SessionPanel, panels: SessionHeaderPanels): void {
+  if (panel === 'changes') return openChangesSection(panels);
+
+  selectSection(panel, panels);
+}
+
+function openChangesSection(panels: SessionHeaderPanels): void {
+  if (hasPreview(panels) && panels.onOpenChanges) return panels.onOpenChanges();
+
+  selectSection('changes', panels);
+}
+
+const selectSection = (
+  panel: SessionPanel,
+  panels: SessionHeaderPanels,
+): void => (panels.onSelect ?? panels.onToggle)(panel);
 
 function sectionCount(
   panel: SessionPanel,
@@ -58,7 +94,13 @@ function hasSection(panel: SessionPanel, panels: SessionHeaderPanels): boolean {
 }
 
 function SectionSummary({ panel, panels }: SectionProps): ReactElement {
-  if (panel === 'changes') return <ChangesSection panels={panels} />;
+  if (panel === 'changes')
+    return (
+      <WorkbenchChangesSection
+        panels={panels}
+        onOpen={() => openSection('changes', panels)}
+      />
+    );
 
   if (panel === 'subagents') return <AgentsSummary panels={panels} />;
 
@@ -79,22 +121,6 @@ function AgentsSummary({ panels }: Pick<SectionProps, 'panels'>): ReactElement {
   );
 }
 
-function ChangesSummary({
-  panels,
-}: Pick<SectionProps, 'panels'>): ReactElement | null {
-  const summary = panels.changesSummary;
-
-  if (!summary) return null;
-
-  return (
-    <View className="flex-row items-center gap-2">
-      <Text tone="muted">{summary.files} files</Text>
-      <Text tone="success">+{summary.additions}</Text>
-      <Text tone="danger">−{summary.deletions}</Text>
-    </View>
-  );
-}
-
 const changesCount = (panels: SessionHeaderPanels): number =>
   Math.max(fileCount(panels), itemCount('changes', panels));
 
@@ -103,14 +129,3 @@ const fileCount = (panels: SessionHeaderPanels): number =>
 
 const itemCount = (panel: SessionPanel, panels: SessionHeaderPanels): number =>
   panels.counts?.[panel] ?? 0;
-
-function ChangesSection({
-  panels,
-}: Pick<SectionProps, 'panels'>): ReactElement {
-  return (
-    <View className="gap-2 px-4 pb-3">
-      <ChangesSummary panels={panels} />
-      {panels.checks && <PullRequestChecks {...panels.checks} />}
-    </View>
-  );
-}

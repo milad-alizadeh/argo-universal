@@ -128,6 +128,7 @@ function renderInspector(
     { ...inspectorProps(content), toolbar: undefined, contentScrolls: true },
     <RetainedInspectorPages
       {...content}
+      changesRequest={content.panels.state.changesRequest}
       inspector={inspectorProps(content)}
       scrollState={stage.scrollState}
     />,

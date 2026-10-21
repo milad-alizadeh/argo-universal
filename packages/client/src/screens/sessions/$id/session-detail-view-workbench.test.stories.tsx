@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { changesArgs } from '../../../features/frame/components/changes-inspector/changes-inspector.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
@@ -34,10 +34,23 @@ type Story = StoryObj<typeof meta>;
 export const ChecksStayWithTheChangesSummary: Story = {
   play: async ({ canvas }) => {
     await expect(
-      await canvas.findByLabelText('CI Checks 8/10, 2 running'),
+      await canvas.findByLabelText('CI Checks 3/5, 2 running'),
     ).toBeVisible();
     await expect(canvas.queryByTestId('session-header-bar')).toBeNull();
     await expect(canvas.getByTestId('session-workbench')).toBeVisible();
+  },
+};
+
+export const SeveralPullRequestsInStage: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Changes' }),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
+    const stage = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
+
+    await expect(stage.getByLabelText('Open Change #45')).toBeVisible();
+    await expect(stage.getByLabelText('Open Change #46')).toBeVisible();
   },
 };
 
@@ -53,6 +66,7 @@ export const MergesFromChangeDetail: Story = {
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Changes' }),
     );
+    await userEvent.click(canvas.getByRole('button', { name: 'Files' }));
     await expect(
       canvas.getAllByRole('button', { name: /^Diff for/ }).length,
     ).toBeGreaterThan(0);

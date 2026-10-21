@@ -65,7 +65,7 @@ The Workbench therefore has three states, and one toggle in the window band driv
 ## The Workbench
 
 - **A stack of separate cards, one per section: an overview of what is happening in the Session.** Drawn at 312 with `--radius-2xl` cards and `--spacing-2` between them on "Spec / Workbench layout · collapsible cards".
-- **Cards summarize their sections.** Changes shows a diff total; Shells shows a count. The Agents card also previews active Agents, with role avatars, status marks and details. Completed Agents share one count and up to three overlapping role avatars. Its disclosure collapses the preview; pressing the card opens the full Stage list.
+- **Cards summarize their sections.** Changes shows a diff total and up to three Open Changes, with individual checks and menus. A grouped remainder counts further Changes by stage. Shells shows a count. The Agents card also previews active Agents, with role avatars, status marks and details. Completed Agents share one count and up to three overlapping role avatars. Its disclosure collapses the preview; pressing the card opens the full Stage list.
 - **Pressing a card opens its section's full view in the Stage, as a tab.**
 - **Argo's cards are Changes, Agents and Shells.** Each appears, disappears and reorders on its own. The Agents card counts the Agents this Session started, not the installed Agents the Agents page lists.
 - **A card is drawn only when the Session has one.** A section with nothing in it is not drawn at all, so an empty Workbench is an empty column, not three headers over nothing (same board). A Session with no Agents has no Agents card, as its header has no Agents button.
@@ -108,7 +108,7 @@ Compact has no column, so the Workbench is a menu and a sheet. Every card and ev
 
 This one holds on desktop and on phones alike.
 
-Changes and Shells keep one summary in the Workbench. The Agents card previews active Agents, while completed Agents stay grouped. The Workbench column scrolls when its previews need more height.
+Changes previews at most three Open Changes and groups the remainder; Shells keeps one count in the Workbench. The Agents card previews active Agents, while completed Agents stay grouped. The Workbench column scrolls when its previews need more height.
 
 The length lives in the Stage tab the card opens, and the tab's list groups its items by state and counts each group, live first. The Agents tab reads `Active · 0` with `No active agents` under it when none are running, then `Done · 2` with a row for each finished Agent. Shells group the same way. The tab is a full view and scrolls, so no group is folded away.
 

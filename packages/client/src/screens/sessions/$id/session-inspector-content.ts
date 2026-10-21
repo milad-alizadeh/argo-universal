@@ -17,6 +17,7 @@ import { SessionAgentsStage, type AgentFeedSlot } from './session-agents-stage';
 import { SessionChangesStage } from './session-changes-stage';
 
 export interface SessionInspectorContent {
+  changesRequest?: number;
   header?: SessionHeaderProps;
   renderSubagentFeed?: AgentFeedSlot;
   subagents?: SubagentListProps;
@@ -68,11 +69,16 @@ function shellsPanel({
 
 // Changes is always offered; until the page loads them it is empty.
 function changesPanel(
-  { changes, header }: SessionInspectorContent,
+  { changes, header, changesRequest }: SessionInspectorContent,
   scrollState?: InspectorProps['scrollState'],
 ): PanelContent {
   return {
-    body: createElement(SessionChangesStage, { changes, header, scrollState }),
+    body: createElement(SessionChangesStage, {
+      changes,
+      header,
+      scrollState,
+      changesRequest,
+    }),
   };
 }
 

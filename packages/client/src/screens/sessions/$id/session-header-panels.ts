@@ -13,12 +13,13 @@ export const headerPanels = (
   offered: offeredSessionPanels(props),
   counts: sectionCounts(props),
   agents: props.subagents,
+  pullRequests: props.header.pullRequests,
+  onOpenChanges: panels.openChanges,
   checks: summarizeChecks(props.header.pullRequests),
   shown: panels.state.shown,
   changesSummary: props.header.changes?.summary,
   onSelect: panels.select,
-  onToggle: (panel) =>
-    panel === 'changes' ? panels.toggle(panel) : panels.select(panel),
+  onToggle: workbenchToggle(panels),
 });
 
 function sectionCounts(
@@ -58,3 +59,10 @@ function addChecks(total: Checks, checks: Checks): Checks {
     total: total.total + checks.total,
   };
 }
+
+const workbenchToggle =
+  (
+    panels: SessionPanels,
+  ): NonNullable<SessionHeaderProps['panels']>['onToggle'] =>
+  (panel) =>
+    panel === 'changes' ? panels.toggle(panel) : panels.select(panel);

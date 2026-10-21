@@ -1,3 +1,4 @@
+import type { ChangesSummary } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
@@ -13,11 +14,12 @@ import {
 } from './change-stage/change-stage-model';
 import type { PullRequestChecksProps } from './pull-request-checks';
 
-// One of a Session's Changes, as its header shows it.
+// One of a Session's Changes, shown by its Workbench and Stage.
 export type SessionPullRequest = ChangeState & {
   number: number;
   title: string;
   checks?: PullRequestChecksProps;
+  summary?: ChangesSummary;
   mergeable: boolean;
 };
 

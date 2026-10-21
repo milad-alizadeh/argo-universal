@@ -18,6 +18,8 @@ export interface SessionChanges {
 
 // The Inspector panels the header's triggers open: those the Session has, the one shown, and pressing a trigger.
 export interface SessionHeaderPanels {
+  pullRequests?: readonly SessionPullRequest[];
+  onOpenChanges?: () => void;
   agents?: SubagentListProps;
   checks?: NonNullable<SessionPullRequest['checks']>;
   counts?: Partial<Record<SessionPanel, number>>;
@@ -33,7 +35,7 @@ export interface SessionHeaderProps {
   status: SessionHeaderStatus;
   // The running Turn's start, for "4m 12s"; null when no Turn runs.
   startedAt: number | null;
-  // The Session's PRs; the header shows one and lists the rest in a menu.
+  // The Session's PRs, drawn in the Workbench and Stage.
   pullRequests?: SessionPullRequest[];
   // Absent while the Server cannot merge a PR; Merge PR then stays dimmed.
   onMerge?: (pullRequest: number, method: MergeMethod) => void;

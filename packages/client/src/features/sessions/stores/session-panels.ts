@@ -9,6 +9,8 @@ export type SessionPanel = (typeof sessionPanelOrder)[number];
 export interface SessionPanelsState {
   tabs: readonly SessionPanel[];
   shown?: SessionPanel;
+  // A preview row asks the Changes tab to show PR details, even after Files was selected.
+  changesRequest?: number;
 }
 
 export const noPanels: SessionPanelsState = { tabs: [] };
@@ -19,7 +21,7 @@ export function selectPanel(
 ): SessionPanelsState {
   if (state.tabs.includes(panel)) return { ...state, shown: panel };
 
-  return { tabs: [...state.tabs, panel], shown: panel };
+  return { ...state, tabs: [...state.tabs, panel], shown: panel };
 }
 
 // Closing the shown tab shows the last one left.
@@ -31,7 +33,11 @@ export function closePanel(
 
   if (tabs.length === 0) return noPanels;
 
-  return { tabs, shown: state.shown === panel ? tabs.at(-1) : state.shown };
+  return {
+    ...state,
+    tabs,
+    shown: state.shown === panel ? tabs.at(-1) : state.shown,
+  };
 }
 
 // A header trigger: shows its panel, opening its tab; pressed again while it shows, closes that tab.
@@ -60,6 +66,7 @@ export interface SessionPanels {
   select: (panel: SessionPanel) => void;
   close: (panel: SessionPanel) => void;
   closeAll: () => void;
+  openChanges: () => void;
 }
 
 type PanelChange = typeof togglePanel;
@@ -79,13 +86,26 @@ export function useSessionPanels(
 
   if (available !== state) setState(available);
 
+  return panelActions(available, setState);
+}
+
+function panelActions(
+  state: SessionPanelsState,
+  setState: Dispatch<SetStateAction<SessionPanelsState>>,
+): SessionPanels {
   const on = changeWith(setState);
 
   return {
-    state: available,
+    state,
     toggle: on(togglePanel),
     select: on(selectPanel),
     close: on(closePanel),
     closeAll: () => setState(noPanels),
+    openChanges: () => setState(requestChanges),
   };
 }
+
+const requestChanges = (state: SessionPanelsState): SessionPanelsState => ({
+  ...selectPanel(state, 'changes'),
+  changesRequest: (state.changesRequest ?? 0) + 1,
+});

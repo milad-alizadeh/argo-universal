@@ -16,6 +16,7 @@ import {
 } from '#primitives/scaffolds/inspector';
 
 type Props = {
+  changesRequest?: number;
   changes?: ChangesViewProps;
   header?: SessionHeaderProps;
   scrollState?: InspectorProps['scrollState'];
@@ -82,7 +83,13 @@ function stageFrame(props: Page): ComponentProps<typeof InspectorBody> {
 
 // Segments and comparison belong above the scroller; each file page keeps its own position.
 export function SessionChangesStage(props: Props): ReactElement {
-  const [selected, onSelect] = useState('files');
+  return <ChangesStagePage key={props.changesRequest} {...props} />;
+}
+
+function ChangesStagePage(props: Props): ReactElement {
+  const [selected, onSelect] = useState(
+    props.changesRequest ? 'change' : 'files',
+  );
 
   const page = {
     ...props,
