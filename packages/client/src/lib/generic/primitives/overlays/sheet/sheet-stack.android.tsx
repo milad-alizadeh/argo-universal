@@ -78,10 +78,18 @@ function pagerPages(
 /*
  * A root page alone is as tall as its content, so a footer under it stays in view; once a second
  * page is in the stack, the pages keep one sizing mode while Material owns the medium and large heights.
+ * A List that scrolls itself in a sheet resting at medium and large has no content height to match, so it fills too.
  */
 function fillsHeight(props: PagesProps): boolean {
-  return props.stack.pages.length > 1 || props.detents?.join() === 'large';
+  return [
+    props.stack.pages.length > 1,
+    props.detents?.join() === 'large',
+    scrollsAtMaterialHeights(props),
+  ].includes(true);
 }
+
+const scrollsAtMaterialHeights = (props: PagesProps): boolean =>
+  props.contentScrolls === true && props.detents?.includes('large') === true;
 
 function sheetModifiers(fill: boolean): ModifierConfig[] {
   return fill ? [fillMaxWidth(), fillMaxHeight()] : [fillMaxWidth()];
@@ -97,7 +105,7 @@ type PageProps = PagesProps & {
 function StackPage(props: PageProps): ReactElement {
   return (
     <Column modifiers={pageModifiers(props)}>
-      <PageHeader {...props} title={props.page.title} />
+      <PageHeader {...props} />
       <PageContent
         {...props}
         contentScrolls={props.page.contentScrolls ?? props.contentScrolls}

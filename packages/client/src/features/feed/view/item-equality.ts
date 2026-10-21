@@ -1,4 +1,9 @@
-import type { FeedExploration, FeedGroup, FeedViewItem } from './feed-view';
+import type {
+  FeedExploration,
+  FeedGroup,
+  FeedSubagent,
+  FeedViewItem,
+} from './feed-view';
 
 export function sameList<Value>(
   first: readonly Value[],
@@ -66,12 +71,41 @@ function sameRow(first: FeedViewItem, second: FeedViewItem): boolean {
   return first.row === second.row;
 }
 
-function sameContents(first: FeedViewItem, second: FeedViewItem): boolean {
+function sameSubagentAction(
+  first: FeedSubagent,
+  second: FeedSubagent,
+): boolean {
+  return first.id === second.id && first.kind === second.kind;
+}
+
+function sameSubagentWords(first: FeedSubagent, second: FeedSubagent): boolean {
   return (
-    sameGroup(first, second) ||
-    sameExploration(first, second) ||
-    sameRow(first, second)
+    first.title === second.title &&
+    first.role === second.role &&
+    first.text === second.text
   );
+}
+
+function sameSubagentContent(
+  first: FeedSubagent,
+  second: FeedSubagent,
+): boolean {
+  return sameSubagentAction(first, second) && sameSubagentWords(first, second);
+}
+
+function sameSubagent(first: FeedViewItem, second: FeedViewItem): boolean {
+  if (first.type !== 'subagent') return false;
+
+  if (second.type !== 'subagent') return false;
+
+  return sameSubagentContent(first, second);
+}
+
+// Each drawing compares its own kind; the first that recognises both items answers.
+const comparisons = [sameGroup, sameExploration, sameSubagent, sameRow];
+
+function sameContents(first: FeedViewItem, second: FeedViewItem): boolean {
+  return comparisons.some((isSame) => isSame(first, second));
 }
 
 export function sameItem(first: FeedViewItem, second: FeedViewItem): boolean {

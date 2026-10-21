@@ -1,8 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
-import { CodeBlockHeader } from '../code-block-header';
+import { CodeBlockHeader, codeBlockTray } from '../code-block-header';
 import { codeBlockGroup } from '../copy-button';
 import { CodeBlockBody } from './code-block-body';
 import {
@@ -12,20 +11,17 @@ import {
 } from './code-block-source';
 
 export type FeedCodeBlockProps = {
+  // What the fence is written in, which decides the highlighting; the header shows it when nothing else names the block.
   language?: string;
+  // A heading of Argo's own, such as a command's "Shell" or a file's name, for a block that is not a plain fence.
+  title?: string;
   footer?: ReactNode;
   textClassName?: string;
 } & CodeBlockSource;
 
 function CodeBlockFrame({ children }: { children: ReactNode }): ReactElement {
   return (
-    <View
-      className={cn(
-        codeBlockGroup,
-        markdownBlockClassNames.codeBlock,
-        'cursor-auto overflow-hidden bg-tint px-1 pb-1',
-      )}
-    >
+    <View className={cn(codeBlockGroup, codeBlockTray, 'cursor-auto')}>
       {children}
     </View>
   );
@@ -36,7 +32,7 @@ function SourceHeader(props: FeedCodeBlockProps): ReactElement {
 
   return (
     <CodeBlockHeader
-      title={headerTitle(props, props.language)}
+      title={headerTitle(props)}
       copyValue={copy.value}
       copyLabel={copy.label}
       resource={props.resource}
@@ -52,6 +48,7 @@ export function FeedCodeBlock(props: FeedCodeBlockProps): ReactElement {
       <CodeBlockBody
         code={props.code}
         description={props.description}
+        language={props.language}
         textClassName={props.textClassName}
       />
       {props.footer}

@@ -47,7 +47,7 @@ export function agentsRow(props: SettingsListViewProps): SettingsRow {
 export function pluginsRow(props: SettingsListViewProps): SettingsRow {
   return countedRow(props, {
     label: 'Plugins',
-    icon: 'plug',
+    icon: 'plugins',
     href: '/settings/plugins',
     count: props.pluginCount,
   });

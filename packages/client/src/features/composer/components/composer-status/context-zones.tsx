@@ -8,21 +8,23 @@ import {
 } from './status-meter';
 import { StatusText } from './status-text';
 
-const zones = [
+export const contextZones = [
   {
     label: `Smart zone · below ${smartZonePercent}%`,
     explanation: 'Focused context helps the Agent follow instructions.',
     color: successBackgroundClassName,
+    tone: 'success',
   },
   {
     label: `Dumb zone · ${smartZonePercent}% and up`,
     explanation: 'Extra history can distract the Agent, even with space left.',
     color: warningBackgroundClassName,
+    tone: 'warning',
   },
-];
+] as const;
 
 interface ContextZoneProps {
-  zone: (typeof zones)[number];
+  zone: (typeof contextZones)[number];
 }
 
 function ContextZoneCopy({ zone }: ContextZoneProps): JSX.Element {
@@ -50,7 +52,7 @@ function ContextZoneRow({ zone }: ContextZoneProps): JSX.Element {
 export function ContextZones(): JSX.Element {
   return (
     <View className="px-0 pt-3 gap-2">
-      {zones.map((zone) => (
+      {contextZones.map((zone) => (
         <ContextZoneRow key={zone.label} zone={zone} />
       ))}
     </View>

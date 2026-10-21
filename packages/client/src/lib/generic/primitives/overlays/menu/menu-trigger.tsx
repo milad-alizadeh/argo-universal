@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Platform, Pressable, View } from 'react-native';
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 import { buttonInteractionProps } from '#primitives/actions/button';
 import { Icon } from '#primitives/content/icon';
@@ -40,6 +41,7 @@ const iosPressedTint = Platform.OS === 'ios' ? 'active:bg-pressed' : undefined;
 const triggerClassName = cn(
   'min-w-0 shrink flex-row items-center gap-1.5 h-11 android:h-12',
   'web:h-7 web:px-1.5 web:rounded-control web:outline-none web:hover:bg-hover web:focus-visible:bg-hover web:active:bg-pressed',
+  tintTransitionClassName,
   iosPressedTint,
 );
 

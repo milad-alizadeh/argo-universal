@@ -44,6 +44,7 @@ import EditSquare from '@expo/material-symbols/edit_square.xml';
 import Error from '@expo/material-symbols/error.xml';
 import EventRepeat from '@expo/material-symbols/event_repeat.xml';
 import Explore from '@expo/material-symbols/explore.xml';
+import Extension from '@expo/material-symbols/extension.xml';
 
 export const materialImagesAE = {
   account_tree: AccountTree,
@@ -90,4 +91,5 @@ export const materialImagesAE = {
   error: Error,
   event_repeat: EventRepeat,
   explore: Explore,
+  extension: Extension,
 } as const;

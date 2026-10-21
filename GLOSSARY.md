@@ -49,12 +49,8 @@ A Device whose App has access to a Server through Pairing. It is never that Serv
 _Avoid_: Remote Device, guest, client
 
 **Issue**:
-A work item in a Project's Tracker, such as Linear or GitHub Issues.
+A work item in an Issue tracker that a Plugin draws, such as Linear or GitHub Issues. Argo has no Issues of its own.
 _Avoid_: Ticket, task
-
-**Integration**:
-A Project's link to an outside service, such as GitHub. A Project's chosen Tracker is an Integration.
-_Avoid_: Connection, account link
 
 ## Plugins
 
@@ -67,7 +63,7 @@ The Server process that runs Plugin code, each Plugin in its own worker thread w
 _Avoid_: Extension host, sandbox
 
 **Plugin API**:
-The `argo` object a Plugin's `register` receives: its calls to files, processes, the network, storage, secrets and settings, and its pages, Slots and Hooks. `@argo/plugin-kit` exports its type as `Argo`.
+The `argo` object a Plugin's `register` receives: its calls to files, processes, the network, storage, secrets, settings and Accounts, its OAuth redirect, and its pages, Slots, Hooks, Queries and background pass. `@argo/plugin-kit` exports its type as `Argo`.
 _Avoid_: SDK, host API, `api`
 
 **Hook**:
@@ -95,12 +91,24 @@ Something a Plugin's manifest says it needs, such as running `gh` or reaching `a
 _Avoid_: Permission (that is the Agent's Permission request), scope, entitlement
 
 **Grant**:
-A Capability the user, or Argo for a first-party Plugin, has allowed. The user can remove a single Grant.
+The answer, from the user or from Argo for a first-party Plugin, about a Capability or about one Plugin's use of one Account: allowed or refused. Unset means nobody has been asked, and the first use asks. The user can remove a single Grant.
 _Avoid_: Approval, permission
 
-**Tracker**:
-A source of Issues inside the Issue tracker Plugin, such as GitHub Issues or Linear. Each Project chooses one.
-_Avoid_: Provider, backend, issue source
+**Query**:
+A read a Plugin describes as a value instead of making, which Argo performs, keys by its normalised form and refreshes on a clock Argo owns.
+_Avoid_: Descriptor, query key, request object
+
+**Background pass**:
+One run of a Plugin's declared background entry on its interval. It refreshes Queries and may set its own nav count; it draws nothing and never raises a Notification.
+_Avoid_: Job, cron, tick
+
+**Borrow**:
+One Plugin using an Account another Plugin provides. Argo checks the Grant, asks the providing Plugin for a fresh token and sets the header; the borrowing Plugin never sees the token, and the header never leaves the Account's host.
+_Avoid_: Share, delegate, proxy
+
+**Account**:
+A sign-in one Plugin provides and other Plugins borrow, named by the API host its token opens, such as `api.linear.app`, rather than by the button that gets it. CircleCI and GitHub are separate Accounts though both sign in with GitHub. A Plugin asks Argo for an Account, and the user approves each Plugin once per Account. See ADR-0036.
+_Avoid_: Login, credential, identity, Tracker, Integration
 
 ## Agents and Sessions
 
@@ -249,7 +257,7 @@ Argo's small set of components, tokens and prop names that every screen, and lat
 _Avoid_: Design system (for the code), component library
 
 **Pill**:
-A short, static label that shows an Argo status or a Tracker label.
+A short, static label that shows an Argo status or a label from a Plugin.
 _Avoid_: Badge, chip
 
 **Row badge**:

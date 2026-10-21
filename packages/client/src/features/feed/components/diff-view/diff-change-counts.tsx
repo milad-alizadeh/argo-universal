@@ -32,6 +32,3 @@ export function ChangeCounts({ file }: { file: FileDiff }): ReactNode {
     </>
   );
 }
-
-export const hasChangeCounts = (file: FileDiff): boolean =>
-  file.added > 0 || file.removed > 0;

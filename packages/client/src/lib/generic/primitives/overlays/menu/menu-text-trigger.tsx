@@ -1,9 +1,16 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
+import { tintTransitionClassName } from '#lib/generic/motion';
+import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { MenuProps } from './menu-props';
+
+const textTriggerClassName = cn(
+  'h-5 flex-row items-center gap-1 rounded-sm px-1 web:outline-none web:hover:bg-hover web:focus-visible:bg-hover',
+  tintTransitionClassName,
+);
 
 // The menu's trigger passes its press handlers and ref through these props.
 type MenuTextTriggerProps = Omit<
@@ -34,7 +41,7 @@ function MenuTextTrigger({
       accessibilityRole="button"
       accessibilityLabel={label}
       {...props}
-      className="h-5 flex-row items-center gap-1 rounded-sm px-1 web:outline-none web:hover:bg-hover web:focus-visible:bg-hover"
+      className={textTriggerClassName}
     >
       <MenuTextTriggerContent label={label} />
     </Pressable>

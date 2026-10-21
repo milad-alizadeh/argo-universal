@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
@@ -56,7 +56,8 @@ interface AttachMenuProps {
 function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
   return (
     <View className="native:flex-1 native:wide:p-3 bg-content web:wide:bg-card">
-      <List appearance="grouped" fit>
+      {/* A phone's sheet fills its height, so the List scrolls in it; a web popover fits its rows. */}
+      <List appearance="grouped" fit={Platform.OS === 'web'}>
         <ListSection>
           <ComposerAttachItems {...menu} />
         </ListSection>

@@ -42,5 +42,15 @@ export async function picker(label: string): Promise<HTMLElement> {
   return trigger;
 }
 
+// The phone Git sheet names its two panels; comparisons remain a desktop Inspector control.
+export async function expectComparison(
+  label: string,
+  width: number,
+): Promise<void> {
+  await (width === layoutWidths.phone
+    ? expect(screen.queryByRole('button', { name: 'Comparison' })).toBeNull()
+    : expect(await picker(label)).toBeVisible());
+}
+
 export const fileHeader = (path: string): HTMLElement =>
   screen.getByRole('button', { name: `Diff for ${path}` });

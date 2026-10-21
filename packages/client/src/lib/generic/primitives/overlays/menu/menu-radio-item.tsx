@@ -1,6 +1,7 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 import { Icon, IconSlot } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
@@ -62,6 +63,7 @@ function choiceItemClassName(keyboardFocus: boolean): string {
   return cn(
     choiceRowClassName,
     'cursor-default outline-0 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
+    tintTransitionClassName,
     keyboardFocus &&
       'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
   );

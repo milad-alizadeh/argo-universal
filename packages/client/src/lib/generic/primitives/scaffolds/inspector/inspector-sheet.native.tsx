@@ -10,7 +10,10 @@ import { InspectorSheetFrame } from './inspector-sheet-frame';
  */
 export function InspectorSheet(props: InspectorProps): ReactElement {
   return (
-    <InspectorSheetFrame inspector={props} pageTitle={props.title}>
+    <InspectorSheetFrame
+      inspector={props}
+      pageTitle={props.sheetHeader ? undefined : props.title}
+    >
       <SheetContent {...props} />
     </InspectorSheetFrame>
   );
@@ -19,6 +22,7 @@ export function InspectorSheet(props: InspectorProps): ReactElement {
 function SheetContent(props: InspectorProps): ReactElement {
   return (
     <View testID={props.testID} className="flex-1 bg-content">
+      {props.sheetHeader}
       <SheetActions {...props} />
       <InspectorBody {...props} surface="bg-content" />
     </View>

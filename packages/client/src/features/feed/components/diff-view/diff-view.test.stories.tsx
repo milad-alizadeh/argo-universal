@@ -148,6 +148,20 @@ export const ClearingViewedOpens: Story = {
   },
 };
 
+export const SpaceMarksViewedPhone: Story = {
+  args: { viewed: false, onViewedChange: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await settleViewport(layoutWidths.phone);
+    canvas.getByRole('checkbox', { name: 'Viewed' }).focus();
+    await userEvent.keyboard(' ');
+    await expect(args.onViewedChange).toHaveBeenCalledWith(true);
+    await expect(canvas.getByRole('button', largeHeader)).toHaveAttribute(
+      expanded,
+      'false',
+    );
+  },
+};
+
 export const FeedDiffHasNoViewedMark: Story = {
   args: { inline: true },
   play: async ({ canvas }) => {

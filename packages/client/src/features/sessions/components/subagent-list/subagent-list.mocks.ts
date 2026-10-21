@@ -4,7 +4,8 @@ export const subagentNow = 1_800_000_000_000;
 
 const parentSessionId = 'parent-session';
 
-const running: Subagent = {
+// The one child a Session runs: the Subagents list and the Feed's Subagent rows name the same one.
+export const runningSubagent: Subagent = {
   sessionId: 'subagent-readers',
   parentSessionId,
   toolCallId: 'tool-readers',
@@ -20,7 +21,7 @@ const running: Subagent = {
 };
 
 const requiresAction: Subagent = {
-  ...running,
+  ...runningSubagent,
   sessionId: 'subagent-tokens',
   toolCallId: 'tool-tokens',
   title: 'Migrate tokens to kit roles',
@@ -32,7 +33,7 @@ const requiresAction: Subagent = {
 };
 
 const finished: Subagent = {
-  ...running,
+  ...runningSubagent,
   sessionId: 'subagent-plan',
   toolCallId: 'tool-plan',
   title: 'Draft the Plan schema',
@@ -59,13 +60,13 @@ const cancelled: Subagent = {
 
 export const subagentStates = {
   none: [] satisfies Subagent[],
-  oneRunning: [running],
-  severalMixed: [running, requiresAction, finished, cancelled],
+  oneRunning: [runningSubagent],
+  severalMixed: [runningSubagent, requiresAction, finished, cancelled],
   allFinished: [finished, cancelled],
 };
 
 export const interleavedSubagents = [
-  running,
+  runningSubagent,
   finished,
   requiresAction,
   cancelled,

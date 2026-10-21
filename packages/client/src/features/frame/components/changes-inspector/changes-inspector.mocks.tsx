@@ -57,6 +57,8 @@ const inspectorSheet: Omit<SheetProps, 'children'> = {
   onOpenChange: ignore,
   label: 'Inspector',
   detents: ['medium', 'large'],
+  floating: true,
+  contentScrolls: true,
 };
 
 // The web's Inspector sheet under wide, whose root page Compare Against pushes its branches over.

@@ -1,4 +1,5 @@
 import type { Href } from 'expo-router';
+import type { ThemeChoice } from '#features/settings';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import type { RowBadge } from '#primitives/lists/list-item';
 
@@ -18,7 +19,9 @@ export interface SettingsListViewProps {
   accountState?: string;
   connectionState?: string;
   deviceCount?: number;
-  appearanceState?: string;
+  // This Device's theme, chosen in place from the Theme group's Appearance row.
+  theme?: ThemeChoice;
+  onThemeChange: (theme: ThemeChoice) => void;
   notificationsState?: string;
   status?: 'ready' | 'loading' | 'disconnected';
   // The sidebar's search: only pages whose title matches show.
@@ -34,4 +37,10 @@ export interface SettingsRow {
   needsAttention?: boolean;
   disabled?: boolean;
   status?: Omit<Extract<RowBadge, { kind: 'status' }>, 'kind'>;
+}
+
+// A titled group of pages.
+export interface SettingsGroup {
+  title: string;
+  rows: SettingsRow[];
 }

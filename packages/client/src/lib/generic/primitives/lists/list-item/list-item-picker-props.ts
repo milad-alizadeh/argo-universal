@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import type { KitProps } from '../../kit-props';
 
+// Kit-only: a leading icon, as a settings row's.
 export type ListItemPickerProps<Value extends string = string> = KitProps<
   'ListItem.Picker',
   Value
->;
+> & { leading?: ReactNode };
 
 export function pickerRowValue<Value extends string>(
   props: ListItemPickerProps<Value>,

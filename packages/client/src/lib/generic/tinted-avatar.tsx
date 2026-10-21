@@ -13,9 +13,16 @@ const palettes = {
   success: { fill: 'bg-tone-success-100', ink: 'text-tone-success-700' },
 };
 
+// A leading avatar stands beside a row of its own; an inline one sits on the line of text beside it.
+const sizes = {
+  leading: { box: 'size-9 wide-type:size-7', glyph: 'body' },
+  inline: { box: 'size-6 wide-type:size-5', glyph: 'secondary' },
+} as const;
+
 interface TintedAvatarProps {
   icon: IconName;
   tone: keyof typeof palettes;
+  size?: keyof typeof sizes;
   dimmed?: boolean;
   status?: { tone: 'success' | 'warning'; accessibilityLabel: string };
 }
@@ -26,7 +33,7 @@ export function TintedAvatar(props: TintedAvatarProps): ReactElement {
     <View className={avatarClass(props)}>
       <Icon
         name={props.icon}
-        role="body"
+        role={sizes[props.size ?? 'leading'].glyph}
         className={palettes[props.tone].ink}
       />
       <AvatarStatus status={props.status} />
@@ -34,9 +41,10 @@ export function TintedAvatar(props: TintedAvatarProps): ReactElement {
   );
 }
 
-const avatarClass = ({ tone, dimmed }: TintedAvatarProps): string =>
+const avatarClass = ({ tone, size, dimmed }: TintedAvatarProps): string =>
   cn(
-    'relative size-9 wide-type:size-7 shrink-0 self-center items-center justify-center rounded-full',
+    'relative shrink-0 self-center items-center justify-center rounded-full',
+    sizes[size ?? 'leading'].box,
     palettes[tone].fill,
     dimmed && 'opacity-50',
   );

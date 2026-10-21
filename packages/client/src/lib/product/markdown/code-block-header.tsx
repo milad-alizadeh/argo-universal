@@ -7,6 +7,10 @@ import { CodeBlockTitle } from './code-block-title/code-block-title';
 import { CopyButton } from './copy-button';
 import { type HeaderResource, ResourceHeading } from './resource-heading';
 
+// The tray that holds a CodeBlockHeader and its body: code blocks, tool output and inline diffs.
+export const codeBlockTray =
+  'overflow-hidden rounded-2xl border border-hairline bg-content px-1 pb-1';
+
 interface CodeBlockHeaderProps {
   title: string;
   copyValue: string;

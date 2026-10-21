@@ -2,12 +2,11 @@ import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { ChangesInspectorSheet } from './changes-inspector.mocks';
+import { ChangesInspectorSheet, manyFiles } from './changes-inspector.mocks';
 import {
   allChanges,
   compareAgainst,
   fileHeader,
-  largeFile,
   picker,
   testMeta,
 } from './changes-inspector.test.mocks';
@@ -38,8 +37,6 @@ function picksUncommitted(width: number): Story {
     },
   };
 }
-
-export const PicksUncommittedPhone = picksUncommitted(layoutWidths.phone);
 
 export const PicksUncommittedWide = picksUncommitted(layoutWidths.wide);
 
@@ -75,25 +72,29 @@ export const CompareAgainstInAPopover: Story = {
   },
 };
 
-// On a phone, Compare Against pushes its branches as a page of the Inspector sheet.
-export const CompareAgainstInTheSheet: Story = {
-  args: { onComparisonChange: fn() },
+// The phone sheet owns its segmented header instead of the generic Inspector title and desktop comparison controls.
+export const PhoneHasTheGitHeader: Story = {
+  args: { files: manyFiles },
   render: (args) => <ChangesInspectorSheet {...args} />,
-  play: async ({ args, userEvent }) => {
+  play: async () => {
     await settleViewport(layoutWidths.phone);
     await screen.findByRole('dialog', { name: 'Inspector' });
-    await userEvent.click(await picker(allChanges));
-    await userEvent.click(
-      await screen.findByRole('menuitemradio', compareAgainstDialog),
-    );
     await expect(
-      await screen.findByRole('heading', compareAgainstDialog),
+      screen.getByRole('button', { name: 'File changes', pressed: true }),
     ).toBeVisible();
-    await userEvent.click(screen.getByRole('radio', { name: 'release/2.4' }));
-    await expect(args.onComparisonChange).toHaveBeenCalledWith({
-      kind: 'branch',
-      branch: 'release/2.4',
-    });
-    await waitFor(() => expect(fileHeader(largeFile)).toBeVisible());
+    await expect(screen.getByRole('button', { name: 'PR' })).toBeDisabled();
+    await expect(screen.queryByRole('heading', { name: 'Changes' })).toBeNull();
+    await expect(
+      screen.queryByRole('button', { name: 'Close Inspector' }),
+    ).toBeNull();
+    await expect(
+      screen.queryByRole('button', { name: 'Comparison' }),
+    ).toBeNull();
+    const last = fileHeader('/repo/src/module-60/index.ts');
+    last.scrollIntoView();
+    await waitFor(() => expect(last).toBeVisible());
+    await expect(
+      screen.getByRole('button', { name: 'File changes', pressed: true }),
+    ).toBeVisible();
   },
 };

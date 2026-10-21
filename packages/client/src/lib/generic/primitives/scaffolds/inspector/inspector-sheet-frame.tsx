@@ -11,17 +11,31 @@ interface InspectorSheetFrameProps {
 
 // The Inspector's sheet, at its medium detent first, with one page for its content; a page there can push more.
 export function InspectorSheetFrame({
-  inspector: { open, onOpenChange, title },
+  inspector,
   pageTitle,
   children,
 }: InspectorSheetFrameProps): ReactElement {
   return (
-    <Sheet {...{ open, onOpenChange }} label={title} detents={sheetDetents}>
+    <Sheet {...sheetProps(inspector)}>
       <Sheet.Page name="inspector" title={pageTitle}>
         {children}
       </Sheet.Page>
     </Sheet>
   );
 }
+
+const sheetProps = ({
+  open,
+  onOpenChange,
+  title,
+  sheetHeader,
+}: InspectorProps): Omit<React.ComponentProps<typeof Sheet>, 'children'> => ({
+  open,
+  onOpenChange,
+  label: title,
+  detents: sheetDetents,
+  floating: sheetHeader !== undefined,
+  contentScrolls: true,
+});
 
 const sheetDetents: ('medium' | 'large')[] = ['medium', 'large'];

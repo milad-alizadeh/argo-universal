@@ -27,6 +27,7 @@ const meta = {
     deviceCount: 2,
     selectedPath: '/settings/accounts',
     onSelect: action('select Settings page'),
+    onThemeChange: action('choose theme'),
   },
 } satisfies Meta<typeof SettingsListView>;
 

@@ -2,6 +2,7 @@ import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import type { PlayContext, Story } from './settings-list-story.test.mocks';
+import { appearanceRow } from './settings-list-theme.test.mocks';
 
 type Pointer = Pick<PlayContext, 'canvas' | 'userEvent'>;
 
@@ -20,14 +21,7 @@ async function expectOpened(
 }
 
 // A phone leaves out Devices and Notifications.
-const phonePages = [
-  'Projects',
-  'Agents',
-  'Plugins',
-  'Accounts',
-  'Connection',
-  'Appearance',
-];
+const phonePages = ['Projects', 'Agents', 'Plugins', 'Accounts', 'Connection'];
 
 const widePages = [
   'Projects',
@@ -36,12 +30,13 @@ const widePages = [
   'Accounts',
   'Connection',
   'Devices',
-  'Appearance',
   'Notifications',
 ];
 
-// Every width lists its pages in one list, without group headings.
-async function expectOneFlatList(
+const groups = ['Workspace', 'Account', 'Connection', 'Theme'];
+
+// Every width lists its pages under the groups' headings, Theme last; Appearance chooses in place, so it is no link.
+async function expectGroupedPages(
   canvas: PlayContext['canvas'],
   width: number,
 ): Promise<void> {
@@ -52,7 +47,10 @@ async function expectOneFlatList(
         .map((link) => link.getAttribute('aria-label')?.split(',')[0]),
     ).toEqual(width === layoutWidths.phone ? phonePages : widePages),
   );
-  await expect(canvas.queryByRole('heading')).toBeNull();
+  await expect(
+    canvas.getAllByRole('heading').map((heading) => heading.textContent),
+  ).toEqual(groups);
+  await expect(appearanceRow(canvas)).toBeVisible();
 }
 
 async function clickEveryWidthsPages({
@@ -96,7 +94,7 @@ export function allPagesNavigate(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expectOpened(args.onSelect, []);
-      await expectOneFlatList(canvas, width);
+      await expectGroupedPages(canvas, width);
       await clickEveryWidthsPages({ canvas, userEvent });
       await expectOpened(
         args.onSelect,
@@ -134,6 +132,7 @@ export function searchSaysWhenNothingMatches(width: number): Story {
         canvas.getByText('No Settings page has "mistral" in its name.'),
       ).toBeVisible();
       await expect(canvas.queryByRole('link')).toBeNull();
+      await expect(canvas.queryByRole('button')).toBeNull();
     },
   };
 }

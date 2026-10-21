@@ -1,12 +1,10 @@
 import { use, type ReactElement, type ReactNode } from 'react';
 import { Platform, Pressable, View } from 'react-native';
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 import { ContextActions } from '#primitives/actions/action-list';
 import { ListContext, type ListPosition } from '../../../list-context';
-import {
-  usePressedRowHandlers,
-  useSeparatorCovered,
-} from '../../../row-highlights';
+import { useRowHighlight, useSeparatorCovered } from '../../../row-highlights';
 import { GridCell } from './table-cell';
 import type { TableProps } from './table-props';
 import { cellOf, type TableRow } from './table-rows';
@@ -48,11 +46,12 @@ function SelectedTint(): ReactElement {
 const rowClass = cn(
   'flex-row items-center gap-4 p-3 web:select-none web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2',
   Platform.OS !== 'android' && 'active:bg-pressed',
+  tintTransitionClassName,
 );
 
 function RowPress(props: RowProps & { selected?: boolean }): ReactElement {
   const onPress = rowPress(props, props.row);
-  const press = { onPress, disabled: !onPress, ...usePressedRowHandlers() };
+  const press = { onPress, disabled: !onPress, ...useRowHighlight() };
 
   return (
     <Pressable

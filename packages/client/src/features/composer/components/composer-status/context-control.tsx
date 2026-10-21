@@ -10,7 +10,7 @@ import {
   ControlLabel,
   createStatusControlTrigger,
 } from './status-control-trigger';
-import { unselectableTextClassName } from './status-surface';
+import { phoneSheet, unselectableTextClassName } from './status-surface';
 import { StatusText } from './status-text';
 
 interface ContextProps {
@@ -52,6 +52,12 @@ function createContextTrigger(props: ContextProps): JSX.Element {
   });
 }
 
+const contextPopoverProps = {
+  label: 'Context window',
+  width: 320,
+  listContent: phoneSheet,
+};
+
 export function ContextControl(props: ContextProps): JSX.Element {
   const contentProps = {
     context: props.context,
@@ -60,8 +66,7 @@ export function ContextControl(props: ContextProps): JSX.Element {
 
   return (
     <ComposerPopover
-      label="Context window"
-      width={320}
+      {...contextPopoverProps}
       trigger={createContextTrigger(props)}
     >
       {(close) => <ContextContent {...contentProps} close={close} />}

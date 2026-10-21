@@ -12,6 +12,8 @@ export type RowBadge = Exclude<
 export type ListItemProps = KitProps<'ListItem'> & {
   // A control under the title, such as a Slider, spanning the row's content width.
   control?: ReactNode;
+  // The title and subtitle wrap rather than truncate, for a row whose words are its content, such as a plan step.
+  multiline?: boolean;
   onPointerDown?: ComponentProps<typeof Pressable>['onPointerDown'];
   onKeyDown?: React.KeyboardEventHandler;
   role?: 'button' | 'link' | 'group';

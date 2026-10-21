@@ -4,6 +4,7 @@ import {
   menuRowsClassName,
   menuSurfaceClassName,
 } from '#lib/generic/menu-surface';
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 
 export { menuRowsClassName };
@@ -26,6 +27,7 @@ export const actionContentClassName = cn(
 export const actionItemClassName = cn(
   menuRowClassName,
   'active:bg-pressed group relative',
+  tintTransitionClassName,
   'web:focus:bg-hover web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
 );
 

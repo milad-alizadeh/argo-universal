@@ -1,29 +1,48 @@
+import type { ReactNode } from 'react';
 import type * as React from 'react';
+import { useMemo } from 'react';
 import { View } from 'react-native';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
+import { syntaxRunsText } from '../../../generic/code-text/syntax-run';
 import { ScrollFadeView } from '../../../generic/scroll-fade/scroll-fade';
+import { syntaxRuns } from './code-highlight/syntax-runs';
 
 interface CodeBlockBodyProps {
   code?: string;
   description?: string;
+  language?: string;
   textClassName?: string;
 }
 
 interface CodeTextProps {
   code: string;
+  language?: string;
   textClassName?: string;
 }
 
-function CodeText({ code, textClassName }: CodeTextProps): React.JSX.Element {
+/*
+ * Coloured runs where the language is known, the code as it stands where it is not. Tokenising is
+ * the one costly part of drawing a fence, and a streaming row renders many times over.
+ */
+function useCodeContent(code: string, language?: string): ReactNode {
+  const runs = useMemo(() => syntaxRuns(code, language), [code, language]);
+
+  return runs === undefined ? code : syntaxRunsText(runs);
+}
+
+function CodeText(props: CodeTextProps): React.JSX.Element {
+  const content = useCodeContent(props.code, props.language);
+
   return (
     <Text
       selectable
       role="code"
-      className={cn(markdownBlockClassNames.codeText, textClassName)}
+      testID="code-text"
+      className={cn(markdownBlockClassNames.codeText, props.textClassName)}
     >
-      {code}
+      {content}
     </Text>
   );
 }
@@ -76,10 +95,12 @@ function CodeDescription({
 export function CodeBlockBody({
   code,
   description,
+  language,
   textClassName,
 }: CodeBlockBodyProps): React.JSX.Element | null {
-  if (code !== undefined)
-    return <CodeScroll code={code} textClassName={textClassName} />;
+  if (code === undefined) return <CodeDescription description={description} />;
 
-  return <CodeDescription description={description} />;
+  return (
+    <CodeScroll code={code} language={language} textClassName={textClassName} />
+  );
 }

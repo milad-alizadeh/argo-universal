@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
+import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
 
 type SubtitleProps = Pick<
@@ -47,12 +48,16 @@ function titleWeight(
   return props.sidebar ? 'font-medium' : undefined;
 }
 
+// A multiline row shows its whole title; others keep it to one line.
+const lineLimit = (multiline?: boolean): number | undefined =>
+  multiline ? undefined : 1;
+
 function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   return (
     <Text
       role="row"
       tone={props.titleTone ?? props.tone}
-      numberOfLines={1}
+      numberOfLines={lineLimit(props.multiline)}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
     >
       {props.title}
@@ -77,13 +82,17 @@ export const trailsTitle = (
   props: Pick<ListItemProps, 'sidebar' | 'value'>,
 ): boolean => props.sidebar === 'regular' && props.value === undefined;
 
-export function ItemContent(props: ListItemProps): ReactElement {
+// A row's subtitle shows every line when a description, Android's placed value or the caller asks for it.
+const subtitleWraps = (props: PlacedContentProps): boolean =>
+  [props.description, props.multiline, props.subtitleWraps].some(Boolean);
+
+export function ItemContent(props: PlacedContentProps): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
       <TitleLine {...props} />
       <Subtitle
         text={props.subtitle}
-        multiline={!!props.description}
+        multiline={subtitleWraps(props)}
         subtitleLines={props.subtitleLines}
         subtitleTone={props.subtitleTone ?? 'muted'}
         subtitleDimmed={props.subtitleDimmed}

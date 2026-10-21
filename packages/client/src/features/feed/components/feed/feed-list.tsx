@@ -1,11 +1,11 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
-import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
 import { useRef } from 'react';
 import { View } from 'react-native';
 import { FeedGrowthContext } from '../feed-growth-context';
 import type { FeedEntry } from './feed-entry';
 import { JumpToLatestWhenAway } from './feed-overlays';
+import type { EntryDrawing } from './feed-row';
 import { FeedScroll, type FeedScrollProps } from './feed-scroll';
 import { useFeedGrowth } from './use-feed-growth';
 import {
@@ -15,14 +15,12 @@ import {
 
 const fillShrinkable = { flex: 1, minHeight: 0 };
 
-export interface FeedListProps {
+export interface FeedListProps extends EntryDrawing {
   entries: FeedEntry[];
   // The newest row's key, so a row arriving while the reader is away marks Jump to latest.
   newestKey: string;
   loadingOlder: boolean;
   onStartReached: () => void;
-  imageUrl: (blob: BlobRef) => string;
-  now?: number;
   onAtEndChange?: (atEnd: boolean) => void;
 }
 
