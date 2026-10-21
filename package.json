@@ -12,6 +12,7 @@
     "dev:storybook": "pnpm --filter @repo/storybook storybook",
     "dev:storybook:all": "EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST=10.0.2.2 node tools/start-storybook-previews.mts",
     "format": "oxfmt",
+    "new:story": "node --import tsx tools/new-story.mts",
     "postinstall": "sherif",
     "perf": "pnpm --filter @repo/universal-app build && pnpm --filter @repo/tools perf",
     "quality:dead-code": "knip --no-progress --max-issues 0",
