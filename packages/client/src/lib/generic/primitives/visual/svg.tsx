@@ -1,10 +1,13 @@
 import type * as React from 'react';
-import { Platform, Pressable } from 'react-native';
+import { useContext } from 'react';
+import { Platform, Pressable, type ViewStyle } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { Text } from '#primitives/content/text';
 import type { Tone } from '#primitives/content/text';
+import { ListTileContext } from '../../list-context';
 import type { KitProps } from '../kit-props';
+import { useSvgDrawing } from './svg-budget';
 
 export type SvgProps = KitProps<'Svg'>;
 
@@ -22,22 +25,35 @@ type AccessibilityProps = Pick<
 // Server sanitizes the markup; native rendering resolves currentColor gradient stops to the tone.
 export function Svg(props: SvgProps): React.JSX.Element {
   const { color } = useResolveClassNames(toneClass(props.tone));
-  const ratio = props.aspectRatio ?? viewBoxRatio(props.xml) ?? 1;
+  const frame = useArtworkFrame(artworkRatio(props));
 
-  return svgPressable(props, color, ratio);
+  const draws = useSvgDrawing();
+
+  if (!draws && !props.onPress)
+    return <Text role="secondary">{props.label}</Text>;
+
+  return (
+    <SvgPressable props={props} color={color} frame={frame} draws={draws} />
+  );
 }
 
-function svgPressable(
-  props: SvgProps,
-  color: ArtworkProps['color'],
-  ratio: number,
-): React.JSX.Element {
+interface SvgPressableProps {
+  props: SvgProps;
+  color: ArtworkProps['color'];
+  frame: ViewStyle;
+  draws: boolean;
+}
+
+function SvgPressable(input: SvgPressableProps): React.JSX.Element {
+  const { props, color, frame, draws } = input;
+
   return (
-    <Pressable
-      {...accessibilityProps(props)}
-      style={{ width: '100%', aspectRatio: ratio }}
-    >
-      {svgArtwork(props, color)}
+    <Pressable {...accessibilityProps(props)} style={frame}>
+      {draws ? (
+        svgArtwork(props, color)
+      ) : (
+        <Text role="secondary">{props.label}</Text>
+      )}
     </Pressable>
   );
 }
@@ -137,4 +153,16 @@ function finiteRatio(ratio: number): number | null {
 
 function isDimension(value: number | undefined): value is number {
   return value !== undefined && value !== 0;
+}
+
+function artworkRatio(props: SvgProps): number {
+  return props.aspectRatio ?? viewBoxRatio(props.xml) ?? 1;
+}
+
+function useArtworkFrame(ratio: number): ViewStyle {
+  const tile = useContext(ListTileContext);
+
+  return tile
+    ? { width: '100%', height: '100%' }
+    : { width: '100%', aspectRatio: ratio };
 }

@@ -3,11 +3,14 @@ import { actionListWireParts } from './action-list-wire-parts';
 import { canvasWireParts } from './canvas-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
+import { imageWirePart } from './image-wire-part';
 import { buttonProps, stackProps, textProps, svgProps } from './kit-props';
 import { layoutWireParts } from './layout-wire-parts';
 import { listWireParts } from './list-wire-parts';
 import { mediaWireParts } from './media-wire-parts';
 import { overlayWireParts } from './overlay-wire-parts';
+import { part } from './plugin-part-schema-utils';
+import { avatarProps, iconProps } from './presentation-kit-props';
 import { proseWireParts } from './prose-wire-parts';
 import { scaffoldWireParts } from './scaffold-wire-parts';
 import { tableWireParts } from './table-wire-parts';
@@ -29,6 +32,12 @@ export const wireParts = {
   ...controlWireParts,
   ...overlayWireParts,
   ...mediaWireParts,
+  Image: imageWirePart,
+  Avatar: part(
+    'An image, initials or person symbol with optional status.',
+    avatarProps,
+  ),
+  Icon: part('A native symbol with semantic size and tone.', iconProps),
   ...canvasWireParts,
   Text: {
     props: textProps,

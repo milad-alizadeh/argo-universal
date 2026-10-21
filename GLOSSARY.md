@@ -264,6 +264,10 @@ _Avoid_: Notice, Feed entry
 Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
 _Avoid_: Design system (for the code), component library
 
+**List section**:
+A distinct group of items in a List, with an optional heading and footer.
+_Avoid_: Group (when naming a List section)
+
 **Pill**:
 A short, static label that shows an Argo status or a label from a Plugin.
 _Avoid_: Badge, chip

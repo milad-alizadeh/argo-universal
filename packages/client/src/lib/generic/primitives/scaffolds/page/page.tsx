@@ -8,6 +8,7 @@ import {
   ActionShortcutScope,
   type HeaderSink,
 } from '#primitives/actions/action-list';
+import { SvgBudget } from '#primitives/visual';
 import { PageAccessory } from './page-accessory';
 import { usePageColumn } from './page-column';
 import { PageHeaderSinkProvider } from './page-header-actions';
@@ -20,9 +21,11 @@ import { usePageActions } from './use-page-actions';
 // Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Page(props: PageProps): ReactElement {
   return (
-    <ActionShortcutScope>
-      <PageSurface {...props} />
-    </ActionShortcutScope>
+    <SvgBudget>
+      <ActionShortcutScope>
+        <PageSurface {...props} />
+      </ActionShortcutScope>
+    </SvgBudget>
   );
 }
 

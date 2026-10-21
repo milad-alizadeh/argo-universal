@@ -11,6 +11,27 @@ export {
 } from './status-kit-props';
 
 export const contentListProps = z.object({
+  layout: z.enum(['list', 'grid']).optional().describe('Rows or media tiles.'),
+  direction: z
+    .enum(['vertical', 'horizontal'])
+    .optional()
+    .describe('Vertical content or a horizontal shelf.'),
+  columns: z
+    .union([z.number().int().positive(), z.literal('auto')])
+    .optional()
+    .describe(
+      'Column count, capped at 2/4/6 by Size class; auto fits tileSize.',
+    ),
+  tileSize: z
+    .enum(['sm', 'md', 'lg'])
+    .optional()
+    .describe(
+      'Minimum tile width; phones cap grids at two columns, lg at one.',
+    ),
+  aspect: z
+    .enum(['square', 'landscape', 'portrait'])
+    .optional()
+    .describe('Media aspect: square 1:1, landscape 16:10, portrait 3:4.'),
   appearance: z
     .enum(['plain', 'grouped', 'cards'])
     .optional()

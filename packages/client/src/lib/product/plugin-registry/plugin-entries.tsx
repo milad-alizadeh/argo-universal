@@ -5,7 +5,10 @@ import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
 import { SplitButton } from '#primitives/actions/split-button';
 import { Audio } from '#primitives/content/audio';
+import { Avatar } from '#primitives/content/avatar';
 import { Code } from '#primitives/content/code';
+import { Icon } from '#primitives/content/icon';
+import { Image } from '#primitives/content/image';
 import { Label } from '#primitives/content/label';
 import { Link } from '#primitives/content/link';
 import { Markdown } from '#primitives/content/markdown';
@@ -98,6 +101,9 @@ export const pluginEntries = {
   'Canvas.Group': Canvas.Group,
   Video,
   Audio,
+  Image,
+  Avatar,
+  Icon,
   Alert,
   Sheet,
 } satisfies {

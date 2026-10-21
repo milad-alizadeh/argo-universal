@@ -127,7 +127,7 @@ function PageFooter({ text }: { text?: string }): ReactNode {
   );
 }
 
-function ListEnd(
+export function ListEnd(
   props: Pick<ListProps<never>, 'endContent' | 'footer'>,
 ): ReactElement {
   return (
