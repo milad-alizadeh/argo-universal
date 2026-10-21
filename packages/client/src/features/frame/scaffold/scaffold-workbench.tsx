@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { View, type ViewStyle } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 import { ScrollView } from '#primitives/layout/scroll-view';
 import { Surface } from '#primitives/layout/surface';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
@@ -35,9 +35,11 @@ function WorkbenchPanel({
   );
 }
 
-function workbenchPlacement({ frame }: ScaffoldPartProps['layout']): {
-  style: ViewStyle;
-} {
+type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'>;
+
+function workbenchPlacement({
+  frame,
+}: ScaffoldPartProps['layout']): WorkbenchPlacement {
   return {
     className: 'absolute bottom-frame-inset',
     style: {
