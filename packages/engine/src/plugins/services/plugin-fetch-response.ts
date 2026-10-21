@@ -1,5 +1,5 @@
 import type { IncomingMessage } from 'node:http';
-import { sameHost } from '@repo/contracts/plugins';
+import { confineAccountHeaders } from '../accounts/account-headers';
 import type { PluginValue } from '../protocol/runtime';
 import { argoFetchLimitBytes } from './plugin-limits';
 
@@ -69,17 +69,12 @@ const becomesGet = (method: string, status: number): boolean =>
     : postToGet.has(status) && method === 'POST';
 
 const headersFor = (hop: Hop, url: URL): Record<string, string> =>
-  without(
-    hop.headers,
-    (name) => leavesOrigin(hop, url, name) || leavesAccountHost(hop, url, name),
+  without(confineAccountHeaders(hop, url), (name) =>
+    leavesOrigin(hop, url, name),
   );
 
 const leavesOrigin = (hop: Hop, url: URL, name: string): boolean =>
   url.origin !== hop.url.origin && credentialHeaders.has(name);
-
-const leavesAccountHost = (hop: Hop, url: URL, name: string): boolean =>
-  !sameHost(url.host, hop.url.host) &&
-  name === hop.accountHeader?.toLowerCase();
 
 const asGet = (hop: Hop): Hop => ({
   ...hop,

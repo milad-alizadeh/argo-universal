@@ -1,6 +1,6 @@
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { ActivatedPlugin, PluginAccess } from '../access/plugin-access';
-import type { AccountProviders } from '../accounts/account-providers';
+import type { AccountServices } from '../accounts/account-services';
 import type { PluginOAuth } from '../accounts/plugin-oauth';
 import { accountCall, oauthCall } from '../accounts/service-calls';
 import {
@@ -37,7 +37,7 @@ export type CallReach = {
   generation: number;
   projectId?: string;
   serverDevice?: boolean;
-  providers?: AccountProviders;
+  accounts: AccountServices;
   oauth: PluginOAuth;
   query?: boolean;
   resources: PluginResources;

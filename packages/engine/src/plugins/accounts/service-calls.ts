@@ -2,7 +2,6 @@ import { CapabilityRefusal } from '../access/capability-refusal';
 import type { PluginRequest, PluginValue } from '../protocol/runtime';
 import type { PluginCall } from '../services/plugin-calls';
 import { allowAccountHeader } from '../services/plugin-fetch';
-import type { AccountProviders } from './account-providers';
 import type { PluginAccounts } from './plugin-accounts';
 
 type AccountRequest = Extract<PluginRequest, { api: 'accounts' }>;
@@ -31,7 +30,7 @@ async function providerCall(
   call: PluginCall,
   input: Extract<AccountRequest['call'], { action: 'provide' | 'provided' }>,
 ): Promise<void> {
-  const providers = requireProviders(call);
+  const providers = call.accounts;
 
   if (input.action === 'provided') return providers.settle(call, input);
   await requireAccounts(call).requireProvider(call.pluginId, input.host);
@@ -44,12 +43,6 @@ function requireAccounts(call: PluginCall): PluginAccounts {
   if (!call.options.accounts) throw new Error('Accounts are unavailable');
 
   return call.options.accounts;
-}
-
-function requireProviders(call: PluginCall): AccountProviders {
-  if (!call.providers) throw new Error('Account providers are unavailable');
-
-  return call.providers;
 }
 
 export async function oauthCall(

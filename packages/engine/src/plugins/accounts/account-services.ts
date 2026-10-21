@@ -1,6 +1,13 @@
 import { realClock } from '../clock';
+import type { SpawnCaller } from '../hooks/spawn-hooks';
+import type { PluginValue } from '../protocol/runtime';
 import type { CallReach } from '../services/plugin-calls';
 import type { PluginServiceOptions } from '../services/plugin-services';
+import {
+  borrowFetch,
+  type BorrowCall,
+  type BorrowRequest,
+} from './account-borrow';
 import { AccountProviders, type AccountTransport } from './account-providers';
 import { PluginOAuth } from './plugin-oauth';
 
@@ -23,8 +30,36 @@ export class AccountServices {
     });
   }
 
-  reach(): Pick<CallReach, 'providers' | 'oauth'> {
-    return { providers: this.providers, oauth: this.oauth };
+  reach(): Pick<CallReach, 'accounts' | 'oauth'> {
+    return { accounts: this, oauth: this.oauth };
+  }
+
+  borrow(call: BorrowCall, request: BorrowRequest): Promise<PluginValue> {
+    return borrowFetch(
+      { accounts: this.options.accounts, providers: this.providers },
+      call,
+      request,
+    );
+  }
+
+  register(
+    caller: SpawnCaller,
+    options: Parameters<AccountProviders['register']>[1],
+  ): void {
+    this.registry().register(caller, options);
+  }
+
+  settle(
+    caller: SpawnCaller,
+    reply: Parameters<AccountProviders['settle']>[1],
+  ): void {
+    this.registry().settle(caller, reply);
+  }
+
+  private registry(): AccountProviders {
+    if (!this.providers) throw new Error('Account providers are unavailable');
+
+    return this.providers;
   }
 
   release(pluginId: string): void {

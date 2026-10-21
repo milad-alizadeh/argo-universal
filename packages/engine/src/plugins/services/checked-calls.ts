@@ -1,7 +1,6 @@
 import type { PluginAssetSource } from '@repo/contracts/plugins/assets';
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { PluginAccess } from '../access/plugin-access';
-import { borrowHop } from '../accounts/borrow-hop';
 import { spawnHooks } from '../hooks/spawn-hooks';
 import type {
   FetchCall,
@@ -77,22 +76,26 @@ export async function answerFetch(
 
   access.checkHost(hop.url);
 
-  const authenticated = await fetchHop(call, hop, request.account);
+  if (request.account !== undefined)
+    return call.accounts.borrow(
+      { ...call, access },
+      { hop, host: request.account },
+    );
 
-  if (!authenticated) return unavailableBorrow(call);
+  return sendFetch(call, hop, access);
+}
 
+function sendFetch(
+  call: PluginCall,
+  hop: ReturnType<typeof firstHop>,
+  access: PluginAccess,
+): Promise<PluginValue> {
   call.logCall();
 
-  return call.resources.fetch(authenticated, {
+  return call.resources.fetch(hop, {
     access,
     network: call.network,
   });
-}
-
-function unavailableBorrow(call: PluginCall): null {
-  if (call.query) throw new CapabilityRefusal('Account is unavailable');
-
-  return null;
 }
 
 export const answerAsset = (
@@ -137,12 +140,4 @@ async function checkedProcess(
   if (call.action === 'wait' || call.action === 'kill') return call;
 
   return { ...(await access.checkCommand(call)), action: call.action };
-}
-
-function fetchHop(
-  call: PluginCall,
-  hop: ReturnType<typeof firstHop>,
-  host?: string,
-): Promise<ReturnType<typeof firstHop> | null> {
-  return host === undefined ? Promise.resolve(hop) : borrowHop(call, hop, host);
 }

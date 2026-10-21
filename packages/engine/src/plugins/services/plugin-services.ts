@@ -125,7 +125,7 @@ export class PluginServices {
 
   private ports(): Pick<
     CallReach,
-    'storage' | 'keychain' | 'options' | 'network' | 'providers' | 'oauth'
+    'storage' | 'keychain' | 'options' | 'network' | 'accounts' | 'oauth'
   > {
     return {
       storage: this.storage,
