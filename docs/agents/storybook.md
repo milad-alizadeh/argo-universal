@@ -1,5 +1,7 @@
 # Storybook
 
+Storybook is the source of truth for built UI: a component's states, its platforms and its appearance are whatever its stories show. A design in Paper leads up to that story and is deleted once the component ships (`paper.md`).
+
 [ADR-0021](../adr/0021-storybook-renders-views-from-props.md) owns Storybook's data boundary. App E2E, not Storybook, proves that a screen is wired.
 
 - Presentation: `*.stories.tsx` renders the actual component for people to inspect and use. Name stories for visible states or experiences, not a prop inventory. A file with one story names it after the component (`name: 'Button'`) so the sidebar shows one entry.
