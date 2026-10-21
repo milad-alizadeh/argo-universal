@@ -30,9 +30,16 @@ export function WindowBand({
   ...content
 }: WindowBandContent & { children?: ReactNode }): ReactNode {
   const host = use(WindowBandHostContext);
-  const focused = useScreenFocused();
-  const wide = useWide();
-  useClaim(focused && wide ? host : undefined, content);
+  const activeHost = useWide() ? host : undefined;
+  useBandClaim(activeHost, content);
 
-  return host && wide ? null : children;
+  return activeHost ? null : children;
+}
+
+function useBandClaim(
+  host: WindowBandHost | undefined,
+  content: WindowBandContent,
+): void {
+  const focused = useScreenFocused();
+  useClaim(focused ? host : undefined, content);
 }

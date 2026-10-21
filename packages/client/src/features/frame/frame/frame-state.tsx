@@ -48,7 +48,11 @@ const inspectorStateOf = (open: boolean, expanded: boolean): InspectorState => {
 
 type InspectorColumn = Omit<
   FrameScaffoldState,
-  'sidebarShown' | 'onSidebarShownChange'
+  | 'sidebarShown'
+  | 'onSidebarShownChange'
+  | 'band'
+  | 'workbenchShown'
+  | 'onWorkbenchShownChange'
 >;
 
 // The hosted Inspector's pane, whose expand moves the Frame's column between open and expanded.
@@ -95,20 +99,31 @@ export interface FrameState {
 export function useFrameState(): FrameState {
   const [sidebarShown, onSidebarShownChange] = useState(true);
   const [inspectorHost] = useState(createInspectorHost);
-  const [bandHost] = useState(createWindowBandHost);
-  const [workbenchShown, onWorkbenchShownChange] = useState(false);
-  const band = useClaimed(bandHost);
+  const { bandHost, ...band } = useBandState();
 
   return {
     bandHost,
     scaffold: {
-      band,
-      workbenchShown,
-      onWorkbenchShownChange,
+      ...band,
       sidebarShown,
       onSidebarShownChange,
       ...useInspectorColumn(useHostedInspector(inspectorHost)),
     },
     inspectorHost,
+  };
+}
+
+function useBandState(): Pick<
+  FrameScaffoldState,
+  'band' | 'workbenchShown' | 'onWorkbenchShownChange'
+> & { bandHost: WindowBandHost } {
+  const [bandHost] = useState(createWindowBandHost);
+  const [workbenchShown, onWorkbenchShownChange] = useState(false);
+
+  return {
+    bandHost,
+    band: useClaimed(bandHost),
+    workbenchShown,
+    onWorkbenchShownChange,
   };
 }
