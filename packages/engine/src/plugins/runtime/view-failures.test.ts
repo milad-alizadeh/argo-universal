@@ -153,3 +153,30 @@ it('rolls two failed Openings of one Plugin up to one failure for the App', asyn
     { message: 'Atlas threw twice' },
   ]);
 });
+
+it('fails an Opening whose page threw after it had already drawn', async () => {
+  const { failures, views, opened } = wiring();
+  ask(views, { path: '/map' });
+  await settled();
+  const viewId = opened();
+  views.receive(atlas, viewId, { ...snapshot, root: drew });
+  views.receive(atlas, viewId, {
+    type: 'patch',
+    revision: 2,
+    ops: [{ op: 'replace', key: [], node: broke }],
+  });
+
+  expect(await listed(failures)).toMatchObject([
+    { kind: 'drawing', message: threw, pluginId: atlas },
+  ]);
+});
+
+it('retires a failed Opening with no view left when the Plugin is deactivated', async () => {
+  const { failures, views } = wiring();
+  const page = views.headless(atlas, { path: '/sync' }, 60_000);
+  views.receive(atlas, page.viewId, { ...snapshot, root: broke });
+  expect(await listed(failures)).toMatchObject([{ message: threw }]);
+
+  failures.ended(atlas);
+  expect(await listed(failures)).toEqual([]);
+});

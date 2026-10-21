@@ -1,9 +1,10 @@
+import { oneLine } from './log-line';
+
 export const renderFallbackLine = (
   pluginId: string,
   slotId: string,
   reason: string,
-): string =>
-  `Plugin ${pluginId}: core fallback ${slotId}: ${reason.replaceAll(/[\r\n]/g, ' ')}`;
+): string => `Plugin ${pluginId}: core fallback ${slotId}: ${oneLine(reason)}`;
 
 export const belowWireMinimum = 'App is below the wire minimum';
 

@@ -107,6 +107,7 @@ export class RuntimePlugins {
 
   async deactivate(pluginId: string): Promise<void> {
     this.input.resources.background.remove(pluginId);
+    this.input.resources.failures.ended(pluginId);
     const plugin = this.plugins.get(pluginId);
 
     if (!plugin) return;

@@ -41,6 +41,11 @@ export class PluginFailures {
     if (this.drawings.failed(plugin, opening, message)) this.changed();
   }
 
+  // A deactivated Plugin has no Opening left to draw, and its views were removed without drawing.
+  public ended(pluginId: string): void {
+    if (this.drawings.end(pluginId)) this.changed();
+  }
+
   /*
    * An Opening's drawing failure goes when a view for it draws, and when the App stops asking for it.
    * Another Opening of the same Plugin clears nothing, and the viewId a reload mints keeps the Opening.
