@@ -30,6 +30,8 @@ export type InspectorProps = KitProps<'Inspector'> & {
   // The caller can retain a tab or drill-in page's scroll position while it is unmounted.
   scrollState?: {
     key: string;
+    // False while loading; true settles restoration even when the final page is shorter.
+    ready?: boolean;
     getOffset: () => number;
     onScroll: (offset: number) => void;
   };

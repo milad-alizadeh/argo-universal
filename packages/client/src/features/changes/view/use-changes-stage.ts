@@ -17,7 +17,7 @@ export function useChangesStage(
   const comparison = comparisonKey(props);
   const selectedFile = selectedPath(props, selection, comparison);
 
-  const scrollState = usePageScroll(pageKey(comparison, selectedFile));
+  const scrollState = useChangesScroll(comparison, selectedFile, props);
 
   const onFileSelect = (path?: string): void =>
     select(selectionOf(comparison, path));
@@ -62,12 +62,25 @@ const selectionOf = (comparison: string, path?: string): Selection =>
 
 function usePageScroll(
   key: string,
+  ready: boolean,
 ): NonNullable<InspectorProps['scrollState']> {
   const offsets = useRef(new Map<string, number>());
 
   return {
     key,
+    ready,
     getOffset: () => offsets.current.get(key) ?? 0,
     onScroll: (offset) => offsets.current.set(key, offset),
   };
+}
+
+const filesReady = (props: ChangesViewProps | undefined): boolean =>
+  props?.files !== undefined;
+
+function useChangesScroll(
+  comparison: string,
+  path: string | undefined,
+  props: ChangesViewProps | undefined,
+): ChangesStage['scrollState'] {
+  return usePageScroll(pageKey(comparison, path), filesReady(props));
 }
