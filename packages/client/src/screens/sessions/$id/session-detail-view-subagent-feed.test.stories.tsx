@@ -77,7 +77,7 @@ async function assertOpened(
   wide: boolean,
 ): Promise<void> {
   if (wide) {
-    const tab = await canvas.findByRole('tab', { name: /^Subagents:/ });
+    const tab = await canvas.findByRole('tab', { name: /^Agents:/ });
 
     await expect(tab).toHaveAttribute('aria-selected', 'true');
 

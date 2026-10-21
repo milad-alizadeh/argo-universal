@@ -91,3 +91,17 @@ export const LongTitleStopsAtTheTrailingControls: ScaffoldStory = {
     await expect(text.scrollWidth).toBeGreaterThan(text.clientWidth);
   }),
 };
+
+// Compact drill-in belongs to the page; desktop navigation and pane controls do not survive on a phone.
+export const CompactShowsThePageWithoutDesktopChrome: ScaffoldStory = {
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    await page.viewport(390, 844);
+    await controlled.render({ sizeClass: 'compact' });
+    await expect(canvas.getByTestId('compact-frame')).toBeVisible();
+    await expect(canvas.getByTestId('detail-content')).toBeVisible();
+    await expect(canvas.queryByTestId('desktop-rail')).toBeNull();
+    await expect(canvas.queryByTestId('desktop-list')).toBeNull();
+    await expect(canvas.queryByTestId('window-band')).toBeNull();
+    await expect(canvas.queryByRole('separator')).toBeNull();
+  }),
+};
