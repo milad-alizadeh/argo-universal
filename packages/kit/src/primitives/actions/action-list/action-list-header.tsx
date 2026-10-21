@@ -108,6 +108,18 @@ function HeaderOverflow({
   return <ActionMenu groups={groups} label={label} trigger={trigger} />;
 }
 
+// Android clips what hangs outside the button, so its badge sits on the glyph's corner, inside the 48 box.
+function submenuBadge(submenu: DeclaredSubmenu): ReactElement | undefined {
+  if (!submenu.badge) return undefined;
+
+  return (
+    <ItemBadge
+      badge={submenu.badge}
+      className="android:right-2 android:top-2"
+    />
+  );
+}
+
 // A submenu opens its own Sections from its icon, its badge on the icon.
 function HeaderSubmenu({
   submenu,
@@ -115,7 +127,7 @@ function HeaderSubmenu({
   submenu: DeclaredSubmenu;
 }): ReactElement {
   const label = submenuLabel(submenu);
-  const badge = submenu.badge && <ItemBadge badge={submenu.badge} />;
+  const badge = submenuBadge(submenu);
 
   return (
     <ActionMenu

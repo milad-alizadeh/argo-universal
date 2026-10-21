@@ -1,22 +1,27 @@
 import type { KitSchemaProps } from '@repo/contracts/kit-props';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { cn } from '#kit/utils';
 import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
 import { useInSidebar } from './row-drawing-context';
 
 interface BadgeProps {
   badge?: KitSchemaProps['ListItem']['badge'];
+  // Replaces the corner offset, for a host whose bounds would clip a badge hanging outside them.
+  className?: string;
 }
 
 type RowBadge = Exclude<NonNullable<BadgeProps['badge']>, number>;
 
 // A Row badge at the top-end corner of the view it sits in, such as a row's leading icon or a header button.
-export function ItemBadge({ badge }: BadgeProps): ReactNode {
+export function ItemBadge({ badge, className }: BadgeProps): ReactNode {
   if (badge === undefined) return null;
 
   return (
-    <View className="absolute -right-1 -top-1">{renderRowBadge(badge)}</View>
+    <View className={cn('absolute -right-1 -top-1', className)}>
+      {renderRowBadge(badge)}
+    </View>
   );
 }
 
