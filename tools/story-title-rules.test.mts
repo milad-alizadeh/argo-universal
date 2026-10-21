@@ -187,26 +187,31 @@ describe('a story title', (): void => {
     ).toEqual([expect.stringMatching(/no story group belongs/)]);
   });
 
-  // One depth per kit root (#1199): a primitive is four segments, a foundation three, and nothing else.
-  it('fails a primitive that skips its own folder', (): void => {
-    expect(
-      storyTitleProblems(
-        `${kit}/primitives/visual/svg.stories.tsx`,
-        meta(svgTitle),
-      ),
-    ).toEqual([
+  /*
+   * One depth per kit root (ADR-0040 item 3): a primitive is four segments, a foundation three, and
+   * nothing else. Each depth is exact, not a floor: a folder deeper than the one the title names
+   * would drop a segment silently.
+   */
+  it.each([
+    [`${kit}/primitives/visual/svg.stories.tsx`, svgTitle],
+    [
+      `${kit}/primitives/visual/svg/variants/variants.stories.tsx`,
+      'Design System/Primitives/Visual/Variants',
+    ],
+  ])('fails a primitive outside its own folder: %s', (file, title): void => {
+    expect(storyTitleProblems(file, meta(title))).toEqual([
       expect.stringMatching(
         /a kit primitive lives in `primitives\/<category>\/<name>\/`/,
       ),
     ]);
   });
 
-  it('fails a foundation that skips its own folder', (): void => {
+  it.each([
+    `${kit}/foundations/tones.stories.tsx`,
+    `${kit}/foundations/tones/ramp/ramp.stories.tsx`,
+  ])('fails a foundation outside its own folder: %s', (file): void => {
     expect(
-      storyTitleProblems(
-        `${kit}/foundations/tones.stories.tsx`,
-        meta('Design System/Foundations/Tones'),
-      ),
+      storyTitleProblems(file, meta('Design System/Foundations/Tones')),
     ).toEqual([expect.stringMatching(/or a foundation in `foundations/)]);
   });
 

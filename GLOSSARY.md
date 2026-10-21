@@ -264,6 +264,10 @@ _Avoid_: Notice, Feed entry
 Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
 _Avoid_: Design system (for the code), component library
 
+**Foundation**:
+A scale the UI kit documents on its own, because no component owns it: the tone ramp, the spacing scale. A primitive's own states are its stories, never a Foundation.
+_Avoid_: Token page, style guide
+
 **List section**:
 A distinct group of items in a List, with an optional heading and footer.
 _Avoid_: Group (when naming a List section)

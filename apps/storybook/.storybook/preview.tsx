@@ -45,8 +45,8 @@ const preview: Preview = {
     standalonePreview: true,
     /*
      * Storybook reads `storySort` from this file without evaluating it, so it must stay an inline literal here:
-     * not a constant, not spread in from `previewParameters`. Names that match no story yet (Foundations, Patterns)
-     * are ignored, so later tickets need not touch this.
+     * not a constant, not spread in from `previewParameters`. A name that matches no story is ignored, so a
+     * root may be listed here before the ticket that fills it lands.
      */
     options: {
       storySort: {

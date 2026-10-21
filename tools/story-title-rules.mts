@@ -62,7 +62,6 @@ type Expected =
   | { kind: 'prefix'; prefix: string; seed: string; why: string }
   | { kind: 'none'; why: string };
 
-// A folder no story group belongs to, with the reason a reader needs to place the file.
 const nowhere = (why = 'no story group belongs to this folder'): Expected => ({
   kind: 'none',
   why,
@@ -121,10 +120,11 @@ const testStories: Rule = {
 };
 
 /*
- * One depth per kit root (#1199): a primitive is `Design System/Primitives/<Category>/<Name>`, four
- * segments drawn from `primitives/<category>/<name>/`, and a foundation — a token scale no component
- * owns — is `Design System/Foundations/<Topic>` from `foundations/<topic>/`. The kit has no third root,
- * so a story anywhere else in it has nowhere to go and says where the two homes are.
+ * One depth per kit root (ADR-0040 item 3): a primitive is `Design System/Primitives/<Category>/<Name>`,
+ * four segments drawn from `primitives/<category>/<name>/`, and a foundation — a token scale no component
+ * owns — is `Design System/Foundations/<Topic>` from `foundations/<topic>/`. Each depth is exact, not a
+ * floor: a deeper folder would drop a segment silently and two of them could collide on one title. The
+ * kit has no third root, so a story anywhere else in it has nowhere to go and is told the two homes.
  */
 const primitivesHome =
   'a kit primitive lives in `primitives/<category>/<name>/`, so its title carries its category';
@@ -135,12 +135,12 @@ const kitHome =
 const kitRules: readonly Rule[] = [
   testStories,
   {
-    test: ({ dirs }) => dirs[0] === 'foundations' && dirs.length > 1,
+    test: ({ dirs }) => dirs[0] === 'foundations' && dirs.length === 2,
     expected: (path) =>
       titleUnder('Design System/Foundations', path.dirs.slice(1), path),
   },
   {
-    test: ({ dirs }) => dirs[0] === 'primitives' && dirs.length > 2,
+    test: ({ dirs }) => dirs[0] === 'primitives' && dirs.length === 3,
     expected: (path) =>
       titleUnder(
         `Design System/Primitives/${pascal(path.dirs[1] ?? '')}`,
@@ -232,15 +232,8 @@ const expectedTitle = (file: string, component?: string): Expected => {
  * The title `pnpm new:story` writes. A screen's page title and a test's subject are the author's, so
  * the derived one is a starting point there and the exact title everywhere else.
  */
-const firstTitle = (expected: Expected): string | undefined => {
-  if (expected.kind === 'exact') return expected.title;
-
-  return expected.kind === 'prefix' ? expected.seed : undefined;
-};
-
-// Why a path derives no title, which `pnpm new:story` reports as the folder's own problem.
-const whyNowhere = (expected: Expected): string =>
-  expected.kind === 'none' ? expected.why : '';
+const firstTitle = (expected: Exclude<Expected, { kind: 'none' }>): string =>
+  expected.kind === 'exact' ? expected.title : expected.seed;
 
 export const derivedStoryTitle = (componentFile: string): string => {
   const storyFile = componentFile.replace(
@@ -250,12 +243,11 @@ export const derivedStoryTitle = (componentFile: string): string => {
 
   // `pnpm new:story` writes a story for the component the file itself exports, never for its folder's.
   const expected = expectedTitle(storyFile);
-  const title = firstTitle(expected);
 
-  if (title === undefined)
-    throw new Error(`${componentFile}: ${whyNowhere(expected)}`);
+  if (expected.kind === 'none')
+    throw new Error(`${componentFile}: ${expected.why}`);
 
-  return title;
+  return firstTitle(expected);
 };
 
 const quoted = (value: string): string => `'${value}'`;
