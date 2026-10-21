@@ -13,7 +13,7 @@ import { ReplaceableSlotView } from './replaceable-slot';
 import { coreSlotState, type ReplaceableState } from './replaceable-state';
 
 const meta = {
-  title: 'Shared/ReplaceableSlot',
+  title: 'Design System/Patterns/ReplaceableSlot',
   component: ReplaceableSlotView,
 } satisfies Meta;
 
@@ -32,7 +32,6 @@ function preview(state: ReplaceableState): React.JSX.Element {
 }
 
 export const MessageDrawings: StoryObj = {
-  name: 'Replaceable Slot',
   render: () => (
     <Variations>
       <Variation label="Core and fallback">

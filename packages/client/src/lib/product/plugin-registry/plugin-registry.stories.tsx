@@ -11,7 +11,7 @@ import { useState, type ReactElement } from 'react';
 import { PluginTree } from './plugin-registry';
 
 const meta = {
-  title: 'Shared/PluginTree',
+  title: 'Design System/Patterns/PluginRegistry',
   component: PluginTree,
   parameters: { screenPreview: true },
 } satisfies Meta;

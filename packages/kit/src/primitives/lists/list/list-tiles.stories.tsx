@@ -10,7 +10,7 @@ import { Svg } from '#primitives/visual';
 import { List } from './list';
 
 const meta = {
-  title: 'Design System/Primitives/Lists/List tiles',
+  title: 'Design System/Primitives/Lists/List/Tiles',
   component: List,
   argTypes: kitArgTypes('List'),
   parameters: { screenPreview: true },

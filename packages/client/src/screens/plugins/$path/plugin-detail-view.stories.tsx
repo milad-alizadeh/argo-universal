@@ -18,7 +18,7 @@ const meta = {
 
 export default meta;
 
-export const Page: StoryObj<typeof meta> = { name: 'PluginDetailView' };
+export const Page: StoryObj<typeof meta> = {};
 
 export const ListPage: StoryObj<typeof meta> = {
   name: 'List page',

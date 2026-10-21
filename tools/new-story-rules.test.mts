@@ -78,7 +78,7 @@ describe('derivedTitle', () => {
     ['packages/kit/src/symbols/icon.tsx', 'Design System/Icon'],
     [
       'packages/client/src/lib/product/scroll-fade/scroll-fade.tsx',
-      'Shared/ScrollFade',
+      'Design System/Patterns/ScrollFade',
     ],
     [
       'packages/client/src/features/sessions/components/session-row.tsx',

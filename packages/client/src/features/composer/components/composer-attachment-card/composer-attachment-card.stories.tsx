@@ -39,7 +39,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ComposerAttachmentCardStates: Story = {
-  name: 'ComposerAttachmentCard',
   render: (args): React.JSX.Element => (
     <Variations>
       {states.map(([label, attachment]) => (

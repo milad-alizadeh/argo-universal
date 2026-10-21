@@ -35,7 +35,6 @@ const usage = {
 };
 
 export const ContextControl: Story = {
-  name: 'ContextControl',
   render: (args) => (
     <Variations>
       {contextLevels.map(({ label, context }) => (

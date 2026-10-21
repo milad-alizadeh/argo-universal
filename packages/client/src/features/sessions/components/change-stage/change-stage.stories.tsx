@@ -23,7 +23,6 @@ const variations: ChangeStageProps[] = [
 ];
 
 export const Overview: Story = {
-  name: 'ChangeStage',
   render: () => (
     <Variations>
       {variations.map((props) => (

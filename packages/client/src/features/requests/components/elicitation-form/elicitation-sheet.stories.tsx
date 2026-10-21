@@ -27,7 +27,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = { name: 'ElicitationSheet' };
+export const Overview: Story = {};
 
 export const MultipleChoice: Story = {
   args: { request: nextWorkRequest, initialValues: nextWorkValues },

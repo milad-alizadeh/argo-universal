@@ -76,6 +76,5 @@ export const ImageSelectionFailed: Story = {
 };
 
 export const Overview: Story = {
-  name: 'Composer',
   render: (args) => <ComposerOverview {...args} />,
 };

@@ -11,7 +11,7 @@ const [notice] = noticeStates;
 if (!notice) throw new Error('Notice gallery needs a Notice');
 
 const meta = {
-  title: 'Feed/Notices',
+  title: 'Feed/FeedNotice',
   component: FeedNotice,
   args: { row: notice },
 } satisfies Meta<typeof FeedNotice>;

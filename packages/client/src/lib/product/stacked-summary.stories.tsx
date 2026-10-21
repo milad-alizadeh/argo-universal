@@ -23,7 +23,7 @@ const shellIcons: StackedSummaryIcon[] = [1, 2, 3].map(() => ({
 }));
 
 const meta = {
-  title: 'Shared/StackedSummary',
+  title: 'Design System/Patterns/StackedSummary',
   component: StackedSummary,
   decorators: [
     (Story): ReactElement => (
@@ -50,7 +50,6 @@ const examples = [
 ];
 
 export const Overview: Story = {
-  name: 'StackedSummary',
   render: (): ReactElement => (
     <Variations>
       {examples.map(({ name, ...props }) => (

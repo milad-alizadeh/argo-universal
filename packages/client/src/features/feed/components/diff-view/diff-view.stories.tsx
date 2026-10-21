@@ -34,7 +34,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {
-  name: 'DiffView',
   render: () => (
     <Variations>
       {variations.map(({ label, ...props }) => (

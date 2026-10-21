@@ -16,10 +16,9 @@ const meta = {
 
 export default meta;
 
-export const Overview: StoryObj<typeof meta> = { name: 'SessionsLoading' };
+export const Overview: StoryObj<typeof meta> = {};
 
 export const Compact: StoryObj<typeof meta> = {
-  name: 'SessionsLoading, Compact',
   render: (): React.JSX.Element => (
     <View className="w-full bg-content wide:w-frame-list">
       <SessionsLoading layout="compact" />

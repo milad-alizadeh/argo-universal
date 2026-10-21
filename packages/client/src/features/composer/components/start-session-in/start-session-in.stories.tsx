@@ -4,7 +4,7 @@ import { fn } from 'storybook/test';
 import { StartSessionIn } from './start-session-in';
 
 const meta = {
-  title: 'Composer/New Session context',
+  title: 'Composer/StartSessionIn',
   component: StartSessionIn,
   args: {
     serverName: serverInfo.name,
@@ -20,4 +20,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Context: Story = { name: 'New Session context' };
+export const Context: Story = {};

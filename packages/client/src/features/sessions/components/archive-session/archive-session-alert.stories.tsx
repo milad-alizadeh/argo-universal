@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { ArchiveSessionAlert } from './archive-session-alert';
 
 const meta = {
-  title: 'Sessions/ArchiveSessionAlert',
+  title: 'Sessions/ArchiveSession/Alert',
   component: ArchiveSessionAlert,
   args: {
     open: true,
@@ -17,4 +17,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // iOS and Android ask before every archive; the web preview draws the centred alert.
-export const Confirm: Story = { name: 'ArchiveSessionAlert' };
+export const Confirm: Story = {};

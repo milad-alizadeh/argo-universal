@@ -35,6 +35,5 @@ type Story = StoryObj;
 
 // The AccountRow chips and captions designed for Settings › Accounts in Paper.
 export const GitHubStep: Story = {
-  name: 'GitHubStep',
   render: GitHubSteps,
 };

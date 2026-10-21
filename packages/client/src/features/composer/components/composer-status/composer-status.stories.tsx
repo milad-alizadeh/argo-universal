@@ -30,7 +30,6 @@ const settledStatus = {
 const workPreviewClassName = 'flex-row items-center gap-2';
 
 export const Status: Story = {
-  name: 'Composer status',
   render: (args) => (
     <Variations>
       <Variation label="Subagents running">

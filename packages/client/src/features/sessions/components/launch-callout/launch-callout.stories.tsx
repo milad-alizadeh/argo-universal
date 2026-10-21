@@ -54,4 +54,4 @@ const gallery = (
   </Variations>
 );
 
-export const Overview: StoryObj<typeof meta> = { name: 'LaunchCallout' };
+export const Overview: StoryObj<typeof meta> = {};

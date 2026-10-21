@@ -38,7 +38,6 @@ const variations = [
 
 // Recorded prompts: inline code, an image, markdown and a long prompt; longer than four lines clamps behind Show more.
 export const Overview: Story = {
-  name: 'UserMessage',
   render: (args) => (
     <Variations>
       {variations.map(({ label, row }) => (
