@@ -4,6 +4,7 @@ import type * as IconButtonKit from '#primitives/actions/icon-button';
 import type * as SplitButtonKit from '#primitives/actions/split-button';
 import type * as AvatarKit from '#primitives/content/avatar';
 import type * as IconKit from '#primitives/content/icon';
+import type * as ImageKit from '#primitives/content/image';
 import type * as LabelKit from '#primitives/content/label';
 import type * as LiquidGlassKit from '#primitives/content/liquid-glass';
 import type * as NativeTextKit from '#primitives/content/native-text';
@@ -47,6 +48,7 @@ import type * as SpinnerKit from '#primitives/status/spinner';
 
 export type Primitives = {
   AvatarProps: AvatarKit.AvatarProps;
+  ImageProps: ImageKit.ImageProps;
   ProgressBarProps: ProgressBarKit.ProgressBarProps;
   LabelProps: LabelKit.LabelProps;
   PillProps: PillKit.PillProps;
