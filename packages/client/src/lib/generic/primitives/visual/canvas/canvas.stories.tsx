@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Canvas } from './canvas';
 import { CanvasFallback } from './canvas-boundary';
@@ -10,6 +11,7 @@ import { days, rectangles, labels } from './canvas.stories.mocks';
 const meta = {
   title: 'Design System/Primitives/Visual/Canvas',
   component: Canvas,
+  argTypes: kitArgTypes('Canvas'),
 } satisfies Meta;
 
 export default meta;

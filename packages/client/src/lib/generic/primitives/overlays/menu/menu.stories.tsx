@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Text } from '#primitives/content/text';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Menu, type MenuAction } from './menu';
@@ -90,6 +91,7 @@ function rangeActions(
 const meta = {
   title: 'Design System/Primitives/Overlays/Menu',
   component: Menu,
+  argTypes: kitArgTypes('Menu'),
 } satisfies Meta;
 
 export default meta;

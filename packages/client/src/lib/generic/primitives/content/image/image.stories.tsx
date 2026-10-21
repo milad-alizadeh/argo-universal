@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { MediaUrlContext } from '#primitives/content/media-url';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Image } from './image';
@@ -6,6 +7,7 @@ import { Image } from './image';
 const meta = {
   title: 'Design System/Primitives/Content/Image',
   component: Image,
+  argTypes: kitArgTypes('Image'),
 } satisfies Meta;
 
 export default meta;
