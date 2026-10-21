@@ -39,6 +39,8 @@ export interface Measurement {
   session: CDPSession;
   page: Page;
   once: () => Promise<void>;
+  // Reloading or otherwise resetting the page empties the frame recorder, so it happens out here.
+  before?: () => Promise<void>;
 }
 
 const output = (file: string): string => path.join(outputDirectory, file);
@@ -49,7 +51,9 @@ async function traceOnce({
   cpu,
   session,
   once,
+  before,
 }: Measurement): Promise<Record<string, number>> {
+  await before?.();
   const recorded = await trace(session, once);
   await writeFile(
     output(`${label}-${interaction}-${cpu}x.trace.json`),
@@ -61,7 +65,8 @@ async function traceOnce({
 
 // Saves one sampled CPU profile of `once`.
 async function profileOnce(measurement: Measurement): Promise<void> {
-  const { interaction, cpu, session, once } = measurement;
+  const { interaction, cpu, session, once, before } = measurement;
+  await before?.();
   await session.send('Profiler.enable');
   await session.send('Profiler.setSamplingInterval', { interval: 200 });
   await session.send('Profiler.start');
@@ -75,11 +80,14 @@ async function samples({
   session,
   page,
   once,
+  before,
 }: Measurement): Promise<Sample[]> {
   const measured: Sample[] = [];
 
-  for (let index = 0; index < runs; index += 1)
+  for (let index = 0; index < runs; index += 1) {
+    await before?.();
     measured.push(await measure(page, session, once));
+  }
 
   return measured;
 }

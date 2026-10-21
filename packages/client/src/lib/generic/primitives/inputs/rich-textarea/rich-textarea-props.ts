@@ -19,6 +19,10 @@ export interface RichTextareaProps {
   autoFocus?: boolean;
 }
 
-// The text field's own look, shared by the web editor and the phone text area.
+/*
+ * The text field's own look, shared by the web editor and the phone text area. The padding is spelt
+ * out a side at a time rather than as `p-0`: a caller's `px-4` replaces `pl-0 pr-0`, while `p-0`
+ * would outlive it and leave the text against the card's edge.
+ */
 export const plainFieldClassName =
-  'min-h-5 border-0 rounded-none bg-transparent dark:bg-transparent p-0 type-control shadow-none';
+  'min-h-5 border-0 rounded-none bg-transparent dark:bg-transparent pt-0 pr-0 pb-0 pl-0 type-control shadow-none';

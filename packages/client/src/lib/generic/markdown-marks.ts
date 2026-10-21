@@ -21,9 +21,11 @@ export const markdownMarkClassNames = {
  * markers, a code block's box. A DOM list colours its own ::marker.
  */
 export const markdownBlockClassNames = {
-  heading: 'font-semibold',
-  // Rendered markdown's heading: Paper's 16/24 on every width, 4 below the block before it.
-  proseHeading: 'font-semibold wide-type:text-base wide-type:leading-6 pt-1',
+  /*
+   * A heading takes a type role wherever it is drawn (Title for #, Heading below it),
+   * which carries its weight, so this only has to bind it to the block under it.
+   */
+  proseHeading: 'pt-1',
   quote: 'border-l-2 border-border pl-3',
   listMarker: 'text-muted-foreground',
   domListMarker: 'marker:text-muted-foreground',
@@ -31,9 +33,13 @@ export const markdownBlockClassNames = {
   codeText: 'type-code text-foreground',
 } as const;
 
-// A link underlines in the ring colour: a DOM element takes it as a class, a React Native view resolves it.
+/*
+ * A link keeps the colour of the text around it and is marked only by its underline,
+ * drawn in the focus colour: a DOM element takes that as a class, a React Native view
+ * resolves the colour and sets textDecorationColor.
+ */
 export const markdownLinkClassNames = {
   underline: 'underline underline-offset-2',
-  domColor: 'decoration-focus',
-  viewColor: 'text-focus',
+  domUnderlineColor: 'decoration-focus',
+  viewUnderlineColor: 'text-focus',
 } as const;

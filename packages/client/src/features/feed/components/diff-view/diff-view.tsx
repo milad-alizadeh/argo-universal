@@ -1,10 +1,8 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
+import { trayCardClassName, trayClassName } from '#lib/generic/tray-surface';
 import { cn } from '#lib/generic/utils';
-import {
-  CodeBlockHeader,
-  codeBlockTray,
-} from '#lib/product/markdown/code-block-header';
+import { CodeBlockHeader } from '#lib/product/markdown/code-block-header';
 import { codeBlockGroup } from '#lib/product/markdown/copy-button';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
@@ -27,7 +25,7 @@ export type { DiffViewProps } from './diff-view-state';
 
 const showAllClassName = contentActionClass({
   variant: 'link',
-  className: 'h-6 sm:h-6 justify-start rounded-none bg-content px-3 py-0',
+  className: 'h-6 sm:h-6 justify-start rounded-none px-3 py-0',
 });
 
 const showAllTextClassName =
@@ -61,7 +59,7 @@ function DiffHeader(props: DiffViewState): React.JSX.Element {
 }
 
 const diffClassName = (inline: boolean): string =>
-  cn('min-w-0', codeBlockGroup, inline && codeBlockTray);
+  cn('min-w-0', codeBlockGroup, inline && trayClassName);
 
 function DiffFrame(
   props: DiffViewState & { children: ReactNode },
@@ -79,7 +77,7 @@ function DiffFrame(
 
 function diffContentClass(inline: boolean | undefined): string | undefined {
   return inline
-    ? 'overflow-hidden rounded-xl bg-content'
+    ? trayCardClassName
     : 'bg-card py-2 medium:bg-content medium:py-0';
 }
 

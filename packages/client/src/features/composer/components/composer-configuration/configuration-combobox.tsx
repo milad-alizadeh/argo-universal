@@ -16,6 +16,8 @@ interface ConfigurationComboboxProps {
   title: string;
   leading?: ReactElement;
   choiceLabel?: (choice: SessionConfigSelectOption) => string;
+  // The choices are drawn with Configure rather than when the row is pressed; see Drill's mount.
+  eager?: boolean;
 }
 
 // A Configure row for one select option, its short list of choices with no search: on a desktop they open beside the menu and stay open across picks; a phone pushes a page.
@@ -32,14 +34,23 @@ const configureRow = {
   searchable: false,
 } as const;
 
+type RowDrawing = typeof configureRow &
+  Pick<ComboboxProps<string>, 'mount' | 'valueLeading'>;
+
+// An eager row's choices are drawn with Configure itself, so pressing it only slides to them.
+const rowDrawing = (props: ConfigurationComboboxProps): RowDrawing => ({
+  ...configureRow,
+  mount: props.eager ? 'eager' : 'lazy',
+  valueLeading: props.leading,
+});
+
 function comboboxProps(
   props: ConfigurationComboboxProps,
 ): ComboboxProps<string> {
   const { configuration, option, label, title } = props;
 
   return {
-    ...configureRow,
-    valueLeading: props.leading,
+    ...rowDrawing(props),
     label,
     title,
     value: option.currentValue,

@@ -7,7 +7,7 @@ import {
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
-import { ComposerAttachMenu, composerIconButton } from './composer-attach-menu';
+import { ComposerAttachMenu } from './composer-attach-menu';
 import type {
   ToolbarLayout,
   LeftControlsLayout,
@@ -103,11 +103,7 @@ function sendButtonProps(
     ...filledSendProps,
     loading: layout.sendState === 'sending',
     // Paper dims a disabled Send to 35%, whatever stops it.
-    className: cn(
-      composerIconButton,
-      'shadow-control',
-      action.disabled && 'opacity-35',
-    ),
+    className: cn('shadow-control', action.disabled && 'opacity-35'),
   };
 }
 
@@ -137,7 +133,7 @@ function stopButtonAction(
 
 const filledSendProps = {
   variant: 'filled',
-  size: 'xs',
+  size: '2xs',
   corners: 'round',
   iconFilled: true,
   hitSlop: 8,

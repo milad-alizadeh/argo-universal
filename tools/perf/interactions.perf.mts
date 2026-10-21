@@ -2,17 +2,27 @@ import { mkdtemp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { type CDPSession, expect, type Page, test } from '@playwright/test';
+import { feedScenarios } from './feed-scenarios.mts';
 import {
   desktop,
   feedScroll,
   jump,
   loadWholeList,
+  type Measured,
   openApp,
   phone,
+  type Scenario,
   scrollDownAndUp,
   sessionsScroll,
 } from './page.mts';
-import { cpuRates, report, type Result, run, wanted } from './results.mts';
+import {
+  cpuRates,
+  type Measurement,
+  report,
+  type Result,
+  run,
+  wanted,
+} from './results.mts';
 import { type SeededServer, startSeededServer } from './seed.mts';
 
 const toggleSettleMilliseconds = 330;
@@ -48,10 +58,6 @@ test.afterAll(async () => {
   });
 });
 
-type Scenario = (
-  page: Page,
-) => Promise<{ session: CDPSession; once: () => Promise<void> }>;
-
 const toggleSidebar = async (page: Page, index: number): Promise<void> => {
   const name = index % 2 ? 'Show sidebar' : 'Hide sidebar';
   await page.getByRole('button', { name, exact: true }).click();
@@ -77,15 +83,6 @@ const sidebar: Scenario = async (page) => {
   };
 
   return { session, once };
-};
-
-// Flicks down and up the long Session's whole Feed.
-const feed: Scenario = async (page) => {
-  const session = await openLongSession(page);
-  await page.getByTestId(feedScroll).waitFor();
-  await loadWholeList(page, feedScroll, true);
-
-  return { session, once: () => scrollDownAndUp(page, feedScroll) };
 };
 
 // Flicks down and up the whole Sessions list.
@@ -128,8 +125,26 @@ const drawer: Scenario = async (page) => {
 };
 
 const scenarios = new Map<string, Scenario>(
-  Object.entries({ sidebar, feed, sessions, drawer }),
+  Object.entries({
+    sidebar,
+    sessions,
+    drawer,
+    ...feedScenarios({
+      open: openLongSession,
+      title: () => server.longSessionTitle,
+    }),
+  }),
 );
+
+// What `run` is handed: a scenario with no setup leaves `before` out rather than passing an undefined one.
+function measurement(
+  scenario: Measured,
+  where: { page: Page; interaction: string; cpu: number },
+): Measurement {
+  const { session, once, before } = scenario;
+
+  return { ...where, session, once, ...(before && { before }) };
+}
 
 // Warms the code paths and caches with a first pass, then measures.
 async function measureScenario(
@@ -140,10 +155,12 @@ async function measureScenario(
   const scenario = scenarios.get(interaction);
 
   if (!scenario) throw new Error(`No ${interaction} scenario`);
-  const { session, once } = await scenario(page);
-  await once();
+  const started = await scenario(page);
 
-  return run({ interaction, cpu, session, page, once });
+  await started.before?.();
+  await started.once();
+
+  return run(measurement(started, { page, interaction, cpu }));
 }
 
 for (const cpu of cpuRates)

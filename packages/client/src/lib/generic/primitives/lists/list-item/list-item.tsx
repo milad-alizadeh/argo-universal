@@ -106,14 +106,24 @@ function RowFooter(props: {
   );
 }
 
-// Paper's Combobox: a menu's chosen row shows its check only, with no selected fill.
+/*
+ * Paper's Combobox: a chosen row shows its check only, with no selected fill. Every choosing List
+ * draws that check, on a menu row and in a sheet's grouped card alike, so none of them tints the
+ * row behind it; a tint there is the web leaking into a stock picker, and it paints over the
+ * separator under the chosen row. A selected row without a check, such as the Sessions sidebar's,
+ * keeps its tint: it is the only mark that row carries.
+ */
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing();
+  const { selectionMode } = useContext(ListContext);
 
   return (
     <View className={itemSurface(drawing, props)}>
       <ItemPress {...drawingContent(props)} />
-      <Selection selected={props.selected && !drawing.menu} drawing={drawing} />
+      <Selection
+        selected={props.selected && !drawing.menu && !selectionMode}
+        drawing={drawing}
+      />
       <ItemSeparator {...props} />
       <ItemProgress progress={props.progress} sidebar={props.sidebar} />
     </View>

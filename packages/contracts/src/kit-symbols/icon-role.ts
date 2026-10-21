@@ -10,7 +10,13 @@ export const iconRoles = {
   secondary: { wide: 12, phone: 16 },
   // Inside a control.
   control: { wide: 16, phone: 16 },
-  // A disclosure chevron after a label: steps up with the text beside it (owner, 2026-10-20: a step larger on wide).
+  /*
+   * Every chevron in the app, wherever it sits: after a label, before a collapsible's title, in a
+   * menu trigger. A chevron reads as punctuation beside what it points at, so it is a step under
+   * the icons around it and takes one size at every width, rather than a size per surface — the
+   * only chevron outside this role is the web `disclosure`, whose artwork is already a 7x12
+   * chevron drawn inside a 20 box (owner, 2026-10-20).
+   */
   chevron: { wide: 14, phone: 14 },
   // Beside the fixed-size mono text in a file diff.
   code: { wide: 12, phone: 12 },

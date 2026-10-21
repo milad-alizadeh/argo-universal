@@ -37,7 +37,11 @@ export function selection(
   );
 }
 
-// Configure's own rows show these categories; any other select option gets a row of its own.
+/*
+ * The categories Configure already draws a control of its own for; every other select option gets a plain row.
+ * Shorter than the Contract's `knownCategories` on purpose: `model_config` is understood but has no control of
+ * its own, so listing it here would drop such a select rather than give it a row (owner, 2026-10-20).
+ */
 const configuredCategories = new Set([
   'mode',
   'model',
@@ -45,14 +49,24 @@ const configuredCategories = new Set([
   'collaboration_mode',
 ]);
 
+/*
+ * Options Configure leaves out. Claude Code sends `agent`, its own main-thread persona picker, whenever a
+ * folder holds a custom Agent; it has no category, so it would land among the plain rows under the name
+ * "Agent" and read as Argo's Agent, which it is not. Custom Agents are their own piece of work, and the
+ * option comes back when we do them (owner, 2026-10-20).
+ */
+const hiddenOptions = new Set(['agent']);
+
+const drawnElsewhere = (option: SelectConfiguration): boolean =>
+  hiddenOptions.has(option.configId) ||
+  configuredCategories.has(option.category ?? '');
+
 export function otherSelections(
   configuration: ConfigurationValues,
 ): SelectConfiguration[] {
-  return configuration.configOptions.filter(
-    (option): option is SelectConfiguration =>
-      option.type === 'select' &&
-      !configuredCategories.has(option.category ?? ''),
-  );
+  return configuration.configOptions
+    .filter((option): option is SelectConfiguration => option.type === 'select')
+    .filter((option) => !drawnElsewhere(option));
 }
 
 export interface EffortSelection {
@@ -103,6 +117,16 @@ function fallbackEffort(
         );
 
   return below.at(-1) ?? offered[Math.floor(offered.length / 2)];
+}
+
+/*
+ * Whether the Agent's settings are still on their way: a chosen Agent that has sent nothing. The picker draws
+ * its rows as bars while this holds, and the Agent list keeps the reader until it lifts.
+ */
+export function loadingConfiguration(
+  configuration: ComposerConfigurationProps,
+): boolean {
+  return !!configuration.opening && !configuration.configOptions.length;
 }
 
 // The Agent's name; without an installed Agent, the fallback a surface shows instead.

@@ -30,13 +30,22 @@ export function configuration(agentIndex: 0 | 1): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: 'Agent and model' }),
       );
+      /*
+       * A running Session's Agent is fixed: Configure opens on its settings alone, with neither a choice of
+       * Agent nor a row naming the one it is already titled with.
+       */
       await waitFor(() =>
         expect(
-          within(document.body).getByRole('group', {
-            name: `Agent, ${agent.name}`,
+          within(document.body).getByRole('dialog', {
+            name: 'Agent and model',
           }),
         ).toBeVisible(),
       );
+      await expect(
+        within(document.body).queryByRole('group', {
+          name: `Agent, ${agent.name}`,
+        }),
+      ).not.toBeInTheDocument();
       await expect(
         within(document.body).queryByRole('button', { name: /Select .*Agent/ }),
       ).not.toBeInTheDocument();

@@ -1,7 +1,7 @@
-import { lexer } from 'marked';
 import { memo, useMemo } from 'react';
 import { View } from 'react-native';
 import { Blocks } from './block-tokens';
+import { lexMarkdown } from './lex-markdown';
 import { MarkdownVariant, type MarkdownVariantName } from './markdown-variant';
 
 export interface FeedMarkdownProps {
@@ -23,7 +23,7 @@ export const FeedMarkdown = memo(function FeedMarkdown({
   streaming = false,
   variant = 'feed',
 }: FeedMarkdownProps) {
-  const tokens = useMemo(() => lexer(text), [text]);
+  const tokens = useMemo(() => lexMarkdown(text), [text]);
 
   return (
     <MarkdownVariant.Provider value={variant}>

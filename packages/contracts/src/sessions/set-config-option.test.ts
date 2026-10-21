@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   getConfigOptionDiagnostics,
   SessionConfigOption,
-  SessionConfigSelectOption,
 } from './set-config-option';
 
 const extensionOption = {
@@ -34,31 +33,22 @@ it('keeps extension categories and metadata on options, groups and values', (): 
   expect(getConfigOptionDiagnostics().unknownCategories).toBe(before + 1);
 });
 
-describe('config option icon diagnostics', (): void => {
+describe('config option category diagnostics', (): void => {
   it.each([
-    { icon: 'ShieldWarning', unknown: 0 },
-    { icon: 'Pencil', unknown: 0 },
-    { icon: 'MapTrifold', unknown: 0 },
-    { icon: 'Sparkles', unknown: 0 },
-    { icon: 'WarningTriangle', unknown: 0 },
-    { icon: 'ExtensionWidget', unknown: 1 },
-    { icon: 'ShieldCheck', unknown: 1 },
-    { icon: 'shieldWarning', unknown: 1 },
-    { icon: 'constructor', unknown: 1 },
-    { icon: '', unknown: 1 },
-    { icon: undefined, unknown: 0 },
-  ])(
-    'keeps $icon and counts $unknown unknown names',
-    ({ icon, unknown }): void => {
-      const before = getConfigOptionDiagnostics();
-      const option = { value: 'mode', name: 'Mode', _meta: { argo: { icon } } };
-      expect(SessionConfigSelectOption.parse(option)).toEqual(option);
-      expect(
-        getConfigOptionDiagnostics().unknownIcons - before.unknownIcons,
-      ).toBe(unknown);
-      expect(getConfigOptionDiagnostics().unknownCategories).toBe(
-        before.unknownCategories,
-      );
-    },
-  );
+    { category: 'mode', unknown: 0 },
+    { category: 'model_config', unknown: 0 },
+    // Outside the ACP spec, sent by codex-acp, and drawn by Configure.
+    { category: 'collaboration_mode', unknown: 0 },
+    // The spec keeps the leading underscore for an Agent's own categories.
+    { category: '_personality', unknown: 0 },
+    { category: 'invented', unknown: 1 },
+  ])('counts $category as $unknown unknown', ({ category, unknown }): void => {
+    const before = getConfigOptionDiagnostics().unknownCategories;
+
+    SessionConfigOption.parse({ ...extensionOption, category });
+
+    expect(getConfigOptionDiagnostics().unknownCategories).toBe(
+      before + unknown,
+    );
+  });
 });

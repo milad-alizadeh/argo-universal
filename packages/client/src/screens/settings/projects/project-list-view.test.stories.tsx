@@ -129,7 +129,10 @@ export const ShowsALoadErrorAsAToast: Story = {
   args: { projects: { status: 'error' } },
   play: async ({ canvas }) => {
     await expect(await findToast('Could not load Projects')).toBeVisible();
-    await expect(canvas.getByText('Loading Projects…')).toBeVisible();
+    // The loading rows stay up, and they are skeletons: shapes with nothing to press and nothing to read.
+    await expect(
+      canvas.queryByRole('button', { name: /Argo Universal/ }),
+    ).toBeNull();
     await expect(canvas.queryByRole('button', { name: 'Retry' })).toBeNull();
     await expect(canvas.queryByRole('alert')).toBeNull();
   },

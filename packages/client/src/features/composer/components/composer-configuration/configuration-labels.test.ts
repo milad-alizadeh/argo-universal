@@ -1,6 +1,10 @@
+import type { SessionConfigOption } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { checkoutName, modelName } from './configuration-values';
-import { modeIcon } from './mode-icon';
+import {
+  checkoutName,
+  modelName,
+  otherSelections,
+} from './configuration-values';
 
 it.each([
   ['Model', 'Model'],
@@ -51,24 +55,26 @@ it('labels a Local Checkout independently of its path', () => {
   ).toBe('Local');
 });
 
-// Claude's ACP modes arrive without Argo's icon metadata; each still gets its own icon.
-it.each([
-  ['default', 'permission'],
-  ['acceptEdits', 'edit'],
-  ['plan', 'plan-mode'],
-  ['auto', 'sparkle'],
-  ['bypassPermissions', 'warning'],
-  ['unknown-mode', 'permission'],
-])('draws mode %j with the %j icon', (value, expected) => {
-  expect(modeIcon({ value, name: value })).toBe(expected);
+const selectOption = (
+  configId: string,
+  category?: string,
+): SessionConfigOption => ({
+  configId,
+  name: configId,
+  type: 'select',
+  currentValue: 'one',
+  category,
+  options: [{ value: 'one', name: 'One' }],
 });
 
-it("prefers the Agent's own mode icon over the value's", () => {
-  expect(
-    modeIcon({
-      value: 'default',
-      name: 'Plan',
-      _meta: { argo: { icon: 'MapTrifold' } },
-    }),
-  ).toBe('plan-mode');
+it('leaves Claude Code’s Agent persona out of the plain rows', () => {
+  const configOptions = [
+    selectOption('agent'),
+    selectOption('verbosity'),
+    selectOption('model', 'model'),
+  ];
+
+  expect(otherSelections({ configOptions }).map((o) => o.configId)).toEqual([
+    'verbosity',
+  ]);
 });

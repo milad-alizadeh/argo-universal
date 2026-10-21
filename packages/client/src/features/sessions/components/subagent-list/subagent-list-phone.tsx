@@ -21,7 +21,7 @@ const rowPress = ({
 function disclosure(onSelect: RowProps['onSelect']): JSX.Element | undefined {
   if (!onSelect || Platform.OS !== 'android') return undefined;
 
-  return <Icon name="chevron-right" role="row" tone="muted" />;
+  return <Icon name="chevron-right" role="chevron" tone="muted" />;
 }
 
 const rowTones = (finished: boolean) =>

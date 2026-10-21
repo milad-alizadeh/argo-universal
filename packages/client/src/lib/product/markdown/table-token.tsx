@@ -4,6 +4,7 @@ import type { ComponentType, ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
+import { trayCardClassName, trayClassName } from '#lib/generic/tray-surface';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
 import { ClampedBlock } from './clamped-block';
@@ -21,10 +22,11 @@ interface CellProps {
   column: number;
 }
 
+// The column titles sit on the tray's strip, secondary and muted, as the Table primitive draws them.
 function HeaderCell({ cell, column }: CellProps): React.JSX.Element {
   return (
     <View className={cellClassName(column)}>
-      <Text className="font-sans font-semibold">
+      <Text role="secondary" tone="muted" numberOfLines={1}>
         <InlineTokens
           tokens={cell.tokens}
           codeClassName={markdownMarkClassNames.code}
@@ -69,9 +71,14 @@ function rowKey(row: Cells): string {
   return row.map((cell) => cell.text).join('|');
 }
 
+/*
+ * The same tray a code block and the Table primitive sit on: the tint shows through beside the titles
+ * as the header strip, and the rows ride on the card inset inside it. The scroll is within the tray, so
+ * a wide table slides under a strip that stays put.
+ */
 function TableFrame({ children }: { children: ReactNode }): React.JSX.Element {
   return (
-    <View className="overflow-hidden rounded-2xl border border-border">
+    <View className={trayClassName}>
       <ScrollView
         horizontal
         contentContainerClassName="min-w-full"
@@ -84,15 +91,8 @@ function TableFrame({ children }: { children: ReactNode }): React.JSX.Element {
 }
 
 function BodyRows({ rows }: { rows: Cells[] }): React.JSX.Element[] {
-  const last = rows.length - 1;
-
-  return withOccurrenceKeys(rows, rowKey).map(({ item: row, key }, index) => (
-    <Row
-      key={key}
-      cells={row}
-      Cell={BodyCell}
-      className={cn('flex-row', index < last && 'border-b border-border')}
-    />
+  return withOccurrenceKeys(rows, rowKey).map(({ item: row, key }) => (
+    <Row key={key} cells={row} Cell={BodyCell} className="flex-row" />
   ));
 }
 
@@ -102,9 +102,11 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
       <Row
         cells={token.header}
         Cell={HeaderCell}
-        className="flex-row border-b border-border bg-content"
+        className="h-8 flex-row items-center"
       />
-      <BodyRows rows={token.rows} />
+      <View className={trayCardClassName}>
+        <BodyRows rows={token.rows} />
+      </View>
     </TableFrame>
   );
 }

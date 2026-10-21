@@ -29,6 +29,12 @@ const listDefaults = {
   maintainVisibleContentPosition: false,
   recycleItems: false,
   keyboardShouldPersistTaps: 'handled',
+  /*
+   * Android switches nested scrolling off on every scroll view unless it is asked for. A list inside a
+   * Compose sheet needs it on: it scrolls its own rows first and offers Material what is left, which is
+   * how a sheet React Native draws the content of is dragged (owner, 2026-10-20).
+   */
+  nestedScrollEnabled: true,
 } as const;
 
 // Props only native scroll views take: Legend List's web build hands them to its scroll element, where React warns of unknown attributes.

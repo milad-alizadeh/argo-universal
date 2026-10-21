@@ -1,4 +1,4 @@
-import { pluginAt, type PluginSection, type SectionLists } from '@repo/client';
+import { pluginAt, type PluginSection } from '@repo/client';
 import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import type { ParamListBase, RouteProp } from 'expo-router/react-navigation';
 import {
@@ -9,27 +9,20 @@ import {
 
 type PluginLocation = { plugins: readonly PluginSection[]; path: string };
 
-type FrameSections = PluginLocation & { lists: SectionLists };
-
 export const frameDrawerOptions =
-  (framed: boolean, sections: FrameSections) =>
+  (framed: boolean, sections: PluginLocation) =>
   ({ route }: { route: RouteProp<ParamListBase> }): DrawerNavigationOptions => {
     if (route.name === 'plugins') return pluginDrawerOptions(framed, sections);
 
-    return drawerScreenOptions(framed, sections.lists)({ route });
+    return drawerScreenOptions(framed)({ route });
   };
 
-// A Plugin has no SectionList: its narrow root header is the nav item's title, or none while its Plugin is unknown, which still opens the drawer.
+// A Plugin's pages draw their own headers, as a section's do; only its root keeps the drawer's edge swipe.
 function pluginDrawerOptions(
   framed: boolean,
   location: PluginLocation,
 ): DrawerNavigationOptions {
-  const { section, root } = pluginAt(location.plugins, location.path);
+  const { root } = pluginAt(location.plugins, location.path);
 
-  return framed || !root
-    ? stackOwnsHeader
-    : drawerRootOptions({ title: titleOf(section) });
+  return framed || !root ? stackOwnsHeader : drawerRootOptions;
 }
-
-const titleOf = (section: PluginSection | undefined): string =>
-  section?.title ?? '';

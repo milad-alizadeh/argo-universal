@@ -38,13 +38,17 @@ type PressDrawing = {
   appearance: ListAppearance;
 } & Pick<ListItemProps, 'sidebar'>;
 
-const webCard = (appearance: ListAppearance): boolean =>
+/*
+ * A grouped card draws a pressed row as a rounded tile inset in the card on the web only. Both
+ * phones fill the row edge to edge, the shape a stock grouped row and Material's ripple take.
+ */
+const tiledCard = (appearance: ListAppearance): boolean =>
   Platform.OS === 'web' && appearance === 'grouped';
 
 function cardLayout(press: PressDrawing): PressLayout {
   if (contentCard(press)) return 'content';
 
-  return webCard(press.appearance) ? 'card' : 'row';
+  return tiledCard(press.appearance) ? 'card' : 'row';
 }
 
 // A sidebar List (Paper's SettingsList) draws its rows as tiles; others draw them by their card.

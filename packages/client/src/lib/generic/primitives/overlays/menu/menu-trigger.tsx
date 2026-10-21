@@ -5,7 +5,6 @@ import { cn } from '#lib/generic/utils';
 import { buttonInteractionProps } from '#primitives/actions/button';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { usePressRipple } from '#primitives/native/material-palette';
 import type { MenuTriggerProps } from './menu-props';
 
 // What the overlay it opens passes in: its press, hover and ARIA handlers and its ref.
@@ -24,52 +23,64 @@ const triggerKeys = [
   'trailing',
   'tone',
   'iconOnly',
-  'variant',
   'size',
   'disabled',
   'accessibilityLabel',
   'testID',
 ] as const;
 
-// iOS takes the pressed tint, as the kit's other drawn rows do; Android's Pressable draws the ripple in that tint.
-const iosPressedTint = Platform.OS === 'ios' ? 'active:bg-pressed' : undefined;
-
 /*
- * Desktop and the web draw it 28 high with a radius-control tint for hover, press and focus. Phones draw it at the
- * stock touch height (iOS 44, Android 48) with no hover or focus, and the stock press feedback.
+ * Desktop and the web draw it 28 high, its hover, press and focus a pill around the words it says: the trigger is
+ * already its content's size there, so it lights up itself. Phones draw it at the stock touch height (iOS 44,
+ * Android 48) with no hover or focus; what lights up there is the pill below, not the whole touch box, so the
+ * trigger keeps its reach without a block of tint around a few words (owner, 2026-10-20).
  */
 const triggerClassName = cn(
-  'min-w-0 shrink flex-row items-center gap-1.5 h-11 android:h-12',
-  'web:h-7 web:px-1.5 web:rounded-control web:outline-none web:hover:bg-hover web:focus-visible:bg-hover web:active:bg-pressed',
+  'group min-w-0 shrink flex-row items-center h-11 android:h-12',
+  'web:h-7 web:px-2 web:rounded-full web:outline-none web:hover:bg-hover web:focus-visible:bg-hover web:active:bg-pressed',
   tintTransitionClassName,
-  iosPressedTint,
 );
 
-const iconOnlyClassName = 'w-11 android:w-12 web:w-7 web:px-0 justify-center';
+/*
+ * The phones' press: a pill the size of what the trigger says. Its padding is pulled straight back out again, so
+ * the label keeps the place it has in the row and only the tint is wider than the words. The web's own tint is on
+ * the trigger, which is already its content's size there, so the pill draws nothing.
+ */
+const pillClassName =
+  Platform.OS === 'web'
+    ? ''
+    : cn('-mx-2 rounded-full px-2 py-1', tintTransitionClassName);
 
-const variantClassNames = {
-  default: '',
-  toolbar: 'web:rounded-md',
-} satisfies Record<NonNullable<MenuTriggerProps['variant']>, string>;
+const triggerPillClassName = cn(
+  'min-w-0 shrink flex-row items-center gap-1.5',
+  pillClassName,
+);
+
+// A group variant does not reach a child on the phones, so the pill reads the press Pressable hands it.
+const pillClass = (pressed: boolean): string =>
+  cn(triggerPillClassName, pressed && Platform.OS !== 'web' && 'bg-pressed');
+
+const iconOnlyClassName = 'w-11 android:w-12 web:w-7 web:px-0 justify-center';
 
 const sizeClassNames = {
   sm: '',
   md: 'web:h-8',
 } satisfies Record<NonNullable<MenuTriggerProps['size']>, string>;
 
-// A toolbar picker's corners and height; the defaults draw nothing extra.
-function toolbarClass({
-  variant = 'default',
-  size = 'sm',
-}: Pick<MenuTriggerProps, 'variant' | 'size'>): string {
-  return cn(variantClassNames[variant], sizeClassNames[size]);
+// A taller picker, such as the Composer's; the default draws nothing extra.
+function toolbarClass({ size = 'sm' }: Pick<MenuTriggerProps, 'size'>): string {
+  return sizeClassNames[size];
 }
 
 export function MenuTrigger(props: TriggerProps): ReactElement {
   return (
     <Pressable {...useTriggerPressableProps(props)}>
-      <TriggerLeading {...props} />
-      <TriggerText {...props} />
+      {({ pressed }) => (
+        <View className={pillClass(pressed)}>
+          <TriggerLeading {...props} />
+          <TriggerText {...props} />
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -80,7 +91,6 @@ function useTriggerPressableProps(
   return {
     ...overlayHandlers(props),
     ...buttonInteractionProps({ disabled: props.disabled }),
-    android_ripple: usePressRipple(),
     accessibilityLabel: props.accessibilityLabel ?? props.label,
     testID: props.testID,
     className: triggerClass(props),
