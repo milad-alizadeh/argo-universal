@@ -7,7 +7,8 @@ import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
-import { PaneBanner, WindowDragStrip } from './scaffold-chrome';
+import { ScaffoldBand } from './scaffold-band';
+import { PaneBanner } from './scaffold-chrome';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
 import {
   type ScaffoldLayout,
@@ -66,13 +67,17 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
 // The Inspector beside the page, the resize handles, and the banner over the panes.
 function Overlays(parts: ScaffoldParts): React.JSX.Element {
   return (
-    <>
+    <View
+      pointerEvents="box-none"
+      className="absolute inset-x-0 bottom-0"
+      style={{ top: parts.layout.frame.panesTop }}
+    >
       <InspectorColumn {...parts} />
       <ScaffoldResizeHandles {...parts} />
       <PaneBanner left={sidebarWidth(parts.layout)}>
         {parts.scaffold.banner}
       </PaneBanner>
-    </>
+    </View>
   );
 }
 
@@ -85,7 +90,7 @@ interface FrameEdges {
 const frameEdges = (parts: ScaffoldParts): FrameEdges =>
   parts.framed
     ? {
-        before: <WindowDragStrip />,
+        before: <ScaffoldBand {...parts} />,
         after: <Overlays {...parts} />,
       }
     : { before: null, after: null };
@@ -93,10 +98,10 @@ const frameEdges = (parts: ScaffoldParts): FrameEdges =>
 export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
 // A framed tablet's panes start under the status bar; the window surface still runs behind it. The phone shell's pages keep their own header insets, and a desktop window has none.
-function useFrameTop(framed: boolean): ViewStyle {
+function useFrameTop(parts: ScaffoldParts): ViewStyle {
   const { top } = useSafeAreaInsets();
 
-  return { paddingTop: framed ? top : 0 };
+  return { paddingTop: parts.framed ? top + parts.layout.frame.panesTop : 0 };
 }
 
 function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
@@ -107,7 +112,7 @@ function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
       // Named for the Size class it lays out, such as `wide-frame`.
       testID={`${parts.scaffold.sizeClass}-frame`}
       className="flex-1 flex-row overflow-hidden bg-content"
-      style={useFrameTop(parts.framed)}
+      style={useFrameTop(parts)}
       onLayout={parts.layout.onLayout}
     >
       {before}

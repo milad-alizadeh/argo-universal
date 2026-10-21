@@ -24,7 +24,7 @@ const glassGeometry = ({
   width: layout.measures.railWidth + layout.shownListWidth,
   expandedWidth: layout.measures.railWidth + layout.visibleListWidth,
   railWidth: layout.measures.railWidth,
-  barHeight: layout.measures.barHeight,
+  barHeight: 0,
   sidebarShown: scaffold.sidebarShown,
 });
 
@@ -93,7 +93,7 @@ export function ScaffoldSidebarColumn({
   ...parts
 }: ScaffoldSidebarColumnProps): React.JSX.Element {
   return (
-    <View className="p-frame-inset">
+    <View className="px-frame-inset pb-frame-inset">
       <View className="flex-1 flex-row">
         <SidebarGlass {...parts} />
         {sidebar}
