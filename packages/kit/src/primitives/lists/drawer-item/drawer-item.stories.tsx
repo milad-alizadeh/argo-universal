@@ -3,16 +3,16 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { DrawerItem } from './drawer-item';
+import {
+  defaultDrawerItem,
+  needsAttentionDrawerItem,
+  overNinetyNineDrawerItem,
+  selectedDrawerItem,
+} from './drawer-item-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Lists/DrawerItem',
   component: DrawerItem,
-  args: {
-    label: 'Inbox',
-    icon: 'sessions',
-    selected: false,
-    onPress: action('select destination'),
-  },
   // No Contracts schema: the props DrawerItemProps declares.
   argTypes: {
     label: { control: 'text' },
@@ -35,23 +35,21 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+const onPress = action('select destination');
 
-export const Selected: Story = { args: { selected: true } };
+export const Default: Story = { args: { ...defaultDrawerItem, onPress } };
+
+export const Selected: Story = { args: { ...selectedDrawerItem, onPress } };
 
 export const NeedsAttention: Story = {
-  args: { badge: { count: 2, label: '2 items need attention' } },
+  args: { ...needsAttentionDrawerItem, onPress },
   parameters: {
     docs: { description: { story: 'A count of what needs attention.' } },
   },
 };
 
 export const OverNinetyNine: Story = {
-  args: {
-    label: 'Tasks',
-    icon: 'issue',
-    badge: { count: 120, label: '120 open items' },
-  },
+  args: { ...overNinetyNineDrawerItem, onPress },
   parameters: {
     docs: {
       description: {

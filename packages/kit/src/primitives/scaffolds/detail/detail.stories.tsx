@@ -3,15 +3,20 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Page } from '#primitives/scaffolds/page';
-import { EmptyState } from '#primitives/status/empty-state';
 import { Detail } from './detail';
+import {
+  agentDetail,
+  contentAndMetadataDetail,
+  emptyDetail,
+  loadingDetail,
+  narrowContainerDetail,
+} from './detail-fixtures';
 import { agent, issue } from './detail.mocks';
 
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Detail',
   component: Detail,
   argTypes: kitArgTypes('Detail'),
-  args: { metadata: issue.detail.metadata },
   /*
    * A Detail fills the Page that holds it, so each story draws it inside one. A story names its own
    * page with `parameters.pageTitle`, and asks for the narrow container with `parameters.narrow`.
@@ -31,22 +36,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ContentAndMetadata: Story = { args: issue.detail };
+export const ContentAndMetadata: Story = { args: contentAndMetadataDetail };
 
 export const Agent: Story = {
-  args: agent.detail,
+  args: agentDetail,
   parameters: { pageTitle: agent.title },
 };
 
 export const NarrowContainer: Story = {
-  args: issue.detail,
+  args: narrowContainerDetail,
   parameters: { narrow: true },
 };
 
 export const Loading: Story = {
-  args: { ...issue.detail, isLoading: true },
+  args: loadingDetail,
 };
 
 export const Empty: Story = {
-  args: { children: <EmptyState title="No description" icon="issue" /> },
+  args: emptyDetail,
 };

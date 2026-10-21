@@ -5,10 +5,14 @@ import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Slider, type SliderProps } from './slider';
-
-const speeds = { minimumValue: 0.5, maximumValue: 2, step: 0.5 };
-
-const efforts = { minimumValue: 0, maximumValue: 5, step: 1 };
+import {
+  defaultSlider,
+  disabledSlider,
+  maximumSlider,
+  minimumSlider,
+  noSelectionSlider,
+  sixStopsSlider,
+} from './slider-fixtures';
 
 // The value is held by the caller, so each state drags against local state and its label follows.
 function ControlledSlider(props: SliderProps): React.JSX.Element {
@@ -35,12 +39,7 @@ const valueLabel = (value: number | undefined, none: string): string =>
 const meta = {
   title: 'Design System/Primitives/Inputs/Slider',
   component: Slider,
-  args: {
-    ...speeds,
-    accessibilityLabel: 'Speech speed',
-    valueLabel: 'None',
-    onValueChange: fn(),
-  },
+  args: { onValueChange: fn() },
   argTypes: kitArgTypes('Slider'),
   // The track takes the width a settings row gives it.
   decorators: [
@@ -57,14 +56,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { args: { value: 1 } };
+export const Default: Story = { args: defaultSlider };
 
-export const Minimum: Story = { args: { value: 0.5 } };
+export const Minimum: Story = { args: minimumSlider };
 
-export const Maximum: Story = { args: { value: 2 } };
+export const Maximum: Story = { args: maximumSlider };
 
-export const SixStops: Story = { args: { ...efforts, value: 2 } };
+export const SixStops: Story = { args: sixStopsSlider };
 
-export const NoSelection: Story = { args: efforts };
+export const NoSelection: Story = { args: noSelectionSlider };
 
-export const Disabled: Story = { args: { value: 1, disabled: true } };
+export const Disabled: Story = { args: disabledSlider };

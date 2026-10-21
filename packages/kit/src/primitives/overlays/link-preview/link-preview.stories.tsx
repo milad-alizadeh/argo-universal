@@ -4,22 +4,19 @@ import { Platform, View } from 'react-native';
 import { Link } from '#primitives/content/link';
 import { Text } from '#primitives/content/text';
 import { LinkPreviewCard } from './link-preview-card';
-import type { LinkPreviewCardData } from './link-preview-card-props';
-import { LinkPreviewContext } from './link-preview-context';
 import {
-  commitPreview,
-  issuePreview,
-  pullPreview,
-  webPreview,
-} from './link-preview.mocks';
-
-const imagePreview: LinkPreviewCardData = {
-  ...webPreview,
-  image: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="168"><rect width="320" height="168" fill="#e5e5e5"/></svg>')}`,
-};
+  commitLinkPreviewCard,
+  issueLinkPreviewCard,
+  pullRequestLinkPreviewCard,
+  webLinkPreviewCard,
+  webWithImageLinkPreviewCard,
+} from './link-preview-card-fixtures';
+import { LinkPreviewContext } from './link-preview-context';
 
 const source = {
-  load: async (): Promise<ReactNode> => <LinkPreviewCard data={webPreview} />,
+  load: async (): Promise<ReactNode> => (
+    <LinkPreviewCard data={webLinkPreviewCard.data} />
+  ),
 };
 
 /*
@@ -30,7 +27,7 @@ const source = {
 const meta = {
   title: 'Design System/Primitives/Overlays/LinkPreview',
   component: LinkPreviewCard,
-  args: { data: webPreview },
+  args: webLinkPreviewCard,
   argTypes: { data: { control: false } },
   render: (args): ReactElement => (
     <WebOnly>
@@ -69,15 +66,15 @@ export const NoPreview: Story = {
   ),
 };
 
-export const Web: Story = {};
+export const Web: Story = { args: webLinkPreviewCard };
 
-export const WebWithImage: Story = { args: { data: imagePreview } };
+export const WebWithImage: Story = { args: webWithImageLinkPreviewCard };
 
-export const Issue: Story = { args: { data: issuePreview } };
+export const Issue: Story = { args: issueLinkPreviewCard };
 
-export const PullRequest: Story = { args: { data: pullPreview } };
+export const PullRequest: Story = { args: pullRequestLinkPreviewCard };
 
-export const Commit: Story = { args: { data: commitPreview } };
+export const Commit: Story = { args: commitLinkPreviewCard };
 
 function WebOnly({ children }: { children: ReactNode }): ReactNode {
   if (Platform.OS !== 'web') return <Text>Link previews are web only.</Text>;

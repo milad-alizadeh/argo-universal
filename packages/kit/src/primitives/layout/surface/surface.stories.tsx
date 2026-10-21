@@ -4,39 +4,37 @@ import { kitArgTypes } from '#kit/kit-arg-types';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { Surface } from './surface';
+import {
+  backgroundSurface,
+  cardSurface,
+  glassSurface,
+  loosePaddingSurface,
+  mutedSurface,
+  tightPaddingSurface,
+} from './surface-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Layout/Surface',
   component: Surface,
   argTypes: kitArgTypes('Surface'),
-  args: { kind: 'card', padding: 4, children: <Text>card</Text> },
+  args: cardSurface,
 } satisfies Meta<typeof Surface>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Background: Story = {
-  args: { kind: 'background', children: <Text>background</Text> },
-};
+export const Background: Story = { args: backgroundSurface };
 
-export const Card: Story = { args: { kind: 'card' } };
+export const Card: Story = { args: cardSurface };
 
-export const Muted: Story = {
-  args: { kind: 'muted', children: <Text>muted</Text> },
-};
+export const Muted: Story = { args: mutedSurface };
 
-export const Glass: Story = {
-  args: { kind: 'glass', children: <Text>glass</Text> },
-};
+export const Glass: Story = { args: glassSurface };
 
-export const TightPadding: Story = {
-  args: { padding: 3, children: <Text>Padding 3</Text> },
-};
+export const TightPadding: Story = { args: tightPaddingSurface };
 
-export const LoosePadding: Story = {
-  args: { padding: 6, children: <Text>Padding 6</Text> },
-};
+export const LoosePadding: Story = { args: loosePaddingSurface };
 
 // The pressed and archived copy is live, so this state keeps its own render.
 export const Pressable: Story = {

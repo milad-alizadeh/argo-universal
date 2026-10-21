@@ -4,6 +4,13 @@ import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Switch } from './switch';
+import {
+  disabledSwitch,
+  offSwitch,
+  onSwitch,
+  smallOffSwitch,
+  smallOnSwitch,
+} from './switch-fixtures';
 import type { SwitchProps } from './switch-props';
 
 // The on or off state is held by the caller, so each story toggles against local state.
@@ -21,11 +28,7 @@ function ControlledSwitch(props: SwitchProps): React.JSX.Element {
 const meta = {
   title: 'Design System/Primitives/Inputs/Switch',
   component: Switch,
-  args: {
-    value: false,
-    accessibilityLabel: 'Accept terms and conditions',
-    onValueChange: fn(),
-  },
+  args: { onValueChange: fn() },
   argTypes: kitArgTypes('Switch'),
   tags: ['third-party'],
   render: (args): React.JSX.Element => <ControlledSwitch {...args} />,
@@ -35,12 +38,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Off: Story = {};
+export const Off: Story = { args: offSwitch };
 
-export const On: Story = { args: { value: true } };
+export const On: Story = { args: onSwitch };
 
-export const SmallOff: Story = { args: { size: 'sm' } };
+export const SmallOff: Story = { args: smallOffSwitch };
 
-export const SmallOn: Story = { args: { size: 'sm', value: true } };
+export const SmallOn: Story = { args: smallOnSwitch };
 
-export const Disabled: Story = { args: { disabled: true } };
+export const Disabled: Story = { args: disabledSwitch };
