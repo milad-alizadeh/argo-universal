@@ -111,10 +111,21 @@ function StageFiles(
 
   if (selected) return <FileDiffRow {...props} file={selected} initialOpen />;
 
+  return <BranchFiles {...props} />;
+}
+
+function BranchFiles(
+  props: ChangesViewProps & { files: readonly FileDiff[] },
+): React.JSX.Element {
   return (
     <View className="bg-content">
-      {props.files.map((file) => (
-        <StageFile key={file.path} {...props} file={file} />
+      {props.files.map((file, index) => (
+        <StageFileBoundary
+          key={file.path}
+          {...props}
+          file={file}
+          separated={index > 0}
+        />
       ))}
     </View>
   );
@@ -133,5 +144,17 @@ function StageFile(
       viewed={props.viewed.includes(file.path)}
       onViewedChange={(viewed) => props.onViewedChange(file.path, viewed)}
     />
+  );
+}
+
+// Separators belong to file boundaries, so neither edge of the list draws an extra line.
+function StageFileBoundary(
+  props: ChangesViewProps & { file: FileDiff; separated: boolean },
+): React.JSX.Element {
+  return (
+    <>
+      {props.separated && <View className="h-px bg-border" />}
+      <StageFile {...props} />
+    </>
   );
 }
