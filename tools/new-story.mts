@@ -7,12 +7,8 @@ import {
   kitPropDescriptors,
 } from '@repo/contracts/plugins/kit-prop-descriptors';
 import { declaredProps, type Prop } from './new-story-props.mts';
-import {
-  branchesIn,
-  derivedTitle,
-  kitPartIn,
-  renderStory,
-} from './new-story-rules.mts';
+import { branchesIn, kitPartIn, renderStory } from './new-story-rules.mts';
+import { derivedStoryTitle } from './story-title-rules.mts';
 
 const root = path.resolve(import.meta.dirname, '..');
 
@@ -70,7 +66,7 @@ function propsFor(file: string, component: string, sources: string[]): Prop[] {
 
 function storyFor(file: string): string {
   const sources = folderSources(path.dirname(file));
-  const title = derivedTitle(path.relative(root, file));
+  const title = derivedStoryTitle(path.relative(root, file));
   const named = title.split('/').pop() ?? '';
   const component = exportedComponent(readFileSync(file, 'utf8'), named);
 

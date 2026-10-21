@@ -58,4 +58,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Paper "Components / Shell", Desktop column: the list, and a row opens that Shell's output under its own header.
-export const Shells: Story = { name: 'ShellPanel' };
+export const Shells: Story = {};

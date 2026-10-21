@@ -15,7 +15,6 @@ type Story = StoryObj<typeof meta>;
 
 // An open Connection shows no banner, so only the two down states appear; the Frame floats the capsule over the page.
 export const Overview: Story = {
-  name: 'ConnectionBanner',
   args: { state: 'reconnecting', onRetry: action('try again') },
   render: ({ onRetry }) => (
     <Variations className="max-w-none">

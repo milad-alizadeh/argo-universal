@@ -11,4 +11,4 @@ const meta = {
 
 export default meta;
 
-export const Unavailable: StoryObj<typeof meta> = { name: 'RegistryIcon' };
+export const Unavailable: StoryObj<typeof meta> = {};

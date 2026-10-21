@@ -25,4 +25,4 @@ const meta = {
 
 export default meta;
 
-export const Overview: StoryObj<typeof meta> = { name: 'TerminalSignIn' };
+export const Overview: StoryObj<typeof meta> = {};

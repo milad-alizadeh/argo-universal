@@ -50,4 +50,4 @@ const gallery = (
   </Variations>
 );
 
-export const Overview: StoryObj<typeof meta> = { name: 'AuthCallout' };
+export const Overview: StoryObj<typeof meta> = {};

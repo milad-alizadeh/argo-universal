@@ -22,7 +22,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {
-  name: 'WorkbenchCollapsibleTitle',
   render: (args) => (
     <Variations>
       {[true, false].map((expanded) => (

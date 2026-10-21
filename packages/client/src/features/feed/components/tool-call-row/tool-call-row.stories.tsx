@@ -14,7 +14,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {
-  name: 'ToolCallRow',
   render: () => (
     <Variations className="max-w-column!">
       <Variation label="Reading file">

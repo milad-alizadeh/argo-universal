@@ -10,39 +10,9 @@ import {
   traverseFast,
 } from '@babel/types';
 import { type Prop, parseSource } from './new-story-props.mts';
-import { pascal, storyPlacement } from './story-title-rules.mts';
+import { pascal } from './story-title-rules.mts';
 
 // What `pnpm new:story` reads from a component's folder and writes as its story file (ADR-0040).
-const fileName = /\.(?:native\.)?tsx?$/;
-
-const primitiveCategory = /^primitives\/([^/]+)\//;
-
-// A primitive's title carries its category folder, so every primitive is four segments deep.
-const category = (path: string): string => {
-  const folder = primitiveCategory.exec(path)?.[1];
-
-  return folder === undefined ? '' : `${pascal(folder)}/`;
-};
-
-// The first group tools/story-title-rules.mts allows for the story file, then the category and the file's name.
-const componentName = (path: string): string =>
-  pascal(path.slice(path.lastIndexOf('/') + 1).replace(fileName, ''));
-
-export function derivedTitle(componentFile: string): string {
-  // The rules place story files, so the component is placed under the name its story will take.
-  const placed = storyPlacement(
-    componentFile.replace(fileName, '.stories.tsx'),
-  );
-
-  const group = placed.groups[0];
-
-  if (group === undefined)
-    throw new Error(`${componentFile}: no story group belongs to this folder`);
-
-  const path = placed.path.replace(/\.stories\.tsx$/, '');
-
-  return `${group}${category(path)}${componentName(path)}`;
-}
 
 // A prop name to the values the component's variants maps branch on, in source order.
 export type Branches = Map<string, string[]>;

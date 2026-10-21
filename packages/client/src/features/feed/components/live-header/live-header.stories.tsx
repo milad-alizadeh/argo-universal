@@ -19,7 +19,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {
-  name: 'LiveHeader',
   render: () => (
     <Variations className="max-w-column!">
       {liveHeaderSteps.map(({ step, liveHeader, toolCall }) => (

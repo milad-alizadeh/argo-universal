@@ -43,7 +43,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Callbacks report rail and divider changes; controls set the displayed Scaffold props.
-export const Overview: Story = { name: 'Scaffold' };
+export const Overview: Story = {};
 
 // Paper's "Rail B · collapsed": only the rail stays on the glass, on the window surface.
 export const SidebarHidden: Story = {

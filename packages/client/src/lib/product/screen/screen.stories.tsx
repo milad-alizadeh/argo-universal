@@ -3,9 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Screen, type ScreenProps } from './screen';
 import { ScreenPreview, ScreenPreviewContent } from './screen-preview.mocks';
 
-const meta = { title: 'Shared/Screen', component: Screen } satisfies Meta<
-  typeof Screen
->;
+const meta = {
+  title: 'Design System/Patterns/Screen',
+  component: Screen,
+} satisfies Meta<typeof Screen>;
 
 export default meta;
 
@@ -18,7 +19,6 @@ const screenVariations = [
 ] satisfies { label: string; props: Partial<ScreenProps> }[];
 
 export const Overview: Story = {
-  name: 'Screen',
   render: (args) => (
     <Variations>
       {screenVariations.map(({ label, props }) => (

@@ -64,9 +64,10 @@ export const UnavailableSidebarWaitsForSpaceBesideStage: Story = {
       await canvas.findByRole('button', { name: showSidebar }),
     ).toBeDisabled();
     await settleViewport(1440);
-    await expect(
-      canvas.getByRole('button', { name: showSidebar }),
-    ).toBeEnabled();
+    // The sidebar re-enables on the next layout pass, which a slow runner reaches after the resize.
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: showSidebar })).toBeEnabled(),
+    );
     await userEvent.click(canvas.getByRole('button', { name: showSidebar }));
     await expect(
       canvas.getByRole('button', { name: hideSidebar }),

@@ -58,7 +58,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {
-  name: 'EditRow',
   render: () => (
     <Variations className="max-w-full">
       {variations.map((variation) => (

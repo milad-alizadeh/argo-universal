@@ -2,12 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { declaredProps } from './new-story-props.mts';
 import {
   branchesIn,
-  derivedTitle,
   kitPartIn,
   renderStory,
   storyEntries,
 } from './new-story-rules.mts';
-import { storyTitleProblems } from './story-title-rules.mts';
 
 const styles = `
 import { cva } from 'class-variance-authority';
@@ -66,37 +64,6 @@ describe('storyEntries', () => {
     );
 
     expect(entries.map((entry) => entry.name)).toEqual(['SizeSm', 'GapSm']);
-  });
-});
-
-describe('derivedTitle', () => {
-  it.each([
-    [
-      'packages/kit/src/primitives/status/pill/pill.tsx',
-      'Design System/Primitives/Status/Pill',
-    ],
-    ['packages/kit/src/symbols/icon.tsx', 'Design System/Icon'],
-    [
-      'packages/client/src/lib/product/scroll-fade/scroll-fade.tsx',
-      'Shared/ScrollFade',
-    ],
-    [
-      'packages/client/src/features/sessions/components/session-row.tsx',
-      'Sessions/SessionRow',
-    ],
-  ])('%s → %s, which the title check accepts', (file, title) => {
-    const story = file.replace(/\.tsx$/, '.stories.tsx');
-
-    expect(derivedTitle(file)).toBe(title);
-    expect(
-      storyTitleProblems(story, `const meta = { title: '${title}' }`),
-    ).toEqual([]);
-  });
-
-  it('refuses a folder no story group belongs to', () => {
-    expect(() => derivedTitle('packages/client/src/app/index.tsx')).toThrow(
-      'no story group belongs to this folder',
-    );
   });
 });
 

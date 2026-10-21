@@ -39,7 +39,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = { name: 'SessionDetailScreen' };
+export const Overview: Story = {};
 
 export const SeveralPullRequests: Story = {
   render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,

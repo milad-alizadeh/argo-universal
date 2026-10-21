@@ -15,7 +15,7 @@ import {
 } from './list-tiles-fixtures';
 
 const meta = {
-  title: 'Design System/Primitives/Lists/List tiles',
+  title: 'Design System/Primitives/Lists/List/Tiles',
   component: List,
   argTypes: kitArgTypes('List'),
   parameters: { screenPreview: true },

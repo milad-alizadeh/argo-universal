@@ -10,4 +10,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Archived: Story = { name: 'ArchivedBanner' };
+export const Archived: Story = {};

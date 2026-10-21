@@ -20,7 +20,6 @@ type Story = StoryObj<typeof meta>;
 
 // Both Agents' recorded markdown answers, and one caught mid-stream.
 export const Overview: Story = {
-  name: 'AgentMessage',
   render: () => (
     <Variations>
       <Variation label="Agent 1 answer">

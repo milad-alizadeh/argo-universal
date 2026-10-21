@@ -50,7 +50,6 @@ const meta = {
 export default meta;
 
 export const Overview = {
-  name: 'PermissionRequest',
   render: function RequestGallery(args): React.JSX.Element {
     const request = <PermissionPreview {...galleryRequestProps(args)} />;
 

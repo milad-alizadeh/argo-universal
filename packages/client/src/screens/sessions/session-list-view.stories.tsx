@@ -28,7 +28,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = { name: 'LiveSessionList' };
+export const Overview: Story = {};
 
 export const Loading: Story = { args: { loadState: 'loading' } };
 

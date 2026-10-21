@@ -11,7 +11,7 @@ const entry = publishedRegistry.agents[0];
 if (!entry) throw new Error('Registry fixture needs an Agent');
 
 const meta = {
-  title: 'Agents/Agent card',
+  title: 'Agents/AgentListItem',
   component: AgentListItem,
   parameters: { screenPreview: true },
   decorators: [

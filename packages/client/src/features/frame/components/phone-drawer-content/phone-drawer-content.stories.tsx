@@ -26,4 +26,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Paper's "LiveSessionList (phone) / Drawer open": the glass drawer on the window surface.
-export const Overview: Story = { name: 'PhoneDrawerContent' };
+export const Overview: Story = {};

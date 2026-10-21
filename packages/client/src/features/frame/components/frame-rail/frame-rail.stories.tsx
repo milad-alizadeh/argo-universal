@@ -95,7 +95,6 @@ function ManySectionsVariation(args: FrameRailProps): React.JSX.Element {
 
 // Paper "Rail · narrow variants", Variant B: 40 tiles on the tinted rail, the selected one a flat tint, and no separator. A Plugin page lists its nav items after the core sections and has no sidebar toggle; once Plugins add more than the window holds, the sections scroll above the toggle.
 export const Overview: Story = {
-  name: 'FrameRail',
   render: (args) => (
     <Variations className="flex-row">
       <SidebarVariation {...args} label="Sidebar shown" sidebarShown />

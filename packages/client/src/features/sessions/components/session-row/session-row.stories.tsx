@@ -51,7 +51,6 @@ function PaperSessionList(
  * and the first row selected on wide layouts.
  */
 export const Overview: Story = {
-  name: 'SessionRow',
   render: (args) => (
     <Variations>
       <Variation label="Regular, every status">
@@ -89,7 +88,7 @@ function hovered(layout: SessionsLayout): Story {
   };
 }
 
-export const Hovered: Story = { name: 'Hovered', ...hovered('regular') };
+export const Hovered: Story = { ...hovered('regular') };
 
 export const CompactHovered: Story = {
   name: 'Compact hovered',

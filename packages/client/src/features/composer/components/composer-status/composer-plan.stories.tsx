@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { StatusPlan } from './composer-plan';
 
 const meta = {
-  title: 'Composer/StatusPlan',
+  title: 'Composer/ComposerPlan',
   component: StatusPlan,
   args: {
     disabled: false,
@@ -30,4 +30,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Plan: Story = { name: 'StatusPlan' };
+export const Plan: Story = {};

@@ -12,4 +12,4 @@ const meta = {
 
 export default meta;
 
-export const Overview: StoryObj<typeof meta> = { name: 'AuthRequiredCard' };
+export const Overview: StoryObj<typeof meta> = {};

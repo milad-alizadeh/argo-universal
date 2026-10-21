@@ -54,7 +54,6 @@ const meta = {
 export default meta;
 
 export const Overview = {
-  name: 'ElicitationForm',
   render: (args): React.JSX.Element => <ElicitationGallery {...args} />,
 } satisfies StoryObj<GalleryArgs>;
 

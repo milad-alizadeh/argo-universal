@@ -30,7 +30,6 @@ type Story = StoryObj<typeof meta>;
 
 // Paper "SessionsList": the sidebar's control bar, the title then Search, the view menu and New Session; the frame insets it 24 from the left and 14 from the right.
 export const SessionsHeaderStory: Story = {
-  name: 'SessionsHeader',
   render: function Render(args) {
     const [query, setQuery] = useState(args.query);
 
