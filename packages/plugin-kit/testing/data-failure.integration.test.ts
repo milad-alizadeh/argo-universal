@@ -51,12 +51,13 @@ it('reports one drawing failure while other pages, Slots, Hooks and background p
   await failures.return([]);
 });
 
-it("clears a Plugin's drawing failure once one of its pages draws again", async () => {
+it("keeps a page's drawing failure when another page of the Plugin draws", async () => {
   const fixture = await dataFixture(
     `import { Text } from '@argo/plugin-kit';
     export function register(argo) {
       argo.pages.register('/', () => <Text>drawn</Text>);
       argo.pages.register('/broken', () => { throw new Error('cannot draw'); });
+      argo.pages.register('/worse', () => { throw new Error('cannot draw either'); });
     }`,
   );
 
@@ -68,8 +69,22 @@ it("clears a Plugin's drawing failure once one of its pages draws again", async 
   expect((await failures.next()).value).toEqual([
     expect.objectContaining({ kind: 'drawing', message: 'cannot draw' }),
   ]);
+
+  // Two failed pages of one Plugin are one failure for the App, the latest of them.
+  kit.page('/worse');
+  expect((await failures.next()).value).toEqual([
+    expect.objectContaining({ kind: 'drawing', message: 'cannot draw either' }),
+  ]);
+
+  // A page the App never asked these of draws without clearing either failure.
   await kit.page('/').find('drawn');
-  expect((await failures.next()).value).toEqual([]);
+  const watched = new AbortController();
+  const current = kit.failures(watched.signal);
+  expect((await current.next()).value).toEqual([
+    expect.objectContaining({ kind: 'drawing', message: 'cannot draw either' }),
+  ]);
+  watched.abort();
+  await current.return([]);
   controller.abort();
   await failures.return([]);
 });
