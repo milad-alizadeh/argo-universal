@@ -1,4 +1,8 @@
-import type { SessionHeaderProps, SessionPanels } from '#features/sessions';
+import type {
+  SessionHeaderProps,
+  SessionPanels,
+  SessionPullRequest,
+} from '#features/sessions';
 import type { OpenSessionViewProps } from './session-detail-view';
 import { offeredSessionPanels } from './session-inspector';
 
@@ -8,6 +12,7 @@ export const headerPanels = (
 ): SessionHeaderProps['panels'] => ({
   offered: offeredSessionPanels(props),
   counts: sectionCounts(props),
+  checks: summarizeChecks(props.header.pullRequests),
   shown: panels.state.shown,
   changesSummary: props.header.changes?.summary,
   onSelect: panels.select,
@@ -17,8 +22,12 @@ export const headerPanels = (
 
 function sectionCounts(
   props: OpenSessionViewProps,
-): Partial<Record<'subagents' | 'shells', number>> {
-  return { subagents: agentCount(props), shells: shellCount(props) };
+): Partial<Record<'subagents' | 'shells' | 'changes', number>> {
+  return {
+    subagents: agentCount(props),
+    shells: shellCount(props),
+    changes: changeCount(props),
+  };
 }
 
 const agentCount = (props: OpenSessionViewProps): number =>
@@ -26,3 +35,25 @@ const agentCount = (props: OpenSessionViewProps): number =>
 
 const shellCount = (props: OpenSessionViewProps): number =>
   props.shells?.shells.length ?? 0;
+
+const changeCount = (props: OpenSessionViewProps): number =>
+  props.header.pullRequests?.length ?? 0;
+
+type Checks = NonNullable<SessionPullRequest['checks']>;
+
+function summarizeChecks(
+  changes: readonly SessionPullRequest[] = [],
+): Checks | undefined {
+  const checked = changes.flatMap(({ checks }) => (checks ? [checks] : []));
+
+  return checked.length ? checked.reduce(addChecks) : undefined;
+}
+
+function addChecks(total: Checks, checks: Checks): Checks {
+  return {
+    passed: total.passed + checks.passed,
+    failing: total.failing + checks.failing,
+    running: total.running + checks.running,
+    total: total.total + checks.total,
+  };
+}

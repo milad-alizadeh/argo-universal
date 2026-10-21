@@ -4,6 +4,7 @@ import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { Card } from '#primitives/layout/card';
 import type { SessionPanel } from '../stores/session-panels';
+import { PullRequestChecks } from './pull-request-checks';
 import type { SessionHeaderPanels } from './session-header-props';
 import { sessionPanelLabels } from './session-panel-triggers';
 
@@ -55,7 +56,7 @@ function hasSection(panel: SessionPanel, panels: SessionHeaderPanels): boolean {
 }
 
 function SectionSummary({ panel, panels }: SectionProps): ReactElement {
-  if (panel === 'changes') return <ChangesSummary panels={panels} />;
+  if (panel === 'changes') return <ChangesSection panels={panels} />;
 
   return <Text tone="muted">{sectionCount(panel, panels)}</Text>;
 }
@@ -77,7 +78,21 @@ function ChangesSummary({
 }
 
 const changesCount = (panels: SessionHeaderPanels): number =>
+  Math.max(fileCount(panels), itemCount('changes', panels));
+
+const fileCount = (panels: SessionHeaderPanels): number =>
   panels.changesSummary?.files ?? 0;
 
 const itemCount = (panel: SessionPanel, panels: SessionHeaderPanels): number =>
   panels.counts?.[panel] ?? 0;
+
+function ChangesSection({
+  panels,
+}: Pick<SectionProps, 'panels'>): ReactElement {
+  return (
+    <View className="gap-2">
+      <ChangesSummary panels={panels} />
+      {panels.checks && <PullRequestChecks {...panels.checks} />}
+    </View>
+  );
+}
