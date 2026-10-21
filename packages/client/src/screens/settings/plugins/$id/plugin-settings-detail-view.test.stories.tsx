@@ -90,7 +90,7 @@ export const TextSavesWhenTheFieldLosesFocus: Story = {
     await userEvent.clear(host);
     await userEvent.type(host, 'github.example.com');
     await expect(args.onSettingChange).not.toHaveBeenCalled();
-    await userEvent.tab();
+    host.blur();
     await expect(args.onSettingChange).toHaveBeenCalledWith(
       'host',
       'github.example.com',
@@ -100,8 +100,10 @@ export const TextSavesWhenTheFieldLosesFocus: Story = {
 
 export const AnUnchangedFieldSavesNothing: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('textbox', { name: 'Host' }));
-    await userEvent.tab();
+    const host = canvas.getByRole('textbox', { name: 'Host' });
+
+    await userEvent.click(host);
+    host.blur();
     await expect(args.onSettingChange).not.toHaveBeenCalled();
   },
 };
@@ -114,7 +116,7 @@ export const ASecretIsNeverShown: Story = {
     await expect(token).toHaveValue('');
     await expect(token).toHaveAttribute('placeholder', 'Saved in the Keychain');
     await userEvent.type(token, 'ghp_new');
-    await userEvent.tab();
+    token.blur();
     await expect(args.onSettingChange).toHaveBeenCalledWith('token', 'ghp_new');
     await expect(token).toHaveValue('');
   },

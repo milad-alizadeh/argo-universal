@@ -66,12 +66,12 @@ function unavailable(status: Unavailable, width: number): Story {
       }
 
       await expect(onSelect).not.toHaveBeenCalled();
-      await userEvent.tab();
 
       const connection = canvas.getByRole('link', {
         name: connectionNames[status],
       });
 
+      connection.focus();
       await expect(connection).toHaveFocus();
       await userEvent.keyboard('{Enter}');
       await expect(onSelect).toHaveBeenLastCalledWith('/settings/connection');

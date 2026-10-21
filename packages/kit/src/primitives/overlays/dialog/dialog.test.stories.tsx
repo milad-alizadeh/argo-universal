@@ -79,6 +79,9 @@ function trapsFocusAt(layout: Layout): Story {
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', rename));
       const dialog = await body.findByRole('dialog', dialogName);
+
+      // Walk from a control inside the dialog, so the traversal has a defined origin.
+      within(dialog).getByRole('button', { name: 'Save' }).focus();
       await userEvent.tab();
       await userEvent.tab();
       await userEvent.tab();

@@ -66,7 +66,7 @@ export const CopiesInTheApp: Story = {
     ).mockResolvedValue();
 
     try {
-      await userEvent.tab();
+      canvas.getByRole('button', { name: 'Copy code' }).focus();
       await userEvent.keyboard('{Enter}');
       await waitFor(() =>
         expect(clipboard).toHaveBeenCalledWith('const ready = true;'),

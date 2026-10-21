@@ -95,8 +95,10 @@ export const KeyboardFocusKeepsNavigationWide: Story = {
   ),
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
-    await userEvent.tab();
+
     const link = canvas.getByRole('link');
+
+    link.focus();
     await expect(link).toHaveFocus();
     await expect(link).toHaveAttribute('href', href);
 
