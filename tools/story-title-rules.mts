@@ -60,7 +60,13 @@ const leafTitle = ({ name, aspect }: Leaf): string =>
 type Expected =
   | { kind: 'exact'; title: string }
   | { kind: 'prefix'; prefix: string; seed: string; why: string }
-  | { kind: 'none' };
+  | { kind: 'none'; why: string };
+
+// A folder no story group belongs to, with the reason a reader needs to place the file.
+const nowhere = (why = 'no story group belongs to this folder'): Expected => ({
+  kind: 'none',
+  why,
+});
 
 const titleUnder = (
   root: string,
@@ -114,11 +120,27 @@ const testStories: Rule = {
     }),
 };
 
-// The kit is the design system: its primitives carry their category folder, everything else sits beside them.
+/*
+ * One depth per kit root (#1199): a primitive is `Design System/Primitives/<Category>/<Name>`, four
+ * segments drawn from `primitives/<category>/<name>/`, and a foundation — a token scale no component
+ * owns — is `Design System/Foundations/<Topic>` from `foundations/<topic>/`. The kit has no third root,
+ * so a story anywhere else in it has nowhere to go and says where the two homes are.
+ */
+const primitivesHome =
+  'a kit primitive lives in `primitives/<category>/<name>/`, so its title carries its category';
+
+const kitHome =
+  'a kit story is a primitive in `primitives/<category>/<name>/` or a foundation in `foundations/<topic>/`';
+
 const kitRules: readonly Rule[] = [
   testStories,
   {
-    test: ({ dirs }) => dirs[0] === 'primitives' && dirs.length > 1,
+    test: ({ dirs }) => dirs[0] === 'foundations' && dirs.length > 1,
+    expected: (path) =>
+      titleUnder('Design System/Foundations', path.dirs.slice(1), path),
+  },
+  {
+    test: ({ dirs }) => dirs[0] === 'primitives' && dirs.length > 2,
     expected: (path) =>
       titleUnder(
         `Design System/Primitives/${pascal(path.dirs[1] ?? '')}`,
@@ -127,9 +149,10 @@ const kitRules: readonly Rule[] = [
       ),
   },
   {
-    test: () => true,
-    expected: (path) => titleUnder('Design System', path.dirs, path),
+    test: ({ dirs }) => dirs[0] === 'primitives',
+    expected: () => nowhere(primitivesHome),
   },
+  { test: () => true, expected: () => nowhere(kitHome) },
 ];
 
 const isProduct = ({ dirs }: StoryPath): boolean =>
@@ -194,16 +217,14 @@ const pathIn = (
 
 // A story outside every rule's folder would start a new top-level group, so no title belongs to it.
 const expectedIn = (rules: readonly Rule[], path: StoryPath): Expected =>
-  rules.find((rule): boolean => rule.test(path))?.expected(path) ?? {
-    kind: 'none',
-  };
+  rules.find((rule): boolean => rule.test(path))?.expected(path) ?? nowhere();
 
 // The title the file's own path derives, which the check compares and `pnpm new:story` writes.
 const expectedTitle = (file: string, component?: string): Expected => {
   const found = packageOf(file);
 
   return found === undefined
-    ? { kind: 'none' }
+    ? nowhere()
     : expectedIn(found[1], pathIn(found[0], file, component));
 };
 
@@ -217,6 +238,10 @@ const firstTitle = (expected: Expected): string | undefined => {
   return expected.kind === 'prefix' ? expected.seed : undefined;
 };
 
+// Why a path derives no title, which `pnpm new:story` reports as the folder's own problem.
+const whyNowhere = (expected: Expected): string =>
+  expected.kind === 'none' ? expected.why : '';
+
 export const derivedStoryTitle = (componentFile: string): string => {
   const storyFile = componentFile.replace(
     /\.(?:native\.)?tsx?$/,
@@ -224,10 +249,11 @@ export const derivedStoryTitle = (componentFile: string): string => {
   );
 
   // `pnpm new:story` writes a story for the component the file itself exports, never for its folder's.
-  const title = firstTitle(expectedTitle(storyFile));
+  const expected = expectedTitle(storyFile);
+  const title = firstTitle(expected);
 
   if (title === undefined)
-    throw new Error(`${componentFile}: no story group belongs to this folder`);
+    throw new Error(`${componentFile}: ${whyNowhere(expected)}`);
 
   return title;
 };
@@ -263,8 +289,7 @@ const expectedProblem = (
   title: string,
   expected: Expected,
 ): string[] => {
-  if (expected.kind === 'none')
-    return [`${file}: no story group belongs to this folder`];
+  if (expected.kind === 'none') return [`${file}: ${expected.why}`];
 
   return expected.kind === 'exact'
     ? exactProblem(file, title, expected.title)

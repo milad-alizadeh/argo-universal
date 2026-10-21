@@ -10,6 +10,8 @@ const src = 'packages/client/src';
 
 const kit = 'packages/kit/src';
 
+const svgTitle = 'Design System/Primitives/Visual/Svg';
+
 const meta = (title: string): string =>
   `const meta = {\n  title: '${title}',\n} satisfies Meta;`;
 
@@ -23,12 +25,17 @@ describe('a story title', (): void => {
       `${kit}/primitives/lists/grouped-list-item/grouped-list-item.stories.tsx`,
       'Design System/Primitives/Lists/GroupedListItem',
     ],
-    // A file in a category folder with no folder of its own takes the category and its own name.
+    // Four segments, always: a primitive carries the category folder it sits in.
+    [`${kit}/primitives/visual/svg/svg.stories.tsx`, svgTitle],
+    // A foundation is a token scale no component owns; its topic folder is its last segment.
     [
-      `${kit}/primitives/visual/svg.stories.tsx`,
-      'Design System/Primitives/Visual/Svg',
+      `${kit}/foundations/tones/tones.stories.tsx`,
+      'Design System/Foundations/Tones',
     ],
-    [`${kit}/symbols/icon.stories.tsx`, 'Design System/Icon'],
+    [
+      `${kit}/foundations/spacing/spacing.stories.tsx`,
+      'Design System/Foundations/Spacing',
+    ],
     [
       `${src}/lib/product/screen/screen.stories.tsx`,
       'Design System/Patterns/Screen',
@@ -74,11 +81,6 @@ describe('a story title', (): void => {
       `${kit}/primitives/lists/grouped-list-content/grouped-list-content.stories.tsx`,
       'Primitives/GroupedListContent',
       "expected 'Design System/Primitives/Lists/GroupedListContent'",
-    ],
-    [
-      `${kit}/symbols/icon.stories.tsx`,
-      'Symbols/Icon',
-      "expected 'Design System/Icon'",
     ],
     [
       `${src}/features/feed/components/edit-row/edit-row.stories.tsx`,
@@ -185,6 +187,42 @@ describe('a story title', (): void => {
     ).toEqual([expect.stringMatching(/no story group belongs/)]);
   });
 
+  // One depth per kit root (#1199): a primitive is four segments, a foundation three, and nothing else.
+  it('fails a primitive that skips its own folder', (): void => {
+    expect(
+      storyTitleProblems(
+        `${kit}/primitives/visual/svg.stories.tsx`,
+        meta(svgTitle),
+      ),
+    ).toEqual([
+      expect.stringMatching(
+        /a kit primitive lives in `primitives\/<category>\/<name>\/`/,
+      ),
+    ]);
+  });
+
+  it('fails a foundation that skips its own folder', (): void => {
+    expect(
+      storyTitleProblems(
+        `${kit}/foundations/tones.stories.tsx`,
+        meta('Design System/Foundations/Tones'),
+      ),
+    ).toEqual([expect.stringMatching(/or a foundation in `foundations/)]);
+  });
+
+  it('fails a kit story outside the two kit roots', (): void => {
+    expect(
+      storyTitleProblems(
+        `${kit}/symbols/icon.stories.tsx`,
+        meta('Design System/Icon'),
+      ),
+    ).toEqual([
+      expect.stringMatching(
+        /a kit story is a primitive in `primitives\/<category>\/<name>\/`/,
+      ),
+    ]);
+  });
+
   it('reads a one-line meta', (): void => {
     expect(
       storyTitleProblems(
@@ -219,6 +257,7 @@ describe('the title `pnpm new:story` writes', (): void => {
       `${kit}/primitives/status/pill/pill.tsx`,
       'Design System/Primitives/Status/Pill',
     ],
+    [`${kit}/primitives/visual/svg/svg.tsx`, svgTitle],
     [
       `${src}/lib/product/scroll-fade/scroll-fade.tsx`,
       'Design System/Patterns/ScrollFade',
@@ -244,6 +283,12 @@ describe('the title `pnpm new:story` writes', (): void => {
     expect((): string => derivedStoryTitle(`${src}/app/index.tsx`)).toThrow(
       'no story group belongs to this folder',
     );
+  });
+
+  it('says where a kit component with no folder belongs', (): void => {
+    expect((): string =>
+      derivedStoryTitle(`${kit}/primitives/visual/svg.tsx`),
+    ).toThrow('a kit primitive lives in `primitives/<category>/<name>/`');
   });
 });
 

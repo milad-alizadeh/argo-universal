@@ -5,8 +5,8 @@ import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { Text } from '#primitives/content/text';
 import type { Tone } from '#primitives/content/text';
-import { ListTileContext } from '../../list-context';
-import type { KitProps } from '../kit-props';
+import { ListTileContext } from '../../../list-context';
+import type { KitProps } from '../../kit-props';
 import { useSvgDrawing } from './svg-budget';
 
 export type SvgProps = KitProps<'Svg'>;

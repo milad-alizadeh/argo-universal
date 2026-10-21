@@ -1,4 +1,4 @@
-import { serviceMapXml } from '../../../mocks/service-map-svg';
+import { serviceMapXml } from '../../../../mocks/service-map-svg';
 import type { SvgProps } from './svg';
 
 export const infoSvg = {
