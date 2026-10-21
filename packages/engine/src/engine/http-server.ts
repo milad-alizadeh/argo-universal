@@ -14,12 +14,7 @@ import {
   listenOnLoopback,
 } from './http-connections';
 import type { PluginServerOptions } from './plugin-options';
-import {
-  closePlugins,
-  startPlugins,
-  type PluginSetup,
-  pluginRouterDeps,
-} from './plugin-setup';
+import { EnginePlugins } from './plugin-setup';
 import { createRequestGuard } from './request-guard';
 import {
   createRequestListener,
@@ -51,16 +46,14 @@ export interface HttpServer {
   close: () => Promise<void>;
 }
 
-type HttpSetup = PluginSetup & {
+type HttpSetup = {
+  plugins: EnginePlugins;
   blobsFolder: string;
   commandAdmission: AbortController;
   notifications: Notifications;
 };
 
 type RoutedSetup = HttpSetup & { appRouter: AppRouter };
-
-// A bound Server holds the background start so closing never pulls the runtime out from under it.
-type ListeningSetup = RoutedSetup & { backgroundStarted: Promise<void> };
 
 // Serves tRPC and blobs on loopback (ADR 0002); resolves once the port is bound.
 export async function startHttpServer(
@@ -73,13 +66,13 @@ export async function startHttpServer(
     createRequestListener(listenerOptions(setup, guard)),
   );
 
-  const listening = await listenWithPlugins(server, options.port, setup);
+  await listenWithPlugins(server, options.port, setup);
 
-  return connectHttpServer(listening, server, guard);
+  return connectHttpServer(setup, server, guard);
 }
 
 function connectHttpServer(
-  setup: ListeningSetup,
+  setup: RoutedSetup,
   server: Server,
   guard: ReturnType<typeof createRequestGuard>,
 ): HttpServer {
@@ -95,11 +88,11 @@ function connectHttpServer(
 }
 
 async function closeHttpServices(
-  setup: ListeningSetup,
+  setup: RoutedSetup,
   closeConnections: () => Promise<void>,
 ): Promise<void> {
   setup.notifications.close();
-  await Promise.all([closeConnections(), closePlugins(setup)]);
+  await Promise.all([closeConnections(), setup.plugins.close()]);
 }
 
 async function prepareHttpServer(
@@ -119,7 +112,7 @@ function prepareHttpSetup(
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
-    ...startPlugins(options),
+    plugins: new EnginePlugins(options),
   };
 }
 
@@ -133,7 +126,7 @@ function createHttpRouter(
       blobsFolder: setup.blobsFolder,
       sessionCommandSignal: setup.commandAdmission.signal,
       notifications: setup.notifications,
-      ...pluginRouterDeps(setup),
+      ...setup.plugins.router,
     }),
   );
 }
@@ -143,16 +136,16 @@ async function listenWithPlugins(
   server: Server,
   port: number,
   setup: RoutedSetup,
-): Promise<ListeningSetup> {
+): Promise<void> {
   try {
     await listenOnLoopback(server, port);
   } catch (error) {
     setup.notifications.close();
-    await closePlugins(setup);
+    await setup.plugins.close();
     throw error;
   }
 
-  return { ...setup, backgroundStarted: setup.startBackground() };
+  setup.plugins.listening();
 }
 
 function listenerOptions(
@@ -163,6 +156,6 @@ function listenerOptions(
     guard,
     blobsFolder: setup.blobsFolder,
     router: setup.appRouter,
-    readAsset: setup.pluginRuntime.openAsset,
+    readAsset: setup.plugins.openAsset,
   };
 }
