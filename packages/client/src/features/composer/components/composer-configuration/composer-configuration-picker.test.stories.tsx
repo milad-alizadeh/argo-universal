@@ -68,10 +68,11 @@ export const ClickOpensModelPicker: Story = {
       name: agentModelLabel,
     });
 
+    // A running Session's Agent is fixed, so Configure offers neither a choice of Agent nor a row naming one.
     await waitFor(() =>
       expect(
-        within(configure).getByRole('group', { name: /^Agent,/ }),
-      ).toBeVisible(),
+        within(configure).queryByRole('group', { name: /^Agent,/ }),
+      ).not.toBeInTheDocument(),
     );
     await expect(
       within(configure).queryByRole('button', { name: /^Agent,/ }),

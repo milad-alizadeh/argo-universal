@@ -49,8 +49,11 @@ export async function expectResponsiveFooter({
   }
 }
 
-// Both layouts show the read-only Agent row after Send; the phone names its sheet.
-async function expectAgentShown(width: number, agent: string): Promise<void> {
+/*
+ * A running Session's Agent is fixed, so Configure draws no Agent row at all: neither a choice to make nor a
+ * line repeating what the page is already titled with. The phone still names its sheet.
+ */
+async function expectNoAgentRow(width: number): Promise<void> {
   const overlay = within(document.body);
 
   if (width < wideBreakpoint()) {
@@ -61,28 +64,23 @@ async function expectAgentShown(width: number, agent: string): Promise<void> {
 
   await waitFor(() =>
     expect(
-      overlay.getByRole('group', { name: chooseAgentLabel }),
-    ).toBeVisible(),
+      overlay.queryByRole('group', { name: chooseAgentLabel }),
+    ).not.toBeInTheDocument(),
   );
   await expect(
     overlay.queryByRole('button', { name: chooseAgentLabel }),
   ).not.toBeInTheDocument();
-  await expect(
-    overlay.getByRole('group', { name: chooseAgentLabel }),
-  ).toHaveTextContent(agent);
 }
 
 export async function browseResponsiveMenu({
   userEvent,
   width,
-  agent,
 }: Pick<PlayContext, 'userEvent'> & {
   width: number;
-  agent: string;
 }): Promise<void> {
   const overlay = within(document.body);
 
-  await expectAgentShown(width, agent);
+  await expectNoAgentRow(width);
   await userEvent.click(
     await overlay.findByRole('button', { name: chooseModelLabel }),
   );
