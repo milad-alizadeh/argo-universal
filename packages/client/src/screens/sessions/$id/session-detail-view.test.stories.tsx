@@ -87,8 +87,8 @@ export const Idle: Story = {
     }),
 };
 
-// The header, the Feed and the Composer sit in one SessionLayout container, so they share its one surface.
-export const HeaderFeedAndComposerShareOneLayout: Story = {
+// The band owns identity; the Feed and Composer keep the Session layout surface.
+export const BandOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
     const layout = within(await canvas.findByTestId('session-layout'));

@@ -47,7 +47,7 @@ function FrameStatePage({
 
 const changesOnly = ['changes'] as const;
 
-// A Session page's header, whose Changes button holds its Changes Inspector open.
+// A Session's Workbench card opens its Changes Stage.
 function SessionPage({ title }: { title: string }): React.JSX.Element {
   const panels = useSessionPanels(changesOnly);
   const open = panels.state.tabs.length > 0;
@@ -90,7 +90,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The open Session's Changes button opens the Inspector beside it and closes it again.
+// The Workbench opens Changes and the band's fixed Stage toggle closes it.
 export const ChangesOpensInspector: Story = {
   args: {
     content: <SessionPage title="Fix login" />,
@@ -117,7 +117,7 @@ export const ChangesOpensInspector: Story = {
 const longTitle =
   'Build the Session layout from spec 0003, wire the Inspector to the changed files and keep the Composer pinned to the bottom of the window';
 
-// The Session header keeps a long title on one line with its whole text in the heading's name, and never covers the header actions, with the Inspector closed or open.
+// The band keeps a long title's accessible name while truncating before its controls, with the Stage closed or open.
 export const LongSessionTitle: Story = {
   args: {
     content: <SessionPage title={longTitle} />,
