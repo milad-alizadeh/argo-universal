@@ -4,14 +4,13 @@ import {
   PluginFailure,
   type PluginStatus,
 } from '@repo/contracts/plugins/runtime';
-import type { z } from 'zod';
+import { DrawingFailures, type PluginIdentity } from './drawing-failures';
 
 type FailureEvents = EventEmitter<{ change: [PluginFailure[]]; close: [] }>;
 
-type PluginIdentity = Pick<z.input<typeof PluginFailure>, 'pluginId' | 'name'>;
-
 export class PluginFailures {
-  private readonly current = new Map<string, PluginFailure>();
+  private readonly stopped = new Map<string, PluginFailure>();
+  private readonly drawings = new DrawingFailures();
   private readonly events: FailureEvents = new EventEmitter();
 
   public constructor() {
@@ -20,64 +19,54 @@ export class PluginFailures {
   }
 
   public update(plugin: PluginIdentity, status: PluginStatus): void {
-    if (this.keepsDrawing(plugin.pluginId, status)) return;
-
-    if (this.replace(plugin, status))
-      this.events.emit('change', [...this.current.values()]);
+    if (this.replace(plugin, status)) this.changed();
   }
 
-  private keepsDrawing(pluginId: string, status: PluginStatus): boolean {
-    return (
-      status.state === 'running' &&
-      this.current.get(pluginId)?.kind === 'drawing'
-    );
-  }
-
+  // A stopped Plugin outranks its views' drawing failures and takes their place.
   private replace(plugin: PluginIdentity, status: PluginStatus): boolean {
-    if (status.state === 'crashed') {
-      this.current.set(plugin.pluginId, createFailure(plugin, status));
+    if (status.state !== 'crashed') return this.stopped.delete(plugin.pluginId);
+    this.stopped.set(plugin.pluginId, createFailure(plugin, status));
+    this.drawings.end(plugin.pluginId);
 
-      return true;
-    }
-
-    return this.current.delete(plugin.pluginId);
+    return true;
   }
 
-  public drawing(plugin: PluginIdentity, message: string): void {
-    if (!this.newDrawingFailure(plugin.pluginId, message)) return;
-    this.current.set(
-      plugin.pluginId,
-      PluginFailure.parse({
-        ...plugin,
-        kind: 'drawing',
-        message,
-        key: randomUUID(),
-      }),
-    );
-    this.events.emit('change', [...this.current.values()]);
+  public drawing(
+    plugin: PluginIdentity,
+    opening: string,
+    message: string,
+  ): void {
+    if (this.stopped.has(plugin.pluginId)) return;
+
+    if (this.drawings.failed(plugin, opening, message)) this.changed();
   }
 
-  // A stopped Plugin outranks a drawing failure, and the same message again is not news.
-  private newDrawingFailure(pluginId: string, message: string): boolean {
-    const current = this.current.get(pluginId);
-
-    if (current?.kind !== 'drawing') return current === undefined;
-
-    return current.message !== message;
+  /*
+   * An Opening's drawing failure goes when a view for it draws, and when the App stops asking for it.
+   * Another Opening of the same Plugin clears nothing, and the viewId a reload mints keeps the Opening.
+   */
+  public cleared(opening: string): void {
+    if (this.drawings.cleared(opening)) this.changed();
   }
 
-  // A view that draws again clears the Plugin's drawing failure; a stopped Plugin's stays.
-  public drew(pluginId: string): void {
-    if (this.current.get(pluginId)?.kind !== 'drawing') return;
-    this.current.delete(pluginId);
-    this.events.emit('change', [...this.current.values()]);
+  private changed(): void {
+    this.events.emit('change', this.snapshot());
+  }
+
+  private snapshot(): PluginFailure[] {
+    return [
+      ...this.stopped.values(),
+      ...this.drawings
+        .rollup()
+        .filter((failure) => !this.stopped.has(failure.pluginId)),
+    ];
   }
 
   public async *watch(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
     const stream = on(this.events, 'change', { signal, close: ['close'] });
 
     try {
-      yield [...this.current.values()];
+      yield this.snapshot();
       yield* readFailures(stream, signal);
     } finally {
       await stream.return?.();

@@ -9,6 +9,7 @@ import type { ViewLifecycle } from '../views/view-registry';
 import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
 import { pluginIdentity } from './status';
+import { ViewFailures } from './view-failures';
 
 export class RuntimeResources {
   readonly failures = new PluginFailures();
@@ -19,6 +20,9 @@ export class RuntimeResources {
     string,
     ReturnType<typeof pluginIdentity>
   >();
+  private readonly viewFailures = new ViewFailures(this.failures, (pluginId) =>
+    this.identities.get(pluginId),
+  );
   private readonly unwatch;
   private projectUpdates: Promise<void> = Promise.resolve();
 
@@ -36,25 +40,22 @@ export class RuntimeResources {
 
   private lifecycle(): ViewLifecycle {
     return {
-      opened: (pluginId) => this.data.opened(pluginId),
-      released: (viewId) => {
-        this.data.releaseView(viewId);
-        this.background.released(viewId);
-      },
+      opened: (view) => this.data.opened(view.pluginId),
+      released: (view, lastOfOpening) => this.releaseView(view, lastOfOpening),
       received: (view) => this.drew(view),
-      failed: (pluginId, message) => this.drawingFailed(pluginId, message),
+      failed: (view, message) => this.viewFailures.failed(view, message),
     };
   }
 
-  private drew(view: OpenView): void {
-    this.failures.drew(view.pluginId);
-    this.background.rendered(view.opening.viewId);
+  private releaseView(view: OpenView, lastOfOpening: boolean): void {
+    this.data.releaseView(view.opening.viewId);
+    this.background.released(view.opening.viewId);
+    this.viewFailures.released(view, lastOfOpening);
   }
 
-  private drawingFailed(pluginId: string, message: string): void {
-    const identity = this.identities.get(pluginId);
-
-    if (identity) this.failures.drawing(identity, message);
+  private drew(view: OpenView): void {
+    this.viewFailures.drew(view);
+    this.background.rendered(view.opening.viewId);
   }
 
   activate(

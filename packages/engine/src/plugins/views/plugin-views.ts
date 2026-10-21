@@ -35,12 +35,10 @@ export class PluginViews {
     private readonly log: (line: string) => void,
     private readonly lifecycle: ViewLifecycle = noViewLifecycle,
   ) {
-    this.views = new ViewRegistry(send, (viewId) => this.dropped(viewId));
-  }
-
-  private dropped(viewId: PluginViewId): void {
-    this.dispatches.end(viewId);
-    this.lifecycle.released(viewId);
+    this.views = new ViewRegistry(send, (view, lastOfOpening) => {
+      this.dispatches.end(view.opening.viewId);
+      this.lifecycle.released(view, lastOfOpening);
+    });
   }
 
   public dataView(pluginId: string, viewId: string): OpenView {
@@ -65,12 +63,13 @@ export class PluginViews {
     this.lifecycle.received(view);
   }
 
+  // The failure outlives the view it came from, so it is raised after the removal that would evict it.
   private failed(view: OpenView, reason: string): void {
     this.log(
       `Plugin ${view.pluginId}: could not draw ${view.opening.path}: ${reason}`,
     );
-    this.lifecycle.failed(view.pluginId, reason);
     this.views.remove(view);
+    this.lifecycle.failed(view, reason);
   }
 
   public headless(
@@ -149,10 +148,10 @@ export class PluginViews {
     opening: Opening,
     connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
-    this.lifecycle.opened(pluginId);
     const reported = { ...opening, surface: connection.surface };
 
     const view = this.views.acquire(pluginId, reported, connection.id);
+    this.lifecycle.opened(view);
 
     try {
       yield* appView(view, connection, this.log);

@@ -11,16 +11,21 @@ import {
   type OpenView,
   type Opening,
 } from './open-view';
+import { openingKey } from './opening-key';
 
 type ViewIdentity = Pick<PluginViewInput, 'pluginId' | 'path' | 'projectId'>;
 
 type ViewTarget = Pick<PluginDispatchInput, 'pluginId' | 'path' | 'viewId'>;
 
+/*
+ * What became of one view. Each callback carries the view itself, so a caller can key on the Opening it
+ * belongs to rather than on the viewId a reload rotates.
+ */
 export type ViewLifecycle = {
-  opened: (pluginId: string) => void;
-  released: (viewId: PluginViewId) => void;
+  opened: (view: OpenView) => void;
+  released: (view: OpenView, lastOfOpening: boolean) => void;
   received: (view: OpenView) => void;
-  failed: (pluginId: string, message: string) => void;
+  failed: (view: OpenView, message: string) => void;
 };
 
 export const noViewLifecycle: ViewLifecycle = {
@@ -35,11 +40,18 @@ export class ViewRegistry {
 
   constructor(
     private readonly send: (pluginId: string, event: PluginEvent) => void,
-    private readonly dropped: (viewId: PluginViewId) => void,
+    private readonly dropped: (view: OpenView, lastOfOpening: boolean) => void,
   ) {}
 
   values(): MapIterator<OpenView> {
     return this.views.values();
+  }
+
+  // `watchers` counts one connection's Apps, so the views left open for this Opening are counted instead.
+  private drop(view: OpenView): void {
+    const key = openingKey(view);
+
+    this.dropped(view, !this.values().some((open) => openingKey(open) === key));
   }
 
   owned(pluginId: string, id: string): OpenView {
@@ -97,7 +109,8 @@ export class ViewRegistry {
   }
 
   retire(view: OpenView): void {
-    this.dropped(view.opening.viewId);
+    // The view is still registered, so its Opening outlives the viewId this mints.
+    this.drop(view);
     this.views.delete(view.opening.viewId);
     view.opening = { ...view.opening, viewId: createPluginViewId() };
     view.workerRevision = null;
@@ -106,7 +119,7 @@ export class ViewRegistry {
 
   remove(view: OpenView): void {
     if (!this.views.delete(view.opening.viewId)) return;
-    this.dropped(view.opening.viewId);
+    this.drop(view);
     view.events.emit('close');
     this.send(view.pluginId, { type: 'close', viewId: view.opening.viewId });
   }
