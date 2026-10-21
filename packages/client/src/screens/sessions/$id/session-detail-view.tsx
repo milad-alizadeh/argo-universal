@@ -110,8 +110,13 @@ const headerPanels = (
   panels: SessionPanels,
 ): SessionHeaderProps['panels'] => ({
   offered: offeredSessionPanels(props),
+  counts: {
+    subagents: props.subagents?.subagents.length ?? 0,
+    shells: props.shells?.shells.length ?? 0,
+  },
   shown: panels.state.shown,
   changesSummary: props.header.changes?.summary,
+  onSelect: panels.select,
   onToggle: (panel) =>
     panel === 'changes' ? panels.toggle(panel) : panels.select(panel),
 });
