@@ -1,53 +1,46 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { Text } from '#primitives/content/text';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { LiquidGlass } from './liquid-glass';
-import type { LiquidGlassProps } from './liquid-glass-props';
+
+function GlassText({ text }: { text: string }): React.JSX.Element {
+  return (
+    <Text role="body" className="px-4 py-1">
+      {text}
+    </Text>
+  );
+}
 
 // The web and Android draw each fallback surface; the iOS preview draws Liquid Glass on iOS 26 and later.
-const examples: (Omit<LiquidGlassProps, 'children'> & {
-  label: string;
-  text: string;
-})[] = [
-  {
-    label: 'Sheet',
-    text: 'Message',
+const meta = {
+  title: 'Design System/Primitives/Content/LiquidGlass',
+  component: LiquidGlass,
+  args: { children: <GlassText text="Message" /> },
+  // LiquidGlass has no Contracts schema, so its own props type gives the domain.
+  argTypes: {
+    corners: { control: 'select', options: ['container', 'sheet', 'pill'] },
+    children: { control: false },
+  },
+} satisfies Meta<typeof LiquidGlass>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Sheet: Story = {
+  args: {
     corners: 'sheet',
     className: 'w-full',
     fallbackClassName: 'rounded-2xl bg-card shadow-glass',
   },
-  {
-    label: 'Pill',
-    text: 'Label',
+};
+
+export const Pill: Story = {
+  args: {
+    children: <GlassText text="Label" />,
     corners: 'pill',
     interactive: true,
     className: 'h-6 justify-center self-start',
     fallbackClassName: 'rounded-full border border-border bg-card shadow-card',
   },
-];
-
-const meta = {
-  title: 'Design System/Primitives/Content/LiquidGlass',
-  component: LiquidGlass,
-} satisfies Meta;
-
-export default meta;
-
-type Story = StoryObj;
-
-export const Variations: Story = {
-  name: 'LiquidGlass',
-  render: () => (
-    <VariationList>
-      {examples.map(({ label, text, ...surface }) => (
-        <Variation key={label} label={label}>
-          <LiquidGlass {...surface}>
-            <Text role="body" className="px-4 py-1">
-              {text}
-            </Text>
-          </LiquidGlass>
-        </Variation>
-      ))}
-    </VariationList>
-  ),
 };

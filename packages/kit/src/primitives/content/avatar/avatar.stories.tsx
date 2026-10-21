@@ -1,20 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Avatar } from './avatar';
-
-const tones = [
-  'neutral',
-  'muted',
-  'accent',
-  'info',
-  'success',
-  'warning',
-  'danger',
-  'done',
-] as const;
 
 const meta = {
   title: 'Design System/Primitives/Content/Avatar',
@@ -28,92 +14,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Avatar',
-  render: (args) => <AvatarVariations args={args} />,
-};
+export const Initials: Story = {};
 
-function AvatarVariations({
-  args,
-}: {
-  args: React.ComponentProps<typeof Avatar>;
-}): React.JSX.Element {
-  return (
-    <VariationList>
-      <AvatarInitialsExamples args={args} />
-      <AvatarToneVariations />
-    </VariationList>
-  );
-}
+export const Small: Story = { args: { size: 'sm' } };
 
-function AvatarInitialsExamples({
-  args,
-}: {
-  args: React.ComponentProps<typeof Avatar>;
-}): React.JSX.Element {
-  return (
-    <>
-      <InitialsExample args={args} />
-      <SmallExample args={args} />
-      <StatusExample args={args} />
-    </>
-  );
-}
+export const Neutral: Story = { args: { status: { tone: 'neutral' } } };
 
-function InitialsExample({
-  args,
-}: {
-  args: React.ComponentProps<typeof Avatar>;
-}): React.JSX.Element {
-  return (
-    <Variation label="Initials">
-      <Avatar {...args} />
-    </Variation>
-  );
-}
+export const Muted: Story = { args: { status: { tone: 'muted' } } };
 
-function SmallExample({
-  args,
-}: {
-  args: React.ComponentProps<typeof Avatar>;
-}): React.JSX.Element {
-  return (
-    <Variation label="Small">
-      <Avatar {...args} size="sm" />
-    </Variation>
-  );
-}
+export const Accent: Story = { args: { status: { tone: 'accent' } } };
 
-function StatusExample({
-  args,
-}: {
-  args: React.ComponentProps<typeof Avatar>;
-}): React.JSX.Element {
-  return (
-    <Variation label="With status">
-      <Avatar {...args} status={{ tone: 'success' }} />
-    </Variation>
-  );
-}
+export const Info: Story = { args: { status: { tone: 'info' } } };
 
-function AvatarToneVariations(): React.JSX.Element {
-  return (
-    <Variation label="Status tones">
-      <View className="flex-row gap-3">
-        {tones.map((tone) => (
-          <AvatarTone key={tone} tone={tone} />
-        ))}
-      </View>
-    </Variation>
-  );
-}
+export const Success: Story = { args: { status: { tone: 'success' } } };
 
-function AvatarTone({
-  tone,
-}: {
-  tone: (typeof tones)[number];
-}): React.JSX.Element {
-  return (
-    <Avatar initials="SR" accessibilityLabel="Sam Rivera" status={{ tone }} />
-  );
-}
+export const Warning: Story = { args: { status: { tone: 'warning' } } };
+
+export const Danger: Story = { args: { status: { tone: 'danger' } } };
+
+export const Done: Story = { args: { status: { tone: 'done' } } };

@@ -1,21 +1,34 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
+import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { CentredOverlayScope } from '#primitives/overlays/centred-overlay';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Form } from './form';
 import { IssueForm, type IssueDraft } from './form-example';
 
 const meta = {
   title: 'Design System/Primitives/Fields/Form',
   component: Form,
+  // The example form holds every field's draft, so each state renders it rather than these args.
+  args: { submitLabel: 'Create', onSubmit: fn() },
   argTypes: kitArgTypes('Form'),
   parameters: { screenPreview: true },
-} satisfies Meta;
+  // The desktop Form sits in a centred dialog, where Cancel joins the submit.
+  decorators: [
+    (Story): React.JSX.Element => (
+      <CentredOverlayScope>
+        <View className="w-full max-w-md">
+          <Story />
+        </View>
+      </CentredOverlayScope>
+    ),
+  ],
+} satisfies Meta<typeof Form>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
 const filled: IssueDraft = {
   title: 'Sign-in sheet closes early',
@@ -25,44 +38,24 @@ const filled: IssueDraft = {
   labels: ['bug'],
 };
 
-const states: {
-  label: string;
-  props: React.ComponentProps<typeof IssueForm>;
-}[] = [
-  { label: 'Rest', props: { onSubmit: () => {} } },
-  { label: 'Filled', props: { initial: filled, onSubmit: () => {} } },
-  {
-    label: 'Invalid',
-    props: { titleError: 'Enter a title.', onSubmit: () => {} },
-  },
-  {
-    label: 'Submitting',
-    props: { initial: filled, loading: true, onSubmit: () => {} },
-  },
-];
+const handlers = { onSubmit: fn(), onCancel: fn() };
 
-export const Variations: Story = {
-  name: 'Form',
-  render: () => (
-    <VariationList>
-      {states.map(({ label, props }) => (
-        <Variation key={label} label={label}>
-          <FormFrame {...props} />
-        </Variation>
-      ))}
-    </VariationList>
+export const Rest: Story = {
+  render: (): React.JSX.Element => <IssueForm {...handlers} />,
+};
+
+export const Filled: Story = {
+  render: (): React.JSX.Element => <IssueForm {...handlers} initial={filled} />,
+};
+
+export const Invalid: Story = {
+  render: (): React.JSX.Element => (
+    <IssueForm {...handlers} titleError="Enter a title." />
   ),
 };
 
-// The desktop Form sits in a centred dialog, where Cancel joins the submit.
-function FormFrame(
-  props: React.ComponentProps<typeof IssueForm>,
-): React.JSX.Element {
-  return (
-    <CentredOverlayScope>
-      <View className="w-full max-w-md">
-        <IssueForm {...props} onCancel={() => {}} />
-      </View>
-    </CentredOverlayScope>
-  );
-}
+export const Submitting: Story = {
+  render: (): React.JSX.Element => (
+    <IssueForm {...handlers} loading initial={filled} />
+  ),
+};

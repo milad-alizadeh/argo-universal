@@ -1,72 +1,70 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Slider, type SliderProps } from './slider';
-
-type ExampleProps = Pick<
-  SliderProps,
-  'minimumValue' | 'maximumValue' | 'step' | 'disabled'
-> & { initialValue?: number };
 
 const speeds = { minimumValue: 0.5, maximumValue: 2, step: 0.5 };
 
 const efforts = { minimumValue: 0, maximumValue: 5, step: 1 };
 
-function SliderExample(props: ExampleProps): React.JSX.Element {
-  const { initialValue, ...range } = props;
-  const [value, setValue] = useState(initialValue);
+// The value is held by the caller, so each state drags against local state and its label follows.
+function ControlledSlider(props: SliderProps): React.JSX.Element {
+  const [value, setValue] = useState(props.value);
+
+  const onValueChange = (next: number): void => {
+    setValue(next);
+    props.onValueChange(next);
+  };
 
   return (
-    <View className="w-80">
-      <Slider
-        {...range}
-        {...speechLabels(value)}
-        value={value}
-        onValueChange={setValue}
-      />
-    </View>
+    <Slider
+      {...props}
+      value={value}
+      valueLabel={valueLabel(value, props.valueLabel)}
+      onValueChange={onValueChange}
+    />
   );
 }
 
-function speechLabels(
-  value: number | undefined,
-): Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'> {
-  return {
-    accessibilityLabel: 'Speech speed',
-    valueLabel: value === undefined ? 'None' : `${value.toFixed(1)}×`,
-  };
-}
-
-const examples: { label: string; props: ExampleProps }[] = [
-  { label: 'Default', props: { ...speeds, initialValue: 1 } },
-  { label: 'Minimum', props: { ...speeds, initialValue: 0.5 } },
-  { label: 'Maximum', props: { ...speeds, initialValue: 2 } },
-  { label: 'Six stops', props: { ...efforts, initialValue: 2 } },
-  { label: 'No selection', props: { ...efforts } },
-  { label: 'Disabled', props: { ...speeds, initialValue: 1, disabled: true } },
-];
+const valueLabel = (value: number | undefined, none: string): string =>
+  value === undefined ? none : `${value.toFixed(1)}×`;
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Slider',
   component: Slider,
+  args: {
+    ...speeds,
+    accessibilityLabel: 'Speech speed',
+    valueLabel: 'None',
+    onValueChange: fn(),
+  },
   argTypes: kitArgTypes('Slider'),
-} satisfies Meta;
+  // The track takes the width a settings row gives it.
+  decorators: [
+    (Story): React.JSX.Element => (
+      <View className="w-80">
+        <Story />
+      </View>
+    ),
+  ],
+  render: (args): React.JSX.Element => <ControlledSlider {...args} />,
+} satisfies Meta<typeof Slider>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Slider',
-  render: () => (
-    <VariationList>
-      {examples.map(({ label, props }) => (
-        <Variation key={label} label={label}>
-          <SliderExample {...props} />
-        </Variation>
-      ))}
-    </VariationList>
-  ),
-};
+export const Default: Story = { args: { value: 1 } };
+
+export const Minimum: Story = { args: { value: 0.5 } };
+
+export const Maximum: Story = { args: { value: 2 } };
+
+export const SixStops: Story = { args: { ...efforts, value: 2 } };
+
+export const NoSelection: Story = { args: efforts };
+
+export const Disabled: Story = { args: { value: 1, disabled: true } };

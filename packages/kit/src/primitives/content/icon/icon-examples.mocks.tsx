@@ -4,8 +4,6 @@ import { Text } from '#primitives/content/text';
 import { iconNames } from '../../../symbols/icon-names';
 import { type IconRole, useIconPixels } from '../../../symbols/icon-role';
 import { logoSources } from '../../../symbols/logo-source';
-import { Variation, Variations as VariationList } from '../../../variations';
-import { FilledSymbols } from './filled-symbols.mocks';
 import { Icon } from './icon';
 
 type IconName = (typeof iconNames)[number];
@@ -52,15 +50,13 @@ function IconCell({ name }: { name: IconName }): React.JSX.Element {
   );
 }
 
-function EveryIconExample(): React.JSX.Element {
+export function EveryIconExample(): React.JSX.Element {
   return (
-    <Variation label="Every Argo icon">
-      <View className="flex-row flex-wrap gap-x-2 gap-y-3">
-        {iconNames.map((name) => (
-          <IconCell key={name} name={name} />
-        ))}
-      </View>
-    </Variation>
+    <View className="flex-row flex-wrap gap-x-2 gap-y-3">
+      {iconNames.map((name) => (
+        <IconCell key={name} name={name} />
+      ))}
+    </View>
   );
 }
 
@@ -79,27 +75,23 @@ function FilledIconButton(props: {
   );
 }
 
-function IconButtonsExample(): React.JSX.Element {
+export function IconButtonsExample(): React.JSX.Element {
   return (
-    <Variation label="Inside icon buttons">
-      <View className="flex-row gap-3">
-        {iconButtonExamples.map(({ label, icon }) => (
-          <FilledIconButton key={label} label={label} icon={icon} />
-        ))}
-      </View>
-    </Variation>
+    <View className="flex-row gap-3">
+      {iconButtonExamples.map(({ label, icon }) => (
+        <FilledIconButton key={label} label={label} icon={icon} />
+      ))}
+    </View>
   );
 }
 
-function RolesExample(): React.JSX.Element {
+export function RolesExample(): React.JSX.Element {
   return (
-    <Variation label="Roles: each steps to its phone size below the wide breakpoint">
-      <View className="flex-row flex-wrap items-end gap-4">
-        {roles.map((role) => (
-          <RoleSample key={role} role={role} />
-        ))}
-      </View>
-    </Variation>
+    <View className="flex-row flex-wrap items-end gap-4">
+      {roles.map((role) => (
+        <RoleSample key={role} role={role} />
+      ))}
+    </View>
   );
 }
 
@@ -107,60 +99,38 @@ function ColoredIcon({ className }: { className: string }): React.JSX.Element {
   return <Icon name="warning" role="control" className={className} />;
 }
 
-function ColorsExample(): React.JSX.Element {
+export function ColorsExample(): React.JSX.Element {
   return (
-    <Variation label="Colors: foreground, muted, primary and destructive">
-      <View className="flex-row items-center gap-3">
-        {colorClasses.map((className) => (
-          <ColoredIcon key={className} className={className} />
-        ))}
-      </View>
-    </Variation>
-  );
-}
-
-export function IconExamples(): React.JSX.Element {
-  return (
-    <VariationList>
-      <EveryIconExample />
-      <IconButtonsExample />
-      <RolesExample />
-      <Variation label="Fill follows selection on every platform">
-        <FilledSymbols />
-      </Variation>
-      <ColorsExample />
-      <LogoExample />
-      <CornerStatusExample />
-    </VariationList>
+    <View className="flex-row items-center gap-3">
+      {colorClasses.map((className) => (
+        <ColoredIcon key={className} className={className} />
+      ))}
+    </View>
   );
 }
 
 // A logo draws its own SVG through `source`, at the role's size and in the text colour, beside a symbol.
-function LogoExample(): React.JSX.Element {
+export function LogoExample(): React.JSX.Element {
   return (
-    <Variation label="Logo source: GitHub's mark beside the web symbol">
-      <View className="flex-row items-center gap-3">
-        <Icon source={logoSources.github} role="control" />
-        <Icon name="web" role="control" />
-        <Icon source={logoSources.github} role="control" tone="muted" />
-        <Icon name="web" role="control" tone="muted" />
-      </View>
-    </Variation>
+    <View className="flex-row items-center gap-3">
+      <Icon source={logoSources.github} role="control" />
+      <Icon name="web" role="control" />
+      <Icon source={logoSources.github} role="control" tone="muted" />
+      <Icon name="web" role="control" tone="muted" />
+    </View>
   );
 }
 
-function CornerStatusExample(): React.JSX.Element {
+export function CornerStatusExample(): React.JSX.Element {
   return (
-    <Variation label="Corner status">
-      <View className="flex-row items-center gap-4">
-        <Icon name="agent" role="control" status={{ tone: 'success' }} />
-        <Icon
-          name="agent"
-          role="control"
-          status={{ tone: 'warning', pulse: true }}
-        />
-        <Icon name="agent" role="control" status={{ tone: 'danger' }} />
-      </View>
-    </Variation>
+    <View className="flex-row items-center gap-4">
+      <Icon name="agent" role="control" status={{ tone: 'success' }} />
+      <Icon
+        name="agent"
+        role="control"
+        status={{ tone: 'warning', pulse: true }}
+      />
+      <Icon name="agent" role="control" status={{ tone: 'danger' }} />
+    </View>
   );
 }

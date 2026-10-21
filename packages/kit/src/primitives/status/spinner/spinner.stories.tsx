@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Spinner } from './spinner';
 
 const meta = {
@@ -14,13 +13,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Spinner',
-  render: (args) => (
-    <VariationList>
-      <Variation label="Loading">
-        <Spinner {...args} />
-      </Variation>
-    </VariationList>
-  ),
-};
+export const Loading: Story = {};

@@ -1,69 +1,46 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { useWide } from '../../../use-wide/use-wide';
-import { Variation, Variations } from '../../../variations';
+import { kitArgTypes } from '#kit/kit-arg-types';
 import { Callout } from './callout';
 import { CalloutButton } from './callout-button';
-import type { CalloutProps } from './callout-props';
 
 const stderr = `Error: could not complete
   at step one
   at step two`;
 
-const info = {
-  title: 'Nothing added yet',
-  description: 'Press Add to get started.',
-  actions: <CalloutButton label="Add" />,
-} satisfies CalloutProps;
-
-const error = {
-  tone: 'danger',
-  title: 'Something failed',
-  description: 'Exited with status 1',
-  detail: stderr,
-  actions: <CalloutButton label="Retry" />,
-} satisfies CalloutProps;
-
-const busy = {
-  busy: true,
-  title: 'Working…',
-  actions: <CalloutButton variant="secondary" label="Cancel" />,
-} satisfies CalloutProps;
-
-const examples = { info, error, busy };
-
-type GalleryArgs = { example: keyof typeof examples };
-
+// A wide window draws the callout in place; a phone presents the same content as a sheet.
 const meta = {
   title: 'Design System/Primitives/Status/Callout',
-  component: CalloutGallery,
-  args: { example: 'info' },
-  argTypes: {
-    example: { options: Object.keys(examples), control: 'select' },
-  },
-} satisfies Meta<typeof CalloutGallery>;
+  component: Callout,
+  argTypes: kitArgTypes('Callout'),
+  args: { title: 'Nothing added yet' },
+} satisfies Meta<typeof Callout>;
 
 export default meta;
 
-const variations: [label: string, example: CalloutProps][] = [
-  ['Info', info],
-  ['Error', error],
-  ['Busy', busy],
-];
+type Story = StoryObj<typeof meta>;
 
-// A phone presents each callout as a sheet, so it shows the one the example control picks.
-function CalloutGallery(args: GalleryArgs): React.JSX.Element {
-  if (!useWide()) return <Callout {...examples[args.example]} />;
+export const Info: Story = {
+  args: {
+    description: 'Press Add to get started.',
+    actions: <CalloutButton label="Add" />,
+  },
+};
 
-  return (
-    <Variations>
-      {variations.map(([label, example]) => (
-        <Variation key={label} label={label}>
-          <Callout {...example} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
+// The one tone Callout branches on: danger, for work that failed.
+export const Failed: Story = {
+  args: {
+    tone: 'danger',
+    title: 'Something failed',
+    description: 'Exited with status 1',
+    detail: stderr,
+    actions: <CalloutButton label="Retry" />,
+  },
+};
 
-export const Overview: StoryObj<typeof meta> = { name: 'Callout' };
+export const Busy: Story = {
+  args: {
+    busy: true,
+    title: 'Working…',
+    actions: <CalloutButton variant="secondary" label="Cancel" />,
+  },
+};

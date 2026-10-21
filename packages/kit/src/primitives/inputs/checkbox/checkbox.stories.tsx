@@ -1,73 +1,36 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { createElement, useState } from 'react';
+import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Checkbox, type CheckboxProps } from './checkbox';
 
-function Example(
-  props: Omit<CheckboxProps, 'onValueChange' | 'label'>,
-): React.JSX.Element {
-  const [value, setValue] = useState(props.value);
+// A Checkbox is controlled, so every story draws through a wrapper that keeps the value.
+function Example({
+  value: initial,
+  ...props
+}: CheckboxProps): React.JSX.Element {
+  const [value, setValue] = useState(initial);
 
-  return createElement(Checkbox, {
-    ...props,
-    value,
-    onValueChange: setValue,
-    label: 'Notify team',
-  });
+  return <Checkbox {...props} value={value} onValueChange={setValue} />;
 }
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Checkbox',
   component: Checkbox,
+  args: { label: 'Notify team', value: false, onValueChange: (): void => {} },
   argTypes: kitArgTypes('Checkbox'),
-} satisfies Meta;
+  render: (args): React.JSX.Element => <Example {...args} />,
+} satisfies Meta<typeof Checkbox>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-function unchecked(): React.JSX.Element {
-  return (
-    <Variation label="Unchecked">
-      <Example value={false} />
-    </Variation>
-  );
-}
+export const Unchecked: Story = {};
 
-function checked(): React.JSX.Element {
-  return (
-    <Variation label="Checked">
-      <Example value />
-    </Variation>
-  );
-}
+export const Checked: Story = { args: { value: true } };
 
-function disabled(): React.JSX.Element {
-  return (
-    <Variation label="Disabled">
-      <Example value disabled />
-    </Variation>
-  );
-}
+export const Disabled: Story = { args: { value: true, disabled: true } };
 
-function invalid(): React.JSX.Element {
-  return (
-    <Variation label="Invalid">
-      <Example value={false} errors={['Confirm your choice']} />
-    </Variation>
-  );
-}
-
-export const Variations: Story = {
-  name: 'Checkbox',
-  render: () =>
-    createElement(
-      VariationList,
-      null,
-      unchecked(),
-      checked(),
-      disabled(),
-      invalid(),
-    ),
+export const Invalid: Story = {
+  args: { errors: ['Confirm your choice'] },
 };

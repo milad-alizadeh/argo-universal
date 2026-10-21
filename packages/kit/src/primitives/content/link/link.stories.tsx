@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Text } from '#primitives/content/text';
-import { Variation, Variations } from '../../../variations';
 import { Link } from './index';
 
 const meta = {
@@ -9,37 +9,42 @@ const meta = {
   component: Link,
   argTypes: kitArgTypes('Link'),
   args: { label: 'Read more', href: 'https://example.com' },
+  // A link draws in running text, as it sits in a product layout.
+  decorators: [
+    (Story): React.JSX.Element => (
+      <Text>
+        <Story />
+      </Text>
+    ),
+  ],
 } satisfies Meta<typeof Link>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const props = meta.args;
+export const Inline: Story = {
+  render: (args): React.JSX.Element => (
+    <>
+      Inline text with <Link {...args} />.
+    </>
+  ),
+};
 
-const states = (
-  <Variations>
-    <Variation label="Inline">
-      <Text>
-        Inline text with <Link {...props} />.
-      </Text>
-    </Variation>
-    <Variation label="Standalone">
+export const Standalone: Story = {
+  decorators: [
+    (Story): React.JSX.Element => (
       <Text role="secondary" tone="muted">
-        <Link {...props} />
+        <Story />
       </Text>
-    </Variation>
-    <Variation label="Route">
-      <Text>
-        <Link label="Settings" route="/settings" />
-      </Text>
-    </Variation>
-    <Variation label="Unsupported">
-      <Text>
-        <Link label="Unsupported link" href="file:///example.txt" />
-      </Text>
-    </Variation>
-  </Variations>
-);
+    ),
+  ],
+};
 
-export const States: Story = { name: 'Link', render: () => states };
+export const Route: Story = {
+  args: { label: 'Settings', route: '/settings', href: undefined },
+};
+
+export const Unsupported: Story = {
+  args: { label: 'Unsupported link', href: 'file:///example.txt' },
+};

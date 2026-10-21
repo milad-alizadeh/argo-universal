@@ -8,7 +8,6 @@ import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { MenuTrigger } from '#primitives/overlays/menu';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Sheet } from './sheet';
 import { useSheet } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
@@ -16,44 +15,33 @@ import type { SheetProps } from './sheet-props';
 const meta = {
   title: 'Design System/Primitives/Overlays/Sheet',
   component: Sheet,
+  /*
+   * A sheet opens from its own trigger and holds its own open state, so each story draws an example
+   * of its own and these args only satisfy the component's type.
+   */
+  args: { open: false, onOpenChange: (): void => {} },
   argTypes: kitArgTypes('Sheet'),
-} satisfies Meta;
+  // PagedSheet is the example `sheet.test.stories.tsx` drives, not a story.
+  excludeStories: ['PagedSheet'],
+} satisfies Meta<typeof Sheet>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Sheet',
-  render: () => <SheetVariations />,
+export const FitsItsContent: Story = {
+  render: () => <ExampleSheet label="Options" />,
 };
 
-function SheetVariations(): ReactElement {
-  return (
-    <VariationList>
-      <Variation label="Fits its content">
-        <ExampleSheet label="Options" />
-      </Variation>
-      <Variation label="With a footer">
-        <ExampleSheet label="Footer" footer={<SubmitFooter />} />
-      </Variation>
-      <TallVariations />
-    </VariationList>
-  );
-}
+export const WithFooter: Story = {
+  render: () => <ExampleSheet label="Footer" footer={<SubmitFooter />} />,
+};
 
-function TallVariations(): ReactElement {
-  return (
-    <>
-      <Variation label="Full height">
-        <ExampleSheet label="Tall" detents={['large']} />
-      </Variation>
-      <Variation label="With pages">
-        <PagedSheet />
-      </Variation>
-    </>
-  );
-}
+export const FullHeight: Story = {
+  render: () => <ExampleSheet label="Tall" detents={['large']} />,
+};
+
+export const WithPages: Story = { render: () => <PagedSheet /> };
 
 const choices = ['Option one', 'Option two', 'Option three'];
 
@@ -61,7 +49,7 @@ type ExampleProps = Pick<SheetProps, 'detents' | 'footer'> & {
   label: string;
 };
 
-export function ExampleSheet(props: ExampleProps): ReactElement {
+function ExampleSheet(props: ExampleProps): ReactElement {
   const [open, setOpen] = useState(false);
 
   return (

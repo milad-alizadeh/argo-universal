@@ -84,15 +84,15 @@ const meta = {
   component: Dialog,
   argTypes: kitArgTypes('Dialog'),
   tags: ['third-party'],
-} satisfies Meta;
+} satisfies Meta<typeof Dialog>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Dialog',
-  render: () => <DialogPreview />,
+// A dialog is a composition — trigger, header, fields, footer — so it keeps its own render.
+export const Default: Story = {
+  render: (): React.JSX.Element => <DialogPreview />,
 };
 
 function ProfileField({

@@ -1,37 +1,30 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations } from '../../../variations';
 import { Pill } from './pill';
-
-const tones = [
-  'neutral',
-  'muted',
-  'accent',
-  'info',
-  'success',
-  'warning',
-  'danger',
-  'done',
-] as const;
 
 const meta = {
   title: 'Design System/Primitives/Status/Pill',
-  args: { text: 'Ready' },
   component: Pill,
+  args: { text: 'Ready' },
   argTypes: kitArgTypes('Pill'),
 } satisfies Meta<typeof Pill>;
 
 export default meta;
 
-export const Overview: StoryObj<typeof meta> = {
-  name: 'Pill',
-  render: () => (
-    <Variations>
-      {tones.map((tone) => (
-        <Variation key={tone} label={`tone ${tone}`}>
-          <Pill text="Ready" tone={tone} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
+type Story = StoryObj<typeof meta>;
+
+export const Neutral: Story = { args: { tone: 'neutral' } };
+
+export const Muted: Story = { args: { tone: 'muted' } };
+
+export const Accent: Story = { args: { tone: 'accent' } };
+
+export const Info: Story = { args: { tone: 'info' } };
+
+export const Success: Story = { args: { tone: 'success' } };
+
+export const Warning: Story = { args: { tone: 'warning' } };
+
+export const Danger: Story = { args: { tone: 'danger' } };
+
+export const Done: Story = { args: { tone: 'done' } };

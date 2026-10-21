@@ -2,16 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Icon } from '#primitives/content/icon';
 import { ListItem } from '#primitives/lists/list-item';
-import { Variation, Variations } from '../../../variations';
 import { List } from './list';
-
-const meta = {
-  title: 'Design System/Primitives/Lists/List',
-  component: List,
-  argTypes: kitArgTypes('List'),
-} satisfies Meta<typeof List>;
-
-export default meta;
 
 const sections = (
   <>
@@ -25,27 +16,19 @@ const sections = (
   </>
 );
 
-function Example({
-  appearance,
-}: {
-  appearance: 'plain' | 'grouped' | 'cards';
-}): React.JSX.Element {
-  return (
-    <List appearance={appearance} maxHeight={400}>
-      {sections}
-    </List>
-  );
-}
+const meta = {
+  title: 'Design System/Primitives/Lists/List',
+  component: List,
+  args: { maxHeight: 400, children: sections },
+  argTypes: kitArgTypes('List'),
+} satisfies Meta<typeof List>;
 
-export const Overview: StoryObj<typeof meta> = {
-  name: 'List',
-  render: () => (
-    <Variations>
-      {(['plain', 'grouped', 'cards'] as const).map((appearance) => (
-        <Variation key={appearance} label={appearance}>
-          <Example appearance={appearance} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Plain: Story = { args: { appearance: 'plain' } };
+
+export const Grouped: Story = { args: { appearance: 'grouped' } };
+
+export const Cards: Story = { args: { appearance: 'cards' } };

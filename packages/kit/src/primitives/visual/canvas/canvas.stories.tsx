@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Canvas } from './canvas';
 import { CanvasFallback } from './canvas-boundary';
 import type { RectProps } from './canvas-props';
@@ -12,11 +12,20 @@ const meta = {
   title: 'Design System/Primitives/Visual/Canvas',
   component: Canvas,
   argTypes: kitArgTypes('Canvas'),
-} satisfies Meta;
+  // The scenes are drawn at a fixed width, as they sit in a product layout.
+  decorators: [
+    (Story): React.JSX.Element => (
+      <View style={{ width: 360, maxWidth: '100%' }}>
+        <Story />
+      </View>
+    ),
+  ],
+} satisfies Meta<typeof Canvas>;
 
 export default meta;
 
-type Story = StoryObj;
+// Every scene composes its own children, so stories type against the component, not meta's args.
+type Story = StoryObj<typeof Canvas>;
 
 const scenes = {
   heatmap: {
@@ -33,7 +42,8 @@ const scenes = {
   },
 } as const;
 
-function Heatmap(): React.JSX.Element {
+// Each scene draws Canvas children and tracks its own selection, so it keeps a render.
+function HeatmapScene(): React.JSX.Element {
   const [selectedKey, select] = useState('day-44');
 
   return (
@@ -45,7 +55,7 @@ function Heatmap(): React.JSX.Element {
   );
 }
 
-function CodeMap(): React.JSX.Element {
+function CodeMapScene(): React.JSX.Element {
   const [selectedKey, select] = useState('packages-0');
   const props = { ...scenes.files, selectedKey };
 
@@ -60,25 +70,6 @@ function CodeMap(): React.JSX.Element {
     </Canvas>
   );
 }
-
-export const Variations: Story = {
-  name: 'Canvas',
-  render: () => (
-    <View style={{ width: 360, maxWidth: '100%' }}>
-      <VariationList>
-        <Variation label="Heatmap · pan and zoom">
-          <Heatmap />
-        </Variation>
-        <Variation label="Atlas · flat code map">
-          <CodeMap />
-        </Variation>
-        <Variation label="Drawing unavailable">
-          <Unavailable />
-        </Variation>
-      </VariationList>
-    </View>
-  ),
-};
 
 function selectable(
   file: (typeof rectangles)[number],
@@ -96,3 +87,26 @@ function Unavailable(): React.JSX.Element {
     </View>
   );
 }
+
+export const Heatmap: Story = {
+  render: () => <HeatmapScene />,
+  parameters: {
+    docs: { description: { story: 'Rectangles the viewer can pan and zoom.' } },
+  },
+};
+
+export const CodeMap: Story = {
+  render: () => <CodeMapScene />,
+  parameters: {
+    docs: { description: { story: 'A flat map of rectangles and labels.' } },
+  },
+};
+
+export const DrawingUnavailable: Story = {
+  render: () => <Unavailable />,
+  parameters: {
+    docs: {
+      description: { story: 'The fallback a failed drawing falls back to.' },
+    },
+  },
+};

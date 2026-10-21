@@ -9,8 +9,34 @@ import { Grid } from '#primitives/layout/grid';
 import { Stack } from '#primitives/layout/stack';
 import { Pill } from '#primitives/status/pill';
 import { Svg } from '#primitives/visual';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Card } from './card';
+
+const moreButton = (
+  <IconButton icon="more" variant="ghost" accessibilityLabel="More" />
+);
+
+const deployBody = (
+  <Stack direction="column" gap={2} align="start">
+    <Text>Deployed 12 min ago by Ana Ruiz</Text>
+    <Pill tone="success" text="Healthy" />
+  </Stack>
+);
+
+const deployCard = (
+  <Card title="api-gateway" subtitle="Production" actions={moreButton}>
+    {deployBody}
+  </Card>
+);
+
+const workerCard = (
+  <Card
+    icon={<Icon role="row" name="server" />}
+    title="worker"
+    subtitle="Staging"
+  >
+    <Text>Deployed 2 hours ago by Sam Lee</Text>
+  </Card>
+);
 
 const meta = {
   title: 'Design System/Primitives/Layout/Card',
@@ -23,63 +49,39 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Card',
-  render: () => (
-    <VariationList>
-      {variations.map(([label, card]) => (
-        <Variation key={label} label={label}>
-          {card}
-        </Variation>
-      ))}
-    </VariationList>
-  ),
-};
-
-function MediaCard(): React.JSX.Element {
-  return (
-    <Card
-      media={<Svg xml={serviceMap()} label="Service map" />}
-      title="Service map"
-      subtitle="12 services"
-    >
-      <Text>Updated after the last deploy.</Text>
-    </Card>
-  );
-}
-
-// Cards in one row share the tallest one's height.
-function CardGrid(): React.JSX.Element {
-  return (
-    <Grid columns={3} gap={3}>
-      <DeployCard />
-      <Card
-        icon={<Icon role="row" name="server" />}
-        title="worker"
-        subtitle="Staging"
-      >
-        <Text>Deployed 2 hours ago by Sam Lee</Text>
-      </Card>
-      <Card icon={<Icon role="row" name="web" />} title="web" />
-    </Grid>
-  );
-}
+export const TitleOnly: Story = {};
 
 // The unrelated example from the Paper master: a deploy status card.
-function DeployCard(): React.JSX.Element {
-  return (
-    <Card title="api-gateway" subtitle="Production" actions={moreButton}>
-      <Stack direction="column" gap={2} align="start">
-        <Text>Deployed 12 min ago by Ana Ruiz</Text>
-        <Pill tone="success" text="Healthy" />
-      </Stack>
-    </Card>
-  );
-}
+export const Anatomy: Story = {
+  args: {
+    subtitle: 'Production',
+    actions: moreButton,
+    children: deployBody,
+  },
+};
 
-const moreButton = (
-  <IconButton icon="more" variant="ghost" accessibilityLabel="More" />
-);
+export const Media: Story = {
+  args: {
+    media: <Svg xml={serviceMap()} label="Service map" />,
+    title: 'Service map',
+    subtitle: '12 services',
+    children: <Text>Updated after the last deploy.</Text>,
+  },
+};
+
+// The press count is live, so this state keeps its own render.
+export const Pressable: Story = { render: () => <PressableCard /> };
+
+// Cards in one row share the tallest one's height, so this state draws the row.
+export const InAGrid: Story = {
+  render: () => (
+    <Grid columns={3} gap={3}>
+      {deployCard}
+      {workerCard}
+      <Card icon={<Icon role="row" name="web" />} title="web" />
+    </Grid>
+  ),
+};
 
 function PressableCard(): React.JSX.Element {
   const [opened, setOpened] = useState(0);
@@ -103,11 +105,3 @@ function serviceMap(): string {
 
   return fixture.xml;
 }
-
-const variations: [string, React.JSX.Element][] = [
-  ['Title only', <Card key="title" title="api-gateway" />],
-  ['Anatomy', <DeployCard key="anatomy" />],
-  ['Media', <MediaCard key="media" />],
-  ['Pressable', <PressableCard key="pressable" />],
-  ['Grid', <CardGrid key="grid" />],
-];

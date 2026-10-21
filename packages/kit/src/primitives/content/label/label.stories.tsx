@@ -1,56 +1,50 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations } from '../../../variations';
 import { Label } from './label';
-import type { LabelProps } from './label-props';
 
 const subagents = '3 items';
 
 const meta = {
   title: 'Design System/Primitives/Content/Label',
-  args: { icon: 'agent', text: subagents },
   component: Label,
+  args: { text: subagents },
   argTypes: kitArgTypes('Label'),
 } satisfies Meta<typeof Label>;
 
 export default meta;
 
-const samples: { label: string; props: LabelProps }[] = [
-  { label: 'Count', props: { icon: 'agent', text: subagents } },
-  {
-    label: 'Success',
-    props: { icon: 'pr-open', text: '#45', tone: 'success' },
-  },
-  { label: 'Info', props: { icon: 'check', text: '2/5', tone: 'info' } },
-  {
-    label: 'Danger',
-    props: { icon: 'warning', text: 'Failed', tone: 'danger' },
-  },
-  { label: 'Merged', props: { icon: 'pr-merged', text: '#46', tone: 'done' } },
-  {
-    label: 'Queued',
-    props: { icon: 'cycle', text: 'Waiting', tone: 'warning' },
-  },
-  {
-    label: 'Neutral',
-    props: { icon: 'check', text: 'Neutral', tone: 'neutral' },
-  },
-  { label: 'Accent', props: { icon: 'check', text: 'Accent', tone: 'accent' } },
-  {
-    label: 'Text only',
-    props: { text: 'v1.2.0', testID: 'label-text-only' },
-  },
-];
+type Story = StoryObj<typeof meta>;
 
-export const Overview: StoryObj<typeof meta> = {
-  name: 'Label',
-  render: () => (
-    <Variations>
-      {samples.map(({ label, props }) => (
-        <Variation key={label} label={label}>
-          <Label {...props} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
+export const Count: Story = { args: { icon: 'agent' } };
+
+export const Success: Story = {
+  args: { icon: 'pr-open', text: '#45', tone: 'success' },
+};
+
+export const Info: Story = {
+  args: { icon: 'check', text: '2/5', tone: 'info' },
+};
+
+export const Danger: Story = {
+  args: { icon: 'warning', text: 'Failed', tone: 'danger' },
+};
+
+export const Merged: Story = {
+  args: { icon: 'pr-merged', text: '#46', tone: 'done' },
+};
+
+export const Queued: Story = {
+  args: { icon: 'cycle', text: 'Waiting', tone: 'warning' },
+};
+
+export const Neutral: Story = {
+  args: { icon: 'check', text: 'Neutral', tone: 'neutral' },
+};
+
+export const Accent: Story = {
+  args: { icon: 'check', text: 'Accent', tone: 'accent' },
+};
+
+export const TextOnly: Story = {
+  args: { text: 'v1.2.0', testID: 'label-text-only' },
 };
