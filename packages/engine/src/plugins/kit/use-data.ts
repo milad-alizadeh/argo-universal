@@ -52,18 +52,40 @@ export function useQueryData(
   query: PluginQuery | null,
   { every }: { every?: number } = {},
 ): QueryData {
-  const target = useTarget(client, query, every);
+  const { target, error } = useTarget(client, query, every);
   const state = useSubscription(client, target);
 
   const refresh = useCallback(() => client.refresh(target), [client, target]);
 
   return {
     data: useResult(query, state.data),
-    error: state.error,
+    error: error ?? state.error,
     stale: state.stale,
     refresh,
   };
 }
+
+type QueryIdentity = { identity: string | null; error: string | undefined };
+
+type QueryTarget = { target: DataTarget; error: string | undefined };
+
+/*
+ * A Query with no normal form is a Query Argo cannot ask at all, which is what `error` reports
+ * (ADR-0037). The Engine already answers its own serialiser that way; a throw here would instead
+ * take down the page that asked, which the Plugin cannot read.
+ */
+function identityOf(query: PluginQuery | null): QueryIdentity {
+  if (query === null) return { identity: null, error: undefined };
+
+  try {
+    return { identity: serialisePluginQuery(query), error: undefined };
+  } catch (cause) {
+    return { identity: null, error: refusal(cause) };
+  }
+}
+
+const refusal = (cause: unknown): string =>
+  cause instanceof Error ? cause.message : String(cause);
 
 function useResult(
   query: PluginQuery | null,
@@ -78,14 +100,16 @@ function useTarget(
   client: PluginDataClient,
   query: PluginQuery | null,
   every: number | undefined,
-): DataTarget {
+): QueryTarget {
   const viewId = useContext(QueryViewContext);
-  const identity = query === null ? null : serialisePluginQuery(query);
+  const { identity, error } = identityOf(query);
 
-  return useMemo(
+  const target = useMemo(
     () => ({ viewId, watchId: client.nextId(), identity, every }),
     [client, viewId, identity, every],
   );
+
+  return { target, error };
 }
 
 function useSubscription(
