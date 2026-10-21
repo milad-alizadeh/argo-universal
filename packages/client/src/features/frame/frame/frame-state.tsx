@@ -21,6 +21,7 @@ interface FrameScaffoldState {
   onWorkbenchShownChange: (shown: boolean) => void;
   sidebarShown: boolean;
   onSidebarShownChange: (shown: boolean) => void;
+  inspectorAvailable: boolean;
   inspectorState: InspectorState;
   onInspectorStateChange: (state: InspectorState) => void;
   inspector: (expanded: boolean) => ReactNode;
@@ -82,6 +83,7 @@ function useInspectorColumn(hosted: InspectorProps | null): InspectorColumn {
   };
 
   return {
+    inspectorAvailable: hosted !== null,
     inspectorState: inspectorStateOf(open, expanded),
     onInspectorStateChange,
     inspector: hostedPane(hosted, onInspectorStateChange),

@@ -54,7 +54,7 @@ export function ScaffoldBand(parts: ScaffoldPartProps): ReactElement {
     <View
       testID="window-band"
       className="absolute inset-x-0 top-0 z-50 flex-row items-center web:[app-region:drag]"
-      style={{ height: parts.layout.frame.panesTop }}
+      style={{ top: parts.layout.safeTop, height: parts.layout.frame.panesTop }}
     >
       <BandLeading {...parts} platform={platform} />
       <BandTitle {...parts} leadingWidth={leadingWidths[platform]} />

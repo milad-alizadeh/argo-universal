@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
 import type { WindowBandContent } from '#lib/product/window-band';
@@ -15,6 +16,7 @@ import {
 // What the Scaffold places: its Slots, and the sidebar's and the Inspector's state, which the caller holds.
 export interface ScaffoldProps {
   band?: WindowBandContent | null;
+  inspectorAvailable?: boolean;
   workbenchShown?: boolean;
   onWorkbenchShownChange?: (shown: boolean) => void;
   sizeClass: SizeClass;
@@ -50,6 +52,7 @@ interface WindowWidth {
 export interface ScaffoldLayout
   extends ScaffoldGeometry, PreferredWidths, WindowWidth {
   measures: ScaffoldMeasures;
+  safeTop: number;
   motion: FrameMotion;
   setResizing: (resizing: boolean) => void;
 }
@@ -127,6 +130,7 @@ export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
 
   return {
     ...geometry,
+    safeTop: useSafeAreaInsets().top,
     ...widths,
     ...windowWidth,
     motion: useFrameMotion(geometry, resizing),

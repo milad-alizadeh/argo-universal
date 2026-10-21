@@ -54,8 +54,15 @@ function StageToggle({ scaffold, layout }: ScaffoldPartProps): ReactElement {
       {...bandToggleAppearance(open)}
       icon="stage"
       accessibilityLabel={label}
+      disabled={!open && !stageAvailable(scaffold)}
       onPress={() => toggleStage(scaffold, open)}
     />
+  );
+}
+
+function stageAvailable(scaffold: ScaffoldPartProps['scaffold']): boolean {
+  return (
+    scaffold.inspectorAvailable !== false || !!scaffold.band?.onStageToggle
   );
 }
 
