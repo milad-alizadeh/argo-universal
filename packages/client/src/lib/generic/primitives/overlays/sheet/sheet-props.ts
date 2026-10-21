@@ -25,6 +25,11 @@ export interface SheetPageProps {
   title?: string;
   // The page's one header action, at the trailing end of its title row.
   action?: SheetPageAction;
+  /*
+   * The rows the page stands in for while it slides in, as bars of the width its own rows will take.
+   * Android draws it; the platforms whose pages are drawn before they move never need it.
+   */
+  placeholder?: ReactNode;
   children: ReactNode;
 }
 
@@ -47,10 +52,17 @@ export interface SheetLinkProps {
 export interface SheetDestination extends SheetPageProps {
   contentScrolls?: boolean;
   onExit?: () => void;
+  /*
+   * Whether the sheet carries the page from the moment it opens rather than mounting it on the way in.
+   * A page on standby is already drawn when it is pushed, so pushing it is a slide and nothing else.
+   */
+  standby?: boolean;
 }
 
 export interface SheetNavigation {
   push: (page: string | SheetDestination) => void;
+  // Hands the sheet a page to carry unpushed, so the push that follows has nothing left to mount.
+  standby: (page: SheetDestination) => void;
   update: (page: SheetDestination) => void;
   back: () => void;
   close: () => void;

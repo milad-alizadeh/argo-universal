@@ -76,7 +76,7 @@ function trailingContent(props: TrailingProps): ReactNode {
   return props.value === undefined ? (
     props.trailing
   ) : (
-    <View className="flex-row items-center gap-3">
+    <View className="flex-row items-center gap-1.5">
       <Text role="row" tone={props.valueTone ?? 'muted'}>
         {props.value}
       </Text>
@@ -117,14 +117,20 @@ export function Accessory({ children }: { children?: ReactNode }): ReactNode {
   ) : null;
 }
 
-// The disclosure chevron of a row that pushes a page; Android draws none. iOS draws SF's, since the iOS asset catalog leaves out Tabler's `web-disclosure`.
+/*
+ * The disclosure chevron of a row that pushes a page; Android draws none. The two glyphs fill their
+ * boxes differently, so each takes the role that lands it on the same 12pt chevron beside the title:
+ * SF's inks most of its point size and takes the chevron role, while Tabler's `web-disclosure` is
+ * drawn as a 7x12 chevron inside its box and takes the full disclosure slot. iOS draws SF's, since
+ * the iOS asset catalog leaves out `web-disclosure`.
+ */
 export function LinkAccessory(): ReactElement | null {
-  return Platform.OS === 'android' ? null : (
-    <Icon
-      name={Platform.OS === 'ios' ? 'disclosure' : 'web-disclosure'}
-      role="disclosure"
-      className="text-tertiary"
-    />
+  if (Platform.OS === 'android') return null;
+
+  return Platform.OS === 'ios' ? (
+    <Icon name="disclosure" role="chevron" className="text-tertiary" />
+  ) : (
+    <Icon name="web-disclosure" role="disclosure" className="text-tertiary" />
   );
 }
 

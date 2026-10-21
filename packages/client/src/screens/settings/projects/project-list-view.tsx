@@ -3,10 +3,9 @@ import { useState } from 'react';
 import { RowDrawingContext } from '#lib/generic/row-drawing-context';
 import { Action } from '#primitives/actions/action-list';
 import { List } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
+import { type LoadingRow, loadingRows } from '#primitives/lists/list-item';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { Page, type PageProps } from '#primitives/scaffolds/page';
-import { Spinner } from '#primitives/status/spinner';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
 import { LoadedProjects } from './project-list-rows';
 import { projectsTitle, searchLabel } from './project-list-search';
@@ -63,15 +62,17 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
   return <LoadedProjects {...props} projects={projects.projects} />;
 }
 
+// Widths, not words: a Project row is its folder icon and one line, so these stand in for the names.
+const loadingProjects: LoadingRow[] = [
+  { title: 'Argo Universal' },
+  { title: 'Server' },
+  { title: 'Plugin kit' },
+];
+
 function LoadingProjects(): React.JSX.Element {
   return (
     <List appearance="grouped">
-      <List.Section>
-        <ListItem
-          title="Loading Projects…"
-          leading={<Spinner accessibilityLabel="Loading Projects" />}
-        />
-      </List.Section>
+      <List.Section>{loadingRows(loadingProjects)}</List.Section>
     </List>
   );
 }

@@ -82,7 +82,6 @@ function SectionsDrawer({
   plugins,
 }: SectionsProps): React.JSX.Element {
   const options = frameDrawerOptions(framed, {
-    lists: frame.lists,
     plugins,
     path: usePathname(),
   });

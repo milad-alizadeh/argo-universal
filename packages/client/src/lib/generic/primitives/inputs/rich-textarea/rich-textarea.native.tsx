@@ -28,7 +28,8 @@ function plainFieldProps({
 
 const fieldClassName = (props: RichTextareaProps): string =>
   cn(
-    'w-full text-foreground',
+    // Clipped, so the lines scrolled past the six it shows stay inside the card instead of painting over its edge.
+    'w-full overflow-hidden text-foreground',
     plainFieldClassName,
     props.fieldClassName,
     props.disabled === true && 'opacity-50',

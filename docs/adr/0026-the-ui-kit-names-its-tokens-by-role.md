@@ -46,12 +46,12 @@ Owner amendment, 2026-10-15: interaction fills have separate `hover`, `selected`
 | Size class | Window width | Layout |
 | --- | --- | --- |
 | `compact` | < 600 | Phone: drawer and drill-in |
-| `medium` | 600–1099 | Phone shell: drawer and drill-in; Inspector as a sheet (amended 2026-10-18) |
-| `wide` | ≥ 1100 | Rail, list, detail and Inspector as its own column |
+| `medium` | 600–1099 | Phone shell: drawer and drill-in; Workbench as a sheet (amended 2026-10-18) |
+| `wide` | ≥ 1100 | Rail, list, detail and Workbench as its own column |
 
 Phones are always `compact`, even in landscape. Tablets, desktop and web take their size class from window width. `useWide()` becomes `useSizeClass()`, used inside the kit only.
 
-Owner amendment, 2026-10-18 (decision B): `medium` uses the phone shell on every platform (iOS, Android, web and desktop): the drawer in front of the pages, stack navigation, native headers on native, sheets in place of trigger popovers (centred modals on the web), and the Inspector as a sheet. The sidebar beside the content starts at `wide`. The size-class widths are unchanged; only the shell switch moves from `medium` to `wide`. Text follows the platform, not the shell: at `medium` the web and desktop keep the desktop type scale and native keeps the phone scale. Tablets rotate (iPad and Android), and a tablet in landscape can reach `wide`; phones stay in portrait.
+Owner amendment, 2026-10-18 (decision B): `medium` uses the phone shell on every platform (iOS, Android, web and desktop): the drawer in front of the pages, stack navigation, native headers on native, sheets in place of trigger popovers (centred modals on the web), and the Workbench as a sheet. The sidebar beside the content starts at `wide`. The size-class widths are unchanged; only the shell switch moves from `medium` to `wide`. Text follows the platform, not the shell: at `medium` the web and desktop keep the desktop type scale and native keeps the phone scale. Tablets rotate (iPad and Android), and a tablet in landscape can reach `wide`; phones stay in portrait.
 
 Typography keeps its nine text roles and icons keep the roles of ADR-0019.
 

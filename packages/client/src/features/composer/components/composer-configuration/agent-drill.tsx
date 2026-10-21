@@ -1,11 +1,11 @@
 import type { ReactElement, ComponentProps } from 'react';
-import { ListItem } from '#primitives/lists/list-item';
 import { Drill } from '#primitives/overlays/drill';
 import { AgentChoices } from '../start-session-in/agent-picker-choices';
 import { AgentIcon } from './agent-icon';
 import { ConfigurationRowIcon } from './configuration-row-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { agentName } from './configuration-values';
+import { useAgentPick, type AgentPick } from './use-agent-pick';
 
 type Props = { configuration: ComposerConfigurationProps };
 
@@ -14,11 +14,11 @@ type ChoicesProps = Props & {
   close: () => void;
 };
 
-export function AgentDrill(props: Props): ReactElement {
+// Only drawn where the Agent can still be chosen, so the choices are always there to drill into.
+export function AgentDrill(props: Props): ReactElement | null {
   const choices = props.configuration.agentChoices;
-  const row = agentRow(props.configuration);
 
-  if (!choices) return <ListItem title="Agent" {...row} />;
+  if (!choices) return null;
 
   return <AgentSelector {...props} choices={choices} />;
 }
@@ -45,6 +45,7 @@ function AgentSelector(props: Omit<ChoicesProps, 'close'>): ReactElement {
       value={value || 'Choose Agent'}
       valueLeading={leading}
       contentScrolls
+      mount="eager"
     >
       {(close) => <AgentDrillChoices {...props} close={close} />}
     </Drill>
@@ -63,22 +64,35 @@ function AgentLeading({ configuration }: Props): ReactElement {
 }
 
 function AgentDrillChoices(props: ChoicesProps): ReactElement {
-  return <AgentChoices {...agentChoicesProps(props)} />;
+  const picking = useAgentPick(
+    props.configuration,
+    props.choices.onChange,
+    props.close,
+  );
+
+  return <AgentChoices {...agentChoicesProps(props, picking)} />;
 }
 
 function agentChoicesProps(
   props: ChoicesProps,
+  picking: AgentPick,
 ): ComponentProps<typeof AgentChoices> {
   const { configuration, choices, close } = props;
 
   return {
     agents: choices.agents,
     agent: configuration.agent,
-    onAgentChange: choices.onChange,
+    pending: picking.pending,
+    onAgentChange: picking.pick,
     onAddAgents: choices.onAdd,
-    close: (after) => {
-      close();
-      after?.();
-    },
+    close: leaving(close),
   };
 }
+
+// Add Agents leaves at once: it is not a choice the picker waits on.
+const leaving =
+  (close: () => void) =>
+  (after?: () => void): void => {
+    close();
+    after?.();
+  };

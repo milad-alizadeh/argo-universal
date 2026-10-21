@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
@@ -10,14 +10,19 @@ type TitleRowProps = Pick<SheetPageEntry, 'title' | 'action'> & {
   // A pushed page's way back to the page below it.
   backLabel?: string;
   onBack: () => void;
+  /*
+   * The sheet's own way out, which only the root page carries: there is nothing below it to go back to, and
+   * the leading end of its title row would otherwise stand empty (owner, 2026-10-21).
+   */
+  onClose?: () => void;
 };
 
-// A page's title, centred, with Back before it on a pushed page and the page's action after it.
+// A page's title, centred, with Back or Close before it and the page's action after it.
 export function SheetTitleRow(props: TitleRowProps): ReactElement {
   return (
     <View className="h-13 shrink-0 flex-row items-center px-4">
       <View className={slotClass(props, 'items-start')}>
-        <BackButton {...props} />
+        <LeadingButton {...props} />
       </View>
       <Title {...props} />
       <View className={slotClass(props, 'items-end')}>
@@ -47,16 +52,45 @@ function Title(props: TitleRowProps): ReactElement {
   );
 }
 
-function BackButton(props: TitleRowProps): ReactElement | null {
-  if (!props.backLabel) return null;
+const closeLabel = 'Close';
 
+// Back on a pushed page, the sheet's close on the root, and nothing on a page that is given neither.
+function LeadingButton(props: TitleRowProps): ReactElement | null {
+  if (props.backLabel)
+    return (
+      <LeadingIcon
+        icon="chevron-left"
+        label={props.backLabel}
+        onPress={props.onBack}
+      />
+    );
+
+  if (!props.onClose) return null;
+
+  return (
+    <LeadingIcon icon="close" label={closeLabel} onPress={props.onClose} />
+  );
+}
+
+/*
+ * Material's own app bar icons are 24 boxes whose artwork carries its padding inside it; the kit's glyphs
+ * fill their box, so at 24 they read a size larger than the header the sheet sits under. The header role
+ * is what matches it by eye (owner, 2026-10-21).
+ */
+const leadingRole = Platform.OS === 'android' ? 'action' : 'title';
+
+function LeadingIcon(props: {
+  icon: 'chevron-left' | 'close';
+  label: string;
+  onPress: () => void;
+}): ReactElement {
   return (
     <IconButton
       variant="ghost"
-      icon="chevron-left"
-      iconRole="title"
-      accessibilityLabel={props.backLabel}
-      onPress={props.onBack}
+      icon={props.icon}
+      iconRole={leadingRole}
+      accessibilityLabel={props.label}
+      onPress={props.onPress}
     />
   );
 }

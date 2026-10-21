@@ -65,7 +65,8 @@ export const ComposerUsesAvailableWidth: ScaffoldStory = {
       .getByTestId('responsive-composer')
       .getBoundingClientRect();
 
-    for (const name of ['Mode', 'Usage', 'Context window', 'Send']) {
+    // Usage is a desktop control, and the open Inspector leaves the Composer the width of a phone's.
+    for (const name of ['Mode', 'Context window', 'Send']) {
       const control = canvas
         .getByRole('button', { name })
         .getBoundingClientRect();

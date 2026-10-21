@@ -136,21 +136,27 @@ export type WireSchemaHints = {
   };
   "Markdown": {
     /** Markdown source text. */
-    "source": PropValue<"Markdown", "source">;
+    "text": PropValue<"Markdown", "text">;
+    /** Show a caret at the end of the content. */
+    "streaming": PropValue<"Markdown", "streaming">;
   };
   "Code": {
-    /** Code displayed in the block. */
+    /** Plain text to display and copy. */
     "code": PropValue<"Code", "code">;
-    /** Optional language name. */
+    /** Language tag for syntax highlighting. */
     "language": PropValue<"Code", "language">;
+    /** File path shown in the header. */
+    "path": PropValue<"Code", "path">;
+    /** Diff hunks; Copy copies their patch and long diffs start with five lines. */
+    "diff": PropValue<"Code", "diff">;
   };
   "Link": {
-    /** The visible and accessible label. */
+    /** Visible link label. */
     "label": PropValue<"Link", "label">;
-    /** URL or Argo route. */
+    /** An http, https or mailto URL. */
     "href": PropValue<"Link", "href">;
-    /** on Press for this part. */
-    "onPress": PropValue<"Link", "onPress">;
+    /** An absolute route within the App. */
+    "route": PropValue<"Link", "route">;
   };
   "Pill": {
     /** The text displayed by the part. */
@@ -718,7 +724,7 @@ export type WireSchemaHints = {
     "series": PropValue<"Chart", "series">;
   };
   "Detail": {
-    /** The content as Markdown; drawn as body text until kit Markdown lands. */
+    /** The content drawn by the kit Markdown part. */
     "markdown": PropValue<"Detail", "markdown">;
     /** Show the content loading state; the Metadata stays. */
     "isLoading": PropValue<"Detail", "isLoading">;

@@ -27,12 +27,7 @@ const toggleClassName = contentActionClass({
 function ToggleLabel(props: FileHeaderProps): React.JSX.Element {
   return (
     <TextClassContext.Provider value="select-none no-underline">
-      <DisclosureChevron
-        open={props.open}
-        role="control"
-        fitArtwork
-        weight="light"
-      />
+      <DisclosureChevron open={props.open} />
       <FilePath path={props.file.path} />
     </TextClassContext.Provider>
   );

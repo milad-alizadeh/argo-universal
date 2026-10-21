@@ -1,15 +1,9 @@
 import { useSyncLayout } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { Pressable, View, type ViewStyle } from 'react-native';
-import { FeedMarkdown } from '#lib/product/markdown/feed-markdown';
+import { Pressable, View } from 'react-native';
+import { Markdown, type MarkdownProps } from '#primitives/content/markdown';
 import { Text } from '#primitives/content/text';
-import { ClampLeaves } from '../../../../lib/product/markdown/clamp-leaves';
-import {
-  useWholeLineClamp,
-  type WholeLineClamp,
-} from '../../../../lib/product/markdown/use-whole-line-clamp';
-import { wholeLineClip } from '../../../../lib/product/markdown/whole-line-clip';
 
 const clampedLines = 4;
 
@@ -24,31 +18,6 @@ function useSyncLayoutWhenClampChanges(clamped: boolean): void {
   }, [clamped, syncLayout]);
 }
 
-interface ClampedMarkdownProps extends WholeLineClamp {
-  text: string;
-  clamped: boolean;
-}
-
-const clipStyle = ({
-  clamped,
-  clipHeight,
-}: ClampedMarkdownProps): ViewStyle | undefined =>
-  clamped && clipHeight !== undefined ? wholeLineClip(clipHeight) : undefined;
-
-function ClampedMarkdown(props: ClampedMarkdownProps): React.JSX.Element {
-  const { content, onContentLayout, registerLeaf } = props;
-
-  return (
-    <View style={clipStyle(props)}>
-      <View ref={content} onLayout={onContentLayout}>
-        <ClampLeaves.Provider value={registerLeaf}>
-          <FeedMarkdown text={props.text} />
-        </ClampLeaves.Provider>
-      </View>
-    </View>
-  );
-}
-
 function ShowMore({ onPress }: { onPress: () => void }): React.JSX.Element {
   return (
     <Pressable role="button" onPress={onPress}>
@@ -59,23 +28,47 @@ function ShowMore({ onPress }: { onPress: () => void }): React.JSX.Element {
   );
 }
 
+/*
+ * A bubble stops growing at a readable measure rather than at a share of the column, so a wide Feed
+ * does not stretch every prompt to the same block. A phone keeps the share, which is what leaves the
+ * gutter that tells your message from the Agent's.
+ */
 const bubbleClassName =
-  'max-w-7/10 gap-0.5 rounded-2xl bg-foreground/4 dark:bg-foreground/8 px-3.5 py-2.5 wide:px-3 wide:py-2';
+  'max-w-7/10 wide:max-w-lg gap-0.5 rounded-2xl bg-foreground/4 dark:bg-foreground/8 px-3.5 py-2.5 wide:px-3 wide:py-2';
 
 interface BubbleProps {
   text: string;
 }
 
 export function UserMessageBubble({ text }: BubbleProps): React.JSX.Element {
-  const [expanded, setExpanded] = useState(false);
-  const clamp = useWholeLineClamp(clampedLines);
-  const clamped = !expanded && clamp.clipHeight !== undefined;
-  useSyncLayoutWhenClampChanges(clamped);
+  const { clamped, expand, markdown } = useBubbleExpansion();
 
   return (
     <View className={bubbleClassName}>
-      <ClampedMarkdown text={text} clamped={clamped} {...clamp} />
-      {clamped && <ShowMore onPress={() => setExpanded(true)} />}
+      <Markdown text={text} {...markdown} />
+      {clamped && <ShowMore onPress={expand} />}
     </View>
   );
+}
+
+interface BubbleExpansion {
+  clamped: boolean;
+  expand: () => void;
+  markdown: Pick<MarkdownProps, 'numberOfLines' | 'onOverflowChange'>;
+}
+
+function useBubbleExpansion(): BubbleExpansion {
+  const [expanded, setExpanded] = useState(false);
+  const [overflowing, setOverflowing] = useState(false);
+  const clamped = !expanded && overflowing;
+  useSyncLayoutWhenClampChanges(clamped);
+
+  return {
+    clamped,
+    expand: () => setExpanded(true),
+    markdown: {
+      numberOfLines: expanded ? undefined : clampedLines,
+      onOverflowChange: setOverflowing,
+    },
+  };
 }

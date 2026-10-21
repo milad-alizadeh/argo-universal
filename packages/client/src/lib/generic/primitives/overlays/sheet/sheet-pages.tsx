@@ -2,11 +2,8 @@ import {
   Children,
   createContext,
   isValidElement,
-  useCallback,
   useContext,
-  useLayoutEffect,
   useMemo,
-  useRef,
   useState,
   type Dispatch,
   type ReactElement,
@@ -16,6 +13,7 @@ import {
 import { ListItem } from '#primitives/lists/list-item';
 import {
   pushDestination,
+  registerDestination,
   updateDestination,
   usePageExits,
 } from './sheet-destinations';
@@ -26,7 +24,12 @@ import type {
   SheetPageProps,
   SheetProps,
 } from './sheet-props';
-import { popPage, sheetReports, type SheetReports } from './sheet-state';
+import {
+  popPage,
+  sheetReports,
+  useLatest,
+  type SheetReports,
+} from './sheet-state';
 
 // Marks one page of a sheet; each platform's stack draws it.
 export function SheetPage(props: SheetPageProps): ReactNode {
@@ -37,9 +40,12 @@ export interface SheetPageEntry {
   name: string;
   title?: string;
   action?: SheetPageAction;
+  placeholder?: ReactNode;
   content: ReactNode;
   contentScrolls?: boolean;
   onExit?: () => void;
+  // Drawn from the moment the sheet opens, so pushing it moves a page that is already there.
+  standby?: boolean;
 }
 
 // The sheet's Sheet.Page children, the first one its root; none when the sheet has a single page.
@@ -50,6 +56,7 @@ export function sheetPages(children: ReactNode): SheetPageEntry[] {
       name: page.props.name,
       title: page.props.title,
       action: page.props.action,
+      placeholder: page.props.placeholder,
       content: page.props.children,
     }));
 }
@@ -103,36 +110,44 @@ export interface SheetStack {
 export function useSheetStack(props: SheetProps): SheetStack {
   const latest = useLatest(props);
   const presentation = usePresentation(props.open, latest);
-  const [destinations, setDestinations] = useState<SheetPageEntry[]>([]);
 
   const navigation = useSheetNavigation({
     setPath: presentation.setPath,
     latest,
-    setDestinations,
+    setDestinations: presentation.setDestinations,
   });
 
-  const pages = [...sheetPages(props.children), ...destinations];
+  const pages = [...sheetPages(props.children), ...presentation.destinations];
   usePageExits(props.open, presentation.path, pages);
 
   return { ...presentation, pages, navigation };
 }
 
-type Presentation = Pick<SheetStack, 'path' | 'setPath' | 'reports'>;
+type Presentation = Pick<SheetStack, 'path' | 'setPath' | 'reports'> & {
+  destinations: SheetPageEntry[];
+  setDestinations: Dispatch<SetStateAction<SheetPageEntry[]>>;
+};
 
-// Each opening starts on the root page and reports its own close; the old page stays while the sheet slides away.
+/*
+ * Each opening starts on the root page and reports its own close; the old page stays while the sheet slides
+ * away. Pages pushed during an opening go with it, since a sheet that kept them would count pages it no
+ * longer draws — which is what decides whether Android's sheet fills the window or wraps (owner, 2026-10-20).
+ */
 function usePresentation(
   open: boolean,
   latest: () => SheetProps,
 ): Presentation {
   const [path, setPath] = useState<string[]>([]);
+  const [destinations, setDestinations] = useState<SheetPageEntry[]>([]);
   const [reports, setReports] = useState(() => sheetReports(latest));
 
   if (useOpening(open)) {
     setPath([]);
+    setDestinations([]);
     setReports(sheetReports(latest));
   }
 
-  return { path, setPath, reports };
+  return { path, setPath, destinations, setDestinations, reports };
 }
 
 function useOpening(open: boolean): boolean {
@@ -165,25 +180,9 @@ function navigationFor({
 }: NavigationOwners): SheetNavigation {
   return {
     push: (page): void => pushDestination(setDestinations, setPath, page),
+    standby: (page): void => registerDestination(setDestinations, page),
     update: (page): void => updateDestination(setDestinations, page),
     back: (): void => setPath(popPage),
     close: (): void => latest().onOpenChange(false),
   };
-}
-
-// Reads the newest props from callbacks that outlive a render.
-function useLatest<Value>(value: Value): () => Value {
-  const ref = useRef(value);
-  useLayoutEffect(() => {
-    ref.current = value;
-  });
-
-  return useCallback(() => ref.current, []);
-}
-
-export function pageTitle(
-  pages: SheetPageEntry[],
-  name: string | undefined,
-): string | undefined {
-  return pages.find((page) => page.name === name)?.title;
 }

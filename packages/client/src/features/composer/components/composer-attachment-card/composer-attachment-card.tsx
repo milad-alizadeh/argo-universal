@@ -38,28 +38,32 @@ const mutedClass = 'text-muted-foreground';
 
 const removeClass = 'absolute rounded-full web:rounded-full web:wide:opacity-0';
 
-// Phones draw a small card-coloured disc tight in the corner (Paper); hitSlop restores the 44 (iOS) or 48 (Android) target.
+/*
+ * A 20 disc with its 14 mark, tight in the corner: a seventh of the tile's width, where the xs button stood a third
+ * of it and the 10 disc before this one was a speck (owner, 2026-10-21). hitSlop restores the 44 (iOS) or 48
+ * (Android) target; the phones' disc is card-coloured, the web's filled.
+ */
+const removeDisc = 'right-1.5 top-1.5 size-5 sm:size-5 min-h-0 min-w-0';
+
 const phoneRemove = {
   variant: 'ghost',
-  iconRole: 'badge',
-  className:
-    'right-1.25 top-1.25 size-2.5 sm:size-2.5 min-h-0 min-w-0 bg-card active:bg-muted',
+  iconRole: 'mark',
+  className: `${removeDisc} bg-card active:bg-muted`,
 } as const;
 
 const removeFit = Platform.select({
   web: {
     variant: 'filled',
-    iconRole: 'secondary',
-    className: 'right-1 top-1',
-    hitSlop: undefined,
+    iconRole: 'mark',
+    className: removeDisc,
+    hitSlop: 4,
   },
   android: {
     ...phoneRemove,
-    className:
-      'right-1.25 top-1.25 size-2.5 sm:size-2.5 min-h-0 min-w-0 android:min-h-0 android:min-w-0 bg-card active:bg-muted',
-    hitSlop: 19,
+    className: `${removeDisc} android:min-h-0 android:min-w-0 bg-card active:bg-muted`,
+    hitSlop: 14,
   },
-  default: { ...phoneRemove, hitSlop: 17 },
+  default: { ...phoneRemove, hitSlop: 12 },
 } as const);
 
 const removeHoverClass = (disabled: boolean): string =>

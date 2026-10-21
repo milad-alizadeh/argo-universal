@@ -1,7 +1,8 @@
-import { lexer, type Tokens } from 'marked';
+import type { Tokens } from 'marked';
+import { lexMarkdown } from '#lib/generic/lex-markdown';
 
 const firstHeading = (content: string): Tokens.Heading | undefined =>
-  lexer(content).find(
+  lexMarkdown(content).find(
     (token): token is Tokens.Heading => token.type === 'heading',
   );
 

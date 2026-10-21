@@ -13,7 +13,6 @@ import { Platform } from 'react-native';
 import { DrawerMenuButton } from './drawer-menu-button';
 import { headerTitleOptions } from './header-title';
 import { pageLayout } from './page-layout';
-import { drawerDrawsRootHeader } from './section-drawer-options';
 
 type ScreenHeaderProps = SectionList['rootHeader'];
 
@@ -39,16 +38,22 @@ const framedOptions = {
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
 
+const menuButton = (): React.JSX.Element => <DrawerMenuButton />;
+
 /*
- * A narrow section root's header on the stack: the web's JS header leads with ☰ and its attention dot; iOS takes the
- * title here, and the root page declares ☰, its items and its search as stock items (`SectionRoot`).
+ * Who leads a narrow section root: the web's JS header and Android's top app bar draw ☰ themselves, while iOS's
+ * root page declares it as a stock bar button item, with the attention dot as its badge (`SectionRoot`).
  */
+const rootMenuOptions: NativeStackNavigationOptions =
+  Platform.OS === 'ios' ? {} : { headerLeft: menuButton };
+
+// A narrow section root's header on the stack, where it belongs to the page it names and leaves with it.
 const stackRootOptions = (
   header: SectionList['rootHeader'],
-): NativeStackNavigationOptions =>
-  Platform.OS === 'web'
-    ? { headerLeft: () => <DrawerMenuButton />, ...screenHeaderOptions(header) }
-    : screenHeaderOptions(header);
+): NativeStackNavigationOptions => ({
+  ...rootMenuOptions,
+  ...screenHeaderOptions(header),
+});
 
 interface SectionOptions {
   screenOptions: StackProps['screenOptions'];
@@ -78,9 +83,7 @@ function narrowRootOptions(
 ): NativeStackNavigationOptions {
   if (!root) return screenHeaderOptions(header);
 
-  return drawerDrawsRootHeader
-    ? { headerShown: false }
-    : stackRootOptions(header);
+  return stackRootOptions(header);
 }
 
 interface SectionStackProps extends PropsWithChildren {

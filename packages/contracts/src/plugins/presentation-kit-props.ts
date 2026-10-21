@@ -50,7 +50,7 @@ export const iconButtonProps = z.object({
   onPress: handler('onPress').optional().describe('Action run on activation.'),
   tone: z.literal('danger').optional().describe('Danger treatment.'),
   size: z
-    .enum(['xs', 'sm', 'md', 'lg', 'xl'])
+    .enum(['2xs', 'xs', 'sm', 'md', 'lg', 'xl'])
     .optional()
     .describe('Button size.'),
   loading: z.boolean().optional().describe('The action is running.'),

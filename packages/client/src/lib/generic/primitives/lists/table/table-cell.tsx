@@ -6,12 +6,16 @@ import type { TableColumn } from './table-props';
 import type { TableCell } from './table-rows';
 
 // Column widths are tokens: the first column fills, the rest hold a fixed Tailwind width.
-const widths = { sm: 'w-24', md: 'w-32', lg: 'w-48' } as const;
+const widths = {
+  sm: { className: 'w-24', steps: 24 },
+  md: { className: 'w-32', steps: 32 },
+  lg: { className: 'w-48', steps: 48 },
+} as const;
 
 export function columnClass(column: TableColumn, first: boolean): string {
   if (first) return 'min-w-0 flex-1';
 
-  return cn('shrink-0', widths[column.width ?? 'md']);
+  return cn('shrink-0', widths[column.width ?? 'md'].className);
 }
 
 // A drawn cell on a ListItem: Android writes it under the title, as its other ListItems do; elsewhere it trails.
@@ -68,3 +72,6 @@ export function GridCell(props: CellProps): ReactElement {
     </View>
   );
 }
+
+export const columnWidthSteps = (column: TableColumn): number =>
+  widths[column.width ?? 'md'].steps;

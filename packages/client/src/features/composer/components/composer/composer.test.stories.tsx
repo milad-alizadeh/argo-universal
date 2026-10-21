@@ -67,6 +67,7 @@ export const Empty: Story = {
         .getBoundingClientRect();
 
       await expect(model.right).toBeLessThanOrEqual(mode.left);
+
       await expectAgentTextFits(canvas);
     }
   },

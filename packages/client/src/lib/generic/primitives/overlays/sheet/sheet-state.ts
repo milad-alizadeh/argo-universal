@@ -1,3 +1,4 @@
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import type { SheetDetent, SheetProps } from './sheet-props';
 
 export function pushPage(path: string[], name: string): string[] {
@@ -56,4 +57,14 @@ export function sheetDetents(
   if (props.detents) return props.detents;
 
   return props.paged ? ['medium', 'large'] : undefined;
+}
+
+// Reads the newest props from callbacks that outlive a render.
+export function useLatest<Value>(value: Value): () => Value {
+  const ref = useRef(value);
+  useLayoutEffect(() => {
+    ref.current = value;
+  });
+
+  return useCallback(() => ref.current, []);
 }

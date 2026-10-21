@@ -6,12 +6,16 @@ import { cn } from '#lib/generic/utils';
 
 const listClassName = cn('my-1 pl-5', markdownBlockClassNames.domListMarker);
 
-const heading = markdownBlockClassNames.heading;
+/*
+ * The editor draws a heading in the role the Feed draws it in, so sending one never
+ * changes its size: # takes the Title role, ## and deeper the Heading role.
+ */
+const heading = 'type-heading';
 
 // The Feed's block and link look in the editor's DOM; a list draws its own markers, in the Feed's marker colour.
 export const blockThemeClassNames = {
   heading: {
-    h1: heading,
+    h1: 'type-title',
     h2: heading,
     h3: heading,
     h4: heading,
@@ -29,5 +33,8 @@ export const blockThemeClassNames = {
     markdownBlockClassNames.codeBlock,
     markdownBlockClassNames.codeText,
   ),
-  link: cn(markdownLinkClassNames.underline, markdownLinkClassNames.domColor),
+  link: cn(
+    markdownLinkClassNames.underline,
+    markdownLinkClassNames.domUnderlineColor,
+  ),
 };

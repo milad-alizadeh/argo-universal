@@ -62,7 +62,7 @@ function WideTitle({
     <>
       <Text {...wideTitleTextProps}>{title}</Text>
       <Icon
-        role="secondary"
+        role="chevron"
         name="chevron-up"
         className="text-muted-foreground"
       />

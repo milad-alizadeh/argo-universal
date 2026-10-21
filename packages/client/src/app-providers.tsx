@@ -1,4 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from 'react';
 import { ConnectionContext } from '#features/connection';
@@ -10,6 +11,7 @@ import {
 } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
 import { MediaUrlContext } from '#primitives/content/media-url';
+import { createQueryClient } from './query-cache';
 
 export interface AppProvidersProps {
   serverUrl: string;
@@ -22,7 +24,7 @@ type Connection = ReturnType<typeof openConnection>;
 export function AppProviders(
   props: AppProvidersProps,
 ): React.JSX.Element | null {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(createQueryClient);
   const connection = useServerConnection(props.serverUrl);
 
   if (!connection) return null;

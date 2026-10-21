@@ -1,6 +1,12 @@
 /* Generated from Contracts part names by `pnpm docs:build`. Do not edit by hand. */
 import type { PluginComponents } from './index';
 
+export const Markdown: PluginComponents['Markdown'];
+
+export const Code: PluginComponents['Code'];
+
+export const Link: PluginComponents['Link'];
+
 export const Spacer: PluginComponents['Spacer'];
 
 export const Grid: PluginComponents['Grid'];

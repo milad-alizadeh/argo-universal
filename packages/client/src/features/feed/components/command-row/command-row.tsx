@@ -6,7 +6,7 @@ import type {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
+import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';

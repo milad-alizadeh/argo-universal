@@ -114,9 +114,11 @@ function useReadError(
 function useOptions(
   read: DiscoveryRead,
   picks: Choice['picks'],
+  // An Agent and a Project are chosen, so an update is on its way even before the first one lands.
+  chosen: boolean,
 ): SessionOptions {
   const cached = read.data?.configOptions ?? undefined;
-  const opening = isOpening(read);
+  const opening = isOpening(read, chosen);
 
   return useMemo(
     () => sessionOptions(cached, { saved: {}, picks, opening }),
@@ -124,14 +126,26 @@ function useOptions(
   );
 }
 
-const isOpening = (read: DiscoveryRead): boolean =>
-  read.data?.configOptions === null && !read.error;
+/*
+ * Loading runs from the pick to the options, in two stretches. The Server reports its own discovery as
+ * `configOptions: null`; before that there is a gap in which a newly chosen Agent's stream has said nothing at
+ * all, since changing the Agent changes the snapshot's owner and drops the old Agent's update. Counting that
+ * gap as settled empties the picker for as long as it lasts, and a sheet sized to its contents collapses and
+ * grows back twice over (owner, 2026-10-20).
+ */
+function isOpening(read: DiscoveryRead, chosen: boolean): boolean {
+  if (read.error) return false;
+
+  if (!read.data) return chosen;
+
+  return read.data.configOptions === null;
+}
 
 // The Server owns both the saved snapshot and discovery; the screen keeps only picks.
 export function useSessionOptions(choice: Choice): OptionsDiscovery {
   const read = useDiscovery(choice);
   const error = useReadError(read, choice.sessionId);
-  const options = useOptions(read, choice.picks);
+  const options = useOptions(read, choice.picks, inputOf(choice) !== skipToken);
 
   return {
     ...options,

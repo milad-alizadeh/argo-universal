@@ -66,10 +66,12 @@ function OverlapComposerLayout(props: SessionLayoutProps): React.JSX.Element {
 function OverlapContent(props: SessionLayoutProps): React.JSX.Element {
   const [filled, setFilled] = useState(false);
   const fill = useMemo(() => ({ filled, setFilled }), [filled]);
+  // The Screen holds the bottom safe area clear, and the keyboard opens over it.
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <SessionFillProvider value={fill}>
-      <KeyboardAvoidingContent>
+      <KeyboardAvoidingContent inset={bottom}>
         <OverlapPane {...props} />
         {props.panel}
       </KeyboardAvoidingContent>

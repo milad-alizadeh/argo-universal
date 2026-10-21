@@ -1,32 +1,15 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
 
-const configOptionIcons = [
-  'ShieldWarning',
-  'Pencil',
-  'MapTrifold',
-  'Sparkles',
-  'WarningTriangle',
-] as const;
-
-export type ConfigOptionIcon = (typeof configOptionIcons)[number];
-
-const knownIcons = new Set<string>(configOptionIcons);
-
-let unknownIcons = 0;
-
-// ACP extension fields are kept; Argo's known fields are checked at this boundary.
+/*
+ * ACP extension fields are kept; Argo's known fields are checked at this boundary. There is no `icon` among
+ * them: ACP gives an option and its values a name and a description and nothing more, and Argo draws for every
+ * Agent there will be, so it cannot hold a glyph per Agent's vocabulary. A loose object still carries an
+ * `icon` an Agent sends through untouched (owner, 2026-10-20).
+ */
 export const ConfigOptionMeta = z.looseObject({
   argo: z
     .looseObject({
-      icon: z
-        .string()
-        .transform((icon): string => {
-          if (!knownIcons.has(icon)) unknownIcons += 1;
-
-          return icon;
-        })
-        .optional(),
       shortName: z.string().optional(),
       tone: z.enum(['planning', 'safe', 'moderate', 'dangerous']).optional(),
       supportsEffort: z.boolean().optional(),
@@ -63,20 +46,30 @@ export const SessionConfigSelectGroup = z.strictObject({
 
 export type SessionConfigSelectGroup = z.infer<typeof SessionConfigSelectGroup>;
 
+/*
+ * Every category Argo draws something for, which is the ACP spec's four plus the ones real Agents send beside
+ * them: `collaboration_mode` is codex-acp's own, outside the spec but handled, so it is not a surprise. This is
+ * not the Composer's `configuredCategories`, which is the shorter list of categories that already have a control
+ * of their own there (owner, 2026-10-20).
+ */
 const knownCategories = new Set([
   'mode',
   'model',
   'model_config',
   'thought_level',
+  'collaboration_mode',
 ]);
 
 let unknownCategories = 0;
+
+// A leading underscore is the spec's own extension space, so such a category is custom by design, never unknown.
+const customCategory = (category: string): boolean => category.startsWith('_');
 
 // Unknown categories are kept for ACP extensions and counted on boundary validation.
 export const SessionConfigOptionCategory = z
   .string()
   .transform((category): string => {
-    if (!knownCategories.has(category)) {
+    if (!knownCategories.has(category) && !customCategory(category)) {
       unknownCategories += 1;
     }
 
@@ -85,11 +78,10 @@ export const SessionConfigOptionCategory = z
 
 type ConfigOptionDiagnostics = {
   unknownCategories: number;
-  unknownIcons: number;
 };
 
 export function getConfigOptionDiagnostics(): ConfigOptionDiagnostics {
-  return { unknownCategories, unknownIcons };
+  return { unknownCategories };
 }
 
 export type SessionConfigOptionCategory = z.infer<

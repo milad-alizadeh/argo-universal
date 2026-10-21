@@ -12,6 +12,22 @@ type SetPages = Dispatch<SetStateAction<SheetPageEntry[]>>;
 
 type SetPath = Dispatch<SetStateAction<string[]>>;
 
+/*
+ * Where a page sits in the sheet is settled the first time the sheet is given it and never moves while the
+ * sheet is open: a page the reader has already slid to would slide out from under them if a later page
+ * took its place in the row.
+ */
+function placedPage(
+  current: SheetPageEntry[],
+  page: SheetDestination,
+): SheetPageEntry[] {
+  const entry = { ...page, content: page.children };
+
+  return current.some((held) => held.name === page.name)
+    ? current.map((held) => (held.name === page.name ? entry : held))
+    : [...current, entry];
+}
+
 // A choice page follows its owner's current props, including availability and loading changes.
 export function updateDestination(
   setPages: SetPages,
@@ -19,13 +35,20 @@ export function updateDestination(
 ): void {
   setPages((current) =>
     current.some((entry) => entry.name === page.name)
-      ? current.map((entry) =>
-          entry.name === page.name
-            ? { ...page, content: page.children }
-            : entry,
-        )
+      ? placedPage(current, page)
       : current,
   );
+}
+
+/*
+ * A page the sheet carries without showing: it takes its place in the row while the sheet opens, so the
+ * push that follows slides over a page that is already drawn and has nothing left to mount.
+ */
+export function registerDestination(
+  setPages: SetPages,
+  page: SheetDestination,
+): void {
+  setPages((current) => placedPage(current, page));
 }
 
 // A field supplies its choices when opened; static Sheet.Link callers push a declared name.
@@ -35,10 +58,7 @@ export function pushDestination(
   page: string | SheetDestination,
 ): void {
   if (typeof page !== 'string')
-    setPages((current) => [
-      ...current.filter((entry) => entry.name !== page.name),
-      { ...page, content: page.children },
-    ]);
+    setPages((current) => placedPage(current, page));
 
   const name = typeof page === 'string' ? page : page.name;
 
