@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { materialArtworkScale } from './material-artwork-scale';
+import { materialGlyphScale } from './material-glyph-scale';
 import { NativeSymbolView } from './native-symbol-view';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 import { TablerSymbolPath } from './tabler-symbol-path';
@@ -22,9 +22,7 @@ export function SymbolGlyph({
   );
 }
 
-// Always fitted, as the web's Material path is, so a glyph is the same size on Android and in a browser.
+// The one Material multiple, as the web's Material path takes, so a glyph is the same size in either.
 function materialScale(props: SymbolGlyphProps): number {
-  return props.symbol.kind === 'system'
-    ? materialArtworkScale(props.symbol.material)
-    : props.glyphScale;
+  return props.symbol.kind === 'system' ? materialGlyphScale : props.glyphScale;
 }
