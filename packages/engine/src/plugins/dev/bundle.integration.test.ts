@@ -1,6 +1,7 @@
 import { readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import { processWait } from '#mocks/data-fixture';
 import { killPluginHost, pluginHostPids } from '#mocks/plugin-host-log';
 import { startPluginRuntime } from '#mocks/plugin-runtime-host';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
@@ -62,6 +63,6 @@ it('loads imports within the Plugin folder while preserving a failed rebuild acr
   expect(await runtime.activate(location)).toEqual(failed);
   await writeFile(source, 'export function check(): void {}');
   await expect
-    .poll(() => runtime.status('dev'))
+    .poll(() => runtime.status('dev'), processWait)
     .toEqual({ state: 'running', hanging: false, error: null });
 }, 15_000);
