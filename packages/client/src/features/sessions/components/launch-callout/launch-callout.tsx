@@ -5,6 +5,8 @@ import { View } from 'react-native';
 import type { LaunchCalloutProps } from '../../types/session-callout';
 import { InstallationProgress } from '../session-callout/installation-progress';
 
+export type { LaunchCalloutProps } from '../../types/session-callout';
+
 const retryHint = 'Try to restart the Agent';
 
 // Zed's Failed to Launch callout. Retry re-runs the open and never resends a Turn.
@@ -32,14 +34,18 @@ const RetryButton = ({
   />
 );
 
+export interface CalloutLoadingProps {
+  // The step running now; with none, the callout reads Loading….
+  title?: string;
+  // How far the download has got, null while the total is unknown, and nothing at all for a step with no bar.
+  progress?: number | null;
+}
+
 // While Retry or a sign-in's methods load, the tray or the sheet shows Loading….
 export function CalloutLoading({
   title,
   progress,
-}: {
-  title?: string;
-  progress?: number | null;
-}): React.JSX.Element {
+}: CalloutLoadingProps): React.JSX.Element {
   if (!title) return <Callout busy title="Loading…" />;
 
   return <LoadingProgress title={title} progress={progress} />;

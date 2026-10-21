@@ -12,7 +12,6 @@ import {
   emptyAnswersRequest,
   configurationRequest,
 } from '../request.mocks';
-import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';
 import { ElicitationOutcome } from './elicitation-outcome';
 
 const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm/Outcome' };
@@ -86,11 +85,12 @@ export const EmptyAcceptedOutcome: Story = {
   },
 };
 
-function galleryFixture(mock: RequestMock, width: number): Story {
+// Each Agent's recorded Elicitation draws its message.
+function recordedRequest(mock: RequestMock, width: number): Story {
   const props = elicitationProps({ mock });
 
   return {
-    render: () => Gallery.render({ ...galleryMeta.args, agent: mock.agent }),
+    args: props,
     play: async ({ canvas }) => {
       await settleViewport(width);
       await expect(
@@ -100,27 +100,27 @@ function galleryFixture(mock: RequestMock, width: number): Story {
   };
 }
 
-const [firstGalleryAgent, secondGalleryAgent] = elicitationMocks;
+const [firstRecordedAgent, secondRecordedAgent] = elicitationMocks;
 
-if (!firstGalleryAgent || !secondGalleryAgent)
-  throw new Error('Recorded gallery needs both Agents.');
+if (!firstRecordedAgent || !secondRecordedAgent)
+  throw new Error('Recorded catalog needs both Agents.');
 
-export const GalleryFirstAgentPhone: Story = galleryFixture(
-  firstGalleryAgent,
+export const RecordedFirstAgentPhone: Story = recordedRequest(
+  firstRecordedAgent,
   layoutWidths.phone,
 );
 
-export const GalleryFirstAgentWide: Story = galleryFixture(
-  firstGalleryAgent,
+export const RecordedFirstAgentWide: Story = recordedRequest(
+  firstRecordedAgent,
   layoutWidths.wide,
 );
 
-export const GallerySecondAgentPhone: Story = galleryFixture(
-  secondGalleryAgent,
+export const RecordedSecondAgentPhone: Story = recordedRequest(
+  secondRecordedAgent,
   layoutWidths.phone,
 );
 
-export const GallerySecondAgentWide: Story = galleryFixture(
-  secondGalleryAgent,
+export const RecordedSecondAgentWide: Story = recordedRequest(
+  secondRecordedAgent,
   layoutWidths.wide,
 );

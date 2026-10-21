@@ -1,38 +1,21 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import {
-  recordedAgentMessage,
-  streamingAgentMessage,
-} from '../../../../lib/product/feed-message.mocks';
 import { AgentMessage } from './agent-message';
-
-const markdownAnswerId = 'markdown-answer';
+import { answeredMessage, streamingMessage } from './agent-message-fixtures';
 
 const meta = {
   title: 'Feed/AgentMessage',
   component: AgentMessage,
-  args: { row: recordedAgentMessage('agent-1', markdownAnswerId) },
+  // The recorded `agent_message` row; its state decides whether the last block streams.
+  argTypes: { row: { control: false } },
+  args: answeredMessage,
 } satisfies Meta<typeof AgentMessage>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Both Agents' recorded markdown answers, and one caught mid-stream.
-export const Overview: Story = {
-  render: () => (
-    <Variations>
-      <Variation label="Agent 1 answer">
-        <AgentMessage row={recordedAgentMessage('agent-1', markdownAnswerId)} />
-      </Variation>
-      <Variation label="Agent 2 answer">
-        <AgentMessage row={recordedAgentMessage('agent-2', markdownAnswerId)} />
-      </Variation>
-      <Variation label="Streaming">
-        <AgentMessage
-          row={streamingAgentMessage('agent-2', markdownAnswerId)}
-        />
-      </Variation>
-    </Variations>
-  ),
-};
+// A finished answer, as markdown on the Feed with no bubble.
+export const Answered: Story = { args: answeredMessage };
+
+// The same answer caught mid-stream, so its last block streams.
+export const Streaming: Story = { args: streamingMessage };

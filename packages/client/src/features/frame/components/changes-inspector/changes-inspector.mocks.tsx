@@ -15,10 +15,13 @@ export const branchNames = [
   'chore/bump-expo',
 ];
 
+// The short modified file, the one the stories mark Viewed.
+export const viewedPath = '/repo/src/feed.ts';
+
 // Recorded edits: a long modified file, a short one, an added file and a deleted one, each at its own path.
 export const fewFiles: FileDiff[] = [
   recordedFile('agent-2', 'edit-states'),
-  { ...recordedFile('agent-1'), path: '/repo/src/feed.ts' },
+  { ...recordedFile('agent-1'), path: viewedPath },
   {
     ...recordedFile('agent-1', 'edit-and-command', 'add'),
     path: '/repo/src/new-file.ts',
@@ -45,7 +48,7 @@ export const changesArgs = {
   branches: { names: branchNames },
   onComparisonChange: ignore,
   files: fewFiles,
-  viewed: [fewFiles[1]?.path ?? ''],
+  viewed: [viewedPath],
   onViewedChange: ignore,
   expanded: false,
   onExpandedChange: ignore,

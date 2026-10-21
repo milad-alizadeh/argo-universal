@@ -1,50 +1,33 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import {
-  recordedImageUrl,
-  recordedPrompt,
-  recordedUserMessage,
-} from '../../../../lib/product/feed-message.mocks';
+import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
 import { UserMessage } from './user-message';
+import {
+  clampedPrompt,
+  imagePrompt,
+  markdownPrompt,
+} from './user-message-fixtures';
 
 const meta = {
   title: 'Feed/UserMessage',
   component: UserMessage,
-  args: {
-    row: recordedUserMessage('agent-1', 'interrupt'),
-    imageUrl: recordedImageUrl,
-  },
+  argTypes: { row: { control: false }, imageUrl: { control: false } },
+  args: { ...markdownPrompt, imageUrl: recordedImageUrl },
 } satisfies Meta<typeof UserMessage>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const variations = [
-  {
-    label: 'Text with inline code',
-    row: recordedUserMessage('agent-1', 'interrupt'),
-  },
-  {
-    label: 'With an image',
-    row: recordedUserMessage('agent-2', 'image-prompt'),
-  },
-  { label: 'Markdown', row: recordedPrompt('agent-1', 'markdown-prompt') },
-  {
-    label: 'Long text',
-    row: recordedUserMessage('agent-2', 'markdown-answer'),
-  },
-];
+/*
+ * No story for a prompt's file chips: no recording holds a prompt with a resource
+ * reference, and a fixture may not invent one.
+ */
 
-// Recorded prompts: inline code, an image, markdown and a long prompt; longer than four lines clamps behind Show more.
-export const Overview: Story = {
-  render: (args) => (
-    <Variations>
-      {variations.map(({ label, row }) => (
-        <Variation key={label} label={label}>
-          <UserMessage {...args} row={row} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
+// A prompt as the person sent it: a right-aligned bubble of markdown.
+export const Markdown: Story = { args: markdownPrompt };
+
+// An attached image sits above the bubble.
+export const Images: Story = { args: imagePrompt };
+
+// Longer than four lines: the bubble clamps behind Show more.
+export const Clamped: Story = { args: clampedPrompt };

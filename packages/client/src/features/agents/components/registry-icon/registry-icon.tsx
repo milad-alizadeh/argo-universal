@@ -11,7 +11,8 @@ import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { cssSafeUri } from './css-safe-uri';
 
-interface RegistryIconProps {
+export interface RegistryIconProps {
+  // The Registry entry's icon; the Agent glyph stands in when it is missing or fails to load.
   uri: string | undefined;
   agentName: string;
   role: IconRoleValue;

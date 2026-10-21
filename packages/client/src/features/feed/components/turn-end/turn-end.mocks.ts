@@ -50,13 +50,3 @@ export const endings = {
     error: { code: 'interrupted', message: 'Agent exited with status 1' },
   },
 } satisfies Record<string, TurnEnd>;
-
-export const visibleEndings = [
-  { label: 'Stopped', end: endings.stopped },
-  { label: 'Output limit', end: endings.outputLimit },
-  { label: 'Step limit', end: endings.stepLimit },
-  { label: 'Refused', end: endings.refused },
-  { label: 'Error', end: endings.error },
-  { label: 'Error without details', end: endings.errorWithoutDetails },
-  { label: 'Authentication required', end: endings.authenticationRequired },
-];

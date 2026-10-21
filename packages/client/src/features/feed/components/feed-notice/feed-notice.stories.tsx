@@ -1,38 +1,49 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import {
-  compactionStates,
-  noticeStates,
-} from '../../../../../mocks/feed-paper';
 import { FeedNotice } from './feed-notice';
-
-const [notice] = noticeStates;
-
-if (!notice) throw new Error('Notice gallery needs a Notice');
+import {
+  compactedNotice,
+  compactingNotice,
+  compactionFailedNotice,
+  compactionStoppedNotice,
+  errorNotice,
+  infoNotice,
+  unrecognisedNotice,
+  warningNotice,
+} from './feed-notice-fixtures';
 
 const meta = {
   title: 'Feed/FeedNotice',
   component: FeedNotice,
-  args: { row: notice },
+  // A Notice or a Compaction row; the component reads its severity or its status.
+  argTypes: { row: { control: false } },
+  args: infoNotice,
 } satisfies Meta<typeof FeedNotice>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Notices: Story = {
-  render: () => (
-    <Variations>
-      {noticeStates.map((row) => (
-        <Variation key={row.severity} label={row.severity}>
-          <FeedNotice row={row} />
-        </Variation>
-      ))}
-      {compactionStates.map((row) => (
-        <Variation key={row.status} label={`Compaction ${row.status}`}>
-          <FeedNotice row={row} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
+/*
+ * One story per severity and per Compaction status. No story for a Compaction status Argo
+ * does not know: the recordings hold none, and the row then reads like Unrecognised.
+ */
+
+export const Info: Story = { args: infoNotice };
+
+export const Warning: Story = { args: warningNotice };
+
+// `Error` is a global, so the story is named for what it draws.
+export const ErrorNotice: Story = { args: errorNotice };
+
+// A severity Argo does not know yet: the row keeps the words and says so.
+export const Unrecognised: Story = { args: unrecognisedNotice };
+
+// Compaction runs, so its title shimmers.
+export const Compacting: Story = { args: compactingNotice };
+
+export const Compacted: Story = { args: compactedNotice };
+
+// A failed Compaction reads red, with the Agent's reason under it.
+export const CompactionFailed: Story = { args: compactionFailedNotice };
+
+export const CompactionStopped: Story = { args: compactionStoppedNotice };

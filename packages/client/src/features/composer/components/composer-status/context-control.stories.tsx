@@ -1,50 +1,32 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { action } from 'storybook/actions';
-import { ComposerStatusControls } from './composer-status';
+import { ContextControl } from './context-control';
+import {
+  dumbZoneContext,
+  fullContext,
+  smartZoneContext,
+} from './context-control-fixtures';
 
 const meta = {
   title: 'Composer/ContextControl',
-  component: ComposerStatusControls,
-  args: {
-    disabled: false,
-    status: {},
+  component: ContextControl,
+  args: smartZoneContext,
+  argTypes: {
+    context: { control: false },
+    disabled: { control: 'boolean' },
+    // The desktop trigger names the control and its token counts; a phone draws the ring alone.
+    wide: { control: 'boolean' },
   },
-} satisfies Meta<typeof ComposerStatusControls>;
+} satisfies Meta<typeof ContextControl>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onCompact = action('Compact');
+// Focused context: the remaining arc reads in the success tone.
+export const SmartZone: Story = { args: smartZoneContext };
 
-const contextLevels = [
-  { label: 'Low · 17%', context: { used: 34_000, size: 200_000 } },
-  { label: 'High · 85%', context: { used: 170_000, size: 200_000, onCompact } },
-  {
-    label: 'Full · 100%',
-    context: { used: 200_000, size: 200_000, onCompact },
-  },
-];
+// Past the smart zone's edge: the arc takes the warning tone.
+export const DumbZone: Story = { args: dumbZoneContext };
 
-const usage = {
-  limits: [
-    { label: 'Session', usedPercent: 42, resets: 'Resets in 3 h' },
-    { label: 'Weekly', usedPercent: 71, resets: 'Resets Monday' },
-  ],
-};
-
-export const ContextControl: Story = {
-  render: (args) => (
-    <Variations>
-      {contextLevels.map(({ label, context }) => (
-        <Variation key={label} label={label}>
-          <ComposerStatusControls {...args} status={{ context }} />
-        </Variation>
-      ))}
-      <Variation label="Usage">
-        <ComposerStatusControls {...args} status={{ usage }} />
-      </Variation>
-    </Variations>
-  ),
-};
+// A full window: a zero-length arc would still paint a dot, so none is drawn.
+export const Full: Story = { args: fullContext };

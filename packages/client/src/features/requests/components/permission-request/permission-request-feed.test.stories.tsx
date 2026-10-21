@@ -14,7 +14,6 @@ import {
 } from '../../../../../mocks/requests/permission/permission-story-context.test.mocks';
 import { RequestFrame } from '../../../../lib/product/request-frame';
 import { permissionProps, permissionMocks } from '../request.mocks';
-import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 
 const meta = { ...permissionTestMeta, title: 'Tests/PermissionRequest/Feed' };
 
@@ -98,11 +97,12 @@ export const StoredNativeOutcome: Story = {
   },
 };
 
-function galleryFixture(mock: RequestMock, width: number): Story {
+// Each Agent's recorded request draws its title and the input it sent.
+function recordedRequest(mock: RequestMock, width: number): Story {
   const props = permissionProps({ mock });
 
   return {
-    render: () => Gallery.render({ ...galleryMeta.args, agent: mock.agent }),
+    args: props,
     play: async () => {
       const canvas = within(document.body);
       await settleViewport(width);
@@ -119,27 +119,27 @@ function galleryFixture(mock: RequestMock, width: number): Story {
   };
 }
 
-const [firstGalleryAgent, secondGalleryAgent] = permissionMocks;
+const [firstRecordedAgent, secondRecordedAgent] = permissionMocks;
 
-if (!firstGalleryAgent || !secondGalleryAgent)
-  throw new Error('Recorded gallery needs both Agents.');
+if (!firstRecordedAgent || !secondRecordedAgent)
+  throw new Error('Recorded catalog needs both Agents.');
 
-export const GalleryFirstAgentPhone: Story = galleryFixture(
-  firstGalleryAgent,
+export const RecordedFirstAgentPhone: Story = recordedRequest(
+  firstRecordedAgent,
   layoutWidths.phone,
 );
 
-export const GalleryFirstAgentWide: Story = galleryFixture(
-  firstGalleryAgent,
+export const RecordedFirstAgentWide: Story = recordedRequest(
+  firstRecordedAgent,
   layoutWidths.wide,
 );
 
-export const GallerySecondAgentPhone: Story = galleryFixture(
-  secondGalleryAgent,
+export const RecordedSecondAgentPhone: Story = recordedRequest(
+  secondRecordedAgent,
   layoutWidths.phone,
 );
 
-export const GallerySecondAgentWide: Story = galleryFixture(
-  secondGalleryAgent,
+export const RecordedSecondAgentWide: Story = recordedRequest(
+  secondRecordedAgent,
   layoutWidths.wide,
 );

@@ -7,7 +7,7 @@ import {
 import type { PermissionRequestProps } from '../permission-request/permission-request';
 
 // claude-agent-acp's request to leave plan mode, as the Engine presents it.
-const planRequest: PendingPermission = {
+export const planRequest: PendingPermission = {
   requestId: 'leave-plan-mode-request',
   toolCallId: leavePlanMode.toolCallId,
   title: leavePlanMode.title,

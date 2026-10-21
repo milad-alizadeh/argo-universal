@@ -1,30 +1,29 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { completedRead, runningRead } from '../tool-call.mocks';
 import { ToolCallRow } from './tool-call-row';
+import { completedToolCall, runningToolCall } from './tool-call-row-fixtures';
 
 const meta = {
   title: 'Feed/ToolCallRow',
   component: ToolCallRow,
-  args: { row: completedRead },
+  argTypes: {
+    row: { control: false },
+    initialOpen: { control: 'boolean' },
+    awaitingApproval: { control: 'boolean' },
+  },
+  args: completedToolCall,
 } satisfies Meta<typeof ToolCallRow>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
-  render: () => (
-    <Variations className="max-w-column!">
-      <Variation label="Reading file">
-        <ToolCallRow row={runningRead} />
-      </Variation>
-      <Variation label="Read file">
-        <ToolCallRow row={completedRead} />
-      </Variation>
-      <Variation label="Read file, expanded">
-        <ToolCallRow row={completedRead} initialOpen />
-      </Variation>
-    </Variations>
-  ),
-};
+/*
+ * No story for a failed or stopped read: the recordings hold neither, and the settled
+ * label it would add is one line of the row's own output.
+ */
+
+// Still running: the title reads in the present and the row marks itself as working.
+export const Running: Story = { args: runningToolCall };
+
+// Settled: the title reads in the past and the row opens on its output.
+export const Completed: Story = { args: completedToolCall };

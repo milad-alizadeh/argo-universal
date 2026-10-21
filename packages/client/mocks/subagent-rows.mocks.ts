@@ -120,7 +120,7 @@ export const unknownSubagentSnapshot: SessionSnapshot = {
 };
 
 // The rows the real converter makes from the recorded actions, in Feed order.
-export const subagentItems: FeedSubagent[] = toFeedView(
+const subagentItems: FeedSubagent[] = toFeedView(
   subagentRows,
   subagentSnapshot,
 ).items.flatMap((item) => (item.type === 'subagent' ? [item] : []));

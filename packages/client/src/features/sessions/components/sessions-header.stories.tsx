@@ -2,23 +2,30 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import type { SessionsView } from '../stores/sessions-view';
 import { SessionsHeader } from './sessions-header';
-
-const paperView: SessionsView = {
-  group: 'project',
-  status: 'active',
-  layout: 'regular',
-};
+import { sessionsHeader } from './sessions-header-fixtures';
 
 const meta = {
   title: 'Sessions/SessionsHeader',
   component: SessionsHeader,
   parameters: { previewPadding: false },
+  /*
+   * SessionsHeaderProps extends SessionsViewState from another module, which
+   * react-docgen cannot follow, so the descriptions live here.
+   */
+  argTypes: {
+    query: { control: 'text', description: 'What the search box holds.' },
+    view: {
+      control: false,
+      description: 'The group, status and layout the view menu sets.',
+    },
+    onQueryChange: { control: false },
+    onViewChange: { control: false },
+    onNewSession: { control: false },
+  },
   args: {
-    query: '',
+    ...sessionsHeader,
     onQueryChange: action('query'),
-    view: paperView,
     onViewChange: action('view'),
     onNewSession: action('new Session'),
   },
@@ -29,7 +36,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Paper "SessionsList": the sidebar's control bar, the title then Search, the view menu and New Session; the frame insets it 24 from the left and 14 from the right.
-export const SessionsHeaderStory: Story = {
+export const Default: Story = {
   render: function Render(args) {
     const [query, setQuery] = useState(args.query);
 

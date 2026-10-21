@@ -12,7 +12,7 @@ export type AgentActions = {
   onRemove: (id: string) => void;
 };
 
-export type AgentCardProps = AgentActions & { agent: AgentRowEntry };
+type AgentCardProps = AgentActions & { agent: AgentRowEntry };
 
 type State = 'install' | 'remove';
 

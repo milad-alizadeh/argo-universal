@@ -1,98 +1,97 @@
-import { Variation, Variations } from '@repo/kit/variations';
-import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { action } from 'storybook/actions';
-import type { SessionsLayout } from '../../stores/sessions-view';
+import { sessionsLayoutChoices } from '../../stores/sessions-view';
 import { SessionRow, type SessionRowProps } from './session-row';
 import {
-  SessionRowListMock,
-  type SessionRowListMockProps,
-} from './session-row-list.mocks';
-import { paperSessionMetadata, paperSessionRows } from './session-row.mocks';
+  archivedSession,
+  compactSession,
+  failedSession,
+  idleSession,
+  needsInputSession,
+  runningSession,
+  selectedSession,
+  unreadSession,
+} from './session-row-fixtures';
 
 const meta = {
   title: 'Sessions/SessionRow',
   component: SessionRow,
   parameters: { previewPadding: false },
-  args: {
-    session: sessionRows.running,
-    logo: agentsList[0]?.icon ?? '',
-    onSelect: action('select Session'),
+  /*
+   * SessionRowProps is declared in session-row-props.ts, which react-docgen cannot follow
+   * (docs/agents/storybook.md, "Docgen"), so the descriptions live here with the prop domain.
+   */
+  argTypes: {
+    layout: {
+      control: 'select',
+      options: sessionsLayoutChoices.map(({ value }) => value),
+      description:
+        'Regular: the activity, metadata and Plan bar. Compact: one line.',
+    },
+    selected: {
+      control: 'boolean',
+      description:
+        'The open Session, on a layout wide enough to show a selection.',
+    },
+    subagentsFailed: {
+      control: 'boolean',
+      description: 'A Subagent of this Session failed.',
+    },
+    age: {
+      control: 'text',
+      description:
+        'How long ago the Session was last active: it leads a Regular row\u2019s meta line, and ends a Compact row that has no PR.',
+    },
+    session: { control: false, description: 'The Session the row draws.' },
+    pullRequest: {
+      control: false,
+      description: 'The Change this Session opened, drawn as its stage glyph.',
+    },
   },
+  args: { ...runningSession, onSelect: action('select Session') },
 } satisfies Meta<typeof SessionRow>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const unreadLongTitleArchived = [
-  sessionRows.unread,
-  sessionRows.longTitle,
-  sessionRows.archived,
-];
+// The time leads the meta line, the activity reads in the foreground, and a Plan bar fills under the row.
+export const Running: Story = { args: runningSession };
 
-const paperList = {
-  sessions: paperSessionRows,
-  metadata: paperSessionMetadata,
-  selectedSessionId: paperSessionRows[0]?.sessionId,
-};
+// Waiting on you: the activity takes the warning tone.
+export const NeedsInput: Story = { args: needsInputSession };
 
-function PaperSessionList(
-  props: Pick<SessionRowListMockProps, 'layout' | 'onSelect'>,
-): React.JSX.Element {
-  return <SessionRowListMock {...paperList} {...props} />;
-}
+// A failed Session reads red, and its failed Subagents show beside a closed Change.
+export const Failed: Story = { args: failedSession };
 
-/*
- * Paper's list: every status, both Agents, the time leading each meta line, pull request metadata,
- * a failed Subagent, a finished Plan with no bar, a status dot ending every row but an idle one's,
- * and the first row selected on wide layouts.
- */
-export const Overview: Story = {
-  render: (args) => (
-    <Variations>
-      <Variation label="Regular, every status">
-        <PaperSessionList layout="regular" onSelect={args.onSelect} />
-      </Variation>
-      <Variation label="Unread, long title and archived">
-        <SessionRowListMock
-          sessions={unreadLongTitleArchived}
-          onSelect={args.onSelect}
-        />
-      </Variation>
-    </Variations>
-  ),
-};
+// Nothing is running: no status dot ends the row, and a finished Plan draws no bar.
+export const Idle: Story = { args: idleSession };
+
+// Unread: the title is semibold and the activity is muted.
+export const Unread: Story = { args: unreadSession };
+
+// The selected row on a wide layout.
+export const Selected: Story = { args: selectedSession };
+
+// An archived Session ends its meta line on the Archived pill.
+export const Archived: Story = { args: archivedSession };
 
 // One line per Session: its PR's glyph in the PR's state colour, or with no PR how long ago it was active, then its status dot unless idle.
-export const Compact: Story = {
-  name: 'Compact',
-  render: (args) => (
-    <PaperSessionList layout="compact" onSelect={args.onSelect} />
-  ),
-};
+export const Compact: Story = { args: compactSession };
 
 // The pointer over a row tints it; Regular keeps its hairline. Wide layouts only.
-function hovered(layout: SessionsLayout): Story {
-  return {
-    args: {
-      ...paperSessionMetadata['session-plan'],
-      layout,
-      session: paperSessionRows[0] ?? sessionRows.running,
-    },
-    play: async ({ canvas, userEvent }) => {
-      await userEvent.hover(canvas.getByRole('button'));
-    },
-  };
-}
+const hover: Story['play'] = async ({ canvas, userEvent }) => {
+  await userEvent.hover(canvas.getByRole('button'));
+};
 
-export const Hovered: Story = { ...hovered('regular') };
+export const Hovered: Story = { args: runningSession, play: hover };
 
 export const CompactHovered: Story = {
   name: 'Compact hovered',
-  ...hovered('compact'),
+  args: compactSession,
+  play: hover,
 };
 
 // A checkpoint every 1.5 seconds: the fill springs from 1 to 2 to 3 of 4 done, then starts over.
@@ -122,5 +121,6 @@ function SteppingPlanRow(args: SessionRowProps): React.JSX.Element {
 
 export const PlanSteps: Story = {
   name: 'Plan steps',
+  args: runningSession,
   render: (args) => <SteppingPlanRow {...args} />,
 };

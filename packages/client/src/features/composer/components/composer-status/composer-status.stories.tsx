@@ -1,47 +1,35 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { action } from 'storybook/actions';
 import { ComposerWorkChips } from './composer-status';
+import { runningWork, settledWork } from './composer-status-fixtures';
 
 const meta = {
   title: 'Composer/ComposerStatus',
   component: ComposerWorkChips,
-  args: {
-    disabled: false,
-    status: {},
-  },
+  // The chips are a fragment; the Composer's tray lays them out in a row.
+  decorators: [
+    (Story): ReactElement => (
+      <View className="flex-row items-center gap-2">
+        <Story />
+      </View>
+    ),
+  ],
+  args: runningWork,
+  argTypes: { status: { control: false }, disabled: { control: 'boolean' } },
 } satisfies Meta<typeof ComposerWorkChips>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const runningStatus = {
-  subagents: { count: 2, running: true, onPress: action('Subagents') },
-  shells: { count: 1, running: false, onPress: action('Shells') },
-};
+/*
+ * A chip is drawn only for work the Session has, so a status with neither Subagents nor
+ * Shells draws nothing and has no story.
+ */
 
-const settledStatus = {
-  ...runningStatus,
-  subagents: { ...runningStatus.subagents, running: false },
-};
+// Subagents still running: their count reads in the success tone.
+export const SubagentsRunning: Story = { args: runningWork };
 
-const workPreviewClassName = 'flex-row items-center gap-2';
-
-export const Status: Story = {
-  render: (args) => (
-    <Variations>
-      <Variation label="Subagents running">
-        <View className={workPreviewClassName}>
-          <ComposerWorkChips {...args} status={runningStatus} />
-        </View>
-      </Variation>
-      <Variation label="Settled">
-        <View className={workPreviewClassName}>
-          <ComposerWorkChips {...args} status={settledStatus} />
-        </View>
-      </Variation>
-    </Variations>
-  ),
-};
+// Nothing running: both counts read muted.
+export const Settled: Story = { args: settledWork };

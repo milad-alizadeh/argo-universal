@@ -12,6 +12,8 @@ import { type ListRows, useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
 import { useScrolling } from './sessions-list-scrolling';
 
+export type { SessionsListProps } from './sessions-list-props';
+
 function entrySection(entry: SessionsListEntry): string {
   return entry.kind === 'session' ? entry.session.projectId : entry.id;
 }

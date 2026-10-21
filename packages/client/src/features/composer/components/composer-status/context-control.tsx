@@ -13,13 +13,15 @@ import {
 import { phoneSheet, unselectableTextClassName } from './status-surface';
 import { StatusText } from './status-text';
 
-interface ContextProps {
+export interface ContextControlProps {
+  // The Session's context window, and Compact when there is one to offer.
   context: ComposerContext;
   disabled: boolean;
+  // The desktop trigger, which names the control and its token counts; a phone draws the ring alone.
   wide: boolean;
 }
 
-type ContextTokenProps = Pick<ContextProps, 'context' | 'wide'>;
+type ContextTokenProps = Pick<ContextControlProps, 'context' | 'wide'>;
 
 function ContextTriggerTokens(props: ContextTokenProps): JSX.Element {
   const { context, wide } = props;
@@ -38,7 +40,7 @@ function ContextTriggerTokens(props: ContextTokenProps): JSX.Element {
   );
 }
 
-function createContextTrigger(props: ContextProps): JSX.Element {
+function createContextTrigger(props: ContextControlProps): JSX.Element {
   return createStatusControlTrigger({
     ...props,
     label: 'Context',
@@ -58,7 +60,7 @@ const contextPopoverProps = {
   listContent: phoneSheet,
 };
 
-export function ContextControl(props: ContextProps): JSX.Element {
+export function ContextControl(props: ContextControlProps): JSX.Element {
   const contentProps = {
     context: props.context,
     percent: contextPercent(props.context),

@@ -1,36 +1,44 @@
-import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { fn } from 'storybook/test';
-import {
-  composerFastModeConfiguration,
-  composerLongListConfiguration,
-  composerLongSettingsOptions,
-  composerUnlistedEffortConfigurations,
-} from '../../../../../mocks/composer-mock';
 import { updateComposerSettings } from '../../../../../mocks/composer-mock';
 import {
   ComposerAgentModelControl,
   type ComposerConfigurationProps,
 } from './composer-configuration';
-
-const configuration = composerUnlistedEffortConfigurations[0];
-
-if (!configuration)
-  throw new Error('Recorded catalog needs an Agent with effort.');
+import {
+  defaultEffortConfiguration,
+  fastModeConfiguration,
+  longListsConfiguration,
+  newSessionConfiguration,
+  openingConfiguration,
+  otherOptionsConfiguration,
+} from './composer-configuration-fixtures';
 
 const meta = {
   title: 'Composer/ComposerConfiguration',
   component: ComposerAgentModelControl,
-  args: { configuration, disabled: false },
+  args: defaultEffortConfiguration,
+  argTypes: {
+    configuration: { control: false },
+    disabled: { control: 'boolean' },
+  },
 } satisfies Meta<typeof ComposerAgentModelControl>;
 
 export default meta;
 
-export const DefaultEffort: StoryObj<typeof meta> = {
+type Story = StoryObj<typeof meta>;
+
+/*
+ * No story for a configuration with no Agent, no Agent choices and no model: the control draws
+ * nothing at all.
+ */
+
+// An effort the Agent's own catalog does not list falls back to its default.
+export const DefaultEffort: Story = {
   name: 'Default effort',
+  args: defaultEffortConfiguration,
   render: function ConfigurationRender(args) {
     const configuration = useInteractiveConfiguration(args.configuration);
 
@@ -42,32 +50,31 @@ export const DefaultEffort: StoryObj<typeof meta> = {
   },
 };
 
-export const LongLists: StoryObj<typeof meta> = {
+// Enough Agents and models that both lists scroll inside the picker.
+export const LongLists: Story = {
   name: 'Long Agent and model lists',
-  args: { configuration: composerLongListConfiguration },
+  args: longListsConfiguration,
   render: DefaultEffort.render,
 };
 
-export const FastMode: StoryObj<typeof meta> = {
+export const FastMode: Story = {
   name: 'Fast mode on',
-  args: { configuration: composerFastModeConfiguration(true) },
+  args: fastModeConfiguration,
   render: DefaultEffort.render,
 };
 
 // Fast mode and an Agent's other select options sit in Configure beside its model and effort.
-export const OtherOptions: StoryObj<typeof meta> = {
+export const OtherOptions: Story = {
   name: 'Other options',
-  args: {
-    configuration: {
-      ...configuration,
-      configOptions: [
-        ...configuration.configOptions,
-        ...composerLongSettingsOptions,
-      ],
-    },
-  },
+  args: otherOptionsConfiguration,
   render: DefaultEffort.render,
 };
+
+// Before Send the same Drill adds Agent selection; after Send its row is read-only.
+export const NewSession: Story = { args: newSessionConfiguration };
+
+// The Session opens and takes this device's last choices, so its options are still loading.
+export const LoadingConfiguration: Story = { args: openingConfiguration };
 
 function useInteractiveConfiguration(
   configuration: ComposerConfigurationProps,
@@ -95,32 +102,3 @@ function configurationChanged(
     );
   };
 }
-
-// Before Send the same Drill adds Agent selection; after Send its row is read-only.
-export const NewSession: StoryObj<typeof meta> = {
-  args: {
-    configuration: {
-      ...configuration,
-      agentChoices: {
-        agents: newSessionCatalogs.bothAvailable,
-        onChange: fn(),
-        onAdd: fn(),
-      },
-    },
-  },
-};
-
-export const LoadingConfiguration: StoryObj<typeof meta> = {
-  args: {
-    configuration: {
-      ...configuration,
-      configOptions: [],
-      opening: true,
-      agentChoices: {
-        agents: newSessionCatalogs.bothAvailable,
-        onChange: fn(),
-        onAdd: fn(),
-      },
-    },
-  },
-};

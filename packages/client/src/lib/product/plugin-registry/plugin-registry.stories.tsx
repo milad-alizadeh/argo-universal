@@ -1,44 +1,37 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
-import { slottedRow } from '@repo/contracts/plugins/wire-fixtures';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
-import { Stack } from '@repo/kit/primitives/layout/stack';
-import canvasFixture from '@repo/mocks/plugins/canvas.json' with { type: 'json' };
-import controls from '@repo/mocks/plugins/controls.json' with { type: 'json' };
-import overlays from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
-import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { PluginTree } from './plugin-registry';
+import { action } from 'storybook/actions';
+import { PluginTree, type PluginTreeProps } from './plugin-registry';
+import {
+  canvasTree,
+  checkboxTree,
+  iconButtonTree,
+  openSheetTree,
+  pickerTree,
+  sliderTree,
+  slottedRowTree,
+  splitButtonTree,
+  svgTree,
+  switchTree,
+  textInputTree,
+} from './plugin-registry-fixtures';
 
 const meta = {
   title: 'Design System/Patterns/PluginRegistry',
   component: PluginTree,
   parameters: { screenPreview: true },
-} satisfies Meta;
-
-function firstSvgXml(): string {
-  const fixture = svgFixtures.valid[0];
-
-  if (!fixture) throw new Error('Missing valid SVG fixture');
-
-  return fixture.xml;
-}
-
-const svgXml = firstSvgXml();
+  argTypes: { root: { control: false }, onEvent: { control: false } },
+  args: { ...slottedRowTree, onEvent: action('Plugin event') },
+} satisfies Meta<typeof PluginTree>;
 
 export default meta;
 
-function SlotPreview(): ReactElement {
-  const [count, setCount] = useState(0);
-  const root = rowWithCount(count);
+type Story = StoryObj<typeof meta>;
 
-  return (
-    <PluginTree root={root} onEvent={() => setCount((value) => value + 1)} />
-  );
-}
-
-function rowWithCount(count: number): WireNode {
-  return applyPatch(slottedRow, [
+function rowWithCount(root: WireNode, count: number): WireNode {
+  return applyPatch(root, [
     {
       op: 'setProps',
       key: [{ slot: 'trailing', key: 'count' }],
@@ -47,58 +40,51 @@ function rowWithCount(count: number): WireNode {
   ]);
 }
 
-export const Slots: StoryObj = {
-  render: SlotPreview,
-};
+function SlotPreview({ root, onEvent }: PluginTreeProps): ReactElement {
+  const [count, setCount] = useState(0);
 
-export const Svg: StoryObj = {
-  render: SvgPreview,
-};
-
-export const Canvas: StoryObj = {
-  render: () => (
-    <PluginTree root={WireNode.parse(canvasFixture)} onEvent={() => {}} />
-  ),
-};
-
-function SvgPreview(): ReactElement {
-  return <PluginTree root={svgRoot()} onEvent={() => {}} />;
-}
-
-function svgRoot(): WireNode {
-  return {
-    type: 'Svg',
-    key: '0',
-    props: {
-      xml: svgXml,
-      label: 'Service map',
-      tone: 'info',
-      onPress: { $event: 'onPress' },
-    },
-    children: [],
-    slots: {},
-  };
-}
-
-export const Controls: StoryObj = {
-  render: () => (
-    <Stack direction="column" gap={4}>
-      {controls.map((fixture) => {
-        const root = WireNode.parse(fixture);
-
-        return <PluginTree key={root.key} root={root} onEvent={() => {}} />;
-      })}
-    </Stack>
-  ),
-};
-
-export const Overlays: StoryObj = {
-  render: () => (
+  return (
     <PluginTree
-      root={applyPatch(WireNode.parse(overlays), [
-        { op: 'setProps', key: ['sheet'], props: { open: true } },
-      ])}
-      onEvent={() => {}}
+      root={rowWithCount(root, count)}
+      onEvent={(key, event) => {
+        void onEvent(key, event);
+        setCount((value) => value + 1);
+      }}
     />
-  ),
+  );
+}
+
+/*
+ * One story per drawing path RenderNode takes: a part's slots, its children, and each entry it
+ * looks up in the registry. A node whose type is not in the registry has no story: it draws
+ * "Update Argo to see this", which plugin-compatibility.test.stories.tsx asserts.
+ */
+
+// A part's named slots hold nodes of their own; pressing the Button patches the node beside it.
+export const Slots: Story = {
+  args: slottedRowTree,
+  render: (args) => <SlotPreview {...args} />,
 };
+
+// An Svg node draws the Plugin's own artwork inside the tree's SVG budget.
+export const Svg: Story = { args: svgTree };
+
+// A Canvas node keys its children by their own key, so the scene survives a redraw.
+export const Canvas: Story = { args: canvasTree };
+
+// An overlay is an ordinary node: the Sheet opens in place rather than outside the tree.
+export const Overlays: Story = { args: openSheetTree };
+
+export const Switch: Story = { args: switchTree };
+
+export const Checkbox: Story = { args: checkboxTree };
+
+export const Picker: Story = { args: pickerTree };
+
+export const Slider: Story = { args: sliderTree };
+
+export const TextInput: Story = { args: textInputTree };
+
+export const IconButton: Story = { args: iconButtonTree };
+
+export const SplitButton: Story = { args: splitButtonTree };

@@ -1,97 +1,64 @@
-import { SizeClass } from '@repo/kit/size-class/size-class';
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import type { ComponentProps, ReactNode } from 'react';
-import { View } from 'react-native';
+import { action } from 'storybook/actions';
+import { PermissionPreview } from '../../../../../mocks/requests/permission/permission-gallery';
+import { PermissionRequest } from './permission-request';
 import {
-  answeredElsewhere,
-  galleryVariations,
-  PermissionPreview,
-} from '../../../../../mocks/requests/permission/permission-gallery';
-import type { RequestState } from '../request-card/request-card';
-import {
-  permissionProps,
-  permissionMock,
-  permissionMocks,
-} from '../request.mocks';
-import {
-  PermissionRequest,
-  type PermissionRequestProps,
-} from './permission-request';
+  answeredPermission,
+  severalAllowOptionsPermission,
+  severalRejectOptionsPermission,
+  toolCallPermission,
+} from './permission-request-fixtures';
 
-type GalleryArgs = ComponentProps<typeof PermissionRequest> & {
-  agent: (typeof permissionMock)['agent'];
-  requestState: NonNullable<
-    ComponentProps<typeof PermissionRequest>['state']
-  >['kind'];
-};
-
+// The request in the Composer's tray, where a Session shows it.
 const meta = {
   title: 'Requests/PermissionRequest',
   component: PermissionRequest,
   parameters: { previewPadding: false },
-  args: {
-    ...permissionProps({}),
-    agent: permissionMock.agent,
-    requestState: 'open',
-  },
   argTypes: {
-    agent: { options: ['agent-1', 'agent-2'], control: 'select' },
-    requestState: {
-      options: ['open', 'submitting', 'answered'],
-      control: 'select',
+    request: {
+      control: false,
+      description: 'The pending request and the options the Agent offers.',
     },
-    state: { control: false },
+    state: {
+      control: false,
+      description: 'Open, submitting, or answered with the reason.',
+    },
+    input: {
+      control: 'text',
+      description: 'What the Tool call would run, as the Agent sent it.',
+    },
+    reason: {
+      control: 'text',
+      description: 'Why the Agent is asking, when it says.',
+    },
     error: { control: 'text' },
+    onAnswer: { control: false },
+    onBuildInNewSession: { control: false },
+    onSavePlan: { control: false },
   },
-} satisfies Meta<GalleryArgs>;
+  render: (args): React.JSX.Element => <PermissionPreview {...args} />,
+  args: { ...toolCallPermission, onAnswer: action('answer') },
+} satisfies Meta<typeof PermissionRequest>;
 
 export default meta;
 
-export const Overview = {
-  render: function RequestGallery(args): React.JSX.Element {
-    const request = <PermissionPreview {...galleryRequestProps(args)} />;
+type Story = StoryObj<typeof meta>;
 
-    return (
-      <SizeClass compact={request} wide={<WideGallery request={request} />} />
-    );
-  },
-} satisfies StoryObj<GalleryArgs>;
+/*
+ * A Tool call to let run: its title, the Agent's reason and its input. The other branch, a request
+ * carrying a plan, is PlanRequest's own story.
+ */
+export const ToolCall: Story = { args: toolCallPermission };
 
-// The request the controls drive, from the chosen Agent's recording.
-function galleryRequestProps(args: GalleryArgs): PermissionRequestProps {
-  const selected = permissionProps({
-    mock:
-      permissionMocks.find((mock) => mock.agent === args.agent) ??
-      permissionMock,
-  });
+// Two allow options: the group leads with Allow once and a chevron picks the other.
+export const SeveralAllowOptions: Story = {
+  args: severalAllowOptionsPermission,
+};
 
-  return permissionProps({
-    ...args,
-    request: selected.request,
-    input: selected.input,
-    state: answeredState(args.requestState),
-  });
-}
+// Both groups offer more than one option, so both take a chevron.
+export const SeveralRejectOptions: Story = {
+  args: severalRejectOptionsPermission,
+};
 
-function answeredState(kind: GalleryArgs['requestState']): RequestState {
-  return kind === 'answered'
-    ? { kind: 'answered', reason: answeredElsewhere }
-    : { kind };
-}
-
-function WideGallery({ request }: { request: ReactNode }): React.JSX.Element {
-  return (
-    <View className="w-full items-center py-4">
-      <Variations className="max-w-column!">
-        <Variation label="Permission request">{request}</Variation>
-        {galleryVariations.map(({ label, preview }) => (
-          <Variation key={label} label={label}>
-            {preview}
-          </Variation>
-        ))}
-      </Variations>
-    </View>
-  );
-}
+export const AlreadyAnswered: Story = { args: answeredPermission };

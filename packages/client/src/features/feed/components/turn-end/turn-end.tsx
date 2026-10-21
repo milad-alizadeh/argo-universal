@@ -71,7 +71,12 @@ export function withoutDisclosedTurnEnds(
 export const turnEndNotice = (end: TurnEnd): NoticeMessageProps | null =>
   notices[end.stopReason](end);
 
-export function TurnEndRow({ end }: { end: TurnEnd }): ReactElement | null {
+export interface TurnEndRowProps {
+  // How the Turn ended; the row draws one Notice per stop reason.
+  end: TurnEnd;
+}
+
+export function TurnEndRow({ end }: TurnEndRowProps): ReactElement | null {
   const notice = turnEndNotice(end);
 
   return notice && <NoticeMessage {...notice} />;

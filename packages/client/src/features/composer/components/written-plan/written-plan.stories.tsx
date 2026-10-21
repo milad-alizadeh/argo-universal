@@ -4,18 +4,11 @@ import { type ReactElement, useState } from 'react';
 import { action } from 'storybook/actions';
 import { SessionColumn } from '#lib/product/session-column';
 import { composerProps } from '../../../../../mocks/composer-mock';
-import { longWrittenPlan } from '../../../../../mocks/feed-paper';
-import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';
 import { Composer } from '../composer/composer';
-
-const recording = recordedAcpContent('agent-1');
-
-const fileRow = recording.rows.find(
-  (row) => row.sessionUpdate === 'plan_update' && row.plan.type === 'file',
-);
-
-if (fileRow?.sessionUpdate !== 'plan_update' || fileRow.plan.type !== 'file')
-  throw new Error('ACP recording needs a file Plan');
+import {
+  markdownWrittenPlan,
+  planFileWrittenPlan,
+} from './written-plan-fixtures';
 
 const meta = {
   title: 'Composer/WrittenPlan',
@@ -37,14 +30,33 @@ const meta = {
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
     onSend: action('send'),
-    writtenPlan: longWrittenPlan,
+    writtenPlan: markdownWrittenPlan,
   }),
+  /*
+   * ComposerProps is declared in composer-types.ts, which react-docgen cannot follow
+   * (docs/agents/storybook.md, "Docgen"), so the descriptions live here with the prop domain.
+   */
+  argTypes: {
+    writtenPlan: {
+      control: false,
+      description:
+        'The Plan the Agent wrote: markdown it wrote out, or the file it wrote it to.',
+    },
+    draft: { control: false },
+    status: { control: false },
+    configuration: { control: false },
+    onDraftChange: { control: false },
+    onAttachImages: { control: false },
+    onSend: { control: false },
+  },
 } satisfies Meta<typeof Composer>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Document: Story = {};
+// Markdown the Agent wrote out: the trigger takes its title and the Plan reads at full height.
+export const Document: Story = { args: { writtenPlan: markdownWrittenPlan } };
 
-export const UriOnly: Story = { args: { writtenPlan: fileRow.plan } };
+// A Plan written to a file: the trigger names the file and its card is as tall as itself.
+export const UriOnly: Story = { args: { writtenPlan: planFileWrittenPlan } };
