@@ -16,7 +16,6 @@ type RunningPass = {
   viewId: PluginViewId;
   close: () => void;
   finish: () => void;
-  settled?: () => boolean;
 };
 
 export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
@@ -50,10 +49,9 @@ export class BackgroundPass {
     if (pass.viewId === viewId) this.settle(pass);
   }
 
+  // Every render is asked again: a Plugin that chains Queries declares the next one on a later render.
   private settle(pass: RunningPass): void {
-    pass.settled ??= this.services.data.queriesSettled(pass.viewId);
-
-    if (pass.settled()) pass.finish();
+    if (this.services.data.queriesSettled(pass.viewId)) pass.finish();
   }
 
   released(viewId: PluginViewId): void {
