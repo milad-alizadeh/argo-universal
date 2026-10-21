@@ -7,11 +7,11 @@ import {
   type RowsLoad,
 } from '#features/agents';
 import { RowDrawingContext } from '#lib/generic/row-drawing-context';
-import { type LoadingRow, loadingRows } from '#primitives/lists/list-item';
 import {
   FieldList,
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
+import { type LoadingRow, loadingRows } from '#primitives/lists/list-item';
 import type { AgentListViewProps } from './agent-list-view';
 import {
   AgentsFilterPills,

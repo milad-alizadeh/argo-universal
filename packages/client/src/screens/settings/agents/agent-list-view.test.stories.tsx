@@ -4,7 +4,6 @@ import { type AgentsFilter, agentsPage } from '#features/agents';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { AgentListView } from './agent-list-view';
-import { agentsLoadingTitle } from './catalog';
 import {
   agentListArgs,
   catalog,
@@ -12,6 +11,7 @@ import {
   longCatalog,
   pageRows,
 } from './agent-list-view.mocks';
+import { agentsLoadingTitle } from './catalog';
 
 const meta = {
   title: 'Tests/Agents page',
