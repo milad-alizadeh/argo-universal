@@ -4,6 +4,7 @@ import { startPluginTest } from '@argo/plugin-kit/testing';
 import { JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it, onTestFinished } from 'vitest';
 import { fixtureNetwork, httpsServer } from '../../engine/mocks/probe-plugin';
+import { processWait } from '../mocks/data-fixture';
 import {
   startHookTest as start,
   hookFixture as fixture,
@@ -24,7 +25,7 @@ it('gives up a prompt Hook at 2000 ms and logs the Plugin and event once', async
     answer = value;
   });
 
-  await expect.poll(() => kit.log()).toContain(entered);
+  await expect.poll(() => kit.log(), processWait).toContain(entered);
   await kit.clock.advance(1999);
   expect(answer).toBeUndefined();
   await kit.clock.advance(1);
@@ -125,7 +126,7 @@ it.each([
       answer = value;
     });
 
-    await expect.poll(() => kit.log()).toContain(entered);
+    await expect.poll(() => kit.log(), processWait).toContain(entered);
     await kit.clock.advance(9999);
     expect(answer).toBeUndefined();
     await kit.clock.advance(1);

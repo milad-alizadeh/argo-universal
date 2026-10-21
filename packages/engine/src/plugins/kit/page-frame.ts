@@ -1,5 +1,6 @@
 import { reportFailure } from './host-config';
 import type { OpenView } from './page-view';
+import { flushEffects } from './reconciler';
 import { kitScheduler } from './scheduler';
 
 const frameMs = 16;
@@ -14,6 +15,7 @@ export function schedulePage(view: OpenView, commit: () => void): void {
 
 function publishCommit(commit: () => void): void {
   try {
+    flushEffects();
     commit();
   } catch (error) {
     reportFailure(error instanceof Error ? error : new Error(String(error)));

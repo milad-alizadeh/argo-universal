@@ -157,6 +157,6 @@ it('refuses a Query that borrows an Account, which no Plugin provides yet', asyn
 
   const kit = await fixture.start({ network: await fixtureNetwork() });
   const page = kit.page();
-  await page.find(`Refused: Account localhost:${port} is unavailable`);
+  await page.find(`Refused: Account is unavailable`);
   expect(requested).toBe(false);
 });

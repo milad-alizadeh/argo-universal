@@ -1,6 +1,7 @@
 import { JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import { messageSlotFixture } from '@repo/contracts/plugins/replaceable-fixtures';
 import { expect, it } from 'vitest';
+import { processWait } from '../mocks/data-fixture';
 import { startHookTest as start } from '../mocks/hook-fixture';
 
 const entered = 'argo.settings.get entered';
@@ -21,7 +22,7 @@ it('keeps the ui.render payload and core answer with its full ten-second budget'
       answer = value;
     });
 
-  await expect.poll(() => kit.log()).toContain(entered);
+  await expect.poll(() => kit.log(), processWait).toContain(entered);
   await kit.clock.advance(9998);
   expect(answer).toBeUndefined();
   await kit.clock.advance(1);
@@ -40,7 +41,7 @@ it('gives up a ui.render Hook at ten seconds and names its event in one fallback
 
   const emitted = kit.emit('ui.render', JsonObject.parse(messageSlotFixture));
 
-  await expect.poll(() => kit.log()).toContain(entered);
+  await expect.poll(() => kit.log(), processWait).toContain(entered);
   await kit.clock.advance(10_000);
   expect(await emitted).toEqual({ input: messageSlotFixture });
   expect(

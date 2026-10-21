@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type {
@@ -17,21 +17,7 @@ const laterProject = 'later-project';
 type Caller = Awaited<ReturnType<typeof startEngineTestHost>>['caller'];
 
 it('starts Project background passes at Server startup and after Writer membership changes', async () => {
-  const fixture = await dataFixture(
-    `import {Text,useData,useEffect} from '@argo/plugin-kit';
-  export function register(argo) {
-    let count = 0;
-    argo.pages.register('/', ({context:{projectId}}) => {
-      const {data} = useData({api:'storage',queries:[{sql:'SELECT ?',params:[projectId],method:'values'}]});
-      useEffect(() => { if (data) void argo.nav.badge('inbox',++count); }, [data]);
-      return <Text>{projectId}</Text>;
-    });
-  }`,
-    {
-      nav: [{ id: 'inbox', title: 'Inbox', path: '/' }],
-      background: { path: '/', interval: 300000 },
-    },
-  );
+  const fixture = await backgroundFixture();
 
   const host = await startEngineTestHost({
     home: await shippedHome(fixture.directory),
@@ -86,6 +72,43 @@ it('starts Project background passes at Server startup and after Writer membersh
     .poll(() => currentBadges(watching), { timeout: 10_000 })
     .toEqual([{ pluginId: dataPluginId, id: 'inbox', count: 2 }]);
 });
+
+it('runs the final background effects before announcing the pass completed', async () => {
+  const fixture = await backgroundFixture(50);
+
+  const host = await startEngineTestHost({
+    home: await shippedHome(fixture.directory),
+  });
+
+  const log = (): Promise<string> =>
+    readFile(join(host.home, 'logs/plugins.log'), 'utf8');
+
+  await expect
+    .poll(log, { timeout: 10_000 })
+    .toContain('background pass completed');
+  expect(await log()).toMatch(
+    /argo.nav.badge inbox 1[\s\S]*background pass completed/,
+  );
+});
+
+function backgroundFixture(blockMs = 0): ReturnType<typeof dataFixture> {
+  return dataFixture(
+    `import {Text,useData,useEffect} from '@argo/plugin-kit';
+  export function register(argo) {
+    let count = 0;
+    argo.pages.register('/', ({context:{projectId}}) => {
+      const {data} = useData({api:'storage',queries:[{sql:'SELECT ?',params:[projectId],method:'values'}]});
+      if (data && ${blockMs}) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ${blockMs});
+      useEffect(() => { if (data) void argo.nav.badge('inbox',++count); }, [data]);
+      return <Text>{projectId}</Text>;
+    });
+  }`,
+    {
+      nav: [{ id: 'inbox', title: 'Inbox', path: '/' }],
+      background: { path: '/', interval: 300000 },
+    },
+  );
+}
 
 async function currentBadges(caller: Caller): Promise<PluginBadge[]> {
   const stream = (await caller.plugins.badges())[Symbol.asyncIterator]();

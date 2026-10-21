@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { processWait } from '../mocks/data-fixture';
 import { startHookTest as start, promptEvent } from '../mocks/hook-fixture';
 
 const promptSubmit = 'prompt.submit';
@@ -26,7 +27,9 @@ it('stops the outer Hook budget only while next runs and resumes it afterwards',
     answer = value;
   });
 
-  await expect.poll(() => kit.log()).toContain('argo.settings.get outer');
+  await expect
+    .poll(() => kit.log(), processWait)
+    .toContain('argo.settings.get outer');
   await kit.clock.advance(3699);
   expect(answer).toBeUndefined();
   await kit.clock.advance(1);
@@ -48,7 +51,9 @@ it('keeps next as the commit point and drops a late refusal after it', async () 
   }`);
 
   const emitted = kit.emit(promptSubmit, promptEvent);
-  await expect.poll(() => kit.log()).toContain('argo.settings.get committed');
+  await expect
+    .poll(() => kit.log(), processWait)
+    .toContain('argo.settings.get committed');
   await kit.clock.advance(2000);
   expect(await emitted).toEqual({
     prompt: [{ type: 'text', text: 'Committed' }],
@@ -78,7 +83,9 @@ it('drops a late rewrite and prevents next from running the chain twice', async 
     { sql: 'CREATE TABLE visits (value INTEGER)', params: [], method: 'run' },
   ]);
   const emitted = kit.emit(promptSubmit, promptEvent);
-  await expect.poll(() => kit.log()).toContain('argo.settings.get entered');
+  await expect
+    .poll(() => kit.log(), processWait)
+    .toContain('argo.settings.get entered');
   await kit.clock.advance(2000);
   expect(await emitted).toEqual({ prompt: promptEvent.prompt });
   await kit.clock.advance(100);
