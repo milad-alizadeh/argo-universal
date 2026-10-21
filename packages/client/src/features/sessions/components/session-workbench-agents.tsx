@@ -3,7 +3,6 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useClock } from '#lib/generic/use-clock';
 import { Text } from '#primitives/content/text';
-import { TintedAvatar } from '../../../lib/generic/tinted-avatar';
 import { StackedSummary } from '../../../lib/product/stacked-summary';
 import { subagentRoleMark } from '../../../lib/product/subagents/subagent-role';
 import { subagentSupporting } from './subagent-list/subagent-format';
@@ -50,7 +49,7 @@ function ActiveAgentText({ agent, now }: ActiveProps): ReactElement {
 function DoneAgents({ agents }: { agents: Subagent[] }): ReactElement {
   const marks = agents.map((agent) => ({
     key: agent.sessionId,
-    node: <TintedAvatar {...subagentRoleMark(agent.role)} size="inline" />,
+    ...subagentRoleMark(agent.role),
   }));
 
   return <StackedSummary marks={marks} label={`${agents.length} done`} />;

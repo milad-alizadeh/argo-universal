@@ -5,7 +5,7 @@ import {
   type SummaryMark,
 } from '../../../lib/product/stacked-summary';
 import { ChangeRow } from './change-row';
-import { ChangeStageIcon } from './change-stage/change-stage';
+import { resolveChangeStage } from './change-stage/change-stage-model';
 import type { SessionPullRequest } from './session-pull-request';
 
 interface Props {
@@ -57,11 +57,8 @@ function MoreChanges({ changes, onOpen }: Props): ReactElement {
 function remainderMarks(changes: readonly SessionPullRequest[]): SummaryMark[] {
   return [...new Set(changes.map((change) => change.stage))].map((stage) => ({
     key: stage,
-    node: (
-      <View className="size-6 items-center justify-center rounded-full bg-glass wide-type:size-5">
-        <ChangeStageIcon stage={stage} role="control" />
-      </View>
-    ),
+    ...resolveChangeStage({ stage }),
+    surface: 'glass',
   }));
 }
 

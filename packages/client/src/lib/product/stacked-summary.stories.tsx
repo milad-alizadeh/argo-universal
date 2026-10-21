@@ -1,38 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { TintedAvatar } from '../generic/tinted-avatar';
-import { ToneMark } from '../generic/tone-mark';
 import { Variation, Variations } from '../generic/variations';
-import { StackedSummary } from './stacked-summary';
+import { StackedSummary, type SummaryMark } from './stacked-summary';
 
-const agentMarks = [
-  {
-    key: 'plan',
-    node: <TintedAvatar icon="plan-mode" tone="done" size="inline" />,
-  },
-  {
-    key: 'test',
-    node: <TintedAvatar icon="flask" tone="success" size="inline" />,
-  },
+const agentMarks: SummaryMark[] = [
+  { key: 'plan', icon: 'plan-mode', tone: 'done' },
+  { key: 'test', icon: 'flask', tone: 'success' },
 ];
 
-const changeMarks = [
-  {
-    key: 'merged',
-    node: <ToneMark icon="pr-merged" tone="done" form="disc" role="control" />,
-  },
-  {
-    key: 'closed',
-    node: (
-      <ToneMark icon="pr-closed" tone="danger" form="disc" role="control" />
-    ),
-  },
+const changeMarks: SummaryMark[] = [
+  { key: 'merged', icon: 'pr-merged', tone: 'done', surface: 'glass' },
+  { key: 'closed', icon: 'pr-closed', tone: 'danger', surface: 'glass' },
 ];
 
-const shellMarks = ['first', 'second', 'third'].map((key) => ({
+const shellMarks: SummaryMark[] = ['first', 'second', 'third'].map((key) => ({
   key,
-  node: <TintedAvatar icon="terminal" tone="neutral" size="inline" />,
+  icon: 'terminal',
+  tone: 'neutral',
 }));
 
 const meta = {

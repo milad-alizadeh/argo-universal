@@ -7,6 +7,16 @@ import type { IconRoleValue } from './symbols/icon-role';
 
 // Foundations / ChangeStage uses the same tone pairing on desktop and phone.
 const palettes = {
+  info: {
+    bare: 'text-tone-info-600',
+    disc: 'bg-tone-info-100',
+    ink: 'text-tone-info-700',
+  },
+  warning: {
+    bare: 'text-tone-warning-600',
+    disc: 'bg-tone-warning-100',
+    ink: 'text-tone-warning-700',
+  },
   neutral: {
     bare: 'text-tone-neutral-600',
     disc: 'bg-tone-neutral-100',

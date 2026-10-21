@@ -1,10 +1,14 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
+import type { IconName } from '../generic/symbols/icon-names';
+import { ToneMark } from '../generic/tone-mark';
 
 export interface SummaryMark {
   key: string;
-  node: ReactNode;
+  icon: IconName;
+  tone: ComponentProps<typeof ToneMark>['tone'];
+  surface?: 'glass';
 }
 
 interface Props {
@@ -20,7 +24,9 @@ export function StackedSummary({ marks, label }: Props): ReactElement {
     <View className="flex-row items-center gap-2 px-1 py-2">
       <SummaryMarks marks={marks} />
       <View className="min-w-0 flex-1">
-        <Text tone="muted">{label}</Text>
+        <Text role="body" tone="muted">
+          {label}
+        </Text>
       </View>
     </View>
   );
@@ -38,9 +44,32 @@ function SummaryMarks({ marks }: Pick<Props, 'marks'>): ReactElement {
     <View {...markStackProps}>
       {marks.slice(0, visibleMarks).map((mark, index) => (
         <View key={mark.key} className={index > 0 ? '-ml-1.5' : undefined}>
-          {mark.node}
+          <SummaryIcon mark={mark} />
         </View>
       ))}
     </View>
+  );
+}
+
+function SummaryIcon({ mark }: { mark: SummaryMark }): ReactElement {
+  const glyph = summaryGlyph(mark);
+
+  if (mark.surface !== 'glass') return glyph;
+
+  return (
+    <View className="size-6 items-center justify-center rounded-full bg-glass wide-type:size-5">
+      {glyph}
+    </View>
+  );
+}
+
+function summaryGlyph(mark: SummaryMark): ReactElement {
+  return (
+    <ToneMark
+      icon={mark.icon}
+      tone={mark.tone}
+      role="control"
+      form={mark.surface === 'glass' ? 'bare' : 'disc'}
+    />
   );
 }
