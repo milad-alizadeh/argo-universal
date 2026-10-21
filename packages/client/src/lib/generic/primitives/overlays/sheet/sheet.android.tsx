@@ -22,7 +22,6 @@ import {
 } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
 import { SheetPages } from './sheet-stack.android';
-import { sheetDetents } from './sheet-state';
 import { SheetTrigger } from './sheet-trigger';
 
 type SheetRef = RefObject<ModalBottomSheetRef | null>;
@@ -82,19 +81,16 @@ function useModalProps(props: Omit<PresentationProps, 'sheetRef'>): ModalProps {
 }
 
 /*
- * Only a sheet that rests at the medium height stops half open on the way up. A sheet with pages names
- * no heights of its own, because its pages differ in height, and resting at medium is what keeps its
- * root page from opening as tall as the window (owner, 2026-10-20).
+ * Only a sheet that rests at the medium height stops half open on the way up. A sheet with pages takes a
+ * height of its own and opens straight at it, so there is no half stop for it to pass through and nothing
+ * for a drag to find above it (owner, 2026-10-21).
  */
 function restsHalfOpen(
   props: Pick<PresentationProps, 'detents' | 'stack'>,
 ): boolean {
-  const detents = sheetDetents({
-    detents: props.detents,
-    paged: props.stack.pages.length > 0,
-  });
+  if (props.stack.pages.length > 0) return false;
 
-  return detents?.includes('medium') === true;
+  return props.detents?.includes('medium') === true;
 }
 
 function dismissal(

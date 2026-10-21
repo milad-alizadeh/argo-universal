@@ -8,7 +8,7 @@ import { SheetBody } from './sheet-body';
 import { backLabel } from './sheet-page-label';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
-import { fillsHeight, sheetModifiers } from './sheet-sizing.android';
+import { sheetFill, sheetModifiers } from './sheet-sizing.android';
 import { useRetainedPages } from './sheet-slide-pages.android';
 import {
   usePageSlide,
@@ -38,14 +38,17 @@ type PageProps = FrameProps & {
  * — there is no Compose scroller between the finger and the rows to hand the drag to (owner, 2026-10-20).
  */
 export function SheetPages(props: PagesProps): ReactElement {
-  const fill = fillsHeight({
+  const fill = sheetFill({
     detents: props.detents,
     paged: props.stack.pages.length > 0,
   });
 
   return (
-    <RNHostView matchContents={!fill} modifiers={sheetModifiers(fill)}>
-      <SheetFrame {...props} fill={fill} />
+    <RNHostView
+      matchContents={fill === undefined}
+      modifiers={sheetModifiers(fill)}
+    >
+      <SheetFrame {...props} fill={fill !== undefined} />
     </RNHostView>
   );
 }
