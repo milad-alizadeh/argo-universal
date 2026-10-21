@@ -1,6 +1,6 @@
 # Layout
 
-[ADR-0039](../adr/0039-the-workbench-summarises-sections-and-the-stage-shows-them-in-full.md) owns what the Workbench and the Stage are; this page is the shape they are drawn in. Every measurement below comes from a board on the Paper file "Argo · Feed, Workbench & Stage", page "Workbench & Stage · Exploration", and each rule names its board. Sizes are tokens wherever a token exists; never hard-code a number a token already holds.
+[ADR-0039](../adr/0039-the-workbench-summarises-sections-and-the-stage-shows-them-in-full.md) defines the Workbench and the Stage. This page describes their layout. Paper supplies pane measurements from "Argo · Feed, Workbench & Stage", page "Workbench & Stage · Exploration". Existing tokens supply sizes.
 
 [Spec 0020](https://github.com/milad-alizadeh/argo-universal/issues/1178) moves desktop controls into the window band. Its tickets define the derived thresholds below.
 
