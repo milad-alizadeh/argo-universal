@@ -3,11 +3,10 @@ import { View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { cn } from '#lib/generic/utils';
 import { SheetBody } from './sheet-body';
-import { backLabel } from './sheet-page-label';
+import { SheetPageHeader } from './sheet-page-header';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
 import { usePageSlide, type SlideMotion } from './sheet-slide.android';
-import { SheetTitleRow } from './sheet-title-row';
 
 export type PagesProps = SheetProps & { stack: SheetStack };
 
@@ -44,22 +43,17 @@ export function SlidePage(props: PageProps): ReactElement {
 const hideHeader = (props: PageProps): boolean =>
   props.root && !props.page.title;
 
-const pageBackLabel = (props: PageProps): string | undefined =>
-  props.root ? undefined : backLabel(props.stack);
-
 // Only the root page closes the sheet; every page above it goes back to the one below instead.
 const pageClose = (props: PageProps): (() => void) | undefined =>
   props.root ? props.stack.navigation.close : undefined;
 
 function PageHeader(props: PageProps): ReactElement | null {
-  if (hideHeader(props)) return null;
-
   return (
-    <SheetTitleRow
-      title={props.page.title}
-      action={props.page.action}
-      backLabel={pageBackLabel(props)}
-      onBack={props.stack.navigation.back}
+    <SheetPageHeader
+      page={props.page}
+      stack={props.stack}
+      hidden={hideHeader(props)}
+      root={props.root}
       onClose={pageClose(props)}
     />
   );
