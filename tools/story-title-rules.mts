@@ -11,18 +11,21 @@ const metaTitle = /const meta\b[\s\S]*?\btitle: '([^']+)'/;
 
 const story = /\.stories\.tsx$/;
 
+// The component a story's meta draws, which says whether the file draws its folder's component or its own.
+const metaComponent = /const meta\b[\s\S]*?\bcomponent: (\w+)/;
+
 export const pascal = (name: string): string =>
   name
     .split('-')
     .map((part): string => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
 
-/*
- * Exception 2: an aspect segment is a reader's phrase, so `list-grouping` may read `Grouping` or
- * `Group at top`. Both spellings are accepted; nothing else in a title may be written freehand.
- */
-const sentence = (name: string): string =>
-  [pascal(name.split('-')[0] ?? ''), ...name.split('-').slice(1)].join(' ');
+// Where a story file sits: the folders inside its package, its own name, and the component its meta draws.
+interface StoryPath {
+  dirs: string[];
+  base: string;
+  component: string | undefined;
+}
 
 // A story file's name: the component it draws, and the aspect of it this file holds, when its siblings share one.
 interface Leaf {
@@ -30,116 +33,138 @@ interface Leaf {
   aspect: string | undefined;
 }
 
-// A file named after its own folder draws the component; one named `<folder>-<aspect>` draws an aspect of it.
-const leafOf = (dirs: readonly string[], base: string): Leaf => {
+/*
+ * A file draws an aspect of its folder's component when it is named `<folder>-<aspect>` and its meta
+ * draws that folder's component: `list-tiles.stories.tsx` draws `List`, so it is `List/Tiles`. A file
+ * that draws a component of its own keeps its own node, however its name reads beside the folder's.
+ */
+const drawsFolder = (folder: string, { base, component }: StoryPath): boolean =>
+  base.startsWith(`${folder}-`) && component === pascal(folder);
+
+const leafOf = (dirs: readonly string[], path: StoryPath): Leaf => {
   const folder = dirs.at(-1);
 
-  if (folder !== undefined && base.startsWith(`${folder}-`))
-    return { name: pascal(folder), aspect: base.slice(folder.length + 1) };
+  if (folder !== undefined && drawsFolder(folder, path))
+    return { name: pascal(folder), aspect: path.base.slice(folder.length + 1) };
 
-  return { name: pascal(base), aspect: undefined };
+  return { name: pascal(path.base), aspect: undefined };
 };
 
-const leafTitles = ({ name, aspect }: Leaf): string[] =>
-  aspect === undefined
-    ? [name]
-    : [`${name}/${pascal(aspect)}`, `${name}/${sentence(aspect)}`];
+const leafTitle = ({ name, aspect }: Leaf): string =>
+  aspect === undefined ? name : `${name}/${pascal(aspect)}`;
 
 /*
  * What a title must be. A path that names its own component derives the whole title; a path that
  * cannot — a screen, a test — derives everything up to the segment only a reader can write.
  */
 type Expected =
-  | { kind: 'exact'; titles: string[] }
+  | { kind: 'exact'; title: string }
   | { kind: 'prefix'; prefix: string; seed: string; why: string }
   | { kind: 'none' };
 
-const titlesUnder = (
+const titleUnder = (
   root: string,
   dirs: readonly string[],
-  base: string,
-): string[] =>
-  leafTitles(leafOf(dirs, base)).map((leaf): string => `${root}/${leaf}`);
-
-const exactly = (
-  root: string,
-  dirs: readonly string[],
-  base: string,
-): Expected => ({ kind: 'exact', titles: titlesUnder(root, dirs, base) });
+  path: StoryPath,
+): Expected => ({
+  kind: 'exact',
+  title: `${root}/${leafTitle(leafOf(dirs, path))}`,
+});
 
 /*
  * Exception 1: a screen's last segment is the page title a reader sees in the product — `New Session`,
  * not `SessionNewView` — which no folder name can give. The section and the depth are checked; the
  * page title is the author's, so do not "fix" it to match the file.
  */
-const screenExpected = (dirs: readonly string[], base: string): Expected => ({
+const screenExpected = (section: string, base: string): Expected => ({
   kind: 'prefix',
-  prefix: `Screens/${pascal(dirs[1] ?? '')}/`,
-  seed: `Screens/${pascal(dirs[1] ?? '')}/${pascal(base)}`,
+  prefix: `Screens/${pascal(section)}/`,
+  seed: `Screens/${pascal(section)}/${pascal(base)}`,
   why: "a screen's last segment is its visible page title, which the folder cannot give",
 });
 
 /*
- * A test title mirrors its subject's title, which #1200 derives; until then only the root is checked,
- * and the aspect segment #1197 gave each file keeps whatever reads best.
+ * Exception 2: a test title mirrors its subject's title, which #1200 derives; until then only the
+ * root is checked, and the aspect segment #1197 gave each file keeps whatever reads best.
  */
-const testExpected = (dirs: readonly string[], base: string): Expected => ({
+const testExpected = (dirs: readonly string[], path: StoryPath): Expected => ({
   kind: 'prefix',
   prefix: 'Tests/',
-  seed: `Tests/${leafOf(dirs, base).name}`,
+  seed: `Tests/${leafOf(dirs, path).name}`,
   why: "a test's title mirrors its subject's, which #1200 derives",
 });
 
 // Only a view of a route, or a file in `screens/`, draws a screen; `diff-view` is a component.
 const screenView = /-(?:list|detail|new|edit)-view$|-page$/;
 
+// A screen's section is the folder under `screens/`, or the feature a view belongs to.
+const sectionOf = (dirs: readonly string[]): string | undefined => dirs[1];
+
 interface Rule {
-  test: (dirs: readonly string[], base: string) => boolean;
-  expected: (dirs: readonly string[], base: string) => Expected;
+  test: (path: StoryPath) => boolean;
+  expected: (path: StoryPath) => Expected;
 }
 
 const testStories: Rule = {
-  test: (_dirs, base) => base.endsWith('.test'),
-  expected: (dirs, base) => testExpected(dirs, base.replace(/\.test$/, '')),
+  test: ({ base }) => base.endsWith('.test'),
+  expected: (path) =>
+    testExpected(path.dirs, {
+      ...path,
+      base: path.base.replace(/\.test$/, ''),
+    }),
 };
 
 // The kit is the design system: its primitives carry their category folder, everything else sits beside them.
 const kitRules: readonly Rule[] = [
   testStories,
   {
-    test: (dirs) => dirs[0] === 'primitives',
-    expected: (dirs, base) =>
-      exactly(
-        `Design System/Primitives/${pascal(dirs[1] ?? '')}`,
-        dirs.slice(2),
-        base,
+    test: ({ dirs }) => dirs[0] === 'primitives' && dirs.length > 1,
+    expected: (path) =>
+      titleUnder(
+        `Design System/Primitives/${pascal(path.dirs[1] ?? '')}`,
+        path.dirs.slice(2),
+        path,
       ),
   },
   {
     test: () => true,
-    expected: (dirs, base) => exactly('Design System', dirs, base),
+    expected: (path) => titleUnder('Design System', path.dirs, path),
   },
 ];
 
-const isProduct = (dirs: readonly string[]): boolean =>
+const isProduct = ({ dirs }: StoryPath): boolean =>
   dirs[0] === 'lib' && dirs[1] === 'product';
+
+const isScreenFolder = ({ dirs }: StoryPath): boolean =>
+  dirs[0] === 'screens' && sectionOf(dirs) !== undefined;
+
+const isFeatureScreen = ({ dirs, base }: StoryPath): boolean =>
+  dirs[0] === 'features' &&
+  sectionOf(dirs) !== undefined &&
+  screenView.test(base);
 
 // The first rule whose test matches the path gives the title that path expects.
 const clientRules: readonly Rule[] = [
   testStories,
+  // A route's own folder in `screens/` draws that page (#761).
   {
-    test: (dirs, base) => dirs[0] === 'screens' || screenView.test(base),
-    expected: screenExpected,
+    test: isScreenFolder,
+    expected: ({ dirs, base }) => screenExpected(sectionOf(dirs) ?? '', base),
+  },
+  // A feature may own a route's view; the feature is then the section it lands in.
+  {
+    test: isFeatureScreen,
+    expected: ({ dirs, base }) => screenExpected(sectionOf(dirs) ?? '', base),
   },
   {
     test: isProduct,
-    expected: (dirs, base) =>
-      exactly('Design System/Patterns', dirs.slice(2), base),
+    expected: (path) =>
+      titleUnder('Design System/Patterns', path.dirs.slice(2), path),
   },
   {
-    test: (dirs) => dirs[0] === 'features',
-    expected: (dirs, base) =>
-      exactly(pascal(dirs[1] ?? ''), dirs.slice(2), base),
+    test: ({ dirs }) => dirs[0] === 'features' && dirs.length > 1,
+    expected: (path) =>
+      titleUnder(pascal(path.dirs[1] ?? ''), path.dirs.slice(2), path),
   },
 ];
 
@@ -153,34 +178,33 @@ const packages: readonly [string, readonly Rule[]][] = [
 const packageOf = (file: string): [string, readonly Rule[]] | undefined =>
   packages.find(([source]): boolean => file.includes(source));
 
-// Where a story file sits: the folders inside its package, and the file's own name without its suffixes.
-interface Path {
-  dirs: string[];
-  base: string;
-}
-
-const pathIn = (source: string, file: string): Path => {
+const pathIn = (
+  source: string,
+  file: string,
+  component: string | undefined,
+): StoryPath => {
   const parts = file.slice(file.indexOf(source) + source.length).split('/');
 
   return {
     dirs: parts.slice(0, -1),
     base: (parts.at(-1) ?? '').replace(story, ''),
+    component,
   };
 };
 
 // A story outside every rule's folder would start a new top-level group, so no title belongs to it.
-const expectedIn = (rules: readonly Rule[], { dirs, base }: Path): Expected =>
-  rules
-    .find((rule): boolean => rule.test(dirs, base))
-    ?.expected(dirs, base) ?? { kind: 'none' };
+const expectedIn = (rules: readonly Rule[], path: StoryPath): Expected =>
+  rules.find((rule): boolean => rule.test(path))?.expected(path) ?? {
+    kind: 'none',
+  };
 
 // The title the file's own path derives, which the check compares and `pnpm new:story` writes.
-const expectedTitle = (file: string): Expected => {
+const expectedTitle = (file: string, component?: string): Expected => {
   const found = packageOf(file);
 
   return found === undefined
     ? { kind: 'none' }
-    : expectedIn(found[1], pathIn(found[0], file));
+    : expectedIn(found[1], pathIn(found[0], file, component));
 };
 
 /*
@@ -188,18 +212,22 @@ const expectedTitle = (file: string): Expected => {
  * the derived one is a starting point there and the exact title everywhere else.
  */
 const firstTitle = (expected: Expected): string | undefined => {
-  if (expected.kind === 'exact') return expected.titles[0];
+  if (expected.kind === 'exact') return expected.title;
 
   return expected.kind === 'prefix' ? expected.seed : undefined;
 };
 
-export const derivedStoryTitle = (file: string): string => {
-  const story = file.replace(/\.(?:native\.)?tsx?$/, '.stories.tsx');
+export const derivedStoryTitle = (componentFile: string): string => {
+  const storyFile = componentFile.replace(
+    /\.(?:native\.)?tsx?$/,
+    '.stories.tsx',
+  );
 
-  const title = firstTitle(expectedTitle(story));
+  // `pnpm new:story` writes a story for the component the file itself exports, never for its folder's.
+  const title = firstTitle(expectedTitle(storyFile));
 
   if (title === undefined)
-    throw new Error(`${file}: no story group belongs to this folder`);
+    throw new Error(`${componentFile}: no story group belongs to this folder`);
 
   return title;
 };
@@ -209,14 +237,14 @@ const quoted = (value: string): string => `'${value}'`;
 const exactProblem = (
   file: string,
   title: string,
-  titles: string[],
+  expected: string,
 ): string[] =>
-  titles.includes(title)
+  title === expected
     ? []
-    : [`${file}: expected ${quoted(titles[0] ?? '')}, found ${quoted(title)}`];
+    : [`${file}: expected ${quoted(expected)}, found ${quoted(title)}`];
 
 const matchesPrefix = (title: string, prefix: string): boolean =>
-  title.startsWith(prefix) && title.slice(prefix.length).length > 0;
+  title.startsWith(prefix) && title.length > prefix.length;
 
 const prefixProblem = (
   file: string,
@@ -230,16 +258,25 @@ const prefixProblem = (
     : [`${file}: expected ${wanted}, found ${quoted(title)} — ${why}`];
 };
 
-const titleProblem = (file: string, title: string): string[] => {
-  const expected = expectedTitle(file);
-
+const expectedProblem = (
+  file: string,
+  title: string,
+  expected: Expected,
+): string[] => {
   if (expected.kind === 'none')
     return [`${file}: no story group belongs to this folder`];
 
   return expected.kind === 'exact'
-    ? exactProblem(file, title, expected.titles)
+    ? exactProblem(file, title, expected.title)
     : prefixProblem(file, title, expected);
 };
+
+const titleProblem = (file: string, source: string, title: string): string[] =>
+  expectedProblem(
+    file,
+    title,
+    expectedTitle(file, metaComponent.exec(source)?.[1]),
+  );
 
 const isPlacedStory = (file: string): boolean =>
   story.test(file) && packageOf(file) !== undefined;
@@ -249,7 +286,7 @@ const metaTitleProblem = (file: string, source: string): string[] => {
 
   return title === undefined
     ? [`${file}: the story meta needs a literal title`]
-    : titleProblem(file, title);
+    : titleProblem(file, source, title);
 };
 
 export const storyTitleProblems = (file: string, source: string): string[] =>

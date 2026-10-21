@@ -10,13 +10,9 @@ import {
   traverseFast,
 } from '@babel/types';
 import { type Prop, parseSource } from './new-story-props.mts';
-import { derivedStoryTitle, pascal } from './story-title-rules.mts';
+import { pascal } from './story-title-rules.mts';
 
 // What `pnpm new:story` reads from a component's folder and writes as its story file (ADR-0040).
-
-// The title the component's own path derives, which `tools/story-title-rules.mts` then checks.
-export const derivedTitle = (componentFile: string): string =>
-  derivedStoryTitle(componentFile);
 
 // A prop name to the values the component's variants maps branch on, in source order.
 export type Branches = Map<string, string[]>;

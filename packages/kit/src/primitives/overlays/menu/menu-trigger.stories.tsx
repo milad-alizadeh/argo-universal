@@ -5,7 +5,7 @@ import { Spinner } from '#primitives/status/spinner';
 import { MenuTrigger } from './menu-trigger';
 
 const meta = {
-  title: 'Design System/Primitives/Overlays/Menu/Trigger',
+  title: 'Design System/Primitives/Overlays/MenuTrigger',
   component: MenuTrigger,
   args: { label: 'Item' },
   // No Contracts schema: the props MenuTriggerProps declares.

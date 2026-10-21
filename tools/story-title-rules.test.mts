@@ -13,16 +13,15 @@ const kit = 'packages/kit/src';
 const meta = (title: string): string =>
   `const meta = {\n  title: '${title}',\n} satisfies Meta;`;
 
+// A file draws an aspect of its folder only when its meta draws the folder's own component.
+const drawing = (title: string, component: string): string =>
+  `const meta = {\n  title: '${title}',\n  component: ${component},\n} satisfies Meta;`;
+
 describe('a story title', (): void => {
   it.each([
     [
       `${kit}/primitives/lists/grouped-list-item/grouped-list-item.stories.tsx`,
       'Design System/Primitives/Lists/GroupedListItem',
-    ],
-    // A file named after its folder plus an aspect draws that aspect of the component.
-    [
-      `${kit}/primitives/lists/list/list-tiles.stories.tsx`,
-      'Design System/Primitives/Lists/List/Tiles',
     ],
     // A file in a category folder with no folder of its own takes the category and its own name.
     [
@@ -57,7 +56,7 @@ describe('a story title', (): void => {
       `${src}/features/settings/components/placeholder-detail-view/placeholder-detail-view.stories.tsx`,
       'Screens/Settings/Placeholder',
     ],
-    // Exception 2: an aspect segment may be sentence case.
+    // Exception 2: a test's subject is #1200's to derive, so only its root is checked here.
     [
       `${kit}/primitives/overlays/sheet/sheet-root-page.test.stories.tsx`,
       'Tests/Sheet/Root page',
@@ -75,11 +74,6 @@ describe('a story title', (): void => {
       `${kit}/primitives/lists/grouped-list-content/grouped-list-content.stories.tsx`,
       'Primitives/GroupedListContent',
       "expected 'Design System/Primitives/Lists/GroupedListContent'",
-    ],
-    [
-      `${kit}/primitives/lists/list/list-tiles.stories.tsx`,
-      'Design System/Primitives/Lists/List tiles',
-      "expected 'Design System/Primitives/Lists/List/Tiles'",
     ],
     [
       `${kit}/symbols/icon.stories.tsx`,
@@ -139,6 +133,52 @@ describe('a story title', (): void => {
     ]);
   });
 
+  it.each([
+    // The folder's own component, drawn by a `<folder>-<aspect>` file: an aspect of it.
+    [
+      `${kit}/primitives/lists/list/list-tiles.stories.tsx`,
+      'Design System/Primitives/Lists/List/Tiles',
+      'List',
+    ],
+    [
+      `${kit}/primitives/lists/list-item/list-item-settings.stories.tsx`,
+      'Design System/Primitives/Lists/ListItem/Settings',
+      'ListItem',
+    ],
+    // Its own component, in a folder whose name it happens to start with: its own node.
+    [
+      `${kit}/primitives/overlays/menu/menu-trigger.stories.tsx`,
+      'Design System/Primitives/Overlays/MenuTrigger',
+      'MenuTrigger',
+    ],
+    [
+      `${src}/features/sessions/components/archive-session/archive-session-alert.stories.tsx`,
+      'Sessions/ArchiveSessionAlert',
+      'ArchiveSessionAlert',
+    ],
+  ])(
+    'reads the component its meta draws: %s',
+    (file, title, component): void => {
+      expect(storyTitleProblems(file, drawing(title, component))).toEqual([]);
+    },
+  );
+
+  it('refuses an aspect title from a file drawing its own component', (): void => {
+    expect(
+      storyTitleProblems(
+        `${kit}/primitives/overlays/menu/menu-trigger.stories.tsx`,
+        drawing(
+          'Design System/Primitives/Overlays/Menu/Trigger',
+          'MenuTrigger',
+        ),
+      ),
+    ).toEqual([
+      expect.stringContaining(
+        "expected 'Design System/Primitives/Overlays/MenuTrigger'",
+      ),
+    ]);
+  });
+
   it('fails a story in a folder with no group', (): void => {
     expect(
       storyTitleProblems(`${src}/helpers/thing.stories.tsx`, meta('Thing')),
@@ -188,8 +228,16 @@ describe('the title `pnpm new:story` writes', (): void => {
       `${src}/screens/sessions/$id/session-new-view.tsx`,
       'Screens/Sessions/SessionNewView',
     ],
-  ])('derives %s', (file, title): void => {
+    // A new component in a folder it shares takes its own node, not its neighbour's.
+    [
+      `${kit}/primitives/overlays/menu/menu-trigger.tsx`,
+      'Design System/Primitives/Overlays/MenuTrigger',
+    ],
+  ])('derives %s, which the check then accepts', (file, title): void => {
     expect(derivedStoryTitle(file)).toBe(title);
+    expect(
+      storyTitleProblems(file.replace(/\.tsx$/, '.stories.tsx'), meta(title)),
+    ).toEqual([]);
   });
 
   it('refuses a folder no story group belongs to', (): void => {
