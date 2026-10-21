@@ -14,3 +14,5 @@ export {
   useHostedInspector,
   type InspectorHost,
 } from './inspector-host';
+
+export { InspectorControlsContext } from './inspector-controls-context';

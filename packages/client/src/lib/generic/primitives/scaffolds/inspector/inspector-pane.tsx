@@ -1,10 +1,11 @@
-import type { ReactElement, ReactNode } from 'react';
+import { use, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { ActionListHeaderContext } from '#primitives/actions/action-list';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
+import { InspectorControlsContext } from './inspector-controls-context';
 import { isFittedSheet, paneSizing } from './inspector-pane-sizing';
 import type { InspectorProps } from './inspector-props';
 import { InspectorTabs } from './inspector-tabs';
@@ -172,7 +173,9 @@ export function InspectorPane(props: InspectorPaneProps): ReactElement {
   );
 }
 
-function InspectorControls(props: InspectorPaneProps): ReactElement {
+function InspectorControls(props: InspectorPaneProps): ReactElement | null {
+  if (use(InspectorControlsContext)) return null;
+
   return (
     <View className="shrink-0 flex-row items-center gap-0.5">
       <ExpandButton {...props} />

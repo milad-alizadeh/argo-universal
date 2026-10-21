@@ -1,5 +1,5 @@
 import type { Meta } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import {
   controlledPlay,
@@ -26,3 +26,28 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
     );
   }),
 };
+
+export const TrailingControlsNeverMoveWithPanes: ScaffoldStory = {
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    await page.viewport(1440, 844);
+    const group = canvas.getByTestId('window-band-trailing');
+    const controls = within(group).getAllByRole('button');
+    const positions = controls.map(position);
+    await expect(controls).toHaveLength(4);
+
+    for (const sidebarShown of [false, true]) {
+      for (const inspectorState of ['closed', 'open', 'expanded'] as const) {
+        await controlled.render({ sidebarShown, inspectorState });
+        await expect(
+          within(group).getAllByRole('button').map(position),
+        ).toEqual(positions);
+      }
+    }
+  }),
+};
+
+function position(element: HTMLElement): { x: number; y: number } {
+  const { x, y } = element.getBoundingClientRect();
+
+  return { x, y };
+}

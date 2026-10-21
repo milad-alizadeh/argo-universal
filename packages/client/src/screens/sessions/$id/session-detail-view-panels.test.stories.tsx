@@ -60,11 +60,9 @@ export const ExpandSelectedPanel: Story = {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Expand Inspector' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Expand Stage' }));
     await expect(
-      await canvas.findByRole('button', { name: 'Restore Inspector' }),
+      await canvas.findByRole('button', { name: 'Restore Stage' }),
     ).toBeVisible();
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
@@ -92,7 +90,7 @@ export const CloseTabs: Story = {
     );
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
     await expect(
-      canvas.queryByRole('button', { name: 'Close Inspector' }),
+      canvas.queryByRole('button', { name: 'Hide Stage' }),
     ).not.toBeInTheDocument();
   },
 };
@@ -103,9 +101,7 @@ export const CloseInspector: Story = {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Close Inspector' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Hide Stage' }));
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', subagentsName));
     await expect(canvas.getAllByRole('tab')).toHaveLength(1);

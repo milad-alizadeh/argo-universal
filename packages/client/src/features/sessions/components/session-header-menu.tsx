@@ -7,8 +7,8 @@ import { type SessionMenu, sessionMenuItems } from './session-menu-items';
 export const headerActionAppearance = {
   variant: 'ghost',
   size: 'xs',
-  corners: 'tight',
-  iconRole: 'control',
+  corners: 'control',
+  iconRole: 'band',
   iconClassName: 'text-foreground',
 } as const;
 

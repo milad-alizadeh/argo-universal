@@ -2,14 +2,9 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { IconButton } from '#primitives/actions/icon-button';
 import { useSymbolImageRenderer } from '../../../lib/generic/symbols/symbol-images';
+import { bandControlAppearance } from './band-control-appearance';
+import { BandTrailing } from './scaffold-band-controls';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
-
-export const bandControlAppearance = {
-  variant: 'ghost',
-  size: '2xs',
-  iconRole: 'band',
-  corners: 'control',
-} as const;
 
 const leadingWidths = { mac: 124, other: 44 };
 
@@ -55,6 +50,8 @@ export function ScaffoldBand(parts: ScaffoldPartProps): ReactElement {
       style={{ height: parts.layout.frame.panesTop }}
     >
       <BandLeading {...parts} />
+      <View className="min-w-0 flex-1" />
+      <BandTrailing {...parts} />
     </View>
   );
 }
