@@ -4,8 +4,8 @@
  */
 export const gitSymbols = {
   pencil: { tabler: 'pencil' },
-  workbench: { tabler: 'layout-sidebar-right' },
-  stage: { tabler: 'clipboard-list' },
+  workbench: { tabler: 'clipboard-list' },
+  stage: { tabler: 'layout-sidebar-right' },
   commit: { tabler: 'git-commit' },
   'git-issue-open': { tabler: 'circle-dot' },
   'git-issue-closed': { tabler: 'circle-check' },
