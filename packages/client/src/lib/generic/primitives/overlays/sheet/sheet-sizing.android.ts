@@ -12,30 +12,40 @@ import type { SheetProps } from './sheet-props';
  */
 const pagedHeight = 0.7;
 
+export interface SheetSizing {
+  // Whether the pages stretch to the sheet rather than each taking the height of what it holds.
+  fill: boolean;
+  /*
+   * The height React Native gives the content, which Compose then wraps. A fraction of the window asked of
+   * Compose did not hold the sheet to it, because Compose opens a sheet with no half stop at its full
+   * height and the host view measured to that; a height measured here is one Compose has to wrap.
+   */
+  height?: number;
+}
+
 /*
- * How much of the window the sheet's content takes, or nothing at all when it is as tall as what it holds.
  * A sheet that wrapped its pages was as tall as whichever page it held, so it changed height under the
- * reader; a sheet of pages takes the one height instead. A sheet that names its own heights rests where
- * Material puts it, as it did (owner, 2026-10-20).
- *
- * A sheet that names no heights and holds no pages, such as a one-page confirm, stays as tall as what it holds.
+ * reader; a sheet of pages is given the one height instead. A sheet that names its own heights rests where
+ * Material puts it, as it did, and a sheet that names none and holds no pages is as tall as what it holds
+ * (owner, 2026-10-20).
  */
-export function sheetFill(
-  props: Pick<SheetProps, 'detents'> & { paged: boolean },
-): number | undefined {
-  if (props.detents) return 1;
+export function sheetSizing(
+  props: Pick<SheetProps, 'detents'> & { paged: boolean; window: number },
+): SheetSizing {
+  if (props.detents) return { fill: true };
 
-  return props.paged ? pagedHeight : undefined;
+  if (props.paged) return { fill: true, height: props.window * pagedHeight };
+
+  return { fill: false };
 }
 
-export function fillsHeight(
-  props: Pick<SheetProps, 'detents'> & { paged: boolean },
-): boolean {
-  return sheetFill(props) !== undefined;
+// Compose fills the window only where the height is its to decide; a height measured here it wraps.
+export function sheetModifiers(sizing: SheetSizing): ModifierConfig[] {
+  if (sizing.fill && sizing.height === undefined)
+    return [fillMaxWidth(), fillMaxHeight()];
+
+  return [fillMaxWidth()];
 }
 
-export function sheetModifiers(fill: number | undefined): ModifierConfig[] {
-  if (fill === undefined) return [fillMaxWidth()];
-
-  return [fillMaxWidth(), fillMaxHeight(fill)];
-}
+export const wrapsContents = (sizing: SheetSizing): boolean =>
+  !sizing.fill || sizing.height !== undefined;
