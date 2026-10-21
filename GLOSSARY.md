@@ -293,11 +293,11 @@ A kit component that arranges a screen's panes for its Size class, such as list 
 _Avoid_: Layout (for a whole screen), template
 
 **Workbench**:
-The column beside a Session's Feed that holds its section cards: Changes, Agents, Shells, and the cards Plugins add through a Slot. Its Agents card lists the Agents the Session started, not the Installed Agents. Phones reach the same cards without the column. See ADR-0039.
+The column beside a Session's Feed that gives an overview of what is happening in it, one summary card per section: Changes, Agents, Shells, and the cards Plugins add through a Slot. A card carries a count or a total and no list; pressing it opens that section's full view as a Stage tab. Its Agents card counts the Agents the Session started, not the Installed Agents. Phones reach the same cards without the column. See ADR-0039.
 _Avoid_: Inspector, right panel, second sidebar
 
 **Stage**:
-The surface that shows one Workbench row in full, such as a Change's diff, the Feed of an Agent the Session started, or a Shell's output. A row opens it and the Workbench stays.
+The surface that shows a Workbench card's section in full, as a Stage tab. A tab lists the section's items — the Session's Changes, the Agents it started, its Shells — and a row opens that item's detail in the same tab, such as a Change's diff, an Agent's Feed or a Shell's output. A card opens the tab and the Workbench stays.
 _Avoid_: Inspector, detail pane, viewer
 
 **Surface**:
