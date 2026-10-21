@@ -1,0 +1,81 @@
+import type { ComposerMockProps } from '../../../../../mocks/composer-mock';
+import {
+  imageAttachment,
+  oversizedAttachment,
+} from '../composer-attachment-card/composer-attachment-card-fixtures';
+
+/*
+ * A story supplies the draft, attachment, send and stop callbacks; a fixture is the draft itself
+ * and the Session the Composer sits in.
+ */
+type ComposerFixture = Omit<
+  ComposerMockProps,
+  | 'onDraftChange'
+  | 'onAttachImages'
+  | 'onAttachCamera'
+  | 'onAttachFiles'
+  | 'onSelectSlashCommand'
+  | 'onCreateGoal'
+  | 'onSend'
+  | 'onStop'
+>;
+
+const prompt = 'Match the spacing and colours.';
+
+const emptyDraft = { text: '', attachments: [] };
+
+// Nothing written yet: Send is blocked.
+export const emptyComposer = { draft: emptyDraft } satisfies ComposerFixture;
+
+// A prompt with something in it: Send is ready.
+export const readyComposer = {
+  draft: { text: prompt, attachments: [] },
+} satisfies ComposerFixture;
+
+// The prompt is on its way: Send shows that it is sending.
+export const sendingComposer = {
+  draft: { text: prompt, attachments: [] },
+  sending: true,
+} satisfies ComposerFixture;
+
+// The Composer is inactive: the field, the toolbar and the trays all go quiet.
+export const disabledComposer = {
+  draft: { text: prompt, attachments: [] },
+  disabled: true,
+} satisfies ComposerFixture;
+
+// An image in the draft: the card grows a row of attachment tiles above the field.
+export const attachedImageComposer = {
+  draft: {
+    text: 'Match these screenshots.',
+    attachments: [imageAttachment.attachment],
+  },
+} satisfies ComposerFixture;
+
+// Past the upload limit: the tile takes the danger border and Send stays blocked.
+export const oversizedAttachmentComposer = {
+  draft: {
+    text: 'Match these screenshots.',
+    attachments: [oversizedAttachment.attachment],
+  },
+} satisfies ComposerFixture;
+
+// The Turn is running: Send becomes Stop.
+export const runningTurnComposer = {
+  draft: emptyDraft,
+  sessionStarted: true,
+  running: true,
+} satisfies ComposerFixture;
+
+// Inside a Session: the Plan tray sits above the card and the status tray below it.
+export const startedSessionComposer = {
+  draft: emptyDraft,
+  sessionStarted: true,
+} satisfies ComposerFixture;
+
+// A Session with no Plan: the tray above the card goes.
+export const planlessSessionComposer = {
+  draft: emptyDraft,
+  sessionStarted: true,
+  plan: [],
+} satisfies ComposerFixture;

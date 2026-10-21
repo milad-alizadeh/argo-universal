@@ -11,7 +11,17 @@ import {
 } from '../../../../../mocks/composer-mock';
 import { attachmentSelectionFailureMessage } from '../../utils/attachment-draft';
 import { Composer } from './composer';
-import { ComposerOverview } from './composer-overview';
+import {
+  attachedImageComposer,
+  disabledComposer,
+  emptyComposer,
+  oversizedAttachmentComposer,
+  planlessSessionComposer,
+  readyComposer,
+  runningTurnComposer,
+  sendingComposer,
+  startedSessionComposer,
+} from './composer-fixtures';
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;
 
@@ -30,15 +40,20 @@ const meta = {
     screenPreview: Platform.OS !== 'web',
   },
   args: {
+    ...emptyComposer,
     initialAgent: firstAgent.id,
-    draft: { text: '', attachments: [] },
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
     onAttachFiles: action('attach files'),
     onSelectSlashCommand: action('slash commands'),
     onCreateGoal: action('create goal'),
     onSend: action('send prompt'),
+    onStop: action('stop Turn'),
   },
+  /*
+   * ComposerProps is declared in composer-types.ts, which react-docgen cannot follow
+   * (docs/agents/storybook.md, "Docgen"), so the descriptions live here with the prop domain.
+   */
   argTypes: {
     initialAgent: {
       name: 'Agent',
@@ -53,6 +68,44 @@ const meta = {
         ),
       },
     },
+    draft: {
+      control: false,
+      description: 'The prompt being written, and what is attached to it.',
+    },
+    status: {
+      control: false,
+      description: "The Session's Plan, Subagents, Shells, context and usage.",
+    },
+    configuration: {
+      control: false,
+      description: "The Session's Agent, its options and its checkout.",
+    },
+    writtenPlan: {
+      control: false,
+      description: "A written Plan, in the Composer's tray above the card.",
+    },
+    permissionRequest: { control: false },
+    callout: { control: false },
+    placeholder: { control: 'text' },
+    sending: {
+      control: 'boolean',
+      description: 'The prompt is on its way.',
+    },
+    disabled: { control: 'boolean' },
+    sendable: {
+      control: 'boolean',
+      description: 'The Connection can take a prompt.',
+    },
+    error: { control: 'text', description: 'Raised as an error toast.' },
+    errorKey: { control: 'text' },
+    onDraftChange: { control: false },
+    onAttachImages: { control: false },
+    onAttachCamera: { control: false },
+    onAttachFiles: { control: false },
+    onSelectSlashCommand: { control: false },
+    onCreateGoal: { control: false },
+    onSend: { control: false },
+    onStop: { control: false },
   },
 } satisfies Meta<ComposerMockProps>;
 
@@ -60,6 +113,36 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Nothing written yet: Send is blocked.
+export const Empty: Story = { args: emptyComposer };
+
+// A prompt with something in it: Send is ready.
+export const Ready: Story = { args: readyComposer };
+
+// The prompt is on its way.
+export const Sending: Story = { args: sendingComposer };
+
+// Inactive: the field, the toolbar and the trays all go quiet.
+export const Disabled: Story = { args: disabledComposer };
+
+// The Turn is running, so Send becomes Stop.
+export const TurnRunning: Story = { args: runningTurnComposer };
+
+// An attachment grows a row of tiles above the field.
+export const Attachments: Story = { args: attachedImageComposer };
+
+// An attachment past the upload limit keeps Send blocked and raises its toast.
+export const OversizedAttachment: Story = {
+  args: oversizedAttachmentComposer,
+};
+
+// Inside a Session: the Plan tray sits above the card and the status tray below it.
+export const InSession: Story = { args: startedSessionComposer };
+
+// A Session with no Plan: the tray above the card goes.
+export const NoPlan: Story = { args: planlessSessionComposer };
+
+// Choosing an image failed: the Composer raises the failure as a toast.
 export const ImageSelectionFailed: Story = {
   parameters: { screenPreview: true },
   args: {
@@ -73,8 +156,4 @@ export const ImageSelectionFailed: Story = {
       composer={<Composer {...composerProps(args)} />}
     />
   ),
-};
-
-export const Overview: Story = {
-  render: (args) => <ComposerOverview {...args} />,
 };

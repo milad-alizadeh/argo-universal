@@ -2,9 +2,7 @@ import type { AgentAuthTerminalFrame } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn } from 'storybook/test';
 import { TerminalSignIn } from './terminal-sign-in';
-
-const loginPrompt =
-  'Open this link to sign in to Codex:\r\nhttps://auth.openai.com/device\r\n';
+import { loginPrompt, terminalSignIn } from './terminal-sign-in-fixtures';
 
 // The login command's output once, then nothing new.
 const readLogin = async (cursor: number): Promise<AgentAuthTerminalFrame> => ({
@@ -16,8 +14,18 @@ const readLogin = async (cursor: number): Promise<AgentAuthTerminalFrame> => ({
 const meta = {
   title: 'Sessions/TerminalSignIn',
   component: TerminalSignIn,
+  // TerminalSignInProps is declared in types/session-callout.ts, which react-docgen cannot follow.
+  argTypes: {
+    title: { control: 'text', description: "The sign-in method's name." },
+    terminal: {
+      control: false,
+      description:
+        "The login command's output, and what this Device types back.",
+    },
+    onClose: { control: false },
+  },
   args: {
-    title: 'Terminal sign-in',
+    ...terminalSignIn,
     terminal: { onRead: fn(readLogin), onInput: fn(), onFailure: fn() },
     onClose: fn(),
   },
@@ -25,4 +33,7 @@ const meta = {
 
 export default meta;
 
-export const Overview: StoryObj<typeof meta> = {};
+type Story = StoryObj<typeof meta>;
+
+// The Agent's login command running on the Server: a panel under the Composer on a wide window, a sheet on a phone.
+export const SigningIn: Story = { args: terminalSignIn };

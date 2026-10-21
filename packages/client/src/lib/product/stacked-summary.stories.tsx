@@ -1,64 +1,37 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { StackedSummary, type StackedSummaryIcon } from './stacked-summary';
-
-const agentIcons: StackedSummaryIcon[] = [
-  { icon: 'plan-mode', tone: 'done' },
-  { icon: 'flask', tone: 'success' },
-];
-
-const changeIcons: StackedSummaryIcon[] = [
-  { icon: 'pr-merged', tone: 'done' },
-  { icon: 'pr-merged', tone: 'done' },
-  { icon: 'pr-closed', tone: 'danger' },
-  { icon: 'pr-open', tone: 'success' },
-  { icon: 'branch', tone: 'neutral' },
-];
-
-const shellIcons: StackedSummaryIcon[] = [1, 2, 3].map(() => ({
-  icon: 'terminal',
-  tone: 'neutral',
-}));
+import { StackedSummary } from './stacked-summary';
+import {
+  distinctMarks,
+  repeatedMarks,
+  singleMark,
+} from './stacked-summary-fixtures';
 
 const meta = {
   title: 'Design System/Patterns/StackedSummary',
   component: StackedSummary,
+  // A Workbench card's width, which the summary's text truncates against.
   decorators: [
     (Story): ReactElement => (
-      <View className="w-full">
+      <View className="w-frame-list">
         <Story />
       </View>
     ),
   ],
-  args: { icons: agentIcons, texts: ['2 done'] },
+  argTypes: { icons: { control: false }, texts: { control: false } },
+  args: distinctMarks,
 } satisfies Meta<typeof StackedSummary>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const examples = [
-  { name: 'Agents', icons: agentIcons, texts: ['2 done'] },
-  {
-    name: 'Changes',
-    icons: changeIcons,
-    texts: ['2 merged', '1 closed', '1 open', '1 branch'],
-  },
-  { name: 'Shells', icons: shellIcons, texts: ['3 shells'] },
-];
+// Each mark after the first overlaps the one before it.
+export const DistinctMarks: Story = { args: distinctMarks };
 
-export const Overview: Story = {
-  render: (): ReactElement => (
-    <Variations>
-      {examples.map(({ name, ...props }) => (
-        <Variation key={name} label={name}>
-          <View className="w-frame-list">
-            <StackedSummary {...props} />
-          </View>
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
+// A mark already in the stack is drawn once, so five Changes leave four marks.
+export const RepeatedMarks: Story = { args: repeatedMarks };
+
+// Every mark is the same, which leaves one with nothing to overlap.
+export const SingleMark: Story = { args: singleMark };

@@ -13,13 +13,19 @@ import { composerPlan } from './composer-attachments';
 
 export {
   composerImages,
+  composerImage,
   oversizedComposerImage,
   composerFiles,
+  composerTextFile,
+  composerOtherFile,
   composerPlan,
   composerPlanDone,
 } from './composer-attachments';
 
-export { composerUnlistedEffortConfigurations } from './composer-agent-catalogs';
+export {
+  composerUnlistedEffortConfigurations,
+  composerUnlistedEffortConfiguration,
+} from './composer-agent-catalogs';
 
 export {
   composerLongModelList,

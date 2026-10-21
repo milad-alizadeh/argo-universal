@@ -41,13 +41,20 @@ export const liveHeaderElapsed = '2m 14s';
 
 export const liveHeaderNow = startedAt + 134_000;
 
-export const workingHeader =
-  liveHeaderSteps.find((step) => step.liveHeader.source.type === 'working')
-    ?.liveHeader ?? missingStep('working');
+// The first recorded step of a kind: its live header, and the Tool call a `tool_call` step names.
+export const liveHeaderStepOf = (
+  type: LiveHeader['source']['type'],
+): (typeof liveHeaderSteps)[number] =>
+  liveHeaderSteps.find((step) => step.liveHeader.source.type === type) ??
+  missingStep(type);
 
-export const requestHeader =
-  liveHeaderSteps.find((step) => step.liveHeader.source.type === 'request')
-    ?.liveHeader ?? missingStep('request');
+export const workingHeader = liveHeaderStepOf('working').liveHeader;
+
+export const requestHeader = liveHeaderStepOf('request').liveHeader;
+
+export const retryHeader = liveHeaderStepOf('retry').liveHeader;
+
+export const toolCallStep = liveHeaderStepOf('tool_call');
 
 // Paper's titled thought: the Feed never receives reasoning text to draw here.
 export const thoughtHeader: LiveHeader = {

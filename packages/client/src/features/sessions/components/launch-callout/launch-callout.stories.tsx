@@ -1,57 +1,34 @@
-import { SizeClass } from '@repo/kit/size-class/size-class';
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { CalloutLoading, LaunchCallout } from './launch-callout';
-
-const exited = `Agent exited with status 1
-npm error code E404
-npm error 404 Not Found - GET https://registry.npmjs.org/@zed-industries%2fcodex-acp
-npm error 404 '@zed-industries/codex-acp@0.3.9' is not in this registry.`;
-
-const examples = { failed: 'Failed to Launch', retrying: 'Retrying' } as const;
-
-type GalleryArgs = { example: keyof typeof examples };
+import { fn } from 'storybook/test';
+import { LaunchCallout } from './launch-callout';
+import {
+  failedLaunch,
+  failedLaunchWithoutOutput,
+} from './launch-callout-fixtures';
 
 const meta = {
   title: 'Sessions/LaunchCallout',
-  component: LaunchCalloutGallery,
-  args: { example: 'failed' },
+  component: LaunchCallout,
+  // LaunchCalloutProps is declared in types/session-callout.ts, which react-docgen cannot follow.
   argTypes: {
-    example: { options: Object.keys(examples), control: 'select' },
+    message: {
+      control: 'text',
+      description:
+        'How the Agent stopped, then the last stderr block; or the error text alone.',
+    },
+    onRetry: { control: false },
   },
-} satisfies Meta<typeof LaunchCalloutGallery>;
+  args: { ...failedLaunch, onRetry: fn() },
+} satisfies Meta<typeof LaunchCallout>;
 
 export default meta;
 
-const failed = <LaunchCallout message={exited} onRetry={() => {}} />;
+type Story = StoryObj<typeof meta>;
 
-// A phone presents each state as a sheet, so it shows the one the example control picks.
-function LaunchCalloutGallery(args: GalleryArgs): React.JSX.Element {
-  return (
-    <SizeClass
-      compact={args.example === 'failed' ? failed : <CalloutLoading />}
-      wide={gallery}
-    />
-  );
-}
+// Zed's Failed to Launch callout: the first line describes it, the stderr block below it.
+export const FailedToLaunch: Story = { args: failedLaunch };
 
-const gallery = (
-  <Variations>
-    <Variation label="Installing with download progress">
-      <CalloutLoading title="Installing…" progress={0.48} />
-    </Variation>
-    <Variation label="Installing without a known total">
-      <CalloutLoading title="Installing…" progress={null} />
-    </Variation>
-    <Variation label="Loading configuration">
-      <CalloutLoading title="Loading configuration…" />
-    </Variation>
-    <Variation label={examples.failed}>{failed}</Variation>
-    <Variation label={examples.retrying}>
-      <CalloutLoading />
-    </Variation>
-  </Variations>
-);
-
-export const Overview: StoryObj<typeof meta> = {};
+// The error text alone, with no stderr block to show.
+export const FailedWithoutOutput: Story = {
+  args: failedLaunchWithoutOutput,
+};

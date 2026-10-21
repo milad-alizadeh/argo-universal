@@ -934,7 +934,7 @@
     {
       // Product code shared by features imports the kit, never a feature (A2, ADR-0016 item 9).
       "files": ["packages/client/src/lib/product/**"],
-      "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/*-fixtures.*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -1066,6 +1066,7 @@
       "excludeFiles": [
         "**/*.test.*",
         "**/*.stories.*",
+        "**/*-fixtures.*",
         "**/*.mocks.*",
         "**/mocks/**",
         "packages/contracts/tools/**"
@@ -1078,6 +1079,7 @@
       "excludeFiles": [
         "**/*.test.*",
         "**/*.stories.*",
+        "**/*-fixtures.*",
         "**/*.mocks.*",
         "**/mocks/**"
       ],

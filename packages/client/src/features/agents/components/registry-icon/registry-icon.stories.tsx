@@ -1,14 +1,28 @@
+import { iconRoles } from '@repo/contracts/kit-symbols';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { iconAgent } from '../registry-icons.mocks';
 import { RegistryIcon } from './registry-icon';
+import {
+  loadedRegistryIcon,
+  unavailableRegistryIcon,
+} from './registry-icon-fixtures';
 
 const meta = {
   title: 'Agents/RegistryIcon',
   component: RegistryIcon,
-  args: { agentName: iconAgent.entry.name, uri: undefined, role: 'control' },
-  argTypes: { uri: { control: 'text' } },
+  args: unavailableRegistryIcon,
+  argTypes: {
+    uri: { control: 'text' },
+    agentName: { control: 'text' },
+    role: { control: 'select', options: Object.keys(iconRoles) },
+  },
 } satisfies Meta<typeof RegistryIcon>;
 
 export default meta;
 
-export const Unavailable: StoryObj<typeof meta> = {};
+type Story = StoryObj<typeof meta>;
+
+// The Registry entry carries an icon, which paints in the foreground.
+export const Loaded: Story = { args: loadedRegistryIcon };
+
+// No icon to draw, or one that fails to load: the Agent glyph stands in.
+export const Unavailable: Story = { args: unavailableRegistryIcon };

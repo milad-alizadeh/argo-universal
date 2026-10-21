@@ -1,5 +1,9 @@
 'use dom';
 
+import type {
+  AgentAuthTerminalFrame,
+  AgentAuthTerminalInput,
+} from '@repo/contracts';
 import type { DOMProps } from 'expo/dom';
 import '@xterm/xterm/css/xterm.css';
 import { createElement, type RefObject, type CSSProperties } from 'react';
@@ -8,17 +12,30 @@ import {
   type TerminalAppearance,
 } from './terminal-appearance';
 import { TerminalKeys } from './terminal-keys';
-import type { LoginTerminalProps } from './terminal-props';
 import { useDOMKeyboard } from './use-terminal-keyboard';
 import { useTerminalRenderer } from './use-terminal-renderer';
 
-type Props = LoginTerminalProps & {
+/*
+ * Spelled out rather than intersected with LoginTerminalProps: react-docgen is Babel-based, so the props table
+ * reads only a type written in the component's own file.
+ */
+export interface TerminalRendererProps {
+  // The colour tokens the host reads for the terminal, its keys and its viewport.
   appearance?: TerminalAppearance;
+  // False while the Agent's sign-in is not running: the key accessory stays away.
+  enabled: boolean;
+  // The viewport's height; an open phone keyboard overrides it.
   height: number;
   keyboardOpen: boolean;
+  // The phone layout, which adds the key accessory above the keyboard.
   compact: boolean;
   dom?: DOMProps;
-};
+  onRead: (cursor: number) => Promise<AgentAuthTerminalFrame>;
+  onInput: (input: AgentAuthTerminalInput) => Promise<void>;
+  onFailure: (message: string) => Promise<void>;
+}
+
+type Props = TerminalRendererProps;
 
 const containerStyle: CSSProperties = {
   display: 'flex',

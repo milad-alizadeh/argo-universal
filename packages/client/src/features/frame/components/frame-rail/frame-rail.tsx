@@ -12,7 +12,7 @@ import { sectionAttentionCount } from '../../utils/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
 import { railTiles, useRailTileStyle } from './rail-tile-style';
 
-interface DesktopRailProps {
+export interface FrameRailProps {
   items: readonly NavigationSection[];
   // A Plugin page has no list, so no sidebar to toggle.
   hasSidebar: boolean;
@@ -24,7 +24,7 @@ interface DesktopRailProps {
 }
 
 type SectionButtonProps = Pick<
-  DesktopRailProps,
+  FrameRailProps,
   'attentionCount' | 'onSectionChange'
 > & {
   section: NavigationSection;
@@ -94,7 +94,7 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
 });
 
 // The sections scroll once Plugins add more than the window holds.
-function RailSections(props: DesktopRailProps): React.JSX.Element {
+function RailSections(props: FrameRailProps): React.JSX.Element {
   const tiles = props.items.map((section) => (
     <SectionButton key={section.id} {...railSectionProps(section, props)} />
   ));
@@ -114,7 +114,7 @@ function RailSections(props: DesktopRailProps): React.JSX.Element {
 
 function railSectionProps(
   section: NavigationSection,
-  props: DesktopRailProps,
+  props: FrameRailProps,
 ): SectionButtonProps {
   return {
     section,
@@ -137,7 +137,7 @@ function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
 }
 
 // The desktop tiles keep the same 8px inset at the top and sides of the glass panel.
-export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
+export const FrameRail = memo(function FrameRail(props: FrameRailProps) {
   return (
     <View
       testID="desktop-rail"

@@ -52,12 +52,13 @@ const noticeProps = (row: Notice): NoticeMessageProps => ({
     : `Unknown severity: ${row.severity}`,
 });
 
-// A Notice or a Compaction: one status row, never opened.
-export function FeedNotice({
-  row,
-}: {
+export interface FeedNoticeProps {
+  // The recorded row: a Notice's own severity and words, or a Compaction's status.
   row: Notice | CompactionUpdate;
-}): React.JSX.Element {
+}
+
+// A Notice or a Compaction: one status row, never opened.
+export function FeedNotice({ row }: FeedNoticeProps): React.JSX.Element {
   const props =
     row.sessionUpdate === 'compaction_update'
       ? compactionNotice(row)

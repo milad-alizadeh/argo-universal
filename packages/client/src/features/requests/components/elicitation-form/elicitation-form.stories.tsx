@@ -1,158 +1,74 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import type { ComponentProps } from 'react';
-import { View } from 'react-native';
+import { action } from 'storybook/actions';
+import { RequestFrame } from '../../../../lib/product/request-frame';
+import { ElicitationForm } from './elicitation-form';
 import {
-  nextWorkRequest,
-  nextWorkValues,
-} from '../../../../../mocks/elicitation-questions';
-import {
-  configurationRequest,
-  configurationValues,
-  elicitationProps,
-  elicitationMock,
-  elicitationMocks,
-  elicitationRequest,
-  functionNameRequest,
-  refactorRequest,
-} from '../request.mocks';
-import {
-  ElicitationForm,
-  type ElicitationAnswer,
-  type ElicitationFormProps,
-} from './elicitation-form';
-import { ElicitationOutcome } from './elicitation-outcome';
+  answeredElicitation,
+  formFieldsElicitation,
+  multipleChoiceElicitation,
+  severalQuestionsElicitation,
+  singleChoiceElicitation,
+  submittingElicitation,
+  textFieldElicitation,
+} from './elicitation-form-fixtures';
 
-type GalleryArgs = ComponentProps<typeof ElicitationForm> & {
-  agent: (typeof elicitationMock)['agent'];
-  requestState: NonNullable<
-    ComponentProps<typeof ElicitationForm>['state']
-  >['kind'];
-};
-
+// The request as a card, in a Feed's request frame.
 const meta = {
   title: 'Requests/ElicitationForm',
   component: ElicitationForm,
   parameters: { previewPadding: false },
-  args: {
-    ...elicitationProps({}),
-    agent: elicitationMock.agent,
-    requestState: 'open',
-  },
+  decorators: [
+    (Story): React.JSX.Element => (
+      <RequestFrame>
+        <Story />
+      </RequestFrame>
+    ),
+  ],
+  /*
+   * ElicitationFormProps is declared in elicitation-form-props.ts, which react-docgen cannot
+   * follow (docs/agents/storybook.md, "Docgen"), so the descriptions live here.
+   */
   argTypes: {
-    agent: { options: ['agent-1', 'agent-2'], control: 'select' },
-    requestState: {
-      options: ['open', 'submitting', 'answered'],
-      control: 'select',
+    request: {
+      control: false,
+      description: 'The pending Elicitation and the schema it asks for.',
     },
-    state: { control: false },
+    initialValues: {
+      control: false,
+      description: 'The answers the form opens with.',
+    },
+    state: {
+      control: false,
+      description: 'Open, submitting, or answered with the reason.',
+    },
+    source: {
+      control: 'text',
+      description: 'Which Tool asked, when the Agent says.',
+    },
     error: { control: 'text' },
+    onAnswer: { control: false },
   },
-} satisfies Meta<GalleryArgs>;
+  args: { ...singleChoiceElicitation, onAnswer: action('answer') },
+} satisfies Meta<typeof ElicitationForm>;
 
 export default meta;
 
-export const Overview = {
-  render: (args): React.JSX.Element => <ElicitationGallery {...args} />,
-} satisfies StoryObj<GalleryArgs>;
+type Story = StoryObj<typeof meta>;
 
-const answeredState = {
-  kind: 'answered',
-  reason: 'Already answered on another device',
-} as const;
+// Choices with nothing else to check page one question at a time.
+export const SingleChoice: Story = { args: singleChoiceElicitation };
 
-const examples: { label: string; props: ElicitationFormProps }[] = [
-  {
-    label: 'Single choice',
-    props: elicitationProps({ request: refactorRequest }),
-  },
-  {
-    label: 'Multiple choice',
-    props: elicitationProps({
-      request: nextWorkRequest,
-      values: nextWorkValues,
-    }),
-  },
-  {
-    label: 'Text field',
-    props: elicitationProps({ request: functionNameRequest }),
-  },
-  {
-    label: 'Form fields and validation',
-    props: elicitationProps({
-      request: configurationRequest,
-      values: configurationValues,
-    }),
-  },
-];
+export const MultipleChoice: Story = { args: multipleChoiceElicitation };
 
-const outcomes: { label: string; answer: ElicitationAnswer }[] = [
-  {
-    label: 'Submitted form',
-    answer:
-      elicitationMock.answer.procedure === 'answerElicitation'
-        ? elicitationMock.answer.input
-        : { action: 'cancel' },
-  },
-  { label: 'Dismissed form', answer: { action: 'cancel' } },
-  { label: 'Declined form', answer: { action: 'decline' } },
-];
+// Several questions: each takes its own page, headed by its title and the pager.
+export const SeveralQuestions: Story = { args: severalQuestionsElicitation };
 
-function ElicitationGallery(args: GalleryArgs): React.JSX.Element {
-  return (
-    <View className="w-full items-center py-4">
-      <Variations className="max-w-column!">
-        <FormVariations {...args} />
-        <OutcomeVariations />
-        <Variation label="Already answered">
-          <ElicitationForm {...elicitationProps({ state: answeredState })} />
-        </Variation>
-      </Variations>
-    </View>
-  );
-}
+// Any other form is one page of fields, headed by its message.
+export const TextField: Story = { args: textFieldElicitation };
 
-function FormVariations(args: GalleryArgs): React.JSX.Element {
-  return (
-    <>
-      <Variation label="Recorded choice">
-        <ElicitationForm {...choiceProps(args)} />
-      </Variation>
-      {examples.map(({ label, props }) => (
-        <Variation key={label} label={label}>
-          <ElicitationForm {...props} />
-        </Variation>
-      ))}
-    </>
-  );
-}
+export const FormFields: Story = { args: formFieldsElicitation };
 
-function choiceProps(args: GalleryArgs): ElicitationFormProps {
-  const selected = elicitationProps({
-    mock:
-      elicitationMocks.find((mock) => mock.agent === args.agent) ??
-      elicitationMock,
-  });
+export const Submitting: Story = { args: submittingElicitation };
 
-  return elicitationProps({
-    ...args,
-    request: selected.request,
-    state:
-      args.requestState === 'answered'
-        ? answeredState
-        : { kind: args.requestState },
-  });
-}
-
-function OutcomeVariations(): React.JSX.Element {
-  return (
-    <>
-      {outcomes.map(({ label, answer }) => (
-        <Variation key={label} label={label}>
-          <ElicitationOutcome request={elicitationRequest} answer={answer} />
-        </Variation>
-      ))}
-    </>
-  );
-}
+export const AlreadyAnswered: Story = { args: answeredElicitation };

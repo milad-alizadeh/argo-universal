@@ -10,7 +10,8 @@ import { WorkChips } from './work-chips';
 
 export type { ComposerStatusProps } from '../../utils/status';
 
-interface StatusControlsProps {
+export interface StatusControlsProps {
+  // The Session's Plan, Subagents, Shells, context and usage; each control draws only what it is given.
   status: ComposerStatusProps;
   disabled: boolean;
 }

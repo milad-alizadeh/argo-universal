@@ -1,5 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { fn } from 'storybook/test';
+import {
+  desktopTerminal,
+  phoneKeyboardTerminal,
+} from './agent-login-terminal-fixtures';
 import TerminalRenderer from './terminal-renderer';
 import { readTerminalFrame } from './terminal.mocks';
 import { useTerminalAppearance } from './use-terminal-appearance';
@@ -9,17 +14,21 @@ const meta = {
   component: TerminalRenderer,
   render: (args): React.JSX.Element => <ThemedTerminal {...args} />,
   args: {
-    enabled: true,
-    height: 320,
-    compact: false,
-    keyboardOpen: false,
-    dom: {
-      containerStyle: { flex: 0, width: '100%', height: 320 },
-      style: { height: 320 },
-    },
+    ...desktopTerminal,
     onRead: fn(readTerminalFrame),
     onInput: fn(),
     onFailure: fn(),
+  },
+  argTypes: {
+    enabled: { control: 'boolean' },
+    height: { control: 'number' },
+    keyboardOpen: { control: 'boolean' },
+    compact: { control: 'boolean' },
+    appearance: { control: false },
+    dom: { control: false },
+    onRead: { control: false },
+    onInput: { control: false },
+    onFailure: { control: false },
   },
 } satisfies Meta<typeof TerminalRenderer>;
 
@@ -34,16 +43,8 @@ function ThemedTerminal(
 
 type Story = StoryObj<typeof meta>;
 
-export const Desktop: Story = {};
+// A desktop window: the terminal takes its full height and draws no key accessory.
+export const Desktop: Story = { args: desktopTerminal };
 
-export const PhoneKeyboard: Story = {
-  args: {
-    compact: true,
-    height: 120,
-    keyboardOpen: true,
-    dom: {
-      containerStyle: { flex: 0, width: '100%', height: 182 },
-      style: { height: 182 },
-    },
-  },
-};
+// A phone with the keyboard up: the viewport shrinks and the keys sit above it.
+export const PhoneKeyboard: Story = { args: phoneKeyboardTerminal };

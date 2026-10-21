@@ -3,6 +3,8 @@ import { Callout, CalloutButton } from '@repo/kit/primitives/status/callout';
 import type * as React from 'react';
 import type { AuthRequiredCardProps } from '../../types/session-callout';
 
+export type { AuthRequiredCardProps } from '../../types/session-callout';
+
 // A Turn ended with `auth_required`. Authenticate swaps the card for the sign-in callout; the prompt is not put back.
 export function AuthRequiredCard(
   props: AuthRequiredCardProps,

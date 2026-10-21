@@ -1,46 +1,46 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { recordedFile } from '../../../../../mocks/feed-edit-mock';
-import { DiffView, type DiffViewProps } from './diff-view';
-
-const editStatesId = 'edit-states';
-
-const variations: (DiffViewProps & { label: string })[] = [
-  { label: 'Small edit', file: recordedFile('agent-1') },
-  {
-    label: 'New file',
-    file: recordedFile('agent-1', 'edit-and-command', 'add'),
-  },
-  {
-    label: 'Deleted file',
-    file: recordedFile('agent-2', editStatesId, 'delete'),
-  },
-  { label: 'Large diff', file: recordedFile('agent-2', editStatesId) },
-  {
-    label: 'Inline preview',
-    file: recordedFile('agent-2', editStatesId),
-    inline: true,
-  },
-];
+import { DiffView } from './diff-view';
+import { inlineDiff, inspectorDiff } from './diff-view-fixtures';
 
 const meta = {
   title: 'Feed/DiffView',
   component: DiffView,
-  args: { file: recordedFile('agent-1') },
+  /*
+   * DiffViewProps is declared in diff-view-state.ts, which react-docgen cannot follow
+   * (docs/agents/storybook.md, "Docgen"), so the descriptions live here with the prop domain.
+   */
+  argTypes: {
+    file: { control: false },
+    inline: {
+      control: 'boolean',
+      description: 'Draws the hunks alone, as a Feed patch.',
+    },
+    initialOpen: {
+      control: 'boolean',
+      description:
+        'A file opened from the Stage list reveals its diff even when already viewed.',
+    },
+    viewed: {
+      control: 'boolean',
+      description:
+        'Inspector only: the file’s Viewed mark, which folds the diff while it is set.',
+    },
+    onViewedChange: { control: false },
+  },
+  args: inspectorDiff,
 } satisfies Meta<typeof DiffView>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
-  render: () => (
-    <Variations>
-      {variations.map(({ label, ...props }) => (
-        <Variation key={label} label={label}>
-          <DiffView {...props} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
+/*
+ * No story for the Viewed fold: without an owner to take onViewedChange the Inspector
+ * draws no mark, so the fold belongs to the Change list that owns the marks.
+ */
+
+// The Inspector's drawing: a file header and a Viewed fold around the hunks.
+export const Inspector: Story = { args: inspectorDiff };
+
+// The Feed's drawing: the hunks alone, as a patch.
+export const Inline: Story = { args: inlineDiff };

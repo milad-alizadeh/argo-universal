@@ -10,7 +10,8 @@ import { PlanSteps } from './plan-steps';
 import { createPlanTrigger } from './plan-trigger';
 import { ChipSurface, phoneSheet } from './status-surface';
 
-interface ComposerPlanProps {
+export interface ComposerPlanProps {
+  // The Agent's live Plan; its completed steps fill the trigger's marks.
   entries: PlanEntry[];
   disabled: boolean;
 }

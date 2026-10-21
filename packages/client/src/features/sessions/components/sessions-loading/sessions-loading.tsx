@@ -20,7 +20,8 @@ const skeletonRows = [
   { title: 'Rename the Drawer', subtitle: 'Gemini · nav', meta: '1 week' },
 ] as const;
 
-interface SessionsLoadingProps {
+export interface SessionsLoadingProps {
+  // Regular rows carry their Agent line and age; Compact rows are one line each.
   layout?: SessionsLayout;
 }
 

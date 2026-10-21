@@ -1,52 +1,33 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { toolCallGroupMock } from '../tool-call.mocks';
-import { ToolCallGroup, type ToolCallGroupProps } from './tool-call-group';
+import { ToolCallGroup } from './tool-call-group';
+import {
+  parallelGroup,
+  runningGroup,
+  settledGroup,
+} from './tool-call-group-fixtures';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
-
-const variations: (Omit<ToolCallGroupProps, 'renderActivity'> & {
-  label: string;
-})[] = [
-  {
-    label: 'Running group',
-    group: toolCallGroupMock.running,
-    now: toolCallGroupMock.now,
-  },
-  {
-    label: 'Parallel calls: earlier command still running',
-    group: toolCallGroupMock.parallel,
-    now: toolCallGroupMock.now,
-    initialOpen: true,
-  },
-  { label: 'Settled group', group: toolCallGroupMock.group },
-  {
-    label: 'Settled group, expanded',
-    group: toolCallGroupMock.group,
-    initialOpen: true,
-  },
-];
 
 const meta = {
   title: 'Feed/ToolCallGroup',
   component: ToolCallGroup,
-  args: {
-    group: toolCallGroupMock.group,
-    renderActivity: renderRecordedActivity,
+  argTypes: {
+    group: { control: false },
+    renderActivity: { control: false },
+    initialOpen: { control: 'boolean' },
+    now: { control: 'number' },
   },
+  args: { ...settledGroup, renderActivity: renderRecordedActivity },
 } satisfies Meta<typeof ToolCallGroup>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
-  render: () => (
-    <Variations className="max-w-column!">
-      {variations.map(({ label, ...props }) => (
-        <Variation key={label} label={label}>
-          <ToolCallGroup {...props} renderActivity={renderRecordedActivity} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
+// Still running: the live Tool call heads the group and the duration counts up.
+export const Running: Story = { args: runningGroup };
+
+// Parallel calls: the live command heads the group while the read it overlaps stays in the list.
+export const Parallel: Story = { args: parallelGroup };
+
+// Settled: the group's own title heads it, with no duration.
+export const Settled: Story = { args: settledGroup };

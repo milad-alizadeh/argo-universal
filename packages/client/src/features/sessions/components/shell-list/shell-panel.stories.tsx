@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type JSX, useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { runningShells } from './shell-list-fixtures';
 import type { ShellEntry, ShellOutputText } from './shell-list-types';
-import { sessionShells, shellNow } from './shell-list.mocks';
 import {
   failedOutput,
   longRunningOutput,
@@ -45,11 +45,35 @@ const meta = {
     ),
   ],
   render: (args): JSX.Element => <LoadingShellPanel {...args} />,
+  /*
+   * ShellPanelProps is an intersection over shell-list-types.ts, which react-docgen cannot
+   * expand (docs/agents/storybook.md, "Docgen"), so the descriptions live here.
+   */
+  argTypes: {
+    shells: {
+      control: false,
+      description: 'The Session\u2019s background Shells.',
+    },
+    output: {
+      control: false,
+      description:
+        'The open Shell\u2019s output; the caller loads it when `onSelect` names the Shell.',
+    },
+    onSelect: {
+      control: false,
+      description: 'Opens that Shell\u2019s output.',
+    },
+    onStop: { control: false, description: 'Stops that Shell.' },
+    listScrolls: {
+      description:
+        'The list scrolls on its own, as the Inspector\u2019s pages do.',
+    },
+    now: { description: 'Fixed time for stories and tests.' },
+  },
   args: {
-    shells: sessionShells,
+    ...runningShells,
     onSelect: action('Open Shell output'),
     onStop: action('Stop Shell'),
-    now: shellNow,
   },
 } satisfies Meta<typeof ShellPanel>;
 

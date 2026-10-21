@@ -25,30 +25,37 @@ const imageFromContract = composerImages[0];
 if (!imageFromContract)
   throw new Error('New Session contract mock needs an image.');
 
+export const composerImage: ComposerAttachment = imageFromContract;
+
 export const oversizedComposerImage: ComposerAttachment = {
-  ...imageFromContract,
+  ...composerImage,
   name: 'full-screen.png',
   bytes: 27 * 1024 * 1024,
 };
 
-// A text file shows its first lines; any other file shows its kind.
+// A text file shows its first lines.
+export const composerTextFile: ComposerAttachment = {
+  id: 'notes:file',
+  name: 'release-notes.md',
+  uri: 'file:///Users/me/release-notes.md',
+  bytes: 1_204,
+  mimeType: 'text/markdown',
+  preview:
+    '# Release notes\n\n- Attach any file to a prompt\n- Drop files on the Composer\n- Text files go to the Agent inline',
+};
+
+// Any other file shows its kind.
+export const composerOtherFile: ComposerAttachment = {
+  id: 'report:file',
+  name: 'quarterly-report.pdf',
+  uri: 'file:///Users/me/quarterly-report.pdf',
+  bytes: 482_113,
+  mimeType: 'application/pdf',
+};
+
 export const composerFiles: ComposerAttachment[] = [
-  {
-    id: 'notes:file',
-    name: 'release-notes.md',
-    uri: 'file:///Users/me/release-notes.md',
-    bytes: 1_204,
-    mimeType: 'text/markdown',
-    preview:
-      '# Release notes\n\n- Attach any file to a prompt\n- Drop files on the Composer\n- Text files go to the Agent inline',
-  },
-  {
-    id: 'report:file',
-    name: 'quarterly-report.pdf',
-    uri: 'file:///Users/me/quarterly-report.pdf',
-    bytes: 482_113,
-    mimeType: 'application/pdf',
-  },
+  composerTextFile,
+  composerOtherFile,
 ];
 
 export const composerPlan: PlanEntry[] = [

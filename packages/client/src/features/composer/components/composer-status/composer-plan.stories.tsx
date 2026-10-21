@@ -1,33 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { StatusPlan } from './composer-plan';
+import { completedPlan, runningPlan } from './composer-plan-fixtures';
 
 const meta = {
   title: 'Composer/ComposerPlan',
   component: StatusPlan,
-  args: {
-    disabled: false,
-    entries: [
-      {
-        content: 'Read the Sheet primitive',
-        priority: 'medium',
-        status: 'completed',
-      },
-      {
-        content: 'Move each phone sheet into grouped cards',
-        priority: 'medium',
-        status: 'in_progress',
-      },
-      {
-        content: 'Compare the sheets with Paper on iOS and Android',
-        priority: 'medium',
-        status: 'pending',
-      },
-    ],
-  },
+  args: runningPlan,
+  argTypes: { entries: { control: false }, disabled: { control: 'boolean' } },
 } satisfies Meta<typeof StatusPlan>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Plan: Story = {};
+// A step under way: the trigger names it, and the marks before it are filled.
+export const Running: Story = { args: runningPlan };
+
+// Every step done: all the marks fill and the trigger names no step.
+export const Done: Story = { args: completedPlan };

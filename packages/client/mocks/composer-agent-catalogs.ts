@@ -14,3 +14,12 @@ export const composerUnlistedEffortConfigurations =
       checkout: { branch: 'main', newWorktree: false },
     }),
   );
+
+const [firstUnlistedEffortConfiguration] = composerUnlistedEffortConfigurations;
+
+if (!firstUnlistedEffortConfiguration)
+  throw new Error('Recorded catalog needs an Agent with effort.');
+
+// The first recorded Agent whose effort is set to a value its catalog does not list.
+export const composerUnlistedEffortConfiguration =
+  firstUnlistedEffortConfiguration;

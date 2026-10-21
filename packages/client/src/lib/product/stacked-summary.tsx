@@ -9,13 +9,18 @@ export interface StackedSummaryIcon {
   tone: ComponentProps<typeof ToneMark>['tone'];
 }
 
-interface Props {
+export interface StackedSummaryProps {
+  // The decorative marks the summary stacks; repeats collapse into one.
   icons: readonly StackedSummaryIcon[];
+  // The counts the summary reads out, joined by commas.
   texts: readonly string[];
 }
 
 // Paper's group entry: distinct decorative icons and their summary.
-export function StackedSummary({ icons, texts }: Props): ReactElement {
+export function StackedSummary({
+  icons,
+  texts,
+}: StackedSummaryProps): ReactElement {
   return (
     <View className="flex-row items-center gap-2 px-1 py-2">
       <SummaryIcons icons={icons} />
@@ -35,7 +40,9 @@ const markStackProps = {
   className: 'min-w-7 shrink-0 flex-row items-center pl-1',
 } as const;
 
-function SummaryIcons({ icons }: Pick<Props, 'icons'>): ReactElement {
+function SummaryIcons({
+  icons,
+}: Pick<StackedSummaryProps, 'icons'>): ReactElement {
   return (
     <View {...markStackProps}>
       {uniqueIcons(icons).map(({ icon, tone }, index) => (

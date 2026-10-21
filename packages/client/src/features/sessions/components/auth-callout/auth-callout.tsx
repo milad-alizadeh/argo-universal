@@ -8,6 +8,8 @@ import type {
   AuthCalloutProps,
 } from '../../types/session-callout';
 
+export type { AuthCalloutProps } from '../../types/session-callout';
+
 const chooseMethodHint = 'Choose one of the following authentication options:';
 
 // Zed's sign-in callout: one action per method, the first the accent; while one runs, every Device can cancel it.

@@ -1,26 +1,47 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { TurnEndRow } from './turn-end';
-import { endings, visibleEndings } from './turn-end.mocks';
+import {
+  authenticationRequiredTurnEnd,
+  erroredTurnEnd,
+  erroredWithoutDetailsTurnEnd,
+  outputLimitTurnEnd,
+  refusedTurnEnd,
+  stepLimitTurnEnd,
+  stoppedTurnEnd,
+} from './turn-end-fixtures';
 
 const meta = {
   title: 'Feed/TurnEnd',
   component: TurnEndRow,
-  args: { end: endings.stopped },
+  argTypes: { end: { control: false } },
+  args: stoppedTurnEnd,
 } satisfies Meta<typeof TurnEndRow>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
-  render: () => (
-    <Variations>
-      {visibleEndings.map(({ label, end }) => (
-        <Variation key={label} label={label}>
-          <TurnEndRow end={end} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
+/*
+ * One story per key in the component's notices table, except end_turn: a Turn that ended
+ * normally draws nothing, so it has no story.
+ */
+
+// You stopped the Turn, after how long it ran.
+export const Stopped: Story = { args: stoppedTurnEnd };
+
+export const OutputLimit: Story = { args: outputLimitTurnEnd };
+
+export const StepLimit: Story = { args: stepLimitTurnEnd };
+
+export const Refused: Story = { args: refusedTurnEnd };
+
+export const Errored: Story = { args: erroredTurnEnd };
+
+// The same error with no message to report.
+export const ErroredWithoutDetails: Story = {
+  args: erroredWithoutDetailsTurnEnd,
+};
+
+export const AuthenticationRequired: Story = {
+  args: authenticationRequiredTurnEnd,
 };

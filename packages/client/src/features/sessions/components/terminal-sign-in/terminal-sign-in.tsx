@@ -11,6 +11,8 @@ import { View } from 'react-native';
 import { AgentLoginTerminal } from '#features/agents';
 import type { TerminalSignInProps } from '../../types/session-callout';
 
+export type { TerminalSignInProps } from '../../types/session-callout';
+
 // A terminal sign-in method runs the Agent's login command on the Server: a panel under the Composer on a wide window, a sheet on a phone.
 export function TerminalSignIn(props: TerminalSignInProps): React.JSX.Element {
   return (

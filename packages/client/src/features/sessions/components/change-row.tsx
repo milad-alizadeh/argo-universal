@@ -11,9 +11,13 @@ import {
 import { PullRequestChecks } from './pull-request-checks';
 import type { SessionPullRequest } from './session-pull-request';
 
-type Props = { change: SessionPullRequest; onOpen: () => void };
+export interface ChangeRowProps {
+  change: SessionPullRequest;
+  // Open the Change in the Stage.
+  onOpen: () => void;
+}
 
-export function ChangeRow(props: Props): ReactElement {
+export function ChangeRow(props: ChangeRowProps): ReactElement {
   return (
     <View className="flex-row items-start gap-2 rounded-xl px-1 py-2 web:hover:bg-hover web:has-focus-visible:bg-hover">
       <ChangeAction {...props} />
@@ -22,7 +26,7 @@ export function ChangeRow(props: Props): ReactElement {
   );
 }
 
-function ChangeAction({ change, onOpen }: Props): ReactElement {
+function ChangeAction({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
     <Pressable
       role="button"
@@ -38,7 +42,7 @@ function ChangeAction({ change, onOpen }: Props): ReactElement {
   );
 }
 
-function ChangeText({ change }: Pick<Props, 'change'>): ReactElement {
+function ChangeText({ change }: Pick<ChangeRowProps, 'change'>): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
       <View className="flex-row items-center gap-1.5">
@@ -52,7 +56,7 @@ function ChangeText({ change }: Pick<Props, 'change'>): ReactElement {
   );
 }
 
-function ChangeMeta({ change }: Pick<Props, 'change'>): ReactElement {
+function ChangeMeta({ change }: Pick<ChangeRowProps, 'change'>): ReactElement {
   return (
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">
       {change.summary && <ChangeDiffTotal {...change.summary} icon />}
@@ -62,7 +66,7 @@ function ChangeMeta({ change }: Pick<Props, 'change'>): ReactElement {
   );
 }
 
-function ChangeMenu({ change, onOpen }: Props): ReactElement {
+function ChangeMenu({ change, onOpen }: ChangeRowProps): ReactElement {
   const label = `Change #${change.number} actions`;
 
   return (

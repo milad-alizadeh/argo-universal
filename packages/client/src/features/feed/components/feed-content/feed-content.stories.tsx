@@ -15,6 +15,18 @@ const meta = {
     onStartReached: (): void => {},
     imageUrl: (): string => '',
   },
+  argTypes: {
+    items: { control: false },
+    liveHeader: { control: false },
+    liveToolCall: { control: false },
+    loadingOlder: { control: 'boolean' },
+    onStartReached: { control: false },
+    imageUrl: { control: false },
+    checkoutBranch: { control: 'text' },
+    now: { control: 'number' },
+    onOpenSubagent: { control: false },
+    onAtEndChange: { control: false },
+  },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof Feed>;
 
@@ -22,4 +34,5 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const SupportedContent: Story = {};
+// Every content block an Agent can send, drawn through one recorded Feed.
+export const SupportedContent: Story = { name: 'Supported content' };

@@ -1,38 +1,41 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { CommandRow } from './command-row';
 import {
-  commandNow,
-  failedCommand,
-  longOutputCommand,
-  runningCommand,
-} from '../tool-call.mocks';
-import { CommandRow, type CommandRowProps } from './command-row';
-
-const variations: (CommandRowProps & { label: string })[] = [
-  { label: 'Running', row: runningCommand, now: commandNow },
-  { label: 'Collapsed output', row: longOutputCommand },
-  { label: 'Expanded output', row: longOutputCommand, initialOpen: true },
-  { label: 'Failed command', row: failedCommand, initialOpen: true },
-];
+  completedCommandRow,
+  failedCommandRow,
+  runningCommandRow,
+  stoppedCommandRow,
+} from './command-row-fixtures';
 
 const meta = {
   title: 'Feed/CommandRow',
   component: CommandRow,
-  args: { row: longOutputCommand },
+  argTypes: {
+    row: { control: false },
+    initialOpen: { control: 'boolean' },
+    now: { control: 'number' },
+    awaitingApproval: { control: 'boolean' },
+  },
+  args: completedCommandRow,
 } satisfies Meta<typeof CommandRow>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
-  render: () => (
-    <Variations className="max-w-column!">
-      {variations.map(({ label, ...props }) => (
-        <Variation key={label} label={label}>
-          <CommandRow {...props} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
+/*
+ * One story per outcome the command state reads. No story for a command waiting on your
+ * approval: no recording holds one, and a fixture may not invent it.
+ */
+
+// Still running: the header counts up and the footer reads Running.
+export const Running: Story = { args: runningCommandRow };
+
+// Settled at exit 0, with its Shell output open.
+export const Completed: Story = { args: completedCommandRow };
+
+// A non-zero exit reads red, in the header and beside the footer's cross.
+export const Failed: Story = { args: failedCommandRow };
+
+// You stopped the command, so it settles on Stopped with no outcome mark.
+export const Stopped: Story = { args: stoppedCommandRow };

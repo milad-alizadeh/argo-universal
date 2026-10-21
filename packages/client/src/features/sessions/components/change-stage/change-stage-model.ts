@@ -1,13 +1,21 @@
-export type ChangeStageName =
-  | 'working'
-  | 'branch'
-  | 'open'
-  | 'merged'
-  | 'closed';
+// The stages a Change moves through, in order; a picker reads its options from here.
+export const changeStageNames = [
+  'working',
+  'branch',
+  'open',
+  'merged',
+  'closed',
+] as const;
+
+export type ChangeStageName = (typeof changeStageNames)[number];
+
+export const changeModifierNames = ['draft', 'conflict'] as const;
+
+type ChangeModifier = (typeof changeModifierNames)[number];
 
 // Draft and conflict describe an Open Change, without replacing its stage.
 export type ChangeState =
-  | { stage: 'open'; modifier?: 'draft' | 'conflict' }
+  | { stage: 'open'; modifier?: ChangeModifier }
   | { stage: Exclude<ChangeStageName, 'open'>; modifier?: never };
 
 const stages = {
