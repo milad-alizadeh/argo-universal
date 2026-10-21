@@ -1,39 +1,38 @@
-import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
 import { fn } from 'storybook/test';
-import { stepMarks } from '#features/setup';
 import { GitHubStepView } from './github-step';
-import { githubSteps } from './onboarding-view.mocks';
+import {
+  expiredGitHub,
+  loginFoundGitHub,
+  notConnectedGitHub,
+  signedInGitHub,
+  signingInGitHub,
+} from './github-step-fixtures';
 
-const agentDone = { status: 'done', agentName: 'Claude' } as const;
-
-function GitHubSteps(): React.JSX.Element {
-  return (
-    <Variations>
-      {Object.entries(githubSteps).map(([name, step]) => (
-        <Variation key={name} label={step.status}>
-          <GitHubStepView
-            github={step}
-            mark={stepMarks(agentDone, step).github}
-            onConnectGitHub={fn()}
-          />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-
+// The AccountRow chips and captions designed for Settings › Accounts in Paper.
 const meta = {
   title: 'Screens/Onboarding/GitHub step',
   component: GitHubStepView,
-} satisfies Meta;
+  argTypes: {
+    github: { control: false },
+    mark: { control: 'select', options: ['done', 'next', 'open'] },
+  },
+  args: { onConnectGitHub: fn() },
+} satisfies Meta<typeof GitHubStepView>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-// The AccountRow chips and captions designed for Settings › Accounts in Paper.
-export const GitHubStep: Story = {
-  render: GitHubSteps,
-};
+// Nothing saved yet: the caption says what GitHub is for and Connect starts the sign-in.
+export const NotConnected: Story = { args: notConnectedGitHub };
+
+// The GitHub CLI is already signed in, so the step offers to take that login.
+export const LoginFound: Story = { args: loginFoundGitHub };
+
+export const SigningIn: Story = { args: signingInGitHub };
+
+// The only done state: the chip reads Signed in and the footer offers another account.
+export const SignedIn: Story = { args: signedInGitHub };
+
+export const Expired: Story = { args: expiredGitHub };

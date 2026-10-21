@@ -11,13 +11,19 @@ const notInstalled = 'not-installed';
 
 const exampleSearch = 'Example';
 
-const unmatchedSearch = 'zzzz';
-
 const meta = {
   title: 'Screens/Settings/Agents',
   component: AgentListView,
   args: agentListArgs(),
   parameters: { screenPreview: true },
+  argTypes: {
+    agents: { control: false },
+    initialSearch: { control: 'text' },
+    initialFilter: {
+      control: 'select',
+      options: ['all', 'installed', notInstalled],
+    },
+  },
 } satisfies Meta<typeof AgentListView>;
 
 export default meta;
@@ -42,25 +48,11 @@ export const RegistryError: Story = {
 
 const noAgents = pageRows([], { status: 'loaded', registry: emptyCatalog });
 
+/*
+ * The Registry came back with nothing: the catalog's empty section takes the cards' place. The
+ * label each filter and search pairs with is `Tests/AgentListView`'s, not a story of its own.
+ */
 export const Empty: Story = { args: { agents: noAgents } };
-
-export const EmptyInstalled: Story = {
-  args: { initialFilter: 'installed', agents: pageRows([]) },
-};
-
-export const EmptyNotInstalled: Story = {
-  args: { initialFilter: notInstalled, agents: noAgents },
-};
-
-export const SearchEmpty: Story = { args: { initialSearch: unmatchedSearch } };
-
-export const SearchEmptyInstalled: Story = {
-  args: { initialSearch: unmatchedSearch, initialFilter: 'installed' },
-};
-
-export const SearchEmptyNotInstalled: Story = {
-  args: { initialSearch: unmatchedSearch, initialFilter: notInstalled },
-};
 
 export const LongRegistry: Story = {
   args: {

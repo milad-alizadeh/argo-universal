@@ -21,7 +21,6 @@
     "./symbols/symbol-images": "./src/symbols/symbol-images.tsx",
     "./tinted-avatar": "./src/tinted-avatar.tsx",
     "./tone-mark": "./src/tone-mark.tsx",
-    "./variations": "./src/variations.tsx",
     "./primitives/*": {
       "types": "./src/primitives/*/index.ts",
       "default": "./src/primitives/*/index.ts"

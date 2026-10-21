@@ -1,103 +1,43 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { fn } from 'storybook/test';
-import { SessionNewView, type SessionNewViewProps } from './session-new-view';
-import {
-  openingNewSession,
-  readyNewSession,
-  startingNewSession,
-  typedDraft,
-} from './session-new-view.mocks';
+import { SessionNewView } from './session-new-view';
+import { readyNewSession, startingNewSession } from './session-new-view.mocks';
 
 const meta = {
   title: 'Screens/Sessions/New Session',
-  /*
-   * No `component`: its stories pass the whole view as one `view` arg, which a SessionNewView
-   * meta cannot type. Ticket #1203 flattens the wrapper; the Docs page comes with it.
-   */
-  tags: ['!autodocs'],
+  component: SessionNewView,
   parameters: { screenPreview: true },
-  args: { view: { state: 'ready', ...readyNewSession } },
-  render: ({ view }): React.JSX.Element => <SessionNewView {...view} />,
-} satisfies Meta<{ view: SessionNewViewProps }>;
+  argTypes: {
+    state: { control: 'select', options: ['ready', 'loading', 'load-failed'] },
+  },
+} satisfies Meta<typeof SessionNewView>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {};
+// Waiting for a first prompt: the empty Composer, the Agent and the Project the Session will start in.
+export const Ready: Story = { args: { state: 'ready', ...readyNewSession } };
 
-export const Draft: Story = {
-  args: { view: { state: 'ready', ...readyNewSession, draft: typedDraft } },
-};
-
-export const Reconnecting: Story = {
-  args: {
-    view: {
-      state: 'ready',
-      ...readyNewSession,
-      connected: false,
-      canOpen: false,
-    },
-  },
-};
-
-export const Opening: Story = {
-  args: { view: { state: 'ready', ...readyNewSession, ...openingNewSession } },
-};
-
+// The first prompt is sent: a Feed takes the empty page's place while the Session opens.
 export const Starting: Story = {
-  args: { view: { state: 'ready', ...readyNewSession, ...startingNewSession } },
+  args: { state: 'ready', ...readyNewSession, ...startingNewSession },
 };
 
-export const FailedStart: Story = {
-  args: {
-    view: {
-      state: 'ready',
-      ...readyNewSession,
-      draft: typedDraft,
-      callout: {
-        kind: 'launch',
-        message: 'Agent exited with status 1\nnpm error code E404',
-        onRetry: fn(),
-      },
-    },
-  },
-};
+export const Loading: Story = { args: { state: 'loading' } };
 
-export const SignIn: Story = {
-  args: {
-    view: {
-      state: 'ready',
-      ...readyNewSession,
-      callout: {
-        kind: 'authenticate',
-        agentName: 'Codex',
-        methods: [{ id: 'chatgpt', name: 'Login with ChatGPT' }],
-        pending: false,
-        onAuthenticate: fn(),
-        onCancel: fn(),
-      },
-    },
-  },
-};
+export const LoadFailure: Story = { args: { state: 'load-failed' } };
 
-export const Loading: Story = { args: { view: { state: 'loading' } } };
-
-export const LoadFailure: Story = { args: { view: { state: 'load-failed' } } };
-
+// No Agent is installed, so there is nothing to start a Session with and Send stays off.
 export const ZeroAgents: Story = {
   args: {
-    view: {
-      state: 'ready',
-      ...readyNewSession,
-      canOpen: false,
-      agents: [],
-      configuration: {
-        ...readyNewSession.configuration,
-        agent: undefined,
-        configOptions: [],
-      },
+    state: 'ready',
+    ...readyNewSession,
+    canOpen: false,
+    agents: [],
+    configuration: {
+      ...readyNewSession.configuration,
+      agent: undefined,
+      configOptions: [],
     },
   },
 };
