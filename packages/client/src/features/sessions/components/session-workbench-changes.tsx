@@ -1,6 +1,9 @@
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { Text } from '#primitives/content/text';
+import {
+  StackedSummary,
+  type SummaryMark,
+} from '../../../lib/product/stacked-summary';
 import { ChangeRow } from './change-row';
 import { ChangeStageIcon } from './change-stage/change-stage';
 import type { SessionPullRequest } from './session-pull-request';
@@ -41,28 +44,25 @@ function MoreChanges({ changes, onOpen }: Props): ReactElement {
     <Pressable
       role="button"
       onPress={onOpen}
-      className="flex-row items-center gap-2 rounded-control px-1 py-2 web:hover:bg-hover web:focus-visible:bg-hover"
+      className="rounded-control web:hover:bg-hover web:focus-visible:bg-hover"
     >
-      <RemainderMarks changes={changes} />
-      <Text tone="muted">{remainderLabel(changes)}</Text>
+      <StackedSummary
+        marks={remainderMarks(changes)}
+        label={remainderLabel(changes)}
+      />
     </Pressable>
   );
 }
 
-function RemainderMarks({ changes }: Pick<Props, 'changes'>): ReactElement {
-  const stages = [...new Set(changes.map((change) => change.stage))];
-
-  return (
-    <View className="min-w-7 shrink-0 flex-row items-center pl-1">
-      {stages.slice(0, previewLimit).map((stage, index) => (
-        <View key={stage} className={index > 0 ? '-ml-1' : undefined}>
-          <View className="size-5 items-center justify-center rounded-full bg-glass">
-            <ChangeStageIcon stage={stage} role="control" />
-          </View>
-        </View>
-      ))}
-    </View>
-  );
+function remainderMarks(changes: readonly SessionPullRequest[]): SummaryMark[] {
+  return [...new Set(changes.map((change) => change.stage))].map((stage) => ({
+    key: stage,
+    node: (
+      <View className="size-6 items-center justify-center rounded-full bg-glass wide-type:size-5">
+        <ChangeStageIcon stage={stage} role="control" />
+      </View>
+    ),
+  }));
 }
 
 function remainderLabel(changes: readonly SessionPullRequest[]): string {

@@ -4,12 +4,11 @@ import { View } from 'react-native';
 import { useClock } from '#lib/generic/use-clock';
 import { Text } from '#primitives/content/text';
 import { TintedAvatar } from '../../../lib/generic/tinted-avatar';
+import { StackedSummary } from '../../../lib/product/stacked-summary';
 import { subagentRoleMark } from '../../../lib/product/subagents/subagent-role';
 import { subagentSupporting } from './subagent-list/subagent-format';
 import type { SubagentListProps } from './subagent-list/subagent-list-types';
 import { SubagentMark } from './subagent-list/subagent-mark';
-
-const shownDoneRoles = 3;
 
 type ActiveProps = { agent: Subagent; now: number };
 
@@ -49,28 +48,10 @@ function ActiveAgentText({ agent, now }: ActiveProps): ReactElement {
 }
 
 function DoneAgents({ agents }: { agents: Subagent[] }): ReactElement {
-  return (
-    <View className="flex-row items-center gap-2 px-1 py-2">
-      <View className="min-w-7 shrink-0 flex-row items-center pl-1">
-        {agents.slice(0, shownDoneRoles).map((agent, index) => (
-          <DoneAvatar key={agent.sessionId} agent={agent} index={index} />
-        ))}
-      </View>
-      <Text tone="muted">{agents.length} done</Text>
-    </View>
-  );
-}
+  const marks = agents.map((agent) => ({
+    key: agent.sessionId,
+    node: <TintedAvatar {...subagentRoleMark(agent.role)} size="inline" />,
+  }));
 
-function DoneAvatar({
-  agent,
-  index,
-}: {
-  agent: Subagent;
-  index: number;
-}): ReactElement {
-  return (
-    <View className={index > 0 ? '-ml-1.5' : undefined}>
-      <TintedAvatar {...subagentRoleMark(agent.role)} size="inline" />
-    </View>
-  );
+  return <StackedSummary marks={marks} label={`${agents.length} done`} />;
 }

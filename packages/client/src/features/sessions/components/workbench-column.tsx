@@ -1,6 +1,5 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
 import type { SessionPanel } from '../stores/session-panels';
 import type { SessionHeaderPanels } from './session-header-props';
 import { sessionPanelLabels } from './session-panel-triggers';
@@ -10,6 +9,7 @@ import {
   WorkbenchChangesTotal,
 } from './session-workbench-change-section';
 import { WorkbenchCard } from './workbench-card';
+import { WorkbenchCountSummary } from './workbench-count-summary';
 
 // Paper 24JC-0: WorkbenchColumn previews sections and opens their lists in Stage.
 export function WorkbenchColumn({
@@ -104,20 +104,24 @@ function SectionSummary({ panel, panels }: SectionProps): ReactElement {
 
   if (panel === 'subagents') return <AgentsSummary panels={panels} />;
 
-  return (
-    <View className="px-4 pb-3">
-      <Text tone="muted">{sectionCount(panel, panels)}</Text>
-    </View>
-  );
+  return <CountSummary panel={panel} panels={panels} />;
 }
 
 function AgentsSummary({ panels }: Pick<SectionProps, 'panels'>): ReactElement {
   return panels.agents ? (
     <WorkbenchAgents {...panels.agents} />
   ) : (
-    <View className="px-4 pb-3">
-      <Text tone="muted">{itemCount('subagents', panels)}</Text>
-    </View>
+    <CountSummary panel="subagents" panels={panels} />
+  );
+}
+
+function CountSummary({ panel, panels }: SectionProps): ReactElement {
+  return (
+    <WorkbenchCountSummary
+      count={itemCount(panel, panels)}
+      icon={sessionPanelLabels[panel].icon}
+      noun={panel === 'subagents' ? 'agent' : 'shell'}
+    />
   );
 }
 
