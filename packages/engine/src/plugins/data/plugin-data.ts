@@ -12,7 +12,7 @@ import {
   keepNewest,
   queryKey,
   removeProject,
-  retainedEntries,
+  retainedWarmEntries,
 } from './entry-map';
 import { PluginBadges } from './plugin-badges';
 import { QueryEntry } from './query-entry';
@@ -64,12 +64,18 @@ export class PluginData {
     return { ok: true };
   }
 
+  // The watcher is registered before the map is bounded, so this answer is never the entry dropped.
   private watch(
     caller: Caller,
     view: OpenView,
     request: QueryWatch,
   ): PluginDataState {
-    return this.entry(caller, view, request.query).watch(view, request);
+    const entries = this.entriesOf(caller.pluginId);
+    const state = this.entry(caller, view, request.query).watch(view, request);
+
+    this.bound(caller.pluginId, entries);
+
+    return state;
   }
 
   private entry(
@@ -85,20 +91,20 @@ export class PluginData {
 
     if (existing) return keepNewest(entries, key, existing);
     const entry = this.createEntry({ ...caller, projectId, query });
+
     entries.set(key, entry);
-    this.bound(caller.pluginId, entries);
 
     return entry;
   }
 
   // The warm path keeps answers no view holds, so only the oldest unwatched ones go.
   private bound(pluginId: string, entries: Map<string, QueryEntry>): void {
-    if (entries.size <= retainedEntries) return;
+    if (entries.size <= retainedWarmEntries) return;
     const dropped = dropOldest(entries);
 
     if (dropped === 0) return;
     this.services.log(
-      `Plugin ${pluginId}: dropped ${dropped} warm Query answers over the ${retainedEntries} kept`,
+      `Plugin ${pluginId}: dropped ${dropped} warm Query answers over the ${retainedWarmEntries} kept`,
     );
   }
 
@@ -138,6 +144,7 @@ export class PluginData {
 
   release(pluginId: string): void {
     this.badges.release(pluginId);
+    this.intervals.release(pluginId);
 
     for (const entry of this.entriesOf(pluginId).values()) entry.close();
     this.plugins.delete(pluginId);
@@ -154,17 +161,14 @@ export class PluginData {
   }
 
   opened(pluginId: string): void {
-    for (const entry of this.entriesOf(pluginId).values())
-      entry.suspended = false;
+    for (const entry of this.entriesOf(pluginId).values()) entry.opened();
   }
 
-  // The Queries a view opened, answered as a question the caller can ask again as they settle.
-  queriesSettled(viewId: PluginViewId): () => boolean {
-    const entries = this.entries()
+  // Whether every Query the view has declared so far holds a value or an error.
+  queriesSettled(viewId: PluginViewId): boolean {
+    return this.entries()
       .filter((entry) => entry.hasView(viewId))
-      .toArray();
-
-    return () => entries.every((entry) => entry.settled);
+      .every((entry) => entry.settled);
   }
 
   private entries(): IteratorObject<QueryEntry> {

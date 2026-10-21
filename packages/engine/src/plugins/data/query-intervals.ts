@@ -4,8 +4,9 @@ export const backgroundFloorMs = 300000;
 
 export const backgroundBudgetMs = 60000;
 
+// One line per Plugin and clamped interval, kept beside the Plugin so nothing outlives it.
 export class QueryIntervals {
-  private readonly logged = new Set<string>();
+  private readonly logged = new Map<string, Set<number>>();
 
   constructor(private readonly log: (line: string) => void) {}
 
@@ -19,12 +20,18 @@ export class QueryIntervals {
   }
 
   private clamped(pluginId: string, every: number): void {
-    const key = JSON.stringify([pluginId, every]);
+    const seen = this.logged.get(pluginId) ?? new Set<number>();
 
-    if (this.logged.has(key)) return;
-    this.logged.add(key);
+    this.logged.set(pluginId, seen);
+
+    if (seen.has(every)) return;
+    seen.add(every);
     this.log(
       `Plugin ${pluginId}: Query every ${every} ms clamped to ${mountedQueryFloorMs} ms`,
     );
+  }
+
+  release(pluginId: string): void {
+    this.logged.delete(pluginId);
   }
 }

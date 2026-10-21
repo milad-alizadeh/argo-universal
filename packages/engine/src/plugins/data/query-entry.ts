@@ -14,7 +14,7 @@ import { QueryWatchers } from './query-watchers';
 
 export class QueryEntry {
   state: PluginDataState = { stale: false, revision: 0 };
-  suspended = false;
+  private refusedInBackground = false;
   readonly watchers;
   private readonly timing;
   private flight: Promise<void> | undefined;
@@ -57,10 +57,21 @@ export class QueryEntry {
 
   refresh(background?: boolean): Promise<void> {
     if (this.flight) return this.flight;
+    const inBackground = background === true;
 
-    if (this.suspended) return Promise.resolve();
+    if (this.stopped(inBackground)) return Promise.resolve();
 
-    return this.begin(background === true);
+    return this.begin(inBackground);
+  }
+
+  // ADR-0037 stops a refused Query's clock in the background alone; a page on screen keeps its own.
+  private stopped(background: boolean): boolean {
+    return background && this.refusedInBackground;
+  }
+
+  // "Until the Plugin is next opened": opening it lets the next background pass read the Query again.
+  opened(): void {
+    this.refusedInBackground = false;
   }
 
   private begin(background: boolean): Promise<void> {
@@ -76,7 +87,7 @@ export class QueryEntry {
   private async execute(background: boolean): Promise<void> {
     const reply = await readQuery(this.owner, this.services);
 
-    this.suspended = backgroundRefusal(background, reply);
+    this.refusedInBackground = backgroundRefusal(background, reply);
     this.publish(queryState(this.state, reply));
   }
 
@@ -113,7 +124,7 @@ export class QueryEntry {
   }
 
   private paused(): boolean {
-    return Boolean(this.flight) || this.suspended || this.closed;
+    return Boolean(this.flight) || this.closed;
   }
 
   storageWritten(): void {
