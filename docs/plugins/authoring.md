@@ -161,7 +161,7 @@ Other `argo` calls are not Queries. Storage Queries use a read-only connection; 
 The hook returns `{ data, error, stale, refresh }`:
 
 - `data` contains the call's answer and retains the last successful value.
-- `error` describes a refused call, transport failure, or Argo timeout. An HTTP 401 remains fetch data. An unavailable Account borrow returns `null` data.
+- `error` describes a refused call, transport failure, or Argo timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow reports an error and retains the last successful data.
 - `stale` is true only while refreshing an existing answer.
 - `refresh()` runs the Query now and joins a call already in flight.
 
@@ -190,7 +190,8 @@ Adding a Project starts its pass. Removing one releases its views, passes, and e
 Use the same Query in the background page and the mounted Slot to warm the same entry.
 A background pass ignores a Query's `every` option. It ends after the first render's Queries settle, or after sixty seconds, and discards its tree.
 A refused background Query stops retrying until the Plugin is next opened.
-The optional fetch `account` field borrows the Project’s Account for that host. An unavailable borrow returns `null`.
+The optional fetch `account` field borrows the Project’s Account for that host.
+An unavailable Borrow returns `null` from a direct `argo.fetch` call. A Query reports an error and retains its last successful data.
 
 A page may call `argo.nav.badge(id, count)` to set the nav badge for a nav id its own manifest declares. Zero clears the badge.
 A background page runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
