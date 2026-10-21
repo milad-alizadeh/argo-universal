@@ -11,6 +11,7 @@ import {
 import { ScaffoldBand } from './scaffold-band';
 import { PaneBanner } from './scaffold-chrome';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
+import { ScaffoldWorkbench } from './scaffold-workbench';
 import {
   type ScaffoldLayout,
   type ScaffoldPartProps,
@@ -59,13 +60,7 @@ const inspectorPlacement = ({ layout }: ScaffoldPartProps): PanePlacement => ({
 
 function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
   return (
-    <View
-      className="absolute top-0"
-      style={{
-        left: parts.layout.frame.stage.offset,
-        bottom: parts.layout.measures.inset,
-      }}
-    >
+    <View className="absolute top-0" style={inspectorPosition(parts)}>
       <FramePane testID="desktop-inspector" {...inspectorPlacement(parts)}>
         <InspectorControlsContext value={true}>
           {parts.scaffold.inspector(parts.layout.inspectorExpanded)}
@@ -75,7 +70,24 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
   );
 }
 
-// The Inspector beside the page, the resize handles, and the banner over the panes.
+function inspectorPosition({ layout }: ScaffoldPartProps): ViewStyle {
+  return { left: layout.frame.stage.offset, bottom: layout.measures.inset };
+}
+
+function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
+  return (
+    <>
+      <InspectorColumn {...parts} />
+      <ScaffoldWorkbench {...parts} />
+      <ScaffoldResizeHandles {...parts} />
+      <PaneBanner left={sidebarWidth(parts.layout)}>
+        {parts.scaffold.banner}
+      </PaneBanner>
+    </>
+  );
+}
+
+// The Inspector, Workbench and handles share the panes' origin below the band.
 function Overlays(parts: ScaffoldParts): React.JSX.Element {
   return (
     <View
@@ -83,11 +95,7 @@ function Overlays(parts: ScaffoldParts): React.JSX.Element {
       className="absolute inset-x-0 bottom-0"
       style={{ top: parts.layout.frame.panesTop }}
     >
-      <InspectorColumn {...parts} />
-      <ScaffoldResizeHandles {...parts} />
-      <PaneBanner left={sidebarWidth(parts.layout)}>
-        {parts.scaffold.banner}
-      </PaneBanner>
+      <OverlayContents {...parts} />
     </View>
   );
 }

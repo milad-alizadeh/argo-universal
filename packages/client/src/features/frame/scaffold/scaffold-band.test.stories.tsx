@@ -28,26 +28,36 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
   }),
 };
 
-export const TrailingControlsNeverMoveWithPanes: ScaffoldStory = {
-  play: controlledPlay(async ({ canvas }, controlled) => {
-    await page.viewport(1440, 844);
-    const group = canvas.getByTestId('window-band-trailing');
-    const controls = within(group).getAllByRole('button');
-    const positions = controls.map(position);
-    await expect(controls).toHaveLength(4);
+function trailingControls(width: number): ScaffoldStory {
+  return {
+    play: controlledPlay(async ({ canvas }, controlled) => {
+      await page.viewport(width, 844);
+      const group = canvas.getByTestId('window-band-trailing');
+      const controls = within(group).getAllByRole('button');
+      const positions = controls.map(position);
+      await expect(controls).toHaveLength(4);
+      await expect(controls[0]).toHaveAccessibleName('More');
+      await expect(controls[1]).toHaveAccessibleName('Toggle Workbench');
+      await expect(controls[2]).toHaveAccessibleName('Expand Stage');
+      await expect(controls[3]).toHaveAccessibleName('Show Stage');
 
-    for (const sidebarShown of [false, true]) {
-      for (const inspectorState of ['closed', 'open', 'expanded'] as const) {
-        await controlled.render({ sidebarShown, inspectorState });
-        await expect(
-          within(group).getAllByRole('button').map(position),
-        ).toEqual(positions);
+      for (const sidebarShown of [false, true]) {
+        for (const inspectorState of ['closed', 'open', 'expanded'] as const) {
+          await controlled.render({ sidebarShown, inspectorState });
+          await expect(
+            within(group).getAllByRole('button').map(position),
+          ).toEqual(positions);
+        }
       }
-    }
-  }),
-};
+    }),
+  };
+}
 
-function position(element: HTMLElement) {
+export const TrailingControlsNeverMoveWithPanes = trailingControls(1440);
+export const TrailingControlsAtNarrowWidth = trailingControls(1100);
+export const TrailingControlsAtVeryWideWidth = trailingControls(1920);
+
+function position(element: HTMLElement): Pick<DOMRect, 'x' | 'y'> {
   const { x, y } = element.getBoundingClientRect();
 
   return { x, y };

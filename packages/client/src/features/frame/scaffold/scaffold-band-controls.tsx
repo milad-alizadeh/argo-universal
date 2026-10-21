@@ -1,38 +1,41 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { IconButton } from '#primitives/actions/icon-button';
+import {
+  IconButton,
+  type IconButtonProps,
+} from '#primitives/actions/icon-button';
 import { bandControlAppearance } from './band-control-appearance';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
 
-function WorkbenchToggle({
+function workbenchProps({
   scaffold,
   layout,
-}: ScaffoldPartProps): ReactElement {
-  const visible =
-    layout.frame.workbenchDocked || scaffold.workbenchShown === true;
+}: ScaffoldPartProps): IconButtonProps {
+  const visible = ['docked', 'floating'].includes(layout.frame.workbenchState);
 
-  return (
-    <IconButton
-      {...bandControlAppearance}
-      icon="workbench"
-      selected={visible}
-      accessibilityLabel="Toggle Workbench"
-      disabled={!scaffold.band?.workbench}
-      onPress={() => scaffold.onWorkbenchShownChange?.(!visible)}
-    />
-  );
+  return {
+    ...bandControlAppearance,
+    icon: 'workbench',
+    selected: visible,
+    accessibilityLabel: 'Toggle Workbench',
+    disabled: !scaffold.band?.workbench,
+    onPress: () => scaffold.onWorkbenchShownChange?.(!visible),
+  };
+}
+
+function WorkbenchToggle(parts: ScaffoldPartProps): ReactElement {
+  return <IconButton {...workbenchProps(parts)} />;
 }
 
 function StageExpand({ scaffold, layout }: ScaffoldPartProps): ReactElement {
   const expanded = layout.inspectorExpanded;
-  const label = expanded ? 'Restore Stage' : 'Expand Stage';
 
   return (
     <IconButton
       {...bandControlAppearance}
       icon={expanded ? 'collapse' : 'expand'}
       selected={expanded}
-      accessibilityLabel={label}
+      accessibilityLabel={expanded ? 'Restore Stage' : 'Expand Stage'}
       disabled={!layout.inspectorOpen}
       onPress={() =>
         scaffold.onInspectorStateChange(expanded ? 'open' : 'expanded')
@@ -69,22 +72,28 @@ function openStage(scaffold: ScaffoldPartProps['scaffold']): void {
   else scaffold.onInspectorStateChange('open');
 }
 
+function BandMenu({ scaffold }: ScaffoldPartProps): ReactElement {
+  return (
+    <View className="size-7 shrink-0">
+      {scaffold.band?.menu ?? (
+        <IconButton
+          {...bandControlAppearance}
+          icon="more"
+          accessibilityLabel="More"
+          disabled
+        />
+      )}
+    </View>
+  );
+}
+
 export function BandTrailing(parts: ScaffoldPartProps): ReactElement {
   return (
     <View
       testID="window-band-trailing"
       className="shrink-0 flex-row items-center gap-1 web:[app-region:no-drag]"
     >
-      <View className="size-7 shrink-0">
-        {parts.scaffold.band?.menu ?? (
-          <IconButton
-            {...bandControlAppearance}
-            icon="more"
-            accessibilityLabel="More"
-            disabled
-          />
-        )}
-      </View>
+      <BandMenu {...parts} />
       <WorkbenchToggle {...parts} />
       <StageExpand {...parts} />
       <StageToggle {...parts} />

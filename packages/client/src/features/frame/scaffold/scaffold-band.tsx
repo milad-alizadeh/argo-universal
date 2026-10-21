@@ -11,24 +11,28 @@ const leadingWidths = { mac: 124, other: 44 };
 
 const leadingInsets = { mac: 88, other: 8 };
 
-function SidebarBandToggle({ scaffold }: ScaffoldPartProps): ReactElement {
-  const label = scaffold.sidebarShown ? 'Hide sidebar' : 'Show sidebar';
+function SidebarBandToggle({
+  scaffold,
+  layout,
+}: ScaffoldPartProps): ReactElement {
+  const shown = !layout.frame.listFolded;
 
   return (
     <IconButton
       {...bandControlAppearance}
       icon="sidebar"
-      selected={scaffold.sidebarShown}
-      accessibilityLabel={label}
-      onPress={() => scaffold.onSidebarShownChange(!scaffold.sidebarShown)}
+      selected={shown}
+      accessibilityLabel={shown ? 'Hide sidebar' : 'Show sidebar'}
+      onPress={() => scaffold.onSidebarShownChange(!shown)}
     />
   );
 }
 
-function BandLeading({
-  platform,
-  ...parts
-}: ScaffoldPartProps & { platform: keyof typeof leadingWidths }): ReactElement {
+type BandLeadingProps = ScaffoldPartProps & {
+  platform: keyof typeof leadingWidths;
+};
+
+function BandLeading({ platform, ...parts }: BandLeadingProps): ReactElement {
   const style = {
     width: leadingWidths[platform],
     paddingLeft: leadingInsets[platform],
