@@ -13,7 +13,6 @@ const meta = {
   title: 'Design System/Primitives/Layout/ScrollView',
   component: ScrollView,
   argTypes: kitArgTypes('ScrollView'),
-  args: verticalScrollView,
   // A bounded height is what makes the region scroll, as it has in a product layout.
   decorators: [
     (Story): React.JSX.Element => (

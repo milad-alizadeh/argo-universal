@@ -10,7 +10,7 @@ const meta = {
   title: 'Design System/Primitives/Overlays/Tooltip',
   component: Tooltip,
   // The trigger is composed in the render, so `children` is an arg in name only.
-  args: { ...linkTooltip, children: undefined },
+  args: { children: undefined },
   argTypes: kitArgTypes('Tooltip'),
   // A tooltip wraps the caller's own control, which the story composes rather than passes as an arg.
   render: (args): ReactElement => (

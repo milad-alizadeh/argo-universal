@@ -6,7 +6,6 @@ import { cardsList, groupedList, plainList } from './list-fixtures';
 const meta = {
   title: 'Design System/Primitives/Lists/List',
   component: List,
-  args: plainList,
   argTypes: kitArgTypes('List'),
 } satisfies Meta<typeof List>;
 

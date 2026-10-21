@@ -14,7 +14,6 @@ const meta = {
   title: 'Design System/Primitives/Layout/Grid',
   component: Grid,
   argTypes: kitArgTypes('Grid'),
-  args: twoColumnsGrid,
 } satisfies Meta<typeof Grid>;
 
 export default meta;

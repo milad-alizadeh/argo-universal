@@ -12,7 +12,6 @@ import {
 const meta = {
   title: 'Design System/Primitives/Inputs/Textarea',
   component: Textarea,
-  args: emptyTextarea,
   argTypes: kitArgTypes('Textarea'),
   tags: ['third-party'],
 } satisfies Meta<typeof Textarea>;
@@ -28,7 +27,7 @@ export const Filled: Story = { args: filledTextarea };
 export const ReadOnly: Story = { args: readOnlyTextarea };
 
 export const Invalid: Story = {
-  render: (args): React.JSX.Element => (
-    <Textarea {...args} {...invalidTextarea} />
+  render: (): React.JSX.Element => (
+    <Textarea {...emptyTextarea} {...invalidTextarea} />
   ),
 };

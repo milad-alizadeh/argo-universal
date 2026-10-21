@@ -7,7 +7,6 @@ const meta = {
   title: 'Design System/Primitives/Layout/Stack',
   component: Stack,
   argTypes: kitArgTypes('Stack'),
-  args: rowStack,
 } satisfies Meta<typeof Stack>;
 
 export default meta;

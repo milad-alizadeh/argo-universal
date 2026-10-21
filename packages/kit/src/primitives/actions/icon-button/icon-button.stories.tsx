@@ -22,7 +22,6 @@ import {
 const meta = {
   title: 'Design System/Primitives/Actions/IconButton',
   component: IconButton,
-  args: defaultIconButton,
   argTypes: kitArgTypes('IconButton'),
   // A row keeps the button at its own width, as it sits in a product layout.
   decorators: [

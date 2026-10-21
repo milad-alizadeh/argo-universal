@@ -162,11 +162,12 @@
       "rules": { "anti-slop/no-unsafe-dictionary-type": "off" }
     },
     {
-      // Tests, stories, fixtures and mocks state their inputs and expectations as literals.
+      // Tests, stories, story fixtures and mocks state their inputs and expectations as literals.
       "files": [
         "**/*.test.*",
         "**/*.stories.*",
-        "**/*-fixtures.*",
+        "packages/kit/src/**/*-fixtures.*",
+        "packages/client/src/**/*-fixtures.*",
         "**/*.mocks.*",
         "e2e/**",
         "**/mocks/**",
