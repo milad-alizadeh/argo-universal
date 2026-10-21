@@ -2,6 +2,7 @@ import type { PaneSpan } from '../utils/pane-shift';
 import { frameContent } from './content-geometry';
 import type { FrameGeometry } from './frame-geometry-types';
 import type { ScaffoldGeometryInput } from './scaffold-geometry';
+import { frameStage, stageRegion } from './stage-geometry';
 import {
   frameWorkbench,
   workbenchState,
@@ -20,16 +21,6 @@ export interface FrameRegions {
 
 function listWidth(input: ScaffoldGeometryInput): number {
   return Math.max(input.measures.listWidth, input.preferredListWidth);
-}
-
-function stageWidth(input: ScaffoldGeometryInput): number {
-  return Math.max(input.measures.inspectorWidth, input.preferredInspectorWidth);
-}
-
-function stageRegion(input: ScaffoldGeometryInput): number {
-  return input.inspectorState === 'closed'
-    ? 0
-    : stageWidth(input) + input.measures.paneGap;
 }
 
 function frameThresholds(
@@ -52,27 +43,6 @@ function frameList(input: ScaffoldGeometryInput, threshold: number): PaneSpan {
     offset: input.measures.inset + input.measures.railWidth,
     width: folded ? 0 : listWidth(input),
   };
-}
-
-function stageTarget(input: ScaffoldGeometryInput): number {
-  return input.inspectorState === 'expanded' ? input.width : stageWidth(input);
-}
-
-function frameStage(
-  input: ScaffoldGeometryInput,
-  contentStart: number,
-): PaneSpan {
-  const available = Math.max(
-    0,
-    input.width - contentStart - input.measures.inset,
-  );
-
-  const width =
-    input.inspectorState === 'closed'
-      ? 0
-      : Math.min(available, stageTarget(input));
-
-  return { offset: input.width - input.measures.inset - width, width };
 }
 
 function occupiedWidth(width: number, gap: number): number {
