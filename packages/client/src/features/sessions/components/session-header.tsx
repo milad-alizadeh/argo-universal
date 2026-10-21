@@ -5,7 +5,7 @@ import { WindowBand } from '../../../lib/product/window-band';
 import { SessionHeaderBar } from './session-header-bar';
 import { SessionHeaderMenu } from './session-header-menu';
 import type { SessionHeaderProps } from './session-header-props';
-import { SessionWorkbench } from './session-workbench';
+import { WorkbenchColumn } from './workbench-column';
 
 export type {
   SessionHeaderProps,
@@ -34,7 +34,7 @@ function headerMenu({ menu }: SessionHeaderProps): ReactElement | undefined {
 function headerWorkbench({
   panels,
 }: SessionHeaderProps): ReactElement | undefined {
-  return panels ? <SessionWorkbench panels={panels} /> : undefined;
+  return panels ? <WorkbenchColumn panels={panels} /> : undefined;
 }
 
 function stageToggle({ panels }: SessionHeaderProps): (() => void) | undefined {

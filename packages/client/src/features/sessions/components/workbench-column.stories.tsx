@@ -3,17 +3,17 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { severalPullRequests } from './session-pull-request.mocks';
-import { SessionWorkbench } from './session-workbench';
 import { sessionShells } from './shell-list/shell-list.mocks';
 import {
   subagentNow,
   subagentStates,
 } from './subagent-list/subagent-list.mocks';
+import { WorkbenchColumn } from './workbench-column';
 
-// Paper / WorkbenchGlass: the Changes, Agents and Shells cards at their product width.
+// Paper 24JC-0: Components / WorkbenchColumn at its product width.
 const meta = {
-  title: 'Sessions/SessionWorkbench',
-  component: SessionWorkbench,
+  title: 'Sessions/WorkbenchColumn',
+  component: WorkbenchColumn,
   parameters: { screenPreview: true },
   decorators: [
     (Story): ReactElement => (
@@ -38,10 +38,10 @@ const meta = {
       onOpenChanges: fn(),
     },
   },
-} satisfies Meta<typeof SessionWorkbench>;
+} satisfies Meta<typeof WorkbenchColumn>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = { name: 'SessionWorkbench' };
+export const Overview: Story = { name: 'WorkbenchColumn' };

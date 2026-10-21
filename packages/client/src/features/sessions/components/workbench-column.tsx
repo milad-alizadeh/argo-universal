@@ -5,14 +5,14 @@ import type { SessionPanel } from '../stores/session-panels';
 import type { SessionHeaderPanels } from './session-header-props';
 import { sessionPanelLabels } from './session-panel-triggers';
 import { WorkbenchAgents } from './session-workbench-agents';
-import { WorkbenchCard } from './session-workbench-card';
 import {
   WorkbenchChangesSection,
   WorkbenchChangesTotal,
 } from './session-workbench-change-section';
+import { WorkbenchCard } from './workbench-card';
 
-// ADR-0039: a summary per section; its list lives in the Stage tab that pressing the card opens.
-export function SessionWorkbench({
+// Paper 24JC-0: WorkbenchColumn previews sections and opens their lists in Stage.
+export function WorkbenchColumn({
   panels,
 }: {
   panels: SessionHeaderPanels;

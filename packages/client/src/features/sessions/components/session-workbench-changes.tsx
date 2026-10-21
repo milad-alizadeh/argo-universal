@@ -1,9 +1,9 @@
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from '#primitives/content/text';
+import { ChangeRow } from './change-row';
 import { ChangeStageIcon } from './change-stage/change-stage';
 import type { SessionPullRequest } from './session-pull-request';
-import { WorkbenchChangeRow } from './session-workbench-change-row';
 
 interface Props {
   changes: readonly SessionPullRequest[];
@@ -33,7 +33,7 @@ const previewRows = (
   onOpen: () => void,
 ): ReactElement[] =>
   changes.map((change) => (
-    <WorkbenchChangeRow key={change.number} change={change} onOpen={onOpen} />
+    <ChangeRow key={change.number} change={change} onOpen={onOpen} />
   ));
 
 function MoreChanges({ changes, onOpen }: Props): ReactElement {

@@ -13,7 +13,7 @@ import type { SessionPullRequest } from './session-pull-request';
 
 type Props = { change: SessionPullRequest; onOpen: () => void };
 
-export function WorkbenchChangeRow(props: Props): ReactElement {
+export function ChangeRow(props: Props): ReactElement {
   return (
     <View className="flex-row items-start gap-2 px-1 py-2">
       <ChangeAction {...props} />
