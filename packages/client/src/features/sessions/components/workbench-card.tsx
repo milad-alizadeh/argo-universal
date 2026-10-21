@@ -1,5 +1,9 @@
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
+import {
+  Collapsible,
+  CollapsibleContent,
+} from '#primitives/layout/collapsible';
 import { Surface } from '#primitives/layout/surface';
 import type { IconName } from '../../../lib/generic/symbols/icon-names';
 import { WorkbenchCollapsibleTitle } from './workbench-collapsible-title';
@@ -39,11 +43,14 @@ function WorkbenchPlate(props: Props): ReactElement {
 
 function CardContents(props: HeadingProps): ReactElement {
   return (
-    <View className="gap-2">
+    <Collapsible open={props.open}>
       <CardTitle {...props} />
-      {props.open &&
-        (props.interactive ? props.children : <BodyAction {...props} />)}
-    </View>
+      <CollapsibleContent>
+        <View className="pt-2">
+          {props.interactive ? props.children : <BodyAction {...props} />}
+        </View>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 

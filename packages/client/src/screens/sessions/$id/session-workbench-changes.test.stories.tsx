@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
-import { expect, screen, within } from 'storybook/test';
+import { expect, screen, within, waitFor } from 'storybook/test';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -72,7 +72,9 @@ export const DisclosureKeepsStageClosed: Story = {
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Collapse Changes' }),
     );
-    await expect(canvas.queryByRole('button', firstChange)).toBeNull();
+    await waitFor(() =>
+      expect(canvas.queryByRole('button', firstChange)).toBeNull(),
+    );
     await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Expand Changes' }),

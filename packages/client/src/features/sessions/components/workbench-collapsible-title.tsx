@@ -1,10 +1,11 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View, type PressableProps } from 'react-native';
-import { cn } from '#lib/generic/utils';
+import Animated from 'react-native-reanimated';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
 import type { IconName } from '../../../lib/generic/symbols/icon-names';
+import { useWorkbenchTitlePadding } from './use-workbench-title-padding';
 
 export interface WorkbenchCollapsibleTitleProps {
   title: string;
@@ -21,10 +22,12 @@ export function WorkbenchCollapsibleTitle(
 ): ReactElement {
   return (
     <Pressable {...titleControlProps(props)}>
-      <TitleLabel {...props} />
-      <TitleDisclosure expanded={props.expanded} />
-      <View className="flex-1" />
-      {props.summary}
+      <Animated.View
+        className="flex-row items-center gap-2 pt-3 pr-4 pl-1"
+        style={useWorkbenchTitlePadding(props.expanded)}
+      >
+        <TitleContents {...props} />
+      </Animated.View>
     </Pressable>
   );
 }
@@ -36,11 +39,19 @@ const titleControlProps = (
   accessibilityLabel: actionLabel(props),
   'aria-expanded': props.expanded,
   onPress: props.onPress,
-  className: cn(
-    'flex-row items-center gap-2 rounded-2xl pt-3 pr-4 pl-1',
-    props.expanded === false && 'pb-3',
-  ),
+  className: 'rounded-2xl',
 });
+
+function TitleContents(props: WorkbenchCollapsibleTitleProps): ReactElement {
+  return (
+    <>
+      <TitleLabel {...props} />
+      <TitleDisclosure expanded={props.expanded} />
+      <View className="flex-1" />
+      {props.summary}
+    </>
+  );
+}
 
 function TitleLabel({
   title,

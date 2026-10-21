@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { Text } from '#primitives/content/text';
+import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
 import { WorkbenchCard } from './workbench-card';
 
 const meta = {
@@ -37,7 +38,9 @@ export const WholeHeaderTogglesAndBodyOpensStage: Story = {
       canvas.getByRole('heading', { name: 'Changes' }),
     );
     await userEvent.click(canvas.getByText('Changes'));
-    await expect(canvas.queryByText('Working branch')).toBeNull();
+    await waitFor(() =>
+      expect(canvas.queryByText('Working branch')).toBeNull(),
+    );
     await userEvent.click(canvas.getByText('3 files'));
     await expect(canvas.getByText('Working branch')).toBeVisible();
     header.focus();
@@ -50,5 +53,31 @@ export const WholeHeaderTogglesAndBodyOpensStage: Story = {
       canvas.getByRole('button', { name: 'Open Changes overview' }),
     );
     await expect(args.onOpen).toHaveBeenCalledOnce();
+  },
+};
+
+async function assertHeightMotion(
+  canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
+  action: string,
+): Promise<void> {
+  const card = canvas.getByTestId('card');
+
+  const height = (): number => card.getBoundingClientRect().height;
+  const start = height();
+
+  const frames = await sampleEachFrame(
+    () => canvas.getByRole('button', { name: action }).click(),
+    height,
+    24,
+  );
+
+  await expect(frames.at(-1)).not.toBe(start);
+  await expect(new Set(frames.map(Math.round)).size).toBeGreaterThan(2);
+}
+
+export const CardHeightAnimatesInBothDirections: Story = {
+  play: async ({ canvas }) => {
+    await assertHeightMotion(canvas, 'Collapse Changes');
+    await assertHeightMotion(canvas, 'Expand Changes');
   },
 };

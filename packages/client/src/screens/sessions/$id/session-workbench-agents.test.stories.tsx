@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import {
   subagentStates,
@@ -55,7 +55,7 @@ export const DisclosureKeepsStageClosed: Story = {
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Collapse Agents' }),
     );
-    await expect(canvas.queryByText(activeTitle)).toBeNull();
+    await waitFor(() => expect(canvas.queryByText(activeTitle)).toBeNull());
     await expect(canvas.queryByText('2 done')).toBeNull();
     await expect(
       canvas.getByRole('button', { name: 'Show Stage' }),
