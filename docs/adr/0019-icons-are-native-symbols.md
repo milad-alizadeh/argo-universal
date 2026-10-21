@@ -10,17 +10,17 @@ Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-1
 | Electron on Windows and Linux | Material Symbols | as on web |
 | Electron on macOS | SF Symbols | macOS, at runtime |
 
-One map, `packages/client/src/lib/generic/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" role="control" />`; colour comes from the text class. The one exception is a Plugin's icon (owner, 2026-10-16, [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md)): a Plugin names its own SF and Material symbols, so `Icon` also takes an `{ sf, sfFilled?, material }` pair that bypasses the map. Screens never write a pair; only Plugin navigation passes one.
+One map, `packages/kit/src/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" role="control" />`; colour comes from the text class. The one exception is a Plugin's icon (owner, 2026-10-16, [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md)): a Plugin names its own SF and Material symbols, so `Icon` also takes an `{ sf, sfFilled?, material }` pair that bypasses the map. Screens never write a pair; only Plugin navigation passes one.
 
 ## Icon roles
 
-An icon takes a role, never a size (owner, 2026-10-12): where it sits decides its size, and an icon beside text steps up on the phone as the text does. `packages/client/src/lib/generic/symbols/icon-role.ts` is the one table of roles and their wide and phone sizes, on the 12, 14, 16, 20 and 24 scale. SwiftUI and Compose trees, which cannot hold `Icon`, read the same table through `useIconPixels(role)` or draw with `SwiftUISymbol`, so native icons cannot drift from the rest. The `argo/icon-role` lint rule rejects a size prop, a `size-*` class on an icon, a hand-written `systemName` and a numeric Compose `size` modifier outside `lib/generic/symbols`.
+An icon takes a role, never a size (owner, 2026-10-12): where it sits decides its size, and an icon beside text steps up on the phone as the text does. `packages/kit/src/symbols/icon-role.ts` is the one table of roles and their wide and phone sizes, on the 12, 14, 16, 20 and 24 scale. SwiftUI and Compose trees, which cannot hold `Icon`, read the same table through `useIconPixels(role)` or draw with `SwiftUISymbol`, so native icons cannot drift from the rest. The `argo/icon-role` lint rule rejects a size prop, a `size-*` class on an icon, a hand-written `systemName` and a numeric Compose `size` modifier outside the kit's `symbols/`.
 
 Apple's licence allows SF Symbols only in apps for Apple platforms, so no SF Symbol image is committed or shipped in the web build. On macOS, the Electron main process draws the symbol with `nativeImage.createFromNamedImage` and the preload script returns it as a PNG data URL. The page uses that image as a CSS mask filled with the text colour, caches it, and keeps an empty box of the same size while it loads. The IPC request is validated; an unrecognised request is rejected, reported and counted.
 
 ## Custom symbols
 
-Where SF Symbols has no symbol for an Argo icon, Argo draws a custom SF Symbol (owner, 2026-10-10). The first is `custom.robot`, the Agent icon; SF Symbols 8 has no robot. Each custom symbol is one Regular-M template path in `packages/client/src/lib/generic/symbols/custom-symbol-paths.json`, named `custom.<name>` so it cannot clash with Apple's names:
+Where SF Symbols has no symbol for an Argo icon, Argo draws a custom SF Symbol (owner, 2026-10-10). The first is `custom.robot`, the Agent icon; SF Symbols 8 has no robot. Each custom symbol is one Regular-M template path in `packages/kit/src/symbols/custom-symbol-paths.json`, named `custom.<name>` so it cannot clash with Apple's names:
 
 - iOS: the Expo plugin `apps/universal-app/plugins/with-custom-symbols.mjs` writes it into the app's asset catalog as a symbol set, and `SymbolView`, patched to fall back to `UIImage(named:)`, draws it natively, so it follows weight and size like the system symbols.
 - Electron on macOS: the page masks the path itself; no IPC is needed, since the art is Argo's own and its licence allows shipping it.
@@ -34,9 +34,9 @@ Paper designs may use SF Symbols exported as SVG as mockups only; they never rea
 
 ## Git icons
 
-Git icons are the first exception to native symbols (owner, 2026-10-16). Neither SF Symbols nor Material Symbols has a full set for branches and pull request states, and mixing the nearest names drew a different, incomplete set on each platform. Branch, pull request, every PR state (open, draft, merged, closed, conflict), Merge PR and Changes use Tabler Icons v3.49.0 (MIT, © Paweł Kuna), drawn from the same paths on every platform. These icons take priority over SF Symbols, Material Symbols and any other set. The source SVGs and licences are committed in `packages/client/src/lib/generic/symbols/assets/tabler`.
+Git icons are the first exception to native symbols (owner, 2026-10-16). Neither SF Symbols nor Material Symbols has a full set for branches and pull request states, and mixing the nearest names drew a different, incomplete set on each platform. Branch, pull request, every PR state (open, draft, merged, closed, conflict), Merge PR and Changes use Tabler Icons v3.49.0 (MIT, © Paweł Kuna), drawn from the same paths on every platform. These icons take priority over SF Symbols, Material Symbols and any other set. The source SVGs and licences are committed in `packages/kit/src/symbols/assets/tabler`.
 
-- The source SVGs and Tabler's licence are committed in `packages/client/src/lib/generic/symbols/assets/tabler`. The Swift package `tools/sf-symbols/tabler-symbols` outlines their 2-point strokes and unions them with Core Graphics, so every platform gets filled paths, and writes `tabler-symbol-paths.json` in the custom symbols' units and box.
+- The source SVGs and Tabler's licence are committed in `packages/kit/src/symbols/assets/tabler`. The Swift package `tools/sf-symbols/tabler-symbols` outlines their 2-point strokes and unions them with Core Graphics, so every platform gets filled paths, and writes `tabler-symbol-paths.json` in the custom symbols' units and box.
 - iOS: `with-custom-symbols` writes them into the asset catalog with the other custom symbols, and `SymbolView` draws them.
 - Electron on macOS and web, Windows and Linux: the page masks the path, as for the other custom symbols.
 - Android: `react-native-svg` draws the path, filled with the icon's colour.
@@ -47,7 +47,7 @@ Git icons are the first exception to native symbols (owner, 2026-10-16). Neither
 
 Logos are plain SVG assets, not symbols (owner, 2026-10-19). A brand mark such as GitHub's is a logo, not a glyph: the Tabler pipeline, built for 2-point strokes on a 24-point grid, outlined the GitHub mark's filled 16-point shape as if it were strokes and drew it distorted. Native symbols and the Tabler pipeline stay for glyphs.
 
-- The SVG files and their licences are committed in `packages/client/src/lib/generic/symbols/assets/logos`, with `currentColor` fills. The first is GitHub's Octicons mark (MIT), which the Agent card's repository link draws (owner decision, 2026-10-16).
+- The SVG files and their licences are committed in `packages/kit/src/symbols/assets/logos`, with `currentColor` fills. The first is GitHub's Octicons mark (MIT), which the Agent card's repository link draws (owner decision, 2026-10-16).
 - `logo-source.ts` imports each file and gives it a name to speak; `Icon` draws one through its `source` prop, and `IconButton` through `iconSource`. A logo has no Argo icon name, so it never reaches the symbol map, the asset catalog or a Plugin.
 - One renderer draws it on iOS, Android, web and Electron: `react-native-svg`, from a component the bundler makes of the file. Metro uses `react-native-svg-transformer` for the app and the desktop app's web build, and Storybook's Vite uses `vite-plugin-svgr` with SVGR's native output.
 - It draws at the role's size from `icon-role.ts`, filling the share of the box that `circle` fills, so a round mark matches the symbols beside it, and takes the icon's text colour as every other icon does.

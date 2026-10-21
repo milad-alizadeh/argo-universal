@@ -1,6 +1,6 @@
+import { Surface } from '@repo/kit/primitives/layout/surface';
+import { cn } from '@repo/kit/utils';
 import type { ComponentProps, ReactElement, ReactNode, RefObject } from 'react';
-import { cn } from '#lib/generic/utils';
-import { Surface } from '#primitives/layout/surface';
 import type { FramePaneProps } from './frame-pane';
 import { leftEdgeClip, useEdgeClip } from './pane-edge-clip.web';
 

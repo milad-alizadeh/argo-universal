@@ -1,9 +1,9 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, TextInput } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { Text } from '#primitives/content/text';
 import { SessionLayout } from './session-layout';
 
 const feedText = 'Read 2 files, edited 1 file';

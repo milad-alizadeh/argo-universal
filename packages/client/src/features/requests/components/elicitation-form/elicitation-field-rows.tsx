@@ -1,7 +1,7 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
+import { type StandaloneTextInputProps } from '@repo/kit/primitives/inputs/text-input';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
-import { type StandaloneTextInputProps } from '#primitives/inputs/text-input';
-import { ListItem } from '#primitives/lists/list-item';
 import { toggledChoice } from './elicitation-answers';
 import { OptionRows } from './elicitation-option-rows';
 import { elicitationChoices, numericProperty } from './elicitation-property';

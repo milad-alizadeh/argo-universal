@@ -1,5 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
-import type { StatusDotProps } from '#primitives/status/status-dot';
+import type { StatusDotProps } from '@repo/kit/primitives/status/status-dot';
 
 export const sessionStatusLabels = {
   needs_input: 'Needs input',

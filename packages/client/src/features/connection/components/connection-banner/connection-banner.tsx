@@ -1,12 +1,12 @@
+import { motionDuration } from '@repo/kit/motion';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
+import { Text } from '@repo/kit/primitives/content/text';
+import { NativeOnlyAnimatedView } from '@repo/kit/primitives/native/native-only-animated-view';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Keyframe } from 'react-native-reanimated';
-import { IconButton } from '#primitives/actions/icon-button';
-import { LiquidGlass } from '#primitives/content/liquid-glass';
-import { Text } from '#primitives/content/text';
-import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
-import { Spinner } from '#primitives/status/spinner';
-import { motionDuration } from '../../../../lib/generic/motion';
 import type { ConnectionState } from '../../stores/connection';
 
 export interface ConnectionBannerProps {

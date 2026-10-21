@@ -1,7 +1,7 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, screen, waitFor } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { runningShell } from './shell-list.mocks';
 import sheetMeta from './shell-sheet.stories';
 

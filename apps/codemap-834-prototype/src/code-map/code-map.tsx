@@ -4,7 +4,7 @@
  * renderer, its camera and controls, label placement and drawing, palette, readiness and the
  * accessible file list that selects the same file as the canvas.
  */
-import { Text } from '@repo/client/text';
+import { Text } from '@repo/kit/text';
 import {
   Suspense,
   useCallback,

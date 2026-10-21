@@ -1,7 +1,7 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import { CalloutLoading, LaunchCallout } from './launch-callout';
 
 const exited = `Agent exited with status 1

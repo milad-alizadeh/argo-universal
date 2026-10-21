@@ -1,11 +1,14 @@
+import {
+  InspectorPage,
+  InspectorPages,
+} from '@repo/kit/primitives/scaffolds/inspector';
+import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
 import { useState, type ReactNode } from 'react';
 import {
   SubagentList,
   type SubagentListProps,
   type SubagentFeedProps,
 } from '#features/sessions';
-import { InspectorPage, InspectorPages } from '#primitives/scaffolds/inspector';
-import { ScrollFadeView } from '../../../lib/generic/scroll-fade/scroll-fade';
 
 export type AgentFeedSlot = (
   props: Pick<SubagentFeedProps, 'subagent' | 'onBack'>,

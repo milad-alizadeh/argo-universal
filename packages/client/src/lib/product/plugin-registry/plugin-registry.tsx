@@ -1,7 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
+import { SvgBudget } from '@repo/kit/primitives/visual';
 import type * as React from 'react';
-import { SvgBudget } from '#primitives/visual';
 import { usePluginDispatcher } from '../plugin-dispatcher';
 import { RenderNode } from './plugin-nodes';
 import type { PluginOnEvent } from './plugin-rendering';

@@ -1,10 +1,10 @@
 import type { ToolCallUpdate } from '@repo/contracts';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Page } from '#primitives/scaffolds/page';
 import { ScaffoldMock } from '../../../../../mocks/scaffold';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { EditRow } from './edit-row';
 
 function EditFeed({ row }: { row: ToolCallUpdate }): React.JSX.Element {

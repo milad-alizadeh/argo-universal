@@ -2,12 +2,12 @@ import type {
   ElicitationPropertySchema,
   PendingElicitation,
 } from '@repo/contracts';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { ListItem } from '#primitives/lists/list-item';
 import type { ElicitationAnswer } from './elicitation-form';
 import { elicitationChoices, propertyTitle } from './elicitation-property';
 

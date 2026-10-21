@@ -1,7 +1,7 @@
+import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { InspectorPane } from '#primitives/scaffolds/inspector';
 import { ListTitle } from '../../../lib/product/list-title';
 import {
   type Section,

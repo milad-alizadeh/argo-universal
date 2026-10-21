@@ -1,3 +1,4 @@
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
@@ -8,7 +9,6 @@ import {
   type EdgeInsets,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { cn } from '#lib/generic/utils';
 
 const allEdges: readonly Edge[] = ['top', 'right', 'bottom', 'left'];
 

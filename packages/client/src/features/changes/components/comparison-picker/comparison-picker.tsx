@@ -1,8 +1,8 @@
+import { Menu, MenuTrigger } from '@repo/kit/primitives/overlays/menu';
+import type { MenuChoiceGroup } from '@repo/kit/primitives/overlays/menu';
+import { useOptionalSheet } from '@repo/kit/primitives/overlays/sheet';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Menu, MenuTrigger } from '#primitives/overlays/menu';
-import type { MenuChoiceGroup } from '#primitives/overlays/menu';
-import { useOptionalSheet } from '#primitives/overlays/sheet';
 import {
   type ChangesComparison,
   allChangesLabel,

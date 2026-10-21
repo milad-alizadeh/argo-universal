@@ -1,7 +1,7 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { DOMProps } from 'expo/dom';
 import { createElement, useEffect, useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { terminalKeyboardHeight } from './terminal-appearance';
 import type { LoginTerminalProps } from './terminal-props';
 import TerminalRenderer from './terminal-renderer';

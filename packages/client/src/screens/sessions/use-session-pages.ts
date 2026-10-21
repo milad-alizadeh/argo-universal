@@ -1,5 +1,9 @@
 import type { AppRouter } from '@repo/engine/router';
 import {
+  type ErrorToast,
+  useErrorToast,
+} from '@repo/kit/primitives/overlays/toast';
+import {
   type InfiniteData,
   keepPreviousData,
   type UseInfiniteQueryResult,
@@ -17,7 +21,6 @@ import {
   sessionsListInput,
   useSessionsViewKept,
 } from '#features/sessions';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import type { SessionListViewProps } from './session-list-view';
 
 type SessionsSearch = Pick<SessionListViewProps, 'view' | 'query'>;

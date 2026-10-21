@@ -1,7 +1,7 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
 import { OnboardingFrame, type OnboardingFrameProps } from './onboarding-frame';
 
 const meta = {

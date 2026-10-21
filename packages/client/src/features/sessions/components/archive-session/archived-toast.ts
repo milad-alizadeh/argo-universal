@@ -1,4 +1,4 @@
-import type { Toast } from '#primitives/overlays/toast';
+import type { Toast } from '@repo/kit/primitives/overlays/toast';
 
 const archivedToastCopy = { title: 'Session archived', undo: 'Undo' };
 

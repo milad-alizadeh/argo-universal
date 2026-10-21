@@ -1,11 +1,11 @@
-import type { ReactElement } from 'react';
-import { sessionHref } from '#lib/product/navigation/navigation';
 import {
   ActionList,
   Action,
   type ActionListProps,
-} from '#primitives/actions/action-list';
-import { type ContextMenuTriggerProps } from '#primitives/overlays/menu';
+} from '@repo/kit/primitives/actions/action-list';
+import { type ContextMenuTriggerProps } from '@repo/kit/primitives/overlays/menu';
+import type { ReactElement } from 'react';
+import { sessionHref } from '#lib/product/navigation/navigation';
 import { sessionMenuItems, type SessionMenuItem } from '../session-menu-items';
 import type { SessionRowProps } from './session-row-props';
 

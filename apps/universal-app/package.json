@@ -22,6 +22,7 @@
     "@react-native-community/datetimepicker": "catalog:",
     "@react-native-community/slider": "catalog:",
     "@repo/client": "workspace:*",
+    "@repo/kit": "workspace:*",
     "@repo/uniwind": "workspace:*",
     "@shopify/react-native-skia": "catalog:",
     "@storybook/addon-ondevice-actions": "catalog:",

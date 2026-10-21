@@ -72,10 +72,10 @@ describe('storyEntries', () => {
 describe('derivedTitle', () => {
   it.each([
     [
-      'packages/client/src/lib/generic/primitives/status/pill/pill.tsx',
+      'packages/kit/src/primitives/status/pill/pill.tsx',
       'Design System/Primitives/Status/Pill',
     ],
-    ['packages/client/src/lib/generic/symbols/icon.tsx', 'Design System/Icon'],
+    ['packages/kit/src/symbols/icon.tsx', 'Design System/Icon'],
     [
       'packages/client/src/lib/product/scroll-fade/scroll-fade.tsx',
       'Shared/ScrollFade',

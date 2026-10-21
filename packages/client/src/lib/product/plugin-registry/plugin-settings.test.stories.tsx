@@ -1,7 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
-import { settleViewport } from '../../generic/settle-viewport';
 import { PluginTree } from './plugin-registry';
 
 const node = (

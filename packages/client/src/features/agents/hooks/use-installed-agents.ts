@@ -1,4 +1,5 @@
 import type { AgentServer, AgentsRegistryOutput } from '@repo/contracts';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
 import {
   type UseMutationResult,
   type UseQueryResult,
@@ -8,7 +9,6 @@ import {
 } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTRPC, type ClientError } from '#features/connection';
-import { showToast } from '#primitives/overlays/toast';
 import { type AgentRows, agentsPage } from '../utils/agent-rows';
 import {
   type InstalledAgents,

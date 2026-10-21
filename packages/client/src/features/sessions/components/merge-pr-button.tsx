@@ -1,5 +1,5 @@
+import { SplitButton } from '@repo/kit/primitives/actions/split-button';
 import type * as React from 'react';
-import { SplitButton } from '#primitives/actions/split-button';
 import type { MergeMethod } from '../stores/merge-method';
 
 const mergeMethodOptions = [

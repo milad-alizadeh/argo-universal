@@ -1,9 +1,9 @@
 import type { SessionConfigSelectOption } from '@repo/contracts';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { configurationChoices } from '#lib/product/session-configuration';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
 import { ConfigurationChoice } from './configuration-choice';
 import { ConfigurationCombobox } from './configuration-combobox';
 import { selection } from './configuration-values';

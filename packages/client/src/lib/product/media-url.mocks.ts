@@ -1,7 +1,10 @@
 import { wireParts } from '@repo/contracts/plugins/kit';
+import type {
+  MediaAsset,
+  MediaUrl,
+} from '@repo/kit/primitives/content/media-url';
 import chime from '@repo/mocks/media/chime.mp3';
 import poster from '@repo/mocks/media/poster.jpeg';
-import type { MediaAsset, MediaUrl } from '#primitives/content/media-url';
 import { storyClip } from './story-clip.mocks';
 
 const formats = (part: 'Video' | 'Audio'): ReadonlySet<MediaAsset['format']> =>

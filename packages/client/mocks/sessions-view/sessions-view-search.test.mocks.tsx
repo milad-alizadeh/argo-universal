@@ -1,6 +1,6 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { sessionRows } from '@repo/mocks/app';
 import { expect } from 'storybook/test';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { SessionsPreviewMock } from '../sessions-preview-mock';
 import {
   noMatches,

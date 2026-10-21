@@ -1,10 +1,13 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import {
+  MenuTrigger,
+  type MenuTriggerProps,
+} from '@repo/kit/primitives/overlays/menu';
+import { Sheet } from '@repo/kit/primitives/overlays/sheet';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { Icon } from '#primitives/content/icon';
-import { MenuTrigger, type MenuTriggerProps } from '#primitives/overlays/menu';
-import { Sheet } from '#primitives/overlays/sheet';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import {

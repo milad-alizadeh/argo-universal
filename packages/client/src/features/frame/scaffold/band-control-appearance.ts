@@ -1,4 +1,4 @@
-import type { IconButtonProps } from '#primitives/actions/icon-button';
+import type { IconButtonProps } from '@repo/kit/primitives/actions/icon-button';
 
 // Paper's band controls share their box, glyph role and corners.
 export const bandControlAppearance = {

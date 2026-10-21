@@ -1,6 +1,6 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { ReactElement } from 'react';
-import { Text } from '#primitives/content/text';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { WindowBand } from '../../../lib/product/window-band';
 import { SessionHeaderBar } from './session-header-bar';
 import { SessionHeaderMenu } from './session-header-menu';

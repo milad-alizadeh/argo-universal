@@ -1,8 +1,8 @@
+import { Label } from '@repo/kit/primitives/content/label';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { Label } from '#primitives/content/label';
-import { StatusDot } from '#primitives/status/status-dot';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
 import { sidebarRows } from './session-row-sidebar';
 

@@ -1,7 +1,7 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import fileDiff from '@repo/kit/symbols/assets/file-diff.xml';
 import { Stack } from 'expo-router';
 import type * as React from 'react';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
-import fileDiff from '../../../lib/generic/symbols/assets/file-diff.xml';
 import { toolbarIcon } from '../../../lib/product/navigation/toolbar-icon';
 import { type SessionMenuItem, sessionMenuItems } from './session-menu-items';
 import type { SessionMenuToolbarProps } from './session-menu-toolbar';

@@ -1,8 +1,8 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { List } from '@repo/kit/primitives/lists/list';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { type MockInstance, expect, spyOn, waitFor } from 'storybook/test';
-import { Text } from '#primitives/content/text';
-import { List } from '#primitives/lists/list';
 import { fadedEdges, fadedInlineEdges } from '../../../../mocks/scroll-fade';
 import { ScrollFadeView } from './scroll-fade';
 import {

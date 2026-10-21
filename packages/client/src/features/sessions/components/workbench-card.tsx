@@ -1,11 +1,11 @@
-import { useState, type ReactElement, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
 import {
   Collapsible,
   CollapsibleContent,
-} from '#primitives/layout/collapsible';
-import { Surface } from '#primitives/layout/surface';
-import type { IconName } from '../../../lib/generic/symbols/icon-names';
+} from '@repo/kit/primitives/layout/collapsible';
+import { Surface } from '@repo/kit/primitives/layout/surface';
+import type { IconName } from '@repo/kit/symbols/icon-names';
+import { useState, type ReactElement, type ReactNode } from 'react';
+import { Pressable, View } from 'react-native';
 import { WorkbenchCollapsibleTitle } from './workbench-collapsible-title';
 
 interface Props {

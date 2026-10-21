@@ -1,7 +1,7 @@
+import { List, ListSection } from '@repo/kit/primitives/lists/list';
+import { PopoverHoverGroup } from '@repo/kit/primitives/overlays/popover';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { Platform, View, type ViewProps } from 'react-native';
-import { List, ListSection } from '#primitives/lists/list';
-import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { AgentDrill } from './agent-drill';
 import { AgentNameRow } from './agent-name-row';
 import {

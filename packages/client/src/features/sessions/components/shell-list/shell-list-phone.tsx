@@ -1,6 +1,9 @@
+import { List } from '@repo/kit/primitives/lists/list';
+import {
+  ListItem,
+  type ListItemProps,
+} from '@repo/kit/primitives/lists/list-item';
 import type { JSX } from 'react';
-import { List } from '#primitives/lists/list';
-import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import {
   shellElapsed,
   shellOutcome,

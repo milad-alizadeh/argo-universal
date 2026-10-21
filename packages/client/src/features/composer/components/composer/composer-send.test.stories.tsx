@@ -1,3 +1,4 @@
+import { layoutWidths } from '@repo/kit/each-layout';
 import { expect } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -5,7 +6,6 @@ import { meta as composerTestMeta } from '../../../../../mocks/composer/composer
 import { sending } from '../../../../../mocks/composer/draft-editing.test.mocks';
 import { disabled } from '../../../../../mocks/composer/draft-editing.test.mocks';
 import { stopPrecedence } from '../../../../../mocks/composer/turn-admission.test.mocks';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { Composer } from './composer';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };

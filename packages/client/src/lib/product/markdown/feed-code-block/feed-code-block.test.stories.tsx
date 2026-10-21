@@ -1,12 +1,12 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
 import { recordedFile } from '../../../../../mocks/feed-edit-mock';
 import { embeddedResource } from '../../../../../mocks/feed-paper';
-import { layoutWidths } from '../../../generic/each-layout';
-import { settleViewport } from '../../../generic/settle-viewport';
 import { longCodeBlockTitle } from '../code-block-title/code-block-title.mocks';
 
 const codeScrollId = 'code-scroll';

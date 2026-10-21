@@ -1,13 +1,16 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import {
+  type ErrorToast,
+  useErrorToast,
+} from '@repo/kit/primitives/overlays/toast';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
+import { RowDrawingContext } from '@repo/kit/row-drawing-context';
+import type { IconSymbol } from '@repo/kit/symbols/icon-symbol';
 import type * as React from 'react';
-import { RowDrawingContext } from '#lib/generic/row-drawing-context';
-import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
-import { Icon } from '#primitives/content/icon';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { Page } from '#primitives/scaffolds/page';
-import { Spinner } from '#primitives/status/spinner';
 
 export interface PluginRow {
   pluginId: string;

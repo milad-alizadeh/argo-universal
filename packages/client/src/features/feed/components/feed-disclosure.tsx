@@ -1,14 +1,14 @@
-import type * as React from 'react';
-import { type ReactNode, useState } from 'react';
-import { View } from 'react-native';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { Text } from '#primitives/content/text';
+import { Text } from '@repo/kit/primitives/content/text';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleHeader,
   useCollapsibleHovered,
-} from '#primitives/layout/collapsible';
+} from '@repo/kit/primitives/layout/collapsible';
+import type { IconName } from '@repo/kit/symbols/icon-names';
+import type * as React from 'react';
+import { type ReactNode, useState } from 'react';
+import { View } from 'react-native';
 import {
   FeedDisclosureLabel,
   type FeedDisclosureLabelProps,

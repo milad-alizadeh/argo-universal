@@ -1,9 +1,9 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
-import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { longSession } from './session-detail-view.mocks';
 

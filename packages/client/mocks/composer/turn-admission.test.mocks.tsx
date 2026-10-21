@@ -1,6 +1,6 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { expect, fn } from 'storybook/test';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { oversizedComposerImage } from '../composer-mock';
 import type { Story } from './composer-story-context.test.mocks';
 import { pickerCatalogs } from './recorded-catalog.test.mocks';

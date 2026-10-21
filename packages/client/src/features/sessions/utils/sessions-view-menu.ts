@@ -1,4 +1,4 @@
-import type { MenuChoiceGroup } from '#primitives/overlays/menu';
+import type { MenuChoiceGroup } from '@repo/kit/primitives/overlays/menu';
 import {
   type SessionsView,
   sessionsGroupChoices,

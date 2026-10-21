@@ -1,12 +1,12 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { Text } from '@repo/kit/primitives/content/text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { Button } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
-import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ComposerPopover } from './composer-popover';
 
 const meta = {

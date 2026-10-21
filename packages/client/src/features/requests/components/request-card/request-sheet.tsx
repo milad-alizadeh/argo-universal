@@ -1,7 +1,7 @@
+import { Sheet, type SheetProps } from '@repo/kit/primitives/overlays/sheet';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { ReactNode } from 'react';
 import { ContentWidthProvider } from '#lib/product/content-layout';
-import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { RequestCardProps } from './request-card';
 import { RequestFooter } from './request-footer';
 

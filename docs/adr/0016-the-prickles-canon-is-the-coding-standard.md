@@ -34,9 +34,9 @@ Where the canon cannot apply as written, these are the recorded applications (ow
    |---|---|---|
    | Local | the apps; the Agents domain | client `features/<feature>/`; Engine `src/<module>/`; Supervisor `supervisor/` |
    | Product | contracts, db, engine, the shared Agent module, git, client | client `lib/product/` and each feature's `index.ts`; an Engine module's `index.ts` |
-   | Generic | machine-log, uniwind, `tooling/*` | client `lib/generic/`, with the primitives in `lib/generic/primitives/`; Engine `src/lib/` |
+   | Generic | machine-log, uniwind, `tooling/*` | `@repo/kit`, with the primitives in `packages/kit/src/primitives/`; Engine `src/lib/` |
 
-   Git is product because Checkout is a `GLOSSARY.md` term (ADR-0008). Shell and Turn have UI homonyms, so their word matches need a person. `lib/product/` holds product code that two or more features share, including navigation, which sits there to avoid a frame–sessions cycle. `lib/generic/` holds code that would compile after an npm publish and imports no product word.
+   Git is product because Checkout is a `GLOSSARY.md` term (ADR-0008). Shell and Turn have UI homonyms, so their word matches need a person. `lib/product/` holds product code that two or more features share, including navigation, which sits there to avoid a frame–sessions cycle. `@repo/kit` holds code that would compile after an npm publish and imports no product word.
 
    Other features import a feature only through its `index.ts`, which is product tier (owner, 2026-10-10). The allowed feature edges are: sessions uses composer, feed, agents, connection and requests; frame hosts section screens from sessions and settings; data hooks use connection. The owner approved sessions using requests for live Elicitation presentation on 2026-10-13 (#430). In the Engine, `rpc/` holds the base procedure and error mapping and sits below the modules, and each router takes its own dependencies. oxlint keeps `rpc/` free of module imports and keeps every module off `engine/`, so the Engine composition has no import cycle.
 
@@ -54,7 +54,7 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 
    Spec 0014 #722 removes the old catalog path. Registry cache intake logs rejected values without saving rejection totals (owner, 2026-10-16).
 
-13. **Kit-styling allowlist.** The shrinking allowlist in `tooling/oxlint/kit-styling-allowlist.json` is an accepted exception to "debt lists go" (owner, 2026-10-14, Spec 0015 #724). It names the files that still pass `className`, `style` or a `*ClassName` slot to kit components, which [ADR-0020](0020-argo-owns-its-primitives.md) bans outside `lib/generic`. `tools/check-rule-allowlists.mts` keeps it honest: once the list is on main it only shrinks, and a file with no findings must leave it.
+13. **Kit-styling allowlist.** The shrinking allowlist in `tooling/oxlint/kit-styling-allowlist.json` is an accepted exception to "debt lists go" (owner, 2026-10-14, Spec 0015 #724). It names the files that still pass `className`, `style` or a `*ClassName` slot to kit components, which [ADR-0020](0020-argo-owns-its-primitives.md) bans outside `@repo/kit`. `tools/check-rule-allowlists.mts` keeps it honest: once the list is on main it only shrinks, and a file with no findings must leave it.
 
 Enforcement lands through a spec issue, folder by folder, so CI stays green.
 

@@ -11,7 +11,7 @@ The Prickles pack uses ESLint rules. oxlint runs them, mostly natively and the r
 Where the pack could not run as written:
 
 - `prettier/prettier` is dropped: oxfmt formats, and `oxfmt --check` gates.
-- `import-x/no-restricted-paths` is dropped: oxlint has no such rule, and its zones name `src/lib/generic` and `src/lib/product`. D1 to D11 hold Argo's import directions, and `no-restricted-imports` in `argo.json` guards the client's `lib/generic` and `lib/product` folders.
+- `import-x/no-restricted-paths` is dropped: oxlint has no such rule, and its zones name `src/lib/generic` and `src/lib/product`. D1 to D11 hold Argo's import directions, and `no-restricted-imports` in `argo.json` guards `@repo/kit` and the client's `lib/product` folder.
 - `unicorn/no-for-each`, `unicorn/no-for-loop` and `unicorn/prefer-switch` run from eslint-plugin-unicorn, and `line-comment-position` and `multiline-comment-style` from @stylistic/eslint-plugin, as JS plugins. The sonarjs rules run the same way, without the type information a few of them read under ESLint.
 - `import/namespace` and `jsx-a11y/prefer-tag-over-role` are off: oxlint cannot follow the re-exports of `@rn-primitives`, and React Native has no semantic tags.
 
@@ -108,7 +108,7 @@ The Sessions folder splits under the client-move rules above: `sessions/*` and `
 
 ## Component folders
 
-Spec 421 moves each component, with behaviour unchanged, into its own folder inside the folder that held it: its platform files, props, styles, stories, test stories, mocks and unit tests sit together. Primitives also group by kind under `lib/generic/primitives/` (`buttons`, `inputs`, `fields`, `overlays`, `lists`, `display`, `native`); `pressable` stays a folder beside them, because many groups use it. Each primitive folder's `index.ts` names its public exports; code outside the folder imports `#primitives/<group>/<name>` (`#primitives/pressable` for Pressable), and oxlint's `no-restricted-imports` bans deeper paths and relative imports into another folder (owner, 2026-10-14). The owner approved these rows (#518, 2026-10-12). Each component folder keeps the historical waiver identity of the folder that held it, with only the rules its files still break; that folder keeps the files that stay, so it and its component folders share that identity, as a split does under the client-move rules above. `tools/not-yet-cleared/component-relocations.mts` lists the exact folders; the rows below are under `packages/client/src/`:
+Spec 421 moves each component, with behaviour unchanged, into its own folder inside the folder that held it: its platform files, props, styles, stories, test stories, mocks and unit tests sit together. Primitives also group by kind under the kit's `primitives/` (`buttons`, `inputs`, `fields`, `overlays`, `lists`, `display`, `native`); `pressable` stays a folder beside them, because many groups use it. Each primitive folder's `index.ts` names its public exports; code outside the folder imports `#primitives/<group>/<name>` (`#primitives/pressable` for Pressable), and oxlint's `no-restricted-imports` bans deeper paths and relative imports into another folder (owner, 2026-10-14). The owner approved these rows (#518, 2026-10-12). Each component folder keeps the historical waiver identity of the folder that held it, with only the rules its files still break; that folder keeps the files that stay, so it and its component folders share that identity, as a split does under the client-move rules above. `tools/not-yet-cleared/component-relocations.mts` lists the exact folders; the rows below are under `packages/client/src/`:
 
 | New folder entries | Original folder entry |
 |---|---|
@@ -136,5 +136,5 @@ This preserves [ADR-0028](0028-plugins-draw-svg-charts-and-canvases-on-every-app
 ## Canvas deferred renderer
 
 The owner approved Canvas implementation on 2026-10-19 (#836), including ADR-0028's deferred web loading.
-`packages/client/src/lib/generic/primitives/visual/canvas/canvas-loader.web.tsx` may import only `./canvas-renderer` at runtime, after `WithSkiaWeb` initializes CanvasKit.
+`packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx` may import only `./canvas-renderer` at runtime, after `WithSkiaWeb` initializes CanvasKit.
 The lint rule checks both literal paths. It still refuses other runtime imports in that file and Canvas imports elsewhere.

@@ -1,13 +1,13 @@
 import type { ProjectInfo } from '@repo/contracts';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { Metadata } from '@repo/kit/primitives/scaffolds/metadata';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
+import { RowDrawingContext } from '@repo/kit/row-drawing-context';
 import type * as React from 'react';
 import { homePath } from '#features/settings';
-import { RowDrawingContext } from '#lib/generic/row-drawing-context';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
-import { Metadata } from '#primitives/scaffolds/metadata';
-import { Page } from '#primitives/scaffolds/page';
-import { Spinner } from '#primitives/status/spinner';
 import { NewSessionsSection } from './project-detail-new-sessions';
 import { RemoveProject } from './project-detail-remove';
 

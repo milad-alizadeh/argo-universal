@@ -1,3 +1,4 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -5,7 +6,6 @@ import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { ReplaceableSlotRenderer } from '#lib/product/plugin-registry/replaceable-slot';
 import { SessionLayout } from '#lib/product/session-layout';
-import { Text } from '#primitives/content/text';
 import { preservesComposer } from '../../../../../mocks/composer/request-composer.test.mocks';
 import { Composer } from './composer';
 

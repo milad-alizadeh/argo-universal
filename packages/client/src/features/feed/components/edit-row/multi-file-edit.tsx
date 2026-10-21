@@ -1,9 +1,9 @@
-import type * as React from 'react';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleHeader,
-} from '#primitives/layout/collapsible';
+} from '@repo/kit/primitives/layout/collapsible';
+import type * as React from 'react';
 import type { FileDiff } from '../../view/file-diff';
 import { FileEdit } from './file-edit';
 

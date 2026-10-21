@@ -1,8 +1,8 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
+import { motionDuration } from '@repo/kit/motion';
 import type * as React from 'react';
 import type { RefObject } from 'react';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { motionDuration } from '#lib/generic/motion';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import {
   JumpToLatestButton,

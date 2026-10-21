@@ -1,9 +1,9 @@
+import { useWide } from '@repo/kit/use-wide/use-wide';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { createContext, useContext, useState } from 'react';
 import { type LayoutChangeEvent, View, type ViewProps } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { useWide } from '#lib/generic/use-wide/use-wide';
-import { cn } from '#lib/generic/utils';
 
 const ContentWide = createContext<boolean | undefined>(undefined);
 

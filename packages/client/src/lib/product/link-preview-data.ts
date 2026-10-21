@@ -1,5 +1,5 @@
 import type { BlobRef, LinkPreviewData } from '@repo/contracts';
-import type { LinkPreviewCardData } from '#primitives/overlays/link-preview';
+import type { LinkPreviewCardData } from '@repo/kit/primitives/overlays/link-preview';
 
 type ImageUrl = (blob: BlobRef) => string;
 

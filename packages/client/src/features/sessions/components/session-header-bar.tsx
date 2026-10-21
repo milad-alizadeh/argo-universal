@@ -1,10 +1,10 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { SessionColumn } from '#lib/product/session-column';
-import { Text } from '#primitives/content/text';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 
 export interface SessionHeaderBarProps {
   // A plain title, or a block such as the Session's title over its meta line.

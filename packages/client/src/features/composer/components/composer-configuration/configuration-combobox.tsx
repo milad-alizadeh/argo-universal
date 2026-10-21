@@ -1,11 +1,11 @@
 import type { SessionConfigSelectOption } from '@repo/contracts';
-import type { ReactElement } from 'react';
-import { configurationChoices } from '#lib/product/session-configuration';
 import {
   Combobox,
   type ComboboxOption,
   type ComboboxProps,
-} from '#primitives/inputs/combobox';
+} from '@repo/kit/primitives/inputs/combobox';
+import type { ReactElement } from 'react';
+import { configurationChoices } from '#lib/product/session-configuration';
 import type { ComposerConfigurationProps } from './configuration-types';
 import type { SelectConfiguration } from './configuration-values';
 

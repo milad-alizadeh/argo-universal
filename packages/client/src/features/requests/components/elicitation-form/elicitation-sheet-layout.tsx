@@ -1,8 +1,8 @@
+import { Sheet, type SheetProps } from '@repo/kit/primitives/overlays/sheet';
+import { cn } from '@repo/kit/utils';
 import { useEffect, useRef, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { ContentWidthProvider } from '#lib/product/content-layout';
-import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestError } from '../request-card/request-card';
 import { RequestFooter } from '../request-card/request-footer';

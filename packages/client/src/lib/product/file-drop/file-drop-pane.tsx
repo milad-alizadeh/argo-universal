@@ -1,7 +1,7 @@
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type ReactNode, useId } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { FileDropLabel, FileDropZone } from './file-drop-zone';
 import { type DroppedFiles, useFileDrop } from './use-file-drop';
 

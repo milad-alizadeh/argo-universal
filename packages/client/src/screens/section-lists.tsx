@@ -1,3 +1,4 @@
+import { SearchField } from '@repo/kit/primitives/inputs/search-field';
 import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -14,7 +15,6 @@ import {
   newSessionHref,
   useNavigate,
 } from '#lib/product/navigation/navigation';
-import { SearchField } from '#primitives/inputs/search-field';
 import { newSessionId } from '../lib/product/navigation/new-session';
 import { sections } from '../lib/product/navigation/sections';
 import { LiveSessionList } from './sessions/live-session-list';

@@ -1,6 +1,6 @@
+import { Text, type Tone } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { Text, type Tone } from '#primitives/content/text';
 import type { FileDiff } from '../../view/file-diff';
 
 interface ChangeCountProps {

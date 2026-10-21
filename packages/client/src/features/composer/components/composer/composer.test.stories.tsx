@@ -1,3 +1,6 @@
+import { layoutWidths, wideBreakpoint } from '@repo/kit/each-layout';
+import { shownText } from '@repo/kit/mocks/shown-text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, within } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
@@ -12,12 +15,6 @@ import { spacingPrompt } from '../../../../../mocks/composer/composer-test-contr
 import { multiline } from '../../../../../mocks/composer/draft-editing.test.mocks';
 import { editorScrollsAfterTenLines } from '../../../../../mocks/composer/editor-scroll.test.mocks';
 import { expectAgentTextFits } from '../../../../../mocks/composer/empty-layout.test.mocks';
-import { shownText } from '../../../../../mocks/shown-text';
-import {
-  layoutWidths,
-  wideBreakpoint,
-} from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
 

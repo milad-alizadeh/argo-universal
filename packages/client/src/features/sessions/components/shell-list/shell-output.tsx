@@ -1,13 +1,13 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
+import { Text } from '@repo/kit/primitives/content/text';
+import { List } from '@repo/kit/primitives/lists/list';
+import { useClock } from '@repo/kit/use-clock';
 import { type JSX, type RefObject, useMemo, useRef } from 'react';
 import { View } from 'react-native';
-import { useClock } from '#lib/generic/use-clock';
 import {
   JumpToLatestButton,
   useNewestKeyWhenLeftEnd,
 } from '#lib/product/jump-to-latest';
-import { Text } from '#primitives/content/text';
-import { List } from '#primitives/lists/list';
 import type { ShellEntry, ShellOutputText } from './shell-list-types';
 import { type ShellSpan, shellOutputLines } from './shell-output-lines';
 import { CommandLine, DroppedLines, ExitLine } from './shell-output-parts';

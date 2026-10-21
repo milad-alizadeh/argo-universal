@@ -1,11 +1,11 @@
-import type * as React from 'react';
-import { Platform, View } from 'react-native';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { cn } from '#lib/generic/utils';
 import {
   IconButton,
   type IconButtonProps,
-} from '#primitives/actions/icon-button';
+} from '@repo/kit/primitives/actions/icon-button';
+import type { IconName } from '@repo/kit/symbols/icon-names';
+import { cn } from '@repo/kit/utils';
+import type * as React from 'react';
+import { Platform, View } from 'react-native';
 
 export interface HeaderButtonProps extends Pick<
   IconButtonProps,

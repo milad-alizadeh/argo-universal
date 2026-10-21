@@ -1,4 +1,4 @@
-import { Text } from '@repo/client/text';
+import { Text } from '@repo/kit/text';
 import { useSyncExternalStore, type JSX, type RefObject } from 'react';
 import type { Feed } from './feed';
 import type { Label } from './labels/map-labels';

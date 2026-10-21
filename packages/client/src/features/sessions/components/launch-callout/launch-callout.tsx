@@ -1,7 +1,7 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { Callout, CalloutButton } from '@repo/kit/primitives/status/callout';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import { Callout, CalloutButton } from '#primitives/status/callout';
 import type { LaunchCalloutProps } from '../../types/session-callout';
 import { InstallationProgress } from '../session-callout/installation-progress';
 

@@ -1,7 +1,7 @@
 import { type SessionConfigSelectOption } from '@repo/contracts';
+import { wideBreakpoint } from '@repo/kit/each-layout';
 import { within, expect, waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import { chooseEffort } from '../choose-effort';
 import {
   type PickerCatalog,

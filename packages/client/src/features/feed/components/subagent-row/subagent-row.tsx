@@ -1,9 +1,9 @@
+import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
+import { TextClassContext } from '@repo/kit/primitives/content/text';
+import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Icon, IconSlot } from '#primitives/content/icon';
-import { TextClassContext } from '#primitives/content/text';
-import { TintedAvatar } from '../../../../lib/generic/tinted-avatar';
 import { subagentRoleMark } from '../../../../lib/product/subagents/subagent-role';
 import type { FeedSubagent } from '../../view/feed-view';
 import {

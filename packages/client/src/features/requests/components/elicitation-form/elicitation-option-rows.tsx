@@ -1,7 +1,7 @@
 import type { ElicitationEnumOption } from '@repo/contracts';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
-import { List } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 
 export type OptionRowsProps = {
   options: readonly ElicitationEnumOption[];

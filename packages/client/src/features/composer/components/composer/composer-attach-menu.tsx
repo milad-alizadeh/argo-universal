@@ -1,11 +1,11 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Icon } from '#primitives/content/icon';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { AttachLayout } from './composer-toolbar-types';
 import type { ComposerProps } from './composer-types';

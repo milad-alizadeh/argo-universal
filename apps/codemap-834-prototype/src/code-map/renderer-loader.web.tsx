@@ -1,4 +1,4 @@
-import { Text } from '@repo/client/text';
+import { Text } from '@repo/kit/text';
 import { WithSkiaWeb } from '@shopify/react-native-skia/lib/module/web';
 import { lazy, memo, type JSX, type ComponentType } from 'react';
 import type { RendererProps } from './model';

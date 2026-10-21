@@ -1,6 +1,6 @@
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { ComposerStatusControls } from '../composer-status/composer-status';
 import { TrayCheckout } from './composer-tray-checkout';
 import { composerTrayClass } from './composer-tray-class';

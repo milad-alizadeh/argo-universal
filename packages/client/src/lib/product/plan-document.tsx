@@ -1,7 +1,7 @@
+import { Markdown } from '@repo/kit/primitives/content/markdown';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { Markdown } from '#primitives/content/markdown';
 import {
   PlanScrollThumb,
   PlanScrollView,

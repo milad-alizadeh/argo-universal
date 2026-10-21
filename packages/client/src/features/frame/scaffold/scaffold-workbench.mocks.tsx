@@ -1,9 +1,9 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Text } from '@repo/kit/primitives/content/text';
+import { Card } from '@repo/kit/primitives/layout/card';
+import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
 import { useState, type ReactElement } from 'react';
 import { View, TextInput } from 'react-native';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Text } from '#primitives/content/text';
-import { Card } from '#primitives/layout/card';
-import { InspectorPane } from '#primitives/scaffolds/inspector';
 import { Scaffold, type ScaffoldProps, type InspectorState } from './scaffold';
 
 type MockState = Pick<

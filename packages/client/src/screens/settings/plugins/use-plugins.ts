@@ -1,8 +1,8 @@
 import type { PluginList, PluginSettingValue } from '@repo/contracts/plugins';
+import { errorToast } from '@repo/kit/error-toast';
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { errorToast } from '#lib/generic/error-toast';
-import { useErrorToast } from '#primitives/overlays/toast';
 import { pluginSymbol } from '../../plugins/plugin-symbol';
 import type { PluginRow, PluginsLoad } from './plugin-list-view';
 

@@ -1,8 +1,8 @@
 import { isRootOnly } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
 import type * as React from 'react';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
-import { Page } from '#primitives/scaffolds/page';
 import {
   PluginTree,
   type PluginOnEvent,

@@ -1,6 +1,6 @@
+import { cn } from '@repo/kit/utils';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import type { ElicitationActionsProps } from './elicitation-actions';
 import type { ElicitationFormProps } from './elicitation-form-props';

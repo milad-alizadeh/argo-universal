@@ -1,7 +1,7 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
 import {

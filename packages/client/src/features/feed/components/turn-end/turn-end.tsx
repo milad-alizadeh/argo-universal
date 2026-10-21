@@ -1,6 +1,6 @@
 import type { StopReason, TurnEnd, TurnError } from '@repo/contracts';
+import { formatElapsed } from '@repo/kit/format-elapsed';
 import type { ReactElement } from 'react';
-import { formatElapsed } from '#lib/generic/format-elapsed';
 import type { FeedViewItem } from '../../view/feed-view';
 import {
   NoticeMessage,

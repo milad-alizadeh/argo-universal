@@ -1,11 +1,11 @@
+import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect } from 'storybook/test';
 import {
   meta as sessionRowTestMeta,
   statusDots,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
-import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { sessionRowMocks } from './session-row.mocks';
 
 // A Compact row's one line: the title, then its PR's state or how long ago the Session was active.

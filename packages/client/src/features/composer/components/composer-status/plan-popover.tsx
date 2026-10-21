@@ -1,9 +1,9 @@
 import type { PlanEntry } from '@repo/contracts';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { completedSteps, fullPercent } from '../../utils/status';
 import { PlanSheetContent } from './plan-sheet-content';
 import { PlanSteps } from './plan-steps';

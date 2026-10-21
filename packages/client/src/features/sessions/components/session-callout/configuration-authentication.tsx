@@ -1,8 +1,8 @@
+import { Button } from '@repo/kit/primitives/actions/button';
+import { Text } from '@repo/kit/primitives/content/text';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/actions/button';
-import { Text } from '#primitives/content/text';
-import { Spinner } from '#primitives/status/spinner';
 import type { KindProps } from '../../types/session-callout';
 import { MethodActions } from '../auth-callout/auth-callout';
 

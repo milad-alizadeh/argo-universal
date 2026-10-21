@@ -1,3 +1,8 @@
+import {
+  type ErrorToast,
+  useErrorToast,
+} from '@repo/kit/primitives/overlays/toast';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Composer, type ComposerProps } from '#features/composer';
@@ -18,12 +23,10 @@ import {
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
-import { cn } from '#lib/generic/utils';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { headerPanels } from './session-header-panels';
 import {
   SessionInspector,

@@ -1,3 +1,4 @@
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useResubscribeOnReconnect } from '#features/connection';
 import {
@@ -7,7 +8,6 @@ import {
   EmptySessionStore,
   opensOnReconnect,
 } from '#features/sessions';
-import { useErrorToast } from '#primitives/overlays/toast';
 import { useEmptySessionPorts } from './empty-session-adapters';
 
 export interface EmptySession extends EmptySessionState {

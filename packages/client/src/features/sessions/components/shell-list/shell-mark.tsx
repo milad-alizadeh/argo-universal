@@ -1,7 +1,7 @@
 import type { Shell } from '@repo/contracts';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type { JSX } from 'react';
-import { Icon } from '#primitives/content/icon';
-import { StatusDot } from '#primitives/status/status-dot';
 import { shellOutcome } from './shell-format';
 
 // A running Shell's row leads with a live dot; an ended one with the icon for how it ended.

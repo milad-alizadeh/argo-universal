@@ -1,9 +1,9 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import type { ElicitationFormProps } from '#features/requests';
 import { ScaffoldMock } from '../../../../mocks/scaffold';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import {
   SessionDetailView,
   type SessionDetailViewProps,

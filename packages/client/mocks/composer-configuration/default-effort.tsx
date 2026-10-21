@@ -1,11 +1,11 @@
 import type { SessionConfigOption } from '@repo/contracts';
+import { PortalProvider } from '@repo/kit/primitives/overlays/portal';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { PortalProvider } from '#primitives/overlays/portal';
 import { ComposerAgentModelControl } from '../../src/features/composer/components/composer-configuration/composer-configuration';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   agentModelLabel,
   type Story,

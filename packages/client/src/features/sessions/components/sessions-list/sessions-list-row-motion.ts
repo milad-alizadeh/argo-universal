@@ -1,7 +1,7 @@
+import { ListContext } from '@repo/kit/list-context';
+import { cn } from '@repo/kit/utils';
 import { use } from 'react';
 import { FadeIn } from 'react-native-reanimated';
-import { ListContext } from '#lib/generic/list-context';
-import { cn } from '#lib/generic/utils';
 
 const fadeInMilliseconds = 200;
 

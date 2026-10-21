@@ -1,5 +1,5 @@
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
-import { ListItem } from '#primitives/lists/list-item';
 import { ConfigurationRowIcon } from './configuration-row-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 

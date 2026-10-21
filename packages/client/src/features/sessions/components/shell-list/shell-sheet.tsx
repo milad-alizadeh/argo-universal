@@ -1,11 +1,11 @@
-import type { JSX } from 'react';
 import {
   Sheet,
   type SheetPageAction,
   type SheetPageProps,
   type SheetProps,
   useSheet,
-} from '#primitives/overlays/sheet';
+} from '@repo/kit/primitives/overlays/sheet';
+import type { JSX } from 'react';
 import { ShellList } from './shell-list';
 import type {
   ShellEntry,

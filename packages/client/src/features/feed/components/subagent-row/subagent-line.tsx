@@ -1,7 +1,7 @@
+import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon, IconSlot } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import type { FeedSubagent } from '../../view/feed-view';
 
 // Paper words each action: "Started Explore", "Messaged Explore “…”", "Explore replied “…”".

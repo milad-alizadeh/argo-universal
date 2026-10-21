@@ -1,7 +1,7 @@
+import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import type { useResolveClassNames } from 'uniwind';
-import { Sheet } from '#primitives/overlays/sheet';
 import type { useAfterClose } from '../../hooks/use-after-close';
 import type { ComposerPopoverProps } from './popover-types';
 

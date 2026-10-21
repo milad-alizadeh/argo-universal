@@ -1,10 +1,10 @@
 import { maxBlobUploadMebibytes } from '@repo/contracts';
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { PermissionRequest } from '#features/requests';
-import { cn } from '#lib/generic/utils';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
-import { useErrorToast } from '#primitives/overlays/toast';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';

@@ -1,6 +1,6 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   agentModelLabel,
   modelsScrollId,

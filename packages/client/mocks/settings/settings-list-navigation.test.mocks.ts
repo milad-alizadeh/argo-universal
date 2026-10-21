@@ -1,6 +1,6 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import type { PlayContext, Story } from './settings-list-story.test.mocks';
 import { appearanceRow } from './settings-list-theme.test.mocks';
 

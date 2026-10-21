@@ -1,3 +1,4 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -5,7 +6,6 @@ import type { Dispatch, SetStateAction } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { ComposerAgentModelControl } from '../../src/features/composer/components/composer-configuration/composer-configuration';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { chooseEffort } from '../choose-effort';
 import { updateComposerSettings } from '../composer-mock';
 import {

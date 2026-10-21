@@ -1,9 +1,9 @@
 import { useSyncLayout } from '@legendapp/list/react-native';
 import type { BlobRef } from '@repo/contracts';
+import { CollapsibleLayoutSyncContext } from '@repo/kit/primitives/layout/collapsible';
 import type * as React from 'react';
 import { memo, useMemo } from 'react';
 import { SessionColumn } from '#lib/product/session-column';
-import { CollapsibleLayoutSyncContext } from '#primitives/layout/collapsible';
 import { FeedItem } from '../feed-item';
 import { LiveHeader } from '../live-header/live-header';
 import { type FeedEntry, entryKey, spaceBelowEntry } from './feed-entry';

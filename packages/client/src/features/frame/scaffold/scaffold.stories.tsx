@@ -1,7 +1,7 @@
+import { Inspector } from '@repo/kit/primitives/scaffolds/inspector';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
-import { Inspector } from '#primitives/scaffolds/inspector';
 import { sectionOrder } from '../../../lib/product/navigation/sections';
 import { InspectorFilesMock } from './inspector-files.mocks';
 import { ScaffoldMock, type ScaffoldMockProps } from './scaffold.mocks';

@@ -1,5 +1,5 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
-import type { ErrorToast } from '#primitives/overlays/toast';
+import type { ErrorToast } from '@repo/kit/primitives/overlays/toast';
 
 /*
  * A stopped Plugin is gone until it starts again, so its toast names the Plugin alone. A drawing

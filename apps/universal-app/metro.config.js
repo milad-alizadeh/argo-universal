@@ -19,7 +19,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   const primitivePath = moduleName.startsWith('#primitives/')
     ? path.resolve(
         __dirname,
-        '../../packages/client/src/lib/generic/primitives',
+        '../../packages/kit/src/primitives',
         moduleName.slice('#primitives/'.length),
         'index',
       )

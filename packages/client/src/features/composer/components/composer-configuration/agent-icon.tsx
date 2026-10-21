@@ -1,10 +1,10 @@
 import type { AgentServer } from '@repo/contracts';
+import { IconSlot } from '@repo/kit/primitives/content/icon';
+import type { IconRoleValue } from '@repo/kit/symbols/icon-role';
+import { referenceShare } from '@repo/kit/symbols/symbol-path';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { AgentLogo } from '#features/agents';
-import { IconSlot } from '#primitives/content/icon';
-import type { IconRoleValue } from '../../../../lib/generic/symbols/icon-role';
-import { referenceShare } from '../../../../lib/generic/symbols/symbol-path';
 
 interface AgentIconProps {
   agent?: AgentServer;

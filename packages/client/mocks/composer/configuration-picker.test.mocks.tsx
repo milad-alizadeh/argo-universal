@@ -1,11 +1,11 @@
 import { type AgentServer } from '@repo/contracts';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { within, expect, fn } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps, updateComposerSettings } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
 import {

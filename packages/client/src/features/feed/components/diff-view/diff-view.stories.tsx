@@ -1,6 +1,6 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { recordedFile } from '../../../../../mocks/feed-edit-mock';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import { DiffView, type DiffViewProps } from './diff-view';
 
 const editStatesId = 'edit-states';

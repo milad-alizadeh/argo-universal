@@ -1,9 +1,9 @@
+import { layoutWidths, wideBreakpoint } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, screen, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { fadedEdges } from '../../../../mocks/scroll-fade';
-import { layoutWidths, wideBreakpoint } from '../../../lib/generic/each-layout';
-import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { InspectorFilesMock } from './inspector-files.mocks';
 import {
   detailContentId,

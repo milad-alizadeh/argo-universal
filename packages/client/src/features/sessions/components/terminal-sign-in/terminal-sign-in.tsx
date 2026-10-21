@@ -1,14 +1,14 @@
-import type * as React from 'react';
-import { View } from 'react-native';
-import { AgentLoginTerminal } from '#features/agents';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Text } from '#primitives/content/text';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Text } from '@repo/kit/primitives/content/text';
 import {
   Sheet,
   type SheetDetent,
   type SheetProps,
-} from '#primitives/overlays/sheet';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
+} from '@repo/kit/primitives/overlays/sheet';
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import type * as React from 'react';
+import { View } from 'react-native';
+import { AgentLoginTerminal } from '#features/agents';
 import type { TerminalSignInProps } from '../../types/session-callout';
 
 // A terminal sign-in method runs the Agent's login command on the Server: a panel under the Composer on a wide window, a sheet on a phone.

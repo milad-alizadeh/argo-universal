@@ -2,10 +2,10 @@ import type {
   PluginDispatchInput,
   PluginViewId,
 } from '@repo/contracts/plugins/wire';
+import { errorMessage } from '@repo/kit/error-toast';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { errorMessage } from '#lib/generic/error-toast';
-import { showToast } from '#primitives/overlays/toast';
 import type { PluginOnEvent } from '../../lib/product/plugin-registry';
 
 export type PluginDispatch = (input: PluginDispatchInput) => Promise<void>;

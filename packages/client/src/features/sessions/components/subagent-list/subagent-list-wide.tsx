@@ -1,9 +1,9 @@
 import type { Subagent } from '@repo/contracts';
+import { tintTransitionClassName } from '@repo/kit/motion';
+import { Text } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { Pressable, View } from 'react-native';
-import { tintTransitionClassName } from '#lib/generic/motion';
-import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/content/text';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
 import { SubagentMark } from './subagent-mark';

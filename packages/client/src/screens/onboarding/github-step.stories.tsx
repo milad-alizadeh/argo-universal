@@ -1,8 +1,8 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
 import { stepMarks } from '#features/setup';
-import { Variation, Variations } from '../../lib/generic/variations';
 import { GitHubStepView } from './github-step';
 import { githubSteps } from './onboarding-view.mocks';
 

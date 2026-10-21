@@ -1,8 +1,8 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { ScrollFadeGradient } from '@repo/kit/scroll-fade/scroll-fade-gradient';
 import type * as React from 'react';
 import { useRef } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import { ScrollFadeGradient } from '../../../../lib/generic/scroll-fade/scroll-fade-gradient';
 
 function FolderName({ folder }: { folder: string }): React.JSX.Element {
   return (

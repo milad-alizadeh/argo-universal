@@ -1,7 +1,7 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fireEvent, waitFor, within } from 'storybook/test';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import { Stage } from './session-inspector-stage.test.mocks';
 
 const meta = {

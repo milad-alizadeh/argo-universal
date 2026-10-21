@@ -3,12 +3,12 @@ import type {
   ToolCallTerminal,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import {
   ToolCallDisclosure,

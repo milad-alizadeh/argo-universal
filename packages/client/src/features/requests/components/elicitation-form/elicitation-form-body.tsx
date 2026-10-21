@@ -1,5 +1,5 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactElement } from 'react';
-import { Text } from '#primitives/content/text';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import type { ElicitationFieldProps } from './elicitation-field-rows';
 import type { ElicitationValue } from './elicitation-schema';

@@ -1,8 +1,8 @@
+import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { PlanDocument } from '#lib/product/plan-document';
-import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
-import { Text } from '#primitives/content/text';
 import type { WrittenPlanValue } from './written-plan-types';
 
 interface ContentProps {

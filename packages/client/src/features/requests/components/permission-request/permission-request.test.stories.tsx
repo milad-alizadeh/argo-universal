@@ -1,3 +1,5 @@
+import { wideBreakpoint } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, fn, within } from 'storybook/test';
 import {
@@ -11,8 +13,6 @@ import {
   meta as permissionTestMeta,
   type Story,
 } from '../../../../../mocks/requests/permission/permission-story-context.test.mocks';
-import { wideBreakpoint } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { permissionProps, permissionMocks } from '../request.mocks';
 
 const meta = { ...permissionTestMeta, title: 'Tests/PermissionRequest' };

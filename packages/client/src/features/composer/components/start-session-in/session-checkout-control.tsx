@@ -1,6 +1,9 @@
+import {
+  MenuTrigger,
+  type MenuTriggerProps,
+} from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { MenuTrigger, type MenuTriggerProps } from '#primitives/overlays/menu';
 import { CheckoutContents } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { StartSessionInProps } from './start-session-types';

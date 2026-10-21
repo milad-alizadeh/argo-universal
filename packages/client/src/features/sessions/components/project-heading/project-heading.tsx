@@ -1,10 +1,10 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { ListSectionHeader } from '@repo/kit/primitives/lists/list';
+import type { ContextMenuTriggerProps } from '@repo/kit/primitives/overlays/menu';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { memo } from 'react';
 import { Platform } from 'react-native';
-import { Icon } from '#primitives/content/icon';
-import { ListSectionHeader } from '#primitives/lists/list';
-import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { ProjectActions } from './project-heading-actions';
 import { ProjectHeadingMenu } from './project-heading-menu';
 

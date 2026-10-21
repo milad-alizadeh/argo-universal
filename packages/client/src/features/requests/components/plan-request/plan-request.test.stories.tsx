@@ -1,7 +1,7 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, within } from 'storybook/test';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { RequestFrame } from '../../../../lib/product/request-frame';
 import { FilledSessionFrame } from '../../../../lib/product/session-fill.mocks';
 import { PermissionRequest } from '../permission-request/permission-request';

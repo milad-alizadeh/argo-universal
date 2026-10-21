@@ -1,4 +1,8 @@
 import type { AgentServer, ProjectInfo } from '@repo/contracts';
+import {
+  type ErrorToast,
+  useErrorToast,
+} from '@repo/kit/primitives/overlays/toast';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -19,7 +23,6 @@ import { useContentWide } from '#lib/product/content-layout';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { promptComposerProps } from './new-session-composer-props';
 import { NewSessionFeed } from './new-session-feed';
 

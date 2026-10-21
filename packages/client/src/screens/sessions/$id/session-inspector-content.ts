@@ -1,3 +1,7 @@
+import type {
+  InspectorTab,
+  InspectorProps,
+} from '@repo/kit/primitives/scaffolds/inspector';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
 import type { ChangesViewProps } from '#features/changes';
@@ -9,10 +13,6 @@ import {
   ShellPanel,
   type SubagentListProps,
 } from '#features/sessions';
-import type {
-  InspectorTab,
-  InspectorProps,
-} from '#primitives/scaffolds/inspector';
 import { SessionAgentsStage, type AgentFeedSlot } from './session-agents-stage';
 import { SessionChangesStage } from './session-changes-stage';
 

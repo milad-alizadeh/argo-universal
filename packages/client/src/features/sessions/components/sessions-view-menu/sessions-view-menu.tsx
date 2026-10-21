@@ -1,6 +1,6 @@
+import { Menu } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { ListHeaderButton } from '#lib/product/header-button';
-import { Menu } from '#primitives/overlays/menu';
 import {
   isDefaultSessionsView,
   type SessionsView,

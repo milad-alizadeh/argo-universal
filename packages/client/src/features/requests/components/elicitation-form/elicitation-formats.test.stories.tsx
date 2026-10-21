@@ -1,9 +1,9 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect } from 'storybook/test';
 import {
   meta as elicitationTestMeta,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-form-story.test.mocks';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   dateFormatsRequest,
   dateFormatsValues,

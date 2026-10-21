@@ -1,7 +1,7 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Variation, Variations } from '../generic/variations';
 import { StackedSummary, type StackedSummaryIcon } from './stacked-summary';
 
 const agentIcons: StackedSummaryIcon[] = [

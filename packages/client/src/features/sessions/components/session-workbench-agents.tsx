@@ -1,8 +1,8 @@
 import type { Subagent } from '@repo/contracts';
+import { Text } from '@repo/kit/primitives/content/text';
+import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { useClock } from '#lib/generic/use-clock';
-import { Text } from '#primitives/content/text';
 import { StackedSummary } from '../../../lib/product/stacked-summary';
 import { subagentRoleMark } from '../../../lib/product/subagents/subagent-role';
 import { subagentSupporting } from './subagent-list/subagent-format';

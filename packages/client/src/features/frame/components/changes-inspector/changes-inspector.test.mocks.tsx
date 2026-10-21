@@ -1,8 +1,8 @@
+import { layoutWidths } from '@repo/kit/each-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, screen } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { ChangesInspector } from './changes-inspector';
 import { changesArgs } from './changes-inspector.mocks';
 

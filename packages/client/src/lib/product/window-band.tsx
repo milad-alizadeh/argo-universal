@@ -1,10 +1,10 @@
-import { createContext, use, type ReactNode } from 'react';
 import {
   type ClaimStore,
   createClaimStore,
   useClaim,
-} from '#lib/generic/claim-store';
-import { useWide } from '#lib/generic/use-wide/use-wide';
+} from '@repo/kit/claim-store';
+import { useWide } from '@repo/kit/use-wide/use-wide';
+import { createContext, use, type ReactNode } from 'react';
 import { useScreenFocused } from './navigation/navigation';
 
 // The focused page supplies its identity and summary; the window owns their placement and pane controls.

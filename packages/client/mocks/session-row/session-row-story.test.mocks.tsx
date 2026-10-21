@@ -1,3 +1,5 @@
+import { eachLayout } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Platform } from 'react-native';
@@ -5,8 +7,6 @@ import { expect, fn, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { SessionRow } from '../../src/features/sessions/components/session-row/session-row';
 import type { SessionsLayout } from '../../src/features/sessions/stores/sessions-view';
-import { eachLayout } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 
 export const meta = {
   title: 'Tests/SessionRow',

@@ -1,10 +1,10 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 
 export type AgentActions = {

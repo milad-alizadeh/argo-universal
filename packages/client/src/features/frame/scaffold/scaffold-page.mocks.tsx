@@ -1,8 +1,8 @@
+import { Action, ActionList } from '@repo/kit/primitives/actions/action-list';
+import { Text } from '@repo/kit/primitives/content/text';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Action, ActionList } from '#primitives/actions/action-list';
-import { Text } from '#primitives/content/text';
-import { Page } from '#primitives/scaffolds/page';
 
 export function MockText({
   testID,

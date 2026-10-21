@@ -1,4 +1,4 @@
-import { Text } from '@repo/client/text';
+import { Text } from '@repo/kit/text';
 import type { JSX } from 'react';
 import { CodeMap } from '../code-map';
 import type { Palette } from '../code-map';

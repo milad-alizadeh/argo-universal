@@ -1,8 +1,8 @@
+import { wideBreakpoint } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { fn, expect, waitFor, within } from 'storybook/test';
-import { wideBreakpoint } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps, composerImages } from '../composer-mock';
 import { type Story, imageComposer } from './composer-story-context.test.mocks';
 

@@ -1,6 +1,6 @@
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import { useState } from 'react';
-import { ListItem } from '#primitives/lists/list-item';
 
 type TextRowProps = {
   label: string;

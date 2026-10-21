@@ -1,3 +1,5 @@
+import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { useEffect, useMemo } from 'react';
 import Animated, {
@@ -10,8 +12,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Text } from '#primitives/content/text';
 
 // How many characters the bright band spans on each side of its centre.
 const bandHalfWidth = 8;

@@ -1,9 +1,9 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { Surface } from '@repo/kit/primitives/layout/surface';
+import { cn } from '@repo/kit/utils';
 import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Text } from '#primitives/content/text';
-import { Surface } from '#primitives/layout/surface';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';
 import { SheetWhenCompact } from './request-sheet';

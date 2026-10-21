@@ -1,3 +1,4 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type * as React from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { action } from 'storybook/actions';
@@ -8,7 +9,6 @@ import {
   composerPlanDone,
   oversizedComposerImage,
 } from '../../../../../mocks/composer-mock';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import { Composer } from './composer';
 
 const spacingAndColoursPrompt = 'Match the spacing and colours.';

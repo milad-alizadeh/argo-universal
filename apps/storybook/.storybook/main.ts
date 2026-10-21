@@ -17,30 +17,30 @@ function getAbsolutePath(value: string): string {
 
 const PREBUNDLED_DEPENDENCIES = [
   'react-native-svg',
-  '@repo/client > @radix-ui/react-popover',
-  '@repo/client > @radix-ui/react-dialog',
+  '@repo/kit > @radix-ui/react-popover',
+  '@repo/kit > @radix-ui/react-dialog',
   '@repo/client > react-native > invariant',
-  '@repo/client > @radix-ui/react-collapsible',
-  '@repo/client > @radix-ui/react-select',
-  '@repo/client > @radix-ui/react-dropdown-menu',
-  '@repo/client > @gorhom/portal',
-  '@repo/client > @tanstack/react-form',
+  '@repo/kit > @radix-ui/react-collapsible',
+  '@repo/kit > @radix-ui/react-select',
+  '@repo/kit > @radix-ui/react-dropdown-menu',
+  '@repo/kit > @gorhom/portal',
+  '@repo/kit > @tanstack/react-form',
   '@repo/client > ajv',
   '@repo/client > ajv-formats',
-  '@repo/client > burnt',
-  '@repo/client > burnt/web',
-  '@repo/client > @legendapp/list/react-native',
-  '@repo/client > react-native-keyboard-controller',
-  '@repo/client > expo-haptics',
+  '@repo/kit > burnt',
+  '@repo/kit > burnt/web',
+  '@repo/kit > @legendapp/list/react-native',
+  '@repo/kit > react-native-keyboard-controller',
+  '@repo/kit > expo-haptics',
   '@repo/client > expo-document-picker',
   '@repo/client > expo-image-picker',
-  '@repo/client > expo-symbols',
-  '@repo/client > expo-audio',
-  '@repo/client > expo-symbols/androidWeights/extraLight',
+  '@repo/kit > expo-symbols',
+  '@repo/kit > expo-audio',
+  '@repo/kit > expo-symbols/androidWeights/extraLight',
   'storybook/actions',
 ];
 
-const PRIMITIVES_FOLDER = `${import.meta.dirname}/../../../packages/client/src/lib/generic/primitives`;
+const PRIMITIVES_FOLDER = `${import.meta.dirname}/../../../packages/kit/src/primitives`;
 
 const RESOLVED_EXTENSIONS = [
   '.web.tsx',
@@ -55,7 +55,7 @@ const RESOLVED_EXTENSIONS = [
 ];
 
 const VITE_RESOLVE = {
-  // #primitives/<group>/<name> is that folder's index, as in @repo/client's imports map.
+  // #primitives/<group>/<name> is that folder's index, as in @repo/kit's imports map.
   alias: [
     {
       find: /^#primitives\/(.+)$/,
@@ -89,10 +89,16 @@ const config: StorybookConfig & {
       to: '/canvaskit.wasm',
     },
   ],
-  // Screens live in @repo/client (ADR 0009); globs resolve from this .storybook folder.
+  // Screens live in @repo/client and the kit in @repo/kit (ADR 0009); globs resolve from this .storybook folder.
   stories: process.env.VITEST
-    ? ['../../../packages/client/src/**/*.stories.tsx']
-    : ['../../../packages/client/src/**/!(*.test).stories.tsx'],
+    ? [
+        '../../../packages/client/src/**/*.stories.tsx',
+        '../../../packages/kit/src/**/*.stories.tsx',
+      ]
+    : [
+        '../../../packages/client/src/**/!(*.test).stories.tsx',
+        '../../../packages/kit/src/**/!(*.test).stories.tsx',
+      ],
   addons: [
     getAbsolutePath('@chromatic-com/storybook'),
     getAbsolutePath('@storybook/addon-vitest'),

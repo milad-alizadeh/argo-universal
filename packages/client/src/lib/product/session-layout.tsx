@@ -1,10 +1,10 @@
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { cn } from '#lib/generic/utils';
 import {
   ComposerCover,
   composerOverlap,

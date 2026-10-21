@@ -1,8 +1,8 @@
 import type { ChangesSummary } from '@repo/contracts';
+import { Text } from '@repo/kit/primitives/content/text';
+import { Menu, type MenuAction } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import { Menu, type MenuAction } from '#primitives/overlays/menu';
 import {
   ChangeStageIcon,
   ChangeStageModifier,

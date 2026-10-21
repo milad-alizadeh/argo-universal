@@ -1,4 +1,3 @@
-import { dirname, resolve } from 'node:path';
 import type { Context, ESTree, Visitor } from '@oxlint/plugins';
 import { defineRule } from '@oxlint/plugins';
 
@@ -13,21 +12,14 @@ type Specifier = ESTree.ImportDeclaration['specifiers'][number];
 const isStylePropName = (name: string): boolean =>
   name === 'style' || name === 'className' || name.endsWith('ClassName');
 
-// A relative path that lands in the primitives folder, such as `../../lib/generic/primitives/actions/button`.
-const isRelativeKitPath = (source: string, filename: string): boolean =>
-  source.startsWith('.') &&
-  resolve(dirname(filename), source)
-    .replaceAll('\\', '/')
-    .includes('/lib/generic/primitives/');
-
-// Kit components come from the primitives folder, through its alias or a relative path.
-const isKitImport = (
-  node: ESTree.ImportDeclaration,
-  filename: string,
-): boolean =>
+/*
+ * A kit component reaches a file outside the kit as `@repo/kit/primitives/<group>/<name>`, the only
+ * path the package publishes. The kit styles its own primitives (ADR-0020), so its internal imports
+ * are not kit imports here.
+ */
+const isKitImport = (node: ESTree.ImportDeclaration): boolean =>
   node.importKind !== 'type' &&
-  (node.source.value.startsWith('#primitives/') ||
-    isRelativeKitPath(node.source.value, filename));
+  node.source.value.startsWith('@repo/kit/primitives/');
 
 const isValueSpecifier = (specifier: Specifier): boolean =>
   specifier.type !== 'ImportSpecifier' || specifier.importKind !== 'type';
@@ -69,7 +61,7 @@ const isStyleProp = (attribute: ESTree.JSXAttributeItem): boolean => {
 
 const kitVisitor = (context: Context, kitNames: Set<string>): KitVisitor => ({
   ImportDeclaration: (node): void => {
-    if (!isKitImport(node, context.filename)) return;
+    if (!isKitImport(node)) return;
 
     for (const specifier of node.specifiers.filter(isValueSpecifier))
       kitNames.add(specifier.local.name);
@@ -87,7 +79,7 @@ export const kitStyling = defineRule({
     type: 'problem',
     messages: {
       kitStyling:
-        'Kit components take props, not className, style or a *ClassName slot; style them inside lib/generic.',
+        'Kit components take props, not className, style or a *ClassName slot; style them inside @repo/kit.',
     },
   },
   create: (context): KitVisitor => kitVisitor(context, new Set()),

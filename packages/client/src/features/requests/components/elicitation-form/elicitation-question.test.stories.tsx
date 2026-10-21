@@ -1,3 +1,4 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, within } from 'storybook/test';
 import { boundedChoicesRequest } from '../../../../../mocks/elicitation-questions';
 import {
@@ -11,7 +12,6 @@ import {
   releaseReview,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-question-story.test.mocks';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 
 const meta = { ...questionTestMeta, title: 'Tests/ElicitationQuestions' };
 

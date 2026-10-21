@@ -1,6 +1,6 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { ComponentProps, JSX } from 'react';
 import { Pressable, View } from 'react-native';
-import { Text } from '#primitives/content/text';
 import {
   shellElapsed,
   shellOutcome,

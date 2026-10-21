@@ -1,16 +1,19 @@
-import type * as React from 'react';
-import { useLayoutEffect, useMemo, type ReactNode } from 'react';
 import {
   Combobox,
   type ComboboxContentProps,
-} from '#primitives/inputs/combobox';
+} from '@repo/kit/primitives/inputs/combobox';
 import {
   Popover,
   PopoverAnchor,
   PopoverContent,
   PopoverTitle,
-} from '#primitives/overlays/popover';
-import { useSheet, type SheetDestination } from '#primitives/overlays/sheet';
+} from '@repo/kit/primitives/overlays/popover';
+import {
+  useSheet,
+  type SheetDestination,
+} from '@repo/kit/primitives/overlays/sheet';
+import type * as React from 'react';
+import { useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { compareAgainstLabel } from '../../view/changes-comparison';
 import type { ComparisonPickerProps } from './comparison-picker';
 

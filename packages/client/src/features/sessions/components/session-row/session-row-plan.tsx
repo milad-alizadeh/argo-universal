@@ -1,6 +1,6 @@
 import type { SessionInfo } from '@repo/contracts';
-import type { Tone } from '#primitives/content/text';
-import type { ProgressBarProps } from '#primitives/status/progress-bar';
+import type { Tone } from '@repo/kit/primitives/content/text';
+import type { ProgressBarProps } from '@repo/kit/primitives/status/progress-bar';
 
 const statusTones = {
   needs_input: 'warning',

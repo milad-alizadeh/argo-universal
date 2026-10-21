@@ -1,10 +1,10 @@
-import type { ReactElement } from 'react';
 import {
   ContextMenu,
   type ContextMenuItem,
   contextMenuGroup,
   type ContextMenuTriggerProps,
-} from '#primitives/overlays/menu';
+} from '@repo/kit/primitives/overlays/menu';
+import type { ReactElement } from 'react';
 import type { ProjectHeadingProps } from './project-heading';
 
 type ProjectHeadingMenuProps = ProjectHeadingProps & {

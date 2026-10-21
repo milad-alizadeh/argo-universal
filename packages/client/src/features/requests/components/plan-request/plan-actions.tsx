@@ -1,7 +1,7 @@
+import { SplitButton } from '@repo/kit/primitives/actions/split-button';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { SplitButton } from '#primitives/actions/split-button';
 import type { PermissionAnswers } from '../permission-request/use-permission-answers';
 import { RequestAction } from '../request-card/request-card';
 import type { PlanBuild } from './use-plan-build';

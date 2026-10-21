@@ -1,4 +1,4 @@
-import { Text } from '@repo/client/text';
+import { Text } from '@repo/kit/text';
 /*
  * Throwaway renderer feasibility check using Atlas masters 8G-0 / AU-0 / CZ-0.
  * This route has no Plugin registry or production API.

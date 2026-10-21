@@ -1,3 +1,5 @@
+import { motionDuration } from '@repo/kit/motion';
+import { useSpacing } from '@repo/kit/use-spacing';
 import type { ViewStyle } from 'react-native';
 import {
   ReduceMotion,
@@ -5,8 +7,6 @@ import {
   useDerivedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { motionDuration } from '../../../lib/generic/motion';
-import { useSpacing } from '../../../lib/generic/use-spacing';
 
 const timing = {
   duration: motionDuration.enter,

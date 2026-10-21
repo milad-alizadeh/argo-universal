@@ -1,6 +1,6 @@
 import type { SessionInfo } from '@repo/contracts';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type * as React from 'react';
-import { StatusDot } from '#primitives/status/status-dot';
 import { sessionStatusDot } from '../../session-status-dot';
 import { sidebarRows } from './session-row-sidebar';
 

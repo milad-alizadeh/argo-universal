@@ -5,10 +5,10 @@ import {
   refusedTreeFixture,
   renderThrowReason,
 } from '@repo/contracts/plugins/replaceable-fixtures';
+import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
-import { Text } from '#primitives/content/text';
 import {
   renderCoreMessage,
   replacementState,

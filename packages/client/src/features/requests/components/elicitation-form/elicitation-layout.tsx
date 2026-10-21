@@ -1,8 +1,8 @@
+import { Surface } from '@repo/kit/primitives/layout/surface';
+import { cn } from '@repo/kit/utils';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Surface } from '#primitives/layout/surface';
 import {
   RequestCard,
   type RequestCardProps,

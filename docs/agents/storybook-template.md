@@ -5,7 +5,7 @@ The shape every presentation story file takes ([ADR-0040](../adr/0040-one-shape-
 Start from the generator, which reads the component's folder and writes this shape:
 
 ```bash
-pnpm new:story packages/client/src/lib/generic/primitives/actions/button/button.tsx
+pnpm new:story packages/kit/src/primitives/actions/button/button.tsx
 ```
 
 It derives the title from the path and sets `component:`. It takes `argTypes` from a kit component's Contracts schema, or from any other component's own `<Component>Props` type. It gives each required prop a placeholder arg, and `fn()` for a handler. Then it writes one story per value in the component's `cva` or `tailwind-variants` maps, named for the value. Where a value name reads as a prop value rather than a state, such as `Sm`, rename the story for what it shows. Add by hand only what it cannot see: a branch in a conditional, a lookup table or a platform fork, and a pair the component has a rule for.
@@ -14,11 +14,11 @@ It derives the title from the path and sets `component:`. It takes `argTypes` fr
 
 ```tsx
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { kitArgTypes } from '#lib/generic/kit-arg-types';
+import { kitArgTypes } from '#kit/kit-arg-types';
 import { Button } from './button';
 
 const meta = {
-  // Derived from the path: lib/generic/primitives/<category>/<name>.
+  // Derived from the path: primitives/<category>/<name> inside the kit.
   title: 'Design System/Primitives/Actions/Button',
   component: Button,
   // Placeholder copy, never product copy. A prop with no branch stays an arg here.

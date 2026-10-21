@@ -1,8 +1,8 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import type * as React from 'react';
 import { type RefObject, useEffect, useEffectEvent, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
 
 type ListRef = RefObject<LegendListRef | null>;
 

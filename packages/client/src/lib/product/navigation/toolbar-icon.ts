@@ -1,11 +1,11 @@
-import type { ImageSourcePropType } from 'react-native';
-import type { SFSymbol } from 'sf-symbols-typescript';
-import { type IconName, iconSymbols } from '#lib/generic/symbols/icon-names';
+import { overflowIcon } from '@repo/kit/primitives/actions/action-list';
+import { type IconName, iconSymbols } from '@repo/kit/symbols/icon-names';
 import {
   type DrawnMaterialName,
   namedMaterialImage,
-} from '#lib/generic/symbols/material-images/material-images';
-import { overflowIcon } from '#primitives/actions/action-list';
+} from '@repo/kit/symbols/material-images/material-images';
+import type { ImageSourcePropType } from 'react-native';
+import type { SFSymbol } from 'sf-symbols-typescript';
 
 // The Argo icons a native header toolbar can show: a system SF Symbol on iOS, and on Android, which takes an image, a Material drawing.
 export type ToolbarIconName = {

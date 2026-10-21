@@ -1,3 +1,4 @@
+import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
 import { sessionRows } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -5,7 +6,6 @@ import { Pressable, Text, View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
 import { largeSessions } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
-import { sampleEachFrame } from '../sample-each-frame';
 import {
   exampleProjectName,
   type Story,

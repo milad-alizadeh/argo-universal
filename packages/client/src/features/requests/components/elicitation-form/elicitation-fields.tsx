@@ -1,5 +1,5 @@
+import { ListSection } from '@repo/kit/primitives/lists/list';
 import type { ReactElement } from 'react';
-import { ListSection } from '#primitives/lists/list';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import { FieldRows } from './elicitation-field-rows';
 import { ElicitationFormField } from './elicitation-form-body';

@@ -1,9 +1,9 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import type * as React from 'react';
 import { useState } from 'react';
 import { useTRPC, useResubscribeOnReconnect } from '#features/connection';
-import { useErrorToast } from '#primitives/overlays/toast';
 import { pluginFailureToast } from './plugin-failure-toast';
 
 // One watcher in the Frame reports crashes even when a Plugin's page is closed.

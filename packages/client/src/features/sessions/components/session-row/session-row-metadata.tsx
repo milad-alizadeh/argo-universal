@@ -1,7 +1,7 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import { Pill } from '#primitives/status/pill';
 import { ChangeStage } from '../change-stage/change-stage';
 import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';

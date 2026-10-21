@@ -1,7 +1,7 @@
+import { eachLayout } from '@repo/kit/each-layout';
+import { canPointAt } from '@repo/kit/mocks/point-hit';
 import { expect, waitFor, within } from 'storybook/test';
 import { scrolledToEnd } from '../../src/features/feed/components/feed/feed-reader.mocks';
-import { eachLayout } from '../../src/lib/generic/each-layout';
-import { canPointAt } from '../point-hit';
 import { bottomFadeStart, fadedEdges } from '../scroll-fade';
 import { feedScrollTestId, type Story } from './session-view-story.test.mocks';
 

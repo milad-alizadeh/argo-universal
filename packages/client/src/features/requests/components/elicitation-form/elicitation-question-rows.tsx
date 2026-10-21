@@ -1,5 +1,5 @@
+import { ListSection } from '@repo/kit/primitives/lists/list';
 import type { ReactElement } from 'react';
-import { ListSection } from '#primitives/lists/list';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { choiceValue, selectedAnswers } from './elicitation-answers';
 import { CustomAnswer } from './elicitation-custom-answer';

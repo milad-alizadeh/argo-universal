@@ -1,6 +1,6 @@
 import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
-import { millisecondsPerSecond } from '#lib/generic/format-elapsed';
-import { useClock } from '#lib/generic/use-clock';
+import { millisecondsPerSecond } from '@repo/kit/format-elapsed';
+import { useClock } from '@repo/kit/use-clock';
 
 export function useToolCallDuration(
   row: ToolCallUpdate | undefined,

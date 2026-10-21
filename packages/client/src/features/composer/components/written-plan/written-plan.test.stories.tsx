@@ -1,3 +1,4 @@
+import { layoutWidths } from '@repo/kit/each-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
@@ -8,7 +9,6 @@ import {
   openingWrittenPlan,
   readingLongWrittenPlan,
 } from '../../../../../mocks/written-plan-stories';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
 import type { MockAgent } from '../../../../lib/product/feed-message.mocks';
 import { Composer } from '../composer/composer';
 

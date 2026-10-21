@@ -1,7 +1,7 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { questionsRequest } from '../../../../../mocks/elicitation-questions';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   elicitationProps,
   elicitationMock,

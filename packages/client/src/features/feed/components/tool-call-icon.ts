@@ -1,5 +1,5 @@
 import { knownCommandActions, type ToolCallUpdate } from '@repo/contracts';
-import type { IconName } from '#lib/generic/symbols/icon-names';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 
 const categoryIcons = new Map<string, IconName>([
   ['read', 'read'],

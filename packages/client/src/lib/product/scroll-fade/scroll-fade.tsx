@@ -1,4 +1,4 @@
 export {
   ScrollFadeView,
   type ScrollFadeViewProps,
-} from '../../generic/scroll-fade/scroll-fade';
+} from '@repo/kit/scroll-fade/scroll-fade';

@@ -1,5 +1,5 @@
+import { PageBesideList } from '@repo/kit/primitives/scaffolds/page';
 import type * as React from 'react';
-import { PageBesideList } from '#primitives/scaffolds/page';
 import { ProjectDetailPane } from './project-detail-pane';
 
 export interface ProjectDetailScreenProps {

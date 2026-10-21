@@ -1,10 +1,10 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { MenuTrigger } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { MenuTrigger } from '#primitives/overlays/menu';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ConfigurationChoice } from './configuration-choice';
 import type { ComposerConfigurationProps } from './configuration-types';

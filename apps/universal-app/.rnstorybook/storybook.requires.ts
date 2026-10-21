@@ -17,6 +17,17 @@ const normalizedStories = [
       true,
       /^\.(?:(?:^|\/|(?:(?:(?!(?:^|\/)\.).)*?)\/)(?:(?!(?:[^/]*?\.test))[^/]*?)\.stories\.tsx)$/
     ),
+  },
+  {
+    titlePrefix: "",
+    directory: "../../packages/kit/src",
+    files: "**/!(*.test).stories.tsx",
+    importPathMatcher: /^\.(?:(?:^|\/|(?:(?:(?!(?:^|\/)\.).)*?)\/)(?:(?!(?:[^/]*?\.test))[^/]*?)\.stories\.tsx)$/,
+    req: require.context(
+      '../../../packages/kit/src',
+      true,
+      /^\.(?:(?:^|\/|(?:(?:(?!(?:^|\/)\.).)*?)\/)(?:(?!(?:[^/]*?\.test))[^/]*?)\.stories\.tsx)$/
+    ),
   }
 ];
 

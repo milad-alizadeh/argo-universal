@@ -1,3 +1,7 @@
+import {
+  InspectorPane,
+  type InspectorPaneProps,
+} from '@repo/kit/primitives/scaffolds/inspector';
 import type * as React from 'react';
 import {
   ChangesFiles,
@@ -6,10 +10,6 @@ import {
   ChangesSheetHeader,
   type ChangesViewProps,
 } from '#features/changes';
-import {
-  InspectorPane,
-  type InspectorPaneProps,
-} from '#primitives/scaffolds/inspector';
 
 export type ChangesInspectorProps = ChangesViewProps &
   Pick<

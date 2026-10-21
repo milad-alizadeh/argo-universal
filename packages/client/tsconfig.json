@@ -5,5 +5,13 @@
     // className props on React Native components come from Uniwind's type augmentation.
     "types": ["uniwind/types"]
   },
-  "include": ["src", "mocks", "vitest.config.ts"]
+  "include": [
+    "src",
+    "mocks",
+    "vitest.config.ts",
+    // The kit's React Native typing for the inert prop, which its components use.
+    "../kit/src/view-inert.d.ts",
+    // Prism's DOM-free core, which the package itself leaves untyped.
+    "../kit/src/primitives/content/code/code-highlight/prism-core.d.ts"
+  ]
 }

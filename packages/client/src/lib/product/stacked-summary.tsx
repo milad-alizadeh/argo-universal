@@ -1,8 +1,8 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import type { IconName } from '@repo/kit/symbols/icon-names';
+import { ToneMark } from '@repo/kit/tone-mark';
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import type { IconName } from '../generic/symbols/icon-names';
-import { ToneMark } from '../generic/tone-mark';
 
 export interface StackedSummaryIcon {
   icon: IconName;

@@ -1,3 +1,4 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { ReactElement } from 'react';
 import { expect, within } from 'storybook/test';
 import {
@@ -8,7 +9,6 @@ import {
   previousQuestion,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-question-story.test.mocks';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { RequestFrame } from '../../../../lib/product/request-frame';
 import { ElicitationSheet } from './elicitation-sheet';
 

@@ -1,9 +1,12 @@
 import { useSyncLayout } from '@legendapp/list/react-native';
+import {
+  Markdown,
+  type MarkdownProps,
+} from '@repo/kit/primitives/content/markdown';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Markdown, type MarkdownProps } from '#primitives/content/markdown';
-import { Text } from '#primitives/content/text';
 
 const clampedLines = 4;
 

@@ -1,4 +1,5 @@
 import type { SessionSnapshot } from '@repo/contracts';
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { type InstalledAgents, loadedAgents } from '#features/agents';
 import { useResubscribeOnReconnect } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
@@ -22,7 +23,6 @@ import {
   useSessionAuth,
   useTurnSignIn,
 } from '#features/sessions';
-import { useErrorToast } from '#primitives/overlays/toast';
 import type { SessionCommands } from './use-session-commands';
 import type { useSessionReadOptions } from './use-session-read-options';
 import { useSessionRetry } from './use-session-retry';

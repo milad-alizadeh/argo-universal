@@ -1,15 +1,15 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { findToast } from '@repo/kit/mocks/find-toast';
+import { canPointAt } from '@repo/kit/mocks/point-hit';
+import { shownText } from '@repo/kit/mocks/shown-text';
+import { Text } from '@repo/kit/primitives/content/text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { ScrollView } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { SessionLayout } from '#lib/product/session-layout';
-import { Text } from '#primitives/content/text';
 import { composerProps } from '../../../../../mocks/composer-mock';
-import { findToast } from '../../../../../mocks/find-toast';
-import { canPointAt } from '../../../../../mocks/point-hit';
-import { shownText } from '../../../../../mocks/shown-text';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
 
 const failedAttachment = 'Could not attach the selected image.';

@@ -52,24 +52,24 @@ export { ProjectListScreen } from './screens/settings/projects/project-list-scre
 
 export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
-export { hasLiquidGlass } from '#lib/generic/native-header';
+export { hasLiquidGlass } from '@repo/kit/native-header';
 
 export {
   type RenderSymbolImage,
   SymbolImagesProvider,
-} from './lib/generic/symbols/symbol-images';
+} from '@repo/kit/symbols/symbol-images';
 
-export { iconSymbols } from './lib/generic/symbols/icon-names';
+export { iconSymbols } from '@repo/kit/symbols/icon-names';
 
-export type { SizeClass } from './lib/generic/use-size-class/size-class';
+export type { SizeClass } from '@repo/kit/use-size-class/size-class';
 
-export { EmptyState } from '#primitives/status/empty-state';
+export { EmptyState } from '@repo/kit/primitives/status/empty-state';
 
-export type { EmptyStateProps } from '#primitives/status/empty-state';
+export type { EmptyStateProps } from '@repo/kit/primitives/status/empty-state';
 
-export { Text } from '#primitives/content/text';
+export { Text } from '@repo/kit/primitives/content/text';
 
-export { Toaster } from '#primitives/overlays/toast';
+export { Toaster } from '@repo/kit/primitives/overlays/toast';
 
 export {
   type FirstPage,
@@ -91,18 +91,18 @@ export { withoutNewSession } from './lib/product/navigation/new-session';
 
 export { AppProviders } from './app-providers';
 
-export { PortalProvider } from '#primitives/overlays/portal';
+export { PortalProvider } from '@repo/kit/primitives/overlays/portal';
 
 export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
-export { PageBesideList } from '#primitives/scaffolds/page';
+export { PageBesideList } from '@repo/kit/primitives/scaffolds/page';
 
 export {
   TableRowDetailHost,
   type OpenRowDetail,
-} from '#primitives/lists/table';
+} from '@repo/kit/primitives/lists/table';
 
 export { PluginErrorToasts } from './screens/plugins/plugin-error-toasts';
 

@@ -1,3 +1,9 @@
+import { SegmentedControl } from '@repo/kit/primitives/inputs/segmented-control';
+import { Stack } from '@repo/kit/primitives/layout/stack';
+import {
+  InspectorBody,
+  type InspectorProps,
+} from '@repo/kit/primitives/scaffolds/inspector';
 import { useState, type ComponentProps, type ReactElement } from 'react';
 import {
   ChangesFiles,
@@ -8,12 +14,6 @@ import {
   SessionChangeDetail,
   type SessionHeaderProps,
 } from '#features/sessions';
-import { SegmentedControl } from '#primitives/inputs/segmented-control';
-import { Stack } from '#primitives/layout/stack';
-import {
-  InspectorBody,
-  type InspectorProps,
-} from '#primitives/scaffolds/inspector';
 
 type Props = {
   changesRequest?: number;

@@ -1,3 +1,9 @@
+import {
+  Inspector,
+  type InspectorProps,
+  type InspectorTab,
+} from '@repo/kit/primitives/scaffolds/inspector';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { ReactNode } from 'react';
 import { createElement, type JSX } from 'react';
 import {
@@ -11,12 +17,6 @@ import {
   sessionPanelOrder,
   type SessionPanels,
 } from '#features/sessions';
-import {
-  Inspector,
-  type InspectorProps,
-  type InspectorTab,
-} from '#primitives/scaffolds/inspector';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import {
   panelContent,
   type SessionInspectorContent,

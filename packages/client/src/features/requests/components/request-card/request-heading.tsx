@@ -1,10 +1,10 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { useOptionalSheet } from '@repo/kit/primitives/overlays/sheet';
+import type { IconName } from '@repo/kit/symbols/icon-names';
+import { cn } from '@repo/kit/utils';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { useOptionalSheet } from '#primitives/overlays/sheet';
-import type { IconName } from '../../../../lib/generic/symbols/icon-names';
 
 interface RequestHeadingProps {
   icon: IconName;

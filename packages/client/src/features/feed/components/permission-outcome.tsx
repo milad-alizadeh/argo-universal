@@ -2,10 +2,10 @@ import {
   type PermissionOutcome as Outcome,
   PermissionOptionKind,
 } from '@repo/contracts';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 
 export interface PermissionOutcomeProps {
   outcome: Outcome;

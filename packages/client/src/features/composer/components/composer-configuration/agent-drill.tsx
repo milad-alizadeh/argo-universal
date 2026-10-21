@@ -1,5 +1,5 @@
+import { Drill } from '@repo/kit/primitives/overlays/drill';
 import type { ReactElement, ComponentProps } from 'react';
-import { Drill } from '#primitives/overlays/drill';
 import { AgentChoices } from '../start-session-in/agent-picker-choices';
 import { AgentIcon } from './agent-icon';
 import { ConfigurationRowIcon } from './configuration-row-icon';

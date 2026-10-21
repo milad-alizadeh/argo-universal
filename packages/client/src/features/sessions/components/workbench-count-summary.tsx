@@ -1,5 +1,5 @@
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type { ReactElement } from 'react';
-import type { IconName } from '../../../lib/generic/symbols/icon-names';
 import {
   StackedSummary,
   type StackedSummaryIcon,

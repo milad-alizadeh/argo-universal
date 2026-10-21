@@ -1,6 +1,6 @@
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { useState, type ReactElement, type ReactNode } from 'react';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
   currentEffort,

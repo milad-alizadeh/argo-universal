@@ -1,6 +1,6 @@
+import { SegmentedControl } from '@repo/kit/primitives/inputs/segmented-control';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { SegmentedControl } from '#primitives/inputs/segmented-control';
 
 const segments = [
   { value: 'change', label: 'Change', disabled: true },

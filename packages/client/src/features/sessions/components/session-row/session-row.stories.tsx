@@ -1,9 +1,9 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { action } from 'storybook/actions';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import type { SessionsLayout } from '../../stores/sessions-view';
 import { SessionRow, type SessionRowProps } from './session-row';
 import {

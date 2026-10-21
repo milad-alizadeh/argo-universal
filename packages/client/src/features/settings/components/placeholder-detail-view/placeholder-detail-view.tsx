@@ -1,11 +1,11 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
-import { Page } from '#primitives/scaffolds/page';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 
 export interface PlaceholderDetailViewProps {
   title: string;

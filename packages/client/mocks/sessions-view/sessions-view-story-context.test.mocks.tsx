@@ -1,3 +1,4 @@
+import { useWide } from '@repo/kit/use-wide/use-wide';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
@@ -5,7 +6,6 @@ import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { SessionsHeader } from '../../src/features/sessions/components/sessions-header';
 import { useSessionsViewState } from '../../src/features/sessions/stores/sessions-view-state';
-import { useWide } from '../../src/lib/generic/use-wide/use-wide';
 import { SessionListView } from '../../src/screens/sessions/session-list-view';
 import { loadedSessionListView } from '../../src/screens/sessions/session-list-view.mocks';
 import { SessionsRootPage } from '../../src/screens/sessions/sessions-root-page';

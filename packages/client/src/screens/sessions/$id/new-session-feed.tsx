@@ -1,10 +1,10 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Feed } from '#features/feed';
 import { type StartingFeed } from '#features/sessions';
 import { useContentWide } from '#lib/product/content-layout';
 import { SessionColumn } from '#lib/product/session-column';
-import { Text } from '#primitives/content/text';
 
 const noOlderRows = (): void => {};
 

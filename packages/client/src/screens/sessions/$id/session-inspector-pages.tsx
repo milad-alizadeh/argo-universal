@@ -1,15 +1,15 @@
+import {
+  InspectorPage,
+  InspectorPages,
+  InspectorBody,
+  type InspectorProps,
+} from '@repo/kit/primitives/scaffolds/inspector';
 import type { ReactElement } from 'react';
 import {
   type SessionPanel,
   type SessionPanels,
   sessionPanelLabels,
 } from '#features/sessions';
-import {
-  InspectorPage,
-  InspectorPages,
-  InspectorBody,
-  type InspectorProps,
-} from '#primitives/scaffolds/inspector';
 import {
   panelContent,
   type SessionInspectorContent,

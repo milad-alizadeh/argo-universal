@@ -1,6 +1,6 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Menu } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Menu } from '#primitives/overlays/menu';
 import { type SessionMenu, sessionMenuItems } from './session-menu-items';
 
 // The header's icon buttons: ghost, extra small and tight-cornered, with 16px foreground icons.

@@ -1,5 +1,5 @@
+import type { InspectorProps } from '@repo/kit/primitives/scaffolds/inspector';
 import { useRef, useState } from 'react';
-import type { InspectorProps } from '#primitives/scaffolds/inspector';
 import type { ChangesViewProps } from './changes-view-props';
 
 type Selection = { comparison: string; path: string } | undefined;

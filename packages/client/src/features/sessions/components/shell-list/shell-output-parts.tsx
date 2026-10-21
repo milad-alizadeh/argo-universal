@@ -1,8 +1,8 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import { type ShellOutcome, shellEnding, shellOutcome } from './shell-format';
 import type { ShellEntry } from './shell-list-types';
 

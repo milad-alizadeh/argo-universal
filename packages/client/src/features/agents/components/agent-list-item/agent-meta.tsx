@@ -1,11 +1,11 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Label } from '@repo/kit/primitives/content/label';
+import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import type { IconName } from '@repo/kit/symbols/icon-names';
+import { type LogoSource, logoSources } from '@repo/kit/symbols/logo-source';
 import type * as React from 'react';
 import { Linking } from 'react-native';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { type LogoSource, logoSources } from '#lib/generic/symbols/logo-source';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Label } from '#primitives/content/label';
-import { Tooltip } from '#primitives/overlays/tooltip';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 import { unavailableIcon, unsupportedLabel } from './agent-button';
 

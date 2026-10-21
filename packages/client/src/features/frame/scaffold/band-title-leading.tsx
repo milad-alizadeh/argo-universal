@@ -1,3 +1,4 @@
+import { bezierEasing } from '@repo/kit/bezier-easing';
 import { useEffect, useRef, type ReactElement } from 'react';
 import Animated, {
   useSharedValue,
@@ -5,7 +6,6 @@ import Animated, {
   withTiming,
   ReduceMotion,
 } from 'react-native-reanimated';
-import { bezierEasing } from '#lib/generic/bezier-easing';
 import type { FrameMotion } from '../utils/frame-timing';
 
 export interface BandTitleLeadingProps extends FrameMotion {

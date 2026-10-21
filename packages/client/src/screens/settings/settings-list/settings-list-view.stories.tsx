@@ -1,9 +1,9 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { Text } from '#primitives/content/text';
 import {
   SettingsListView,
   type SettingsListViewProps,

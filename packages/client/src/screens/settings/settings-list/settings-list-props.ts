@@ -1,7 +1,7 @@
+import type { RowBadge } from '@repo/kit/primitives/lists/list-item';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type { Href } from 'expo-router';
 import type { ThemeChoice } from '#features/settings';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import type { RowBadge } from '#primitives/lists/list-item';
 
 // A page's path, one the router knows.
 export type SettingsHref = Extract<Href, string>;

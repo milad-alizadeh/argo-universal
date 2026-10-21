@@ -1,3 +1,4 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
@@ -6,7 +7,6 @@ import {
   nextWorkRequest,
   nextWorkValues,
 } from '../../../../../mocks/elicitation-questions';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import {
   configurationRequest,
   configurationValues,

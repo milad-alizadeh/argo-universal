@@ -1,9 +1,9 @@
 import type { Subagent } from '@repo/contracts';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ComponentProps, JSX } from 'react';
 import { Platform } from 'react-native';
-import { Icon } from '#primitives/content/icon';
-import { List } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
 import { SubagentMark } from './subagent-mark';

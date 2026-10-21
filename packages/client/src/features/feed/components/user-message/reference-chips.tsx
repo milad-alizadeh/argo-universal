@@ -1,10 +1,10 @@
 import type { ContentBlock } from '@repo/contracts';
+import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
+import { resourceName } from '@repo/kit/primitives/content/code';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { resourceName } from '#primitives/content/code';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 
 export type Reference = Extract<
   ContentBlock,

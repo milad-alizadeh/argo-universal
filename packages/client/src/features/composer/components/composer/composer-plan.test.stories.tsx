@@ -1,3 +1,5 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
@@ -11,8 +13,6 @@ import { runningPlanStepLabel } from '../../../../../mocks/composer/composer-tes
 import { planDone } from '../../../../../mocks/composer/plan-done.test.mocks';
 import { equalPlanSteps } from '../../../../../mocks/composer/plan-steps.test.mocks';
 import { sessionControls } from '../../../../../mocks/composer/session-controls.test.mocks';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };

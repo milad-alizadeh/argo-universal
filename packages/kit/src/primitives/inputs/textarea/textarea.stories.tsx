@@ -1,0 +1,41 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#kit/kit-arg-types';
+import { Variation, Variations as VariationList } from '../../../variations';
+import { Textarea } from './textarea';
+
+const examples: {
+  label: string;
+  props: React.ComponentProps<typeof Textarea> & { 'aria-invalid'?: boolean };
+}[] = [
+  { label: 'Empty', props: { placeholder: 'Message' } },
+  {
+    label: 'Filled',
+    props: { defaultValue: 'Hello.', placeholder: 'Message' },
+  },
+  { label: 'Read-only', props: { disabled: true, placeholder: 'Message' } },
+  { label: 'Invalid', props: { 'aria-invalid': true, placeholder: 'Message' } },
+];
+
+const meta = {
+  title: 'Design System/Primitives/Inputs/Textarea',
+  component: Textarea,
+  argTypes: kitArgTypes('Textarea'),
+  tags: ['third-party'],
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj;
+
+export const Variations: Story = {
+  name: 'Textarea',
+  render: () => (
+    <VariationList>
+      {examples.map(({ label, props }) => (
+        <Variation key={label} label={label}>
+          <Textarea {...props} />
+        </Variation>
+      ))}
+    </VariationList>
+  ),
+};

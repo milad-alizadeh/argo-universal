@@ -1,8 +1,8 @@
 import type { Action } from '@repo/contracts/plugins/wire';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { setStringAsync } from 'expo-clipboard';
 import { router, type Href } from 'expo-router';
 import { Linking } from 'react-native';
-import { showToast } from '#primitives/overlays/toast';
 import { shareContent } from './share';
 
 type External = Extract<Action, { action: 'openUrl' | 'copy' }>;

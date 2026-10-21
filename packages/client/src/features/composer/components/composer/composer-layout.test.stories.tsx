@@ -1,3 +1,5 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect } from 'storybook/test';
 import { within } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
@@ -6,8 +8,6 @@ import { meta as composerTestMeta } from '../../../../../mocks/composer/composer
 import { agentModelLabel } from '../../../../../mocks/composer/composer-test-contract.test.mocks';
 import { responsiveLayout } from '../../../../../mocks/composer/responsive-layout.test.mocks';
 import { workStatusCounts } from '../../../../../mocks/composer/work-status.test.mocks';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };

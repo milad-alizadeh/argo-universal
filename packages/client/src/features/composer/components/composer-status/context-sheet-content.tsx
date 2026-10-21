@@ -1,8 +1,8 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type { JSX } from 'react';
-import { Icon } from '#primitives/content/icon';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
-import { StatusDot } from '#primitives/status/status-dot';
 import type { ComposerContext } from '../../utils/status';
 import { compactNumber, contextZone } from '../../utils/status';
 import { contextZones } from './context-zones';

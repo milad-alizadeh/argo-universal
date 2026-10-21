@@ -1,9 +1,9 @@
 import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, within } from 'storybook/test';
 import { FeedItem, toFeedView } from '../../../src/features/feed';
 import { permissionMocks } from '../../../src/features/requests/components/request.mocks';
-import { settleViewport } from '../../../src/lib/generic/settle-viewport';
 import { RequestFrame } from '../../../src/lib/product/request-frame';
 import {
   allowedOnceAnswer,

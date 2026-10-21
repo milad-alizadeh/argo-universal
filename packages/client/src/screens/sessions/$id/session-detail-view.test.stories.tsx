@@ -1,6 +1,6 @@
+import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, within } from 'storybook/test';
-import { eachLayout, layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import { configuration } from '../../../../mocks/session-view/session-view-agent.test.mocks';
 import { archivedIsReadOnly } from '../../../../mocks/session-view/session-view-archived.test.mocks';
 import { authenticationRequired } from '../../../../mocks/session-view/session-view-callout.test.mocks';

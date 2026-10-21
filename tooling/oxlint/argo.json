@@ -149,10 +149,10 @@
     {
       // `shape` is @expo/ui Compose's own prop name on Surface and Button; the rule allows member reads but not package prop keys.
       "files": [
-        "packages/client/src/lib/generic/primitives/actions/split-button/split-button-look.android.ts",
-        "packages/client/src/lib/generic/primitives/inputs/picker/picker-dialog.android.tsx",
-        "packages/client/src/lib/generic/primitives/inputs/picker/picker-row.android.tsx",
-        "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item.android.tsx"
+        "packages/kit/src/primitives/actions/split-button/split-button-look.android.ts",
+        "packages/kit/src/primitives/inputs/picker/picker-dialog.android.tsx",
+        "packages/kit/src/primitives/inputs/picker/picker-row.android.tsx",
+        "packages/kit/src/primitives/lists/grouped-list-item/grouped-list-item.android.tsx"
       ],
       "rules": { "anti-slop/no-shape-in-symbol-names": "off" }
     },
@@ -218,22 +218,18 @@
       }
     },
     {
-      // Icons take a role, so where an icon sits decides its size on every platform; only lib/generic/symbols turns roles into pixels.
-      "files": ["packages/client/src/**"],
+      // Icons take a role, so where an icon sits decides its size on every platform; only the kit's symbols folder turns roles into pixels.
+      "files": ["packages/client/src/**", "packages/kit/src/**"],
       "rules": { "argo/icon-role": "error" }
     },
     {
-      "files": ["packages/client/src/lib/generic/symbols/**"],
+      "files": ["packages/kit/src/symbols/**"],
       "rules": { "argo/icon-role": "off" }
     },
     {
-      // Kit components take props, never className, style or a *ClassName slot; only lib/generic styles them. kit-styling-allowlist.json holds the files not yet moved over.
+      // Kit components take props, never className, style or a *ClassName slot; only @repo/kit styles them. kit-styling-allowlist.json holds the files not yet moved over.
       "files": ["packages/client/src/**"],
       "rules": { "argo/kit-styling": "error" }
-    },
-    {
-      "files": ["packages/client/src/lib/generic/**"],
-      "rules": { "argo/kit-styling": "off" }
     },
     {
       // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values, no raw colours (native colour props included) and no Tailwind palette colour classes.
@@ -242,7 +238,7 @@
     },
     {
       // Clipboard HTML as browsers and VS Code write it: pasted data, not Argo's styles.
-      "files": ["packages/client/mocks/rich-textarea-paste-mock.ts"],
+      "files": ["packages/kit/mocks/rich-textarea-paste-mock.ts"],
       "rules": { "argo/style-tokens": "off" }
     },
     {
@@ -294,7 +290,7 @@
       "rules": { "vitest/no-conditional-expect": "off" }
     },
     {
-      // Client code reaches a primitive only through its folder's index, #primitives/<group>/<name>, whose extensionless relative imports let Metro pick the platform file (ADR-0020). Later client blocks repeat these patterns.
+      // Client code reaches a primitive only through its folder's index, @repo/kit/primitives/<group>/<name>, whose extensionless relative imports let Metro pick the platform file (ADR-0020). Later client blocks repeat these patterns.
       "files": ["packages/client/**"],
       "rules": {
         "no-restricted-imports": [
@@ -302,16 +298,12 @@
           {
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               }
             ]
           }
@@ -327,16 +319,12 @@
           {
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "^#features/[^/]+/",
@@ -347,7 +335,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$|^@repo/kit/use-size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -368,16 +356,12 @@
           {
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "^#features/[^/]+/",
@@ -388,7 +372,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$|^@repo/kit/use-size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -415,16 +399,12 @@
             ],
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "^#features/[^/]+/",
@@ -435,7 +415,7 @@
                 "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9); only its .mocks files are imported directly."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$|^@repo/kit/use-size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -505,16 +485,12 @@
             ],
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "(^|/)use-[^/]*-query$",
@@ -529,7 +505,7 @@
                 "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9); only its .mocks files are imported directly."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$|^@repo/kit/use-size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -631,16 +607,12 @@
             ],
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "(^|/)use-[^/]*-query$",
@@ -655,7 +627,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$|^@repo/kit/use-size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -753,16 +725,12 @@
             ],
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "(^|/)use-[^/]*-query$",
@@ -777,7 +745,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$|^@repo/kit/use-size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -802,16 +770,12 @@
           {
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "^\\.\\./(components|screens)(/|$)",
@@ -826,7 +790,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$|^@repo/kit/use-size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -847,16 +811,12 @@
           {
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "^\\.\\./\\.\\./(components|screens)(/|$)",
@@ -871,7 +831,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$|^@repo/kit/use-size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -884,8 +844,8 @@
       }
     },
     {
-      // Generic code imports neither product nor local code; ADR-0031 adds the kit prop surface - its types, and the descriptors a props table is built from - beside the shared kit tokens.
-      "files": ["packages/client/src/lib/generic/**"],
+      // The kit imports neither product nor local code; ADR-0031 adds the kit prop surface - its types, and the descriptors a props table is built from - beside the shared kit tokens.
+      "files": ["packages/kit/src/**"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
         "no-restricted-imports": [
@@ -893,16 +853,12 @@
           {
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "^#(features|lib/product)/",
@@ -928,7 +884,7 @@
     },
     {
       // Primitives use one another through their indexes. Contracts supplies only their shared kit tokens, never domain types.
-      "files": ["packages/client/src/lib/generic/primitives/*/*/*"],
+      "files": ["packages/kit/src/primitives/*/*/*"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
         "no-restricted-imports": [
@@ -936,16 +892,12 @@
           {
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "^(\\.\\./)+(actions|content|fields|inputs|layout|lists|native|overlays|scaffolds|status|visual)(/|$)",
@@ -979,7 +931,7 @@
       }
     },
     {
-      // Product code shared by features imports lib/generic, never a feature (A2, ADR-0016 item 9).
+      // Product code shared by features imports the kit, never a feature (A2, ADR-0016 item 9).
       "files": ["packages/client/src/lib/product/**"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
@@ -988,24 +940,20 @@
           {
             "patterns": [
               {
-                "regex": "^#lib/generic/primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
-              },
-              {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
-                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+                "message": "Import primitives through @repo/kit/primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/([^/]+/[^/]+/)",
-                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+                "regex": "^(#primitives|@repo/kit/primitives)/([^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, @repo/kit/primitives/<group>/<name>; only files inside the kit import its files."
               },
               {
                 "regex": "^#features/",
-                "message": "lib/product imports lib/generic, never a feature (A2)."
+                "message": "lib/product imports the kit, never a feature (A2)."
               },
               {
                 "regex": "^(\\.\\./)+features(/|$)",
-                "message": "lib/product imports lib/generic, never a feature (A2)."
+                "message": "lib/product imports the kit, never a feature (A2)."
               },
               {
                 "group": ["@repo/client", "@repo/client/**"],
@@ -1164,6 +1112,10 @@
               {
                 "name": "@repo/client/size-class",
                 "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
+              },
+              {
+                "name": "@repo/kit/use-size-class",
+                "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
               }
             ]
           }
@@ -1181,6 +1133,10 @@
               {
                 "name": "@repo/client/size-class",
                 "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
+              },
+              {
+                "name": "@repo/kit/use-size-class",
+                "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
               }
             ],
             "patterns": [
@@ -1189,12 +1145,14 @@
                   "@repo/**",
                   "!@repo/client",
                   "!@repo/client/**",
+                  "!@repo/kit",
+                  "!@repo/kit/**",
                   "!@repo/uniwind",
                   "!@repo/uniwind/**",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "The App imports client and uniwind, never server-side packages."
+                "message": "The App imports the kit, client and uniwind, never server-side packages."
               }
             ]
           }
@@ -1214,12 +1172,14 @@
                   "@repo/**",
                   "!@repo/client",
                   "!@repo/client/**",
+                  "!@repo/kit",
+                  "!@repo/kit/**",
                   "!@repo/uniwind",
                   "!@repo/uniwind/**",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "The App imports client and uniwind, never server-side packages."
+                "message": "The App imports the kit, client and uniwind, never server-side packages."
               }
             ]
           }
@@ -2144,6 +2104,10 @@
               {
                 "name": "@repo/client/size-class",
                 "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
+              },
+              {
+                "name": "@repo/kit/use-size-class",
+                "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
               }
             ],
             "patterns": [
@@ -2152,11 +2116,13 @@
                   "@repo/**",
                   "!@repo/client",
                   "!@repo/client/**",
+                  "!@repo/kit",
+                  "!@repo/kit/**",
                   "!@repo/uniwind",
                   "!@repo/uniwind/**",
                   "!@repo/browser-suite-lock"
                 ],
-                "message": "storybook imports only client and uniwind from the workspace, and the browser-suite lock in its test setup."
+                "message": "storybook imports only the kit, client and uniwind from the workspace, and the browser-suite lock in its test setup."
               }
             ]
           }
@@ -2180,9 +2146,9 @@
       // ADR-0023: Lexical stays in the RichTextarea web drawing: its view, the web/ folder (with the tests' headless editor) and their tests.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea.tsx",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/**",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*"
+        "packages/kit/src/primitives/inputs/rich-textarea/rich-textarea.tsx",
+        "packages/kit/src/primitives/inputs/rich-textarea/web/**",
+        "packages/kit/src/primitives/inputs/rich-textarea/*.test.*"
       ],
       "rules": { "argo/lexical-zone": "error" }
     },

@@ -3,6 +3,7 @@ import type {
   SessionOpenError,
   SessionAgentOptionsInput,
 } from '@repo/contracts';
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { skipToken, type SkipToken } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useMemo, useState } from 'react';
@@ -11,7 +12,6 @@ import {
   useResubscribeOnReconnect,
   type ClientError,
 } from '#features/connection';
-import { useErrorToast } from '#primitives/overlays/toast';
 import { openErrorOf } from '../utils/open-failure';
 import { optionsReadToast } from '../utils/options-read-toast';
 import {

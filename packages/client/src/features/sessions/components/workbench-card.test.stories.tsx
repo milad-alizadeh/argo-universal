@@ -1,9 +1,9 @@
+import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
+import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { Text } from '#primitives/content/text';
-import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
 import { WorkbenchCard } from './workbench-card';
 
 const meta = {

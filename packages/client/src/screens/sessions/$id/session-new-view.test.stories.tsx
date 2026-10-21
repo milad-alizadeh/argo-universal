@@ -1,6 +1,7 @@
+import { eachLayout } from '@repo/kit/each-layout';
+import { findToast } from '@repo/kit/mocks/find-toast';
+import { shownText } from '@repo/kit/mocks/shown-text';
 import { expect, fn } from 'storybook/test';
-import { eachLayout } from '#lib/generic/each-layout';
-import { findToast } from '../../../../mocks/find-toast';
 import {
   checkoutChoice,
   narrowMainColumn,
@@ -14,7 +15,6 @@ import {
   meta as sessionNewViewTestMeta,
   type Story,
 } from '../../../../mocks/new-session-view/new-session-story.test.mocks';
-import { shownText } from '../../../../mocks/shown-text';
 import {
   exampleProject,
   readyNewSession,

@@ -10,12 +10,12 @@ import {
   traverseFast,
 } from '@babel/types';
 import { type Prop, parseSource } from './new-story-props.mts';
-import { allowedGroups, clientSource, pascal } from './story-title-rules.mts';
+import { pascal, storyPlacement } from './story-title-rules.mts';
 
 // What `pnpm new:story` reads from a component's folder and writes as its story file (ADR-0040).
 const fileName = /\.(?:native\.)?tsx?$/;
 
-const primitiveCategory = /^lib\/generic\/primitives\/([^/]+)\//;
+const primitiveCategory = /^primitives\/([^/]+)\//;
 
 // A primitive's title carries its category folder, so every primitive is four segments deep.
 const category = (path: string): string => {
@@ -29,14 +29,17 @@ const componentName = (path: string): string =>
   pascal(path.slice(path.lastIndexOf('/') + 1).replace(fileName, ''));
 
 export function derivedTitle(componentFile: string): string {
-  const path = componentFile.slice(
-    componentFile.indexOf(clientSource) + clientSource.length,
+  // The rules place story files, so the component is placed under the name its story will take.
+  const placed = storyPlacement(
+    componentFile.replace(fileName, '.stories.tsx'),
   );
 
-  const group = allowedGroups(path.replace(fileName, '.stories.tsx'))[0];
+  const group = placed.groups[0];
 
   if (group === undefined)
     throw new Error(`${componentFile}: no story group belongs to this folder`);
+
+  const path = placed.path.replace(/\.stories\.tsx$/, '');
 
   return `${group}${category(path)}${componentName(path)}`;
 }
@@ -243,7 +246,7 @@ const handlerImport = (plan: StoryPlan): string =>
 const kitImport = (plan: StoryPlan): string =>
   plan.kitPart === undefined
     ? ''
-    : "import { kitArgTypes } from '#lib/generic/kit-arg-types';\n";
+    : "import { kitArgTypes } from '#kit/kit-arg-types';\n";
 
 const metaSource = (plan: StoryPlan): string =>
   [

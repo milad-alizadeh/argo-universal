@@ -1,8 +1,8 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Text } from '@repo/kit/primitives/content/text';
+import { useClock } from '@repo/kit/use-clock';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useClock } from '#lib/generic/use-clock';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Text } from '#primitives/content/text';
 import { subagentFeedMeta } from './subagent-feed-meta';
 import type { SubagentFeedProps } from './subagent-feed-props';
 

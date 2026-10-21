@@ -1,7 +1,7 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { LiveHeader } from './live-header';
 import {
   liveHeaderElapsed,

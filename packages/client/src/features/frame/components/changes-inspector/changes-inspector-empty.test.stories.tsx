@@ -1,7 +1,7 @@
+import { allToasts, findToast } from '@repo/kit/mocks/find-toast';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { allToasts, findToast } from '../../../../../mocks/find-toast';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   fewSummary,
   fileHeader,

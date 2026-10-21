@@ -1,13 +1,13 @@
-import { createContext, use, useState, type ReactNode } from 'react';
-import { ListTitle } from '#lib/product/list-title';
-import { useScreenFocused } from '#lib/product/navigation/navigation';
 import {
   createListDetailSidebar,
   type ListDetailSidebar,
   ListDetailSidebarContext,
   useListDetailSidebarHeld,
   useListDetailSidebarList,
-} from '#primitives/scaffolds/list-detail';
+} from '@repo/kit/primitives/scaffolds/list-detail';
+import { createContext, use, useState, type ReactNode } from 'react';
+import { ListTitle } from '#lib/product/list-title';
+import { useScreenFocused } from '#lib/product/navigation/navigation';
 import {
   isCoreSection,
   type NavigationSection,

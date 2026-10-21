@@ -1,8 +1,11 @@
 import type { ProjectInfo } from '@repo/contracts';
+import {
+  Combobox,
+  type ComboboxOption,
+} from '@repo/kit/primitives/inputs/combobox';
+import { MenuTrigger } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Combobox, type ComboboxOption } from '#primitives/inputs/combobox';
-import { MenuTrigger } from '#primitives/overlays/menu';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { StartSessionLayout } from './start-session-types';
 

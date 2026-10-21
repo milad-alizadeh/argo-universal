@@ -1,13 +1,13 @@
-import type * as React from 'react';
-import { type ReactNode, useState } from 'react';
-import { View } from 'react-native';
-import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
-import { Text } from '#primitives/content/text';
+import { Text } from '@repo/kit/primitives/content/text';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleHeader,
-} from '#primitives/layout/collapsible';
+} from '@repo/kit/primitives/layout/collapsible';
+import { fileTypeIcon } from '@repo/kit/symbols/file-type-icon';
+import type * as React from 'react';
+import { type ReactNode, useState } from 'react';
+import { View } from 'react-native';
 import type { FileDiff } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
 import { FileName } from './file-name';

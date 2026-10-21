@@ -1,7 +1,7 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { useWide } from '@repo/kit/use-wide/use-wide';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import { useWide } from '../src/lib/generic/use-wide/use-wide';
 import { HeaderItems } from '../src/lib/product/header-button';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';

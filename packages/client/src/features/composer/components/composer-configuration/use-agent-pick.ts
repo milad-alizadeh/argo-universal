@@ -1,5 +1,5 @@
+import { useOptionalSheet } from '@repo/kit/primitives/overlays/sheet';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useOptionalSheet } from '#primitives/overlays/sheet';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { loadingConfiguration } from './configuration-values';
 

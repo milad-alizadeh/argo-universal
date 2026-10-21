@@ -1,5 +1,5 @@
+import { Avatar } from '@repo/kit/primitives/content/avatar';
 import type * as React from 'react';
-import { Avatar } from '#primitives/content/avatar';
 import { SessionLogo } from './session-row-logo';
 import type { SessionRowProps } from './session-row-props';
 import { sidebarRows } from './session-row-sidebar';

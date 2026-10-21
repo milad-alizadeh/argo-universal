@@ -1,7 +1,7 @@
+import { Button } from '@repo/kit/primitives/actions/button';
+import type { EmptyStateProps } from '@repo/kit/primitives/status/empty-state';
+import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type * as React from 'react';
-import { Button } from '#primitives/actions/button';
-import type { EmptyStateProps } from '#primitives/status/empty-state';
-import { EmptyState } from '#primitives/status/empty-state';
 import type { SessionsStatus } from '../../stores/sessions-view';
 import type { SessionsListProps } from './sessions-list-props';
 

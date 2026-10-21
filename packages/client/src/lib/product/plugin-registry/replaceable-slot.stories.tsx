@@ -3,12 +3,12 @@ import {
   rewrittenMessage,
   replacementTreeFixture,
 } from '@repo/contracts/plugins/replaceable-fixtures';
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import {
   renderCoreMessage,
   replacementState,
 } from '../../../../mocks/replaceable-slot';
-import { Variation, Variations } from '../../generic/variations';
 import { ReplaceableSlotView } from './replaceable-slot';
 import { coreSlotState, type ReplaceableState } from './replaceable-state';
 

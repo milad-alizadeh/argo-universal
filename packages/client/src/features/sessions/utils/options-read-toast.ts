@@ -1,5 +1,5 @@
-import { errorToast } from '#lib/generic/error-toast';
-import type { ErrorToast } from '#primitives/overlays/toast';
+import { errorToast } from '@repo/kit/error-toast';
+import type { ErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { decodeOpenFailure } from './open-failure';
 
 export const optionsReadFailedTitle = "Couldn't load the Agent's options";

@@ -1,3 +1,4 @@
+import { PortalProvider } from '@repo/kit/primitives/overlays/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useLayoutEffect } from 'react';
@@ -6,7 +7,6 @@ import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { fn } from 'storybook/test';
-import { PortalProvider } from '#primitives/overlays/portal';
 import { ScaffoldMock } from './scaffold.mocks';
 
 export const preservedDraft = 'Keep my draft';

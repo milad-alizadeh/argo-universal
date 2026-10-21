@@ -1,3 +1,5 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
@@ -14,8 +16,6 @@ import type { Story } from '../../../../../mocks/composer/composer-story-context
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { inspectorOpenColumn } from '../../../../../mocks/composer/draft-editing.test.mocks';
 import { firstAgent } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };

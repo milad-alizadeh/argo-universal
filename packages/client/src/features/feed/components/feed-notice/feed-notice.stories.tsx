@@ -1,9 +1,9 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import {
   compactionStates,
   noticeStates,
 } from '../../../../../mocks/feed-paper';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import { FeedNotice } from './feed-notice';
 
 const [notice] = noticeStates;

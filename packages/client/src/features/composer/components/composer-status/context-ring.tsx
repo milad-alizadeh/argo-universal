@@ -1,8 +1,8 @@
+import { IconSlot } from '@repo/kit/primitives/content/icon';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
-import { IconSlot } from '#primitives/content/icon';
 import { contextZone, fullPercent } from '../../utils/status';
 import {
   successBackgroundClassName,

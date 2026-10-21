@@ -1,18 +1,18 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  usePopoverClose,
+} from '@repo/kit/primitives/overlays/popover';
+import { Sheet } from '@repo/kit/primitives/overlays/sheet';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { Text } from '#primitives/content/text';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  usePopoverClose,
-} from '#primitives/overlays/popover';
-import { Sheet } from '#primitives/overlays/sheet';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useAfterClose } from '../../hooks/use-after-close';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import {

@@ -1,5 +1,5 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Variation, Variations } from '../../generic/variations';
 import { Screen, type ScreenProps } from './screen';
 import { ScreenPreview, ScreenPreviewContent } from './screen-preview.mocks';
 

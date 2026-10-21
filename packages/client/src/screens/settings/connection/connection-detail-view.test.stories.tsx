@@ -1,8 +1,8 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { findToast } from '@repo/kit/mocks/find-toast';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
-import { findToast } from '../../../../mocks/find-toast';
 import { ConnectionDetailView } from './connection-detail-view';
 import { loadedServer } from './connection-detail-view.fixtures';
 

@@ -1,10 +1,13 @@
+import {
+  type ErrorToast,
+  useErrorToast,
+} from '@repo/kit/primitives/overlays/toast';
+import { EmptyState } from '@repo/kit/primitives/status/empty-state';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import * as React from 'react';
 import { View } from 'react-native';
 import { DiffFileHeader, DiffView, type FileDiff } from '#features/feed';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { EmptyState } from '#primitives/status/empty-state';
-import { Spinner } from '#primitives/status/spinner';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { noChangesDescription } from '../../view/changes-comparison';
 import { uniqueChangedFiles } from '../../view/changes-files';
 import type { ChangesViewProps } from '../../view/changes-view-props';

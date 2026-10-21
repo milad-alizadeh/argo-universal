@@ -1,9 +1,9 @@
-import { createContext, use, type ReactNode } from 'react';
-import { useScreenFocused } from '#lib/product/navigation/navigation';
 import {
   type InspectorHost,
   InspectorHostContext,
-} from '#primitives/scaffolds/inspector';
+} from '@repo/kit/primitives/scaffolds/inspector';
+import { createContext, use, type ReactNode } from 'react';
+import { useScreenFocused } from '#lib/product/navigation/navigation';
 
 // The Frame's Inspector column, which the shown page's Inspector draws in on a wide window.
 export const FrameInspectorHost = createContext<InspectorHost | undefined>(

@@ -1,8 +1,8 @@
 import type { ChangesSummary } from '@repo/contracts';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
-import { Button } from '#primitives/actions/button';
-import { IconButton } from '#primitives/actions/icon-button';
-import type { IconName } from '../../../lib/generic/symbols/icon-names';
 import { sessionPanelOrder, type SessionPanel } from '../stores/session-panels';
 import { headerActionAppearance } from './session-header-menu';
 import type { SessionHeaderPanels } from './session-header-props';

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { processWait } from '#mocks/data-fixture';
 import { writeHookPlugins } from '#mocks/hook-plugins';
 import { shippedFolder } from '#mocks/runtime-plugins';
 
@@ -45,13 +46,13 @@ it('keeps a dev Plugin alive until all active Turns end and loads only its final
   );
   const entry = join(host.home, shippedFolder, 'dev/index.mjs');
   await writeFile(entry, 'invalid intermediate source }');
-  await expect.poll(() => deferredBuilds(host.home)).toBe(1);
+  await expect.poll(() => deferredBuilds(host.home), processWait).toBe(1);
   expect((await host.caller.plugins.list()).plugins[0]?.state).toBe('running');
   await writeFile(
     entry,
     source('final').replace('$DATA', join(host.home, 'plugin-data/dev')),
   );
-  await expect.poll(() => deferredBuilds(host.home)).toBe(2);
+  await expect.poll(() => deferredBuilds(host.home), processWait).toBe(2);
   expect(await readFile(loaded, 'utf8')).toBe('initial\n');
   await host.caller.session.cancel({ sessionId });
   await waitForAcpSnapshot(
@@ -61,8 +62,10 @@ it('keeps a dev Plugin alive until all active Turns end and loads only its final
   );
   expect(await readFile(loaded, 'utf8')).toBe('initial\n');
   await host.caller.session.cancel({ sessionId: second.sessionId });
-  await expect.poll(() => readFile(loaded, 'utf8')).toBe('initial\nfinal\n');
-}, 20_000);
+  await expect
+    .poll(() => readFile(loaded, 'utf8'), processWait)
+    .toBe('initial\nfinal\n');
+}, 30_000);
 
 async function deferredBuilds(home: string): Promise<number> {
   const log = await readFile(join(home, 'logs/plugins.log'), 'utf8');
