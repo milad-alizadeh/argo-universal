@@ -1,12 +1,14 @@
 import type { z } from 'zod';
 import { literal, memberTexts, typeText } from './kit-prop-type-text';
 import { partObjectSchema } from './plugin-object-schema';
-import { pluginPartSchemas } from './plugin-part-schemas';
+import { pluginPartGroups, pluginPartSchemas } from './plugin-part-schemas';
 import { type JsonValue, type SchemaType, schemaType } from './schema-type';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
 type SchemaNode = z.core.JSONSchema._JSONSchema;
+
+export { pluginPartGroups, pluginPartSchemas };
 
 export type KitPartName = keyof typeof pluginPartSchemas;
 

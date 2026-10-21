@@ -17,6 +17,7 @@ The shape is shown in [`docs/agents/storybook-template.md`](../agents/storybook-
 6. **`argTypes`, or args typed by a literal union, wherever `component:` is set.** A kit component takes `kitArgTypes('<Part>')` from its Contracts schema; any other component lists the values its props can take. This is the enumerated prop domain an author picks values from.
 7. **A story file varies only props its own component declares.** A parent that wants a child in another state passes the child's fixture through its own prop; it does not reach into the child. This is the whole of what the repo takes from atomic design.
 8. **The sidebar has a fixed order,** set once in Storybook's preview, so the tree does not reshuffle when a file lands.
+9. **If the Server needs to know it, it is a Contract; if it is only how it looks, it is the kit.** A kit component's props have one definition, its schema in `packages/contracts/src/plugins/parts/`, and its drawing is the folder of the same name in `@repo/kit`, in the same group. A `variant` union is a Contract, because `prepareSlotTree` validates what a Plugin sends against it; "a destructive button is transparent" is the kit's. The two halves pair by name, so an author handed `primitives/actions/button/` finds `parts/actions.ts`, and `tools/check-kit-pairing.mts` fails when either exists without the other. Compound names (`List.Section`) pair through their parent. A folder with no schema is exempt only by a named entry with a reason in `tools/kit-pairing-rules.mts`.
 
 ## Considered options
 
@@ -30,4 +31,4 @@ The shape is shown in [`docs/agents/storybook-template.md`](../agents/storybook-
 ## Consequences
 
 - `pnpm new:story` writes a story file from the component's folder: the derived title, `component:`, `argTypes`, required args as placeholders, and one story per value in its variants maps, named for the value. Props with no branch stay meta args. It does not invent combinations: a pair story is the author's call, and so is a branch it cannot see, such as a conditional or a lookup table keyed by a prop.
-- Galleries are replaced by per-state stories, and checks in `pnpm verify` enforce the titles, the shape and the parent rule, in the order the spec's tickets give.
+- Galleries are replaced by per-state stories, and checks in `pnpm verify` enforce the titles, the shape and the parent rule, in the order the spec's tickets give. The kit-pairing check (9) runs in `pnpm quality:lint`.

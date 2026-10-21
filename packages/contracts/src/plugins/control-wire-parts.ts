@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { iconButtonPart } from './icon-button-part';
-import { formsPartSchemas } from './parts/forms';
+import { fieldsPartSchemas } from './parts/fields';
 import { inputsPartSchemas as inputs } from './parts/inputs';
 import { selectionPartSchemas } from './selection-parts';
 import type { WirePartDefinition } from './wire-parts';
@@ -63,7 +63,7 @@ export const controlWireParts = {
   Slider: withDraft(inputs.Slider, slider),
   TextInput: withDraft(inputs.TextInput, text),
   DatePicker: withDraft(inputs.DatePicker, datePicker),
-  Form: formsPartSchemas.Form,
+  Form: fieldsPartSchemas.Form,
   SplitButton: withDraft(selectionPartSchemas.SplitButton, split),
   IconButton: iconButtonPart,
 };

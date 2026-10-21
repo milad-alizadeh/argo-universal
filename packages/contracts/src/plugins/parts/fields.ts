@@ -7,7 +7,7 @@ import {
 } from '../plugin-part-schema-utils';
 import { fieldProps } from '../simple-kit-props';
 
-export const formsPartSchemas = {
+export const fieldsPartSchemas = {
   Field: part('A Field wrapper around its child control.', fieldProps, {
     children: true,
     slots: {},

@@ -1,6 +1,6 @@
 import { actionsPartSchemas } from './parts/actions';
 import { contentPartSchemas } from './parts/content';
-import { formsPartSchemas } from './parts/forms';
+import { fieldsPartSchemas } from './parts/fields';
 import { inputsPartSchemas } from './parts/inputs';
 import { layoutPartSchemas } from './parts/layout';
 import { listsPartSchemas } from './parts/lists';
@@ -17,7 +17,7 @@ export const pluginPartSchemas = {
   ...statusPartSchemas,
   ...actionsPartSchemas,
   ...inputsPartSchemas,
-  ...formsPartSchemas,
+  ...fieldsPartSchemas,
   ...listsPartSchemas,
   ...overlaysPartSchemas,
   ...scaffoldsPartSchemas,
@@ -31,5 +31,19 @@ export const pluginPartSchemas = {
   TextInput: inputsPartSchemas.TextInput,
   SplitButton: actionsPartSchemas.SplitButton,
 } satisfies Record<string, WirePartDefinition>;
+
+// Which group file each part is declared in; the kit draws the same group under the same name (tools/kit-pairing-rules.mts).
+export const pluginPartGroups = {
+  actions: actionsPartSchemas,
+  content: contentPartSchemas,
+  fields: fieldsPartSchemas,
+  inputs: inputsPartSchemas,
+  layout: layoutPartSchemas,
+  lists: listsPartSchemas,
+  overlays: overlaysPartSchemas,
+  scaffolds: scaffoldsPartSchemas,
+  status: statusPartSchemas,
+  visual: visualPartSchemas,
+} as const;
 
 export type PluginPartName = keyof typeof pluginPartSchemas;
