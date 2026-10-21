@@ -41,9 +41,34 @@ export const WrappedCellsRemainReadable: Story = {
   },
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.phone);
-    const link = canvas.getByRole('link', { name: 'Read more', hidden: true });
+    const link = canvas.getByRole('link', { name: 'Read more' });
     await waitFor(() => expect(canPointAt(link)).toBe(true));
     await expect(canvas.getByText('Next row')).toBeVisible();
+  },
+};
+
+export const CompactCellLinksWorkFromTheKeyboard: Story = {
+  args: {
+    text: '| Name | Info |\n| --- | --- |\n| [First link](/settings) | [Later link](/settings) |',
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.phone);
+    const first = canvas.getByRole('link', { name: 'First link' });
+    const later = canvas.getByRole('link', { name: 'Later link' });
+    const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
+
+    try {
+      await userEvent.tab();
+      await expect(first).toHaveFocus();
+      await userEvent.keyboard('{Enter}');
+      await expect(navigate).toHaveBeenCalledWith('/settings');
+      await userEvent.tab();
+      await expect(later).toHaveFocus();
+      await userEvent.keyboard('{Enter}');
+      await expect(navigate).toHaveBeenCalledTimes(2);
+    } finally {
+      navigate.mockRestore();
+    }
   },
 };
 

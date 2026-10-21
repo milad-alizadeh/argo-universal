@@ -18,8 +18,8 @@ const trayClass = `relative overflow-hidden ${trayClassName}`;
 
 /*
  * compactLayout "scroll", a Markdown pipe table's: the grid stays at compact widths, its first column pinned and the
- * rest scrolling sideways in the tray, fading at each edge with more to show. Separators run unbroken over the fades. Each
- * pinned cell speaks its whole row, so assistive technology reads the table row by row.
+ * rest scrolling sideways in the tray, fading at each edge with more to show. Separators run unbroken over the fades.
+ * Both sides expose their contents so links remain available to assistive technology.
  */
 export function TableScroll(props: ScrollProps): ReactElement {
   return (
@@ -83,7 +83,6 @@ function PinnedCell({ column, row }: CellRowProps): ReactElement {
     <MeasuredScrollRow
       row={row.key}
       side="pinned"
-      accessible
       accessibilityLabel={row.accessibilityLabel}
       contentClassName="min-h-12 shrink-0 justify-center py-3 pl-3"
     >
@@ -92,7 +91,7 @@ function PinnedCell({ column, row }: CellRowProps): ReactElement {
   );
 }
 
-// Rows are read through each pinned cell, so their scrolled copy is hidden; the header keeps its sort buttons.
+// Scrolled cells stay in the accessibility tree, including their links and controls.
 function ScrolledColumns(props: ScrollProps): ReactElement {
   const fade = useSpacing('--spacing-8');
 
@@ -144,7 +143,6 @@ function ScrolledRow(props: {
     <MeasuredScrollRow
       row={props.row.key}
       side="scrolled"
-      aria-hidden
       contentClassName="min-h-12 shrink-0 flex-row items-center gap-4 py-3"
     >
       {scrolledCells(props.columns, props.row)}
