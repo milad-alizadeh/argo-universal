@@ -47,7 +47,10 @@ export function frameWorkbench(
 ): PaneSpan {
   const width = workbenchWidth(input, state);
 
-  return { offset: input.width - stageRegion - width, width };
+  return {
+    offset: input.width - stageRegion - input.measures.inset - width,
+    width,
+  };
 }
 
 export function workbenchRegion(input: ScaffoldGeometryInput): number {
