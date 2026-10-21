@@ -17,6 +17,8 @@ export interface SessionChanges {
 
 // The Inspector panels the header's triggers open: those the Session has, the one shown, and pressing a trigger.
 export interface SessionHeaderPanels {
+  counts?: Partial<Record<SessionPanel, number>>;
+  onSelect?: (panel: SessionPanel) => void;
   offered: readonly SessionPanel[];
   shown?: SessionPanel;
   onToggle: (panel: SessionPanel) => void;
