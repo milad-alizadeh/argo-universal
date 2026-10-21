@@ -84,6 +84,7 @@ export class PluginServices {
   release(pluginId: string): void {
     this.held.get(pluginId)?.resources.release();
     this.activated.delete(pluginId);
+    this.storage.release(pluginId);
   }
 
   close(): void {
