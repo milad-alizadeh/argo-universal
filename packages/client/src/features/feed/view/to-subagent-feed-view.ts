@@ -22,12 +22,12 @@ function incomingMessage(row: SessionMessage): UserMessage {
   };
 }
 
-const isSessionMessage = (row: SessionUpdate): row is SessionMessage =>
-  row.sessionUpdate === 'session_message';
+const isInitialMessage = (row: SessionUpdate): row is SessionMessage =>
+  row.sessionUpdate === 'session_message' && row.position === 0;
 
 /*
  * A Subagent's Feed. A child transcript's `session_message` rows are only the ones the Agent
- * reported there, and the message that started the child is the first of them; Argo never copies
+ * reported there, and the message that started the child is at transcript position zero; Argo never copies
  * the parent's outgoing message in. So only a leading one is drawn, as the child's own prompt,
  * and a message the child itself sent later stays undrawn, as it does on a Session's own Feed.
  * Where the Agent reported none, the Feed starts with the child's own output.
@@ -38,7 +38,7 @@ export function toSubagentFeedView(
 ): FeedView {
   const [first, ...rest] = rows;
 
-  if (!first || !isSessionMessage(first)) return toFeedView(rows, snapshot);
+  if (!first || !isInitialMessage(first)) return toFeedView(rows, snapshot);
 
   return toFeedView([incomingMessage(first), ...rest], snapshot);
 }
