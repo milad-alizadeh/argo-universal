@@ -3,7 +3,6 @@ import { PlaceholderDetailView } from './placeholder-detail-view';
 import {
   accountsPlaceholder,
   devicesPlaceholder,
-  notificationsPlaceholder,
 } from './placeholder-detail-view-fixtures';
 
 const meta = {
@@ -15,7 +14,6 @@ const meta = {
     caption: { control: 'text' },
     description: { control: 'text' },
   },
-  args: accountsPlaceholder,
 } satisfies Meta<typeof PlaceholderDetailView>;
 
 export default meta;
@@ -23,12 +21,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /*
- * The page branches only on the size class: a wide window keeps the note in a row's card, a
- * phone centres it. Each Settings page that is not built yet keeps its own story, as before.
+ * The page branches only on the size class: a wide window keeps the note in a row's card, a phone
+ * centres it. A page's title, caption and note are copy, so they are args, not stories of their own.
  */
 export const Accounts: Story = { args: accountsPlaceholder };
 
-// No caption: the page's heading stands alone.
+// The one branch: with no caption, the page's heading stands alone.
 export const Devices: Story = { args: devicesPlaceholder };
-
-export const Notifications: Story = { args: notificationsPlaceholder };

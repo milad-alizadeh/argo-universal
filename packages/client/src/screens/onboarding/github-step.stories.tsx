@@ -9,13 +9,14 @@ import {
   signingInGitHub,
 } from './github-step-fixtures';
 
-// The AccountRow chips and captions designed for Settings › Accounts in Paper.
+// Step 2 of Set up Argo, in the AccountRow chips and captions designed for Settings › Accounts in Paper.
 const meta = {
   title: 'Screens/Onboarding/GitHub step',
   component: GitHubStepView,
   argTypes: {
     github: { control: false },
-    mark: { control: 'select', options: ['done', 'next', 'open'] },
+    // The checklist, not the reader, decides a step's mark, so each state's fixture carries it.
+    mark: { control: false },
   },
   args: { onConnectGitHub: fn() },
 } satisfies Meta<typeof GitHubStepView>;
@@ -30,9 +31,11 @@ export const NotConnected: Story = { args: notConnectedGitHub };
 // The GitHub CLI is already signed in, so the step offers to take that login.
 export const LoginFound: Story = { args: loginFoundGitHub };
 
+// The code is on GitHub and the App is waiting: a muted chip, and nothing to press.
 export const SigningIn: Story = { args: signingInGitHub };
 
 // The only done state: the chip reads Signed in and the footer offers another account.
 export const SignedIn: Story = { args: signedInGitHub };
 
+// GitHub rejected the saved login: the caption names it and the button offers to sign in again.
 export const Expired: Story = { args: expiredGitHub };
