@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Code, DiffScroll, patchText } from '#primitives/content/code';
+import { Code, DiffScroll } from '#primitives/content/code';
 import {
   Collapsible,
   CollapsibleContent,
@@ -12,13 +12,7 @@ export type { DiffViewProps } from './diff-view-state';
 // Inline patches are Code; the Inspector adds its file header and Viewed fold around the same hunk drawing.
 export function DiffView(props: DiffViewProps): React.JSX.Element {
   if (props.inline)
-    return (
-      <Code
-        code={patchText(props.file.hunks)}
-        path={props.file.path}
-        diff={props.file.hunks}
-      />
-    );
+    return <Code path={props.file.path} diff={props.file.hunks} />;
 
   return <InspectorDiff {...props} />;
 }

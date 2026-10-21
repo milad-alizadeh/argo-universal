@@ -26,6 +26,7 @@ function tableColumns(token: Tokens.Table): TableProps['columns'] {
   return token.header.map((cell, index) => ({
     id: String(index),
     title: inlineText(cell.tokens),
+    header: <InlineTokens tokens={cell.tokens} />,
     width: 'lg' as const,
     align:
       token.align[index] === 'right' ? ('end' as const) : ('start' as const),
@@ -47,7 +48,7 @@ export function TableToken({
 }: BlockTokenProps<Tokens.Table>): ReactElement {
   return (
     <ClampedBlock caret={caret}>
-      <Table columns={tableColumns(token)} compactLayout="scroll">
+      <Table columns={tableColumns(token)} overflow="scroll">
         {tableRows(token)}
       </Table>
     </ClampedBlock>

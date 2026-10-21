@@ -1,14 +1,8 @@
 import { useSyncLayout } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { Pressable, View, type ViewStyle } from 'react-native';
-import { Markdown } from '#primitives/content/markdown';
-import { ClampLeaves } from '#primitives/content/markdown';
-import {
-  useWholeLineClamp,
-  type WholeLineClamp,
-} from '#primitives/content/markdown';
-import { wholeLineClip } from '#primitives/content/markdown';
+import { Pressable, View } from 'react-native';
+import { Markdown, type MarkdownProps } from '#primitives/content/markdown';
 import { Text } from '#primitives/content/text';
 
 const clampedLines = 4;
@@ -22,31 +16,6 @@ function useSyncLayoutWhenClampChanges(clamped: boolean): void {
     syncedClamped.current = clamped;
     syncLayout();
   }, [clamped, syncLayout]);
-}
-
-interface ClampedMarkdownProps extends WholeLineClamp {
-  text: string;
-  clamped: boolean;
-}
-
-const clipStyle = ({
-  clamped,
-  clipHeight,
-}: ClampedMarkdownProps): ViewStyle | undefined =>
-  clamped && clipHeight !== undefined ? wholeLineClip(clipHeight) : undefined;
-
-function ClampedMarkdown(props: ClampedMarkdownProps): React.JSX.Element {
-  const { content, onContentLayout, registerLeaf } = props;
-
-  return (
-    <View style={clipStyle(props)}>
-      <View ref={content} onLayout={onContentLayout}>
-        <ClampLeaves.Provider value={registerLeaf}>
-          <Markdown text={props.text} />
-        </ClampLeaves.Provider>
-      </View>
-    </View>
-  );
 }
 
 function ShowMore({ onPress }: { onPress: () => void }): React.JSX.Element {
@@ -67,15 +36,34 @@ interface BubbleProps {
 }
 
 export function UserMessageBubble({ text }: BubbleProps): React.JSX.Element {
-  const [expanded, setExpanded] = useState(false);
-  const clamp = useWholeLineClamp(clampedLines);
-  const clamped = !expanded && clamp.clipHeight !== undefined;
-  useSyncLayoutWhenClampChanges(clamped);
+  const { clamped, expand, markdown } = useBubbleExpansion();
 
   return (
     <View className={bubbleClassName}>
-      <ClampedMarkdown text={text} clamped={clamped} {...clamp} />
-      {clamped && <ShowMore onPress={() => setExpanded(true)} />}
+      <Markdown text={text} {...markdown} />
+      {clamped && <ShowMore onPress={expand} />}
     </View>
   );
+}
+
+interface BubbleExpansion {
+  clamped: boolean;
+  expand: () => void;
+  markdown: Pick<MarkdownProps, 'numberOfLines' | 'onOverflowChange'>;
+}
+
+function useBubbleExpansion(): BubbleExpansion {
+  const [expanded, setExpanded] = useState(false);
+  const [overflowing, setOverflowing] = useState(false);
+  const clamped = !expanded && overflowing;
+  useSyncLayoutWhenClampChanges(clamped);
+
+  return {
+    clamped,
+    expand: () => setExpanded(true),
+    markdown: {
+      numberOfLines: expanded ? undefined : clampedLines,
+      onOverflowChange: setOverflowing,
+    },
+  };
 }

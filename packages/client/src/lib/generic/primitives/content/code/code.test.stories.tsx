@@ -65,6 +65,7 @@ export const NoTitle: Story = {
 
 export const ExpandsDiff: Story = {
   args: {
+    code: undefined,
     diff: [
       {
         header: '@@ -1,0 +1,6 @@',
@@ -82,6 +83,24 @@ export const ExpandsDiff: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await expect(canvas.queryByText('six')).not.toBeInTheDocument();
+
+    const clipboard = spyOn(
+      navigator.clipboard,
+      'writeText',
+    ).mockResolvedValue();
+
+    try {
+      await userEvent.tab();
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() =>
+        expect(clipboard).toHaveBeenCalledWith(
+          '@@ -1,0 +1,6 @@\n+one\n+two\n+three\n+four\n+five\n+six',
+        ),
+      );
+    } finally {
+      clipboard.mockRestore();
+    }
+
     await userEvent.click(
       canvas.getByRole('button', { name: 'Show all 6 lines' }),
     );

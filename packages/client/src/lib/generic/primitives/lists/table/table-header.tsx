@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/content/icon';
@@ -89,7 +89,7 @@ function Title(props: TitleProps): ReactElement {
         tone={direction ? undefined : 'muted'}
         numberOfLines={1}
       >
-        {props.column.title}
+        {headerContent(props.column)}
       </Text>
       {direction ? <SortChevron direction={direction} /> : null}
     </View>
@@ -112,3 +112,6 @@ function SortChevron({
     />
   );
 }
+
+const headerContent = (column: TableColumn): ReactNode =>
+  column.header ?? column.title;

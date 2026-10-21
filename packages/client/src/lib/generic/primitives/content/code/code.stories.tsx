@@ -34,7 +34,6 @@ const states = (
     </Variation>
     <Variation label="Diff">
       <Code
-        code=""
         path="example.ts"
         diff={[
           {

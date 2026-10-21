@@ -3,10 +3,7 @@ import type * as AudioKit from '#primitives/content/audio';
 import type { CodeProps } from '#primitives/content/code';
 import type * as KbdKit from '#primitives/content/kbd';
 import type { LinkProps } from '#primitives/content/link';
-import type {
-  MarkdownProps,
-  WholeLineClamp,
-} from '#primitives/content/markdown';
+import type { MarkdownProps } from '#primitives/content/markdown';
 import type * as MediaUrlKit from '#primitives/content/media-url';
 import type * as VideoKit from '#primitives/content/video';
 import type * as FieldDescriptionKit from '#primitives/fields/field-description';
@@ -31,7 +28,6 @@ import type * as SvgKit from '#primitives/visual';
 
 export type AdditionalPrimitives = {
   MarkdownProps: MarkdownProps;
-  WholeLineClamp: WholeLineClamp;
   CodeProps: CodeProps;
   LinkProps: LinkProps;
   MetadataProps: MetadataKit.MetadataProps;

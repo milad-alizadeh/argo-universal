@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { useSpacing } from '../../../use-spacing';
@@ -6,6 +6,8 @@ import { CellContent, columnClass } from './table-cell';
 import { HeaderCell } from './table-header';
 import type { TableColumn, TableProps } from './table-props';
 import { cellOf, type TableRow } from './table-rows';
+import { Separators } from './table-scroll-separators';
+import { MeasuredScrollRow, ScrollRowSizes } from './table-scroll-sizes';
 
 type ScrollProps = TableProps & {
   rows: readonly TableRow[];
@@ -25,9 +27,11 @@ export function TableScroll(props: ScrollProps): ReactElement {
       accessibilityLabel={props.accessibilityLabel}
       className={trayClass}
     >
-      <CardBackground />
-      <Columns {...props} />
-      <Separators rows={props.rows} />
+      <ScrollRowSizes>
+        <CardBackground />
+        <Columns {...props} />
+        <Separators rows={props.rows} />
+      </ScrollRowSizes>
     </View>
   );
 }
@@ -75,13 +79,15 @@ function PinnedCell({ column, row }: CellRowProps): ReactElement {
   const cell = cellOf(row, column);
 
   return (
-    <View
+    <MeasuredScrollRow
+      row={row.key}
+      side="pinned"
       accessible
       accessibilityLabel={row.accessibilityLabel}
-      className="h-12 justify-center pl-3"
+      contentClassName="min-h-12 shrink-0 justify-center py-3 pl-3"
     >
       <CellContent cell={cell} column={column} first />
-    </View>
+    </MeasuredScrollRow>
   );
 }
 
@@ -134,11 +140,14 @@ function ScrolledRow(props: {
   row: TableRow;
 }): ReactElement {
   return (
-    <View aria-hidden className="h-12 flex-row items-center gap-4">
-      {props.columns.map((column) => (
-        <ScrolledCell key={column.id} column={column} row={props.row} />
-      ))}
-    </View>
+    <MeasuredScrollRow
+      row={props.row.key}
+      side="scrolled"
+      aria-hidden
+      contentClassName="min-h-12 shrink-0 flex-row items-center gap-4 py-3"
+    >
+      {scrolledCells(props.columns, props.row)}
+    </MeasuredScrollRow>
   );
 }
 
@@ -150,23 +159,10 @@ function ScrolledCell({ column, row }: CellRowProps): ReactElement {
   );
 }
 
-// Laid over the pinned column and the fades, row for row, so each separator runs the card's width.
-function Separators({ rows }: { rows: readonly TableRow[] }): ReactNode {
-  return (
-    <View
-      aria-hidden
-      pointerEvents="none"
-      className="absolute inset-x-1 top-8 z-20"
-    >
-      {rows.map((row, index) => (
-        <View key={row.key} className="h-12">
-          {index < rows.length - 1 ? <Separator /> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function Separator(): ReactElement {
-  return <View className="absolute bottom-0 left-3 right-0 h-px bg-border" />;
-}
+const scrolledCells = (
+  columns: TableProps['columns'],
+  row: TableRow,
+): ReactElement[] =>
+  columns.map((column) => (
+    <ScrolledCell key={column.id} column={column} row={row} />
+  ));

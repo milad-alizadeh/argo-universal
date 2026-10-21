@@ -128,9 +128,8 @@ function useClipOnLayout(
 }
 
 // Clamps markdown to at most `lines` body lines, cutting after the last line or block that fits whole.
-export function useWholeLineClamp(lines: number): WholeLineClamp {
-  const lineHeight = useLineHeight('body');
-  const limit = lineHeight === undefined ? undefined : lineHeight * lines;
+export function useWholeLineClamp(lines: number | undefined): WholeLineClamp {
+  const limit = clampLimit(useLineHeight('body'), lines);
   const leaves = useRef(new Set<ClampLeaf>());
   const content = useRef<ContentView>(null);
 
@@ -145,4 +144,13 @@ export function useWholeLineClamp(lines: number): WholeLineClamp {
   const clip = useClipOnLayout(limit, leaves, content);
 
   return { registerLeaf, content, ...clip };
+}
+
+function clampLimit(
+  lineHeight: number | undefined,
+  lines: number | undefined,
+): number | undefined {
+  return lineHeight === undefined || lines === undefined
+    ? undefined
+    : lineHeight * lines;
 }

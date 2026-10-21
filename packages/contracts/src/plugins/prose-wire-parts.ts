@@ -8,6 +8,31 @@ const line = z.object({
   text: z.string(),
 });
 
+const codeHeader = {
+  language: z
+    .string()
+    .optional()
+    .describe('Language tag for syntax highlighting.'),
+  path: z.string().optional().describe('File path shown in the header.'),
+};
+
+const codeProps = z.union([
+  z.object({
+    code: z.string().describe('Plain text to display and copy.'),
+    diff: z.never().optional(),
+    ...codeHeader,
+  }),
+  z.object({
+    code: z.never().optional(),
+    diff: z
+      .array(z.object({ header: z.string(), lines: z.array(line) }))
+      .describe(
+        'Diff hunks; Copy copies their patch and long diffs start with five lines.',
+      ),
+    ...codeHeader,
+  }),
+]);
+
 export const proseWireParts = {
   Markdown: part(
     'CommonMark content with Argo typography, Code fences and Link navigation.',
@@ -21,21 +46,8 @@ export const proseWireParts = {
     { accessibility: accessibility.markdownAccessibility },
   ),
   Code: part(
-    'A code block or diff with a copy action.',
-    z.object({
-      code: z.string().describe('Plain text to display and copy.'),
-      language: z
-        .string()
-        .optional()
-        .describe('Language tag for syntax highlighting.'),
-      path: z.string().optional().describe('File path shown in the header.'),
-      diff: z
-        .array(z.object({ header: z.string(), lines: z.array(line) }))
-        .optional()
-        .describe(
-          'Diff hunks; Copy copies their patch and long diffs start with five lines.',
-        ),
-    }),
+    'A code block or diff with a copy action; provide either code or diff.',
+    codeProps,
   ),
   Link: part(
     'Text that opens an allowed URL or an Argo route.',
