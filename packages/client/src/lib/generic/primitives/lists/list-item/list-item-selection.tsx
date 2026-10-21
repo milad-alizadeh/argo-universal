@@ -1,6 +1,7 @@
 import { useContext, type ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { CheckboxIndicator } from '#primitives/inputs/checkbox';
+import { Spinner } from '#primitives/status/spinner';
 import { ListContext, type ListSelection } from '../../../list-context';
 import { ChoiceMark } from './list-item-choice-mark';
 import type { ListItemProps } from './list-item-props';
@@ -46,8 +47,16 @@ export function useItemSelection(props: ListItemProps): ListItemProps {
 export function ChoiceAccessory(props: ListItemProps): ReactNode {
   const { selectionMode } = useContext(ListContext);
 
-  return selectionMode ? choiceMark(props, selectionMode) : null;
+  if (!selectionMode) return null;
+
+  return pendingMark(props) ?? choiceMark(props, selectionMode);
 }
+
+const applyingLabel = 'Applying';
+
+// A choice that has been made and not taken effect yet stands where its mark will be.
+const pendingMark = (props: ListItemProps): ReactNode =>
+  props.pending ? <Spinner accessibilityLabel={applyingLabel} /> : undefined;
 
 function choiceMark(
   props: ListItemProps,
@@ -69,7 +78,7 @@ export function ChoiceSlot(props: ListItemProps): ReactNode {
 
   return (
     <View className="h-5 w-4 shrink-0 items-center justify-center">
-      <ChoiceMark {...props} />
+      {pendingMark(props) ?? <ChoiceMark {...props} />}
     </View>
   );
 }

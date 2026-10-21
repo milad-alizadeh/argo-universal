@@ -11,6 +11,8 @@ export interface AgentChoiceProps {
   agent?: AgentServer;
   onAgentChange: (id: string) => void;
   onAddAgents: () => void;
+  // The Agent whose settings are still coming: its row shows a spinner instead of its mark.
+  pending?: string;
   close: (after?: () => void) => void;
 }
 
@@ -63,10 +65,11 @@ function agentRows(props: AgentChoiceProps): React.JSX.Element {
 
 type RowProps = { agent: AgentServer; choices: AgentChoiceProps };
 
-function AgentChoice({ agent }: RowProps): React.JSX.Element {
+function AgentChoice({ agent, choices }: RowProps): React.JSX.Element {
   return (
     <ListItem
       {...agentChoiceProps(agent)}
+      pending={choices.pending === agent.id}
       leading={
         <AgentIcon agent={agent} role={{ compact: 'body', wide: 'row' }} />
       }
@@ -97,8 +100,9 @@ function agentSelection(
   return {
     selectionMode: 'single',
     selection: props.agent ? [props.agent.id] : [],
+    // Whoever owns the choices decides when to leave them: the Agent's settings are not in yet.
     onSelectionChange: ([id]) => {
-      if (id !== undefined) props.close(() => props.onAgentChange(id));
+      if (id !== undefined) props.onAgentChange(id);
     },
   };
 }

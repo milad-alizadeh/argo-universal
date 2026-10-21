@@ -119,6 +119,16 @@ function fallbackEffort(
   return below.at(-1) ?? offered[Math.floor(offered.length / 2)];
 }
 
+/*
+ * Whether the Agent's settings are still on their way: a chosen Agent that has sent nothing. The picker draws
+ * its rows as bars while this holds, and the Agent list keeps the reader until it lifts.
+ */
+export function loadingConfiguration(
+  configuration: ComposerConfigurationProps,
+): boolean {
+  return !!configuration.opening && !configuration.configOptions.length;
+}
+
 // The Agent's name; without an installed Agent, the fallback a surface shows instead.
 export function agentName(agent?: AgentServer, fallback = ''): string {
   return agent ? agent.name : fallback;

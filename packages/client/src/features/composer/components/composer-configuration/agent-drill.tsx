@@ -5,6 +5,7 @@ import { AgentIcon } from './agent-icon';
 import { ConfigurationRowIcon } from './configuration-row-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { agentName } from './configuration-values';
+import { useAgentPick, type AgentPick } from './use-agent-pick';
 
 type Props = { configuration: ComposerConfigurationProps };
 
@@ -63,22 +64,35 @@ function AgentLeading({ configuration }: Props): ReactElement {
 }
 
 function AgentDrillChoices(props: ChoicesProps): ReactElement {
-  return <AgentChoices {...agentChoicesProps(props)} />;
+  const picking = useAgentPick(
+    props.configuration,
+    props.choices.onChange,
+    props.close,
+  );
+
+  return <AgentChoices {...agentChoicesProps(props, picking)} />;
 }
 
 function agentChoicesProps(
   props: ChoicesProps,
+  picking: AgentPick,
 ): ComponentProps<typeof AgentChoices> {
   const { configuration, choices, close } = props;
 
   return {
     agents: choices.agents,
     agent: configuration.agent,
-    onAgentChange: choices.onChange,
+    pending: picking.pending,
+    onAgentChange: picking.pick,
     onAddAgents: choices.onAdd,
-    close: (after) => {
-      close();
-      after?.();
-    },
+    close: leaving(close),
   };
 }
+
+// Add Agents leaves at once: it is not a choice the picker waits on.
+const leaving =
+  (close: () => void) =>
+  (after?: () => void): void => {
+    close();
+    after?.();
+  };

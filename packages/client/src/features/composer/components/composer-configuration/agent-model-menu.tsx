@@ -10,7 +10,11 @@ import {
 } from './configuration-skeleton';
 import { EffortControl, switchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
-import { currentEffort, switches } from './configuration-values';
+import {
+  currentEffort,
+  loadingConfiguration,
+  switches,
+} from './configuration-values';
 import { ModelPicker } from './model-picker';
 import { optionDrills } from './option-drill';
 
@@ -58,12 +62,6 @@ function menuSections(props: SectionsProps): ReactNode[] {
     return loadingSections({ rows: props.rows, agent: agentRow(props) });
 
   return [configurationDrills(props), configurationTuning(props)];
-}
-
-function loadingConfiguration(
-  configuration: ComposerConfigurationProps,
-): boolean {
-  return !!configuration.opening && !configuration.configOptions.length;
 }
 
 function ConfigurationStatus({ configuration }: MenuProps): ReactNode {
