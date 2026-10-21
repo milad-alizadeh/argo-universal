@@ -83,7 +83,10 @@ async function expectEntry(page: Page, count: number): Promise<void> {
 
 async function expectDesktopEntry(page: Page, count: number): Promise<void> {
   const workbench = page.getByTestId('session-workbench');
-  const changes = workbench.getByRole('button', { name: /^Changes/ });
+
+  const changes = workbench.getByRole('button', {
+    name: 'Open Changes overview',
+  });
 
   await expect(page.getByTestId('desktop-workbench')).toBeVisible();
   await expect(workbench).toBeAttached();
@@ -127,7 +130,7 @@ export async function openChangedFiles(page: Page): Promise<void> {
 async function openStageFile(page: Page): Promise<void> {
   await page
     .getByTestId('session-workbench')
-    .getByRole('button', { name: /^Changes/ })
+    .getByRole('button', { name: 'Open Changes overview' })
     .click();
   await expect(
     page.getByText('1 file · 0 viewed', { exact: true }),

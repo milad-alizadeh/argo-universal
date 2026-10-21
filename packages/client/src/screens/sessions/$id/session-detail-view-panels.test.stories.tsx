@@ -32,9 +32,13 @@ const subagentsTab = { name: 'Agents: 4' };
 
 const changesName = { name: 'Changes' };
 
+const changesEntry = { name: 'Open Changes overview' };
+
+const subagentsEntry = { name: 'Open Agents overview' };
+
 async function openBoth({ canvas, userEvent }: Context): Promise<void> {
-  await userEvent.click(await canvas.findByRole('button', changesName));
-  await userEvent.click(canvas.getByRole('button', subagentsName));
+  await userEvent.click(await canvas.findByRole('button', changesEntry));
+  await userEvent.click(canvas.getByRole('button', subagentsEntry));
   await expect(
     await within(canvas.getByRole('tabpanel', subagentsName)).findByText(
       firstTitle,
@@ -53,7 +57,7 @@ export const FocusExistingTab: Story = {
       canvas.queryByRole('tabpanel', subagentsName),
     ).not.toBeInTheDocument();
     await expect(canvas.getByRole('tabpanel', changesName)).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', subagentsName));
+    await userEvent.click(canvas.getByRole('button', subagentsEntry));
     await expect(canvas.getAllByRole('tab', subagentsTab)).toHaveLength(1);
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
@@ -111,7 +115,7 @@ export const CloseInspector: Story = {
     await openBoth(context);
     await userEvent.click(canvas.getByRole('button', { name: 'Hide Stage' }));
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', subagentsName));
+    await userEvent.click(canvas.getByRole('button', subagentsEntry));
     await expect(canvas.getAllByRole('tab')).toHaveLength(1);
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,

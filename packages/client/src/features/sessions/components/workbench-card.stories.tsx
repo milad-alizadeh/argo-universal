@@ -19,7 +19,7 @@ const meta = {
   parameters: { screenPreview: true },
   decorators: [
     (Story): ReactElement => (
-      <View className="m-4 w-frame-list">
+      <View className="m-8 w-frame-list">
         <Story />
       </View>
     ),
@@ -56,4 +56,9 @@ export const Agents: Story = {
       />
     ),
   },
+};
+
+export const CollapsedAgents: Story = {
+  name: 'Agents · collapsed',
+  args: { ...Agents.args, defaultExpanded: false },
 };

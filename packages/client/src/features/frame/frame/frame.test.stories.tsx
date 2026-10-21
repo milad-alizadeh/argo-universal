@@ -96,7 +96,10 @@ export const ChangesOpensInspector: Story = {
     content: <SessionPage title="Fix login" />,
   },
   play: async ({ canvas, userEvent }) => {
-    const changes = await canvas.findByRole('button', { name: 'Changes' });
+    const changes = await canvas.findByRole('button', {
+      name: 'Open Changes overview',
+    });
+
     await expect(
       canvas.getByRole('button', { name: showStageLabel }),
     ).toHaveAttribute(expanded, 'false');

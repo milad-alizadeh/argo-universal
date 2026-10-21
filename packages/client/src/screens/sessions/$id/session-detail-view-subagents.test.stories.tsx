@@ -17,10 +17,12 @@ import { runningSession } from './session-detail-view.mocks';
 
 const subagentsName = 'Subagents';
 
+const agentsOverview = 'Open Agents overview';
+
 const selected = ['aria-selected', 'true'] as const;
 
 const triggerName = (wide: boolean, count: number): string =>
-  wide ? 'Agents' : `Subagents: ${count}`;
+  wide ? agentsOverview : `Subagents: ${count}`;
 
 const meta = {
   ...sessionDetailViewTestMeta,
@@ -50,7 +52,7 @@ async function assertPresentation(
     await userEvent.click(
       canvas.getByRole('button', { name: 'Toggle Workbench' }),
     );
-    await userEvent.click(canvas.getByRole('button', { name: 'Agents' }));
+    await userEvent.click(canvas.getByRole('button', { name: agentsOverview }));
     await expect(tab).toHaveAttribute(...selected);
     await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
 
@@ -82,7 +84,7 @@ function subagentsAt(width: number, state: State): Story {
   const subagents = subagentStates[state];
   const onSelect = fn();
   const wide = width === layoutWidths.wide;
-  const absentTrigger = wide ? 'Agents' : /^Subagents/;
+  const absentTrigger = wide ? agentsOverview : /^Subagents/;
 
   return {
     beforeEach: () => settleViewport(width),

@@ -31,6 +31,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const firstChangeLabel = 'Open Change #45';
+
 export const ChecksStayWithTheChangesSummary: Story = {
   play: async ({ canvas }) => {
     await expect(
@@ -44,12 +46,12 @@ export const ChecksStayWithTheChangesSummary: Story = {
 export const SeveralPullRequestsInStage: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Changes' }),
+      await canvas.findByRole('button', { name: firstChangeLabel }),
     );
     await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
     const stage = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
 
-    await expect(stage.getByLabelText('Open Change #45')).toBeVisible();
+    await expect(stage.getByLabelText(firstChangeLabel)).toBeVisible();
     await expect(stage.getByLabelText('Open Change #46')).toBeVisible();
   },
 };
@@ -64,7 +66,7 @@ export const MergesFromChangeDetail: Story = {
   },
   play: async ({ canvas, userEvent, args }) => {
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Changes' }),
+      await canvas.findByRole('button', { name: firstChangeLabel }),
     );
     await userEvent.click(canvas.getByRole('button', { name: 'Files' }));
     await expect(

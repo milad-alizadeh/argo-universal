@@ -35,7 +35,7 @@ const completedTitle = completedAgent.title;
 export const ActivePreviewAndDoneGroup: Story = {
   play: async ({ canvas, userEvent }) => {
     const card = await canvas.findByRole('button', {
-      name: 'Agents',
+      name: 'Open Agents overview',
     });
 
     const content = within(canvas.getByTestId(cardId));
@@ -80,7 +80,7 @@ export const CompletedAgentsStayGrouped: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     const card = await canvas.findByRole('button', {
-      name: 'Agents',
+      name: 'Open Agents overview',
     });
 
     await expect(

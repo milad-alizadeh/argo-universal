@@ -65,8 +65,8 @@ The Workbench therefore has three states, and one toggle in the window band driv
 ## The Workbench
 
 - **A stack of separate cards, one per section: an overview of what is happening in the Session.** Drawn at 312 with `--radius-2xl` cards and `--spacing-2` between them on "Spec / Workbench layout · collapsible cards".
-- **Cards summarize their sections.** Changes shows a diff total and up to three Open Changes, with individual checks and menus. A grouped remainder counts further Changes by stage. Shells shows a count. The Agents card also previews active Agents, with role avatars, status marks and details. Completed Agents share one count and up to three overlapping role avatars. Its disclosure collapses the preview; pressing the card opens the full Stage list.
-- **Pressing a card opens its section's full view in the Stage, as a tab.**
+- **Cards summarize their sections.** Changes shows a diff total and up to three Open Changes, with individual checks and menus. A grouped remainder counts further Changes by stage. Shells shows a count. The Agents card also previews active Agents, with role avatars, status marks and details. Completed Agents share one count and up to three overlapping role avatars. Its full header toggles the preview; pressing the body opens the full Stage list.
+- **Pressing a card's body or item opens its full view in the Stage, as a tab.** The full header of a collapsible card toggles its preview.
 - **Argo's cards are Changes, Agents and Shells.** Each appears, disappears and reorders on its own. The Agents card counts the Agents this Session started, not the installed Agents the Agents page lists.
 - **A card is drawn only when the Session has one.** A section with nothing in it is not drawn at all, so an empty Workbench is an empty column, not three headers over nothing (same board). A Session with no Agents has no Agents card, as its header has no Agents button.
 - **Cards are kit components, and the lists their Stage tabs draw are `List` and `ListItem`** ([ADR-0032](../adr/0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md)).
