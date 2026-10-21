@@ -6,49 +6,45 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Platform, View } from 'react-native';
-import { FooterProvider } from '#primitives/fields/field-description';
+import { View } from 'react-native';
 import { flattenedChildren } from '../../../flattened-children';
 import { ListContext, listPosition } from '../../../list-context';
-import { ListFooter } from '../../../list-footer';
 import { useSectionDrawing } from '../../../list-section-drawing';
 import { createRowGroupEnds } from '../../../row-group-ends';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { SectionEndContext } from '../../../section-end-context';
 import type { ListSectionProps } from './list-props';
-import { hasSectionHeader, SectionHeader } from './list-section-parts';
+import {
+  prepareSection,
+  SectionContent,
+  type SectionState,
+} from './list-section-state';
 
 export function ListSection(props: ListSectionProps): ReactElement {
-  const id = useId();
+  const section = prepareSection(props, useId());
   const { below } = useSectionDrawing();
   const ends = useContext(SectionEndContext);
 
   return (
     <View>
-      <Header {...props} />
-      <SectionBody {...props} id={id} />
-      <Footer {...props} id={id} />
+      {section.header}
+      <SectionBody section={section} />
+      {section.footer}
       {!ends && <View className={below} />}
     </View>
   );
 }
 
-function Header(props: ListSectionProps): ReactNode {
-  return hasSectionHeader(props) ? <SectionHeader {...props} /> : null;
-}
-
-function Rows(props: ListSectionProps): ReactNode {
-  const children = flattenedChildren(props.children);
+function Rows({ section: prepared }: { section: SectionState }): ReactNode {
+  const children = flattenedChildren(prepared.children);
 
   const [groupEnds] = useState(createRowGroupEnds);
 
   const section = {
     ...useContext(ListContext),
-    ...selectionContext(props),
+    ...prepared.selection,
     groupEnds,
   };
-
-  if (props.isExpanded === false) return null;
 
   return Children.map(children, (child, index) => (
     <ListContext value={{ ...section, ...rowPlace(index, children.length) }}>
@@ -64,34 +60,12 @@ function rowPlace(
   return { position: listPosition(index === 0, index === count - 1), index };
 }
 
-function selectionContext(
-  props: ListSectionProps,
-): Partial<React.ContextType<typeof ListContext>> {
-  return props.selectionMode
-    ? {
-        selectionMode: props.selectionMode,
-        selection: props.selection,
-        onSelectionChange: props.onSelectionChange,
-      }
-    : {};
-}
-
-function Footer(props: ListSectionProps & { id: string }): ReactNode {
-  if (Platform.OS === 'android' || !props.footer) return null;
-
-  return <ListFooter id={props.id} text={props.footer} tone={props.tone} />;
-}
-
-function SectionBody(props: ListSectionProps & { id: string }): ReactElement {
-  const footer = props.footer
-    ? { id: props.id, failure: props.tone === 'danger' }
-    : undefined;
-
+function SectionBody({ section }: { section: SectionState }): ReactElement {
   return (
-    <FooterProvider value={footer}>
+    <SectionContent section={section}>
       <RowHighlightProvider>
-        <Rows {...props} />
+        <Rows section={section} />
       </RowHighlightProvider>
-    </FooterProvider>
+    </SectionContent>
   );
 }

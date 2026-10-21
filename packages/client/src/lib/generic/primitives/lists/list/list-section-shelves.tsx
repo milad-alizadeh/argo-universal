@@ -3,6 +3,8 @@ import { View } from 'react-native';
 import { RowHighlightProvider } from '../../../row-highlights';
 import type { ListChild } from './list-children';
 import { ListEnd } from './list-scroll-props';
+import { sectionItems } from './list-section-entries';
+import type { ListBlock } from './list-section-model';
 import type { TileListProps } from './list-tile-props';
 import { ListTiles } from './list-tiles';
 
@@ -11,89 +13,59 @@ export type ChildDataProps = Extract<
   { items: readonly ListChild[] }
 >;
 
-interface ShelfSection {
-  key: string;
-  header?: ReactNode;
-  footer?: ReactNode;
-  items: ListChild[];
-}
-
-// Section structure stays above/below its own shelf, outside the horizontal scroller.
-export function SectionShelves(props: ChildDataProps): ReactElement {
+// Explicit sections and consecutive loose items each retain their own shelf.
+export function SectionShelves({
+  blocks,
+  ...props
+}: ChildDataProps & { blocks: ListBlock[] }): ReactElement {
   return (
     <View className="min-w-0 gap-4">
       {props.header}
-      {shelfSections(props.items ?? []).map((section) => (
-        <SectionShelf
-          key={section.key}
-          props={withoutListEnd(props)}
-          section={section}
-        />
-      ))}
+      {shelfContents(props, blocks)}
       <ListEnd footer={props.footer} endContent={props.endContent} />
     </View>
   );
 }
 
-interface SectionShelfProps {
+function SectionShelf({
+  props,
+  block,
+}: {
   props: ChildDataProps;
-  section: ShelfSection;
+  block: ListBlock;
+}): ReactNode {
+  if (block.kind === 'items')
+    return <SectionTiles {...props} items={block.items} header={undefined} />;
+
+  return <SectionGroup props={props} block={block} />;
 }
 
-function SectionShelf({ props, section }: SectionShelfProps): ReactElement {
+interface SectionGroupProps {
+  props: ChildDataProps;
+  block: Extract<ListBlock, { kind: 'section' }>;
+}
+
+function SectionGroup({ props, block }: SectionGroupProps): ReactNode {
+  const items = sectionItems(block.blocks, block.section);
+
+  if (!hasContent(block, items)) return null;
+
   return (
     <View>
-      <SectionTiles props={props} section={section} />
-      {section.footer}
+      <SectionTiles {...props} items={items} header={block.section.header} />
+      {block.section.footer}
     </View>
   );
 }
 
-function SectionTiles({ props, section }: SectionShelfProps): ReactNode {
-  if (section.items.length === 0) return section.header;
+function SectionTiles(props: ChildDataProps): ReactNode {
+  if (props.items.length === 0) return props.header;
 
   return (
     <RowHighlightProvider>
-      <ListTiles {...props} items={section.items} header={section.header} />
+      <ListTiles {...props} />
     </RowHighlightProvider>
   );
-}
-
-function shelfSections(items: readonly ListChild[]): ShelfSection[] {
-  const sections: ShelfSection[] = [];
-  let section: ShelfSection = { key: 'unsectioned', items: [] };
-
-  for (const item of items) {
-    if (startsSection(item, section)) {
-      sections.push(section);
-      section = { key: item.key, items: [] };
-    }
-
-    appendEntry(section, item);
-  }
-
-  return [...sections, section].filter(hasContent);
-}
-
-function startsSection(item: ListChild, section: ShelfSection): boolean {
-  return (
-    Boolean(item.structure && item.structure !== 'footer') &&
-    hasContent(section)
-  );
-}
-
-function hasContent(section: ShelfSection): boolean {
-  return Boolean(section.items.length || section.header || section.footer);
-}
-
-function appendEntry(section: ShelfSection, item: ListChild): void {
-  if (item.structure === 'header') section.header = item.content;
-  else appendBody(section, item);
-}
-
-function appendBody(section: ShelfSection, item: ListChild): void {
-  if (item.structure === 'footer') section.footer = item.content;
-  else if (!item.structure) section.items.push(item);
 }
 
 function withoutListEnd({
@@ -102,4 +74,19 @@ function withoutListEnd({
   ...props
 }: ChildDataProps): ChildDataProps {
   return props;
+}
+
+function shelfContents(props: ChildDataProps, blocks: ListBlock[]): ReactNode {
+  return blocks.map((block) => (
+    <SectionShelf key={block.key} props={withoutListEnd(props)} block={block} />
+  ));
+}
+
+function hasContent(
+  block: Extract<ListBlock, { kind: 'section' }>,
+  items: ListChild[],
+): boolean {
+  return [items.length, block.section.header, block.section.footer].some(
+    Boolean,
+  );
 }

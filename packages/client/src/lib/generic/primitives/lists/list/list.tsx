@@ -1,12 +1,11 @@
-import { useContext, useId, useMemo, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { ListContext } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { childIdentity } from './list-child-identity';
-import { childEntries, menuEntries, type ListChild } from './list-children';
+import { childRenderer, usePreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import { ListKeyboard } from './list-keyboard';
@@ -14,6 +13,7 @@ import { ListMenuRows } from './list-menu-rows';
 import type { ListProps } from './list-props';
 import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
+import type { ListBlock } from './list-section-model';
 import { SectionShelves, type ChildDataProps } from './list-section-shelves';
 import type { TileListProps } from './list-tile-props';
 import { ListTiles } from './list-tiles';
@@ -61,76 +61,37 @@ function RowList<Item>(props: ListProps<Item>): ReactElement {
   );
 }
 
-function ChildRow({
-  item,
-  appearance,
-}: {
-  item: ListChild;
-  appearance: ListProps<never>['appearance'];
-}): ReactElement {
-  // Keeps the row's index from the List's own row.
-  const row = useContext(ListContext);
-
-  return (
-    <ListContext value={{ ...row, ...childContext(item, appearance) }}>
-      {item.content}
-    </ListContext>
-  );
-}
-
-function childContext(
-  item: ListChild,
-  appearance: ListProps<never>['appearance'],
-): React.ContextType<typeof ListContext> {
-  return {
-    appearance: appearance ?? 'plain',
-    position: item.position,
-    inList: true,
-    selectionMode: item.selectionMode,
-    selection: item.selection,
-    onSelectionChange: item.onSelectionChange,
-  };
-}
-
-function useChildEntries(children: ChildrenOptions['children']): ListChild[] {
-  const id = useId();
-  const menu = useInMenu();
-
-  return useMemo(() => {
-    const entries = childEntries(children, id);
-
-    return menu ? menuEntries(entries) : entries;
-  }, [children, id, menu]);
-}
-
 function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
-  const items = useChildEntries(children);
+  const prepared = usePreparedChildren({ children, ...props });
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
 
-  if (items.length === 0) return <ListEmpty {...props} />;
+  if (prepared.items.length === 0 && !prepared.shelves)
+    return <ListEmpty {...props} />;
 
   return (
     <ChildDataList
       {...props}
+      {...prepared}
       maxHeight={childMaxHeight(props, height)}
-      items={items}
-      {...childIdentity}
-      renderItem={childRenderer(props.appearance)}
     />
   );
 }
 
-function ChildDataList(props: ChildDataProps): ReactElement {
-  if (hasSectionShelves(props)) return <SectionShelves {...props} />;
+function ChildDataList({
+  blocks,
+  shelves,
+  ...props
+}: Omit<ChildDataProps, 'renderItem'> & {
+  blocks: ListBlock[];
+  shelves: boolean;
+}): ReactElement {
+  const drawing = childDrawing(props.appearance);
 
-  return <DataList {...props} />;
-}
+  if (shelves)
+    return <SectionShelves {...props} {...drawing} blocks={blocks} />;
 
-function childRenderer(
-  appearance: ListProps<never>['appearance'],
-): (item: ListChild) => ReactElement {
-  return (item) => <ChildRow item={item} appearance={appearance} />;
+  return <DataList {...props} {...drawing} />;
 }
 
 function childMaxHeight(
@@ -162,8 +123,11 @@ export function List<Item>(props: ListProps<Item>): ReactElement {
 
 List.Section = ListSection;
 
-function hasSectionShelves(props: ChildDataProps): boolean {
-  if (props.direction !== 'horizontal') return false;
-
-  return props.items.some((item) => item.fullSpan);
+function childDrawing(
+  appearance: ListProps<never>['appearance'],
+): Pick<
+  ChildDataProps,
+  'keyExtractor' | 'fullSpan' | 'getItemType' | 'renderItem'
+> {
+  return { ...childIdentity, renderItem: childRenderer(appearance) };
 }
