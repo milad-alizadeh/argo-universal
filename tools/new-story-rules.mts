@@ -1,4 +1,3 @@
-import { parse } from '@babel/parser';
 import {
   isBooleanLiteral,
   isCallExpression,
@@ -10,44 +9,36 @@ import {
   type ObjectExpression,
   traverseFast,
 } from '@babel/types';
+import { type Prop, parseSource } from './new-story-props.mts';
+import { allowedGroups, clientSource, pascal } from './story-title-rules.mts';
 
 // What `pnpm new:story` reads from a component's folder and writes as its story file (ADR-0040).
-const clientSource = 'packages/client/src/';
+const fileName = /\.(?:native\.)?tsx?$/;
 
-const pascal = (name: string): string =>
-  name
-    .split(/[-_]/)
-    .map((part): string => part.charAt(0).toUpperCase() + part.slice(1))
-    .join('');
+const primitiveCategory = /^lib\/generic\/primitives\/([^/]+)\//;
 
-const fileName = (path: string): string =>
-  pascal((path.split('/').pop() ?? '').replace(/\.(?:native\.)?tsx?$/, ''));
+// A primitive's title carries its category folder, so every primitive is four segments deep.
+const category = (path: string): string => {
+  const folder = primitiveCategory.exec(path)?.[1];
 
-// Each folder pattern with the group its components' titles start with; the first match wins.
-const titleGroups: [RegExp, (folder: string) => string][] = [
-  [
-    /^lib\/generic\/primitives\/([^/]+)\//,
-    (folder) => `Design System/Primitives/${pascal(folder)}/`,
-  ],
-  [/^lib\/generic\//, () => 'Design System/'],
-  [/^lib\/product\//, () => 'Shared/'],
-  [/^features\/([^/]+)\//, (folder) => `${pascal(folder)}/`],
-  [/^/, () => 'Screens/'],
-];
+  return folder === undefined ? '' : `${pascal(folder)}/`;
+};
 
-// Where a component sits decides its title, by the groups tools/story-title-rules.mts checks.
+// The first group tools/story-title-rules.mts allows for the story file, then the category and the file's name.
+const componentName = (path: string): string =>
+  pascal(path.slice(path.lastIndexOf('/') + 1).replace(fileName, ''));
+
 export function derivedTitle(componentFile: string): string {
   const path = componentFile.slice(
     componentFile.indexOf(clientSource) + clientSource.length,
   );
 
-  const group = titleGroups.flatMap(([pattern, title]): string[] => {
-    const match = pattern.exec(path);
+  const group = allowedGroups(path.replace(fileName, '.stories.tsx'))[0];
 
-    return match ? [title(match[1] ?? '')] : [];
-  })[0];
+  if (group === undefined)
+    throw new Error(`${componentFile}: no story group belongs to this folder`);
 
-  return `${group ?? ''}${fileName(path)}`;
+  return `${group}${category(path)}${componentName(path)}`;
 }
 
 // A prop name to the values the component's variants maps branch on, in source order.
@@ -86,14 +77,9 @@ const variantsOf = (argument: Node): Node[] =>
 
 // `cva(base, { variants })` and `tv({ variants })` both keep their branch set in a `variants` object.
 function variantsObjects(source: string): Node[] {
-  const ast = parse(source, {
-    sourceType: 'module',
-    plugins: ['typescript', 'jsx'],
-  });
-
   const found: Node[] = [];
 
-  traverseFast(ast.program, (node): void => {
+  traverseFast(parseSource(source), (node): void => {
     if (isCallExpression(node) && isVariantsCall(node))
       found.push(...node.arguments.flatMap(variantsOf));
   });
@@ -128,13 +114,6 @@ export const kitPartIn = (sources: string[]): string | undefined =>
   sources
     .map((source) => /KitProps<'(\w+)'>/.exec(source)?.[1])
     .find((part) => part !== undefined);
-
-export interface Prop {
-  name: string;
-  required: boolean;
-  kind: 'text' | 'number' | 'boolean' | 'choice' | 'opaque';
-  options: string[] | undefined;
-}
 
 export interface StoryPlan {
   title: string;
@@ -194,6 +173,7 @@ const placeholders: Partial<Record<Prop['kind'], string>> = {
   text: quote('Label'),
   number: '1',
   boolean: 'false',
+  handler: 'fn()',
 };
 
 const firstOption = (prop: Prop): string | undefined => {
@@ -233,6 +213,7 @@ const controls: Record<Prop['kind'], string> = {
   text: "{ control: 'text' }",
   number: "{ control: 'number' }",
   boolean: "{ control: 'boolean' }",
+  handler: '{ control: false }',
   choice: "{ control: 'select' }",
   opaque: '{ control: false }',
 };
@@ -253,6 +234,11 @@ function argTypesSource(plan: StoryPlan): string {
 
   return lines.length === 0 ? '' : `  argTypes: {\n${lines.join('\n')}\n  },\n`;
 }
+
+const handlerImport = (plan: StoryPlan): string =>
+  metaArgs(plan.props).includes('fn()')
+    ? "import { fn } from 'storybook/test';\n"
+    : '';
 
 const kitImport = (plan: StoryPlan): string =>
   plan.kitPart === undefined
@@ -285,6 +271,7 @@ export function renderStory(plan: StoryPlan): string {
 
   return [
     "import type { Meta, StoryObj } from '@storybook/react-native-web-vite';\n",
+    handlerImport(plan),
     kitImport(plan),
     `import { ${plan.component} } from ${quote(plan.importPath)};\n\n`,
     metaSource(plan),

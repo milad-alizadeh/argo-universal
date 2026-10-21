@@ -8,7 +8,7 @@ Start from the generator, which reads the component's folder and writes this sha
 pnpm new:story packages/client/src/lib/generic/primitives/actions/button/button.tsx
 ```
 
-It derives the title from the path, sets `component:` and `argTypes`, gives required props placeholder args, and writes one story per value in the component's `cva` or `tailwind-variants` maps. Then add by hand only what it cannot see: a branch in a conditional, a lookup table or a platform fork, and a pair the component has a rule for.
+It derives the title from the path and sets `component:`. It takes `argTypes` from a kit component's Contracts schema, or from any other component's own `<Component>Props` type. It gives each required prop a placeholder arg, and `fn()` for a handler. Then it writes one story per value in the component's `cva` or `tailwind-variants` maps, named for the value. Where a value name reads as a prop value rather than a state, such as `Sm`, rename the story for what it shows. Add by hand only what it cannot see: a branch in a conditional, a lookup table or a platform fork, and a pair the component has a rule for.
 
 ## A kit primitive
 

@@ -6,18 +6,18 @@ import {
   isKitPartName,
   kitPropDescriptors,
 } from '@repo/contracts/plugins/kit-prop-descriptors';
+import { declaredProps, type Prop } from './new-story-props.mts';
 import {
   branchesIn,
   derivedTitle,
   kitPartIn,
-  type Prop,
   renderStory,
 } from './new-story-rules.mts';
 
 const root = path.resolve(import.meta.dirname, '..');
 
-const kitProps = (part: string | undefined): Prop[] =>
-  part !== undefined && isKitPartName(part)
+const kitProps = (part: string): Prop[] =>
+  isKitPartName(part)
     ? kitPropDescriptors(part).map(
         ({ name, required, kind, options }): Prop => ({
           name,
@@ -27,6 +27,17 @@ const kitProps = (part: string | undefined): Prop[] =>
         }),
       )
     : [];
+
+const relativeImport = /from '(\.{1,2}\/[^']+)'/g;
+
+// The files a component imports by a relative path, where the aliases its props use are declared.
+const importedSources = (file: string, source: string): string[] =>
+  [...source.matchAll(relativeImport)]
+    .map((match) => path.resolve(path.dirname(file), match[1] ?? ''))
+    .flatMap((base) => [`${base}.ts`, `${base}.tsx`])
+    .flatMap((candidate) =>
+      existsSync(candidate) ? [readFileSync(candidate, 'utf8')] : [],
+    );
 
 const drawing = /\.tsx?$/;
 
@@ -46,18 +57,29 @@ function exportedComponent(source: string, named: string): string {
   return exported.find((name) => name === named) ?? exported[0] ?? named;
 }
 
+// A kit component's props come from its Contracts schema; any other component's from its own `<Component>Props`.
+function propsFor(file: string, component: string, sources: string[]): Prop[] {
+  const kitPart = kitPartIn(sources);
+
+  if (kitPart !== undefined) return kitProps(kitPart);
+
+  const own = readFileSync(file, 'utf8');
+
+  return declaredProps([...sources, ...importedSources(file, own)], component);
+}
+
 function storyFor(file: string): string {
   const sources = folderSources(path.dirname(file));
-  const kitPart = kitPartIn(sources);
   const title = derivedTitle(path.relative(root, file));
   const named = title.split('/').pop() ?? '';
+  const component = exportedComponent(readFileSync(file, 'utf8'), named);
 
   return renderStory({
     title,
-    component: exportedComponent(readFileSync(file, 'utf8'), named),
+    component,
     importPath: `./${path.basename(file).replace(/\.tsx?$/, '')}`,
-    kitPart,
-    props: kitProps(kitPart),
+    kitPart: kitPartIn(sources),
+    props: propsFor(file, component, sources),
     branches: branchesIn(sources),
   });
 }

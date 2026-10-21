@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { declaredProps } from './new-story-props.mts';
 import {
   branchesIn,
   derivedTitle,
@@ -6,6 +7,7 @@ import {
   renderStory,
   storyEntries,
 } from './new-story-rules.mts';
+import { storyTitleProblems } from './story-title-rules.mts';
 
 const styles = `
 import { cva } from 'class-variance-authority';
@@ -73,6 +75,7 @@ describe('derivedTitle', () => {
       'packages/client/src/lib/generic/primitives/status/pill/pill.tsx',
       'Design System/Primitives/Status/Pill',
     ],
+    ['packages/client/src/lib/generic/symbols/icon.tsx', 'Design System/Icon'],
     [
       'packages/client/src/lib/product/scroll-fade/scroll-fade.tsx',
       'Shared/ScrollFade',
@@ -81,8 +84,19 @@ describe('derivedTitle', () => {
       'packages/client/src/features/sessions/components/session-row.tsx',
       'Sessions/SessionRow',
     ],
-  ])('%s → %s', (file, title) => {
+  ])('%s → %s, which the title check accepts', (file, title) => {
+    const story = file.replace(/\.tsx$/, '.stories.tsx');
+
     expect(derivedTitle(file)).toBe(title);
+    expect(
+      storyTitleProblems(story, `const meta = { title: '${title}' }`),
+    ).toEqual([]);
+  });
+
+  it('refuses a folder no story group belongs to', () => {
+    expect(() => derivedTitle('packages/client/src/app/index.tsx')).toThrow(
+      'no story group belongs to this folder',
+    );
   });
 });
 
@@ -112,7 +126,7 @@ describe('renderStory', () => {
   it('writes a story per branch and keeps the label an arg', () => {
     const source = renderStory(plan);
 
-    expect(source).toContain("args: { label: 'Label', }");
+    expect(source).toMatch(/args: \{ label: 'Label',/);
     expect(source).toContain("argTypes: kitArgTypes('Button')");
     expect(source).toContain(
       "export const Outline: Story = { args: { variant: 'outline' } };",
@@ -124,5 +138,74 @@ describe('renderStory', () => {
     expect(renderStory({ ...plan, branches: new Map() })).toContain(
       'export const Default: Story = {};',
     );
+  });
+});
+
+describe('declaredProps', () => {
+  const source = `
+    type Tone = 'info' | 'danger';
+    export interface BannerProps {
+      title: string;
+      tone?: Tone;
+      count: number;
+      open: boolean;
+      onRetry: () => void;
+      blob: BlobRef;
+    }`;
+
+  it('reads each prop of `<Component>Props`, through a local alias', () => {
+    expect(declaredProps([source], 'Banner')).toEqual([
+      { name: 'title', required: true, kind: 'text', options: undefined },
+      {
+        name: 'tone',
+        required: false,
+        kind: 'choice',
+        options: ['info', 'danger'],
+      },
+      { name: 'count', required: true, kind: 'number', options: undefined },
+      { name: 'open', required: true, kind: 'boolean', options: undefined },
+      { name: 'onRetry', required: true, kind: 'handler', options: undefined },
+      { name: 'blob', required: true, kind: 'opaque', options: undefined },
+    ]);
+  });
+
+  it('reads the literal parts of an intersection alias', () => {
+    const alias = 'type RowProps = ViewProps & { label: string };';
+
+    expect(declaredProps([alias], 'Row').map((prop) => prop.name)).toEqual([
+      'label',
+    ]);
+  });
+
+  it('gives a component with no props type no props', () => {
+    expect(declaredProps(['export const Row = () => null;'], 'Row')).toEqual(
+      [],
+    );
+  });
+});
+
+describe('renderStory without a kit part', () => {
+  it('lists argTypes from the props and spies on a required handler', () => {
+    const source = renderStory({
+      title: 'Connection/ConnectionBanner',
+      component: 'ConnectionBanner',
+      importPath: './connection-banner',
+      kitPart: undefined,
+      props: declaredProps(
+        [
+          "interface ConnectionBannerProps { state: 'open' | 'offline'; onRetry: () => void }",
+        ],
+        'ConnectionBanner',
+      ),
+      branches: new Map(),
+    });
+
+    expect(source).toContain("import { fn } from 'storybook/test';");
+    expect(source).toContain("state: 'open',");
+    expect(source).toContain('onRetry: fn(),');
+    expect(source).toContain(
+      "state: { control: 'select', options: ['open', 'offline'] },",
+    );
+    expect(source).not.toContain('kitArgTypes');
   });
 });
