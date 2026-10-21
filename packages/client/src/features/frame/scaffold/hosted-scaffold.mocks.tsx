@@ -2,6 +2,7 @@ import type { JSX, PropsWithChildren } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { ListTitle } from '#lib/product/list-title';
+import { WindowBandHostContext } from '#lib/product/window-band';
 import { InspectorHostContext } from '#primitives/scaffolds/inspector';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { coreNavigationSections } from '../../../lib/product/navigation/sections';
@@ -50,7 +51,9 @@ export function HostedScaffoldMock({
   return (
     <View className="flex-1">
       <InspectorHostContext value={state.inspectorHost}>
-        <AdaptiveScaffold {...state}>{children}</AdaptiveScaffold>
+        <WindowBandHostContext value={state.bandHost}>
+          <AdaptiveScaffold {...state}>{children}</AdaptiveScaffold>
+        </WindowBandHostContext>
       </InspectorHostContext>
     </View>
   );

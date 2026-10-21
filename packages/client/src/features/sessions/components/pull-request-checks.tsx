@@ -139,7 +139,7 @@ function ChecksSummary(props: ChecksSummaryProps): React.JSX.Element {
 
 // "CI Checks 3/5": a ring split by result, coloured by state, and the count.
 export function PullRequestChecks(
-  checks: PullRequestChecksProps,
+  checks: PullRequestChecksProps & { compact?: boolean },
 ): React.JSX.Element {
   const description = describeChecks(checks);
 
@@ -150,7 +150,15 @@ export function PullRequestChecks(
       className="flex-row items-center gap-1"
     >
       <Ring checks={checks} state={description.state} />
-      <ChecksSummary {...description} />
+      <ChecksSummary {...description} summary={shownChecks(checks)} />
     </View>
   );
+}
+
+function shownChecks(
+  checks: PullRequestChecksProps & { compact?: boolean },
+): string {
+  return checks.compact
+    ? `${checks.passed}/${checks.total}`
+    : `CI Checks ${checks.passed}/${checks.total}`;
 }

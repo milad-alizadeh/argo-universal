@@ -17,10 +17,12 @@ import { runningSession } from './session-detail-view.mocks';
 
 const subagentsName = 'Subagents';
 
+const agentsOverview = 'Open Agents overview';
+
 const selected = ['aria-selected', 'true'] as const;
 
 const triggerName = (wide: boolean, count: number): string =>
-  wide ? subagentsName : `Subagents: ${count}`;
+  wide ? agentsOverview : `Subagents: ${count}`;
 
 const meta = {
   ...sessionDetailViewTestMeta,
@@ -44,10 +46,13 @@ async function assertPresentation(
   const page = within(document.body);
 
   if (wide) {
-    const tab = await canvas.findByRole('tab', { name: /^Subagents:/ });
+    const tab = await canvas.findByRole('tab', { name: /^Agents:/ });
     await expect(tab).toHaveAttribute(...selected);
     await expect(within(tab).getByText(String(count))).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: subagentsName }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Toggle Workbench' }),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: agentsOverview }));
     await expect(tab).toHaveAttribute(...selected);
     await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
 
@@ -63,11 +68,23 @@ async function assertPresentation(
   await expect(page.queryByRole('tab')).not.toBeInTheDocument();
 }
 
+async function subagentsPage(
+  canvas: Interaction['canvas'],
+  wide: boolean,
+): Promise<ReturnType<typeof within>> {
+  const host = wide
+    ? await canvas.findByRole('tabpanel', { name: 'Agents' })
+    : await within(document.body).findByRole('dialog', { name: subagentsName });
+
+  return within(host);
+}
+
 // The same props contract at both presentations: header/Inspector wide, Composer/Sheet below wide.
 function subagentsAt(width: number, state: State): Story {
   const subagents = subagentStates[state];
   const onSelect = fn();
   const wide = width === layoutWidths.wide;
+  const absentTrigger = wide ? agentsOverview : /^Subagents/;
 
   return {
     beforeEach: () => settleViewport(width),
@@ -83,12 +100,14 @@ function subagentsAt(width: number, state: State): Story {
         canvas.queryByRole('button', { name: 'Shells' }),
       ).not.toBeInTheDocument();
       await expect(
-        canvas.queryByRole('tab', { name: /^Subagents:/ }),
+        canvas.queryByRole('tab', { name: /^Agents:/ }),
       ).not.toBeInTheDocument();
 
       if (!subagents.length) {
         await expect(
-          canvas.queryByRole('button', { name: /^Subagents/ }),
+          canvas.queryByRole('button', {
+            name: absentTrigger,
+          }),
         ).not.toBeInTheDocument();
 
         return;
@@ -100,7 +119,7 @@ function subagentsAt(width: number, state: State): Story {
         await canvas.findByRole('button', { name: trigger }),
       );
 
-      const page = within(document.body);
+      const page = await subagentsPage(canvas, wide);
 
       for (const item of subagents) {
         await waitFor(() => expect(page.getByText(item.title)).toBeVisible());

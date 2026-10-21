@@ -1,39 +1,27 @@
+import type { ChangesSummary } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { Menu, type MenuAction } from '#primitives/overlays/menu';
-import type { PullRequestChecksProps } from './pull-request-checks';
 import {
-  type PullRequestStatus,
-  pullRequestAppearance,
-  pullRequestStatusLabels,
-} from './pull-request-indicator/pull-request-indicator';
+  ChangeStageIcon,
+  ChangeStageModifier,
+} from './change-stage/change-stage';
+import {
+  changeDescription,
+  type ChangeState,
+  resolveChangeStage,
+} from './change-stage/change-stage-model';
+import type { PullRequestChecksProps } from './pull-request-checks';
 
-// One of a Session's PRs, as its header shows it.
-export interface SessionPullRequest {
+// One of a Session's Changes, shown by its Workbench and Stage.
+export type SessionPullRequest = ChangeState & {
   number: number;
   title: string;
-  status: PullRequestStatus;
-  // Absent when the PR has no CI checks.
   checks?: PullRequestChecksProps;
+  summary?: ChangesSummary;
   mergeable: boolean;
-}
-
-function PullRequestIcon({
-  status,
-}: Pick<SessionPullRequest, 'status'>): React.JSX.Element {
-  const appearance = pullRequestAppearance[status];
-
-  return (
-    <Icon
-      name={appearance.icon}
-      role="control"
-      tone={appearance.tone}
-      className="shrink-0"
-    />
-  );
-}
+};
 
 interface SecondaryPairProps {
   strong: string;
@@ -62,17 +50,24 @@ const labelRow = {
   className: 'flex-row items-center gap-1',
 } as const;
 
-// "#45 Open": the PR's icon, number and state.
-export function SessionPullRequestLabel({
-  number,
-  status,
-}: Pick<SessionPullRequest, 'number' | 'status'>): React.JSX.Element {
-  const label = pullRequestStatusLabels[status];
+function numberPair(props: SessionPullRequest): SecondaryPairProps {
+  return { strong: `#${props.number}`, muted: resolveChangeStage(props).label };
+}
+
+// "#45 Open": the Change's icon, number and state.
+export function SessionPullRequestLabel(
+  props: SessionPullRequest,
+): React.JSX.Element {
+  const label = changeDescription(props);
 
   return (
-    <View {...labelRow} accessibilityLabel={`PR #${number}, ${label}`}>
-      <PullRequestIcon status={status} />
-      <SecondaryPair strong={`#${number}`} muted={label} />
+    <View
+      {...labelRow}
+      accessibilityLabel={`Change #${props.number}, ${label}`}
+    >
+      <ChangeStageIcon {...props} role="control" />
+      <SecondaryPair {...numberPair(props)} />
+      <ChangeStageModifier {...props} />
     </View>
   );
 }
@@ -88,7 +83,7 @@ function PullRequestItemContent(
 ): React.JSX.Element {
   return (
     <>
-      <PullRequestIcon status={pullRequest.status} />
+      <ChangeStageIcon {...pullRequest} role="control" />
       <Text className="font-medium">#{pullRequest.number}</Text>
       <Text numberOfLines={1} className="min-w-0 shrink">
         {pullRequest.title}
@@ -115,11 +110,11 @@ function pullRequestActions(props: MorePullRequestsProps): MenuAction[] {
   );
 }
 
-// "+1 PR ⌄": the header shows one PR; this menu lists all of them and picks the one shown.
+// "+1 Change ⌄": the header shows one Change; this menu lists all of them and picks the one shown.
 export function MorePullRequests(
   props: MorePullRequestsProps,
 ): React.JSX.Element {
-  const label = `+${props.pullRequests.length - 1} PR`;
+  const label = `+${props.pullRequests.length - 1} Change`;
 
   return (
     <Menu

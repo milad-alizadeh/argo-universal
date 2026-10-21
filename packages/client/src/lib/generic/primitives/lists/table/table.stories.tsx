@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Table } from './table';
 import { PlatformsTable } from './table-platforms.mocks';
 import { InPlaceRowDetail, RunsTable } from './table-runs.mocks';
@@ -6,6 +7,7 @@ import { InPlaceRowDetail, RunsTable } from './table-runs.mocks';
 const meta = {
   title: 'Design System/Primitives/Lists/Table',
   component: Table,
+  argTypes: kitArgTypes('Table'),
   parameters: { screenPreview: true },
 } satisfies Meta;
 

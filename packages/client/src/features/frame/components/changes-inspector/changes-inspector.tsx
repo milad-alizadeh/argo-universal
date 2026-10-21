@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import {
   ChangesFiles,
+  useChangesStage,
   ChangesToolbar,
   ChangesSheetHeader,
   type ChangesViewProps,
@@ -35,9 +36,16 @@ const paneOf = ({
 export function ChangesInspector(
   props: ChangesInspectorProps,
 ): React.JSX.Element {
+  const stage = useChangesStage(props);
+  const changes = stage.changes ?? props;
+
   return (
-    <InspectorPane {...paneOf(props)} toolbar={<ChangesToolbar {...props} />}>
-      <ChangesFiles {...props} />
+    <InspectorPane
+      {...paneOf(props)}
+      scrollState={stage.scrollState}
+      toolbar={<ChangesToolbar {...changes} />}
+    >
+      <ChangesFiles {...changes} />
     </InspectorPane>
   );
 }

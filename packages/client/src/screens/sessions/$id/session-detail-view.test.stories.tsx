@@ -9,11 +9,6 @@ import {
   failedWithReason,
 } from '../../../../mocks/session-view/session-view-failure.test.mocks';
 import { lastRowRestsAboveTheComposer } from '../../../../mocks/session-view/session-view-feed-end.test.mocks';
-import {
-  listsEveryPullRequest,
-  mergesWhenChecksPass,
-  mergeWaitsForChecks,
-} from '../../../../mocks/session-view/session-view-merge.test.mocks';
 import { feedReflowsAfterThePaneCollapses } from '../../../../mocks/session-view/session-view-pane.test.mocks';
 import { previewShowsTheFeedAlone } from '../../../../mocks/session-view/session-view-preview.test.mocks';
 import {
@@ -40,8 +35,9 @@ export const RunningTurn: Story = {
       ).toBeVisible();
 
       if (wide) {
-        await expect(canvas.getByText('Running')).toBeVisible();
-        await expect(canvas.getByText('4m 12s')).toBeVisible();
+        // Spec 0020 deletes the repeated header meta; the Live header still states the Turn.
+        await expect(canvas.queryByText('Running')).toBeNull();
+        await expect(canvas.queryByTestId('session-header-bar')).toBeNull();
         await expect(
           canvas.getByRole('button', { name: 'More' }),
         ).toBeVisible();
@@ -81,7 +77,7 @@ export const Idle: Story = {
       ).toBeVisible();
 
       if (wide) {
-        await expect(canvas.getByText('Idle')).toBeVisible();
+        await expect(canvas.queryByText('Idle')).toBeNull();
         await expect(canvas.queryByText(/^for /)).toBeNull();
       }
 
@@ -91,15 +87,18 @@ export const Idle: Story = {
     }),
 };
 
-// The header, the Feed and the Composer sit in one SessionLayout container, so they share its one surface.
-export const HeaderFeedAndComposerShareOneLayout: Story = {
+// The band owns identity; the Feed and Composer keep the Session layout surface.
+export const BandOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
     const layout = within(await canvas.findByTestId('session-layout'));
-    await expect(
-      await layout.findByRole('heading', { name: /^Think briefly first/ }),
-    ).toBeVisible();
-    await expect(layout.getByRole('button', { name: 'Changes' })).toBeVisible();
+
+    const title = await canvas.findByRole('heading', {
+      name: /^Think briefly first/,
+    });
+
+    await expect(canvas.getByTestId('window-band')).toContainElement(title);
+    await expect(layout.queryByTestId('session-header-bar')).toBeNull();
     await expect(layout.getByTestId(feedScrollTestId)).toBeVisible();
     await expect(
       layout.getByRole('textbox', { name: 'Message' }),
@@ -107,11 +106,10 @@ export const HeaderFeedAndComposerShareOneLayout: Story = {
   },
 };
 
-export const MergeWaitsForChecks = mergeWaitsForChecks;
-
-export const MergesWhenChecksPass = mergesWhenChecksPass;
-
-export const ListsEveryPullRequest = listsEveryPullRequest;
+/*
+ * Spec 0020 removes the header's Merge control and single-Change chooser.
+ * Merge behavior lives at MergePrButton's public component tests; the Workbench checks suite covers summary checks.
+ */
 
 export const EmptyFeed: Story = {
   args: { view: { state: 'open', ...emptySession } },

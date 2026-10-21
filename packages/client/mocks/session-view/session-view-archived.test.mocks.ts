@@ -22,7 +22,7 @@ export const archivedIsReadOnly: Story = {
     },
   },
   play: async ({ canvas }) =>
-    eachLayout(async () => {
+    eachLayout(async (wide) => {
       await expect(
         await canvas.findByRole('heading', {
           name: /^Without using any tools/,
@@ -34,7 +34,10 @@ export const archivedIsReadOnly: Story = {
       ).toBeNull();
       await expect(canvas.queryByRole('button', { name: 'Send' })).toBeNull();
       await expect(canvas.queryByRole('button', { name: 'Undo' })).toBeNull();
-      // An archived Session offers neither Rename nor Archive, so the header draws no ⋯.
-      await expect(canvas.queryByRole('button', { name: 'More' })).toBeNull();
+
+      // The band's fixed control remains disabled; the phone omits the unavailable menu.
+      await (wide
+        ? expect(canvas.getByRole('button', { name: 'More' })).toBeDisabled()
+        : expect(canvas.queryByRole('button', { name: 'More' })).toBeNull());
     }),
 };

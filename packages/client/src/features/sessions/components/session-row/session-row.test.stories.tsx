@@ -39,12 +39,12 @@ export const MetadataWide = metadata(layoutWidths.wide);
 export const PullRequestWithoutOtherMetadata: Story = {
   args: {
     session: sessionRows.idle,
-    pullRequest: { number: 45, status: 'open' },
+    pullRequest: { number: 45, stage: 'open' },
   },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      const pullRequest = canvas.getByLabelText('open PR #45');
+      const pullRequest = canvas.getByLabelText('Open Change #45');
       await expect(pullRequest).toBeVisible();
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(

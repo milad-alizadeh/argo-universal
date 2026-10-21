@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Text } from '#primitives/content/text';
 import { Variation, Variations as VariationList } from '../../../variations';
 import {
@@ -24,12 +25,14 @@ function CollapsibleExample({
 
 const meta = {
   title: 'Design System/Primitives/Layout/Collapsible',
+  component: Collapsible,
+  argTypes: kitArgTypes('Collapsible'),
   tags: ['third-party'],
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 // Hover is live: point at either header on a desktop viewport. Phones have no hover.
 export const Variations: Story = {

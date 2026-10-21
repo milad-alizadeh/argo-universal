@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations as VariationList } from '../../../variations';
+import { RichTextarea } from './rich-textarea';
 import { RichTextareaExample } from './rich-textarea-example.mocks';
 
 const longDraft = Array.from(
@@ -40,11 +41,12 @@ const examples = [
 
 const meta = {
   title: 'Design System/Primitives/Inputs/RichTextarea',
+  component: RichTextarea,
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'RichTextarea',

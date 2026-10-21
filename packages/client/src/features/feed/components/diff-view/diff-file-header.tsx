@@ -62,7 +62,7 @@ export function FileHeader(props: FileHeaderProps): React.JSX.Element {
 
 function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
-    <View className="h-9 flex-row items-center gap-2 border-b border-border bg-muted pr-3 pl-2">
+    <View className="h-10.5 flex-row items-center gap-2 pr-3 pl-2">
       <FileHeaderToggle {...props} />
       <ChangeCounts file={props.file} />
       <ViewedMark {...props} />

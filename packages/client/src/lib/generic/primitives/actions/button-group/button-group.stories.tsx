@@ -1,16 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { ButtonGroup } from './button-group';
 
 const meta = {
   title: 'Design System/Primitives/Actions/ButtonGroup',
+  component: ButtonGroup,
+  argTypes: kitArgTypes('ButtonGroup'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'ButtonGroup',

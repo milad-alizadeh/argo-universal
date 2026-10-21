@@ -80,9 +80,9 @@ export const PhoneHasTheGitHeader: Story = {
     await settleViewport(layoutWidths.phone);
     await screen.findByRole('dialog', { name: 'Inspector' });
     await expect(
-      screen.getByRole('button', { name: 'File changes', pressed: true }),
+      screen.getByRole('button', { name: 'Files', pressed: true }),
     ).toBeVisible();
-    await expect(screen.getByRole('button', { name: 'PR' })).toBeDisabled();
+    await expect(screen.getByRole('button', { name: 'Change' })).toBeDisabled();
     await expect(screen.queryByRole('heading', { name: 'Changes' })).toBeNull();
     await expect(
       screen.queryByRole('button', { name: 'Close Inspector' }),
@@ -94,7 +94,7 @@ export const PhoneHasTheGitHeader: Story = {
     last.scrollIntoView();
     await waitFor(() => expect(last).toBeVisible());
     await expect(
-      screen.getByRole('button', { name: 'File changes', pressed: true }),
+      screen.getByRole('button', { name: 'Files', pressed: true }),
     ).toBeVisible();
   },
 };

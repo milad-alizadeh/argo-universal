@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Label } from './label';
 import type { LabelProps } from './label-props';
@@ -9,6 +10,7 @@ const meta = {
   title: 'Design System/Primitives/Content/Label',
   args: { icon: 'agent', text: subagents },
   component: Label,
+  argTypes: kitArgTypes('Label'),
 } satisfies Meta<typeof Label>;
 
 export default meta;

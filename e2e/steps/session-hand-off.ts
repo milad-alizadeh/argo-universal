@@ -63,5 +63,10 @@ async function expectComposerWidth(page: Page): Promise<void> {
     .getByRole('textbox', { name: 'Message' })
     .boundingBox();
 
-  expect(composer?.width).toBe(composerWidthBefore.get(page));
+  const before = composerWidthBefore.get(page);
+
+  if (!composer || before === undefined)
+    throw new Error('The Composer width was not recorded');
+
+  expect(composer.width).toBeCloseTo(before, 2);
 }

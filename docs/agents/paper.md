@@ -10,7 +10,7 @@ One Paper file, [Argo](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW)
 
 | Page | Owns |
 |---|---|
-| [Foundations](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-1-0) | Tokens, the icon library and unbuilt primitives |
+| [Foundations](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-1-0) | Tokens, typography and unbuilt primitives |
 | [Icons](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-2-0) | The icon library to copy from |
 | [Workbench and Change](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-3-0) | Workbench, Stage and Change explorations |
 | [Composer](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-4-0) | Composer explorations |

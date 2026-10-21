@@ -46,16 +46,16 @@ export const ListsAndPicksPluginItems: Story = {
   },
 };
 
-export const SectionWithAListTogglesTheSidebar: Story = {
+export const SidebarToggleBelongsToTheBand: Story = {
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('button', { name: sidebarToggle }),
-    ).toBeVisible();
+      canvas.queryByRole('button', { name: sidebarToggle }),
+    ).toBeNull();
   },
 };
 
-// More Plugin sections than a short window holds scroll above the sidebar toggle, which stays in reach.
-export const ManySectionsScrollAboveTheToggle: Story = {
+// More Plugin sections than a short window holds remain reachable by scrolling.
+export const ManySectionsScrollToTheLastItem: Story = {
   args: { items: manyPluginNavigationItems },
   decorators: [
     (Story) => (
@@ -73,8 +73,8 @@ export const ManySectionsScrollAboveTheToggle: Story = {
 
     await expect(args.onSectionChange).toHaveBeenLastCalledWith(last?.id);
     await expect(
-      canvas.getByRole('button', { name: sidebarToggle }),
-    ).toBeVisible();
+      canvas.queryByRole('button', { name: sidebarToggle }),
+    ).toBeNull();
   },
 };
 

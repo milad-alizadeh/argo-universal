@@ -39,7 +39,7 @@ function PathFade(): React.JSX.Element {
       <ScrollFadeGradient
         edge="leading"
         height={24}
-        className="bg-card medium:bg-muted"
+        className="bg-card medium:bg-content"
       />
     </View>
   );

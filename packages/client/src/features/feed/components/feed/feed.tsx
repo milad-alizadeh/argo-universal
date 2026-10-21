@@ -37,14 +37,15 @@ export interface FeedProps {
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-1.5 p-6">
-      <Text accessibilityRole="heading" aria-level={2}>
+      <Text
+        role="heading"
+        accessibilityRole="heading"
+        aria-level={2}
+        className="wide-type:text-base wide-type:leading-6"
+      >
         What should we build?
       </Text>
-      {!!branch && (
-        <Text role="code" className="text-muted-foreground">
-          {branch}
-        </Text>
-      )}
+      {!!branch && <Text role="secondary">{branch}</Text>}
     </View>
   );
 }

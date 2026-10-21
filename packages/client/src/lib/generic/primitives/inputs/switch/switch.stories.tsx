@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Switch } from './switch';
 
@@ -35,12 +36,14 @@ const examples: {
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Switch',
+  component: Switch,
+  argTypes: kitArgTypes('Switch'),
   tags: ['third-party'],
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Switch',

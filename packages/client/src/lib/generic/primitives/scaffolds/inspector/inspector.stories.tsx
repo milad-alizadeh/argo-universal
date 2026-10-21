@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Inspector, type InspectorProps } from './index';
 import {
@@ -17,6 +18,7 @@ const args: InspectorProps = {
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Inspector',
   component: Inspector,
+  argTypes: kitArgTypes('Inspector'),
   args,
 } satisfies Meta<typeof Inspector>;
 

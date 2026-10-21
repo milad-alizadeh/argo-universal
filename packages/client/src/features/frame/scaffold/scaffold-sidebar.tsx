@@ -18,14 +18,13 @@ import type { ScaffoldPartProps, ScaffoldProps } from './use-scaffold-layout';
 const listColumn = { paddingLeft: 8, paddingRight: 14 };
 
 const glassGeometry = ({
-  scaffold,
   layout,
 }: ScaffoldPartProps): Omit<GlassSurfaceProps, keyof FrameMotion> => ({
   width: layout.measures.railWidth + layout.shownListWidth,
   expandedWidth: layout.measures.railWidth + layout.visibleListWidth,
   railWidth: layout.measures.railWidth,
-  barHeight: layout.measures.barHeight,
-  sidebarShown: scaffold.sidebarShown,
+  barHeight: 0,
+  sidebarShown: !layout.frame.listFolded,
 });
 
 function SidebarGlass(parts: ScaffoldPartProps): React.JSX.Element {
@@ -41,7 +40,7 @@ function SidebarTopBar({
     <SidebarBar
       left={layout.measures.railWidth}
       width={layout.visibleListWidth}
-      sidebarShown={scaffold.sidebarShown}
+      sidebarShown={!layout.frame.listFolded}
       {...layout.motion}
     >
       {scaffold.listHeader}
@@ -63,14 +62,11 @@ function SidebarListContent({ list }: ScaffoldProps): React.JSX.Element {
 
 type ListPlacement = Omit<FramePaneProps, 'testID' | 'children'>;
 
-const listPlacement = ({
-  scaffold,
-  layout,
-}: ScaffoldPartProps): ListPlacement => ({
+const listPlacement = ({ layout }: ScaffoldPartProps): ListPlacement => ({
   width: layout.shownListWidth,
   offset: 0,
   contentWidth: layout.visibleListWidth,
-  hidden: !scaffold.sidebarShown,
+  hidden: layout.frame.listFolded,
   ...layout.motion,
 });
 
@@ -93,7 +89,7 @@ export function ScaffoldSidebarColumn({
   ...parts
 }: ScaffoldSidebarColumnProps): React.JSX.Element {
   return (
-    <View className="p-frame-inset">
+    <View className="px-frame-inset pb-frame-inset">
       <View className="flex-1 flex-row">
         <SidebarGlass {...parts} />
         {sidebar}

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
@@ -9,6 +10,7 @@ import { Surface } from './surface';
 const meta = {
   title: 'Design System/Primitives/Layout/Surface',
   component: Surface,
+  argTypes: kitArgTypes('Surface'),
   args: { kind: 'card' },
 } satisfies Meta<typeof Surface>;
 

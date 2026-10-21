@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button, contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
@@ -117,12 +118,14 @@ function FruitList(props: { onClose: () => void }): React.JSX.Element {
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Popover',
+  component: Popover,
+  argTypes: kitArgTypes('Popover'),
   tags: ['third-party'],
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Popover',

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -76,12 +77,14 @@ const examples: { label: string; props: ExampleProps }[] = [
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Picker',
+  component: Picker,
+  argTypes: kitArgTypes('Picker'),
   parameters: { screenPreview: true },
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Picker',

@@ -2,12 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { List } from '#primitives/lists/list';
 import { ListItem } from './index';
 
 const meta = {
   title: 'Design System/Primitives/Lists/ListItem/Settings',
   component: ListItem,
+  argTypes: kitArgTypes('ListItem'),
   args: { title: 'Settings' },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof ListItem>;

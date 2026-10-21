@@ -100,7 +100,7 @@ export const DividersResizeAndRememberWidths: ScaffoldStory = {
 export const ExpandedInspectorKeepsBothDividerEdgesUsable: ScaffoldStory = {
   args: { inspectorState: 'expanded' },
   play: controlledPlay(async ({ canvas, userEvent }) => {
-    await page.viewport(1440, 844);
+    await page.viewport(1920, 844);
 
     const listWidth = (): number =>
       canvas.getByTestId(sessionListId).getBoundingClientRect().width;

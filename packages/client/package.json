@@ -108,6 +108,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",
+    "react-native-web": "catalog:",
     "sf-symbols-typescript": "catalog:",
     "storybook": "catalog:",
     "tailwindcss": "catalog:",

@@ -24,6 +24,8 @@ import {
 } from './scaffold-test.mocks';
 import { ScaffoldMock } from './scaffold.mocks';
 
+const roomyDesktop = 1920;
+
 const meta = {
   title: 'Tests/Scaffold/Inspector',
   ...scaffoldMeta,
@@ -47,7 +49,7 @@ function inspectorTakesTheDetailAreaAndRestoresIt(
   return {
     play: controlledPlay(async (context, controlled) => {
       const { canvas } = context;
-      await settleViewport(layoutWidths.wide);
+      await settleViewport(roomyDesktop);
       const pageAction = canvas.getByRole('button', { name: moreActionsLabel });
       await controlled.render({ inspectorState: 'open' });
       await expect(canvas.getByRole('button', { name: moreActionsLabel })).toBe(
@@ -75,15 +77,16 @@ function inspectorTakesTheDetailAreaAndRestoresIt(
       await pressInspectorButton(context, controlled, 'open');
       await expect(canvas.getByTestId(detailContentId)).toBeVisible();
       await settleViewport(width());
-      await waitFor(() => expectHidden(context, detailId));
+      await expect(canvas.getByTestId(detailContentId)).toBeVisible();
       await expect(canvas.getByTestId(inspectorContentId)).toBeVisible();
-      await pressInspectorButton(context, controlled, 'open');
-      await expectHidden(context, detailId);
+      await expect(
+        canvas.getByRole('button', { name: expandInspectorLabel }),
+      ).toBeEnabled();
       await pressInspectorButton(context, controlled, 'closed');
       await expectHidden(context, inspectorId);
       await controlled.render({ inspectorState: 'open' });
       await expect(canvas.getByTestId(inspectorContentId)).toBeVisible();
-      await settleViewport(layoutWidths.wide);
+      await settleViewport(roomyDesktop);
       await waitFor(() =>
         expect(canvas.getByTestId(detailContentId)).toBeVisible(),
       );
@@ -98,8 +101,22 @@ function inspectorTakesTheDetailAreaAndRestoresIt(
 export const InspectorTakesTheDetailAreaAndRestoresItTablet =
   inspectorTakesTheDetailAreaAndRestoresIt(wideBreakpoint);
 
-export const InspectorTakesTheDetailAreaAndRestoresItPhone =
-  inspectorTakesTheDetailAreaAndRestoresIt(() => layoutWidths.phone);
+// Below wide the page owns its Sheet; no desktop Stage or band is drawn by the Scaffold.
+export const CompactLeavesInspectorToThePageSheet: ScaffoldStory = {
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    await settleViewport(layoutWidths.phone);
+    await controlled.render({ sizeClass: 'compact', inspectorState: 'open' });
+    await expect(canvas.getByTestId(detailContentId)).toBeVisible();
+    await expect(canvas.queryByTestId(inspectorId)).toBeNull();
+    await expect(canvas.queryByTestId('window-band')).toBeNull();
+    await settleViewport(roomyDesktop);
+    await controlled.render({ sizeClass: 'wide' });
+    await expect(canvas.getByTestId(inspectorContentId)).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: expandInspectorLabel }),
+    ).toBeVisible();
+  }),
+};
 
 export const HeaderMenuDoesNotOpenInspector: ScaffoldStory = {
   play: controlledPlay(async (context) => {

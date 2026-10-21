@@ -27,6 +27,16 @@ export interface InspectorTabsProps {
 export type InspectorProps = KitProps<'Inspector'> & {
   // A phone Inspector can own its header, such as the Git sheet's PR / File changes switcher.
   sheetHeader?: ReactNode;
+  // The caller can retain a tab or drill-in page's scroll position while it is unmounted.
+  scrollState?: {
+    key: string;
+    // False while loading; true settles restoration even when the final page is shorter.
+    ready?: boolean;
+    getOffset: () => number;
+    onScroll: (offset: number) => void;
+  };
+  // The content owns its scroll view, for retained tab pages or virtualised detail.
+  contentScrolls?: boolean;
   toolbar?: ReactNode;
   tabs?: InspectorTabsProps;
   testID?: string;

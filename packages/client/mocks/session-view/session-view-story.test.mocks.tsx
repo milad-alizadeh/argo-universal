@@ -2,15 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import {
   type OpenSessionViewProps,
-  SessionDetailView,
   type SessionDetailViewProps,
 } from '../../src/screens/sessions/$id/session-detail-view';
+import { FramedSessionPreview } from '../../src/screens/sessions/$id/session-detail-view-framed.mocks';
 import {
   idleSession,
   runningSession,
 } from '../../src/screens/sessions/$id/session-detail-view.mocks';
-import { sessionScreenHeader } from '../../src/screens/sessions/$id/session-page-header';
-import { ScreenHeaderMock } from '../screen-header-mock';
 
 export const feedScrollTestId = 'feed-scroll';
 
@@ -18,13 +16,8 @@ export const meta = {
   title: 'Tests/SessionDetailView',
   parameters: { screenPreview: true },
   args: { view: { state: 'open', ...runningSession } },
-  // A narrow window's header, as the screen sets it.
-  render: ({ view }): React.JSX.Element => (
-    <>
-      <ScreenHeaderMock {...sessionScreenHeader(view)} />
-      <SessionDetailView {...view} />
-    </>
-  ),
+  // Exercise the real window host on desktop and the native-header fallback below wide.
+  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export type Story = StoryObj<typeof meta>;

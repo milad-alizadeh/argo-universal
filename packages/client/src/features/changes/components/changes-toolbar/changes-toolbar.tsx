@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import {
@@ -16,21 +17,34 @@ import { ComparisonPicker } from '../comparison-picker/comparison-picker';
  */
 export function ChangesToolbar(props: ChangesViewProps): React.JSX.Element {
   return (
+    <SizeClass
+      compact={<Summary files={props.files} viewed={props.viewed} />}
+      medium={<DesktopToolbar {...props} />}
+      wide={<DesktopToolbar {...props} />}
+    />
+  );
+}
+
+function DesktopToolbar(props: ChangesViewProps): React.JSX.Element {
+  if (props.selectedFile) return <BackRow {...props} />;
+
+  return (
     <View>
-      <SizeClass
-        compact={null}
-        medium={<ComparisonRow {...props} />}
-        wide={<ComparisonRow {...props} />}
-      />
-      <Summary files={props.files} viewed={props.viewed} />
+      <ComparisonRow {...props} />
+      <Summary {...props} />
     </View>
   );
 }
 
 function ComparisonRow(props: ChangesViewProps): React.JSX.Element {
   return (
-    <View className="flex-row px-4 py-2">
-      <ComparisonPicker {...props} />
+    <View className="h-11 flex-row items-center gap-2 px-3">
+      <View className="min-w-0 flex-1">
+        <ComparisonPicker {...props} />
+      </View>
+      {props.files && (
+        <LineTotals {...changesTotals(props.files, props.viewed)} />
+      )}
     </View>
   );
 }
@@ -43,17 +57,10 @@ function Summary(
   const totals = changesTotals(props.files, props.viewed);
 
   return (
-    <View className="flex-row items-center gap-2 px-4 pt-4 pb-2 medium:h-11 medium:bg-content medium:px-3 medium:py-0">
+    <View className="flex-row items-center gap-2 px-4 pt-4 pb-2 medium:h-6 medium:bg-content medium:px-2 medium:py-0">
       <FileCounts {...totals} />
-      <DesktopLineTotals {...totals} />
     </View>
   );
-}
-
-function DesktopLineTotals(totals: ChangesTotals): React.JSX.Element {
-  const lines = <LineTotals {...totals} />;
-
-  return <SizeClass compact={null} medium={lines} wide={lines} />;
 }
 
 function FileCounts(totals: ChangesTotals): React.JSX.Element {
@@ -77,6 +84,22 @@ function LineTotals(totals: ChangesTotals): React.JSX.Element {
     <View className="flex-row gap-2">
       <Text role="badge" tone="success">{`+${lines(totals.added)}`}</Text>
       <Text role="badge" tone="danger">{`−${lines(totals.removed)}`}</Text>
+    </View>
+  );
+}
+
+function BackRow(props: ChangesViewProps): React.JSX.Element {
+  return (
+    <View className="h-11 flex-row items-center gap-2 px-3">
+      <IconButton
+        icon="chevron-left"
+        variant="ghost"
+        accessibilityLabel="Back"
+        onPress={() => props.onFileSelect?.()}
+      />
+      <Text role="secondary" numberOfLines={1}>
+        {props.selectedFile}
+      </Text>
     </View>
   );
 }

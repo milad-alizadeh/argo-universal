@@ -2,16 +2,19 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { SplitButton } from './split-button';
 
 const meta = {
   title: 'Design System/Primitives/Actions/SplitButton',
+  component: SplitButton,
+  argTypes: kitArgTypes('SplitButton'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 type Scope = 'once' | 'always';
 

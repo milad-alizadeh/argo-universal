@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
@@ -11,6 +12,7 @@ import { exampleSubmenu } from './page-submenu-example.mocks';
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Page',
   component: Page,
+  argTypes: kitArgTypes('Page'),
 } satisfies Meta<typeof Page>;
 
 export default meta;

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Icon } from './icon';
 import { IconExamples } from './icon-examples.mocks';
 import { SfAndMaterialTable } from './sf-symbol-table.mocks';
@@ -6,6 +7,7 @@ import { SfAndMaterialTable } from './sf-symbol-table.mocks';
 const meta = {
   title: 'Design System/Primitives/Content/Icon',
   component: Icon,
+  argTypes: kitArgTypes('Icon'),
   args: { name: 'add', role: 'control' },
   tags: ['third-party'],
 } satisfies Meta<typeof Icon>;

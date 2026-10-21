@@ -14,6 +14,7 @@ const roles = [
 ] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Text } from './text';
 
@@ -31,11 +32,13 @@ function RoleExamples(): React.JSX.Element {
 
 const meta = {
   title: 'Design System/Primitives/Content/Text',
+  component: Text,
+  argTypes: kitArgTypes('Text'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Text',

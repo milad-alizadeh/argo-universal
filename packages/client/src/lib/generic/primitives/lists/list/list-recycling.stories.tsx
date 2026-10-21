@@ -8,6 +8,7 @@ import {
   type SetStateAction,
 } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
@@ -16,6 +17,7 @@ import type { ListProps } from './list-props';
 const meta = {
   title: 'Design System/Primitives/Lists/List',
   component: List,
+  argTypes: kitArgTypes('List'),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof List>;
 
