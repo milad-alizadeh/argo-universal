@@ -11,6 +11,7 @@ import {
   syncPointOf,
 } from '../view/feed-state';
 import { findLiveToolCall } from '../view/live-tool-call';
+import { toFeedView } from '../view/to-feed-view';
 import { useHeldFeedStart, useKeepHeldFeed } from './held-feed';
 import type { SessionFeed } from './session-feed';
 import { useFeedHistory } from './use-feed-history';
@@ -22,7 +23,10 @@ import { useFrameCommit } from './use-frame-commit';
 const uncached = { staleTime: 0, gcTime: 0 };
 
 // A Session's held Feed view, paging and live changes (ADR 0007).
-export function useSessionFeed(sessionId: string | undefined): SessionFeed {
+export function useSessionFeed(
+  sessionId: string | undefined,
+  convert = toFeedView,
+): SessionFeed {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const start = useHeldFeedStart(sessionId);
@@ -145,7 +149,7 @@ export function useSessionFeed(sessionId: string | undefined): SessionFeed {
     else setSyncPoint(next);
   }, [syncPoint, reset, setSyncPoint]);
 
-  const view = useFeedView(sessionId, feed, snapshot);
+  const view = useFeedView(sessionId, feed, { snapshot, convert });
 
   const [shownSession, setShownSession] = useState(sessionId);
 

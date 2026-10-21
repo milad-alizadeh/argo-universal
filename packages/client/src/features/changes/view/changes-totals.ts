@@ -1,4 +1,5 @@
 import type { FileDiff } from '#features/feed';
+import { uniqueChangedFiles } from './changes-files';
 
 export interface ChangesTotals {
   files: number;
@@ -11,7 +12,7 @@ export function changesTotals(
   files: readonly FileDiff[],
   viewed: readonly string[],
 ): ChangesTotals {
-  const unique = [...new Map(files.map((file) => [file.path, file])).values()];
+  const unique = uniqueChangedFiles(files);
 
   return {
     files: unique.length,

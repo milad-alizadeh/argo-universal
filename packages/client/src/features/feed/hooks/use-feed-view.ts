@@ -8,13 +8,15 @@ import { toFeedView } from '../view/to-feed-view';
 export function useFeedView(
   sessionId: string | undefined,
   feed: FeedState,
-  snapshot: SessionSnapshot | null,
+  options: { snapshot: SessionSnapshot | null; convert?: typeof toFeedView },
 ): FeedView | null {
+  const { snapshot, convert = toFeedView } = options;
+
   const [held, setHeld] = useState(() => ({
     sessionId,
     rows: feed.rows,
     snapshot,
-    view: snapshot ? toFeedView(feed.rows, snapshot) : null,
+    view: snapshot ? convert(feed.rows, snapshot) : null,
   }));
 
   let view = held.view;
@@ -26,7 +28,7 @@ export function useFeedView(
   ) {
     const previous = held.sessionId === sessionId ? held.view : null;
     view = snapshot
-      ? keepUnchangedItems(previous, toFeedView(feed.rows, snapshot))
+      ? keepUnchangedItems(previous, convert(feed.rows, snapshot))
       : null;
     setHeld({ sessionId, rows: feed.rows, snapshot, view });
   }
