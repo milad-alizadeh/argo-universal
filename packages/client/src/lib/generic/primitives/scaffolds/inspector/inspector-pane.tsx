@@ -4,9 +4,9 @@ import { cn } from '#lib/generic/utils';
 import { ActionListHeaderContext } from '#primitives/actions/action-list';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
-import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { isFittedSheet, paneSizing } from './inspector-pane-sizing';
 import type { InspectorProps } from './inspector-props';
+import { InspectorScroll } from './inspector-scroll';
 import { InspectorTabs } from './inspector-tabs';
 
 export type InspectorPaneProps = InspectorProps & {
@@ -119,42 +119,27 @@ function InspectorHeader(props: InspectorPaneProps): ReactElement {
   );
 }
 
-// The toolbar, then the content scrolling and fading under it on the Inspector's surface.
-const scrollProps = {
-  testID: 'desktop-inspector-scroll',
-  className: 'overflow-hidden',
-  contentContainerClassName: 'grow',
-};
-
-type InspectorBodyProps = InspectorProps & {
+export type InspectorBodyProps = InspectorProps & {
   surface: string;
   fitContent?: boolean;
 };
 
-export function InspectorBody({
-  toolbar,
-  children,
-  ...props
-}: InspectorBodyProps): ReactElement {
+export function InspectorBody(props: InspectorBodyProps): ReactElement {
+  const { toolbar, children, scrollState } = props;
+
+  const body = (
+    <InspectorScroll {...props} key={scrollState?.key}>
+      {children}
+    </InspectorScroll>
+  );
+
   return (
     <>
       {toolbar}
-      <ScrollFadeView {...inspectorScroll(props)}>{children}</ScrollFadeView>
+      {body}
     </>
   );
 }
-
-const inspectorScroll = ({
-  surface,
-  fitContent,
-}: Pick<InspectorBodyProps, 'surface' | 'fitContent'>): React.ComponentProps<
-  typeof ScrollFadeView
-> => ({
-  ...scrollProps,
-  fitContent,
-  surfaceClassName: surface,
-  className: cn(scrollProps.className, fitContent && 'min-h-0 shrink'),
-});
 
 /*
  * Foundations / Inspector: its header with the title, its Actions, expand on a wide window and close, then its

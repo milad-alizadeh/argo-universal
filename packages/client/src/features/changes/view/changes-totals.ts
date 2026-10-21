@@ -11,11 +11,13 @@ export function changesTotals(
   files: readonly FileDiff[],
   viewed: readonly string[],
 ): ChangesTotals {
+  const unique = [...new Map(files.map((file) => [file.path, file])).values()];
+
   return {
-    files: files.length,
-    viewed: files.filter((file) => viewed.includes(file.path)).length,
-    added: files.reduce((sum, file) => sum + file.added, 0),
-    removed: files.reduce((sum, file) => sum + file.removed, 0),
+    files: unique.length,
+    viewed: unique.filter((file) => viewed.includes(file.path)).length,
+    added: unique.reduce((sum, file) => sum + file.added, 0),
+    removed: unique.reduce((sum, file) => sum + file.removed, 0),
   };
 }
 

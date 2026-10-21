@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { createElement, type JSX } from 'react';
 import {
   ChangesFiles,
+  useChangesStage,
   ChangesToolbar,
   ChangesSheetHeader,
   type ChangesViewProps,
@@ -78,7 +79,6 @@ function changesPanel({ changes }: SessionInspectorContent): PanelContent {
   };
 }
 
-// Each panel's content, or nothing where the Session has none: Subagents and Shells while it has any.
 const panelContent: Record<
   SessionPanel,
   (content: SessionInspectorContent) => PanelContent | undefined
@@ -102,7 +102,6 @@ type SessionInspectorProps = SessionInspectorContent & {
   panels: SessionPanels;
 };
 
-// The tab's key back to its panel; the Inspector only hands back keys it was given.
 function onPanel(run: (panel: SessionPanel) => void): (key: string) => void {
   return (key) => {
     const panel = sessionPanelOrder.find((one) => one === key);
@@ -149,15 +148,11 @@ const phonePanels = new Set<SessionPanel | undefined>(['subagents', 'shells']);
 export function SessionInspector(
   props: SessionInspectorProps,
 ): JSX.Element | null {
-  const { shown } = props.panels.state;
+  const stage = useChangesStage(props.changes);
+  const content = { ...props, changes: stage.changes };
+  const inspector = renderInspector(content, stage);
 
-  const inspector = createElement(
-    Inspector,
-    inspectorProps(props),
-    shownPanel(props)?.body,
-  );
-
-  return phonePanels.has(shown) ? (
+  return phonePanels.has(props.panels.state.shown) ? (
     <SizeClass only="wide">{inspector}</SizeClass>
   ) : (
     inspector
@@ -168,4 +163,23 @@ function shownPanel(props: SessionInspectorProps): PanelContent | undefined {
   const { shown } = props.panels.state;
 
   return shown ? panelContent[shown](props) : undefined;
+}
+
+const changesScroll = (
+  shown: SessionPanel | undefined,
+  stage: ReturnType<typeof useChangesStage>,
+): InspectorProps['scrollState'] =>
+  shown === 'changes' ? stage.scrollState : undefined;
+
+function renderInspector(
+  content: SessionInspectorProps,
+  stage: ReturnType<typeof useChangesStage>,
+): JSX.Element {
+  const scrollState = changesScroll(content.panels.state.shown, stage);
+
+  return createElement(
+    Inspector,
+    { ...inspectorProps(content), scrollState },
+    shownPanel(content)?.body,
+  );
 }
