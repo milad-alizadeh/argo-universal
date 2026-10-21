@@ -5,6 +5,8 @@ export interface FrameGeometry {
   thresholds: { listFold: number; workbenchUndock: number };
   listFolded: boolean;
   workbenchDocked: boolean;
+  workbenchState: 'docked' | 'auto-hidden' | 'floating' | 'hidden';
+  page: PaneSpan;
   rail: PaneSpan;
   list: PaneSpan;
   content: PaneSpan;

@@ -123,7 +123,7 @@ export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
   const widths = useScaffoldWidths();
   const windowWidth = useWindowWidth();
   const [resizing, setResizing] = useState(false);
-  const geometry = scaffoldGeometry({ ...scaffold, ...widths, ...windowWidth });
+  const geometry = geometryOf(scaffold, widths, windowWidth);
 
   return {
     ...geometry,
@@ -132,4 +132,18 @@ export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
     motion: useFrameMotion(geometry, resizing),
     setResizing,
   };
+}
+
+function geometryOf(
+  scaffold: ScaffoldProps,
+  widths: ReturnType<typeof useScaffoldWidths>,
+  windowWidth: WindowWidth,
+): ScaffoldGeometry {
+  return scaffoldGeometry({
+    ...scaffold,
+    ...widths,
+    ...windowWidth,
+    framed: scaffold.sizeClass === 'wide',
+    workbenchAvailable: Boolean(scaffold.band?.workbench),
+  });
 }

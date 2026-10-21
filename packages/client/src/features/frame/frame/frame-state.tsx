@@ -17,7 +17,7 @@ import type { InspectorState } from '../scaffold/scaffold';
 
 interface FrameScaffoldState {
   band?: WindowBandContent | null;
-  workbenchShown: boolean;
+  workbenchShown?: boolean;
   onWorkbenchShownChange: (shown: boolean) => void;
   sidebarShown: boolean;
   onSidebarShownChange: (shown: boolean) => void;
@@ -118,7 +118,7 @@ function useBandState(): Pick<
   'band' | 'workbenchShown' | 'onWorkbenchShownChange'
 > & { bandHost: WindowBandHost } {
   const [bandHost] = useState(createWindowBandHost);
-  const [workbenchShown, onWorkbenchShownChange] = useState(false);
+  const [workbenchShown, onWorkbenchShownChange] = useState<boolean>();
 
   return {
     bandHost,

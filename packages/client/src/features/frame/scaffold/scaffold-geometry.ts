@@ -1,5 +1,6 @@
 import { frameGeometry } from './frame-geometry';
 import type { FrameGeometry } from './frame-geometry-types';
+import { framedGeometry } from './framed-geometry';
 
 // The Inspector: closed, open beside the page, or expanded over it.
 export type InspectorState = 'closed' | 'open' | 'expanded';
@@ -30,6 +31,9 @@ export interface ScaffoldMeasures {
 }
 
 export interface ScaffoldGeometryInput {
+  framed?: boolean;
+  workbenchAvailable?: boolean;
+  workbenchShown?: boolean;
   measures: ScaffoldMeasures;
   width: number;
   preferredListWidth: number;
@@ -151,16 +155,7 @@ function inspectorHandleLeft(
   );
 }
 
-function listHandleLeft(
-  input: ScaffoldGeometryInput,
-  list: ListGeometry,
-): number {
-  return input.measures.inset + input.measures.railWidth + list.shownListWidth;
-}
-
-export function scaffoldGeometry(
-  input: ScaffoldGeometryInput,
-): ScaffoldGeometry {
+function legacyGeometry(input: ScaffoldGeometryInput): ScaffoldGeometry {
   const list = listGeometry(input);
   const inspector = inspectorGeometry(input, list.availableWidth);
 
@@ -168,9 +163,18 @@ export function scaffoldGeometry(
     frame: frameGeometry(input),
     ...list,
     ...inspector,
-    listHandleLeft: listHandleLeft(input, list),
+    listHandleLeft:
+      input.measures.inset + input.measures.railWidth + list.shownListWidth,
     inspectorHandleLeft: inspectorHandleLeft(input, inspector),
     detailRight: list.usableWidth - inspector.inspectorTargetWidth,
     transitionKey: `${input.sidebarShown}:${input.inspectorState}:${inspector.inspectorExpanded}`,
   };
+}
+
+export function scaffoldGeometry(
+  input: ScaffoldGeometryInput,
+): ScaffoldGeometry {
+  const geometry = legacyGeometry(input);
+
+  return input.framed ? framedGeometry(input, geometry) : geometry;
 }

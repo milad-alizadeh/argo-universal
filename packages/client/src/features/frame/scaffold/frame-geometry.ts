@@ -1,8 +1,14 @@
 import type { PaneSpan } from '../utils/pane-shift';
+import { frameContent } from './content-geometry';
 import type { FrameGeometry } from './frame-geometry-types';
 import type { ScaffoldGeometryInput } from './scaffold-geometry';
+import {
+  frameWorkbench,
+  workbenchState,
+  workbenchRegion,
+} from './workbench-geometry';
 
-interface FrameRegions {
+export interface FrameRegions {
   listFolded: boolean;
   workbenchDocked: boolean;
   list: PaneSpan;
@@ -34,10 +40,7 @@ function frameThresholds(
   const foldedWidth = measures.railWidth + measures.inset * 2 + contentMinimum;
 
   const workbenchUndock =
-    foldedWidth +
-    measures.workbenchWidth +
-    measures.paneGap +
-    stageRegion(input);
+    foldedWidth + workbenchRegion(input) + stageRegion(input);
 
   return { listFold: workbenchUndock + listWidth(input), workbenchUndock };
 }
@@ -72,13 +75,6 @@ function frameStage(
   return { offset: input.width - input.measures.inset - width, width };
 }
 
-function workbenchDocked(
-  input: ScaffoldGeometryInput,
-  threshold: number,
-): boolean {
-  return input.inspectorState !== 'expanded' && input.width >= threshold;
-}
-
 function occupiedWidth(width: number, gap: number): number {
   return width > 0 ? width + gap : 0;
 }
@@ -88,7 +84,7 @@ function trailingRegions(
   stage: PaneSpan,
   threshold: number,
 ): Pick<FrameRegions, 'workbenchDocked' | 'workbenchRegion' | 'stageRegion'> {
-  const docked = workbenchDocked(input, threshold);
+  const docked = workbenchState(input, threshold) === 'docked';
 
   return {
     workbenchDocked: docked,
@@ -117,7 +113,7 @@ function frameRegions(
   };
 }
 
-function contentAvailable(
+export function contentAvailable(
   input: ScaffoldGeometryInput,
   regions: FrameRegions,
 ): number {
@@ -132,27 +128,14 @@ function contentAvailable(
   );
 }
 
-function frameContent(
+function framePage(
   input: ScaffoldGeometryInput,
   regions: FrameRegions,
 ): PaneSpan {
-  const available = contentAvailable(input, regions);
-
-  const width = Math.min(
-    available,
-    input.measures.contentMaximum + input.measures.contentGutter * 2,
-  );
-
-  return { offset: regions.contentStart + (available - width) / 2, width };
-}
-
-function frameWorkbench(
-  input: ScaffoldGeometryInput,
-  regions: FrameRegions,
-): PaneSpan {
-  const width = regions.workbenchDocked ? input.measures.workbenchWidth : 0;
-
-  return { offset: input.width - regions.stageRegion - width, width };
+  return {
+    offset: regions.contentStart,
+    width: contentAvailable(input, regions),
+  };
 }
 
 // Additive geometry; existing panes still consume scaffoldGeometry's legacy outputs.
@@ -165,10 +148,26 @@ export function frameGeometry(input: ScaffoldGeometryInput): FrameGeometry {
     thresholds,
     listFolded: regions.listFolded,
     workbenchDocked: regions.workbenchDocked,
+
     rail: { offset: input.measures.inset, width: input.measures.railWidth },
     list: regions.list,
     stage: regions.stage,
-    content: frameContent(input, regions),
-    workbench: frameWorkbench(input, regions),
+    ...contentRegions(input, regions, thresholds.workbenchUndock),
+  };
+}
+
+function contentRegions(
+  input: ScaffoldGeometryInput,
+  regions: FrameRegions,
+  threshold: number,
+): Pick<FrameGeometry, 'workbenchState' | 'page' | 'content' | 'workbench'> {
+  const page = framePage(input, regions);
+  const state = workbenchState(input, threshold);
+
+  return {
+    page,
+    workbenchState: state,
+    content: frameContent(input, page),
+    workbench: frameWorkbench(input, regions.stageRegion, state),
   };
 }
