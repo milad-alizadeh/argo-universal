@@ -1,4 +1,4 @@
-import type * as React from 'react';
+import { useCallback, type RefObject, type JSX } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
@@ -9,6 +9,7 @@ export type ScrollFadeViewProps = ScrollViewProps &
   ScrollFadeOptions & {
     // Grows with its content up to the max height in `className`, then scrolls; otherwise it fills its parent. A horizontal one always fits its content's height.
     fitContent?: boolean;
+    ref?: RefObject<ScrollView | null>;
   };
 
 interface Sizing {
@@ -49,14 +50,31 @@ const sizing = ({ fitContent, horizontal, className }: SizingProps): Sizing =>
 export function ScrollFadeView({
   className,
   fitContent,
+  ref,
   ...props
-}: ScrollFadeViewProps): React.JSX.Element {
+}: ScrollFadeViewProps): JSX.Element {
   const { frame, scroll, attachScrollView } = useScrollFade(props);
   const classNames = sizing({ ...props, fitContent, className });
 
+  const attach = useScrollRef(attachScrollView, ref);
+
   return (
     <ScrollFadeFrame {...frame} className={classNames.frame}>
-      <ScrollView {...scroll} {...classNames.scroll} ref={attachScrollView} />
+      <ScrollView {...scroll} {...classNames.scroll} ref={attach} />
     </ScrollFadeFrame>
+  );
+}
+
+function useScrollRef(
+  attach: ((view: ScrollView | null) => void) | undefined,
+  ref: RefObject<ScrollView | null> | undefined,
+): (view: ScrollView | null) => void {
+  return useCallback(
+    (view) => {
+      attach?.(view);
+
+      if (ref) ref.current = view;
+    },
+    [attach, ref],
   );
 }
