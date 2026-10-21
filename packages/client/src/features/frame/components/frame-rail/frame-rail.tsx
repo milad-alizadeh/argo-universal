@@ -93,7 +93,7 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
   );
 });
 
-// The sections scroll once Plugins add more than the window holds; the sidebar toggle stays at the foot.
+// The sections scroll once Plugins add more than the window holds.
 function RailSections(props: DesktopRailProps): React.JSX.Element {
   const tiles = props.items.map((section) => (
     <SectionButton key={section.id} {...railSectionProps(section, props)} />
@@ -106,7 +106,7 @@ function RailSections(props: DesktopRailProps): React.JSX.Element {
   return (
     <View className="min-h-0 flex-1 self-stretch">
       <ScrollView accessibilityLabel="Sections">
-        <View className={cn('items-center pb-2', column)}>{tiles}</View>
+        <View className={cn('items-center', column)}>{tiles}</View>
       </ScrollView>
     </View>
   );
@@ -124,29 +124,6 @@ function railSectionProps(
   };
 }
 
-const sidebarToggleLook = {
-  icon: 'sidebar',
-  iconRole: 'nav',
-  iconClassName: 'text-muted-foreground',
-  iconWeight: railIconWeight,
-  size: 'lg',
-  variant: 'ghost',
-  className: railTiles.corners,
-} as const;
-
-function SidebarToggle({
-  sidebarShown,
-  onSidebarShownChange,
-}: DesktopRailProps): React.JSX.Element {
-  return (
-    <IconButton
-      {...sidebarToggleLook}
-      accessibilityLabel={`${sidebarShown ? 'Hide' : 'Show'} sidebar`}
-      onPress={() => onSidebarShownChange(!sidebarShown)}
-    />
-  );
-}
-
 // A tablet's separator starts level with the first tile; the desktop's tinted rail needs none (Paper Variant B).
 function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
   if (!props.sidebarShown) return null;
@@ -159,17 +136,14 @@ function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
   );
 }
 
-// The wide window's rail on the glass: the shared top bar's window controls above it, then the sections, and the sidebar toggle at the bottom. The glass draws its tint.
+// The desktop tiles keep the same 8px inset at the top and sides of the glass panel.
 export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
   return (
     <View
       testID="desktop-rail"
-      className="relative w-frame-rail shrink-0 items-center pb-2 native:pt-4"
+      className="relative w-frame-rail shrink-0 items-center web:pt-2"
     >
-      {/* The shared top bar: Electron draws the traffic lights here, and the window drags by it; a tablet has no window controls, so its first tile sits inset from the rail's top edge by 16. */}
-      <View className="hidden h-frame-control self-stretch web:flex web:[app-region:drag]" />
       <RailSections {...props} />
-      {props.hasSidebar ? <SidebarToggle {...props} /> : null}
       <RailEdge sidebarShown={props.sidebarShown} />
     </View>
   );

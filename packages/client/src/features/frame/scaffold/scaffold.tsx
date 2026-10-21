@@ -27,7 +27,7 @@ export {
 const pagePlacement = ({ layout, framed }: ScaffoldParts): PanePlacement =>
   framed
     ? {
-        offset: layout.shownListWidth,
+        offset: layout.frame.page.offset,
         width: layout.detailWidth,
         hidden: layout.inspectorExpanded,
         ...layout.motion,

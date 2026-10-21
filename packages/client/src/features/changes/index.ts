@@ -10,3 +10,5 @@ export type {
   ChangesBranches,
   ChangesViewProps,
 } from './view/changes-view-props';
+
+export { useChangesStage } from './view/use-changes-stage';

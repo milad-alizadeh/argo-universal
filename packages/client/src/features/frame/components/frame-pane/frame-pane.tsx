@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { bezierEasing } from '#lib/generic/bezier-easing';
+import { Surface } from '#primitives/layout/surface';
 import type { FrameTiming } from '../../utils/frame-timing';
 import { type PaneSpan, paneShift } from '../../utils/pane-shift';
 import { useStableContentWidth } from './stable-content-width';
@@ -23,6 +24,8 @@ export interface FramePaneProps {
   animate?: boolean;
   timing: FrameTiming;
   children: ReactNode;
+  // The window owns a glass pane's material; its content clips inside the material's shadow.
+  surface?: 'glass';
 }
 
 type AnimatedViewStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
@@ -130,6 +133,32 @@ function PaneContent(props: PaneContentProps): React.JSX.Element {
   );
 }
 
+type PaneDrawingProps = PaneContentProps & Pick<FramePaneProps, 'surface'>;
+
+function PaneClip({ surface, ...props }: PaneDrawingProps): React.JSX.Element {
+  const className = surface
+    ? 'flex-1 overflow-hidden rounded-2xl'
+    : 'flex-1 overflow-hidden';
+
+  return (
+    <View className={className}>
+      <PaneContent {...props} />
+    </View>
+  );
+}
+
+function PaneMaterial(props: PaneDrawingProps): React.JSX.Element {
+  const content = <PaneClip {...props} />;
+
+  return props.surface ? (
+    <Surface kind={props.surface} fill>
+      {content}
+    </Surface>
+  ) : (
+    content
+  );
+}
+
 export function FramePane(props: FramePaneProps): React.JSX.Element {
   const { widthStyle, shiftStyle } = usePaneStyles(props);
 
@@ -139,9 +168,7 @@ export function FramePane(props: FramePaneProps): React.JSX.Element {
       style={widthStyle}
       {...hiddenPaneProps(props.hidden)}
     >
-      <View className="flex-1 overflow-hidden">
-        <PaneContent {...props} shiftStyle={shiftStyle} />
-      </View>
+      <PaneMaterial {...props} shiftStyle={shiftStyle} />
     </Animated.View>
   );
 }

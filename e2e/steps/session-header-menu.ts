@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
+import { onPhone } from './frame';
 import { sessionWithStatus } from './live-session';
 
 // ⋯ in the open Session's header.
@@ -44,7 +45,9 @@ When(
 // A phone goes back to its list; a wide Frame shows the list beside New Session.
 Then('no Session page is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions(\/new)?$/);
-  await expect(
-    page.getByRole('button', { name: 'More', exact: true }),
-  ).toHaveCount(0);
+  const more = page.getByRole('button', { name: 'More', exact: true });
+
+  await (onPhone(page)
+    ? expect(more).toHaveCount(0)
+    : expect(more).toBeDisabled());
 });

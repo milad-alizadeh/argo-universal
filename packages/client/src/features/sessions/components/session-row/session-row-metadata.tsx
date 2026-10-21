@@ -1,12 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
-import {
-  pullRequestAppearance,
-  type PullRequestIndicatorProps,
-} from '../pull-request-indicator/pull-request-indicator';
+import { ChangeStage } from '../change-stage/change-stage';
 import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
 import { sidebarRows } from './session-row-sidebar';
@@ -16,23 +12,9 @@ export type { SessionRowMetadataProps } from './session-row-metadata-props';
 function PullRequestLabel({
   pullRequest,
 }: Pick<SessionRowMetadataProps, 'pullRequest'>): React.ReactNode {
-  return pullRequest ? <Label {...pullRequestLabelProps(pullRequest)} /> : null;
-}
-
-// A sidebar row's PR number is medium in its state's colour (Paper "SessionsList").
-function pullRequestLabelProps({
-  number,
-  status,
-}: PullRequestIndicatorProps): React.ComponentProps<typeof Label> {
-  return {
-    testID: 'session-pull-request-slot',
-    icon: pullRequestAppearance[status].icon,
-    text: `#${number}`,
-    tone: pullRequestAppearance[status].tone,
-    accessibilityLabel: `${status} PR #${number}`,
-    sidebar: sidebarRows,
-    emphasized: sidebarRows,
-  };
+  return pullRequest ? (
+    <ChangeStage {...pullRequest} testID="session-pull-request-slot" />
+  ) : null;
 }
 
 function archivedContent({
@@ -66,7 +48,7 @@ function hasMetadata({
   ].some(Boolean);
 }
 
-// The time, the PR, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList").
+// The time, the Change, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList").
 export function sessionMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {

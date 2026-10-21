@@ -66,7 +66,7 @@ async function expectRunning(page: Page): Promise<void> {
 
 Then(
   /^the changed-files entry shows (\d+) files? while the Turn runs$/,
-  async ({ page }, count: string) => {
+  async ({ page }, count: number) => {
     await expectRunning(page);
     await capture(page, `changed-files-${count}-before-entry`);
     await expectEntry(page, count);
@@ -75,17 +75,32 @@ Then(
   },
 );
 
-async function expectEntry(page: Page, count: string): Promise<void> {
+async function expectEntry(page: Page, count: number): Promise<void> {
   if (onPhone(page)) return expectPhoneEntry(page, count);
 
+  await expectDesktopEntry(page, count);
+}
+
+async function expectDesktopEntry(page: Page, count: number): Promise<void> {
+  const workbench = page.getByTestId('session-workbench');
+
+  const changes = workbench.getByRole('button', {
+    name: 'Open Changes overview',
+  });
+
+  await expect(page.getByTestId('desktop-workbench')).toBeVisible();
+  await expect(workbench).toBeAttached();
+
+  if (count === 0) return expect(changes).toHaveCount(0);
+
   await expect(
-    page.getByRole('button', {
-      name: new RegExp(`^Changed files · ${count}(?:,|$)`),
-    }),
+    page
+      .getByTestId('workbench-changes')
+      .getByText(`${count} files`, { exact: true }),
   ).toBeVisible();
 }
 
-async function expectPhoneEntry(page: Page, count: string): Promise<void> {
+async function expectPhoneEntry(page: Page, count: number): Promise<void> {
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await expect(
     page.getByRole('menuitem', {
@@ -109,11 +124,20 @@ export async function openChangedFiles(page: Page): Promise<void> {
     await page
       .getByRole('menuitem', { name: 'Changed files · 1', exact: true })
       .click();
-  } else {
-    await page
-      .getByRole('button', { name: /^Changed files · 1(?:,|$)/ })
-      .click();
-  }
+  } else await openStageFile(page);
+}
+
+async function openStageFile(page: Page): Promise<void> {
+  await page
+    .getByTestId('session-workbench')
+    .getByRole('button', { name: 'Open Changes overview' })
+    .click();
+  await expect(
+    page.getByText('1 file · 0 viewed', { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Diff for greeting.txt', exact: true })
+    .click();
 }
 
 Then(

@@ -6,8 +6,8 @@ export const railTiles: RailTiles = {
   size: 'md',
   corners: '',
   selected: 'bg-selected',
-  column: 'gap-1 pt-1.5',
-  collapsedColumn: 'gap-1 pt-2',
+  column: 'gap-1',
+  collapsedColumn: 'gap-1',
 };
 
 // The selected tile's fill is the `bg-selected` class.

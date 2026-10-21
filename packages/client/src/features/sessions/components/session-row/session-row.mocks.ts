@@ -52,20 +52,20 @@ export const paperSessionRows: SessionInfo[] = [
 
 export const paperSessionMetadata = {
   'session-plan': {
-    pullRequest: { number: 45, status: 'open' },
+    pullRequest: { number: 45, stage: 'open' },
     age: '4m',
   },
   'session-needs-input': {
-    pullRequest: { number: 45, status: 'open' },
+    pullRequest: { number: 45, stage: 'open' },
     age: '3m',
   },
   'session-failed': {
     subagentsFailed: true,
-    pullRequest: { number: 40, status: 'closed' },
+    pullRequest: { number: 40, stage: 'closed' },
     age: '1h',
   },
   'session-idle': {
-    pullRequest: { number: 44, status: 'merged' },
+    pullRequest: { number: 44, stage: 'merged' },
     age: '2h',
   },
   'session-unread': { age: '12m' },

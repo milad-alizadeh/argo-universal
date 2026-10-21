@@ -1,107 +1,69 @@
-import type * as React from 'react';
-import { useState } from 'react';
+import type { ReactElement } from 'react';
+import { Text } from '#primitives/content/text';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
-import { defaultMergeMethod, type MergeMethod } from '../stores/merge-method';
-import {
-  SessionHeaderActions,
-  type SessionHeaderActionsProps,
-} from './session-header-actions';
+import { WindowBand } from '../../../lib/product/window-band';
 import { SessionHeaderBar } from './session-header-bar';
-import { SessionHeaderTitle } from './session-header-meta';
+import { SessionHeaderMenu } from './session-header-menu';
 import type { SessionHeaderProps } from './session-header-props';
-import type { SessionPullRequest } from './session-pull-request';
+import { WorkbenchColumn } from './workbench-column';
 
 export type {
   SessionHeaderProps,
   SessionHeaderStatus,
 } from './session-header-props';
 
-type ShownPullRequest = [
-  SessionPullRequest | undefined,
-  (number: number) => void,
-];
-
-// The PR the header shows: the first one until the "+n PR" menu picks another.
-function useShownPullRequest(
-  pullRequests: SessionPullRequest[],
-): ShownPullRequest {
-  const [picked, setPicked] = useState<number>();
-
-  const shown =
-    pullRequests.find((pullRequest) => pullRequest.number === picked) ??
-    pullRequests.at(0);
-
-  return [shown, setPicked];
-}
-
-type MergeMethodChoice = Pick<
-  SessionHeaderActionsProps,
-  'method' | 'onMethodChange'
->;
-
-// The merge method Merge PR runs: the one picked here, else the device's last, else squash.
-function useMergeMethodChoice(
-  props: Pick<SessionHeaderProps, 'mergeMethod' | 'onMergeMethodChange'>,
-): MergeMethodChoice {
-  const [picked, setPicked] = useState<MergeMethod>();
-
-  const onMethodChange = (method: MergeMethod): void => {
-    setPicked(method);
-    props.onMergeMethodChange?.(method);
-  };
-
-  return {
-    method: picked ?? props.mergeMethod ?? defaultMergeMethod,
-    onMethodChange,
-  };
-}
-
-interface WideSessionHeaderProps extends SessionHeaderProps {
-  pullRequests: SessionPullRequest[];
-  shownPullRequest: ShownPullRequest;
-  mergeChoice: MergeMethodChoice;
-}
-
-function WideSessionHeader({
-  shownPullRequest: [shown, show],
-  mergeChoice,
-  onMerge,
-  menu,
-  ...props
-}: WideSessionHeaderProps): React.JSX.Element {
-  const actions = { ...mergeChoice, onMerge, menu, shown };
-
+function HeaderTitle({
+  title,
+}: Pick<SessionHeaderProps, 'title'>): ReactElement {
   return (
-    <SessionHeaderBar
-      title={<SessionHeaderTitle {...props} shown={shown} onShow={show} />}
-      actions={<SessionHeaderActions {...actions} panels={props.panels} />}
-    />
+    <Text
+      role="heading"
+      accessibilityRole="heading"
+      aria-level={2}
+      numberOfLines={1}
+    >
+      {title}
+    </Text>
   );
 }
 
-// A phone gets the native stack's own header, which the Session's screen names: the plain title, its back button and the Session's menu. Wide draws its SessionHeaderBar with a one-line title, the meta line (status, one PR, its checks) and the actions.
-export function SessionHeader(props: SessionHeaderProps): React.JSX.Element {
-  const state = useWideHeaderState(props);
+function headerMenu({ menu }: SessionHeaderProps): ReactElement | undefined {
+  return menu ? <SessionHeaderMenu menu={menu} reserved /> : undefined;
+}
 
+function headerWorkbench({
+  panels,
+}: SessionHeaderProps): ReactElement | undefined {
+  return panels ? <WorkbenchColumn panels={panels} /> : undefined;
+}
+
+function stageToggle({ panels }: SessionHeaderProps): (() => void) | undefined {
+  if (!panels) return undefined;
+
+  return () => (panels.onSelect ?? panels.onToggle)('changes');
+}
+
+// In a framed Session, the window owns the title, menu and overview; the Feed has no local header.
+function WideSessionHeader(props: SessionHeaderProps): ReactElement {
+  const title = <HeaderTitle title={props.title} />;
+  const menu = headerMenu(props);
+
+  return (
+    <WindowBand
+      title={title}
+      menu={menu}
+      workbench={headerWorkbench(props)}
+      onStageToggle={stageToggle(props)}
+    >
+      <SessionHeaderBar title={title} actions={menu} />
+    </WindowBand>
+  );
+}
+
+export function SessionHeader(props: SessionHeaderProps): ReactElement {
   return (
     <SizeClass only="wide">
-      <WideSessionHeader {...props} {...state} />
+      <WideSessionHeader {...props} />
     </SizeClass>
   );
-}
-
-type WideHeaderState = Pick<
-  WideSessionHeaderProps,
-  'pullRequests' | 'shownPullRequest' | 'mergeChoice'
->;
-
-// What the wide header keeps between renders: the PR it shows and the merge method Merge PR runs.
-function useWideHeaderState(props: SessionHeaderProps): WideHeaderState {
-  const pullRequests = props.pullRequests ?? [];
-
-  return {
-    pullRequests,
-    shownPullRequest: useShownPullRequest(pullRequests),
-    mergeChoice: useMergeMethodChoice(props),
-  };
 }

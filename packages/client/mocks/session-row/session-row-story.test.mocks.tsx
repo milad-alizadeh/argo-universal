@@ -43,13 +43,13 @@ export function metadata(width: number): Story {
   return {
     render: (args) => (
       <>
-        {(['open', 'draft', 'merged', 'conflict', 'closed'] as const).map(
-          (status) => (
+        {(['working', 'branch', 'open', 'merged', 'closed'] as const).map(
+          (stage) => (
             <SessionRow
               {...args}
-              key={status}
-              session={{ ...args.session, title: `${status} metadata` }}
-              pullRequest={{ number: 45, status }}
+              key={stage}
+              session={{ ...args.session, title: `${stage} metadata` }}
+              pullRequest={{ number: 45, stage }}
             />
           ),
         )}
@@ -58,8 +58,10 @@ export function metadata(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
 
-      for (const status of ['open', 'draft', 'merged', 'conflict', 'closed']) {
-        await expect(canvas.getByLabelText(`${status} PR #45`)).toBeVisible();
+      for (const stage of ['Working', 'Branch', 'Open', 'Merged', 'Closed']) {
+        const label = `${stage} Change #45`;
+
+        await expect(canvas.getByLabelText(label)).toBeVisible();
       }
 
       await expect(canvas.queryByLabelText(/^Issue #/)).not.toBeInTheDocument();
@@ -120,7 +122,6 @@ export const statusParity: Story = {
   },
 };
 
-// Only a Session that is not idle ends its row with a status dot; the web's Compact sidebar row ends every row on one.
 const dotted = (
   layout: SessionsLayout,
 ): Record<(typeof states)[number][0], boolean> => ({

@@ -3,13 +3,13 @@ import { View } from 'react-native';
 import { SegmentedControl } from '#primitives/inputs/segmented-control';
 
 const segments = [
-  { value: 'pr', label: 'PR', disabled: true },
-  { value: 'files', label: 'File changes' },
+  { value: 'change', label: 'Change', disabled: true },
+  { value: 'files', label: 'Files' },
 ];
 
 const stayOnFiles = (): void => {};
 
-// Paper / Changes sheet. PR stays unavailable until the Session supplies its PR panel.
+// Paper / Changes sheet. Change stays unavailable until the Session supplies its Change panel.
 export function ChangesSheetHeader(): ReactElement {
   return (
     <View className="px-4 pb-2">

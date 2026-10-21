@@ -301,12 +301,12 @@ A kit component that arranges a screen's panes for its Size class, such as list 
 _Avoid_: Layout (for a whole screen), template
 
 **Workbench**:
-The column beside a Session's Feed that gives an overview of what is happening in it, one summary card per section: Changes, Agents, Shells, and the cards Plugins add through a Slot. A card carries a count or a total and no list; pressing it opens that section's full view as a Stage tab. Its Agents card counts the Agents the Session started, not the Installed Agents. Phones reach the same cards without the column. See ADR-0039.
+The column beside a Session's Feed with summary cards for its sections, including Plugin cards. Cards show counts, totals and bounded previews; their bodies or items open full Inspector tabs, also reachable on phones.
 _Avoid_: Inspector, right panel, second sidebar
 
-**Stage**:
-The surface that shows a Workbench card's section in full, as a Stage tab. A tab lists the section's items — the Session's Changes, the Agents it started, its Shells — and a row opens that item's detail in the same tab, such as a Change's diff, an Agent's Feed or a Shell's output. A card opens the tab and the Workbench stays.
-_Avoid_: Inspector, detail pane, viewer
+**Inspector**:
+The surface that shows a Workbench card's section in full, with a tab for its list and item details. Details include a Change's diff, an Agent's Feed or a Shell's output; the Workbench stays open beside it.
+_Avoid_: Stage, detail pane, viewer
 
 **Surface**:
 A named background a kit component draws on: `background`, `card`, `muted` or `glass`, with its fill, radius and depth. There is no overlay kind; overlays draw their own.

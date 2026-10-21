@@ -1,3 +1,7 @@
+import { frameGeometry } from './frame-geometry';
+import type { FrameGeometry } from './frame-geometry-types';
+import { framedGeometry } from './framed-geometry';
+
 // The Inspector: closed, open beside the page, or expanded over it.
 export type InspectorState = 'closed' | 'open' | 'expanded';
 
@@ -18,14 +22,24 @@ export interface ScaffoldMeasures {
   inset: number;
   // The shared top bar across the rail and the list, where the window controls sit.
   barHeight: number;
+  topBandHeight: number;
+  workbenchWidth: number;
+  paneGap: number;
+  composerWidth: number;
+  contentGutter: number;
+  contentMaximum: number;
 }
 
 export interface ScaffoldGeometryInput {
+  framed?: boolean;
+  workbenchAvailable?: boolean;
+  workbenchShown?: boolean;
   measures: ScaffoldMeasures;
   width: number;
   preferredListWidth: number;
   preferredInspectorWidth: number;
   sidebarShown: boolean;
+  sidebarRequested?: boolean;
   inspectorState: InspectorState;
 }
 
@@ -45,6 +59,7 @@ interface InspectorGeometry {
 }
 
 export interface ScaffoldGeometry extends ListGeometry, InspectorGeometry {
+  frame: FrameGeometry;
   listHandleLeft: number;
   inspectorHandleLeft: number;
   detailRight: number;
@@ -141,13 +156,12 @@ function inspectorHandleLeft(
   );
 }
 
-export function scaffoldGeometry(
-  input: ScaffoldGeometryInput,
-): ScaffoldGeometry {
+function legacyGeometry(input: ScaffoldGeometryInput): ScaffoldGeometry {
   const list = listGeometry(input);
   const inspector = inspectorGeometry(input, list.availableWidth);
 
   return {
+    frame: frameGeometry(input),
     ...list,
     ...inspector,
     listHandleLeft:
@@ -156,4 +170,12 @@ export function scaffoldGeometry(
     detailRight: list.usableWidth - inspector.inspectorTargetWidth,
     transitionKey: `${input.sidebarShown}:${input.inspectorState}:${inspector.inspectorExpanded}`,
   };
+}
+
+export function scaffoldGeometry(
+  input: ScaffoldGeometryInput,
+): ScaffoldGeometry {
+  const geometry = legacyGeometry(input);
+
+  return input.framed ? framedGeometry(input, geometry) : geometry;
 }

@@ -2,6 +2,8 @@ type IconPixels = 6 | 12 | 14 | 16 | 20 | 22 | 24;
 
 // Where an icon sits decides its size. Text is a step larger on the phone, so an icon beside text steps up with it.
 export const iconRoles = {
+  // The window band's pane toggles and menu.
+  band: { wide: 16, phone: 16 },
   // Inside a small corner disc on a tile, such as an attachment's Remove.
   badge: { wide: 6, phone: 6 },
   // Beside Body text.

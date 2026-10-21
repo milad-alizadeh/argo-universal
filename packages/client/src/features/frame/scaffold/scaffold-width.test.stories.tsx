@@ -14,7 +14,6 @@ import { settleViewport } from '../../../lib/generic/settle-viewport';
 import {
   pressInspectorButton,
   resizeInspectorLabel,
-  toggleSidebar,
 } from './scaffold-controls.mocks';
 import {
   controlledPlay,
@@ -48,25 +47,9 @@ async function expectSessionLabel(canvas: Canvas): Promise<void> {
   ).toBeVisible();
 }
 
-async function waitForSessionLabelGone(canvas: Canvas): Promise<void> {
-  await waitFor(() =>
-    expect(
-      canvas.queryByText('session', { exact: true }),
-    ).not.toBeInTheDocument(),
-  );
-}
-
 async function waitUntilWide(content: HTMLElement): Promise<void> {
   await waitFor(() =>
     expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(
-      contentWideMin(),
-    ),
-  );
-}
-
-async function waitUntilNarrow(content: HTMLElement): Promise<void> {
-  await waitFor(() =>
-    expect(content.getBoundingClientRect().width).toBeLessThan(
       contentWideMin(),
     ),
   );
@@ -103,27 +86,31 @@ export const MainContentUsesAvailableWidth: ScaffoldStory = {
     await waitForAllow(canvas);
     await expectSessionLabel(canvas);
     await controlled.render({ inspectorState: 'open' });
-    await waitForSessionLabelGone(canvas);
+    // The list folds first, and the Stage resize limit then protects the column floor.
+    await waitUntilWide(content);
+    await expectSessionLabel(canvas);
+    await expect(canvas.getByTestId('desktop-list')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+    canvas.getByRole('separator', { name: resizeInspectorLabel }).focus();
+    await userEvent.keyboard('{ArrowLeft}'.repeat(40));
+    await waitUntilWide(content);
+    await expectSessionLabel(canvas);
     await waitForAllow(canvas);
-    await waitForSessionLabelGone(canvas);
     await expect(
       allow(canvas).getBoundingClientRect().right,
     ).toBeLessThanOrEqual(content.getBoundingClientRect().right);
-    await toggleSidebar(context, controlled, false);
+    await userEvent.keyboard('{ArrowRight}'.repeat(40));
     await waitUntilWide(content);
     await waitForAllow(canvas);
     await expectSessionLabel(canvas);
-    canvas.getByRole('separator', { name: resizeInspectorLabel }).focus();
-    await userEvent.keyboard('{ArrowLeft}'.repeat(20));
-    await waitUntilNarrow(content);
-    await waitForAllow(canvas);
-    await userEvent.keyboard('{ArrowRight}'.repeat(20));
-    await waitUntilWide(content);
-    await waitForAllow(canvas);
-    await toggleSidebar(context, controlled, true);
-    await waitForAllow(canvas);
     await pressInspectorButton(context, controlled, 'closed');
     await waitForAllow(canvas);
+    await expect(canvas.getByTestId('desktop-list')).toHaveAttribute(
+      'aria-hidden',
+      'false',
+    );
     await expect(window.innerWidth).toBe(narrowDesktopWidth);
   }),
 };

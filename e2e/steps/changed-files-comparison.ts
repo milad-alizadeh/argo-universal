@@ -5,17 +5,27 @@ import { When } from './fixtures';
 import { onPhone } from './frame';
 
 When("I review the Frame's file comparison", async ({ page }) => {
-  await (onPhone(page) ? inspectPhoneSheet(page) : compareAgainstRemote(page));
+  await (onPhone(page)
+    ? inspectPhoneSheet(page)
+    : reviewDesktopComparison(page));
 });
+
+async function reviewDesktopComparison(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await compareAgainstRemote(page);
+  await page
+    .getByRole('button', { name: 'Diff for greeting.txt', exact: true })
+    .click();
+}
 
 // Paper's phone Git sheet contains the panels, without a separate title or comparison bar.
 async function inspectPhoneSheet(page: Page): Promise<void> {
   await openChangedFiles(page);
   await expect(
-    page.getByRole('button', { name: 'File changes', pressed: true }),
+    page.getByRole('button', { name: 'Files', pressed: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'PR', exact: true }),
+    page.getByRole('button', { name: 'Change', exact: true }),
   ).toBeDisabled();
   await expectNoExtraHeader(page);
 }

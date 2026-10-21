@@ -7,7 +7,7 @@ export const ListTitle = memo(function ListTitle(props: { children: string }) {
     <Text
       accessibilityRole="heading"
       aria-level={2}
-      role="heading"
+      role="title"
       numberOfLines={1}
     >
       {props.children}
