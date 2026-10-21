@@ -21,13 +21,16 @@ export async function registerPlugin(
   bridge: ArgoBridge,
   clock?: PluginClock,
 ): Promise<PluginInboxes> {
-  const { context, inboxes, modules } = createPluginRealm(
+  const { context, inboxes, modules, validateBackground } = createPluginRealm(
     bridge,
     await bundleKit(),
     clock,
   );
 
   await bootstrap(context, new PluginModules(entry, context, modules));
+
+  if (entry.backgroundPath !== undefined)
+    validateBackground(entry.backgroundPath);
 
   return inboxes;
 }

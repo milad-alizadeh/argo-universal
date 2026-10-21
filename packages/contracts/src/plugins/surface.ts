@@ -24,5 +24,6 @@ export const drawsPluginWire = (surface: PluginSurface | undefined): boolean =>
 
 // Render context belongs to one App; legacy Connections did not report a surface.
 export type PluginRenderContext = Readonly<{
+  projectId?: string;
   surface?: Readonly<PluginSurface>;
 }>;

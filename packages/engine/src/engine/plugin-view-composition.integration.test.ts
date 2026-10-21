@@ -2,7 +2,7 @@ import {
   counterSnapshot,
   counterTapPatch,
 } from '@repo/contracts/plugins/wire-fixtures';
-import { expect, it } from 'vitest';
+import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
@@ -99,30 +99,35 @@ it.each([
   20_000,
 );
 
-it('refuses className on a Plugin component by reporting that Plugin as crashed', async () => {
+it('refuses className on a Plugin component with a local drawing failure', async () => {
   const home = await createRuntimePlugins([
     { id: 'styled', fixture: 'class-name' },
   ]);
 
   const { caller, createCaller } = await startEngineTestHost({ home });
   const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const watching = createCaller({ signal: controller.signal });
+  const failures = (await watching.plugins.failures())[Symbol.asyncIterator]();
+  expect((await failures.next()).value).toEqual([]);
 
-  const view = await createCaller({ signal: controller.signal }).plugins.view({
+  const view = await watching.plugins.view({
     pluginId: 'styled',
     path: '/',
   });
 
-  void view[Symbol.asyncIterator]().next();
-
-  await expect
-    .poll(() => caller.plugins.list(), { timeout: 10_000 })
-    .toMatchObject({
-      plugins: [
-        {
-          state: 'crashed',
-          error: 'Text: className is not allowed on Plugin components',
-        },
-      ],
-    });
+  expect(await view[Symbol.asyncIterator]().next()).toMatchObject({
+    done: true,
+  });
+  expect((await failures.next()).value).toMatchObject([
+    {
+      pluginId: 'styled',
+      kind: 'drawing',
+      message: 'Text: className is not allowed on Plugin components',
+    },
+  ]);
+  expect(await caller.plugins.list()).toMatchObject({
+    plugins: [{ state: 'running', error: null }],
+  });
   controller.abort();
 }, 20_000);

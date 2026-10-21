@@ -28,6 +28,7 @@ it.each([
     expect(failure).toEqual([
       {
         pluginId: 'bad',
+        kind: 'stopped',
         name: 'Fixture hello',
         message,
         key: expect.any(String),

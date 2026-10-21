@@ -1,4 +1,4 @@
-import type { PatchOp, PatchStep, WireNode } from './wire';
+import type { PatchOp, PatchStep, ViewMessage, WireNode } from './wire';
 
 function collection(node: WireNode, slot?: string): WireNode[] {
   return slot === undefined ? node.children : (node.slots[slot] ?? []);
@@ -107,6 +107,16 @@ function applyOp(root: WireNode, op: PatchOp): WireNode {
 // Applies a patch without mutating the snapshot the App already holds.
 export function applyPatch(root: WireNode, ops: readonly PatchOp[]): WireNode {
   return ops.reduce(applyOp, root);
+}
+
+// One message folded onto the tree the reader already holds: a snapshot replaces it, a patch edits it.
+export function nextRoot(
+  root: WireNode | null,
+  message: ViewMessage,
+): WireNode | null {
+  if (message.type === 'snapshot') return message.root;
+
+  return root && applyPatch(root, message.ops);
 }
 
 interface LocatedChild {

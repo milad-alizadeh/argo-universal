@@ -1,6 +1,6 @@
 import type { RenderFailureInput } from '@repo/contracts/plugins/replaceable';
 import type { OpenView } from './open-view';
-import { renderFallbackLine } from './render-fallback';
+import { fallbackKey, logOnce, renderFallbackLine } from './render-fallback';
 
 export function reportDrawingFailure(
   view: OpenView | undefined,
@@ -19,7 +19,12 @@ function reportOwnedDrawing(
   if (!ownsDrawing(view, input)) return;
   const slotId = view.opening.renderSlot;
 
-  if (slotId) log(renderFallbackLine(view.pluginId, slotId, input.reason));
+  if (slotId)
+    logOnce(
+      log,
+      fallbackKey('drawing', view.pluginId, slotId),
+      renderFallbackLine(view.pluginId, slotId, input.reason),
+    );
 }
 
 const ownsDrawing = (view: OpenView, input: RenderFailureInput): boolean =>

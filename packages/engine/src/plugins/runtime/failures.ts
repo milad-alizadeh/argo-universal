@@ -4,14 +4,13 @@ import {
   PluginFailure,
   type PluginStatus,
 } from '@repo/contracts/plugins/runtime';
-import type { z } from 'zod';
+import { DrawingFailures, type PluginIdentity } from './drawing-failures';
 
 type FailureEvents = EventEmitter<{ change: [PluginFailure[]]; close: [] }>;
 
-type PluginIdentity = Pick<z.input<typeof PluginFailure>, 'pluginId' | 'name'>;
-
 export class PluginFailures {
-  private readonly current = new Map<string, PluginFailure>();
+  private readonly stopped = new Map<string, PluginFailure>();
+  private readonly drawings = new DrawingFailures();
   private readonly events: FailureEvents = new EventEmitter();
 
   public constructor() {
@@ -20,18 +19,59 @@ export class PluginFailures {
   }
 
   public update(plugin: PluginIdentity, status: PluginStatus): void {
-    if (status.state === 'crashed') {
-      this.current.set(plugin.pluginId, createFailure(plugin, status));
-    } else if (!this.current.delete(plugin.pluginId)) return;
+    if (this.replace(plugin, status)) this.changed();
+  }
 
-    this.events.emit('change', [...this.current.values()]);
+  // A stopped Plugin outranks its views' drawing failures and takes their place.
+  private replace(plugin: PluginIdentity, status: PluginStatus): boolean {
+    if (status.state !== 'crashed') return this.stopped.delete(plugin.pluginId);
+    this.stopped.set(plugin.pluginId, createFailure(plugin, status));
+    this.drawings.end(plugin.pluginId);
+
+    return true;
+  }
+
+  public drawing(
+    plugin: PluginIdentity,
+    opening: string,
+    message: string,
+  ): void {
+    if (this.stopped.has(plugin.pluginId)) return;
+
+    if (this.drawings.failed(plugin, opening, message)) this.changed();
+  }
+
+  // A deactivated Plugin has no Opening left to draw, and its views were removed without drawing.
+  public ended(pluginId: string): void {
+    if (this.drawings.end(pluginId)) this.changed();
+  }
+
+  /*
+   * An Opening's drawing failure goes when a view for it draws, and when the App stops asking for it.
+   * Another Opening of the same Plugin clears nothing, and the viewId a reload mints keeps the Opening.
+   */
+  public cleared(opening: string): void {
+    if (this.drawings.cleared(opening)) this.changed();
+  }
+
+  private changed(): void {
+    this.events.emit('change', this.snapshot());
+  }
+
+  private snapshot(): PluginFailure[] {
+    return [
+      ...this.stopped.values(),
+      ...this.drawings
+        .rollup()
+        .filter((failure) => !this.stopped.has(failure.pluginId)),
+    ];
   }
 
   public async *watch(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
     const stream = on(this.events, 'change', { signal, close: ['close'] });
 
     try {
-      yield [...this.current.values()];
+      yield this.snapshot();
       yield* readFailures(stream, signal);
     } finally {
       await stream.return?.();
@@ -49,6 +89,7 @@ function createFailure(
 ): PluginFailure {
   return PluginFailure.parse({
     ...plugin,
+    kind: 'stopped',
     message: status.error ?? 'Plugin stopped unexpectedly',
     key: randomUUID(),
   });

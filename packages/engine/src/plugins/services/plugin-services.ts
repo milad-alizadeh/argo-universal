@@ -1,12 +1,13 @@
 import type { CoreHooks, PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PluginAssetRef } from '@repo/contracts/plugins/assets';
-import { replyError } from '../access/capability-refusal';
+import { replyFailure } from '../access/capability-refusal';
 import {
   PluginAccess,
   type AccessScope,
   type ActivatedPlugin,
 } from '../access/plugin-access';
 import type { OpenedAsset, PluginAssets } from '../assets/plugin-assets';
+import { type PluginClock } from '../clock';
 import type { SpawnCaller, Waiting } from '../hooks/spawn-hooks';
 import type { PluginReply, PluginValue } from '../protocol/runtime';
 import type { Keychain } from './keychain';
@@ -26,10 +27,13 @@ export type PluginServiceOptions = {
   log: (line: string) => void;
   projects: () => Promise<readonly string[]>;
   projectInfo: () => Promise<PluginProjectInfo[]>;
+  projectPath?: (projectId: string) => Promise<string | undefined>;
   network?: PluginNetwork;
   settings?: (pluginId: string, key: string) => Promise<PluginValue>;
   hooks?: CoreHooks;
   waiting?: Waiting;
+  clock?: PluginClock;
+  watchProjects?: (changed: () => void) => () => void;
 };
 
 type Held = { generation: number; resources: PluginResources };
@@ -51,6 +55,18 @@ export class PluginServices {
     private readonly options: PluginServiceOptions,
   ) {}
 
+  onStorageWrite(written: (pluginId: string) => void): void {
+    this.storage.onWrite(written);
+  }
+
+  projectInfo(): Promise<PluginProjectInfo[]> {
+    return this.options.projectInfo();
+  }
+
+  watchProjects(changed: () => void): () => void {
+    return this.options.watchProjects?.(changed) ?? (() => {});
+  }
+
   // A first-party Plugin's declared Capabilities, granted as its worker loads with no prompt (ADR-0030).
   activate(pluginId: string, plugin: ActivatedPlugin): void {
     this.held.get(pluginId)?.resources.release();
@@ -67,7 +83,7 @@ export class PluginServices {
   async handle(
     pluginId: string,
     generation: number,
-    request: StateRequest,
+    request: StateRequest & Pick<CallReach, 'projectId' | 'query'>,
   ): Promise<PluginReply> {
     try {
       const value = await this.attempt({ pluginId, generation }, request);
@@ -76,7 +92,7 @@ export class PluginServices {
     } catch (error) {
       this.options.log(failureLine(pluginId, request, error));
 
-      return { ok: false, error: replyError(error) };
+      return replyFailure(error);
     }
   }
 
@@ -84,6 +100,7 @@ export class PluginServices {
   release(pluginId: string): void {
     this.held.get(pluginId)?.resources.release();
     this.activated.delete(pluginId);
+    this.storage.release(pluginId);
   }
 
   close(): void {
@@ -94,9 +111,16 @@ export class PluginServices {
 
   private attempt(
     caller: SpawnCaller,
-    request: StateRequest,
+    request: StateRequest & Pick<CallReach, 'projectId' | 'query'>,
   ): Promise<PluginValue> {
-    return answerCall(this.reach(caller), request);
+    return answerCall(
+      {
+        ...this.reach(caller),
+        projectId: request.projectId,
+        query: request.query,
+      },
+      request,
+    );
   }
 
   private reach({ pluginId, generation }: SpawnCaller): CallReach {
@@ -133,7 +157,7 @@ export class PluginServices {
     if (held?.generation === generation) return held.resources;
     supersede(held, generation);
 
-    const resources = new PluginResources();
+    const resources = new PluginResources(this.options.clock);
     this.held.set(pluginId, { generation, resources });
 
     return resources;

@@ -1,4 +1,8 @@
-import type { HookEventName, PluginCapability } from '@repo/contracts/plugins';
+import type {
+  HookEventName,
+  PluginCapability,
+  PluginManifest,
+} from '@repo/contracts/plugins';
 import type { ActivatedPlugin } from '../access/plugin-access';
 import type { HookAllowance } from '../hooks/hook-registry';
 import type { PluginEntry } from '../protocol/runtime';
@@ -10,6 +14,8 @@ export type PluginLocation = {
   capabilities?: readonly PluginCapability[];
   // The core events the manifest says the Plugin hooks.
   hooks?: readonly HookEventName[];
+  navIds?: readonly string[];
+  background?: PluginManifest['contributes']['background'];
 };
 
 export const activatedPlugin = ({

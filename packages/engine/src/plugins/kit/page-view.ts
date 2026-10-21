@@ -21,6 +21,7 @@ export interface OpenView {
   mounted?: Mounted;
   broken?: boolean;
   replaceable?: boolean;
+  rowMeta?: boolean;
   frame: KitTimer | undefined;
   tree: WireNode | null;
   revision: number;

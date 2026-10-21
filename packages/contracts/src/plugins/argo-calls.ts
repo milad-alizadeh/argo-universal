@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PluginAssetRequest } from '#plugin-assets';
+import { WireJson } from '#plugin-wire-json';
 
 // What a Plugin's `argo` calls send to the Server, and what the Server answers.
 export const FsWrite = z.object({
@@ -29,8 +30,10 @@ export const ProcessCommand = z.object({
 
 export type ProcessCommand = z.infer<typeof ProcessCommand>;
 
+export const ProcessRun = ProcessCommand.extend({ action: z.literal('run') });
+
 export const ProcessCall = z.discriminatedUnion('action', [
-  ProcessCommand.extend({ action: z.literal('run') }),
+  ProcessRun,
   ProcessCommand.extend({ action: z.literal('spawn') }),
   z.object({ action: z.literal('wait'), id: z.string() }),
   z.object({ action: z.literal('kill'), id: z.string() }),
@@ -43,6 +46,7 @@ export const FetchCall = z.object({
   method: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   body: z.string().optional(),
+  account: z.string().optional(),
 });
 
 export type FetchCall = z.infer<typeof FetchCall>;
@@ -68,6 +72,56 @@ export const StorageQuery = z.object({
 });
 
 export type StorageQuery = z.infer<typeof StorageQuery>;
+
+export const StorageRead = StorageQuery.extend({
+  method: StorageQuery.shape.method.exclude(['run']),
+});
+
+// Queries describe only repeatable reads, using the imperative calls' member schemas.
+export const PluginQuery = z.discriminatedUnion('api', [
+  FetchCall.extend({ api: z.literal('fetch') }),
+  ProcessRun.extend({ api: z.literal('process') }),
+  z.object({ api: z.literal('storage'), queries: z.array(StorageRead) }),
+]);
+
+export type PluginQuery = z.infer<typeof PluginQuery>;
+
+export const PluginDataState = z.object({
+  data: WireJson.optional(),
+  error: z.string().optional(),
+  stale: z.boolean(),
+  revision: z.number().int().nonnegative(),
+});
+
+export type PluginDataState = z.infer<typeof PluginDataState>;
+
+const dataTarget = z.object({
+  api: z.literal('data'),
+  viewId: z.string().min(1),
+  watchId: z.string().min(1),
+});
+
+export const PluginDataRequest = z.discriminatedUnion('action', [
+  dataTarget.extend({
+    action: z.literal('watch'),
+    query: PluginQuery,
+    every: z.number().finite().nonnegative().optional(),
+  }),
+  dataTarget.extend({ action: z.literal('release') }),
+  dataTarget.extend({ action: z.literal('refresh') }),
+]);
+
+export type PluginDataRequest = z.infer<typeof PluginDataRequest>;
+
+export const PluginNavBadge = z.object({
+  api: z.literal('nav'),
+  id: z.string().min(1),
+  count: z.number().int().nonnegative(),
+});
+
+export type PluginNavBadge = z.infer<typeof PluginNavBadge>;
+
+export { serialisePluginQuery } from '#plugin-query-normalisation';
 
 // `get` answers one row, the other methods a list of rows: the shapes Drizzle's sqlite-proxy driver expects.
 export const StorageResult = z.object({
@@ -123,6 +177,8 @@ export type PluginProjectInfo = z.infer<typeof PluginProjectInfo>;
 // Each `argo` call as it crosses to the Server; the Plugin host adds Hooks, views and dispatch results.
 export const ArgoRequest = z.discriminatedUnion('api', [
   PluginAssetRequest,
+  PluginDataRequest,
+  PluginNavBadge,
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('projects'), action: z.literal('list') }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),

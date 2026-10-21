@@ -1,6 +1,7 @@
 import type { PluginAccess } from '../access/plugin-access';
 import type { AssetContent } from '../assets/content';
 import { readAssetResponse } from '../assets/fetch';
+import { realClock, type PluginClock } from '../clock';
 import type { FsCall, PluginValue } from '../protocol/runtime';
 import { fetchCall, fetchResponse, type FetchContext } from './plugin-fetch';
 import type { Hop } from './plugin-fetch-response';
@@ -13,9 +14,13 @@ import { PluginProcesses, type CheckedProcessCall } from './plugin-processes';
  * `release` ends all of them, so a reload, a crash or turning the Plugin off leaves nothing behind.
  */
 export class PluginResources {
-  private readonly processes = new PluginProcesses();
+  private readonly processes;
   private readonly cleanups = new Set<() => void>();
   private released = false;
+
+  constructor(private readonly clock: PluginClock = realClock) {
+    this.processes = new PluginProcesses(clock);
+  }
 
   release(): void {
     this.released = true;
@@ -72,10 +77,10 @@ export class PluginResources {
 
   // Aborts a request at the deadline or on `release`; the returned function ends it early.
   private timed(request: AbortController): () => void {
-    const timer = setTimeout(() => request.abort(), argoTimeoutMs);
+    const cancel = this.clock.schedule(() => request.abort(), argoTimeoutMs);
 
     return this.hold(() => {
-      clearTimeout(timer);
+      cancel();
       request.abort();
     });
   }

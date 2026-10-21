@@ -1,7 +1,7 @@
 import type { BuildContext } from 'esbuild';
 import type { ActivatedPlugin } from '../access/plugin-access';
 import { watchPlugin } from '../dev/bundle';
-import { notStarted, runtimeError } from '../protocol/runtime';
+import { crashed, notStarted, runtimeError } from '../protocol/runtime';
 import type { PluginStatus } from '../protocol/runtime';
 import type { RuntimePluginInput } from './plugin-input';
 
@@ -61,10 +61,15 @@ export class RuntimePlugin {
       this.input.log(`Plugin ${this.input.entry.pluginId}: ${status.error}`);
   }
 
+  // A crash freezes `activation` on the crashed status; a background pass clears it to try again.
+  restartAfterCrash(): void {
+    if (this.status.state === 'crashed') this.activation = null;
+  }
+
   hostCrashed(message: string): void {
     if (this.status.state !== 'running' && !this.answer) return;
     this.input.release();
-    this.received({ state: 'crashed', hanging: false, error: message });
+    this.received(crashed(message));
     this.activation = null;
   }
 
@@ -78,11 +83,7 @@ export class RuntimePlugin {
   async close(): Promise<void> {
     this.closed = true;
     this.input.release();
-    this.answer?.({
-      state: 'crashed',
-      hanging: false,
-      error: 'Plugin runtime closed',
-    });
+    this.answer?.(crashed('Plugin runtime closed'));
     await this.build?.then(
       (build) => build.dispose(),
       () => {},
@@ -160,7 +161,7 @@ export class RuntimePlugin {
 
     try {
       this.generation += 1;
-      this.input.grant(this.granted);
+      this.input.grant(this.granted, this.generation);
       this.input.host.activate({
         ...this.input.entry,
         clockStart: this.input.clockStart(),
@@ -176,7 +177,7 @@ export class RuntimePlugin {
     if (this.closed) return;
     this.generation += 1;
     this.stopWorker();
-    this.received({ state: 'crashed', hanging: false, error });
+    this.received(crashed(error));
   }
 
   private buildFailed(error: string): void {

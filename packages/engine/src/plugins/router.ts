@@ -66,6 +66,9 @@ const createLifecycleRouter = routerFactory((plugins: PluginService) =>
     failures: publicProcedure.subscription(({ signal }) =>
       plugins.failures(requireSignal(signal)),
     ),
+    badges: publicProcedure.subscription(({ signal }) =>
+      plugins.badges(requireSignal(signal)),
+    ),
     // Proposed lifecycle seam until pages, Slots and actions request activation.
     activate: publicProcedure
       .input(PluginActivation)

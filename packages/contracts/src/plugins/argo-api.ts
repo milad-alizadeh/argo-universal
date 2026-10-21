@@ -7,6 +7,7 @@ import {
   PluginFileEntry,
   PluginFileInfo,
   PluginProjectInfo,
+  PluginNavBadge,
   ProcessCommand,
   ProcessResult,
   SecretSet,
@@ -54,6 +55,14 @@ export type FetchResponse = z.infer<typeof FetchResponse>;
 
 export const PluginApiCalls = z
   .object({
+    nav: z
+      .object({
+        badge: z.function({
+          input: [PluginNavBadge.shape.id, PluginNavBadge.shape.count],
+          output: done,
+        }),
+      })
+      .readonly(),
     assets: z
       .object({
         resolve: z.function({

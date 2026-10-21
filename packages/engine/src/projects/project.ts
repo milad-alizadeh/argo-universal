@@ -13,6 +13,7 @@ import { listBranches, readOriginHost, readRepository } from '@repo/git';
 import type { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
+import { notifyProjectChanges } from './changes';
 
 function readProjectIdentity(
   database: Database,
@@ -41,6 +42,7 @@ export async function seedProject(
     .values({ id: readProjectIdentity(database, repository), ...metadata })
     .onConflictDoUpdate({ target: project.id, set: metadata })
     .run();
+  notifyProjectChanges(database);
 }
 
 async function readDefaultCheckoutChoice(

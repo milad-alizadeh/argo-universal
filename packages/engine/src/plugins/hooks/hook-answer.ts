@@ -1,5 +1,5 @@
 import type { HookOutcome, Json } from '@repo/contracts/plugins/hook-protocol';
-import { failureLine } from './hook-failure';
+import { logFailure } from './hook-failure';
 import { isAnswer } from './hook-rules';
 import { readRenderAnswer, type AcceptedHookAnswer } from './render-answer';
 import type { RunningHook } from './running-hook';
@@ -44,7 +44,7 @@ async function failed(
   reason: string,
   log: Log,
 ): Promise<Json> {
-  log(failureLine(running, reason));
+  logFailure(running, reason, log);
 
   return skipped(running);
 }

@@ -12,6 +12,7 @@ import {
   type ViewSender,
   type DispatchSender,
 } from './pages';
+import { dataClient } from './use-data';
 
 const hooks = {
   useState: React.useState,
@@ -50,12 +51,13 @@ const exportsOf = {
 const jsxRuntime = { jsx, jsxs, Fragment: React.Fragment };
 
 export interface Kit {
-  exports: typeof exportsOf;
+  exports: typeof exportsOf & Pick<ReturnType<typeof dataClient>, 'useData'>;
   jsxRuntime: typeof jsxRuntime;
   registerPage: Pages['register'];
   registerSlot: Pages['registerSlot'];
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
+  requirePage: Pages['requirePage'];
   replacement: (
     invocation: number,
     element: React.ReactNode,
@@ -63,18 +65,39 @@ export interface Kit {
 }
 
 // Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
-export function createKit(send: ViewSender, settle: DispatchSender): Kit {
-  const pages = mountPages(send, settle);
+export function createKit(
+  send: ViewSender,
+  settle: DispatchSender,
+  call: Parameters<typeof dataClient>[0],
+): Kit {
+  const data = dataClient(call);
+  const pages = mountPages(send, settle, (viewId) => data.ready(viewId));
 
+  return pageKit(data, pages);
+}
+
+function pageKit(data: ReturnType<typeof dataClient>, pages: Pages): Kit {
   return {
     isElement: React.isValidElement,
+    requirePage: pages.requirePage,
     replacement: replacementOf(pages),
-    exports: exportsOf,
+    exports: { ...exportsOf, useData: data.useData },
     jsxRuntime,
     registerPage: pages.register,
     registerSlot: pages.registerSlot,
-    inbox: (json: string): void =>
-      pages.receive(PluginEvent.parse(JSON.parse(json))),
+    inbox: inbox(data, pages),
+  };
+}
+
+function inbox(
+  data: ReturnType<typeof dataClient>,
+  pages: Pages,
+): Kit['inbox'] {
+  return (json): void => {
+    const event = PluginEvent.parse(JSON.parse(json));
+
+    if (event.type === 'data') data.receive(event);
+    else pages.receive(event);
   };
 }
 

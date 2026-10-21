@@ -128,3 +128,21 @@ export type {
   StorageQuery,
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
+
+import type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
+import type { QueryResult } from '@repo/contracts/plugins/query-results';
+
+export type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
+
+// One definition, shared with the Engine's readers: what a Query answers comes from its api.
+export type { QueryResult } from '@repo/contracts/plugins/query-results';
+
+export declare function useData<Query extends PluginQuery>(
+  query: Query | null,
+  options?: { every?: number },
+): {
+  data: QueryResult<Query> | undefined;
+  error: string | undefined;
+  stale: boolean;
+  refresh: () => Promise<void>;
+};

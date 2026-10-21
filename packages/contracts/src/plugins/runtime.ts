@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+export const PluginBadge = z.object({
+  pluginId: z.string(),
+  id: z.string(),
+  count: z.number().int().nonnegative(),
+});
+
+export type PluginBadge = z.infer<typeof PluginBadge>;
+
 export const PluginStatus = z.object({
   state: z.enum(['not-started', 'running', 'crashed']),
   hanging: z.boolean(),
@@ -9,6 +17,7 @@ export const PluginStatus = z.object({
 export type PluginStatus = z.infer<typeof PluginStatus>;
 
 export const PluginFailure = z.object({
+  kind: z.enum(['stopped', 'drawing']),
   pluginId: z.string().brand<'PluginId'>(),
   name: z.string(),
   message: z.string(),

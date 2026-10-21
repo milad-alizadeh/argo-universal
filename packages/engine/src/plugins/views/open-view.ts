@@ -17,9 +17,11 @@ export type Opening = Omit<Open, 'type' | 'viewId'>;
 
 export interface OpenView extends ViewSnapshot {
   pluginId: string;
+  projectId?: string;
   connectionId: string;
   opening: Open;
   watchers: number;
+  backgroundInterval?: number;
 }
 
 export function createOpenView(
@@ -27,16 +29,33 @@ export function createOpenView(
   opening: Opening,
   connectionId: string,
 ): OpenView {
-  const events: OpenView['events'] = new EventEmitter();
-  events.setMaxListeners(0);
-
   return {
     pluginId,
+    projectId: projectOfOpening(opening),
     connectionId,
-    events,
+    events: viewEvents(),
     opening: { ...opening, type: 'open', viewId: createPluginViewId() },
     ...blankView(),
   };
+}
+
+export function projectOfOpening(opening: Opening): string | undefined {
+  return opening.slot?.context.projectId ?? opening.projectId;
+}
+
+function viewEvents(): OpenView['events'] {
+  const events: OpenView['events'] = new EventEmitter();
+  events.setMaxListeners(0);
+
+  return events;
+}
+
+export type HeadlessView = { viewId: PluginViewId; close: () => void };
+
+export function temporary(view: OpenView): boolean {
+  return (
+    Boolean(view.opening.renderSlot) || view.backgroundInterval !== undefined
+  );
 }
 
 function blankView(): Pick<

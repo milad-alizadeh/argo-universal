@@ -1,59 +1,87 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
+import { realClock, type PluginClock } from '../clock';
+import type { QueryServices } from '../data/query-types';
 import { hostHooks } from '../hooks/host-hooks';
 import { keepWaiting } from '../hooks/keep-waiting';
 import { HostConnection } from '../host/connection';
-import type { PluginReply } from '../protocol/runtime';
-import {
-  notStarted,
-  type PluginStatus,
-  type HostMessage,
+import type {
+  PluginReply,
+  HostMessage,
+  PluginStatus,
 } from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
-import { PluginViews } from '../views/plugin-views';
 import {
-  oncePerRenderFallback,
+  fallbackKey,
+  forgetOnce,
+  logOnce,
   renderFallbackLine,
 } from '../views/render-fallback';
 import { answerPluginCall } from './calls';
-import { PluginFailures } from './failures';
-import { RuntimePlugin } from './plugin';
-import {
-  activatedPlugin,
-  hookAllowance,
-  type PluginLocation,
-} from './plugin-location';
+import type { PluginLocation } from './plugin-location';
 import { PluginTurns } from './plugin-turns';
 import { RuntimeClock } from './runtime-clock';
-import { hostCrashLine, pluginIdentity } from './status';
+import { RuntimePlugins } from './runtime-plugins';
+import { RuntimeResources } from './runtime-resources';
 
 export class PluginRuntime {
-  private readonly failures = new PluginFailures();
-  private readonly plugins = new Map<string, RuntimePlugin>();
+  private readonly plugins;
+  private readonly resources;
   private readonly host: HostConnection;
-  readonly views: PluginViews;
   readonly hooks;
   private hostError: string | null = null;
-  private closed = false;
   private readonly clock;
   readonly turns = new PluginTurns(() => this.plugins.values());
 
   constructor(
     private readonly log: (line: string) => void,
     private readonly services: PluginServices,
-    clockStart?: number,
+    clock: PluginClock = realClock,
   ) {
-    this.log = oncePerRenderFallback(log);
-    this.views = new PluginViews(
-      (pluginId, event) => this.host.event(pluginId, event),
-      this.log,
-    );
     this.host = new HostConnection(this.callbacks());
-    this.clock = new RuntimeClock(this.host.tests, clockStart);
+    this.clock = new RuntimeClock(this.host.tests, clock);
     this.hooks = hostHooks(this.host, this.log, this.clock.source);
+    this.resources = new RuntimeResources(this.resourceInput());
+    this.plugins = new RuntimePlugins(this.pluginInput());
   }
 
-  public advanceClock(pluginId: string, ms: number): Promise<void> {
-    return this.clock.advance(pluginId, ms);
+  private pluginInput(): ConstructorParameters<typeof RuntimePlugins>[0] {
+    return {
+      host: this.host,
+      hooks: this.hooks,
+      clock: this.clock,
+      resources: this.resources,
+      log: this.log,
+      turnsRunning: () => this.turns.running,
+    };
+  }
+
+  private resourceInput(): QueryServices {
+    return {
+      services: this.services,
+      clock: this.clock.source,
+      log: this.log,
+      send: (pluginId, event): void => this.host.event(pluginId, event),
+      during: <T>(call: () => Promise<T>): Promise<T> =>
+        this.clock.during(call),
+    };
+  }
+
+  get views(): RuntimeResources['views'] {
+    return this.resources.views;
+  }
+  get data(): RuntimeResources['data'] {
+    return this.resources.data;
+  }
+  get background(): RuntimeResources['background'] {
+    return this.resources.background;
+  }
+
+  refreshProjects(): Promise<void> {
+    return this.resources.refreshProjects();
+  }
+
+  public advanceClock(_pluginId: string, ms: number): Promise<void> {
+    return this.clock.advance(() => this.plugins.runningIds(), ms);
   }
 
   public renderFallback(
@@ -61,22 +89,35 @@ export class PluginRuntime {
     slotId: string,
     reason: string,
   ): void {
-    this.log(renderFallbackLine(pluginId, slotId, reason));
+    logOnce(
+      this.log,
+      fallbackKey('runtime', pluginId, slotId),
+      renderFallbackLine(pluginId, slotId, reason),
+    );
   }
 
   private callbacks(): ConstructorParameters<typeof HostConnection>[0] {
     return {
       log: this.log,
       call: (message): Promise<PluginReply> =>
-        this.clock.during(() =>
-          answerPluginCall(
-            { hooks: this.hooks, services: this.services, views: this.views },
-            message,
-          ),
-        ),
-      status: (message): void => this.update(message),
+        this.clock.during(() => this.answer(message)),
+      status: (message): void => this.plugins.update(message),
       crash: (message): void => this.crashed(message),
     };
+  }
+
+  private answer(
+    message: Extract<HostMessage, { type: 'call' }>,
+  ): Promise<PluginReply> {
+    return answerPluginCall(
+      {
+        hooks: this.hooks,
+        services: this.services,
+        views: this.views,
+        data: this.data,
+      },
+      message,
+    );
   }
 
   waiting(pluginId: string, generation: number): () => void {
@@ -87,7 +128,7 @@ export class PluginRuntime {
   }
 
   status(pluginId: string): PluginStatus {
-    return this.plugins.get(pluginId)?.status ?? notStarted;
+    return this.plugins.status(pluginId);
   }
 
   public readonly openAsset: PluginServices['openAsset'] = (reference) =>
@@ -98,81 +139,26 @@ export class PluginRuntime {
   }
 
   public watchFailures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
-    return this.failures.watch(signal);
+    return this.resources.failures.watch(signal);
   }
 
   activate(location: PluginLocation): Promise<PluginStatus> {
-    if (this.closed) throw new Error('Plugin runtime is closed');
-    const { pluginId } = location.entry;
-
-    let plugin = this.plugins.get(pluginId);
-
-    if (!plugin) {
-      plugin = this.createPlugin(location);
-      this.plugins.set(pluginId, plugin);
-    }
-
-    this.hooks.allow(pluginId, hookAllowance(location));
-
-    return plugin.activate(activatedPlugin(location));
+    return this.plugins.activate(location);
   }
-
-  // A Plugin turned off loses its worker and its build; activating it later starts both afresh.
   async deactivate(pluginId: string): Promise<void> {
-    const plugin = this.plugins.get(pluginId);
-
-    if (!plugin) return;
-    this.plugins.delete(pluginId);
-    this.views.end(pluginId);
-    await plugin.stop();
-  }
-
-  private createPlugin(location: PluginLocation): RuntimePlugin {
-    const identity = pluginIdentity(location);
-
-    return new RuntimePlugin({
-      ...location,
-      clockStart: () => this.clock.workerStart(),
-      deferReload: () => this.turns.running,
-      host: this.host,
-      grant: (plugin): void =>
-        this.services.activate(location.entry.pluginId, plugin),
-      release: (): void => this.release(location.entry.pluginId),
-      log: this.log,
-      changed: (status): void => this.failures.update(identity, status),
-    });
-  }
-
-  // Reload, turning off and a crash end the Plugin's resources and its Hooks.
-  private release(pluginId: string): void {
-    this.views.invalidate(pluginId);
-    this.services.release(pluginId);
-    this.hooks.release(pluginId);
+    await this.plugins.deactivate(pluginId);
+    forgetOnce(this.log, pluginId);
   }
 
   async close(): Promise<void> {
-    this.closed = true;
-    this.failures.close();
-    this.views.close();
-    await Promise.all(
-      [...this.plugins.values()].map((plugin) => plugin.close()),
-    );
+    this.resources.close();
+    await this.plugins.close();
     await this.host.close();
     this.services.close();
   }
 
-  private update(message: Extract<HostMessage, { type: 'status' }>): void {
-    const { pluginId, generation, state, hanging, error } = message;
-
-    if (state === 'running') this.views.reopen(pluginId);
-    this.plugins.get(pluginId)?.update({ state, hanging, error }, generation);
-  }
-
   private crashed(message: string): void {
     this.hostError = message;
-
-    this.log(hostCrashLine(message, this.plugins));
-
-    for (const plugin of this.plugins.values()) plugin.hostCrashed(message);
+    this.plugins.crashed(message);
   }
 }

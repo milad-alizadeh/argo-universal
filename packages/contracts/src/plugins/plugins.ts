@@ -69,6 +69,12 @@ export const PluginManifest = z.strictObject({
         'Nav ids must be unique',
       ),
     settings: PluginSettingsSchema.optional(),
+    background: z
+      .strictObject({
+        path: PluginPath,
+        interval: z.number().finite().nonnegative(),
+      })
+      .optional(),
     // The Slots the Plugin fills; core asks only these Plugins for a Slot's content.
     slots: z
       .array(SlotId)

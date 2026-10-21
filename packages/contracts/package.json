@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "imports": {
+    "#plugin-argo-calls": "./src/plugins/argo-calls.ts",
     "#plugin-identifier": "./src/plugins/plugin-identifier.ts",
     "#plugin-assets": "./src/plugins/assets.ts",
     "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
     "#plugin-wire-events": "./src/plugins/wire-events.ts",
     "#plugin-replaceable-slot-id": "./src/plugins/replaceable-slot-id.ts",
     "#plugin-surface": "./src/plugins/surface.ts",
-    "#plugin-wire-json": "./src/plugins/wire-json.ts"
+    "#plugin-wire-json": "./src/plugins/wire-json.ts",
+    "#plugin-query-normalisation": "./src/plugins/query-normalisation.ts"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -18,6 +20,8 @@
     "./plugins": "./src/plugins/plugins.ts",
     "./plugins/runtime": "./src/plugins/runtime.ts",
     "./plugins/argo-calls": "./src/plugins/argo-calls.ts",
+    "./plugins/query-results": "./src/plugins/query-results.ts",
+    "./plugins/query-normalisation": "./src/plugins/query-normalisation.ts",
     "./plugins/argo-api": "./src/plugins/argo-api.ts",
     "./plugins/assets": "./src/plugins/assets.ts",
     "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",

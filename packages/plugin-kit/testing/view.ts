@@ -1,9 +1,5 @@
-import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
-import {
-  currentPluginSurface,
-  type PluginSurface,
-} from '@repo/contracts/plugins/kit';
+import { type PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   PartEvent,
   PluginSlotInput,
@@ -12,8 +8,9 @@ import type {
   WireNode,
 } from '@repo/contracts/plugins/wire';
 import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
-import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
+import { testConnection } from './test-connection';
 
 // A test mount chooses the platform; the test App always speaks the current wire version.
 type MountSurface = Pick<PluginSurface, 'platform'>;
@@ -22,17 +19,18 @@ export type Opening = {
   path: string;
   slot?: PluginSlotInput;
   surface?: MountSurface;
+  projectId?: string;
+  connectionId?: string;
 };
 
-export type PluginMount = { surface: MountSurface } & (
-  | { page: string }
-  | { slot: PluginSlotInput }
-);
+export type PluginMount = {
+  surface: MountSurface;
+  pluginId?: string;
+  projectId?: string;
+  connectionId?: string;
+} & ({ page: string } | { slot: PluginSlotInput });
 
 const viewLimitMs = 3000;
-
-const testSurface = (mount?: MountSurface): PluginSurface =>
-  currentPluginSurface(mount?.platform ?? 'web');
 
 type Event = PartEvent & { key: string };
 
@@ -41,21 +39,20 @@ export class PluginTestView {
   private readonly controller = new AbortController();
   private readonly connection;
   private root: WireNode | null = null;
+  private readonly history: WireNode[] = [];
   private latest: ViewMessage | null = null;
   private failure: Error | null = null;
   private path: string;
+  private readonly projectId: string | undefined;
 
   public constructor(
     private readonly service: PluginService,
     private readonly pluginId: string,
     opening: Opening,
   ) {
-    this.connection = {
-      id: randomUUID(),
-      signal: this.controller.signal,
-      surface: testSurface(opening.surface),
-    };
+    this.connection = testConnection(this.controller.signal, opening);
     this.path = opening.path;
+    this.projectId = opening.projectId;
     void this.receive(opening).catch((error: Error) => {
       this.failure = error;
     });
@@ -69,6 +66,10 @@ export class PluginTestView {
 
   public get message(): ViewMessage | null {
     return this.latest;
+  }
+
+  public get trees(): readonly WireNode[] {
+    return this.history;
   }
 
   public findText(text: string): ReturnType<typeof findWireNodeEntry> {
@@ -135,7 +136,7 @@ export class PluginTestView {
 
   private async receivePage(path: string): Promise<void> {
     for await (const message of this.service.view(
-      { pluginId: this.pluginId, path },
+      { pluginId: this.pluginId, path, projectId: this.projectId },
       this.connection,
     ))
       this.update(message);
@@ -156,8 +157,9 @@ export class PluginTestView {
   }
 
   private update(message: ViewMessage): void {
-    if (message.type === 'snapshot') this.root = message.root;
-    else if (this.root) this.root = applyPatch(this.root, message.ops);
+    this.root = nextRoot(this.root, message);
+
+    if (this.root) this.history.push(this.root);
     this.latest = message;
   }
 }

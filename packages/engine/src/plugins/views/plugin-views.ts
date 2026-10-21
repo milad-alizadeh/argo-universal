@@ -8,26 +8,43 @@ import type {
 import type { RpcConnection } from '../../rpc';
 import { appView } from './app-view';
 import { PluginDispatches } from './dispatches';
+import { drawingFailure } from './drawing-failure';
+import { oneLine } from './log-line';
 import {
-  createOpenView,
-  createPluginViewId,
   currentDispatch,
   dispatchEvent,
+  temporary,
+  type HeadlessView,
   type OpenView,
   type Opening,
 } from './open-view';
 import { reportDrawingFailure } from './render-failure';
 import { receive } from './state';
+import {
+  ViewRegistry,
+  noViewLifecycle,
+  type ViewLifecycle,
+} from './view-registry';
 
 export class PluginViews {
   private revision = 0;
-  private readonly views = new Map<PluginViewId, OpenView>();
+  private readonly views;
   public readonly dispatches = new PluginDispatches();
 
   constructor(
     private readonly send: (pluginId: string, event: PluginEvent) => void,
     private readonly log: (line: string) => void,
-  ) {}
+    private readonly lifecycle: ViewLifecycle = noViewLifecycle,
+  ) {
+    this.views = new ViewRegistry(send, (view, lastOfOpening) => {
+      this.dispatches.end(view.opening.viewId);
+      this.lifecycle.released(view, lastOfOpening);
+    });
+  }
+
+  public dataView(pluginId: string, viewId: string): OpenView {
+    return this.views.owned(pluginId, viewId);
+  }
 
   public receive(
     pluginId: string,
@@ -36,15 +53,53 @@ export class PluginViews {
   ): void {
     const view = this.views.get(viewId);
 
-    if (view?.pluginId === pluginId)
-      receive(view, message, { log: this.log, revision: ++this.revision });
+    if (view?.pluginId === pluginId) this.receiveCurrent(view, message);
+  }
+
+  private receiveCurrent(view: OpenView, message: ViewMessage): void {
+    const reason = drawingFailure(view, message);
+
+    if (reason !== undefined) return this.failed(view, reason);
+    receive(view, message, { log: this.log, revision: ++this.revision });
+    this.lifecycle.received(view);
+  }
+
+  // The failure outlives the view it came from, so it is raised after the removal that would evict it.
+  private failed(view: OpenView, reason: string): void {
+    this.log(
+      `Plugin ${view.pluginId}: could not draw ${view.opening.path}: ${oneLine(reason)}`,
+    );
+    this.views.remove(view);
+    this.lifecycle.failed(view, reason);
+  }
+
+  public headless(
+    pluginId: string,
+    opening: Opening,
+    interval: number,
+  ): HeadlessView {
+    const view = this.views.open(pluginId, opening, 'background');
+
+    view.backgroundInterval = interval;
+
+    return {
+      viewId: view.opening.viewId,
+      close: () => this.views.remove(view),
+    };
+  }
+
+  public endProject(projectId: string): void {
+    for (const view of this.views
+      .values()
+      .filter((view) => view.projectId === projectId))
+      this.views.remove(view);
   }
 
   public dispatch(
     connection: RpcConnection,
     input: PluginDispatchInput,
   ): Promise<void> {
-    const event = currentDispatch(this.find(connection.id, input), input);
+    const event = currentDispatch(this.views.find(connection.id, input), input);
 
     const { requestId, answer } = this.dispatches.wait(
       input.pluginId,
@@ -65,25 +120,17 @@ export class PluginViews {
   }
 
   private restart(view: OpenView): void {
-    this.retire(view);
+    this.views.retire(view);
     this.send(view.pluginId, view.opening);
   }
 
-  private retire(view: OpenView): void {
-    this.dispatches.end(view.opening.viewId);
-    this.views.delete(view.opening.viewId);
-    view.opening = { ...view.opening, viewId: createPluginViewId() };
-    view.workerRevision = null;
-    this.views.set(view.opening.viewId, view);
-  }
-
   public close(): void {
-    for (const view of this.views.values()) this.remove(view);
+    for (const view of this.views.values()) this.views.remove(view);
   }
 
   public end(pluginId: string): void {
     for (const view of this.views.values())
-      if (view.pluginId === pluginId) this.remove(view);
+      if (view.pluginId === pluginId) this.views.remove(view);
   }
 
   public invalidate(pluginId: string): void {
@@ -92,8 +139,8 @@ export class PluginViews {
     );
 
     for (const view of views) {
-      if (view.opening.renderSlot) this.remove(view);
-      else this.retire(view);
+      if (temporary(view)) this.views.remove(view);
+      else this.views.retire(view);
     }
   }
 
@@ -104,12 +151,13 @@ export class PluginViews {
   ): AsyncGenerator<ViewMessage> {
     const reported = { ...opening, surface: connection.surface };
 
-    const view = this.acquire(pluginId, reported, connection.id);
+    const view = this.views.acquire(pluginId, reported, connection.id);
+    this.lifecycle.opened(view);
 
     try {
       yield* appView(view, connection, this.log);
     } finally {
-      this.release(view);
+      this.views.release(view);
     }
   }
 
@@ -121,57 +169,10 @@ export class PluginViews {
     connection: RpcConnection,
     input: RenderFailureInput,
   ): void {
-    reportDrawingFailure(this.find(connection.id, input), input, this.log);
-  }
-
-  private find(
-    connectionId: string,
-    input: { pluginId: string; path: string },
-  ): OpenView | undefined {
-    return [...this.views.values()].find(
-      (view) =>
-        view.connectionId === connectionId &&
-        view.pluginId === input.pluginId &&
-        view.opening.path === input.path,
+    reportDrawingFailure(
+      this.views.find(connection.id, input),
+      input,
+      this.log,
     );
-  }
-
-  private acquire(
-    pluginId: string,
-    opening: Opening,
-    connectionId: string,
-  ): OpenView {
-    const view =
-      this.find(connectionId, { pluginId, path: opening.path }) ??
-      this.open(pluginId, opening, connectionId);
-
-    view.watchers += 1;
-
-    return view;
-  }
-
-  private open(
-    pluginId: string,
-    opening: Opening,
-    connectionId: string,
-  ): OpenView {
-    const view = createOpenView(pluginId, opening, connectionId);
-    this.views.set(view.opening.viewId, view);
-    this.send(pluginId, view.opening);
-
-    return view;
-  }
-
-  private release(view: OpenView): void {
-    view.watchers -= 1;
-
-    if (view.watchers === 0) this.remove(view);
-  }
-
-  private remove(view: OpenView): void {
-    if (!this.views.delete(view.opening.viewId)) return;
-    this.dispatches.end(view.opening.viewId);
-    view.events.emit('close');
-    this.send(view.pluginId, { type: 'close', viewId: view.opening.viewId });
   }
 }

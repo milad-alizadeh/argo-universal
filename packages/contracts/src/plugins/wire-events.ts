@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PluginDataState } from '#plugin-argo-calls';
 import { ReplaceableSlotId } from '#plugin-replaceable-slot-id';
 import { PluginSurface } from '#plugin-surface';
 import { WireJson } from '#plugin-wire-json';
@@ -15,7 +16,10 @@ export type PluginDispatchId = z.infer<typeof PluginDispatchId>;
 export const PluginViewInput = z.object({
   pluginId: z.string(),
   path: z.string(),
+  projectId: z.string().min(1).optional(),
 });
+
+export type PluginViewInput = z.infer<typeof PluginViewInput>;
 
 // A Part event: the App names the node by key and the handler prop by event name.
 export const PartEvent = z.object({
@@ -79,9 +83,16 @@ export type PluginDispatchResult = z.infer<typeof PluginDispatchResult>;
 
 export const PluginEvent = z.union([
   z.object({
+    type: z.literal('data'),
+    viewId: PluginViewId,
+    watchId: z.string(),
+    state: PluginDataState,
+  }),
+  z.object({
     type: z.literal('open'),
     viewId: PluginViewId,
     path: z.string(),
+    projectId: z.string().min(1).optional(),
     slot: PluginSlotInput.optional(),
     renderSlot: ReplaceableSlotId.optional(),
     surface: PluginSurface.optional(),

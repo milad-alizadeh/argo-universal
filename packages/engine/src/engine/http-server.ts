@@ -54,6 +54,11 @@ type HttpSetup = PluginSetup & {
   notifications: Notifications;
 };
 
+type RoutedSetup = HttpSetup & { appRouter: AppRouter };
+
+// A bound Server holds the background start so closing never pulls the runtime out from under it.
+type ListeningSetup = RoutedSetup & { backgroundStarted: Promise<void> };
+
 // Serves tRPC and blobs on loopback (ADR 0002); resolves once the port is bound.
 export async function startHttpServer(
   options: HttpServerOptions,
@@ -65,13 +70,13 @@ export async function startHttpServer(
     createRequestListener(listenerOptions(setup, guard)),
   );
 
-  await listenWithPlugins(server, options.port, setup);
+  const listening = await listenWithPlugins(server, options.port, setup);
 
-  return connectHttpServer(setup, server, guard);
+  return connectHttpServer(listening, server, guard);
 }
 
 function connectHttpServer(
-  setup: HttpSetup & { appRouter: AppRouter },
+  setup: ListeningSetup,
   server: Server,
   guard: ReturnType<typeof createRequestGuard>,
 ): HttpServer {
@@ -87,7 +92,7 @@ function connectHttpServer(
 }
 
 async function closeHttpServices(
-  setup: HttpSetup,
+  setup: ListeningSetup,
   closeConnections: () => Promise<void>,
 ): Promise<void> {
   setup.notifications.close();
@@ -96,7 +101,7 @@ async function closeHttpServices(
 
 async function prepareHttpServer(
   options: HttpServerOptions,
-): Promise<HttpSetup & { appRouter: AppRouter }> {
+): Promise<RoutedSetup> {
   const serverId = await readServerId(options.database, options.databaseWriter);
   const setup = prepareHttpSetup(options, serverId);
 
@@ -140,11 +145,12 @@ const pluginDeps = (setup: HttpSetup): PluginDeps => ({
   hooks: setup.hookPort.hooks,
 });
 
+// Binding the port is all the Supervisor waits for, so a slow background Plugin delays no App.
 async function listenWithPlugins(
   server: Server,
   port: number,
-  setup: HttpSetup,
-): Promise<void> {
+  setup: RoutedSetup,
+): Promise<ListeningSetup> {
   try {
     await listenOnLoopback(server, port);
   } catch (error) {
@@ -152,10 +158,12 @@ async function listenWithPlugins(
     await closePlugins(setup);
     throw error;
   }
+
+  return { ...setup, backgroundStarted: setup.startBackground() };
 }
 
 function listenerOptions(
-  setup: HttpSetup & { appRouter: AppRouter },
+  setup: RoutedSetup,
   guard: ReturnType<typeof createRequestGuard>,
 ): RequestListenerOptions {
   return {

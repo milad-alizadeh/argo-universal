@@ -4,7 +4,7 @@ import type {
   WireNode,
   PluginViewId,
 } from '@repo/contracts/plugins/wire';
-import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 
 export type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
 
@@ -15,15 +15,6 @@ export interface ViewSnapshot {
   workerRevision: number | null;
   refused: boolean;
   events: ViewEvents;
-}
-
-export function nextRoot(
-  root: WireNode | null,
-  message: ViewMessage,
-): WireNode | null {
-  if (message.type === 'snapshot') return message.root;
-
-  return root && applyPatch(root, message.ops);
 }
 
 export function updateView(

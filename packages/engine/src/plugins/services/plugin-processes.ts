@@ -4,6 +4,7 @@ import { delimiter } from 'node:path';
 import type { ProcessResult } from '@repo/contracts/plugins/argo-calls';
 import { shellEnvironment } from '../../agents';
 import type { CheckedCommand } from '../access/plugin-access';
+import { realClock, type PluginClock } from '../clock';
 import type { ProcessCall } from '../protocol/runtime';
 import { argoLimitBytes, argoTimeoutMs } from './plugin-limits';
 
@@ -19,10 +20,11 @@ type Control = Extract<ProcessCall, { action: 'wait' | 'kill' }>;
 
 type Run = { timedOut: boolean; truncated: boolean };
 
-type Timer = ReturnType<typeof setTimeout>;
+type Timer = () => void;
 
 // A Plugin's commands: run by argv with no shell, output capped, killed at the timeout and when released.
 export class PluginProcesses {
+  constructor(private readonly clock: PluginClock = realClock) {}
   private readonly running = new Map<string, Running>();
   private readonly live = new Set<ChildProcess>();
   private readonly timers = new Set<Timer>();
@@ -49,7 +51,7 @@ export class PluginProcesses {
   release(): void {
     for (const child of this.live) killGroup(child);
 
-    for (const timer of this.timers) clearTimeout(timer);
+    for (const cancel of this.timers) cancel();
     this.running.clear();
     this.live.clear();
     this.timers.clear();
@@ -96,7 +98,7 @@ export class PluginProcesses {
   private timeout(child: ChildProcess, run: Run, ms: number | null): void {
     if (ms === null) return;
 
-    const timer = setTimeout(() => {
+    const timer = this.clock.schedule(() => {
       run.timedOut = true;
       killGroup(child);
     }, ms);
@@ -120,7 +122,7 @@ export class PluginProcesses {
   }
 
   private clear(timer: Timer): void {
-    clearTimeout(timer);
+    timer();
     this.timers.delete(timer);
   }
 }

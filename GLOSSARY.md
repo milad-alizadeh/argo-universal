@@ -99,8 +99,12 @@ A read a Plugin describes as a value instead of making, which Argo performs, key
 _Avoid_: Descriptor, query key, request object
 
 **Background pass**:
-One run of a Plugin's declared background entry on its interval. It refreshes Queries and may set its own nav count; it draws nothing and never raises a Notification.
+One run of a Plugin's declared background entry on its interval, for one Project. It refreshes Queries and may set its own nav badge; it draws nothing and never raises a Notification.
 _Avoid_: Job, cron, tick
+
+**Nav badge**:
+The count a Plugin puts on one of its own nav items with `argo.nav.badge(id, count)`; zero clears it. It belongs to the whole Plugin, not to a Project, so the Plugin sets the total it wants shown.
+_Avoid_: Nav count, badge count, unread count
 
 **Borrow**:
 One Plugin using an Account another Plugin provides. Argo checks the Grant, asks the providing Plugin for a fresh token and sets the header; the borrowing Plugin never sees the token, and the header never leaves the Account's host.

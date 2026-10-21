@@ -21,7 +21,7 @@ import type { PluginStorage } from './storage';
 // Pages and Hooks are the runtime's own; every other call is answered by PluginServices.
 export type StateRequest = Exclude<
   PluginRequest,
-  { api: 'view' | 'hooks' | 'dispatchResult' }
+  { api: 'view' | 'hooks' | 'dispatchResult' | 'data' | 'nav' }
 >;
 
 type Api = StateRequest['api'];
@@ -32,6 +32,8 @@ type RequestOf<Name extends Api> = Extract<StateRequest, { api: Name }>;
 export type CallReach = {
   pluginId: string;
   generation: number;
+  projectId?: string;
+  query?: boolean;
   resources: PluginResources;
   storage: PluginStorage;
   keychain: Keychain;
@@ -67,7 +69,8 @@ const kept = <Name extends Api>(
 const calls: CallKinds = {
   storage: kept(
     ({ queries }) => `argo.storage ${queries.length}`,
-    async (call, { queries }) => call.storage.execute(call.pluginId, queries),
+    async (call, { queries }) =>
+      call.storage.execute(call.pluginId, queries, call.query),
   ),
   projects: kept(
     () => 'argo.projects.list',

@@ -1,6 +1,7 @@
 import type { PluginList, PluginManifest } from '@repo/contracts/plugins';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { discoverPlugins, type PluginsDeps } from './discovery/loader';
+import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import type { PluginSettings } from './settings/plugin-settings';
 
@@ -94,12 +95,33 @@ export function startPlugin(
   const { manifest } = plugin;
   refuseTurnedOff(deps, manifest.id);
 
-  return runtime.activate({
-    entry: { pluginId: manifest.id, directory, main: manifest.main },
+  return runtime.activate(locationFor(manifest, directory));
+}
+
+function locationFor(
+  manifest: PluginManifest,
+  directory: string,
+): PluginLocation {
+  return {
+    entry: entryFor(manifest, directory),
     name: manifest.name,
     capabilities: manifest.capabilities ?? [],
     hooks: manifest.contributes.hooks ?? [],
-  });
+    navIds: manifest.contributes.nav.map(({ id }) => id),
+    background: manifest.contributes.background,
+  };
+}
+
+function entryFor(
+  manifest: PluginManifest,
+  directory: string,
+): PluginLocation['entry'] {
+  return {
+    pluginId: manifest.id,
+    directory,
+    main: manifest.main,
+    backgroundPath: manifest.contributes.background?.path,
+  };
 }
 
 // Starts each located Plugin that `declares` picks, in load order; one that fails to start is reported as stopped.

@@ -3,14 +3,16 @@ import type {
   ViewMessage,
   WireNode,
 } from '@repo/contracts/plugins/wire';
-import type { ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
 import { reportFailure } from './host-config';
 import { cancelPageFrame, schedulePage } from './page-frame';
 import { nextMessage, type OpenView } from './page-view';
 import { mount } from './reconciler';
+import { QueryViewContext } from './use-data';
 import { toWire, type Handlers, type Instance } from './wire-tree';
 
 export type PageHub = {
+  ready: (viewId: PluginViewId) => boolean;
   send: (viewId: PluginViewId, message: ViewMessage) => Promise<void>;
   views: Map<PluginViewId, OpenView>;
 };
@@ -19,6 +21,7 @@ type Content = {
   viewId: PluginViewId;
   element: ReactNode;
   replaceable: boolean;
+  rowMeta: boolean;
 };
 
 export function transmit(
@@ -58,20 +61,21 @@ function emptyPage(): WireNode {
 
 export function startPage(
   hub: PageHub,
-  { viewId, element, replaceable }: Content,
+  { viewId, element, replaceable, rowMeta }: Content,
 ): void {
-  const view = pageView(viewId, replaceable);
-  const failed = drawingFailure(hub, view, replaceable);
+  const view = pageView(viewId, replaceable, rowMeta);
+  const failed = drawingFailure(hub, view);
 
   hub.views.set(viewId, view);
   view.mounted = mount(
-    element,
+    createElement(QueryViewContext.Provider, { value: viewId }, element),
     (container) => schedule(hub, view, { container, failed }),
     failed,
   );
 }
 
 function failDrawing(hub: PageHub, view: OpenView, error: Error): void {
+  if (view.broken) return;
   view.broken = true;
   cancelPageFrame(view);
   publish(hub, view, failedDrawingRoot(error.message));
@@ -85,14 +89,25 @@ function schedule(
   { container, failed }: Commit,
 ): void {
   schedulePage(view, () => {
-    if (canCommit(hub, view)) tryCommit(hub, view, { container, failed });
+    if (!canCommit(hub, view)) return;
+
+    if (hub.ready(view.viewId)) {
+      tryCommit(hub, view, { container, failed });
+    } else {
+      schedule(hub, view, { container, failed });
+    }
   });
 }
 
-function pageView(viewId: PluginViewId, replaceable: boolean): OpenView {
+function pageView(
+  viewId: PluginViewId,
+  replaceable: boolean,
+  rowMeta: boolean,
+): OpenView {
   return {
     viewId,
     replaceable,
+    rowMeta,
     frame: undefined,
     tree: null,
     revision: 0,
@@ -100,12 +115,8 @@ function pageView(viewId: PluginViewId, replaceable: boolean): OpenView {
   };
 }
 
-function drawingFailure(
-  hub: PageHub,
-  view: OpenView,
-  replaceable: boolean,
-): (error: Error) => void {
-  return replaceable ? (error) => failDrawing(hub, view, error) : reportFailure;
+function drawingFailure(hub: PageHub, view: OpenView): (error: Error) => void {
+  return (error) => failDrawing(hub, view, error);
 }
 
 const canCommit = (hub: PageHub, view: OpenView): boolean =>
@@ -124,10 +135,23 @@ function tryCommit(
 }
 
 function pageRoot(view: OpenView, container: Instance): Instance | undefined {
-  if (view.replaceable && container.children.length !== 1)
-    throw new Error('A replacement must draw one component');
+  if (view.rowMeta) return metaRoot(container);
+  requireReplacementRoot(view, container);
 
   return container.children[0];
+}
+
+function requireReplacementRoot(view: OpenView, container: Instance): void {
+  if (view.replaceable && container.children.length !== 1)
+    throw new Error('A replacement must draw one component');
+}
+
+function metaRoot(container: Instance): Instance {
+  return {
+    type: 'Stack',
+    props: { direction: 'row' },
+    children: container.children,
+  };
 }
 
 export function failedDrawingRoot(reason: string): WireNode {

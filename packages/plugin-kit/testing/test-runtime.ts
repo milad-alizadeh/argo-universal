@@ -1,57 +1,39 @@
 import { delimiter } from 'node:path';
-import type {
-  PluginManifest,
-  PluginProjectInfo,
-  PluginSettingField,
-  PluginSettingValue,
-} from '@repo/contracts/plugins';
+import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { MemoryKeychain } from '@repo/engine/mocks/keychain';
-import {
-  createPluginRuntime,
-  readPluginManifest,
-  type PluginRuntime,
-} from '@repo/engine/plugins';
+import { createPluginRuntime, type PluginRuntime } from '@repo/engine/plugins';
+import type { ConfiguredTest } from './test-configuration';
 import type { PluginTestOptions } from './test-types';
 
-export async function configureTest(
-  options: PluginTestOptions,
-): Promise<PluginTestOptions> {
-  const manifest = await readPluginManifest(options.directory, options.version);
-
-  return {
-    ...options,
-    settings: options.settings ?? defaultSettings(manifest),
-  };
-}
-
-function defaultSettings(
-  manifest: PluginManifest,
-): Map<string, PluginSettingValue> {
-  return new Map((manifest.contributes.settings ?? []).flatMap(settingDefault));
-}
-
-function settingDefault(
-  field: PluginSettingField,
-): [string, PluginSettingValue][] {
-  if (!('default' in field)) return [];
-
-  return field.default === undefined ? [] : [[field.key, field.default]];
-}
+export { configureTest, type ConfiguredTest } from './test-configuration';
 
 export function runtimeFor(
   home: string,
-  options: PluginTestOptions,
+  options: ConfiguredTest,
 ): PluginRuntime {
   return createPluginRuntime(home, {
     keychain: new MemoryKeychain(),
     clockStart: options.clockStart,
     network: options.network,
-    settings: async (_id, key) => options.settings?.get(key) ?? null,
-    projects: async (): Promise<string[]> => [],
-    projectInfo: async (): Promise<PluginProjectInfo[]> =>
-      options.projects ?? [],
+    settings: async (id, key) =>
+      options.settingsByPlugin.get(id)?.get(key) ?? null,
+    ...projectOptions(options),
     environment: testEnvironment(options),
   });
+}
+
+function projectOptions(
+  options: ConfiguredTest,
+): Pick<
+  Parameters<typeof createPluginRuntime>[1],
+  'projects' | 'projectPath' | 'projectInfo'
+> {
+  return {
+    projects: async (): Promise<string[]> =>
+      Object.values(options.projectPaths),
+    projectPath: async (projectId) => options.projectPaths[projectId],
+    projectInfo: async (): Promise<PluginProjectInfo[]> => options.projects,
+  };
 }
 
 function testEnvironment(options: PluginTestOptions): NodeJS.ProcessEnv {
