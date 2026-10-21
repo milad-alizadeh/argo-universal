@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react';
 import { createElement, type JSX } from 'react';
-import { useChangesStage, ChangesSheetHeader } from '#features/changes';
+import {
+  useChangesStage,
+  ChangesSheetHeader,
+  ChangesFiles,
+} from '#features/changes';
 import {
   type SessionPanel,
   sessionPanelLabels,
@@ -95,9 +99,22 @@ export function SessionInspector(
 
   return (
     <SizeClass
-      compact={phonePanels.has(props.panels.state.shown) ? null : inspector}
+      compact={
+        phonePanels.has(props.panels.state.shown) ? null : phoneInspector(props)
+      }
       wide={inspector}
     />
+  );
+}
+
+function phoneInspector(props: SessionInspectorProps): JSX.Element {
+  return createElement(
+    Inspector,
+    {
+      ...inspectorProps(props),
+      sheetHeader: createElement(ChangesSheetHeader),
+    },
+    props.changes && createElement(ChangesFiles, props.changes),
   );
 }
 

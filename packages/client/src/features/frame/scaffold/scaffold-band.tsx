@@ -25,6 +25,11 @@ function SidebarBandToggle({ layout }: ScaffoldPartProps): ReactElement {
   );
 }
 
+const sidebarControl = (parts: ScaffoldPartProps): ReactElement | null =>
+  parts.scaffold.list || parts.scaffold.listHeader ? (
+    <SidebarBandToggle {...parts} />
+  ) : null;
+
 type BandLeadingProps = ScaffoldPartProps & {
   platform: keyof typeof leadingWidths;
 };
@@ -40,7 +45,7 @@ function BandLeading({ platform, ...parts }: BandLeadingProps): ReactElement {
       className="shrink-0 flex-row items-center web:[app-region:no-drag]"
       style={style}
     >
-      <SidebarBandToggle {...parts} />
+      {sidebarControl(parts)}
     </View>
   );
 }
