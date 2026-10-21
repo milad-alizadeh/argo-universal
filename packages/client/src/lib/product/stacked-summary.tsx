@@ -16,9 +16,7 @@ interface Props {
   label: string;
 }
 
-const visibleMarks = 3;
-
-// Paper's group entry: a bounded stack of decorative marks and its summary.
+// Paper's group entry: distinct decorative icons and their summary.
 export function StackedSummary({ marks, label }: Props): ReactElement {
   return (
     <View className="flex-row items-center gap-2 px-1 py-2">
@@ -42,7 +40,7 @@ const markStackProps = {
 function SummaryMarks({ marks }: Pick<Props, 'marks'>): ReactElement {
   return (
     <View {...markStackProps}>
-      {marks.slice(0, visibleMarks).map((mark, index) => (
+      {uniqueMarks(marks).map((mark, index) => (
         <View key={mark.key} className={index > 0 ? '-ml-1.5' : undefined}>
           <SummaryIcon mark={mark} />
         </View>
@@ -72,4 +70,15 @@ function summaryGlyph(mark: SummaryMark): ReactElement {
       form={mark.surface === 'glass' ? 'bare' : 'disc'}
     />
   );
+}
+
+function uniqueMarks(marks: readonly SummaryMark[]): SummaryMark[] {
+  const seen = new Set<IconName>();
+
+  return marks.filter(({ icon }) => {
+    if (seen.has(icon)) return false;
+    seen.add(icon);
+
+    return true;
+  });
 }

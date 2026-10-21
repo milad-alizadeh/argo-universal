@@ -11,7 +11,10 @@ const agentMarks: SummaryMark[] = [
 
 const changeMarks: SummaryMark[] = [
   { key: 'merged', icon: 'pr-merged', tone: 'done', surface: 'glass' },
+  { key: 'merged-again', icon: 'pr-merged', tone: 'done', surface: 'glass' },
   { key: 'closed', icon: 'pr-closed', tone: 'danger', surface: 'glass' },
+  { key: 'open', icon: 'pr-open', tone: 'success', surface: 'glass' },
+  { key: 'branch', icon: 'branch', tone: 'neutral', surface: 'glass' },
 ];
 
 const shellMarks: SummaryMark[] = ['first', 'second', 'third'].map((key) => ({
@@ -39,7 +42,11 @@ type Story = StoryObj<typeof meta>;
 
 const examples = [
   { name: 'Agents', marks: agentMarks, label: '2 done' },
-  { name: 'Changes', marks: changeMarks, label: '1 merged, 1 closed' },
+  {
+    name: 'Changes',
+    marks: changeMarks,
+    label: '2 merged, 1 closed, 1 open, 1 branch',
+  },
   { name: 'Shells', marks: shellMarks, label: '3 shells' },
 ];
 
