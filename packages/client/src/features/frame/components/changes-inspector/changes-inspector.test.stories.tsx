@@ -37,6 +37,19 @@ async function expectLineTotals(
   }
 }
 
+async function expectInitialFiles(
+  canvas: ReturnType<typeof within>,
+  width: number,
+): Promise<void> {
+  if (width === layoutWidths.phone) {
+    await expect(canvas.getByText(lastAddedLine)).toBeVisible();
+    await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'true');
+  } else {
+    await expect(canvas.queryByText(lastAddedLine)).toBeNull();
+    await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
+  }
+}
+
 // The toolbar counts every file and its lines; a viewed file starts folded.
 export const ShowsFilesAndTotals: Story = {
   play: async ({ canvas }) => {
@@ -47,8 +60,7 @@ export const ShowsFilesAndTotals: Story = {
       await expectComparison(allChanges, width);
       await expect(canvas.getByText(fewSummary)).toBeVisible();
       await expectLineTotals(canvas, width);
-      await expect(canvas.getByText(lastAddedLine)).toBeVisible();
-      await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'true');
+      await expectInitialFiles(canvas, width);
       await expect(fileHeader('/repo/src/feed.ts')).toHaveAttribute(
         expanded,
         'false',
