@@ -1,5 +1,4 @@
 import {
-  PageAtDrawerRoot,
   PluginDetailScreen,
   pluginPath,
   SectionListDetail,
@@ -14,7 +13,6 @@ import {
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { hasRowDetail, PluginRowDetails } from './plugin-row-detail';
-import { drawerDrawsRootHeader } from './section-drawer-options';
 import { MenuToolbar } from './section-root';
 import { PageStack } from './section-stack';
 
@@ -53,37 +51,26 @@ interface PluginRootProps {
 }
 
 /*
- * A Plugin page with, at a narrow root on iOS, ☰ as a stock bar button item, as a section root has. Android's drawer
- * draws a root's header, so its Page hands the drawer its title and Actions. A ListDetail page puts its list in the
- * Frame's sidebar on a wide window.
+ * A Plugin page with, at a narrow root on iOS, ☰ as a stock bar button item, as a section root has; elsewhere the
+ * stack header draws ☰ itself. A ListDetail page puts its list in the Frame's sidebar on a wide window.
  */
 export function PluginRoot({ path }: PluginRootProps): React.JSX.Element {
-  const { narrowRoot, drawerRoot } = useRootPlace(path);
-
   return (
-    <PageAtDrawerRoot value={drawerRoot}>
+    <>
       <SectionListDetail>
         <PluginRowDetails>
           <PluginDetailScreen path={path} />
         </PluginRowDetails>
       </SectionListDetail>
-      {narrowRoot ? <PluginMenuToolbar /> : null}
-    </PageAtDrawerRoot>
+      {useNarrowRoot(path) ? <PluginMenuToolbar /> : null}
+    </>
   );
 }
 
-interface RootPlace {
-  narrowRoot: boolean;
-  drawerRoot: boolean;
-}
-
-function useRootPlace(path: readonly string[]): RootPlace {
+function useNarrowRoot(path: readonly string[]): boolean {
   const { row } = useLocalSearchParams<RowParams>();
   const root = useNavRoot(pluginPath(path), row);
   const wide = useWide();
 
-  return {
-    narrowRoot: root && !wide,
-    drawerRoot: root && drawerDrawsRootHeader,
-  };
+  return root && !wide;
 }

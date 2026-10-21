@@ -28,7 +28,7 @@ const smallEdit: RecordedEdit = {
   path: '/project/hello.txt',
   verb: 'Edited',
   added: '+1',
-  removed: '-1',
+  removed: '−1',
   line: 'hello Argo',
   summary: false,
 };
@@ -42,7 +42,7 @@ const smallPatch: RecordedEdit = {
   path: '/repo/app.txt',
   verb: 'Edited',
   added: '+1',
-  removed: '-1',
+  removed: '−1',
   line: 'gamma',
   summary: true,
 };
@@ -97,7 +97,7 @@ export const FailedEdit: Story = {
       await expect(feed.getByText('file.txt')).toBeVisible();
       await expect(feed.queryByTestId('diff-view')).toBeNull();
       await expect(feed.queryByText('+1')).toBeNull();
-      await expect(feed.queryByText('-1')).toBeNull();
+      await expect(feed.queryByText('−1')).toBeNull();
     }
   },
 };

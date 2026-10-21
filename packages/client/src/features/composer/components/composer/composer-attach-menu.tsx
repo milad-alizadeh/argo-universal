@@ -28,19 +28,17 @@ export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
   );
 }
 
-// Desktop controls match Paper; native hitSlop and narrow web minimums preserve touch targets.
-export const composerIconButton =
-  'size-7 wide:min-h-0 wide:min-w-0 native:min-h-0 native:min-w-0 android:min-h-0 android:min-w-0';
+// Wide, a 16x28 slot; `2xs` holds the 28 at every other width and hitSlop carries the touch target.
+export const composerIconButton = 'wide:w-4 wide:mr-1.5';
 
 const attachTriggerProps = {
   icon: 'add',
   variant: 'ghost',
-  size: 'xs',
+  size: '2xs',
   iconRole: 'control',
   hitSlop: 8,
   accessibilityLabel: 'Attach',
-  // Wide, a 16x28 slot. `wide:sm:` because the CSS orders `wide:` before the size's `sm:`.
-  className: `p-0 ${composerIconButton} wide:sm:w-4 wide:mr-1.5`,
+  className: `p-0 ${composerIconButton}`,
   iconClassName: 'text-muted-foreground',
 } as const;
 

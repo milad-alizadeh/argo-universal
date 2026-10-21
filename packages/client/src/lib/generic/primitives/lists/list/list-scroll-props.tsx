@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Platform } from 'react-native';
+import { useScrollEndGap } from '#lib/generic/scroll-surface';
 import { Icon } from '#primitives/content/icon';
 import { ListFooter } from '../../../list-footer';
 import { listTestIdProps } from '../../../list-test-id';
@@ -106,6 +107,15 @@ function accessibilityProps<Item>(
   };
 }
 
+// The clear space the sheet around the list asks for, drawn after its last row rather than under it.
+function ScrollEndGap(): ReactElement | null {
+  const gap = useScrollEndGap();
+
+  if (gap <= 0) return null;
+
+  return <View style={{ height: gap }} />;
+}
+
 function PageFooter({ text }: { text?: string }): ReactNode {
   if (!text) return null;
 
@@ -124,6 +134,7 @@ function ListEnd(
     <>
       {props.endContent}
       <PageFooter text={props.footer} />
+      <ScrollEndGap />
     </>
   );
 }

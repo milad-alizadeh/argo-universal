@@ -9,14 +9,13 @@ import {
   SheetPageContent,
   type SheetPageContentProps,
 } from './sheet-page-content';
-import { backLabel } from './sheet-page-label';
+import { SheetPageHeader } from './sheet-page-header';
 import {
   useLeavingPage,
   useSlideEnd,
   type LeavingPage,
 } from './sheet-page-motion';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
-import { SheetTitleRow } from './sheet-title-row';
 
 interface StackProps {
   hideRootTitle?: boolean;
@@ -152,14 +151,12 @@ function pageClass(props: PageProps): string {
 }
 
 function PageHeader(props: PageProps): ReactElement | null {
-  if (hideHeader(props)) return null;
-
   return (
-    <SheetTitleRow
-      title={props.page.title}
-      action={props.page.action}
-      backLabel={pageBackLabel(props)}
-      onBack={props.stack.navigation.back}
+    <SheetPageHeader
+      page={props.page}
+      stack={props.stack}
+      hidden={hideHeader(props)}
+      root={props.index === 0}
     />
   );
 }
@@ -168,10 +165,6 @@ function hideHeader(props: PageProps): boolean {
   return (
     props.index === 0 && (props.hideRootTitle || !props.page.title) === true
   );
-}
-
-function pageBackLabel(props: PageProps): string | undefined {
-  return props.index === 0 ? undefined : backLabel(props.stack);
 }
 
 const pageScrolls = (props: PageProps): boolean | undefined =>

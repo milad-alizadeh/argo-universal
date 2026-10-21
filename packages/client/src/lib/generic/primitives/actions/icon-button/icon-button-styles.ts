@@ -29,6 +29,12 @@ export const iconButtonClasses = cva(
         round: 'rounded-full web:rounded-full',
       },
       size: {
+        /*
+         * One box at every width, and no touch minimum: a glyph in a dense row, such as the Composer's Attach and
+         * Send, where a 44 box around a 16 glyph is most of the row's height. The target comes back through
+         * `hitSlop`, so the button stays reachable while the row stays the size Paper draws (owner, 2026-10-21).
+         */
+        '2xs': 'size-7 min-h-0 min-w-0 android:min-h-0 android:min-w-0',
         xs: 'size-11 sm:size-7',
         sm: 'size-11 sm:size-8',
         md: 'size-11 sm:size-10',

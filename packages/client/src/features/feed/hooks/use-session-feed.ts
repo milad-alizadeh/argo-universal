@@ -16,6 +16,7 @@ import type { SessionFeed } from './session-feed';
 import { useFeedHistory } from './use-feed-history';
 import { useFeedSyncPoint } from './use-feed-sync-point';
 import { useFeedView } from './use-feed-view';
+import { useFrameCommit } from './use-frame-commit';
 
 // A fetch the hook keeps in its own state, so the query cache never holds it.
 const uncached = { staleTime: 0, gcTime: 0 };
@@ -29,14 +30,19 @@ export function useSessionFeed(sessionId: string | undefined): SessionFeed {
   const history = useFeedHistory(sessionId, feed);
   const feedRef = useRef(feed);
   const activeSession = useRef(sessionId);
+  const commit = useFrameCommit(setFeed, activeSession);
 
+  /*
+   * The rows held take the change at once, so the event after it reads the newest text; the commit
+   * that rebuilds the view and redraws the list is left to the frame.
+   */
   const replaceFeed = useCallback(
     (next: FeedState) => {
       if (activeSession.current !== sessionId) return;
       feedRef.current = next;
-      setFeed(next);
+      commit.schedule(next);
     },
-    [sessionId],
+    [sessionId, commit],
   );
 
   const closed = useRef(false);
@@ -146,6 +152,8 @@ export function useSessionFeed(sessionId: string | undefined): SessionFeed {
   // Session identity changes reset the held read before any view can show another Session's data.
   if (shownSession !== sessionId) {
     setShownSession(sessionId);
+    // A commit held for the Session just left would otherwise land over this one's first page.
+    commit.cancel();
     setFeed(start.feed);
     setSnapshot(start.snapshot);
     setClosureError(null);

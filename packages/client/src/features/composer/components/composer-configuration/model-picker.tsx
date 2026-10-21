@@ -22,6 +22,7 @@ export function ModelPicker(props: ModelPickerProps): ReactElement | null {
       leading={<ConfigurationRowIcon name="code-map" />}
       title="Select Model"
       choiceLabel={modelName}
+      eager
     />
   );
 }

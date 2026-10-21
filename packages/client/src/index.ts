@@ -97,7 +97,7 @@ export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
-export { PageAtDrawerRoot, PageBesideList } from '#primitives/scaffolds/page';
+export { PageBesideList } from '#primitives/scaffolds/page';
 
 export {
   TableRowDetailHost,

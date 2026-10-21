@@ -1,9 +1,10 @@
 import type { ReactElement } from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { trayCardClassName, trayClassName } from '#lib/generic/tray-surface';
 import { Button } from '#primitives/actions/button';
 import { CodeBlockBody } from './code-block-body';
-import { CodeBlockHeader, codeBlockTray } from './code-block-header';
+import { CodeBlockHeader } from './code-block-header';
 import type { CodeProps } from './code-props';
 import { codeBlockGroup } from './copy-button';
 import { DiffScroll } from './diff-hunks';
@@ -19,7 +20,7 @@ export function Code(props: CodeProps): ReactElement {
   return (
     <View
       testID={props.diff ? 'diff-view' : undefined}
-      className={`${codeBlockGroup} ${codeBlockTray}`}
+      className={`${codeBlockGroup} ${trayClassName}`}
     >
       <CodeBlockHeader title={codeTitle(props)} copyValue={copyValue(props)} />
       <CodeContent {...props} />
@@ -61,7 +62,7 @@ function CodeDiff({ diff, path }: DiffProps): ReactElement {
 }
 
 function DiffFrame({ children }: { children: React.ReactNode }): ReactElement {
-  return <View className="overflow-hidden rounded-xl bg-card">{children}</View>;
+  return <View className={trayCardClassName}>{children}</View>;
 }
 
 function showAllProps(

@@ -3,10 +3,10 @@ import { View } from 'react-native';
 import { installedError, registryError, type RowsLoad } from '#features/agents';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
-import { Spinner } from '#primitives/status/spinner';
 
 type StateProps = {
-  load?: Exclude<RowsLoad, { status: 'loaded' }>;
+  // A load still going draws the loading cards instead, so only a failure is named here.
+  load?: Extract<RowsLoad, { status: 'failed' }>;
   empty?: string;
   onRetry?: () => void;
 };
@@ -19,9 +19,6 @@ const failedMessage = {
 export function RegistryState(props: StateProps): React.JSX.Element {
   return (
     <View className="min-h-40 items-center justify-center gap-3 p-4">
-      {props.load?.status === 'loading' && (
-        <Spinner accessibilityLabel="Loading Registry…" />
-      )}
       <StateMessage {...props} />
       <RetryRegistry {...props} />
     </View>
@@ -29,7 +26,7 @@ export function RegistryState(props: StateProps): React.JSX.Element {
 }
 
 const loadMessage = (load: StateProps['load']): string =>
-  load?.status === 'failed' ? failedMessage[load.failed] : 'Loading Registry…';
+  load ? failedMessage[load.failed] : '';
 
 function StateMessage(props: StateProps): React.JSX.Element {
   return (
@@ -40,7 +37,7 @@ function StateMessage(props: StateProps): React.JSX.Element {
 }
 
 function RetryRegistry(props: StateProps): React.JSX.Element | null {
-  return props.load?.status === 'failed' ? (
+  return props.load ? (
     <Button label="Retry" variant="secondary" onPress={props.onRetry} />
   ) : null;
 }

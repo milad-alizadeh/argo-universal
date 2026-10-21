@@ -29,7 +29,7 @@ interface LineProps {
 }
 
 const lineNumberClassName = ({ inline }: LineProps): string =>
-  cn('shrink-0 text-right', 'text-focus', inline ? 'w-7' : 'w-9');
+  cn('shrink-0 text-right', 'text-tertiary', inline ? 'w-7' : 'w-9');
 
 const lineKey = (line: DiffLine): string => `${line.kind}:${line.text}`;
 

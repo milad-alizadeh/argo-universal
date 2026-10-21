@@ -42,8 +42,15 @@ type RegistryRefresh = UseMutationResult<
   void
 >;
 
+/*
+ * Sync asks the Server for its Registry copy and lets it decide whether to fetch; refresh makes it fetch.
+ * Opening a surface syncs, so a reader who opens the Agents page twice in a minute waits for the CDN once;
+ * Retry refreshes, because a reader who presses it is saying the copy is the thing that is wrong.
+ */
+type RegistryCall = 'syncRegistry' | 'refreshRegistry';
+
 // A refreshed Registry can change which Installed Agents the Server lists.
-function useRegistryRefresh(): RegistryRefresh {
+function useRegistryCall(call: RegistryCall): RegistryRefresh {
   const trpc = useTRPC(),
     cache = useQueryClient(),
     invalidate = useInstalledInvalidation();
@@ -53,9 +60,7 @@ function useRegistryRefresh(): RegistryRefresh {
     void invalidate();
   };
 
-  return useMutation(
-    trpc.agents.refreshRegistry.mutationOptions({ onSuccess }),
-  );
+  return useMutation(trpc.agents[call].mutationOptions({ onSuccess }));
 }
 
 interface Registry {
@@ -63,20 +68,28 @@ interface Registry {
   refresh: () => void;
 }
 
-// The Registry copy the Server keeps, refreshed once on mount.
+// Either call is the Registry loading, and either one failing is the Registry failing.
+const registryCalls = (
+  calls: readonly Pick<RegistryRefresh, 'isPending' | 'isError'>[],
+): Pick<Parameters<typeof registryLoad>[0], 'refreshing' | 'failed'> => ({
+  refreshing: calls.some(({ isPending }) => isPending),
+  failed: calls.some(({ isError }) => isError),
+});
+
+// The Registry copy the Server keeps, synced once on mount.
 function useRegistry(): Registry {
   const query = useQuery(useTRPC().agents.registry.queryOptions());
-  const refresh = useRegistryRefresh();
-  const { mutate } = refresh;
+  const sync = useRegistryCall('syncRegistry');
+  const refresh = useRegistryCall('refreshRegistry');
+  const { mutate } = sync;
   useEffect(() => mutate(), [mutate]);
 
   const load = registryLoad({
     data: query.data,
-    refreshing: refresh.isPending,
-    failed: query.isError || refresh.isError,
+    ...registryCalls([sync, refresh]),
   });
 
-  return { load, refresh: () => mutate() };
+  return { load, refresh: () => refresh.mutate() };
 }
 
 export interface RegistryAgents extends AgentChanges {

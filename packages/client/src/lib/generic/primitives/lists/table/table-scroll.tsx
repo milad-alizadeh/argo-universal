@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
+import { trayClassName } from '../../../tray-surface';
 import { useSpacing } from '../../../use-spacing';
 import { CellContent, columnClass } from './table-cell';
 import { HeaderCell } from './table-header';
@@ -13,7 +14,7 @@ type ScrollProps = TableProps & {
   rows: readonly TableRow[];
 };
 
-const trayClass = 'relative overflow-hidden rounded-2xl bg-tint px-1 pb-1';
+const trayClass = `relative overflow-hidden ${trayClassName}`;
 
 /*
  * compactLayout "scroll", a Markdown pipe table's: the grid stays at compact widths, its first column pinned and the

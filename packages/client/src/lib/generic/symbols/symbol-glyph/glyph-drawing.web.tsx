@@ -9,7 +9,7 @@ import {
 } from '../symbol-images';
 import { referenceShare } from '../symbol-path';
 import { tablerSymbolPath } from '../tabler-symbols';
-import { materialArtworkScale } from './material-artwork-scale';
+import { materialGlyphScale } from './material-glyph-scale';
 import { MaterialGlyph } from './material-glyph.web';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 import { PathMask, SymbolMask } from './symbol-mask.web';
@@ -69,11 +69,9 @@ function SystemGlyph(props: SystemGlyphProps): React.JSX.Element {
   return <MaterialGlyph {...props} pixels={materialPixels(props)} />;
 }
 
+// The role's pixels are the slot, and every Material glyph takes the same share of it.
 function materialPixels(props: SystemGlyphProps): number {
-  return (
-    props.pixels *
-    (props.fitArtwork ? materialArtworkScale(props.symbol.material) : 1)
-  );
+  return props.pixels * materialGlyphScale;
 }
 
 interface AppleSymbolImageProps extends Pick<

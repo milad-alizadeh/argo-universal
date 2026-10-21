@@ -1,8 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { trayClassName } from '#lib/generic/tray-surface';
 import { cn } from '#lib/generic/utils';
 import { CodeBlockBody } from './code-block-body';
-import { CodeBlockHeader, codeBlockTray } from './code-block-header';
+import { CodeBlockHeader } from './code-block-header';
 import {
   type CodeBlockSource,
   copyAction,
@@ -21,7 +22,7 @@ export type ResourceCodeProps = {
 
 function CodeBlockFrame({ children }: { children: ReactNode }): ReactElement {
   return (
-    <View className={cn(codeBlockGroup, codeBlockTray, 'cursor-auto')}>
+    <View className={cn(codeBlockGroup, trayClassName, 'cursor-auto')}>
       {children}
     </View>
   );

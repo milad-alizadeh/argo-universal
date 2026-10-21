@@ -7,9 +7,6 @@ import { CodeBlockTitle } from './code-block-title/code-block-title';
 import { CopyButton } from './copy-button';
 import { type HeaderResource, ResourceHeading } from './resource-heading';
 
-// The tray that holds a CodeBlockHeader and its body: code blocks, tool output and inline diffs.
-export const codeBlockTray = 'overflow-hidden rounded-2xl bg-tint px-1 pb-1';
-
 interface CodeBlockHeaderProps {
   title: string;
   copyValue: string;
@@ -35,10 +32,13 @@ function HeaderTitle({
   return <LanguageTitle title={title} />;
 }
 
+const shellLanguages = new Set(['bash', 'sh', 'shell', 'zsh']);
+
 function languageIcon(
   title: string,
 ): NonNullable<React.ComponentProps<typeof Icon>['name']> {
-  if (['bash', 'sh', 'shell', 'zsh'].includes(title)) return 'terminal';
+  // A fence writes its language in lower case; a Shell card titles itself "Shell".
+  if (shellLanguages.has(title.toLowerCase())) return 'terminal';
 
   return fileTypeIcon(title.includes('.') ? title : `snippet.${title}`);
 }
@@ -48,7 +48,7 @@ function LanguageTitle({
 }: Pick<CodeBlockHeaderProps, 'title'>): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-1.5 pr-2">
-      <Icon name={languageIcon(title)} role="mark" tone="muted" />
+      <Icon name={languageIcon(title)} role="body" tone="muted" />
       <CodeBlockTitle title={title} />
     </View>
   );

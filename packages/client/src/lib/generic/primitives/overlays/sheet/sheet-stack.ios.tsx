@@ -16,6 +16,7 @@ import { SheetContent } from './sheet-content.ios';
 import { SheetPageToolbar } from './sheet-page-toolbar.ios';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
+import { sheetDetents } from './sheet-state';
 
 // A popover sizes to its pages, so they match their content at the popover's width.
 type PagesProps = SheetProps & { stack: SheetStack; popoverWidth?: number };
@@ -28,21 +29,37 @@ export function SheetPages(props: PagesProps): ReactElement {
 
   return (
     <NavigationStack path={props.stack.path} onPathChange={props.stack.setPath}>
-      <StackPage {...props} page={root} />
-      {pushed.map((page) => (
-        <NavigationDestination key={page.name} value={page.name}>
-          <StackPage {...props} page={page} />
-        </NavigationDestination>
-      ))}
+      <StackPage
+        {...props}
+        page={root}
+        onClose={props.stack.navigation.close}
+      />
+      {pushed.map((page) => pushedPage(props, page))}
     </NavigationStack>
   );
 }
 
+const pushedPage = (props: PagesProps, page: SheetPageEntry): ReactElement => (
+  <NavigationDestination key={page.name} value={page.name}>
+    <StackPage {...props} page={page} />
+  </NavigationDestination>
+);
+
+/*
+ * A page fills a sheet presented at detents, and is as tall as itself in one that fits its content.
+ * The detents read here are the ones the sheet is presented at, which a paged sheet is given without
+ * naming them: a page sized to itself inside a shorter sheet is cut off at the sheet's edge.
+ */
 function SinglePage(props: PagesProps): ReactElement {
+  const detents = sheetDetents({
+    detents: props.detents,
+    paged: props.stack.pages.length > 0,
+  });
+
   return (
     <SheetContent
       {...props}
-      fill={props.detents !== undefined && !props.popoverWidth}
+      fill={detents !== undefined && !props.popoverWidth}
       width={props.popoverWidth}
     >
       {props.children}
@@ -50,11 +67,15 @@ function SinglePage(props: PagesProps): ReactElement {
   );
 }
 
-type PageProps = PagesProps & { page: SheetPageEntry };
+type PageProps = PagesProps & {
+  page: SheetPageEntry;
+  // Given to the root page alone, which has no page below it to go back to.
+  onClose?: () => void;
+};
 
 function StackPage(props: PageProps): ReactElement {
   return (
-    <SheetPageToolbar page={props.page}>
+    <SheetPageToolbar page={props.page} onClose={props.onClose}>
       <PageBody {...props} />
     </SheetPageToolbar>
   );

@@ -22,6 +22,10 @@ const examples = [
     value: 'Match the spacing.\nKeep the phone readable.\nUse both themes.',
   },
   {
+    label: 'Headings',
+    value: '# Title heading\n\n## Second heading\n\nBody text for comparison',
+  },
+  {
     label: 'Nested lists',
     value:
       '- Plan the layout\n    - Draft the rows\n        - Outline\n- Ship\n\n1. Build\n    1. Test\n2. Release',

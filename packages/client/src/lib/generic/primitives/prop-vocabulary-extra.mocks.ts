@@ -63,6 +63,7 @@ export type AdditionalPrimitives = {
   DeclaredSubmenu: ActionListKit.DeclaredSubmenu;
   HeaderSink: ActionListKit.HeaderSink;
   ListItemFieldProps: ListItemKit.ListItemFieldProps;
+  LoadingRow: ListItemKit.LoadingRow;
   KbdProps: KbdKit.KbdProps;
   ActionListProps: ActionListKit.ActionListProps;
   ActionProps: ActionListKit.ActionProps;

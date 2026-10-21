@@ -63,7 +63,7 @@ function LineCounts({ file }: FileEditProps): React.JSX.Element {
         +{file.added.toLocaleString('en-US')}
       </LineCount>
       <LineCount count={file.removed} className="text-danger">
-        -{file.removed.toLocaleString('en-US')}
+        −{file.removed.toLocaleString('en-US')}
       </LineCount>
     </>
   );

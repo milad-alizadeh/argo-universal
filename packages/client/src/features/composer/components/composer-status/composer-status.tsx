@@ -31,18 +31,35 @@ export function ComposerStatusControls({
   return <StatusControlsRow status={status} disabled={disabled} wide={wide} />;
 }
 
+/*
+ * Usage is a desktop control. A phone's Composer row holds Attach, the Agent and model, the mark for the Session's
+ * context and Mode's own name, and a second gauge for a limit that resets on its own clock took the room the
+ * model's name needed; Usage keeps its place on a desktop and its page in Settings (owner, 2026-10-21).
+ */
 function StatusControlsRow({
   status,
   ...controlProps
 }: StatusControlsProps & { wide: boolean }): JSX.Element {
   return (
     <View className="flex-row gap-1 items-center min-w-0">
-      {status.usage && <UsageControl usage={status.usage} {...controlProps} />}
+      <StatusUsage usage={status.usage} {...controlProps} />
       {status.context && (
         <ContextControl context={status.context} {...controlProps} />
       )}
     </View>
   );
+}
+
+function StatusUsage({
+  usage,
+  ...controlProps
+}: Pick<ComposerStatusProps, 'usage'> & {
+  disabled: boolean;
+  wide: boolean;
+}): JSX.Element | null {
+  if (!usage || !controlProps.wide) return null;
+
+  return <UsageControl usage={usage} {...controlProps} />;
 }
 
 export function ComposerWorkChips(props: StatusControlsProps): JSX.Element {

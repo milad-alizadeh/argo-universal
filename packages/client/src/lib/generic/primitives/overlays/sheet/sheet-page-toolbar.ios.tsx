@@ -7,25 +7,51 @@ import type { SheetPageAction } from './sheet-props';
 
 type ToolbarProps = {
   page: SheetPageEntry;
+  /*
+   * The sheet's own way out, which only the root page carries: there is nothing below it for the system's
+   * Back to return to, and the leading end of the bar would otherwise stand empty (owner, 2026-10-21).
+   */
+  onClose?: () => void;
   children: ReactElement;
 };
 
 /*
- * A page's action in SwiftUI's own toolbar (Toolbar/index.d.ts, `toolbar(content:)`), as a `topBarTrailing`
- * text button beside the inline navigation title.
+ * A page's close and action in SwiftUI's own toolbar (Toolbar/index.d.ts, `toolbar(content:)`), beside the
+ * inline navigation title: the close leading, the action trailing.
  */
 export function SheetPageToolbar(props: ToolbarProps): ReactElement {
-  const { action } = props.page;
+  const items = toolbarItems(props);
 
-  if (!action) return props.children;
+  if (items.length === 0) return props.children;
 
   return (
     <Toolbar>
       {props.children}
-      <Toolbar.Content>
-        <PageAction action={action} />
-      </Toolbar.Content>
+      <Toolbar.Content>{items}</Toolbar.Content>
     </Toolbar>
+  );
+}
+
+function toolbarItems(props: ToolbarProps): ReactElement[] {
+  const { action } = props.page;
+
+  return [
+    ...(props.onClose
+      ? [<CloseItem key="close" onClose={props.onClose} />]
+      : []),
+    ...(action ? [<PageAction key="action" action={action} />] : []),
+  ];
+}
+
+/*
+ * SwiftUI's own close button (Button/index.d.ts, role `close`): given no label the system draws it as the
+ * xmark, the glyph every other sheet on the platform is dismissed by.
+ */
+function CloseItem({ onClose }: { onClose: () => void }): ReactElement {
+  return (
+    <ToolbarItem placement="topBarLeading">
+      <Button role="close" onPress={onClose} />
+    </ToolbarItem>
   );
 }
 

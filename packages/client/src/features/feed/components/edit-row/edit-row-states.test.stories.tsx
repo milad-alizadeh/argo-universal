@@ -24,7 +24,7 @@ const deletedFile: RecordedEdit = {
   path: '/repo/legacy.txt',
   verb: 'Deleted',
   added: null,
-  removed: '-3',
+  removed: '−3',
   line: 'first legacy line',
   summary: true,
 };
@@ -38,7 +38,7 @@ const largeDiff: RecordedEdit = {
   path: '/repo/large.txt',
   verb: 'Edited',
   added: '+60',
-  removed: '-60',
+  removed: '−60',
   line: 'old value 1',
   summary: true,
 };

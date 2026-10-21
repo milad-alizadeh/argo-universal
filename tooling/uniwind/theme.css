@@ -138,6 +138,8 @@
   --text-badge: var(--text-xs);
   --leading-badge: var(--leading-4);
   --font-weight-badge: var(--font-weight-medium);
+  /* Mono reads larger than SF Pro Text at the same size, so the Code role sits
+     one step under Body rather than level with it (owner, 2026-10-20). */
   --text-code: var(--text-xs);
   --leading-code: var(--leading-5);
   --font-weight-code: var(--font-weight-normal);
@@ -332,13 +334,18 @@
       /* Quiet fields and secondary surfaces; interaction states have their own
          tints. Neutral, as every other grey: the step lighter than neutral-200. */
       --color-muted: var(--color-neutral-100);
-      --color-muted-foreground: var(--color-neutral-500);
-      /* A step quieter than muted-foreground: a grouped row's disclosure chevron. */
-      --color-tertiary: var(--color-neutral-400);
+      /* 7.8:1, matching dark's 7.6:1, so secondary text reads the same strength
+         in both themes. */
+      --color-muted-foreground: var(--color-neutral-600);
+      /* A step quieter than muted-foreground: a grouped row's disclosure chevron,
+         a diff's line numbers. Only ever marks that repeat an adjacent label. */
+      --color-tertiary: var(--color-neutral-500);
       --color-danger: var(--color-red-500);
       /* One step darker than muted, so a border shows on a muted fill. */
       --color-border: var(--color-neutral-300);
-      --color-focus: var(--color-neutral-400);
+      /* A focus ring and a link's underline are the only affordance they carry,
+         so they need 3:1 against the surface; neutral-400 gave 2.6:1. */
+      --color-focus: var(--color-neutral-500);
       /* Finished work: a merged pull request, a completed issue. */
       --color-done: var(--color-violet-600);
       --color-success: var(--color-green-600);
@@ -480,8 +487,8 @@
       --color-accent: var(--color-blue-600);
       --color-muted: var(--color-neutral-800);
       --color-muted-foreground: var(--color-neutral-400);
-      /* iOS's tertiary label on a dark card. */
-      --color-tertiary: var(--color-neutral-600);
+      /* iOS's tertiary label on a dark card, a step up so it clears 3:1. */
+      --color-tertiary: var(--color-neutral-500);
       --color-danger: var(--color-red-400);
       /* A white alpha, so an edge shows on every surface, muted fills included. */
       --color-border: color-mix(in oklab, var(--color-white) 10%, transparent);
@@ -562,6 +569,9 @@
   line-height: var(--leading-secondary);
   font-weight: var(--font-weight-secondary);
   color: var(--color-muted-foreground);
+  /* Durations, counts and timestamps live in this role and change in place as a
+     turn runs, so the figures have to hold one width. */
+  font-variant: tabular-nums;
 
   @variant wide-type {
     font-size: var(--text-secondary-wide);
@@ -580,6 +590,7 @@
   font-size: var(--text-badge);
   line-height: var(--leading-badge);
   font-weight: var(--font-weight-badge);
+  font-variant: tabular-nums;
 }
 
 @utility type-code {
@@ -589,7 +600,8 @@
   font-weight: var(--font-weight-code);
 }
 
-/* Code set as a secondary line, such as a path under a name: muted, and with the desktop type scale the secondary line height. */
+/* Code set as a secondary line, such as a path under a name: the Secondary role's
+   steps in the mono family, so a path and the text beside it share a size. */
 @utility type-secondary-code {
   font-family: var(--font-mono);
   font-size: var(--text-code);
@@ -598,6 +610,7 @@
   color: var(--color-muted-foreground);
 
   @variant wide-type {
+    font-size: var(--text-secondary-wide);
     line-height: var(--leading-secondary-wide);
   }
 }

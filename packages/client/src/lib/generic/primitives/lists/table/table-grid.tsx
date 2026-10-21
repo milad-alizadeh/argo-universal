@@ -7,6 +7,7 @@ import {
 import { View } from 'react-native';
 import { ListContext, listPosition } from '../../../list-context';
 import { RowHighlightProvider } from '../../../row-highlights';
+import { trayCardClassName, trayClassName } from '../../../tray-surface';
 import { GridRow, type GridProps } from './table-grid-row';
 import { TableHeader } from './table-header';
 
@@ -16,10 +17,10 @@ export function TableGrid(props: GridProps): ReactElement {
     <View
       role="table"
       accessibilityLabel={props.accessibilityLabel}
-      className="rounded-2xl bg-tint px-1 pb-1"
+      className={trayClassName}
     >
       <TableHeader {...props} />
-      <View className="overflow-hidden rounded-xl bg-card">
+      <View className={trayCardClassName}>
         <GridRows {...props} />
       </View>
     </View>

@@ -47,17 +47,22 @@ interface ControlLabelProps {
   className?: string;
 }
 
+/*
+ * A narrow column draws no word at all rather than a hidden one: the trigger is sized icon-only from the same
+ * `wide`, and a `wide-type:` class on a hidden label would beat the `hidden` and spill the word out of a 28px
+ * box over the ring. Dropping the label leaves the two to agree (owner, 2026-10-21).
+ */
 export function ControlLabel({
   label,
   wide,
   className,
-}: ControlLabelProps): JSX.Element {
-  const shown = cn(className, !wide && 'hidden');
+}: ControlLabelProps): JSX.Element | null {
+  if (!wide) return null;
 
   return (
     <StatusText
       role="secondary"
-      className={cn('select-none text-foreground', shown)}
+      className={cn('select-none text-foreground', className)}
     >
       {label}
     </StatusText>

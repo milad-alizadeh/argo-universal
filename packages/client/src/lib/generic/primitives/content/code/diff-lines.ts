@@ -11,7 +11,12 @@ export const lineStyles: Record<
   DiffLine['kind'],
   { color: string; background: string; sign: string; patchSign: string }
 > = {
-  context: { color: 'text-focus', background: '', sign: ' ', patchSign: ' ' },
+  context: {
+    color: 'text-muted-foreground',
+    background: '',
+    sign: ' ',
+    patchSign: ' ',
+  },
   added: {
     color: 'text-success',
     background: 'bg-success/10',
@@ -24,7 +29,12 @@ export const lineStyles: Record<
     sign: '−',
     patchSign: '-',
   },
-  note: { color: 'text-focus', background: '', sign: ' ', patchSign: '' },
+  note: {
+    color: 'text-muted-foreground',
+    background: '',
+    sign: ' ',
+    patchSign: '',
+  },
 };
 
 const patchLine = (line: DiffLine): string =>

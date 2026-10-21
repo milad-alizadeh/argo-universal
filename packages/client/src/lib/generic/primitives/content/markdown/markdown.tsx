@@ -1,7 +1,7 @@
-import { lexer } from 'marked';
 import type * as React from 'react';
 import { memo, useMemo } from 'react';
 import { View } from 'react-native';
+import { lexMarkdown } from '#lib/generic/lex-markdown';
 import { Blocks } from './block-tokens';
 import { MarkdownClamp } from './markdown-clamp';
 import type { MarkdownProps } from './markdown-props';
@@ -28,7 +28,7 @@ function MarkdownContent({
   text,
   streaming = false,
 }: MarkdownProps): React.JSX.Element {
-  const tokens = useMemo(() => lexer(text), [text]);
+  const tokens = useMemo(() => lexMarkdown(text), [text]);
 
   return (
     <View className="max-w-full web:select-text gap-paragraph wide-type:gap-paragraph-wide">

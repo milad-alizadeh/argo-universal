@@ -8,6 +8,7 @@ import {
 } from '#primitives/fields/field-description';
 import { Drill, type DrillProps } from '#primitives/overlays/drill';
 import { ComboboxContent } from './combobox-content';
+import { comboboxPlaceholder } from './combobox-placeholder';
 import type { ComboboxProps } from './combobox-props';
 import { ComboboxTrigger } from './combobox-trigger';
 import { comboboxValue } from './combobox-value';
@@ -78,15 +79,32 @@ function drillProps<Value extends string>(
   props: ComboboxProps<Value>,
 ): Omit<DrillProps, 'children'> {
   return {
+    ...choices(props),
     label: props.label,
     title: props.title ?? props.label,
     valueLeading: props.valueLeading,
-    value: props.options.find((entry) => entry.value === props.value)?.label,
     disabled: props.disabled,
     onClose: props.onBlur,
     contentScrolls: true,
     trigger: props.trigger,
-    keepOpen: props.keepOpen,
+    ...opening(props),
+  };
+}
+
+// How the choices come up: whether a pick keeps them open, and when their page is drawn.
+function opening<Value extends string>(
+  props: ComboboxProps<Value>,
+): Pick<DrillProps, 'keepOpen' | 'mount'> {
+  return { keepOpen: props.keepOpen, mount: props.mount };
+}
+
+// What the options give the row: the chosen one's label, and the whole list as the page's stand-in.
+function choices<Value extends string>(
+  props: ComboboxProps<Value>,
+): Pick<DrillProps, 'value' | 'placeholder'> {
+  return {
+    value: props.options.find((entry) => entry.value === props.value)?.label,
+    placeholder: comboboxPlaceholder(props),
   };
 }
 

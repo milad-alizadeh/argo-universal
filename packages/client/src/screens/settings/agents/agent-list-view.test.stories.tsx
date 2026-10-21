@@ -11,6 +11,7 @@ import {
   longCatalog,
   pageRows,
 } from './agent-list-view.mocks';
+import { agentsLoadingTitle } from './catalog';
 
 const meta = {
   title: 'Tests/Agents page',
@@ -109,7 +110,7 @@ export const SearchEmptyUninstalled = empty(
   /No uninstalled Agents match/,
 );
 
-// Until the Server says which Agents are installed, the page shows the Registry's loading look.
+// Until the Server says which Agents are installed, the page stands in for its cards.
 export const WaitsForInstalledAgents: Story = {
   args: {
     agents: agentsPage(
@@ -118,7 +119,7 @@ export const WaitsForInstalledAgents: Story = {
     ),
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByLabelText('Loading Registry…')).toBeVisible();
+    await expect(canvas.getByText(agentsLoadingTitle)).toBeVisible();
   },
 };
 
