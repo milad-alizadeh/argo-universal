@@ -115,10 +115,10 @@ export const Keyboard: Story = {
 
 export const Disabled: Story = {
   render: () => <LabelsPicker initial={['bug']} disabled />,
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     const trigger = canvas.getByRole('button', { name: 'Labels' });
     await expect(trigger).toBeDisabled();
-    await userEvent.tab();
+    trigger.focus();
     await expect(trigger).not.toHaveFocus();
     await expect(picked).not.toHaveBeenCalled();
   },

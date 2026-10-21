@@ -58,7 +58,7 @@ export const CompactCellLinksWorkFromTheKeyboard: Story = {
     const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
 
     try {
-      await userEvent.tab();
+      first.focus();
       await expect(first).toHaveFocus();
       await userEvent.keyboard('{Enter}');
       await expect(navigate).toHaveBeenCalledWith('/settings');

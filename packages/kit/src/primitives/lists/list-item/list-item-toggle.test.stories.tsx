@@ -50,7 +50,7 @@ export const DisabledCannotToggle: Story = {
   play: async ({ args, canvas, userEvent }) => {
     const row = await canvas.findByRole('switch', { name: title });
     await expect(row).toHaveAttribute('aria-disabled', 'true');
-    await userEvent.tab();
+    row.focus();
     await userEvent.keyboard(' ');
     await expect(args.onValueChange).not.toHaveBeenCalled();
   },

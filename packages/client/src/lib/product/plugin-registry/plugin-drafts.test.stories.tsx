@@ -80,7 +80,7 @@ export const FocusedDraftSurvivesPatch: Story = {
   render: () => <PatchedDraft draft={textDraft} />,
   play: async (context) => {
     const field = await editFocusedDraft(context, textDraft);
-    await context.userEvent.tab();
+    field.blur();
     await waitFor(() => expect(field).toHaveValue('Server replacement'));
   },
 };

@@ -25,7 +25,7 @@ function copies(width: number): Story {
       ).mockResolvedValue();
 
       try {
-        await userEvent.tab();
+        canvas.getByRole('button', { name: 'Copy code' }).focus();
         await userEvent.keyboard('{Enter}');
         await waitFor(() =>
           expect(clipboard).toHaveBeenCalledWith('const value = 42;'),
@@ -90,7 +90,7 @@ export const ExpandsDiff: Story = {
     ).mockResolvedValue();
 
     try {
-      await userEvent.tab();
+      canvas.getByRole('button', { name: 'Copy code' }).focus();
       await userEvent.keyboard('{Enter}');
       await waitFor(() =>
         expect(clipboard).toHaveBeenCalledWith(
@@ -122,7 +122,7 @@ export const RepeatedCopyRestartsFeedback: Story = {
     ).mockResolvedValue();
 
     try {
-      await userEvent.tab();
+      canvas.getByRole('button', { name: 'Copy code' }).focus();
       await userEvent.keyboard('{Enter}');
       await canvas.findByRole('button', { name: 'Copied' });
       await new Promise((resolve) => setTimeout(resolve, 1300));

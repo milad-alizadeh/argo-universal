@@ -76,8 +76,11 @@ export const SubmittingLocksTheFields: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.getByRole('button', { name: 'Create' })).toBeDisabled();
     await expect(canvas.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    await userEvent.tab();
-    await expect(canvas.getByLabelText('Title')).not.toHaveFocus();
+    const title = canvas.getByLabelText('Title');
+
+    // The locked fields are inert, so they take no focus even when focused outright.
+    title.focus();
+    await expect(title).not.toHaveFocus();
     await userEvent.keyboard('{Meta>}{Enter}{/Meta}');
     await expect(submitted).not.toHaveBeenCalled();
   },

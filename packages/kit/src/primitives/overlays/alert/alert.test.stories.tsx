@@ -141,8 +141,7 @@ export const DisabledAnswer: Story = {
 
     const update = within(alert).getByRole('button', { name: 'Update' });
     await expect(update).toBeDisabled();
-    await userEvent.tab();
-    await userEvent.tab();
+    update.focus();
     await expect(update).not.toHaveFocus();
     await expect(onAnswer).not.toHaveBeenCalled();
     await userEvent.click(

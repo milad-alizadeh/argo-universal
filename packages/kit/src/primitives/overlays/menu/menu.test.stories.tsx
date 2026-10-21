@@ -146,7 +146,7 @@ function disabledTrigger(width: number): Story {
       const page = within(canvasElement.ownerDocument.body);
       const trigger = canvas.getByRole('button', { name: 'Permissions' });
       await expect(trigger).toBeDisabled();
-      await userEvent.tab();
+      trigger.focus();
       await expect(trigger).not.toHaveFocus();
       await userEvent.keyboard('{Enter}');
       await expect(page.queryByRole('menu')).not.toBeInTheDocument();

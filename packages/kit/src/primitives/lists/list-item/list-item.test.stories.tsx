@@ -33,7 +33,7 @@ export const Disabled: Story = {
   play: async ({ args, canvas, userEvent }) => {
     const row = canvas.getByRole('button', { name: title });
     await expect(row).toHaveAttribute('aria-disabled', 'true');
-    await userEvent.tab();
+    row.focus();
     await userEvent.keyboard('{Enter}');
     await expect(args.onPress).not.toHaveBeenCalled();
   },
