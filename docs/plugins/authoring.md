@@ -177,7 +177,8 @@ To share a list, describe the same list Query in each row and select that row's 
 The Session-row Slot context is `{ sessionId, projectId, branch }`, with `branch` nullable.
 Its children are the existing `ListItem.meta` parts: `Label` and `Pill`. Return a fragment to provide multiple children.
 A Pill uses the kit's existing `text`, `tone`, and optional `color` props. Core adds no pull request or check schema.
-App placement, meta overflow presentation, nav badge appearance, and drawing-failure toast wording remain gated on approved Paper states in #1166.
+App placement, meta overflow presentation, and nav badge appearance remain gated on approved Paper states in #1166.
+A Plugin that throws while drawing shows one error toast naming the Plugin, and its other pages, Slots, Hooks and background pass keep running.
 
 ## Background pages and badges
 
