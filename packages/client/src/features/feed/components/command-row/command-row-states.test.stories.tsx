@@ -19,7 +19,7 @@ import {
 } from './command-row-play.mocks';
 
 const meta = {
-  title: 'Tests/CommandRow',
+  title: 'Tests/CommandRow/States',
   component: CommandRow,
   args: { row: completedCommand },
 } satisfies Meta<typeof CommandRow>;

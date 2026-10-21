@@ -10,7 +10,7 @@ import {
   emptyAnswersRequest,
 } from '../request.mocks';
 
-const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm' };
+const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm/Formats' };
 
 export default meta;
 

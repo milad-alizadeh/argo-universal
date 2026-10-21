@@ -28,7 +28,7 @@ const selectionFailed = 'The selection failed.';
 
 const oversizedMessage = 'Attachment exceeds 20 MB.';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/Error occurrences' };
 
 export default meta;
 

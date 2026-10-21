@@ -8,7 +8,7 @@ import { disabled } from '../../../../../mocks/composer/draft-editing.test.mocks
 import { stopPrecedence } from '../../../../../mocks/composer/turn-admission.test.mocks';
 import { Composer } from './composer';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/Send' };
 
 export default meta;
 

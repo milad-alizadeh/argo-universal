@@ -16,7 +16,7 @@ import { RequestFrame } from '../../../../lib/product/request-frame';
 import { permissionProps, permissionMocks } from '../request.mocks';
 import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 
-const meta = { ...permissionTestMeta, title: 'Tests/PermissionRequest' };
+const meta = { ...permissionTestMeta, title: 'Tests/PermissionRequest/Feed' };
 
 export default meta;
 

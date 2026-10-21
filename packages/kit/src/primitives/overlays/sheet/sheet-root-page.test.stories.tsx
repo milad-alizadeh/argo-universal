@@ -41,7 +41,7 @@ function UntitledRootSheet(): ReactElement {
 }
 
 const meta = {
-  title: 'Tests/Sheet',
+  title: 'Tests/Sheet/Root page',
   component: UntitledRootSheet,
 } satisfies Meta<typeof UntitledRootSheet>;
 

@@ -13,7 +13,7 @@ import { arrivingMessage, arrivingRow, longRows } from './feed.mocks';
 import { feedArgs, PagedFeed, sendRow } from './paged-feed.mocks';
 
 const meta = {
-  title: 'Tests/Feed',
+  title: 'Tests/Feed/Jump to latest',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedArgs,

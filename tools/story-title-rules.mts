@@ -125,3 +125,45 @@ const metaTitleProblem = (file: string, source: string): string[] => {
 
 export const storyTitleProblems = (file: string, source: string): string[] =>
   isPlacedStory(file) ? metaTitleProblem(file, source) : [];
+
+// A story file and what it holds, as the checker reads it off disk.
+export interface StoryFile {
+  file: string;
+  source: string;
+}
+
+// A placed story file's title; an unplaced file or a missing literal has none.
+const placedTitle = ({ file, source }: StoryFile): string | undefined =>
+  isPlacedStory(file) ? metaTitle.exec(source)?.[1] : undefined;
+
+const addTitle = (
+  titles: Map<string, string[]>,
+  story: StoryFile,
+): Map<string, string[]> => {
+  const title = placedTitle(story);
+
+  if (title !== undefined)
+    titles.set(title, [...(titles.get(title) ?? []), story.file]);
+
+  return titles;
+};
+
+// The placed story files that claim each title, in the order they were read.
+const filesByTitle = (files: readonly StoryFile[]): Map<string, string[]> =>
+  files.reduce(addTitle, new Map<string, string[]>());
+
+const sharedTitleProblem = (title: string, files: string[]): string[] =>
+  files.length < 2
+    ? []
+    : [
+        `title '${title}' is declared by ${files.length} files: ${files.join(', ')}`,
+      ];
+
+/*
+ * Storybook merges same-titled files into one sidebar node, where a story id is unique only by
+ * export name — so two files sharing a title overwrite each other's stories without saying so.
+ */
+export const duplicateTitleProblems = (files: readonly StoryFile[]): string[] =>
+  [...filesByTitle(files)].flatMap(([title, declaring]): string[] =>
+    sharedTitleProblem(title, declaring),
+  );

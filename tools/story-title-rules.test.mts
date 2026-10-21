@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { storyTitleProblems } from './story-title-rules.mts';
+import {
+  duplicateTitleProblems,
+  type StoryFile,
+  storyTitleProblems,
+} from './story-title-rules.mts';
 
 const src = 'packages/client/src';
 
@@ -117,5 +121,47 @@ describe('a story title', (): void => {
       storyTitleProblems(`${src}/lib/product/screen/screen.tsx`, ''),
     ).toEqual([]);
     expect(storyTitleProblems('apps/storybook/x.stories.tsx', '')).toEqual([]);
+  });
+});
+
+const feed = `${src}/features/feed/components/feed`;
+
+const feedTitle = 'Tests/Feed';
+
+const storyFile = (file: string, title: string): StoryFile => ({
+  file,
+  source: meta(title),
+});
+
+describe('two story files', (): void => {
+  it('may not declare the same title', (): void => {
+    expect(
+      duplicateTitleProblems([
+        storyFile(`${feed}/a.test.stories.tsx`, feedTitle),
+        storyFile(`${feed}/b.test.stories.tsx`, feedTitle),
+      ]),
+    ).toEqual([
+      expect.stringMatching(
+        /title 'Tests\/Feed' is declared by 2 files: .*a\.test\.stories\.tsx, .*b\.test\.stories\.tsx$/,
+      ),
+    ]);
+  });
+
+  it('pass with a title each', (): void => {
+    expect(
+      duplicateTitleProblems([
+        storyFile(`${feed}/a.test.stories.tsx`, feedTitle),
+        storyFile(`${feed}/b.test.stories.tsx`, 'Tests/Feed/B'),
+      ]),
+    ).toEqual([]);
+  });
+
+  it('ignore files outside the kit and the client', (): void => {
+    expect(
+      duplicateTitleProblems([
+        { file: 'apps/storybook/a.stories.tsx', source: meta('Tests/X') },
+        { file: 'apps/storybook/b.stories.tsx', source: meta('Tests/X') },
+      ]),
+    ).toEqual([]);
   });
 });

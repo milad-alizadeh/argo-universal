@@ -19,7 +19,7 @@ import { longRows } from './feed.mocks';
 import { feedArgs, PagedFeed } from './paged-feed.mocks';
 
 const meta = {
-  title: 'Tests/Feed',
+  title: 'Tests/Feed/Collapsibles',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedArgs,

@@ -13,7 +13,7 @@ import {
   widths,
 } from './changes-inspector.test.mocks';
 
-const meta = { ...testMeta, title: 'Tests/ChangesInspector' };
+const meta = { ...testMeta, title: 'Tests/ChangesInspector/Empty' };
 
 export default meta;
 
