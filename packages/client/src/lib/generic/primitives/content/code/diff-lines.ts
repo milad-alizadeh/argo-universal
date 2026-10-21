@@ -1,6 +1,8 @@
-import type { DiffLine, FileDiff } from '../../view/file-diff';
+import type { CodeProps } from './code-props';
 
-type Hunk = FileDiff['hunks'][number];
+type Hunk = NonNullable<CodeProps['diff']>[number];
+
+type DiffLine = Hunk['lines'][number];
 
 export const previewLineCount = 5;
 

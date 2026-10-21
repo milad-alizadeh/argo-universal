@@ -1,5 +1,8 @@
 import {
   Button,
+  Markdown,
+  Code,
+  Link,
   ActionList,
   Action,
   ListItem,
@@ -61,6 +64,9 @@ function HelloPage(): JSX.Element {
       <Text role={headingRole}>{greeting}</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <ExampleBadges />
+      <Markdown text="## Hello kit\n\nShared **Markdown** content." />
+      <Code code="const greeting = 'Hello';" language="ts" />
+      <Link label="Example website" href="https://example.com" />
       <Buttons onTap={() => setTaps(taps + 1)} />
     </Stack>
   );

@@ -15,7 +15,7 @@
     // The client's React Native typing for the inert prop, which its components use.
     "../../packages/client/src/lib/generic/view-inert.d.ts",
     // Prism's DOM-free core, which the package itself leaves untyped.
-    "../../packages/client/src/lib/product/markdown/feed-code-block/code-highlight/prism-core.d.ts"
+    "../../packages/client/src/lib/generic/primitives/content/code/code-highlight/prism-core.d.ts"
   ],
   // expo/tsconfig.base excluded these; the shared base does not.
   "exclude": ["node_modules", "android", "ios"]

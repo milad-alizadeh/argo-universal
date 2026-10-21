@@ -8,6 +8,7 @@ import { layoutWireParts } from './layout-wire-parts';
 import { listWireParts } from './list-wire-parts';
 import { mediaWireParts } from './media-wire-parts';
 import { overlayWireParts } from './overlay-wire-parts';
+import { proseWireParts } from './prose-wire-parts';
 import { scaffoldWireParts } from './scaffold-wire-parts';
 import { tableWireParts } from './table-wire-parts';
 import type { WirePartDefinition } from './wire-part-definition';
@@ -19,6 +20,7 @@ export { listPartNames } from './list-expansion';
 
 // Each part has one props schema; a change an older App can't draw bumps the Plugin wire version (ADR-0034).
 export const wireParts = {
+  ...proseWireParts,
   ...layoutWireParts,
   ...scaffoldWireParts,
   ...listWireParts,

@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/content/icon';
-import { fileTypeIcon } from '../../generic/symbols/file-type-icon';
+import { fileTypeIcon } from '../../../symbols/file-type-icon';
 import { CodeBlockTitle } from './code-block-title/code-block-title';
 import { CopyButton } from './copy-button';
 import { type HeaderResource, ResourceHeading } from './resource-heading';
@@ -26,6 +26,8 @@ function HeaderTitle({
   resource,
 }: Pick<CodeBlockHeaderProps, 'title' | 'resource'>): React.JSX.Element {
   if (resource) return <ResourceHeading title={title} resource={resource} />;
+
+  if (!title) return <View className="flex-1" />;
 
   return <LanguageTitle title={title} />;
 }

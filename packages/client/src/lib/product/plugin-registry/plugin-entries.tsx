@@ -5,7 +5,10 @@ import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
 import { SplitButton } from '#primitives/actions/split-button';
 import { Audio } from '#primitives/content/audio';
+import { Code } from '#primitives/content/code';
 import { Label } from '#primitives/content/label';
+import { Link } from '#primitives/content/link';
+import { Markdown } from '#primitives/content/markdown';
 import { Text } from '#primitives/content/text';
 import { Video } from '#primitives/content/video';
 import { Form } from '#primitives/fields/form';
@@ -37,6 +40,9 @@ import { ProgressBar } from '#primitives/status/progress-bar';
 import { Canvas, Svg } from '#primitives/visual';
 
 export const pluginEntries = {
+  Markdown,
+  Code,
+  Link,
   Page,
   ListDetail,
   Detail,

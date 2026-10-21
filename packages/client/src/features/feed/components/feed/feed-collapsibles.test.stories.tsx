@@ -32,6 +32,12 @@ type Story = StoryObj<typeof meta>;
 // Long enough for the slowest close and the frames after it.
 const closingFrames = 40;
 
+// Feed disclosures expand inline; code-title tooltip triggers open a popup.
+const closedDisclosureRows = (scroll: HTMLElement): HTMLElement[] =>
+  within(scroll)
+    .queryAllByRole('button', { expanded: false })
+    .filter((button) => !button.hasAttribute('aria-haspopup'));
+
 // The last two closed rows, once the open group has drawn them after its own row.
 async function lastTwoRowsIn(
   group: HTMLElement,
@@ -77,8 +83,7 @@ export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
 
-    const closedRows = (): HTMLElement[] =>
-      within(scroll).getAllByRole('button', { expanded: false });
+    const closedRows = (): HTMLElement[] => closedDisclosureRows(scroll);
 
     // The last group opens on its own rows: the reader opens one and reads on to the end, where the next one sits below it.
     const lastGroup = closedRows().at(-1);
@@ -116,13 +121,11 @@ export const KeepsPlaceWhenRowOpens: Story = {
     const closedRowInTopHalf = (): HTMLElement | undefined => {
       const view = scroll.getBoundingClientRect();
 
-      return within(scroll)
-        .queryAllByRole('button', { expanded: false })
-        .find((button) => {
-          const { top } = button.getBoundingClientRect();
+      return closedDisclosureRows(scroll).find((button) => {
+        const { top } = button.getBoundingClientRect();
 
-          return top > view.top + 40 && top < view.top + view.height / 2;
-        });
+        return top > view.top + 40 && top < view.top + view.height / 2;
+      });
     };
 
     await scrollAwayFromEnd(canvas, scroll);

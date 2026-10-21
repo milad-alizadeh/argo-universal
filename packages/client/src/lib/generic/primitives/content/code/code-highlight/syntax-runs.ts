@@ -1,8 +1,5 @@
 import type { Token, TokenStream } from 'prismjs';
-import type {
-  SyntaxRun,
-  SyntaxType,
-} from '../../../../generic/code-text/syntax-run';
+import type { SyntaxRun, SyntaxType } from '../../../../code-text/syntax-run';
 import { grammarFor, tokenize } from './grammars';
 import { syntaxTypeFor } from './prism-token-types';
 

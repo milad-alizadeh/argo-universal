@@ -24,14 +24,8 @@ import {
   TextToken,
 } from './leaf-block-tokens';
 import { type BlockTokenProps, byType } from './markdown-tokens';
-import { MarkdownVariant, type MarkdownVariantName } from './markdown-variant';
+import { MarkdownTone } from './markdown-tone';
 import { TableToken } from './table-token';
-
-const listGaps: Record<MarkdownVariantName, string> = {
-  feed: 'gap-1',
-  plan: 'gap-2',
-  summary: 'gap-1',
-};
 
 interface ListItemProps {
   marker: string;
@@ -66,22 +60,17 @@ function listItems(
   );
 }
 
-const markerVariantClassNames: Record<MarkdownVariantName, string> = {
-  feed: markdownBlockClassNames.listMarker,
-  plan: 'ios:text-row ios:leading-row',
-  summary: markdownBlockClassNames.listMarker,
-};
-
-function markerClassName(variant: MarkdownVariantName): string {
-  return cn('min-w-4 shrink-0 font-sans', markerVariantClassNames[variant]);
-}
-
 function ListMarker({ children }: { children: string }): ReactElement {
-  const variant = useContext(MarkdownVariant);
+  const tone = useContext(MarkdownTone);
   const leaf = useClampLeaf(useLineHeight('body'));
 
   return (
-    <Text ref={leaf} role="body" className={markerClassName(variant)}>
+    <Text
+      ref={leaf}
+      role="body"
+      tone={tone}
+      className="min-w-4 shrink-0 font-sans text-muted-foreground"
+    >
       {children}
     </Text>
   );
@@ -102,10 +91,8 @@ function ListToken({
   token,
   caret,
 }: BlockTokenProps<Tokens.List>): ReactElement {
-  const variant = useContext(MarkdownVariant);
-
   return (
-    <View className={listGaps[variant]}>
+    <View className="gap-1">
       {listItems(token, caret).map(({ key, ...item }) => (
         <ListItem key={key} {...item} />
       ))}

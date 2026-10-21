@@ -1,6 +1,9 @@
 import type { TokensList } from 'marked';
 import { describe, expect, it } from 'vitest';
-import { createHeldLexer, type HeldLexerLimits } from './lex-markdown';
+import {
+  createHeldLexer,
+  type HeldLexerLimits,
+} from '#lib/generic/lex-markdown';
 
 const limits: HeldLexerLimits = { texts: 2, textLength: 8 };
 

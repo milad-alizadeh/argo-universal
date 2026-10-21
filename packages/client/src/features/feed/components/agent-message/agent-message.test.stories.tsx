@@ -3,10 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import {
-  layoutWidths,
-  wideBreakpoint,
-} from '../../../../lib/generic/each-layout';
+import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   recordedAgentMessage,
@@ -148,18 +145,19 @@ function horizontalScroller(element: HTMLElement | null): HTMLElement {
   return horizontalScroller(element.parentElement);
 }
 
+// Paper's Table pins the first column; the remaining columns scroll on phones.
 export const TableScrollsSideways: Story = {
   args: { row: recordedAgentMessage('agent-2', markdownAnswerId) },
   play: async ({ canvas }) => {
-    for (const width of widths) {
-      await settleViewport(width);
+    await settleViewport(layoutWidths.phone);
 
-      const scroller = horizontalScroller(
-        canvas.getByText('Property').parentElement,
-      );
+    const scroller = horizontalScroller(
+      canvas.getByText('Result').parentElement,
+    );
 
-      const overflows = scroller.scrollWidth > scroller.clientWidth;
-      await expect(overflows).toBe(width < wideBreakpoint());
-    }
+    scroller.scrollLeft = scroller.scrollWidth;
+    await waitFor(() => expect(scroller.scrollLeft).toBeGreaterThan(0));
+    await expect(canvas.getByText('Property')).toBeVisible();
+    await expect(canvas.getByText('Result')).toBeVisible();
   },
 };

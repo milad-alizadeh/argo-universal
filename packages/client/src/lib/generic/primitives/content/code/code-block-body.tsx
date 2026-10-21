@@ -6,8 +6,8 @@ import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { trayCardClassName, trayCardSurface } from '#lib/generic/tray-surface';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
-import { syntaxRunsText } from '../../../generic/code-text/syntax-run';
-import { ScrollFadeView } from '../../../generic/scroll-fade/scroll-fade';
+import { syntaxRunsText } from '../../../code-text/syntax-run';
+import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { syntaxRuns } from './code-highlight/syntax-runs';
 
 interface CodeBlockBodyProps {
