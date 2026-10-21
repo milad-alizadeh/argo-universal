@@ -97,7 +97,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
 | `view.find(text)` | Waits for a matching node and returns its wire data. |
 | `view.press(text)` | Sends `onPress` through the production dispatch path. |
-| `clock.advance(ms)` | Advances Plugin timers and dates. The kit keeps its real rendering scheduler. |
+| `clock.advance(ms)` | Advances Plugin timers, dates, and Hook deadlines together. The kit keeps its real rendering scheduler. |
 | `settings` | Provides a Map with the manifest defaults. Changes reach `argo.settings.get`. |
 | `storage.execute(queries)` | Reads or seeds the isolated Plugin SQLite database through the production storage API. |
 | `session` | Provides test Session, Project, and Agent identifiers. |
@@ -123,10 +123,27 @@ For a Hook test, use the returned result from the real chain:
 ```ts
 const answer = await emit('prompt.submit', {
   sessionId: session.id,
+  projectId: session.projectId,
   prompt: [{ type: 'text', text: 'Hello' }],
 });
 assert.deepEqual(answer, { prompt: [{ type: 'text', text: '[checked] Hello' }] });
 ```
+
+## Hooks
+
+The core Hook events are `prompt.submit`, `tool.check`, and `process.spawn` (ADR-0038).
+Both `prompt.submit` and `tool.check` carry `sessionId` and `projectId`.
+The separate `ui.render` Hook draws Replaceable Slots with its existing payload and answer.
+
+Argo sets each Hook's wall-clock budget: 2000 ms for `prompt.submit`, and 10000 ms for the other events, including `ui.render`.
+Only time spent waiting on `next` stops the budget. Calls to `argo` count against it.
+A two-second prompt budget deliberately does not reach a network service. A prompt Hook reads data already fetched or its own storage, or answers directly.
+
+When a Hook exceeds its budget, Argo stops waiting, drops its return value, and logs the Plugin and event.
+The worker code continues. If the Hook did not call `next`, the chain continues with the original event.
+`next` is the commit point: if the Hook called it, the rest of the chain's answer stands.
+A crash, malformed answer, or Plugin startup failure also leaves core free to continue.
+Plugins refuse by returning an event's refusal answer. `argo.on` accepts a Hook alone or a matcher and Hook, with no options.
 
 ## Dev reload
 

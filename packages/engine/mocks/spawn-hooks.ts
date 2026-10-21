@@ -36,14 +36,10 @@ export const probeEchoing = (...later: string[]): HookPlugin => ({
 export const probe = probeEchoing();
 
 // A Plugin that hooks `process.spawn` with this hook, registered when it loads.
-export const spawnHook = (
-  id: string,
-  hook: string,
-  options = '{}',
-): HookPlugin => ({
+export const spawnHook = (id: string, hook: string): HookPlugin => ({
   id,
   source: `export async function register(argo) {
-    await argo.on('process.spawn', 'echo', ${hook}, ${options});
+    await argo.on('process.spawn', 'echo', ${hook});
   }`,
   hooks: ['process.spawn'],
   capabilities: [hookSpawn],

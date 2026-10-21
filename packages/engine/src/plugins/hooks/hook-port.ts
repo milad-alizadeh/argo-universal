@@ -32,10 +32,8 @@ const typed =
     );
 
 const typedHooks = (run: HookRunner): CoreHooks => ({
-  'session.start': typed('session.start', hookEvents['session.start'], run),
   'prompt.submit': typed('prompt.submit', hookEvents['prompt.submit'], run),
   'tool.check': typed('tool.check', hookEvents['tool.check'], run),
-  'turn.complete': typed('turn.complete', hookEvents['turn.complete'], run),
   'process.spawn': typed('process.spawn', hookEvents['process.spawn'], run),
 });
 

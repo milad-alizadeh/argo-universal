@@ -1,22 +1,25 @@
-// A Hook's time limit. It stops while the Hook waits on `next` or on its Plugin's `argo` calls, so only the Hook's own time counts.
+import type { PluginClock } from '../clock';
+
+// A Hook's wall-clock limit stops only while it waits on `next`.
 export class HookBudget {
   private remaining: number;
   private startedAt = 0;
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private cancel: (() => void) | null = null;
   private holds = 0;
   private stopped = false;
 
   public constructor(
     limitMs: number,
     private readonly expired: () => void,
+    private readonly clock: PluginClock,
   ) {
     this.remaining = limitMs;
   }
 
   public start(): void {
     if (this.stopped || this.holds > 0) return;
-    this.startedAt = Date.now();
-    this.timer = setTimeout(this.expired, this.remaining);
+    this.startedAt = this.clock.now();
+    this.cancel = this.clock.schedule(this.expired, this.remaining);
   }
 
   // Waits can overlap; the clock runs again once the last one ends.
@@ -37,9 +40,9 @@ export class HookBudget {
   }
 
   private pause(): void {
-    if (!this.timer) return;
-    clearTimeout(this.timer);
-    this.timer = null;
-    this.remaining -= Date.now() - this.startedAt;
+    if (!this.cancel) return;
+    this.cancel();
+    this.cancel = null;
+    this.remaining -= this.clock.now() - this.startedAt;
   }
 }

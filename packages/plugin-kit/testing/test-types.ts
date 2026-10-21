@@ -5,7 +5,7 @@ import type {
 } from '@repo/contracts/plugins';
 import type { JsonObject, Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginSlotInput } from '@repo/contracts/plugins/wire';
-import type { PluginStorage } from '@repo/engine/plugins';
+import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
 import type { PluginMount, PluginTestView } from './view';
 
 export interface PluginTestOptions {
@@ -16,6 +16,7 @@ export interface PluginTestOptions {
   // Folders containing external executable fixtures, prepended only for this runtime.
   path?: string[];
   clockStart?: number;
+  network?: PluginNetwork;
   settings?: Map<string, PluginSettingValue>;
 }
 

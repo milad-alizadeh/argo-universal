@@ -879,12 +879,6 @@ const sessionSetup = setup({
             },
           });
 
-          void context.input.hooks['turn.complete']({
-            sessionId: context.sessionId,
-            turnId: context.activeTurnId,
-            stopReason: params.stopReason,
-          });
-
           if (context.feedEnded) {
             enqueue.sendTo(writer, { type: writeFeedEvent, job });
           } else {
@@ -938,6 +932,7 @@ const sessionSetup = setup({
         return {
           hooks: context.input.hooks,
           sessionId: context.sessionId,
+          projectId: context.projectId,
           request: event.request,
           session: self,
         };

@@ -63,6 +63,7 @@ it('raises a real event through the production Hook chain with isolated storage,
   expect(
     await kit.emit('prompt.submit', {
       sessionId: kit.session.id,
+      projectId: kit.session.projectId,
       prompt: [{ type: 'text', text: 'Hello' }],
     }),
   ).toEqual({ prompt: [{ type: 'text', text: 'Changed: Hello Stored' }] });

@@ -1,15 +1,15 @@
 import { HookEventName, type PluginManifest } from '@repo/contracts/plugins';
 import { HookRegistration } from '@repo/contracts/plugins/hook-protocol';
 import type { CallExpression } from 'oxc-parser';
+import { requireNoHookOptions } from '../hooks/hook-arguments';
 import { HookRegistry, type RegisteredHook } from '../hooks/hook-registry';
+import { runtimeError } from '../protocol/runtime';
 import { firstString } from './expressions';
 import { literalValue } from './literal';
 
 const hookOptionIndex = 2;
 
 const matcherOptionIndex = 3;
-
-import { runtimeError } from '../protocol/runtime';
 
 export function hookSourceReason(
   node: CallExpression,
@@ -43,17 +43,23 @@ function registrationReason(
 function registrationOf(node: CallExpression): HookRegistration {
   const matcher = argumentValue(node, 1);
 
-  const options = argumentValue(
-    node,
-    matcher === undefined ? hookOptionIndex : matcherOptionIndex,
-  );
+  requireNoHookOptions(argumentValue(node, optionIndex(node, matcher)));
 
   return HookRegistration.parse({
     hookId: 0,
     name: firstString(node),
     matcher,
-    guard: hasGuard(options),
   });
+}
+
+function optionIndex(
+  node: CallExpression,
+  matcher: ReturnType<typeof literalValue>,
+): number {
+  const matched =
+    node.arguments.length > matcherOptionIndex || matcher !== undefined;
+
+  return matched ? matcherOptionIndex : hookOptionIndex;
 }
 
 function argumentValue(
@@ -65,21 +71,6 @@ function argumentValue(
   if (!argument || argument.type === 'SpreadElement') return;
 
   return literalValue(argument);
-}
-
-function hasGuard(value: ReturnType<typeof literalValue>): boolean {
-  if (!value) return false;
-
-  return typeof value === 'object' ? objectGuard(value) : false;
-}
-
-type LiteralContainer = Extract<
-  NonNullable<ReturnType<typeof literalValue>>,
-  object
->;
-
-function objectGuard(value: LiteralContainer): boolean {
-  return 'guard' in value && value.guard === true;
 }
 
 function configuredRegistry(manifest: PluginManifest): HookRegistry {

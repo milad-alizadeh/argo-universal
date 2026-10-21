@@ -5,7 +5,9 @@ import type {
   Json,
   JsonObject,
 } from '@repo/contracts/plugins/hook-protocol';
+import { hookBudgetMs } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
+import { realClock, type PluginClock } from '../clock';
 import { answerHook } from './hook-answer';
 import type { RegisteredHook } from './hook-registry';
 import { coreAnswer } from './hook-rules';
@@ -15,10 +17,8 @@ import {
 } from './render-answer';
 import { RunningHook, type HookStep } from './running-hook';
 
-// A Hook's own time, as Claude Code allows it; waits on `next` and `argo` calls don't count.
-export const hookBudgetMs = 10_000;
-
 export type HookChainInput = {
+  clock?: PluginClock;
   send: (hook: RegisteredHook, invocation: HookInvocation) => void;
   log: (line: string) => void;
   discard?: (pluginId: string, path: string) => void;
@@ -29,6 +29,7 @@ export type HookCaller = { pluginId: string; generation: number };
 
 // `ancestors` are the Plugins whose Hooks are waiting on this chain: their own calls started it.
 type Chain = {
+  clock: PluginClock;
   name: HookEventName;
   hooks: readonly RegisteredHook[];
   ancestors: ReadonlySet<string>;
@@ -44,10 +45,11 @@ export class HookChain {
   public constructor(private readonly input: HookChainInput) {}
 
   public async run(
-    input: Omit<Chain, 'replacements'>,
+    input: Omit<Chain, 'replacements' | 'clock'>,
     event: JsonObject,
   ): Promise<Json> {
-    const chain: Chain = { ...input, replacements: [] };
+    const chain = chainOf(input, this.input.clock ?? realClock);
+
     let answer: Json = null;
 
     try {
@@ -85,13 +87,6 @@ export class HookChain {
       pluginId,
       ...waiting.flatMap(({ ancestors }) => [...ancestors]),
     ]);
-  }
-
-  // A Plugin's `argo` call may be made by its running Hooks, so none of them is charged for the wait.
-  public whileCalling<T>(pluginId: string, call: Promise<T>): Promise<T> {
-    return [...this.running.values()]
-      .filter((running) => running.hook.pluginId === pluginId)
-      .reduce((work, running) => running.waitingOn(work), call);
   }
 
   // A stopped, reloaded or crashed worker's running Hooks fail, so their chains go on.
@@ -143,9 +138,15 @@ export class HookChain {
 const runningHook = (
   hook: RegisteredHook,
   step: HookStep,
-  { ancestors }: Chain,
+  { ancestors, clock }: Chain,
 ): RunningHook =>
-  new RunningHook({ hook, step, ancestors, budgetMs: hookBudgetMs });
+  new RunningHook({
+    hook,
+    step,
+    ancestors,
+    budgetMs: hookBudgetMs[step.name],
+    clock,
+  });
 
 const invocationOf = (
   invocation: number,
@@ -165,3 +166,8 @@ const chainStep = ({
   surface,
   replacements,
 });
+
+const chainOf = (
+  input: Omit<Chain, 'replacements' | 'clock'>,
+  clock: PluginClock,
+): Chain => ({ ...input, replacements: [], clock });

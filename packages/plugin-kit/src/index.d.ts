@@ -121,7 +121,6 @@ export type {
   Hook,
   HookContext,
   HookNext,
-  HookOptions,
 } from '@repo/contracts/plugins/hooks';
 
 export type {

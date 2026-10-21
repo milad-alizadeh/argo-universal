@@ -45,6 +45,7 @@ export function runtimeFor(
   return createPluginRuntime(home, {
     keychain: new MemoryKeychain(),
     clockStart: options.clockStart,
+    network: options.network,
     settings: async (_id, key) => options.settings?.get(key) ?? null,
     projects: async (): Promise<string[]> => [],
     projectInfo: async (): Promise<PluginProjectInfo[]> =>

@@ -13,12 +13,7 @@ import {
   writeHookPlugins,
 } from '#mocks/hook-plugins';
 
-const sessionHooks: HookEventName[] = [
-  'session.start',
-  'prompt.submit',
-  'tool.check',
-  'turn.complete',
-];
+const sessionHooks: HookEventName[] = ['prompt.submit', 'tool.check'];
 
 const options: RequestPermissionRequest['options'] = [
   { optionId: 'edit-once', name: 'Allow', kind: 'allow_once' },
@@ -74,20 +69,15 @@ async function startHookedSession(
   return { host, sessionId };
 }
 
-const passOn = (name: HookEventName): string =>
-  `await on('${name}', (ctx, e, next) => next(e));`;
-
 it(
   'runs each Session event through its Hooks: a rewritten prompt reaches the Agent and a denial settles through the Feed',
   async () => {
     const journey: Journey = { requests: [], outcomes: [] };
 
     const { host, sessionId } = await startHookedSession(
-      `${passOn('session.start')}
-      await on('prompt.submit', (ctx, e, next) =>
+      `await on('prompt.submit', (ctx, e, next) =>
         next({ ...e, prompt: [{ type: 'text', text: '[hooked] ' + e.prompt[0].text }] }));
-      await on('tool.check', '${editPrompt}', () => ({ decision: 'deny' }));
-      ${passOn('turn.complete')}`,
+      await on('tool.check', '${editPrompt}', () => ({ decision: 'deny' }));`,
       journey,
     );
 
@@ -110,10 +100,14 @@ it(
       )
       .toEqual(sessionHooks);
     expect(await hookRecords(host.home, 'recorder')).toMatchObject([
-      { event: { sessionId, projectId: 'project-1', agent: 'mock' } },
-      { event: { sessionId, prompt } },
-      { event: { sessionId, request: { toolCallId: 'tool-a' } } },
-      { event: { sessionId, stopReason: 'end_turn' } },
+      { event: { sessionId, projectId: 'project-1', prompt } },
+      {
+        event: {
+          sessionId,
+          projectId: 'project-1',
+          request: { toolCallId: 'tool-a' },
+        },
+      },
     ]);
   },
   journeyMs,

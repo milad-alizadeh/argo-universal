@@ -17,7 +17,6 @@ import {
   type HookAllowance,
   type RegisteredHook,
 } from './hook-registry';
-import { guardRefusal } from './hook-rules';
 
 // The Plugins that hook one event: those running, those that failed to start, and those exempt from it.
 export type HookingPlugins = {
@@ -79,10 +78,6 @@ export class PluginHooks {
     }
   }
 
-  public whileCalling<T>(pluginId: string, call: Promise<T>): Promise<T> {
-    return this.chain.whileCalling(pluginId, call);
-  }
-
   public release(pluginId: string): void {
     this.registry.release(pluginId);
     this.chain.release(pluginId);
@@ -93,28 +88,14 @@ export class PluginHooks {
     return caller === undefined ? new Set() : this.chain.ancestorsOf(caller);
   }
 
-  // Runs the event through the running Plugins' Hooks, in the order given, then core; a stopped Plugin's guard still refuses.
+  // Runs the event through the running Plugins' Hooks, in the order given, then core.
   public async run(
-    { running, stopped, exempt, surface }: HookingPlugins,
+    { running, exempt, surface }: HookingPlugins,
     name: HookEventName,
     event: JsonObject,
   ): Promise<Json> {
-    const guard = this.registry.orphanedGuard(stopped, name, event);
-
-    if (guard) return this.orphanRefusal(guard, name);
     const hooks = this.registry.matching(running, name, event);
 
     return this.chain.run({ name, hooks, ancestors: exempt, surface }, event);
-  }
-
-  private orphanRefusal(
-    { pluginId }: RegisteredHook,
-    name: HookEventName,
-  ): Json {
-    this.log(
-      `Plugin ${pluginId}: guard refused ${name} Hook: the Plugin is not running`,
-    );
-
-    return guardRefusal(name) ?? null;
   }
 }

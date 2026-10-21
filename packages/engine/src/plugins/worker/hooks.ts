@@ -1,4 +1,5 @@
 import type { Argo } from '@repo/contracts/plugins/argo-api';
+import { Json as HookJson } from '@repo/contracts/plugins/hook-protocol';
 import type {
   HookCall,
   HookInvocation,
@@ -12,6 +13,7 @@ import type {
   HookEvent,
   HookEventName,
 } from '@repo/contracts/plugins/hooks';
+import { requireNoHookOptions } from '../hooks/hook-arguments';
 import type { Kit } from '../kit/plugin-kit';
 
 type SendHookCall = (call: HookCall) => Promise<Json>;
@@ -71,14 +73,20 @@ function registration(
   name: HookEventName,
   args: HookArgs<JsonHook>,
 ): HookCall {
-  const [matcher, hook, options] = hookFirst(args)
-    ? [undefined, ...args]
-    : args;
+  const [matcher, hook] = hookFirst(args) ? [undefined, ...args] : args;
 
+  requireHookArity(args);
   const hookId = hooks.push(hook) - 1;
-  const guard = options?.guard === true;
 
-  return { action: 'register', hookId, name, matcher, guard };
+  return { action: 'register', hookId, name, matcher };
+}
+
+function requireHookArity(args: HookArgs<JsonHook>): void {
+  const supplied: readonly unknown[] = args;
+
+  requireNoHookOptions(
+    HookJson.optional().parse(supplied[typeof args[0] === 'function' ? 1 : 2]),
+  );
 }
 
 // Runs one invocation after the current task, then settles it with what the Hook answered or threw.

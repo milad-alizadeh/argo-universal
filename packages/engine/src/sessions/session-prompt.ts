@@ -25,7 +25,12 @@ export const promptSession = async (
     deps.readSession(sessionId).agent,
   );
   const sessionActor = await openReadySession(deps, sessionId);
-  const answer = await deps.hooks['prompt.submit']({ sessionId, prompt });
+
+  const answer = await deps.hooks['prompt.submit']({
+    sessionId,
+    projectId: deps.readSession(sessionId).projectId,
+    prompt,
+  });
 
   if ('drop' in answer) return { messageId: null, drop: answer.drop };
   const turnId = deps.createId();

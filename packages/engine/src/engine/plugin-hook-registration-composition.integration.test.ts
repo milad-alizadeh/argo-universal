@@ -18,17 +18,6 @@ it.each([
     plugin: { ...spawnHook('undeclared', appending('x')), hooks: [] },
     reason: 'process.spawn is not a Hook the manifest declares',
   },
-  {
-    name: 'as a guard of an event with no refusal',
-    plugin: {
-      ...spawnHook('observer', appending('x')),
-      source: `export async function register(argo) {
-        await argo.on('turn.complete', (ctx, e, next) => next(e), { guard: true });
-      }`,
-      hooks: ['turn.complete' as const],
-    },
-    reason: 'turn.complete has no refusal to guard with',
-  },
 ])(
   'refuses a Hook registered $name, and the Plugin fails to load',
   async ({ plugin, reason }) => {

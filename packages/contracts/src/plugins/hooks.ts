@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import { z } from 'zod';
 import { ContentBlock } from '../feed/content-block';
 import { PendingPermission } from '../sessions/snapshot';
-import { StopReason } from '../sessions/turn';
 import {
   HookEventName,
   type HookInvocation,
@@ -11,12 +10,6 @@ import {
 import { ReplaceableInput, RenderAnswer } from './replaceable';
 
 export { HookEventName } from './hook-protocol';
-
-const SessionStart = z.strictObject({
-  sessionId: z.string(),
-  projectId: z.string(),
-  agent: z.string(),
-});
 
 // Claude Code's limit on a drop reason.
 const dropReasonLimit = 4096;
@@ -29,18 +22,14 @@ const DropReason = z
 
 const PromptSubmit = z.strictObject({
   sessionId: z.string(),
+  projectId: z.string(),
   prompt: z.array(ContentBlock).min(1),
 });
 
 const ToolCall = z.strictObject({
   sessionId: z.string(),
+  projectId: z.string(),
   request: PendingPermission,
-});
-
-const TurnComplete = z.strictObject({
-  sessionId: z.string(),
-  turnId: z.string(),
-  stopReason: StopReason,
 });
 
 // `pluginId` names the Plugin whose `argo.process` call this is.
@@ -56,7 +45,6 @@ const ProcessSpawn = z.strictObject({
  */
 export const hookEvents = {
   'ui.render': { event: ReplaceableInput, answer: RenderAnswer },
-  'session.start': { event: SessionStart, answer: z.null() },
   'prompt.submit': {
     event: PromptSubmit,
     answer: z.union([
@@ -68,7 +56,6 @@ export const hookEvents = {
     event: ToolCall,
     answer: z.strictObject({ decision: z.enum(['ask', 'allow', 'deny']) }),
   },
-  'turn.complete': { event: TurnComplete, answer: z.null() },
   'process.spawn': {
     event: ProcessSpawn,
     answer: z.union([
@@ -121,14 +108,7 @@ export type Hook<Name extends HookEventName> = (
   next: HookNext<Name>,
 ) => HookResult<Name> | Promise<HookResult<Name>>;
 
-// A guard's failure refuses its event instead of skipping the Hook.
-export type HookOptions = Readonly<Partial<Pick<HookRegistration, 'guard'>>>;
-
 // The Hook alone, or after a matcher that narrows it to one slot, command or tool.
 export type HookArgs<Handler> =
-  | [hook: Handler, options?: HookOptions]
-  | [
-      matcher: HookRegistration['matcher'],
-      hook: Handler,
-      options?: HookOptions,
-    ];
+  | [hook: Handler]
+  | [matcher: HookRegistration['matcher'], hook: Handler];

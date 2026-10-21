@@ -48,8 +48,5 @@ function answerViewOrService(
     return Promise.resolve({ ok: true });
   }
 
-  return runtime.hooks.whileCalling(
-    pluginId,
-    runtime.services.handle(pluginId, generation, request),
-  );
+  return runtime.services.handle(pluginId, generation, request);
 }
