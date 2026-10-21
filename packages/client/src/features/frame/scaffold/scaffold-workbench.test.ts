@@ -100,7 +100,7 @@ describe('production framed pane geometry', () => {
       workbenchShown: undefined,
       shownListWidth: 0,
       detailWidth: 0,
-      inspectorHandleLeft: 72,
+      inspectorHandleLeft: 80,
       inspectorTargetWidth: 1360,
     },
   ])(
@@ -135,5 +135,31 @@ describe('production framed pane geometry', () => {
 
     expect(docked.transitionKey).toBe('true:open:true:docked');
     expect(hidden.transitionKey).toBe('true:open:true:auto-hidden');
+  });
+});
+
+describe('Stage resize boundaries', () => {
+  it('keeps each expanded pane divider reachable in its own gutter', () => {
+    expect(
+      scaffoldGeometry({
+        ...input,
+        width: 1920,
+        inspectorState: 'expanded',
+        framed: true,
+      }),
+    ).toMatchObject({ listHandleLeft: 376, inspectorHandleLeft: 392 });
+  });
+
+  it('gives up the list and Workbench before letting a resized Stage take the content floor', () => {
+    const { frame } = scaffoldGeometry({
+      ...input,
+      width: 1920,
+      inspectorState: 'open',
+      preferredInspectorWidth: 1500,
+      framed: true,
+    });
+
+    expect(frame.page).toEqual({ offset: 72, width: 688 });
+    expect(frame.stage).toEqual({ offset: 768, width: 1144 });
   });
 });

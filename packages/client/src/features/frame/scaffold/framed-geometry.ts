@@ -14,7 +14,7 @@ export function framedGeometry(
     ...geometry,
     ...framedPaneWidths(input, geometry),
     listHandleLeft: frame.list.offset + frame.list.width,
-    inspectorHandleLeft: frame.stage.offset,
+    inspectorHandleLeft: inspectorHandle(input, frame.stage.offset),
     detailRight: frame.stage.offset,
     transitionKey: `${input.sidebarShown}:${input.inspectorState}:${frame.listFolded}:${frame.workbenchState}`,
   };
@@ -59,4 +59,11 @@ function frameInspector(
     inspectorOpen: input.inspectorState !== 'closed',
     inspectorExpanded: input.inspectorState === 'expanded',
   };
+}
+
+// Expanded panes meet at the sidebar gutter; keep the Stage grip on its own side of that edge.
+function inspectorHandle(input: ScaffoldGeometryInput, offset: number): number {
+  return (
+    offset + (input.inspectorState === 'expanded' ? input.measures.inset : 0)
+  );
 }
