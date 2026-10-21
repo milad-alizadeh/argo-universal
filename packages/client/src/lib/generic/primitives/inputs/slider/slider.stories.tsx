@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Slider, type SliderProps } from './slider';
 
@@ -49,11 +50,13 @@ const examples: { label: string; props: ExampleProps }[] = [
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Slider',
+  component: Slider,
+  argTypes: kitArgTypes('Slider'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Slider',

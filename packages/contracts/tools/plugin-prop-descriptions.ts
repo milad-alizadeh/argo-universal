@@ -1,6 +1,6 @@
 import type { z } from 'zod';
+import { partObjectSchema } from '../src/plugins/plugin-object-schema';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
-import { partObjectSchema } from './plugin-object-schema';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 

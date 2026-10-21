@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Slider } from '#primitives/inputs/slider';
 import { List } from '#primitives/lists/list';
 import { Pill } from '#primitives/status/pill';
@@ -12,6 +13,7 @@ const meta = {
   title: 'Design System/Primitives/Lists/ListItem',
   args: { title: 'Item one' },
   component: ListItem,
+  argTypes: kitArgTypes('ListItem'),
 } satisfies Meta<typeof ListItem>;
 
 export default meta;

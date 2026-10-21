@@ -1,6 +1,7 @@
 import fixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
@@ -14,6 +15,7 @@ import { Card } from './card';
 const meta = {
   title: 'Design System/Primitives/Layout/Card',
   component: Card,
+  argTypes: kitArgTypes('Card'),
   args: { title: 'api-gateway' },
 } satisfies Meta<typeof Card>;
 

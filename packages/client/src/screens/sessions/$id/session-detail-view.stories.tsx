@@ -25,6 +25,11 @@ import {
 
 const meta = {
   title: 'Screens/Sessions/Session',
+  /*
+   * No `component`: its stories pass the whole view as one `view` arg, which a SessionDetailView
+   * meta cannot type. Ticket #1203 flattens the wrapper; the Docs page comes with it.
+   */
+  tags: ['!autodocs'],
   parameters: { screenPreview: true },
   args: { view: { state: 'open', ...runningSession } },
   render: ({ view }): React.JSX.Element => <SessionDetailView {...view} />,

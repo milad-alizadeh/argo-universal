@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { ProgressBar } from './progress-bar';
 import type { ProgressBarProps } from './progress-bar-props';
@@ -7,6 +8,7 @@ const meta = {
   title: 'Design System/Primitives/Status/ProgressBar',
   args: { value: 0.4 },
   component: ProgressBar,
+  argTypes: kitArgTypes('ProgressBar'),
 } satisfies Meta<typeof ProgressBar>;
 
 export default meta;

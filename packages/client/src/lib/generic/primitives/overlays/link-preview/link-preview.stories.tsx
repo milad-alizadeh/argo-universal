@@ -29,12 +29,13 @@ const examples = [
 
 const meta = {
   title: 'Design System/Primitives/Overlays/LinkPreview',
+  component: LinkPreviewCard,
   render: (): ReactElement => <PreviewExamples />,
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const source = {
   load: async (): Promise<ReactNode> => <LinkPreviewCard data={webPreview} />,

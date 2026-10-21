@@ -1,17 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { List, ListSection } from '#primitives/lists/list';
 import { DatePicker } from './date-picker';
 import type { DatePickerProps } from './date-picker-props';
 
 const meta = {
   title: 'Design System/Primitives/Inputs/DatePicker',
+  component: DatePicker,
+  argTypes: kitArgTypes('DatePicker'),
   parameters: { screenPreview: true },
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'DatePicker',

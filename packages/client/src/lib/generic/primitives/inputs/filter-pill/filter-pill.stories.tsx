@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { FilterPill } from './filter-pill';
 
@@ -29,11 +30,13 @@ function Pills(): React.JSX.Element {
 
 const meta = {
   title: 'Design System/Primitives/Inputs/FilterPill',
+  component: FilterPill,
+  argTypes: kitArgTypes('FilterPill'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'FilterPill',

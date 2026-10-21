@@ -1,16 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Video } from './video';
 
 const meta = {
   title: 'Design System/Primitives/Content/Video',
+  component: Video,
+  argTypes: kitArgTypes('Video'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const hash = 'a'.repeat(64);
 

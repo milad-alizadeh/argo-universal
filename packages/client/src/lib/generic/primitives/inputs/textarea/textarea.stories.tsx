@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Textarea } from './textarea';
 
@@ -17,12 +18,14 @@ const examples: {
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Textarea',
+  component: Textarea,
+  argTypes: kitArgTypes('Textarea'),
   tags: ['third-party'],
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Textarea',

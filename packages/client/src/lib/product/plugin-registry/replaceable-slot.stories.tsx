@@ -14,6 +14,7 @@ import { coreSlotState, type ReplaceableState } from './replaceable-state';
 
 const meta = {
   title: 'Shared/ReplaceableSlot',
+  component: ReplaceableSlotView,
 } satisfies Meta;
 
 export default meta;
@@ -30,7 +31,7 @@ function preview(state: ReplaceableState): React.JSX.Element {
   );
 }
 
-export const MessageDrawings: StoryObj<typeof meta> = {
+export const MessageDrawings: StoryObj = {
   name: 'Replaceable Slot',
   render: () => (
     <Variations>

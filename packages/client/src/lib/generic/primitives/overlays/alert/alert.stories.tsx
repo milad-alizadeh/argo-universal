@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Alert } from './alert';
@@ -85,11 +86,13 @@ function AlertPreview(props: AlertPreviewProps): React.JSX.Element {
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Alert',
+  component: Alert,
+  argTypes: kitArgTypes('Alert'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Alert',

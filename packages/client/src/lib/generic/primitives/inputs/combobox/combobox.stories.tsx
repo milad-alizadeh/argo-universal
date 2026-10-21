@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
@@ -36,11 +37,13 @@ const options = [
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Combobox',
+  component: Combobox,
+  argTypes: kitArgTypes('Combobox'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Combobox',

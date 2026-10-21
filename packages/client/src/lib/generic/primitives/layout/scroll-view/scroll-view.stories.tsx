@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
 import { Surface } from '#primitives/layout/surface';
@@ -9,6 +10,7 @@ import { ScrollView } from './scroll-view';
 const meta = {
   title: 'Design System/Primitives/Layout/ScrollView',
   component: ScrollView,
+  argTypes: kitArgTypes('ScrollView'),
 } satisfies Meta<typeof ScrollView>;
 
 export default meta;

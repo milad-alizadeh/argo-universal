@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
 import { Variation, Variations } from '../../../variations';
@@ -10,6 +11,7 @@ import { agent, issue } from './detail.mocks';
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Detail',
   component: Detail,
+  argTypes: kitArgTypes('Detail'),
   args: issue.detail,
 } satisfies Meta<typeof Detail>;
 

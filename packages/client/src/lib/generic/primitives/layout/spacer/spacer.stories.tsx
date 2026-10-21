@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
 import { Variation, Variations as VariationList } from '../../../variations';
@@ -8,6 +9,7 @@ import { Spacer } from './spacer';
 const meta = {
   title: 'Design System/Primitives/Layout/Spacer',
   component: Spacer,
+  argTypes: kitArgTypes('Spacer'),
 } satisfies Meta<typeof Spacer>;
 
 export default meta;

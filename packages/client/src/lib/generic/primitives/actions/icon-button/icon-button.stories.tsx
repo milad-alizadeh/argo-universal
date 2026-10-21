@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { logoSources } from '../../../symbols/logo-source';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Text } from '../../content/text';
@@ -9,11 +10,13 @@ const sizes = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 
 const meta = {
   title: 'Design System/Primitives/Actions/IconButton',
+  component: IconButton,
+  argTypes: kitArgTypes('IconButton'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 function DefaultExample(): React.JSX.Element {
   return (
@@ -149,8 +152,9 @@ function BleedExample(): React.JSX.Element {
   );
 }
 
-function IconButtonExamples(): React.JSX.Element {
-  return (
+export const Variations: Story = {
+  name: 'IconButton',
+  render: () => (
     <VariationList>
       <DefaultExample />
       <SizesExample />
@@ -160,10 +164,5 @@ function IconButtonExamples(): React.JSX.Element {
       <BadgeExample />
       <BleedExample />
     </VariationList>
-  );
-}
-
-export const Variations: Story = {
-  name: 'IconButton',
-  render: IconButtonExamples,
+  ),
 };

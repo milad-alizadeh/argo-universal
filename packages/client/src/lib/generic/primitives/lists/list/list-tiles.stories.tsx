@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
 import { Image } from '#primitives/content/image';
@@ -10,13 +11,15 @@ import { List } from './list';
 
 const meta = {
   title: 'Design System/Primitives/Lists/List tiles',
+  component: List,
+  argTypes: kitArgTypes('List'),
   parameters: { screenPreview: true },
   includeStories: ['AutoColumns', 'Shelf', 'Media'],
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const headingRole = 'heading';
 

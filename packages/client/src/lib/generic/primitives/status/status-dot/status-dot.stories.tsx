@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { StatusDot } from './status-dot';
 
@@ -18,6 +19,7 @@ const tones = [
 const meta = {
   title: 'Design System/Primitives/Status/StatusDot',
   component: StatusDot,
+  argTypes: kitArgTypes('StatusDot'),
   args: { tone: 'success' },
   tags: ['third-party'],
 } satisfies Meta<typeof StatusDot>;

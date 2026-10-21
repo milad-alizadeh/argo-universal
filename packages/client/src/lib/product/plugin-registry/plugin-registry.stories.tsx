@@ -12,6 +12,7 @@ import { PluginTree } from './plugin-registry';
 
 const meta = {
   title: 'Shared/PluginTree',
+  component: PluginTree,
   parameters: { screenPreview: true },
 } satisfies Meta;
 
@@ -46,15 +47,15 @@ function rowWithCount(count: number): WireNode {
   ]);
 }
 
-export const Slots: StoryObj<typeof meta> = {
+export const Slots: StoryObj = {
   render: SlotPreview,
 };
 
-export const Svg: StoryObj<typeof meta> = {
+export const Svg: StoryObj = {
   render: SvgPreview,
 };
 
-export const Canvas: StoryObj<typeof meta> = {
+export const Canvas: StoryObj = {
   render: () => (
     <PluginTree root={WireNode.parse(canvasFixture)} onEvent={() => {}} />
   ),
@@ -79,7 +80,7 @@ function svgRoot(): WireNode {
   };
 }
 
-export const Controls: StoryObj<typeof meta> = {
+export const Controls: StoryObj = {
   render: () => (
     <Stack direction="column" gap={4}>
       {controls.map((fixture) => {
@@ -91,7 +92,7 @@ export const Controls: StoryObj<typeof meta> = {
   ),
 };
 
-export const Overlays: StoryObj<typeof meta> = {
+export const Overlays: StoryObj = {
   render: () => (
     <PluginTree
       root={applyPatch(WireNode.parse(overlays), [

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Icon } from '#primitives/content/icon';
 import { ListItem } from '#primitives/lists/list-item';
 import { Variation, Variations } from '../../../variations';
@@ -7,6 +8,7 @@ import { List } from './list';
 const meta = {
   title: 'Design System/Primitives/Lists/List',
   component: List,
+  argTypes: kitArgTypes('List'),
 } satisfies Meta<typeof List>;
 
 export default meta;

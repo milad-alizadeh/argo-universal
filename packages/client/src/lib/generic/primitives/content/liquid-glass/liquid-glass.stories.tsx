@@ -28,11 +28,12 @@ const examples: (Omit<LiquidGlassProps, 'children'> & {
 
 const meta = {
   title: 'Design System/Primitives/Content/LiquidGlass',
+  component: LiquidGlass,
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'LiquidGlass',
