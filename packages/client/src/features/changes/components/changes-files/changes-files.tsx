@@ -6,6 +6,7 @@ import { EmptyState } from '#primitives/status/empty-state';
 import { Spinner } from '#primitives/status/spinner';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { noChangesDescription } from '../../view/changes-comparison';
+import { uniqueChangedFiles } from '../../view/changes-files';
 import type { ChangesViewProps } from '../../view/changes-view-props';
 
 export const loadingChangesLabel = 'Loading changes';
@@ -25,9 +26,7 @@ export function ChangesFiles(
 
   if (!props.files.length) return <NoChanges {...props} />;
 
-  const files = [
-    ...new Map(props.files.map((file) => [file.path, file])).values(),
-  ];
+  const files = uniqueChangedFiles(props.files);
 
   return <FileList {...props} files={files} />;
 }

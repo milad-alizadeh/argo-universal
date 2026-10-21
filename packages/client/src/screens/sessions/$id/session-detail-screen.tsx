@@ -8,6 +8,7 @@ import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
 import { renderConnectedReplaceableSlot } from '../../plugins/connected-replaceable-slot';
+import { renderSubagentFeed } from './connected-subagent-feed';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
@@ -146,7 +147,7 @@ function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
     ...reads,
   });
 
-  return useChangedSession(sessionId, props, sources.feed);
+  return withAgentFeed(useChangedSession(sessionId, props, sources.feed));
 }
 
 function usePageCallout(
@@ -165,3 +166,8 @@ function usePageCallout(
 
   return { options, callouts };
 }
+
+const withAgentFeed = (
+  props: SessionDetailViewProps,
+): SessionDetailViewProps =>
+  props.state === 'open' ? { ...props, renderSubagentFeed } : props;

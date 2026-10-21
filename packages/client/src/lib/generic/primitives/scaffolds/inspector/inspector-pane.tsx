@@ -120,16 +120,26 @@ export type InspectorBodyProps = InspectorProps & {
 export function InspectorBody(props: InspectorBodyProps): ReactElement {
   const { toolbar, children, scrollState } = props;
 
-  const body = (
-    <InspectorScroll {...props} key={scrollState?.key}>
-      {children}
-    </InspectorScroll>
-  );
+  if (props.contentScrolls) return <OwnedScrollBody {...props} />;
 
   return (
     <>
       {toolbar}
-      {body}
+      <InspectorScroll {...props} key={scrollState?.key}>
+        {children}
+      </InspectorScroll>
+    </>
+  );
+}
+
+function OwnedScrollBody({
+  toolbar,
+  children,
+}: InspectorBodyProps): ReactElement {
+  return (
+    <>
+      {toolbar}
+      {children}
     </>
   );
 }

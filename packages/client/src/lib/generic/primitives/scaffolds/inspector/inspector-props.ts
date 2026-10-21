@@ -33,6 +33,8 @@ export type InspectorProps = KitProps<'Inspector'> & {
     getOffset: () => number;
     onScroll: (offset: number) => void;
   };
+  // The content owns its scroll view, for retained tab pages or virtualised detail.
+  contentScrolls?: boolean;
   toolbar?: ReactNode;
   tabs?: InspectorTabsProps;
   testID?: string;
