@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
@@ -72,6 +72,13 @@ function LeadingButton(props: TitleRowProps): ReactElement | null {
   );
 }
 
+/*
+ * Material's own app bar icons are 24 boxes whose artwork carries its padding inside it; the kit's glyphs
+ * fill their box, so at 24 they read a size larger than the header the sheet sits under. The header role
+ * is what matches it by eye (owner, 2026-10-21).
+ */
+const leadingRole = Platform.OS === 'android' ? 'action' : 'title';
+
 function LeadingIcon(props: {
   icon: 'chevron-left' | 'close';
   label: string;
@@ -81,7 +88,7 @@ function LeadingIcon(props: {
     <IconButton
       variant="ghost"
       icon={props.icon}
-      iconRole="title"
+      iconRole={leadingRole}
       accessibilityLabel={props.label}
       onPress={props.onPress}
     />
