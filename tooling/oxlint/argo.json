@@ -2195,6 +2195,7 @@
         "apps/server/src/supervisor/engine-process.ts",
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
+        "packages/engine/src/link-preview/github-access.ts",
         "packages/engine/src/engine/caffeinate.ts",
         "packages/engine/src/plugins/host/connection.ts",
         "packages/engine/src/plugins/services/keychain.ts",

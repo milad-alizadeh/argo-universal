@@ -6,6 +6,8 @@ import type { KitProps } from '../../kit-props';
 export type PopoverProps = KitProps<'Popover'> & {
   // Web only: phones have no pointer to hover with, so a press opens it.
   openOnHover?: boolean;
+  // Web only: preserve inline text flow for a Link.
+  inline?: boolean;
   className?: string;
   style?: StyleProp<ViewStyle>;
 };

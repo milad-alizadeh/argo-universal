@@ -43,13 +43,19 @@ export function Popover(props: PopoverProps): React.JSX.Element {
 }
 
 function PopoverFrame(props: PopoverProps): React.JSX.Element {
-  return (
+  const children = (
+    <TriggerElementProvider>
+      <HoverProvider enabled={props.openOnHover}>
+        {props.children}
+      </HoverProvider>
+    </TriggerElementProvider>
+  );
+
+  return props.inline ? (
+    <span className={props.className}>{children}</span>
+  ) : (
     <View className={props.className} style={props.style}>
-      <TriggerElementProvider>
-        <HoverProvider enabled={props.openOnHover}>
-          {props.children}
-        </HoverProvider>
-      </TriggerElementProvider>
+      {children}
     </View>
   );
 }

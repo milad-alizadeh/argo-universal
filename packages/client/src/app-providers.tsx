@@ -11,6 +11,7 @@ import {
 } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
 import { MediaUrlContext } from '#primitives/content/media-url';
+import { LinkPreviewProvider } from './link-preview-provider';
 import { createQueryClient } from './query-cache';
 
 export interface AppProvidersProps {
@@ -87,7 +88,7 @@ function ServerUrls({
   return (
     <BlobUrlContext.Provider value={blobUrl}>
       <MediaUrlContext.Provider value={mediaUrl}>
-        {children}
+        <LinkPreviewProvider>{children}</LinkPreviewProvider>
       </MediaUrlContext.Provider>
     </BlobUrlContext.Provider>
   );
