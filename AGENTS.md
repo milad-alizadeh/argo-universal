@@ -9,7 +9,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Specs: GitHub Issues, as transient briefs; never commit one. Build a spec as written; when it is unclear or wrong, stop and ask.
 - Checks: several agents share one Mac, so run the test files you work on, then `pnpm verify` before you hand back. `docs/agents/hooks.md` says what `verify` runs and what is left to CI.
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
-- Designs: every new UI or visible state needs a Paper design. Before changing UI or editing Paper, read `docs/agents/paper.md` and identify its design source.
+- Designs: Storybook owns how built UI looks; Paper is for exploring a design before it is built, and its board is deleted once the design ships. Before drawing in Paper, read `docs/agents/paper.md`.
 - Layout: before changing the rail, the content column, the Workbench or the Stage, read `docs/agents/layout.md`. It holds the regions, the widths they give up in order, and the phone model.
 
 ## Agent skills

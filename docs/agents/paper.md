@@ -1,128 +1,68 @@
 # Paper
 
-How designs in Paper stay in sync with each other and with the code while Paper has no component instances.
+Storybook owns how built UI looks. Paper is where a design is explored and agreed **before** it is built.
 
-This doc is temporary. When Paper ships components ("Components with slots" on its roadmap), convert the masters to components first, then swap the copies over one artboard at a time, then delete this doc and its line in `AGENTS.md`.
+Once a design ships, its Storybook story is the record: the story shows the states, the platforms and the appearance, and the PR evidence shows it running. The Paper board that led to it is then deleted. Nothing in Paper describes UI that already exists.
 
-## Design files
+## Design pages
 
-The canonical files for new designs and implementation evidence:
+One Paper file, [Argo](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW), holds every design. Each page owns one area:
 
-| File | Owns |
+| Page | Owns |
 |---|---|
-| [Foundations](https://app.paper.design/file/01M4RJ2FP7N272AE463G6PT2QD/p-2-0) | Global primitives, icons, typography and windows |
-| [Sessions](https://app.paper.design/file/01M4RJRP22R2R2JE20RWDNXR0Q/p-1-0) | Sessions list, filters and shell explorations |
-| [Feed, Workbench & Inspector](https://app.paper.design/file/01M4RJWCAC00EA21V8BKY91FEV/p-1-0) | Session header, Feed, Inspector and PR views |
-| [Composer](https://app.paper.design/file/01M4RJXN4XTK41J7TDNBBD87G1/p-1-0) | Composer, menus, sheets, attachments and Session entry |
-| [Settings](https://app.paper.design/file/01M4RJMTRRZ4K9B62YQ0P53CR5/p-1-0) | Settings, Agents and accounts |
-| [Voice](https://app.paper.design/file/01M4RJ7EBVF0CGT31XYHHYVHYV/p-1-0) | Voice components and flows |
-| [Atlas](https://app.paper.design/file/01M4RJB4J2JMHAQCZYTSD808R7/p-1-0) | Atlas components and flows |
-| [Setup](https://app.paper.design/file/01M4RJFEE925T7Z1Q0E3J8CF7M/p-1-0) | Setup components and flows |
-| [Issues](https://app.paper.design/file/01M4RJGJ2N1YKV0K3RHF80FKZP/p-1-0) | Issues components and flows |
-| [Landing](https://app.paper.design/file/01M4RJQ4TMAKN1KWAXYNDHK589/p-1-0) | Landing designs and explorations |
+| [Foundations](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-1-0) | Tokens, typography and unbuilt primitives |
+| [Icons](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-2-0) | The icon library to copy from |
+| [Workbench and Change](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-3-0) | Workbench, Stage and Change explorations |
+| [Composer](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-4-0) | Composer explorations |
+| [Settings and Accounts](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-5-0) | Settings, Agents and the Accounts broker |
+| [Setup](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-6-0) | Pairing |
+| [Issues](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-7-0) | Issues |
+| [Voice](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-8-0) | Voice |
+| [Atlas](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-9-0) | Atlas |
+| [Landing](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-A-0) | Landing |
 
-The Sessions, Feed/Workbench/Inspector, and Composer files keep masters on `Session Components` (`p-1-0`) and flows on `Session` (`p-2-0`). Foundations has one page per family: Tokens & Type (`p-2-0`), Icons (`p-3-0`), Controls (`p-4-0`), Lists (`p-5-0`), Overlays (`p-6-0`), Layout & Shell (`p-7-0`) and Dark (Graphite) (`p-8-0`), with the old Global Components page (`p-1-0`) last. The other files use `p-1-0`.
+A second file is also called Argo (`01M44G6AG3HPXGPPPMKS9S3H8J`). It is the historical archive, it is over the size limit, and it is never opened. Check the id, not the name.
 
-The original [Argo file](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J) is a historical archive. Never open it; leave its issue approvals and links unchanged.
+## Designing before implementation
 
-Atlas and Voice are work in progress and excluded from paper-sync (`excludedAreas` in `tools/paper-sync/config.mts`). Do not normalise or sync excluded areas.
+New UI, and a new row, card, placeholder or error state inside an existing screen, is drawn in Paper first and agreed in the ticket. The owner is the only approver.
 
-## Design before implementation
+An exploration board always shows **labelled options to choose from**, never one answer. When a design reuses something already built, say which Storybook story it reuses instead of redrawing it.
 
-The `AGENTS.md` design rule covers new rows, cards, placeholders and error states inside an existing screen too. Identify the Paper master and state before implementing the appearance, and link that design in the PR evidence. Reuse a matching master; when none exists, report the design gap before writing the UI. A functional requirement, passing tests or a simulator screenshot does not supply the missing design.
-
-The owner is the only approver. Each ticket's Paper is approved in its issue or PR thread, against named flows, before it is built.
-
-## Masters and copies
-
-- Foundations owns the global masters. Each other file owns its section masters. Domain screens embed only the global copies they use.
-- A **master** lives on a family card named `Components / <CodeName>` on its section's Components board (see Page layout). Its name is `<CodeName> / <State>`: CodeName is the PascalCase code component it becomes, and states are named for that component's props (`Toggle / Changed files (pressed)` is the `pressed` prop). A master with one state drops ` / <State>`.
-- Name cards by CodeName. A descriptive card name such as `Components / Feed messages` claims the family of its first word. State names carry no counters: `Header expanded 8` is wrong.
-- Text layers inside a master are named for their role (`Title`, `Detail`) and are unique within that master; paper-sync matches them by name.
-- A platform suffix follows the code name: `(phone)` for both phones, `(ios)` or `(android)` for one, none for desktop: `SessionRow / Done`, `SessionRow (phone) / Done`, `Switch (ios)`.
-- A page is built only from **copies** of masters: `duplicate_nodes` inside one file, Paper's native clipboard between files. A copy carries its master's exact layer name: the name is the link.
-- A copy between files gets new IDs; compare its tree, tokens and screenshot with the source.
-- A copy may change its text, hide items, and switch to a named state. Any other difference from its master is **drift**.
-- Column masters carry content only. The surface (background, border, radius, shadow) comes from the shell's Card and Sidebar plate, so copies cannot drift on it.
-- **The state matrix lives in the child only** (owner, 2026-10-14). A state belongs to the lowest component that owns it: that card holds every state × platform. A parent card shows one example, with one copy of the child in it, to show where the child sits; it never repeats the child's states. Only a difference in the parent's own layout gets its own small card with its own matrix. Screens show one state per component. Example: `Components / AgentStatusSection` holds every Agent status; `Components / Agent page` holds one state.
-- Pages and cards are built from copies of the Foundations masters (Button, GroupedListItem, GroupedListSection, Tag); nothing is hand-drawn where a master exists. A missing master is a design gap: report it.
-- When a decision supersedes a state, delete that state in every card and screen in the same pass; stale states are not kept for reference.
-- Never delete a Paper board or node the owner has not named.
-
-## Changing a design
-
-Paper-sync carries a master's changes to its copies. [`tools/paper-sync/README.md`](../../tools/paper-sync/README.md) explains what it syncs and how. Its registry (`.paper-sync/registry.json`) is local and gitignored, like Paper itself: run paper-sync from the main checkout, never from a worktree.
-
-1. Edit the master on its `Components / <CodeName>` card (Foundations or the area file) first. Never hand-edit or hand-copy screens to propagate a change, and never restyle copies by script.
-2. Run `pnpm paper:sync check`. Run `pnpm paper:sync scan` and `pnpm paper:sync enroll --rebind` first only when what is linked changed: a new master or state, new copies, or renamed or new layers and text slots. A style or text change to an enrolled master needs only `check` and `apply`.
-3. Report the drift count to the owner, then run `pnpm paper:sync apply`.
-4. Screenshot the changed copies before and after, as evidence.
-
-One agent edits a Paper file at a time. Do not run paper-sync while another agent edits Paper; apply's preflight stops on concurrent edits. Batch master edits and run one `check` and `apply` for all of them.
+Once the owner picks an option and it is built, delete the board in the same pass. A stale board is worse than no board: it competes with the story that is now true.
 
 ## Platforms
 
-Argo owns its primitives (ADR-0020), so Paper designs desktop, iOS and Android.
+Argo owns its primitives (ADR-0020), so an exploration covers desktop, iOS and Android where they differ. Draw the platform rows a decision actually needs, not a full matrix.
 
-- **Cards** have **Desktop | iOS | Android** columns. A single Phone column stays only where both phones match. Overlay cards have **Content | Popover | Sheet (iOS) | Sheet (Android)**.
-- **Mobile flows** get an iOS row. An Android row sits inside the same `Flow / <Name>` only where Android differs from iOS. Platform-only flows are allowed, in a shared order.
-- **Light only:** no dark frames, cards or flows. Dark mode is checked in the code, through the PR evidence.
-- **Native frames** use the platform's type scale as literals (SF Pro text styles on iOS, Roboto on Android) but never literal colours: system text, tint, fill and outline colours map to Argo tokens (`foreground`, `muted-foreground`, `muted`, `border`, `danger`), so Android draws Material shapes in Argo colours and iOS uses Argo's neutral greys.
-- The only literal colours in Paper are copied OS chrome (macOS traffic lights, the iOS keyboard), board backdrops, shadows (Paper tokens cannot hold them; copy the `--shadow-*` values from `theme.css`) and data colours such as GitHub label tints. An alpha the token set lacks is written `color-mix(var(--token) N%, transparent)`.
+**Light only.** Dark mode is checked in the code, through the PR evidence.
 
-## Page layout
-
-Each section uses these artboards on the pages listed in Design files, top-aligned at y 0, left to right, 400px apart. Every board is auto layout, so adding something moves its neighbours instead of overlapping them; nothing is placed by hand.
-
-- `<Section> Components`: a flex row of columns named `Column / <Group>`, each a flex column of family cards `Components / <CodeName>`. A card has a heading and note, a `Columns` header `State | Desktop | iOS | Android` (see Platforms), and one `Row / <State>` per state holding `Cell / Desktop`, `Cell / iOS` and `Cell / Android`. A new component is a new card in a column, never a loose artboard.
-- `<Section> Desktop` and `<Section> Mobile`: a flex column of flows named `Flow / <Name>`, each a heading and a row of `Screen / <State>` frames. A screen frame holds a label, then the screen, named `<Section> — <State>`: no device word (the board says it) and no "(light)". Desktop and Mobile use the same flow names in the same order.
-- `<Section> Explorations`, only when needed: option boards, comparisons and A/B variants, wrapped like screens. Explorations are never drawn on masters, and finished work never sits here. Once the owner approves an exploration, put it onto the masters and run paper-sync (see Changing a design). Delete an exploration board only when the owner says so.
-- Foundations keeps its masters on the family pages; the Global Components page holds only `Column / References`.
-- Within one file, use `move_nodes` to move existing layers into place; it keeps their IDs.
+Native frames use the platform's type scale as literals (SF Pro on iOS, Roboto on Android) but map system colours to Argo tokens (`foreground`, `muted-foreground`, `muted`, `border`, `danger`). The only literal colours are copied OS chrome, board backdrops, shadows and data colours such as GitHub label tints.
 
 ## Tokens
 
-- Paper tokens use the Tailwind names in `tooling/uniwind/theme.css`. Fractional steps take an underscore: `--spacing-0_5`, `--leading-4_5`.
-- Icon dimensions come from the role table in `packages/client/src/lib/generic/symbols/icon-role.ts`: desktop frames use a role's wide size, phone frames its phone size. Paper records the resolved dimensions as literals. An icon slot uses the same size as its glyph.
-- Web and desktop radii follow one rule (owner, 2026-10-14). Controls (Button, IconButton, SplitButton, TextInput, Textarea, the Picker trigger and SearchField) use `--radius-control` (the lg radius, 10px). Rows inside menus and popovers use `--radius-xl` (14px). Containers (cards, popovers, menus and the Composer) use `--radius-2xl` (18px). Pills (Pill, FilterPill, StatusDot) are fully rounded. Sheets use `--radius-sheet` (28px) and round their top corners. Phones keep their stock shapes.
-- Shadows use one scale (owner, 2026-10-15): `shadow-control` (buttons, fields, small cards), `shadow-card` (desktop popovers, menus, toasts), `shadow-raised` (phone popovers, menus, floating buttons), `shadow-glass` and `shadow-tray`. Paper has no shadow token type, so a Paper shadow copies the recipe from `theme.css` and takes its colours from `--color-shadow-subtle` (6%), `--color-shadow` (8%) and `--color-shadow-strong` (14%). Desktop window mocks keep their literal macOS shadow.
-- Edges and selection (owner, 2026-10-19): `--color-hairline` (light black 5%, dark white 10%) draws the 1px edge of a resting Session row (`shadow-hairline`), and the rail separator. Desktop and web popovers and menus draw no line between groups: an 8px gap splits them (owner, 2026-10-20). Selected rows and active rail tiles use the shared flat `--color-selected` fill, without a hairline or inset shadow. Hover and pressed states use the shared state fills below.
-- Grouped rows Argo draws itself, such as the phone Compact Session list, reuse the GroupedList values: `--radius-grouped` (iOS 26, Android 20) for a section's outer corners and `--radius-grouped-inner` (iOS 0, Android 4) inside it. Their text uses the `row` and `row-detail` roles: 16/24 and 14/20 on both phones (Material's bodyLarge and bodyMedium, with +0.5 and +0.25 tracking on Android only; iOS never steps up to 17/22), Body and Secondary on desktop.
-- Web search fields have a `--color-muted` fill and no border or shadow (owner, 2026-10-12).
-- Web dialogs have no border in light mode. Dark web cards, popovers, menus, dialogs and sheets use a 1px `--color-border` edge and a black shadow, without a white glow (owner, 2026-10-10).
-- Feed code blocks, inline diffs and tables use `--radius-sheet` on web and have no shadow. Interactive rows and neutral controls use `--color-hover` for hover and option focus, `--color-selected` for persistent selection, and `--color-pressed` while pressed. Light fills use black at 2%, 3% and 4%; dark fills use white at 4%, 6% and 8% (owner, 2026-10-15). Native controls keep their stock state drawings.
-- Fills that sit on the content surface (user message bubbles, the Inspector pane, an icon button's default chip) use `--color-tint`, not `--color-muted`: content and muted are both neutral-100. Tint is black 4% (dark: white 8%) mixed into content (owner, 2026-10-17).
-- Destructive hover and pressed states use a light red background, 10% of `--color-danger`, with danger text (owner, 2026-10-10).
-- Text takes one of four roles from the "Components / Text" master on the Tokens & Type page: Title, Heading, Body, Secondary. Each role is a set of tokens, `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`; desktop text uses the `-wide` size and leading (`--text-body-wide`), phone text the plain ones. Text nodes reference role tokens, never a scale step such as `--text-sm`. In code they are the `type-title`, `type-heading`, `type-body` and `type-secondary` classes in `theme.css`. Buttons, inputs, chips, the native phone header and mono code keep their own styles.
-- Token values live only in `tooling/uniwind/theme.css`, with no second copy in the repository; each Paper file holds a copy. After a token change in `theme.css`, sync that token by hand in every canonical Paper file; paper-sync does not sync tokens. Paper leads how things look; `theme.css` leads token values. A Paper token missing from `theme.css` or holding a different value is drift: report it and fix Paper.
-- Paper stores oklch with one decimal. When that rounding changes the colour, store the exact hex instead.
-- A Paper token value cannot be `color-mix()`: Paper flattens it to the opaque colour. Alpha tokens (`--color-hover`, `--color-glass`…) store the resolved value, such as `rgb(0 0 0 / 2%)`.
-- Colours come from the Tailwind palette only. Every semantic token (`--color-success`, `--color-content`) aliases a palette token.
+`tooling/uniwind/theme.css` is the only source of token values. The Paper file holds its own copy so it can draw; that copy is a convenience, not a second source. Do not hand-sync it, and do not report it as drift. When a Paper drawing looks wrong because a token moved, update the token in Paper and move on.
+
+Text uses the four roles — Title, Heading, Body, Secondary — as `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`, never a scale step such as `--text-sm`. Icon dimensions come from the role table in `packages/client/src/lib/generic/symbols/icon-role.ts`.
 
 ## Icons
 
-- Icons are SF Symbols, drawn as SVG paths so the design matches iOS and macOS; Android frames use Material Symbols (ADR-0019). The SVGs are Paper mockups only; the app draws the real symbol through expo-symbols.
-- Git icons (branch, pull request, PR states, Merge PR and Changes) are Tabler Icons on every platform, in the SF and the Material cell alike (ADR-0019). Their Paper SVGs use the same sources as the app.
-- Logos, such as GitHub's Octicons mark on the Agent card, are plain SVG files in `packages/client/src/lib/generic/symbols/assets/logos` (ADR-0019). A logo layer is named `Logo / <key>`, `<key>` being its key in `logoSources` (`logo-source.ts`). Its Paper SVG copies the file, in the role's icon box with the mark filling the share `circle` fills.
-- Where SF Symbols has no symbol, Argo draws its own (`custom.<name>` in `packages/client/src/lib/generic/symbols/custom-symbol-paths.json`, ADR-0019). Its Paper SVG uses the JSON's viewBox and path, so design and app share one outline.
-- An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
-- In a copy, the glyph belongs to the copy; its size, fill and placement sync from the master (see [Icon slots](../../tools/paper-sync/README.md#icon-slots)).
-- The library is "Components / Icons" on the Icons page: one tile per app icon, a Material cell beside the SF cell. Copy icons from it.
-- `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use that viewBox, a `--color-*` fill, and the dimensions from the icon's role.
+Icons are SF Symbols drawn as SVG paths; Android frames use Material Symbols; git and file-type glyphs are Tabler on every platform (ADR-0019). `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts` is the only list of icons — an icon a design needs that the app lacks is added there first. Copy icons from the library on the Icons page.
+
+`tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box.
 
 ## Building from Paper
 
-- Before writing JSX, map the whole artboard: the shell, its regions, and every repeated group with its master. A group that repeats without a master is drift; report it.
-- Build from the artboard the user names as canonical. When other artboards of the same screen differ, list the differences and ask.
+- Map the whole artboard before writing JSX: the shell, its regions, and every repeated group.
+- Build from the board the owner named as the chosen option. When other boards of the same screen differ, they are leftovers — ask before following one.
 - Name a new component for its structural role (`LabeledList`), not its content (`FailureList`).
-- Rebuild a chart from its data model (values, ranges, segments) read with `get_computed_styles`, and label every figure you could not recover as a placeholder.
-- The build is done when a screenshot of it sits beside the artboard's screenshot at the same width, and each difference is fixed or listed.
+- The build is done when its Storybook story sits beside the board at the same width and each difference is fixed or listed. Then delete the board.
 
 ## Paper gotchas
 
 - Text nodes do not inherit `font-family`. Set `font-family: var(--font-sans)` on every text node, and check with `find_nodes` for `*system-ui*`.
-- A `var(--token)` font family does not resolve: Paper draws it in SF Pro. Write mono text as `font-family: "SF Mono"`, which stands for `--font-mono`. Mono text is paths, file names, branch names, commands, code, diffs and inline code in markdown.
+- A `var(--token)` font family does not resolve: Paper draws it in SF Pro. Write mono text as `font-family: "SF Mono"`.
 - A `var(--token)` inside a gradient renders transparent. Write the literal colour there.
 - `z-index` and negative margins apply only through `update_styles`.
 - A CSS `filter` on a parent breaks `backdrop-filter` in its children.
-- Paper serves one MCP connection, so parallel agents' calls take turns and one large read stalls them all. Read the artboard you are editing with `get_children` or `find_nodes`, keep `get_tree_summary` for small nodes, and screenshot only the node you changed.
+- Paper serves one MCP connection, so parallel agents' calls take turns and one large read stalls them all. Read the board you are editing with `get_children` or `find_nodes`, and screenshot only the node you changed.
