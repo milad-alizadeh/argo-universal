@@ -27,73 +27,71 @@ export default meta;
 
 const agentIconId = 'composer-agent-icon';
 
-export const ComposerUsesAvailableWidth: ScaffoldStory = {
-  args: {
-    children: (
-      <View
-        className="flex-1 justify-end px-4 pb-4"
-        testID="responsive-composer"
-      >
-        <Composer
-          {...composerProps({
-            sessionStarted: true,
-            draft: { text: preservedDraft, attachments: [] },
-            onDraftChange: fn(),
-            onAttachImages: fn(),
-            onSend: fn(),
-          })}
-        />
-      </View>
-    ),
-  },
-  play: controlledPlay(async (context, controlled) => {
-    const { canvas, userEvent } = context;
-    await settleViewport(narrowDesktopWidth);
-    await waitFor(() =>
-      expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible(),
-    );
-    await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
-    await controlled.render({ inspectorState: 'open' });
-    await expect(canvas.getByTestId(agentIconId)).toBeVisible();
-    await expect(canvas.getByTestId('desktop-list')).toHaveAttribute(
-      'aria-hidden',
-      'true',
-    );
-    canvas.getByRole('separator', { name: resizeInspectorLabel }).focus();
-    await userEvent.keyboard('{ArrowLeft}'.repeat(40));
-    await waitFor(() =>
-      expect(canvas.queryByTestId(agentIconId)).not.toBeInTheDocument(),
-    );
-    await expect(canvas.queryByTestId(agentIconId)).not.toBeInTheDocument();
-    await waitFor(() =>
-      expect(
-        canvas.queryByText('session', { exact: true }),
-      ).not.toBeInTheDocument(),
-    );
+export const ComposerKeepsDesktopControlsAtTheStageResizeLimit: ScaffoldStory =
+  {
+    args: {
+      children: (
+        <View
+          className="flex-1 justify-end px-4 pb-4"
+          testID="responsive-composer"
+        >
+          <Composer
+            {...composerProps({
+              sessionStarted: true,
+              draft: { text: preservedDraft, attachments: [] },
+              onDraftChange: fn(),
+              onAttachImages: fn(),
+              onSend: fn(),
+            })}
+          />
+        </View>
+      ),
+    },
+    play: controlledPlay(async (context, controlled) => {
+      const { canvas, userEvent } = context;
+      await settleViewport(narrowDesktopWidth);
+      await waitFor(() =>
+        expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible(),
+      );
+      await waitFor(() =>
+        expect(canvas.getByTestId(agentIconId)).toBeVisible(),
+      );
+      await controlled.render({ inspectorState: 'open' });
+      await expect(canvas.getByTestId(agentIconId)).toBeVisible();
+      await expect(canvas.getByTestId('desktop-list')).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
+      canvas.getByRole('separator', { name: resizeInspectorLabel }).focus();
+      await userEvent.keyboard('{ArrowLeft}'.repeat(40));
+      await expect(canvas.getByTestId(agentIconId)).toBeVisible();
+      await expect(canvas.getByText('session', { exact: true })).toBeVisible();
 
-    const content = canvas
-      .getByTestId('responsive-composer')
-      .getBoundingClientRect();
-
-    // Explicitly widening the Stage leaves the Composer the width of a phone; its controls stay inside it.
-    for (const name of ['Mode', 'Context window', 'Send']) {
-      const control = canvas
-        .getByRole('button', { name })
+      const content = canvas
+        .getByTestId('responsive-composer')
         .getBoundingClientRect();
 
-      await expect(control.left).toBeGreaterThanOrEqual(content.left);
-      await expect(control.right).toBeLessThanOrEqual(content.right);
-    }
+      // The Stage stops at the column floor; all desktop controls stay inside the Composer.
+      for (const name of ['Mode', 'Context window', 'Send']) {
+        const control = canvas
+          .getByRole('button', { name })
+          .getBoundingClientRect();
 
-    await expect(
-      shownText(canvas.getByRole('textbox', { name: 'Message' })),
-    ).toBe(preservedDraft);
-    await pressInspectorButton(context, controlled, 'closed');
-    await waitFor(() =>
-      expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible(),
-    );
-    await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
-    await expect(canvas.getByText('session', { exact: true })).toBeVisible();
-    await expect(window.innerWidth).toBe(narrowDesktopWidth);
-  }),
-};
+        await expect(control.left).toBeGreaterThanOrEqual(content.left);
+        await expect(control.right).toBeLessThanOrEqual(content.right);
+      }
+
+      await expect(
+        shownText(canvas.getByRole('textbox', { name: 'Message' })),
+      ).toBe(preservedDraft);
+      await pressInspectorButton(context, controlled, 'closed');
+      await waitFor(() =>
+        expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible(),
+      );
+      await waitFor(() =>
+        expect(canvas.getByTestId(agentIconId)).toBeVisible(),
+      );
+      await expect(canvas.getByText('session', { exact: true })).toBeVisible();
+      await expect(window.innerWidth).toBe(narrowDesktopWidth);
+    }),
+  };
