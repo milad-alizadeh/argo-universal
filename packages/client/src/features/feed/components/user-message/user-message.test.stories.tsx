@@ -62,9 +62,9 @@ export const InlineCode: Story = {
 
       await expect(codeElement).toBeVisible();
       await expect(prose).toBeVisible();
-      await expect(
-        canvas.queryByRole('button', { name: 'Show more' }),
-      ).toBeNull();
+      await waitFor(() =>
+        expect(canvas.queryByRole('button', { name: 'Show more' })).toBeNull(),
+      );
       const container = prose.closest('.w-full');
 
       if (!container) throw new Error('Expected the Feed row');
@@ -171,9 +171,9 @@ export const ClampsAgainWhenNarrowed: Story = {
   args: { row: recordedUserMessage('agent-2', 'edit-states') },
   play: async ({ canvas, canvasElement }) => {
     await settleViewport(layoutWidths.wide);
-    await expect(
-      canvas.queryByRole('button', { name: 'Show more' }),
-    ).toBeNull();
+    await waitFor(() =>
+      expect(canvas.queryByRole('button', { name: 'Show more' })).toBeNull(),
+    );
     await settleViewport(layoutWidths.phone);
     await canvas.findByRole('button', { name: 'Show more' });
     await waitFor(() => expect(lineViews(canvasElement)).not.toContain('cut'));
