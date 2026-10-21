@@ -1,0 +1,22 @@
+# The Workbench holds a Session's section cards and the Stage shows one in full
+
+Argo has drawn a column beside the Feed since the first desktop designs, and the owner moved pull requests, checks and file changes into it on 2026-10-20: "the PRs and file changes are going into workbench". Neither the Workbench nor the Stage is written down anywhere. No ADR names them, `GLOSSARY.md` defines neither, and the code still calls both of them the inspector, so [ADR-0035](0035-plugins-add-to-named-slots-and-never-edit-core-screens.md) had to name a Plugin's Slot there the "inspector tab". This ADR names the two surfaces, says what each owns, and records the rule the owner set for phones. The rename in code is work, not a decision this ADR makes.
+
+## Decision
+
+- **The Workbench is the desktop and web column beside a Session's Feed,** 312 wide, flush to the window edge, toggled from the Session header. The Feed keeps its 800 cap beside it. There is one Workbench per Session; it is not a second sidebar, and the rail is still where sections live.
+- **Nothing the Workbench owns is drawn in a header.** Pull requests, checks, Changes counts and file changes are the Workbench's, on every platform. A Session header carries identity and state only: title, status, the running Turn, the Workbench toggle and "…". A header is a fixed width and a Session's Changes are an unbounded list, so the two never fit.
+- **The Workbench holds section cards.** Argo's are Changes, Subagents and Shells. A card is drawn only when the Session has something for it, so a Session with no Subagents has no Subagents card, as its header has no Subagents button. Cards are kit components and list their rows with `List` and `ListItem` ([ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md)).
+- **A Change is what the Changes card lists.** One line of work, named by its branch, at one of five stages: Working, Branch, Open, Merged or Closed. A Session can have several Changes at once, each at its own stage, so no design may assume one pull request.
+- **Plugins add their own cards through a named Slot,** under [ADR-0035](0035-plugins-add-to-named-slots-and-never-edit-core-screens.md) unchanged: the Plugin draws inside its card, Argo decides where the card goes, in what order and how much fits, and a Plugin never moves, hides or restyles Argo's cards or another Plugin's. This Slot is the one ADR-0035 declares for a Plugin page in the Session inspector, under the Workbench's name. A Plugin's `header` action may open its card, as ADR-0035 says.
+- **The Stage shows one Workbench row in full:** a Change's diff, a Subagent's Feed, a Shell's output, or whatever a Plugin draws for its own row. A row opens it; the Workbench stays. The Stage is a surface, not a section: it is always reached from a row, never from the rail, and it holds no list of its own.
+- **Phones reach the same content, and the design says how.** Every Workbench card, Plugin cards included, and every Stage is reachable on compact widths, where there is no column. The presentation is being settled in Paper and is not fixed here; what is fixed is that nothing is dropped on phones and no card is desktop-only.
+- **Each card and the Stage get a Paper design before code,** as every new visible state does and as ADR-0035 requires of each Slot.
+
+## Considered options
+
+- **Keep pull requests and checks in the Session header,** as the meta line and a Merge button did until 2026-10-20. Rejected by the owner: a header cannot hold several Changes, and a "+N" dropdown over an unbounded list is the variable-width problem again.
+- **Give Changes its own rail section.** Rejected: there is one sidebar and the rail is for Plugin sections (owner, 2026-10-19). Changes belong to a Session, so they belong beside its Feed.
+- **Let Plugins place their cards themselves, or reorder Argo's.** Rejected by ADR-0035, for the reasons it gives.
+- **Make the Stage a third column.** Rejected: at 312 plus 800 plus a Stage the Feed loses its width, and a Change's diff needs more room than any column leaves. The Stage covers or replaces, and the Workbench stays.
+- **Settle the phone presentation here,** as a sheet or as a drill-in. Left to the design: the compact layout for the cards and the Stage is open in Paper, and an ADR guessing at it would be a decision nobody made.

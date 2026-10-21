@@ -140,6 +140,10 @@ _Avoid_: Target, loop
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
 _Avoid_: Workspace, worktree (when the main checkout is also possible)
 
+**Change**:
+One line of work in a Session, named by its branch, at one of five stages: Working, Branch, Open, Merged or Closed. A Session can have several at once.
+_Avoid_: PR, pull request, diff, branch (for the work)
+
 **Composer**:
 Where the user writes the next prompt for a Session, with its Agent, model and mode controls.
 _Avoid_: Input, chat box, prompt bar
@@ -287,6 +291,14 @@ _Avoid_: Shell, app shell, chrome
 **Scaffold**:
 A kit component that arranges a screen's panes for its Size class, such as list and detail side by side on wide windows and drill-in on phones. Content is written once; the Scaffold places it.
 _Avoid_: Layout (for a whole screen), template
+
+**Workbench**:
+The column beside a Session's Feed that holds its section cards: Changes, Subagents, Shells, and the cards Plugins add through a Slot. Phones reach the same cards without the column. See ADR-0039.
+_Avoid_: Inspector, right panel, second sidebar
+
+**Stage**:
+The surface that shows one Workbench row in full, such as a Change's diff, a Subagent's Feed or a Shell's output. A row opens it and the Workbench stays.
+_Avoid_: Inspector, detail pane, viewer
 
 **Surface**:
 A named background a kit component draws on: `background`, `card`, `muted` or `glass`, with its fill, radius and depth. There is no overlay kind; overlays draw their own.
