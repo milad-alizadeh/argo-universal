@@ -91,3 +91,29 @@ export const ExpandsDiff: Story = {
     ).not.toBeInTheDocument();
   },
 };
+
+// The feedback interval belongs to the latest successful copy.
+export const RepeatedCopyRestartsFeedback: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+
+    const clipboard = spyOn(
+      navigator.clipboard,
+      'writeText',
+    ).mockResolvedValue();
+
+    try {
+      await userEvent.tab();
+      await userEvent.keyboard('{Enter}');
+      await canvas.findByRole('button', { name: 'Copied' });
+      await new Promise((resolve) => setTimeout(resolve, 1300));
+      await userEvent.click(canvas.getByRole('button', { name: 'Copied' }));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await expect(
+        canvas.getByRole('button', { name: 'Copied' }),
+      ).toBeVisible();
+    } finally {
+      clipboard.mockRestore();
+    }
+  },
+};

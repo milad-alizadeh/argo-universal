@@ -12,7 +12,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const HeadingsAndOrderedLists: Story = {
+export const Headings: Story = {
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('heading', { level: 1, name: 'Overview' }),
@@ -20,8 +20,6 @@ export const HeadingsAndOrderedLists: Story = {
     await expect(
       canvas.getByRole('heading', { level: 2, name: 'Details' }),
     ).toBeVisible();
-    await expect(canvas.getByText('3.')).toBeVisible();
-    await expect(canvas.getByText('4.')).toBeVisible();
   },
 };
 
@@ -61,5 +59,25 @@ export const QuoteAndInlineContent: Story = {
   play: async ({ canvas }) => {
     for (const label of ['Strong', 'emphasis', 'removed', 'value'])
       await expect(canvas.getByText(label)).toBeVisible();
+  },
+};
+
+export const FormattedTableHeader: Story = {
+  args: { text: '| **Name** | *Value* |\n| --- | --- |\n| Item | 42 |' },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('columnheader', { name: 'Name' }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('columnheader', { name: 'Value' }),
+    ).toBeVisible();
+  },
+};
+
+export const OrderedListStart: Story = {
+  args: { text: '3. Third\n4. Fourth' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('3.')).toBeVisible();
+    await expect(canvas.getByText('4.')).toBeVisible();
   },
 };

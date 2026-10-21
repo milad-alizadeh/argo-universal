@@ -44,3 +44,17 @@ export const Route: Story = {
     }
   },
 };
+
+function unsupportedRoute(route: string): Story {
+  return {
+    args: { href: undefined, route },
+    play: async ({ canvas }) => {
+      await expect(canvas.getByText('Read more')).toBeVisible();
+      await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+    },
+  };
+}
+
+export const ProtocolRelativeRoute = unsupportedRoute('//example.com');
+
+export const BackslashRoute = unsupportedRoute('/\\example.com');

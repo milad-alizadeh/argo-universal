@@ -26,18 +26,20 @@ const hoverRevealClassName = (copied: boolean): string =>
 
 // Copies a value and reports it as copied for two seconds.
 function useCopy(): [boolean, (value: string) => void] {
-  const [copied, setCopied] = useState(false);
+  const [copyRevision, setCopyRevision] = useState(0);
   useEffect(() => {
-    if (!copied) return;
-    const timeout = setTimeout(() => setCopied(false), copiedMilliseconds);
+    if (copyRevision === 0) return;
+    const timeout = setTimeout(() => setCopyRevision(0), copiedMilliseconds);
 
     return (): void => clearTimeout(timeout);
-  }, [copied]);
+  }, [copyRevision]);
 
   const copy = (value: string): void =>
-    void setStringAsync(value).then(() => setCopied(true));
+    void setStringAsync(value).then(() =>
+      setCopyRevision((revision) => revision + 1),
+    );
 
-  return [copied, copy];
+  return [copyRevision > 0, copy];
 }
 
 // A bare glyph in a code block's header: no fill, border or touch minimum.

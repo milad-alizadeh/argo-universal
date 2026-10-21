@@ -5,7 +5,7 @@ import type { LinkProps } from './link-props';
 export function isRoute(
   route: string | undefined,
 ): route is Extract<Href, string> {
-  return route !== undefined && /^\/(?!\/)/.test(route);
+  return route !== undefined && /^\/(?![\\/])[^\\\s]*$/.test(route);
 }
 
 function allowedUrl(href: string | undefined): string | undefined {

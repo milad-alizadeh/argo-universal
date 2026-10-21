@@ -5,8 +5,8 @@ import { expect } from 'storybook/test';
 import { Pressable } from '#primitives/actions/pressable';
 import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
 import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+import { layoutWidths } from '../../../generic/each-layout';
+import { settleViewport } from '../../../generic/settle-viewport';
 
 const firstLine = "import { CACHE } from './headers';";
 

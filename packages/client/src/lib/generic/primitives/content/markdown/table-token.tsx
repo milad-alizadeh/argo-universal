@@ -1,4 +1,4 @@
-import type { Tokens } from 'marked';
+import type { Token, Tokens } from 'marked';
 import type { ReactElement } from 'react';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Text } from '#primitives/content/text';
@@ -25,7 +25,7 @@ function Cells({ cells }: { cells: Tokens.TableCell[] }): ReactElement[] {
 function tableColumns(token: Tokens.Table): TableProps['columns'] {
   return token.header.map((cell, index) => ({
     id: String(index),
-    title: cell.text,
+    title: inlineText(cell.tokens),
     width: 'lg' as const,
     align:
       token.align[index] === 'right' ? ('end' as const) : ('start' as const),
@@ -52,4 +52,18 @@ export function TableToken({
       </Table>
     </ClampedBlock>
   );
+}
+
+function inlineText(tokens: Token[]): string {
+  return tokens.map(tokenText).join('');
+}
+
+function tokenText(token: Token): string {
+  if (!('tokens' in token)) return tokenPlainText(token);
+
+  return token.tokens ? inlineText(token.tokens) : tokenPlainText(token);
+}
+
+function tokenPlainText(token: Token): string {
+  return 'text' in token ? token.text : '';
 }
