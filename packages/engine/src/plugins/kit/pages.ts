@@ -35,7 +35,7 @@ export interface Pages {
 }
 
 interface Hub {
-  ready: (viewId: PluginViewId) => boolean;
+  ready: (viewId: PluginViewId, background: boolean) => boolean;
   send: ViewSender;
   settle: DispatchSender;
   pages: Map<string, Page>;
@@ -70,6 +70,7 @@ function openElement(hub: Hub, event: Open): void {
       element,
       replaceable: Boolean(event.renderSlot),
       rowMeta: rowMeta(event),
+      background: event.background,
     });
   missingRender(hub, event);
 }

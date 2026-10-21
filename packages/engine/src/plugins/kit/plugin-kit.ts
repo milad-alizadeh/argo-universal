@@ -71,7 +71,10 @@ export function createKit(
   call: Parameters<typeof dataClient>[0],
 ): Kit {
   const data = dataClient(call);
-  const pages = mountPages(send, settle, (viewId) => data.ready(viewId));
+
+  const pages = mountPages(send, settle, (viewId, background) =>
+    data.ready(viewId, background),
+  );
 
   return pageKit(data, pages);
 }

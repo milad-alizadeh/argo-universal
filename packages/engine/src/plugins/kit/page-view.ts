@@ -22,6 +22,7 @@ export interface OpenView {
   broken?: boolean;
   replaceable?: boolean;
   rowMeta?: boolean;
+  background?: boolean;
   frame: KitTimer | undefined;
   tree: WireNode | null;
   revision: number;

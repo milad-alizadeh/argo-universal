@@ -41,7 +41,7 @@ export function dataClient(call: DataCall): KitDataClient {
   const client = new PluginDataClient(call);
 
   return {
-    ready: (viewId) => client.ready(viewId),
+    ready: (viewId, background) => client.ready(viewId, background),
     receive: (event) => client.receive(event),
     useData: (query, options) => useQueryData(client, query, options),
   };

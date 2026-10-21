@@ -90,6 +90,7 @@ export const PluginEvent = z.union([
   }),
   z.object({
     type: z.literal('open'),
+    background: z.boolean().optional(),
     serverDevice: z.boolean().optional(),
     viewId: PluginViewId,
     path: z.string(),

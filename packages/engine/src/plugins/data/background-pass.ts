@@ -121,7 +121,7 @@ export class BackgroundPass {
 
     return this.services.views.headless(
       pluginId,
-      { path: declaration.path, projectId: this.projectId },
+      { path: declaration.path, projectId: this.projectId, background: true },
       declaration.interval,
     );
   }
