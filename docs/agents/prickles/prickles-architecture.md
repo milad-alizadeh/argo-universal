@@ -18,7 +18,7 @@ Default to local. A new helper lives next to the consumer until a second consume
 
 On the third repeat, hoist. To `@repo/kit` if the file would compile after `npm publish` with no edits. To `lib/product/` if it still names a Tenet, a Pillar, or any other word from the product's ubiquitous language.
 
-Imports flow upward only. A module may import from `product/` and `generic/`; `product/` may import from `generic/`; `generic/` imports neither. Reverse the direction and the build fails.
+Imports flow upward only. A module may import from `lib/product/` and `@repo/kit`; `lib/product/` may import from `@repo/kit`; `@repo/kit` imports neither. Reverse the direction and the build fails.
 
 If the abstraction's shape is unclear after two uses, leave it duplicated for one more iteration. Premature hoisting costs more than the duplication it would eliminate.
 

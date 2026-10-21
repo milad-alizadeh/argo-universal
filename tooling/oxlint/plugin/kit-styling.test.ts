@@ -15,6 +15,14 @@ ruleTester.run('kit-styling', kitStyling, {
       code: 'import { Thing } from \'../../lib/product/things/thing\'; <Thing className="x" />;',
       filename: '/repo/packages/client/src/features/sessions/view.tsx',
     },
+    {
+      code: 'import { Button } from \'../../actions/button\'; <Button className="mt-2" />;',
+      filename: '/repo/packages/kit/src/primitives/lists/list/list.tsx',
+    },
+    {
+      code: 'import { Button } from \'#primitives/actions/button\'; <Button className="mt-2" />;',
+      filename: '/repo/packages/kit/src/primitives/lists/list/list.tsx',
+    },
     'import { type Button } from \'@repo/kit/primitives/actions/button\'; <Button className="x" />;',
     'import type { ButtonProps } from \'@repo/kit/primitives/actions/button\'; <ButtonProps className="x" />;',
   ],
@@ -29,15 +37,6 @@ ruleTester.run('kit-styling', kitStyling, {
     },
     {
       code: `${button} <Button label="Save" {...{ className: 'mt-2' }} />;`,
-      errors: kitStyled,
-    },
-    {
-      code: 'import { Button } from \'../../actions/button\'; <Button className="mt-2" />;',
-      filename: '/repo/packages/kit/src/primitives/lists/list/list.tsx',
-      errors: kitStyled,
-    },
-    {
-      code: 'import { Button } from \'#primitives/actions/button\'; <Button className="mt-2" />;',
       errors: kitStyled,
     },
     {

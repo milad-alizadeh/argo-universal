@@ -1,11 +1,23 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import clientManifest from '../packages/client/package.json' with { type: 'json' };
+import kitManifest from '../packages/kit/package.json' with { type: 'json' };
 
 const repoRoot = join(import.meta.dirname, '..');
 
+type Target = string | { default?: string };
+
+interface Package {
+  root: string;
+  imports: Record<string, Target>;
+}
+
 // Metro picks a platform's drawing by filename, so a fixed-extension alias must never name one.
-const packages = ['packages/client', 'packages/kit'];
+const packages: readonly Package[] = [
+  { root: 'packages/client', imports: clientManifest.imports },
+  { root: 'packages/kit', imports: kitManifest.imports },
+];
 
 const folderIn = (packageRoot: string, directory: string): string =>
   join(repoRoot, packageRoot, directory);
@@ -17,30 +29,26 @@ interface AliasFolder {
   folder: string;
 }
 
-function fixedAliasFolder(alias: string, target: string): AliasFolder[] {
-  if (!/\.tsx?$/.test(target)) return [];
-
-  return [
-    {
-      prefix: alias.slice(0, alias.indexOf('*')),
-      folder: target.slice(0, target.indexOf('*')).replace(/^\.\//, ''),
-    },
-  ];
-}
-
-type Target = string | { default?: string };
-
 function targetPath(target: Target): string {
   return typeof target === 'string' ? target : (target.default ?? '');
 }
 
-function aliasFolders(packageRoot: string): AliasFolder[] {
-  const manifest: { imports?: Record<string, Target> } = JSON.parse(
-    readFileSync(folderIn(packageRoot, 'package.json'), 'utf8'),
-  );
+function fixedAliasFolder(alias: string, target: Target): AliasFolder[] {
+  const path = targetPath(target);
 
-  return Object.entries(manifest.imports ?? {}).flatMap(([alias, target]) =>
-    fixedAliasFolder(alias, targetPath(target)),
+  if (!/\.tsx?$/.test(path)) return [];
+
+  return [
+    {
+      prefix: alias.slice(0, alias.indexOf('*')),
+      folder: path.slice(0, path.indexOf('*')).replace(/^\.\//, ''),
+    },
+  ];
+}
+
+function aliasFolders({ imports }: Package): AliasFolder[] {
+  return Object.entries(imports).flatMap(([alias, target]) =>
+    fixedAliasFolder(alias, target),
   );
 }
 
@@ -87,23 +95,28 @@ function forbiddenImportsIn(
   );
 }
 
-function packageHits(packageRoot: string): string[] {
-  const forbidden = forbiddenSpecifiers(packageRoot, aliasFolders(packageRoot));
-
-  expect(
-    forbidden.size,
-    `${packageRoot} draws for some platform`,
-  ).toBeGreaterThan(0);
-
+function packageHits(entry: Package, forbidden: Set<string>): string[] {
   return [
-    ...listFiles(packageRoot, 'src'),
-    ...listFiles(packageRoot, 'mocks'),
-  ].flatMap((file) => forbiddenImportsIn(packageRoot, file, forbidden));
+    ...listFiles(entry.root, 'src'),
+    ...listFiles(entry.root, 'mocks'),
+  ].flatMap((file) => forbiddenImportsIn(entry.root, file, forbidden));
 }
 
 it('keeps fixed-extension aliases away from platform drawings', () => {
+  const forbidden = packages.map((entry): [Package, Set<string>] => [
+    entry,
+    forbiddenSpecifiers(entry.root, aliasFolders(entry)),
+  ]);
+
+  for (const [entry, specifiers] of forbidden) {
+    expect(
+      specifiers.size,
+      `${entry.root} has no platform drawing under a fixed-extension alias, so this test guards nothing there`,
+    ).toBeGreaterThan(0);
+  }
+
   expect(
-    packages.flatMap((packageRoot) => packageHits(packageRoot)),
+    forbidden.flatMap(([entry, specifiers]) => packageHits(entry, specifiers)),
     'Use relative paths or the extensionless #primitives alias for platform drawings.',
   ).toEqual([]);
 });

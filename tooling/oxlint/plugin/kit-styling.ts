@@ -1,4 +1,3 @@
-import { dirname, resolve } from 'node:path';
 import type { Context, ESTree, Visitor } from '@oxlint/plugins';
 import { defineRule } from '@oxlint/plugins';
 
@@ -13,26 +12,14 @@ type Specifier = ESTree.ImportDeclaration['specifiers'][number];
 const isStylePropName = (name: string): boolean =>
   name === 'style' || name === 'className' || name.endsWith('ClassName');
 
-// A relative path that lands in the primitives folder, such as `../button` inside the kit.
-const isRelativeKitPath = (source: string, filename: string): boolean =>
-  source.startsWith('.') &&
-  resolve(dirname(filename), source)
-    .replaceAll('\\', '/')
-    .includes('/kit/src/primitives/');
-
-// The primitives folder, named through @repo/kit or the kit's own alias.
-const primitivesPrefixes = ['@repo/kit/primitives/', '#primitives/'];
-
-const namesPrimitives = (source: string, filename: string): boolean =>
-  primitivesPrefixes.some((prefix): boolean => source.startsWith(prefix)) ||
-  isRelativeKitPath(source, filename);
-
-// Kit components come from the primitives folder: through @repo/kit, the kit's own alias, or a relative path.
-const isKitImport = (
-  node: ESTree.ImportDeclaration,
-  filename: string,
-): boolean =>
-  node.importKind !== 'type' && namesPrimitives(node.source.value, filename);
+/*
+ * A kit component reaches a file outside the kit as `@repo/kit/primitives/<group>/<name>`, the only
+ * path the package publishes. The kit styles its own primitives (ADR-0020), so its internal imports
+ * are not kit imports here.
+ */
+const isKitImport = (node: ESTree.ImportDeclaration): boolean =>
+  node.importKind !== 'type' &&
+  node.source.value.startsWith('@repo/kit/primitives/');
 
 const isValueSpecifier = (specifier: Specifier): boolean =>
   specifier.type !== 'ImportSpecifier' || specifier.importKind !== 'type';
@@ -74,7 +61,7 @@ const isStyleProp = (attribute: ESTree.JSXAttributeItem): boolean => {
 
 const kitVisitor = (context: Context, kitNames: Set<string>): KitVisitor => ({
   ImportDeclaration: (node): void => {
-    if (!isKitImport(node, context.filename)) return;
+    if (!isKitImport(node)) return;
 
     for (const specifier of node.specifiers.filter(isValueSpecifier))
       kitNames.add(specifier.local.name);
