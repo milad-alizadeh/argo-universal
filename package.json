@@ -10,6 +10,7 @@
     "docs:build": "pnpm --filter @repo/contracts generate:plugin-reference",
     "dev": "turbo run dev",
     "dev:storybook": "pnpm --filter @repo/storybook storybook",
+    "dev:storybook:all": "EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST=10.0.2.2 node tools/start-storybook-previews.mts",
     "format": "oxfmt",
     "postinstall": "sherif",
     "perf": "pnpm --filter @repo/universal-app build && pnpm --filter @repo/tools perf",
