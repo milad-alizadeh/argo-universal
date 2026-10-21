@@ -9,7 +9,10 @@ import {
   ShellPanel,
   type SubagentListProps,
 } from '#features/sessions';
-import type { InspectorTab } from '#primitives/scaffolds/inspector';
+import type {
+  InspectorTab,
+  InspectorProps,
+} from '#primitives/scaffolds/inspector';
 import { SessionAgentsStage, type AgentFeedSlot } from './session-agents-stage';
 import { SessionChangesStage } from './session-changes-stage';
 
@@ -64,14 +67,19 @@ function shellsPanel({
 }
 
 // Changes is always offered; until the page loads them it is empty.
-function changesPanel({
-  changes,
-  header,
-}: SessionInspectorContent): PanelContent {
-  return { body: createElement(SessionChangesStage, { changes, header }) };
+function changesPanel(
+  { changes, header }: SessionInspectorContent,
+  scrollState?: InspectorProps['scrollState'],
+): PanelContent {
+  return {
+    body: createElement(SessionChangesStage, { changes, header, scrollState }),
+  };
 }
 
 export const panelContent: Record<
   SessionPanel,
-  (content: SessionInspectorContent) => PanelContent | undefined
+  (
+    content: SessionInspectorContent,
+    scrollState?: InspectorProps['scrollState'],
+  ) => PanelContent | undefined
 > = { subagents: subagentsPanel, shells: shellsPanel, changes: changesPanel };
