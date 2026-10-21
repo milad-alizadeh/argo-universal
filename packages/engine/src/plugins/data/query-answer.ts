@@ -12,8 +12,13 @@ function requestOf(query: PluginQuery): StateRequest {
 
   if (query.api === 'fetch') return { api: 'fetch', call: query };
 
-  return { api: 'process', call: query };
+  return processRequest(query);
 }
+
+// Naming the member keeps the last branch honest: a new Query api lands here as a type error, not as a process call.
+const processRequest = (
+  query: Extract<PluginQuery, { api: 'process' }>,
+): StateRequest => ({ api: 'process', call: query });
 
 export async function readQuery(
   owner: QueryOwner,
@@ -33,9 +38,19 @@ export async function readQuery(
   return reply;
 }
 
-function timedOut(query: PluginQuery, reply: PluginReply): boolean {
-  if (query.api !== 'process') return false;
+const timedOut = (query: PluginQuery, reply: PluginReply): boolean =>
+  timeouts[query.api](reply);
 
+const neverTimesOut = (): boolean => false;
+
+// Each Query api says how its reply reports a timeout, so a new api has to answer here.
+const timeouts: Record<PluginQuery['api'], (reply: PluginReply) => boolean> = {
+  fetch: neverTimesOut,
+  process: processTimedOut,
+  storage: neverTimesOut,
+};
+
+function processTimedOut(reply: PluginReply): boolean {
   if (!reply.ok) return false;
 
   return ProcessResult.parse(reply.value).timedOut;

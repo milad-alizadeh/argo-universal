@@ -1,17 +1,22 @@
-import type { FetchResponse } from '@repo/contracts/plugins/argo-api';
 import {
   FetchReply,
   ProcessResult,
   StorageResult,
   type PluginQuery,
 } from '@repo/contracts/plugins/argo-calls';
+import type { QueryResults } from '@repo/contracts/plugins/query-results';
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 import { fetchResponse } from './fetch-response';
 
-type QueryValue = FetchResponse | ProcessResult | StorageResult[];
+type QueryValue = QueryResults[PluginQuery['api']];
 
-const readers: Record<PluginQuery['api'], (data: WireJson) => QueryValue> = {
+// One reader per Query api, answering with what `QueryResult` promises that api returns.
+type QueryReaders = {
+  [Api in PluginQuery['api']]: (data: WireJson) => QueryResults[Api];
+};
+
+const readers: QueryReaders = {
   fetch: (data) => fetchResponse(FetchReply.parse(data)),
   process: (data) => ProcessResult.parse(data),
   storage: (data) => z.array(StorageResult).parse(data),

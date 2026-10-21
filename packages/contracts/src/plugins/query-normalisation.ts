@@ -3,12 +3,31 @@ import type { PluginQuery } from './argo-calls';
 
 // The kit's subscription identity and the Engine's hash use this same normal form.
 export function serialisePluginQuery(query: PluginQuery): string {
-  return JSON.stringify(canonical(WireJson.parse(normalHeaders(query))));
+  return canonicalWireJson(WireJson.parse(normalHeaders(query)));
 }
 
-function normalHeaders(query: PluginQuery): PluginQuery {
-  if (query.api !== 'fetch') return query;
+// The one normal form: sorted keys, so a structured value has a single string to compare and key by.
+export function canonicalWireJson(value: WireJson): string {
+  return JSON.stringify(canonical(value));
+}
 
+// Each Query api says how it reaches its normal form, so a new member has to answer here.
+function normalHeaders(query: PluginQuery): PluginQuery {
+  if (query.api === 'fetch') return lowercaseHeaders(query);
+
+  return alreadyNormal(query);
+}
+
+// The Query apis that are their own normal form: a new api is named here or normalised above, never neither.
+function alreadyNormal(
+  query: Extract<PluginQuery, { api: 'process' | 'storage' }>,
+): PluginQuery {
+  return query;
+}
+
+function lowercaseHeaders(
+  query: Extract<PluginQuery, { api: 'fetch' }>,
+): PluginQuery {
   if (!query.headers) return query;
 
   return {

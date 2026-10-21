@@ -129,22 +129,13 @@ export type {
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
 
-import type { FetchResponse } from '@repo/contracts/plugins/argo-api';
-import type {
-  PluginQuery,
-  ProcessResult,
-  StorageResult,
-} from '@repo/contracts/plugins/argo-calls';
+import type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
+import type { QueryResult } from '@repo/contracts/plugins/query-results';
 
 export type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
 
-export type QueryResult<Query extends PluginQuery> = Query extends {
-  api: 'fetch';
-}
-  ? FetchResponse
-  : Query extends { api: 'process' }
-    ? ProcessResult
-    : StorageResult[];
+// One definition, shared with the Engine's readers: what a Query answers comes from its api.
+export type { QueryResult } from '@repo/contracts/plugins/query-results';
 
 export declare function useData<Query extends PluginQuery>(
   query: Query | null,
