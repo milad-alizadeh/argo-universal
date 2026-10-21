@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement, type ReactNode } from 'react';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { LinkPreviewCard } from './link-preview-card';
@@ -61,7 +61,7 @@ export const TooltipBecomesCardWhenReadyWide: Story = {
   },
 };
 
-const failed = { load: fn<() => Promise<ReactNode>>().mockResolvedValue(null) };
+const failed = { load: async (): Promise<ReactNode> => null };
 
 export const MissingPreviewKeepsUrlTooltipWide: Story = {
   render: () => (

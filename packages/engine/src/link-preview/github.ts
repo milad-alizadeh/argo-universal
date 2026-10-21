@@ -83,9 +83,9 @@ function targetOf(match: RegExpExecArray): GitTarget | null {
 }
 
 export function gitPreview(target: GitTarget, data: GitData): GitPreview {
-  return target.kind === 'commit'
-    ? commitPreview(target, GitCommit.parse(data))
-    : itemPreview(target, GitItem.parse(data));
+  return 'sha' in data
+    ? commitPreview(target, data)
+    : itemPreview(target, data);
 }
 
 function commitPreview(target: GitTarget, value: GitCommit): GitPreview {

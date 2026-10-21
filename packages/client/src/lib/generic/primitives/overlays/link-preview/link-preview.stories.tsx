@@ -16,8 +16,7 @@ import {
 
 const imagePreview: LinkPreviewCardData = {
   ...webPreview,
-  image:
-    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="320" height="168"%3E%3Crect width="320" height="168" fill="%23e5e5e5"/%3E%3C/svg%3E',
+  image: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="168"><rect width="320" height="168" fill="#e5e5e5"/></svg>')}`,
 };
 
 const examples = [

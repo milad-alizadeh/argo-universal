@@ -4,6 +4,8 @@
  */
 export const gitSymbols = {
   commit: { tabler: 'git-commit' },
+  'git-issue-open': { tabler: 'circle-dot' },
+  'git-issue-closed': { tabler: 'circle-check' },
   branch: { tabler: 'git-branch' },
   diff: { tabler: 'file-diff' },
   merged: { tabler: 'git-merge' },

@@ -6,7 +6,7 @@ import { cn } from '#lib/generic/utils';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import type { GitPreview } from './link-preview-card-props';
+import type { GitPreview, GitItemPreview } from './link-preview-card-props';
 import { PreviewSecondary } from './link-preview-card-text';
 
 export function GitCard({ data }: { data: GitPreview }): ReactElement {
@@ -87,16 +87,16 @@ function GitDiff({ data }: { data: GitPreview }): ReactElement | null {
   return <DiffTotals data={data} />;
 }
 
-function DiffTotals({ data }: { data: GitPreview }): ReactElement {
+function DiffTotals({ data }: { data: GitItemPreview }): ReactElement {
   const totals = diffTotals(data);
 
   return (
     <>
       <Text role="secondary" tone="success">
-        +{totals.additions}
+        {`+${totals.additions}`}
       </Text>
       <Text role="secondary" tone="danger">
-        −{totals.deletions}
+        {`−${totals.deletions}`}
       </Text>
     </>
   );
@@ -119,7 +119,7 @@ const stateDrawing = {
   draft: { text: 'Draft', tone: 'muted', fill: 'bg-tint', icon: 'pr-draft' },
 } as const;
 
-function GitState({ data }: { data: GitPreview }): ReactElement {
+function GitState({ data }: { data: GitItemPreview }): ReactElement {
   const drawing = stateDrawing[data.state ?? 'open'];
 
   return (
@@ -132,11 +132,11 @@ function GitState({ data }: { data: GitPreview }): ReactElement {
   );
 }
 
-function stateIcon(data: GitPreview): ComponentProps<typeof Icon> {
+function stateIcon(data: GitItemPreview): ComponentProps<typeof Icon> {
   const drawing = stateDrawing[data.state ?? 'open'];
 
   return {
-    name: data.kind === 'issue' ? 'issue-open' : drawing.icon,
+    name: data.kind === 'issue' ? issueIcon(data.state) : drawing.icon,
     role: 'code',
     tone: drawing.tone,
   };
@@ -149,9 +149,14 @@ function stateClass(fill: string): string {
   );
 }
 
-function diffTotals(data: GitPreview): {
-  additions: number;
-  deletions: number;
-} {
+type DiffTotals = { additions: number; deletions: number };
+
+function diffTotals(data: GitItemPreview): DiffTotals {
   return { additions: data.additions ?? 0, deletions: data.deletions ?? 0 };
+}
+
+function issueIcon(
+  state: GitItemPreview['state'],
+): 'git-issue-open' | 'git-issue-closed' {
+  return state === 'closed' ? 'git-issue-closed' : 'git-issue-open';
 }
