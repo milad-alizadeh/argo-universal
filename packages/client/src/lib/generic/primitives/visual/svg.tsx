@@ -1,10 +1,13 @@
 import type * as React from 'react';
-import { Platform, Pressable } from 'react-native';
+import { useContext } from 'react';
+import { Platform, Pressable, type ViewStyle } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { Text } from '#primitives/content/text';
 import type { Tone } from '#primitives/content/text';
+import { ListTileContext } from '../../list-context';
 import type { KitProps } from '../kit-props';
+import { useSvgDrawing } from './svg-budget';
 
 export type SvgProps = KitProps<'Svg'>;
 
@@ -22,21 +25,24 @@ type AccessibilityProps = Pick<
 // Server sanitizes the markup; native rendering resolves currentColor gradient stops to the tone.
 export function Svg(props: SvgProps): React.JSX.Element {
   const { color } = useResolveClassNames(toneClass(props.tone));
-  const ratio = props.aspectRatio ?? viewBoxRatio(props.xml) ?? 1;
+  const frame = useArtworkFrame(artworkRatio(props));
 
-  return svgPressable(props, color, ratio);
+  const draws = useSvgDrawing();
+
+  return draws ? (
+    svgPressable(props, color, frame)
+  ) : (
+    <Text role="secondary">{props.label}</Text>
+  );
 }
 
 function svgPressable(
   props: SvgProps,
   color: ArtworkProps['color'],
-  ratio: number,
+  frame: ViewStyle,
 ): React.JSX.Element {
   return (
-    <Pressable
-      {...accessibilityProps(props)}
-      style={{ width: '100%', aspectRatio: ratio }}
-    >
+    <Pressable {...accessibilityProps(props)} style={frame}>
       {svgArtwork(props, color)}
     </Pressable>
   );
@@ -137,4 +143,16 @@ function finiteRatio(ratio: number): number | null {
 
 function isDimension(value: number | undefined): value is number {
   return value !== undefined && value !== 0;
+}
+
+function artworkRatio(props: SvgProps): number {
+  return props.aspectRatio ?? viewBoxRatio(props.xml) ?? 1;
+}
+
+function useArtworkFrame(ratio: number): ViewStyle {
+  const tile = useContext(ListTileContext);
+
+  return tile
+    ? { width: '100%', height: '100%' }
+    : { width: '100%', aspectRatio: ratio };
 }

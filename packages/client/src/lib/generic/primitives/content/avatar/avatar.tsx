@@ -1,9 +1,13 @@
 import type * as React from 'react';
+import { useState } from 'react';
 import { Image, type ViewProps, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { Icon } from '#primitives/content/icon';
+import { useMediaUrl } from '#primitives/content/media-url';
 import { Text } from '#primitives/content/text';
-import { StatusDot } from '#primitives/status/status-dot';
 import type { AvatarProps } from './avatar-props';
+import { avatarSource } from './avatar-source';
+import { AvatarStatus } from './avatar-status';
 
 export function Avatar(props: AvatarProps): React.JSX.Element {
   return <AvatarFrame {...props} />;
@@ -60,9 +64,13 @@ function avatarClassName(size: AvatarProps['size']): string {
 }
 
 function avatarSizeClass(size: AvatarProps['size']): string {
-  if (size === 'sm') return 'size-6 wide-type:size-5';
-
-  return 'size-10';
+  return {
+    xs: 'size-6 wide-type:size-5',
+    sm: 'size-6',
+    md: 'size-8',
+    lg: 'size-10',
+    xl: 'size-14',
+  }[size ?? 'lg'];
 }
 
 // Avatar's own content sits on tint (Paper Avatar master); hosted content, the Session row's logo, keeps muted.
@@ -85,84 +93,83 @@ function AvatarMedia(props: {
 function avatarContent(props: AvatarProps): React.ReactNode {
   if (props.children) return props.children;
 
-  if (props.source) return <AvatarImage source={props.source} />;
+  if (props.src) return <ResolvedAvatarImage {...props} />;
 
-  return <AvatarInitials initials={props.initials} size={props.size} />;
+  return <AvatarFallback key={JSON.stringify(props.source)} {...props} />;
 }
 
-function AvatarImage({
-  source,
-}: Pick<AvatarProps, 'source'>): React.JSX.Element {
+function ResolvedAvatarImage(props: AvatarProps): React.JSX.Element {
+  const url = useMediaUrl();
+  const source = props.src ? avatarSource(url(props.src)) : undefined;
+
   return (
-    <Image
-      source={source}
-      accessible={false}
-      className="size-full rounded-full"
-    />
+    <AvatarFallback key={JSON.stringify(source)} {...props} source={source} />
   );
 }
 
-// The small circle fits one initial in the Secondary role; the large one shows both in Heading.
+function AvatarFallback(props: AvatarProps): React.JSX.Element {
+  const [failed, setFailed] = useState(false);
+
+  if (props.source && !failed)
+    return (
+      <Image
+        source={props.source}
+        accessible={false}
+        className="size-full rounded-full"
+        onError={() => setFailed(true)}
+      />
+    );
+
+  return <AvatarInitials {...props} initials={fallbackInitials(props)} />;
+}
+
+function fallbackInitials(props: AvatarProps): string {
+  return props.initials ?? nameInitials(props.name);
+}
+
+function nameInitials(name: string | undefined): string {
+  return (name ?? '')
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0))
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
+const initialRoles = {
+  xs: 'secondary',
+  sm: 'secondary',
+  md: 'body',
+  lg: 'heading',
+  xl: 'title',
+} as const;
+
+function displayedInitials(
+  initials: string,
+  size: AvatarProps['size'],
+): string {
+  return size === 'sm' || size === 'xs' ? initials.charAt(0) : initials;
+}
+
 function AvatarInitials({
-  initials,
+  initials = '',
   size,
 }: Pick<AvatarProps, 'initials' | 'size'>): React.JSX.Element {
-  const small = size === 'sm';
+  if (!initials)
+    return (
+      <Icon name={{ sf: 'person.fill', material: 'person' }} role="body" />
+    );
 
   return (
-    <Text
-      role={small ? 'secondary' : 'heading'}
-      tone="neutral"
-      selectable={false}
-    >
-      {small ? initials.charAt(0) : initials}
+    <Text role={initialRole(size)} tone="neutral" selectable={false}>
+      {displayedInitials(initials, size)}
     </Text>
   );
 }
 
-function AvatarStatus(
-  props: Pick<AvatarProps, 'size' | 'status' | 'statusSurface' | 'testID'>,
-): React.JSX.Element | null {
-  if (!props.status) return null;
-
-  return (
-    <View className={avatarStatusClass(props.statusSurface)}>
-      <StatusDot
-        {...avatarStatusDotProps({ ...props, status: props.status })}
-      />
-    </View>
-  );
-}
-
-function avatarStatusDotProps(
-  props: Pick<AvatarProps, 'size' | 'status' | 'testID'> & {
-    status: NonNullable<AvatarProps['status']>;
-  },
-): React.ComponentProps<typeof StatusDot> {
-  return {
-    tone: props.status.tone,
-    pulse: props.status.pulse,
-    className: avatarDotClass(props.size),
-    testID: avatarDotTestID(props.testID),
-  };
-}
-
-function avatarDotClass(size: AvatarProps['size']): string | undefined {
-  if (size === 'sm') return 'size-1.5';
-
-  return undefined;
-}
-
-function avatarDotTestID(testID: string | undefined): string | undefined {
-  if (!testID) return undefined;
-
-  return `${testID}-status`;
-}
-
-function avatarStatusClass(surface: AvatarProps['statusSurface']): string {
-  return cn(
-    'absolute -right-0.5 -top-0.5 rounded-full border-2',
-    surface === 'muted' ? 'border-muted bg-muted' : 'border-card bg-card',
-    surface === 'selected' && 'web:wide:border-content web:wide:bg-content',
-  );
+function initialRole(
+  size: AvatarProps['size'],
+): (typeof initialRoles)[keyof typeof initialRoles] {
+  return initialRoles[size ?? 'lg'];
 }

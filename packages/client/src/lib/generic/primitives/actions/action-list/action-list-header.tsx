@@ -2,8 +2,8 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
 import { IconButton } from '#primitives/actions/icon-button';
-import { ItemBadge } from '#primitives/lists/list-item';
 import { Menu, type MenuEntry } from '#primitives/overlays/menu';
+import { ItemBadge } from '../../../row-badge';
 import {
   submenuGroups,
   isSubmenu,

@@ -16,6 +16,8 @@ import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
 export interface ListChild extends ListSelection {
   key: string;
+  fullSpan?: boolean;
+  structure?: 'header' | 'footer' | 'gap';
   content: ReactNode;
   position: ListPosition;
 }
@@ -34,6 +36,8 @@ function headerEntries(props: ListSectionProps, key: string): ListChild[] {
       key: `${key}:header`,
       content: <SectionHeader {...props} />,
       position: 'only',
+      fullSpan: true,
+      structure: 'header',
     },
   ];
 }
@@ -46,6 +50,8 @@ function footerEntries(props: ListSectionProps, key: string): ListChild[] {
       key: `${key}:footer`,
       content: footerContent(props, key),
       position: 'only',
+      fullSpan: true,
+      structure: 'footer',
     },
   ];
 }
@@ -72,7 +78,7 @@ function sectionEntries(
     ...headerEntries(props, key),
     ...body,
     ...footerEntries(props, key),
-    { key: `${key}:gap`, position: 'only', content: <SectionGap /> },
+    gapEntry(key),
   ];
 }
 
@@ -153,4 +159,14 @@ function sectionSelection(
         onSelectionChange: props.onSelectionChange,
       }
     : entry;
+}
+
+function gapEntry(key: string): ListChild {
+  return {
+    key: `${key}:gap`,
+    position: 'only',
+    fullSpan: true,
+    structure: 'gap',
+    content: <SectionGap />,
+  };
 }

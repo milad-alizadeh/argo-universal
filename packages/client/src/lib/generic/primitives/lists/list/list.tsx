@@ -5,35 +5,18 @@ import { useInMenu } from '../../../menu-rows-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
+import { childIdentity } from './list-child-identity';
 import { childEntries, menuEntries, type ListChild } from './list-children';
+import { childrenOptions, type ChildrenOptions } from './list-children-options';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import { ListKeyboard } from './list-keyboard';
 import { ListMenuRows } from './list-menu-rows';
 import type { ListProps } from './list-props';
 import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
-
-type ChildrenOptions = Omit<
-  ListProps<ListChild>,
-  | 'items'
-  | 'renderItem'
-  | 'getSectionKey'
-  | 'keyExtractor'
-  | 'getItemType'
-  | 'maintainVisibleContentPosition'
->;
-
-function childrenOptions<Item>({
-  items: _items,
-  renderItem: _render,
-  getSectionKey: _section,
-  keyExtractor: _key,
-  getItemType: _type,
-  maintainVisibleContentPosition: _position,
-  ...props
-}: ListProps<Item>): ChildrenOptions {
-  return props;
-}
+import { SectionShelves, type ChildDataProps } from './list-section-shelves';
+import type { TileListProps } from './list-tile-props';
+import { ListTiles } from './list-tiles';
 
 function useDataListProps<Item>(
   props: ListProps<Item>,
@@ -55,7 +38,18 @@ function useDataListProps<Item>(
 const fill = { flex: 1, minWidth: '100%' } as const;
 
 // Its fades blend into the surface behind the list: a popover's card, else the page.
-function DataList<Item>(props: ListProps<Item>): ReactElement {
+function DataList<Item>(props: TileListProps<Item>): ReactElement {
+  if (props.layout === 'grid' || props.direction === 'horizontal')
+    return (
+      <RowHighlightProvider>
+        <ListTiles {...props} />
+      </RowHighlightProvider>
+    );
+
+  return <RowList {...props} />;
+}
+
+function RowList<Item>(props: ListProps<Item>): ReactElement {
   return (
     <RowHighlightProvider>
       <ScrollFadeList
@@ -117,14 +111,20 @@ function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
   if (items.length === 0) return <ListEmpty {...props} />;
 
   return (
-    <DataList
+    <ChildDataList
       {...props}
       maxHeight={childMaxHeight(props, height)}
       items={items}
-      keyExtractor={(item) => item.key}
+      {...childIdentity}
       renderItem={childRenderer(props.appearance)}
     />
   );
+}
+
+function ChildDataList(props: ChildDataProps): ReactElement {
+  if (hasSectionShelves(props)) return <SectionShelves {...props} />;
+
+  return <DataList {...props} />;
 }
 
 function childRenderer(
@@ -161,3 +161,9 @@ export function List<Item>(props: ListProps<Item>): ReactElement {
 }
 
 List.Section = ListSection;
+
+function hasSectionShelves(props: ChildDataProps): boolean {
+  if (props.direction !== 'horizontal') return false;
+
+  return props.items.some((item) => item.fullSpan);
+}

@@ -38,6 +38,11 @@
         "path": "/builds"
       },
       {
+        "id": "hello-gallery",
+        "title": "Gallery",
+        "path": "/gallery"
+      },
+      {
         "id": "hello-media",
         "title": "Hello media",
         "path": "/media"

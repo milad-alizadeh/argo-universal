@@ -3,14 +3,15 @@ import { Platform, View } from 'react-native';
 import { Icon, IconRoleContext } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useInMenu } from '../../../menu-rows-context';
-import { useInSidebar } from '../../../row-drawing-context';
-import { cn } from '../../../utils';
 import {
   hasBadge,
   ItemBadge,
   sidebarStatus,
   useLeadingBadge,
-} from './list-item-badge';
+} from '../../../row-badge';
+import { useInSidebar } from '../../../row-drawing-context';
+import { StatusMarkHidden } from '../../../status-mark-context';
+import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
 
 export function hasLeading(
@@ -57,7 +58,9 @@ export function Leading(props: LeadingProps): ReactNode {
   return (
     <View className={leadingClass(lane, props.leadingSize)}>
       <IconRoleContext value={leadingIconRoles[lane]}>
-        {props.leading}
+        <StatusMarkHidden value={hasBadge(props.badge)}>
+          {props.leading}
+        </StatusMarkHidden>
       </IconRoleContext>
       <ItemBadge badge={badge} />
     </View>

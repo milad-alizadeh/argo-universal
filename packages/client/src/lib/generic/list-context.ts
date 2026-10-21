@@ -34,3 +34,5 @@ const positions = {
 
 export const listPosition = (first: boolean, last: boolean): ListPosition =>
   positions[`${first}-${last}`];
+
+export const ListTileContext = createContext<{ aspect: number } | null>(null);

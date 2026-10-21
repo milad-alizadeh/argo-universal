@@ -1,12 +1,18 @@
+import type { KitSchemaProps } from '@repo/contracts/kit-props';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
-import { useInSidebar } from '../../../row-drawing-context';
-import type { ListItemProps, RowBadge } from './list-item-props';
+import { useInSidebar } from './row-drawing-context';
+
+interface BadgeProps {
+  badge?: KitSchemaProps['ListItem']['badge'];
+}
+
+type RowBadge = Exclude<NonNullable<BadgeProps['badge']>, number>;
 
 // A Row badge at the top-end corner of the view it sits in, such as a row's leading icon or a header button.
-export function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
+export function ItemBadge({ badge }: BadgeProps): ReactNode {
   if (badge === undefined) return null;
 
   return (
@@ -14,9 +20,7 @@ export function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
   );
 }
 
-function renderRowBadge(
-  badge: NonNullable<ListItemProps['badge']>,
-): ReactElement {
+function renderRowBadge(badge: NonNullable<BadgeProps['badge']>): ReactElement {
   if (typeof badge === 'number') return <CountBadge badge={{ count: badge }} />;
 
   if (badge.kind === 'count')
@@ -41,18 +45,18 @@ function RowStatus({
   );
 }
 
-export function hasBadge(badge: ListItemProps['badge']): boolean {
+export function hasBadge(badge: BadgeProps['badge']): boolean {
   return badge !== undefined && hasBadgeContent(badge);
 }
 
-function hasBadgeContent(badge: NonNullable<ListItemProps['badge']>): boolean {
+function hasBadgeContent(badge: NonNullable<BadgeProps['badge']>): boolean {
   if (typeof badge === 'number') return badge > 0;
 
   return badge.kind !== 'count' || badge.count > 0;
 }
 
 // Paper's SettingsList: a sidebar row's status is a small dot after its value, not a badge on its icon.
-export function sidebarStatus(badge: ListItemProps['badge']): ReactNode {
+export function sidebarStatus(badge: BadgeProps['badge']): ReactNode {
   if (typeof badge !== 'object' || badge.kind !== 'status') return undefined;
 
   return (
@@ -67,7 +71,7 @@ export function sidebarStatus(badge: ListItemProps['badge']): ReactNode {
 
 // A sidebar row draws its status after its value, so its icon carries no badge.
 export function useLeadingBadge(
-  badge: ListItemProps['badge'],
-): ListItemProps['badge'] {
+  badge: BadgeProps['badge'],
+): BadgeProps['badge'] {
   return useInSidebar() ? undefined : badge;
 }

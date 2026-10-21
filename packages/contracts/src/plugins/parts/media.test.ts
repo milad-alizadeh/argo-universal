@@ -47,3 +47,40 @@ describe('media prop boundary', () => {
     expect(schema.safeParse(props).success).toBe(false);
   });
 });
+
+const picture = { pluginId: 'hello', hash, format: 'jpeg' };
+
+it('accepts Image and Avatar assets resolved by the Server', () => {
+  expect(
+    pluginPartSchemas.Image.props.safeParse({
+      source: picture,
+      accessibilityLabel: 'Preview',
+    }).success,
+  ).toBe(true);
+  expect(
+    pluginPartSchemas.Avatar.props.safeParse({
+      src: picture,
+      name: 'Sam Rivera',
+      size: 'xl',
+      accessibilityLabel: 'Sam Rivera',
+    }).success,
+  ).toBe(true);
+});
+
+it.each([
+  'https://example.com/private.png',
+  { uri: 'https://example.com/private.png' },
+])('refuses an unresolved image or avatar source', (source) => {
+  expect(
+    pluginPartSchemas.Image.props.safeParse({
+      source,
+      accessibilityLabel: 'Preview',
+    }).success,
+  ).toBe(false);
+  expect(
+    pluginPartSchemas.Avatar.props.safeParse({
+      src: source,
+      accessibilityLabel: 'Person',
+    }).success,
+  ).toBe(false);
+});

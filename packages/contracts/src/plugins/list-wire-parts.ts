@@ -8,6 +8,7 @@ import {
 } from './kit-props';
 import { listExpansion } from './list-expansion';
 import { rowPress } from './list-kit-props';
+import { listMediaParts } from './list-media-parts';
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { echoes } from './plugin-part-props';
 import { part } from './plugin-part-schema-utils';
@@ -20,10 +21,13 @@ export const listWireParts = {
     expansion: listExpansion,
     container: true,
     children: true,
-    slots: { empty: ['Text', 'Stack', 'EmptyState'] },
+    slots: {
+      empty: ['Text', 'Stack', 'EmptyState'],
+      header: ['Text', 'Label'],
+    },
     events: {},
     reference: part(
-      'A content list with plain, grouped or card rows.',
+      'A content list with rows, adaptive media grids or horizontal shelves.',
       contentListProps,
       {
         children: true,
@@ -51,13 +55,15 @@ export const listWireParts = {
     container: true,
     children: false,
     slots: {
+      actions: ['ActionList'],
+      media: listMediaParts,
       leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
       trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],
       meta: ['Label', 'Pill'],
     },
     events: { onPress: rowPress },
     reference: part(
-      'A slotted list row with up to three text lines and an optional Argo-drawn status or count badge on the leading lane.',
+      'A slotted row or media tile, arranged by its List, with selection, a corner badge and context Actions.',
       listItemProps,
       {
         container: true,

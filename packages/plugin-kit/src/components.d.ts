@@ -81,6 +81,12 @@ export const Video: PluginComponents['Video'];
 
 export const Audio: PluginComponents['Audio'];
 
+export const Image: PluginComponents['Image'];
+
+export const Avatar: PluginComponents['Avatar'];
+
+export const Icon: PluginComponents['Icon'];
+
 export const Canvas: PluginComponents['Canvas'] & {
   Rect: PluginComponents['Canvas.Rect'];
   Circle: PluginComponents['Canvas.Circle'];
