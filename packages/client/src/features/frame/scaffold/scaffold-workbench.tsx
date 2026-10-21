@@ -98,8 +98,8 @@ function WorkbenchSurface({
 function WorkbenchScroll({ children }: { children: ReactNode }): ReactElement {
   return (
     <ScrollFadeView
-      className="-mx-4 -mt-4"
-      contentContainerClassName="px-4 pt-4 pb-8"
+      className="-mx-8 -mt-8"
+      contentContainerClassName="px-8 pt-8 pb-16"
     >
       <View className="gap-2">{children}</View>
     </ScrollFadeView>
