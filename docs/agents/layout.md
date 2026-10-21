@@ -11,7 +11,7 @@ The order the regions give up width, the phone model and the way a long section 
 - **Content column** — the Session header, the Feed viewport and the Composer, one centred column under the 800 cap. See [The content column](#the-content-column).
 - **Workbench** — the column beside the Feed holding the Session's summary cards, one per section, toggled from the Session header's `layout-sidebar-right` IconButton. One per Session. It is not a second sidebar and it is not a rail section.
 - **Stage** — the surface that shows a Workbench card's section in full, as a tab. A card opens it, the Workbench stays, and it is never reached from the rail. A tab lists the section's items and a row opens that item's detail in the same tab.
-- **Never in a header** — pull requests, checks, Changes counts and file changes are the Workbench's on every platform. A Session header carries identity and state only: title, status, the running Turn, the Workbench toggle and "…" (ADR-0039).
+- **Never in a header** — Changes, their checks, their counts and their file changes are the Workbench's on every platform. A Session header carries identity and state only: title, status, the running Turn, the Workbench toggle and "…" (ADR-0039).
 
 ## The widths
 
@@ -89,7 +89,7 @@ Compact has no column, so the Workbench is a menu and a sheet. Every card and ev
 
 **Pressing a row inside a sheet pushes that item's detail as a page in the same sheet:** an Agent's Feed, a Shell's output, a Change's detail. The list and the pushed page are the tab's two levels, as they are on a desktop Stage tab.
 
-**A Change's detail page carries a SegmentedControl with two segments, PR and Files** — the pull request's stage, its checks and its closing action, or the file diff.
+**A Change's detail page carries a SegmentedControl with two segments, Change and Files** — the Change's stage, its checks and its closing action, or its file changes.
 
 **A Change row's trailing slot is a "…", not a chevron,** and it opens the Change's actions. Every other row keeps its chevron.
 
