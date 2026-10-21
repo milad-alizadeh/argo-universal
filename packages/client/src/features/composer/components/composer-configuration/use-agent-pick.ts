@@ -15,7 +15,7 @@ const waitForSettings = 600;
  * appears and goes again in that time reads as a glitch; the owner would rather wait than see it flash
  * (owner, 2026-10-21).
  */
-const spinnerFloor = 1000;
+const spinnerFloor = 250;
 
 interface Picked {
   id: string;
