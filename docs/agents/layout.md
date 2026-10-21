@@ -2,36 +2,47 @@
 
 [ADR-0039](../adr/0039-the-workbench-summarises-sections-and-the-stage-shows-them-in-full.md) owns what the Workbench and the Stage are; this page is the shape they are drawn in. Every measurement below comes from a board on the Paper file "Argo · Feed, Workbench & Stage", page "Workbench & Stage · Exploration", and each rule names its board. Sizes are tokens wherever a token exists; never hard-code a number a token already holds.
 
-The order the regions give up width, the phone model and the way a long section reads are the owner's decisions and are settled; the Paper boards that illustrate them are still waiting on his visual sign-off.
+[Spec 0020](https://github.com/milad-alizadeh/argo-universal/issues/1178) moves desktop controls into the window band. Its tickets define the derived thresholds below.
+
+Two decisions remain pending: the desktop frame at 900px, and the status dot beside the band title. The current implementation retains ADR-0026 below 1100px and shows only the title in the band.
 
 ## The regions
 
-- **Rail** — 56 (`--spacing-frame-rail`), inside the sidebar's glass panel, with the sidebar toggle at its foot. Sections live here and nothing else does: a Session's own content never gets a rail item. Present at medium and wide ("Screen / Approved layout").
+- **Rail** — 56 (`--spacing-frame-rail`), inside the sidebar's glass panel, with its toggle in the window band. Sections live here. A Session's own content never gets a rail item. The desktop frame appears at wide widths ("Screen / Approved layout").
 - **Sidebar** — the section's list, 312 (`--spacing-frame-list`), beside the rail in the same glass panel. Rail plus list plus the 8 frame inset on each side make the 384 glass zone on "Screen / Approved layout"; the panel itself is `--radius-2xl` over `--color-glass`.
-- **Content column** — the Session header, the Feed viewport and the Composer, one centred column under the 800 cap. See [The content column](#the-content-column).
-- **Workbench** — the column beside the Feed holding the Session's summary cards, one per section, toggled from the Session header's `layout-sidebar-right` IconButton. One per Session. It is not a second sidebar and it is not a rail section.
+- **Content column** — the Feed viewport and the Composer share a centered column under the 800 cap. The band carries the title. The local Session header contributes no height. See [The content column](#the-content-column).
+- **Workbench** — the column beside the Feed holding the Session's summary cards, one per section, toggled from the band's `layout-sidebar-right` IconButton. One per Session. It is not a second sidebar and it is not a rail section.
 - **Stage** — the surface that shows a Workbench card's section in full, as a tab. A card opens it, the Workbench stays, and it is never reached from the rail. A tab lists the section's items and a row opens that item's detail in the same tab.
-- **Never in a header** — Changes, their checks, their counts and their file changes are the Workbench's on every platform. A Session header carries identity and state only: title, status, the running Turn, the Workbench toggle and "…" (ADR-0039).
+- **Never in a header** — Changes, their checks, their counts and their file changes are the Workbench's on every platform. A Session header carries identity and state only (ADR-0039). The desktop band owns its title and actions. The proposed status dot needs owner approval.
 
 ## The widths
 
 Size classes are `compact` (below `--breakpoint-medium`, 600, and every phone), `medium` (600 to 1099) and `wide` (`--breakpoint-wide`, 1100, and up), as `GLOSSARY.md` defines them.
 
-**Wide, no Stage** — "Screen / Approved layout", 1440×900. Glass zone 384, main container 1056: Feed column 704 and the Workbench 352 (`--spacing-frame-stage`) flush to the window edge, its cards 336 inside padding of 4 leading, 12 trailing, 12 block, gap `--spacing-2`.
+The desktop frame reserves a 44px band (`--spacing-frame-control`). The band has no fill, border, or hairline. Panes start directly below it.
 
-**Wide, Stage open** — "Screen / Wide · Stage as a glass panel", 1440×900. The Stage takes the region and the Workbench is not drawn; Feed column 688. The Stage region is `--spacing-frame-stage` + 16 = 368 and the panel inside it 352, inset `--spacing-frame-inset` from the window edges, `--radius-2xl` on all four corners, the sidebar's `--color-glass` fill, backdrop blur and inset highlight, and its shadow is not clipped. Its tab row sits on the Session title's line.
+The leading group holds the platform controls and sidebar toggle. The trailing group always holds More, Workbench, Stage expand, and Stage toggle, in that order. Each trailing control keeps its position as panes change.
 
-**Wide, both** — "Screen / Wide 1760 · Workbench and Stage together", 1760×900: Feed column 680, Workbench region `--spacing-frame-list` + 16 = 328 with the card stack 312 inside, Stage region 368 with the 352 panel. That board states the cost: about 1760 with the Sessions list showing, about 1450 with it collapsed. At 1440 the Feed is left under 400, so only one of the two fits beside it, which is what every other wide board draws.
+The title uses the content column's leading edge and stops before the trailing controls. Its spacer is `max(0, platformConstant - (frameInset + navigationWidth))`. The platform constant is 124 on macOS and 44 elsewhere.
 
-**Medium** — 900×800 on all three medium boards. The Sessions list is gone; the glass panel holds the rail alone, 68 wide in an 84 zone, and the main container takes 816.
+The following examples use the default pane widths and an available Workbench. The content region includes its two 24px gutters.
 
-- *Workbench returned* — "Screen / Medium · Workbench in the returned region": the toggle returns the region **over** the content, `--spacing-frame-stage` wide, positioned at `--spacing-frame-bar` from the top and `--spacing-3` from the right, on `--color-content` with `--radius-2xl`, `--color-shadow-strong` and a hairline ring. The Feed stays visible behind it and is not dimmed.
-- *Stage floating* — "Screen / Medium · Stage floating over the content": the same glass panel as wide, 352 wide and inset 8 from the window edges, floats over the Feed. The Session header and the Composer take a trailing padding of `--spacing-frame-stage` + 16, so no control is left underneath; only the Feed body passes under the glass.
-- *Region hidden* — "Screen / Medium · Region hidden": too narrow to keep the region, so it hides itself as part of the resize and the Feed takes the whole container. Open Stage tabs collapse into the counter on the header's Workbench button; widening restores them with the tabs intact.
+| Window | Stage | Sessions list | Workbench | Content region |
+| --- | --- | --- | --- | --- |
+| 1440 | Closed | Shown | Docked | 728 |
+| 1440 | Open | Folded | Auto-hidden | 1000, with centered content capped at 848 |
+| 1456 | Open | Folded | Docked | 688 |
+| 1920 | Open | Shown | Docked | 840 |
+
+The Stage panel is 352px wide by default. Its region includes a 16px gap. The panel uses the sidebar's glass material, rounded corners, and an unclipped shadow. Its tabs sit below the window band.
+
+**Medium remains a pending desktop exception.** The 900px Paper boards show a rail and floating panels. ADR-0026 requires the phone shell below 1100px on every platform. Production retains that rule until the owner decides whether Spec 0020 supersedes it.
 
 **Compact** — see [Phones](#phones).
 
 ## Giving up width
+
+These thresholds use default pane widths with an available Workbench.
 
 Three regions compete with the content column for width: the Sessions list, the Workbench, and the Stage while it is open. The main content comes first, so narrowing the window gives width up in a fixed order.
 
@@ -45,11 +56,11 @@ Three regions compete with the content column for width: the Sessions list, the 
 
 Both thresholds are crossed on the way down, in that order, and neither is a choice: the content comes first, then the Workbench, then the Sessions list. The Stage is worth 368 at every step, its 352 and the gutter beside it, which is the difference between each pair of widths above. The content column is held at its floor of 688 throughout the derivation — the Composer's 640 and a 24 gutter on each side — so the thresholds are built on that floor and not on the 800 cap; above them the room left over goes to the column until it reaches the cap.
 
-The Workbench therefore has three states, and the one toggle in the Session header drives all of them.
+The Workbench therefore has three states, and one toggle in the window band drives all three states.
 
 - **Docked** — its own 312 column beside the content, and beside the Stage when the Stage is open.
 - **Auto-hidden** — below the undock threshold, with the toggle unpressed: the Workbench is not drawn and the content column keeps its full width.
-- **Floating** — below the threshold with the toggle pressed: the Workbench overlays the content as a glass panel. The content does not reflow.
+- **Floating** — below the threshold with the toggle pressed: the Workbench overlays the content as a glass panel. The content does not reflow. The panel has no backdrop or resize handle.
 
 ## The Workbench
 
@@ -65,16 +76,16 @@ The Workbench therefore has three states, and the one toggle in the Session head
 ## The Stage
 
 - **A Workbench card opens it** — pressing the card, or a Plugin's `header` action for its own card. The Workbench stays; the Stage is a surface, not a section.
-- **A tab is the section's full view, and it holds a list:** the Session's Changes, the Agents it started, its Shells, or whatever a Plugin draws for its own tab.
-- **A row in that list opens the item's detail in the same tab:** a Change's diff, an Agent's Feed, a Shell's output. Back returns to the list, so a tab has at least two levels.
-- **Wide:** its own region beside the Feed. At 1440 it takes the Workbench's place; from about 1760 (about 1450 with the Sessions list collapsed) both stand ("Screen / Wide 1760 · Workbench and Stage together").
-- **Medium:** it floats over the content instead of sharing the row, and the header and Composer inset by its width so no control is left under the glass ("Screen / Medium · Stage floating over the content").
-- **Narrowing past the region:** open Stage tabs collapse into the header's counter and come back with the tabs intact ("Screen / Medium · Region hidden").
+- **A tab shows a section's full list:** the branch's changed files, its Agents, its Shells, or a Plugin's items.
+- **A row in that list opens the item's detail in the same tab:** one file's diff, an Agent's Feed, or a Shell's output. Back returns to the list. Each tab retains its selected detail and scroll position across tab switches.
+- **Wide:** its own region beside the Feed. At 1440 the Workbench auto-hides. Both fit from 1456 with the list folded, or from 1768 with the list shown.
+- **Medium:** the desktop floating design remains pending the ADR-0026 decision above.
+- **Size-class changes retain open tabs.** Returning to wide restores the selected tab.
 
 ## The content column
 
-- `--container-column` is 800. The Session header, the Feed viewport and the Composer each take the same centred column: `max-width` 848 at a 24 gutter on each side, `align-self: center`, on every desktop board.
-- The cap holds beside the Workbench and under the Stage; at the drawn widths the column is narrower than its cap anyway (704 at 1440 with the Workbench, 688 with the Stage, 680 at 1760), so the cap bites only on wider windows.
+- `--container-column` is 800. The Feed viewport and the Composer take the same centered column: `max-width` 848 at a 24 gutter on each side, `align-self: center`, on every desktop board.
+- The region caps at 848, including its two 24px gutters. Its protected floor is 688: the 640px Composer plus those gutters. Manual Stage resizing respects that floor.
 - The Workbench and the Stage sit outside the cap: they are regions of the window, not content in the column.
 
 ## Phones
