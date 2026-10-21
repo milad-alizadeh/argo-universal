@@ -32,7 +32,7 @@ const meta = {
   title: 'Design System/Primitives/Inputs/TextInput',
   component: TextInput,
   // The bare box is the one variant a story draws from args; the labelled ones hold their own value.
-  args: bareEmptyTextInput,
+  args: { variant: 'bare' },
   argTypes: kitArgTypes('TextInput'),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof TextInput>;

@@ -7,7 +7,6 @@ const meta = {
   title: 'Design System/Primitives/Layout/Collapsible',
   component: Collapsible,
   argTypes: kitArgTypes('Collapsible'),
-  args: closedCollapsible,
   tags: ['third-party'],
 } satisfies Meta<typeof Collapsible>;
 

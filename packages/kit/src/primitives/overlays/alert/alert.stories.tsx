@@ -19,7 +19,7 @@ import type { AlertProps } from './alert-props';
 const meta = {
   title: 'Design System/Primitives/Overlays/Alert',
   component: Alert,
-  args: { ...destructiveConfirmationAlert, onOpenChange: (): void => {} },
+  args: { onOpenChange: (): void => {} },
   argTypes: kitArgTypes('Alert'),
 } satisfies Meta<typeof Alert>;
 

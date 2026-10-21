@@ -15,7 +15,6 @@ import {
 const meta = {
   title: 'Design System/Primitives/Status/Pill',
   component: Pill,
-  args: neutralPill,
   argTypes: kitArgTypes('Pill'),
 } satisfies Meta<typeof Pill>;
 
