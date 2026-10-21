@@ -74,9 +74,10 @@ export class PluginService {
     await locatePlugin(this.deps, pluginId);
     await requireSettings(this.deps).setEnabled(pluginId, enabled);
 
-    return enabled
-      ? this.startBackground()
-      : this.deps.pluginRuntime?.deactivate(pluginId);
+    if (!enabled) return this.deps.pluginRuntime?.deactivate(pluginId);
+
+    // The toggle is answered once the setting is durable; `list` reports a Plugin that then fails to start.
+    void this.startBackground().catch(() => null);
   }
 
   settings(pluginId: string): Promise<PluginSettingsOutput> {

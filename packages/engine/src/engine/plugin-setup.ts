@@ -24,14 +24,14 @@ export type PluginSetup = {
   pluginSettings: PluginSettings;
   hookPort: HookPort;
   unwatchTurns: () => void;
-  // Run once the port is bound: a Plugin that is slow to start must not keep the Server off the air.
+  // Started once the port is bound, never awaited before it: a slow Plugin must not keep the Server off the air.
   startBackground: () => Promise<void>;
 };
 
 // What the runtime is built from, before watching Turns and starting background passes attach to it.
 type PluginParts = Omit<PluginSetup, 'unwatchTurns' | 'startBackground'>;
 
-// A Plugin that never answers would hold startup open forever, so the wait is bounded and non-fatal.
+// Shutdown waits for the start it kicked off, so a Plugin that never answers must not hold the Server open forever.
 const backgroundStartLimitMs = 30000;
 
 // The Plugin runtime, with core's Hook events run through the Plugins that hook them, started on first use.
@@ -134,7 +134,18 @@ async function startBackground(
     ),
   ]);
 
-  if (line) writeLog({ home, label: 'plugins', line });
+  if (line) reportBackground(home, line);
+}
+
+// Shutdown awaits this start long after it began, so even a failed log must not surface as a rejection.
+function reportBackground(home: string, line: string): void {
+  try {
+    writeLog({ home, label: 'plugins', line });
+  } catch (cause) {
+    process.stderr.write(
+      `Background Plugins could not be logged: ${String(cause)}\n`,
+    );
+  }
 }
 
 // The passes carry on starting after this resolves; only the wait for them ends.
@@ -144,10 +155,14 @@ function limit(line: string): Promise<string> {
   });
 }
 
-// Core answers alone again before the runtime closes.
-export async function closePlugins(
-  setup: Pick<PluginSetup, 'pluginRuntime' | 'hookPort' | 'unwatchTurns'>,
-): Promise<void> {
+type ClosingPlugins = Pick<
+  PluginSetup,
+  'pluginRuntime' | 'hookPort' | 'unwatchTurns'
+> & { backgroundStarted?: Promise<void> };
+
+// Core answers alone again before the runtime closes, which waits for a background start still in flight.
+export async function closePlugins(setup: ClosingPlugins): Promise<void> {
+  await setup.backgroundStarted;
   setup.unwatchTurns();
   setup.hookPort.detach();
   await setup.pluginRuntime.close();
