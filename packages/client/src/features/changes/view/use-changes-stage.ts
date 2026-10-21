@@ -39,7 +39,7 @@ function selectedPath(
 }
 
 const comparisonKey = (props: ChangesViewProps | undefined): string =>
-  JSON.stringify(props?.comparison);
+  JSON.stringify(props?.comparison ?? null);
 
 const pageKey = (comparison: string, path?: string): string =>
   `changes:${comparison}:${path ?? ''}`;
@@ -48,11 +48,14 @@ const filesOf = (
   props: ChangesViewProps | undefined,
 ): NonNullable<ChangesViewProps['files']> => props?.files ?? [];
 
-const selectionPath = (
+function selectionPath(
   selection: Selection,
   comparison: string,
-): string | undefined =>
-  selection?.comparison === comparison ? selection.path : undefined;
+): string | undefined {
+  if (!selection) return undefined;
+
+  return selection.comparison === comparison ? selection.path : undefined;
+}
 
 const selectionOf = (comparison: string, path?: string): Selection =>
   path === undefined ? undefined : { comparison, path };
