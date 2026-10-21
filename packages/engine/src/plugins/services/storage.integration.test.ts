@@ -8,6 +8,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { drizzle, type SqliteRemoteDatabase } from 'drizzle-orm/sqlite-proxy';
 import { migrate } from 'drizzle-orm/sqlite-proxy/migrator';
 import { expect, it, onTestFinished } from 'vitest';
+import type { StorageResult } from '../protocol/runtime';
 import { PluginStorage } from './storage';
 
 const tasks = sqliteTable('tasks', {
@@ -20,6 +21,8 @@ const pluginId = 'tasks-plugin';
 const runMethod = 'run';
 
 const taskTitle = 'write plugin';
+
+const pluginData = 'plugin-data';
 
 async function startStorage(): Promise<{
   home: string;
@@ -100,7 +103,7 @@ it('attaches nothing, and creates no file, for a Plugin that never stored', asyn
   onTestFinished(() => server.close());
 
   expect(storage.attachReadOnly(server, 'never-stored', 'idle')).toBe(false);
-  expect(existsSync(join(home, 'plugin-data'))).toBe(false);
+  expect(existsSync(join(home, pluginData))).toBe(false);
 });
 
 it('rolls a failed batch back', async () => {
@@ -120,6 +123,51 @@ it('rolls a failed batch back', async () => {
       { sql: 'select count(*) from t', params: [], method: 'get' },
     ]),
   ).toEqual([{ rows: [0] }]);
+});
+
+it("refuses a Plugin reaching another Plugin's file through its own SQL", async () => {
+  const { home, storage } = await startStorage();
+  storage.execute('weather', [
+    { sql: 'create table cache (value text)', params: [], method: runMethod },
+    {
+      sql: "insert into cache values ('sunny')",
+      params: [],
+      method: runMethod,
+    },
+  ]);
+  const theirFile = join(home, pluginData, 'weather', 'plugin.db');
+  const copy = join(home, 'copy.db');
+
+  const run = (sql: string): StorageResult[] =>
+    storage.execute(pluginId, [{ sql, params: [], method: runMethod }]);
+
+  expect(() => run(`attach database '${theirFile}' as theirs`)).toThrow(
+    /not authorized/,
+  );
+
+  // Outside a batch the authorizer refuses this on its own; `plugin-database` tests that.
+  expect(() => run(`vacuum into '${copy}'`)).toThrow(/VACUUM|not authorized/);
+  expect(existsSync(copy)).toBe(false);
+  expect(
+    storage.execute('weather', [
+      { sql: 'select count(*) from cache', params: [], method: 'get' },
+    ]),
+  ).toEqual([{ rows: [1] }]);
+});
+
+it("drops a released Plugin's handle instead of holding the file open", async () => {
+  const { home, storage } = await startStorage();
+  storage.execute(pluginId, [
+    { sql: 'create table t (x integer)', params: [], method: runMethod },
+  ]);
+  storage.release(pluginId);
+  await rm(join(home, pluginData, pluginId), { recursive: true });
+
+  expect(() =>
+    storage.execute(pluginId, [
+      { sql: 'select count(*) from t', params: [], method: 'get' },
+    ]),
+  ).toThrow(/no such table/);
 });
 
 it('rejects a Plugin id that would leave the plugin-data folder', async () => {

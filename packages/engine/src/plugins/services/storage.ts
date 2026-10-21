@@ -98,6 +98,12 @@ export class PluginStorage {
     return true;
   }
 
+  // Turning a Plugin off, reloading it or a crash drops its handle; its next query opens the file again.
+  release(pluginId: string): void {
+    this.databases.get(pluginId)?.close();
+    this.databases.delete(pluginId);
+  }
+
   close(): void {
     this.closed = true;
 
