@@ -17,7 +17,7 @@ export default meta;
 
 type StoryContext = Parameters<NonNullable<Story['play']>>[0];
 
-const mergeLabel = 'Merge PR';
+const mergeLabel = 'Merge';
 
 const optionsLabel = 'Merge options';
 
@@ -58,7 +58,7 @@ async function pickMethod(
   await userEvent.click(method);
 }
 
-// A method picked from the chevron's menu is the one Merge PR runs, and this device keeps it.
+// A method picked from the chevron's menu is the one Merge runs, and this device keeps it.
 export const MergesByThePickedMethod: Story = {
   args: checksPassed,
   play: async (context) => {
@@ -92,7 +92,7 @@ const lastMethodMerge = {
   },
 } as const satisfies Story['args'];
 
-// Merge PR runs the method this device used last.
+// Merge runs the method this device used last.
 export const MergesByTheLastMethod: Story = {
   args: lastMethodMerge,
   play: async ({ canvas, args, userEvent }) => {

@@ -1,5 +1,11 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { useClaimed } from '#lib/generic/claim-store';
+import {
+  createWindowBandHost,
+  type WindowBandHost,
+  type WindowBandContent,
+} from '#lib/product/window-band';
 import {
   createInspectorHost,
   type InspectorHost,
@@ -10,6 +16,9 @@ import {
 import type { InspectorState } from '../scaffold/scaffold';
 
 interface FrameScaffoldState {
+  band?: WindowBandContent | null;
+  workbenchShown: boolean;
+  onWorkbenchShownChange: (shown: boolean) => void;
   sidebarShown: boolean;
   onSidebarShownChange: (shown: boolean) => void;
   inspectorState: InspectorState;
@@ -39,7 +48,11 @@ const inspectorStateOf = (open: boolean, expanded: boolean): InspectorState => {
 
 type InspectorColumn = Omit<
   FrameScaffoldState,
-  'sidebarShown' | 'onSidebarShownChange'
+  | 'sidebarShown'
+  | 'onSidebarShownChange'
+  | 'band'
+  | 'workbenchShown'
+  | 'onWorkbenchShownChange'
 >;
 
 // The hosted Inspector's pane, whose expand moves the Frame's column between open and expanded.
@@ -76,6 +89,7 @@ function useInspectorColumn(hosted: InspectorProps | null): InspectorColumn {
 }
 
 export interface FrameState {
+  bandHost: WindowBandHost;
   scaffold: FrameScaffoldState;
   // The column the shown page's Inspector draws in.
   inspectorHost: InspectorHost;
@@ -85,13 +99,31 @@ export interface FrameState {
 export function useFrameState(): FrameState {
   const [sidebarShown, onSidebarShownChange] = useState(true);
   const [inspectorHost] = useState(createInspectorHost);
+  const { bandHost, ...band } = useBandState();
 
   return {
+    bandHost,
     scaffold: {
+      ...band,
       sidebarShown,
       onSidebarShownChange,
       ...useInspectorColumn(useHostedInspector(inspectorHost)),
     },
     inspectorHost,
+  };
+}
+
+function useBandState(): Pick<
+  FrameScaffoldState,
+  'band' | 'workbenchShown' | 'onWorkbenchShownChange'
+> & { bandHost: WindowBandHost } {
+  const [bandHost] = useState(createWindowBandHost);
+  const [workbenchShown, onWorkbenchShownChange] = useState(false);
+
+  return {
+    bandHost,
+    band: useClaimed(bandHost),
+    workbenchShown,
+    onWorkbenchShownChange,
   };
 }

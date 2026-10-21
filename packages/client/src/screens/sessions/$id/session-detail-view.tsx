@@ -24,8 +24,8 @@ import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { headerPanels } from './session-header-panels';
 import {
-  offeredSessionPanels,
   SessionInspector,
   type SessionInspectorContent,
 } from './session-inspector';
@@ -103,17 +103,6 @@ const withWork = (
   ...props,
   composer: work.composer,
   feed: work.feed,
-});
-
-const headerPanels = (
-  props: OpenSessionViewProps,
-  panels: SessionPanels,
-): SessionHeaderProps['panels'] => ({
-  offered: offeredSessionPanels(props),
-  shown: panels.state.shown,
-  changesSummary: props.header.changes?.summary,
-  onToggle: (panel) =>
-    panel === 'changes' ? panels.toggle(panel) : panels.select(panel),
 });
 
 const sessionParts = (

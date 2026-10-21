@@ -1,6 +1,10 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
+import {
+  WindowBandHostContext,
+  type WindowBandHost,
+} from '#lib/product/window-band';
 import type { InspectorHost } from '#primitives/scaffolds/inspector';
 import {
   isCoreSection,
@@ -51,6 +55,7 @@ export interface FrameOptions {
 
 // What the Frame and its sidebar and pages are drawn from, which the navigator holds and hands to each.
 export interface FrameParts {
+  bandHost: WindowBandHost;
   scaffold: ScaffoldParts;
   // The column the shown page's Inspector draws in on a wide window.
   inspectorHost: InspectorHost;
@@ -80,10 +85,11 @@ function frameScaffold(
 
 // What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
 export function useFrame(options: FrameOptions): FrameParts {
-  const { scaffold, inspectorHost } = useFrameState();
+  const { scaffold, inspectorHost, bandHost } = useFrameState();
   const listDetail = useFrameListDetail();
 
   return {
+    bandHost,
     scaffold: useScaffoldParts(frameScaffold(scaffold, options, listDetail)),
     inspectorHost,
     section: options.section,
@@ -105,7 +111,9 @@ export function Frame({ frame, children }: FrameProps): React.JSX.Element {
     <SectionListsContext value={frame.lists}>
       <FrameInspectorHost value={frame.inspectorHost}>
         <FrameListDetailSidebar value={frame.listDetail.sidebar}>
-          <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
+          <WindowBandHostContext value={frame.bandHost}>
+            <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
+          </WindowBandHostContext>
         </FrameListDetailSidebar>
       </FrameInspectorHost>
     </SectionListsContext>

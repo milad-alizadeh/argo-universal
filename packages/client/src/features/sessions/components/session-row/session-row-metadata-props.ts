@@ -1,10 +1,10 @@
 import type { SessionInfo } from '@repo/contracts';
-import type { PullRequestIndicatorProps } from '../pull-request-indicator/pull-request-indicator';
+import type { ChangeStageProps } from '../change-stage/change-stage';
 
 export interface SessionRowMetadataProps {
   session: SessionInfo;
   selected: boolean;
   subagentsFailed?: boolean;
-  pullRequest?: PullRequestIndicatorProps;
+  pullRequest?: ChangeStageProps;
   age?: string;
 }
