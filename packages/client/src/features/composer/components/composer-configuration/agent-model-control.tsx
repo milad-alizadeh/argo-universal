@@ -7,6 +7,10 @@ import { Sheet } from '#primitives/overlays/sheet';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
+import {
+  ChipTrigger,
+  type ChipTriggerProps,
+} from '../composer-status/chip-trigger';
 import { AgentIcon } from './agent-icon';
 import { AgentModelMenu } from './agent-model-menu';
 import { AgentModelTrailing } from './agent-model-trailing';
@@ -116,8 +120,26 @@ function configurePage(
   );
 }
 
+/*
+ * Wide, the picker Paper draws; narrow, one of the Composer's own chips. A phone's row has the width for the
+ * model's name or for the mark that opens it, not both, and the pill already reads as something to press
+ * (owner, 2026-10-21).
+ */
 function agentModelTrigger(props: TriggerProps): React.JSX.Element {
+  if (!props.wide) return <ChipTrigger {...agentModelChipProps(props)} />;
+
   return <MenuTrigger {...agentModelTriggerProps(props)} />;
+}
+
+function agentModelChipProps(props: TriggerProps): ChipTriggerProps {
+  return {
+    label: triggerLabel(props),
+    accessibilityLabel: 'Agent and model',
+    disabled: props.disabled,
+    trailing: (
+      <AgentModelTrailing configuration={props.configuration} wide={false} />
+    ),
+  };
 }
 
 function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
@@ -126,7 +148,8 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
   return {
     label: triggerLabel(props),
     accessibilityLabel: 'Agent and model',
-    labelRole: { compact: 'row', wide: 'control' },
+    // The Composer's own size, the chips' above it: one scale across the envelope (owner, 2026-10-21).
+    labelRole: 'badge',
     size: 'md',
     disabled: props.disabled,
     leading: agentModelLeading(props),

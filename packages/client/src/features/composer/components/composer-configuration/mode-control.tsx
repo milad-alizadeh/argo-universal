@@ -6,6 +6,7 @@ import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
+import { ChipTrigger } from '../composer-status/chip-trigger';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
   isDangerous,
@@ -44,28 +45,26 @@ function ModePopover(
   );
 }
 
-// Paper's Composer pickers: control text and radius-md corners.
-const modeTriggerAppearance = {
-  accessibilityLabel: 'Mode',
-  labelRole: { compact: 'row', wide: 'control' },
-} as const;
-
 /*
  * The mode's own name, at every width. ACP sends a mode as a value, a name and a description and nothing else, so
  * there is no icon to draw for it: every Agent names its modes itself, and Argo cannot know their shapes
- * (owner, 2026-10-20). Full access reads red.
+ * (owner, 2026-10-20). Full access reads red. Narrow, the name sits in one of the Composer's own chips.
  */
-function modeTrigger(props: ModeControlProps): React.JSX.Element {
+function modeTrigger(
+  props: ModeControlProps & { wide: boolean },
+): React.JSX.Element {
   const current = selectedChoice(props.configuration, 'mode');
 
-  return (
-    <MenuTrigger
-      {...modeTriggerAppearance}
-      disabled={props.disabled}
-      label={modeLabel(current)}
-      tone={isDangerous(current) ? 'danger' : 'muted'}
-    />
-  );
+  const trigger = {
+    accessibilityLabel: 'Mode',
+    disabled: props.disabled,
+    label: modeLabel(current),
+    tone: isDangerous(current) ? ('danger' as const) : ('muted' as const),
+  };
+
+  if (!props.wide) return <ChipTrigger {...trigger} />;
+
+  return <MenuTrigger {...trigger} labelRole="badge" />;
 }
 
 function modeLabel(current?: SessionConfigSelectOption): string {

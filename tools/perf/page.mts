@@ -44,7 +44,6 @@ export interface Target {
   session?: string;
 }
 
-// One measured interaction: it sets the page up, and hands back one pass over it to repeat.
 // What a scenario measures: `once` is the measured pass, `before` the setup each pass needs outside it.
 export interface Measured {
   session: CDPSession;

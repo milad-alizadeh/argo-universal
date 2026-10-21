@@ -3,6 +3,7 @@ import { Platform, View, type ViewProps } from 'react-native';
 import { List, ListSection } from '#primitives/lists/list';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { AgentDrill } from './agent-drill';
+import { AgentNameRow } from './agent-name-row';
 import {
   loadingSections,
   useConfigurationRows,
@@ -98,12 +99,14 @@ function configurationDrills(props: ContentsProps): ReactElement {
 }
 
 /*
- * The Agent, only where it can still be chosen. Once a Session is running the Agent is fixed, and the page is already
- * titled with its name; a row that repeats the title and does nothing collides with the Agents' own options, which
- * are free to call themselves anything, "Agent" included (owner, 2026-10-20).
+ * The Agent, where it can still be chosen or where nothing else names it. Once a Session is running the Agent is
+ * fixed and the page is titled with its name; a row that repeats the title and does nothing collides with the
+ * Agents' own options, which are free to call themselves anything, "Agent" included (owner, 2026-10-20). An Agent
+ * that is not installed has no name to title the page with, so its row stays and says its id.
  */
 function agentRow(props: ContentsProps): ReactElement[] {
-  if (!props.configuration.agentChoices) return [];
+  if (!props.configuration.agentChoices)
+    return [<AgentNameRow key="agent" configuration={props.configuration} />];
 
   return [<AgentDrill key="agent" configuration={props.configuration} />];
 }

@@ -162,9 +162,13 @@ export const SecondAgentShowMoreNarrow = showsMore('agent-2', narrowWidth);
 
 export const SecondAgentShowMoreWide = showsMore('agent-2', layoutWidths.wide);
 
-// The same prompt fits on a wide screen, then clamps again to whole lines once the window narrows.
+/*
+ * The same prompt fits on a wide screen, then clamps again to whole lines once the window narrows. The prompt is
+ * one that clears four lines at the desktop type scale with room to spare, so the story measures the re-clamp
+ * rather than where a particular sentence happens to break.
+ */
 export const ClampsAgainWhenNarrowed: Story = {
-  args: { row: recordedUserMessage('agent-2', 'markdown-answer') },
+  args: { row: recordedUserMessage('agent-2', 'edit-states') },
   play: async ({ canvas, canvasElement }) => {
     await settleViewport(layoutWidths.wide);
     await expect(

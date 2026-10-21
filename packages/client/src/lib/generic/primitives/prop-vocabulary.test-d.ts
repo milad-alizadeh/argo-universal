@@ -20,7 +20,7 @@ type Tone =
   | 'danger'
   | 'done';
 
-type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+type Size = '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 type SharedPropNames =
   | 'title'
@@ -108,7 +108,7 @@ expectTypeOf<Extract<keyof Primitives, keyof Aliases>>().toBeNever();
 // Retired vocabulary cannot return as primitive prop names.
 expectTypeOf<RetiredNames>().toEqualTypeOf<Each<never>>();
 
-// Every primitive sizes on one xs–xl scale.
+// Every primitive sizes on one 2xs–xl scale.
 expectTypeOf<OffScaleSizes>().toEqualTypeOf<Each<never>>();
 
 // Colour meaning comes from one tone set, and Text and Icon draw all of it.

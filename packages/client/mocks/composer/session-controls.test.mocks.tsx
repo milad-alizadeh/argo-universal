@@ -1,5 +1,6 @@
 import { fn, within, expect, waitFor } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
+import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
@@ -62,19 +63,7 @@ export function sessionControls(width: number): Story {
         await overlay.findByRole('button', { name: 'Compact' }),
       );
       await expect(onCompact).toHaveBeenCalledOnce();
-      await userEvent.click(
-        await canvas.findByRole('button', { name: 'Usage' }),
-      );
-      await waitFor(() =>
-        expect(overlay.getByText('5-hour limit')).toBeVisible(),
-      );
-      await waitFor(() =>
-        expect(overlay.getByText('Weekly limit')).toBeVisible(),
-      );
-      await expect(
-        overlay.queryByText('Every Session on this account counts.'),
-      ).not.toBeInTheDocument();
-      await userEvent.keyboard('{Escape}');
+      await browseUsage({ canvas, userEvent, overlay, width });
       await expect(args.onStop).not.toHaveBeenCalled();
       const stop = await canvas.findByRole('button', { name: 'Stop' });
       await expect(stop).toBeEnabled();
@@ -86,4 +75,35 @@ export function sessionControls(width: number): Story {
       await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
     },
   };
+}
+
+interface UsageBrowse {
+  canvas: ReturnType<typeof within>;
+  userEvent: Parameters<NonNullable<Story['play']>>[0]['userEvent'];
+  overlay: ReturnType<typeof within>;
+  width: number;
+}
+
+/*
+ * Usage is a desktop control: a phone's Composer row has no width for a second gauge beside the context mark, and
+ * the limits are read on its page in Settings instead (owner, 2026-10-21).
+ */
+async function browseUsage(browse: UsageBrowse): Promise<void> {
+  const { canvas, userEvent, overlay, width } = browse;
+
+  if (width < wideBreakpoint()) {
+    await expect(
+      canvas.queryByRole('button', { name: 'Usage' }),
+    ).not.toBeInTheDocument();
+
+    return;
+  }
+
+  await userEvent.click(await canvas.findByRole('button', { name: 'Usage' }));
+  await waitFor(() => expect(overlay.getByText('5-hour limit')).toBeVisible());
+  await waitFor(() => expect(overlay.getByText('Weekly limit')).toBeVisible());
+  await expect(
+    overlay.queryByText('Every Session on this account counts.'),
+  ).not.toBeInTheDocument();
+  await userEvent.keyboard('{Escape}');
 }
