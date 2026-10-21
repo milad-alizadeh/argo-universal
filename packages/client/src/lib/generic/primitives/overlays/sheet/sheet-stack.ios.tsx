@@ -29,15 +29,21 @@ export function SheetPages(props: PagesProps): ReactElement {
 
   return (
     <NavigationStack path={props.stack.path} onPathChange={props.stack.setPath}>
-      <StackPage {...props} page={root} />
-      {pushed.map((page) => (
-        <NavigationDestination key={page.name} value={page.name}>
-          <StackPage {...props} page={page} />
-        </NavigationDestination>
-      ))}
+      <StackPage
+        {...props}
+        page={root}
+        onClose={props.stack.navigation.close}
+      />
+      {pushed.map((page) => pushedPage(props, page))}
     </NavigationStack>
   );
 }
+
+const pushedPage = (props: PagesProps, page: SheetPageEntry): ReactElement => (
+  <NavigationDestination key={page.name} value={page.name}>
+    <StackPage {...props} page={page} />
+  </NavigationDestination>
+);
 
 /*
  * A page fills a sheet presented at detents, and is as tall as itself in one that fits its content.
@@ -61,11 +67,15 @@ function SinglePage(props: PagesProps): ReactElement {
   );
 }
 
-type PageProps = PagesProps & { page: SheetPageEntry };
+type PageProps = PagesProps & {
+  page: SheetPageEntry;
+  // Given to the root page alone, which has no page below it to go back to.
+  onClose?: () => void;
+};
 
 function StackPage(props: PageProps): ReactElement {
   return (
-    <SheetPageToolbar page={props.page}>
+    <SheetPageToolbar page={props.page} onClose={props.onClose}>
       <PageBody {...props} />
     </SheetPageToolbar>
   );

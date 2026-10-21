@@ -47,6 +47,10 @@ const hideHeader = (props: PageProps): boolean =>
 const pageBackLabel = (props: PageProps): string | undefined =>
   props.root ? undefined : backLabel(props.stack);
 
+// Only the root page closes the sheet; every page above it goes back to the one below instead.
+const pageClose = (props: PageProps): (() => void) | undefined =>
+  props.root ? props.stack.navigation.close : undefined;
+
 function PageHeader(props: PageProps): ReactElement | null {
   if (hideHeader(props)) return null;
 
@@ -56,6 +60,7 @@ function PageHeader(props: PageProps): ReactElement | null {
       action={props.page.action}
       backLabel={pageBackLabel(props)}
       onBack={props.stack.navigation.back}
+      onClose={pageClose(props)}
     />
   );
 }
