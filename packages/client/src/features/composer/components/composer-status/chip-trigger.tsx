@@ -1,7 +1,6 @@
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
-import { ChipSurface, chipClassName } from './status-surface';
 import { StatusText } from './status-text';
 
 export interface ChipTriggerProps {
@@ -25,19 +24,13 @@ type OverlayHandlers = Omit<
 type TriggerProps = ChipTriggerProps & OverlayHandlers;
 
 /*
- * A picker drawn as one of the Composer's own chips: the Subagents and Shells pills' surface, text and height, with
- * no chevron. A phone's Composer row has the width for the words or for the mark that opens them, not both, and the
- * pill already reads as something to press (owner, 2026-10-21).
+ * A picker drawn as a pill of its own words: the chips' height and text, no chevron, and a flat tint rather than a
+ * surface of its own. The Composer is already glass on iOS, so a chip's card and border would stand glass on glass
+ * (owner, 2026-10-21).
  */
-export function ChipTrigger(props: TriggerProps): ReactElement {
-  return (
-    <ChipSurface>
-      <ChipPressable {...props} />
-    </ChipSurface>
-  );
-}
+const pillClassName = 'h-6 py-0 px-2.5 gap-1.5 rounded-full bg-tint';
 
-function ChipPressable(props: TriggerProps): ReactElement {
+export function ChipTrigger(props: TriggerProps): ReactElement {
   const { label, tone, leading, trailing } = props;
 
   return (
@@ -79,7 +72,7 @@ function chipPressableProps(
     accessibilityLabel: props.accessibilityLabel ?? props.label,
     className: contentActionClass({
       variant: 'ghost',
-      className: chipClassName,
+      className: pillClassName,
       disabled: !!props.disabled,
     }),
   };
