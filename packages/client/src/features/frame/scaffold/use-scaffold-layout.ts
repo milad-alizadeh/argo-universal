@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
+import type { WindowBandContent } from '#lib/product/window-band';
 import { type FrameMotion, frameTiming } from '../utils/frame-timing';
 import {
   type InspectorState,
@@ -13,6 +14,9 @@ import {
 
 // What the Scaffold places: its Slots, and the sidebar's and the Inspector's state, which the caller holds.
 export interface ScaffoldProps {
+  band?: WindowBandContent | null;
+  workbenchShown?: boolean;
+  onWorkbenchShownChange?: (shown: boolean) => void;
   sizeClass: SizeClass;
   // The section picker beside the list on a wide window, such as the rail.
   sidebar: ReactNode;

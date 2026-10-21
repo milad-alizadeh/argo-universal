@@ -3,6 +3,8 @@
  * The GitHub mark is a logo, drawn by Icon's `source`, not a symbol name.
  */
 export const gitSymbols = {
+  workbench: { tabler: 'layout-sidebar-right' },
+  stage: { tabler: 'clipboard-list' },
   commit: { tabler: 'git-commit' },
   'git-issue-open': { tabler: 'circle-dot' },
   'git-issue-closed': { tabler: 'circle-check' },
