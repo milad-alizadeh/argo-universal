@@ -55,7 +55,9 @@ it(
       answer = value;
     });
 
-    await expect.poll(() => kit.log()).toContain('argo.settings.get reloaded');
+    await expect
+      .poll(() => kit.log(), processWait)
+      .toContain('argo.settings.get reloaded');
     await kit.clock.advance(499);
     expect(answer).toBeUndefined();
     await kit.clock.advance(1);
@@ -76,7 +78,9 @@ it(
       answer = value;
     });
 
-    await expect.poll(() => kit.log()).toContain('argo.settings.get reloaded');
+    await expect
+      .poll(() => kit.log(), processWait)
+      .toContain('argo.settings.get reloaded');
     await kit.clock.advance(1999);
     expect(answer).toBeUndefined();
     await kit.clock.advance(1);

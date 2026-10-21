@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import { processWait } from '#mocks/data-fixture';
 import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
@@ -36,7 +37,7 @@ it.each(['index.mjs', 'index.cjs'])(
       'throw Error("Changed entry")',
     );
     await expect
-      .poll(() => caller.plugins.list())
+      .poll(() => caller.plugins.list(), processWait)
       .toMatchObject({
         plugins: [{ state: 'crashed', error: 'Changed entry' }],
       });

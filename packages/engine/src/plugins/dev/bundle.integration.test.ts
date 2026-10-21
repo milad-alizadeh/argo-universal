@@ -58,7 +58,7 @@ it('loads imports within the Plugin folder while preserving a failed rebuild acr
   await expect.poll(() => runtime.status('dev').state).toBe('crashed');
   const failed = runtime.status('dev');
   await killPluginHost(home);
-  await expect.poll(() => pluginHostPids(home)).toHaveLength(2);
+  await expect.poll(() => pluginHostPids(home), processWait).toHaveLength(2);
 
   expect(await runtime.activate(location)).toEqual(failed);
   await writeFile(source, 'export function check(): void {}');
