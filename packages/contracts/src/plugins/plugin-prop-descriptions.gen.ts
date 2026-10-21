@@ -75,17 +75,17 @@ export type WireSchemaHints = {
     "status": PropValue<"Icon", "status">;
   };
   "Image": {
-    /** source for this part. */
+    /** Image resolved by argo.assets.resolve; loaded through the Server. */
     "source": PropValue<"Image", "source">;
-    /** Appearance-specific sources; `dark` is used in dark appearance and falls back to `light`. */
+    /** Appearance-specific sources, falling back to light then source. */
     "sources": PropValue<"Image", "sources">;
-    /** Media aspect ratio. */
+    /** Frame aspect, or the image’s intrinsic ratio. */
     "aspect": PropValue<"Image", "aspect">;
-    /** Image fitting mode. */
+    /** Fill and crop, or show the whole image. */
     "fit": PropValue<"Image", "fit">;
-    /** Semantic radius token. */
+    /** Semantic frame radius. */
     "radius": PropValue<"Image", "radius">;
-    /** accessibility Label for this part. */
+    /** Spoken description of the image. */
     "accessibilityLabel": PropValue<"Image", "accessibilityLabel">;
   };
   "Video": {
@@ -123,12 +123,12 @@ export type WireSchemaHints = {
     "keys": PropValue<"Kbd", "keys">;
   };
   "Avatar": {
-    /** Fallback initials. */
-    "initials": PropValue<"Avatar", "initials">;
+    /** Name used for fallback initials; absent names show a person symbol. */
+    "name": PropValue<"Avatar", "name">;
+    /** Avatar resolved by argo.assets.resolve; loaded through the Server. */
+    "src": PropValue<"Avatar", "src">;
     /** Avatar size. */
     "size": PropValue<"Avatar", "size">;
-    /** Image source supplied by the App. */
-    "source": PropValue<"Avatar", "source">;
     /** Spoken identity. */
     "accessibilityLabel": PropValue<"Avatar", "accessibilityLabel">;
     /** Status mark over the avatar. */
@@ -136,21 +136,27 @@ export type WireSchemaHints = {
   };
   "Markdown": {
     /** Markdown source text. */
-    "source": PropValue<"Markdown", "source">;
+    "text": PropValue<"Markdown", "text">;
+    /** Show a caret at the end of the content. */
+    "streaming": PropValue<"Markdown", "streaming">;
   };
   "Code": {
-    /** Code displayed in the block. */
+    /** Plain text to display and copy. */
     "code": PropValue<"Code", "code">;
-    /** Optional language name. */
+    /** Language tag for syntax highlighting. */
     "language": PropValue<"Code", "language">;
+    /** File path shown in the header. */
+    "path": PropValue<"Code", "path">;
+    /** Diff hunks; Copy copies their patch and long diffs start with five lines. */
+    "diff": PropValue<"Code", "diff">;
   };
   "Link": {
-    /** The visible and accessible label. */
+    /** Visible link label. */
     "label": PropValue<"Link", "label">;
-    /** URL or Argo route. */
+    /** An http, https or mailto URL. */
     "href": PropValue<"Link", "href">;
-    /** on Press for this part. */
-    "onPress": PropValue<"Link", "onPress">;
+    /** An absolute route within the App. */
+    "route": PropValue<"Link", "route">;
   };
   "Pill": {
     /** The text displayed by the part. */
@@ -495,6 +501,16 @@ export type WireSchemaHints = {
     "onSubmit": PropValue<"Form", "onSubmit">;
   };
   "List": {
+    /** Rows or media tiles. */
+    "layout": PropValue<"List", "layout">;
+    /** Vertical content or a horizontal shelf. */
+    "direction": PropValue<"List", "direction">;
+    /** Column count, capped at 2/4/6 by Size class; auto fits tileSize. */
+    "columns": PropValue<"List", "columns">;
+    /** Minimum tile width; phones cap grids at two columns, lg at one. */
+    "tileSize": PropValue<"List", "tileSize">;
+    /** Media aspect: square 1:1, landscape 16:10, portrait 3:4. */
+    "aspect": PropValue<"List", "aspect">;
     /** The list appearance. */
     "appearance": PropValue<"List", "appearance">;
     /** Page-level supporting text. */
@@ -708,7 +724,7 @@ export type WireSchemaHints = {
     "series": PropValue<"Chart", "series">;
   };
   "Detail": {
-    /** The content as Markdown; drawn as body text until kit Markdown lands. */
+    /** The content drawn by the kit Markdown part. */
     "markdown": PropValue<"Detail", "markdown">;
     /** Show the content loading state; the Metadata stays. */
     "isLoading": PropValue<"Detail", "isLoading">;

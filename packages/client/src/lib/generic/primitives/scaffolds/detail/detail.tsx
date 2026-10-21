@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
+import { Markdown } from '#primitives/content/markdown';
 import { PageHeaderActions } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
@@ -38,7 +38,7 @@ function DetailContent({
 
   return (
     <View className="gap-4">
-      {markdown ? <Text>{markdown}</Text> : null}
+      {markdown ? <Markdown text={markdown} /> : null}
       {children}
     </View>
   );

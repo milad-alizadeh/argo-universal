@@ -1,4 +1,5 @@
 import { use } from 'react';
+import { ListTileContext } from '../../../list-context';
 import { ListContext } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
@@ -39,10 +40,30 @@ export function usePressClass(props: DrawingProps): string {
     appearance: use(ListContext).appearance,
   };
 
+  const tile = use(ListTileContext);
+
+  if (tile) return tilePress(props);
+
+  return regularPress(props, { ...place, ...rowPress(props) });
+}
+
+function regularPress(
+  props: DrawingProps,
+  place: Parameters<typeof itemPress>[0],
+): string {
   return cn(
-    itemPress({ ...place, ...rowPress(props) }),
+    itemPress(place),
     props.leadingSize === 'avatar' &&
       'min-h-15 items-center gap-3 py-2.5 android:min-h-18 android:gap-4 android:py-2',
+    props.disabled && 'opacity-50',
+  );
+}
+
+function tilePress(props: DrawingProps): string {
+  return cn(
+    'w-full flex-col items-stretch overflow-hidden rounded-3xl web:select-none',
+    interactive(props) &&
+      'web:hover:bg-hover web:active:bg-pressed ios:active:bg-pressed',
     props.disabled && 'opacity-50',
   );
 }

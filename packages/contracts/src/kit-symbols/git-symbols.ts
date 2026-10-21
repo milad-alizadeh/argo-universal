@@ -3,6 +3,9 @@
  * The GitHub mark is a logo, drawn by Icon's `source`, not a symbol name.
  */
 export const gitSymbols = {
+  commit: { tabler: 'git-commit' },
+  'git-issue-open': { tabler: 'circle-dot' },
+  'git-issue-closed': { tabler: 'circle-check' },
   branch: { tabler: 'git-branch' },
   diff: { tabler: 'file-diff' },
   merged: { tabler: 'git-merge' },

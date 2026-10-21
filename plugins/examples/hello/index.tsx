@@ -1,5 +1,8 @@
 import {
   Button,
+  Markdown,
+  Code,
+  Link,
   ActionList,
   Action,
   ListItem,
@@ -14,6 +17,7 @@ import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { HelloCanvasPage } from './canvas';
 import { HelloDashboard } from './dashboard';
 import { HelloForm } from './form';
+import { helloGallery } from './gallery';
 import { registerBuilds } from './list-detail';
 import { HelloListPage } from './lists';
 import { helloMedia } from './media';
@@ -61,6 +65,9 @@ function HelloPage(): JSX.Element {
       <Text role={headingRole}>{greeting}</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <ExampleBadges />
+      <Markdown text="## Hello kit\n\nShared **Markdown** content." />
+      <Code code="const greeting = 'Hello';" language="ts" />
+      <Link label="Example website" href="https://example.com" />
       <Buttons onTap={() => setTaps(taps + 1)} />
     </Stack>
   );
@@ -108,8 +115,13 @@ export function register(argo: Argo): void {
   argo.pages.register('/dashboard', HelloDashboard);
   argo.pages.register('/form', HelloForm);
   registerBuilds(argo.pages);
-  argo.pages.register('/media', helloMedia(argo.assets));
+  registerMediaPages(argo);
   argo.pages.register('/runs', HelloRunsPage);
   argo.pages.register('/canvas', HelloCanvasPage);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
+}
+
+function registerMediaPages(argo: Argo): void {
+  argo.pages.register('/media', helloMedia(argo.assets));
+  argo.pages.register('/gallery', helloGallery(argo.assets));
 }

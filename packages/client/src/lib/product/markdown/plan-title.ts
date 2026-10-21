@@ -1,5 +1,5 @@
 import type { Tokens } from 'marked';
-import { lexMarkdown } from './lex-markdown';
+import { lexMarkdown } from '#lib/generic/lex-markdown';
 
 const firstHeading = (content: string): Tokens.Heading | undefined =>
   lexMarkdown(content).find(

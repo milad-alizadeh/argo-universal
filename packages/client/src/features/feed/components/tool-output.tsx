@@ -6,7 +6,7 @@ import type {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
+import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
 import { toFileDiffs } from '../view/file-diff';
 import { DiffView } from './diff-view/diff-view';
 import { FeedContent } from './feed-content/feed-content';

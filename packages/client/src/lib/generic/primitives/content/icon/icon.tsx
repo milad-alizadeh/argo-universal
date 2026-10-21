@@ -5,6 +5,7 @@ import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext, toneClass } from '#primitives/content/text';
 import { StatusDot } from '#primitives/status/status-dot';
+import { StatusMarkHidden } from '../../../status-mark-context';
 import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
 import {
@@ -52,7 +53,9 @@ export function Icon(slotted: IconProps): React.JSX.Element {
   const props = { ...slotted, role: useSlotIconRole(slotted.role) };
   const glyph = <IconGlyph {...props} />;
 
-  if (!props.status) return glyph;
+  const hidden = useContext(StatusMarkHidden);
+
+  if (!props.status || hidden) return glyph;
 
   return (
     <IconWithStatus {...props} status={props.status}>

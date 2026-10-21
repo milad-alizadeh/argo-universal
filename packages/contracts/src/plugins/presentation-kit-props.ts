@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { iconSymbol, iconRole } from '../kit-symbols/icon-schema';
 import { tones } from '../kit-tokens';
+import { imageAsset } from './image-wire-part';
 import { handler } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
 
@@ -19,27 +20,22 @@ export const iconProps = z.object({
   status: statusMark.optional().describe('Status mark over the symbol.'),
 });
 
-const imageUri = z.object({
-  uri: z.string().optional(),
-  bundle: z.string().optional(),
-  method: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
-  body: z.string().optional(),
-  cache: z
-    .enum(['default', 'reload', 'force-cache', 'only-if-cached'])
-    .optional(),
-  width: z.number().optional(),
-  height: z.number().optional(),
-  scale: z.number().optional(),
-});
-
 export const avatarProps = z.object({
-  initials: z.string().describe('Fallback initials.'),
-  size: z.enum(['sm', 'lg']).optional().describe('Avatar size.'),
-  source: z
-    .union([z.number(), imageUri, z.array(imageUri)])
+  name: z
+    .string()
     .optional()
-    .describe('Image source supplied by the App.'),
+    .describe(
+      'Name used for fallback initials; absent names show a person symbol.',
+    ),
+  src: imageAsset
+    .optional()
+    .describe(
+      'Avatar resolved by argo.assets.resolve; loaded through the Server.',
+    ),
+  size: z
+    .enum(['xs', 'sm', 'md', 'lg', 'xl'])
+    .optional()
+    .describe('Avatar size.'),
   accessibilityLabel: z.string().describe('Spoken identity.'),
   status: statusMark
     .extend({ accessibilityLabel: z.string().optional() })

@@ -5,66 +5,56 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Platform, View } from 'react-native';
-import { FooterProvider } from '#primitives/fields/field-description';
+import { View } from 'react-native';
 import { flattenedChildren } from '../../../flattened-children';
-import { ListFooter } from '../../../list-footer';
 import { useSectionDrawing } from '../../../list-section-drawing';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { SectionEndContext } from '../../../section-end-context';
 import { ListGrouping, SectionListRow } from './list-grouping';
 import type { ListSectionProps } from './list-props';
-import { hasSectionHeader, SectionHeader } from './list-section-parts';
+import {
+  prepareSection,
+  SectionContent,
+  type SectionState,
+} from './list-section-state';
 
 export function ListSection(props: ListSectionProps): ReactElement {
-  const id = useId();
+  const section = prepareSection(props, useId());
   const { below } = useSectionDrawing();
   const ends = useContext(SectionEndContext);
 
   return (
     <View>
-      <Header {...props} />
-      <SectionBody {...props} id={id} />
-      <Footer {...props} id={id} />
+      {section.header}
+      <SectionBody section={section} />
+      {section.footer}
       {!ends && <View className={below} />}
     </View>
   );
 }
 
-function Header(props: ListSectionProps): ReactNode {
-  return hasSectionHeader(props) ? <SectionHeader {...props} /> : null;
-}
-
-function Rows(props: ListSectionProps): ReactNode {
-  const children = flattenedChildren(props.children);
-
-  if (props.isExpanded === false) return null;
+function Rows({ section: prepared }: { section: SectionState }): ReactNode {
+  const children = flattenedChildren(prepared.children);
 
   return Children.map(children, (child, index) => (
-    <SectionListRow section={props} index={index} count={children.length}>
+    <SectionListRow
+      section={prepared.selection}
+      index={index}
+      count={children.length}
+    >
       {child}
     </SectionListRow>
   ));
 }
 
-function Footer(props: ListSectionProps & { id: string }): ReactNode {
-  if (Platform.OS === 'android' || !props.footer) return null;
-
-  return <ListFooter id={props.id} text={props.footer} tone={props.tone} />;
-}
-
-function SectionBody(props: ListSectionProps & { id: string }): ReactElement {
-  const footer = props.footer
-    ? { id: props.id, failure: props.tone === 'danger' }
-    : undefined;
-
+function SectionBody({ section }: { section: SectionState }): ReactElement {
   return (
-    <FooterProvider value={footer}>
+    <SectionContent section={section}>
       <ListGrouping>
         <RowHighlightProvider>
-          <Rows {...props} />
+          <Rows section={section} />
         </RowHighlightProvider>
       </ListGrouping>
-    </FooterProvider>
+    </SectionContent>
   );
 }

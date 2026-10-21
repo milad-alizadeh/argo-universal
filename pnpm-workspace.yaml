@@ -63,6 +63,7 @@ catalog:
   "expo-document-picker": ~57.0.3
   "expo-image-picker": ~57.0.20
   "expo-clipboard": ~57.0.2
+  parse5: 8.0.1
   marked: 18.1.0
   # Code block highlighting: the core plus one grammar per language it is registered for.
   prismjs: 1.30.0
@@ -174,6 +175,7 @@ catalog:
   react-reconciler: 0.33.0
   "@shopify/react-native-skia": 2.6.2
   "@babel/parser": 7.29.9
+  expo-image: ~57.0.5
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict

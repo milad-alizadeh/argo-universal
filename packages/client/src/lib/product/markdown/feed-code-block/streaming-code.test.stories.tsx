@@ -3,10 +3,10 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { expect } from 'storybook/test';
 import { Pressable } from '#primitives/actions/pressable';
+import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
 import { Text } from '#primitives/content/text';
 import { layoutWidths } from '../../../generic/each-layout';
 import { settleViewport } from '../../../generic/settle-viewport';
-import { FeedCodeBlock } from './feed-code-block';
 
 const firstLine = "import { CACHE } from './headers';";
 

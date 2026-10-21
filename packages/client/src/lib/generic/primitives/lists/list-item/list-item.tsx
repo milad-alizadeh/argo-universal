@@ -1,16 +1,17 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { ContextActions } from '#primitives/actions/action-list';
 import { useListItemGroup } from '#primitives/lists/list';
-import { ProgressBar } from '#primitives/status/progress-bar';
-import { ListContext } from '../../../list-context';
+import { ListContext, ListTileContext } from '../../../list-context';
 import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
+import { drawingContent } from './list-item-drawing-content';
 import { hasLeading, LinkAccessory, separatorClass } from './list-item-parts';
-import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
+import { ItemProgress } from './list-item-progress';
 import type { ListItemProps } from './list-item-props';
 import {
   useItemSelection,
@@ -45,24 +46,6 @@ function ItemSeparator(props: ListItemProps): ReactNode {
   ) : null;
 }
 
-// Paper "SessionsList": a sidebar row's bar runs under its content, 4 above the row's end, on a hairline track.
-function ItemProgress({
-  progress,
-  sidebar,
-}: Pick<ListItemProps, 'progress' | 'sidebar'>): ReactNode {
-  if (!progress) return null;
-
-  return sidebar ? (
-    <View className="absolute bottom-1 left-9.5 right-3">
-      <ProgressBar {...progress} track="hairline" />
-    </View>
-  ) : (
-    <View className="absolute inset-x-0 bottom-0">
-      <ProgressBar {...progress} />
-    </View>
-  );
-}
-
 function Selection({
   selected,
   drawing,
@@ -76,12 +59,14 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   const { context, footer } = useListItemGroup(props.description);
 
   return (
-    <InListItem value>
-      <ListContext value={context}>
-        <ItemSurface {...props} />
-      </ListContext>
-      {footer}
-    </InListItem>
+    <ContextActions actions={props.actions}>
+      <InListItem value>
+        <ListContext value={context}>
+          <ItemSurface {...props} />
+        </ListContext>
+        {footer}
+      </InListItem>
+    </ContextActions>
   );
 }
 
@@ -94,17 +79,16 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
  */
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing();
-  const { selectionMode } = useContext(ListContext);
+  const tile = useContext(ListTileContext);
+
+  const className = tile
+    ? 'relative overflow-hidden rounded-3xl bg-card'
+    : itemSurface(drawing, props);
 
   return (
-    <View className={itemSurface(drawing, props)}>
-      <ItemPress {...drawingContent(props)} />
-      <Selection
-        selected={props.selected && !drawing.menu && !selectionMode}
-        drawing={drawing}
-      />
-      <ItemSeparator {...props} />
-      <ItemProgress progress={props.progress} sidebar={props.sidebar} />
+    <View className={className}>
+      <PressedContent props={props} drawing={drawing} tile={tile !== null} />
+      <RowDetails tile={tile !== null} props={props} />
     </View>
   );
 }
@@ -158,11 +142,39 @@ function useTrailingChoice(
   return <ChoiceAccessory {...selected} />;
 }
 
-function drawingContent(props: DrawingProps): DrawingProps {
-  return {
-    ...placedContent(props),
-    accessibilityLabel:
-      props.accessibilityLabel ??
-      [props.title, props.value].filter(Boolean).join(', '),
-  };
+function RowDetails({
+  tile,
+  props,
+}: {
+  tile: boolean;
+  props: DrawingProps;
+}): ReactNode {
+  if (tile) return null;
+
+  return (
+    <>
+      <ItemSeparator {...props} />
+      <ItemProgress progress={props.progress} sidebar={props.sidebar} />
+    </>
+  );
+}
+
+interface PressedProps {
+  props: DrawingProps;
+  drawing: ItemDrawing;
+  tile: boolean;
+}
+
+function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
+  const { selectionMode } = useContext(ListContext);
+
+  return (
+    <>
+      <ItemPress {...drawingContent(props, tile)} />
+      <Selection
+        selected={props.selected && !drawing.menu && !selectionMode}
+        drawing={drawing}
+      />
+    </>
+  );
 }

@@ -15,9 +15,7 @@ export const detailProps = z.object({
   markdown: z
     .string()
     .optional()
-    .describe(
-      'The content as Markdown; drawn as body text until kit Markdown lands.',
-    ),
+    .describe('The content drawn by the kit Markdown part.'),
   isLoading: z
     .boolean()
     .optional()

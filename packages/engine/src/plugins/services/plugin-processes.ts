@@ -32,12 +32,16 @@ export class PluginProcesses {
   async handle(
     call: CheckedProcessCall,
   ): Promise<ProcessResult | string | null> {
-    if (call.action === 'run')
-      return this.start(await withLoginPath(call), argoTimeoutMs).done;
+    if (call.action === 'run') return this.run(call);
 
     if (call.action === 'spawn') return this.spawned(await withLoginPath(call));
 
     return this.control(call);
+  }
+
+  // Core callers use the same bounded argv runner for fixed Server commands.
+  public async run(command: CheckedCommand): Promise<ProcessResult> {
+    return this.start(await withLoginPath(command), argoTimeoutMs).done;
   }
 
   private control(call: Control): Promise<ProcessResult> | null {

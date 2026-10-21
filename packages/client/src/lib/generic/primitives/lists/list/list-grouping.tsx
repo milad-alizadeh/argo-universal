@@ -14,7 +14,7 @@ import {
 } from '../../../list-context';
 import type { ListChild } from './list-children';
 import { ListGroupEnds, ListGroupEndsContext } from './list-group-ends';
-import type { ListProps, ListSectionProps } from './list-props';
+import type { ListProps } from './list-props';
 import { dataRowPosition, rowPosition } from './list-row-position';
 
 type RowLayout = {
@@ -67,7 +67,7 @@ type FixedRowProps = {
 };
 
 type SectionRowProps = {
-  section: ListSectionProps;
+  section: ListSelection;
   index: number;
   count: number;
   children: ReactNode;

@@ -1,6 +1,9 @@
 import type * as ActionListKit from '#primitives/actions/action-list';
 import type * as AudioKit from '#primitives/content/audio';
+import type { CodeProps } from '#primitives/content/code';
 import type * as KbdKit from '#primitives/content/kbd';
+import type { LinkProps } from '#primitives/content/link';
+import type { MarkdownProps } from '#primitives/content/markdown';
 import type * as MediaUrlKit from '#primitives/content/media-url';
 import type * as VideoKit from '#primitives/content/video';
 import type * as FieldDescriptionKit from '#primitives/fields/field-description';
@@ -13,6 +16,7 @@ import type * as SpacerKit from '#primitives/layout/spacer';
 import type * as SurfaceKit from '#primitives/layout/surface';
 import type * as ListItemKit from '#primitives/lists/list-item';
 import type * as TableKit from '#primitives/lists/table';
+import type * as LinkPreviewKit from '#primitives/overlays/link-preview';
 import type * as DetailKit from '#primitives/scaffolds/detail';
 import type * as InspectorKit from '#primitives/scaffolds/inspector';
 import type * as ListDetailKit from '#primitives/scaffolds/list-detail';
@@ -24,6 +28,11 @@ import type * as StatusDotKit from '#primitives/status/status-dot';
 import type * as SvgKit from '#primitives/visual';
 
 export type AdditionalPrimitives = {
+  LinkPreviewCardData: LinkPreviewKit.LinkPreviewCardData;
+  LinkPreviewSource: LinkPreviewKit.LinkPreviewSource;
+  MarkdownProps: MarkdownProps;
+  CodeProps: CodeProps;
+  LinkProps: LinkProps;
   MetadataProps: MetadataKit.MetadataProps;
   MetadataLabelProps: MetadataKit.MetadataLabelProps;
   MetadataLinkProps: MetadataKit.MetadataLinkProps;

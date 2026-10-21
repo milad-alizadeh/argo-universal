@@ -1,6 +1,12 @@
 /* Generated from Contracts part names by `pnpm docs:build`. Do not edit by hand. */
 import type { PluginComponents } from './index';
 
+export const Markdown: PluginComponents['Markdown'];
+
+export const Code: PluginComponents['Code'];
+
+export const Link: PluginComponents['Link'];
+
 export const Spacer: PluginComponents['Spacer'];
 
 export const Grid: PluginComponents['Grid'];
@@ -80,6 +86,12 @@ export const Sheet: PluginComponents['Sheet'];
 export const Video: PluginComponents['Video'];
 
 export const Audio: PluginComponents['Audio'];
+
+export const Image: PluginComponents['Image'];
+
+export const Avatar: PluginComponents['Avatar'];
+
+export const Icon: PluginComponents['Icon'];
 
 export const Canvas: PluginComponents['Canvas'] & {
   Rect: PluginComponents['Canvas.Rect'];

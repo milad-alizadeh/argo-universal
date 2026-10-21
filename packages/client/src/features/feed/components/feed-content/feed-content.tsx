@@ -2,20 +2,14 @@ import type { ContentBlock } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
-import {
-  FeedMarkdown,
-  type FeedMarkdownProps,
-} from '#lib/product/markdown/feed-markdown';
-import {
-  resourceIcon,
-  resourceName,
-} from '../../../../lib/product/markdown/resource-name';
+import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
+import { resourceIcon, resourceName } from '#primitives/content/code';
+import { Markdown } from '#primitives/content/markdown';
 import { FeedDisclosure } from '../feed-disclosure';
 import { FeedImage } from '../feed-image';
 import { UnsupportedFeedContent } from '../feed-notice/feed-notice';
 
-type TextVariant = FeedMarkdownProps['variant'];
+type TextVariant = 'feed' | 'summary';
 
 type ResourceLinkBlock = Extract<ContentBlock, { type: 'resource_link' }>;
 
@@ -96,7 +90,11 @@ const markdown = (
   text: string,
   { streaming, textVariant }: TextDrawing,
 ): React.JSX.Element => (
-  <FeedMarkdown text={text} streaming={streaming} variant={textVariant} />
+  <Markdown
+    text={text}
+    streaming={streaming}
+    tone={textVariant === 'summary' ? 'muted' : undefined}
+  />
 );
 
 function FeedContentBlock({

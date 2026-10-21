@@ -7,6 +7,7 @@ import {
 import { Platform, View } from 'react-native';
 import {
   ListContext,
+  ListTileContext,
   listPosition,
   type ListPosition,
 } from '../../../list-context';
@@ -30,8 +31,10 @@ type ListItemGroup = {
 
 export function useListItemGroup(description?: string): ListItemGroup {
   const list = useContext(ListContext);
+  const tile = useContext(ListTileContext);
+  const rowDescription = tile ? undefined : description;
   const ends = useContext(ListGroupEndsContext);
-  const closes = endsGroup(description);
+  const closes = endsGroup(rowDescription);
   useMarkGroupEnd(ends, list.index, closes);
   const opens = useOpensGroup(ends, list.index);
 
@@ -40,7 +43,7 @@ export function useListItemGroup(description?: string): ListItemGroup {
     endsAt.has(list.position) || closes,
   );
 
-  return drawing(list, position, description);
+  return drawing(list, position, rowDescription);
 }
 
 const endsGroup = (description?: string): boolean =>

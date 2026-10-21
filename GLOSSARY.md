@@ -117,7 +117,7 @@ _Avoid_: Login, credential, identity, Tracker, Integration
 ## Agents and Sessions
 
 **Agent**:
-A coding agent program that Argo drives, such as Claude or Codex.
+A coding agent program that Argo drives, such as Claude or Codex. The Agents page lists the Installed ones with the Registry below them. The word has a second sense, below.
 _Avoid_: Harness, provider, vendor, model
 
 **Session**:
@@ -128,9 +128,9 @@ _Avoid_: Chat, thread, conversation
 A Session that New Session opened in the Project's main checkout and no prompt has reached yet. It is not listed, and leaving New Session discards it.
 _Avoid_: Draft Session, pending Session
 
-**Subagent**:
-A Session that another Session started to do delegated work.
-_Avoid_: Child agent, task agent
+**Agent**:
+A Session that another Session started to do delegated work. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so.
+_Avoid_: Subagent, child agent, task agent
 
 **Shell**:
 A command an Agent started in the background, which keeps running while the Turn goes on.
@@ -143,6 +143,10 @@ _Avoid_: Target, loop
 **Checkout**:
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
 _Avoid_: Workspace, worktree (when the main checkout is also possible)
+
+**Change**:
+One line of work in a Session, named by its branch, at one of five stages: Working, Branch, Open, Merged or Closed. A Session can have several at once.
+_Avoid_: PR, pull request, diff, branch (for the work)
 
 **Composer**:
 Where the user writes the next prompt for a Session, with its Agent, model and mode controls.
@@ -187,7 +191,7 @@ The ordered list of Session updates that Argo shows for one Session.
 _Avoid_: Timeline, transcript, log, history
 
 **Session snapshot**:
-Everything a Session shows that is not in its Feed, such as its title, state, Live header, Shells, and Subagents. It is sent whole on each change.
+Everything a Session shows that is not in its Feed, such as its title, state, Live header, Shells, and the Agents it started. It is sent whole on each change.
 _Avoid_: Session state (one field of it), session details
 
 **Session update**:
@@ -260,6 +264,10 @@ _Avoid_: Notice, Feed entry
 Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
 _Avoid_: Design system (for the code), component library
 
+**List section**:
+A distinct group of items in a List, with an optional heading and footer.
+_Avoid_: Group (when naming a List section)
+
 **Pill**:
 A short, static label that shows an Argo status or a label from a Plugin.
 _Avoid_: Badge, chip
@@ -291,6 +299,14 @@ _Avoid_: Shell, app shell, chrome
 **Scaffold**:
 A kit component that arranges a screen's panes for its Size class, such as list and detail side by side on wide windows and drill-in on phones. Content is written once; the Scaffold places it.
 _Avoid_: Layout (for a whole screen), template
+
+**Workbench**:
+The column beside a Session's Feed that gives an overview of what is happening in it, one summary card per section: Changes, Agents, Shells, and the cards Plugins add through a Slot. A card carries a count or a total and no list; pressing it opens that section's full view as a Stage tab. Its Agents card counts the Agents the Session started, not the Installed Agents. Phones reach the same cards without the column. See ADR-0039.
+_Avoid_: Inspector, right panel, second sidebar
+
+**Stage**:
+The surface that shows a Workbench card's section in full, as a Stage tab. A tab lists the section's items — the Session's Changes, the Agents it started, its Shells — and a row opens that item's detail in the same tab, such as a Change's diff, an Agent's Feed or a Shell's output. A card opens the tab and the Workbench stays.
+_Avoid_: Inspector, detail pane, viewer
 
 **Surface**:
 A named background a kit component draws on: `background`, `card`, `muted` or `glass`, with its fill, radius and depth. There is no overlay kind; overlays draw their own.
