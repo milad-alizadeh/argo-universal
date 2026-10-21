@@ -109,7 +109,7 @@ export class QueryEntry {
 
     if (this.paused()) return;
 
-    if (this.owner.query.api !== 'storage') this.timing.schedule(this.watchers);
+    this.timing.schedule(this.watchers);
   }
 
   private paused(): boolean {
