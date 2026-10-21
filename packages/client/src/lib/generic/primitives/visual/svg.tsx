@@ -29,21 +29,31 @@ export function Svg(props: SvgProps): React.JSX.Element {
 
   const draws = useSvgDrawing();
 
-  return draws ? (
-    svgPressable(props, color, frame)
-  ) : (
-    <Text role="secondary">{props.label}</Text>
+  if (!draws && !props.onPress)
+    return <Text role="secondary">{props.label}</Text>;
+
+  return (
+    <SvgPressable props={props} color={color} frame={frame} draws={draws} />
   );
 }
 
-function svgPressable(
-  props: SvgProps,
-  color: ArtworkProps['color'],
-  frame: ViewStyle,
-): React.JSX.Element {
+interface SvgPressableProps {
+  props: SvgProps;
+  color: ArtworkProps['color'];
+  frame: ViewStyle;
+  draws: boolean;
+}
+
+function SvgPressable(input: SvgPressableProps): React.JSX.Element {
+  const { props, color, frame, draws } = input;
+
   return (
     <Pressable {...accessibilityProps(props)} style={frame}>
-      {svgArtwork(props, color)}
+      {draws ? (
+        svgArtwork(props, color)
+      ) : (
+        <Text role="secondary">{props.label}</Text>
+      )}
     </Pressable>
   );
 }

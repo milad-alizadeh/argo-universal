@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { RowHighlightProvider } from '../../../row-highlights';
 import type { ListChild } from './list-children';
+import { ListEnd } from './list-scroll-props';
 import type { TileListProps } from './list-tile-props';
 import { ListTiles } from './list-tiles';
 
@@ -23,8 +24,13 @@ export function SectionShelves(props: ChildDataProps): ReactElement {
     <View className="min-w-0 gap-4">
       {props.header}
       {shelfSections(props.items ?? []).map((section) => (
-        <SectionShelf key={section.key} props={props} section={section} />
+        <SectionShelf
+          key={section.key}
+          props={withoutListEnd(props)}
+          section={section}
+        />
       ))}
+      <ListEnd footer={props.footer} endContent={props.endContent} />
     </View>
   );
 }
@@ -88,4 +94,12 @@ function appendEntry(section: ShelfSection, item: ListChild): void {
 function appendBody(section: ShelfSection, item: ListChild): void {
   if (item.structure === 'footer') section.footer = item.content;
   else if (!item.structure) section.items.push(item);
+}
+
+function withoutListEnd({
+  footer: _footer,
+  endContent: _end,
+  ...props
+}: ChildDataProps): ChildDataProps {
+  return props;
 }

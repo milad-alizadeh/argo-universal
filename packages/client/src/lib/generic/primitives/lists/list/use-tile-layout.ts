@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import type { LayoutChangeEvent, ViewStyle } from 'react-native';
 import { useSpacingStep } from '#primitives/layout/spacing';
+import { ScrollColumnContext } from '../../../scroll-column';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClass } from '../../../use-size-class/size-class';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { ListProps } from './list-props';
 import { tileLayout } from './list-tile-layout';
+import { tileContentWidth } from './list-tile-width';
 
 const tileGapStep = 3;
 
@@ -41,7 +43,8 @@ type TileScrollOptions = Pick<
   | 'drawDistance'
 >;
 
-interface TileMetrics {
+export interface TileMetrics {
+  column: React.ContextType<typeof ScrollColumnContext>;
   viewport: number;
   sizeClass: SizeClass;
   gap: number;
@@ -51,8 +54,6 @@ interface TileMetrics {
 
 function useTileMetrics<Item>(props: ListProps<Item>): TileMetrics {
   const [viewport, setViewport] = useState(0);
-  const sizeClass = useSizeClass();
-  const gap = useSpacingStep(tileGapStep);
 
   const padding = useSpacingStep(
     useSizeClassValue(props.padding ?? tileInsetStep),
@@ -60,8 +61,9 @@ function useTileMetrics<Item>(props: ListProps<Item>): TileMetrics {
 
   return {
     viewport,
-    sizeClass,
-    gap,
+    column: useContext(ScrollColumnContext),
+    sizeClass: useSizeClass(),
+    gap: useSpacingStep(tileGapStep),
     padding,
     onLayout: (event) => setViewport(event.nativeEvent.layout.width),
   };
@@ -81,18 +83,19 @@ export function useTileLayout<Item>(props: ListProps<Item>): TileGeometry {
 
 function layoutFor<Item>(props: ListProps<Item>, metrics: TileMetrics): Layout {
   return {
-    ...tileLayout(props, contentMetrics(metrics)),
+    ...tileLayout(props, contentMetrics(props, metrics)),
     horizontal: props.direction === 'horizontal',
     gap: metrics.gap,
     padding: metrics.padding,
   };
 }
 
-function contentMetrics(
+function contentMetrics<Item>(
+  props: ListProps<Item>,
   metrics: TileMetrics,
 ): Parameters<typeof tileLayout>[1] {
   return {
-    width: Math.max(0, metrics.viewport - metrics.padding * 2),
+    width: tileContentWidth(props.direction, metrics),
     gap: metrics.gap,
     sizeClass: metrics.sizeClass,
   };

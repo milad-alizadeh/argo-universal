@@ -38,11 +38,9 @@ function CellFrame(props: CellProps): ReactElement {
 }
 
 function cellStyle({ width, gap, horizontal }: CellProps): ViewStyle {
-  return {
-    width,
-    marginBottom: horizontal ? 0 : gap,
-    marginRight: horizontal ? gap : 0,
-  };
+  return horizontal
+    ? { width, marginRight: gap }
+    : { width: '100%', marginBottom: gap };
 }
 
 function useReleasedHeight({ index, onHeight }: CellProps): void {

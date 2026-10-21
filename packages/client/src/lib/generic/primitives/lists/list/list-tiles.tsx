@@ -10,7 +10,8 @@ import { scrollProps } from './list-scroll-props';
 import { ShelfHeader, useShelf } from './list-shelf';
 import type { TileListProps } from './list-tile-props';
 import { TileCell } from './tile-cell';
-import { TileVisibility, useTileVisibility } from './tile-visibility';
+import { TileViewportVisibility } from './tile-viewport-visibility';
+import { useTileVisibility } from './tile-visibility';
 import { useTileLayout, viewportInsets } from './use-tile-layout';
 
 export function ListTiles<Item>(props: TileListProps<Item>): ReactElement {
@@ -41,13 +42,13 @@ function TileScroll<Item>(input: ScrollProps<Item>): ReactElement {
   const visibility = useTileVisibility<Item>();
 
   return (
-    <TileVisibility value={visibility.indices}>
+    <TileViewportVisibility indices={visibility.indices}>
       <ScrollFadeList
         {...tileScrollProps(input)}
         renderItem={renderItem}
         onViewableItemsChanged={visibility.update}
       />
-    </TileVisibility>
+    </TileViewportVisibility>
   );
 }
 
@@ -66,7 +67,7 @@ function cellProps<Item>(
   row: LegendListRenderItemProps<Item>,
 ): Omit<React.ComponentProps<typeof TileCell>, 'children'> {
   return {
-    ...rowCell(input.props, row, input.geometry),
+    ...input.geometry.cell,
     index: row.index,
     onHeight: input.shelf.onHeight,
   };
@@ -149,18 +150,6 @@ function TileBody<Item>({
       <TileScroll props={props} geometry={geometry} shelf={shelf} />
     </ListTileContext>
   );
-}
-
-function rowCell<Item>(
-  props: TileListProps<Item>,
-  row: LegendListRenderItemProps<Item>,
-  geometry: Geometry,
-): Geometry['cell'] {
-  const width = props.fullSpan?.(row.item)
-    ? geometry.viewport - geometry.padding * 2
-    : geometry.width;
-
-  return { ...geometry.cell, width };
 }
 
 function tileSpan<Item>(

@@ -54,7 +54,10 @@ export const LoadingTile: Story = {
     </List>
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.queryByText('Loading item')).toBeNull();
+    await expect(await canvas.findByText('Loading item')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
     await expect(canvas.queryByText('Preview')).toBeNull();
   },
 };
