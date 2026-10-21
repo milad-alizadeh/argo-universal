@@ -58,7 +58,7 @@ function WorkbenchSurface({
   children: ReactNode;
 }): ReactElement {
   return floating ? (
-    <Surface kind="glass">
+    <Surface kind="glass" fill>
       <WorkbenchScroll>{children}</WorkbenchScroll>
     </Surface>
   ) : (
@@ -69,7 +69,7 @@ function WorkbenchSurface({
 function WorkbenchScroll({ children }: { children: ReactNode }): ReactElement {
   return (
     <ScrollView>
-      <View className="gap-2 p-2">{children}</View>
+      <View className="gap-2">{children}</View>
     </ScrollView>
   );
 }
