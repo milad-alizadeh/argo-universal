@@ -1,11 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Text } from './text';
+import {
+  titleText,
+  headingText,
+  bodyText,
+  secondaryText,
+  secondaryCodeText,
+  controlText,
+  badgeText,
+  codeText,
+  navTitleText,
+  navActionText,
+  rowText,
+  rowDetailText,
+} from './text-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Content/Text',
   component: Text,
-  args: { children: 'The quick brown fox jumps over the lazy dog.' },
   argTypes: kitArgTypes('Text'),
 } satisfies Meta<typeof Text>;
 
@@ -13,26 +26,26 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Title: Story = { args: { role: 'title' } };
+export const Title: Story = { args: titleText };
 
-export const Heading: Story = { args: { role: 'heading' } };
+export const Heading: Story = { args: headingText };
 
-export const Body: Story = { args: { role: 'body' } };
+export const Body: Story = { args: bodyText };
 
-export const Secondary: Story = { args: { role: 'secondary' } };
+export const Secondary: Story = { args: secondaryText };
 
-export const SecondaryCode: Story = { args: { role: 'secondary-code' } };
+export const SecondaryCode: Story = { args: secondaryCodeText };
 
-export const Control: Story = { args: { role: 'control' } };
+export const Control: Story = { args: controlText };
 
-export const Badge: Story = { args: { role: 'badge' } };
+export const Badge: Story = { args: badgeText };
 
-export const Code: Story = { args: { role: 'code' } };
+export const Code: Story = { args: codeText };
 
-export const NavTitle: Story = { args: { role: 'nav-title' } };
+export const NavTitle: Story = { args: navTitleText };
 
-export const NavAction: Story = { args: { role: 'nav-action' } };
+export const NavAction: Story = { args: navActionText };
 
-export const Row: Story = { args: { role: 'row' } };
+export const Row: Story = { args: rowText };
 
-export const RowDetail: Story = { args: { role: 'row-detail' } };
+export const RowDetail: Story = { args: rowDetailText };

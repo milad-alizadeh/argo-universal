@@ -4,6 +4,14 @@ import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List, ListSection } from '#primitives/lists/list';
 import { DatePicker } from './date-picker';
+import {
+  dateAndTimeDatePicker,
+  defaultDatePicker,
+  disabledDatePicker,
+  emptyDatePicker,
+  invalidDatePicker,
+  timeDatePicker,
+} from './date-picker-fixtures';
 import type { DatePickerProps } from './date-picker-props';
 
 // A DatePicker is controlled, so every story draws through a wrapper that keeps the picked value.
@@ -19,11 +27,7 @@ function Example({
 const meta = {
   title: 'Design System/Primitives/Inputs/DatePicker',
   component: DatePicker,
-  args: {
-    label: 'Due date',
-    value: '2026-10-19',
-    onValueChange: (): void => {},
-  },
+  args: { onValueChange: (): void => {} },
   argTypes: kitArgTypes('DatePicker'),
   parameters: { screenPreview: true },
   // A grouped section keeps the picker in the row it sits in on a settings screen.
@@ -45,24 +49,20 @@ type Story = StoryObj<typeof meta>;
 
 // Named for the default mode, since `Date` cannot be a module-level name.
 export const Default: Story = {
+  args: defaultDatePicker,
   name: 'Date',
 };
 
 export const Time: Story = {
-  args: { label: 'Reminder', mode: 'time', value: '14:30' },
+  args: timeDatePicker,
 };
 
 export const DateAndTime: Story = {
-  args: { label: 'Due', mode: 'datetime', value: '2026-10-19T14:30' },
+  args: dateAndTimeDatePicker,
 };
 
-export const Empty: Story = { args: { value: undefined } };
+export const Empty: Story = { args: emptyDatePicker };
 
-export const Disabled: Story = { args: { disabled: true } };
+export const Disabled: Story = { args: disabledDatePicker };
 
-export const Invalid: Story = {
-  args: {
-    value: '2026-10-18',
-    errors: [{ message: 'Pick today or a later date.' }],
-  },
-};
+export const Invalid: Story = { args: invalidDatePicker };

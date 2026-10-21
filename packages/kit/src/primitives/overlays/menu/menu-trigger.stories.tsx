@@ -1,13 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { iconNames } from '#kit/symbols/icon-names';
 import { textRoles } from '#primitives/content/text';
-import { Spinner } from '#primitives/status/spinner';
 import { MenuTrigger } from './menu-trigger';
+import {
+  dangerMenuTrigger,
+  defaultMenuTrigger,
+  disabledMenuTrigger,
+  iconOnlyMenuTrigger,
+  leadingMenuTrigger,
+  mutedMenuTrigger,
+  noIconMenuTrigger,
+} from './menu-trigger-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/MenuTrigger',
   component: MenuTrigger,
-  args: { label: 'Item' },
   // No Contracts schema: the props MenuTriggerProps declares.
   argTypes: {
     label: { control: 'text' },
@@ -28,25 +35,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { args: { icon: 'folder' } };
+export const Default: Story = { args: defaultMenuTrigger };
 
-export const Muted: Story = {
-  args: { label: 'Muted', icon: 'branch', tone: 'muted' },
-};
+export const Muted: Story = { args: mutedMenuTrigger };
 
-export const Danger: Story = {
-  args: { label: 'Danger', icon: 'private', tone: 'danger' },
-};
+export const Danger: Story = { args: dangerMenuTrigger };
 
-export const NoIcon: Story = { args: { label: 'No icon', tone: 'muted' } };
+export const NoIcon: Story = { args: noIconMenuTrigger };
 
-export const Disabled: Story = {
-  args: { label: 'Disabled', icon: 'folder', tone: 'muted', disabled: true },
-};
+export const Disabled: Story = { args: disabledMenuTrigger };
 
-export const IconOnly: Story = {
-  args: { label: 'Options', icon: 'plan-mode', iconOnly: true },
-};
+export const IconOnly: Story = { args: iconOnlyMenuTrigger };
 
 export const Leading: Story = {
   parameters: {
@@ -56,5 +55,5 @@ export const Leading: Story = {
       },
     },
   },
-  args: { label: 'Label', leading: <Spinner accessibilityLabel="Loading" /> },
+  args: leadingMenuTrigger,
 };

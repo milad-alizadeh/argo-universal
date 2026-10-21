@@ -5,7 +5,12 @@ import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { CentredOverlayScope } from '#primitives/overlays/centred-overlay';
 import { Form } from './form';
-import { IssueForm, type IssueDraft } from './form-example';
+import { IssueForm } from './form-example';
+import {
+  filledIssueForm,
+  invalidIssueForm,
+  submittingIssueForm,
+} from './form-example-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Fields/Form',
@@ -30,14 +35,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const filled: IssueDraft = {
-  title: 'Sign-in sheet closes early',
-  description:
-    'On Android the sheet closes before the code arrives, so the person has to start again.',
-  due: '2026-10-19',
-  labels: ['bug'],
-};
-
 const handlers = { onSubmit: fn(), onCancel: fn() };
 
 export const Rest: Story = {
@@ -45,17 +42,19 @@ export const Rest: Story = {
 };
 
 export const Filled: Story = {
-  render: (): React.JSX.Element => <IssueForm {...handlers} initial={filled} />,
+  render: (): React.JSX.Element => (
+    <IssueForm {...handlers} {...filledIssueForm} />
+  ),
 };
 
 export const Invalid: Story = {
   render: (): React.JSX.Element => (
-    <IssueForm {...handlers} titleError="Enter a title." />
+    <IssueForm {...handlers} {...invalidIssueForm} />
   ),
 };
 
 export const Submitting: Story = {
   render: (): React.JSX.Element => (
-    <IssueForm {...handlers} loading initial={filled} />
+    <IssueForm {...handlers} {...submittingIssueForm} />
   ),
 };

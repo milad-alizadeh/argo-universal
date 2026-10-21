@@ -2,15 +2,20 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from './sheet';
+import {
+  fitsItsContentSheet,
+  fullHeightSheet,
+  settingsSheet,
+  withFooterSheet,
+  type SheetFixture,
+} from './sheet-fixtures';
 import { useSheet } from './sheet-pages';
-import type { SheetProps } from './sheet-props';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Sheet',
@@ -30,26 +35,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const FitsItsContent: Story = {
-  render: () => <ExampleSheet label="Options" />,
+  render: () => <ExampleSheet {...fitsItsContentSheet} />,
 };
 
 export const WithFooter: Story = {
-  render: () => <ExampleSheet label="Footer" footer={<SubmitFooter />} />,
+  render: () => <ExampleSheet {...withFooterSheet} />,
 };
 
 export const FullHeight: Story = {
-  render: () => <ExampleSheet label="Tall" detents={['large']} />,
+  render: () => <ExampleSheet {...fullHeightSheet} />,
 };
 
 export const WithPages: Story = { render: () => <PagedSheet /> };
 
 const choices = ['Option one', 'Option two', 'Option three'];
 
-type ExampleProps = Pick<SheetProps, 'detents' | 'footer'> & {
-  label: string;
-};
-
-function ExampleSheet(props: ExampleProps): ReactElement {
+function ExampleSheet(props: SheetFixture): ReactElement {
   const [open, setOpen] = useState(false);
 
   return (
@@ -74,14 +75,6 @@ function Choices(): ReactElement {
   );
 }
 
-function SubmitFooter(): ReactElement {
-  return (
-    <View className="p-4">
-      <Button label="Submit" />
-    </View>
-  );
-}
-
 const fruits = ['Apple', 'Banana', 'Cherry'];
 
 export function PagedSheet(): ReactElement {
@@ -89,13 +82,7 @@ export function PagedSheet(): ReactElement {
   const [fruit, setFruit] = useState(fruits[0]);
 
   return (
-    <Sheet
-      open={open}
-      onOpenChange={setOpen}
-      label="Settings"
-      contentScrolls
-      trigger={<MenuTrigger label="Settings" />}
-    >
+    <Sheet open={open} onOpenChange={setOpen} {...settingsSheet}>
       {fruitPages(fruit, setFruit)}
     </Sheet>
   );

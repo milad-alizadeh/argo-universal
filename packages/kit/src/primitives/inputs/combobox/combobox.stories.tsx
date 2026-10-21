@@ -6,32 +6,13 @@ import { List, ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Combobox } from './combobox';
-
-const options = [
-  {
-    value: 'long',
-    label: 'long-folder-name',
-    // A long path shows how a path shortens before the selected check.
-    subtitle:
-      '~/Folder/very/long/path/to/some/nested/location/long-folder-name',
-    code: true,
-    icon: 'folder',
-  },
-  {
-    value: 'paper',
-    label: 'second-folder',
-    subtitle: '~/Folder/second-folder',
-    code: true,
-    icon: 'folder',
-  },
-  {
-    value: 'docs',
-    label: 'third-folder',
-    subtitle: '~/Folder/third-folder',
-    code: true,
-    icon: 'folder',
-  },
-] satisfies React.ComponentProps<typeof Combobox>['options'];
+import {
+  couldNotLoadComboboxContent,
+  emptyComboboxContent,
+  loadingComboboxContent,
+} from './combobox-content-fixtures';
+import { defaultCombobox, rowCombobox } from './combobox-fixtures';
+import type { ComboboxContentProps } from './combobox-props';
 
 // A Combobox is controlled, so a story draws through a wrapper that keeps the selected value.
 function Example({
@@ -46,13 +27,7 @@ function Example({
 const meta = {
   title: 'Design System/Primitives/Inputs/Combobox',
   component: Combobox,
-  args: {
-    label: 'Folder',
-    value: 'long',
-    options,
-    searchPlaceholder: 'Find a folder…',
-    onValueChange: (): void => {},
-  },
+  args: { ...defaultCombobox, onValueChange: (): void => {} },
   argTypes: kitArgTypes('Combobox'),
   render: (args): ReactElement => <Example {...args} />,
 } satisfies Meta<typeof Combobox>;
@@ -61,7 +36,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { args: defaultCombobox };
 
 export const Row: Story = {
   render: (): ReactElement => <ProjectSheet />,
@@ -76,32 +51,26 @@ export const Row: Story = {
 };
 
 export const Loading: Story = {
-  render: (): ReactElement => <StatusExample loading />,
+  render: (): ReactElement => <StatusExample {...loadingComboboxContent} />,
 };
 
 export const Empty: Story = {
-  render: (): ReactElement => <StatusExample />,
+  render: (): ReactElement => <StatusExample {...emptyComboboxContent} />,
 };
 
 export const CouldNotLoad: Story = {
   render: (): ReactElement => (
-    <StatusExample loadError="Folders could not be loaded." />
+    <StatusExample {...couldNotLoadComboboxContent} />
   ),
 };
 
 // The choices themselves, drawn without their overlay, so a load state reads on the page.
-function StatusExample(props: {
-  loading?: boolean;
-  loadError?: string;
-}): ReactElement {
+function StatusExample(
+  props: Omit<ComboboxContentProps<string>, 'onValueChange'>,
+): ReactElement {
   return (
     <View className="native:h-64">
-      <Combobox.Content
-        {...props}
-        label="Folders"
-        options={[]}
-        onValueChange={() => {}}
-      />
+      <Combobox.Content {...props} onValueChange={() => {}} />
     </View>
   );
 }
@@ -130,16 +99,8 @@ function ProjectRow(): ReactElement {
   return (
     <List appearance="grouped" fit>
       <ListSection>
-        <Combobox {...rowPresentation} value={value} onValueChange={setValue} />
+        <Combobox {...rowCombobox} value={value} onValueChange={setValue} />
       </ListSection>
     </List>
   );
 }
-
-const rowPresentation = {
-  variant: 'row',
-  label: 'Folder',
-  title: 'Select folder',
-  options,
-  searchPlaceholder: 'Find a folder…',
-} as const;

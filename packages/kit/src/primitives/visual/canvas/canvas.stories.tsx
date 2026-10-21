@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Canvas } from './canvas';
 import { CanvasFallback } from './canvas-boundary';
+import { filesCanvas, heatmapCanvas } from './canvas-fixtures';
 import type { RectProps } from './canvas-props';
 import { days, rectangles, labels } from './canvas.stories.mocks';
 
@@ -27,27 +28,12 @@ export default meta;
 // Every scene composes its own children, so stories type against the component, not meta's args.
 type Story = StoryObj<typeof Canvas>;
 
-const scenes = {
-  heatmap: {
-    label: 'Build activity',
-    width: 360,
-    height: 216,
-    camera: 'pan-zoom',
-  },
-  files: {
-    label: 'Files',
-    width: 360,
-    height: 216,
-    camera: 'pan-zoom',
-  },
-} as const;
-
 // Each scene draws Canvas children and tracks its own selection, so it keeps a render.
 function HeatmapScene(): React.JSX.Element {
   const [selectedKey, select] = useState('day-44');
 
   return (
-    <Canvas {...scenes.heatmap} selectedKey={selectedKey}>
+    <Canvas {...heatmapCanvas} selectedKey={selectedKey}>
       {days.map(({ key, ...day }) => (
         <Canvas.Rect {...day} key={key} onPress={() => select(key)} />
       ))}
@@ -57,7 +43,7 @@ function HeatmapScene(): React.JSX.Element {
 
 function CodeMapScene(): React.JSX.Element {
   const [selectedKey, select] = useState('packages-0');
-  const props = { ...scenes.files, selectedKey };
+  const props = { ...filesCanvas, selectedKey };
 
   return (
     <Canvas {...props}>

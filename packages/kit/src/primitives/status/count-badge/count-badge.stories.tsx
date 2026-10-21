@@ -2,11 +2,16 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { CountBadge } from './count-badge';
+import {
+  countCountBadge,
+  finishedCountBadge,
+  over99CountBadge,
+  runningCountBadge,
+} from './count-badge-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Status/CountBadge',
   component: CountBadge,
-  args: { badge: { count: 3 } },
   // CountBadge has no Contracts schema, so its prop domain is written out here.
   argTypes: {
     badge: { control: false },
@@ -26,12 +31,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Count: Story = {
-  args: { badge: { count: 3, label: '3 items need attention' } },
-};
+export const Count: Story = { args: countCountBadge };
 
-export const Running: Story = { args: { tone: 'success' } };
+export const Running: Story = { args: runningCountBadge };
 
-export const Finished: Story = { args: { tone: 'muted' } };
+export const Finished: Story = { args: finishedCountBadge };
 
-export const Over99: Story = { args: { badge: { count: 120 } } };
+export const Over99: Story = { args: over99CountBadge };
