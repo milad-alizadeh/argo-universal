@@ -60,8 +60,12 @@ const inspectorPlacement = ({ layout }: ScaffoldPartProps): PanePlacement => ({
 
 function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
   return (
-    <View className="absolute top-0" style={inspectorPosition(parts)}>
-      <FramePane testID="desktop-inspector" {...inspectorPlacement(parts)}>
+    <View className="absolute top-0 flex-row" style={inspectorPosition(parts)}>
+      <FramePane
+        testID="desktop-inspector"
+        surface="glass"
+        {...inspectorPlacement(parts)}
+      >
         <InspectorControlsContext value={true}>
           {parts.scaffold.inspector(parts.layout.inspectorExpanded)}
         </InspectorControlsContext>

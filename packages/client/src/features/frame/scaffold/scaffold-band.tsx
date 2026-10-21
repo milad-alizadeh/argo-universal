@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { IconButton } from '#primitives/actions/icon-button';
 import { useSymbolImageRenderer } from '../../../lib/generic/symbols/symbol-images';
-import { bandControlAppearance } from './band-control-appearance';
+import { bandToggleAppearance } from './band-control-appearance';
 import { BandTrailing } from './scaffold-band-controls';
 import { BandTitle } from './scaffold-band-title';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
@@ -19,9 +19,8 @@ function SidebarBandToggle({
 
   return (
     <IconButton
-      {...bandControlAppearance}
+      {...bandToggleAppearance(shown)}
       icon="sidebar"
-      selected={shown}
       accessibilityLabel={shown ? 'Hide sidebar' : 'Show sidebar'}
       onPress={() => scaffold.onSidebarShownChange(!shown)}
     />

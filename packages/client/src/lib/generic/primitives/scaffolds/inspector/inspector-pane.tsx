@@ -139,7 +139,7 @@ export function InspectorBody(props: InspectorBodyProps): ReactElement {
  * content under that header, all on one surface. On the web's sheet it takes the sheet's surface at Paper's height.
  */
 export function InspectorPane(props: InspectorPaneProps): ReactElement {
-  const surface = props.inSheet ? 'bg-content' : 'bg-tint';
+  const surface = usePaneSurface(props);
   const fittedSheet = isFittedSheet(props);
 
   return (
@@ -159,4 +159,11 @@ function InspectorControls(props: InspectorPaneProps): ReactElement | null {
       <CloseButton {...props} />
     </View>
   );
+}
+
+// A hosted pane inherits the window's glass; sheets and standalone panes own their existing surface.
+function usePaneSurface(props: InspectorPaneProps): string {
+  if (use(InspectorControlsContext)) return 'bg-transparent';
+
+  return props.inSheet ? 'bg-content' : 'bg-tint';
 }
