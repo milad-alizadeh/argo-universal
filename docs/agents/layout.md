@@ -2,6 +2,8 @@
 
 [ADR-0039](../adr/0039-the-workbench-holds-section-cards-and-the-stage-shows-one-in-full.md) owns what the Workbench and the Stage are; this page is the shape they are drawn in. Every measurement below comes from a board on the Paper file "Argo · Feed, Workbench & Stage", page "Workbench & Stage · Exploration", and each rule names its board. Sizes are tokens wherever a token exists; never hard-code a number a token already holds.
 
+The order the regions give up width, the phone model and the overflow rule below are the owner's decisions and are settled; the Paper boards that illustrate them are still waiting on his visual sign-off.
+
 ## The regions
 
 - **Rail** — 56 (`--spacing-frame-rail`), inside the sidebar's glass panel, with the sidebar toggle at its foot. Sections live here and nothing else does: a Session's own content never gets a rail item. Present at medium and wide ("Screen / Approved layout").
@@ -27,7 +29,25 @@ Size classes are `compact` (below `--breakpoint-medium`, 600, and every phone), 
 - *Stage floating* — "Screen / Medium · Stage floating over the content": the same glass panel as wide, 352 wide and inset 8 from the window edges, floats over the Feed. The Session header and the Composer take a trailing padding of `--spacing-frame-inspector` + 16, so no control is left underneath; only the Feed body passes under the glass.
 - *Region hidden* — "Screen / Medium · Region hidden": too narrow to keep the region, so it hides itself as part of the resize and the Feed takes the whole container. Open Stage tabs collapse into the counter on the header's Workbench button; widening restores them with the tabs intact.
 
-**Compact** — see [Phones](#phones--not-settled).
+**Compact** — see [Phones](#phones).
+
+## Giving up width
+
+Three regions compete with the content column for width: the Sessions list, the Workbench, and the Stage while it is open. The main content comes first, so narrowing the window gives width up in a fixed order.
+
+1. **The Sessions list collapses first**, folding into the rail. The rail itself never collapses.
+2. **Then the Workbench undocks.** It auto-hides rather than letting the content column be squeezed, so the column keeps the width it had.
+3. **The content column gives last**, and is capped at 800 however much room there is.
+
+TODO: the width at which the Sessions list collapses into the rail. A Paper agent is deriving it from the real column widths.
+
+TODO: the width at which the Workbench undocks. Same derivation, same source.
+
+The Workbench therefore has three states, and the one toggle in the Session header drives all of them.
+
+- **Docked** — its own 312 column beside the content, and beside the Stage when the Stage is open.
+- **Auto-hidden** — below the undock threshold, with the toggle unpressed: the Workbench is not drawn and the content column keeps its full width.
+- **Floating** — below the threshold with the toggle pressed: the Workbench overlays the content as a glass panel. The content does not reflow.
 
 ## The Workbench
 
@@ -52,14 +72,31 @@ Size classes are `compact` (below `--breakpoint-medium`, 600, and every phone), 
 - The cap holds beside the Workbench and under the Stage; at the drawn widths the column is narrower than its cap anyway (704 at 1440 with the Workbench, 688 with the Stage, 680 at 1760), so the cap bites only on wider windows.
 - The Workbench and the Stage sit outside the cap: they are regions of the window, not content in the column.
 
-## Phones — not settled
+## Phones
 
-ADR-0039 fixes only this much, and the boards for it are being approved now:
+Compact has no column, so the Workbench is a menu and a sheet. Every card and every Stage is still reachable, as ADR-0039 requires: nothing is dropped and no card is desktop-only.
 
-- Every Workbench card, Plugin cards included, and every Stage is reachable on compact widths, where there is no column.
-- Nothing is dropped on phones, and no card is desktop-only.
+**There is no Workbench page and no Workbench route.** Nothing navigates away from the Session.
 
-TODO: fill in once the phone boards are approved.
+**The Session header carries a Workbench IconButton beside its "…".** Pressing it opens a nav menu — the same component as the "…" menu that holds Archive and Rename — listing the Workbench's sections in the order the desktop cards take, each with its icon and its muted count: Changes, Agents, Shells, then the sections Plugins add through the Slot.
+
+**Picking a section opens it as a bottom sheet over the Session,** built on Argo's `Sheet` primitive. The sheet's root page carries a ✕ in its title row; a page pushed inside it carries Back.
+
+**Pressing a row inside a sheet pushes that item's detail as a page in the same sheet:** an Agent's Feed, a Shell's output, a Change's detail. That pushed page is the phone's Stage.
+
+**A Change's detail page carries a SegmentedControl with two segments, PR and Files** — the pull request's stage, its checks and its closing action, or the file diff.
+
+**A Change row's trailing slot is a "…", not a chevron,** and it opens the Change's actions. Every other row keeps its chevron.
+
+## The overflow rule
+
+This one holds on desktop and on phones alike.
+
+Live rows in the Agents and Shells sections are always visible. When a section would show more than four rows, its finished and cancelled rows fold into one muted line reading like `3 finished`, where the number is how many are hidden. Pressing that line expands them in place; it never navigates. The full list is the Workbench section itself, because the Stage shows one item and never a list.
+
+## Agents, not Subagents
+
+The Workbench section this page and ADR-0039 call Subagents is labelled **Agents** in the UI. That collides with Argo's Agents page, which lists the installed ACP Agents with the registry below them, and the collision is unresolved: two different things carry one word. `GLOSSARY.md` and ADR-0039 still say Subagent and are left as they are until the owner picks a way out.
 
 ## The name in code
 
