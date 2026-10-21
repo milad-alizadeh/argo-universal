@@ -171,8 +171,24 @@ async function androidSerial(deviceName: string): Promise<string> {
   return serial;
 }
 
+// A link sent while the dev client is still on its launcher or loading the bundle is dropped.
+let androidBundled = false;
+
+function androidReadyToLink(): boolean {
+  return androidBundled || stopping;
+}
+
+async function waitForAndroidBundle(): Promise<void> {
+  for (let attempt = 0; attempt < 240 && !androidReadyToLink(); attempt += 1)
+    await delay(500);
+
+  await delay(1500);
+}
+
 async function openNamedAndroidStorybook(deviceName: string): Promise<void> {
   const serial = await androidSerial(deviceName);
+
+  await waitForAndroidBundle();
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     await openAndroidStorybook(serial);
@@ -218,6 +234,8 @@ function openedDeviceName(output: string): string | null {
 }
 
 function onExpoOutput(output: string): void {
+  if (output.includes('Android Bundled')) androidBundled = true;
+
   const deviceName = openedDeviceName(output);
 
   if (deviceName) queueLink(deviceName);

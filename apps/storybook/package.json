@@ -28,6 +28,7 @@
     "@chromatic-com/storybook": "catalog:",
     "@repo/browser-suite-lock": "workspace:*",
     "@repo/typescript": "workspace:*",
+    "@storybook/addon-a11y": "catalog:",
     "@storybook/addon-docs": "catalog:",
     "@storybook/addon-react-native-server": "catalog:",
     "@storybook/addon-vitest": "catalog:",

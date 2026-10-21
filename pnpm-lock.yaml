@@ -278,6 +278,9 @@ catalogs:
     '@shopify/react-native-skia':
       specifier: 2.6.2
       version: 2.6.2
+    '@storybook/addon-a11y':
+      specifier: 10.6.1
+      version: 10.6.1
     '@storybook/addon-docs':
       specifier: 10.6.1
       version: 10.6.1
@@ -858,6 +861,9 @@ importers:
       '@repo/typescript':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@storybook/addon-a11y':
+        specifier: 'catalog:'
+        version: 10.6.1(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))
@@ -4833,6 +4839,11 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
+  '@storybook/addon-a11y@10.6.1':
+    resolution: {integrity: sha512-73wx4xyOMBbFIF4DnlfHy5o/c5sWjawn/tb+zq/GAKXkYCuBziE5aa3WDzRDhdxN259p5kTDyJcRi1SlUEUexg==}
+    peerDependencies:
+      storybook: ^10.6.1
+
   '@storybook/addon-docs@10.6.1':
     resolution: {integrity: sha512-31PXR+MCWfI5YHKKah6tWnbV1FJWA9qbTHxtvpszPLd8FBekXtPOnmyYOpFF9CfciBF9bkeJFdFanJvUCjWbjA==}
     peerDependencies:
@@ -5758,6 +5769,10 @@ packages:
   auto-bind@5.0.1:
     resolution: {integrity: sha512-ooviqdwwgfIfNmDwo94wlshcdzfO64XV0Cg6oDsDYBJfITDz1EngD2z7DkbvCWn+XIMsIqW27sEVF6qcpJrRcg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  axe-core@4.14.0:
+    resolution: {integrity: sha512-9WTZxEjsZ7b13TH8JPmbV2z8CHbl80/2hm3XPEG4JgNdQLK81IBRXmSxHfMAOkSqQeRxT/0dwNDz2GOm3zzpcQ==}
+    engines: {node: '>=4'}
 
   babel-plugin-polyfill-corejs2@0.4.17:
     resolution: {integrity: sha512-aTyf30K/rqAsNwN76zYrdtx8obu0E4KoUME29B1xj+B3WxgvWkp943vYQ+z8Mv3lw9xHXMHpvSPOBxzAkIa94w==}
@@ -12683,6 +12698,12 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
+  '@storybook/addon-a11y@10.6.1(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))':
+    dependencies:
+      '@storybook/global': 5.0.0
+      axe-core: 4.14.0
+      storybook: 10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3)
+
   '@storybook/addon-docs@10.6.1(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))':
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@19.2.3)
@@ -13606,6 +13627,8 @@ snapshots:
       js-tokens: 10.0.0
 
   auto-bind@5.0.1: {}
+
+  axe-core@4.14.0: {}
 
   babel-plugin-polyfill-corejs2@0.4.17(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1):
     dependencies:
