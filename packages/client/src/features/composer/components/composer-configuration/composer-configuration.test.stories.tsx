@@ -1,3 +1,4 @@
+import { layoutWidths } from '@repo/kit/each-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { defaultEffort } from '../../../../../mocks/composer-configuration/default-effort';
 import {
@@ -11,7 +12,6 @@ import {
   LongListsReachableInPhoneSheet as longListsPhone,
   ShortModelListFitsWide as shortModelListWide,
 } from '../../../../../mocks/composer-configuration/long-lists';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { ComposerAgentModelControl } from './composer-configuration';
 import { DefaultEffort } from './composer-configuration.stories';
 

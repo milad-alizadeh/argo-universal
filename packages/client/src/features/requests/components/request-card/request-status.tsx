@@ -1,8 +1,8 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import type { RequestState } from './request-card';
 
 type AnsweredStatusProps = { reason: string; muted?: boolean };

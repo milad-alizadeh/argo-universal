@@ -1,11 +1,11 @@
 import { isPromptImage, maxBlobUploadBytes } from '@repo/contracts';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { fileTypeIcon } from '@repo/kit/symbols/file-type-icon';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { Image, Platform, View } from 'react-native';
-import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
-import { cn } from '#lib/generic/utils';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 
 export interface ComposerAttachment {
   id: string;

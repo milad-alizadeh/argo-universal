@@ -1,6 +1,6 @@
+import { layoutWidths } from '@repo/kit/each-layout';
 import { expect, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '#lib/generic/each-layout';
 import {
   allPagesNavigate,
   searchNarrowsThePages,

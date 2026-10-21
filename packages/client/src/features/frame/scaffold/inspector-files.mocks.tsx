@@ -1,8 +1,8 @@
+import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { DiffView } from '#features/feed';
 import { recordedFile } from '../../../../mocks/feed-edit-mock';
-import { withOccurrenceKeys } from '../../../lib/generic/occurrence-keys';
 
 function recordedFiles(): ReturnType<typeof recordedFile>[] {
   return [

@@ -1,8 +1,8 @@
+import { InspectorControlsContext } from '@repo/kit/primitives/scaffolds/inspector';
+import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import type { SizeClass } from '#lib/generic/use-size-class/size-class';
-import { InspectorControlsContext } from '#primitives/scaffolds/inspector';
 import {
   FramePane,
   type FramePaneProps,

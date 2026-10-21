@@ -1,3 +1,4 @@
+import { IconSlot } from '@repo/kit/primitives/content/icon';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import Animated, {
@@ -10,7 +11,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { IconSlot } from '#primitives/content/icon';
 
 const stepMilliseconds = 150;
 

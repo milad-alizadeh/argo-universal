@@ -1,12 +1,12 @@
 import type { PermissionOption } from '@repo/contracts';
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
-import { useContentWide } from '#lib/product/content-layout';
 import {
   SplitButton,
   type SplitButtonOption,
   type SplitButtonProps,
-} from '#primitives/actions/split-button';
+} from '@repo/kit/primitives/actions/split-button';
+import type { ReactNode } from 'react';
+import { View } from 'react-native';
+import { useContentWide } from '#lib/product/content-layout';
 import { RequestAction } from '../request-card/request-card';
 import type { PermissionChoices } from './permission-choices';
 

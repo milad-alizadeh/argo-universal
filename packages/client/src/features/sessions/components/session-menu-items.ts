@@ -1,5 +1,5 @@
 import type { SessionStatus } from '@repo/contracts';
-import type { IconName } from '#lib/generic/symbols/icon-names';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 
 // What a Session's menus offer, from its row's right-click or long press, or its page's header.
 export interface SessionMenu {

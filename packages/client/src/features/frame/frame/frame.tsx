@@ -1,11 +1,11 @@
+import type { InspectorHost } from '@repo/kit/primitives/scaffolds/inspector';
+import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import type { SizeClass } from '#lib/generic/use-size-class/size-class';
 import {
   WindowBandHostContext,
   type WindowBandHost,
 } from '#lib/product/window-band';
-import type { InspectorHost } from '#primitives/scaffolds/inspector';
 import {
   isCoreSection,
   type Section,

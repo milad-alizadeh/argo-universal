@@ -1,10 +1,10 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
-import { Button } from '#primitives/actions/button';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   SessionDetailView,
   type SessionDetailViewProps,

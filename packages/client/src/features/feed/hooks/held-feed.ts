@@ -1,7 +1,7 @@
 import type { FeedSyncPoint, SessionSnapshot } from '@repo/contracts';
+import { createHeldCache, type HeldCache } from '@repo/kit/held-cache';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
-import { createHeldCache, type HeldCache } from '#lib/generic/held-cache';
 import { emptyFeed, type FeedState, syncPointOf } from '../view/feed-state';
 
 interface HeldFeed {

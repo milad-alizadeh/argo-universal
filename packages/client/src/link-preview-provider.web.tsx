@@ -1,14 +1,14 @@
 import type { LinkPreviewData } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
+import {
+  LinkPreviewContext,
+  type LinkPreviewSource,
+} from '@repo/kit/primitives/overlays/link-preview';
+import { LinkPreviewCard } from '@repo/kit/primitives/overlays/link-preview';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { TRPCClient } from '@trpc/client';
 import { useMemo, type ReactNode } from 'react';
 import { useBlobUrl, useTRPCClient } from '#features/connection';
-import {
-  LinkPreviewContext,
-  type LinkPreviewSource,
-} from '#primitives/overlays/link-preview';
-import { LinkPreviewCard } from '#primitives/overlays/link-preview';
 import type { BlobUrl } from './features/connection/api/trpc/blob-url';
 import { linkPreviewData } from './lib/product/link-preview-data';
 

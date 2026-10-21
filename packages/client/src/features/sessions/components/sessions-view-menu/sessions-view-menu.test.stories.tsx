@@ -1,6 +1,6 @@
+import { eachLayout } from '@repo/kit/each-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
-import { eachLayout } from '../../../../lib/generic/each-layout';
 import type { SessionsView } from '../../stores/sessions-view';
 import { SessionsViewMenu } from './sessions-view-menu';
 

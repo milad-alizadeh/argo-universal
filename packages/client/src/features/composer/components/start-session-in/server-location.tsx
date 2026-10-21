@@ -1,10 +1,10 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { useServerPaired } from '#lib/product/server-place';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 
 interface ServerLocationProps {
   name: string;

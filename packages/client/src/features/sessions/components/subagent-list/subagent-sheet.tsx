@@ -1,10 +1,10 @@
-import type * as React from 'react';
-import { useLayoutEffect, useMemo, useRef } from 'react';
 import {
   Sheet,
   useSheet,
   type SheetDestination,
-} from '#primitives/overlays/sheet';
+} from '@repo/kit/primitives/overlays/sheet';
+import type * as React from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import {
   SubagentFeed,
   type SubagentFeedProps,

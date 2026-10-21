@@ -2,7 +2,7 @@ import {
   type CubicBezier,
   easingCurve,
   motionDuration,
-} from '#lib/generic/motion';
+} from '@repo/kit/motion';
 
 // How long a Frame motion runs and the curve it eases along.
 export interface FrameTiming {

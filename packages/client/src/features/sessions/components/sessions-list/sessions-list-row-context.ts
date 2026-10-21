@@ -1,6 +1,6 @@
 import type { AgentServer } from '@repo/contracts';
+import { useClock } from '@repo/kit/use-clock';
 import { useMemo } from 'react';
-import { useClock } from '#lib/generic/use-clock';
 import type { SessionsLayout } from '../../stores/sessions-view';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { sessionAge } from './session-age';

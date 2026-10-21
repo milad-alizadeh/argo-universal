@@ -1,11 +1,11 @@
+import { Button } from '@repo/kit/primitives/actions/button';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { type StepMark } from '#features/setup';
-import { cn } from '#lib/generic/utils';
-import { Button } from '#primitives/actions/button';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 
 const markClasses: Record<StepMark, string> = {
   done: 'bg-success',

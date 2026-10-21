@@ -1,5 +1,5 @@
 import type { Subagent } from '@repo/contracts';
-import { formatElapsed } from '#lib/generic/format-elapsed';
+import { formatElapsed } from '@repo/kit/format-elapsed';
 import {
   subagentElapsedMs,
   subagentStateLabel,

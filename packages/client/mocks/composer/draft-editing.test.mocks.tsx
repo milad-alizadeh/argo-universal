@@ -1,8 +1,8 @@
+import { shownText } from '@repo/kit/mocks/shown-text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { fn, expect, waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerImages } from '../composer-mock';
-import { shownText } from '../shown-text';
 import {
   type Story,
   SendingComposer,

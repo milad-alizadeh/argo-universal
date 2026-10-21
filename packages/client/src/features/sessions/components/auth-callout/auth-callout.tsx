@@ -1,8 +1,8 @@
+import { SplitButton } from '@repo/kit/primitives/actions/split-button';
+import { Callout, CalloutButton } from '@repo/kit/primitives/status/callout';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { useState } from 'react';
-import { SplitButton } from '#primitives/actions/split-button';
-import { Callout, CalloutButton } from '#primitives/status/callout';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type {
   AuthCalloutMethod,
   AuthCalloutProps,

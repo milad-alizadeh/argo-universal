@@ -71,7 +71,7 @@ ruleTester.run('static-imports', staticImports, {
     {
       code: "await import('./canvas-renderer');",
       filename:
-        '/repo/packages/client/src/lib/generic/primitives/visual/canvas/canvas-loader.web.tsx',
+        '/repo/packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx',
     },
   ],
   invalid: [

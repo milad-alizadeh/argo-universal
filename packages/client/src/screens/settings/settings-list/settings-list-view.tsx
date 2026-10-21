@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react';
-import type * as React from 'react';
 import {
   SettingsLayout,
   type SettingsLayoutProps,
   type SettingsLayoutSections,
-} from '#primitives/scaffolds/settings-layout';
-import { EmptyState } from '#primitives/status/empty-state';
+} from '@repo/kit/primitives/scaffolds/settings-layout';
+import { EmptyState } from '@repo/kit/primitives/status/empty-state';
+import type { ReactNode } from 'react';
+import type * as React from 'react';
 import {
   matchesSearch,
   settingsGroups,

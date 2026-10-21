@@ -1,5 +1,5 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import { toolCallGroupMock } from '../tool-call.mocks';
 import { ToolCallGroup, type ToolCallGroupProps } from './tool-call-group';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';

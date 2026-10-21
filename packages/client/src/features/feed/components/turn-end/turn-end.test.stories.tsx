@@ -1,8 +1,8 @@
 import type { TurnEnd } from '@repo/contracts';
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { feedContentArgs } from '../feed-content/feed-content.mocks';
 import { Feed } from '../feed/feed';
 import { endings, turnEndItems } from './turn-end.mocks';

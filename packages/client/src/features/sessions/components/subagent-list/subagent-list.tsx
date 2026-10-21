@@ -1,6 +1,6 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import { useClock } from '@repo/kit/use-clock';
 import type { JSX } from 'react';
-import { useClock } from '#lib/generic/use-clock';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { PhoneSubagentList } from './subagent-list-phone';
 import type { SubagentListProps } from './subagent-list-types';
 import { WideSubagentList } from './subagent-list-wide';

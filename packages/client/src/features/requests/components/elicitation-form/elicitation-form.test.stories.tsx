@@ -1,3 +1,5 @@
+import { wideBreakpoint } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, fn } from 'storybook/test';
 import {
@@ -6,8 +8,6 @@ import {
   recordedValues,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-form-story.test.mocks';
-import { wideBreakpoint } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   elicitationProps,
   elicitationMock,

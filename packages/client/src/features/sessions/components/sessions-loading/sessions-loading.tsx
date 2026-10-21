@@ -1,7 +1,7 @@
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { List } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 import type { SessionsLayout } from '../../stores/sessions-view';
 
 // Placeholder text never shows: each skeleton bar takes the width its line would.

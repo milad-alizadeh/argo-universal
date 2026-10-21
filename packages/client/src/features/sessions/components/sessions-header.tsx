@@ -1,8 +1,8 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { SearchField } from '@repo/kit/primitives/inputs/search-field';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { ListTitle } from '#lib/product/list-title';
-import { IconButton } from '#primitives/actions/icon-button';
-import { SearchField } from '#primitives/inputs/search-field';
 import type { SessionsViewState } from '../stores/sessions-view-state';
 import { SessionsViewMenu } from './sessions-view-menu/sessions-view-menu';
 

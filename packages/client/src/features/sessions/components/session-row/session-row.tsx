@@ -1,7 +1,10 @@
+import {
+  ListItem,
+  type ListItemProps,
+} from '@repo/kit/primitives/lists/list-item';
+import type { ContextMenuTriggerProps } from '@repo/kit/primitives/overlays/menu';
 import { memo } from 'react';
 import type * as React from 'react';
-import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
-import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import { CompactSessionRow } from './session-row-compact';
 import { SessionMark } from './session-row-mark';
 import { SessionRowMenu } from './session-row-menu';

@@ -1,6 +1,6 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import { ComposerStatusControls } from './composer-status';
 
 const meta = {

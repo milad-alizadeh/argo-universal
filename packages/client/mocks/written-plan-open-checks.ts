@@ -1,8 +1,8 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { shownText } from '@repo/kit/mocks/shown-text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { layoutWidths } from '../src/lib/generic/each-layout';
-import { settleViewport } from '../src/lib/generic/settle-viewport';
-import { shownText } from './shown-text';
 import {
   writtenPlanRegionName,
   type WrittenPlanPlayContext,

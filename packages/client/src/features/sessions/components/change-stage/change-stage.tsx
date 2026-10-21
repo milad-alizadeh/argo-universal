@@ -1,7 +1,7 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { ToneCaption, ToneMark } from '@repo/kit/tone-mark';
 import type { ReactElement } from 'react';
 import { View, type ViewProps } from 'react-native';
-import { Text } from '#primitives/content/text';
-import { ToneCaption, ToneMark } from '../../../../lib/generic/tone-mark';
 import {
   changeDescription,
   resolveChangeStage,

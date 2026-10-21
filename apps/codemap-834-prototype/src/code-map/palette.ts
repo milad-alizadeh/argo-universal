@@ -1,4 +1,4 @@
-import { useNativeTheme, type NativeTheme } from '@repo/client/native-theme';
+import { useNativeTheme, type NativeTheme } from '@repo/kit/native-theme';
 import { useMemo } from 'react';
 import type { Palette } from './model';
 

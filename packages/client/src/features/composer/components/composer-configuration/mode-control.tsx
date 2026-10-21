@@ -1,9 +1,9 @@
 import type { SessionConfigSelectOption } from '@repo/contracts';
+import { MenuTrigger } from '@repo/kit/primitives/overlays/menu';
+import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { MenuTrigger } from '#primitives/overlays/menu';
-import { Sheet } from '#primitives/overlays/sheet';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ChipTrigger } from '../composer-status/chip-trigger';

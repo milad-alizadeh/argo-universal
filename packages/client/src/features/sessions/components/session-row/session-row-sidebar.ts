@@ -1,7 +1,7 @@
 import type { SessionInfo } from '@repo/contracts';
+import type { Tone } from '@repo/kit/primitives/content/text';
+import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
 import { Platform } from 'react-native';
-import type { Tone } from '#primitives/content/text';
-import type { ListItemProps } from '#primitives/lists/list-item';
 
 // Desktop and web draw Session rows as Paper's sidebar rows ("SessionsList"); phones keep their cards and grouped lists.
 export const sidebarRows = Platform.OS === 'web';

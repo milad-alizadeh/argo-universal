@@ -1,14 +1,14 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import {
+  type IconRoleValue,
+  useIconBox,
+  useIconPixels,
+} from '@repo/kit/symbols/icon-role';
 import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { Image, Platform, View } from 'react-native';
 import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import { Icon } from '#primitives/content/icon';
-import {
-  type IconRoleValue,
-  useIconBox,
-  useIconPixels,
-} from '../../../../lib/generic/symbols/icon-role';
 import { cssSafeUri } from './css-safe-uri';
 
 interface RegistryIconProps {

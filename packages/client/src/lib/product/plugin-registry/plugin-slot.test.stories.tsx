@@ -3,9 +3,9 @@ import {
   slotCounterRoot,
   slotCounterWaveEvent,
 } from '@repo/contracts/plugins/wire-fixtures';
+import { List } from '@repo/kit/primitives/lists/list';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { List } from '#primitives/lists/list';
 import { PluginSlot, type PluginSlotContribution } from './plugin-slot';
 
 // A second Plugin's contribution, for the order of two.

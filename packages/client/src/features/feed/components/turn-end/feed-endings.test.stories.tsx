@@ -1,9 +1,9 @@
 import type { AgentThought, Notice, TurnEnd } from '@repo/contracts';
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { recordedFeedMock } from '../../../../lib/product/feed-message.mocks';
 import { toFeedView } from '../../view/to-feed-view';
 import { feedContentArgs } from '../feed-content/feed-content.mocks';

@@ -1,8 +1,8 @@
+import type { EmptyStateProps } from '@repo/kit/primitives/status/empty-state';
 import type { ReactNode } from 'react';
 import { createContext, use } from 'react';
 import type { FirstPage } from '#lib/product/navigation/navigation';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
-import type { EmptyStateProps } from '#primitives/status/empty-state';
 import type { CoreSection } from '../../../lib/product/navigation/sections';
 
 // What a section hands the Frame: its list, and what goes with it.

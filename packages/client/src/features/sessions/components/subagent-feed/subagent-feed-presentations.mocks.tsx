@@ -1,6 +1,6 @@
+import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { InspectorPane } from '#primitives/scaffolds/inspector';
 import { sessionPanelLabels } from '../session-panel-triggers';
 import { subagentStates } from '../subagent-list/subagent-list.mocks';
 import { SubagentSheet } from '../subagent-list/subagent-sheet';

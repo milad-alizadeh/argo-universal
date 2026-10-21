@@ -1,6 +1,6 @@
+import { eachLayout } from '@repo/kit/each-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { eachLayout } from '../../../../lib/generic/each-layout';
 import { ConnectionBanner } from './connection-banner';
 
 const serverName = "Milad's Mac mini";

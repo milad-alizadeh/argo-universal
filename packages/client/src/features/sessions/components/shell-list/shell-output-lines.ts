@@ -1,4 +1,4 @@
-import type { Tone } from '#primitives/content/text';
+import type { Tone } from '@repo/kit/primitives/content/text';
 
 // A run of a Shell's output in one colour; untoned text takes the output's own colour.
 export interface ShellSpan {

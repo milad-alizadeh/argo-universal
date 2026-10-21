@@ -1,8 +1,8 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Text } from '@repo/kit/primitives/content/text';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Text } from '#primitives/content/text';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import {
   changesTotals,
   filesSummary,

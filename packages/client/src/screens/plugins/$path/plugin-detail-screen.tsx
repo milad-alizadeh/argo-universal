@@ -1,7 +1,7 @@
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { Redirect } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useErrorToast } from '#primitives/overlays/toast';
 import {
   pluginPath,
   usePluginAt,

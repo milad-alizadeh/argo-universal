@@ -5,8 +5,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "../universal-app/src/uniwind-types.d.ts",
-    "../../packages/client/src/lib/generic/view-inert.d.ts",
+    "../../packages/kit/src/view-inert.d.ts",
     // Prism's DOM-free core, which the package itself leaves untyped.
-    "../../packages/client/src/lib/generic/primitives/content/code/code-highlight/prism-core.d.ts"
+    "../../packages/kit/src/primitives/content/code/code-highlight/prism-core.d.ts"
   ]
 }

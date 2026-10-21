@@ -1,7 +1,7 @@
 import type { Shell } from '@repo/contracts';
-import { formatElapsed } from '#lib/generic/format-elapsed';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import type { Tone } from '#primitives/content/text';
+import { formatElapsed } from '@repo/kit/format-elapsed';
+import type { Tone } from '@repo/kit/primitives/content/text';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type { ShellEntry } from './shell-list-types';
 
 // How a Shell stands: a running one draws a dot, an ended one the icon for how it ended.

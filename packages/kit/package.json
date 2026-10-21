@@ -1,0 +1,118 @@
+{
+  "name": "@repo/kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./custom-symbol-paths.json": "./src/symbols/custom-symbol-paths.json",
+    "./tabler-symbol-paths.json": "./src/symbols/tabler-symbol-paths.json",
+    "./mocks/*": "./mocks/*.ts",
+    "./native-theme": "./src/native-theme.ts",
+    "./text": "./src/primitives/content/text/index.ts",
+    "./use-size-class": "./src/use-size-class/index.ts",
+    "./scroll-fade/scroll-fade": "./src/scroll-fade/scroll-fade.tsx",
+    "./scroll-fade/scroll-fade-gradient": "./src/scroll-fade/scroll-fade-gradient.tsx",
+    "./size-class/size-class": "./src/size-class/size-class.tsx",
+    "./symbols/assets/file-diff.xml": {
+      "types": "./src/symbols/assets/file-diff.xml.d.ts",
+      "default": "./src/symbols/assets/file-diff.xml"
+    },
+    "./symbols/assets/*": "./src/symbols/assets/*",
+    "./symbols/symbol-images": "./src/symbols/symbol-images.tsx",
+    "./tinted-avatar": "./src/tinted-avatar.tsx",
+    "./tone-mark": "./src/tone-mark.tsx",
+    "./variations": "./src/variations.tsx",
+    "./primitives/*": {
+      "types": "./src/primitives/*/index.ts",
+      "default": "./src/primitives/*/index.ts"
+    },
+    "./*": {
+      "types": "./src/*.ts",
+      "default": "./src/*.ts"
+    }
+  },
+  "imports": {
+    "#primitives/*": {
+      "types": "./src/primitives/*/index.ts",
+      "default": "./src/primitives/*/index.ts"
+    },
+    "#kit/*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "generate:plugin-symbol-names": "node tools/plugin-symbol-names/generate.mts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@expo/material-symbols": "catalog:",
+    "@expo/ui": "catalog:",
+    "@gorhom/portal": "catalog:",
+    "@legendapp/list": "catalog:",
+    "@lexical/code": "catalog:",
+    "@lexical/link": "catalog:",
+    "@lexical/list": "catalog:",
+    "@lexical/markdown": "catalog:",
+    "@lexical/react": "catalog:",
+    "@lexical/rich-text": "catalog:",
+    "@lexical/selection": "catalog:",
+    "@radix-ui/react-collapsible": "catalog:",
+    "@radix-ui/react-context-menu": "catalog:",
+    "@radix-ui/react-dialog": "catalog:",
+    "@radix-ui/react-dismissable-layer": "catalog:",
+    "@radix-ui/react-dropdown-menu": "catalog:",
+    "@radix-ui/react-popover": "catalog:",
+    "@radix-ui/react-select": "catalog:",
+    "@repo/contracts": "workspace:*",
+    "@shopify/react-native-skia": "catalog:",
+    "@tanstack/react-form": "catalog:",
+    "burnt": "catalog:",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "expo": "catalog:",
+    "expo-audio": "catalog:",
+    "expo-clipboard": "catalog:",
+    "expo-glass-effect": "catalog:",
+    "expo-haptics": "catalog:",
+    "expo-image": "catalog:",
+    "expo-router": "catalog:",
+    "expo-symbols": "catalog:",
+    "expo-video": "catalog:",
+    "lexical": "catalog:",
+    "marked": "catalog:",
+    "prismjs": "catalog:",
+    "react-native-gesture-handler": "catalog:",
+    "react-native-keyboard-controller": "catalog:",
+    "react-native-reanimated": "catalog:",
+    "react-native-safe-area-context": "catalog:",
+    "react-native-svg": "catalog:",
+    "sonner": "catalog:",
+    "tailwind-merge": "catalog:",
+    "uniwind": "catalog:",
+    "vaul": "catalog:",
+    "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-native": "catalog:"
+  },
+  "devDependencies": {
+    "@lexical/headless": "catalog:",
+    "@lexical/html": "catalog:",
+    "@repo/mocks": "workspace:*",
+    "@repo/typescript": "workspace:*",
+    "@repo/vitest": "workspace:*",
+    "@storybook/react-native-web-vite": "catalog:",
+    "@types/prismjs": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-native": "catalog:",
+    "react-native-web": "catalog:",
+    "sf-symbols-typescript": "catalog:",
+    "storybook": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

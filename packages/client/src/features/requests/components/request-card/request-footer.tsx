@@ -1,6 +1,6 @@
+import { cn } from '@repo/kit/utils';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import type { RequestCardProps, RequestState } from './request-card';
 import { RequestStatus } from './request-status';

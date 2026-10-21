@@ -1,10 +1,10 @@
 import type { ContentBlock } from '@repo/contracts';
+import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
+import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
+import { resourceIcon, resourceName } from '@repo/kit/primitives/content/code';
+import { Markdown } from '@repo/kit/primitives/content/markdown';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
-import { resourceIcon, resourceName } from '#primitives/content/code';
-import { Markdown } from '#primitives/content/markdown';
 import { FeedDisclosure } from '../feed-disclosure';
 import { FeedImage } from '../feed-image';
 import { UnsupportedFeedContent } from '../feed-notice/feed-notice';

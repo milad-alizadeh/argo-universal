@@ -1,6 +1,6 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import { sessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
 import {
   exampleProjectName,

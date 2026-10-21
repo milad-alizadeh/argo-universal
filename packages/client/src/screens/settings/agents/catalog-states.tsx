@@ -1,8 +1,8 @@
+import { Button } from '@repo/kit/primitives/actions/button';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { installedError, registryError, type RowsLoad } from '#features/agents';
-import { Button } from '#primitives/actions/button';
-import { Text } from '#primitives/content/text';
 
 type StateProps = {
   // A load still going draws the loading cards instead, so only a failure is named here.

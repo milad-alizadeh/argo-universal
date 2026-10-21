@@ -1,3 +1,8 @@
+import {
+  type LoadingRow,
+  loadingRows,
+} from '@repo/kit/primitives/lists/list-item';
+import { RowDrawingContext } from '@repo/kit/row-drawing-context';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -6,12 +11,10 @@ import {
   agentsEmptyLabel,
   type RowsLoad,
 } from '#features/agents';
-import { RowDrawingContext } from '#lib/generic/row-drawing-context';
 import {
   FieldList,
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
-import { type LoadingRow, loadingRows } from '#primitives/lists/list-item';
 import type { AgentListViewProps } from './agent-list-view';
 import {
   AgentsFilterPills,

@@ -1,11 +1,11 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { newSessionProjects, serverInfo } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ServerPlaceProvider } from '../../../../lib/product/server-place';
 import { StartSessionIn, type StartSessionInProps } from './start-session-in';
 

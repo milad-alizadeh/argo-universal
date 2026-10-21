@@ -1,8 +1,8 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
 import { themeChoices } from '#features/settings';
-import { Icon } from '#primitives/content/icon';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 import type { SettingsListViewProps } from './settings-list-props';
 
 type ThemeProps = Pick<SettingsListViewProps, 'theme' | 'onThemeChange'>;

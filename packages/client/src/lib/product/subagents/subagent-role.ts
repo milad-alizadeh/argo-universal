@@ -1,4 +1,4 @@
-import type { IconName } from '../../generic/symbols/icon-names';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 
 export interface SubagentRoleMark {
   icon: IconName;

@@ -1,3 +1,4 @@
+import { bezierEasing } from '@repo/kit/bezier-easing';
 import { useLayoutEffect, useRef } from 'react';
 import type { ViewStyle } from 'react-native';
 import {
@@ -7,7 +8,6 @@ import {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { bezierEasing } from '#lib/generic/bezier-easing';
 import type { FrameMotion } from '../utils/frame-timing';
 
 type OffsetMotion = FrameMotion & { offset: number; visible: boolean };

@@ -1,7 +1,7 @@
 import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { ReplaceableSlot } from '#lib/product/plugin-registry/replaceable-slot';
 import {
   ComposerPlan,

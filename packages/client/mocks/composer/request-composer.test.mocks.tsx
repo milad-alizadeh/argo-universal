@@ -1,3 +1,7 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { canPointAt } from '@repo/kit/mocks/point-hit';
+import { shownText } from '@repo/kit/mocks/shown-text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { newSessionCatalogs, recordedRequestMocks } from '@repo/mocks/app';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
@@ -6,11 +10,7 @@ import {
   Composer,
   type ComposerProps,
 } from '../../src/features/composer/components/composer/composer';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps } from '../composer-mock';
-import { canPointAt } from '../point-hit';
-import { shownText } from '../shown-text';
 
 type Story = StoryObj<typeof Composer>;
 

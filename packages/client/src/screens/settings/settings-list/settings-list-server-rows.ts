@@ -1,4 +1,4 @@
-import type { RowBadge } from '#primitives/lists/list-item';
+import type { RowBadge } from '@repo/kit/primitives/lists/list-item';
 import {
   connectionValue,
   countValue,

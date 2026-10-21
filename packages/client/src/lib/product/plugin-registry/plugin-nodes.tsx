@@ -9,9 +9,9 @@ import {
   childNodeKey,
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
+import { Text } from '@repo/kit/primitives/content/text';
 import { Fragment, createElement, type ElementType } from 'react';
 import { z } from 'zod';
-import { Text } from '#primitives/content/text';
 import { pluginEntries } from './plugin-entries';
 import type * as Rendering from './plugin-rendering';
 

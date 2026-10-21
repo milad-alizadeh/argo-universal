@@ -1,7 +1,7 @@
+import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
+import { List } from '@repo/kit/primitives/lists/list';
 import type { ReactNode, JSX } from 'react';
 import { Platform } from 'react-native';
-import { LiquidGlass } from '#primitives/content/liquid-glass';
-import { List } from '#primitives/lists/list';
 
 // A phone opens the status controls in a sheet whose grouped List scrolls itself, as Settings does.
 export const phoneSheet = Platform.OS !== 'web';

@@ -1,3 +1,8 @@
+import { MediaUrlContext } from '@repo/kit/primitives/content/media-url';
+import { PortalProvider } from '@repo/kit/primitives/overlays/portal';
+import { dismissToasts, Toaster } from '@repo/kit/primitives/overlays/toast';
+import { PageNavigationEnabled } from '@repo/kit/primitives/scaffolds/page';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { PropsWithChildren } from 'react';
 import { type ComponentType, useLayoutEffect } from 'react';
@@ -6,12 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Uniwind } from 'uniwind';
-import { MediaUrlContext } from '#primitives/content/media-url';
-import { PortalProvider } from '#primitives/overlays/portal';
-import { dismissToasts, Toaster } from '#primitives/overlays/toast';
-import { PageNavigationEnabled } from '#primitives/scaffolds/page';
 import { BlobUrlContext } from './features/connection/api/trpc/blob-url';
-import { cn } from './lib/generic/utils';
 import { recordedImageUrl } from './lib/product/feed-message.mocks';
 import { storyMediaUrl } from './lib/product/media-url.mocks';
 

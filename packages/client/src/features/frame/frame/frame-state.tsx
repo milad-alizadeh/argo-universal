@@ -1,18 +1,18 @@
-import type { ReactNode } from 'react';
-import { useState } from 'react';
-import { useClaimed } from '#lib/generic/claim-store';
-import {
-  createWindowBandHost,
-  type WindowBandHost,
-  type WindowBandContent,
-} from '#lib/product/window-band';
+import { useClaimed } from '@repo/kit/claim-store';
 import {
   createInspectorHost,
   type InspectorHost,
   InspectorPane,
   type InspectorProps,
   useHostedInspector,
-} from '#primitives/scaffolds/inspector';
+} from '@repo/kit/primitives/scaffolds/inspector';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
+import {
+  createWindowBandHost,
+  type WindowBandHost,
+  type WindowBandContent,
+} from '#lib/product/window-band';
 import type { InspectorState } from '../scaffold/scaffold';
 
 interface FrameScaffoldState {

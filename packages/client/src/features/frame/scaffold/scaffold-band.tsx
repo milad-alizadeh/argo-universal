@@ -1,7 +1,7 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { useSymbolImageRenderer } from '@repo/kit/symbols/symbol-images';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { IconButton } from '#primitives/actions/icon-button';
-import { useSymbolImageRenderer } from '../../../lib/generic/symbols/symbol-images';
 import { bandToggleAppearance } from './band-control-appearance';
 import { BandTrailing } from './scaffold-band-controls';
 import { BandTitle } from './scaffold-band-title';

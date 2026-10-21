@@ -1,12 +1,12 @@
 import type { BlobRef, ImageContent } from '@repo/contracts';
-import type * as React from 'react';
-import { createContext, useContext, useState } from 'react';
-import { Image, Pressable, useWindowDimensions } from 'react-native';
 import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from '#primitives/overlays/dialog';
+} from '@repo/kit/primitives/overlays/dialog';
+import type * as React from 'react';
+import { createContext, useContext, useState } from 'react';
+import { Image, Pressable, useWindowDimensions } from 'react-native';
 
 type ImageUrl = (blob: BlobRef) => string;
 

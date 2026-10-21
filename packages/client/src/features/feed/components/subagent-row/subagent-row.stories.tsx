@@ -1,3 +1,4 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { View } from 'react-native';
@@ -6,7 +7,6 @@ import {
   subagentItemOf,
   subagentItems,
 } from '../../../../../mocks/subagent-rows.mocks';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import type { FeedSubagent } from '../../view/feed-view';
 import { SubagentRow } from './subagent-row';
 

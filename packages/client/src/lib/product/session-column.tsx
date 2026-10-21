@@ -1,7 +1,7 @@
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { Ref } from 'react';
 import { View, type ViewProps } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { filledClass } from './session-fill';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.

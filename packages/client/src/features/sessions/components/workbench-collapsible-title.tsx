@@ -1,10 +1,10 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { DisclosureChevron } from '@repo/kit/primitives/status/disclosure-chevron';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View, type PressableProps } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
-import type { IconName } from '../../../lib/generic/symbols/icon-names';
 import { useWorkbenchTitlePadding } from './use-workbench-title-padding';
 
 export interface WorkbenchCollapsibleTitleProps {

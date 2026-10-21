@@ -1,10 +1,10 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 
 export type ElicitationHeaderProps = {
   title: string;

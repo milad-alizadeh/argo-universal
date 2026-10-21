@@ -4,8 +4,9 @@
 @import "@repo/uniwind/theme.css";
 @import "@repo/uniwind/react-native-web.css";
 
-/* Screens and primitives live in @repo/client (ADR 0009). */
+/* Screens live in @repo/client and the kit in @repo/kit (ADR 0009). */
 @source "../../packages/client/src";
+@source "../../packages/kit/src";
 
 @source "../../packages/client/mocks";
 

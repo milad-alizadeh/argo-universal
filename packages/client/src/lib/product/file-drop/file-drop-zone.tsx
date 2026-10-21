@@ -1,10 +1,10 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { useState } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 
 const outlineWidth = 2;
 

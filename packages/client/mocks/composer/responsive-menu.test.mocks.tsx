@@ -1,5 +1,5 @@
+import { wideBreakpoint } from '@repo/kit/each-layout';
 import { expect, waitFor, within } from 'storybook/test';
-import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import type { PlayContext } from './composer-story-context.test.mocks';
 import {
   chooseAgentLabel,

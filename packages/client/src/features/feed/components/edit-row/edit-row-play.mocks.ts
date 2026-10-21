@@ -1,7 +1,7 @@
 import type { ToolCallUpdate } from '@repo/contracts';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import type { EditRow } from './edit-row';
 
 type Story = StoryObj<typeof EditRow>;

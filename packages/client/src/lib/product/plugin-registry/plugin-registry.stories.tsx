@@ -1,13 +1,13 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { slottedRow } from '@repo/contracts/plugins/wire-fixtures';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import { Stack } from '@repo/kit/primitives/layout/stack';
 import canvasFixture from '@repo/mocks/plugins/canvas.json' with { type: 'json' };
 import controls from '@repo/mocks/plugins/controls.json' with { type: 'json' };
 import overlays from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { Stack } from '#primitives/layout/stack';
 import { PluginTree } from './plugin-registry';
 
 const meta = {

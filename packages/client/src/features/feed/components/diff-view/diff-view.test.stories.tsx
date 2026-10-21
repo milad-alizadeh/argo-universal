@@ -1,3 +1,5 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
@@ -5,8 +7,6 @@ import { View } from 'react-native';
 import { expect, fn, spyOn, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { recordedFile } from '../../../../../mocks/feed-edit-mock';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { DiffView, type DiffViewProps } from './diff-view';
 
 const lastAddedLine = 'new value 60';

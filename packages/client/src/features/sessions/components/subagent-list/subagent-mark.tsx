@@ -1,6 +1,6 @@
 import type { Subagent } from '@repo/contracts';
+import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import type { JSX } from 'react';
-import { TintedAvatar } from '../../../../lib/generic/tinted-avatar';
 import { subagentRoleMark } from '../../../../lib/product/subagents/subagent-role';
 
 const statuses = {

@@ -1,12 +1,12 @@
+import { errorToast } from '@repo/kit/error-toast';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type * as React from 'react';
 import { formatServerClock, formatServerStart } from '#features/connection';
-import { errorToast } from '#lib/generic/error-toast';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
-import { useErrorToast } from '#primitives/overlays/toast';
-import { Page } from '#primitives/scaffolds/page';
-import { Spinner } from '#primitives/status/spinner';
 
 export type ServerDetails =
   | { status: 'loading' }

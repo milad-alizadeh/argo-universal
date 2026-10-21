@@ -1,10 +1,10 @@
+import { InspectorHostContext } from '@repo/kit/primitives/scaffolds/inspector';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { JSX, PropsWithChildren } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { ListTitle } from '#lib/product/list-title';
 import { WindowBandHostContext } from '#lib/product/window-band';
-import { InspectorHostContext } from '#primitives/scaffolds/inspector';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { coreNavigationSections } from '../../../lib/product/navigation/sections';
 import { FrameRail } from '../components/frame-rail/frame-rail';
 import { LayoutListMock } from '../components/layout-list.mocks';

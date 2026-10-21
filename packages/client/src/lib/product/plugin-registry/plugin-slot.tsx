@@ -1,6 +1,6 @@
 import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
+import { List } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
-import { List } from '#primitives/lists/list';
 import { PluginTree, type PluginOnEvent } from './plugin-registry';
 
 export interface PluginSlotContribution {

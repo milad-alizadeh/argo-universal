@@ -1,8 +1,8 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fireEvent, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import { runningSubagent } from '../../../features/sessions/components/subagent-list/subagent-list.mocks';
 import { Stage } from './session-inspector-stage.test.mocks';
 

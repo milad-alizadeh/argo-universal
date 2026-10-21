@@ -1,3 +1,5 @@
+import { bezierEasing } from '@repo/kit/bezier-easing';
+import { Surface } from '@repo/kit/primitives/layout/surface';
 import type * as React from 'react';
 import { type ReactNode, useLayoutEffect, useRef } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
@@ -8,8 +10,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { bezierEasing } from '#lib/generic/bezier-easing';
-import { Surface } from '#primitives/layout/surface';
 import type { FrameTiming } from '../../utils/frame-timing';
 import { type PaneSpan, paneShift } from '../../utils/pane-shift';
 import { useStableContentWidth } from './stable-content-width';

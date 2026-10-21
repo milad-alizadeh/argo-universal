@@ -1,9 +1,9 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, within } from 'storybook/test';
 import { recordedEdit } from '../../../../../mocks/feed-edit-mock';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { EditRow } from './edit-row';
 import { editRow, type RecordedEdit } from './edit-row-play.mocks';
 import { EditRowPreview } from './edit-row-preview.mocks';

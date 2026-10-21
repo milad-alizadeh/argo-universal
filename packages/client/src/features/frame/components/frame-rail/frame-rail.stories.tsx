@@ -1,8 +1,8 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import {
   coreNavigationSections,
   sectionOrder,

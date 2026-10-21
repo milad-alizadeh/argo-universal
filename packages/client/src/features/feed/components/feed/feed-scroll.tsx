@@ -1,10 +1,10 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
+import { List, type ListProps } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
-import { List, type ListProps } from '#primitives/lists/list';
 import { type FeedEntry, entryKey, entryType } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import { LoadingEarlier } from './loading-earlier';

@@ -1,8 +1,8 @@
+import { Button } from '@repo/kit/primitives/actions/button';
+import type { Tone } from '@repo/kit/primitives/content/text';
+import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
 import { type GitHubStep, type StepMark } from '#features/setup';
-import { Button } from '#primitives/actions/button';
-import type { Tone } from '#primitives/content/text';
-import { Pill } from '#primitives/status/pill';
 import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep, type SetupStepProps } from './setup-step';
 

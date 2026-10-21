@@ -1,5 +1,10 @@
 import type { AgentServer, ProjectsListOutput } from '@repo/contracts';
 import type { SessionInfo } from '@repo/contracts';
+import {
+  type ErrorToast,
+  useErrorToast,
+} from '@repo/kit/primitives/overlays/toast';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -9,8 +14,6 @@ import {
   SessionsLoading,
 } from '#features/sessions';
 import { Screen } from '#lib/product/screen/screen';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { SizeClass } from '../../lib/generic/size-class/size-class';
 import { SessionsListContent } from './session-list-view-rows';
 
 export interface SessionListViewProps {

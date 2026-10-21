@@ -1,7 +1,7 @@
 import type { ProjectInfo } from '@repo/contracts';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 
 const checkoutOptions = [
   { value: 'worktree', label: 'New worktree' },

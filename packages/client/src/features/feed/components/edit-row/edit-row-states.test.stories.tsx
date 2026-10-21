@@ -1,7 +1,7 @@
+import { layoutWidths } from '@repo/kit/each-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { recordedEdit } from '../../../../../mocks/feed-edit-mock';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { EditRow } from './edit-row';
 import { editRow, type RecordedEdit } from './edit-row-play.mocks';
 import { EditRowPreview } from './edit-row-preview.mocks';

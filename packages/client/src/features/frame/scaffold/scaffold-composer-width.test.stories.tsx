@@ -1,10 +1,10 @@
+import { shownText } from '@repo/kit/mocks/shown-text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { Composer } from '#features/composer';
 import { composerProps } from '../../../../mocks/composer-mock';
-import { shownText } from '../../../../mocks/shown-text';
-import { settleViewport } from '../../../lib/generic/settle-viewport';
 import {
   pressInspectorButton,
   resizeInspectorLabel,

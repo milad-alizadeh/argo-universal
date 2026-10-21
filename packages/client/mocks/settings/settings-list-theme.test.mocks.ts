@@ -1,5 +1,5 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, within } from 'storybook/test';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import type { PlayContext, Story } from './settings-list-story.test.mocks';
 
 // The Theme group's one row, named with the theme it shows.

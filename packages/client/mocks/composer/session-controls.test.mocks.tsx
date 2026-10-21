@@ -1,7 +1,7 @@
+import { wideBreakpoint } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { fn, within, expect, waitFor } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
-import { wideBreakpoint } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
 import {

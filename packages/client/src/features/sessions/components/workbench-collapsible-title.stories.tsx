@@ -1,7 +1,7 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { Variation, Variations } from '../../../lib/generic/variations';
 import { ChangeDiffTotal } from './change-diff-total';
 import { WorkbenchCollapsibleTitle } from './workbench-collapsible-title';
 import { InteractiveWorkbenchTitle } from './workbench-collapsible-title.mocks';

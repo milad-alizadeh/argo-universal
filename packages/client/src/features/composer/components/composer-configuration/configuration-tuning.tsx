@@ -1,7 +1,7 @@
 import type { SessionConfigOption } from '@repo/contracts';
+import { Slider } from '@repo/kit/primitives/inputs/slider';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import { Slider } from '#primitives/inputs/slider';
-import { ListItem } from '#primitives/lists/list-item';
 import { ConfigurationRowIcon, optionIcon } from './configuration-row-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';

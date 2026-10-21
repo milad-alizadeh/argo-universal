@@ -1,7 +1,7 @@
+import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { cn } from '@repo/kit/utils';
 import type { JSX, ReactNode } from 'react';
-import { cn } from '#lib/generic/utils';
-import { contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
 import { StatusText } from './status-text';
 
 interface ControlTriggerProps {

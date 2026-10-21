@@ -1,8 +1,8 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { canPointAt } from '@repo/kit/mocks/point-hit';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
-import { canPointAt } from '../point-hit';
 import {
   type Story,
   type PlayContext,

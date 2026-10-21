@@ -1,8 +1,8 @@
+import { Surface } from '@repo/kit/primitives/layout/surface';
+import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Surface } from '#primitives/layout/surface';
-import { ScrollFadeView } from '../../../lib/generic/scroll-fade/scroll-fade';
 import { useFrameOffset } from '../hooks/use-frame-offset';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
 

@@ -1,6 +1,6 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import { useClock } from '@repo/kit/use-clock';
 import type { JSX } from 'react';
-import { useClock } from '#lib/generic/use-clock';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { shellsRunning } from './shell-format';
 import { PhoneShellList } from './shell-list-phone';
 import type { ShellListProps } from './shell-list-types';

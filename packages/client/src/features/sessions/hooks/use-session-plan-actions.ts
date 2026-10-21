@@ -3,11 +3,11 @@ import type {
   SessionNewInput,
   SessionSnapshot,
 } from '@repo/contracts';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation } from '@tanstack/react-query';
 import { type ClientError, useTRPC } from '#features/connection';
 import type { PermissionRequestProps } from '#features/requests';
 import { sessionHref, useNavigate } from '#lib/product/navigation/navigation';
-import { showToast } from '#primitives/overlays/toast';
 
 type PlanActions = Pick<
   PermissionRequestProps,

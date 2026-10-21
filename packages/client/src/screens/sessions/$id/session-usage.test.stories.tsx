@@ -1,10 +1,10 @@
 import type { ContextUsage } from '@repo/contracts';
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, within, waitFor } from 'storybook/test';
 import { composerStatus } from '#features/sessions';
-import { layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import { SessionDetailView } from './session-detail-view';
 import { idleSession } from './session-detail-view.mocks';
 

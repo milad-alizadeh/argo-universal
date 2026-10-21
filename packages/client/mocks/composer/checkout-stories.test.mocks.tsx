@@ -1,11 +1,8 @@
 import { type AgentServer } from '@repo/contracts';
+import { layoutWidths, wideBreakpoint } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
-import {
-  layoutWidths,
-  wideBreakpoint,
-} from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerPlan } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
 import {

@@ -1,7 +1,7 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, screen, within, waitFor } from 'storybook/test';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {

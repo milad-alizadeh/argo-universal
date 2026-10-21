@@ -1,5 +1,5 @@
+import type { MenuAction } from '@repo/kit/primitives/overlays/menu';
 import { useState } from 'react';
-import type { MenuAction } from '#primitives/overlays/menu';
 import type { PermissionAnswers } from '../permission-request/use-permission-answers';
 import type { RequestState } from '../request-card/request-card';
 import {

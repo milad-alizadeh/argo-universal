@@ -1,7 +1,7 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import { ControlledMergeButton } from './merge-pr-button.test.mocks';
 
 // Spec 0020 removed Merge from the Session header. Its public control still owns method selection and execution.

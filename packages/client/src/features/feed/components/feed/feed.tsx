@@ -3,10 +3,10 @@ import type {
   LiveHeader as LiveHeaderValue,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
 import type { FeedViewItem } from '../../view/feed-view';
 import { isDrawnFeedItem } from '../drawn-feed-item';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';

@@ -1,4 +1,6 @@
 import type { SessionInfo } from '@repo/contracts';
+import { fullTurnDegrees } from '@repo/kit/motion';
+import { useIconBox } from '@repo/kit/symbols/icon-role';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import type { ViewStyle } from 'react-native';
@@ -11,8 +13,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { AgentLogo } from '#features/agents';
-import { fullTurnDegrees } from '#lib/generic/motion';
-import { useIconBox } from '../../../../lib/generic/symbols/icon-role';
 
 const logoTurnMilliseconds = 3000;
 

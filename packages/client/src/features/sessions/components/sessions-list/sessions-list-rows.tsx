@@ -1,8 +1,8 @@
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import { memo, useCallback } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { ListItem } from '#primitives/lists/list-item';
 import {
   ProjectHeading,
   type ProjectHeadingProps,

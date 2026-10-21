@@ -1,9 +1,9 @@
 import type { SessionInfo } from '@repo/contracts';
+import { List } from '@repo/kit/primitives/lists/list';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import { agentsList } from '@repo/mocks/app';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { List } from '#primitives/lists/list';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { SessionsLayout } from '../../stores/sessions-view';
 import { rowClassName } from '../sessions-list/sessions-list-row-motion';
 import { SessionRow, type SessionRowProps } from './session-row';

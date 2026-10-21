@@ -1,6 +1,6 @@
+import { CheckButton } from '@repo/kit/primitives/actions/check-button';
+import { Checkbox } from '@repo/kit/primitives/inputs/checkbox';
 import type * as React from 'react';
-import { CheckButton } from '#primitives/actions/check-button';
-import { Checkbox } from '#primitives/inputs/checkbox';
 import type { FileHeaderProps } from './diff-file-header';
 
 type ViewedMarkProps = Pick<FileHeaderProps, 'viewed' | 'onViewedChange'> & {

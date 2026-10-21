@@ -1,3 +1,4 @@
+import { Inspector } from '@repo/kit/primitives/scaffolds/inspector';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -7,7 +8,6 @@ import { page } from 'vitest/browser';
 import { SessionHeader, useSessionPanels } from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
 import { WindowBandHostContext } from '#lib/product/window-band';
-import { Inspector } from '#primitives/scaffolds/inspector';
 import { LayoutListMock } from '../components/layout-list.mocks';
 import { Scaffold } from '../scaffold/scaffold';
 import { useFrameState } from './frame';

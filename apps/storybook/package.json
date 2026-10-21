@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@repo/client": "workspace:*",
+    "@repo/kit": "workspace:*",
     "@repo/uniwind": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",

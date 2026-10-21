@@ -1,5 +1,5 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';
 import {
   type MockAgent,

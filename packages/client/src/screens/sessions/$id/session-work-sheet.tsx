@@ -1,3 +1,4 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import { createElement, type ReactNode } from 'react';
 import type { ComposerProps } from '#features/composer';
 import {
@@ -7,7 +8,6 @@ import {
   SubagentSheet,
   type SubagentListProps,
 } from '#features/sessions';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 
 type ComposerStatus = NonNullable<ComposerProps['status']>;
 

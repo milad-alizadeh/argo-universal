@@ -1,7 +1,7 @@
+import { Page, type PageProps } from '@repo/kit/primitives/scaffolds/page';
 import type * as React from 'react';
 import { useState } from 'react';
 import { type AgentRows, type AgentsFilter } from '#features/agents';
-import { Page, type PageProps } from '#primitives/scaffolds/page';
 import {
   type AgentsFilterProps,
   type AgentsSearchProps,

@@ -1,5 +1,5 @@
+import { findToast } from '@repo/kit/mocks/find-toast';
 import { expect } from 'storybook/test';
-import { findToast } from '../find-toast';
 import type { Story } from './session-view-story.test.mocks';
 
 const agentFailure = 'The Agent stopped three times in ten minutes';

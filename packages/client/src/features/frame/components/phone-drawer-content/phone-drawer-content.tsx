@@ -1,11 +1,11 @@
-import type * as React from 'react';
-import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '#primitives/content/text';
+import { Text } from '@repo/kit/primitives/content/text';
 import {
   DrawerItem,
   type DrawerItemProps,
-} from '#primitives/lists/drawer-item';
+} from '@repo/kit/primitives/lists/drawer-item';
+import type * as React from 'react';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   type Section,
   type NavigationSection,

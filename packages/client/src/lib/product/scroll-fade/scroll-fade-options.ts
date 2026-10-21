@@ -1,1 +1,1 @@
-export * from '../../generic/scroll-fade/scroll-fade-options';
+export * from '@repo/kit/scroll-fade/scroll-fade-options';

@@ -1,8 +1,8 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { Text } from '#primitives/content/text';
 
 const phoneInsets = { top: 48, bottom: 24, left: 0, right: 0 };
 

@@ -1,5 +1,5 @@
-import { hasLiquidGlass } from '#lib/generic/native-header';
-import { useWide } from '../generic/use-wide/use-wide';
+import { hasLiquidGlass } from '@repo/kit/native-header';
+import { useWide } from '@repo/kit/use-wide/use-wide';
 import { useComposerFadeDepth, useFeedEndClearance } from './composer-cover';
 import type {
   PerEdge,

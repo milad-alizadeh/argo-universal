@@ -1,7 +1,7 @@
+import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
+import { RichTextarea } from '@repo/kit/primitives/inputs/rich-textarea';
 import type * as React from 'react';
 import { View, ScrollView } from 'react-native';
-import { LiquidGlass } from '#primitives/content/liquid-glass';
-import { RichTextarea } from '#primitives/inputs/rich-textarea';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,

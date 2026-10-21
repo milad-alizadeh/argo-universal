@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@react-three/fiber": "9.8.2",
-    "@repo/client": "workspace:*",
+    "@repo/kit": "workspace:*",
     "@shopify/react-native-skia": "2.6.2",
     "react": "catalog:",
     "react-dom": "catalog:",

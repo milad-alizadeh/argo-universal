@@ -3,12 +3,12 @@ import type {
   PluginSettingValue,
   PluginSettings,
 } from '@repo/contracts/plugins';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type * as React from 'react';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
-import { Page } from '#primitives/scaffolds/page';
-import { Spinner } from '#primitives/status/spinner';
 import { SettingFieldRow } from './plugin-setting-field-row';
 
 export type PluginLoad =

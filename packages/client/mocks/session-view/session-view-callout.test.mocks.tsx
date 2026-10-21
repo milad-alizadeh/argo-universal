@@ -1,6 +1,6 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, fn, within } from 'storybook/test';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import type { Story } from './session-view-story.test.mocks';
 

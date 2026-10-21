@@ -1,5 +1,5 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import type { ReactNode } from 'react';
-import { Button } from '#primitives/actions/button';
 
 export interface RequestActionProps {
   disabled?: boolean;

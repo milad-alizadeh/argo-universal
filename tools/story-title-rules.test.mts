@@ -3,16 +3,18 @@ import { storyTitleProblems } from './story-title-rules.mts';
 
 const src = 'packages/client/src';
 
+const kit = 'packages/kit/src';
+
 const meta = (title: string): string =>
   `const meta = {\n  title: '${title}',\n} satisfies Meta;`;
 
 describe('a story title', (): void => {
   it.each([
     [
-      `${src}/lib/generic/primitives/lists/grouped-list-item/grouped-list-item.stories.tsx`,
+      `${kit}/primitives/lists/grouped-list-item/grouped-list-item.stories.tsx`,
       'Design System/Primitives/GroupedListItem',
     ],
-    [`${src}/lib/generic/symbols/icon.stories.tsx`, 'Design System/Icon'],
+    [`${kit}/symbols/icon.stories.tsx`, 'Design System/Icon'],
     [`${src}/lib/product/screen/screen.stories.tsx`, 'Shared/Screen'],
     [
       `${src}/features/feed/components/edit-row/edit-row.stories.tsx`,
@@ -49,15 +51,11 @@ describe('a story title', (): void => {
 
   it.each([
     [
-      `${src}/lib/generic/primitives/lists/grouped-list-content/grouped-list-content.stories.tsx`,
+      `${kit}/primitives/lists/grouped-list-content/grouped-list-content.stories.tsx`,
       'Primitives/GroupedListContent',
       /'Design System\/Primitives\/'/,
     ],
-    [
-      `${src}/lib/generic/symbols/icon.stories.tsx`,
-      'Symbols/Icon',
-      /'Design System\/'/,
-    ],
+    [`${kit}/symbols/icon.stories.tsx`, 'Symbols/Icon', /'Design System\/'/],
     [
       `${src}/features/feed/components/edit-row/edit-row.stories.tsx`,
       'EditRow',
@@ -114,7 +112,7 @@ describe('a story title', (): void => {
     ).toEqual([expect.stringMatching(/needs a literal title/)]);
   });
 
-  it('ignores files that are not client stories', (): void => {
+  it('ignores files outside the kit and the client', (): void => {
     expect(
       storyTitleProblems(`${src}/lib/product/screen/screen.tsx`, ''),
     ).toEqual([]);

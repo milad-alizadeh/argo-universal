@@ -1,12 +1,12 @@
 import type { RegistryAgentId } from '@repo/contracts';
+import { errorToast } from '@repo/kit/error-toast';
+import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import {
   type UseMutationResult,
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
 import { useTRPC, type ClientError } from '#features/connection';
-import { errorToast } from '#lib/generic/error-toast';
-import { useErrorToast } from '#primitives/overlays/toast';
 
 // Refetches the Installed Agents after the Server changes them.
 export function useInstalledInvalidation(): () => Promise<void> {

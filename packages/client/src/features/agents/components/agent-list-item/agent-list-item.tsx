@@ -1,6 +1,6 @@
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import { ListItem } from '#primitives/lists/list-item';
-import type { ListItemProps } from '#primitives/lists/list-item';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import {

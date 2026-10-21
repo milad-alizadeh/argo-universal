@@ -1,9 +1,9 @@
-import type * as React from 'react';
-import { Code, DiffScroll } from '#primitives/content/code';
+import { Code, DiffScroll } from '@repo/kit/primitives/content/code';
 import {
   Collapsible,
   CollapsibleContent,
-} from '#primitives/layout/collapsible';
+} from '@repo/kit/primitives/layout/collapsible';
+import type * as React from 'react';
 import { FileHeader } from './diff-file-header';
 import { type DiffViewProps, useDiffViewState } from './diff-view-state';
 

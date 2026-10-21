@@ -1,5 +1,5 @@
-import { errorToast } from '#lib/generic/error-toast';
-import type { ErrorToast } from '#primitives/overlays/toast';
+import { errorToast } from '@repo/kit/error-toast';
+import type { ErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { sessionOpenFailedTitle } from './open-failure';
 import type { SessionProblemSources } from './session-problem';
 

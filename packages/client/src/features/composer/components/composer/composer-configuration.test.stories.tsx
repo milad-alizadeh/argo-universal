@@ -1,3 +1,5 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
@@ -10,8 +12,6 @@ import { pickers } from '../../../../../mocks/composer/configuration-picker.test
 import { firstAgent } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
 import { secondAgent } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
 import { pickerCatalogs } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
 

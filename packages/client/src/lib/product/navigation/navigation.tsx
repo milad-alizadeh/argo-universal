@@ -1,3 +1,4 @@
+import { useWide } from '@repo/kit/use-wide/use-wide';
 import {
   type Href,
   router,
@@ -8,7 +9,6 @@ import {
 import { usePreventRemove } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { createContext, type ReactNode, use } from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { newSessionId } from './new-session';
 import { isPage, sectionOf } from './sections';
 

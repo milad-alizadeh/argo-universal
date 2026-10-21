@@ -1,9 +1,9 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { expect, within } from 'storybook/test';
-import { settleViewport } from '#lib/generic/settle-viewport';
-import { Text } from '#primitives/content/text';
 import { HostedScaffoldMock } from './hosted-scaffold.mocks';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 

@@ -1,3 +1,5 @@
+import { contentWideMin } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
@@ -9,8 +11,6 @@ import {
   permissionMock,
   recordedPermission,
 } from '../../../../mocks/requests/recorded-requests';
-import { contentWideMin } from '../../../lib/generic/each-layout';
-import { settleViewport } from '../../../lib/generic/settle-viewport';
 import {
   pressInspectorButton,
   resizeInspectorLabel,

@@ -1,6 +1,6 @@
+import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import type { ComposerContext } from '../../utils/status';
 import { compactNumber, contextPercent } from '../../utils/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';

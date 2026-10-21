@@ -4,7 +4,7 @@ import { withArgoPreview } from './with-theme';
 export {
   type RenderSymbolImage,
   SymbolImagesProvider,
-} from './lib/generic/symbols/symbol-images';
+} from '@repo/kit/symbols/symbol-images';
 
 // Stories render views from props (ADR-0021); no decorator serves data.
 export const previewDecorators = [withArgoPreview];

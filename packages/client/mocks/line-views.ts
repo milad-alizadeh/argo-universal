@@ -1,4 +1,4 @@
-import { canPointAt } from './point-hit';
+import { canPointAt } from '@repo/kit/mocks/point-hit';
 
 type LineView = 'shown' | 'hidden' | 'cut';
 

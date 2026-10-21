@@ -1,10 +1,10 @@
 import type { Subagent } from '@repo/contracts';
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { toFeedView } from '#features/feed';
-import { layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import {
   meta as sessionDetailViewTestMeta,
   type Story,

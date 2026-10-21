@@ -1,9 +1,9 @@
+import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
-import type { SizeClass } from '#lib/generic/use-size-class/size-class';
 import type { WindowBandContent } from '#lib/product/window-band';
 import { type FrameMotion, frameTiming } from '../utils/frame-timing';
 import {

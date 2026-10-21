@@ -1,6 +1,6 @@
+import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect } from 'storybook/test';
-import { eachLayout, layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import type { ReadySessionNewViewProps } from '../../src/screens/sessions/$id/session-new-view';
 import {
   openingNewSession,

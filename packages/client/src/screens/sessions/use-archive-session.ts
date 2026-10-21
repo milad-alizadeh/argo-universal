@@ -1,4 +1,6 @@
 import type { SessionArchiveInput, SessionListOutput } from '@repo/contracts';
+import { errorToast } from '@repo/kit/error-toast';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
 import {
   type InfiniteData,
   useMutation,
@@ -10,8 +12,6 @@ import {
   type ArchiveSessionAlertProps,
   archivedToast,
 } from '#features/sessions';
-import { errorToast } from '#lib/generic/error-toast';
-import { showToast } from '#primitives/overlays/toast';
 import { archiveAsksFirst } from './archive-asks-first';
 
 const archiveFailedTitle = 'Couldn’t archive the Session';

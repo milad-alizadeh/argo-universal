@@ -1,9 +1,9 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { ScrollView } from '@repo/kit/primitives/layout/scroll-view';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { IconButton } from '#primitives/actions/icon-button';
-import { ScrollView } from '#primitives/layout/scroll-view';
 import {
   type Section,
   type NavigationSection,

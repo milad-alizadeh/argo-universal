@@ -1,5 +1,5 @@
+import type { ErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { describe, expect, it } from 'vitest';
-import type { ErrorToast } from '#primitives/overlays/toast';
 import { dropped } from '../../../../mocks/sessions/open-failure.mocks';
 import type { OpenAttempt } from './session-problem';
 import { droppedOpenToast, pastSessionDropToast } from './session-toasts';

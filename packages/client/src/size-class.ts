@@ -1,7 +1,7 @@
 /*
  * The size class for the navigator, apps/universal-app/src/navigation, which is kit under ADR-0026.
- * A module, not a package.json export target, so Metro still picks each platform's use-size-class file.
+ * The kit's use-size-class export is the folder's index, so Metro still picks each platform's file.
  */
-export { useSizeClass } from './lib/generic/use-size-class/use-size-class';
+export { useSizeClass } from '@repo/kit/use-size-class';
 
-export { useWide } from './lib/generic/use-wide/use-wide';
+export { useWide } from '@repo/kit/use-wide/use-wide';

@@ -1,5 +1,5 @@
+import { Alert, type AlertAction } from '@repo/kit/primitives/overlays/alert';
 import type * as React from 'react';
-import { Alert, type AlertAction } from '#primitives/overlays/alert';
 
 export interface ArchiveSessionAlertProps {
   open: boolean;

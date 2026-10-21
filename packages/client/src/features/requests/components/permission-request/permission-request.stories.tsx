@@ -1,3 +1,5 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ComponentProps, ReactNode } from 'react';
@@ -7,8 +9,6 @@ import {
   galleryVariations,
   PermissionPreview,
 } from '../../../../../mocks/requests/permission/permission-gallery';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import type { RequestState } from '../request-card/request-card';
 import {
   permissionProps,

@@ -1,7 +1,7 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, within } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { Text } from '#primitives/content/text';
 import {
   controlledPlay,
   scaffoldMeta,

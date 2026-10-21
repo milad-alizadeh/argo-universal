@@ -1,9 +1,9 @@
+import { resourceName } from '@repo/kit/primitives/content/code';
+import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { resourceName } from '#primitives/content/code';
-import { Sheet } from '#primitives/overlays/sheet';
 import { planTitle } from '../../../../lib/product/markdown/plan-title';
 import { useWrittenPlanEscape } from '../../hooks/use-written-plan-escape';
 import { WrittenPlanContent } from './written-plan-content';

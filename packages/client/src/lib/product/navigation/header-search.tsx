@@ -1,12 +1,12 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import {
+  SearchField,
+  type SearchFieldProps,
+} from '@repo/kit/primitives/inputs/search-field';
 import type { HeaderOptions } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import {
-  SearchField,
-  type SearchFieldProps,
-} from '#primitives/inputs/search-field';
 
 // The web's JS header lays out its title and right containers by these; native-stack's options type leaves them out, so the header takes them through untyped. The title container grows so the search row fills it; the row keeps its own gap before the right items.
 export const headerSearchRowLayout = {

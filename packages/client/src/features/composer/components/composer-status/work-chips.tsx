@@ -1,8 +1,8 @@
+import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
-import { Icon } from '#primitives/content/icon';
 import type { ComposerStatusProps, ComposerWork } from '../../utils/status';
 import {
   ChipSurface,

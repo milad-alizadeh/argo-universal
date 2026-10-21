@@ -1,4 +1,4 @@
-import { errorMessage } from '#lib/generic/error-toast';
+import { errorMessage } from '@repo/kit/error-toast';
 import type { SessionCalloutProps } from '../types/session-callout';
 
 export interface SignInRead {

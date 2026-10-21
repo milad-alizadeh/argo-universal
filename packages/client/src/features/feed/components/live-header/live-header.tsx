@@ -3,6 +3,13 @@ import type {
   LiveHeader as LiveHeaderValue,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { formatElapsed, millisecondsPerSecond } from '@repo/kit/format-elapsed';
+import { fullTurnDegrees } from '@repo/kit/motion';
+import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
+import type { IconName } from '@repo/kit/symbols/icon-names';
+import { useClock } from '@repo/kit/use-clock';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -15,16 +22,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import {
-  formatElapsed,
-  millisecondsPerSecond,
-} from '#lib/generic/format-elapsed';
-import { fullTurnDegrees } from '#lib/generic/motion';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { useClock } from '#lib/generic/use-clock';
-import { Icon, IconSlot } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { StatusDot } from '#primitives/status/status-dot';
 import { ShimmerText } from '../shimmer-text';
 import { toolCallIcon } from '../tool-call-icon';
 import { WorkingMark } from '../working-mark';

@@ -1,5 +1,5 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { ComposerCheckoutControl } from '../composer-configuration/composer-configuration';
 import type { ComposerProps } from './composer-types';
 

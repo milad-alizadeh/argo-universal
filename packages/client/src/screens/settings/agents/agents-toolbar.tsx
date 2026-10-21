@@ -1,8 +1,8 @@
+import { FilterPill } from '@repo/kit/primitives/inputs/filter-pill';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type AgentsFilter } from '#features/agents';
-import { cn } from '#lib/generic/utils';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
-import { FilterPill } from '#primitives/inputs/filter-pill';
 
 export interface AgentsFilterProps {
   filter: AgentsFilter;

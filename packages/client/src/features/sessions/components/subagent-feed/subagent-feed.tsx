@@ -1,7 +1,7 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Feed } from '#features/feed';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { SubagentFeedHeader } from './subagent-feed-header';
 import type { SubagentFeedProps } from './subagent-feed-props';
 

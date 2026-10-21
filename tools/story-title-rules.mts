@@ -1,4 +1,6 @@
 // Where a story file sits decides the Storybook group its title starts with, so the sidebar keeps one tree.
+const kitSource = 'packages/kit/src/';
+
 const clientSource = 'packages/client/src/';
 
 // The first title after `const meta` is the story file's title; a Variation's own titles come later.
@@ -27,23 +29,29 @@ const featureGroup = (path: string): string[] => [
   `${pascal(feature.exec(path)?.[1] ?? '')}/`,
 ];
 
-// The first rule whose test matches the path gives its allowed groups.
-const rules: readonly {
+interface Rule {
   test: (path: string) => boolean;
   groups: (path: string) => string[];
-}[] = [
+}
+
+const testStories: Rule = {
+  test: (path) => path.endsWith('.test.stories.tsx'),
+  groups: () => ['Tests/'],
+};
+
+// The kit is the design system: its primitives are the sidebar's own root, everything else sits beside them.
+const kitRules: readonly Rule[] = [
+  testStories,
   {
-    test: (path) => path.endsWith('.test.stories.tsx'),
-    groups: () => ['Tests/'],
-  },
-  {
-    test: (path) => path.startsWith('lib/generic/primitives/'),
+    test: (path) => path.startsWith('primitives/'),
     groups: () => ['Design System/Primitives/'],
   },
-  {
-    test: (path) => path.startsWith('lib/generic/'),
-    groups: () => ['Design System/'],
-  },
+  { test: () => true, groups: () => ['Design System/'] },
+];
+
+// The first rule whose test matches the path gives its allowed groups.
+const clientRules: readonly Rule[] = [
+  testStories,
   {
     test: (path) => path.startsWith('lib/product/'),
     groups: () => ['Shared/'],
@@ -53,9 +61,18 @@ const rules: readonly {
   { test: (path) => path.startsWith('screens/'), groups: () => ['Screens/'] },
 ];
 
+// A story file's package decides which rules place it: the kit draws the design system, the client the screens.
+const packages: readonly [string, readonly Rule[]][] = [
+  [kitSource, kitRules],
+  [clientSource, clientRules],
+];
+
+const packageOf = (file: string): [string, readonly Rule[]] | undefined =>
+  packages.find(([source]): boolean => file.startsWith(source));
+
 // A story outside every rule's folder would start a new top-level group, so it has none.
-const allowedGroups = (path: string): string[] =>
-  rules.find((rule) => rule.test(path))?.groups(path) ?? [];
+const allowedGroups = (rules: readonly Rule[], path: string): string[] =>
+  rules.find((rule): boolean => rule.test(path))?.groups(path) ?? [];
 
 const quoted = (group: string): string => `'${group}'`;
 
@@ -73,15 +90,16 @@ const groupProblem = ({ file, title, groups }: Placement): string[] => {
 };
 
 const titleProblem = (file: string, title: string): string[] => {
-  const groups = allowedGroups(file.slice(clientSource.length));
+  const [source, rules] = packageOf(file) ?? ['', []];
+  const groups = allowedGroups(rules, file.slice(source.length));
 
   return groups.length === 0
     ? [`${file}: no story group belongs to this folder`]
     : groupProblem({ file, title, groups });
 };
 
-const isClientStory = (file: string): boolean =>
-  story.test(file) && file.startsWith(clientSource);
+const isPlacedStory = (file: string): boolean =>
+  story.test(file) && packageOf(file) !== undefined;
 
 const metaTitleProblem = (file: string, source: string): string[] => {
   const title = metaTitle.exec(source)?.[1];
@@ -92,4 +110,4 @@ const metaTitleProblem = (file: string, source: string): string[] => {
 };
 
 export const storyTitleProblems = (file: string, source: string): string[] =>
-  isClientStory(file) ? metaTitleProblem(file, source) : [];
+  isPlacedStory(file) ? metaTitleProblem(file, source) : [];

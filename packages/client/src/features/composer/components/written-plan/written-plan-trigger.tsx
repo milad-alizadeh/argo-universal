@@ -1,9 +1,9 @@
+import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import { cn } from '#lib/generic/utils';
-import { contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 
 export interface WrittenPlanTriggerProps {
   open: boolean;

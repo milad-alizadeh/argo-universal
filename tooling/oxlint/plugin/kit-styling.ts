@@ -13,21 +13,26 @@ type Specifier = ESTree.ImportDeclaration['specifiers'][number];
 const isStylePropName = (name: string): boolean =>
   name === 'style' || name === 'className' || name.endsWith('ClassName');
 
-// A relative path that lands in the primitives folder, such as `../../lib/generic/primitives/actions/button`.
+// A relative path that lands in the primitives folder, such as `../button` inside the kit.
 const isRelativeKitPath = (source: string, filename: string): boolean =>
   source.startsWith('.') &&
   resolve(dirname(filename), source)
     .replaceAll('\\', '/')
-    .includes('/lib/generic/primitives/');
+    .includes('/kit/src/primitives/');
 
-// Kit components come from the primitives folder, through its alias or a relative path.
+// The primitives folder, named through @repo/kit or the kit's own alias.
+const primitivesPrefixes = ['@repo/kit/primitives/', '#primitives/'];
+
+const namesPrimitives = (source: string, filename: string): boolean =>
+  primitivesPrefixes.some((prefix): boolean => source.startsWith(prefix)) ||
+  isRelativeKitPath(source, filename);
+
+// Kit components come from the primitives folder: through @repo/kit, the kit's own alias, or a relative path.
 const isKitImport = (
   node: ESTree.ImportDeclaration,
   filename: string,
 ): boolean =>
-  node.importKind !== 'type' &&
-  (node.source.value.startsWith('#primitives/') ||
-    isRelativeKitPath(node.source.value, filename));
+  node.importKind !== 'type' && namesPrimitives(node.source.value, filename);
 
 const isValueSpecifier = (specifier: Specifier): boolean =>
   specifier.type !== 'ImportSpecifier' || specifier.importKind !== 'type';
@@ -87,7 +92,7 @@ export const kitStyling = defineRule({
     type: 'problem',
     messages: {
       kitStyling:
-        'Kit components take props, not className, style or a *ClassName slot; style them inside lib/generic.',
+        'Kit components take props, not className, style or a *ClassName slot; style them inside @repo/kit.',
     },
   },
   create: (context): KitVisitor => kitVisitor(context, new Set()),

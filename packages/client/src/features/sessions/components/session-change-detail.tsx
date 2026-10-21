@@ -1,6 +1,6 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import { Stack } from '@repo/kit/primitives/layout/stack';
 import type { ReactElement } from 'react';
-import { Text } from '#primitives/content/text';
-import { Stack } from '#primitives/layout/stack';
 import { ChangeStage } from './change-stage/change-stage';
 import { MergePrButton } from './merge-pr-button';
 import { PullRequestChecks } from './pull-request-checks';

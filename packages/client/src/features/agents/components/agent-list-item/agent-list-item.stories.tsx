@@ -1,9 +1,9 @@
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { fn } from 'storybook/test';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
 import { AgentListItem } from './agent-list-item';
 
 const entry = publishedRegistry.agents[0];

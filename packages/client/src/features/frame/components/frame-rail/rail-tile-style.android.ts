@@ -1,5 +1,5 @@
+import { useMaterialPalette } from '@repo/kit/primitives/native/material-palette';
 import type { ViewStyle } from 'react-native';
-import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { RailTiles } from './rail-tiles';
 
 // A tablet's 80 rail: 48 tiles a hairline apart; the style below fills the selected one.

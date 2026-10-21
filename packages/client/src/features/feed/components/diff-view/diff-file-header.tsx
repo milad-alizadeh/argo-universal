@@ -1,10 +1,10 @@
+import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { TextClassContext } from '@repo/kit/primitives/content/text';
+import { DisclosureChevron } from '@repo/kit/primitives/status/disclosure-chevron';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
-import { TextClassContext } from '#primitives/content/text';
-import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { FileDiff } from '../../view/file-diff';
 import { ChangeCounts } from './diff-change-counts';
 import { FilePath } from './diff-file-path';

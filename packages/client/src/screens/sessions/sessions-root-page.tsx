@@ -1,3 +1,5 @@
+import { Action, ActionList } from '@repo/kit/primitives/actions/action-list';
+import { Page, type PageProps } from '@repo/kit/primitives/scaffolds/page';
 import type * as React from 'react';
 import {
   isDefaultSessionsView,
@@ -7,8 +9,6 @@ import {
   sessionsViewGroups,
 } from '#features/sessions';
 import { headerFilterIcon } from '#lib/product/header-button';
-import { Action, ActionList } from '#primitives/actions/action-list';
-import { Page, type PageProps } from '#primitives/scaffolds/page';
 import { sections } from '../../lib/product/navigation/sections';
 
 export interface SessionsRootPageProps extends SessionsViewState {

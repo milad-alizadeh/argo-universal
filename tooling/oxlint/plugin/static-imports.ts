@@ -23,7 +23,7 @@ function isCanvasLoader(
   node: ESTree.ImportExpression,
 ): boolean {
   const canvasLoader =
-    '/packages/client/src/lib/generic/primitives/visual/canvas/canvas-loader.web.tsx';
+    '/packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx';
 
   return (
     filename.replaceAll('\\', '/').endsWith(canvasLoader) && canvasImport(node)

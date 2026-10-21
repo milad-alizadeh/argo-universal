@@ -4,9 +4,9 @@ import {
   SessionOpenFailureResponse,
   sessionOpenErrorText,
 } from '@repo/contracts';
+import { errorMessage } from '@repo/kit/error-toast';
 import { TRPCClientError } from '@trpc/client';
 import type { ConnectionState } from '#features/connection';
-import { errorMessage } from '#lib/generic/error-toast';
 
 // The same failure reads the same on every Sessions page.
 export const serverSilentMessage =

@@ -1,6 +1,6 @@
+import { Sheet, type SheetProps } from '@repo/kit/primitives/overlays/sheet';
 import type * as React from 'react';
 import type { FileDiff } from '#features/feed';
-import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
 import { recordedFile } from '../../../../../mocks/feed-edit-mock';
 import {
   ChangesInspector,

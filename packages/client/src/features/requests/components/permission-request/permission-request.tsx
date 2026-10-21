@@ -1,6 +1,6 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
 import {
   PlanRequest,
   type PlanRequestActions,

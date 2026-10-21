@@ -1,5 +1,5 @@
+import type { ListSectionProps } from '@repo/kit/primitives/lists/list';
 import { useStore } from '@tanstack/react-form';
-import type { ListSectionProps } from '#primitives/lists/list';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import { fieldLabel } from './elicitation-field-rows';
 import {

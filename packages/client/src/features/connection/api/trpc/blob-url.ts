@@ -1,7 +1,7 @@
 import { type BlobRef, blobPath } from '@repo/contracts';
 import { pluginAssetPath } from '@repo/contracts/plugins/assets';
+import type { MediaUrl } from '@repo/kit/primitives/content/media-url';
 import { createContext, useContext } from 'react';
-import type { MediaUrl } from '#primitives/content/media-url';
 import { serverHttpUrl } from './create-trpc-client';
 
 export type BlobUrl = (blob: BlobRef) => string;

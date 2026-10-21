@@ -1,10 +1,10 @@
+import { Button } from '@repo/kit/primitives/actions/button';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/actions/button';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { StatusDot } from '#primitives/status/status-dot';
 import { shellHeading } from './shell-format';
 import type { ShellEntry } from './shell-list-types';
 

@@ -1,9 +1,9 @@
-import type { ReactElement } from 'react';
-import { View } from 'react-native';
 import {
   IconButton,
   type IconButtonProps,
-} from '#primitives/actions/icon-button';
+} from '@repo/kit/primitives/actions/icon-button';
+import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import {
   bandControlAppearance,
   bandToggleAppearance,

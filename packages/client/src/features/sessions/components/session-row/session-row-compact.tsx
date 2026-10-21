@@ -1,8 +1,11 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import {
+  ListItem,
+  type ListItemProps,
+} from '@repo/kit/primitives/lists/list-item';
+import type { ContextMenuTriggerProps } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
-import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
-import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import {
   ChangeStageIcon,
   ChangeStageModifier,

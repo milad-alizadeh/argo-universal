@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import customSymbols from '@repo/client/custom-symbol-paths.json' with { type: 'json' };
-import tablerSymbols from '@repo/client/tabler-symbol-paths.json' with { type: 'json' };
+import customSymbols from '@repo/kit/custom-symbol-paths.json' with { type: 'json' };
+import tablerSymbols from '@repo/kit/tabler-symbol-paths.json' with { type: 'json' };
 import configPlugins from 'expo/config-plugins.js';
 
 /*

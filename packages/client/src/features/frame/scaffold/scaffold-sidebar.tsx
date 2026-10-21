@@ -1,7 +1,7 @@
+import { ScrollColumnContext } from '@repo/kit/scroll-column';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import {
   FramePane,
   type FramePaneProps,

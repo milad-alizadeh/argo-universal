@@ -1,12 +1,12 @@
-import type { ReactElement } from 'react';
-import { Platform, View } from 'react-native';
-import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
-import { cn } from '#lib/generic/utils';
-import { useContentWide } from '#lib/product/content-layout';
 import {
   IconButton,
   type IconButtonProps,
-} from '#primitives/actions/icon-button';
+} from '@repo/kit/primitives/actions/icon-button';
+import type { IconSymbol } from '@repo/kit/symbols/icon-symbol';
+import { cn } from '@repo/kit/utils';
+import type { ReactElement } from 'react';
+import { Platform, View } from 'react-native';
+import { useContentWide } from '#lib/product/content-layout';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 
 type ModelProps = { model: QuestionModel };

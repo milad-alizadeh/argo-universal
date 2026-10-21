@@ -3,9 +3,9 @@ import type {
   PluginSettingValue,
   PluginSettings,
 } from '@repo/contracts/plugins';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 import { SecretRow, TextRow } from './plugin-text-rows';
 
 export interface SettingFieldRowProps {

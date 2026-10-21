@@ -1,8 +1,8 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { ActionShortcutScope } from '@repo/kit/primitives/actions/action-list';
+import { List } from '@repo/kit/primitives/lists/list';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { ActionShortcutScope } from '#primitives/actions/action-list';
-import { List } from '#primitives/lists/list';
 import { PluginSlot } from './plugin-slot';
 
 function actions(label: string): WireNode {

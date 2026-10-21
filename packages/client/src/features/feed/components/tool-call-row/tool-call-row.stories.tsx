@@ -1,5 +1,5 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import { completedRead, runningRead } from '../tool-call.mocks';
 import { ToolCallRow } from './tool-call-row';
 

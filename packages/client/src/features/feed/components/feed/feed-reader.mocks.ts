@@ -1,11 +1,7 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { canPointAt, centreOf, topmostAt } from '@repo/kit/mocks/point-hit';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, waitFor, type within } from 'storybook/test';
-import {
-  canPointAt,
-  centreOf,
-  topmostAt,
-} from '../../../../../mocks/point-hit';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { splitGroupHeader } from './feed.mocks';
 
 export const feedScrollId = 'feed-scroll';

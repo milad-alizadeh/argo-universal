@@ -1,4 +1,4 @@
-import type { BadgeCount } from '#lib/generic/badge-count';
+import type { BadgeCount } from '@repo/kit/badge-count';
 import type { Section } from '../../../lib/product/navigation/sections';
 
 function badgeLabel(attentionCount: number): string {

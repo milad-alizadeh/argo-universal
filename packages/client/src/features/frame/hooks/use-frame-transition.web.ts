@@ -1,5 +1,5 @@
+import { cssTransition } from '@repo/kit/motion';
 import { type RefObject, useLayoutEffect, useRef } from 'react';
-import { cssTransition } from '#lib/generic/motion';
 import type { FrameMotion, FrameTiming } from '../utils/frame-timing';
 
 export type ElementFrame = readonly [HTMLElement | null, Keyframe[]];

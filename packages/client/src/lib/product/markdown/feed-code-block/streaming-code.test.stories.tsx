@@ -1,12 +1,12 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
+import { Text } from '@repo/kit/primitives/content/text';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { expect } from 'storybook/test';
-import { Pressable } from '#primitives/actions/pressable';
-import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
-import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../generic/each-layout';
-import { settleViewport } from '../../../generic/settle-viewport';
 
 const firstLine = "import { CACHE } from './headers';";
 

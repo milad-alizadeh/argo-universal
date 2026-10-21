@@ -1,8 +1,8 @@
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Text } from '@repo/kit/primitives/content/text';
+import { Menu } from '@repo/kit/primitives/overlays/menu';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Text } from '#primitives/content/text';
-import { Menu } from '#primitives/overlays/menu';
 import { ChangeDiffTotal } from './change-diff-total';
 import {
   ChangeStageIcon,

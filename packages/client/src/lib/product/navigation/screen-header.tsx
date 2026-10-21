@@ -1,9 +1,9 @@
+import { useWide } from '@repo/kit/use-wide/use-wide';
 import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Platform } from 'react-native';
 import { HeaderItems } from '#lib/product/header-button';
-import { useWide } from '../../generic/use-wide/use-wide';
 import {
   type HeaderSearch,
   HeaderSearchRow,

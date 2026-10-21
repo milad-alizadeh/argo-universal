@@ -1,10 +1,10 @@
 import type { ToolCallDiff } from '@repo/contracts';
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { type FileDiff, toFileDiffs } from '../../view/file-diff';
 import { DiffView } from './diff-view';
 

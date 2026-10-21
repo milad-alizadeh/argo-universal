@@ -1,7 +1,7 @@
+import { Text } from '@repo/kit/primitives/content/text';
+import type { Tone } from '@repo/kit/primitives/content/text';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type * as React from 'react';
-import { Text } from '#primitives/content/text';
-import type { Tone } from '#primitives/content/text';
-import { StatusDot } from '#primitives/status/status-dot';
 import { sessionStatusDot, sessionStatusLabels } from '../session-status-dot';
 import type {
   SessionHeaderProps,

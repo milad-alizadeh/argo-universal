@@ -1,11 +1,17 @@
+import { Action } from '@repo/kit/primitives/actions/action-list';
+import { List } from '@repo/kit/primitives/lists/list';
+import {
+  type LoadingRow,
+  loadingRows,
+} from '@repo/kit/primitives/lists/list-item';
+import {
+  type ErrorToast,
+  useErrorToast,
+} from '@repo/kit/primitives/overlays/toast';
+import { Page, type PageProps } from '@repo/kit/primitives/scaffolds/page';
+import { RowDrawingContext } from '@repo/kit/row-drawing-context';
 import type * as React from 'react';
 import { useState } from 'react';
-import { RowDrawingContext } from '#lib/generic/row-drawing-context';
-import { Action } from '#primitives/actions/action-list';
-import { List } from '#primitives/lists/list';
-import { type LoadingRow, loadingRows } from '#primitives/lists/list-item';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { Page, type PageProps } from '#primitives/scaffolds/page';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
 import { LoadedProjects } from './project-list-rows';
 import { projectsTitle, searchLabel } from './project-list-search';

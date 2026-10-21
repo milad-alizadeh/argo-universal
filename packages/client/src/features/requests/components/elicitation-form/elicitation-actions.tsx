@@ -1,6 +1,6 @@
+import { Button, type ButtonProps } from '@repo/kit/primitives/actions/button';
 import type { ReactElement } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
-import { Button, type ButtonProps } from '#primitives/actions/button';
 
 export type ElicitationActionsProps = {
   // Submit on the last page, Next before it.

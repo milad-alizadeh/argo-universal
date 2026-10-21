@@ -1,3 +1,4 @@
+import { MediaUrlContext } from '@repo/kit/primitives/content/media-url';
 import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
@@ -10,7 +11,6 @@ import {
   createServerMediaUrl,
 } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
-import { MediaUrlContext } from '#primitives/content/media-url';
 import { LinkPreviewProvider } from './link-preview-provider';
 import { createQueryClient } from './query-cache';
 

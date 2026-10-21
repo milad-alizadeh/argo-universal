@@ -1,6 +1,6 @@
+import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
-import { contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
 import { StatusText } from './status-text';
 
 export interface ChipTriggerProps {

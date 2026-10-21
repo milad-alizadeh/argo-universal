@@ -1,6 +1,6 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {

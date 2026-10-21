@@ -1,10 +1,10 @@
+import { hasLiquidGlass } from '@repo/kit/native-header';
+import { ActionShortcutScope } from '@repo/kit/primitives/actions/action-list';
+import { List } from '@repo/kit/primitives/lists/list';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { Platform, View } from 'react-native';
-import { hasLiquidGlass } from '#lib/generic/native-header';
-import { cn } from '#lib/generic/utils';
-import { ActionShortcutScope } from '#primitives/actions/action-list';
-import { List } from '#primitives/lists/list';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
 import { listsFlat, searchesAsOneList } from './sessions-list-entries-state';

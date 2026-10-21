@@ -1,7 +1,7 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { expect, within, waitFor } from 'storybook/test';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import { idleConfiguration, type Story } from './session-view-story.test.mocks';
 

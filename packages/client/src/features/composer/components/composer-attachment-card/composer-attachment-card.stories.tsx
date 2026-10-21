@@ -1,3 +1,4 @@
+import { Variation, Variations } from '@repo/kit/variations';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
@@ -6,7 +7,6 @@ import {
   composerImages,
   oversizedComposerImage,
 } from '../../../../../mocks/composer-mock';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import {
   type ComposerAttachment,
   ComposerAttachmentCard,

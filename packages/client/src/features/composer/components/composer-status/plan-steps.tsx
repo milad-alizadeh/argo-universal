@@ -1,11 +1,11 @@
 import type { PlanEntry } from '@repo/contracts';
+import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
+import { Icon, IconSpinner } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { ScrollView, View } from 'react-native';
-import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { cn } from '#lib/generic/utils';
-import { Icon, IconSpinner } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { maximumPlanStepsHeight } from '../../utils/status';
 import { mutedTextClassName } from './status-surface';
 

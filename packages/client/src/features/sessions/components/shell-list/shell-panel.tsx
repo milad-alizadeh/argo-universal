@@ -1,8 +1,11 @@
+import {
+  InspectorPage,
+  InspectorPages,
+} from '@repo/kit/primitives/scaffolds/inspector';
+import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
+import { useClock } from '@repo/kit/use-clock';
 import type { JSX, ReactElement } from 'react';
 import { View } from 'react-native';
-import { useClock } from '#lib/generic/use-clock';
-import { InspectorPage, InspectorPages } from '#primitives/scaffolds/inspector';
-import { ScrollFadeView } from '../../../../lib/generic/scroll-fade/scroll-fade';
 import { ShellList } from './shell-list';
 import type { ShellEntry, ShellViewProps } from './shell-list-types';
 import { ShellOutput } from './shell-output';

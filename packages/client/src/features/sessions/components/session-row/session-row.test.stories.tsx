@@ -1,3 +1,5 @@
+import { layoutWidths } from '@repo/kit/each-layout';
+import { settleViewport } from '@repo/kit/settle-viewport';
 import { sessionRows } from '@repo/mocks/app';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
@@ -10,8 +12,6 @@ import {
   statusParity,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { sessionRowMocks } from './session-row.mocks';
 
 const meta = { ...sessionRowTestMeta, title: 'Tests/SessionRow' };

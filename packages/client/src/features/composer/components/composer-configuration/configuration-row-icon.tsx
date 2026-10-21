@@ -1,5 +1,5 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
 import type { ComponentProps, ReactElement } from 'react';
-import { Icon } from '#primitives/content/icon';
 import { isFastMode } from './configuration-values';
 
 interface Props {

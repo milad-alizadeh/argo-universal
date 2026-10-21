@@ -1,7 +1,7 @@
+import { settleViewport } from '@repo/kit/settle-viewport';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, fn, within } from 'storybook/test';
 import { permissionProps } from '../../../src/features/requests/components/request.mocks';
-import { settleViewport } from '../../../src/lib/generic/settle-viewport';
 import {
   allowOnceLabel,
   type Story,

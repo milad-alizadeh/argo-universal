@@ -1,7 +1,5 @@
-import { type ReactElement, useState } from 'react';
-import { Platform, View } from 'react-native';
-import { Button } from '#primitives/actions/button';
-import { TextInput } from '#primitives/inputs/text-input';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { TextInput } from '@repo/kit/primitives/inputs/text-input';
 import {
   Dialog,
   DialogCancel,
@@ -9,7 +7,9 @@ import {
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '#primitives/overlays/dialog';
+} from '@repo/kit/primitives/overlays/dialog';
+import { type ReactElement, useState } from 'react';
+import { Platform, View } from 'react-native';
 import { renamedTitle } from './renamed-title';
 
 export type RenameSessionDialogProps = {

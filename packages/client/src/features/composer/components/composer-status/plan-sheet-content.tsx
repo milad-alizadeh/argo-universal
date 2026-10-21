@@ -1,8 +1,8 @@
 import type { PlanEntry } from '@repo/contracts';
+import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
+import { ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { JSX } from 'react';
-import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 import { completedSteps } from '../../utils/status';
 import { StepIndicator } from './plan-steps';
 import { StatusSheetList } from './status-surface';

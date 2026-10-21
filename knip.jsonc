@@ -7,6 +7,10 @@
       // Metro selects platform modules by filename rather than by a literal import.
       "entry": ["src/**/*.@(android|ios|native|web).{ts,tsx}"]
     },
+    "packages/kit": {
+      // Metro selects platform modules by filename rather than by a literal import.
+      "entry": ["src/**/*.@(android|ios|native|web).{ts,tsx}"]
+    },
     "apps/desktop": {
       // Knip has no Electron Forge plugin, so forge.config.mts and the Vite `build` entries it names by string are listed by hand.
       "entry": [
@@ -54,8 +58,10 @@
       "entry": ["plugins/*.mjs"]
     },
     "apps/storybook": {
-      // Peers of @repo/client's primitives, listed here so the Storybook Vite build resolves them.
+      // Peers of @repo/kit's primitives, listed here so the Storybook Vite build resolves them.
+      // @repo/kit is listed so Turborepo hashes the kit into the Storybook tasks; its stories reach the build through the stories globs, not an import.
       "ignoreDependencies": [
+        "@repo/kit",
         "react-native-gesture-handler",
         "react-native-safe-area-context",
         "react-native-svg"

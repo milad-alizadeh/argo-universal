@@ -1,5 +1,5 @@
+import { List } from '@repo/kit/primitives/lists/list';
 import type { ReactElement, ReactNode } from 'react';
-import { List } from '#primitives/lists/list';
 
 export function ElicitationList({
   children,
