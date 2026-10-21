@@ -91,3 +91,14 @@ export const ReadinessKeepsChildState: Story = {
     ).toHaveValue('Keep this note');
   },
 };
+
+export const RestoresWithoutAReadinessHint: Story = {
+  args: { explicitReady: false },
+  play: async ({ canvas, userEvent }) => {
+    await canvas.findByText('Loading content');
+    await userEvent.click(canvas.getByRole('button', { name: loadLabel }));
+    const scroll = await loadedScroll(canvas);
+
+    await waitFor(() => expect(scroll.scrollTop).toBeGreaterThan(400));
+  },
+};

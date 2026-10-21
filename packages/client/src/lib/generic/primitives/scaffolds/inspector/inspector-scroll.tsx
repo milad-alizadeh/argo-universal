@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement, ReactNode, RefObject } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
@@ -15,17 +15,28 @@ export function InspectorScroll({
 
   return (
     <ScrollFadeView {...scrollProps(props)} {...tracking}>
-      <View ref={contentRef} className="grow" onLayout={onContentLayout}>
-        {children}
-      </View>
+      {measuredContent(children, contentRef, onContentLayout)}
     </ScrollFadeView>
+  );
+}
+
+// A layout-only View can be flattened on native; measurement needs this host node to exist.
+function measuredContent(
+  children: ReactNode,
+  ref: RefObject<View | null>,
+  onLayout: ComponentProps<typeof View>['onLayout'],
+): ReactElement {
+  return (
+    <View ref={ref} collapsable={false} className="grow" onLayout={onLayout}>
+      {children}
+    </View>
   );
 }
 
 const scrollProps = ({
   surface,
   fitContent,
-}: InspectorBodyProps): React.ComponentProps<typeof ScrollFadeView> => ({
+}: InspectorBodyProps): ComponentProps<typeof ScrollFadeView> => ({
   testID: 'desktop-inspector-scroll',
   className: cn('overflow-hidden', fitContent && 'min-h-0 shrink'),
   contentContainerClassName: 'grow',
