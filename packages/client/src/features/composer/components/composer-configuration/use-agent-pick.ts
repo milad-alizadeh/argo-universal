@@ -10,6 +10,19 @@ import { loadingConfiguration } from './configuration-values';
  */
 const waitForSettings = 600;
 
+/*
+ * The shortest the spinner stands. The settings sometimes land inside a couple of frames, and a mark that
+ * appears and goes again in that time reads as a glitch; the owner would rather wait than see it flash
+ * (owner, 2026-10-21).
+ */
+const spinnerFloor = 250;
+
+interface Picked {
+  id: string;
+  // When the choice was made, which is what the shortest time is counted from.
+  at: number;
+}
+
 export interface AgentPick {
   // The Agent whose settings the list is waiting for: its row shows a spinner where its mark was.
   pending?: string;
@@ -28,15 +41,16 @@ export function useAgentPick(
   leave: () => void,
 ): AgentPick {
   const slides = useOptionalSheet() !== undefined;
-  const [pending, setPending] = useState<string>();
-  const done = useLeave(leave, setPending);
+  const [picked, setPicked] = useState<Picked>();
+  const done = useLeave(leave, setPicked);
+  const on = { change, leave, slides, setPicked };
 
   useSettledLeave(
-    { pending, settled: !loadingConfiguration(configuration) },
+    { picked, settled: !loadingConfiguration(configuration) },
     done,
   );
 
-  return { pending, pick: picking({ change, leave, slides, setPending }) };
+  return { pending: picked?.id, pick: picking(on) };
 }
 
 interface Picking {
@@ -44,7 +58,7 @@ interface Picking {
   leave: () => void;
   // Whether leaving the choices is a slide, which is the motion the wait is here to keep clear.
   slides: boolean;
-  setPending: (pending: string) => void;
+  setPicked: (picked: Picked) => void;
 }
 
 const picking =
@@ -52,14 +66,14 @@ const picking =
   (id: string): void => {
     on.change(id);
 
-    if (on.slides) on.setPending(id);
+    if (on.slides) on.setPicked({ id, at: Date.now() });
     else on.leave();
   };
 
 // Leaving is the same whether the settings arrived or the wait ran out, and it must not restart the wait.
 function useLeave(
   leave: () => void,
-  setPending: (pending?: string) => void,
+  setPicked: (picked?: Picked) => void,
 ): () => void {
   const latest = useRef(leave);
   useEffect(() => {
@@ -67,26 +81,31 @@ function useLeave(
   });
 
   return useCallback(() => {
-    setPending(undefined);
+    setPicked(undefined);
     latest.current();
-  }, [setPending]);
+  }, [setPicked]);
 }
 
 interface Waiting {
-  pending?: string;
+  picked?: Picked;
   settled: boolean;
 }
 
+// How much longer the list holds: until the settings are in, and never less than the spinner's shortest time.
+const leaveIn = (picked: Picked, settled: boolean): number =>
+  Math.max(
+    (settled ? spinnerFloor : waitForSettings) - (Date.now() - picked.at),
+    0,
+  );
+
 function useSettledLeave(waiting: Waiting, done: () => void): void {
-  const { pending, settled } = waiting;
+  const { picked, settled } = waiting;
 
   useEffect(() => {
-    if (pending === undefined) return;
+    if (picked === undefined) return;
 
-    if (settled) return done();
-
-    const timer = setTimeout(done, waitForSettings);
+    const timer = setTimeout(done, leaveIn(picked, settled));
 
     return (): void => clearTimeout(timer);
-  }, [pending, settled, done]);
+  }, [picked, settled, done]);
 }

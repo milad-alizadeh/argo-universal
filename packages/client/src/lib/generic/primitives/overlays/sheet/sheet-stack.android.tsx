@@ -10,7 +10,12 @@ import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
 import { fillsHeight, sheetModifiers } from './sheet-sizing.android';
 import { useRetainedPages } from './sheet-slide-pages.android';
-import { useSlide } from './sheet-slide.android';
+import {
+  usePageSlide,
+  useSlide,
+  type Slide,
+  type SlideMotion,
+} from './sheet-slide.android';
 import { SheetTitleRow } from './sheet-title-row';
 
 type PagesProps = SheetProps & { stack: SheetStack };
@@ -19,9 +24,12 @@ type FrameProps = PagesProps & { fill: boolean; width: number };
 
 type PageProps = FrameProps & {
   page: SheetPageEntry;
+  // The page's own place among the pages, which is both where it is laid out and where it slides from.
+  index: number;
   root: boolean;
-  // False while the row is sliding: a pushed page stands in for itself until the motion stops.
+  // False while the pages are sliding: a pushed page stands in for itself until the motion stops.
   settled: boolean;
+  motion: SlideMotion;
 };
 
 /*
@@ -65,15 +73,21 @@ function SheetPane(props: FrameProps): ReactElement {
   return <SlidingPages {...props} />;
 }
 
+/*
+ * The pages keep their places side by side, so none of them is laid out again to be moved, but each carries
+ * its own transform rather than riding one that moves them all. Travelling two places used to drag the page
+ * between them right across the reader's view; now only the page being left and the page being gone to move,
+ * and the rest wait a screen's width off to one side (owner, 2026-10-21).
+ */
 function SlidingPages(props: FrameProps): ReactElement {
   const { pages, slot } = useRetainedPages(props.stack, props.open);
-  const slide = useSlide(slot, props.width);
+  const slide = useSlide(slot);
 
   return (
     <View className={cn('overflow-hidden', props.fill && 'flex-1')}>
-      <Animated.View style={[rowStyle(props, pages.length), slide.style]}>
-        {slidePages(props, pages, slide.settled)}
-      </Animated.View>
+      <View style={rowStyle(props, pages.length)}>
+        {slidePages(props, pages, slide)}
+      </View>
     </View>
   );
 }
@@ -81,22 +95,30 @@ function SlidingPages(props: FrameProps): ReactElement {
 function slidePages(
   props: FrameProps,
   pages: SheetPageEntry[],
-  settled: boolean,
+  slide: Slide,
 ): ReactElement[] {
   return pages.map((page, index) => (
-    <SlidePage
-      {...props}
-      key={page.name}
-      page={page}
-      root={index === 0}
-      settled={settled}
-    />
+    <SlidePage {...props} {...placed(page, index, slide)} key={page.name} />
   ));
 }
 
+// What a page is told of where it sits and what the pages are doing, over and above the frame they share.
+const placed = (
+  page: SheetPageEntry,
+  index: number,
+  slide: Slide,
+): Pick<PageProps, 'page' | 'index' | 'root' | 'settled' | 'motion'> => ({
+  page,
+  index,
+  root: index === 0,
+  settled: slide.settled,
+  motion: slide.motion,
+});
+
 /*
  * The row is as wide as all its pages together and each page keeps its own width, because a child of a row
- * that was told to fill would share the row's width with its siblings instead of holding a screen each.
+ * that was told to fill would share the row's width with its siblings instead of holding a screen each. The
+ * row itself never moves: it is only what gives every page the same height, the tallest one's.
  */
 const rowStyle = (props: FrameProps, count: number): ViewStyle => ({
   flexDirection: 'row',
@@ -107,11 +129,13 @@ const rowStyle = (props: FrameProps, count: number): ViewStyle => ({
 const pageStyle = (width: number): ViewStyle => ({ width, flexShrink: 0 });
 
 function SlidePage(props: PageProps): ReactElement {
+  const slide = usePageSlide(props.motion, props.index, props.width);
+
   return (
-    <View style={pageStyle(props.width)}>
+    <Animated.View style={[pageStyle(props.width), slide]}>
       <PageHeader {...props} />
       <PageContent {...props} />
-    </View>
+    </Animated.View>
   );
 }
 
