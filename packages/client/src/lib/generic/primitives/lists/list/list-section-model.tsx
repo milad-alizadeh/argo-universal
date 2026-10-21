@@ -64,7 +64,12 @@ function appendItem(blocks: ListBlock[], entry: ListChild): void {
   const previous = blocks.at(-1);
 
   if (previous?.kind === 'items') previous.items.push(entry);
-  else blocks.push({ key: entry.key, kind: 'items', items: [entry] });
+  else
+    blocks.push({
+      key: looseRunKey(previous),
+      kind: 'items',
+      items: [entry],
+    });
 }
 
 function childEntry(
@@ -76,4 +81,8 @@ function childEntry(
     content: child,
     position: listPosition(place.index === 0, place.index === place.count - 1),
   };
+}
+
+function looseRunKey(previous: ListBlock | undefined): string {
+  return `${previous?.key ?? 'start'}:items`;
 }

@@ -1,6 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { listTestIdProps } from '../../../list-test-id';
 import { RowHighlightProvider } from '../../../row-highlights';
+import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
+import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { ListChild } from './list-children';
 import { ListEnd } from './list-scroll-props';
 import { sectionItems } from './list-section-entries';
@@ -19,10 +22,38 @@ export function SectionShelves({
   ...props
 }: ChildDataProps & { blocks: ListBlock[] }): ReactElement {
   return (
-    <View className="min-w-0 gap-4">
-      {props.header}
-      {shelfContents(props, blocks)}
+    <ScrollFadeList
+      {...shelfScrollProps(props)}
+      data={blocks}
+      keyExtractor={blockKey}
+      renderItem={shelfRenderer(props)}
+    />
+  );
+}
+
+function blockKey(block: ListBlock): string {
+  return block.key;
+}
+
+function shelfScrollProps(
+  props: ChildDataProps,
+): Partial<ScrollFadeListProps<ListBlock>> {
+  return {
+    maxHeight: props.maxHeight,
+    ...sectionTestId(props.testID),
+    ListHeaderComponent: props.header ? <View>{props.header}</View> : undefined,
+    ListFooterComponent: (
       <ListEnd footer={props.footer} endContent={props.endContent} />
+    ),
+  };
+}
+
+function shelfRenderer(
+  props: ChildDataProps,
+): NonNullable<ScrollFadeListProps<ListBlock>['renderItem']> {
+  return ({ item }) => (
+    <View className="pb-4">
+      <SectionShelf props={withoutListEnd(props)} block={item} />
     </View>
   );
 }
@@ -73,13 +104,7 @@ function withoutListEnd({
   endContent: _end,
   ...props
 }: ChildDataProps): ChildDataProps {
-  return props;
-}
-
-function shelfContents(props: ChildDataProps, blocks: ListBlock[]): ReactNode {
-  return blocks.map((block) => (
-    <SectionShelf key={block.key} props={withoutListEnd(props)} block={block} />
-  ));
+  return { ...props, testID: undefined };
 }
 
 function hasContent(
@@ -89,4 +114,10 @@ function hasContent(
   return [items.length, block.section.header, block.section.footer].some(
     Boolean,
   );
+}
+
+function sectionTestId(
+  testID: string | undefined,
+): ReturnType<typeof listTestIdProps> | Record<never, never> {
+  return testID ? listTestIdProps(testID) : {};
 }
