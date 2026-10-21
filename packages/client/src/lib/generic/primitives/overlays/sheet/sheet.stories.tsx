@@ -7,6 +7,7 @@ import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { MenuTrigger } from '#primitives/overlays/menu';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Sheet } from './sheet';
 import { useSheet } from './sheet-pages';
@@ -14,11 +15,13 @@ import type { SheetProps } from './sheet-props';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Sheet',
+  component: Sheet,
+  argTypes: kitArgTypes('Sheet'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Sheet',

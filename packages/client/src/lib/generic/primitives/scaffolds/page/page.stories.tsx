@@ -4,6 +4,7 @@ import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Page, type PageProps } from './index';
 import { exampleSubmenu } from './page-submenu-example.mocks';
@@ -11,6 +12,7 @@ import { exampleSubmenu } from './page-submenu-example.mocks';
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Page',
   component: Page,
+  argTypes: kitArgTypes('Page'),
 } satisfies Meta<typeof Page>;
 
 export default meta;

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Code } from './index';
 
@@ -6,8 +7,9 @@ const sample =
   "// Responses must never be cached\nexport function noStore(res: Response) {\n  res.headers.set(CACHE, 'no-store');\n  return res;\n}";
 
 const meta = {
-  title: 'Design System/Primitives/Code',
+  title: 'Design System/Primitives/Content/Code',
   component: Code,
+  argTypes: kitArgTypes('Code'),
   args: {
     code: sample,
     language: 'ts',

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { createElement, useState } from 'react';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Checkbox, type CheckboxProps } from './checkbox';
 
@@ -18,11 +19,13 @@ function Example(
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Checkbox',
+  component: Checkbox,
+  argTypes: kitArgTypes('Checkbox'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 function unchecked(): React.JSX.Element {
   return (

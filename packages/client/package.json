@@ -19,7 +19,8 @@
     },
     "#features/*": "./src/features/*/index.ts",
     "#lib/generic/*": "./src/lib/generic/*.ts",
-    "#lib/product/*": "./src/lib/product/*.tsx"
+    "#lib/product/*": "./src/lib/product/*.tsx",
+    "#storybook/*": "./src/storybook/*.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -108,6 +109,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",
+    "react-native-web": "catalog:",
     "sf-symbols-typescript": "catalog:",
     "storybook": "catalog:",
     "tailwindcss": "catalog:",

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Button } from './button';
 import type { ButtonProps } from './button-props';
@@ -45,11 +46,13 @@ const buttons: { state: string; props: ButtonProps }[] = [
 
 const meta = {
   title: 'Design System/Primitives/Actions/Button',
+  component: Button,
+  argTypes: kitArgTypes('Button'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 function ButtonExamples(): React.JSX.Element {
   return (

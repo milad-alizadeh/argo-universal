@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Avatar } from './avatar';
 
@@ -18,6 +19,7 @@ const tones = [
 const meta = {
   title: 'Design System/Primitives/Content/Avatar',
   component: Avatar,
+  argTypes: kitArgTypes('Avatar'),
   args: { initials: 'SR', accessibilityLabel: 'Sam Rivera' },
   tags: ['third-party'],
 } satisfies Meta<typeof Avatar>;

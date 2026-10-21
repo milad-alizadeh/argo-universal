@@ -3,12 +3,14 @@ import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
 import { Surface } from '#primitives/layout/surface';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { ScrollView } from './scroll-view';
 
 const meta = {
   title: 'Design System/Primitives/Layout/ScrollView',
   component: ScrollView,
+  argTypes: kitArgTypes('ScrollView'),
 } satisfies Meta<typeof ScrollView>;
 
 export default meta;

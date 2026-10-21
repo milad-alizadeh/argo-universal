@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Platform, View } from 'react-native';
 import { List } from '#primitives/lists/list';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Metadata } from './metadata';
 import { fields } from './metadata.mocks';
@@ -8,6 +9,7 @@ import { fields } from './metadata.mocks';
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Metadata',
   component: Metadata,
+  argTypes: kitArgTypes('Metadata'),
 } satisfies Meta<typeof Metadata>;
 
 export default meta;

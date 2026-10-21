@@ -8,11 +8,12 @@ import { DrawerItem } from './drawer-item';
 
 const meta = {
   title: 'Design System/Primitives/Lists/DrawerItem',
+  component: DrawerItem,
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'DrawerItem',

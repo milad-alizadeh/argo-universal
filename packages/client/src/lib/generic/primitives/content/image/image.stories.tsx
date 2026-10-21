@@ -3,11 +3,14 @@ import { MediaUrlContext } from '#primitives/content/media-url';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Image } from './image';
 
-const meta = { title: 'Design System/Primitives/Content/Image' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Content/Image',
+  component: Image,
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const asset = {
   pluginId: 'hello',

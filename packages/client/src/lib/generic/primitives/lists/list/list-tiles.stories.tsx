@@ -6,17 +6,20 @@ import { Image } from '#primitives/content/image';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import { Svg } from '#primitives/visual';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { List } from './list';
 
 const meta = {
   title: 'Design System/Primitives/Lists/List tiles',
+  component: List,
+  argTypes: kitArgTypes('List'),
   parameters: { screenPreview: true },
   includeStories: ['AutoColumns', 'Shelf', 'Media'],
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const headingRole = 'heading';
 

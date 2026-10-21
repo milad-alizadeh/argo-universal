@@ -26,11 +26,12 @@ function GitHubSteps(): React.JSX.Element {
 
 const meta = {
   title: 'Screens/Onboarding/GitHub step',
+  component: GitHubStepView,
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 // The AccountRow chips and captions designed for Settings › Accounts in Paper.
 export const GitHubStep: Story = {

@@ -16,6 +16,7 @@ function AnimationExample(): React.JSX.Element {
 
 const meta = {
   title: 'Design System/Primitives/Native/NativeOnlyAnimatedView',
+  component: NativeOnlyAnimatedView,
   tags: ['third-party'],
 } satisfies Meta;
 

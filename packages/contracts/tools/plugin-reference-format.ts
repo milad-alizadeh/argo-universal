@@ -1,7 +1,7 @@
 import type { z } from 'zod';
+import { partObjectSchema } from '../src/plugins/plugin-object-schema';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
 import { wireParts, type WirePartDefinition } from '../src/plugins/wire-parts';
-import { partObjectSchema } from './plugin-object-schema';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 

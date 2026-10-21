@@ -31,6 +31,8 @@ const withDesktopSymbols: Decorator = (Story) => (
 );
 
 const preview: Preview = {
+  // Every story file gets a Docs page; a file with nothing to document opts out with '!autodocs'.
+  tags: ['autodocs'],
   decorators: [...previewDecorators, withDesktopSymbols],
   initialGlobals: previewGlobals,
   globalTypes: previewGlobalTypes,

@@ -1,15 +1,18 @@
 import fixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../variations';
 import { Svg } from './svg';
 
 const meta = {
-  title: 'Design System/Primitives/Svg',
+  title: 'Design System/Primitives/Visual/Svg',
+  component: Svg,
+  argTypes: kitArgTypes('Svg'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const svgXml = firstFixtureXml();
 

@@ -1,14 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
+import { SearchField } from './search-field';
 import { SearchFieldExample } from './search-field-example.mocks';
 
 const meta = {
   title: 'Design System/Primitives/Inputs/SearchField',
+  component: SearchField,
+  argTypes: kitArgTypes('SearchField'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'SearchField',

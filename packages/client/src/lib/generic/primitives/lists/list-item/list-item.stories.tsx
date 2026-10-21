@@ -4,6 +4,7 @@ import { action } from 'storybook/actions';
 import { Slider } from '#primitives/inputs/slider';
 import { List } from '#primitives/lists/list';
 import { Pill } from '#primitives/status/pill';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { ListItem } from './index';
 import type { ListItemProps } from './list-item-props';
@@ -12,6 +13,7 @@ const meta = {
   title: 'Design System/Primitives/Lists/ListItem',
   args: { title: 'Item one' },
   component: ListItem,
+  argTypes: kitArgTypes('ListItem'),
 } satisfies Meta<typeof ListItem>;
 
 export default meta;

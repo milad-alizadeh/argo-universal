@@ -17,12 +17,13 @@ function Example(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Design System/Primitives/SegmentedControl',
+  title: 'Design System/Primitives/Inputs/SegmentedControl',
+  component: SegmentedControl,
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'SegmentedControl',

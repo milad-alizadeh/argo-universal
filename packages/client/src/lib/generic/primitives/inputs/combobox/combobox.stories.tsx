@@ -5,6 +5,7 @@ import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Combobox } from './combobox';
 
@@ -36,11 +37,13 @@ const options = [
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Combobox',
+  component: Combobox,
+  argTypes: kitArgTypes('Combobox'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Combobox',

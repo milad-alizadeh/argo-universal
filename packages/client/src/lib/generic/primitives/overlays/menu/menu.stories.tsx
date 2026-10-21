@@ -87,11 +87,14 @@ function rangeActions(
   }));
 }
 
-const meta = { title: 'Design System/Primitives/Overlays/Menu' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Overlays/Menu',
+  component: Menu,
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const permissionStates: { label: string; props: PermissionsMenuProps }[] = [
   { label: 'Options', props: {} },

@@ -3,12 +3,14 @@ import { useState } from 'react';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Surface } from './surface';
 
 const meta = {
   title: 'Design System/Primitives/Layout/Surface',
   component: Surface,
+  argTypes: kitArgTypes('Surface'),
   args: { kind: 'card' },
 } satisfies Meta<typeof Surface>;
 

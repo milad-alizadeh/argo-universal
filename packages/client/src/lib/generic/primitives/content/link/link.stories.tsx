@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Text } from '#primitives/content/text';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Link } from './index';
 
 const meta = {
-  title: 'Design System/Primitives/Link',
+  title: 'Design System/Primitives/Content/Link',
   component: Link,
+  argTypes: kitArgTypes('Link'),
   args: { label: 'Read more', href: 'https://example.com' },
 } satisfies Meta<typeof Link>;
 

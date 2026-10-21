@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Pill } from './pill';
 
@@ -17,6 +18,7 @@ const meta = {
   title: 'Design System/Primitives/Status/Pill',
   args: { text: 'Ready' },
   component: Pill,
+  argTypes: kitArgTypes('Pill'),
 } satisfies Meta<typeof Pill>;
 
 export default meta;

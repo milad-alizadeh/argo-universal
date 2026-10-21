@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Text } from '#primitives/content/text';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Stack } from './stack';
 
 const meta = {
   title: 'Design System/Primitives/Layout/Stack',
   component: Stack,
+  argTypes: kitArgTypes('Stack'),
   args: { direction: 'row' },
 } satisfies Meta<typeof Stack>;
 

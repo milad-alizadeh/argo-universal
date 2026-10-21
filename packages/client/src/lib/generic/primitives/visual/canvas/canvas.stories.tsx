@@ -7,11 +7,14 @@ import { CanvasFallback } from './canvas-boundary';
 import type { RectProps } from './canvas-props';
 import { days, rectangles, labels } from './canvas.stories.mocks';
 
-const meta = { title: 'Design System/Primitives/Canvas' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Visual/Canvas',
+  component: Canvas,
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const scenes = {
   heatmap: {

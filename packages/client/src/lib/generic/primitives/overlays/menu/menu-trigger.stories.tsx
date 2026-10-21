@@ -6,11 +6,12 @@ import { MenuTrigger } from './menu-trigger';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/MenuTrigger',
+  component: MenuTrigger,
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const states: { label: string; props: MenuTriggerProps }[] = [
   { label: 'Default', props: { label: 'Item', icon: 'folder' } },

@@ -8,6 +8,7 @@ import { Portal, PortalHost } from './portal';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Portal',
+  component: Portal,
   render: (): React.JSX.Element => <PortalPreview />,
 } satisfies Meta;
 

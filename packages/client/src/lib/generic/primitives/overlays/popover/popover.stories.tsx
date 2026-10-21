@@ -6,6 +6,7 @@ import { Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { Combobox } from '#primitives/inputs/combobox';
 import { TextInput } from '#primitives/inputs/text-input';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { PopoverAnchor } from './popover-anchor';
 import { PopoverTitle } from './popover-title';
@@ -117,12 +118,14 @@ function FruitList(props: { onClose: () => void }): React.JSX.Element {
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Popover',
+  component: Popover,
+  argTypes: kitArgTypes('Popover'),
   tags: ['third-party'],
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Popover',

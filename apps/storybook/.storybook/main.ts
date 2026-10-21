@@ -96,7 +96,7 @@ const config: StorybookConfig = {
     getAbsolutePath('@storybook/addon-vitest'),
     getAbsolutePath('@storybook/addon-docs'),
   ],
-  typescript: { reactDocgen: false },
+  typescript: { reactDocgen: 'react-docgen' },
   framework: getAbsolutePath('@storybook/react-native-web-vite'),
   // Uniwind styles the screens; the Vitest addon reuses this hook.
   viteFinal(config) {

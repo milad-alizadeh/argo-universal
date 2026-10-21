@@ -1,17 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { CentredOverlayScope } from '#primitives/overlays/centred-overlay';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
+import { Form } from './form';
 import { IssueForm, type IssueDraft } from './form-example';
 
 const meta = {
   title: 'Design System/Primitives/Fields/Form',
+  component: Form,
+  argTypes: kitArgTypes('Form'),
   parameters: { screenPreview: true },
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const filled: IssueDraft = {
   title: 'Sign-in sheet closes early',

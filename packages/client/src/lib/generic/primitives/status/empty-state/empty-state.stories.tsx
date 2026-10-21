@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Button } from '#primitives/actions/button';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { EmptyState } from './empty-state';
 import type { EmptyStateProps } from './empty-state-props';
@@ -46,6 +47,7 @@ const examples = [
 const meta = {
   title: 'Design System/Primitives/Status/EmptyState',
   component: EmptyState,
+  argTypes: kitArgTypes('EmptyState'),
   args: {
     icon: sessions.icon,
     title: sessions.title,

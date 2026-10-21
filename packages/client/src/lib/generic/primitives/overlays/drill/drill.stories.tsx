@@ -9,11 +9,12 @@ import { Drill } from './drill';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Drill',
+  component: Drill,
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = { name: 'Drill', render: () => <Configure /> };
 

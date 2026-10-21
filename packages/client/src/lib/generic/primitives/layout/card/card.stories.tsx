@@ -8,12 +8,14 @@ import { Grid } from '#primitives/layout/grid';
 import { Stack } from '#primitives/layout/stack';
 import { Pill } from '#primitives/status/pill';
 import { Svg } from '#primitives/visual';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Card } from './card';
 
 const meta = {
   title: 'Design System/Primitives/Layout/Card',
   component: Card,
+  argTypes: kitArgTypes('Card'),
   args: { title: 'api-gateway' },
 } satisfies Meta<typeof Card>;
 

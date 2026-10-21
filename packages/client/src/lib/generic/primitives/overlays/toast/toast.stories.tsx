@@ -5,6 +5,8 @@ import { ActionToastExample, ErrorToastExample } from './toast-example.mocks';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Toast',
+  // A Toast is raised by `showToast`, not drawn from props, so there is nothing to document.
+  tags: ['!autodocs'],
 } satisfies Meta;
 
 export default meta;

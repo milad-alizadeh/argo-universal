@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import { kitJsonSchema } from '../src/kit-schema-json';
-import type { WirePartDefinition } from '../src/plugins/wire-parts';
+import { kitJsonSchema } from '../kit-schema-json';
+import type { WirePartDefinition } from './wire-parts';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 

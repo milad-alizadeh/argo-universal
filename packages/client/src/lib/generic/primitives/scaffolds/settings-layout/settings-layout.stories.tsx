@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { SettingsLayout, type SettingsLayoutProps } from './index';
 import {
@@ -13,6 +14,7 @@ const args: SettingsLayoutProps = { sections: exampleSections };
 const meta = {
   title: 'Design System/Primitives/Scaffolds/SettingsLayout',
   component: SettingsLayout,
+  argTypes: kitArgTypes('SettingsLayout'),
   args,
 } satisfies Meta<typeof SettingsLayout>;
 

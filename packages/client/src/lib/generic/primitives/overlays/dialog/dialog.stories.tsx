@@ -5,6 +5,7 @@ import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { TextInput } from '#primitives/inputs/text-input';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import {
   Dialog,
   DialogCancel,
@@ -80,12 +81,14 @@ function ProfileFooter(): React.JSX.Element {
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Dialog',
+  component: Dialog,
+  argTypes: kitArgTypes('Dialog'),
   tags: ['third-party'],
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'Dialog',

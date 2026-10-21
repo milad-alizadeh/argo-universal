@@ -1,17 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Audio } from './audio';
 import { AudioTransport, type AudioTransportProps } from './audio-transport';
 
 const meta = {
   title: 'Design System/Primitives/Content/Audio',
+  component: Audio,
+  argTypes: kitArgTypes('Audio'),
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const chime = {
   pluginId: 'hello',

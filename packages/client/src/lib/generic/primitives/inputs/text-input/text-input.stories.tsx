@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { TextInput } from './text-input';
 import type {
@@ -14,12 +15,14 @@ import type {
 
 const meta = {
   title: 'Design System/Primitives/Inputs/TextInput',
+  component: TextInput,
+  argTypes: kitArgTypes('TextInput'),
   parameters: { screenPreview: true },
 } satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const Variations: Story = {
   name: 'TextInput',

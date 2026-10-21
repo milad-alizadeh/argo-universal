@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Markdown } from './index';
 
 const meta = {
-  title: 'Design System/Primitives/Markdown',
+  title: 'Design System/Primitives/Content/Markdown',
   component: Markdown,
+  argTypes: kitArgTypes('Markdown'),
   args: { text: '' },
 } satisfies Meta<typeof Markdown>;
 
