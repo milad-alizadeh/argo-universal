@@ -4,6 +4,7 @@ import {
   type SubagentListProps,
   type SubagentFeedProps,
 } from '#features/sessions';
+import { InspectorPage, InspectorPages } from '#primitives/scaffolds/inspector';
 import { ScrollFadeView } from '../../../lib/generic/scroll-fade/scroll-fade';
 
 export type AgentFeedSlot = (
@@ -17,17 +18,50 @@ export function SessionAgentsStage(props: Props): ReactNode {
   const [selected, select] = useState<string | null>(null);
   const subagent = props.subagents.find((one) => one.sessionId === selected);
 
-  if (subagent && props.renderFeed)
-    return props.renderFeed({ subagent, onBack: () => select(null) });
+  const detail = agentDetail(props, subagent, () => select(null));
 
   return (
-    <AgentList
+    <AgentPages
       {...props}
+      detail={detail}
       onSelect={(one) => {
         select(one.sessionId);
         props.onSelect?.(one);
       }}
     />
+  );
+}
+
+function agentDetail(
+  props: Props,
+  subagent: SubagentFeedProps['subagent'] | undefined,
+  onBack: () => void,
+): ReactNode {
+  if (!subagent || !props.renderFeed) return null;
+
+  return props.renderFeed({ subagent, onBack });
+}
+
+function AgentPages(
+  props: SubagentListProps & { detail: ReactNode },
+): ReactNode {
+  return (
+    <InspectorPages>
+      <InspectorPage active={!props.detail} label="Agents list">
+        <AgentList {...props} />
+      </InspectorPage>
+      <AgentDetail detail={props.detail} />
+    </InspectorPages>
+  );
+}
+
+function AgentDetail({ detail }: { detail: ReactNode }): ReactNode {
+  return (
+    detail && (
+      <InspectorPage active label="Agent Feed">
+        {detail}
+      </InspectorPage>
+    )
   );
 }
 
