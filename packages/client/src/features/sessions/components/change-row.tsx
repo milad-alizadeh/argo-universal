@@ -15,7 +15,7 @@ type Props = { change: SessionPullRequest; onOpen: () => void };
 
 export function ChangeRow(props: Props): ReactElement {
   return (
-    <View className="flex-row items-start gap-2 px-1 py-2">
+    <View className="flex-row items-start gap-2 rounded-xl px-1 py-2 web:hover:bg-hover web:has-focus-visible:bg-hover">
       <ChangeAction {...props} />
       <ChangeMenu {...props} />
     </View>
@@ -28,7 +28,7 @@ function ChangeAction({ change, onOpen }: Props): ReactElement {
       role="button"
       accessibilityLabel={`Open Change #${change.number}`}
       onPress={onOpen}
-      className="min-w-0 flex-1 flex-row items-start gap-2 rounded-control web:hover:bg-hover web:focus-visible:bg-hover"
+      className="min-w-0 flex-1 flex-row items-start gap-2"
     >
       <View className="w-7 shrink-0 items-center pt-0.5">
         <ChangeStageIcon {...change} role="control" />
