@@ -3,9 +3,9 @@ import { useState, type ReactElement, type ReactNode } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
+import { Link } from '#primitives/content/link';
 import { LinkPreviewCard } from './link-preview-card';
 import { LinkPreviewContext } from './link-preview-context';
-import { Link } from './link-preview-story-link';
 import { webPreview } from './link-preview.mocks';
 
 const href = 'https://example.com/guide';

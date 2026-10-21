@@ -1,5 +1,6 @@
 import { router, type Href } from 'expo-router';
 import type { AnchorHTMLAttributes, MouseEvent, ReactElement } from 'react';
+import { LinkPreview } from '#primitives/overlays/link-preview';
 import type { LinkProps } from './link-props';
 import { linkTarget, isRoute } from './link-target';
 
@@ -49,7 +50,7 @@ function anchorProps(
 
   return {
     href: props.target,
-    title: props.target,
+    title: navigation ? props.target : undefined,
     onClick: isRoute(props.route) ? routePress(props.route) : undefined,
     ...destination,
   };
@@ -59,6 +60,16 @@ const anchorClass =
   'rounded-sm underline decoration-focus underline-offset-2 hover:decoration-foreground focus-visible:outline-3 focus-visible:outline-primary/35';
 
 function FollowedLink(props: LinkProps & { target: string }): ReactElement {
+  const anchor = <LinkAnchor {...props} />;
+
+  return isRoute(props.route) ? (
+    anchor
+  ) : (
+    <LinkPreview href={props.target}>{anchor}</LinkPreview>
+  );
+}
+
+function LinkAnchor(props: LinkProps & { target: string }): ReactElement {
   return (
     <a
       {...anchorProps(props)}

@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
+import { Link } from '#primitives/content/link';
 import { Text } from '#primitives/content/text';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { LinkPreviewCard } from './link-preview-card';
 import type { LinkPreviewCardData } from './link-preview-card-props';
 import { LinkPreviewContext } from './link-preview-context';
-import { Link } from './link-preview-story-link';
 import {
   commitPreview,
   issuePreview,
