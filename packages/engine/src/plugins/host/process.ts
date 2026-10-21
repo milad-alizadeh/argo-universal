@@ -1,8 +1,4 @@
-import {
-  HostCommand,
-  type HostHook,
-  type HostReply,
-} from '../protocol/runtime.ts';
+import { HostCommand, type HostDelivery } from '../protocol/runtime.ts';
 import { HostWorkers } from './workers.ts';
 
 const workers = new HostWorkers((message) => process.send?.(message));
@@ -23,8 +19,10 @@ const isWorkerEvent = (
 ): command is Extract<HostCommand, { type: 'event' | 'test' }> =>
   command.type === 'event' || command.type === 'test';
 
-const isDelivery = (command: HostCommand): command is HostReply | HostHook =>
-  command.type === 'reply' || command.type === 'hook';
+const isDelivery = (command: HostCommand): command is HostDelivery =>
+  command.type === 'reply' ||
+  command.type === 'hook' ||
+  command.type === 'accountToken';
 
 function handle(command: HostCommand): void {
   if (command.type === 'activate') workers.activate(command);

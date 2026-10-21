@@ -2,22 +2,22 @@
 // Each file under `schema/` holds one module's tables (ADR-0016 §9); a foreign key may import the table it points at.
 // JSON columns are text; the Server validates them on write and read.
 
-export * from './schema/blob';
+export * from '#schema-blob';
 
-export * from './schema/feed';
+export * from '#schema-feed';
 
-export * from './schema/projects';
+export * from '#schema-projects';
 
-export * from './schema/sessions';
+export * from '#schema-sessions';
 
-export * from './schema/agent-servers';
+export * from '#schema-agent-servers';
 
-export * from './schema/agent-options';
+export * from '#schema-agent-options';
 
-export * from './schema/registry-cache';
+export * from '#schema-registry-cache';
 
-export * from './schema/shells';
+export * from '#schema-shells';
 
-export * from './schema/server-identity';
+export * from '#schema-server-identity';
 
-export * from './schema/plugins';
+export * from '#schema-plugins';

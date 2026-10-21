@@ -24,6 +24,7 @@ import {
   type RpcConnection,
 } from '../rpc';
 import type { RpcContext } from '../rpc/connection';
+import { accountsRouter } from './accounts/router';
 import { PluginService, type PluginServiceDeps } from './service';
 
 function requireSignal(signal: AbortSignal | undefined): AbortSignal {
@@ -134,6 +135,7 @@ export const createPluginsRouter = routerFactory((deps: PluginServiceDeps) => {
   const plugins = new PluginService(deps);
 
   return mergeRouters(
+    router({ accounts: accountsRouter(deps.pluginAccounts) }),
     createLifecycleRouter(plugins),
     createSettingsRouter(plugins),
     createViewsRouter(plugins),

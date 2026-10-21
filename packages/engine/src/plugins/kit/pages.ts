@@ -13,6 +13,7 @@ import { cancelPageFrame } from './page-frame';
 import { runHandler, type OpenView, type DispatchSender } from './page-view';
 import { ReplacementPages } from './replacement-pages';
 import { elementOf } from './view-content';
+import { withView } from './view-scope';
 
 export type { DispatchSender } from './page-view';
 
@@ -30,7 +31,7 @@ export interface Pages {
   registerSlot: (slotId: SlotId, content: SlotContent) => void;
   receive: (event: Exclude<PluginEvent, { type: 'data' }>) => void;
   registerReplacement: (path: string, element: ReactNode) => void;
-  requirePage: (path: string) => void;
+  requirePage: (path: string, contribution?: string) => void;
 }
 
 interface Hub {
@@ -88,7 +89,9 @@ function close(hub: Hub, viewId: PluginViewId): void {
 
 async function dispatch(hub: Hub, event: Dispatch): Promise<void> {
   try {
-    await runHandler(hub.views.get(event.viewId), event);
+    await withView(event.viewId, () =>
+      runHandler(hub.views.get(event.viewId), event),
+    );
     await hub.settle(event.requestId, { ok: true });
   } catch (error) {
     await hub.settle(event.requestId, {
@@ -120,13 +123,17 @@ export function mountPages(
     receive: (event) => receive(hub, event),
     registerReplacement: (path, element) =>
       hub.replacements.register(path, element),
-    requirePage: (path) => requirePage(hub, path),
+    requirePage: (path, contribution) => requirePage(hub, path, contribution),
   };
 }
 
-function requirePage(hub: Hub, path: string): void {
+function requirePage(
+  hub: Hub,
+  path: string,
+  contribution = 'Background',
+): void {
   if (!hub.pages.has(path))
-    throw new Error(`Background path ${path} is not a registered page`);
+    throw new Error(`${contribution} path ${path} is not a registered page`);
 }
 
 function pageHub(

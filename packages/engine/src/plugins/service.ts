@@ -23,7 +23,7 @@ import {
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
-import { discoverPlugins } from './discovery/loader';
+import { discoverWithAccounts } from './accounts/removed-plugins';
 import {
   fillsSlot,
   hooksEvent,
@@ -50,12 +50,15 @@ export class PluginService {
   constructor(private readonly deps: PluginServiceDeps) {}
 
   async startBackground(): Promise<void> {
-    await requireRuntime(this.deps).refreshProjects();
+    await Promise.all([
+      this.list(),
+      requireRuntime(this.deps).refreshProjects(),
+    ]);
     await startPlugins(this.deps, ({ plugin }) => runsBackground(plugin));
   }
 
   async list(): Promise<PluginList> {
-    const result = await discoverPlugins(this.deps);
+    const result = await discoverWithAccounts(this.deps);
 
     if (this.deps.pluginSettings)
       applyEnabled(result, this.deps.pluginSettings);

@@ -1,6 +1,7 @@
 import type { PluginAssetSource } from '@repo/contracts/plugins/assets';
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { PluginAccess } from '../access/plugin-access';
+import { borrowHop } from '../accounts/borrow-hop';
 import { spawnHooks } from '../hooks/spawn-hooks';
 import type {
   FetchCall,
@@ -72,14 +73,17 @@ export async function answerFetch(
 ): Promise<PluginValue> {
   const access = call.access();
 
-  if (request.account !== undefined)
-    throw new CapabilityRefusal(`Account ${request.account} is unavailable`);
   const hop = firstHop(request);
 
   access.checkHost(hop.url);
+
+  const authenticated = await fetchHop(call, hop, request.account);
+
+  if (!authenticated) return null;
+
   call.logCall();
 
-  return call.resources.fetch(hop, {
+  return call.resources.fetch(authenticated, {
     access,
     network: call.network,
   });
@@ -127,4 +131,12 @@ async function checkedProcess(
   if (call.action === 'wait' || call.action === 'kill') return call;
 
   return { ...(await access.checkCommand(call)), action: call.action };
+}
+
+function fetchHop(
+  call: PluginCall,
+  hop: ReturnType<typeof firstHop>,
+  host?: string,
+): Promise<ReturnType<typeof firstHop> | null> {
+  return host === undefined ? Promise.resolve(hop) : borrowHop(call, hop, host);
 }

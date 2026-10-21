@@ -1,6 +1,6 @@
 import { integer, primaryKey, snakeCase, text } from 'drizzle-orm/sqlite-core';
-import { agentServers } from './agent-servers';
-import { project } from './projects';
+import { agentServers } from '#schema-agent-servers';
+import { project } from '#schema-projects';
 
 export const agentOptions = snakeCase.table(
   'agent_options',

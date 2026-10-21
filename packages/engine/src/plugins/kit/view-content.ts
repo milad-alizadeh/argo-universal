@@ -16,15 +16,11 @@ type Open = Extract<PluginEvent, { type: 'open' }>;
 function renderContext(
   surface: PluginSurface | undefined,
   projectId: string | undefined,
+  serverDevice: boolean,
 ): PluginRenderContext {
   const context = surface
-    ? {
-        surface: Object.freeze({
-          platform: surface.platform,
-          wireVersion: surface.wireVersion,
-        }),
-      }
-    : {};
+    ? { serverDevice, surface: frozenSurface(surface) }
+    : { serverDevice };
 
   return projectId === undefined ? context : { ...context, projectId };
 }
@@ -46,12 +42,19 @@ function slotElement(
 // Every page and Slot gets the surface of the Connection its view belongs to.
 export function elementOf(
   content: Content,
-  { path, slot, surface, projectId }: Open,
+  { path, slot, surface, projectId, serverDevice }: Open,
 ): ReactNode | null {
-  const context = renderContext(surface, projectId);
+  const context = renderContext(surface, projectId, serverDevice === true);
 
   if (slot) return slotElement(content, slot, context);
   const page = content.pages.get(path);
 
   return page ? createElement(page, { context: Object.freeze(context) }) : null;
+}
+
+function frozenSurface(surface: PluginSurface): Readonly<PluginSurface> {
+  return Object.freeze({
+    platform: surface.platform,
+    wireVersion: surface.wireVersion,
+  });
 }

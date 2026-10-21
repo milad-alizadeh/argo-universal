@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import type {
   PluginCapability,
   PluginSettingField,
+  PluginManifest,
 } from '@repo/contracts/plugins';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { onTestFinished, vi } from 'vitest';
@@ -37,6 +38,7 @@ export async function installed(
     dev?: boolean;
     capabilities?: PluginCapability[];
     settings?: PluginSettingField[];
+    accounts?: PluginManifest['contributes']['accounts'];
   } = {},
 ): Promise<Probe> {
   const home = await createRuntimePlugins([

@@ -8,8 +8,8 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
-import { session } from './sessions';
-import { timestamp } from './timestamp';
+import { session } from '#schema-sessions';
+import { timestamp } from '#schema-timestamp';
 
 export const sessionUpdateKinds = [
   'user_message',

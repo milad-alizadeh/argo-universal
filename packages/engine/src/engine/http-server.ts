@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
-import type { HookPort, Keychain, PluginNetwork } from '../plugins';
+import type { HookPort } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
@@ -13,7 +13,13 @@ import {
   connectWebSockets,
   listenOnLoopback,
 } from './http-connections';
-import { closePlugins, startPlugins, type PluginSetup } from './plugin-setup';
+import type { PluginServerOptions } from './plugin-options';
+import {
+  closePlugins,
+  startPlugins,
+  type PluginSetup,
+  pluginRouterDeps,
+} from './plugin-setup';
 import { createRequestGuard } from './request-guard';
 import {
   createRequestListener,
@@ -22,15 +28,12 @@ import {
 import { type AppRouter, createAppRouter } from './router';
 import { createAppRouterDeps } from './router-deps';
 
-export interface HttpServerOptions {
+export interface HttpServerOptions extends PluginServerOptions {
   home: string;
   registry: RegistryActor;
   createId: () => string;
   port: number;
   version: string;
-  firstPartyPluginsDirectory?: string;
-  keychain?: Keychain;
-  pluginNetwork?: PluginNetwork;
   startedAt: string;
   database: Database;
   sessions: OpenSessionsActorRef;
@@ -130,20 +133,10 @@ function createHttpRouter(
       blobsFolder: setup.blobsFolder,
       sessionCommandSignal: setup.commandAdmission.signal,
       notifications: setup.notifications,
-      ...pluginDeps(setup),
+      ...pluginRouterDeps(setup),
     }),
   );
 }
-
-type PluginDeps = Pick<HttpSetup, 'pluginRuntime' | 'pluginSettings'> & {
-  hooks: HookPort['hooks'];
-};
-
-const pluginDeps = (setup: HttpSetup): PluginDeps => ({
-  pluginRuntime: setup.pluginRuntime,
-  pluginSettings: setup.pluginSettings,
-  hooks: setup.hookPort.hooks,
-});
 
 // Binding the port is all the Supervisor waits for, so a slow background Plugin delays no App.
 async function listenWithPlugins(

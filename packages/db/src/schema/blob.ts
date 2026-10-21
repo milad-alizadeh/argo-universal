@@ -5,8 +5,8 @@ import {
   snakeCase,
   text,
 } from 'drizzle-orm/sqlite-core';
-import { session } from './sessions';
-import { timestamp } from './timestamp';
+import { session } from '#schema-sessions';
+import { timestamp } from '#schema-timestamp';
 
 // `id` is the sha256 of the file in `~/.argo/blobs/` (ADR-0005).
 export const blob = snakeCase.table('blob', {

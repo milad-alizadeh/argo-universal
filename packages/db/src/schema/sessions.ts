@@ -7,8 +7,8 @@ import {
   snakeCase,
   text,
 } from 'drizzle-orm/sqlite-core';
-import { project } from './projects';
-import { timestamp } from './timestamp';
+import { project } from '#schema-projects';
+import { timestamp } from '#schema-timestamp';
 
 export const turnStatuses = ['running', 'ended'] as const;
 

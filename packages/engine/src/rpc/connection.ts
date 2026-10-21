@@ -6,6 +6,7 @@ export interface RpcConnection {
   id: string;
   signal: AbortSignal;
   surface?: PluginSurface;
+  serverDevice?: boolean;
 }
 
 export interface RpcContext {
@@ -19,14 +20,25 @@ export function createRpcContext(
   const controller = new AbortController();
   socket.once('close', () => controller.abort());
 
+  return { connection: socketConnection(socket, params, controller.signal) };
+}
+
+function socketConnection(
+  socket: Socket,
+  params: Record<string, string | undefined> | null | undefined,
+  signal: AbortSignal,
+): RpcConnection {
   return {
-    connection: {
-      id: randomUUID(),
-      signal: controller.signal,
-      surface: reportedSurface(params?.['pluginSurface']),
-    },
+    id: randomUUID(),
+    signal,
+    surface: reportedSurface(params?.['pluginSurface']),
+    serverDevice: sameDeviceSocket(socket),
   };
 }
+
+const sameDeviceSocket = (socket: Socket): boolean =>
+  socket.remoteAddress !== undefined &&
+  socket.remoteAddress === socket.localAddress;
 
 // A missing, non-JSON or malformed surface reports no wire version: that App sees "Update Argo", not a broken Connection.
 function reportedSurface(

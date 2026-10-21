@@ -2,6 +2,7 @@ import { mkdir, realpath } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 import {
   isSpecialHost,
+  sameHost,
   type FetchCapability,
   type PluginCapability,
   type ProcessCapability,
@@ -115,7 +116,7 @@ export class PluginAccess {
       throw new CapabilityRefusal(`${url.protocol} is not HTTPS`);
 
     const capabilities = this.fetchCapabilities();
-    const exact = capabilities.find(({ host }) => host === url.host);
+    const exact = capabilities.find(({ host }) => sameHost(host, url.host));
 
     const rule = exact ? exactHost(exact) : anyHost(capabilities, url);
 

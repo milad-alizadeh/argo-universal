@@ -154,14 +154,14 @@ export function register(argo: Argo): void {
 }
 ```
 
-Declare the command's Capability in `plugin.json`. A process Query uses the declaring view's Project folder unless the Query specifies `cwd`. A direct `argo.process.run` call carries no view and Argo never tells a Plugin where a Project lives, so run it as a Query whenever it belongs in the Project's folder.
+Declare the command's Capability in `plugin.json`. A process Query uses the declaring view's Project folder unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
 A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
 The hook returns `{ data, error, stale, refresh }`:
 
 - `data` contains the call's answer and retains the last successful value.
-- `error` describes a refused call, missing Account, transport failure, or Argo timeout. An HTTP 401 remains fetch data.
+- `error` describes a refused call, transport failure, or Argo timeout. An HTTP 401 remains fetch data. An unavailable Account borrow returns `null` data.
 - `stale` is true only while refreshing an existing answer.
 - `refresh()` runs the Query now and joins a call already in flight.
 
@@ -190,7 +190,7 @@ Adding a Project starts its pass. Removing one releases its views, passes, and e
 Use the same Query in the background page and the mounted Slot to warm the same entry.
 A background pass ignores a Query's `every` option. It ends after the first render's Queries settle, or after sixty seconds, and discards its tree.
 A refused background Query stops retrying until the Plugin is next opened.
-The optional fetch `account` field is reserved for the Account broker; it currently returns a refusal until that broker is available.
+The optional fetch `account` field borrows the Project’s Account for that host. An unavailable borrow returns `null`.
 
 A page may call `argo.nav.badge(id, count)` to set the nav badge for a nav id its own manifest declares. Zero clears the badge.
 A background page runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
@@ -221,3 +221,66 @@ While any Turn runs, including a subagent's, the Server keeps the current Plugin
 After active Turns end, the Server rebuilds the latest source once. Intermediate syntax errors do not stop the current worker.
 Outside a Turn, the existing file watcher reloads the Plugin after each build.
 Turning a Plugin off releases its worker and pending rebuild.
+
+
+## Accounts and OAuth
+
+Declare each provided Account as `{ host, page }` in `contributes.accounts`.
+Register that page with `argo.pages.register` before registration completes.
+The host must be concrete and have an identical `fetch` Capability, including its port. A wildcard Capability does not satisfy this requirement.
+Localhost forms are refused.
+
+Register the provider handler when the Plugin starts:
+
+```ts
+await argo.accounts.provide(
+  'api.github.com',
+  { header: 'Authorization', prefix: 'Bearer' },
+  (account) => argo.secrets.get(account.id),
+);
+```
+
+The handler receives the Account metadata and returns a current token or `null`.
+Argo wakes the provider when another Plugin borrows its Account.
+The whole provider call has a three-second deadline, including activation.
+A failed, disabled, stopped, or slow provider makes the borrow return `null`.
+
+After sign-in, create the Account and store its token under the returned id:
+
+```ts
+const id = await argo.accounts.add('api.github.com', { label: 'Work' });
+await argo.secrets.set(id, token);
+```
+
+Argo stores Accounts, Grants, and each Project’s choice in its database.
+Tokens stay in the provider’s Keychain namespace, keyed by Account id.
+Sign-out deletes the token, Account, Grants, and Project mappings.
+Plugin removal also deletes its Accounts and dependent records when discovery succeeds.
+
+`argo.accounts.get(host)` returns the current Project’s Account or `null`.
+One available Account becomes the Project’s choice automatically. Multiple Accounts require an explicit choice.
+Page effects, Part event handlers, and Hooks carry their Project context across awaited calls.
+A call without a Project returns no Account.
+
+Use `argo.fetch(url, { account: host })` to borrow the Account.
+A fetch Query uses the same field and the declaring view’s Project.
+Argo checks the Grant, calls the provider, and sets its header. The borrower receives no credential value from Argo.
+The URL must name the Account’s exact host and port. A redirect away from that host drops the provider header.
+Argo removes any borrower header with the same name first. Network-reserved headers cannot provide authentication.
+First-party Plugins receive unset Grants silently until consent screens exist. A refused Grant stays refused across Server restarts.
+
+OAuth starts from a page effect or Part event handler on the Server Device.
+The Server stamps `context.serverDevice` from the Connection and independently refuses OAuth calls from other Devices.
+The App cannot set this flag through its reported platform.
+
+`argo.oauth.start()` returns `redirectUri`, `state`, `codeChallenge`, and `codeChallengeMethod`, or `null` if the listener cannot start.
+The method is always `S256`. The redirect URI is `http://127.0.0.1:51789/callback`.
+Build the service’s authorize URL with these values, then call `argo.oauth.await(state, authorizeUrl)`.
+Argo opens that HTTP or HTTPS URL without a shell.
+The result is `{ code, verifier }` or `null`. The Plugin exchanges the code itself.
+A denial, unknown state, five-minute timeout, reload, or stop resolves to `null`.
+Each Plugin holds one pending exchange. The callback listener runs only while an exchange is pending.
+
+Accounts screens, consent presentation, native sign-out confirmation, and the close-tab document remain pending approved designs in #1166.
+The callback currently returns an empty HTTP 204 response. The Server logs a clear error if port 51789 is occupied.
+The App URL-scheme guard remains in the App follow-up. The Server already refuses and logs disallowed schemes.

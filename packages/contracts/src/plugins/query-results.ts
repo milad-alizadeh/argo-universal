@@ -3,7 +3,7 @@ import type { PluginQuery, ProcessResult, StorageResult } from './argo-calls';
 
 // What each Query api answers with. The Engine's readers and the kit's `useData` type both come from here.
 export type QueryResults = {
-  fetch: FetchResponse;
+  fetch: FetchResponse | null;
   process: ProcessResult;
   storage: StorageResult[];
 };

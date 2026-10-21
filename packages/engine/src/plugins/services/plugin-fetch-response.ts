@@ -1,4 +1,5 @@
 import type { IncomingMessage } from 'node:http';
+import { sameHost } from '@repo/contracts/plugins';
 import type { PluginValue } from '../protocol/runtime';
 import { argoFetchLimitBytes } from './plugin-limits';
 
@@ -8,6 +9,7 @@ export type Hop = {
   method: string;
   headers: Record<string, string>;
   body?: string;
+  accountHeader?: string;
 };
 
 const movedPermanently = 301;
@@ -67,14 +69,23 @@ const becomesGet = (method: string, status: number): boolean =>
     : postToGet.has(status) && method === 'POST';
 
 const headersFor = (hop: Hop, url: URL): Record<string, string> =>
-  url.origin === hop.url.origin
-    ? hop.headers
-    : without(hop.headers, (name) => credentialHeaders.has(name));
+  without(
+    hop.headers,
+    (name) => leavesOrigin(hop, url, name) || leavesAccountHost(hop, url, name),
+  );
 
-const asGet = ({ url, headers }: Hop): Hop => ({
-  url,
+const leavesOrigin = (hop: Hop, url: URL, name: string): boolean =>
+  url.origin !== hop.url.origin && credentialHeaders.has(name);
+
+const leavesAccountHost = (hop: Hop, url: URL, name: string): boolean =>
+  !sameHost(url.host, hop.url.host) &&
+  name === hop.accountHeader?.toLowerCase();
+
+const asGet = (hop: Hop): Hop => ({
+  ...hop,
+  body: undefined,
   method: 'GET',
-  headers: without(headers, (name) => name.startsWith('content-')),
+  headers: without(hop.headers, (name) => name.startsWith('content-')),
 });
 
 const without = (

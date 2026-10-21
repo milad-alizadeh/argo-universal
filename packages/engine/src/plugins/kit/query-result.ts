@@ -17,7 +17,8 @@ type QueryReaders = {
 };
 
 const readers: QueryReaders = {
-  fetch: (data) => fetchResponse(FetchReply.parse(data)),
+  fetch: (data) =>
+    data === null ? null : fetchResponse(FetchReply.parse(data)),
   process: (data) => ProcessResult.parse(data),
   storage: (data) => z.array(StorageResult).parse(data),
 };

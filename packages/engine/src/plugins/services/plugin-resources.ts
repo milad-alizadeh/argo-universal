@@ -97,7 +97,7 @@ export class PluginResources {
     return once;
   }
 
-  private assertOpen(): void {
+  public assertOpen(): void {
     if (this.released) throw new Error('Plugin is stopped');
   }
 }

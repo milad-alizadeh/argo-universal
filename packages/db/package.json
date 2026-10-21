@@ -20,5 +20,18 @@
     "@types/node": "catalog:",
     "drizzle-kit": "catalog:",
     "typescript": "catalog:"
+  },
+  "imports": {
+    "#schema-agent-options": "./src/schema/agent-options.ts",
+    "#schema-agent-servers": "./src/schema/agent-servers.ts",
+    "#schema-blob": "./src/schema/blob.ts",
+    "#schema-feed": "./src/schema/feed.ts",
+    "#schema-plugins": "./src/schema/plugins.ts",
+    "#schema-projects": "./src/schema/projects.ts",
+    "#schema-registry-cache": "./src/schema/registry-cache.ts",
+    "#schema-server-identity": "./src/schema/server-identity.ts",
+    "#schema-sessions": "./src/schema/sessions.ts",
+    "#schema-shells": "./src/schema/shells.ts",
+    "#schema-timestamp": "./src/schema/timestamp.ts"
   }
 }

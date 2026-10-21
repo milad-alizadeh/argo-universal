@@ -20,6 +20,8 @@ type ServerSource = {
     | 'firstPartyPluginsDirectory'
     | 'keychain'
     | 'pluginNetwork'
+    | 'pluginOAuth'
+    | 'pluginClock'
     | 'version'
     | 'startedAt'
     | 'database'
@@ -52,6 +54,8 @@ type ServerConfiguration = Pick<
   | 'firstPartyPluginsDirectory'
   | 'keychain'
   | 'pluginNetwork'
+  | 'pluginOAuth'
+  | 'pluginClock'
 >;
 
 function serverConfiguration(
@@ -66,5 +70,12 @@ function serverConfiguration(
     firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
     keychain: context.keychain,
     pluginNetwork: context.pluginNetwork,
+    ...pluginFlowOptions(context),
   };
+}
+
+function pluginFlowOptions(
+  context: ServerConfiguration,
+): Pick<ServerConfiguration, 'pluginOAuth' | 'pluginClock'> {
+  return { pluginOAuth: context.pluginOAuth, pluginClock: context.pluginClock };
 }

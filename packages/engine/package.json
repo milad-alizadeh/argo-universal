@@ -6,7 +6,8 @@
   "imports": {
     "#mocks/*": "./mocks/*.ts",
     "#plugin-test-control": "./src/plugins/protocol/test-control.ts",
-    "#plugin-entry": "./src/plugins/protocol/plugin-entry.ts"
+    "#plugin-entry": "./src/plugins/protocol/plugin-entry.ts",
+    "#plugin-runtime-status": "./src/plugins/protocol/runtime-status.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

@@ -38,6 +38,9 @@ export class PluginRuntime {
     clock: PluginClock = realClock,
   ) {
     this.host = new HostConnection(this.callbacks());
+    this.services.accountCalls.connect((pluginId, generation, invocation) =>
+      this.host.tell({ ...invocation, pluginId, generation }),
+    );
     this.clock = new RuntimeClock(this.host.tests, clock);
     this.hooks = hostHooks(this.host, this.log, this.clock.source);
     this.resources = new RuntimeResources(this.resourceInput());

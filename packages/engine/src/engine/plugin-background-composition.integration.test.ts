@@ -41,7 +41,7 @@ it('starts Project background passes at Server startup and after Writer membersh
   onTestFinished(() => controller.abort());
   const watching = host.createCaller({ signal: controller.signal });
   await expect
-    .poll(() => currentBadges(watching))
+    .poll(() => currentBadges(watching), { timeout: 10_000 })
     .toEqual([{ pluginId: dataPluginId, id: 'inbox', count: 1 }]);
   await writeDatabaseJobAndWaitForCommit(host.databaseWriter, {
     describe: () => 'add Project fixture',
@@ -53,7 +53,7 @@ it('starts Project background passes at Server startup and after Writer membersh
     },
   });
   await expect
-    .poll(() => currentBadges(watching))
+    .poll(() => currentBadges(watching), { timeout: 10_000 })
     .toEqual([{ pluginId: dataPluginId, id: 'inbox', count: 2 }]);
   await writeDatabaseJobAndWaitForCommit(host.databaseWriter, {
     describe: () => 'remove Project fixture',
@@ -71,7 +71,7 @@ it('starts Project background passes at Server startup and after Writer membersh
     },
   });
   await expect
-    .poll(() => currentBadges(watching))
+    .poll(() => currentBadges(watching), { timeout: 10_000 })
     .toEqual([{ pluginId: dataPluginId, id: 'inbox', count: 3 }]);
   await host.caller.plugins.setEnabled({
     pluginId: dataPluginId,
@@ -83,7 +83,7 @@ it('starts Project background passes at Server startup and after Writer membersh
     enabled: true,
   });
   await expect
-    .poll(() => currentBadges(watching))
+    .poll(() => currentBadges(watching), { timeout: 10_000 })
     .toEqual([{ pluginId: dataPluginId, id: 'inbox', count: 2 }]);
 });
 

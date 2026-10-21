@@ -27,5 +27,6 @@ function connectionOf(signal: AbortSignal): RpcConnection {
     id: randomUUID(),
     signal,
     surface: currentPluginSurface('web'),
+    serverDevice: true,
   };
 }

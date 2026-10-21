@@ -1,25 +1,17 @@
-import { ProjectsBranchesInput } from '@repo/contracts';
 import { writeLog } from '@repo/machine-log';
 import {
-  createPluginRuntime,
   HookPort,
-  macKeychain,
-  pluginManifest,
   PluginService,
-  PluginSettings,
-  type Keychain,
+  type PluginSettings,
+  type PluginAccounts,
   type PluginRuntime,
 } from '../plugins';
-import {
-  readPluginProjects,
-  readProjectPath,
-  readProjectPaths,
-  watchProjectChanges,
-} from '../projects';
 import { watchTurnActivity } from '../sessions';
 import type { HttpServerOptions } from './http-server';
+import { createPluginParts } from './plugin-parts';
 
 export type PluginSetup = {
+  pluginAccounts: PluginAccounts;
   pluginRuntime: PluginRuntime;
   pluginSettings: PluginSettings;
   hookPort: HookPort;
@@ -37,43 +29,11 @@ const backgroundStartLimitMs = 30000;
 // The Plugin runtime, with core's Hook events run through the Plugins that hook them, started on first use.
 export function startPlugins(options: HttpServerOptions): PluginSetup {
   const hookPort = options.hookPort ?? new HookPort();
-  const keychain = options.keychain ?? macKeychain;
-  const pluginSettings = settingsFor(options, keychain);
 
-  const pluginRuntime = createPluginRuntime(options.home, {
-    keychain,
-    network: options.pluginNetwork,
-    ...projectOptions(options),
-    hooks: hookPort.hooks,
-    settings: async (pluginId, key) => pluginSettings.read(pluginId, key),
+  return connectPlugins(options, {
+    ...createPluginParts(options, hookPort),
+    hookPort,
   });
-
-  return connectPlugins(options, { pluginRuntime, pluginSettings, hookPort });
-}
-
-function projectOptions(
-  options: HttpServerOptions,
-): Pick<
-  Parameters<typeof createPluginRuntime>[1],
-  'watchProjects' | 'projects' | 'projectInfo' | 'projectPath'
-> {
-  return {
-    watchProjects: (changed) =>
-      watchProjectChanges(options.database, changed, options.databaseWriter),
-    projects: async () => readProjectPaths(options.database),
-    projectInfo: async () => readPluginProjects(options.database),
-    projectPath: async (projectId) => pluginProjectPath(options, projectId),
-  };
-}
-
-function pluginProjectPath(
-  options: HttpServerOptions,
-  projectId: string,
-): string {
-  return readProjectPath(
-    options.database,
-    ProjectsBranchesInput.parse({ projectId }).projectId,
-  );
 }
 
 // Sessions reach Plugins through Hooks; dev Plugins reload only once every Turn has ended (ADR-0027).
@@ -92,18 +52,6 @@ function connectPlugins(
     unwatchTurns,
     startBackground: () => startBackground(plugins, options.home),
   };
-}
-
-// The runtime and the settings it answers `argo.settings` from share one Keychain.
-function settingsFor(
-  options: HttpServerOptions,
-  keychain: Keychain,
-): PluginSettings {
-  return new PluginSettings({
-    ...options,
-    keychain,
-    manifest: async (pluginId) => pluginManifest(options, pluginId),
-  });
 }
 
 function attachHooks(
@@ -167,3 +115,17 @@ export async function closePlugins(setup: ClosingPlugins): Promise<void> {
   setup.hookPort.detach();
   await setup.pluginRuntime.close();
 }
+
+type PluginDeps = Pick<
+  PluginSetup,
+  'pluginRuntime' | 'pluginSettings' | 'pluginAccounts'
+> & {
+  hooks: HookPort['hooks'];
+};
+
+export const pluginRouterDeps = (setup: PluginSetup): PluginDeps => ({
+  pluginAccounts: setup.pluginAccounts,
+  pluginRuntime: setup.pluginRuntime,
+  pluginSettings: setup.pluginSettings,
+  hooks: setup.hookPort.hooks,
+});
