@@ -4,7 +4,7 @@ import type { ViewMessage } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import type { OpenView } from './open-view';
 import { preparedView } from './prepared-view';
-import { updateArgoLine } from './render-fallback';
+import { logOnce, updateArgoKey, updateArgoLine } from './render-fallback';
 import { prepareSlotTree } from './slot-tree';
 import { messages } from './stream';
 
@@ -18,12 +18,22 @@ export function appView(
   if (view.opening.renderSlot) return source;
 
   if (!drawsPluginWire(connection.surface)) {
-    log(updateArgoLine(view.pluginId, view.opening.path));
+    logUpdateArgo(view, log);
 
     return replaceWithUpdateArgo(source);
   }
 
   return preparedSlot(view, source, log);
+}
+
+function logUpdateArgo(view: OpenView, log: (line: string) => void): void {
+  const { pluginId, opening } = view;
+
+  logOnce(
+    log,
+    updateArgoKey(pluginId, opening.path),
+    updateArgoLine(pluginId, opening.path),
+  );
 }
 
 function preparedSlot(

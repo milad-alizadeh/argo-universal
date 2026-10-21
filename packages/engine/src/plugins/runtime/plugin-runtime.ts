@@ -11,7 +11,9 @@ import type {
 } from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
 import {
-  oncePerRenderFallback,
+  fallbackKey,
+  forgetOnce,
+  logOnce,
   renderFallbackLine,
 } from '../views/render-fallback';
 import { answerPluginCall } from './calls';
@@ -35,7 +37,6 @@ export class PluginRuntime {
     private readonly services: PluginServices,
     clock: PluginClock = realClock,
   ) {
-    this.log = oncePerRenderFallback(log);
     this.host = new HostConnection(this.callbacks());
     this.clock = new RuntimeClock(this.host.tests, clock);
     this.hooks = hostHooks(this.host, this.log, this.clock.source);
@@ -88,7 +89,11 @@ export class PluginRuntime {
     slotId: string,
     reason: string,
   ): void {
-    this.log(renderFallbackLine(pluginId, slotId, reason));
+    logOnce(
+      this.log,
+      fallbackKey('runtime', pluginId, slotId),
+      renderFallbackLine(pluginId, slotId, reason),
+    );
   }
 
   private callbacks(): ConstructorParameters<typeof HostConnection>[0] {
@@ -140,8 +145,9 @@ export class PluginRuntime {
   activate(location: PluginLocation): Promise<PluginStatus> {
     return this.plugins.activate(location);
   }
-  deactivate(pluginId: string): Promise<void> {
-    return this.plugins.deactivate(pluginId);
+  async deactivate(pluginId: string): Promise<void> {
+    await this.plugins.deactivate(pluginId);
+    forgetOnce(this.log, pluginId);
   }
 
   async close(): Promise<void> {
