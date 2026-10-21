@@ -79,7 +79,7 @@ export async function answerFetch(
 
   const authenticated = await fetchHop(call, hop, request.account);
 
-  if (!authenticated) return null;
+  if (!authenticated) return unavailableBorrow(call);
 
   call.logCall();
 
@@ -87,6 +87,12 @@ export async function answerFetch(
     access,
     network: call.network,
   });
+}
+
+function unavailableBorrow(call: PluginCall): null {
+  if (call.query) throw new CapabilityRefusal('Account is unavailable');
+
+  return null;
 }
 
 export const answerAsset = (

@@ -87,10 +87,12 @@ export class OAuthListener {
 
 function callbackQuery(request: IncomingMessage): URLSearchParams | null {
   if (request.method !== 'GET') return null;
-  const url = callbackUrl(request);
 
-  return url.pathname === '/callback' ? url.searchParams : null;
+  return callbackParams(callbackUrl(request));
 }
+
+const callbackParams = (url: URL | null): URLSearchParams | null =>
+  url?.pathname === '/callback' ? url.searchParams : null;
 
 function bind(server: Server, log: (line: string) => void): Promise<boolean> {
   return new Promise((resolve) => {
@@ -112,5 +114,10 @@ function closeServer(server: Server): Promise<void> {
 const callbackState = (query: URLSearchParams): string =>
   query.get('state') ?? '';
 
-const callbackUrl = (request: IncomingMessage): URL =>
-  new URL(request.url ?? '/', redirectUri);
+function callbackUrl(request: IncomingMessage): URL | null {
+  const target = request.url ?? '/';
+
+  return URL.canParse(target, redirectUri)
+    ? new URL(target, redirectUri)
+    : null;
+}

@@ -55,6 +55,7 @@ it(
 it.each([
   { path: '/callback', host: 'evil.example:51789', status: 403 },
   { path: '/elsewhere', host: callbackHost, status: 404 },
+  { path: '//[', host: callbackHost, status: 404 },
 ])(
   'refuses callback $path with Host $host',
   async ({ path, host: header, status }) => {

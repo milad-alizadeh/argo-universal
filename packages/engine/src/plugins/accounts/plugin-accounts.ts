@@ -18,6 +18,7 @@ import {
 } from '../../storage';
 import { pluginKeychainService, type Keychain } from '../services/keychain';
 import { AccountJob, type AccountChange } from './account-job';
+import { requireAccount, requireChoice } from './account-records';
 
 type Dependencies = {
   database: Database;
@@ -108,11 +109,7 @@ export class PluginAccounts {
   }
 
   async choose(choice: AccountChoice): Promise<void> {
-    const account = this.list().find(
-      ({ id, host }) => id === choice.account && host === choice.host,
-    );
-
-    if (!account) throw new Error('Account is unavailable');
+    requireChoice(this.deps.database, choice);
     await this.write({ action: 'choose', ...choice });
   }
 
@@ -134,6 +131,7 @@ export class PluginAccounts {
 
   async grant(grant: PluginAccountGrant): Promise<void> {
     await this.deps.manifest(grant.plugin);
+    requireAccount(this.deps.database, grant.host, grant.account);
     await this.write({ action: 'grant', grant });
   }
 

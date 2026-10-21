@@ -10,6 +10,7 @@ import {
 } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import { hasAccount, hasProject } from './account-records';
 
 export type AccountChange =
   | { action: 'add'; account: PluginAccount }
@@ -43,6 +44,7 @@ const commits: Commits = {
     transaction.insert(pluginAccount).values(account).run();
   },
   grant: (transaction, { grant }) => {
+    if (!hasAccount(transaction, grant.host, grant.account)) return;
     transaction
       .insert(pluginAccountGrant)
       .values(grant)
@@ -50,13 +52,7 @@ const commits: Commits = {
       .run();
   },
   defaultGrant: (transaction, { grant }) => {
-    const present = transaction
-      .select({ id: pluginAccount.id })
-      .from(pluginAccount)
-      .where(eq(pluginAccount.id, grant.account))
-      .get();
-
-    if (!present) return;
+    if (!hasAccount(transaction, grant.host, grant.account)) return;
     transaction
       .insert(pluginAccountGrant)
       .values(grant)
@@ -64,6 +60,9 @@ const commits: Commits = {
       .run();
   },
   choose: (transaction, { projectId, host, account }) => {
+    if (!hasAccount(transaction, host, account)) return;
+
+    if (!hasProject(transaction, projectId)) return;
     transaction
       .insert(projectAccount)
       .values({ projectId, host, account })
