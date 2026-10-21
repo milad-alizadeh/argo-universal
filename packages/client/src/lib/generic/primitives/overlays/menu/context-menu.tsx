@@ -7,7 +7,11 @@ import { TextClassContext } from '#primitives/content/text';
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
 import { MenuActionLabel } from './menu-action-label';
 import { MenuSection } from './menu-section';
-import { menuRowClass, menuTextClass, menuRowsClassName } from './menu-styles';
+import {
+  menuContentClassName,
+  menuRowClass,
+  menuTextClass,
+} from './menu-styles';
 
 /*
  * The web's context menu, on Radix Context Menu (`@radix-ui/react-context-menu`): Root, Trigger `asChild`,
@@ -43,8 +47,8 @@ function ContextMenuTrigger(props: ContextMenuProps): ReactElement {
 }
 
 const contentClassName = cn(
-  'bg-card dark:border-border min-w-65 overflow-hidden rounded-2xl dark:border px-1 py-2 web:shadow-card',
-  menuRowsClassName,
+  menuContentClassName,
+  'min-w-65',
   'web:animate-in web:fade-in-0 web:zoom-in-95 web:max-h-(--radix-context-menu-content-available-height) web:overflow-y-auto web:origin-(--radix-context-menu-content-transform-origin) web:cursor-default',
 );
 

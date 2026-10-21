@@ -120,8 +120,8 @@ function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
     <TextClassContext.Provider value={menuTextClass(action.tone)}>
       <RadixMenu.Item {...actionItemProps(action)}>
         <View {...actionRow(action)}>
-          <MenuActionLabel {...action} />
           <ChoiceCheck selected={action.selected} />
+          <MenuActionLabel {...action} />
         </View>
       </RadixMenu.Item>
     </TextClassContext.Provider>
@@ -147,7 +147,7 @@ function choiceRole(
   return { role: 'menuitemradio', 'aria-checked': selected };
 }
 
-// The trailing check on the selected action; the others keep its place, so labels line up.
+// The leading check on the selected action, as every popover row (owner, 2026-10-20); the others keep its place, so labels line up.
 function ChoiceCheck({
   selected,
 }: Pick<MenuAction, 'selected'>): React.JSX.Element | null {

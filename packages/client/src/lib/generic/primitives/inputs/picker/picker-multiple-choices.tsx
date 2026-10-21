@@ -1,5 +1,7 @@
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
+import { wideMenuInsetClassName } from '#lib/generic/menu-surface';
+import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
 import { ComboboxSearch } from '#primitives/inputs/combobox';
 import { drillInLimit } from './picker-drill-in';
@@ -19,13 +21,19 @@ export function Choices<Value extends string>(
   return <ChoiceList {...props} />;
 }
 
+// A phone sheet's page fill; wide, the popover's card and inset.
+const choiceListClassName = cn(
+  'flex-1 bg-content wide:gap-2 wide:bg-transparent',
+  wideMenuInsetClassName,
+);
+
 function ChoiceList<Value extends string>(
   props: MultiplePickerProps<Value>,
 ): ReactElement {
   const [query, setQuery] = useState('');
 
   return (
-    <View className="flex-1 bg-content wide:gap-1 wide:bg-transparent wide:p-1">
+    <View className={choiceListClassName}>
       {props.options.length > drillInLimit ? (
         <Search label={props.label} value={query} onChangeText={setQuery} />
       ) : null}
@@ -40,7 +48,7 @@ function Search(props: {
   onChangeText: (text: string) => void;
 }): ReactElement {
   return (
-    <View className="px-4 py-3 wide:p-0">
+    <View className="px-4 py-3 wide:px-0 wide:py-1">
       <ComboboxSearch
         {...props}
         label={`Search ${props.label}`}

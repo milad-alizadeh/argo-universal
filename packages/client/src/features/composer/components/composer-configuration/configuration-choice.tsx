@@ -17,6 +17,7 @@ export function ConfigurationChoice(props: ChoiceProps): ReactElement {
       id={props.label}
       title={props.label}
       subtitle={props.description}
+      subtitleLines={2}
       leading={props.leading}
       selected={props.selected}
       onPress={props.onPress}

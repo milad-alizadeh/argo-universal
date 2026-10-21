@@ -5,6 +5,8 @@ import {
   type ReactNode,
 } from 'react';
 import { moveFocusAmong } from '#lib/generic/arrow-focus';
+import { wideMenuInsetClassName } from '#lib/generic/menu-surface';
+import { cn } from '#lib/generic/utils';
 import { ComboboxChoices } from './combobox-choices';
 import type { ComboboxContentProps } from './combobox-props';
 
@@ -22,7 +24,7 @@ export function ComboboxResults<Value extends string>(
     {
       role: 'group',
       onKeyDownCapture: moveFocus,
-      className: 'flex min-h-0 flex-col wide:gap-1 wide:p-1',
+      className: cn('flex min-h-0 flex-col wide:gap-2', wideMenuInsetClassName),
     },
     props.search,
     <Options {...props} />,

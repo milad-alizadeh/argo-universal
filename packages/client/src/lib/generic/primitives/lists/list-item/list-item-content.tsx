@@ -5,10 +5,16 @@ import { cn } from '../../../utils';
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
 
-type SubtitleProps = Pick<ListItemProps, 'subtitleTone' | 'subtitleDimmed'> & {
+type SubtitleProps = Pick<
+  ListItemProps,
+  'subtitleTone' | 'subtitleDimmed' | 'subtitleLines'
+> & {
   text?: string;
   multiline?: boolean;
 };
+
+const subtitleLines = (props: SubtitleProps): number | undefined =>
+  props.multiline ? undefined : (props.subtitleLines ?? 1);
 
 function Subtitle(props: SubtitleProps): ReactNode {
   return props.text === undefined ? null : (
@@ -16,7 +22,7 @@ function Subtitle(props: SubtitleProps): ReactNode {
       role="row-detail"
       tone={props.subtitleTone}
       dimmed={props.subtitleDimmed}
-      numberOfLines={lineLimit(props.multiline)}
+      numberOfLines={subtitleLines(props)}
     >
       {props.text}
     </Text>
@@ -87,6 +93,7 @@ export function ItemContent(props: PlacedContentProps): ReactElement {
       <Subtitle
         text={props.subtitle}
         multiline={subtitleWraps(props)}
+        subtitleLines={props.subtitleLines}
         subtitleTone={props.subtitleTone ?? 'muted'}
         subtitleDimmed={props.subtitleDimmed}
       />

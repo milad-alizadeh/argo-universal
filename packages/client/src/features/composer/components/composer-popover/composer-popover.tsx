@@ -92,10 +92,8 @@ function WideContent(props: OverlayProps): React.JSX.Element {
 }
 
 function wideContentClassName(props: OverlayProps): string {
-  return (
-    props.contentClassName ??
-    'composer-popover bg-card rounded-2xl border border-border p-0 overflow-hidden'
-  );
+  // The Popover draws the card; the composer-popover class keeps focus outlines off its Radix wrapper.
+  return props.contentClassName ?? 'composer-popover p-0 overflow-hidden';
 }
 
 function CompactPopover(props: OverlayProps): React.JSX.Element {

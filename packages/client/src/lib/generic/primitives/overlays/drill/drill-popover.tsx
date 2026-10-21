@@ -74,13 +74,13 @@ function DrillContent(props: ContentProps): ReactElement {
 
 const fieldOffset = 4;
 
-// A row ends 5px inside its menu (the list's 4px padding and the popover's 1px border).
-const menuInset = 5;
+// A row ends 4px inside its menu, the list's side inset in a popover (menu-surface.ts).
+const menuInset = 4;
 
 // Paper's Drilled cell: the choices overlap the menu's edge by 16px, their top 1px above the row's.
 const menuOverlap = 16;
 
-const popoverBorder = 1;
+const choicesLift = 1;
 
 const drillOffset = menuInset - menuOverlap;
 
@@ -89,7 +89,7 @@ const placements = {
   row: {
     side: 'right',
     sideOffset: drillOffset,
-    alignOffset: -popoverBorder,
+    alignOffset: -choicesLift,
     className: 'w-71 overflow-hidden p-0',
   },
   field: {

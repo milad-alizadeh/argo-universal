@@ -7,8 +7,8 @@ type Insets = Pick<
 
 type Options = Insets & Pick<ListProps<never>, 'appearance' | 'fit'>;
 
-// Paper's Combobox master: a grouped list in a popover holds its menu rows 4px inside the popover.
-const menuInset = 1;
+// Paper's Configure popover (menu-surface.ts): a grouped list in a popover holds its rows 4px in from every side.
+const menuInset = { sides: 1, ends: 1 } as const;
 
 export function listInsets(props: Options, menu: boolean): Insets {
   if (props.appearance !== 'grouped') return plainInsets(props, menu);
@@ -34,14 +34,15 @@ function verticalInsets(props: Options): Omit<Insets, 'padding'> {
   };
 }
 
-const orMenuInset = (
+const orInset = (
   inset: Insets['padding'],
-): NonNullable<Insets['padding']> => inset ?? menuInset;
+  fallback: NonNullable<Insets['padding']>,
+): NonNullable<Insets['padding']> => inset ?? fallback;
 
 function menuInsets(props: Options): Insets {
   return {
-    padding: orMenuInset(props.padding),
-    paddingTop: orMenuInset(props.paddingTop),
-    paddingBottom: orMenuInset(props.paddingBottom),
+    padding: orInset(props.padding, menuInset.sides),
+    paddingTop: orInset(props.paddingTop, menuInset.ends),
+    paddingBottom: orInset(props.paddingBottom, menuInset.ends),
   };
 }

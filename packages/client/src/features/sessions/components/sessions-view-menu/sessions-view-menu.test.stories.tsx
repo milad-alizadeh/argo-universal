@@ -130,7 +130,7 @@ export const DotAwayFromDefault = dotShown(
   true,
 );
 
-// Every option leads with its own icon, and the chosen one ends with the check.
+// The chosen option leads with the check, and every option carries its own icon after it.
 async function expectOptionIcons(
   option: (typeof paperOptions)[number],
 ): Promise<void> {
@@ -140,7 +140,7 @@ async function expectOptionIcons(
 
   const check = option.checked ? ['icon-check'] : [];
 
-  await expect(icons).toEqual([`icon-${option.icon}`, ...check]);
+  await expect(icons).toEqual([...check, `icon-${option.icon}`]);
 }
 
 export const ShowsOptionIcons: Story = {

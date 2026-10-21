@@ -3,6 +3,7 @@ import * as WebPopover from '@radix-ui/react-popover';
 import * as React from 'react';
 import { View } from 'react-native';
 import { InMenu } from '#lib/generic/menu-rows-context';
+import { menuSurfaceClassName } from '#lib/generic/menu-surface';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/content/text';
 import { useOpenState } from '#primitives/overlays/open-state';
@@ -53,8 +54,10 @@ function PopoverFrame(props: PopoverProps): React.JSX.Element {
   );
 }
 
-const contentClassName =
-  'bg-card border-border outline-hidden z-50 w-72 rounded-2xl border p-4 shadow-card popover-content cursor-auto';
+const contentClassName = cn(
+  menuSurfaceClassName,
+  'outline-hidden z-50 w-72 p-4 popover-content cursor-auto',
+);
 
 function contentPlacement({
   align = 'center',

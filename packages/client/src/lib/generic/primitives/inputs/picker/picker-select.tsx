@@ -87,7 +87,7 @@ function useTriggerProps(props: TriggerProps): TriggerWebProps {
 
 function ItemIndicator(): React.JSX.Element {
   return (
-    <IconSlot role="control" className="absolute right-2">
+    <IconSlot role="control">
       <RadixSelect.ItemIndicator asChild>
         <View>
           <SelectedCheck className="text-muted-foreground shrink-0" />

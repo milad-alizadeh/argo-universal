@@ -2,6 +2,8 @@ import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { menuGroupGapClassName } from '#lib/generic/menu-surface';
+import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
@@ -12,7 +14,7 @@ import {
   menuChoiceGroups,
 } from './menu-props';
 import { MenuRadioItem } from './menu-radio-item';
-import { menuRowsClassName } from './menu-styles';
+import { menuContentClassName, menuRowsClassName } from './menu-styles';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -43,14 +45,14 @@ function choiceContentProps<Value extends string>(
   };
 }
 
-// A choice menu's web drawing: radio rows, the chosen one checked, each later group after a section line.
+// A choice menu's web drawing: radio rows, the chosen one checked, each later group 8px below the one before.
 export function MenuChoiceContent<Value extends string>(
   props: MenuChoicesProps<Value>,
 ): React.JSX.Element {
   return (
     // Radix's popper wrapper copies the content's z-index, so the menu opens above a sheet.
     <RadixMenu.Content {...choiceContentProps(props)}>
-      <View className="w-65 overflow-hidden bg-card rounded-2xl p-1 shadow-card dark:border dark:border-border">
+      <View className={cn(menuContentClassName, 'w-65')}>
         {props.loading ? <MenuLoadingRow /> : <MenuChoices {...props} />}
       </View>
     </RadixMenu.Content>
@@ -95,7 +97,7 @@ type MenuChoiceGroupRowsProps = {
   focus: KeyboardFocus;
 };
 
-// One group's radio rows; a later group is set apart by a section line, and its heading when it has one.
+// One group's radio rows; a later group is set apart by a gap, and its heading when it has one.
 function MenuChoiceGroupRows(
   props: MenuChoiceGroupRowsProps,
 ): React.JSX.Element {
@@ -108,13 +110,11 @@ function MenuChoiceGroupRows(
   );
 }
 
-// A hairline with 4px above and below, as iOS menus part their sections; Radix's Separator gives it role="separator", so it is announced and skipped by the keyboard.
+// Groups sit 8px apart with no line (Paper's Menu "Section line"); Radix's Separator gives the gap role="separator", so it is announced and skipped by the keyboard.
 function MenuGroupSeparator(): React.JSX.Element {
   return (
     <RadixMenu.Separator asChild>
-      <View className="py-1">
-        <View className="h-px bg-hairline" />
-      </View>
+      <View className={menuGroupGapClassName} />
     </RadixMenu.Separator>
   );
 }
@@ -141,7 +141,7 @@ function MenuGroupHeading(props: { label?: string }): React.JSX.Element | null {
   if (!props.label) return null;
 
   return (
-    <View className="px-3 pb-1 pt-1.5">
+    <View className="px-2 pb-1 pt-1.5">
       <Text role="secondary" className="select-none">
         {props.label}
       </Text>
