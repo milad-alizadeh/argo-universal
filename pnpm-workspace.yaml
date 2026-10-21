@@ -175,6 +175,7 @@ catalog:
   react-reconciler: 0.33.0
   "@shopify/react-native-skia": 2.6.2
   "@babel/parser": 7.29.9
+  "@babel/types": 7.29.8
   expo-image: ~57.0.5
 
 # `pnpm add` fails when a version is outside the catalog.

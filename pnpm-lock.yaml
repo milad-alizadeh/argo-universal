@@ -170,6 +170,9 @@ catalogs:
     '@babel/parser':
       specifier: 7.29.9
       version: 7.29.9
+    '@babel/types':
+      specifier: 7.29.8
+      version: 7.29.8
     '@chromatic-com/storybook':
       specifier: 5.4.0
       version: 5.4.0
@@ -1734,6 +1737,9 @@ importers:
       '@babel/parser':
         specifier: 'catalog:'
         version: 7.29.9
+      '@babel/types':
+        specifier: 'catalog:'
+        version: 7.29.8
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
