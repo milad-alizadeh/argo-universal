@@ -3,7 +3,10 @@ import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
-import { ChangeStageIcon } from '../change-stage/change-stage';
+import {
+  ChangeStageIcon,
+  ChangeStageModifier,
+} from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
 import { SessionMark } from './session-row-mark';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
@@ -15,7 +18,12 @@ type CompactEndProps = Pick<SessionRowProps, 'session' | 'pullRequest' | 'age'>;
 // Its Change's glyph, without the number; with no Change, how long ago the Session was active.
 function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
   if (pullRequest)
-    return <ChangeStageIcon {...pullRequest} role={compactGlyphRole} />;
+    return (
+      <>
+        <ChangeStageIcon {...pullRequest} role={compactGlyphRole} />
+        <ChangeStageModifier {...pullRequest} />
+      </>
+    );
 
   return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
 }
