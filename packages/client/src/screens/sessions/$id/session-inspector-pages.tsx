@@ -36,20 +36,11 @@ function RetainedPage(props: PageProps): ReactElement {
 
 function PageBody(props: PageProps): ReactElement {
   return (
-    <InspectorBody
-      {...props.inspector}
-      {...pageScroll(props)}
-      surface="bg-transparent"
-      contentScrolls={props.panel !== 'changes'}
-    >
-      {panelContent[props.panel](props)?.body}
+    <InspectorBody {...props.inspector} surface="bg-transparent" contentScrolls>
+      {panelContent[props.panel](props, props.scrollState)?.body}
     </InspectorBody>
   );
 }
-
-const pageScroll = (props: PageProps): Pick<InspectorProps, 'scrollState'> => ({
-  scrollState: props.panel === 'changes' ? props.scrollState : undefined,
-});
 
 // Hidden tab pages keep their content tree and native/virtualised scroll views mounted.
 export function RetainedInspectorPages(props: Props): ReactElement {

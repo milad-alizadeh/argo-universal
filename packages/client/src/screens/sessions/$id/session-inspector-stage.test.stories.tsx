@@ -16,11 +16,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const scrollTestID = 'desktop-inspector-scroll';
+
 export const RemembersListPositionAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
     const list = within(
       await canvas.findByRole('tabpanel', { name: 'Changes' }),
-    ).getByTestId('desktop-inspector-scroll');
+    ).getByTestId(scrollTestID);
 
     list.scrollTop = 500;
     await fireEvent.scroll(list);
@@ -32,7 +34,7 @@ export const RemembersListPositionAcrossTabs: Story = {
     await waitFor(() =>
       expect(
         within(canvas.getByRole('tabpanel', { name: 'Changes' })).getByTestId(
-          'desktop-inspector-scroll',
+          scrollTestID,
         ).scrollTop,
         'restored scroll',
       ).toBeGreaterThan(400),
@@ -106,5 +108,30 @@ export const RemembersAgentDetailAcrossTabs: Story = {
         name: new RegExp(`^${runningSubagent.title},`),
       }),
     ).toBeVisible();
+  },
+};
+
+export const KeepsComparisonAboveScrollingFiles: Story = {
+  play: async ({ canvas }) => {
+    const page = within(
+      await canvas.findByRole('tabpanel', { name: 'Changes' }),
+    );
+
+    const comparison = page.getByRole('button', {
+      name: 'Comparison',
+    });
+
+    const files = page.getByTestId(scrollTestID);
+
+    const top = comparison.getBoundingClientRect().top;
+
+    files.scrollTop = 500;
+    await fireEvent.scroll(files);
+    await waitFor(() => expect(files.scrollTop).toBeGreaterThan(400));
+    await expect(comparison).toBeVisible();
+    await expect(comparison.getBoundingClientRect().top).toBe(top);
+    await expect(comparison.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      files.getBoundingClientRect().top,
+    );
   },
 };
