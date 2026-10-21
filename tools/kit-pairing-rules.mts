@@ -43,7 +43,6 @@ export const exemptFolders = {
 // A schema name that has no drawing folder of its own, with the reason it is exempt.
 export const exemptSchemas = {
   Action: 'Drawn by ActionList as one of its rows.',
-  Svg: 'Drawn by visual/svg.tsx, a file rather than a folder.',
   Chart: 'Declared for Plugins; no drawing yet.',
 } satisfies Record<string, string>;
 

@@ -1,1 +1,5 @@
-export { resolvedToneShades, toneShadeTokens } from './tone-shades';
+export {
+  resolvedToneShades,
+  toneShadeSteps,
+  toneShadeTokens,
+} from './tone-shades';
