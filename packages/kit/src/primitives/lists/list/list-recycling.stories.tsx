@@ -13,6 +13,7 @@ import { Button } from '#primitives/actions/button';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
 import type { ListProps } from './list-props';
+import { recyclingList } from './list-recycling-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Lists/List/Recycling',
@@ -36,12 +37,8 @@ type ListRef = RefObject<LegendListRef | null>;
 type ChangeRows = Dispatch<SetStateAction<Row[]>>;
 
 const recycleProps = {
+  ...recyclingList,
   keyExtractor: (item): string => item.id,
-  appearance: 'grouped',
-  recycleItems: true,
-  drawDistance: 0,
-  estimatedItemSize: 56,
-  maintainVisibleContentPosition: false,
   renderItem: (item): React.JSX.Element => (
     <ListItem title={item.title} description={item.description} />
   ),

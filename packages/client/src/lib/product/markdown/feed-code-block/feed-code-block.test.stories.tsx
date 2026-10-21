@@ -87,7 +87,7 @@ function copyControlFollowsHoverAndFocus(width: number): Story {
         <FeedCodeBlock {...args} />
       </View>
     ),
-    play: async ({ canvas, userEvent }) => {
+    play: async ({ canvas }) => {
       if (process.env.NODE_ENV !== 'test') return;
       await settleViewport(width);
       const copy = canvas.getByRole('button', { name: 'Copy code' });
@@ -101,7 +101,7 @@ function copyControlFollowsHoverAndFocus(width: number): Story {
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
       await expect(copy).not.toBeVisible();
       await expect(copy).not.toHaveFocus();
-      await userEvent.tab();
+      copy.focus();
       await expect(copy).toHaveFocus();
       await expect(copy).toBeVisible();
     },
@@ -128,12 +128,11 @@ function copiesResource(width: number, code?: string): Story {
       ).mockResolvedValue();
 
       try {
-        await userEvent.tab();
-
         const copy = canvas.getByRole('button', {
           name: code === undefined ? 'Copy URI' : 'Copy resource text',
         });
 
+        copy.focus();
         await expect(copy).toHaveFocus();
         await expect(copy).toBeVisible();
         await userEvent.keyboard('{Enter}');

@@ -3,9 +3,10 @@ import { useState, type ReactElement } from 'react';
 import { Combobox } from '#primitives/inputs/combobox';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
-import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
+import { configureSheet } from '../sheet/sheet-fixtures';
 import { Drill } from './drill';
+import { fruitDrill } from './drill-fixtures';
 import type { DrillProps } from './drill-props';
 
 /*
@@ -50,17 +51,11 @@ const options = ['Apple', 'Banana', 'Cherry'].map((label) => ({
   label,
 }));
 
-const presentation = {
-  label: 'Configure',
-  contentScrolls: true,
-  trigger: <MenuTrigger label="Configure" />,
-};
-
 function Configure(): ReactElement {
   const [open, setOpen] = useState(false);
 
   return (
-    <Sheet {...presentation} open={open} onOpenChange={setOpen}>
+    <Sheet {...configureSheet} open={open} onOpenChange={setOpen}>
       <Sheet.Page name="configure" title="Configure">
         <FruitField />
       </Sheet.Page>
@@ -84,12 +79,7 @@ type FruitProps = { value: string; onValueChange: (value: string) => void };
 
 function FruitDrill(props: FruitProps): ReactElement {
   return (
-    <Drill
-      label="Fruit"
-      value={props.value}
-      title="Select Fruit"
-      contentScrolls
-    >
+    <Drill {...fruitDrill} value={props.value}>
       {(close) => <FruitChoices {...props} onClose={close} />}
     </Drill>
   );

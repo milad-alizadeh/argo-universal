@@ -51,7 +51,7 @@ No `WithIcon` or `SizeSm`: a story named after a prop is an arg. No `render:` ga
 The child exports each of its states as a fixture, beside its story file:
 
 ```tsx
-// check-mark.fixtures.ts
+// check-mark-fixtures.ts
 import type { CheckMarkProps } from './check-mark';
 
 export const passingCheck = {
@@ -70,11 +70,10 @@ export const failingCheck = {
 const meta = {
   title: 'Workbench/CheckMark',
   component: CheckMark,
-  args: { check: passingCheck },
   argTypes: { check: { control: false } },
 } satisfies Meta<typeof CheckMark>;
 
-export const Passed: Story = {};
+export const Passed: Story = { args: { check: passingCheck } };
 
 export const Failed: Story = { args: { check: failingCheck } };
 ```
@@ -83,7 +82,7 @@ The parent imports them and varies only its own props:
 
 ```tsx
 // change-row.stories.tsx
-import { failingCheck, passingCheck } from '../check-mark/check-mark.fixtures';
+import { failingCheck, passingCheck } from '../check-mark/check-mark-fixtures';
 
 const meta = {
   title: 'Workbench/ChangeRow',

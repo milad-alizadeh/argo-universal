@@ -1,24 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { RichTextarea } from './rich-textarea';
+import { RichTextareaExample } from './rich-textarea-example.mocks';
 import {
-  exampleLabel,
-  RichTextareaExample,
-} from './rich-textarea-example.mocks';
-
-const longDraft = Array.from(
-  { length: 14 },
-  (_, index) => `Line ${index + 1} of a long draft`,
-).join('\n');
+  boldRichTextarea,
+  codeBlockRichTextarea,
+  emptyRichTextarea,
+  headingsRichTextarea,
+  inlineCodeRichTextarea,
+  italicRichTextarea,
+  linkRichTextarea,
+  longDraftRichTextarea,
+  nestedListsRichTextarea,
+  quoteRichTextarea,
+  strikethroughRichTextarea,
+  threeLinesRichTextarea,
+} from './rich-textarea-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Inputs/RichTextarea',
   component: RichTextarea,
-  args: {
-    value: '',
-    accessibilityLabel: exampleLabel,
-    onChangeText: (): void => {},
-  },
+  args: { onChangeText: (): void => {} },
   // RichTextarea has no Contracts schema; these are the props its own type declares as opaque.
   argTypes: {
     onChangeText: { control: false },
@@ -35,55 +37,30 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = {};
+export const Empty: Story = { args: emptyRichTextarea };
 
-export const Bold: Story = { args: { value: 'Keep the **phone** readable.' } };
+export const Bold: Story = { args: boldRichTextarea };
 
-export const Italic: Story = { args: { value: 'Keep the _phone_ readable.' } };
+export const Italic: Story = { args: italicRichTextarea };
 
-export const Strikethrough: Story = {
-  args: { value: 'Keep the ~~tablet~~ phone readable.' },
-};
+export const Strikethrough: Story = { args: strikethroughRichTextarea };
 
-export const InlineCode: Story = {
-  args: { value: 'Run `pnpm test` before you push.' },
-};
+export const InlineCode: Story = { args: inlineCodeRichTextarea };
 
-export const Link: Story = {
-  args: {
-    value: 'Read the [the guide](https://example.com/guide) before you start.',
-  },
-};
+export const Link: Story = { args: linkRichTextarea };
 
-export const ThreeLines: Story = {
-  args: {
-    value: 'Match the spacing.\nKeep the phone readable.\nUse both themes.',
-  },
-};
+export const ThreeLines: Story = { args: threeLinesRichTextarea };
 
-export const Headings: Story = {
-  args: {
-    value: '# Title heading\n\n## Second heading\n\nBody text for comparison',
-  },
-};
+export const Headings: Story = { args: headingsRichTextarea };
 
-export const NestedLists: Story = {
-  args: {
-    value:
-      '- Plan the layout\n    - Draft the rows\n        - Outline\n- Ship\n\n1. Build\n    1. Test\n2. Release',
-  },
-};
+export const NestedLists: Story = { args: nestedListsRichTextarea };
 
-export const Quote: Story = {
-  args: { value: '> Keep the phone readable.\n> Use both themes.' },
-};
+export const Quote: Story = { args: quoteRichTextarea };
 
-export const CodeBlock: Story = {
-  args: { value: 'Run this first:\n\n```\npnpm install\npnpm test\n```' },
-};
+export const CodeBlock: Story = { args: codeBlockRichTextarea };
 
 export const LongDraft: Story = {
-  args: { value: longDraft },
+  args: longDraftRichTextarea,
   parameters: {
     docs: { description: { story: 'A draft at the editor’s maximum height.' } },
   },

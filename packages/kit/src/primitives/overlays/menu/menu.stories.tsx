@@ -4,27 +4,18 @@ import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Text } from '#primitives/content/text';
 import { Menu, type MenuAction } from './menu';
+import {
+  choices,
+  disabledMenu,
+  disabledOptionMenu,
+  loadingMenu,
+  type MenuFixture,
+  type Permission,
+} from './menu-fixtures';
 import { ViewOptionsMenu } from './menu-groups.mocks';
 import { MenuTrigger } from './menu-trigger';
 
-const choices = [
-  { value: 'default', label: 'Option one' },
-  { value: 'ask', label: 'Option two' },
-  { value: 'full', label: 'Option three' },
-] as const;
-
-type Permission = (typeof choices)[number]['value'];
-
-const limitedChoices = choices.map((choice) => ({
-  ...choice,
-  disabled: choice.value === 'full',
-}));
-
-type PermissionsMenuProps = {
-  disabled?: boolean;
-  loading?: boolean;
-  options?: typeof limitedChoices;
-};
+type PermissionsMenuProps = MenuFixture;
 
 function PermissionsMenu(props: PermissionsMenuProps): React.JSX.Element {
   const [value, setValue] = useState<Permission>('default');
@@ -109,7 +100,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { render: () => <PermissionsMenu /> };
 
-export const Disabled: Story = { render: () => <PermissionsMenu disabled /> };
+export const Disabled: Story = {
+  render: () => <PermissionsMenu {...disabledMenu} />,
+};
 
 export const DisabledOption: Story = {
   parameters: {
@@ -119,10 +112,12 @@ export const DisabledOption: Story = {
       },
     },
   },
-  render: () => <PermissionsMenu options={limitedChoices} />,
+  render: () => <PermissionsMenu {...disabledOptionMenu} />,
 };
 
-export const Loading: Story = { render: () => <PermissionsMenu loading /> };
+export const Loading: Story = {
+  render: () => <PermissionsMenu {...loadingMenu} />,
+};
 
 // Two headed groups of choices in one menu.
 export const Groups: Story = { render: () => <ViewOptionsMenu /> };

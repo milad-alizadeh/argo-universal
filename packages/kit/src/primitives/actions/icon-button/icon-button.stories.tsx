@@ -2,18 +2,27 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { logoSources } from '../../../symbols/logo-source';
 import { Text } from '../../content/text';
 import { IconButton } from './icon-button';
-
-const filterDot = (
-  <View className="absolute top-1.5 right-1.5 size-1.75 rounded-full border border-card bg-foreground" />
-);
+import {
+  badgeIconButton,
+  bleedLogoIconButton,
+  bleedWebIconButton,
+  defaultIconButton,
+  disabledIconButton,
+  extraLargeIconButton,
+  extraSmallIconButton,
+  largeIconButton,
+  loadingIconButton,
+  mediumIconButton,
+  selectedIconButton,
+  smallIconButton,
+} from './icon-button-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Actions/IconButton',
   component: IconButton,
-  args: { icon: 'more', accessibilityLabel: 'More actions' },
+  args: defaultIconButton,
   argTypes: kitArgTypes('IconButton'),
   // A row keeps the button at its own width, as it sits in a product layout.
   decorators: [
@@ -30,53 +39,25 @@ export default meta;
 // IconButtonProps is a union (a named icon or a logo source), so stories type against the component.
 type Story = StoryObj<typeof IconButton>;
 
-export const Default: Story = {};
+export const Default: Story = { args: defaultIconButton };
 
-const sidebarArgs = {
-  icon: 'sidebar',
-  variant: 'ghost',
-  accessibilityLabel: 'Sidebar',
-} as const;
+export const ExtraSmall: Story = { args: extraSmallIconButton };
 
-export const ExtraSmall: Story = { args: { ...sidebarArgs, size: 'xs' } };
+export const Small: Story = { args: smallIconButton };
 
-export const Small: Story = { args: { ...sidebarArgs, size: 'sm' } };
+export const Medium: Story = { args: mediumIconButton };
 
-export const Medium: Story = { args: { ...sidebarArgs, size: 'md' } };
+export const Large: Story = { args: largeIconButton };
 
-export const Large: Story = { args: { ...sidebarArgs, size: 'lg' } };
+export const ExtraLarge: Story = { args: extraLargeIconButton };
 
-export const ExtraLarge: Story = { args: { ...sidebarArgs, size: 'xl' } };
+export const Selected: Story = { args: selectedIconButton };
 
-export const Selected: Story = {
-  args: {
-    icon: 'bold',
-    variant: 'ghost',
-    size: 'xs',
-    accessibilityLabel: 'Bold',
-    selected: true,
-  },
-};
+export const Disabled: Story = { args: disabledIconButton };
 
-export const Disabled: Story = { args: { disabled: true } };
+export const Loading: Story = { args: loadingIconButton };
 
-export const Loading: Story = { args: { loading: true } };
-
-export const Badge: Story = {
-  args: {
-    icon: 'filters',
-    variant: 'ghost',
-    accessibilityLabel: 'Filters',
-    badge: filterDot,
-  },
-};
-
-const metaLinkProps = {
-  size: 'xs',
-  variant: 'ghost',
-  iconTone: 'muted',
-  bleed: true,
-} as const;
+export const Badge: Story = { args: badgeIconButton };
 
 /*
  * Each glyph sits on the text line and the row's gap; its hit area bleeds past it.
@@ -88,12 +69,8 @@ export const Bleed: Story = {
       <Text role="secondary" tone="muted">
         v1.0.0
       </Text>
-      <IconButton
-        {...metaLinkProps}
-        iconSource={logoSources.github}
-        accessibilityLabel="Link"
-      />
-      <IconButton {...metaLinkProps} icon="web" accessibilityLabel="Web" />
+      <IconButton {...bleedLogoIconButton} />
+      <IconButton {...bleedWebIconButton} />
     </View>
   ),
 };

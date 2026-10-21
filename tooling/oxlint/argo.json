@@ -162,10 +162,11 @@
       "rules": { "anti-slop/no-unsafe-dictionary-type": "off" }
     },
     {
-      // Tests, stories and mocks state their inputs and expectations as literals.
+      // Tests, stories, fixtures and mocks state their inputs and expectations as literals.
       "files": [
         "**/*.test.*",
         "**/*.stories.*",
+        "**/*-fixtures.*",
         "**/*.mocks.*",
         "e2e/**",
         "**/mocks/**",
@@ -846,7 +847,7 @@
     {
       // The kit imports neither product nor local code; ADR-0031 adds the kit prop surface - its types, and the descriptors a props table is built from - beside the shared kit tokens.
       "files": ["packages/kit/src/**"],
-      "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/*-fixtures.*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -885,7 +886,7 @@
     {
       // Primitives use one another through their indexes. Contracts supplies only their shared kit tokens, never domain types.
       "files": ["packages/kit/src/primitives/*/*/*"],
-      "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/*-fixtures.*"],
       "rules": {
         "no-restricted-imports": [
           "error",

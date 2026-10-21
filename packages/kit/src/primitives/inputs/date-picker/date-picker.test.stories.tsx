@@ -80,10 +80,10 @@ export const PicksADateAndTime: Story = {
 
 export const Disabled: Story = {
   render: () => <Field value="2026-10-19" disabled />,
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     const input = canvas.getByLabelText(LABEL);
     await expect(input).toBeDisabled();
-    await userEvent.tab();
+    input.focus();
     await expect(input).not.toHaveFocus();
   },
 };

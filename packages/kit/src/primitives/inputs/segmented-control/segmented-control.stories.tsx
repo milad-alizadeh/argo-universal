@@ -3,12 +3,8 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { SegmentedControl } from './segmented-control';
+import { defaultSegmentedControl } from './segmented-control-fixtures';
 import type { SegmentedControlProps } from './segmented-control-props';
-
-const options = [
-  { value: 'pr', label: 'PR' },
-  { value: 'files', label: 'File changes' },
-];
 
 // The selected segment is held by the caller, so the stories press against local state.
 function ControlledSegmentedControl(
@@ -29,7 +25,7 @@ function ControlledSegmentedControl(
 const meta = {
   title: 'Design System/Primitives/Inputs/SegmentedControl',
   component: SegmentedControl,
-  args: { label: 'Git', options, value: 'files', onValueChange: fn() },
+  args: { onValueChange: fn() },
   // SegmentedControl has no Contracts schema, so its props are listed here.
   argTypes: {
     label: { control: 'text' },
@@ -44,4 +40,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { args: defaultSegmentedControl };

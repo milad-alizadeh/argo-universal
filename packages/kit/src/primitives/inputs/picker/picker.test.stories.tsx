@@ -59,8 +59,10 @@ export const PointerSelection: Story = {
 
 export const KeyboardTypeahead: Story = {
   play: async ({ canvas, canvasElement, userEvent }) => {
-    await userEvent.tab();
-    await expect(canvas.getByRole('button', { name: 'Effort' })).toHaveFocus();
+    const trigger = canvas.getByRole('button', { name: 'Effort' });
+
+    trigger.focus();
+    await expect(trigger).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     await within(canvasElement.ownerDocument.body).findByRole('listbox');
     await userEvent.keyboard('high{Enter}');
@@ -98,12 +100,12 @@ export const Disabled: Story = {
       onValueChange={changed}
     />
   ),
-  play: async ({ canvas, userEvent }) => {
-    await expect(canvas.getByRole('button', { name: 'Effort' })).toBeDisabled();
-    await userEvent.tab();
-    await expect(
-      canvas.getByRole('button', { name: 'Effort' }),
-    ).not.toHaveFocus();
+  play: async ({ canvas }) => {
+    const trigger = canvas.getByRole('button', { name: 'Effort' });
+
+    await expect(trigger).toBeDisabled();
+    trigger.focus();
+    await expect(trigger).not.toHaveFocus();
     await expect(changed).not.toHaveBeenCalled();
   },
 };

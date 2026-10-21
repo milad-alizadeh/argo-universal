@@ -4,12 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { FilterPill } from './filter-pill';
-
-const pills = [
-  { value: 'all', label: 'All' },
-  { value: 'installed', label: 'Installed', count: 4 },
-  { value: 'not-installed', label: 'Not installed', count: 2 },
-] as const;
+import { filtersFilterPill } from './filter-pill-fixtures';
 
 // A pill is one of a toolbar row that keeps the chosen filter, so the row owns the selection.
 function Pills(): React.JSX.Element {
@@ -17,7 +12,7 @@ function Pills(): React.JSX.Element {
 
   return (
     <View className="flex-row items-center gap-1">
-      {pills.map(({ value, ...pill }) => (
+      {filtersFilterPill.map(({ value, ...pill }) => (
         <FilterPill
           key={value}
           {...pill}

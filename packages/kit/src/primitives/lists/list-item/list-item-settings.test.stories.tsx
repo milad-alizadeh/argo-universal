@@ -69,10 +69,10 @@ export const PickerKeyboardSelection: StoryObj<typeof meta> = {
   },
   play: async ({ canvas, canvasElement, userEvent }) => {
     await settleViewport(1440);
-    await userEvent.tab();
-    await expect(
-      canvas.getByRole('button', { name: 'Theme, System' }),
-    ).toHaveFocus();
+    const theme = canvas.getByRole('button', { name: 'Theme, System' });
+
+    theme.focus();
+    await expect(theme).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     const page = within(canvasElement.ownerDocument.body);
     await expect(

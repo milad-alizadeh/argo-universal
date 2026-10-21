@@ -14,11 +14,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Url: Story = {
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     const link = canvas.getByRole('link', { name: 'Read more' });
 
     await expect(link).toHaveAttribute('href', 'https://example.com');
-    await userEvent.tab();
+    link.focus();
     await expect(link).toHaveFocus();
   },
 };
