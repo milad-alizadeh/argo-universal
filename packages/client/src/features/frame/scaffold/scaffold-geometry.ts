@@ -1,3 +1,6 @@
+import { frameGeometry } from './frame-geometry';
+import type { FrameGeometry } from './frame-geometry-types';
+
 // The Inspector: closed, open beside the page, or expanded over it.
 export type InspectorState = 'closed' | 'open' | 'expanded';
 
@@ -18,6 +21,12 @@ export interface ScaffoldMeasures {
   inset: number;
   // The shared top bar across the rail and the list, where the window controls sit.
   barHeight: number;
+  topBandHeight: number;
+  workbenchWidth: number;
+  paneGap: number;
+  composerWidth: number;
+  contentGutter: number;
+  contentMaximum: number;
 }
 
 export interface ScaffoldGeometryInput {
@@ -45,6 +54,7 @@ interface InspectorGeometry {
 }
 
 export interface ScaffoldGeometry extends ListGeometry, InspectorGeometry {
+  frame: FrameGeometry;
   listHandleLeft: number;
   inspectorHandleLeft: number;
   detailRight: number;
@@ -141,6 +151,13 @@ function inspectorHandleLeft(
   );
 }
 
+function listHandleLeft(
+  input: ScaffoldGeometryInput,
+  list: ListGeometry,
+): number {
+  return input.measures.inset + input.measures.railWidth + list.shownListWidth;
+}
+
 export function scaffoldGeometry(
   input: ScaffoldGeometryInput,
 ): ScaffoldGeometry {
@@ -148,10 +165,10 @@ export function scaffoldGeometry(
   const inspector = inspectorGeometry(input, list.availableWidth);
 
   return {
+    frame: frameGeometry(input),
     ...list,
     ...inspector,
-    listHandleLeft:
-      input.measures.inset + input.measures.railWidth + list.shownListWidth,
+    listHandleLeft: listHandleLeft(input, list),
     inspectorHandleLeft: inspectorHandleLeft(input, inspector),
     detailRight: list.usableWidth - inspector.inspectorTargetWidth,
     transitionKey: `${input.sidebarShown}:${input.inspectorState}:${inspector.inspectorExpanded}`,
