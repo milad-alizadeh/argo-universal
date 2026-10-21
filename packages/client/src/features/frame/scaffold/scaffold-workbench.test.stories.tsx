@@ -23,12 +23,14 @@ export const FloatingKeepsTheFeedInPlace: Story = {
     await settleViewport(1440);
     const feed = await canvas.findByTestId('workbench-feed');
     const bounds = feed.getBoundingClientRect();
-    await expect(canvas.queryByTestId(workbenchId)).toBeNull();
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
     await expect(
       canvas.getByRole('button', { name: toggleLabel }),
     ).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(canvas.getByRole('button', { name: toggleLabel }));
-    await expect(await canvas.findByTestId(workbenchId)).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
     await expect(
       canvas.getByRole('button', { name: toggleLabel }),
     ).toHaveAttribute('aria-pressed', 'true');
@@ -38,7 +40,9 @@ export const FloatingKeepsTheFeedInPlace: Story = {
       canvas.queryByRole('separator', { name: 'Resize Workbench' }),
     ).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: toggleLabel }));
-    await expect(canvas.queryByTestId(workbenchId)).toBeNull();
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
     await expect(canvas.getByRole('textbox', { name: 'Draft' })).toHaveValue(
       'Keep my draft',
     );
@@ -49,11 +53,13 @@ export const NarrowingAutoHidesTheDockedWorkbench: Story = {
   args: { stageOpen: true },
   play: async ({ canvas, userEvent }) => {
     await settleViewport(1768);
-    await expect(await canvas.findByTestId(workbenchId)).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
     await settleViewport(1440);
-    await waitFor(() => expect(canvas.queryByTestId(workbenchId)).toBeNull());
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
     await userEvent.click(canvas.getByRole('button', { name: toggleLabel }));
-    await expect(await canvas.findByTestId(workbenchId)).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
     await expect(canvas.getByRole('textbox', { name: 'Draft' })).toHaveValue(
       'Keep my draft',
     );
@@ -63,9 +69,9 @@ export const NarrowingAutoHidesTheDockedWorkbench: Story = {
 export const CardOpensTheStageWithoutClosingTheOverview: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(1920);
-    await expect(await canvas.findByTestId(workbenchId)).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
     await userEvent.click(canvas.getByRole('button', { name: 'Changes' }));
     await expect(await canvas.findByText('Branch files')).toBeVisible();
-    await expect(await canvas.findByTestId(workbenchId)).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
   },
 };

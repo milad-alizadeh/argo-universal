@@ -1,7 +1,9 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Surface } from '#primitives/layout/surface';
 import { ScrollFadeView } from '../../../lib/generic/scroll-fade/scroll-fade';
+import { useFrameOffset } from '../hooks/use-frame-offset';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
 
 // A floating Workbench overlays the content; its geometry contributes no width to the page.
@@ -9,12 +11,11 @@ export function ScaffoldWorkbench(
   parts: ScaffoldPartProps,
 ): ReactElement | null {
   const { scaffold, layout } = parts;
+  const workbench = scaffold.band?.workbench;
 
-  if (!layout.frame.workbench.width) return null;
+  if (!workbench) return null;
 
-  return (
-    <WorkbenchPanel layout={layout}>{scaffold.band?.workbench}</WorkbenchPanel>
-  );
+  return <WorkbenchPanel layout={layout}>{workbench}</WorkbenchPanel>;
 }
 
 type WorkbenchPanelProps = {
@@ -26,27 +27,55 @@ function WorkbenchPanel({
   layout,
   children,
 }: WorkbenchPanelProps): ReactElement {
+  const placement = useWorkbenchPlacement(layout);
+
   return (
-    <View testID="desktop-workbench" {...workbenchPlacement(layout)}>
+    <Animated.View {...placement}>
       <WorkbenchSurface floating={layout.frame.workbenchState === 'floating'}>
         {children}
       </WorkbenchSurface>
-    </View>
+    </Animated.View>
   );
 }
 
-type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'>;
+function useWorkbenchPlacement(
+  layout: ScaffoldPartProps['layout'],
+): ComponentProps<typeof Animated.View> & { inert: boolean } {
+  const placement = workbenchPlacement(layout);
+  const motion = useFrameOffset({ ...layout.motion, ...placement.motion });
+
+  return {
+    testID: 'desktop-workbench',
+    className: placement.className,
+    style: [placement.style, motion],
+    ...visibilityProps(placement.motion.visible),
+  };
+}
+
+const visibilityProps = (visible: boolean): ViewProps & { inert: boolean } => ({
+  pointerEvents: visible ? 'auto' : 'none',
+  accessibilityElementsHidden: !visible,
+  importantForAccessibility: visible ? 'auto' : 'no-hide-descendants',
+  'aria-hidden': !visible,
+  inert: !visible,
+});
+
+type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'> & {
+  motion: { offset: number; visible: boolean };
+};
 
 function workbenchPlacement({
   frame,
+  measures,
+  width,
 }: ScaffoldPartProps['layout']): WorkbenchPlacement {
+  const visible = frame.workbench.width > 0;
+  const offset = visible ? frame.workbench.offset : width - measures.inset;
+
   return {
     className: 'absolute bottom-frame-inset',
-    style: {
-      left: frame.workbench.offset,
-      width: frame.workbench.width,
-      top: 0,
-    },
+    style: { left: offset, width: measures.workbenchWidth, top: 0 },
+    motion: { offset, visible },
   };
 }
 

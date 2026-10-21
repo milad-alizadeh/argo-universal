@@ -29,7 +29,9 @@ export const FoldedSidebarCanBeShown: Story = {
     await waitFor(() =>
       expect(canvas.getByRole('button', { name: hideSidebar })).toBeVisible(),
     );
-    await expect(canvas.queryByTestId(workbenchId)).toBeNull();
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
     await expect(canvas.getByRole('textbox', { name: 'Draft' })).toHaveValue(
       'Keep my draft',
     );
@@ -70,6 +72,8 @@ export const UnavailableSidebarWaitsForSpaceBesideStage: Story = {
       canvas.getByRole('button', { name: hideSidebar }),
     ).toBeVisible();
     await expect(canvas.getByText('Branch files')).toBeVisible();
-    await expect(canvas.queryByTestId(workbenchId)).toBeNull();
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
   },
 };

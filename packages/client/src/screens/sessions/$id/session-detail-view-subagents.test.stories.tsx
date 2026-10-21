@@ -66,6 +66,17 @@ async function assertPresentation(
   await expect(page.queryByRole('tab')).not.toBeInTheDocument();
 }
 
+async function subagentsPage(
+  canvas: Interaction['canvas'],
+  wide: boolean,
+): Promise<ReturnType<typeof within>> {
+  const host = wide
+    ? await canvas.findByRole('tabpanel', { name: 'Agents' })
+    : await within(document.body).findByRole('dialog', { name: subagentsName });
+
+  return within(host);
+}
+
 // The same props contract at both presentations: header/Inspector wide, Composer/Sheet below wide.
 function subagentsAt(width: number, state: State): Story {
   const subagents = subagentStates[state];
@@ -106,7 +117,7 @@ function subagentsAt(width: number, state: State): Story {
         await canvas.findByRole('button', { name: trigger }),
       );
 
-      const page = within(document.body);
+      const page = await subagentsPage(canvas, wide);
 
       for (const item of subagents) {
         await waitFor(() => expect(page.getByText(item.title)).toBeVisible());
