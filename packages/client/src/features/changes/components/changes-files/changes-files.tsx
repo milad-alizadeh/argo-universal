@@ -104,6 +104,8 @@ function FileDiffRow(props: FileDiffRowProps): React.JSX.Element {
 }
 
 // The branch list opens one file directly; the comparison is still the branch's comparison.
+type BranchFilesProps = ChangesViewProps & { files: readonly FileDiff[] };
+
 function StageFiles(
   props: ChangesViewProps & { files: readonly FileDiff[] },
 ): React.JSX.Element {
@@ -114,9 +116,7 @@ function StageFiles(
   return <BranchFiles {...props} />;
 }
 
-function BranchFiles(
-  props: ChangesViewProps & { files: readonly FileDiff[] },
-): React.JSX.Element {
+function BranchFiles(props: BranchFilesProps): React.JSX.Element {
   return (
     <View className="bg-content">
       {props.files.map((file, index) => (
