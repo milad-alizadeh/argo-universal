@@ -87,8 +87,8 @@ const server = createActor(serverConnectionMachine, {
   },
 });
 
-// The 12px lights centred in the shared top bar's 44px row: the glass is inset 8, and the 52px of lights starts 12 into the 68px window controls.
-const trafficLights = { x: 20, y: 24 };
+// The 12px lights are centred in the window band's 44px row.
+const trafficLights = { x: 20, y: 16 };
 
 const createWindow = (url: string): void => {
   const stateFile = path.join(app.getPath('userData'), 'window-state.json');

@@ -6,6 +6,8 @@ export type {
   InspectorTabsProps,
 } from './inspector-props';
 
+export { InspectorBody } from './inspector-pane';
+
 export { InspectorPane, type InspectorPaneProps } from './inspector-pane';
 
 export {
@@ -14,3 +16,7 @@ export {
   useHostedInspector,
   type InspectorHost,
 } from './inspector-host';
+
+export { InspectorControlsContext } from './inspector-controls-context';
+
+export { InspectorPage, InspectorPages } from './inspector-page';

@@ -32,9 +32,35 @@ const withDesktopSymbols: Decorator = (Story) => (
 
 const preview: Preview = {
   decorators: [...previewDecorators, withDesktopSymbols],
-  initialGlobals: previewGlobals,
+  /*
+   * Keep manager panels from turning desktop presentations into phone layouts.
+   * Unlike story globals, this default leaves the viewport toolbar editable.
+   */
+  initialGlobals: { ...previewGlobals, viewport: { value: 'desktop' } },
   globalTypes: previewGlobalTypes,
-  parameters: { ...previewParameters, standalonePreview: true },
+  parameters: {
+    ...previewParameters,
+    standalonePreview: true,
+    viewport: {
+      options: {
+        desktop: {
+          name: 'Desktop',
+          type: 'desktop',
+          styles: { width: '1440px', height: '900px' },
+        },
+        tablet: {
+          name: 'Tablet',
+          type: 'tablet',
+          styles: { width: '1024px', height: '900px' },
+        },
+        phone: {
+          name: 'Phone',
+          type: 'mobile',
+          styles: { width: '390px', height: '844px' },
+        },
+      },
+    },
+  },
 };
 
 export default preview;

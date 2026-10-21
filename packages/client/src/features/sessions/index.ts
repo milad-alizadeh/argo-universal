@@ -217,3 +217,5 @@ export {
 } from './components/archive-session/archive-session-alert';
 
 export { archivedToast } from './components/archive-session/archived-toast';
+
+export { SessionChangeDetail } from './components/session-change-detail';

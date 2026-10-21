@@ -9,9 +9,9 @@ const mergeMethodOptions = [
 ] as const satisfies readonly { value: MergeMethod; label: string }[];
 
 export interface MergePrButtonProps {
-  // False until the PR can merge: checks pass and nothing conflicts.
+  // False until the Change can merge: checks pass and nothing conflicts.
   mergeable: boolean;
-  // The method Merge PR runs, ticked in its menu.
+  // The method Merge runs, ticked in its menu.
   method: MergeMethod;
   onMethodChange: (method: MergeMethod) => void;
   // Absent while the Server has no way to merge; the button then stays dimmed.
@@ -19,7 +19,7 @@ export interface MergePrButtonProps {
 }
 
 const mergeSplit = {
-  label: 'Merge PR',
+  label: 'Merge',
   icon: 'merged',
   size: 'xs',
   primary: true,
@@ -27,7 +27,7 @@ const mergeSplit = {
   options: mergeMethodOptions,
 } as const;
 
-// "Merge PR" runs the ticked merge method; its chevron picks another, as GitHub's merge button does. Dimmed until the PR can merge.
+// "Merge" runs the ticked merge method; its chevron picks another, as GitHub's merge button does. Dimmed until the Change can merge.
 export function MergePrButton(props: MergePrButtonProps): React.JSX.Element {
   const disabled = !props.mergeable || !props.onMerge;
 

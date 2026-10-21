@@ -9,6 +9,9 @@ export interface ChangesBranches {
 }
 
 export interface ChangesViewProps {
+  // Desktop Stage navigation; phone file changes retain their inline diffs.
+  selectedFile?: string;
+  onFileSelect?: (path?: string) => void;
   comparison: ChangesComparison;
   // The branch the Project's main checkout has checked out.
   mainBranch: string;

@@ -12,7 +12,7 @@ The canonical files for new designs and implementation evidence:
 |---|---|
 | [Foundations](https://app.paper.design/file/01M4RJ2FP7N272AE463G6PT2QD/p-2-0) | Global primitives, icons, typography and windows |
 | [Sessions](https://app.paper.design/file/01M4RJRP22R2R2JE20RWDNXR0Q/p-1-0) | Sessions list, filters and shell explorations |
-| [Feed & Inspector](https://app.paper.design/file/01M4RJWCAC00EA21V8BKY91FEV/p-1-0) | Session header, Feed, Inspector and PR views |
+| [Feed, Workbench & Inspector](https://app.paper.design/file/01M4RJWCAC00EA21V8BKY91FEV/p-1-0) | Session header, Feed, Inspector and PR views |
 | [Composer](https://app.paper.design/file/01M4RJXN4XTK41J7TDNBBD87G1/p-1-0) | Composer, menus, sheets, attachments and Session entry |
 | [Settings](https://app.paper.design/file/01M4RJMTRRZ4K9B62YQ0P53CR5/p-1-0) | Settings, Agents and accounts |
 | [Voice](https://app.paper.design/file/01M4RJ7EBVF0CGT31XYHHYVHYV/p-1-0) | Voice components and flows |
@@ -21,7 +21,7 @@ The canonical files for new designs and implementation evidence:
 | [Issues](https://app.paper.design/file/01M4RJGJ2N1YKV0K3RHF80FKZP/p-1-0) | Issues components and flows |
 | [Landing](https://app.paper.design/file/01M4RJQ4TMAKN1KWAXYNDHK589/p-1-0) | Landing designs and explorations |
 
-Sessions, Feed & Inspector, and Composer keep masters on `Session Components` (`p-1-0`) and flows on `Session` (`p-2-0`). Foundations has one page per family: Tokens & Type (`p-2-0`), Icons (`p-3-0`), Controls (`p-4-0`), Lists (`p-5-0`), Overlays (`p-6-0`), Layout & Shell (`p-7-0`) and Dark (Graphite) (`p-8-0`), with the old Global Components page (`p-1-0`) last. The other files use `p-1-0`.
+The Sessions, Feed/Workbench/Inspector, and Composer files keep masters on `Session Components` (`p-1-0`) and flows on `Session` (`p-2-0`). Foundations has one page per family: Tokens & Type (`p-2-0`), Icons (`p-3-0`), Controls (`p-4-0`), Lists (`p-5-0`), Overlays (`p-6-0`), Layout & Shell (`p-7-0`) and Dark (Graphite) (`p-8-0`), with the old Global Components page (`p-1-0`) last. The other files use `p-1-0`.
 
 The original [Argo file](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J) is a historical archive. Never open it; leave its issue approvals and links unchanged.
 

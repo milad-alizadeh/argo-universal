@@ -18,11 +18,11 @@ const session = sessionRowMocks.planAndSubagents;
 const pullRequestArgs: Story['args'] = {
   session,
   layout: 'compact',
-  pullRequest: { number: 45, status: 'open' },
+  pullRequest: { number: 45, stage: 'open' },
   age: '12m',
 };
 
-const rowName = { name: `${session.title}, Running, Open PR` };
+const rowName = { name: `${session.title}, Running, Open Change` };
 
 // The PR's state, without its number; no Plan, activity, metadata or time.
 export const CompactPullRequest: Story = {

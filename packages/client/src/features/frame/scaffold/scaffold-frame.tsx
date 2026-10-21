@@ -1,14 +1,16 @@
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
+import { InspectorControlsContext } from '#primitives/scaffolds/inspector';
 import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
-import { PaneBanner, WindowDragStrip } from './scaffold-chrome';
+import { ScaffoldBand } from './scaffold-band';
+import { PaneBanner } from './scaffold-chrome';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
+import { ScaffoldWorkbench } from './scaffold-workbench';
 import {
   type ScaffoldLayout,
   type ScaffoldPartProps,
@@ -57,22 +59,47 @@ const inspectorPlacement = ({ layout }: ScaffoldPartProps): PanePlacement => ({
 
 function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
   return (
-    <FramePane testID="desktop-inspector" {...inspectorPlacement(parts)}>
-      {parts.scaffold.inspector(parts.layout.inspectorExpanded)}
-    </FramePane>
+    <View className="absolute top-0 flex-row" style={inspectorPosition(parts)}>
+      <FramePane
+        testID="desktop-inspector"
+        surface="glass"
+        {...inspectorPlacement(parts)}
+      >
+        <InspectorControlsContext value={true}>
+          {parts.scaffold.inspector(parts.layout.inspectorExpanded)}
+        </InspectorControlsContext>
+      </FramePane>
+    </View>
   );
 }
 
-// The Inspector beside the page, the resize handles, and the banner over the panes.
-function Overlays(parts: ScaffoldParts): React.JSX.Element {
+function inspectorPosition({ layout }: ScaffoldPartProps): ViewStyle {
+  return { left: layout.frame.stage.offset, bottom: layout.measures.inset };
+}
+
+function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
       <InspectorColumn {...parts} />
+      <ScaffoldWorkbench {...parts} />
       <ScaffoldResizeHandles {...parts} />
       <PaneBanner left={sidebarWidth(parts.layout)}>
         {parts.scaffold.banner}
       </PaneBanner>
     </>
+  );
+}
+
+// The Inspector, Workbench and handles share the panes' origin below the band.
+function Overlays(parts: ScaffoldParts): React.JSX.Element {
+  return (
+    <View
+      pointerEvents="box-none"
+      className="absolute inset-x-0 bottom-0"
+      style={{ top: parts.layout.safeTop + parts.layout.frame.panesTop }}
+    >
+      <OverlayContents {...parts} />
+    </View>
   );
 }
 
@@ -85,7 +112,7 @@ interface FrameEdges {
 const frameEdges = (parts: ScaffoldParts): FrameEdges =>
   parts.framed
     ? {
-        before: <WindowDragStrip />,
+        before: <ScaffoldBand {...parts} />,
         after: <Overlays {...parts} />,
       }
     : { before: null, after: null };
@@ -93,10 +120,12 @@ const frameEdges = (parts: ScaffoldParts): FrameEdges =>
 export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
 // A framed tablet's panes start under the status bar; the window surface still runs behind it. The phone shell's pages keep their own header insets, and a desktop window has none.
-function useFrameTop(framed: boolean): ViewStyle {
-  const { top } = useSafeAreaInsets();
-
-  return { paddingTop: framed ? top : 0 };
+function frameTop(parts: ScaffoldParts): ViewStyle {
+  return {
+    paddingTop: parts.framed
+      ? parts.layout.safeTop + parts.layout.frame.panesTop
+      : 0,
+  };
 }
 
 function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
@@ -107,7 +136,7 @@ function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
       // Named for the Size class it lays out, such as `wide-frame`.
       testID={`${parts.scaffold.sizeClass}-frame`}
       className="flex-1 flex-row overflow-hidden bg-content"
-      style={useFrameTop(parts.framed)}
+      style={frameTop(parts)}
       onLayout={parts.layout.onLayout}
     >
       {before}

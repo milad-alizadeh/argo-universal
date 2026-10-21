@@ -1,33 +1,24 @@
 import type * as React from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { View } from 'react-native';
 import type { FramePaneProps } from './frame-pane';
+import {
+  GlassPane,
+  PaneMaterial,
+  paneViewportClass,
+  type PaneMaterialProps,
+} from './glass-pane.web';
 import { leftEdgeClip, useEdgeClip } from './pane-edge-clip.web';
 import { type PaneGeometry, usePaneGeometry } from './pane-geometry';
 import type { PaneRefs } from './pane-motion.web';
+import { ReflowingText, SlidingText } from './pane-text.web';
 import { slideStyle } from './slide-style';
 import { usePaneMotion } from './use-pane-motion.web';
 
-interface PaneViewportProps extends PaneRefs {
+interface PaneViewportProps
+  extends PaneRefs, Omit<PaneMaterialProps, 'children'> {
   testID: string;
   geometry: PaneGeometry;
   children: ReactNode;
-}
-
-type SlidingTextProps = Pick<
-  PaneViewportProps,
-  'testID' | 'geometry' | 'children'
->;
-
-function ReflowingText({
-  testID,
-  children,
-}: Pick<PaneViewportProps, 'testID' | 'children'>): React.JSX.Element {
-  return (
-    <View testID={`${testID}-content`} className="flex-1 h-full w-full">
-      {children}
-    </View>
-  );
 }
 
 function ReflowingContent({
@@ -54,17 +45,18 @@ function reflowingStyle({ contentWidth, hidden }: PaneGeometry): CSSProperties {
   };
 }
 
-function ReflowingViewport({
-  frameRef,
-  ...props
-}: PaneViewportProps): React.JSX.Element {
+function ReflowingViewport(input: PaneViewportProps): React.JSX.Element {
+  const { frameRef, ...props } = input;
+
   return (
     <div
       ref={frameRef}
-      className="absolute bottom-0 left-0 top-0"
+      className={paneViewportClass(props.surface, false)}
       style={reflowingStyle(props.geometry)}
     >
-      <ReflowingContent {...props} />
+      <PaneMaterial {...props}>
+        <ReflowingContent {...props} />
+      </PaneMaterial>
     </div>
   );
 }
@@ -74,22 +66,6 @@ function slidingStyle({ width, contentWidth }: PaneGeometry): CSSProperties {
     ...slideStyle(width, contentWidth),
     willChange: 'transform, opacity',
   };
-}
-
-function SlidingText({
-  testID,
-  geometry,
-  children,
-}: SlidingTextProps): React.JSX.Element {
-  return (
-    <View
-      testID={`${testID}-content`}
-      className="flex-1 h-full"
-      style={{ width: geometry.contentWidth }}
-    >
-      {children}
-    </View>
-  );
 }
 
 function SlidingContent({
@@ -103,18 +79,19 @@ function SlidingContent({
   );
 }
 
-function SlidingViewport({
-  viewportRef,
-  ...props
-}: PaneViewportProps): React.JSX.Element {
+function SlidingViewport(input: PaneViewportProps): React.JSX.Element {
+  const { viewportRef, ...props } = input;
+
   return (
     <div
       ref={viewportRef}
       data-testid={`${props.testID}-viewport`}
-      className="absolute bottom-0 left-0 top-0 overflow-hidden"
+      className={paneViewportClass(props.surface, true)}
       style={{ width: props.geometry.frameWidth, willChange: 'transform' }}
     >
-      <SlidingContent {...props} />
+      <PaneMaterial {...props}>
+        <SlidingContent {...props} />
+      </PaneMaterial>
     </div>
   );
 }
@@ -140,18 +117,21 @@ function usePane(props: FramePaneProps): PaneState {
   return { geometry, reflows, refs };
 }
 
-function PaneViewport(props: FramePaneProps): React.JSX.Element {
+function PaneViewport(
+  props: FramePaneProps & Pick<PaneMaterialProps, 'edgeRef'>,
+): React.JSX.Element {
   const { geometry, reflows, refs } = usePane(props);
   const Viewport = reflows ? ReflowingViewport : SlidingViewport;
+  const { testID, surface, edgeRef, children } = props;
 
   return (
-    <Viewport {...refs} testID={props.testID} geometry={geometry}>
-      {props.children}
+    <Viewport {...refs} {...{ testID, geometry, surface, edgeRef }}>
+      {children}
     </Viewport>
   );
 }
 
-export function FramePane(props: FramePaneProps): React.JSX.Element {
+function BareFramePane(props: FramePaneProps): React.JSX.Element {
   return (
     <div
       ref={useEdgeClip(props)}
@@ -163,5 +143,15 @@ export function FramePane(props: FramePaneProps): React.JSX.Element {
     >
       <PaneViewport {...props} />
     </div>
+  );
+}
+
+export function FramePane(props: FramePaneProps): React.JSX.Element {
+  return props.surface ? (
+    <GlassPane {...props}>
+      {(edgeRef) => <PaneViewport {...props} edgeRef={edgeRef} />}
+    </GlassPane>
+  ) : (
+    <BareFramePane {...props} />
   );
 }

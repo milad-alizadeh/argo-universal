@@ -2,37 +2,12 @@ import { fn } from 'storybook/test';
 import { type SessionPullRequest } from '#features/sessions';
 import type { OpenSessionViewProps } from './session-detail-view';
 
-// A Session's PR with its checks running, failing or passed.
-const sessionPullRequest = {
-  number: 45,
-  title: 'Build the Session layout from spec 0003',
-  status: 'open',
-  mergeable: false,
-} satisfies SessionPullRequest;
+export {
+  pullRequestMocks,
+  severalPullRequests,
+} from '../../../features/sessions/components/session-pull-request.mocks';
 
-export const pullRequestMocks = {
-  checksRunning: {
-    ...sessionPullRequest,
-    checks: { passed: 3, failing: 0, running: 2, total: 5 },
-  },
-  checksFailing: {
-    ...sessionPullRequest,
-    checks: { passed: 4, failing: 1, running: 0, total: 5 },
-  },
-  checksPassed: {
-    ...sessionPullRequest,
-    checks: { passed: 5, failing: 0, running: 0, total: 5 },
-    mergeable: true,
-  },
-  followUp: {
-    number: 46,
-    title: 'Wire the Inspector to the changed files',
-    status: 'draft',
-    mergeable: false,
-  },
-} satisfies Record<string, SessionPullRequest>;
-
-// The running Session with its PRs on the header.
+// The Session's PR props, presented by its Workbench and Stage.
 export function withPullRequests(
   session: OpenSessionViewProps,
   pullRequests: SessionPullRequest[],
@@ -42,8 +17,32 @@ export function withPullRequests(
     header: {
       ...session.header,
       pullRequests,
+      changes: session.header.changes ?? changesHeader(pullRequests),
       onMerge: fn(),
       onMergeMethodChange: fn(),
     },
   };
 }
+
+function changesHeader(
+  changes: SessionPullRequest[],
+): NonNullable<OpenSessionViewProps['header']['changes']> {
+  const summaries = changes.flatMap(({ summary }) =>
+    summary ? [summary] : [],
+  );
+
+  return {
+    open: false,
+    onOpenChange: fn(),
+    summary: summaries.length ? summaries.reduce(addSummary) : undefined,
+  };
+}
+
+const addSummary = (
+  total: NonNullable<SessionPullRequest['summary']>,
+  next: NonNullable<SessionPullRequest['summary']>,
+): NonNullable<SessionPullRequest['summary']> => ({
+  files: total.files + next.files,
+  additions: total.additions + next.additions,
+  deletions: total.deletions + next.deletions,
+});

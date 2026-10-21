@@ -1,12 +1,16 @@
-import type { ReactElement, ReactNode } from 'react';
+import { use, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { ActionListHeaderContext } from '#primitives/actions/action-list';
+import { InspectorActions } from './inspector-actions';
+
+export { InspectorActions } from './inspector-actions';
+
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
-import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
+import { InspectorControlsContext } from './inspector-controls-context';
 import { isFittedSheet, paneSizing } from './inspector-pane-sizing';
 import type { InspectorProps } from './inspector-props';
+import { InspectorScroll } from './inspector-scroll';
 import { InspectorTabs } from './inspector-tabs';
 
 export type InspectorPaneProps = InspectorProps & {
@@ -72,17 +76,6 @@ function CloseButton(props: InspectorPaneProps): ReactElement {
   );
 }
 
-// The Inspector's own Actions draw in its header, never in the Page header around it.
-export function InspectorActions(props: { children: ReactNode }): ReactNode {
-  if (!props.children) return null;
-
-  return (
-    <ActionListHeaderContext value={undefined}>
-      {props.children}
-    </ActionListHeaderContext>
-  );
-}
-
 function InspectorTitle(props: { title: string }): ReactElement {
   return (
     <Text
@@ -119,49 +112,44 @@ function InspectorHeader(props: InspectorPaneProps): ReactElement {
   );
 }
 
-// The toolbar, then the content scrolling and fading under it on the Inspector's surface.
-const scrollProps = {
-  testID: 'desktop-inspector-scroll',
-  className: 'overflow-hidden',
-  contentContainerClassName: 'grow',
-};
-
-type InspectorBodyProps = InspectorProps & {
+export type InspectorBodyProps = InspectorProps & {
   surface: string;
   fitContent?: boolean;
 };
 
-export function InspectorBody({
-  toolbar,
-  children,
-  ...props
-}: InspectorBodyProps): ReactElement {
+export function InspectorBody(props: InspectorBodyProps): ReactElement {
+  const { toolbar, children, scrollState } = props;
+
+  if (props.contentScrolls) return <OwnedScrollBody {...props} />;
+
   return (
     <>
       {toolbar}
-      <ScrollFadeView {...inspectorScroll(props)}>{children}</ScrollFadeView>
+      <InspectorScroll {...props} key={scrollState?.key}>
+        {children}
+      </InspectorScroll>
     </>
   );
 }
 
-const inspectorScroll = ({
-  surface,
-  fitContent,
-}: Pick<InspectorBodyProps, 'surface' | 'fitContent'>): React.ComponentProps<
-  typeof ScrollFadeView
-> => ({
-  ...scrollProps,
-  fitContent,
-  surfaceClassName: surface,
-  className: cn(scrollProps.className, fitContent && 'min-h-0 shrink'),
-});
+function OwnedScrollBody({
+  toolbar,
+  children,
+}: InspectorBodyProps): ReactElement {
+  return (
+    <>
+      {toolbar}
+      {children}
+    </>
+  );
+}
 
 /*
  * Foundations / Inspector: its header with the title, its Actions, expand on a wide window and close, then its
  * content under that header, all on one surface. On the web's sheet it takes the sheet's surface at Paper's height.
  */
 export function InspectorPane(props: InspectorPaneProps): ReactElement {
-  const surface = props.inSheet ? 'bg-content' : 'bg-tint';
+  const surface = usePaneSurface(props);
   const fittedSheet = isFittedSheet(props);
 
   return (
@@ -172,11 +160,20 @@ export function InspectorPane(props: InspectorPaneProps): ReactElement {
   );
 }
 
-function InspectorControls(props: InspectorPaneProps): ReactElement {
+function InspectorControls(props: InspectorPaneProps): ReactElement | null {
+  if (use(InspectorControlsContext)) return null;
+
   return (
     <View className="shrink-0 flex-row items-center gap-0.5">
       <ExpandButton {...props} />
       <CloseButton {...props} />
     </View>
   );
+}
+
+// A hosted pane inherits the window's glass; sheets and standalone panes own their existing surface.
+function usePaneSurface(props: InspectorPaneProps): string {
+  if (use(InspectorControlsContext)) return 'bg-transparent';
+
+  return props.inSheet ? 'bg-content' : 'bg-tint';
 }

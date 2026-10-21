@@ -46,6 +46,7 @@ export const iconButtonClasses = cva(
     },
     // A wide web window draws the smaller sizes; xl stays 48 everywhere.
     compoundVariants: [
+      { variant: 'filled', pressed: true, className: 'bg-primary' },
       { bleed: true, size: 'xs', className: 'web:sm:-m-1.5' },
       { bleed: true, size: 'sm', className: 'web:sm:-m-2' },
       { bleed: true, size: 'md', className: 'web:sm:-m-3' },

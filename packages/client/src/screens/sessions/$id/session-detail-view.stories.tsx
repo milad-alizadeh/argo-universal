@@ -12,7 +12,7 @@ import {
 import { ElicitationPreview } from './session-detail-view-elicitation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
-  pullRequestMocks,
+  severalPullRequests,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
@@ -36,42 +36,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = { name: 'SessionDetailScreen' };
 
-export const ChecksRunning: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(runningSession, [pullRequestMocks.checksRunning]),
-    },
-  },
-};
-
-export const ChecksFailing: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(runningSession, [pullRequestMocks.checksFailing]),
-    },
-  },
-};
-
-// Every check passed, so Merge PR is ready.
-export const ChecksPassed: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
-    },
-  },
-};
-
 export const SeveralPullRequests: Story = {
+  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
   args: {
     view: {
       state: 'open',
-      ...withPullRequests(runningSession, [
-        pullRequestMocks.checksRunning,
-        pullRequestMocks.followUp,
-      ]),
+      ...withPullRequests(runningSession, severalPullRequests),
     },
   },
 };
@@ -102,6 +72,7 @@ export const LongFeedInFrame: Story = {
 
 export const Empty: Story = {
   args: { view: { state: 'open', ...emptySession } },
+  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
 };
 
 // The Connection is down: the draft stays editable but Send waits.
