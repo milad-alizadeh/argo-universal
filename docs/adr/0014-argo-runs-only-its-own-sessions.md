@@ -2,7 +2,7 @@
 
 Argo shows and drives only Sessions it started. A Session started in a terminal or another app does not exist for Argo: Argo never lists, watches or controls it.
 
-Taking over a running external Session is impossible: Claude Code's terminal owns its process, and Codex holds a writer lock per thread. Watching external Sessions is where old Argo grew out of control: liveness probes, status that decayed to `unknown`, polling, transcript parsing, and stray Guardian and Subagent threads. That work broke each time a vendor changed its files.
+Taking over a running external Session is impossible: Claude Code's terminal owns its process, and Codex holds a writer lock per thread. Watching external Sessions is where old Argo grew out of control: liveness probes, status that decayed to `unknown`, polling, transcript parsing, and stray Guardian threads and threads for the Agents a Session started. That work broke each time a vendor changed its files.
 
 Importing a stopped external Session as an Argo Session comes later, with its own spec. Paseo, T3 Code and Nimbalyst stop at the same point.
 

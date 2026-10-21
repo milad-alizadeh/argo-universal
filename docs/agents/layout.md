@@ -39,9 +39,11 @@ Three regions compete with the content column for width: the Sessions list, the 
 2. **Then the Workbench undocks.** It auto-hides rather than letting the content column be squeezed, so the column keeps the width it had.
 3. **The content column gives last**, and is capped at 800 however much room there is.
 
-TODO: the width at which the Sessions list collapses into the rail. A Paper agent is deriving it from the real column widths.
+**The Sessions list folds into the rail below 1768 with the Stage open, and below 1400 without it.** Those are the widths everything docked needs: the rail's 56, the list's 312, the content column, the Workbench's 312 and, when it is open, the Stage's 352, with the 8 frame insets and the 16 gutters between the regions (board `1RKK-0`). Folding the list frees its 312 and nothing else, because it sits inside the glass panel and has no gutter of its own.
 
-TODO: the width at which the Workbench undocks. Same derivation, same source.
+**The Workbench undocks below 1456 with the Stage open, and below 1088 without it.** The list has already folded by then, so those are the folded layout's widths. Undocking frees 328, the Workbench's 312 and the 16 gutter beside it, and what is left needs 1128 with the Stage and 760 without.
+
+Both thresholds are crossed on the way down, in that order, and neither is a choice: the content comes first, then the Workbench, then the Sessions list. The Stage is worth 368 at every step, its 352 and the gutter beside it, which is the difference between each pair of widths above. The content column is held at its floor of 688 throughout the derivation — the Composer's 640 and a 24 gutter on each side — so the thresholds are built on that floor and not on the 800 cap; above them the room left over goes to the column until it reaches the cap.
 
 The Workbench therefore has three states, and the one toggle in the Session header drives all of them.
 
@@ -52,8 +54,8 @@ The Workbench therefore has three states, and the one toggle in the Session head
 ## The Workbench
 
 - **A stack of separate cards, one per section, each collapsible from its own header.** The chevron sits in the leading slot; a collapsed card keeps its header and shows a count, or the collapse is lossy. Collapsed state is remembered per Session. Drawn at 312 with `--radius-2xl` cards and `--spacing-2` between them on "Spec / Workbench layout · collapsible cards".
-- **Argo's cards are Changes, Subagents and Shells.** Each appears, disappears and reorders on its own.
-- **A card is drawn only when the Session has one.** A section with nothing in it is not drawn at all, so an empty Workbench is an empty column, not three headers over nothing (same board). A Session with no Subagents has no Subagents card, as its header has no Subagents button.
+- **Argo's cards are Changes, Agents and Shells.** Each appears, disappears and reorders on its own. The Agents card lists the Agents this Session started, not the installed Agents the Agents page lists.
+- **A card is drawn only when the Session has one.** A section with nothing in it is not drawn at all, so an empty Workbench is an empty column, not three headers over nothing (same board). A Session with no Agents has no Agents card, as its header has no Agents button.
 - **Cards are kit components and list their rows with `List` and `ListItem`** ([ADR-0032](../adr/0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md)).
 - **Plugins contribute cards into the named Slot, add-only** ([ADR-0035](../adr/0035-plugins-add-to-named-slots-and-never-edit-core-screens.md)). The Plugin draws inside its own card; Argo decides where the card goes, in what order and how much fits. A Plugin never moves, hides, reorders or restyles Argo's cards or another Plugin's. A Plugin's `header` action may open its card.
 - *Not settled:* the Workbench card surface. "Screen / Approved layout" draws the cards on `--color-card` with a hairline; "Spec / Workbench layout · collapsible cards" and the 1760 board draw them on `--color-glass` with the sidebar's blur.
@@ -61,7 +63,7 @@ The Workbench therefore has three states, and the one toggle in the Session head
 ## The Stage
 
 - **A Workbench row opens it** — pressing the row, or a Plugin's `header` action for its own card. The Workbench stays; the Stage is a surface, not a section.
-- **It shows one row in full:** a Change's diff, a Subagent's Feed, a Shell's output, or whatever a Plugin draws for its own row.
+- **It shows one row in full:** a Change's diff, an Agent's Feed, a Shell's output, or whatever a Plugin draws for its own row.
 - **Wide:** its own region beside the Feed. At 1440 it takes the Workbench's place; from about 1760 (about 1450 with the Sessions list collapsed) both stand ("Screen / Wide 1760 · Workbench and Stage together").
 - **Medium:** it floats over the content instead of sharing the row, and the header and Composer inset by its width so no control is left under the glass ("Screen / Medium · Stage floating over the content").
 - **Narrowing past the region:** open Stage tabs collapse into the header's counter and come back with the tabs intact ("Screen / Medium · Region hidden").
@@ -96,8 +98,8 @@ Live rows in the Agents and Shells sections are always visible. When a section w
 
 ## Agents, not Subagents
 
-The Workbench section this page and ADR-0039 call Subagents is labelled **Agents** in the UI. That collides with Argo's Agents page, which lists the installed ACP Agents with the registry below them, and the collision is unresolved: two different things carry one word. `GLOSSARY.md` and ADR-0039 still say Subagent and are left as they are until the owner picks a way out.
+Subagent is not a word in Argo any more (owner, 2026-10-21). An Agent a Session started is an Agent, in the UI, on this page, in `GLOSSARY.md` and in ADR-0039, and the Workbench section is the **Agents** card. That collides with Argo's Agents page, which lists the installed ACP Agents with the Registry below them: two different things carry one word, and the collision is unresolved. Where a sentence would otherwise be ambiguous, the docs say which of the two is meant. No second name has been coined, because that is the owner's call.
 
 ## The name in code
 
-The code still calls both surfaces the inspector: about 120 files carry the word, among them `InspectorPane`, `ChangesInspector` and `session-inspector.tsx`, and ADR-0035 had to name the Workbench's Slot an "inspector tab" because nothing else had a name yet. The rename is outstanding work, not an open decision. In designs, docs, Issues and messages the words are Workbench and Stage.
+The code still calls both surfaces the inspector: about 120 files carry the word, among them `InspectorPane`, `ChangesInspector` and `session-inspector.tsx`, and ADR-0035 called the Workbench's Slot an "inspector tab" until ADR-0039 gave the column its name. The rename is outstanding work, not an open decision. In designs, docs, Issues and messages the words are Workbench and Stage.

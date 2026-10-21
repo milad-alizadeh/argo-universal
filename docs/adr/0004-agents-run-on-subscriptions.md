@@ -21,4 +21,4 @@ The Server accepts protocol version 1 or newer. `session/close` is optional. Clo
 - A subscription or account check before a Session opens. Rejected: Zed has none, and the Agent's own `auth_required` is the only reliable signal.
 - Filtering methods to the ones Argo prefers. Rejected: the Agent's list and order are its own; Argo shows every `agent` and `terminal` method.
 - Argo-owned native adapters. Superseded by Spec 0009: public upstream adapters and the SDK own protocol behavior.
-- Off-the-shelf ACP adapters. Rejected earlier because paged history, Subagents and usage were incomplete; Spec 0009 accepts upstream protocol support and defines honest product outcomes for unavailable capabilities instead of maintaining another native strategy.
+- Off-the-shelf ACP adapters. Rejected earlier because paged history, the Agents a Session starts and usage were incomplete; Spec 0009 accepts upstream protocol support and defines honest product outcomes for unavailable capabilities instead of maintaining another native strategy.

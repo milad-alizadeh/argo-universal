@@ -113,7 +113,7 @@ _Avoid_: Login, credential, identity, Tracker, Integration
 ## Agents and Sessions
 
 **Agent**:
-A coding agent program that Argo drives, such as Claude or Codex.
+A coding agent program that Argo drives, such as Claude or Codex. The Agents page lists the Installed ones with the Registry below them. The word has a second sense, below.
 _Avoid_: Harness, provider, vendor, model
 
 **Session**:
@@ -124,9 +124,9 @@ _Avoid_: Chat, thread, conversation
 A Session that New Session opened in the Project's main checkout and no prompt has reached yet. It is not listed, and leaving New Session discards it.
 _Avoid_: Draft Session, pending Session
 
-**Subagent**:
-A Session that another Session started to do delegated work.
-_Avoid_: Child agent, task agent
+**Agent**:
+A Session that another Session started to do delegated work. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so.
+_Avoid_: Subagent, child agent, task agent
 
 **Shell**:
 A command an Agent started in the background, which keeps running while the Turn goes on.
@@ -187,7 +187,7 @@ The ordered list of Session updates that Argo shows for one Session.
 _Avoid_: Timeline, transcript, log, history
 
 **Session snapshot**:
-Everything a Session shows that is not in its Feed, such as its title, state, Live header, Shells, and Subagents. It is sent whole on each change.
+Everything a Session shows that is not in its Feed, such as its title, state, Live header, Shells, and the Agents it started. It is sent whole on each change.
 _Avoid_: Session state (one field of it), session details
 
 **Session update**:
@@ -293,11 +293,11 @@ A kit component that arranges a screen's panes for its Size class, such as list 
 _Avoid_: Layout (for a whole screen), template
 
 **Workbench**:
-The column beside a Session's Feed that holds its section cards: Changes, Subagents, Shells, and the cards Plugins add through a Slot. Phones reach the same cards without the column. See ADR-0039.
+The column beside a Session's Feed that holds its section cards: Changes, Agents, Shells, and the cards Plugins add through a Slot. Its Agents card lists the Agents the Session started, not the Installed Agents. Phones reach the same cards without the column. See ADR-0039.
 _Avoid_: Inspector, right panel, second sidebar
 
 **Stage**:
-The surface that shows one Workbench row in full, such as a Change's diff, a Subagent's Feed or a Shell's output. A row opens it and the Workbench stays.
+The surface that shows one Workbench row in full, such as a Change's diff, the Feed of an Agent the Session started, or a Shell's output. A row opens it and the Workbench stays.
 _Avoid_: Inspector, detail pane, viewer
 
 **Surface**:
