@@ -8,6 +8,7 @@ import { childIdentity } from './list-child-identity';
 import { childRenderer, usePreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
+import { ListGrouping } from './list-grouping';
 import { ListKeyboard } from './list-keyboard';
 import { ListMenuRows } from './list-menu-rows';
 import type { ListProps } from './list-props';
@@ -51,13 +52,15 @@ function DataList<Item>(props: TileListProps<Item>): ReactElement {
 
 function RowList<Item>(props: ListProps<Item>): ReactElement {
   return (
-    <RowHighlightProvider>
-      <ScrollFadeList
-        surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
-        style={fill}
-        {...useDataListProps(props)}
-      />
-    </RowHighlightProvider>
+    <ListGrouping list={props}>
+      <RowHighlightProvider>
+        <ScrollFadeList
+          surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
+          style={fill}
+          {...useDataListProps(props)}
+        />
+      </RowHighlightProvider>
+    </ListGrouping>
   );
 }
 

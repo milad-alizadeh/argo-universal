@@ -18,6 +18,8 @@ const post = (message: WorkerCall | TestReply | 'pong' | 'ready'): void =>
 
 const calls = new WorkerCalls(post);
 
+const bridge = argoBridge(calls);
+
 const entry = PluginEntry.parse(workerData);
 
 const clock =
@@ -46,11 +48,12 @@ function deliverToInbox(
 }
 
 function toInbox(
-  { pages, hooks }: PluginInboxes,
+  { pages, hooks, accounts }: PluginInboxes,
   command: Exclude<Delivery, { type: 'reply' | 'test' }>,
 ): void {
   if (command.type === 'event') pages(JSON.stringify(command.event));
-  else hooks(JSON.stringify(command));
+  else if (command.type === 'accountToken') accounts(JSON.stringify(command));
+  else deliverHook(hooks, command);
 }
 
 parentPort?.on('message', (message) => {
@@ -60,7 +63,7 @@ parentPort?.on('message', (message) => {
   else deliver(command);
 });
 
-inboxes = await registerPlugin(entry, argoBridge(calls), clock);
+inboxes = await registerPlugin(entry, bridge, clock);
 
 post('ready');
 
@@ -81,4 +84,16 @@ async function runTestAction(action: TestAction): Promise<TestClockState> {
   await clock.advance(action.action === 'advanceClock' ? action.ms : 0);
 
   return { now: clock.now(), nextAt: clock.nextAt() };
+}
+
+function deliverHook(
+  hooks: PluginInboxes['hooks'],
+  command: Extract<Delivery, { type: 'hook' }>,
+): void {
+  const projectId = command.event.projectId;
+  const run = (): void => hooks(JSON.stringify(command));
+  bridge.inProject?.(
+    typeof projectId === 'string' ? projectId : undefined,
+    run,
+  );
 }

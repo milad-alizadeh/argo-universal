@@ -17,6 +17,7 @@ import {
   type HeadlessView,
   type OpenView,
   type Opening,
+  connectionOpening,
 } from './open-view';
 import { reportDrawingFailure } from './render-failure';
 import { receive } from './state';
@@ -149,7 +150,7 @@ export class PluginViews {
     opening: Opening,
     connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
-    const reported = { ...opening, surface: connection.surface };
+    const reported = connectionOpening(opening, connection);
 
     const view = this.views.acquire(pluginId, reported, connection.id);
     this.lifecycle.opened(view);

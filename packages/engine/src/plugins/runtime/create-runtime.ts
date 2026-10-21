@@ -1,5 +1,6 @@
 import { writeLog } from '@repo/machine-log';
 import { PluginAssets } from '../assets/plugin-assets';
+import type { PluginClock } from '../clock';
 import { macKeychain, type Keychain } from '../services/keychain';
 import {
   PluginServices,
@@ -12,7 +13,7 @@ import { runtimeClockSource } from './runtime-clock';
 export type PluginRuntimeOptions = Omit<
   PluginServiceOptions,
   'log' | 'waiting' | 'assets' | 'clock'
-> & { keychain?: Keychain; clockStart?: number };
+> & { keychain?: Keychain; clockStart?: number; clock?: PluginClock };
 
 type ServiceOptions = Omit<PluginServiceOptions, 'assets'> & {
   keychain?: Keychain;
@@ -20,10 +21,10 @@ type ServiceOptions = Omit<PluginServiceOptions, 'assets'> & {
 
 export function createPluginRuntime(
   home: string,
-  { clockStart, ...options }: PluginRuntimeOptions,
+  { clockStart, clock: suppliedClock, ...options }: PluginRuntimeOptions,
 ): PluginRuntime {
   const log = pluginLog(home);
-  const clock = runtimeClockSource(clockStart);
+  const clock = suppliedClock ?? runtimeClockSource(clockStart);
 
   const services = createServices(home, {
     ...options,

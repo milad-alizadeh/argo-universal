@@ -1,5 +1,5 @@
 import { snakeCase, text } from 'drizzle-orm/sqlite-core';
-import { timestamp } from './timestamp';
+import { timestamp } from '#schema-timestamp';
 
 export const project = snakeCase.table('project', {
   id: text().primaryKey(),

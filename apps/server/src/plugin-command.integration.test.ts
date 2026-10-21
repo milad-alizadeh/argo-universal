@@ -4,6 +4,9 @@ import { PluginManifest } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
 import { example, fixture, run } from '../mocks/plugin-cli';
 
+// The example starts a separate worker for each of its interaction tests.
+const exampleTestLimitMs = 60_000;
+
 it.each([
   ['process.cwd();', 'Node global process'],
   ["new URL('https://example.com');", 'Node global URL'],
@@ -66,12 +69,16 @@ it('validate reports the hello Plugin contributions', async () => {
   });
 }, 30_000);
 
-it('test runs the hello Plugin worker interaction', async () => {
-  expect(await run('test', example)).toMatchObject({
-    code: 0,
-    output: expect.stringContaining('PASS pressing Tap me'),
-  });
-}, 30_000);
+it(
+  'test runs the hello Plugin worker interaction',
+  async () => {
+    expect(await run('test', example, exampleTestLimitMs)).toMatchObject({
+      code: 0,
+      output: expect.stringContaining('PASS pressing Tap me'),
+    });
+  },
+  exampleTestLimitMs + 10_000,
+);
 
 it.each([
   ['assert.equal(1, 1)', 0, 'PASS'],

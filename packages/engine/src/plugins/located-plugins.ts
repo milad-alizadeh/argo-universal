@@ -1,5 +1,6 @@
 import type { PluginList, PluginManifest } from '@repo/contracts/plugins';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
+import type { PluginAccounts } from './accounts/plugin-accounts';
 import { discoverPlugins, type PluginsDeps } from './discovery/loader';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
@@ -12,6 +13,7 @@ type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
 export type StartedPlugins = { running: string[]; stopped: string[] };
 
 export type PluginServiceDeps = PluginsDeps & {
+  pluginAccounts?: PluginAccounts;
   pluginRuntime?: PluginRuntime;
   pluginSettings?: PluginSettings;
 };
@@ -121,6 +123,7 @@ function entryFor(
     directory,
     main: manifest.main,
     backgroundPath: manifest.contributes.background?.path,
+    accountPaths: manifest.contributes.accounts?.map(({ page }) => page),
   };
 }
 

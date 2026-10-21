@@ -6,6 +6,7 @@ import { ListTileContext } from '../../../list-context';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { useRenderedRows, ListEmpty } from './list-data';
+import { ListGrouping } from './list-grouping';
 import { scrollProps } from './list-scroll-props';
 import { ShelfHeader, useShelf } from './list-shelf';
 import type { TileListProps } from './list-tile-props';
@@ -19,11 +20,13 @@ export function ListTiles<Item>(props: TileListProps<Item>): ReactElement {
   const shelf = useShelf(props, geometry);
 
   return (
-    <SvgBudget>
-      <TileFrame geometry={geometry} shelf={shelf}>
-        <TileBody props={props} geometry={geometry} shelf={shelf} />
-      </TileFrame>
-    </SvgBudget>
+    <ListGrouping list={props}>
+      <SvgBudget>
+        <TileFrame geometry={geometry} shelf={shelf}>
+          <TileBody props={props} geometry={geometry} shelf={shelf} />
+        </TileFrame>
+      </SvgBudget>
+    </ListGrouping>
   );
 }
 

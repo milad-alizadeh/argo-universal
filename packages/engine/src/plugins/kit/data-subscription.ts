@@ -29,6 +29,7 @@ export class DataSubscription {
   private revision = -1;
   private answer: PluginDataState['data'];
   seen = 0;
+  settled = false;
 
   constructor(
     private readonly call: DataCall,
@@ -67,6 +68,7 @@ export class DataSubscription {
 
     if (state.revision <= this.revision) return;
     const published = withStableAnswer(state, this.answer);
+    this.settled = settledState(published);
     this.answer = published.data;
     this.revision = state.revision;
     this.latest += 1;
@@ -86,6 +88,9 @@ export class DataSubscription {
     );
   }
 }
+
+const settledState = (state: PluginDataState): boolean =>
+  !state.stale && (state.data !== undefined || state.error !== undefined);
 
 function withStableAnswer(
   state: PluginDataState,

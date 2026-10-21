@@ -72,11 +72,24 @@ export async function answerFetch(
 ): Promise<PluginValue> {
   const access = call.access();
 
-  if (request.account !== undefined)
-    throw new CapabilityRefusal(`Account ${request.account} is unavailable`);
   const hop = firstHop(request);
 
   access.checkHost(hop.url);
+
+  if (request.account !== undefined)
+    return call.accounts.borrow(
+      { ...call, access },
+      { hop, host: request.account },
+    );
+
+  return sendFetch(call, hop, access);
+}
+
+function sendFetch(
+  call: PluginCall,
+  hop: ReturnType<typeof firstHop>,
+  access: PluginAccess,
+): Promise<PluginValue> {
   call.logCall();
 
   return call.resources.fetch(hop, {

@@ -13,6 +13,7 @@ import {
   type DispatchSender,
 } from './pages';
 import { dataClient } from './use-data';
+import { viewEffects } from './view-scope';
 
 const hooks = {
   useState: React.useState,
@@ -20,8 +21,7 @@ const hooks = {
   useMemo: React.useMemo,
   useCallback: React.useCallback,
   useRef: React.useRef,
-  useEffect: React.useEffect,
-  useLayoutEffect: React.useLayoutEffect,
+  ...viewEffects,
   useContext: React.useContext,
   createContext: React.createContext,
   memo: React.memo,
@@ -71,7 +71,10 @@ export function createKit(
   call: Parameters<typeof dataClient>[0],
 ): Kit {
   const data = dataClient(call);
-  const pages = mountPages(send, settle, (viewId) => data.ready(viewId));
+
+  const pages = mountPages(send, settle, (viewId, background) =>
+    data.ready(viewId, background),
+  );
 
   return pageKit(data, pages);
 }

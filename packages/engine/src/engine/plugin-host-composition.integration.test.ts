@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import { processWait } from '#mocks/data-fixture';
 import { startEngineTestHost } from '#mocks/engine';
 import { killPluginHost, pluginHostPids } from '#mocks/plugin-host-log';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
@@ -15,7 +16,9 @@ it('restarts the real Plugin host three times, logs the running Plugins and then
 
   for (const restart of [1, 2, 3]) {
     await killPluginHost(home);
-    await expect.poll(() => pluginHostPids(home)).toHaveLength(restart + 1);
+    await expect
+      .poll(() => pluginHostPids(home), processWait)
+      .toHaveLength(restart + 1);
     expect(
       await caller.plugins.activate({ pluginId: 'healthy' }),
     ).toMatchObject({ state: 'running' });

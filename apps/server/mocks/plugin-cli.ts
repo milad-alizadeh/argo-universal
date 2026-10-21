@@ -31,15 +31,15 @@ type CommandResult = { code: string | number | null; output: string };
 export function run(
   command: string,
   directory: string,
+  timeout = 20_000,
 ): Promise<CommandResult> {
   return new Promise((resolve) => {
     execFile(
       process.execPath,
       [cli, 'plugin', command, directory],
-      { timeout: 20_000, cwd: tmpdir() },
-      (error, output, stderr) => {
-        resolve({ code: errorCode(error), output: output + stderr });
-      },
+      { timeout, cwd: tmpdir() },
+      (error, output, stderr) =>
+        resolve({ code: errorCode(error), output: output + stderr }),
     );
   });
 }

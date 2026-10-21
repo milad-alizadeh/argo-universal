@@ -6,6 +6,7 @@ import {
   type PluginDispatchId,
   type PluginEvent,
 } from '@repo/contracts/plugins/wire';
+import type { RpcConnection } from '../../rpc';
 import { requireViewHandler } from './handler';
 import type { ViewSnapshot } from './messages';
 
@@ -103,4 +104,15 @@ export function dispatchEvent(
 
 export function createPluginViewId(): PluginViewId {
   return PluginViewId.parse(randomUUID());
+}
+
+export function connectionOpening(
+  opening: Opening,
+  connection: RpcConnection,
+): Opening {
+  return {
+    ...opening,
+    surface: connection.surface,
+    serverDevice: connection.serverDevice === true,
+  };
 }

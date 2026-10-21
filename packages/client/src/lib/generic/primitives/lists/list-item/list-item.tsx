@@ -1,6 +1,7 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action-list';
+import { useListItemGroup } from '#primitives/lists/list';
 import { ListContext, ListTileContext } from '../../../list-context';
 import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
@@ -8,8 +9,6 @@ import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { drawingContent } from './list-item-drawing-content';
-import { RowFooter } from './list-item-footer';
-import { useGroupPosition } from './list-item-group';
 import { hasLeading, LinkAccessory, separatorClass } from './list-item-parts';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import { ItemProgress } from './list-item-progress';
@@ -57,16 +56,15 @@ function Selection({
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
-  const list = useContext(ListContext);
-  const position = useGroupPosition(props.description);
+  const { context, footer } = useListItemGroup(props.description);
 
   return (
     <ContextActions actions={props.actions}>
       <InListItem value>
-        <ListContext value={{ ...list, position }}>
+        <ListContext value={context}>
           <ItemSurface {...props} />
         </ListContext>
-        <RowFooter description={props.description} position={list.position} />
+        {footer}
       </InListItem>
     </ContextActions>
   );

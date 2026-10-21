@@ -1,6 +1,7 @@
 import type { IncomingHttpHeaders } from 'node:http';
 import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
+import { requestHostAllowed } from '../rpc/request-host';
 
 // No Origin (the native Apps), the desktop app, or a web App on this machine on any port.
 const AllowedOrigin = z.union([
@@ -25,7 +26,10 @@ export interface RequestGuard {
 
 // Checks Host on every request and Origin on every tRPC call, so a website cannot reach the Server (ADR 0002).
 export function createRequestGuard(port: number): RequestGuard {
-  const AllowedHost = z.enum([`127.0.0.1:${port}`, `localhost:${port}`]);
+  const AllowedHost = z.custom<string>(
+    (host) => typeof host === 'string' && requestHostAllowed(port, host),
+  );
+
   const report = createReporter();
   const allowsHost = allowHeader(AllowedHost, 'Host', report);
   const allowsOrigin = allowHeader(AllowedOrigin, 'Origin', report);

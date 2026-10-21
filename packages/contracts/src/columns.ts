@@ -4,6 +4,9 @@ import {
   blob,
   feedRow,
   pluginState,
+  pluginAccount,
+  pluginAccountGrant,
+  projectAccount,
   project,
   session,
   shell,
@@ -29,3 +32,9 @@ export const registryCacheColumns = createSelectSchema(registryCache);
 export const shellColumns = createSelectSchema(shell);
 
 export const pluginStateColumns = createSelectSchema(pluginState);
+
+export const pluginAccountColumns = createSelectSchema(pluginAccount);
+
+export const pluginAccountGrantColumns = createSelectSchema(pluginAccountGrant);
+
+export const projectAccountColumns = createSelectSchema(projectAccount);

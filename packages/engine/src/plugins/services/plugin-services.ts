@@ -1,14 +1,10 @@
-import type { CoreHooks, PluginProjectInfo } from '@repo/contracts/plugins';
+import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PluginAssetRef } from '@repo/contracts/plugins/assets';
 import { replyFailure } from '../access/capability-refusal';
-import {
-  PluginAccess,
-  type AccessScope,
-  type ActivatedPlugin,
-} from '../access/plugin-access';
-import type { OpenedAsset, PluginAssets } from '../assets/plugin-assets';
-import { type PluginClock } from '../clock';
-import type { SpawnCaller, Waiting } from '../hooks/spawn-hooks';
+import type { PluginAccess, ActivatedPlugin } from '../access/plugin-access';
+import { AccountServices } from '../accounts/account-services';
+import type { OpenedAsset } from '../assets/plugin-assets';
+import type { SpawnCaller } from '../hooks/spawn-hooks';
 import type { PluginReply, PluginValue } from '../protocol/runtime';
 import type { Keychain } from './keychain';
 import {
@@ -17,35 +13,21 @@ import {
   type CallReach,
   type StateRequest,
 } from './plugin-calls';
-import type { PluginNetwork } from './plugin-fetch';
 import { PluginResources, supersede } from './plugin-resources';
+import type { PluginServiceOptions } from './plugin-service-options';
+import { serviceAccess } from './service-access';
 import type { PluginStorage } from './storage';
 
-export type PluginServiceOptions = {
-  assets: PluginAssets;
-  environment?: NodeJS.ProcessEnv;
-  log: (line: string) => void;
-  projects: () => Promise<readonly string[]>;
-  projectInfo: () => Promise<PluginProjectInfo[]>;
-  projectPath?: (projectId: string) => Promise<string | undefined>;
-  network?: PluginNetwork;
-  settings?: (pluginId: string, key: string) => Promise<PluginValue>;
-  hooks?: CoreHooks;
-  waiting?: Waiting;
-  clock?: PluginClock;
-  watchProjects?: (changed: () => void) => () => void;
-};
+export type { PluginServiceOptions } from './plugin-service-options';
+
+type ServiceRequest = StateRequest &
+  Pick<CallReach, 'projectId' | 'query' | 'serverDevice'>;
 
 type Held = { generation: number; resources: PluginResources };
 
-// Nothing is granted to a Plugin whose worker isn't loaded.
-const notActivated: Pick<AccessScope, 'grants' | 'codeFolder'> = {
-  grants: [],
-  codeFolder: null,
-};
-
-// What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
+// The Server boundary for Plugin API calls; each Plugin keeps its own storage and Keychain namespace.
 export class PluginServices {
+  public readonly accountCalls;
   private readonly held = new Map<string, Held>();
   private readonly activated = new Map<string, ActivatedPlugin>();
 
@@ -53,7 +35,9 @@ export class PluginServices {
     private readonly storage: PluginStorage,
     private readonly keychain: Keychain,
     private readonly options: PluginServiceOptions,
-  ) {}
+  ) {
+    this.accountCalls = new AccountServices(options);
+  }
 
   onStorageWrite(written: (pluginId: string) => void): void {
     this.storage.onWrite(written);
@@ -83,7 +67,7 @@ export class PluginServices {
   async handle(
     pluginId: string,
     generation: number,
-    request: StateRequest & Pick<CallReach, 'projectId' | 'query'>,
+    request: ServiceRequest,
   ): Promise<PluginReply> {
     try {
       const value = await this.attempt({ pluginId, generation }, request);
@@ -98,12 +82,15 @@ export class PluginServices {
 
   // Reload, turning off and a crash end the Plugin's child processes, timers and requests, and its Grants.
   release(pluginId: string): void {
+    this.accountCalls.release(pluginId);
     this.held.get(pluginId)?.resources.release();
     this.activated.delete(pluginId);
     this.storage.release(pluginId);
   }
 
   close(): void {
+    this.accountCalls.close();
+
     for (const { resources } of this.held.values()) resources.release();
     this.activated.clear();
     this.storage.close();
@@ -111,12 +98,13 @@ export class PluginServices {
 
   private attempt(
     caller: SpawnCaller,
-    request: StateRequest & Pick<CallReach, 'projectId' | 'query'>,
+    request: ServiceRequest,
   ): Promise<PluginValue> {
     return answerCall(
       {
         ...this.reach(caller),
         projectId: request.projectId,
+        serverDevice: request.serverDevice,
         query: request.query,
       },
       request,
@@ -128,26 +116,34 @@ export class PluginServices {
       pluginId,
       generation,
       resources: this.resources(pluginId, generation),
-      storage: this.storage,
-      keychain: this.keychain,
-      options: this.options,
-      network: this.options.network ?? {},
-      access: (): PluginAccess => this.access(pluginId),
+      ...this.ports(),
+      access: this.access(pluginId),
       activated: (): ActivatedPlugin | undefined =>
         this.activated.get(pluginId),
     };
   }
 
-  private access(pluginId: string): PluginAccess {
-    const { grants, codeFolder } = this.activated.get(pluginId) ?? notActivated;
+  private ports(): Pick<
+    CallReach,
+    'storage' | 'keychain' | 'options' | 'network' | 'accounts' | 'oauth'
+  > {
+    return {
+      storage: this.storage,
+      keychain: this.keychain,
+      options: this.options,
+      network: this.options.network ?? {},
+      ...this.accountCalls.reach(),
+    };
+  }
 
-    return new PluginAccess({
-      grants,
-      codeFolder,
-      dataFolder: this.storage.folderOf(pluginId),
-      projects: this.options.projects,
-      environment: this.options.environment,
-    });
+  private access(pluginId: string): () => PluginAccess {
+    return () =>
+      serviceAccess({
+        pluginId,
+        plugin: this.activated.get(pluginId),
+        storage: this.storage,
+        options: this.options,
+      });
   }
 
   // A later worker generation starts with fresh resources; an earlier one's calls are refused.

@@ -29,8 +29,7 @@ export async function registerPlugin(
 
   await bootstrap(context, new PluginModules(entry, context, modules));
 
-  if (entry.backgroundPath !== undefined)
-    validateBackground(entry.backgroundPath);
+  validatePaths(entry, validateBackground);
 
   return inboxes;
 }
@@ -146,3 +145,14 @@ function builtModuleSource(source: string, path: string): string {
     (function(module, exports) { ${source}\n })(module, exports);
     export const register = module.exports.register;`;
 }
+
+function validatePaths(
+  entry: PluginEntry,
+  validate: PluginRealmExports['validateBackground'],
+): void {
+  if (entry.backgroundPath !== undefined) validate(entry.backgroundPath);
+
+  for (const path of accountPaths(entry)) validate(path, 'Account');
+}
+
+const accountPaths = (entry: PluginEntry): string[] => entry.accountPaths ?? [];

@@ -7,8 +7,7 @@ import {
   type HostMessage,
   type PluginEntry,
   type HostEvent,
-  type HostHook,
-  type HostReply,
+  type HostDelivery,
   type HostWaiting,
   type WorkerCall,
   type HostCommand,
@@ -28,7 +27,7 @@ export class HostWorkers {
   }
 
   // A reply or Hook belongs to the worker generation it names; a reloaded worker never receives it.
-  deliver({ pluginId, generation, ...command }: HostReply | HostHook): void {
+  deliver({ pluginId, generation, ...command }: HostDelivery): void {
     const record = this.workers.get(pluginId);
 
     if (record?.generation === generation) record.worker.postMessage(command);

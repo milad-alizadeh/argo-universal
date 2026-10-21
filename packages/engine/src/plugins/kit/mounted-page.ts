@@ -12,7 +12,7 @@ import { QueryViewContext } from './use-data';
 import { toWire, type Handlers, type Instance } from './wire-tree';
 
 export type PageHub = {
-  ready: (viewId: PluginViewId) => boolean;
+  ready: (viewId: PluginViewId, background: boolean) => boolean;
   send: (viewId: PluginViewId, message: ViewMessage) => Promise<void>;
   views: Map<PluginViewId, OpenView>;
 };
@@ -22,6 +22,7 @@ type Content = {
   element: ReactNode;
   replaceable: boolean;
   rowMeta: boolean;
+  background?: boolean;
 };
 
 export function transmit(
@@ -59,11 +60,9 @@ function emptyPage(): WireNode {
   };
 }
 
-export function startPage(
-  hub: PageHub,
-  { viewId, element, replaceable, rowMeta }: Content,
-): void {
-  const view = pageView(viewId, replaceable, rowMeta);
+export function startPage(hub: PageHub, content: Content): void {
+  const { viewId, element } = content;
+  const view = pageView(content);
   const failed = drawingFailure(hub, view);
 
   hub.views.set(viewId, view);
@@ -91,7 +90,7 @@ function schedule(
   schedulePage(view, () => {
     if (!canCommit(hub, view)) return;
 
-    if (hub.ready(view.viewId)) {
+    if (hub.ready(view.viewId, view.background === true)) {
       tryCommit(hub, view, { container, failed });
     } else {
       schedule(hub, view, { container, failed });
@@ -99,15 +98,12 @@ function schedule(
   });
 }
 
-function pageView(
-  viewId: PluginViewId,
-  replaceable: boolean,
-  rowMeta: boolean,
-): OpenView {
+function pageView(content: Content): OpenView {
   return {
-    viewId,
-    replaceable,
-    rowMeta,
+    viewId: content.viewId,
+    replaceable: content.replaceable,
+    rowMeta: content.rowMeta,
+    background: content.background,
     frame: undefined,
     tree: null,
     revision: 0,

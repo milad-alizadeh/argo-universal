@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { WebUrl } from '#plugin-account-calls';
 import { PluginViewId } from '#plugin-wire-events';
 
 export {
@@ -42,12 +43,12 @@ export type WireEvent = z.infer<typeof WireEvent>;
 export const Action = z.discriminatedUnion('action', [
   z.strictObject({ action: z.literal('toast'), message: z.string() }),
   z.strictObject({ action: z.literal('navigate'), path: z.string() }),
-  z.strictObject({ action: z.literal('openUrl'), url: z.string() }),
+  z.strictObject({ action: z.literal('openUrl'), url: WebUrl }),
   z.strictObject({ action: z.literal('copy'), text: z.string() }),
   z.strictObject({
     action: z.literal('share'),
     message: z.string(),
-    url: z.string().optional(),
+    url: WebUrl.optional(),
     title: z.string().optional(),
   }),
   z.strictObject({ action: z.literal('pop') }),

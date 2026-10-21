@@ -1,5 +1,5 @@
 import { lookup as dnsLookup } from 'node:dns';
-import type { IncomingMessage } from 'node:http';
+import type { IncomingMessage, ClientRequest } from 'node:http';
 import { request, type RequestOptions } from 'node:https';
 import type { LookupFunction } from 'node:net';
 import { CapabilityRefusal } from '../access/capability-refusal';
@@ -10,8 +10,13 @@ import { redirected, responseValue, type Hop } from './plugin-fetch-response';
 
 // What the Server decides about TLS and name lookup; tests pass a fixture certificate authority and resolver.
 export type PluginNetwork = {
+  request?: (url: URL, options: PluginRequestOptions) => ClientRequest;
   ca?: string;
   lookup?: LookupFunction;
+};
+
+type PluginRequestOptions = Omit<RequestOptions, 'headers'> & {
+  headers: Record<string, string>;
 };
 
 // One `argo.fetch` call: whose Capabilities it is checked against, the Server's network, and its deadline.
@@ -25,6 +30,27 @@ const maxRedirects = 10;
 
 // Headers that would send a request to another host than the one checked, or past its TLS name.
 const refusedHeaders = new Set(['host', ':authority']);
+
+const reservedAccountHeaders = new Set([
+  'connection',
+  'content-length',
+  'transfer-encoding',
+  'upgrade',
+  'trailer',
+  'te',
+  'proxy-authorization',
+  'proxy-connection',
+  'accept-encoding',
+]);
+
+export function allowAccountHeader(name: string): void {
+  allowHeaders({ [name]: '' });
+
+  if (reservedAccountHeaders.has(name.toLowerCase()))
+    throw new CapabilityRefusal(
+      `The ${name} header is reserved by the network layer`,
+    );
+}
 
 /*
  * `argo.fetch` over HTTPS only. The Server follows redirects itself and checks every hop's host,
@@ -90,7 +116,7 @@ function send(hop: Hop, context: FetchContext): Promise<IncomingMessage> {
   const options = requestOptions(hop, context);
 
   return new Promise((resolve, reject) => {
-    const outgoing = request(hop.url, options);
+    const outgoing = (context.network.request ?? request)(hop.url, options);
 
     outgoing.once('response', resolve);
     outgoing.once('error', reject);
@@ -102,7 +128,7 @@ function send(hop: Hop, context: FetchContext): Promise<IncomingMessage> {
 function requestOptions(
   hop: Hop,
   { access, network, signal }: FetchContext,
-): RequestOptions {
+): PluginRequestOptions {
   const rule = access.checkHost(hop.url);
 
   return {

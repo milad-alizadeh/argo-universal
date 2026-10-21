@@ -9,7 +9,9 @@ import type {
 } from '@repo/contracts/plugins/argo-calls';
 import { fetchResponse } from '../kit/fetch-response';
 import { createKit, type Kit } from '../kit/plugin-kit';
+import { configureViewScope } from '../kit/view-scope';
 import type { PluginRequest } from '../protocol/runtime';
+import { accountDispatcher } from './accounts';
 import type { ArgoBridge } from './argo';
 import { hookDispatcher } from './hooks';
 
@@ -25,8 +27,8 @@ declare global {
 type PluginInbox = (json: string) => void;
 
 export type PluginRealmExports = {
-  validateBackground: (path: string) => void;
-  inboxes: { pages: PluginInbox; hooks: PluginInbox };
+  validateBackground: (path: string, contribution?: string) => void;
+  inboxes: { pages: PluginInbox; hooks: PluginInbox; accounts: PluginInbox };
   modules: Pick<Kit, 'exports' | 'jsxRuntime'>;
 };
 
@@ -35,6 +37,8 @@ const bridge = globalThis.__argoBridge;
 delete globalThis.__argoBridge;
 
 if (!bridge) throw new Error('The kit runs only in a Plugin realm');
+
+if (bridge.inView) configureViewScope(bridge.inView);
 
 // No object, promise or error from the worker's realm reaches Plugin code: only the bridge's JSON text crosses.
 const call = async <Value>(request: PluginRequest): Promise<Value> => {
@@ -60,6 +64,8 @@ const hooks = hookDispatcher(
   kit,
 );
 
+const accounts = accountDispatcher(call);
+
 // Each level of `argo` is frozen, so Plugin code can't change what another module sees.
 const frozen = <Value>(value: Value): Value => Object.freeze(value);
 
@@ -81,6 +87,17 @@ const spawned = (id: string): PluginProcess =>
   });
 
 const argo: Argo = frozen({
+  accounts: frozen({
+    add: (host, options) =>
+      call({ api: 'accounts', call: { action: 'add', host, ...options } }),
+    get: (host) => call({ api: 'accounts', call: { action: 'get', host } }),
+    provide: accounts.provide,
+  }),
+  oauth: frozen({
+    start: () => call({ api: 'oauth', call: { action: 'start' } }),
+    await: (state, url) =>
+      call({ api: 'oauth', call: { action: 'await', state, url } }),
+  }),
   nav: frozen({
     badge: async (id, count) => {
       await call({ api: 'nav', id, count });
@@ -102,8 +119,14 @@ const argo: Argo = frozen({
     spawn: async (argv, options = {}) =>
       spawned(await run<string>({ action: 'spawn', argv, ...options })),
   }),
-  fetch: async (url, options = {}) =>
-    fetchResponse(await call({ api: 'fetch', call: { url, ...options } })),
+  fetch: async (url, options = {}) => {
+    const result = await call<Parameters<typeof fetchResponse>[0] | null>({
+      api: 'fetch',
+      call: { url, ...options },
+    });
+
+    return result === null ? null : fetchResponse(result);
+  },
   storage: frozen({
     batch: (queries) => call({ api: 'storage', queries }),
     execute: async (query) =>
@@ -134,7 +157,7 @@ Object.assign(globalThis, {
   argo,
   __argoRealm: {
     validateBackground: kit.requirePage,
-    inboxes: { pages: kit.inbox, hooks: hooks.inbox },
+    inboxes: { pages: kit.inbox, hooks: hooks.inbox, accounts: accounts.inbox },
     modules: { exports: kit.exports, jsxRuntime: kit.jsxRuntime },
   } satisfies PluginRealmExports,
 });

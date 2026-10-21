@@ -1,9 +1,12 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import {
   PluginRequest,
   type PluginValue,
   type WorkerCall,
   type WorkerReply,
 } from '../protocol/runtime.ts';
+
+type CallOrigin = { viewId?: string | null; projectId?: string };
 
 type Pending = {
   resolve: (value: PluginValue) => void;
@@ -20,12 +23,18 @@ export class WorkerCalls {
     this.send = send;
   }
 
-  call(request: PluginRequest): Promise<PluginValue> {
+  call(request: PluginRequest, origin: CallOrigin = {}): Promise<PluginValue> {
     const id = this.next++;
 
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
-      this.send({ type: 'call', id, request });
+      this.send({
+        type: 'call',
+        id,
+        request,
+        ...origin,
+        viewId: origin.viewId ?? undefined,
+      });
     });
   }
 
@@ -42,7 +51,10 @@ function settleWith(pending: Pending, { reply }: WorkerReply): void {
   else pending.reject(new Error(reply.error));
 }
 
-export type ArgoBridge = (json: string) => Promise<string>;
+export type ArgoBridge = ((json: string) => Promise<string>) & {
+  inView?: <T>(viewId: string | null, run: () => T) => T;
+  inProject?: <T>(projectId: string | undefined, run: () => T) => T;
+};
 
 /*
  * The only host function a Plugin's context ever holds, and the context never sees it:
@@ -50,10 +62,23 @@ export type ArgoBridge = (json: string) => Promise<string>;
  * reaches Plugin code (and with it no path to this realm's `Function`). The Plugin API
  * (`plugin-api.ts`) wraps it inside the context, then removes it.
  */
-export const argoBridge =
-  (calls: WorkerCalls): ArgoBridge =>
-  async (json) => {
-    const value = await calls.call(PluginRequest.parse(JSON.parse(json)));
+export function argoBridge(calls: WorkerCalls): ArgoBridge {
+  const scope = new AsyncLocalStorage<CallOrigin>();
+
+  const bridge: ArgoBridge = async (json) => {
+    const value = await calls.call(
+      PluginRequest.parse(JSON.parse(json)),
+      scope.getStore() ?? undefined,
+    );
 
     return JSON.stringify(value ?? null);
   };
+
+  bridge.inView = <T>(viewId: string | null, run: () => T): T =>
+    scope.run({ viewId }, run);
+
+  bridge.inProject = <T>(projectId: string | undefined, run: () => T): T =>
+    scope.run({ projectId }, run);
+
+  return bridge;
+}

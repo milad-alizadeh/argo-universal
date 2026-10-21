@@ -6,6 +6,7 @@ import type {
   PluginReply,
   PluginRequest,
 } from '../protocol/runtime';
+import type { StateRequest } from '../services/plugin-calls';
 import type { PluginServices } from '../services/plugin-services';
 import type { PluginViews } from '../views/plugin-views';
 
@@ -30,9 +31,18 @@ export async function answerPluginCall(
   runtime: RuntimeCalls,
   message: Call,
 ): Promise<PluginReply> {
+  try {
+    return await answer(runtime, message);
+  } catch (error) {
+    return replyFailure(error);
+  }
+}
+
+function answer(runtime: RuntimeCalls, message: Call): Promise<PluginReply> {
   const { pluginId, generation, request } = message;
 
-  if (request.api === 'nav') return answerBadge(runtime, message, request);
+  if (request.api === 'nav')
+    return Promise.resolve(answerBadge(runtime, message, request));
 
   if (request.api === 'data')
     return runtime.data.handle(pluginId, generation, request);
@@ -74,14 +84,57 @@ function answerHookOrView(
 
 function answerViewOrService(
   runtime: RuntimeCalls,
-  { pluginId, generation, request }: ServiceCall,
+  { pluginId, generation, request, viewId, projectId }: ServiceCall,
 ): Promise<PluginReply> {
   if (request.api === 'dispatchResult') {
-    const { requestId, result } = request;
-    runtime.views.dispatches.settle(pluginId, requestId, result);
-
-    return Promise.resolve({ ok: true });
+    return settleDispatch(runtime, pluginId, request);
   }
 
-  return runtime.services.handle(pluginId, generation, request);
+  return answerService(runtime, {
+    pluginId,
+    generation,
+    request,
+    viewId,
+    projectId,
+  });
+}
+
+type StateCall = Pick<
+  Call,
+  'pluginId' | 'generation' | 'viewId' | 'projectId'
+> & { request: StateRequest };
+
+function answerService(
+  runtime: RuntimeCalls,
+  message: StateCall,
+): Promise<PluginReply> {
+  const { pluginId, generation, request } = message;
+
+  return runtime.services.handle(pluginId, generation, {
+    ...request,
+    ...callOrigin(runtime, message),
+  });
+}
+
+function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
+  if (!message.viewId)
+    return { projectId: message.projectId, serverDevice: false };
+  const view = runtime.views.dataView(message.pluginId, message.viewId);
+
+  return {
+    projectId: view.projectId,
+    serverDevice: view.opening.serverDevice === true,
+  };
+}
+
+type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
+
+function settleDispatch(
+  runtime: RuntimeCalls,
+  pluginId: string,
+  request: Extract<PluginRequest, { api: 'dispatchResult' }>,
+): Promise<PluginReply> {
+  runtime.views.dispatches.settle(pluginId, request.requestId, request.result);
+
+  return Promise.resolve({ ok: true });
 }

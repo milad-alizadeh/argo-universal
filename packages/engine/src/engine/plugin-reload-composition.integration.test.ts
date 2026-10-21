@@ -1,6 +1,7 @@
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import { processWait } from '#mocks/data-fixture';
 import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins, shippedFolder } from '#mocks/runtime-plugins';
 
@@ -44,19 +45,19 @@ it('bundles and reloads a first-party dev Plugin, recovering after runtime and b
   });
   await writeFile(source, 'export function check(): void {}');
   await expect
-    .poll(() => caller.plugins.list())
+    .poll(() => caller.plugins.list(), processWait)
     .toMatchObject({ plugins: [{ state: 'running', error: null }] });
 
   await writeFile(source, 'not valid TypeScript }');
   await expect
-    .poll(() => caller.plugins.list())
+    .poll(() => caller.plugins.list(), processWait)
     .toMatchObject({ plugins: [{ state: 'crashed' }] });
   await writeFile(
     source,
     'export function check(): void { throw Error("Reloaded dev Plugin"); }',
   );
   await expect
-    .poll(() => caller.plugins.list())
+    .poll(() => caller.plugins.list(), processWait)
     .toMatchObject({
       plugins: [{ state: 'crashed', error: 'Reloaded dev Plugin' }],
     });

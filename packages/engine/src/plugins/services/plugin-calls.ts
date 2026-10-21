@@ -1,5 +1,8 @@
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { ActivatedPlugin, PluginAccess } from '../access/plugin-access';
+import type { AccountServices } from '../accounts/account-services';
+import type { PluginOAuth } from '../accounts/plugin-oauth';
+import { accountCall, oauthCall } from '../accounts/service-calls';
 import {
   runtimeError,
   type PluginRequest,
@@ -33,6 +36,9 @@ export type CallReach = {
   pluginId: string;
   generation: number;
   projectId?: string;
+  serverDevice?: boolean;
+  accounts: AccountServices;
+  oauth: PluginOAuth;
   query?: boolean;
   resources: PluginResources;
   storage: PluginStorage;
@@ -67,6 +73,8 @@ const kept = <Name extends Api>(
 });
 
 const calls: CallKinds = {
+  accounts: kept(({ call }) => `argo.accounts.${call.action}`, accountCall),
+  oauth: kept(() => 'argo.oauth', oauthCall),
   storage: kept(
     ({ queries }) => `argo.storage ${queries.length}`,
     async (call, { queries }) =>

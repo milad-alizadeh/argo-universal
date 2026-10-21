@@ -1,4 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { actionUrlReason } from './action-urls';
 import { canvasReason } from './canvas-validation';
 import { visualPropsReason, visualSchemas } from './props';
 
@@ -18,7 +19,7 @@ export function visualReason(
   node: WireNode,
   partial = false,
 ): string | undefined {
-  return placementReason(node.type) ?? dataReason(node, partial);
+  return actionUrlReason(node.props) ?? partReason(node, partial);
 }
 
 function placementReason(type: string): string | undefined {
@@ -44,4 +45,8 @@ function dataReason(node: WireNode, partial: boolean): string | undefined {
 
 function sceneReason(node: WireNode, partial: boolean): string | undefined {
   return node.type === 'Canvas' ? canvasReason(node, partial) : undefined;
+}
+
+function partReason(node: WireNode, partial: boolean): string | undefined {
+  return placementReason(node.type) ?? dataReason(node, partial);
 }

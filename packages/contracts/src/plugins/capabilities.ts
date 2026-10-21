@@ -84,12 +84,46 @@ const hostnameOf = (host: string): string =>
     ? host.slice(0, host.indexOf(']') + 1)
     : (host.split(':').at(0) ?? host);
 
+const normalUrl = z.url({ normalize: true });
+
 const parsesTo = (host: string): boolean =>
-  URL.canParse(`https://${host}`) && new URL(`https://${host}`).host === host;
+  normalUrl.safeParse(`https://${host}/`).data === `https://${host}/`;
 
 // A host is written as the URL parser normalises it, so what is declared is exactly what a call is compared with.
 const normalHost = (host: string): boolean =>
   host === '*' || (parsesTo(host) && !/[/@?#]/.test(host));
+
+export const AccountHost = z
+  .string()
+  .refine(
+    (host) => normalHost(host) && !isAccountLoopback(host),
+    'Account host must be concrete, with no wildcard or localhost forms',
+  );
+
+const accountLocalNames = new Set([
+  '*',
+  'localhost',
+  '0.0.0.0',
+  '[::]',
+  '[::1]',
+]);
+
+function isAccountLoopback(host: string): boolean {
+  const name = hostnameOf(host).replace(/\.$/, '');
+
+  return accountLocalNames.has(name) || localAccountSuffix(name);
+}
+
+const localAccountSuffix = (name: string): boolean =>
+  name.endsWith('.localhost') || loopbackAddress(name);
+
+const loopbackAddress = (name: string): boolean =>
+  /^127\.\d+\.\d+\.\d+$/.test(name) ||
+  /^\[::ffff:7f[\da-f]{2}:[\da-f]{1,4}\]$/.test(name);
+
+// Hosts use URL-normalised spellings; the port is part of the identity.
+export const sameHost = (left: string, right: string): boolean =>
+  left === right;
 
 // The host a failing capability names, for its message.
 const HostOf = z.object({ host: z.string() }).catch({ host: 'This host' });

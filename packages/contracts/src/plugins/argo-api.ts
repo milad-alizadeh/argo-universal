@@ -1,6 +1,10 @@
 import type { ComponentType } from 'react';
 import { z } from 'zod';
 import {
+  accountApiCalls,
+  type AccountProviderRegistration,
+} from './account-api';
+import {
   FetchCall,
   FetchReply,
   FsWrite,
@@ -55,6 +59,7 @@ export type FetchResponse = z.infer<typeof FetchResponse>;
 
 export const PluginApiCalls = z
   .object({
+    ...accountApiCalls,
     nav: z
       .object({
         badge: z.function({
@@ -90,7 +95,7 @@ export const PluginApiCalls = z
       .readonly(),
     fetch: z.function({
       input: [FetchCall.shape.url, FetchCall.omit({ url: true }).optional()],
-      output: z.promise(FetchResponse),
+      output: z.promise(FetchResponse.nullable()),
     }),
     storage: z
       .object({
@@ -146,8 +151,9 @@ export type SlotContent = ComponentType<{
  * its worker (ADR-0027). Its calls are inferred from `PluginApiCalls`; `on` registers a Hook on one
  * core event.
  */
-export type Argo = PluginApiCalls &
+export type Argo = Omit<PluginApiCalls, 'accounts'> &
   Readonly<{
+    accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
     pages: Readonly<{ register: (path: string, page: Page) => void }>;
     slots: Readonly<{
       register: (slotId: SlotId, content: SlotContent) => void;

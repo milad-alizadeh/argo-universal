@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AccountCall, OAuthCall } from '#plugin-account-calls';
 import { PluginAssetRequest } from '#plugin-assets';
 import { WireJson } from '#plugin-wire-json';
 
@@ -176,6 +177,8 @@ export type PluginProjectInfo = z.infer<typeof PluginProjectInfo>;
 
 // Each `argo` call as it crosses to the Server; the Plugin host adds Hooks, views and dispatch results.
 export const ArgoRequest = z.discriminatedUnion('api', [
+  z.object({ api: z.literal('accounts'), call: AccountCall }),
+  z.object({ api: z.literal('oauth'), call: OAuthCall }),
   PluginAssetRequest,
   PluginDataRequest,
   PluginNavBadge,

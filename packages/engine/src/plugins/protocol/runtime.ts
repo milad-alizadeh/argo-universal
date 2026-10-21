@@ -1,3 +1,4 @@
+import { AccountInvocation } from '@repo/contracts/plugins/account-calls';
 import {
   ArgoRequest,
   FetchCall,
@@ -75,6 +76,7 @@ export const PluginReply = z.discriminatedUnion('ok', [
 export type PluginReply = z.infer<typeof PluginReply>;
 
 export const HostCommand = z.discriminatedUnion('type', [
+  AccountInvocation.extend({ pluginId: z.string(), generation: z.number() }),
   PluginEntry.extend({ type: z.literal('activate') }),
   TestCommand.extend({ pluginId: z.string() }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
@@ -96,6 +98,11 @@ export const HostCommand = z.discriminatedUnion('type', [
 
 export type HostCommand = z.infer<typeof HostCommand>;
 
+export type HostDelivery = Extract<
+  HostCommand,
+  { type: 'reply' | 'hook' | 'accountToken' }
+>;
+
 export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
 
 export type HostEvent = Extract<z.infer<typeof HostCommand>, { type: 'event' }>;
@@ -115,6 +122,8 @@ export const HostMessage = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('call'),
     pluginId: z.string(),
+    viewId: z.string().optional(),
+    projectId: z.string().optional(),
     generation: z.number(),
     id: z.number(),
     request: PluginRequest,
@@ -125,6 +134,8 @@ export type HostMessage = z.infer<typeof HostMessage>;
 
 export const WorkerCall = z.object({
   type: z.literal('call'),
+  viewId: z.string().optional(),
+  projectId: z.string().optional(),
   id: z.number(),
   request: PluginRequest,
 });
@@ -151,6 +162,7 @@ const WorkerEvent = z.object({
 });
 
 export const WorkerCommand = z.union([
+  AccountInvocation,
   z.literal('ping'),
   WorkerReply,
   WorkerEvent,
@@ -158,25 +170,11 @@ export const WorkerCommand = z.union([
   TestCommand,
 ]);
 
-export const notStarted: PluginStatus = {
-  state: 'not-started',
-  hanging: false,
-  error: null,
-};
-
-export const crashed = (error: string): PluginStatus => ({
-  state: 'crashed',
-  hanging: false,
-  error,
-});
-
-export const running: PluginStatus = {
-  state: 'running',
-  hanging: false,
-  error: null,
-};
-
-export const runtimeError = (cause: unknown): string =>
-  cause instanceof Error ? cause.message : String(cause);
+export {
+  notStarted,
+  crashed,
+  running,
+  runtimeError,
+} from '#plugin-runtime-status';
 
 export type WorkerCommand = z.infer<typeof WorkerCommand>;

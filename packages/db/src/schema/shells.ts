@@ -5,8 +5,8 @@ import {
   snakeCase,
   text,
 } from 'drizzle-orm/sqlite-core';
-import { blob } from './blob';
-import { session } from './sessions';
+import { blob } from '#schema-blob';
+import { session } from '#schema-sessions';
 
 export const shellStatuses = ['running', 'exited', 'stopped', 'lost'] as const;
 

@@ -1,14 +1,8 @@
-import {
-  useContext,
-  useId,
-  useMemo,
-  type ReactNode,
-  type ReactElement,
-} from 'react';
-import { ListContext } from '../../../list-context';
+import { useId, useMemo, type ReactNode, type ReactElement } from 'react';
 import type { ListPosition, ListSelection } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
 import type { ChildrenOptions } from './list-children-options';
+import { FixedListRow } from './list-grouping';
 import type { ListProps } from './list-props';
 import { sectionEntries, menuEntries } from './list-section-entries';
 import { prepareChildren, type ListBlock } from './list-section-model';
@@ -20,41 +14,10 @@ export interface ListChild extends ListSelection {
   position: ListPosition;
 }
 
-function ChildRow({
-  item,
-  appearance,
-}: {
-  item: ListChild;
-  appearance: ListProps<never>['appearance'];
-}): ReactElement {
-  // Keeps the row's index from the List's own row.
-  const row = useContext(ListContext);
-
-  return (
-    <ListContext value={{ ...row, ...childContext(item, appearance) }}>
-      {item.content}
-    </ListContext>
-  );
-}
-
-function childContext(
-  item: ListChild,
-  appearance: ListProps<never>['appearance'],
-): React.ContextType<typeof ListContext> {
-  return {
-    appearance: appearance ?? 'plain',
-    position: item.position,
-    inList: true,
-    selectionMode: item.selectionMode,
-    selection: item.selection,
-    onSelectionChange: item.onSelectionChange,
-  };
-}
-
 export function childRenderer(
   appearance: ListProps<never>['appearance'],
 ): (item: ListChild) => ReactElement {
-  return (item) => <ChildRow item={item} appearance={appearance} />;
+  return (item) => <FixedListRow item={item} appearance={appearance} />;
 }
 
 interface PreparedChildren {

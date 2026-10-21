@@ -8,6 +8,12 @@ export { macKeychain, type Keychain } from './services/keychain';
 
 export { PluginSettings } from './settings/plugin-settings';
 
+export { PluginAccounts } from './accounts/plugin-accounts';
+
+export type { OAuthOptions } from './accounts/plugin-oauth';
+
+export type { PluginClock } from './clock';
+
 export type { PluginNetwork } from './services/plugin-fetch';
 
 export type { OpenedAsset } from './assets/plugin-assets';
