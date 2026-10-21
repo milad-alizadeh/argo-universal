@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import type { IconName } from '../../../lib/generic/symbols/icon-names';
 import {
   StackedSummary,
-  type SummaryMark,
+  type StackedSummaryIcon,
 } from '../../../lib/product/stacked-summary';
 
 interface Props {
@@ -16,15 +16,10 @@ export function WorkbenchCountSummary({
   icon,
   noun,
 }: Props): ReactElement {
-  const marks: SummaryMark[] = ['first', 'second', 'third']
-    .slice(0, count)
-    .map((key) => ({
-      key,
-      icon,
-      tone: 'neutral',
-    }));
+  const icons: StackedSummaryIcon[] =
+    count > 0 ? [{ icon, tone: 'neutral' }] : [];
 
   const label = `${count} ${noun}${count === 1 ? '' : 's'}`;
 
-  return <StackedSummary marks={marks} label={label} />;
+  return <StackedSummary icons={icons} texts={[label]} />;
 }

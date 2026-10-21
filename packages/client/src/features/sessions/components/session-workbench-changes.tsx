@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import {
   StackedSummary,
-  type SummaryMark,
+  type StackedSummaryIcon,
 } from '../../../lib/product/stacked-summary';
 import { ChangeRow } from './change-row';
 import { resolveChangeStage } from './change-stage/change-stage-model';
@@ -47,31 +47,25 @@ function MoreChanges({ changes, onOpen }: Props): ReactElement {
       className="rounded-control web:hover:bg-hover web:focus-visible:bg-hover"
     >
       <StackedSummary
-        marks={remainderMarks(changes)}
-        label={remainderLabel(changes)}
+        icons={remainderIcons(changes)}
+        texts={remainderTexts(changes)}
       />
     </Pressable>
   );
 }
 
-function remainderMarks(changes: readonly SessionPullRequest[]): SummaryMark[] {
-  return [...new Set(changes.map((change) => change.stage))].map((stage) => ({
-    key: stage,
-    ...resolveChangeStage({ stage }),
-    surface: 'glass',
-  }));
+function remainderIcons(
+  changes: readonly SessionPullRequest[],
+): StackedSummaryIcon[] {
+  return changes.map(({ stage }) => resolveChangeStage({ stage }));
 }
 
-function remainderLabel(changes: readonly SessionPullRequest[]): string {
+function remainderTexts(changes: readonly SessionPullRequest[]): string[] {
   const stages = ['open', 'merged', 'closed', 'branch', 'working'] as const;
 
-  return stages
-    .flatMap((stage) => {
-      const count = changes.filter((change) => change.stage === stage).length;
+  return stages.flatMap((stage) => {
+    const count = changes.filter((change) => change.stage === stage).length;
 
-      return count
-        ? [`${count} ${stage === 'open' ? 'more open' : stage}`]
-        : [];
-    })
-    .join(', ');
+    return count ? [`${count} ${stage === 'open' ? 'more open' : stage}`] : [];
+  });
 }

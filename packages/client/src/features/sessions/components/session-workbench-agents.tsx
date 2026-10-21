@@ -47,10 +47,7 @@ function ActiveAgentText({ agent, now }: ActiveProps): ReactElement {
 }
 
 function DoneAgents({ agents }: { agents: Subagent[] }): ReactElement {
-  const marks = agents.map((agent) => ({
-    key: agent.sessionId,
-    ...subagentRoleMark(agent.role),
-  }));
+  const icons = agents.map((agent) => subagentRoleMark(agent.role));
 
-  return <StackedSummary marks={marks} label={`${agents.length} done`} />;
+  return <StackedSummary icons={icons} texts={[`${agents.length} done`]} />;
 }

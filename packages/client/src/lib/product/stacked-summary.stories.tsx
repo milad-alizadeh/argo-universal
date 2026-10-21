@@ -2,23 +2,22 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../generic/variations';
-import { StackedSummary, type SummaryMark } from './stacked-summary';
+import { StackedSummary, type StackedSummaryIcon } from './stacked-summary';
 
-const agentMarks: SummaryMark[] = [
-  { key: 'plan', icon: 'plan-mode', tone: 'done' },
-  { key: 'test', icon: 'flask', tone: 'success' },
+const agentIcons: StackedSummaryIcon[] = [
+  { icon: 'plan-mode', tone: 'done' },
+  { icon: 'flask', tone: 'success' },
 ];
 
-const changeMarks: SummaryMark[] = [
-  { key: 'merged', icon: 'pr-merged', tone: 'done', surface: 'glass' },
-  { key: 'merged-again', icon: 'pr-merged', tone: 'done', surface: 'glass' },
-  { key: 'closed', icon: 'pr-closed', tone: 'danger', surface: 'glass' },
-  { key: 'open', icon: 'pr-open', tone: 'success', surface: 'glass' },
-  { key: 'branch', icon: 'branch', tone: 'neutral', surface: 'glass' },
+const changeIcons: StackedSummaryIcon[] = [
+  { icon: 'pr-merged', tone: 'done' },
+  { icon: 'pr-merged', tone: 'done' },
+  { icon: 'pr-closed', tone: 'danger' },
+  { icon: 'pr-open', tone: 'success' },
+  { icon: 'branch', tone: 'neutral' },
 ];
 
-const shellMarks: SummaryMark[] = ['first', 'second', 'third'].map((key) => ({
-  key,
+const shellIcons: StackedSummaryIcon[] = [1, 2, 3].map(() => ({
   icon: 'terminal',
   tone: 'neutral',
 }));
@@ -33,7 +32,7 @@ const meta = {
       </View>
     ),
   ],
-  args: { marks: agentMarks, label: '2 done' },
+  args: { icons: agentIcons, texts: ['2 done'] },
 } satisfies Meta<typeof StackedSummary>;
 
 export default meta;
@@ -41,13 +40,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const examples = [
-  { name: 'Agents', marks: agentMarks, label: '2 done' },
+  { name: 'Agents', icons: agentIcons, texts: ['2 done'] },
   {
     name: 'Changes',
-    marks: changeMarks,
-    label: '2 merged, 1 closed, 1 open, 1 branch',
+    icons: changeIcons,
+    texts: ['2 merged', '1 closed', '1 open', '1 branch'],
   },
-  { name: 'Shells', marks: shellMarks, label: '3 shells' },
+  { name: 'Shells', icons: shellIcons, texts: ['3 shells'] },
 ];
 
 export const Overview: Story = {
