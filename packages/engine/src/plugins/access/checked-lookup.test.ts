@@ -110,12 +110,7 @@ describe('checkedLookup answers as the caller asked', () => {
     expect(await ask(closed, resolving([]), { all: true })).toEqual([null, []]);
   });
 
-  /*
-   * DEFECT: private-addresses.json lists ::ffff:0:0/96, and Node's BlockList matches every IPv4
-   * address against it as IPv4-mapped, so no public IPv4 answer is ever allowed (it fails closed).
-   * `it.fails` goes red once that is fixed: then make this a plain `it`.
-   */
-  it.fails('allows a public IPv4 answer for a closed rule', async () => {
+  it('allows a public IPv4 answer for a closed rule', async () => {
     const [error] = await ask(
       closed,
       resolving([{ address: fixtures.publicIpv4, family: 4 }]),

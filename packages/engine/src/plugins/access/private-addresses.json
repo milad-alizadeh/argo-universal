@@ -67,10 +67,6 @@
       "prefix": 96
     },
     {
-      "address": "::ffff:0:0",
-      "prefix": 96
-    },
-    {
       "address": "2002::",
       "prefix": 16
     }
