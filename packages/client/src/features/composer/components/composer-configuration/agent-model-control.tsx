@@ -18,6 +18,7 @@ import {
   selection,
   modelName,
 } from './configuration-values';
+import { useOptimisticConfig } from './use-optimistic-config';
 
 interface ControlProps {
   configuration: ComposerConfigurationProps;
@@ -34,12 +35,15 @@ export function ComposerAgentModelControl(
   props: ControlProps,
 ): React.JSX.Element | null {
   const wide = useContentWide();
+  const configuration = useOptimisticConfig(props.configuration);
 
   useCommitEffortFallback(props.configuration);
 
-  if (nothingToConfigure(props.configuration)) return null;
+  if (nothingToConfigure(configuration)) return null;
 
-  return <AgentModelOverlay {...props} disabled={props.disabled} wide={wide} />;
+  return (
+    <AgentModelOverlay {...props} configuration={configuration} wide={wide} />
+  );
 }
 
 // Hidden until an Agent is chosen, and while neither a model nor an installed Agent can show.
