@@ -2,14 +2,14 @@ import { useSyncLayout } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
-import { FeedMarkdown } from '#lib/product/markdown/feed-markdown';
-import { Text } from '#primitives/content/text';
-import { ClampLeaves } from '../../../../lib/product/markdown/clamp-leaves';
+import { Markdown } from '#primitives/content/markdown';
+import { ClampLeaves } from '#primitives/content/markdown';
 import {
   useWholeLineClamp,
   type WholeLineClamp,
-} from '../../../../lib/product/markdown/use-whole-line-clamp';
-import { wholeLineClip } from '../../../../lib/product/markdown/whole-line-clip';
+} from '#primitives/content/markdown';
+import { wholeLineClip } from '#primitives/content/markdown';
+import { Text } from '#primitives/content/text';
 
 const clampedLines = 4;
 
@@ -42,7 +42,7 @@ function ClampedMarkdown(props: ClampedMarkdownProps): React.JSX.Element {
     <View style={clipStyle(props)}>
       <View ref={content} onLayout={onContentLayout}>
         <ClampLeaves.Provider value={registerLeaf}>
-          <FeedMarkdown text={props.text} />
+          <Markdown text={props.text} />
         </ClampLeaves.Provider>
       </View>
     </View>

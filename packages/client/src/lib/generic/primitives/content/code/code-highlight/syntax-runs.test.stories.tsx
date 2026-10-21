@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '../../../../generic/each-layout';
-import { settleViewport } from '../../../../generic/settle-viewport';
-import { FeedCodeBlock } from '../feed-code-block';
+import { ResourceCode as FeedCodeBlock } from '#primitives/content/code';
+import { layoutWidths } from '../../../../each-layout';
+import { settleViewport } from '../../../../settle-viewport';
 
 const source = [
   '// Responses must never be cached',

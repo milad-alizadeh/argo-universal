@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { FeedMarkdown } from './markdown/feed-markdown';
+import { Markdown } from '#primitives/content/markdown';
 import {
   PlanScrollThumb,
   PlanScrollView,
@@ -44,7 +44,7 @@ export function PlanDocument({
   content,
   layout,
 }: PlanDocumentProps): React.JSX.Element {
-  const markdown = <FeedMarkdown text={content} variant="plan" />;
+  const markdown = <Markdown text={content} />;
 
   if (layout === 'sheet') return <View className="pt-2 pb-4">{markdown}</View>;
 

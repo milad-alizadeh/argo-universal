@@ -49,13 +49,7 @@
         "packages/client/src/features/settings/components/placeholder-detail-view/placeholder-detail-view.tsx",
         "packages/client/src/screens/onboarding/onboarding-view.tsx",
         "packages/client/src/screens/onboarding/setup-step.tsx",
-        "packages/client/src/lib/product/header-button.tsx",
-        "packages/client/src/lib/product/markdown/block-tokens.tsx",
-        "packages/client/src/lib/product/markdown/code-block-title/code-block-title.tsx",
-        "packages/client/src/lib/product/markdown/copy-button.tsx",
-        "packages/client/src/lib/product/markdown/feed-code-block/code-block-body.tsx",
-        "packages/client/src/lib/product/markdown/resource-heading.tsx",
-        "packages/client/src/lib/product/markdown/table-token.tsx"
+        "packages/client/src/lib/product/header-button.tsx"
       ],
       "rules": { "argo/kit-styling": "off" }
     }

@@ -2,14 +2,13 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/content/icon';
-import { fileTypeIcon } from '../../generic/symbols/file-type-icon';
+import { fileTypeIcon } from '../../../symbols/file-type-icon';
 import { CodeBlockTitle } from './code-block-title/code-block-title';
 import { CopyButton } from './copy-button';
 import { type HeaderResource, ResourceHeading } from './resource-heading';
 
 // The tray that holds a CodeBlockHeader and its body: code blocks, tool output and inline diffs.
-export const codeBlockTray =
-  'overflow-hidden rounded-2xl border border-hairline bg-content px-1 pb-1';
+export const codeBlockTray = 'overflow-hidden rounded-2xl bg-tint px-1 pb-1';
 
 interface CodeBlockHeaderProps {
   title: string;
@@ -30,6 +29,8 @@ function HeaderTitle({
   resource,
 }: Pick<CodeBlockHeaderProps, 'title' | 'resource'>): React.JSX.Element {
   if (resource) return <ResourceHeading title={title} resource={resource} />;
+
+  if (!title) return <View className="flex-1" />;
 
   return <LanguageTitle title={title} />;
 }

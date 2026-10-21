@@ -4,7 +4,7 @@ import { type ComponentType, createElement, type ReactNode } from 'react';
 import { Text as Span } from 'react-native';
 import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Link } from './markdown-link';
+import { Link, isRoute } from '#primitives/content/link';
 import { byType } from './markdown-tokens';
 
 interface InlineTokenProps<T extends Token = Token> {
@@ -48,7 +48,11 @@ function LinkToken({
   codeClassName,
 }: InlineTokenProps<Tokens.Link>): React.JSX.Element {
   return (
-    <Link href={token.href}>
+    <Link
+      href={token.href}
+      route={isRoute(token.href) ? token.href : undefined}
+      label={token.text}
+    >
       <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
     </Link>
   );

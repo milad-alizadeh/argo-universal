@@ -1,15 +1,19 @@
 import type * as React from 'react';
 import { type ReactNode, useMemo } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
-import { syntaxRunsText } from '../../../../lib/generic/code-text/syntax-run';
-import { syntaxRuns } from '../../../../lib/product/markdown/feed-code-block/code-highlight/syntax-runs';
-import type { DiffLine, FileDiff } from '../../view/file-diff';
-import { lineStyles } from './diff-lines';
+import { syntaxRunsText } from '../../../code-text/syntax-run';
+import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
+import { syntaxRuns } from './code-highlight/syntax-runs';
+import type { CodeProps } from './code-props';
 
-type Hunk = FileDiff['hunks'][number];
+type Hunk = NonNullable<CodeProps['diff']>[number];
+
+type DiffLine = Hunk['lines'][number];
+
+import { lineStyles } from './diff-lines';
 
 interface HunksProps {
   hunks: readonly Hunk[];
@@ -58,7 +62,7 @@ function LineText({ line, path }: LineProps): React.JSX.Element {
     <Text
       role="code"
       testID="diff-line"
-      className="shrink-0 pr-3 text-foreground"
+      className={cn('shrink-0 pr-3', lineStyles[line.kind].color)}
       selectable
     >
       {runs === undefined ? line.text : syntaxRunsText(runs)}
@@ -110,27 +114,28 @@ function VerticalScroll(props: {
   inline: boolean;
   children: ReactNode;
 }): React.JSX.Element {
-  return (
-    <ScrollView
-      className={props.inline ? 'max-h-75 wide:max-h-100' : undefined}
-      scrollEnabled={props.inline}
-      testID="diff-scroll"
-    >
-      {props.children}
-    </ScrollView>
-  );
+  const scroll = {
+    fitContent: true,
+    scrollEnabled: props.inline,
+    testID: 'diff-scroll',
+    className: props.inline ? 'max-h-75 wide:max-h-100' : undefined,
+    surfaceClassName: 'bg-card',
+  };
+
+  return <ScrollFadeView {...scroll}>{props.children}</ScrollFadeView>;
 }
 
 export function DiffScroll(props: HunksProps): React.JSX.Element {
   return (
     <VerticalScroll inline={props.inline}>
-      <ScrollView
+      <ScrollFadeView
         horizontal
+        surfaceClassName={props.inline ? 'bg-card' : 'bg-content'}
         className="min-w-0 grow-0 shrink-0"
         contentContainerClassName="min-w-full"
       >
         <HunkList {...props} />
-      </ScrollView>
+      </ScrollFadeView>
     </VerticalScroll>
   );
 }

@@ -1,9 +1,9 @@
 import type { Tokens } from 'marked';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Code } from '#primitives/content/code';
 import { Caret } from './caret';
 import { ClampedBlock } from './clamped-block';
-import { FeedCodeBlock } from './feed-code-block/feed-code-block';
 import { type BlockTokenProps, literal } from './markdown-tokens';
 import { Prose } from './prose';
 
@@ -49,7 +49,7 @@ export function HrToken({
 }: BlockTokenProps<Tokens.Hr>): React.JSX.Element {
   return (
     <ClampedBlock caret={caret}>
-      <View role="separator" className="border-t border-border" />
+      <View role="separator" />
     </ClampedBlock>
   );
 }
@@ -60,7 +60,7 @@ export function CodeToken({
 }: BlockTokenProps<Tokens.Code>): React.JSX.Element {
   return (
     <ClampedBlock caret={caret}>
-      <FeedCodeBlock code={token.text} language={token.lang || undefined} />
+      <Code code={token.text} language={token.lang || undefined} />
     </ClampedBlock>
   );
 }

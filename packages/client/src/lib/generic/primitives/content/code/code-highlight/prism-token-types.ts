@@ -1,5 +1,5 @@
 import type { Token } from 'prismjs';
-import type { SyntaxType } from '../../../../generic/code-text/syntax-run';
+import type { SyntaxType } from '../../../../code-text/syntax-run';
 
 /*
  * Prism names far more than six things; everything left out here stays foreground, punctuation and

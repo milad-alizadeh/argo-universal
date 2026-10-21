@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { FeedMarkdown } from './feed-markdown';
+import { Markdown } from './markdown';
 
 const meta = {
-  title: 'Tests/FeedMarkdown',
-  component: FeedMarkdown,
+  title: 'Tests/Markdown',
+  component: Markdown,
   args: { text: '' },
-} satisfies Meta<typeof FeedMarkdown>;
+} satisfies Meta<typeof Markdown>;
 
 export default meta;
 
@@ -33,7 +33,7 @@ export const ALinkDefinitionIsDrawn = drawnAsWritten(
   '[spec]: https://argo.dev/spec',
 );
 
-export const AThematicBreakIsARule: Story = {
+export const AThematicBreakSeparatesContent: Story = {
   args: { text: 'Before\n\n---\n\nAfter' },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('separator')).toBeInTheDocument();
