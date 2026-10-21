@@ -12,6 +12,7 @@ import {
   type ScaffoldMeasures,
   scaffoldGeometry,
 } from './scaffold-geometry';
+import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
 
 // What the Scaffold places: its Slots, and the sidebar's and the Inspector's state, which the caller holds.
 export interface ScaffoldProps {
@@ -53,6 +54,7 @@ export interface ScaffoldLayout
   extends ScaffoldGeometry, PreferredWidths, WindowWidth {
   measures: ScaffoldMeasures;
   safeTop: number;
+  requestSidebar: SidebarIntent['requestSidebar'];
   motion: FrameMotion;
   setResizing: (resizing: boolean) => void;
 }
@@ -115,6 +117,12 @@ function useScaffoldWidths(): PreferredWidths & { measures: ScaffoldMeasures } {
   return { measures, ...usePreferredWidths(measures) };
 }
 
+function useScaffoldSizing(
+  scaffold: ScaffoldProps,
+): ReturnType<typeof useScaffoldWidths> & SidebarIntent {
+  return { ...useScaffoldWidths(), ...useSidebarIntent(scaffold) };
+}
+
 function useFrameMotion(
   { transitionKey }: ScaffoldGeometry,
   resizing: boolean,
@@ -123,7 +131,7 @@ function useFrameMotion(
 }
 
 export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
-  const widths = useScaffoldWidths();
+  const widths = useScaffoldSizing(scaffold);
   const windowWidth = useWindowWidth();
   const [resizing, setResizing] = useState(false);
   const geometry = geometryOf(scaffold, widths, windowWidth);
@@ -140,7 +148,7 @@ export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
 
 function geometryOf(
   scaffold: ScaffoldProps,
-  widths: ReturnType<typeof useScaffoldWidths>,
+  widths: ReturnType<typeof useScaffoldSizing>,
   windowWidth: WindowWidth,
 ): ScaffoldGeometry {
   return scaffoldGeometry({

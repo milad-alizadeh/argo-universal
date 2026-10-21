@@ -39,6 +39,7 @@ export interface ScaffoldGeometryInput {
   preferredListWidth: number;
   preferredInspectorWidth: number;
   sidebarShown: boolean;
+  sidebarRequested?: boolean;
   inspectorState: InspectorState;
 }
 

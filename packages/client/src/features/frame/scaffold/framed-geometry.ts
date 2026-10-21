@@ -1,7 +1,9 @@
+import type { FrameGeometry } from './frame-geometry-types';
 import type {
   ScaffoldGeometry,
   ScaffoldGeometryInput,
 } from './scaffold-geometry';
+import { sidebarWidth } from './sidebar-intent';
 
 // The frame's pane spans drive the existing animation and divider contracts; phone drill-in keeps its own layout.
 export function framedGeometry(
@@ -22,6 +24,7 @@ export function framedGeometry(
 
 type FramedWidths = Pick<
   ScaffoldGeometry,
+  | 'listLimit'
   | 'shownListWidth'
   | 'visibleListWidth'
   | 'availableWidth'
@@ -37,10 +40,8 @@ function framedPaneWidths(
 ): FramedWidths {
   return {
     shownListWidth: frame.list.width,
-    visibleListWidth: Math.max(
-      input.measures.listWidth,
-      input.preferredListWidth,
-    ),
+    listLimit: framedListLimit(input, frame),
+    visibleListWidth: sidebarWidth(input),
     availableWidth: Math.max(0, input.width - frame.page.offset),
     ...frameInspector(input, frame.stage.width),
     detailWidth: frame.page.width,
@@ -65,5 +66,25 @@ function frameInspector(
 function inspectorHandle(input: ScaffoldGeometryInput, offset: number): number {
   return (
     offset + (input.inspectorState === 'expanded' ? input.measures.inset : 0)
+  );
+}
+
+function framedListLimit(
+  input: ScaffoldGeometryInput,
+  frame: FrameGeometry,
+): number {
+  if (input.inspectorState === 'expanded') return expandedListLimit(input);
+
+  const floor = input.measures.composerWidth + input.measures.contentGutter * 2;
+
+  return Math.max(0, frame.list.width + frame.page.width - floor);
+}
+
+function expandedListLimit({ width, measures }: ScaffoldGeometryInput): number {
+  const sidebar = measures.railWidth + measures.inset * 2;
+
+  return Math.max(
+    0,
+    width - sidebar - measures.inset - measures.inspectorWidth,
   );
 }

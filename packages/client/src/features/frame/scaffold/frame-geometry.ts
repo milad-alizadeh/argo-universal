@@ -2,6 +2,12 @@ import type { PaneSpan } from '../utils/pane-shift';
 import { frameContent } from './content-geometry';
 import type { FrameGeometry } from './frame-geometry-types';
 import type { ScaffoldGeometryInput } from './scaffold-geometry';
+import {
+  preferredSidebarWidth,
+  sidebarWidth,
+  sidebarAvailable,
+  sidebarThresholds,
+} from './sidebar-intent';
 import { frameStage, stageRegion } from './stage-geometry';
 import {
   frameWorkbench,
@@ -19,10 +25,6 @@ export interface FrameRegions {
   stageRegion: number;
 }
 
-function listWidth(input: ScaffoldGeometryInput): number {
-  return Math.max(input.measures.listWidth, input.preferredListWidth);
-}
-
 function frameThresholds(
   input: ScaffoldGeometryInput,
 ): FrameGeometry['thresholds'] {
@@ -33,7 +35,10 @@ function frameThresholds(
   const workbenchUndock =
     foldedWidth + workbenchRegion(input) + stageRegion(input);
 
-  return { listFold: workbenchUndock + listWidth(input), workbenchUndock };
+  return {
+    listFold: workbenchUndock + preferredSidebarWidth(input),
+    workbenchUndock,
+  };
 }
 
 function frameList(input: ScaffoldGeometryInput, threshold: number): PaneSpan {
@@ -41,7 +46,7 @@ function frameList(input: ScaffoldGeometryInput, threshold: number): PaneSpan {
 
   return {
     offset: input.measures.inset + input.measures.railWidth,
-    width: folded ? 0 : listWidth(input),
+    width: folded ? 0 : sidebarWidth(input),
   };
 }
 
@@ -110,13 +115,14 @@ function framePage(
 
 // Additive geometry; existing panes still consume scaffoldGeometry's legacy outputs.
 export function frameGeometry(input: ScaffoldGeometryInput): FrameGeometry {
-  const thresholds = frameThresholds(input);
+  const thresholds = sidebarThresholds(input, frameThresholds(input));
   const regions = frameRegions(input, thresholds);
 
   return {
     panesTop: input.measures.topBandHeight,
     thresholds,
     listFolded: regions.listFolded,
+    sidebarAvailable: sidebarAvailable(input),
     workbenchDocked: regions.workbenchDocked,
 
     rail: { offset: input.measures.inset, width: input.measures.railWidth },

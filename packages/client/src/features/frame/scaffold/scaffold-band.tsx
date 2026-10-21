@@ -11,10 +11,7 @@ const leadingWidths = { mac: 124, other: 44 };
 
 const leadingInsets = { mac: 88, other: 8 };
 
-function SidebarBandToggle({
-  scaffold,
-  layout,
-}: ScaffoldPartProps): ReactElement {
+function SidebarBandToggle({ layout }: ScaffoldPartProps): ReactElement {
   const shown = !layout.frame.listFolded;
 
   return (
@@ -22,7 +19,8 @@ function SidebarBandToggle({
       {...bandToggleAppearance(shown)}
       icon="sidebar"
       accessibilityLabel={shown ? 'Hide sidebar' : 'Show sidebar'}
-      onPress={() => scaffold.onSidebarShownChange(!shown)}
+      disabled={!shown && !layout.frame.sidebarAvailable}
+      onPress={() => layout.requestSidebar(!shown)}
     />
   );
 }

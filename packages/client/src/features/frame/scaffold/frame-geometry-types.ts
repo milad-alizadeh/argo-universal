@@ -4,6 +4,7 @@ export interface FrameGeometry {
   panesTop: number;
   thresholds: { listFold: number; workbenchUndock: number };
   listFolded: boolean;
+  sidebarAvailable: boolean;
   workbenchDocked: boolean;
   workbenchState: 'docked' | 'auto-hidden' | 'floating' | 'hidden';
   page: PaneSpan;
