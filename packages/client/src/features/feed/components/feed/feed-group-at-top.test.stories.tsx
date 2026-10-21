@@ -20,7 +20,7 @@ import {
 import { feedArgs, PagedFeed, sendOlderPage } from './paged-feed.mocks';
 
 const meta = {
-  title: 'Tests/Feed',
+  title: 'Tests/Feed/Group at top',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedArgs,

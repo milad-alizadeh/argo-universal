@@ -15,7 +15,7 @@ import { equalPlanSteps } from '../../../../../mocks/composer/plan-steps.test.mo
 import { sessionControls } from '../../../../../mocks/composer/session-controls.test.mocks';
 import { Composer } from './composer';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/Plan' };
 
 export default meta;
 

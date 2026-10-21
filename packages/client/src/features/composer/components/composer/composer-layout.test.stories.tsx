@@ -10,7 +10,7 @@ import { responsiveLayout } from '../../../../../mocks/composer/responsive-layou
 import { workStatusCounts } from '../../../../../mocks/composer/work-status.test.mocks';
 import { Composer } from './composer';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/Layout' };
 
 export default meta;
 

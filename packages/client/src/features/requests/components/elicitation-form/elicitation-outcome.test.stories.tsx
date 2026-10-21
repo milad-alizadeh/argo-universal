@@ -15,7 +15,7 @@ import {
 import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';
 import { ElicitationOutcome } from './elicitation-outcome';
 
-const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm' };
+const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm/Outcome' };
 
 export default meta;
 

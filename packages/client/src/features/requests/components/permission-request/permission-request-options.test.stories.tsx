@@ -9,7 +9,10 @@ import {
 import { meta as permissionTestMeta } from '../../../../../mocks/requests/permission/permission-story-context.test.mocks';
 import { permissionMocks } from '../request.mocks';
 
-const meta = { ...permissionTestMeta, title: 'Tests/PermissionRequest' };
+const meta = {
+  ...permissionTestMeta,
+  title: 'Tests/PermissionRequest/Options',
+};
 
 export default meta;
 

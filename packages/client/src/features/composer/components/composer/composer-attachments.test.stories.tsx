@@ -18,7 +18,7 @@ import { inspectorOpenColumn } from '../../../../../mocks/composer/draft-editing
 import { firstAgent } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
 import { Composer } from './composer';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/Attachments' };
 
 export default meta;
 

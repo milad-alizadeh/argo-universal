@@ -3,7 +3,7 @@ import { expect } from 'storybook/test';
 import { Markdown } from './markdown';
 
 const meta = {
-  title: 'Tests/Markdown',
+  title: 'Tests/Markdown/Feed',
   component: Markdown,
   args: { text: '' },
 } satisfies Meta<typeof Markdown>;

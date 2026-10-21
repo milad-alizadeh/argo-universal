@@ -13,7 +13,7 @@ import { firstAgent } from '../../../../../mocks/composer/recorded-catalog.test.
 import { secondAgent } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
 import { pickerCatalogs } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/Configuration' };
 
 type Story = StoryObj<typeof meta>;
 

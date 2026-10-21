@@ -17,7 +17,7 @@ const failedAttachment = 'Could not attach the selected image.';
 const draft = { text: 'Keep this prompt.', attachments: [] };
 
 const meta = {
-  title: 'Tests/Composer',
+  title: 'Tests/Composer/Error',
   component: Composer,
   parameters: { screenPreview: true },
   args: composerProps({

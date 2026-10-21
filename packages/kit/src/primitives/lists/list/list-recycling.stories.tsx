@@ -15,7 +15,7 @@ import { List } from './list';
 import type { ListProps } from './list-props';
 
 const meta = {
-  title: 'Design System/Primitives/Lists/List',
+  title: 'Design System/Primitives/Lists/List/Recycling',
   component: List,
   argTypes: kitArgTypes('List'),
   parameters: { screenPreview: true },
