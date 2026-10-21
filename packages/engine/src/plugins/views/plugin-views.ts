@@ -9,6 +9,7 @@ import type { RpcConnection } from '../../rpc';
 import { appView } from './app-view';
 import { PluginDispatches } from './dispatches';
 import { drawingFailure } from './drawing-failure';
+import { oneLine } from './log-line';
 import {
   currentDispatch,
   dispatchEvent,
@@ -66,7 +67,7 @@ export class PluginViews {
   // The failure outlives the view it came from, so it is raised after the removal that would evict it.
   private failed(view: OpenView, reason: string): void {
     this.log(
-      `Plugin ${view.pluginId}: could not draw ${view.opening.path}: ${reason}`,
+      `Plugin ${view.pluginId}: could not draw ${view.opening.path}: ${oneLine(reason)}`,
     );
     this.views.remove(view);
     this.lifecycle.failed(view, reason);
