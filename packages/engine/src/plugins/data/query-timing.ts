@@ -30,18 +30,22 @@ export class QueryTiming {
   }
 
   finished(watchers: QueryWatchers): void {
+    const { active, backgroundPeriod } = watchers.pacing();
+
     this.lastAt = this.clock.now();
 
-    if (this.remountDue && !watchers.active) return;
+    if (this.remountDue && !active) return;
     this.remountDue = false;
-    this.dueAt = this.lastAt + watchers.backgroundPeriod;
+    this.dueAt = this.lastAt + backgroundPeriod;
   }
 
   schedule(watchers: QueryWatchers): void {
+    const { active, period } = watchers.pacing();
+
     this.cancel();
 
-    if (!watchers.active) return;
-    this.schedulePeriod(watchers.period);
+    if (!active) return;
+    this.schedulePeriod(period);
   }
 
   private schedulePeriod(period: number): void {

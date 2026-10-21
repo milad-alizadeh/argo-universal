@@ -5,6 +5,7 @@ import type { QueryIntervals } from './query-intervals';
 import {
   watchKey,
   type QueryOwner,
+  type QueryPacing,
   type QueryServices,
   type QueryWatch,
 } from './query-types';
@@ -21,7 +22,7 @@ export class QueryWatchers {
 
   constructor(
     private readonly owner: QueryOwner,
-    private readonly services: QueryServices,
+    private readonly services: Pick<QueryServices, 'send'>,
     private readonly intervals: QueryIntervals,
   ) {}
 
@@ -66,16 +67,17 @@ export class QueryWatchers {
     return this.registrations.size > 0;
   }
 
-  get period(): number {
-    return minimum(this.registrations.values().map(({ every }) => every));
-  }
-
-  get backgroundPeriod(): number {
-    return minimum(
-      this.registrations
-        .values()
-        .map(({ backgroundInterval }) => backgroundInterval),
-    );
+  // Timing reads the three together, so it names one answer instead of reaching into the registrations.
+  pacing(): QueryPacing {
+    return {
+      active: this.active,
+      period: minimum(this.registrations.values().map(({ every }) => every)),
+      backgroundPeriod: minimum(
+        this.registrations
+          .values()
+          .map(({ backgroundInterval }) => backgroundInterval),
+      ),
+    };
   }
 
   publish(state: PluginDataState): void {

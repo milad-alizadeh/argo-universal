@@ -22,7 +22,7 @@ const processRequest = (
 
 export async function readQuery(
   owner: QueryOwner,
-  services: QueryServices,
+  services: Pick<QueryServices, 'during' | 'services'>,
 ): Promise<PluginReply> {
   const reply = await services.during(() =>
     services.services.handle(owner.pluginId, owner.generation, {

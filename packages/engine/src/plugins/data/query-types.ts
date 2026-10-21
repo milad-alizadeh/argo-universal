@@ -21,6 +21,13 @@ export type QueryServices = {
   during: <T>(call: () => Promise<T>) => Promise<T>;
 };
 
+// What Timing needs of the watchers: whether any view holds the Query, and how often each kind wants it.
+export type QueryPacing = {
+  active: boolean;
+  period: number;
+  backgroundPeriod: number;
+};
+
 export type QueryWatch = Extract<PluginDataRequest, { action: 'watch' }>;
 
 export function watchKey(
