@@ -6,11 +6,16 @@ import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { SessionHeader, useSessionPanels } from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
+import { WindowBandHostContext } from '#lib/product/window-band';
 import { Inspector } from '#primitives/scaffolds/inspector';
 import { LayoutListMock } from '../components/layout-list.mocks';
 import { Scaffold } from '../scaffold/scaffold';
 import { useFrameState } from './frame';
 import { FrameInspectorHost, ScreenInspector } from './frame-inspector';
+
+const showStageLabel = 'Show Stage';
+
+const hideStageLabel = 'Hide Stage';
 
 const expanded = 'aria-pressed';
 
@@ -20,19 +25,21 @@ function FrameStatePage({
 }: {
   content: ReactNode;
 }): React.JSX.Element {
-  const { scaffold, inspectorHost } = useFrameState();
+  const { scaffold, inspectorHost, bandHost } = useFrameState();
 
   return (
     <View className="flex-1">
       <FrameInspectorHost value={inspectorHost}>
-        <Scaffold
-          {...scaffold}
-          sizeClass="wide"
-          sidebar={null}
-          listHeader={<ListTitle>Sessions</ListTitle>}
-          list={<LayoutListMock name="Sessions" />}
-          page={<ScreenInspector>{content}</ScreenInspector>}
-        />
+        <WindowBandHostContext value={bandHost}>
+          <Scaffold
+            {...scaffold}
+            sizeClass="wide"
+            sidebar={null}
+            listHeader={<ListTitle>Sessions</ListTitle>}
+            list={<LayoutListMock name="Sessions" />}
+            page={<ScreenInspector>{content}</ScreenInspector>}
+          />
+        </WindowBandHostContext>
       </FrameInspectorHost>
     </View>
   );
@@ -40,7 +47,7 @@ function FrameStatePage({
 
 const changesOnly = ['changes'] as const;
 
-// A Session page's header, whose Changes button holds its Changes Inspector open.
+// A Session's Workbench card opens its Changes Stage.
 function SessionPage({ title }: { title: string }): React.JSX.Element {
   const panels = useSessionPanels(changesOnly);
   const open = panels.state.tabs.length > 0;
@@ -54,6 +61,7 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
         panels={{
           ...panels.state,
           offered: changesOnly,
+          counts: { changes: 1 },
           onToggle: panels.toggle,
         }}
       />
@@ -82,48 +90,58 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The open Session's Changes button opens the Inspector beside it and closes it again.
+// The Workbench opens Changes and the band's fixed Stage toggle closes it.
 export const ChangesOpensInspector: Story = {
   args: {
     content: <SessionPage title="Fix login" />,
   },
   play: async ({ canvas, userEvent }) => {
     const changes = await canvas.findByRole('button', { name: 'Changes' });
-    await expect(changes).toHaveAttribute(expanded, 'false');
+    await expect(
+      canvas.getByRole('button', { name: showStageLabel }),
+    ).toHaveAttribute(expanded, 'false');
     await userEvent.click(changes);
-    await expect(changes).toHaveAttribute(expanded, 'true');
+    await expect(
+      canvas.getByRole('button', { name: hideStageLabel }),
+    ).toHaveAttribute(expanded, 'true');
     await expect(
       await canvas.findByRole('heading', { name: 'Changes' }),
     ).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Hide Stage' }));
-    await expect(changes).toHaveAttribute(expanded, 'false');
+    await userEvent.click(canvas.getByRole('button', { name: hideStageLabel }));
+    await expect(
+      canvas.getByRole('button', { name: showStageLabel }),
+    ).toHaveAttribute(expanded, 'false');
   },
 };
 
 const longTitle =
   'Build the Session layout from spec 0003, wire the Inspector to the changed files and keep the Composer pinned to the bottom of the window';
 
-// The Session header keeps a long title on one line with its whole text in the heading's name, and never covers the header actions, with the Inspector closed or open.
+// The band keeps a long title's accessible name while truncating before its controls, with the Stage closed or open.
 export const LongSessionTitle: Story = {
   args: {
     content: <SessionPage title={longTitle} />,
   },
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('heading', { name: longTitle });
-    const changes = canvas.getByRole('button', { name: 'Changes' });
+    const controls = canvas.getByTestId('window-band-trailing');
     const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight);
 
     for (const open of [false, true]) {
       if (open) {
-        await userEvent.click(changes);
-        await expect(changes).toHaveAttribute(expanded, 'true');
+        await userEvent.click(
+          canvas.getByRole('button', { name: showStageLabel }),
+        );
+        await expect(
+          canvas.getByRole('button', { name: hideStageLabel }),
+        ).toHaveAttribute(expanded, 'true');
       }
 
       await expect(heading.getBoundingClientRect().height).toBeLessThan(
         lineHeight * 1.5,
       );
       await expect(heading.getBoundingClientRect().right).toBeLessThanOrEqual(
-        changes.getBoundingClientRect().left,
+        controls.getBoundingClientRect().left,
       );
     }
   },

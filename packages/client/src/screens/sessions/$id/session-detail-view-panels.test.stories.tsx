@@ -1,18 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
-import { subagentsSession } from './session-detail-view-subagents.mocks';
+import { panelsSession } from './session-detail-view-panels.test.mocks';
+
+const desktopWithStage = 1920;
 
 const meta = {
   title: 'Tests/SessionDetailViewPanels',
   parameters: { screenPreview: true },
-  args: { view: subagentsSession },
+  args: { view: panelsSession },
   render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleViewport(desktopWithStage),
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export default meta;
@@ -25,9 +26,9 @@ const firstTitle = 'Find every Feed reader';
 
 const selected = ['aria-selected', 'true'] as const;
 
-const subagentsName = { name: 'Subagents' };
+const subagentsName = { name: 'Agents' };
 
-const subagentsTab = { name: 'Subagents: 4' };
+const subagentsTab = { name: 'Agents: 4' };
 
 const changesName = { name: 'Changes' };
 
@@ -37,7 +38,7 @@ async function openBoth({ canvas, userEvent }: Context): Promise<void> {
   await expect(await canvas.findByText(firstTitle)).toBeVisible();
 }
 
-// The header focuses an existing tab and restores its content without adding another tab.
+// The Workbench card focuses an existing tab and restores its content without adding another tab.
 export const FocusExistingTab: Story = {
   play: async (context) => {
     const { canvas, userEvent } = context;
@@ -76,9 +77,7 @@ export const CloseTabs: Story = {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Close Subagents' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Close Agents' }));
     await expect(
       canvas.queryByRole('tab', subagentsTab),
     ).not.toBeInTheDocument();
@@ -90,8 +89,8 @@ export const CloseTabs: Story = {
     );
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
     await expect(
-      canvas.queryByRole('button', { name: 'Hide Stage' }),
-    ).not.toBeInTheDocument();
+      canvas.getByRole('button', { name: 'Show Stage' }),
+    ).toHaveAttribute('aria-pressed', 'false');
   },
 };
 

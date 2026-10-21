@@ -9,7 +9,7 @@ import type { SessionHeaderPanels } from './session-header-props';
 
 // Each panel's name and icon, on its header trigger and its Inspector tab.
 export const sessionPanelLabels = {
-  subagents: { label: 'Subagents', icon: 'agent' },
+  subagents: { label: 'Agents', icon: 'agent' },
   shells: { label: 'Shells', icon: 'terminal' },
   changes: { label: 'Changes', icon: 'diff' },
 } as const satisfies Record<SessionPanel, { label: string; icon: IconName }>;

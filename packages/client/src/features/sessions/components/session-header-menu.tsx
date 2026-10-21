@@ -27,15 +27,17 @@ const sessionMenuParts = {
   ),
 } as const;
 
-// The menu keeps its band control box even when the Session has no actions.
+// The window band reserves its control box even when the Session has no actions.
 export function SessionHeaderMenu({
   menu,
+  reserved = false,
 }: {
   menu: SessionMenu;
-}): React.JSX.Element {
+  reserved?: boolean;
+}): React.JSX.Element | null {
   const actions = sessionMenuItems(menu);
 
-  if (actions.length === 0) return <EmptySessionMenu />;
+  if (actions.length === 0) return emptyMenu(reserved);
 
   return <Menu {...sessionMenuParts} actions={actions} />;
 }
@@ -49,4 +51,8 @@ function EmptySessionMenu(): React.JSX.Element {
       disabled
     />
   );
+}
+
+function emptyMenu(reserved: boolean): React.JSX.Element | null {
+  return reserved ? <EmptySessionMenu /> : null;
 }

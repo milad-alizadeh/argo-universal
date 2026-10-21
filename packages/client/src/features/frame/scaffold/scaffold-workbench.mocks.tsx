@@ -92,7 +92,7 @@ function mockBand(
   onInspectorStateChange: SetInspectorState,
 ): ScaffoldProps['band'] {
   return {
-    title: 'Session',
+    title: <Text>Session</Text>,
     menu: <IconButton icon="more" accessibilityLabel="More" />,
     workbench: (
       <Card title="Changes" onPress={() => onInspectorStateChange('open')}>
