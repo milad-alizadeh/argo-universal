@@ -1,6 +1,7 @@
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, within } from 'storybook/test';
 import { page } from 'vitest/browser';
+import { Text } from '#primitives/content/text';
 import {
   controlledPlay,
   scaffoldMeta,
@@ -46,8 +47,35 @@ export const TrailingControlsNeverMoveWithPanes: ScaffoldStory = {
   }),
 };
 
-function position(element: HTMLElement): { x: number; y: number } {
+function position(element: HTMLElement) {
   const { x, y } = element.getBoundingClientRect();
 
   return { x, y };
 }
+
+const longTitle =
+  'An exceptionally long Session title that needs all available space in the band while every pane control stays reachable. '.repeat(
+    8,
+  );
+
+export const LongTitleStopsAtTheTrailingControls: ScaffoldStory = {
+  args: {
+    band: {
+      title: (
+        <Text accessibilityRole="heading" numberOfLines={1}>
+          {longTitle}
+        </Text>
+      ),
+    },
+  },
+  play: controlledPlay(async ({ canvas }) => {
+    await page.viewport(1440, 844);
+    const title = canvas.getByTestId('band-title');
+    const group = canvas.getByTestId('window-band-trailing');
+    const text = within(title).getByRole('heading');
+    await expect(title.getBoundingClientRect().right).toBeLessThanOrEqual(
+      group.getBoundingClientRect().left,
+    );
+    await expect(text.scrollWidth).toBeGreaterThan(text.clientWidth);
+  }),
+};
