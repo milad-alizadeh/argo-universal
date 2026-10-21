@@ -70,6 +70,12 @@ function useScaffoldMeasures(): ScaffoldMeasures {
     railWidth: useCSSPixels('--spacing-frame-rail'),
     inset: useCSSPixels('--spacing-frame-inset'),
     barHeight: useCSSPixels('--spacing-frame-control'),
+    topBandHeight: useCSSPixels('--spacing-frame-control'),
+    workbenchWidth: useCSSPixels('--spacing-frame-list'),
+    paneGap: useCSSPixels('--spacing-4'),
+    composerWidth: useCSSPixels('--container-composer'),
+    contentGutter: useCSSPixels('--spacing-6'),
+    contentMaximum: useCSSPixels('--container-column'),
   };
 }
 
