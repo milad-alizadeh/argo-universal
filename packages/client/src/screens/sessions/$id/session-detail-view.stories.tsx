@@ -102,6 +102,7 @@ export const LongFeedInFrame: Story = {
 
 export const Empty: Story = {
   args: { view: { state: 'open', ...emptySession } },
+  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
 };
 
 // The Connection is down: the draft stays editable but Send waits.
