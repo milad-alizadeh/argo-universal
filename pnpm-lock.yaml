@@ -284,6 +284,9 @@ catalogs:
     '@storybook/addon-ondevice-controls':
       specifier: 10.6.0
       version: 10.6.0
+    '@storybook/addon-react-native-server':
+      specifier: 1.0.1
+      version: 1.0.1
     '@storybook/addon-vitest':
       specifier: 10.6.1
       version: 10.6.1
@@ -852,6 +855,9 @@ importers:
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))
+      '@storybook/addon-react-native-server':
+        specifier: 'catalog:'
+        version: 1.0.1
       '@storybook/addon-vitest':
         specifier: 'catalog:'
         version: 10.6.1(@vitest/browser-playwright@5.0.3)(@vitest/browser@5.0.3)(react@19.2.3)(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))(vitest@5.0.3)
@@ -4746,6 +4752,9 @@ packages:
     peerDependenciesMeta:
       '@gorhom/bottom-sheet':
         optional: true
+
+  '@storybook/addon-react-native-server@1.0.1':
+    resolution: {integrity: sha512-D2PJ04dB3ilf7x0RwZMKh/VSmCxPP8ql9kb9W5kgj8boyPJnx/cHwblpt3ZxNrmSYONwhF8Ltm2U18VfDaV63Q==}
 
   '@storybook/addon-vitest@10.6.1':
     resolution: {integrity: sha512-ZGB7kDd9o0UiXIIXLZMKK9ruNyqo2jEBT+2YjlpKGDtJR6iAEhfWyiPY8JkobCV5Fge0oBqyg1x9am4wv/vp5w==}
@@ -12609,6 +12618,13 @@ snapshots:
       - react-dom
       - supports-color
       - typescript
+
+  '@storybook/addon-react-native-server@1.0.1':
+    dependencies:
+      ws: 8.22.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@storybook/addon-vitest@10.6.1(@vitest/browser-playwright@5.0.3)(@vitest/browser@5.0.3)(react@19.2.3)(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))(vitest@5.0.3)':
     dependencies:
