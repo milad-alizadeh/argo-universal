@@ -5,13 +5,13 @@ import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { Variation, Variations } from '../../../variations';
 import { Page, type PageProps } from './index';
 import { exampleSubmenu } from './page-submenu-example.mocks';
 
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Page',
   component: Page,
+  args: { title: 'Title' },
   argTypes: kitArgTypes('Page'),
 } satisfies Meta<typeof Page>;
 
@@ -19,32 +19,34 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const States: Story = {
-  name: 'Page',
-  args: { title: 'Title' },
-  render: () => <PageVariations />,
+// Page holds its own search text and the result of the action a reader picks, so each state draws the example rather than passing args.
+export const TitleOnly: Story = { render: () => <PageExample /> };
+
+export const Actions: Story = { render: () => <PageExample actions /> };
+
+export const Submenu: Story = {
+  render: () => <PageExample actions submenu />,
+  parameters: {
+    docs: { description: { story: 'An action list with a submenu.' } },
+  },
 };
 
-const examples = [
-  { label: 'Title' },
-  { label: 'Actions', actions: true },
-  { label: 'Actions, with a submenu', actions: true, submenu: true },
-  { label: 'Search', search: true },
-  { label: 'Primary action', search: true, primary: true },
-  { label: 'Drill-in, with Back and a caption', drillIn: true },
-];
+export const Search: Story = { render: () => <PageExample search /> };
 
-function PageVariations(): React.JSX.Element {
-  return (
-    <Variations>
-      {examples.map(({ label, ...props }) => (
-        <Variation key={label} label={label}>
-          <PageExample {...props} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
+export const PrimaryAction: Story = {
+  render: () => <PageExample search primary />,
+};
+
+export const DrillIn: Story = {
+  render: () => <PageExample drillIn />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Back and the caption show on a wide window only.',
+      },
+    },
+  },
+};
 
 type Example = {
   search?: boolean;

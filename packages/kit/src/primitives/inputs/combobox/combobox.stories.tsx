@@ -2,11 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
+import { List, ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Combobox } from './combobox';
 
 const options = [
@@ -35,48 +33,63 @@ const options = [
   },
 ] satisfies React.ComponentProps<typeof Combobox>['options'];
 
+// A Combobox is controlled, so a story draws through a wrapper that keeps the selected value.
+function Example({
+  value: initial,
+  ...props
+}: React.ComponentProps<typeof Combobox>): ReactElement {
+  const [value, setValue] = useState(initial);
+
+  return <Combobox {...props} value={value} onValueChange={setValue} />;
+}
+
 const meta = {
   title: 'Design System/Primitives/Inputs/Combobox',
   component: Combobox,
+  args: {
+    label: 'Folder',
+    value: 'long',
+    options,
+    searchPlaceholder: 'Find a folder…',
+    onValueChange: (): void => {},
+  },
   argTypes: kitArgTypes('Combobox'),
-} satisfies Meta;
+  render: (args): ReactElement => <Example {...args} />,
+} satisfies Meta<typeof Combobox>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Combobox',
-  render: () => <ComboboxExamples />,
+export const Default: Story = {};
+
+export const Row: Story = {
+  render: (): ReactElement => <ProjectSheet />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The row variant lives in a menu or sheet: it opens beside the menu on a desktop and pushes a page of the sheet on a phone.',
+      },
+    },
+  },
 };
 
-const states = [
-  { label: 'Loading', loading: true },
-  { label: 'Empty' },
-  { label: 'Could not load', loadError: 'Folders could not be loaded.' },
-];
+export const Loading: Story = {
+  render: (): ReactElement => <StatusExample loading />,
+};
 
-const examples = [
-  { label: 'Searchable choice', example: <ProjectChoice /> },
-  { label: 'Row', example: <ProjectSheet /> },
-  ...states.map(({ label, ...state }) => ({
-    label,
-    example: <StatusExample {...state} />,
-  })),
-];
+export const Empty: Story = {
+  render: (): ReactElement => <StatusExample />,
+};
 
-function ComboboxExamples(): ReactElement {
-  return (
-    <VariationList>
-      {examples.map(({ label, example }) => (
-        <Variation key={label} label={label}>
-          {example}
-        </Variation>
-      ))}
-    </VariationList>
-  );
-}
+export const CouldNotLoad: Story = {
+  render: (): ReactElement => (
+    <StatusExample loadError="Folders could not be loaded." />
+  ),
+};
 
+// The choices themselves, drawn without their overlay, so a load state reads on the page.
 function StatusExample(props: {
   loading?: boolean;
   loadError?: string;
@@ -93,21 +106,6 @@ function StatusExample(props: {
   );
 }
 
-function ProjectChoice(): ReactElement {
-  const [value, setValue] = useState('long');
-
-  return (
-    <Combobox
-      label="Folder"
-      value={value}
-      options={options}
-      searchPlaceholder="Find a folder…"
-      onValueChange={setValue}
-    />
-  );
-}
-
-// The row variant lives in a menu or sheet: it opens beside the menu on a desktop and pushes a page of the sheet on a phone.
 function ProjectSheet(): ReactElement {
   const [open, setOpen] = useState(false);
 

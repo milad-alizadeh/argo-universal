@@ -3,20 +3,25 @@ import { useId, useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
-import { Variation, Variations } from '../../../variations';
 import { Portal, PortalHost } from './portal';
 
+/*
+ * No argTypes: Portal is a children-only wrapper from @gorhom/portal with no enumerable props, so its
+ * Docs page has no props table (docs/agents/storybook.md records it as one of those pages).
+ */
 const meta = {
   title: 'Design System/Primitives/Overlays/Portal',
   component: Portal,
-  render: (): React.JSX.Element => <PortalPreview />,
-} satisfies Meta;
+} satisfies Meta<typeof Portal>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = { name: 'Portal' };
+// Content declared beside the button, drawn in the named region above it.
+export const NamedRegion: Story = {
+  render: (): React.JSX.Element => <PortalPreview />,
+};
 
 function PortalPreview(): React.JSX.Element {
   const hostName = useId();
@@ -49,14 +54,12 @@ function NamedHost(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <Variations>
-      <Variation label="Named region">
-        <View className="relative w-full min-h-32 rounded-sheet bg-card p-4">
-          <PortalHost name={props.hostName} />
-        </View>
-        {props.children}
-      </Variation>
-    </Variations>
+    <>
+      <View className="relative w-full min-h-32 rounded-sheet bg-card p-4">
+        <PortalHost name={props.hostName} />
+      </View>
+      {props.children}
+    </>
   );
 }
 

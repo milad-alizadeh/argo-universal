@@ -1,79 +1,62 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { useState } from 'react';
 import { View } from 'react-native';
-import type { BadgeCount } from '../../../badge-count';
-import type { IconName } from '../../../symbols/icon-names';
+import { action } from 'storybook/actions';
 import { DrawerItem } from './drawer-item';
 
 const meta = {
   title: 'Design System/Primitives/Lists/DrawerItem',
   component: DrawerItem,
-} satisfies Meta;
+  args: {
+    label: 'Inbox',
+    icon: 'sessions',
+    selected: false,
+    onPress: action('select destination'),
+  },
+  // No Contracts schema: the props DrawerItemProps declares.
+  argTypes: {
+    label: { control: 'text' },
+    icon: { control: false },
+    selected: { control: 'boolean' },
+    badge: { control: false },
+    onPress: { control: false },
+  },
+  // A drawer's width, as the destination stands in the drawer.
+  decorators: [
+    (Story): React.JSX.Element => (
+      <View className="w-72">
+        <Story />
+      </View>
+    ),
+  ],
+} satisfies Meta<typeof DrawerItem>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'DrawerItem',
-  render: () => <Drawer />,
+export const Default: Story = {};
+
+export const Selected: Story = { args: { selected: true } };
+
+export const NeedsAttention: Story = {
+  args: { badge: { count: 2, label: '2 items need attention' } },
+  parameters: {
+    docs: { description: { story: 'A count of what needs attention.' } },
+  },
 };
 
-interface Destination {
-  title: string;
-  icon: IconName;
-  badge?: BadgeCount;
-}
-
-// Inbox counts 2 that need attention; Tasks has more than a badge shows, so it reads 99+.
-const destinations: Destination[] = [
-  {
-    title: 'Inbox',
-    icon: 'sessions',
-    badge: { count: 2, label: '2 items need attention' },
-  },
-  {
-    title: 'Tasks',
+export const OverNinetyNine: Story = {
+  args: {
+    label: 'Tasks',
     icon: 'issue',
     badge: { count: 120, label: '120 open items' },
   },
-  { title: 'Settings', icon: 'settings' },
-];
-
-// A drawer's destinations: pressing one makes it the current one; two carry a count.
-function Drawer(): React.JSX.Element {
-  const [current, setCurrent] = useState('Inbox');
-
-  return (
-    <View className="w-72 gap-1">
-      {destinations.map((destination) => (
-        <Destination
-          key={destination.title}
-          {...destination}
-          current={current}
-          onSelect={setCurrent}
-        />
-      ))}
-    </View>
-  );
-}
-
-type DestinationProps = Destination & {
-  current: string;
-  onSelect: (title: string) => void;
+  parameters: {
+    docs: {
+      description: {
+        story: 'More items than a badge shows, so the count reads 99+.',
+      },
+    },
+  },
 };
-
-function Destination(props: DestinationProps): React.JSX.Element {
-  const { title, current, onSelect } = props;
-
-  return (
-    <DrawerItem
-      label={title}
-      icon={props.icon}
-      selected={current === title}
-      badge={props.badge}
-      onPress={() => onSelect(title)}
-    />
-  );
-}

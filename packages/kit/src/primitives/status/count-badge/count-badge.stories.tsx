@@ -1,44 +1,37 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { CountBadge } from './count-badge';
-import type { CountBadgeProps } from './count-badge-props';
 
 const meta = {
   title: 'Design System/Primitives/Status/CountBadge',
   component: CountBadge,
+  args: { badge: { count: 3 } },
+  // CountBadge has no Contracts schema, so its prop domain is written out here.
+  argTypes: {
+    badge: { control: false },
+    tone: { control: 'select', options: ['danger', 'success', 'muted'] },
+  },
+  // The badge hugs its count, as it does at a row's end or on a rail tile.
+  decorators: [
+    (Story): React.JSX.Element => (
+      <View className="flex-row">
+        <Story />
+      </View>
+    ),
+  ],
 } satisfies Meta<typeof CountBadge>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The badge hugs its count, as it does at a row's end or on a rail tile.
-function BadgeVariation(
-  props: {
-    label: string;
-  } & CountBadgeProps,
-): React.JSX.Element {
-  return (
-    <Variation label={props.label}>
-      <View className="flex-row">
-        <CountBadge badge={props.badge} tone={props.tone} />
-      </View>
-    </Variation>
-  );
-}
-
-export const Variations: Story = {
-  name: 'CountBadge',
-  render: () => (
-    <VariationList>
-      <BadgeVariation
-        label="Count"
-        badge={{ count: 3, label: '3 items need attention' }}
-      />
-      <BadgeVariation label="Running" badge={{ count: 3 }} tone="success" />
-      <BadgeVariation label="Finished" badge={{ count: 3 }} tone="muted" />
-      <BadgeVariation label="Over 99" badge={{ count: 120 }} />
-    </VariationList>
-  ),
+export const Count: Story = {
+  args: { badge: { count: 3, label: '3 items need attention' } },
 };
+
+export const Running: Story = { args: { tone: 'success' } };
+
+export const Finished: Story = { args: { tone: 'muted' } };
+
+export const Over99: Story = { args: { badge: { count: 120 } } };

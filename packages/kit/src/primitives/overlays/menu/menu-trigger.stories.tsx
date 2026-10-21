@@ -1,55 +1,60 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { iconNames } from '#kit/symbols/icon-names';
+import { textRoles } from '#primitives/content/text';
 import { Spinner } from '#primitives/status/spinner';
-import { Variation, Variations as VariationList } from '../../../variations';
-import type { MenuTriggerProps } from './menu-props';
 import { MenuTrigger } from './menu-trigger';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/MenuTrigger',
   component: MenuTrigger,
-} satisfies Meta;
+  args: { label: 'Item' },
+  // No Contracts schema: the props MenuTriggerProps declares.
+  argTypes: {
+    label: { control: 'text' },
+    labelRole: { control: 'select', options: textRoles },
+    icon: { control: 'select', options: iconNames },
+    leading: { control: false },
+    trailing: { control: false },
+    tone: { control: 'select', options: ['muted', 'danger'] },
+    iconOnly: { control: 'boolean' },
+    size: { control: 'select', options: ['sm', 'md'] },
+    disabled: { control: 'boolean' },
+    accessibilityLabel: { control: 'text' },
+    testID: { control: 'text' },
+  },
+} satisfies Meta<typeof MenuTrigger>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-const states: { label: string; props: MenuTriggerProps }[] = [
-  { label: 'Default', props: { label: 'Item', icon: 'folder' } },
-  {
-    label: 'Muted',
-    props: { label: 'Muted', icon: 'branch', tone: 'muted' },
-  },
-  {
-    label: 'Danger',
-    props: { label: 'Danger', icon: 'private', tone: 'danger' },
-  },
-  { label: 'No icon', props: { label: 'No icon', tone: 'muted' } },
-  {
-    label: 'Disabled',
-    props: { label: 'Disabled', icon: 'folder', tone: 'muted', disabled: true },
-  },
-  {
-    label: 'Icon only',
-    props: { label: 'Options', icon: 'plan-mode', iconOnly: true },
-  },
-  {
-    label: 'With leading',
-    props: {
-      label: 'Label',
-      leading: <Spinner accessibilityLabel="Loading" />,
+export const Default: Story = { args: { icon: 'folder' } };
+
+export const Muted: Story = {
+  args: { label: 'Muted', icon: 'branch', tone: 'muted' },
+};
+
+export const Danger: Story = {
+  args: { label: 'Danger', icon: 'private', tone: 'danger' },
+};
+
+export const NoIcon: Story = { args: { label: 'No icon', tone: 'muted' } };
+
+export const Disabled: Story = {
+  args: { label: 'Disabled', icon: 'folder', tone: 'muted', disabled: true },
+};
+
+export const IconOnly: Story = {
+  args: { label: 'Options', icon: 'plan-mode', iconOnly: true },
+};
+
+export const Leading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Drawn in the icon’s place, where no symbol fits.',
+      },
     },
   },
-];
-
-export const Variations: Story = {
-  name: 'MenuTrigger',
-  render: () => (
-    <VariationList>
-      {states.map(({ label, props }) => (
-        <Variation key={label} label={label}>
-          <MenuTrigger {...props} />
-        </Variation>
-      ))}
-    </VariationList>
-  ),
+  args: { label: 'Label', leading: <Spinner accessibilityLabel="Loading" /> },
 };

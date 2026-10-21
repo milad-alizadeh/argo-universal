@@ -1,67 +1,68 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List, ListSection } from '#primitives/lists/list';
 import { DatePicker } from './date-picker';
 import type { DatePickerProps } from './date-picker-props';
 
-const meta = {
-  title: 'Design System/Primitives/Inputs/DatePicker',
-  component: DatePicker,
-  argTypes: kitArgTypes('DatePicker'),
-  parameters: { screenPreview: true },
-} satisfies Meta;
-
-export default meta;
-
-type Story = StoryObj;
-
-export const Variations: Story = {
-  name: 'DatePicker',
-  render: () => <DatePickerVariations />,
-};
-
-type ExampleProps = Omit<DatePickerProps, 'onValueChange'>;
-
-function Example(props: ExampleProps): React.JSX.Element {
-  const [value, setValue] = useState(props.value);
+// A DatePicker is controlled, so every story draws through a wrapper that keeps the picked value.
+function Example({
+  value: initial,
+  ...props
+}: DatePickerProps): React.JSX.Element {
+  const [value, setValue] = useState(initial);
 
   return <DatePicker {...props} value={value} onValueChange={setValue} />;
 }
 
-const examples: { title: string; props: ExampleProps }[] = [
-  { title: 'Date', props: { label: 'Due date', value: '2026-10-19' } },
-  {
-    title: 'Time',
-    props: { label: 'Reminder', mode: 'time', value: '14:30' },
+const meta = {
+  title: 'Design System/Primitives/Inputs/DatePicker',
+  component: DatePicker,
+  args: {
+    label: 'Due date',
+    value: '2026-10-19',
+    onValueChange: (): void => {},
   },
-  {
-    title: 'Date and time',
-    props: { label: 'Due', mode: 'datetime', value: '2026-10-19T14:30' },
-  },
-  { title: 'Empty', props: { label: 'Due date' } },
-  {
-    title: 'Disabled',
-    props: { label: 'Due date', value: '2026-10-19', disabled: true },
-  },
-  {
-    title: 'Invalid',
-    props: {
-      label: 'Due date',
-      value: '2026-10-18',
-      errors: [{ message: 'Pick today or a later date.' }],
-    },
-  },
-];
-
-function DatePickerVariations(): React.JSX.Element {
-  return (
-    <List appearance="grouped">
-      {examples.map(({ title, props }) => (
-        <ListSection key={title} title={title}>
-          <Example {...props} />
+  argTypes: kitArgTypes('DatePicker'),
+  parameters: { screenPreview: true },
+  // A grouped section keeps the picker in the row it sits in on a settings screen.
+  decorators: [
+    (Story): React.JSX.Element => (
+      <List appearance="grouped">
+        <ListSection>
+          <Story />
         </ListSection>
-      ))}
-    </List>
-  );
-}
+      </List>
+    ),
+  ],
+  render: (args): React.JSX.Element => <Example {...args} />,
+} satisfies Meta<typeof DatePicker>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+// Named for the default mode, since `Date` cannot be a module-level name.
+export const Default: Story = {
+  name: 'Date',
+};
+
+export const Time: Story = {
+  args: { label: 'Reminder', mode: 'time', value: '14:30' },
+};
+
+export const DateAndTime: Story = {
+  args: { label: 'Due', mode: 'datetime', value: '2026-10-19T14:30' },
+};
+
+export const Empty: Story = { args: { value: undefined } };
+
+export const Disabled: Story = { args: { disabled: true } };
+
+export const Invalid: Story = {
+  args: {
+    value: '2026-10-18',
+    errors: [{ message: 'Pick today or a later date.' }],
+  },
+};

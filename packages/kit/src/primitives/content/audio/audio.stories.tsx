@@ -1,20 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Audio } from './audio';
 import { AudioTransport, type AudioTransportProps } from './audio-transport';
-
-const meta = {
-  title: 'Design System/Primitives/Content/Audio',
-  component: Audio,
-  argTypes: kitArgTypes('Audio'),
-} satisfies Meta;
-
-export default meta;
-
-type Story = StoryObj;
 
 const chime = {
   pluginId: 'hello',
@@ -33,52 +21,49 @@ const transport = {
   onSeek: ignore,
 } satisfies Partial<AudioTransportProps>;
 
-const examples: { label: string; example: React.JSX.Element }[] = [
-  {
-    label: 'Paused',
-    example: <Audio source={chime} accessibilityLabel="Chime" />,
-  },
-  {
-    label: 'Playing',
-    example: (
-      <AudioTransport
-        {...transport}
-        phase="playing"
-        currentTime={47}
-        duration={192}
-      />
-    ),
-  },
-  {
-    label: 'Loading',
-    example: (
-      <AudioTransport
-        {...transport}
-        phase="loading"
-        currentTime={0}
-        duration={0}
-      />
-    ),
-  },
-  {
-    label: 'Error',
-    example: (
-      <MediaUrlContext.Provider value={missing}>
-        <Audio source={chime} accessibilityLabel="Chime" />
-      </MediaUrlContext.Provider>
-    ),
-  },
-];
+const meta = {
+  title: 'Design System/Primitives/Content/Audio',
+  component: Audio,
+  args: { source: chime, accessibilityLabel: 'Chime' },
+  argTypes: kitArgTypes('Audio'),
+} satisfies Meta<typeof Audio>;
 
-export const Variations: Story = {
-  name: 'Audio',
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Paused: Story = {};
+
+/*
+ * Playing and Loading draw the transport row directly: the phase is the player's
+ * own state, which no Audio prop sets.
+ */
+export const Playing: Story = {
   render: () => (
-    <VariationList>
-      {examples.map(({ label, example }) => (
-        <Variation key={label} label={label}>
-          {example}
-        </Variation>
-      ))}
-    </VariationList>
+    <AudioTransport
+      {...transport}
+      phase="playing"
+      currentTime={47}
+      duration={192}
+    />
+  ),
+};
+
+export const Loading: Story = {
+  render: () => (
+    <AudioTransport
+      {...transport}
+      phase="loading"
+      currentTime={0}
+      duration={0}
+    />
+  ),
+};
+
+export const Failed: Story = {
+  render: (args) => (
+    <MediaUrlContext.Provider value={missing}>
+      <Audio {...args} />
+    </MediaUrlContext.Provider>
   ),
 };

@@ -1,41 +1,32 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Textarea } from './textarea';
-
-const examples: {
-  label: string;
-  props: React.ComponentProps<typeof Textarea> & { 'aria-invalid'?: boolean };
-}[] = [
-  { label: 'Empty', props: { placeholder: 'Message' } },
-  {
-    label: 'Filled',
-    props: { defaultValue: 'Hello.', placeholder: 'Message' },
-  },
-  { label: 'Read-only', props: { disabled: true, placeholder: 'Message' } },
-  { label: 'Invalid', props: { 'aria-invalid': true, placeholder: 'Message' } },
-];
+import type { TextareaProps } from './textarea-props';
 
 const meta = {
   title: 'Design System/Primitives/Inputs/Textarea',
   component: Textarea,
+  args: { placeholder: 'Message' },
   argTypes: kitArgTypes('Textarea'),
   tags: ['third-party'],
-} satisfies Meta;
+} satisfies Meta<typeof Textarea>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Textarea',
-  render: () => (
-    <VariationList>
-      {examples.map(({ label, props }) => (
-        <Variation key={label} label={label}>
-          <Textarea {...props} />
-        </Variation>
-      ))}
-    </VariationList>
-  ),
+export const Empty: Story = {};
+
+export const Filled: Story = { args: { defaultValue: 'Hello.' } };
+
+export const ReadOnly: Story = { args: { disabled: true } };
+
+// React Native declares no invalid attribute, so the box reads the web one, outside the props type.
+const invalid: TextareaProps & { 'aria-invalid'?: boolean } = {
+  'aria-invalid': true,
+};
+
+export const Invalid: Story = {
+  render: (args): React.JSX.Element => <Textarea {...args} {...invalid} />,
 };

@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations } from '../../../variations';
 import { Inspector, type InspectorProps } from './index';
 import {
   ExamplePane,
@@ -8,7 +7,7 @@ import {
   inspectorTitle,
 } from './inspector.mocks';
 
-// Each variation draws its own pane; the story's args only satisfy the component's type.
+// Each story draws its own pane; the meta args only satisfy the component's type.
 const args: InspectorProps = {
   title: inspectorTitle,
   open: true,
@@ -24,34 +23,23 @@ const meta = {
 
 export default meta;
 
-// The wide column; under wide the same content opens in a Sheet (see Tests/Inspector).
-export const Overview: StoryObj<typeof meta> = {
-  name: 'Inspector',
-  render: () => (
-    <Variations>
-      <Variation label="Open">
-        <ExamplePane />
-      </Variation>
-      <Variation label="With Actions">
-        <ExamplePane actions />
-      </Variation>
-      <Variation label="Expanded">
-        <ExamplePane expanded />
-      </Variation>
-    </Variations>
-  ),
-};
+type Story = StoryObj<typeof meta>;
 
-// Tabs in place of the title; the ones that do not fit scroll behind the faded edge.
-export const Tabs: StoryObj<typeof meta> = {
-  render: () => (
-    <Variations>
-      <Variation label="Tabs">
-        <ExampleTabsPane />
-      </Variation>
-      <Variation label="Overflowing">
-        <ExampleTabsPane narrow />
-      </Variation>
-    </Variations>
-  ),
+/*
+ * Each story keeps its own render: it draws the wide column's pane directly, with the props the
+ * host holds rather than the ones Inspector takes. Under wide the same content opens in a Sheet
+ * (see Tests/Inspector).
+ */
+export const Open: Story = { render: () => <ExamplePane /> };
+
+export const Actions: Story = { render: () => <ExamplePane actions /> };
+
+export const Expanded: Story = { render: () => <ExamplePane expanded /> };
+
+// Tabs in place of the title, for an Inspector that shows one of several panels.
+export const Tabs: Story = { render: () => <ExampleTabsPane /> };
+
+// The tabs that do not fit scroll behind the faded edge.
+export const Overflowing: Story = {
+  render: () => <ExampleTabsPane narrow />,
 };

@@ -1,10 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations } from '../../../variations';
 import { Code } from './index';
 
 const sample =
   "// Responses must never be cached\nexport function noStore(res: Response) {\n  res.headers.set(CACHE, 'no-store');\n  return res;\n}";
+
+const longSample = Array.from(
+  { length: 30 },
+  (_, index) =>
+    `Line ${index + 1}: a long line of text that scrolls horizontally across the block.`,
+).join('\n');
 
 const meta = {
   title: 'Design System/Primitives/Content/Code',
@@ -21,43 +26,38 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const props = meta.args;
+export const PathAndSyntax: Story = {};
 
-const states = (
-  <Variations>
-    <Variation label="Path and syntax">
-      <Code {...props} />
-    </Variation>
-    <Variation label="No path">
-      <Code code="echo ready" language="sh" />
-    </Variation>
-    <Variation label="No language">
-      <Code code="plain text" />
-    </Variation>
-    <Variation label="Diff">
-      <Code
-        path="example.ts"
-        diff={[
-          {
-            header: '@@ -1 +1 @@',
-            lines: [
-              { kind: 'removed', number: 1, text: 'const value = 1;' },
-              { kind: 'added', number: 1, text: 'const value = 2;' },
-            ],
-          },
-        ]}
-      />
-    </Variation>
-    <Variation label="Long">
-      <Code
-        code={Array.from(
-          { length: 30 },
-          (_, index) =>
-            `Line ${index + 1}: a long line of text that scrolls horizontally across the block.`,
-        ).join('\n')}
-      />
-    </Variation>
-  </Variations>
-);
+export const NoPath: Story = {
+  args: { code: 'echo ready', language: 'sh', path: undefined },
+};
 
-export const States: Story = { name: 'Code', render: () => states };
+export const NoLanguage: Story = {
+  args: { code: 'plain text', language: undefined, path: undefined },
+};
+
+export const Diff: Story = {
+  args: {
+    path: 'example.ts',
+    code: undefined,
+    language: undefined,
+    diff: [
+      {
+        header: '@@ -1 +1 @@',
+        lines: [
+          { kind: 'removed', number: 1, text: 'const value = 1;' },
+          { kind: 'added', number: 1, text: 'const value = 2;' },
+        ],
+      },
+    ],
+  },
+};
+
+export const Long: Story = {
+  args: { code: longSample, language: undefined, path: undefined },
+  parameters: {
+    docs: {
+      description: { story: 'Long lines scroll horizontally in the block.' },
+    },
+  },
+};

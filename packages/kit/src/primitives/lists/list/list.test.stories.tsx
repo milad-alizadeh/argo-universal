@@ -5,7 +5,7 @@ import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '../list-item';
 import { List } from './list';
-import presentationMeta, { Overview } from './list.stories';
+import presentationMeta, { Grouped } from './list.stories';
 
 const meta = {
   ...presentationMeta,
@@ -77,9 +77,11 @@ export const Section: Story = {
 };
 
 export const Contents: Story = {
-  ...Overview,
+  ...Grouped,
   play: async ({ canvas }) => {
-    await expect(await canvas.findAllByText('Item')).toHaveLength(9);
+    await expect(await canvas.findAllByText('Item')).toHaveLength(3);
+    await expect(canvas.getByText('Section one')).toBeVisible();
+    await expect(canvas.getByText('Footer')).toBeVisible();
   },
 };
 

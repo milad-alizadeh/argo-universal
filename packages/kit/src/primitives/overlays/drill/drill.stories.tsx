@@ -6,17 +6,44 @@ import { ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Drill } from './drill';
+import type { DrillProps } from './drill-props';
+
+/*
+ * Drill has no Contracts schema, so its prop domain is written out from DrillProps. Its args only
+ * satisfy the component's type: a drill draws inside an open sheet, so the story renders one.
+ */
+const args: DrillProps = {
+  label: 'Fruit',
+  title: 'Select Fruit',
+  children: (): null => null,
+};
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Drill',
   component: Drill,
-} satisfies Meta;
+  args,
+  argTypes: {
+    label: { control: 'text' },
+    value: { control: false },
+    valueLeading: { control: false },
+    disabled: { control: 'boolean' },
+    title: { control: 'text' },
+    trigger: { control: false },
+    contentScrolls: { control: 'boolean' },
+    placeholder: { control: false },
+    mount: { control: 'select', options: ['lazy', 'eager'] },
+    onClose: { control: false },
+    keepOpen: { control: 'boolean' },
+    children: { control: false },
+  },
+} satisfies Meta<typeof Drill>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = { name: 'Drill', render: () => <Configure /> };
+// The row and the page it pushes, inside the sheet that holds them.
+export const Default: Story = { render: (): ReactElement => <Configure /> };
 
 const options = ['Apple', 'Banana', 'Cherry'].map((label) => ({
   value: label,

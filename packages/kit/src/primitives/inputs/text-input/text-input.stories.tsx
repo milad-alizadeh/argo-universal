@@ -1,14 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
-import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { Variation, Variations as VariationList } from '../../../variations';
+import { List, ListSection } from '#primitives/lists/list';
 import { TextInput } from './text-input';
 import type {
-  BareTextInputProps,
   RowTextInputProps,
   StandaloneTextInputProps,
 } from './text-input-props';
@@ -16,18 +12,15 @@ import type {
 const meta = {
   title: 'Design System/Primitives/Inputs/TextInput',
   component: TextInput,
+  // The bare box is the one variant a story draws from args; the labelled ones hold their own value.
+  args: { variant: 'bare' },
   argTypes: kitArgTypes('TextInput'),
   parameters: { screenPreview: true },
-} satisfies Meta;
+} satisfies Meta<typeof TextInput>;
 
 export default meta;
 
-type Story = StoryObj;
-
-export const Variations: Story = {
-  name: 'TextInput',
-  render: () => <VariationsExample />,
-};
+type Story = StoryObj<typeof meta>;
 
 const pathHint = "An absolute path, or a command on the Server's PATH.";
 
@@ -35,119 +28,131 @@ const spaceError = 'One path or command, without spaces.';
 
 const title = 'Drafts vanish after a reconnect';
 
-function VariationsExample(): React.JSX.Element {
-  return (
-    <List appearance="grouped">
-      <RowSection />
-      <InvalidSection />
-      <StateSections />
-      <View>
-        <OwnVariations />
-      </View>
-    </List>
-  );
-}
-
-function StateSections(): React.JSX.Element {
-  return (
-    <>
-      <ListSection title="Row disabled">
-        <TypedRow label="Name" initial="Example ACP" disabled />
-      </ListSection>
-      <ListSection title="Row checking">
-        <TypedRow mono label="Executable" initial="example-acp" loading />
-      </ListSection>
-    </>
-  );
-}
-
-function RowSection(): React.JSX.Element {
-  return (
-    <ListSection title="Row" footer={pathHint}>
+export const Row: Story = {
+  render: (): React.JSX.Element => (
+    <RowFrame footer={pathHint}>
       <TypedRow label="Name" initial="Example ACP" />
       <TypedRow mono label="Executable" initial="example-acp" hint={pathHint} />
-    </ListSection>
-  );
-}
-
-const invalidRow = {
-  mono: true,
-  label: 'Executable',
-  initial: 'example-acp --acp',
-  errors: [spaceError],
+    </RowFrame>
+  ),
 };
 
-function InvalidSection(): React.JSX.Element {
+export const RowInvalid: Story = {
+  render: (): React.JSX.Element => (
+    <RowFrame footer={spaceError} tone="danger">
+      <TypedRow
+        mono
+        label="Executable"
+        initial="example-acp --acp"
+        errors={[spaceError]}
+      />
+    </RowFrame>
+  ),
+};
+
+export const RowDisabled: Story = {
+  render: (): React.JSX.Element => (
+    <RowFrame>
+      <TypedRow label="Name" initial="Example ACP" disabled />
+    </RowFrame>
+  ),
+};
+
+export const RowChecking: Story = {
+  render: (): React.JSX.Element => (
+    <RowFrame>
+      <TypedRow mono label="Executable" initial="example-acp" loading />
+    </RowFrame>
+  ),
+};
+
+export const Required: Story = {
+  render: (): React.JSX.Element => (
+    <TypedStandalone label="Title" initial={title} required />
+  ),
+};
+
+export const Invalid: Story = {
+  render: (): React.JSX.Element => (
+    <TypedStandalone
+      numeric
+      label="Estimate"
+      initial="12"
+      errors={['Enter a whole number from 1 to 8.']}
+    />
+  ),
+};
+
+export const Disabled: Story = {
+  render: (): React.JSX.Element => (
+    <TypedStandalone label="Title" initial={title} disabled />
+  ),
+};
+
+export const Checking: Story = {
+  render: (): React.JSX.Element => (
+    <TypedStandalone label="Folder" initial="~/Code" loading />
+  ),
+};
+
+export const BareEmpty: Story = {
+  args: { placeholder: 'Email', accessibilityLabel: 'Bare empty' },
+};
+
+export const BareFilled: Story = {
+  args: {
+    defaultValue: 'hello@example.com',
+    placeholder: 'Email',
+    accessibilityLabel: 'Bare filled',
+  },
+};
+
+export const BareReadOnly: Story = {
+  args: {
+    editable: false,
+    placeholder: 'Email',
+    accessibilityLabel: 'Bare read-only',
+  },
+};
+
+export const BareInvalid: Story = {
+  args: { 'aria-invalid': true, accessibilityLabel: 'Bare invalid' },
+};
+
+export const BareMuted: Story = {
+  args: {
+    tone: 'muted',
+    placeholder: 'https://',
+    accessibilityLabel: 'Bare muted',
+  },
+};
+
+export const BareSecure: Story = {
+  args: {
+    secureTextEntry: true,
+    defaultValue: 'password',
+    accessibilityLabel: 'Bare secure',
+  },
+};
+
+// A row draws inside a grouped List section, where its label leads and its footer closes the section.
+function RowFrame(props: {
+  footer?: string;
+  tone?: 'danger';
+  children: React.ReactNode;
+}): React.JSX.Element {
   return (
-    <ListSection title="Row invalid" footer={spaceError} tone="danger">
-      <TypedRow {...invalidRow} />
-    </ListSection>
+    <List appearance="grouped">
+      <ListSection footer={props.footer} tone={props.tone}>
+        {props.children}
+      </ListSection>
+    </List>
   );
 }
 
 type Typed<Props> = Omit<Props, 'value' | 'onChangeText' | 'variant'> & {
   initial: string;
 };
-
-type StandaloneExample = Typed<StandaloneTextInputProps> & { example: string };
-
-const standaloneExamples: StandaloneExample[] = [
-  { example: 'Required', label: 'Title', initial: title, required: true },
-  {
-    example: 'Invalid',
-    label: 'Estimate',
-    initial: '12',
-    numeric: true,
-    errors: ['Enter a whole number from 1 to 8.'],
-  },
-  { example: 'Disabled', label: 'Title', initial: title, disabled: true },
-  { example: 'Checking', label: 'Folder', initial: '~/Code', loading: true },
-];
-
-type BareProps = Omit<BareTextInputProps, 'variant'>;
-
-type BareExample = { label: string; props: BareProps };
-
-const bareExamples: BareExample[] = [
-  { label: 'Bare empty', props: { placeholder: 'Email' } },
-  {
-    label: 'Bare filled',
-    props: { defaultValue: 'hello@example.com', placeholder: 'Email' },
-  },
-  { label: 'Bare read-only', props: { editable: false, placeholder: 'Email' } },
-  { label: 'Bare invalid', props: { 'aria-invalid': true } },
-  { label: 'Bare muted', props: { tone: 'muted', placeholder: 'https://' } },
-  {
-    label: 'Bare secure',
-    props: { secureTextEntry: true, defaultValue: 'password' },
-  },
-];
-
-// The standalone field and the bare box sit on their own, outside a section.
-function OwnVariations(): React.JSX.Element {
-  return (
-    <VariationList>
-      {standaloneExamples.map(({ example, ...props }) => (
-        <Variation key={example} label={example}>
-          <TypedStandalone {...props} />
-        </Variation>
-      ))}
-      <BareVariations />
-    </VariationList>
-  );
-}
-
-function BareVariations(): React.JSX.Element {
-  return (
-    <>
-      {bareExamples.map(({ label, props }) => (
-        <Variation key={label} label={label}>
-          <TextInput variant="bare" accessibilityLabel={label} {...props} />
-        </Variation>
-      ))}
-    </>
-  );
-}
 
 function TypedRow({
   initial,

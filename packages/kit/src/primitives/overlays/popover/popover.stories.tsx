@@ -121,17 +121,13 @@ const meta = {
   component: Popover,
   argTypes: kitArgTypes('Popover'),
   tags: ['third-party'],
-} satisfies Meta;
+} satisfies Meta<typeof Popover>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Popover',
-  render: () => <PopoverPreview />,
-};
+// A popover is its trigger and its content together, so each story composes its own.
+export const Default: Story = { render: () => <PopoverPreview /> };
 
-export const AnchoredList: Story = {
-  render: () => <AnchoredListPreview />,
-};
+export const AnchoredList: Story = { render: () => <AnchoredListPreview /> };

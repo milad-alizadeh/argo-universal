@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { Text } from '#primitives/content/text';
+import { Pill } from '#primitives/status/pill';
 import { ListItem } from './index';
-import { Overview } from './list-item.stories';
 
 const title = 'Item one';
 
@@ -40,11 +40,29 @@ export const Disabled: Story = {
 };
 
 export const SlottedAnatomy: Story = {
-  render: Overview.render,
+  args: {
+    title: 'Item three',
+    subtitle: 'Subtitle',
+    meta: <Pill text="Meta" />,
+    progress: { value: 0.4, tone: 'success', active: true },
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Item three')).toBeVisible();
-    await expect(canvas.getByLabelText('Warning')).toBeVisible();
-    await expect(canvas.getByLabelText('3')).toBeVisible();
+    await expect(canvas.getByText('Meta')).toBeVisible();
+  },
+};
+
+export const StatusBadge: Story = {
+  args: { badge: { kind: 'status', tone: 'warning', label: 'Warning' } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText('Warning')).toBeVisible();
+  },
+};
+
+export const CountBadge: Story = {
+  args: { title: 'Disabled item', disabled: true, badge: 3 },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText('3')).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: 'Disabled item' }),
     ).toHaveAttribute('aria-disabled', 'true');

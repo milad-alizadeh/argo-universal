@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { ListItem } from '#primitives/lists/list-item';
-import { Variation, Variations } from '../../../variations';
 import { ChoiceExample } from './action-list-choice.mocks';
 import { Action, ActionList, type PressActionProps } from './index';
 
@@ -61,30 +60,40 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const examples = [
-  ['On a Page', <PageExample key="page" />],
-  ['Choice (filter)', <ChoiceExample key="choice" />],
-  [
-    'Row, context menu',
-    <RowExample key="session" title="Item" actions={sessions} />,
-  ],
-  [
-    'Row, sections and destructive',
-    <RowExample key="issue" title="Another item" actions={issues} />,
-  ],
-] as const;
+// Every story draws Action children and tracks what the last press did, so each keeps a render.
+export const OnAPage: Story = { render: () => <PageExample /> };
 
-export const Overview: Story = {
-  name: 'ActionList',
-  render: () => (
-    <Variations>
-      {examples.map(([label, example]) => (
-        <Variation key={label} label={label}>
-          {example}
-        </Variation>
-      ))}
-    </Variations>
-  ),
+export const Choice: Story = {
+  render: () => <ChoiceExample />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'A submenu Action whose Sections are each one single choice.',
+      },
+    },
+  },
+};
+
+export const ContextMenu: Story = {
+  render: () => <RowExample title="Item" actions={sessions} />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'A row is the trigger, and each action has a shortcut.',
+      },
+    },
+  },
+};
+
+export const Destructive: Story = {
+  render: () => <RowExample title="Another item" actions={issues} />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'A context row with a disabled and a danger action.',
+      },
+    },
+  },
 };
 
 function PageExample(): React.JSX.Element {

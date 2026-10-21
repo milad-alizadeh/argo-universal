@@ -1,6 +1,11 @@
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import presentationMeta, { Overview } from './progress-bar.stories';
+import presentationMeta, {
+  Complete,
+  NotStarted,
+  Running,
+  Waiting,
+} from './progress-bar.stories';
 
 const valueAttribute = 'aria-valuenow';
 
@@ -11,20 +16,25 @@ const meta = {
 
 export default meta;
 
-export const Contents: StoryObj<typeof meta> = {
-  ...Overview,
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('progressbar', { name: 'Plan' }),
-    ).toHaveAttribute(valueAttribute, '40');
-    await expect(
-      canvas.getByRole('progressbar', { name: 'Jobs' }),
-    ).toHaveAttribute(valueAttribute, '75');
-    await expect(
-      canvas.getByRole('progressbar', { name: 'Queued' }),
-    ).toHaveAttribute(valueAttribute, '0');
-    await expect(
-      canvas.getByRole('progressbar', { name: 'Complete' }),
-    ).toHaveAttribute(valueAttribute, '100');
-  },
-};
+type Story = StoryObj<typeof meta>;
+
+// Each state reads its own value, so each one is its own story.
+function reads(story: Story, name: string, value: string): Story {
+  return {
+    ...story,
+    play: async ({ canvas }) => {
+      await expect(canvas.getByRole('progressbar', { name })).toHaveAttribute(
+        valueAttribute,
+        value,
+      );
+    },
+  };
+}
+
+export const RunningValue: Story = reads(Running, 'Plan', '40');
+
+export const WaitingValue: Story = reads(Waiting, 'Jobs', '75');
+
+export const NotStartedValue: Story = reads(NotStarted, 'Queued', '0');
+
+export const CompleteValue: Story = reads(Complete, 'Complete', '100');

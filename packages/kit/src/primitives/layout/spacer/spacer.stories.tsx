@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Spacer } from './spacer';
 
 const meta = {
@@ -16,23 +15,25 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function Horizontal({
-  centred = false,
-}: {
-  centred?: boolean;
-}): React.JSX.Element {
-  return (
+/*
+ * A Spacer declares no props of its own: each story draws the layout it takes its
+ * space from, so every state keeps its own render.
+ */
+export const Horizontal: Story = {
+  render: () => (
     <Stack direction="row">
       <Text>Start</Text>
       <Spacer />
-      <Middle centred={centred} />
       <Text>End</Text>
     </Stack>
-  );
-}
+  ),
+  parameters: {
+    docs: { description: { story: 'Flexible space along a row.' } },
+  },
+};
 
-function Vertical(): React.JSX.Element {
-  return (
+export const Vertical: Story = {
+  render: () => (
     <View className="h-40">
       <View className="flex-1">
         <Text>Title</Text>
@@ -40,31 +41,20 @@ function Vertical(): React.JSX.Element {
         <Text>Continue</Text>
       </View>
     </View>
-  );
-}
-
-export const Variations: Story = {
-  name: 'Spacer',
-  render: () => (
-    <VariationList>
-      <Variation label="Flexible (horizontal)">
-        <Horizontal />
-      </Variation>
-      <Variation label="Flexible (vertical)">
-        <Vertical />
-      </Variation>
-      <Variation label="Two Spacers">
-        <Horizontal centred />
-      </Variation>
-    </VariationList>
   ),
+  parameters: {
+    docs: { description: { story: 'Flexible space down a column.' } },
+  },
 };
 
-function Middle({ centred }: { centred: boolean }): React.ReactNode {
-  return centred ? (
-    <>
+export const TwoSpacers: Story = {
+  render: () => (
+    <Stack direction="row">
+      <Text>Start</Text>
+      <Spacer />
       <Text>Centre</Text>
       <Spacer />
-    </>
-  ) : null;
-}
+      <Text>End</Text>
+    </Stack>
+  ),
+};

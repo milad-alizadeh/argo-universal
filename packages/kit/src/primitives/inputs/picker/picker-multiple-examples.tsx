@@ -32,36 +32,3 @@ export function MultipleExample(props: Props): React.JSX.Element {
     </View>
   );
 }
-
-export const multipleExamples: {
-  label: string;
-  props: Props;
-}[] = [
-  { label: 'Multiple: none selected', props: {} },
-  { label: 'Multiple: one selected', props: { value: ['bug'] } },
-  {
-    label: 'Multiple: several selected',
-    props: { value: ['bug', 'feature', 'docs'] },
-  },
-  {
-    label: 'Multiple: disabled',
-    props: { value: ['bug', 'feature'], disabled: true },
-  },
-  { label: 'Multiple: loading options', props: { loading: true } },
-  { label: 'Multiple: no options', props: { options: [] } },
-  {
-    label: 'Multiple: options unavailable',
-    props: { loadError: 'Could not load labels' },
-  },
-  {
-    label: 'Multiple: previous choice unavailable',
-    props: { value: ['removed'] },
-  },
-  {
-    label: 'Multiple: invalid',
-    props: {
-      required: true,
-      errors: [{ message: 'Choose at least one label.' }],
-    },
-  },
-];

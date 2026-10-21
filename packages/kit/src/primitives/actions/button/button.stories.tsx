@@ -1,85 +1,68 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Button } from './button';
-import type { ButtonProps } from './button-props';
 
 const saveLabel = 'Save changes';
-
-const buttons: { state: string; props: ButtonProps }[] = [
-  { state: 'Default', props: { label: saveLabel } },
-  {
-    state: 'Secondary',
-    props: { label: saveLabel, variant: 'secondary' },
-  },
-  { state: 'Outlined', props: { label: saveLabel, variant: 'outline' } },
-  { state: 'Text', props: { label: saveLabel, variant: 'ghost' } },
-  { state: 'Link', props: { label: 'Learn more', variant: 'link' } },
-  {
-    state: 'Destructive',
-    props: { label: 'Delete', tone: 'danger', fullWidth: true },
-  },
-  {
-    state: 'Extra small (a phone draws Default)',
-    props: { label: saveLabel, size: 'xs' },
-  },
-  {
-    state: 'Small (a phone draws Default)',
-    props: { label: saveLabel, size: 'sm' },
-  },
-  {
-    state: 'Full width on a phone',
-    props: {
-      label: 'Add argument',
-      variant: 'ghost',
-      size: 'sm',
-      icon: 'add',
-      fullWidth: 'narrow',
-    },
-  },
-  { state: 'Large', props: { label: saveLabel, size: 'lg' } },
-  { state: 'Disabled', props: { label: saveLabel, disabled: true } },
-  { state: 'Loading', props: { label: saveLabel, loading: true } },
-  { state: 'Leading icon', props: { label: 'Add', icon: 'agent' } },
-];
 
 const meta = {
   title: 'Design System/Primitives/Actions/Button',
   component: Button,
+  args: { label: saveLabel },
   argTypes: kitArgTypes('Button'),
-} satisfies Meta;
+  // A row keeps the button at its own width, as it sits in a product layout.
+  decorators: [
+    (Story): React.JSX.Element => (
+      <View className="flex-row">
+        <Story />
+      </View>
+    ),
+  ],
+} satisfies Meta<typeof Button>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-function ButtonExamples(): React.JSX.Element {
-  return (
-    <VariationList>
-      {buttons.map(({ state, props }) => (
-        <ButtonExample key={state} state={state} props={props} />
-      ))}
-    </VariationList>
-  );
-}
+export const Default: Story = {};
 
-interface ExampleOptions {
-  state: string;
-  props: React.ComponentProps<typeof Button>;
-}
+export const Secondary: Story = { args: { variant: 'secondary' } };
 
-function ButtonExample(options: ExampleOptions): React.JSX.Element {
-  return (
-    <Variation label={options.state}>
-      <View className="flex-row">
-        <Button {...options.props} />
-      </View>
-    </Variation>
-  );
-}
+export const Outlined: Story = { args: { variant: 'outline' } };
 
-export const Variations: Story = {
-  name: 'Button',
-  render: ButtonExamples,
+export const Text: Story = { args: { variant: 'ghost' } };
+
+export const Link: Story = { args: { label: 'Learn more', variant: 'link' } };
+
+export const Destructive: Story = {
+  args: { label: 'Delete', tone: 'danger', fullWidth: true },
 };
+
+export const ExtraSmall: Story = {
+  args: { size: 'xs' },
+  parameters: { docs: { description: { story: 'A phone draws Default.' } } },
+};
+
+export const Small: Story = {
+  args: { size: 'sm' },
+  parameters: { docs: { description: { story: 'A phone draws Default.' } } },
+};
+
+export const FullWidthOnAPhone: Story = {
+  args: {
+    label: 'Add argument',
+    variant: 'ghost',
+    size: 'sm',
+    icon: 'add',
+    fullWidth: 'narrow',
+  },
+};
+
+export const Large: Story = { args: { size: 'lg' } };
+
+export const Disabled: Story = { args: { disabled: true } };
+
+export const Loading: Story = { args: { loading: true } };
+
+export const LeadingIcon: Story = { args: { label: 'Add', icon: 'agent' } };

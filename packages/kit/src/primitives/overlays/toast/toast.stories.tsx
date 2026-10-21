@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { ActionToastExample, ErrorToastExample } from './toast-example.mocks';
 
 const meta = {
@@ -13,16 +12,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Toast',
-  render: () => (
-    <VariationList>
-      <Variation label="Error">
-        <ErrorToastExample />
-      </Variation>
-      <Variation label="With action (web)">
-        <ActionToastExample onUndo={action('undo')} />
-      </Variation>
-    </VariationList>
-  ),
+/*
+ * `showToast` raises a toast, so each story keeps the button that raises its own.
+ * The export cannot be named `Error`, which shadows the global.
+ */
+export const ErrorToast: Story = {
+  name: 'Error',
+  render: () => <ErrorToastExample />,
+};
+
+// The web only: a toast there can carry one action.
+export const WithAction: Story = {
+  render: () => <ActionToastExample onUndo={action('undo')} />,
 };

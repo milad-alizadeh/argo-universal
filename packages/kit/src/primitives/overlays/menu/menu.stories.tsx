@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Text } from '#primitives/content/text';
-import { Variation, Variations as VariationList } from '../../../variations';
 import { Menu, type MenuAction } from './menu';
 import { ViewOptionsMenu } from './menu-groups.mocks';
 import { MenuTrigger } from './menu-trigger';
@@ -16,7 +15,6 @@ const choices = [
 
 type Permission = (typeof choices)[number]['value'];
 
-// The third option is shown but cannot be chosen.
 const limitedChoices = choices.map((choice) => ({
   ...choice,
   disabled: choice.value === 'full',
@@ -91,35 +89,42 @@ function rangeActions(
 const meta = {
   title: 'Design System/Primitives/Overlays/Menu',
   component: Menu,
+  /*
+   * A menu keeps the value it was given, so each story draws a controlled example of its own and
+   * these args only satisfy the component's type.
+   */
+  args: {
+    accessibilityLabel: 'Options',
+    value: 'default',
+    options: choices,
+    onValueChange: (): void => {},
+    trigger: 'Options',
+  },
   argTypes: kitArgTypes('Menu'),
-} satisfies Meta;
+} satisfies Meta<typeof Menu>;
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
-const permissionStates: { label: string; props: PermissionsMenuProps }[] = [
-  { label: 'Options', props: {} },
-  { label: 'Disabled', props: { disabled: true } },
-  { label: 'Disabled option', props: { options: limitedChoices } },
-  { label: 'Loading', props: { loading: true } },
-];
+export const Default: Story = { render: () => <PermissionsMenu /> };
 
-export const Variations: Story = {
-  name: 'Menu',
-  render: () => (
-    <VariationList>
-      {permissionStates.map(({ label, props }) => (
-        <Variation key={label} label={label}>
-          <PermissionsMenu {...props} />
-        </Variation>
-      ))}
-      <Variation label="Groups">
-        <ViewOptionsMenu />
-      </Variation>
-      <Variation label="Actions on a text trigger">
-        <RangeMenu />
-      </Variation>
-    </VariationList>
-  ),
+export const Disabled: Story = { render: () => <PermissionsMenu disabled /> };
+
+export const DisabledOption: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'The third option is shown but cannot be chosen.',
+      },
+    },
+  },
+  render: () => <PermissionsMenu options={limitedChoices} />,
 };
+
+export const Loading: Story = { render: () => <PermissionsMenu loading /> };
+
+// Two headed groups of choices in one menu.
+export const Groups: Story = { render: () => <ViewOptionsMenu /> };
+
+export const ActionsOnATextTrigger: Story = { render: () => <RangeMenu /> };
