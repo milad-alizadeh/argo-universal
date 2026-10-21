@@ -28,6 +28,7 @@
     "jsonc-parser": "catalog:",
     "node-pty": "catalog:",
     "oxc-parser": "catalog:",
+    "parse5": "catalog:",
     "react": "catalog:",
     "react-native": "catalog:",
     "react-native-svg": "catalog:",
