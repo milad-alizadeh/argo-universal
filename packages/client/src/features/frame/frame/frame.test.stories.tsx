@@ -95,9 +95,7 @@ export const ChangesOpensInspector: Story = {
     await expect(
       await canvas.findByRole('heading', { name: 'Changes' }),
     ).toBeVisible();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Close Inspector' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Hide Stage' }));
     await expect(changes).toHaveAttribute(expanded, 'false');
   },
 };

@@ -28,6 +28,7 @@ export type ScaffoldMockProps = Partial<ScaffoldState> & {
   onSectionChange?: (section: Section) => void;
   // The Inspector's content, under its header.
   inspector?: ReactNode;
+  band?: ScaffoldProps['band'];
   // The page; a stand-in page names the section when there is none.
   children?: ReactNode;
 };
@@ -133,7 +134,7 @@ export function ScaffoldMock(props: ScaffoldMockProps): React.JSX.Element {
 
   return (
     <View className="flex-1">
-      <Scaffold {...state} {...mockPanes(props, state)} />
+      <Scaffold {...state} {...mockPanes(props, state)} band={props.band} />
     </View>
   );
 }

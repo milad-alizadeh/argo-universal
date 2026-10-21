@@ -1,9 +1,13 @@
-import type { ReactElement, ReactNode } from 'react';
+import { use, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { ActionListHeaderContext } from '#primitives/actions/action-list';
+import { InspectorActions } from './inspector-actions';
+
+export { InspectorActions } from './inspector-actions';
+
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
+import { InspectorControlsContext } from './inspector-controls-context';
 import { isFittedSheet, paneSizing } from './inspector-pane-sizing';
 import type { InspectorProps } from './inspector-props';
 import { InspectorScroll } from './inspector-scroll';
@@ -69,17 +73,6 @@ function CloseButton(props: InspectorPaneProps): ReactElement {
       onPress={() => props.onOpenChange(false)}
       icon="close"
     />
-  );
-}
-
-// The Inspector's own Actions draw in its header, never in the Page header around it.
-export function InspectorActions(props: { children: ReactNode }): ReactNode {
-  if (!props.children) return null;
-
-  return (
-    <ActionListHeaderContext value={undefined}>
-      {props.children}
-    </ActionListHeaderContext>
   );
 }
 
@@ -157,7 +150,9 @@ export function InspectorPane(props: InspectorPaneProps): ReactElement {
   );
 }
 
-function InspectorControls(props: InspectorPaneProps): ReactElement {
+function InspectorControls(props: InspectorPaneProps): ReactElement | null {
+  if (use(InspectorControlsContext)) return null;
+
   return (
     <View className="shrink-0 flex-row items-center gap-0.5">
       <ExpandButton {...props} />
