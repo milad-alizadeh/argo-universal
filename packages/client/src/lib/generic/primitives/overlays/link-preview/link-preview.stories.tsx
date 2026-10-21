@@ -58,11 +58,11 @@ function HoverExamples(): ReactElement {
     <>
       <Variation label="Hover a link">
         <LinkPreviewContext value={source}>
-          <Link href="https://example.com/guide">the migration guide</Link>
+          <Link href="https://example.com/guide" label="the migration guide" />
         </LinkPreviewContext>
       </Variation>
       <Variation label="No preview">
-        <Link href="https://example.com/missing">the build log</Link>
+        <Link href="https://example.com/missing" label="the build log" />
       </Variation>
     </>
   );

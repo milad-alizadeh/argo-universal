@@ -31,7 +31,7 @@ function DelayedPreview(): ReactElement {
   return (
     <LinkPreviewContext value={source}>
       <p>
-        See <Link href={href}>the guide</Link> for details.
+        See <Link href={href} label="the guide" /> for details.
       </p>
       <button onClick={() => resolve?.(<LinkPreviewCard data={webPreview} />)}>
         Finish loading
@@ -67,7 +67,7 @@ export const MissingPreviewKeepsUrlTooltipWide: Story = {
   render: () => (
     <LinkPreviewContext value={failed}>
       <p>
-        See <Link href={href}>the guide</Link>.
+        See <Link href={href} label="the guide" />.
       </p>
     </LinkPreviewContext>
   ),
@@ -90,7 +90,7 @@ const ready = {
 export const KeyboardFocusKeepsNavigationWide: Story = {
   render: () => (
     <LinkPreviewContext value={ready}>
-      <Link href={href}>the guide</Link>
+      <Link href={href} label="the guide" />
     </LinkPreviewContext>
   ),
   play: async ({ canvas, userEvent }) => {

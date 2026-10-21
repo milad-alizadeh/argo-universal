@@ -45,12 +45,11 @@ function anchorProps(
   const navigation = isRoute(props.route);
 
   const destination = navigation
-    ? {}
+    ? { title: props.target }
     : { target: '_blank', rel: 'noopener noreferrer' };
 
   return {
     href: props.target,
-    title: navigation ? props.target : undefined,
     onClick: isRoute(props.route) ? routePress(props.route) : undefined,
     ...destination,
   };
