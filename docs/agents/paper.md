@@ -4,22 +4,24 @@ Storybook owns how built UI looks. Paper is where a design is explored and agree
 
 Once a design ships, its Storybook story is the record: the story shows the states, the platforms and the appearance, and the PR evidence shows it running. The Paper board that led to it is then deleted. Nothing in Paper describes UI that already exists.
 
-## Design files
+## Design pages
 
-| File | Owns |
+One Paper file, [Argo](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW), holds every design. Each page owns one area:
+
+| Page | Owns |
 |---|---|
-| [Foundations](https://app.paper.design/file/01M4RJ2FP7N272AE463G6PT2QD/p-2-0) | Device chrome, the icon library and unbuilt primitives |
-| [Sessions](https://app.paper.design/file/01M4RJRP22R2R2JE20RWDNXR0Q/p-1-0) | Sessions explorations |
-| [Feed & Inspector](https://app.paper.design/file/01M4RJWCAC00EA21V8BKY91FEV/p-1-0) | Workbench, Stage and Change explorations |
-| [Composer](https://app.paper.design/file/01M4RJXN4XTK41J7TDNBBD87G1/p-1-0) | Composer explorations |
-| [Settings](https://app.paper.design/file/01M4RJMTRRZ4K9B62YQ0P53CR5/p-1-0) | Settings, Agents and the Accounts broker |
-| [Voice](https://app.paper.design/file/01M4RJ7EBVF0CGT31XYHHYVHYV/p-1-0) | Voice |
-| [Atlas](https://app.paper.design/file/01M4RJB4J2JMHAQCZYTSD808R7/p-1-0) | Atlas |
-| [Setup](https://app.paper.design/file/01M4RJFEE925T7Z1Q0E3J8CF7M/p-1-0) | Pairing |
-| [Issues](https://app.paper.design/file/01M4RJGJ2N1YKV0K3RHF80FKZP/p-1-0) | Issues |
-| [Landing](https://app.paper.design/file/01M4RJQ4TMAKN1KWAXYNDHK589/p-1-0) | Landing |
+| [Foundations](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-1-0) | Tokens, the icon library and unbuilt primitives |
+| [Icons](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-2-0) | The icon library to copy from |
+| [Workbench and Change](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-3-0) | Workbench, Stage and Change explorations |
+| [Composer](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-4-0) | Composer explorations |
+| [Settings and Accounts](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-5-0) | Settings, Agents and the Accounts broker |
+| [Setup](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-6-0) | Pairing |
+| [Issues](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-7-0) | Issues |
+| [Voice](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-8-0) | Voice |
+| [Atlas](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-9-0) | Atlas |
+| [Landing](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-A-0) | Landing |
 
-The original [Argo file](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J) is a historical archive. Never open it.
+A second file is also called Argo (`01M44G6AG3HPXGPPPMKS9S3H8J`). It is the historical archive, it is over the size limit, and it is never opened. Check the id, not the name.
 
 ## Designing before implementation
 
@@ -39,13 +41,13 @@ Native frames use the platform's type scale as literals (SF Pro on iOS, Roboto o
 
 ## Tokens
 
-`tooling/uniwind/theme.css` is the only source of token values. Each Paper file holds its own copy so it can draw; that copy is a convenience, not a second source. Do not hand-sync it, and do not report it as drift. When a Paper drawing looks wrong because a token moved, update that file's token and move on.
+`tooling/uniwind/theme.css` is the only source of token values. The Paper file holds its own copy so it can draw; that copy is a convenience, not a second source. Do not hand-sync it, and do not report it as drift. When a Paper drawing looks wrong because a token moved, update the token in Paper and move on.
 
 Text uses the four roles — Title, Heading, Body, Secondary — as `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`, never a scale step such as `--text-sm`. Icon dimensions come from the role table in `packages/client/src/lib/generic/symbols/icon-role.ts`.
 
 ## Icons
 
-Icons are SF Symbols drawn as SVG paths; Android frames use Material Symbols; git and file-type glyphs are Tabler on every platform (ADR-0019). `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts` is the only list of icons — an icon a design needs that the app lacks is added there first. Copy icons from the library on the Foundations Icons page.
+Icons are SF Symbols drawn as SVG paths; Android frames use Material Symbols; git and file-type glyphs are Tabler on every platform (ADR-0019). `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts` is the only list of icons — an icon a design needs that the app lacks is added there first. Copy icons from the library on the Icons page.
 
 `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box.
 
