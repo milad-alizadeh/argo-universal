@@ -179,6 +179,17 @@ const packages: readonly [string, readonly Rule[]][] = [
 const packageOf = (file: string): [string, readonly Rule[]] | undefined =>
   packages.find(([source]): boolean => file.includes(source));
 
+// A story file's own name, without the `.stories.tsx` every story shares.
+const baseOf = (file: string): string =>
+  (file.split('/').at(-1) ?? '').replace(story, '');
+
+/*
+ * The folder a file sits in, as a whole path. `StoryPath.dirs` drops the package, so it cannot name
+ * a neighbour of the file, which is what a test's subject is looked up by.
+ */
+const dirOf = (file: string): string =>
+  file.slice(0, file.lastIndexOf('/') + 1);
+
 const pathIn = (
   source: string,
   file: string,
@@ -186,11 +197,7 @@ const pathIn = (
 ): StoryPath => {
   const parts = file.slice(file.indexOf(source) + source.length).split('/');
 
-  return {
-    dirs: parts.slice(0, -1),
-    base: (parts.at(-1) ?? '').replace(story, ''),
-    component,
-  };
+  return { dirs: parts.slice(0, -1), base: baseOf(file), component };
 };
 
 // A story outside every rule's folder would start a new top-level group, so no title belongs to it.
@@ -229,16 +236,10 @@ interface Subject {
   aspect: readonly string[];
 }
 
-const dirOf = (file: string): string =>
-  file.slice(0, file.lastIndexOf('/') + 1);
-
-const baseOf = (file: string): string =>
-  (file.split('/').at(-1) ?? '').replace(story, '');
-
 /*
- * Where a test file sits and what its own name says, which together find the subject beside it.
+ * The story files a test file sits among, and the words of its own name, which together find its subject.
  */
-interface Beside {
+interface Neighbours {
   titles: StoryTitles;
   dir: string;
   folder: string;
@@ -250,7 +251,7 @@ interface Beside {
  * `plugin-registry.stories.tsx` is the registry's `Canvas`.
  */
 const subjectOf = (
-  { parts }: Beside,
+  { parts }: Neighbours,
   title: string,
   base: string,
 ): Subject => ({ title, aspect: parts.slice(sharedWords(words(base), parts)) });
@@ -260,7 +261,7 @@ const extendedSubject = ({
   titles,
   dir,
   parts,
-}: Beside): Subject | undefined => {
+}: Neighbours): Subject | undefined => {
   for (let taken = parts.length; taken > 0; taken -= 1) {
     const base = parts.slice(0, taken).join('-');
     const title = titles.get(`${dir}${base}.stories.tsx`);
@@ -271,13 +272,21 @@ const extendedSubject = ({
   return undefined;
 };
 
-// The folder's own story, which a test named for one part of it belongs under.
-const folderSubject = (beside: Beside): Subject | undefined => {
-  const { titles, dir, folder } = beside;
-  const title = titles.get(`${dir}${folder}.stories.tsx`);
+// One neighbour as the subject: the title it declares, and the words of its name the test shares.
+const subjectIn = (
+  neighbours: Neighbours,
+  file: string,
+): Subject | undefined => {
+  const title = neighbours.titles.get(file);
 
-  return title === undefined ? undefined : subjectOf(beside, title, folder);
+  return title === undefined
+    ? undefined
+    : subjectOf(neighbours, title, baseOf(file));
 };
+
+// The folder's own story, which a test named for one part of it belongs under.
+const folderSubject = (neighbours: Neighbours): Subject | undefined =>
+  subjectIn(neighbours, `${neighbours.dir}${neighbours.folder}.stories.tsx`);
 
 const storiesIn = (titles: StoryTitles, dir: string): string[] =>
   [...titles.keys()].filter(
@@ -295,26 +304,26 @@ const routeDetailView = ({
   titles,
   dir,
   folder,
-}: Beside): string | undefined =>
+}: Neighbours): string | undefined =>
   folder.startsWith('$') ? detailViewIn(titles, dir) : undefined;
 
-const routeSubject = (beside: Beside): Subject | undefined => {
-  const view = routeDetailView(beside);
+const routeSubject = (neighbours: Neighbours): Subject | undefined => {
+  const view = routeDetailView(neighbours);
 
-  return view === undefined
-    ? undefined
-    : subjectOf(beside, beside.titles.get(view) ?? '', baseOf(view));
+  return view === undefined ? undefined : subjectIn(neighbours, view);
 };
 
-const subjectBeside = (beside: Beside): Subject | undefined =>
-  extendedSubject(beside) ?? folderSubject(beside) ?? routeSubject(beside);
+const subjectBeside = (neighbours: Neighbours): Subject | undefined =>
+  extendedSubject(neighbours) ??
+  folderSubject(neighbours) ??
+  routeSubject(neighbours);
 
 // Where the test file sits, as its subject's neighbours are looked up from.
-const besideOf = (
+const neighboursOf = (
   file: string,
   path: StoryPath,
   titles: StoryTitles,
-): Beside => ({
+): Neighbours => ({
   titles,
   dir: dirOf(file),
   folder: path.dirs.at(-1) ?? '',
@@ -378,22 +387,22 @@ const derivedTestExpected = (
 const testExpected = (
   rules: readonly Rule[],
   path: StoryPath,
-  beside: Beside,
+  neighbours: Neighbours,
 ): Expected => {
-  const subject = subjectBeside(beside);
+  const subject = subjectBeside(neighbours);
 
   return subject === undefined
     ? derivedTestExpected(rules, path)
     : { kind: 'exact', title: testTitle(subject) };
 };
 
-const expectedIn = (
+const expectedFor = (
   rules: readonly Rule[],
   path: StoryPath,
-  beside: Beside,
+  neighbours: Neighbours,
 ): Expected =>
   testFile.test(path.base)
-    ? testExpected(rules, path, beside)
+    ? testExpected(rules, path, neighbours)
     : placedIn(rules, path);
 
 // The title the file's own path derives, which the check compares and `pnpm new:story` writes.
@@ -408,7 +417,7 @@ const expectedTitle = (
 
   const path = pathIn(found[0], file, component);
 
-  return expectedIn(found[1], path, besideOf(file, path, titles));
+  return expectedFor(found[1], path, neighboursOf(file, path, titles));
 };
 
 /*

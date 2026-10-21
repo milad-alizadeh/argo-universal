@@ -372,6 +372,19 @@ describe("a test's title", (): void => {
     expect(storyTitleProblems(file, meta(title))).toEqual([]);
   });
 
+  /*
+   * A screen's last segment is its visible page title (#1198), so a screen test with no story beside
+   * it to mirror is held to its section, the one segment the folder gives.
+   */
+  it('holds a screen test with no story beside it to its section', (): void => {
+    expect(
+      storyTitleProblems(
+        `${src}/screens/settings/agents/agents-list.test.stories.tsx`,
+        meta('Tests/AgentsList'),
+      ),
+    ).toEqual([expect.stringContaining("expected 'Tests/Screens/Settings/…'")]);
+  });
+
   it('reads only the presentation stories as subjects', (): void => {
     expect(
       presentationTitles([
