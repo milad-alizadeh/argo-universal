@@ -48,6 +48,32 @@ export const RemembersAgentListPosition = remembersSectionList(
   'Agents',
 );
 
+type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+
+const shellOutputOffset = 100;
+
+function scrollOutputUp(output: HTMLElement): void {
+  output.dispatchEvent(
+    new WheelEvent('wheel', { deltaY: -output.clientHeight }),
+  );
+  output.scrollTop = shellOutputOffset;
+  output.dispatchEvent(new Event('scroll'));
+}
+
+// The output initially follows latest; wait until the reader has actually left it.
+async function readEarlierOutput(
+  output: HTMLElement,
+  canvas: Canvas,
+): Promise<void> {
+  await waitFor(async () => {
+    scrollOutputUp(output);
+    await expect(
+      canvas.getByRole('button', { name: 'Jump to latest' }),
+    ).toBeVisible();
+    await expect(output.scrollTop).toBeCloseTo(shellOutputOffset, 0);
+  });
+}
+
 export const RemembersShellOutputPosition: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByRole('tab', { name: /Shells/ }));
@@ -59,11 +85,7 @@ export const RemembersShellOutputPosition: Story = {
     await waitFor(() =>
       expect(output.scrollHeight).toBeGreaterThan(output.clientHeight),
     );
-    output.dispatchEvent(
-      new WheelEvent('wheel', { deltaY: -output.clientHeight }),
-    );
-    output.scrollTop = 100;
-    await fireEvent.scroll(output);
+    await readEarlierOutput(output, canvas);
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     await expect(
       canvas.queryByRole('button', { name: 'Back to Shells' }),
@@ -73,7 +95,7 @@ export const RemembersShellOutputPosition: Story = {
       canvas.getByRole('button', { name: 'Back to Shells' }),
     ).toBeVisible();
     await expect(canvas.getByTestId('shell-output').scrollTop).toBeCloseTo(
-      100,
+      shellOutputOffset,
       0,
     );
   },
