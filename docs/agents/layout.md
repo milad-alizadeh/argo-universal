@@ -65,13 +65,13 @@ The Workbench therefore has three states, and one toggle in the window band driv
 ## The Workbench
 
 - **A stack of separate cards, one per section: an overview of what is happening in the Session.** Drawn at 312 with `--radius-2xl` cards and `--spacing-2` between them on "Spec / Workbench layout · collapsible cards".
-- **A card is a summary and nothing else.** The Changes card shows a diff total, the Agents card a count and the role avatars, the Shells card a count. A card holds none of its section's items and discloses none: there is no expander on a card, because the list is the Stage tab the card opens.
+- **Cards summarize their sections.** Changes shows a diff total; Shells shows a count. The Agents card also previews active Agents, with role avatars, status marks and details. Completed Agents share one count and up to three overlapping role avatars. Its disclosure collapses the preview; pressing the card opens the full Stage list.
 - **Pressing a card opens its section's full view in the Stage, as a tab.**
 - **Argo's cards are Changes, Agents and Shells.** Each appears, disappears and reorders on its own. The Agents card counts the Agents this Session started, not the installed Agents the Agents page lists.
 - **A card is drawn only when the Session has one.** A section with nothing in it is not drawn at all, so an empty Workbench is an empty column, not three headers over nothing (same board). A Session with no Agents has no Agents card, as its header has no Agents button.
 - **Cards are kit components, and the lists their Stage tabs draw are `List` and `ListItem`** ([ADR-0032](../adr/0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md)).
 - **Plugins contribute cards into the named Slot, add-only** ([ADR-0035](../adr/0035-plugins-add-to-named-slots-and-never-edit-core-screens.md)). The Plugin draws inside its own card; Argo decides where the card goes, in what order and how much fits. A Plugin never moves, hides, reorders or restyles Argo's cards or another Plugin's. A Plugin's `header` action may open its card.
-- *Not settled:* the Workbench card surface. "Screen / Approved layout" draws the cards on `--color-card` with a hairline; "Spec / Workbench layout · collapsible cards" and the 1760 board draw them on `--color-glass` with the sidebar's blur.
+- **Each card uses glass and its own shadow.** The owner selected [WorkbenchGlass / Agents](https://app.paper.design/file/01M4RJWCAC00EA21V8BKY91FEV/p-4-0/21BX-0) on 2026-10-21. Use `--color-glass`, `--shadow-glass` and the sidebar's blur. The scroll viewport leaves room for each card's shadow without shrinking its content width.
 
 ## The Stage
 
@@ -108,7 +108,7 @@ Compact has no column, so the Workbench is a menu and a sheet. Every card and ev
 
 This one holds on desktop and on phones alike.
 
-A section's length never reaches the Workbench. However many Changes, Agents or Shells a Session has, its card carries one summary: a diff total, or a count with the role avatars. The column therefore keeps its height whatever the Session is doing.
+Changes and Shells keep one summary in the Workbench. The Agents card previews active Agents, while completed Agents stay grouped. The Workbench column scrolls when its previews need more height.
 
 The length lives in the Stage tab the card opens, and the tab's list groups its items by state and counts each group, live first. The Agents tab reads `Active · 0` with `No active agents` under it when none are running, then `Done · 2` with a row for each finished Agent. Shells group the same way. The tab is a full view and scrolls, so no group is folded away.
 

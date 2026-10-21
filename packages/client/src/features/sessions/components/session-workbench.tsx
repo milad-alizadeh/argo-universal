@@ -1,12 +1,12 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { Card } from '#primitives/layout/card';
 import type { SessionPanel } from '../stores/session-panels';
 import { PullRequestChecks } from './pull-request-checks';
 import type { SessionHeaderPanels } from './session-header-props';
 import { sessionPanelLabels } from './session-panel-triggers';
+import { WorkbenchAgents } from './session-workbench-agents';
+import { WorkbenchCard } from './session-workbench-card';
 
 // ADR-0039: a summary per section; its list lives in the Stage tab that pressing the card opens.
 export function SessionWorkbench({
@@ -32,13 +32,15 @@ function SectionCard({ panel, panels }: SectionProps): ReactElement {
     panel === 'subagents' ? 'Agents' : sessionPanelLabels[panel].label;
 
   return (
-    <Card
+    <WorkbenchCard
       title={title}
-      icon={<Icon name={sessionPanelLabels[panel].icon} role="body" />}
-      onPress={() => (panels.onSelect ?? panels.onToggle)(panel)}
+      icon={sessionPanelLabels[panel].icon}
+      onOpen={() => (panels.onSelect ?? panels.onToggle)(panel)}
+      collapsible={panel === 'subagents'}
+      testID={`workbench-${panel}`}
     >
       <SectionSummary panel={panel} panels={panels} />
-    </Card>
+    </WorkbenchCard>
   );
 }
 
@@ -58,7 +60,23 @@ function hasSection(panel: SessionPanel, panels: SessionHeaderPanels): boolean {
 function SectionSummary({ panel, panels }: SectionProps): ReactElement {
   if (panel === 'changes') return <ChangesSection panels={panels} />;
 
-  return <Text tone="muted">{sectionCount(panel, panels)}</Text>;
+  if (panel === 'subagents') return <AgentsSummary panels={panels} />;
+
+  return (
+    <View className="px-4 pb-3">
+      <Text tone="muted">{sectionCount(panel, panels)}</Text>
+    </View>
+  );
+}
+
+function AgentsSummary({ panels }: Pick<SectionProps, 'panels'>): ReactElement {
+  return panels.agents ? (
+    <WorkbenchAgents {...panels.agents} />
+  ) : (
+    <View className="px-4 pb-3">
+      <Text tone="muted">{itemCount('subagents', panels)}</Text>
+    </View>
+  );
 }
 
 function ChangesSummary({
@@ -90,7 +108,7 @@ function ChangesSection({
   panels,
 }: Pick<SectionProps, 'panels'>): ReactElement {
   return (
-    <View className="gap-2">
+    <View className="gap-2 px-4 pb-3">
       <ChangesSummary panels={panels} />
       {panels.checks && <PullRequestChecks {...panels.checks} />}
     </View>

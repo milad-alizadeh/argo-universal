@@ -3,6 +3,7 @@ import type { MergeMethod } from '../stores/merge-method';
 import type { SessionPanel } from '../stores/session-panels';
 import type { SessionMenu } from './session-menu-items';
 import type { SessionPullRequest } from './session-pull-request';
+import type { SubagentListProps } from './subagent-list/subagent-list-types';
 
 export type SessionHeaderStatus = Extract<
   SessionStatus,
@@ -17,6 +18,7 @@ export interface SessionChanges {
 
 // The Inspector panels the header's triggers open: those the Session has, the one shown, and pressing a trigger.
 export interface SessionHeaderPanels {
+  agents?: SubagentListProps;
   checks?: NonNullable<SessionPullRequest['checks']>;
   counts?: Partial<Record<SessionPanel, number>>;
   onSelect?: (panel: SessionPanel) => void;

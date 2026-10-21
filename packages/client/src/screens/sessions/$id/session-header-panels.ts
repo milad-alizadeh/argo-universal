@@ -12,6 +12,7 @@ export const headerPanels = (
 ): SessionHeaderProps['panels'] => ({
   offered: offeredSessionPanels(props),
   counts: sectionCounts(props),
+  agents: props.subagents,
   checks: summarizeChecks(props.header.pullRequests),
   shown: panels.state.shown,
   changesSummary: props.header.changes?.summary,

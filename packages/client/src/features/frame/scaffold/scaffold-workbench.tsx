@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
-import { ScrollView } from '#primitives/layout/scroll-view';
 import { Surface } from '#primitives/layout/surface';
+import { ScrollFadeView } from '../../../lib/generic/scroll-fade/scroll-fade';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
 
 // A floating Workbench overlays the content; its geometry contributes no width to the page.
@@ -68,8 +68,11 @@ function WorkbenchSurface({
 
 function WorkbenchScroll({ children }: { children: ReactNode }): ReactElement {
   return (
-    <ScrollView>
+    <ScrollFadeView
+      className="-mx-4 -mt-4"
+      contentContainerClassName="px-4 pt-4 pb-8"
+    >
       <View className="gap-2">{children}</View>
-    </ScrollView>
+    </ScrollFadeView>
   );
 }

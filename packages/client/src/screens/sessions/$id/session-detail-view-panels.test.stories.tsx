@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -35,7 +35,11 @@ const changesName = { name: 'Changes' };
 async function openBoth({ canvas, userEvent }: Context): Promise<void> {
   await userEvent.click(await canvas.findByRole('button', changesName));
   await userEvent.click(canvas.getByRole('button', subagentsName));
-  await expect(await canvas.findByText(firstTitle)).toBeVisible();
+  await expect(
+    await within(canvas.getByRole('tabpanel', subagentsName)).findByText(
+      firstTitle,
+    ),
+  ).toBeVisible();
 }
 
 // The Workbench card focuses an existing tab and restores its content without adding another tab.
@@ -54,7 +58,9 @@ export const FocusExistingTab: Story = {
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
     );
-    await expect(canvas.getByText(firstTitle)).toBeVisible();
+    await expect(
+      within(canvas.getByRole('tabpanel', subagentsName)).getByText(firstTitle),
+    ).toBeVisible();
   },
 };
 

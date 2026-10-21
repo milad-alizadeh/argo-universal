@@ -91,7 +91,9 @@ async function expectDesktopEntry(page: Page, count: number): Promise<void> {
   if (count === 0) return expect(changes).toHaveCount(0);
 
   await expect(
-    changes.getByText(`${count} files`, { exact: true }),
+    page
+      .getByTestId('workbench-changes')
+      .getByText(`${count} files`, { exact: true }),
   ).toBeVisible();
 }
 

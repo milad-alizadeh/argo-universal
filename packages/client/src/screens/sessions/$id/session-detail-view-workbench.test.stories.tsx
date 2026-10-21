@@ -51,7 +51,7 @@ export const MergesFromChangeDetail: Story = {
   },
   play: async ({ canvas, userEvent, args }) => {
     await userEvent.click(
-      await canvas.findByRole('button', { name: /Changes/ }),
+      await canvas.findByRole('button', { name: 'Changes' }),
     );
     await expect(
       canvas.getAllByRole('button', { name: /^Diff for/ }).length,
