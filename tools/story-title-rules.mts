@@ -1,5 +1,5 @@
 // Where a story file sits decides the Storybook group its title starts with, so the sidebar keeps one tree.
-const clientSource = 'packages/client/src/';
+export const clientSource = 'packages/client/src/';
 
 // The first title after `const meta` is the story file's title; a Variation's own titles come later.
 const metaTitle = /const meta\b[\s\S]*?\btitle: '([^']+)'/;
@@ -10,7 +10,7 @@ const feature = /^features\/([^/]+)\//;
 
 // A feature's components group under its own name.
 
-const pascal = (name: string): string =>
+export const pascal = (name: string): string =>
   name
     .split('-')
     .map((part): string => part.charAt(0).toUpperCase() + part.slice(1))
@@ -54,7 +54,7 @@ const rules: readonly {
 ];
 
 // A story outside every rule's folder would start a new top-level group, so it has none.
-const allowedGroups = (path: string): string[] =>
+export const allowedGroups = (path: string): string[] =>
   rules.find((rule) => rule.test(path))?.groups(path) ?? [];
 
 const quoted = (group: string): string => `'${group}'`;

@@ -13,6 +13,7 @@
     "dev:storybook:all": "EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST=10.0.2.2 node tools/start-storybook-previews.mts",
     "format": "oxfmt",
     "postinstall": "sherif",
+    "new:story": "node --import tsx tools/new-story.mts",
     "perf": "pnpm --filter @repo/universal-app build && pnpm --filter @repo/tools perf",
     "quality:dead-code": "knip --no-progress --max-issues 0",
     "quality:duplication": "jscpd --config .jscpd.json --baseline .jscpd-baseline.json --fail-on-new-clones=0 apps packages tooling tools e2e mocks",
