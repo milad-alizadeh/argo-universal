@@ -136,12 +136,12 @@ function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
   );
 }
 
-// The wide window's sections start at the glass panel's top; window controls belong to the band.
+// The desktop tiles keep the same 8px inset at the top and sides of the glass panel.
 export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
   return (
     <View
       testID="desktop-rail"
-      className="relative w-frame-rail shrink-0 items-center"
+      className="relative w-frame-rail shrink-0 items-center web:pt-2"
     >
       <RailSections {...props} />
       <RailEdge sidebarShown={props.sidebarShown} />
