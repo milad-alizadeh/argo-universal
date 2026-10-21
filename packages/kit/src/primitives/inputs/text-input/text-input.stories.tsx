@@ -4,6 +4,14 @@ import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List, ListSection } from '#primitives/lists/list';
 import { TextInput } from './text-input';
+import {
+  bareEmptyTextInput,
+  bareFilledTextInput,
+  bareInvalidTextInput,
+  bareMutedTextInput,
+  bareReadOnlyTextInput,
+  bareSecureTextInput,
+} from './text-input-fixtures';
 import type {
   RowTextInputProps,
   StandaloneTextInputProps,
@@ -13,7 +21,7 @@ const meta = {
   title: 'Design System/Primitives/Inputs/TextInput',
   component: TextInput,
   // The bare box is the one variant a story draws from args; the labelled ones hold their own value.
-  args: { variant: 'bare' },
+  args: bareEmptyTextInput,
   argTypes: kitArgTypes('TextInput'),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof TextInput>;
@@ -95,45 +103,17 @@ export const Checking: Story = {
   ),
 };
 
-export const BareEmpty: Story = {
-  args: { placeholder: 'Email', accessibilityLabel: 'Bare empty' },
-};
+export const BareEmpty: Story = { args: bareEmptyTextInput };
 
-export const BareFilled: Story = {
-  args: {
-    defaultValue: 'hello@example.com',
-    placeholder: 'Email',
-    accessibilityLabel: 'Bare filled',
-  },
-};
+export const BareFilled: Story = { args: bareFilledTextInput };
 
-export const BareReadOnly: Story = {
-  args: {
-    editable: false,
-    placeholder: 'Email',
-    accessibilityLabel: 'Bare read-only',
-  },
-};
+export const BareReadOnly: Story = { args: bareReadOnlyTextInput };
 
-export const BareInvalid: Story = {
-  args: { 'aria-invalid': true, accessibilityLabel: 'Bare invalid' },
-};
+export const BareInvalid: Story = { args: bareInvalidTextInput };
 
-export const BareMuted: Story = {
-  args: {
-    tone: 'muted',
-    placeholder: 'https://',
-    accessibilityLabel: 'Bare muted',
-  },
-};
+export const BareMuted: Story = { args: bareMutedTextInput };
 
-export const BareSecure: Story = {
-  args: {
-    secureTextEntry: true,
-    defaultValue: 'password',
-    accessibilityLabel: 'Bare secure',
-  },
-};
+export const BareSecure: Story = { args: bareSecureTextInput };
 
 // A row draws inside a grouped List section, where its label leads and its footer closes the section.
 function RowFrame(props: {

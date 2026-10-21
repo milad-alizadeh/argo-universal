@@ -6,32 +6,7 @@ import { List, ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Combobox } from './combobox';
-
-const options = [
-  {
-    value: 'long',
-    label: 'long-folder-name',
-    // A long path shows how a path shortens before the selected check.
-    subtitle:
-      '~/Folder/very/long/path/to/some/nested/location/long-folder-name',
-    code: true,
-    icon: 'folder',
-  },
-  {
-    value: 'paper',
-    label: 'second-folder',
-    subtitle: '~/Folder/second-folder',
-    code: true,
-    icon: 'folder',
-  },
-  {
-    value: 'docs',
-    label: 'third-folder',
-    subtitle: '~/Folder/third-folder',
-    code: true,
-    icon: 'folder',
-  },
-] satisfies React.ComponentProps<typeof Combobox>['options'];
+import { defaultCombobox, options } from './combobox-fixtures';
 
 // A Combobox is controlled, so a story draws through a wrapper that keeps the selected value.
 function Example({
@@ -46,13 +21,7 @@ function Example({
 const meta = {
   title: 'Design System/Primitives/Inputs/Combobox',
   component: Combobox,
-  args: {
-    label: 'Folder',
-    value: 'long',
-    options,
-    searchPlaceholder: 'Find a folder…',
-    onValueChange: (): void => {},
-  },
+  args: { ...defaultCombobox, onValueChange: (): void => {} },
   argTypes: kitArgTypes('Combobox'),
   render: (args): ReactElement => <Example {...args} />,
 } satisfies Meta<typeof Combobox>;
@@ -61,7 +30,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { args: defaultCombobox };
 
 export const Row: Story = {
   render: (): ReactElement => <ProjectSheet />,

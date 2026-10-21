@@ -3,13 +3,25 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Button } from './button';
-
-const saveLabel = 'Save changes';
+import {
+  defaultButton,
+  destructiveButton,
+  disabledButton,
+  extraSmallButton,
+  fullWidthOnAPhoneButton,
+  largeButton,
+  leadingIconButton,
+  linkButton,
+  loadingButton,
+  outlinedButton,
+  secondaryButton,
+  smallButton,
+  textButton,
+} from './button-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Actions/Button',
   component: Button,
-  args: { label: saveLabel },
   argTypes: kitArgTypes('Button'),
   // A row keeps the button at its own width, as it sits in a product layout.
   decorators: [
@@ -25,44 +37,34 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { args: defaultButton };
 
-export const Secondary: Story = { args: { variant: 'secondary' } };
+export const Secondary: Story = { args: secondaryButton };
 
-export const Outlined: Story = { args: { variant: 'outline' } };
+export const Outlined: Story = { args: outlinedButton };
 
-export const Text: Story = { args: { variant: 'ghost' } };
+export const Text: Story = { args: textButton };
 
-export const Link: Story = { args: { label: 'Learn more', variant: 'link' } };
+export const Link: Story = { args: linkButton };
 
-export const Destructive: Story = {
-  args: { label: 'Delete', tone: 'danger', fullWidth: true },
-};
+export const Destructive: Story = { args: destructiveButton };
 
 export const ExtraSmall: Story = {
-  args: { size: 'xs' },
+  args: extraSmallButton,
   parameters: { docs: { description: { story: 'A phone draws Default.' } } },
 };
 
 export const Small: Story = {
-  args: { size: 'sm' },
+  args: smallButton,
   parameters: { docs: { description: { story: 'A phone draws Default.' } } },
 };
 
-export const FullWidthOnAPhone: Story = {
-  args: {
-    label: 'Add argument',
-    variant: 'ghost',
-    size: 'sm',
-    icon: 'add',
-    fullWidth: 'narrow',
-  },
-};
+export const FullWidthOnAPhone: Story = { args: fullWidthOnAPhoneButton };
 
-export const Large: Story = { args: { size: 'lg' } };
+export const Large: Story = { args: largeButton };
 
-export const Disabled: Story = { args: { disabled: true } };
+export const Disabled: Story = { args: disabledButton };
 
-export const Loading: Story = { args: { loading: true } };
+export const Loading: Story = { args: loadingButton };
 
-export const LeadingIcon: Story = { args: { label: 'Add', icon: 'agent' } };
+export const LeadingIcon: Story = { args: leadingIconButton };

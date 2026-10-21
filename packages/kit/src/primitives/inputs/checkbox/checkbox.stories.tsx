@@ -2,6 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Checkbox, type CheckboxProps } from './checkbox';
+import {
+  checkedCheckbox,
+  disabledCheckbox,
+  invalidCheckbox,
+  uncheckedCheckbox,
+} from './checkbox-fixtures';
 
 // A Checkbox is controlled, so every story draws through a wrapper that keeps the value.
 function Example({
@@ -16,7 +22,7 @@ function Example({
 const meta = {
   title: 'Design System/Primitives/Inputs/Checkbox',
   component: Checkbox,
-  args: { label: 'Notify team', value: false, onValueChange: (): void => {} },
+  args: { onValueChange: (): void => {} },
   argTypes: kitArgTypes('Checkbox'),
   render: (args): React.JSX.Element => <Example {...args} />,
 } satisfies Meta<typeof Checkbox>;
@@ -25,12 +31,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Unchecked: Story = {};
+export const Unchecked: Story = { args: uncheckedCheckbox };
 
-export const Checked: Story = { args: { value: true } };
+export const Checked: Story = { args: checkedCheckbox };
 
-export const Disabled: Story = { args: { value: true, disabled: true } };
+export const Disabled: Story = { args: disabledCheckbox };
 
-export const Invalid: Story = {
-  args: { errors: ['Confirm your choice'] },
-};
+export const Invalid: Story = { args: invalidCheckbox };

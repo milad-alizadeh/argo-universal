@@ -1,32 +1,13 @@
-import fixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { IconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { Grid } from '#primitives/layout/grid';
-import { Stack } from '#primitives/layout/stack';
-import { Pill } from '#primitives/status/pill';
-import { Svg } from '#primitives/visual';
 import { Card } from './card';
+import { anatomyCard, mediaCard, titleOnlyCard } from './card-fixtures';
 
-const moreButton = (
-  <IconButton icon="more" variant="ghost" accessibilityLabel="More" />
-);
-
-const deployBody = (
-  <Stack direction="column" gap={2} align="start">
-    <Text>Deployed 12 min ago by Ana Ruiz</Text>
-    <Pill tone="success" text="Healthy" />
-  </Stack>
-);
-
-const deployCard = (
-  <Card title="api-gateway" subtitle="Production" actions={moreButton}>
-    {deployBody}
-  </Card>
-);
+const deployCard = <Card {...anatomyCard} />;
 
 const workerCard = (
   <Card
@@ -42,32 +23,18 @@ const meta = {
   title: 'Design System/Primitives/Layout/Card',
   component: Card,
   argTypes: kitArgTypes('Card'),
-  args: { title: 'api-gateway' },
+  args: titleOnlyCard,
 } satisfies Meta<typeof Card>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const TitleOnly: Story = {};
+export const TitleOnly: Story = { args: titleOnlyCard };
 
-// The unrelated example from the Paper master: a deploy status card.
-export const Anatomy: Story = {
-  args: {
-    subtitle: 'Production',
-    actions: moreButton,
-    children: deployBody,
-  },
-};
+export const Anatomy: Story = { args: anatomyCard };
 
-export const Media: Story = {
-  args: {
-    media: <Svg xml={serviceMap()} label="Service map" />,
-    title: 'Service map',
-    subtitle: '12 services',
-    children: <Text>Updated after the last deploy.</Text>,
-  },
-};
+export const Media: Story = { args: mediaCard };
 
 // The press count is live, so this state keeps its own render.
 export const Pressable: Story = { render: () => <PressableCard /> };
@@ -96,12 +63,4 @@ function PressableCard(): React.JSX.Element {
       <Text>Press the card to open its builds.</Text>
     </Card>
   );
-}
-
-function serviceMap(): string {
-  const fixture = fixtures.valid[0];
-
-  if (!fixture) throw new Error('Missing valid SVG fixture');
-
-  return fixture.xml;
 }

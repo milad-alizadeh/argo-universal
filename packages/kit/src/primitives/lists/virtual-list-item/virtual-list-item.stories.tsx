@@ -2,19 +2,18 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import { VirtualListItem } from './virtual-list-item';
+import {
+  firstInSectionVirtualListItem,
+  lastInSectionVirtualListItem,
+  loneRowVirtualListItem,
+  middleOfSectionVirtualListItem,
+  selectedRowVirtualListItem,
+} from './virtual-list-item-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Lists/VirtualListItem',
   component: VirtualListItem,
-  args: {
-    title: 'Item one',
-    leading: <Icon role="body" name="agent" />,
-    trailing: <Text role="row-detail">3/8</Text>,
-    onPress: action('press row'),
-  },
   // No Contracts schema: the props VirtualListItemProps declares.
   argTypes: {
     title: { control: 'text' },
@@ -47,26 +46,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const FirstInSection: Story = { args: { position: 'first' } };
+const onPress = action('press row');
+
+export const FirstInSection: Story = {
+  args: { ...firstInSectionVirtualListItem, onPress },
+};
 
 export const MiddleOfSection: Story = {
-  args: {
-    title: 'Item two',
-    trailing: <Text role="row-detail">12m</Text>,
-    position: 'middle',
-  },
+  args: { ...middleOfSectionVirtualListItem, onPress },
 };
 
 export const LastInSection: Story = {
-  args: {
-    title: 'Item three',
-    trailing: <Text role="row-detail">1h</Text>,
-    position: 'last',
-  },
+  args: { ...lastInSectionVirtualListItem, onPress },
 };
 
 export const SelectedRow: Story = {
-  args: { position: 'first', selected: true },
+  args: { ...selectedRowVirtualListItem, onPress },
   parameters: {
     docs: {
       description: { story: 'Wide only; a phone list has no selection.' },
@@ -75,11 +70,7 @@ export const SelectedRow: Story = {
 };
 
 export const LoneRow: Story = {
-  args: {
-    title: 'Item four',
-    trailing: <Text role="row-detail">2h</Text>,
-    position: 'only',
-  },
+  args: { ...loneRowVirtualListItem, onPress },
   parameters: {
     docs: { description: { story: 'A lone row rounds every corner.' } },
   },

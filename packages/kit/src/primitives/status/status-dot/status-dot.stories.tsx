@@ -3,12 +3,22 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { StatusDot } from './status-dot';
+import {
+  accentStatusDot,
+  dangerStatusDot,
+  doneStatusDot,
+  infoStatusDot,
+  mutedStatusDot,
+  neutralStatusDot,
+  pulsingStatusDot,
+  successStatusDot,
+  warningStatusDot,
+} from './status-dot-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Status/StatusDot',
   component: StatusDot,
   argTypes: kitArgTypes('StatusDot'),
-  args: { tone: 'success' },
   tags: ['third-party'],
   // A centred row keeps the dot at its own size, as it sits beside a row's text.
   decorators: [
@@ -24,20 +34,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Neutral: Story = { args: { tone: 'neutral' } };
+export const Neutral: Story = { args: neutralStatusDot };
 
-export const Muted: Story = { args: { tone: 'muted' } };
+export const Muted: Story = { args: mutedStatusDot };
 
-export const Accent: Story = { args: { tone: 'accent' } };
+export const Accent: Story = { args: accentStatusDot };
 
-export const Info: Story = { args: { tone: 'info' } };
+export const Info: Story = { args: infoStatusDot };
 
-export const Success: Story = { args: { tone: 'success' } };
+export const Success: Story = { args: successStatusDot };
 
-export const Warning: Story = { args: { tone: 'warning' } };
+export const Warning: Story = { args: warningStatusDot };
 
-export const Danger: Story = { args: { tone: 'danger' } };
+export const Danger: Story = { args: dangerStatusDot };
 
-export const Done: Story = { args: { tone: 'done' } };
+export const Done: Story = { args: doneStatusDot };
 
-export const Pulsing: Story = { args: { pulse: true } };
+export const Pulsing: Story = { args: pulsingStatusDot };

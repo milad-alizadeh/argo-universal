@@ -5,13 +5,22 @@ import { action } from 'storybook/actions';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Slider } from '#primitives/inputs/slider';
 import { List } from '#primitives/lists/list';
-import { Pill } from '#primitives/status/pill';
 import { ListItem } from './index';
+import {
+  controlListItem,
+  defaultListItem,
+  disabledListItem,
+  effortSlider,
+  loadingListItem,
+  mutedListItem,
+  progressListItem,
+  selectedListItem,
+  statusBadgeListItem,
+} from './list-item-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Lists/ListItem',
   component: ListItem,
-  args: { title: 'Item one' },
   argTypes: kitArgTypes('ListItem'),
   // A card list at a page's width, as the row stands in a product layout.
   decorators: [
@@ -29,63 +38,31 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { args: defaultListItem };
 
 export const Selected: Story = {
-  args: {
-    title: 'Item two',
-    subtitle: 'Subtitle',
-    selected: true,
-    onPress: action('select row'),
-  },
+  args: { ...selectedListItem, onPress: action('select row') },
 };
 
-export const Progress: Story = {
-  args: {
-    title: 'Item three',
-    subtitle: 'Subtitle',
-    meta: <Pill text="Meta" />,
-    progress: { value: 0.4, tone: 'success', active: true },
-  },
-};
+export const Progress: Story = { args: progressListItem };
 
 export const Disabled: Story = {
-  args: {
-    title: 'Disabled item',
-    disabled: true,
-    badge: 3,
-    onPress: action('select row'),
-  },
+  args: { ...disabledListItem, onPress: action('select row') },
 };
 
-export const StatusBadge: Story = {
-  args: {
-    title: 'Item four',
-    subtitle: 'Subtitle',
-    badge: { kind: 'status', tone: 'warning', label: 'Warning' },
-  },
-};
+export const StatusBadge: Story = { args: statusBadgeListItem };
 
 export const Control: Story = {
   args: {
-    title: 'Effort',
-    value: 'High',
+    ...controlListItem,
     control: (
-      <Slider
-        accessibilityLabel="Effort"
-        valueLabel="High"
-        minimumValue={0}
-        maximumValue={3}
-        step={1}
-        value={2}
-        onValueChange={action('change effort')}
-      />
+      <Slider {...effortSlider} onValueChange={action('change effort')} />
     ),
   },
 };
 
 export const Loading: Story = {
-  args: { isLoading: true, leading: null, subtitle: 'Subtitle', meta: 'Meta' },
+  args: loadingListItem,
   parameters: {
     docs: {
       description: {
@@ -97,7 +74,7 @@ export const Loading: Story = {
 };
 
 export const Muted: Story = {
-  args: { title: 'No items', tone: 'muted' },
+  args: mutedListItem,
   parameters: {
     docs: { description: { story: "An empty section's line." } },
   },

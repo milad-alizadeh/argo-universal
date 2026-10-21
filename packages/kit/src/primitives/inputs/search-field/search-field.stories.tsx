@@ -4,11 +4,15 @@ import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { SearchField } from './search-field';
 import { SearchFieldExample } from './search-field-example.mocks';
+import {
+  atRestSearchField,
+  searchingSearchField,
+} from './search-field-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Inputs/SearchField',
   component: SearchField,
-  args: { label: 'Search Agents', value: '', onChangeText: fn() },
+  args: { onChangeText: fn() },
   argTypes: kitArgTypes('SearchField'),
   /*
    * The query is typed into the field, so every state holds its own value; the example is the
@@ -23,6 +27,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const AtRest: Story = {};
+export const AtRest: Story = { args: atRestSearchField };
 
-export const Searching: Story = { args: { value: 'review' } };
+export const Searching: Story = { args: searchingSearchField };

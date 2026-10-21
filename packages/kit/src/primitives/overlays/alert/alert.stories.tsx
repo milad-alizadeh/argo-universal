@@ -4,13 +4,13 @@ import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { Alert } from './alert';
+import {
+  destructiveConfirmationAlert,
+  disabledAnswerAlert,
+  questionAlert,
+  runningAnswerAlert,
+} from './alert-fixtures';
 import type { AlertProps } from './alert-props';
-
-const removeTitle = 'Delete item?';
-
-const removeMessage = 'This cannot be undone.';
-
-const removeAgent = 'Delete';
 
 /*
  * An alert only draws while it is open, so each story opens its own from a trigger; the open state
@@ -19,12 +19,7 @@ const removeAgent = 'Delete';
 const meta = {
   title: 'Design System/Primitives/Overlays/Alert',
   component: Alert,
-  args: {
-    open: false,
-    onOpenChange: (): void => {},
-    title: removeTitle,
-    message: removeMessage,
-  },
+  args: { ...destructiveConfirmationAlert, onOpenChange: (): void => {} },
   argTypes: kitArgTypes('Alert'),
 } satisfies Meta<typeof Alert>;
 
@@ -33,37 +28,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const DestructiveConfirmation: Story = {
-  args: {
-    actions: [
-      { label: removeAgent, tone: 'danger' },
-      { label: 'Cancel', role: 'cancel' },
-    ],
-  },
+  args: destructiveConfirmationAlert,
   render: (args): React.JSX.Element => (
-    <AlertPreview trigger={removeAgent} alert={args} />
+    <AlertPreview trigger="Delete" alert={args} />
   ),
 };
 
 export const Question: Story = {
-  args: {
-    title: 'Discard your changes?',
-    message: 'Saved settings stay as they are.',
-    actions: [{ label: 'Keep editing', role: 'cancel' }, { label: 'Discard' }],
-  },
+  args: questionAlert,
   render: (args): React.JSX.Element => (
     <AlertPreview trigger="Discard changes" alert={args} />
   ),
 };
 
 export const DisabledAnswer: Story = {
-  args: {
-    title: 'Update item?',
-    message: 'Stop running work before updating.',
-    actions: [
-      { label: 'Cancel', role: 'cancel' },
-      { label: 'Update', disabled: true },
-    ],
-  },
+  args: disabledAnswerAlert,
   render: (args): React.JSX.Element => (
     <AlertPreview trigger="Update" alert={args} />
   ),
@@ -71,12 +50,7 @@ export const DisabledAnswer: Story = {
 
 // iOS hides a running alert, since SwiftUI's alert draws no progress; the screen shows it instead.
 export const RunningAnswer: Story = {
-  args: {
-    actions: [
-      { label: removeAgent, tone: 'danger', loading: true },
-      { label: 'Cancel', role: 'cancel' },
-    ],
-  },
+  args: runningAnswerAlert,
   render: (args): React.JSX.Element => (
     <AlertPreview trigger="Deleting" alert={args} />
   ),

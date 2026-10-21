@@ -2,13 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
 import { Audio } from './audio';
+import { failedAudio, pausedAudio } from './audio-fixtures';
 import { AudioTransport, type AudioTransportProps } from './audio-transport';
-
-const chime = {
-  pluginId: 'hello',
-  hash: 'a'.repeat(64),
-  format: 'mp3',
-} as const;
 
 // A source the browser refuses at once, with no network.
 const missing: MediaUrl = () => 'data:audio/mpeg;base64,AAAA';
@@ -24,7 +19,7 @@ const transport = {
 const meta = {
   title: 'Design System/Primitives/Content/Audio',
   component: Audio,
-  args: { source: chime, accessibilityLabel: 'Chime' },
+  args: pausedAudio,
   argTypes: kitArgTypes('Audio'),
 } satisfies Meta<typeof Audio>;
 
@@ -32,7 +27,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Paused: Story = {};
+export const Paused: Story = { args: pausedAudio };
 
 /*
  * Playing and Loading draw the transport row directly: the phase is the player's
@@ -61,6 +56,7 @@ export const Loading: Story = {
 };
 
 export const Failed: Story = {
+  args: failedAudio,
   render: (args) => (
     <MediaUrlContext.Provider value={missing}>
       <Audio {...args} />

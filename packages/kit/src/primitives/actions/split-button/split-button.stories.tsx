@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { SplitButton } from './split-button';
+import { actionsSplitButton } from './split-button-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Actions/SplitButton',
@@ -56,11 +57,7 @@ export const Narrow: Story = { render: () => <MergeSplit narrow /> };
 
 export const Actions: Story = {
   args: {
-    size: 'xs',
-    primary: true,
-    label: 'Merge',
-    icon: 'merged',
-    menuLabel: 'Options',
+    ...actionsSplitButton,
     actions: [
       { label: 'Option one', onPress: fn() },
       { label: 'Option two', onPress: fn() },
