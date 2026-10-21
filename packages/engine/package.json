@@ -60,6 +60,7 @@
     "./shell-runtime": "./src/agents/shell-runtime.ts",
     "./plugins": "./src/plugins/index.ts",
     "./plugin-validation": "./src/plugins/authoring/validate.ts",
-    "./mocks/keychain": "./mocks/memory-keychain.ts"
+    "./mocks/keychain": "./mocks/memory-keychain.ts",
+    "./mocks/data-fixture": "./mocks/data-fixture.ts"
   }
 }
