@@ -23,7 +23,7 @@ export const SessionIdentityMovesIntoTheBand: Story = {
         title="Build the window band"
         status="running"
         startedAt={null}
-        menu={{}}
+        menu={{ archived: false, status: 'running' }}
       />
       <View testID="session-feed" className="flex-1">
         <Text>Feed content</Text>
@@ -39,9 +39,7 @@ export const SessionIdentityMovesIntoTheBand: Story = {
     });
 
     await expect(band).toContainElement(title);
-    await expect(
-      canvas.getByRole('button', { name: 'More', exact: true }),
-    ).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: /^More$/ })).toBeDisabled();
     await expect(canvas.queryByTestId('session-header-bar')).toBeNull();
     await expect(canvas.getByTestId('session-feed')).toBeVisible();
   },
