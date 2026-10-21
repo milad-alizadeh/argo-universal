@@ -13,7 +13,10 @@ describe('bandLeadingSpacer', () => {
     { leadingWidth: 44, inset: 8, navPaneWidth: 35, spacer: 1 },
     { leadingWidth: 44, inset: 8, navPaneWidth: 36, spacer: 0 },
     { leadingWidth: 44, inset: 8, navPaneWidth: 56, spacer: 0 },
-  ])('clears $leadingWidth at nav width $navPaneWidth', ({ spacer, ...input }) => {
-    expect(bandLeadingSpacer(input)).toBe(spacer);
-  });
+  ])(
+    'clears $leadingWidth at nav width $navPaneWidth',
+    ({ spacer, ...input }) => {
+      expect(bandLeadingSpacer(input)).toBe(spacer);
+    },
+  );
 });

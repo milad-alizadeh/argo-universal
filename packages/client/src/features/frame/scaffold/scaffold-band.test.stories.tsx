@@ -54,7 +54,9 @@ function trailingControls(width: number): ScaffoldStory {
 }
 
 export const TrailingControlsNeverMoveWithPanes = trailingControls(1440);
+
 export const TrailingControlsAtNarrowWidth = trailingControls(1100);
+
 export const TrailingControlsAtVeryWideWidth = trailingControls(1920);
 
 function position(element: HTMLElement): Pick<DOMRect, 'x' | 'y'> {

@@ -27,15 +27,26 @@ const sessionMenuParts = {
   ),
 } as const;
 
-// ⋯ opens the Session's Rename and Archive under it; with neither to offer, it is not drawn.
+// The menu keeps its band control box even when the Session has no actions.
 export function SessionHeaderMenu({
   menu,
 }: {
   menu: SessionMenu;
-}): React.JSX.Element | null {
+}): React.JSX.Element {
   const actions = sessionMenuItems(menu);
 
-  if (actions.length === 0) return null;
+  if (actions.length === 0) return <EmptySessionMenu />;
 
   return <Menu {...sessionMenuParts} actions={actions} />;
+}
+
+function EmptySessionMenu(): React.JSX.Element {
+  return (
+    <IconButton
+      {...headerActionAppearance}
+      accessibilityLabel={sessionMenuLabel}
+      icon="more"
+      disabled
+    />
+  );
 }
