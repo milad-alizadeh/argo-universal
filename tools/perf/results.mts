@@ -40,7 +40,7 @@ export interface Measurement {
   page: Page;
   once: () => Promise<void>;
   // Reloading or otherwise resetting the page empties the frame recorder, so it happens out here.
-  before?: (() => Promise<void>) | undefined;
+  before?: () => Promise<void>;
 }
 
 const output = (file: string): string => path.join(outputDirectory, file);

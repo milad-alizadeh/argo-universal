@@ -8,13 +8,21 @@ import {
   feedScroll,
   jump,
   loadWholeList,
+  type Measured,
   openApp,
   phone,
   type Scenario,
   scrollDownAndUp,
   sessionsScroll,
 } from './page.mts';
-import { cpuRates, report, type Result, run, wanted } from './results.mts';
+import {
+  cpuRates,
+  type Measurement,
+  report,
+  type Result,
+  run,
+  wanted,
+} from './results.mts';
 import { type SeededServer, startSeededServer } from './seed.mts';
 
 const toggleSettleMilliseconds = 330;
@@ -128,6 +136,16 @@ const scenarios = new Map<string, Scenario>(
   }),
 );
 
+// What `run` is handed: a scenario with no setup leaves `before` out rather than passing an undefined one.
+function measurement(
+  scenario: Measured,
+  where: { page: Page; interaction: string; cpu: number },
+): Measurement {
+  const { session, once, before } = scenario;
+
+  return { ...where, session, once, ...(before && { before }) };
+}
+
 // Warms the code paths and caches with a first pass, then measures.
 async function measureScenario(
   page: Page,
@@ -137,11 +155,12 @@ async function measureScenario(
   const scenario = scenarios.get(interaction);
 
   if (!scenario) throw new Error(`No ${interaction} scenario`);
-  const { session, once, before } = await scenario(page);
-  await before?.();
-  await once();
+  const started = await scenario(page);
 
-  return run({ interaction, cpu, session, page, once, before });
+  await started.before?.();
+  await started.once();
+
+  return run(measurement(started, { page, interaction, cpu }));
 }
 
 for (const cpu of cpuRates)
