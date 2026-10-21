@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Text } from '#primitives/content/text';
 import { Surface } from '#primitives/layout/surface';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Grid, type GridProps } from './grid';
 

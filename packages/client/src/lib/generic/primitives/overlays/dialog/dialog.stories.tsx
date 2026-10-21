@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { TextInput } from '#primitives/inputs/text-input';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import {
   Dialog,
   DialogCancel,

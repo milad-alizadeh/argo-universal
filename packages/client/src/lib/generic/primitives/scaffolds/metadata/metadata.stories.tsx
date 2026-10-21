@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Platform, View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { List } from '#primitives/lists/list';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Metadata } from './metadata';
 import { fields } from './metadata.mocks';

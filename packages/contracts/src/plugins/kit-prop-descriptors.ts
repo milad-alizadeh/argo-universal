@@ -1,12 +1,12 @@
 import type { z } from 'zod';
+import { literal, memberTexts, typeText } from './kit-prop-type-text';
 import { partObjectSchema } from './plugin-object-schema';
 import { pluginPartSchemas } from './plugin-part-schemas';
+import { type JsonValue, type SchemaType, schemaType } from './schema-type';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
 type SchemaNode = z.core.JSONSchema._JSONSchema;
-
-type JsonValue = JsonSchema['const'];
 
 export type KitPartName = keyof typeof pluginPartSchemas;
 
@@ -21,8 +21,10 @@ export type KitPropDescriptor = {
   description: string | undefined;
   required: boolean;
   kind: KitPropKind;
-  // The prop's whole type, as a reader reads it: `'sm' | 'md'`, `string`, `boolean`.
+  // The prop's whole type, as a reader reads it: `'sm' | 'md'`, `string`, `Item[]`.
   type: string;
+  // The alternatives `type` is made of; one entry where the type is not a union.
+  members: string[];
   // The values a `choice` prop takes, in schema order.
   options: string[] | undefined;
   defaultValue: string | undefined;
@@ -35,46 +37,31 @@ const SCALAR_KINDS = new Map<string, KitPropKind>([
   ['string', 'text'],
 ]);
 
-function literal(value: JsonValue): string {
-  return typeof value === 'string' ? `'${value}'` : JSON.stringify(value);
+function literalValues(members: SchemaType[]): JsonValue[] {
+  return members.flatMap((member) =>
+    member.kind === 'literal' ? [member.value] : [],
+  );
 }
 
-function unionMembers(schema: JsonSchema): SchemaNode[] | undefined {
-  return schema.anyOf ?? schema.oneOf;
+// One member that is not a literal makes the whole union a free field.
+function unionValues(members: SchemaType[]): JsonValue[] | undefined {
+  const values = literalValues(members);
+
+  return values.length === members.length ? values : undefined;
 }
 
-function constType(schema: JsonSchema): string | undefined {
-  return schema.const === undefined ? undefined : literal(schema.const);
+function singleValues(type: SchemaType): JsonValue[] | undefined {
+  if (type.kind === 'literal') return [type.value];
+
+  if (type.kind === 'choice') return type.values;
+
+  return undefined;
 }
 
-function enumType(schema: JsonSchema): string | undefined {
-  return schema.enum?.map(literal).join(' | ');
-}
+function choiceValues(type: SchemaType): JsonValue[] | undefined {
+  if (type.kind === 'union') return unionValues(type.members);
 
-function unionType(schema: JsonSchema): string | undefined {
-  const members = unionMembers(schema);
-
-  return members && [...new Set(members.map(nodeType))].join(' | ');
-}
-
-function plainType(schema: JsonSchema): string {
-  return typeof schema.type === 'string' ? schema.type : 'unknown';
-}
-
-function namedType(schema: JsonSchema): string | undefined {
-  return constType(schema) ?? enumType(schema);
-}
-
-function typeName(schema: JsonSchema): string {
-  return namedType(schema) ?? unionType(schema) ?? plainType(schema);
-}
-
-function nodeType(node: SchemaNode): string {
-  return typeof node === 'boolean' ? 'unknown' : typeName(node);
-}
-
-function constChoice(schema: JsonSchema): string[] | undefined {
-  return schema.const === undefined ? undefined : [String(schema.const)];
+  return singleValues(type);
 }
 
 function stringValues(values: JsonValue[]): string[] | undefined {
@@ -83,44 +70,48 @@ function stringValues(values: JsonValue[]): string[] | undefined {
     : undefined;
 }
 
-function enumChoice(schema: JsonSchema): string[] | undefined {
-  return schema.enum && stringValues(schema.enum);
-}
-
-function unionChoice(schema: JsonSchema): string[] | undefined {
-  const members = unionMembers(schema);
-
-  return (
-    members &&
-    stringValues(
-      members.map((node) =>
-        typeof node === 'boolean' ? undefined : node.const,
-      ),
-    )
-  );
-}
-
 // A prop a table can offer as a list of values, rather than a free field.
-function choices(schema: JsonSchema): string[] | undefined {
-  return constChoice(schema) ?? enumChoice(schema) ?? unionChoice(schema);
+function choices(type: SchemaType): string[] | undefined {
+  const values = choiceValues(type);
+
+  return values && stringValues(values);
 }
 
-function kindOf(schema: JsonSchema): KitPropKind {
-  if (choices(schema)) return 'choice';
+function scalarKind(type: SchemaType): KitPropKind | undefined {
+  if (type.kind !== 'primitive' || type.names.length !== 1) return undefined;
 
-  return SCALAR_KINDS.get(plainType(schema)) ?? 'opaque';
+  return SCALAR_KINDS.get(String(type.names[0]));
 }
 
-function schemaOf(node: SchemaNode): JsonSchema {
+function kindOf(type: SchemaType, options: string[] | undefined): KitPropKind {
+  if (options) return 'choice';
+
+  return scalarKind(type) ?? 'opaque';
+}
+
+function propertySchema(node: SchemaNode): JsonSchema {
   return typeof node === 'boolean' ? {} : node;
 }
 
-function defaultType(schema: JsonSchema): string | undefined {
-  const value = schema.default;
+function defaultLiteral(schema: JsonSchema): string | undefined {
+  return schema.default === undefined ? undefined : literal(schema.default);
+}
 
-  if (value === undefined) return undefined;
+type DescribedType = Pick<
+  KitPropDescriptor,
+  'kind' | 'type' | 'members' | 'options'
+>;
 
-  return typeof value === 'string' ? `'${value}'` : JSON.stringify(value);
+function describeType(
+  type: SchemaType,
+  options: string[] | undefined,
+): DescribedType {
+  return {
+    kind: kindOf(type, options),
+    type: typeText(type),
+    members: memberTexts(type),
+    options,
+  };
 }
 
 function describe(
@@ -128,14 +119,14 @@ function describe(
   schema: JsonSchema,
   required: boolean,
 ): KitPropDescriptor {
+  const type = schemaType(schema);
+
   return {
     name,
     description: schema.description,
     required,
-    kind: kindOf(schema),
-    type: typeName(schema),
-    options: choices(schema),
-    defaultValue: defaultType(schema),
+    ...describeType(type, choices(type)),
+    defaultValue: defaultLiteral(schema),
   };
 }
 
@@ -149,10 +140,6 @@ export function kitPropDescriptors(name: KitPartName): KitPropDescriptor[] {
   const required = new Set(schema.required ?? []);
 
   return Object.entries(schema.properties ?? {}).map(([prop, node]) =>
-    describe(prop, schemaOf(node), required.has(prop)),
+    describe(prop, propertySchema(node), required.has(prop)),
   );
-}
-
-export function isKitPartName(name: string): name is KitPartName {
-  return Object.hasOwn(pluginPartSchemas, name);
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button } from '#primitives/actions/button';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { ButtonGroup } from './button-group';
 

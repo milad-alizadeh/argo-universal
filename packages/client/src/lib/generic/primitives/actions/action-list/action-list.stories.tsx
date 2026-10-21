@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { ListItem } from '#primitives/lists/list-item';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { ChoiceExample } from './action-list-choice.mocks';
 import { Action, ActionList, type PressActionProps } from './index';

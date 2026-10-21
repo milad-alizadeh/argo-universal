@@ -884,7 +884,7 @@
       }
     },
     {
-      // Generic code imports neither product nor local code; ADR-0031 adds the type-only kit prop surface beside the shared kit tokens.
+      // Generic code imports neither product nor local code; ADR-0031 adds the kit prop surface - its types, and the descriptors a props table is built from - beside the shared kit tokens.
       "files": ["packages/client/src/lib/generic/**"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
@@ -916,7 +916,8 @@
                 "group": [
                   "@repo/**",
                   "!@repo/contracts/kit-props",
-                  "!@repo/contracts/kit-symbols"
+                  "!@repo/contracts/kit-symbols",
+                  "!@repo/contracts/plugins/kit-prop-descriptors"
                 ],
                 "message": "Generic code imports neither product nor local code (A2)."
               }

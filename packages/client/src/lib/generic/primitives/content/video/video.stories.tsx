@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Video } from './video';
 

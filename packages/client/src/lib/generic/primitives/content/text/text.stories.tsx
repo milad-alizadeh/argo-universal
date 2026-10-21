@@ -14,7 +14,7 @@ const roles = [
 ] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { kitArgTypes } from '#storybook/kit-arg-types';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Text } from './text';
 

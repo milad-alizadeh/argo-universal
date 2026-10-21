@@ -1,6 +1,7 @@
 import fixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
@@ -8,7 +9,6 @@ import { Grid } from '#primitives/layout/grid';
 import { Stack } from '#primitives/layout/stack';
 import { Pill } from '#primitives/status/pill';
 import { Svg } from '#primitives/visual';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Card } from './card';
 

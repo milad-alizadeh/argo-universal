@@ -19,8 +19,7 @@
     },
     "#features/*": "./src/features/*/index.ts",
     "#lib/generic/*": "./src/lib/generic/*.ts",
-    "#lib/product/*": "./src/lib/product/*.tsx",
-    "#storybook/*": "./src/storybook/*.ts"
+    "#lib/product/*": "./src/lib/product/*.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

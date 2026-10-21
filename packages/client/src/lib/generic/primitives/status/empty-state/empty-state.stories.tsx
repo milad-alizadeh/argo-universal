@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button } from '#primitives/actions/button';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { EmptyState } from './empty-state';
 import type { EmptyStateProps } from './empty-state-props';

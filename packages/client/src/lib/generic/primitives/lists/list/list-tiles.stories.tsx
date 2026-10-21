@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
 import { Image } from '#primitives/content/image';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import { Svg } from '#primitives/visual';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { List } from './list';
 
 const meta = {

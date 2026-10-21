@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Surface } from './surface';
 

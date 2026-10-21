@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { logoSources } from '#lib/generic/symbols/logo-source';
 import { IconButton } from '#primitives/actions/icon-button';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Tooltip } from './tooltip';
 
 const label = 'Link';

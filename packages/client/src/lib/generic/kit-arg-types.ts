@@ -26,20 +26,23 @@ const SCALAR_TYPES = new Map<KitPropKind, 'string' | 'number' | 'boolean'>([
 const SUMMARY_MEMBERS = 8;
 
 function summary(prop: KitPropDescriptor): string {
-  const members = prop.type.split(' | ');
+  const { members } = prop;
 
   if (members.length <= SUMMARY_MEMBERS) return prop.type;
 
   return `${members.slice(0, SUMMARY_MEMBERS).join(' | ')} | … (${members.length} values)`;
 }
 
+function otherType(prop: KitPropDescriptor): ArgTypes[string]['type'] {
+  return { name: 'other', value: prop.type, required: prop.required };
+}
+
+function enumType(prop: KitPropDescriptor): ArgTypes[string]['type'] {
+  return { name: 'enum', value: prop.options ?? [], required: prop.required };
+}
+
 function choiceType(prop: KitPropDescriptor): ArgTypes[string]['type'] {
-  const { required } = prop;
-
-  if (prop.kind !== 'choice')
-    return { name: 'other', value: prop.type, required };
-
-  return { name: 'enum', value: prop.options ?? [], required };
+  return prop.kind === 'choice' ? enumType(prop) : otherType(prop);
 }
 
 function sbType(prop: KitPropDescriptor): ArgTypes[string]['type'] {

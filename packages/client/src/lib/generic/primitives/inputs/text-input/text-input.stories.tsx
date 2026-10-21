@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { TextInput } from './text-input';
 import type {

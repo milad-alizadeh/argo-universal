@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { List } from '#primitives/lists/list';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { ListItem } from './index';
 
 const meta = {

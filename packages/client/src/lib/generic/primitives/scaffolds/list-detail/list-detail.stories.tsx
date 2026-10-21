@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { kitArgTypes } from '#storybook/kit-arg-types';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { ListDetail, type ListDetailProps } from './index';
 import { ExampleListDetail, issues, projects } from './list-detail.mocks';

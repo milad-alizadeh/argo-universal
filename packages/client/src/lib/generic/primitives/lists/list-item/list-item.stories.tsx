@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Slider } from '#primitives/inputs/slider';
 import { List } from '#primitives/lists/list';
 import { Pill } from '#primitives/status/pill';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { ListItem } from './index';
 import type { ListItemProps } from './list-item-props';

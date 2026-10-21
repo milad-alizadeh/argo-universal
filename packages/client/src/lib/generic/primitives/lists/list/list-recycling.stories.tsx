@@ -8,9 +8,9 @@ import {
   type SetStateAction,
 } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { ListItem } from '#primitives/lists/list-item';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { List } from './list';
 import type { ListProps } from './list-props';
 

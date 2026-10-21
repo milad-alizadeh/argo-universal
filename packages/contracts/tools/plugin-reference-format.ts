@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { partObjectSchema } from '../src/plugins/plugin-object-schema';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
+import { type SchemaType, schemaType } from '../src/plugins/schema-type';
 import { wireParts, type WirePartDefinition } from '../src/plugins/wire-parts';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
@@ -36,106 +37,61 @@ export function propsSchema(name: string): JsonSchema {
   return schema;
 }
 
-function constantType(schema: JsonSchema): string | undefined {
-  return schema.const === undefined ? undefined : JSON.stringify(schema.const);
+function literalText(type: SchemaType): string | undefined {
+  if (type.kind === 'literal') return JSON.stringify(type.value);
+
+  if (type.kind === 'choice')
+    return type.values.map((item) => `\`${String(item)}\``).join(', ');
+
+  return undefined;
 }
 
-function enumType(schema: JsonSchema): string | undefined {
-  return schema.enum?.map((item) => `\`${String(item)}\``).join(', ');
+function membersText(type: SchemaType): string | undefined {
+  if (type.kind === 'union')
+    return [...new Set(type.members.map(markdownType))].join(' or ');
+
+  if (type.kind === 'conjunction')
+    return type.members.map(markdownType).join(' and ');
+
+  return undefined;
 }
 
-function unionType(schema: JsonSchema): string | undefined {
-  const union = schema.anyOf ?? schema.oneOf;
+function nameText(type: SchemaType): string | undefined {
+  if (type.kind === 'action') return `\`${type.name}\` action object`;
 
-  if (!union) return undefined;
+  if (type.kind === 'named') return type.name;
 
-  return [...new Set(union.map(schemaNodeType))].join(' or ');
+  return undefined;
+}
+
+function itemsText(items: SchemaType[]): string {
+  if (items.length === 0) return jsonValueDescription;
+
+  return items.map(markdownType).join(' or ');
+}
+
+function listText(type: SchemaType): string | undefined {
+  if (type.kind === 'array') return `${itemsText(type.items)}[]`;
+
+  if (type.kind === 'primitive') return type.names.join(' or ');
+
+  return undefined;
+}
+
+function emptyText(type: SchemaType): string {
+  return type.kind === 'never' ? 'never' : jsonValueDescription;
+}
+
+function namedText(type: SchemaType): string | undefined {
+  return literalText(type) ?? membersText(type) ?? nameText(type);
+}
+
+function markdownType(type: SchemaType): string {
+  return namedText(type) ?? listText(type) ?? emptyText(type);
 }
 
 function schemaNodeType(schema: JsonSchemaNode): string {
-  if (typeof schema !== 'boolean') return markdownType(schema);
-
-  return schema ? jsonValueDescription : 'never';
-}
-
-function formatAction(action: JsonSchema['const']): string | undefined {
-  return typeof action === 'string' ? `\`${action}\` action object` : undefined;
-}
-
-function actionObjectType(schema: JsonSchema): string | undefined {
-  return actionHandlerType(schema.properties?.action);
-}
-
-function actionHandlerType(
-  action: JsonSchemaNode | undefined,
-): string | undefined {
-  if (!action || typeof action === 'boolean') return undefined;
-
-  return formatAction(action.const);
-}
-
-function eventObjectType(schema: JsonSchema): string | undefined {
-  return schema.properties?.$event === undefined
-    ? undefined
-    : 'Plugin event object';
-}
-
-function genericObjectType(schema: JsonSchema): string | undefined {
-  return schema.properties === undefined ? undefined : 'object';
-}
-
-function objectType(schema: JsonSchema): string | undefined {
-  return (
-    actionObjectType(schema) ??
-    eventObjectType(schema) ??
-    genericObjectType(schema)
-  );
-}
-
-function conjunctionType(schema: JsonSchema): string | undefined {
-  return schema.allOf?.map(schemaNodeType).join(' and ');
-}
-
-function arrayType(schema: JsonSchema): string | undefined {
-  if (schema.type !== 'array') return undefined;
-
-  return `${arrayItemType(schema.items)}[]`;
-}
-
-function arrayItemType(items: JsonSchema['items']): string {
-  if (Array.isArray(items)) return items.map(schemaNodeType).join(' or ');
-
-  return items ? schemaNodeType(items) : jsonValueDescription;
-}
-
-function typeList(schema: JsonSchema): string | undefined {
-  return Array.isArray(schema.type) ? schema.type.join(' or ') : undefined;
-}
-
-function schemaTypeCandidates(schema: JsonSchema): (string | undefined)[] {
-  return [
-    constantType(schema),
-    enumType(schema),
-    unionType(schema),
-    conjunctionType(schema),
-    arrayType(schema),
-    objectType(schema),
-    typeList(schema),
-    primitiveType(schema),
-  ];
-}
-
-export function markdownType(schema: JsonSchema): string {
-  if (typeof schema['x-argo-type'] === 'string') return schema['x-argo-type'];
-
-  return (
-    schemaTypeCandidates(schema).find((candidate) => candidate !== undefined) ??
-    jsonValueDescription
-  );
-}
-
-function primitiveType(schema: JsonSchema): string | undefined {
-  return typeof schema.type === 'string' ? schema.type : undefined;
+  return markdownType(schemaType(schema));
 }
 
 function escapeCell(value: string): string {

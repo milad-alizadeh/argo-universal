@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Detail } from './detail';
 import type { DetailProps } from './detail-props';

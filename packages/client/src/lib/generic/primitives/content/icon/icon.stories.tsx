@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { kitArgTypes } from '#storybook/kit-arg-types';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Icon } from './icon';
 import { IconExamples } from './icon-examples.mocks';
 import { SfAndMaterialTable } from './sf-symbol-table.mocks';

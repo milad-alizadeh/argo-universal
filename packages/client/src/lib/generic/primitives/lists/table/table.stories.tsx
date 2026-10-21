@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { kitArgTypes } from '#storybook/kit-arg-types';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Table } from './table';
 import { PlatformsTable } from './table-platforms.mocks';
 import { InPlaceRowDetail, RunsTable } from './table-runs.mocks';

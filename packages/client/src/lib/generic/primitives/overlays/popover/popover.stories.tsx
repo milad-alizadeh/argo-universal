@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Button, contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { Combobox } from '#primitives/inputs/combobox';
 import { TextInput } from '#primitives/inputs/text-input';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { PopoverAnchor } from './popover-anchor';
 import { PopoverTitle } from './popover-title';

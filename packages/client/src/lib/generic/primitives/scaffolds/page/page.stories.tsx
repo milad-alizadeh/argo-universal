@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { kitArgTypes } from '#storybook/kit-arg-types';
 import { Variation, Variations } from '../../../variations';
 import { Page, type PageProps } from './index';
 import { exampleSubmenu } from './page-submenu-example.mocks';

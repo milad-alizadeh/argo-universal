@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { kitArgTypes } from '#storybook/kit-arg-types';
+import { kitArgTypes } from '#lib/generic/kit-arg-types';
 import { logoSources } from '../../../symbols/logo-source';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Text } from '../../content/text';
