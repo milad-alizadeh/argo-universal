@@ -28,7 +28,7 @@ function HeaderTitle({
 }
 
 function headerMenu({ menu }: SessionHeaderProps): ReactElement | undefined {
-  return menu ? <SessionHeaderMenu menu={menu} /> : undefined;
+  return menu ? <SessionHeaderMenu menu={menu} reserved /> : undefined;
 }
 
 function headerWorkbench({

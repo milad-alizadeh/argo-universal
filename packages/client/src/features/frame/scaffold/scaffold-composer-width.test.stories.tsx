@@ -5,7 +5,10 @@ import { Composer } from '#features/composer';
 import { composerProps } from '../../../../mocks/composer-mock';
 import { shownText } from '../../../../mocks/shown-text';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
-import { pressInspectorButton } from './scaffold-controls.mocks';
+import {
+  pressInspectorButton,
+  resizeInspectorLabel,
+} from './scaffold-controls.mocks';
 import {
   controlledPlay,
   narrowDesktopWidth,
@@ -44,13 +47,20 @@ export const ComposerUsesAvailableWidth: ScaffoldStory = {
     ),
   },
   play: controlledPlay(async (context, controlled) => {
-    const { canvas } = context;
+    const { canvas, userEvent } = context;
     await settleViewport(narrowDesktopWidth);
     await waitFor(() =>
       expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible(),
     );
     await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
     await controlled.render({ inspectorState: 'open' });
+    await expect(canvas.getByTestId(agentIconId)).toBeVisible();
+    await expect(canvas.getByTestId('desktop-list')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+    canvas.getByRole('separator', { name: resizeInspectorLabel }).focus();
+    await userEvent.keyboard('{ArrowLeft}'.repeat(40));
     await waitFor(() =>
       expect(canvas.queryByTestId(agentIconId)).not.toBeInTheDocument(),
     );
@@ -65,7 +75,7 @@ export const ComposerUsesAvailableWidth: ScaffoldStory = {
       .getByTestId('responsive-composer')
       .getBoundingClientRect();
 
-    // Usage is a desktop control, and the open Inspector leaves the Composer the width of a phone's.
+    // Explicitly widening the Stage leaves the Composer the width of a phone; its controls stay inside it.
     for (const name of ['Mode', 'Context window', 'Send']) {
       const control = canvas
         .getByRole('button', { name })

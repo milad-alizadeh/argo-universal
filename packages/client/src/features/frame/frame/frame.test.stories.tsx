@@ -6,11 +6,16 @@ import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { SessionHeader, useSessionPanels } from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
+import { WindowBandHostContext } from '#lib/product/window-band';
 import { Inspector } from '#primitives/scaffolds/inspector';
 import { LayoutListMock } from '../components/layout-list.mocks';
 import { Scaffold } from '../scaffold/scaffold';
 import { useFrameState } from './frame';
 import { FrameInspectorHost, ScreenInspector } from './frame-inspector';
+
+const showStageLabel = 'Show Stage';
+
+const hideStageLabel = 'Hide Stage';
 
 const expanded = 'aria-pressed';
 
@@ -20,19 +25,21 @@ function FrameStatePage({
 }: {
   content: ReactNode;
 }): React.JSX.Element {
-  const { scaffold, inspectorHost } = useFrameState();
+  const { scaffold, inspectorHost, bandHost } = useFrameState();
 
   return (
     <View className="flex-1">
       <FrameInspectorHost value={inspectorHost}>
-        <Scaffold
-          {...scaffold}
-          sizeClass="wide"
-          sidebar={null}
-          listHeader={<ListTitle>Sessions</ListTitle>}
-          list={<LayoutListMock name="Sessions" />}
-          page={<ScreenInspector>{content}</ScreenInspector>}
-        />
+        <WindowBandHostContext value={bandHost}>
+          <Scaffold
+            {...scaffold}
+            sizeClass="wide"
+            sidebar={null}
+            listHeader={<ListTitle>Sessions</ListTitle>}
+            list={<LayoutListMock name="Sessions" />}
+            page={<ScreenInspector>{content}</ScreenInspector>}
+          />
+        </WindowBandHostContext>
       </FrameInspectorHost>
     </View>
   );
@@ -54,6 +61,7 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
         panels={{
           ...panels.state,
           offered: changesOnly,
+          counts: { changes: 1 },
           onToggle: panels.toggle,
         }}
       />
@@ -89,14 +97,20 @@ export const ChangesOpensInspector: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     const changes = await canvas.findByRole('button', { name: 'Changes' });
-    await expect(changes).toHaveAttribute(expanded, 'false');
+    await expect(
+      canvas.getByRole('button', { name: showStageLabel }),
+    ).toHaveAttribute(expanded, 'false');
     await userEvent.click(changes);
-    await expect(changes).toHaveAttribute(expanded, 'true');
+    await expect(
+      canvas.getByRole('button', { name: hideStageLabel }),
+    ).toHaveAttribute(expanded, 'true');
     await expect(
       await canvas.findByRole('heading', { name: 'Changes' }),
     ).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Hide Stage' }));
-    await expect(changes).toHaveAttribute(expanded, 'false');
+    await userEvent.click(canvas.getByRole('button', { name: hideStageLabel }));
+    await expect(
+      canvas.getByRole('button', { name: showStageLabel }),
+    ).toHaveAttribute(expanded, 'false');
   },
 };
 
@@ -110,20 +124,24 @@ export const LongSessionTitle: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('heading', { name: longTitle });
-    const changes = canvas.getByRole('button', { name: 'Changes' });
+    const controls = canvas.getByTestId('window-band-trailing');
     const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight);
 
     for (const open of [false, true]) {
       if (open) {
-        await userEvent.click(changes);
-        await expect(changes).toHaveAttribute(expanded, 'true');
+        await userEvent.click(
+          canvas.getByRole('button', { name: showStageLabel }),
+        );
+        await expect(
+          canvas.getByRole('button', { name: hideStageLabel }),
+        ).toHaveAttribute(expanded, 'true');
       }
 
       await expect(heading.getBoundingClientRect().height).toBeLessThan(
         lineHeight * 1.5,
       );
       await expect(heading.getBoundingClientRect().right).toBeLessThanOrEqual(
-        changes.getBoundingClientRect().left,
+        controls.getBoundingClientRect().left,
       );
     }
   },

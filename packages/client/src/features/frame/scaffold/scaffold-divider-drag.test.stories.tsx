@@ -85,13 +85,13 @@ export const DragToCollapseExpandAndReopen: ScaffoldStory = {
     await drag(context, resizeInspectorLabel, -240);
     await acceptInspector(controlled, 'open');
     await waitForButton(context, closeInspectorLabel);
-    await drag(context, resizeInspectorLabel, -700);
+    await drag(context, resizeInspectorLabel, -window.innerWidth);
     await acceptInspector(controlled, 'expanded');
     await waitForZeroWidth(canvas, detailId);
-    await drag(context, resizeInspectorLabel, 400);
+    await drag(context, resizeInspectorLabel, window.innerWidth / 2);
     await acceptInspector(controlled, 'open');
     await waitForButton(context, expandInspectorLabel);
-    await drag(context, resizeInspectorLabel, 800);
+    await drag(context, resizeInspectorLabel, window.innerWidth);
     await acceptInspector(controlled, 'closed');
     await expect(
       canvas.getByRole('button', { name: moreActionsLabel }),

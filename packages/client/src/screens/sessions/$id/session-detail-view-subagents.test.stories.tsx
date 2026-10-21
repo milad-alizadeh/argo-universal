@@ -20,7 +20,7 @@ const subagentsName = 'Subagents';
 const selected = ['aria-selected', 'true'] as const;
 
 const triggerName = (wide: boolean, count: number): string =>
-  wide ? subagentsName : `Subagents: ${count}`;
+  wide ? 'Agents' : `Subagents: ${count}`;
 
 const meta = {
   ...sessionDetailViewTestMeta,
@@ -44,10 +44,13 @@ async function assertPresentation(
   const page = within(document.body);
 
   if (wide) {
-    const tab = await canvas.findByRole('tab', { name: /^Subagents:/ });
+    const tab = await canvas.findByRole('tab', { name: /^Agents:/ });
     await expect(tab).toHaveAttribute(...selected);
     await expect(within(tab).getByText(String(count))).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: subagentsName }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Toggle Workbench' }),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Agents' }));
     await expect(tab).toHaveAttribute(...selected);
     await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
 
@@ -68,6 +71,7 @@ function subagentsAt(width: number, state: State): Story {
   const subagents = subagentStates[state];
   const onSelect = fn();
   const wide = width === layoutWidths.wide;
+  const absentTrigger = wide ? 'Agents' : /^Subagents/;
 
   return {
     beforeEach: () => settleViewport(width),
@@ -83,12 +87,14 @@ function subagentsAt(width: number, state: State): Story {
         canvas.queryByRole('button', { name: 'Shells' }),
       ).not.toBeInTheDocument();
       await expect(
-        canvas.queryByRole('tab', { name: /^Subagents:/ }),
+        canvas.queryByRole('tab', { name: /^Agents:/ }),
       ).not.toBeInTheDocument();
 
       if (!subagents.length) {
         await expect(
-          canvas.queryByRole('button', { name: /^Subagents/ }),
+          canvas.queryByRole('button', {
+            name: absentTrigger,
+          }),
         ).not.toBeInTheDocument();
 
         return;

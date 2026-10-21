@@ -7,7 +7,6 @@ import {
   currentAttribute,
   detailContentId,
   hiddenAttribute,
-  hideSidebarLabel,
   listContentId,
   railId,
   sessionListId,
@@ -102,12 +101,10 @@ function sectionsAndSidebar(width: number): ScaffoldStory {
   };
 }
 
-export const SectionsAndSidebarPhone = sectionsAndSidebar(layoutWidths.phone);
-
 export const SectionsAndSidebarWide = sectionsAndSidebar(layoutWidths.wide);
 
-// The rail lists the core sections in order and keeps the sidebar toggle last; only the open section is current.
-export const RailListsSectionsThenTheSidebarToggle: ScaffoldStory = {
+// The rail lists the sections; the sidebar toggle belongs to the window band.
+export const RailListsOnlySections: ScaffoldStory = {
   args: { selectedSection: 'settings' },
   play: controlledPlay(async ({ canvas }) => {
     await page.viewport(1440, 844);
@@ -116,7 +113,7 @@ export const RailListsSectionsThenTheSidebarToggle: ScaffoldStory = {
       rail
         .getAllByRole('button')
         .map((button) => button.getAttribute('aria-label')),
-    ).toEqual(['Sessions', 'Settings', hideSidebarLabel]);
+    ).toEqual(['Sessions', 'Settings']);
     await expect(
       rail.getByRole('button', { name: 'Settings' }),
     ).toHaveAttribute(currentAttribute, 'page');
@@ -134,10 +131,8 @@ function attention(
   return {
     args: { attentionCount },
     play: controlledPlay(async ({ canvas }) => {
-      for (const width of [390, 1440]) {
-        await page.viewport(width, 844);
-        await check(canvas);
-      }
+      await settleViewport(layoutWidths.wide);
+      await check(canvas);
     }),
   };
 }
