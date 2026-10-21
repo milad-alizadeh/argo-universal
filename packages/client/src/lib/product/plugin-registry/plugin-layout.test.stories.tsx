@@ -3,7 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
-const meta = { title: 'Tests/Plugin layout parts' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/Layout',
+} satisfies Meta;
 
 export default meta;
 

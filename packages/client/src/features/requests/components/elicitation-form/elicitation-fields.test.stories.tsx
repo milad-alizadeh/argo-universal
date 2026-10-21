@@ -11,7 +11,10 @@ import {
   invalidSchemaRequest,
 } from '../request.mocks';
 
-const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm/Fields' };
+const meta = {
+  ...elicitationTestMeta,
+  title: 'Tests/Requests/ElicitationForm/Fields',
+};
 
 export default meta;
 

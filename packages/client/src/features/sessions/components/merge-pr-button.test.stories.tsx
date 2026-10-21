@@ -6,7 +6,7 @@ import { ControlledMergeButton } from './merge-pr-button.test.mocks';
 
 // Spec 0020 removed Merge from the Session header. Its public control still owns method selection and execution.
 const meta = {
-  title: 'Tests/MergePrButton',
+  title: 'Tests/Sessions/MergePrButton',
   component: ControlledMergeButton,
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   args: {

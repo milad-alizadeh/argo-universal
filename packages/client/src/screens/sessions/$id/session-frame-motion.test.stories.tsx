@@ -8,7 +8,7 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { longSession } from './session-detail-view.mocks';
 
 const meta = {
-  title: 'Tests/SessionFrameMotion',
+  title: 'Tests/Screens/Sessions/Session/FrameMotion',
   parameters: { screenPreview: true },
   render: (): React.JSX.Element => (
     <FramedSessionPreview state="open" {...longSession} />

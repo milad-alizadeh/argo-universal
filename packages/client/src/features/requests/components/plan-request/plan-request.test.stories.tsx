@@ -8,7 +8,7 @@ import { PermissionRequest } from '../permission-request/permission-request';
 import { planRequestProps, planTitleText } from './plan-request.mocks';
 
 const meta = {
-  title: 'Tests/PlanRequest',
+  title: 'Tests/Requests/PlanRequest',
   component: PermissionRequest,
   parameters: { previewPadding: false },
   render: (args): React.JSX.Element => (

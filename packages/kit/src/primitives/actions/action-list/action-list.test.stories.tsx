@@ -7,7 +7,9 @@ import { Action, ActionList } from './index';
 
 const choose = fn();
 
-const meta = { title: 'Tests/ActionList' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Actions/ActionList',
+} satisfies Meta;
 
 export default meta;
 

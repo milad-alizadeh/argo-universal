@@ -14,7 +14,10 @@ import {
 } from '../request.mocks';
 import { ElicitationOutcome } from './elicitation-outcome';
 
-const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm/Outcome' };
+const meta = {
+  ...elicitationTestMeta,
+  title: 'Tests/Requests/ElicitationForm/Outcome',
+};
 
 export default meta;
 

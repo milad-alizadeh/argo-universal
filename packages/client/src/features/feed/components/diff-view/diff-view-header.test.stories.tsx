@@ -10,7 +10,7 @@ import { DiffView } from './diff-view';
 const largeHeader = { name: 'Diff for /repo/large.txt' };
 
 const meta = {
-  title: 'Tests/DiffView/Header',
+  title: 'Tests/Feed/DiffView/Header',
   component: DiffView,
   globals: { mode: 'light' },
   decorators: [

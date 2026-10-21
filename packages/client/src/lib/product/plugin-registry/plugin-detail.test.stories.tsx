@@ -87,7 +87,9 @@ const root = WireNode.parse({
 
 const onEvent = fn();
 
-const meta = { title: 'Tests/Plugin registry/Detail' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/Detail',
+} satisfies Meta;
 
 export default meta;
 

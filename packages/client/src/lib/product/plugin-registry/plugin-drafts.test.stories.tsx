@@ -6,7 +6,9 @@ import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
-const meta = { title: 'Tests/Plugin drafts' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/Drafts',
+} satisfies Meta;
 
 export default meta;
 

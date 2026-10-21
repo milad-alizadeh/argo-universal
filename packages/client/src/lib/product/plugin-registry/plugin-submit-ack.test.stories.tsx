@@ -9,7 +9,7 @@ import { PluginTree } from './plugin-registry';
 const onEvent = fn();
 
 const meta = {
-  title: 'Tests/Plugin field submission acknowledgement',
+  title: 'Tests/Design System/Patterns/PluginRegistry/SubmitAck',
 } satisfies Meta;
 
 export default meta;

@@ -8,7 +8,9 @@ const choose = fn();
 
 const open = fn();
 
-const meta = { title: 'Tests/ActionList/Focus' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Actions/ActionList/Focus',
+} satisfies Meta;
 
 export default meta;
 

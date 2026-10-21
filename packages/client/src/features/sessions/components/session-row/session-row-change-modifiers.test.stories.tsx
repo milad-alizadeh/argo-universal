@@ -9,7 +9,7 @@ import { SessionRow } from './session-row';
 
 const meta = {
   ...sessionRowTestMeta,
-  title: 'Tests/SessionRow Change modifiers',
+  title: 'Tests/Sessions/SessionRow/ChangeModifiers',
 };
 
 export default meta;

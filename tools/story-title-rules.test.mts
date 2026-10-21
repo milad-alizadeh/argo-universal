@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   derivedStoryTitle,
   duplicateTitleProblems,
+  presentationTitles,
   type StoryFile,
+  type StoryTitles,
   storyTitleProblems,
 } from './story-title-rules.mts';
 
@@ -63,14 +65,10 @@ describe('a story title', (): void => {
       `${src}/features/settings/components/placeholder-detail-view/placeholder-detail-view.stories.tsx`,
       'Screens/Settings/Placeholder',
     ],
-    // Exception 2: a test's subject is #1200's to derive, so only its root is checked here.
+    // Exception 2: a test's title is its subject's under `Tests/`; with no story beside it, its own path.
     [
       `${kit}/primitives/overlays/sheet/sheet-root-page.test.stories.tsx`,
-      'Tests/Sheet/Root page',
-    ],
-    [
-      `${src}/screens/settings/agents/agents-list.test.stories.tsx`,
-      'Tests/AgentsList',
+      'Tests/Design System/Primitives/Overlays/Sheet/RootPage',
     ],
   ])('passes in its folder: %s', (file, title): void => {
     expect(storyTitleProblems(file, meta(title))).toEqual([]);
@@ -123,11 +121,6 @@ describe('a story title', (): void => {
       `${src}/screens/sessions/session-list-view.stories.tsx`,
       'Screens/Sessions',
       /visible page title/,
-    ],
-    [
-      `${src}/features/feed/components/feed/feed.test.stories.tsx`,
-      'Feed/Feed',
-      /expected 'Tests\/…'/,
     ],
   ])('fails outside its root: %s', (file, title, message): void => {
     expect(storyTitleProblems(file, meta(title))).toEqual([
@@ -289,6 +282,104 @@ describe('the title `pnpm new:story` writes', (): void => {
     expect((): string =>
       derivedStoryTitle(`${kit}/primitives/visual/svg.tsx`),
     ).toThrow('a kit primitive lives in `primitives/<category>/<name>/`');
+  });
+});
+
+const composer = `${src}/features/composer/components/composer`;
+
+const registry = `${src}/lib/product/plugin-registry`;
+
+const registryTitle = 'Design System/Patterns/PluginRegistry';
+
+const composerTitle = 'Composer/Composer';
+
+const composerStory = `${composer}/composer.stories.tsx`;
+
+const route = `${src}/screens/sessions/$id`;
+
+const beside = (entries: readonly [string, string][]): StoryTitles =>
+  new Map(entries);
+
+const subjects = beside([
+  [composerStory, composerTitle],
+  [`${registry}/plugin-registry.stories.tsx`, registryTitle],
+  [
+    `${registry}/replaceable-slot.stories.tsx`,
+    'Design System/Patterns/ReplaceableSlot',
+  ],
+  [`${route}/session-detail-view.stories.tsx`, 'Screens/Sessions/Session'],
+  [`${route}/session-new-view.stories.tsx`, 'Screens/Sessions/New Session'],
+]);
+
+describe("a test's title", (): void => {
+  it.each([
+    // The story whose name the test's name extends, with the rest as the aspect segment.
+    [`${composer}/composer-send.test.stories.tsx`, 'Tests/Composer/Send'],
+    // The repeated segment is said once, not twice.
+    [`${composer}/composer.test.stories.tsx`, 'Tests/Composer'],
+    [
+      `${composer}/composer-attachment-limit.test.stories.tsx`,
+      'Tests/Composer/AttachmentLimit',
+    ],
+    // The folder's own story, for a test named for one part of it.
+    [
+      `${registry}/plugin-canvas.test.stories.tsx`,
+      `Tests/${registryTitle}/Canvas`,
+    ],
+    // A story its name extends wins over the folder's own.
+    [
+      `${registry}/replaceable-slot.test.stories.tsx`,
+      'Tests/Design System/Patterns/ReplaceableSlot',
+    ],
+    // A route folder is named for nothing, so its detail view is the subject.
+    [
+      `${route}/session-usage.test.stories.tsx`,
+      'Tests/Screens/Sessions/Session/Usage',
+    ],
+    [
+      `${route}/session-detail-view-panels.test.stories.tsx`,
+      'Tests/Screens/Sessions/Session/Panels',
+    ],
+  ])('mirrors its subject: %s', (file, title): void => {
+    expect(storyTitleProblems(file, meta(title), subjects)).toEqual([]);
+  });
+
+  it('reports the title its subject derives', (): void => {
+    expect(
+      storyTitleProblems(
+        `${composer}/composer-send.test.stories.tsx`,
+        meta('Tests/Composer/Composer/Send'),
+        subjects,
+      ),
+    ).toEqual([
+      expect.stringContaining(
+        "expected 'Tests/Composer/Send', found 'Tests/Composer/Composer/Send'",
+      ),
+    ]);
+  });
+
+  it.each([
+    // No story beside it: the test's own folder is its subject's, so the same rules place it.
+    [
+      `${kit}/primitives/actions/button/button.test.stories.tsx`,
+      'Tests/Design System/Primitives/Actions/Button',
+    ],
+    [`${feed}/feed.test.stories.tsx`, 'Tests/Feed'],
+    [`${feed}/feed-collapsibles.test.stories.tsx`, 'Tests/Feed/Collapsibles'],
+    // A folder no story group belongs to still leaves the leaf its own node under `Tests/`.
+    [`${src}/app-providers.test.stories.tsx`, 'Tests/AppProviders'],
+  ])('falls back to its own path: %s', (file, title): void => {
+    expect(storyTitleProblems(file, meta(title))).toEqual([]);
+  });
+
+  it('reads only the presentation stories as subjects', (): void => {
+    expect(
+      presentationTitles([
+        storyFile(composerStory, composerTitle),
+        storyFile(`${composer}/composer.test.stories.tsx`, 'Tests/Composer'),
+        { file: 'apps/storybook/x.stories.tsx', source: meta('X') },
+      ]),
+    ).toEqual(new Map([[composerStory, composerTitle]]));
   });
 });
 

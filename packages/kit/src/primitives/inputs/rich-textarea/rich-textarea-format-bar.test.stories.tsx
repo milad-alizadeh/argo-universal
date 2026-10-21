@@ -10,7 +10,7 @@ import {
 
 // The format bar in the web drawing (Lexical), selected with the browser's own mouse and keys.
 const meta = {
-  title: 'Tests/RichTextarea/FormatBar',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/FormatBar',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {

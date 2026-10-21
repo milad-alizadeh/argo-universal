@@ -7,7 +7,7 @@ import { Button } from '#primitives/actions/button';
 import { MetadataPills } from './metadata-pills.ios';
 
 const meta = {
-  title: 'Tests/Metadata/Pill line',
+  title: 'Tests/Design System/Primitives/Scaffolds/Metadata/Pills',
   component: MetadataPills,
   args: { pills: [{ text: 'iOS' }, { text: 'Android' }, { text: 'Web' }] },
 } satisfies Meta<typeof MetadataPills>;

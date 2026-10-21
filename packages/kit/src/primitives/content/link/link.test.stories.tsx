@@ -4,7 +4,7 @@ import { expect, spyOn } from 'storybook/test';
 import { Link } from './index';
 
 const meta = {
-  title: 'Tests/Link',
+  title: 'Tests/Design System/Primitives/Content/Link',
   component: Link,
   args: { label: 'Read more', href: 'https://example.com' },
 } satisfies Meta<typeof Link>;

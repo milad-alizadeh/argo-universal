@@ -7,7 +7,7 @@ import { editRow, type RecordedEdit } from './edit-row-play.mocks';
 import { EditRowPreview } from './edit-row-preview.mocks';
 
 const meta = {
-  title: 'Tests/EditRow/States',
+  title: 'Tests/Feed/EditRow/States',
   component: EditRow,
   globals: { mode: 'light' },
   parameters: { screenPreview: true },

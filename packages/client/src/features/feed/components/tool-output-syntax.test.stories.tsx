@@ -7,7 +7,7 @@ import { ToolOutput } from './tool-output';
 const code = "export const cache = 'no-store';";
 
 const meta = {
-  title: 'Tests/ToolOutputSyntax',
+  title: 'Tests/Feed/ToolOutputSyntax',
   component: ToolOutput,
   args: {
     content: [{ type: 'content', content: { type: 'text', text: code } }],

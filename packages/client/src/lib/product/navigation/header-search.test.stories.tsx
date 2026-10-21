@@ -38,7 +38,7 @@ function WebHeaderWithSearch({
 }
 
 const meta = {
-  title: 'Tests/HeaderSearchRow',
+  title: 'Tests/Design System/Patterns/HeaderSearch',
   component: WebHeaderWithSearch,
   args: { onChangeText: fn() },
 } satisfies Meta<typeof WebHeaderWithSearch>;

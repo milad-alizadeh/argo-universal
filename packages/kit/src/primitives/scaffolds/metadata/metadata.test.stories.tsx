@@ -6,7 +6,7 @@ import { fields } from './metadata.mocks';
 const path = '~/Developer/argo';
 
 const meta = {
-  title: 'Tests/Metadata',
+  title: 'Tests/Design System/Primitives/Scaffolds/Metadata',
   component: Metadata,
   args: {
     children: <Metadata.Label title="Path" text={path} />,

@@ -6,7 +6,9 @@ import { ChoiceFilter } from './action-list-choice.mocks';
 
 const choose = fn();
 
-const meta = { title: 'Tests/ActionList/Choice' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Actions/ActionList/Choice',
+} satisfies Meta;
 
 export default meta;
 

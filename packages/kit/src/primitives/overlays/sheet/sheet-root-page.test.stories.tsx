@@ -41,7 +41,7 @@ function UntitledRootSheet(): ReactElement {
 }
 
 const meta = {
-  title: 'Tests/Sheet/Root page',
+  title: 'Tests/Design System/Primitives/Overlays/Sheet/RootPage',
   component: UntitledRootSheet,
 } satisfies Meta<typeof UntitledRootSheet>;
 

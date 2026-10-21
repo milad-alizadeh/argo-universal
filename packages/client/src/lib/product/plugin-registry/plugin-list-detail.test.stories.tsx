@@ -65,7 +65,7 @@ function tree(selected: boolean): WireNode {
 const onEvent = fn();
 
 const meta = {
-  title: 'Tests/Plugin registry/ListDetail',
+  title: 'Tests/Design System/Patterns/PluginRegistry/ListDetail',
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta;
 

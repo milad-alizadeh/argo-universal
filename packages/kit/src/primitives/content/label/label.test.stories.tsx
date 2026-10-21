@@ -9,7 +9,7 @@ import presentationMeta, {
 
 const meta = {
   ...presentationMeta,
-  title: 'Tests/Design System/Primitives/label',
+  title: 'Tests/Design System/Primitives/Content/Label',
 };
 
 export default meta;

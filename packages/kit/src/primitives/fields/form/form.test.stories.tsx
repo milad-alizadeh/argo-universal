@@ -9,7 +9,7 @@ const submitted = fn<(draft: IssueDraft) => void>();
 const cancelled = fn();
 
 const meta = {
-  title: 'Tests/Form',
+  title: 'Tests/Design System/Primitives/Fields/Form',
   render: (): React.JSX.Element => (
     <CentredOverlayScope>
       <IssueForm onSubmit={submitted} onCancel={cancelled} />

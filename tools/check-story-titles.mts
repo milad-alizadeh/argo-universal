@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   duplicateTitleProblems,
+  presentationTitles,
   type StoryFile,
   storyTitleProblems,
 } from './story-title-rules.mts';
@@ -30,9 +31,12 @@ const stories: StoryFile[] = files.map((file): StoryFile => ({
   source: readFileSync(resolve(root, file), 'utf8'),
 }));
 
+// A test file's title mirrors its subject's, so every presentation title is read before any is checked.
+const titles = presentationTitles(stories);
+
 const problems = [
   ...stories.flatMap(({ file, source }): string[] =>
-    storyTitleProblems(file, source),
+    storyTitleProblems(file, source, titles),
   ),
   ...duplicateTitleProblems(stories),
 ];

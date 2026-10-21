@@ -28,7 +28,7 @@ import {
 import { ScaffoldMock } from './scaffold.mocks';
 
 const meta = {
-  title: 'Tests/Scaffold/Divider drag',
+  title: 'Tests/Frame/Scaffold/DividerDrag',
   ...scaffoldMeta,
 } satisfies Meta<typeof ScaffoldMock>;
 

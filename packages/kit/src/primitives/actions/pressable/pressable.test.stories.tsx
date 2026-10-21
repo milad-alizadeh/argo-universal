@@ -5,7 +5,9 @@ import { Text } from '#primitives/content/text';
 import { Menu } from '#primitives/overlays/menu';
 import { Pressable } from './pressable';
 
-const meta = { title: 'Tests/Pressable' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Actions/Pressable',
+} satisfies Meta;
 
 export default meta;
 

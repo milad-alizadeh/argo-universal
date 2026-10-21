@@ -27,7 +27,7 @@ import { ScaffoldMock } from './scaffold.mocks';
 const roomyDesktop = 1920;
 
 const meta = {
-  title: 'Tests/Scaffold/Inspector',
+  title: 'Tests/Frame/Scaffold/Inspector',
   ...scaffoldMeta,
 } satisfies Meta<typeof ScaffoldMock>;
 

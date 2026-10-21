@@ -9,7 +9,7 @@ import {
 } from './onboarding-view.mocks';
 
 const meta = {
-  title: 'Tests/Onboarding/GitHubStep',
+  title: 'Tests/Screens/Onboarding/GitHub step',
   component: GitHubStepView,
   args: {
     github: githubSteps.notConnected,

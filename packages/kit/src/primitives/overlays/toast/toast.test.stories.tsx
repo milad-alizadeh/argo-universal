@@ -9,7 +9,7 @@ import {
 } from './toast-example.mocks';
 
 const meta = {
-  title: 'Tests/Toast',
+  title: 'Tests/Design System/Primitives/Overlays/Toast',
   component: ErrorToastExample,
 } satisfies Meta<typeof ErrorToastExample>;
 

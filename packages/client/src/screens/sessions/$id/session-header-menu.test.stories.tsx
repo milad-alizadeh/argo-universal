@@ -8,7 +8,10 @@ import {
 } from '../../../../mocks/session-view/session-view-story.test.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
-const meta = { ...sessionDetailViewTestMeta, title: 'Tests/SessionHeaderMenu' };
+const meta = {
+  ...sessionDetailViewTestMeta,
+  title: 'Tests/Screens/Sessions/Session/HeaderMenu',
+};
 
 export default meta;
 

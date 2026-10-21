@@ -6,7 +6,7 @@ import { settleViewport } from '../../../settle-viewport';
 import { Menu, picked } from './drill-menu.mocks';
 
 const meta = {
-  title: 'Tests/Drill',
+  title: 'Tests/Design System/Primitives/Overlays/Drill',
   beforeEach: async (): Promise<void> => {
     picked.mockClear();
     await settleViewport(layoutWidths.wide);

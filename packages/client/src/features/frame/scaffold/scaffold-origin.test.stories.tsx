@@ -8,7 +8,7 @@ import { HostedScaffoldMock } from './hosted-scaffold.mocks';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {
-  title: 'Tests/ScaffoldOriginAndAvailability',
+  title: 'Tests/Frame/Scaffold/Origin',
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(1180),

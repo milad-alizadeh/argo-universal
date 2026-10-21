@@ -5,7 +5,7 @@ import { fn } from 'storybook/test';
 import { SettingsListView } from '../../src/screens/settings/settings-list/settings-list-view';
 
 export const meta = {
-  title: 'Tests/SettingsListView',
+  title: 'Tests/Screens/Settings',
   component: SettingsListView,
   args: {
     projectCount: 1,

@@ -5,7 +5,7 @@ import { expect } from 'storybook/test';
 import { ChangeStage } from './change-stage';
 
 const meta = {
-  title: 'Tests/ChangeStage',
+  title: 'Tests/Sessions/ChangeStage',
   component: ChangeStage,
   args: { stage: 'open' },
 } satisfies Meta<typeof ChangeStage>;

@@ -28,7 +28,7 @@ const thoughtRow = thought;
 const commandRow = command;
 
 const meta = {
-  title: 'Tests/FeedEndings',
+  title: 'Tests/Feed/TurnEnd/FeedEndings',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedContentArgs,

@@ -51,7 +51,7 @@ function DraftField({
 }
 
 const meta = {
-  title: 'Tests/RichTextareaValue',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/Value',
   component: DraftField,
   args: { initialValue: '', onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {

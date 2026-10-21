@@ -24,7 +24,7 @@ import { largeSessions, sessionsListProps } from './sessions-list.mocks';
 
 const expandedAttribute = 'aria-expanded';
 
-const meta = { ...sessionsListMeta, title: 'Tests/SessionsList' };
+const meta = { ...sessionsListMeta, title: 'Tests/Sessions/SessionsList' };
 
 export default meta;
 

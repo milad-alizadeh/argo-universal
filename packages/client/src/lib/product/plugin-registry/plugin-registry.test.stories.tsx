@@ -15,7 +15,9 @@ import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
 
-const meta = { title: 'Tests/Plugin registry' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry',
+} satisfies Meta;
 
 export default meta;
 

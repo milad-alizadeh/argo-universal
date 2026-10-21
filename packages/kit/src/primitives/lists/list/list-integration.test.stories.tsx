@@ -10,7 +10,7 @@ import { Svg } from '#primitives/visual';
 import { List } from './list';
 
 const meta = {
-  title: 'Tests/List integration',
+  title: 'Tests/Design System/Primitives/Lists/List/Integration',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
     await settleViewport(layoutWidths.wide);

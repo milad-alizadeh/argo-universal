@@ -8,7 +8,9 @@ import { Action, ActionList, ActionShortcutScope } from './index';
 
 const choose = fn();
 
-const meta = { title: 'Tests/ActionList/Shortcuts' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Actions/ActionList/Shortcuts',
+} satisfies Meta;
 
 export default meta;
 

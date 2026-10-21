@@ -45,7 +45,7 @@ function ListWithHeader(args: ListViewArgs): React.JSX.Element {
 }
 
 export const meta = {
-  title: 'Tests/SessionListView',
+  title: 'Tests/Screens/Sessions',
   component: SessionListView,
   parameters: { screenPreview: true },
   args: { ...loadedSessionListView, ...spies },

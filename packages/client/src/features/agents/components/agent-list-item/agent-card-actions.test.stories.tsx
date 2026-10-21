@@ -6,7 +6,7 @@ import { agentRow as agent } from '../registry-icons.mocks';
 import { AgentListItem } from './agent-list-item';
 
 const meta = {
-  title: 'Tests/AgentCardActions',
+  title: 'Tests/Agents/AgentListItem/CardActions',
   component: AgentListItem,
   args: { agent, onInstall: fn(), onRemove: fn() },
 } satisfies Meta<typeof AgentListItem>;

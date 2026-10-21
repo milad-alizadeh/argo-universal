@@ -14,7 +14,7 @@ import {
 // Outside a list, Tab and ⇧Tab move focus to the field's neighbours and type nothing.
 
 const meta = {
-  title: 'Tests/RichTextareaTab',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/Tab',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {

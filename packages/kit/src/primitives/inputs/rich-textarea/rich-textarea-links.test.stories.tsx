@@ -12,7 +12,7 @@ import {
 
 // Links in the web drawing (Lexical), typed through the browser.
 const meta = {
-  title: 'Tests/RichTextarea/Links',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/Links',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {

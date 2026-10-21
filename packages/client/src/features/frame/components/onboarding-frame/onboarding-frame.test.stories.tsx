@@ -9,7 +9,7 @@ import { railId, sessionListId } from '../../scaffold/scaffold-controls.mocks';
 import { OnboardingFrame, type OnboardingFrameProps } from './onboarding-frame';
 
 const meta = {
-  title: 'Tests/OnboardingFrame',
+  title: 'Tests/Frame/OnboardingFrame',
   component: OnboardingFrame,
   args: { children: null },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),

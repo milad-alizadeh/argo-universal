@@ -11,7 +11,7 @@ import { permissionMocks } from '../request.mocks';
 
 const meta = {
   ...permissionTestMeta,
-  title: 'Tests/PermissionRequest/Options',
+  title: 'Tests/Requests/PermissionRequest/Options',
 };
 
 export default meta;

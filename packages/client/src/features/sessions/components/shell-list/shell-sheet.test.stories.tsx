@@ -7,7 +7,7 @@ import sheetMeta from './shell-sheet.stories';
 
 const meta = {
   ...sheetMeta,
-  title: 'Tests/ShellSheet',
+  title: 'Tests/Sessions/ShellSheet',
   args: {
     ...sheetMeta.args,
     onSelect: fn(),

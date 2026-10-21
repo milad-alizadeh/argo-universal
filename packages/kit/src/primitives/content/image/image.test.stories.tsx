@@ -5,7 +5,9 @@ import { Button } from '#primitives/actions/button';
 import { MediaUrlContext } from '#primitives/content/media-url';
 import { Image } from './image';
 
-const meta = { title: 'Tests/Image' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Content/Image',
+} satisfies Meta;
 
 export default meta;
 

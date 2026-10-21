@@ -5,7 +5,7 @@ import { pluginNavigationItems } from '../navigation-items.mocks';
 import { PhoneDrawerContent } from './phone-drawer-content';
 
 const meta = {
-  title: 'Tests/PhoneDrawerContent',
+  title: 'Tests/Frame/PhoneDrawerContent',
   component: PhoneDrawerContent,
   args: {
     items: pluginNavigationItems,

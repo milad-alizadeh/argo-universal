@@ -10,7 +10,7 @@ import { preservesComposer } from '../../../../../mocks/composer/request-compose
 import { Composer } from './composer';
 
 const meta = {
-  title: 'Tests/Composer/Requests',
+  title: 'Tests/Composer/Request',
   component: Composer,
   parameters: { screenPreview: true },
   decorators: [

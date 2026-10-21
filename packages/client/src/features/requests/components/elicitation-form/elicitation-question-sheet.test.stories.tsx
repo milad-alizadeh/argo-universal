@@ -12,7 +12,10 @@ import {
 import { RequestFrame } from '../../../../lib/product/request-frame';
 import { ElicitationSheet } from './elicitation-sheet';
 
-const meta = { ...questionTestMeta, title: 'Tests/ElicitationQuestions/Sheet' };
+const meta = {
+  ...questionTestMeta,
+  title: 'Tests/Requests/ElicitationForm/QuestionSheet',
+};
 
 export default meta;
 

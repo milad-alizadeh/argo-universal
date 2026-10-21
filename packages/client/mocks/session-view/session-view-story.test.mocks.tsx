@@ -13,7 +13,7 @@ import {
 export const feedScrollTestId = 'feed-scroll';
 
 export const meta = {
-  title: 'Tests/SessionDetailView',
+  title: 'Tests/Screens/Sessions/Session',
   parameters: { screenPreview: true },
   args: { view: { state: 'open', ...runningSession } },
   // Exercise the real window host on desktop and the native-header fallback below wide.

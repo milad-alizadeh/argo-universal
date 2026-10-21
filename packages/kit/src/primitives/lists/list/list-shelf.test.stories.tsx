@@ -14,7 +14,7 @@ import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
 
 const meta = {
-  title: 'Tests/List shelves',
+  title: 'Tests/Design System/Primitives/Lists/List/Shelf',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
     await settleViewport(layoutWidths.wide);

@@ -15,7 +15,7 @@ import { Feed } from '../feed/feed';
 import { feedContentArgs } from './feed-content.mocks';
 
 const meta = {
-  title: 'Tests/FeedContent/Image',
+  title: 'Tests/Feed/FeedContent/Image',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedContentArgs,

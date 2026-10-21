@@ -11,7 +11,7 @@ import {
 } from './scroll-fade-preview.mocks';
 
 const meta = {
-  title: 'Tests/ScrollFade',
+  title: 'Tests/Design System/Patterns/ScrollFade',
   component: ScrollFadeView,
 } satisfies Meta<typeof ScrollFadeView>;
 

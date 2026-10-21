@@ -20,7 +20,7 @@ import feedMeta from './subagent-feed.stories';
 
 const meta = {
   ...feedMeta,
-  title: 'Tests/SubagentFeed',
+  title: 'Tests/Sessions/SubagentFeed',
   args: { ...feedMeta.args, onBack: fn() },
 };
 

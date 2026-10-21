@@ -7,7 +7,7 @@ import { SessionHeader } from '#features/sessions';
 import { HostedScaffoldMock } from './hosted-scaffold.mocks';
 
 const meta = {
-  title: 'Tests/Scaffold/BandSession',
+  title: 'Tests/Frame/Scaffold/BandSession',
   component: HostedScaffoldMock,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof HostedScaffoldMock>;

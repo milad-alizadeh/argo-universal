@@ -9,7 +9,7 @@ import { List } from './list';
 import { Recycling } from './list-recycling.stories';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/List/Grouping',
+  title: 'Tests/Design System/Primitives/Lists/List/Grouping',
   component: List,
   parameters: { screenPreview: true },
 } satisfies Meta;

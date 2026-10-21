@@ -38,7 +38,7 @@ const configured = {
 };
 
 const meta = {
-  title: 'Tests/ComposerCollaboration',
+  title: 'Tests/Composer/ComposerConfiguration/Collaboration',
   component: ComposerModeControl,
   args: { configuration: configured, disabled: false },
   render: (args): React.JSX.Element => (

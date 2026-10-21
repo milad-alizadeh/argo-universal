@@ -51,7 +51,7 @@ function Permissions({
 }
 
 const meta = {
-  title: 'Tests/Menu',
+  title: 'Tests/Design System/Primitives/Overlays/Menu',
   component: Permissions,
   args: { onValueChange: fn() },
 } satisfies Meta<typeof Permissions>;

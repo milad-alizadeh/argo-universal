@@ -9,7 +9,7 @@ import { panelsSession } from './session-detail-view-panels.test.mocks';
 const desktopWithStage = 1920;
 
 const meta = {
-  title: 'Tests/SessionDetailViewPanels',
+  title: 'Tests/Screens/Sessions/Session/Panels',
   parameters: { screenPreview: true },
   args: { view: panelsSession },
   render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,

@@ -12,7 +12,7 @@ import { AgentListItem } from './agent-list-item';
 const agent = { ...agentRow, icon: encodedIcon };
 
 const meta = {
-  title: 'Tests/AgentListItem',
+  title: 'Tests/Agents/AgentListItem',
   component: AgentListItem,
   args: { agent, onInstall: fn(), onRemove: fn() },
 } satisfies Meta<typeof AgentListItem>;

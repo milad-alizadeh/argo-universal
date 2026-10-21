@@ -6,7 +6,9 @@ import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Grid } from './grid';
 
-const meta = { title: 'Tests/Grid' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Layout/Grid',
+} satisfies Meta;
 
 export default meta;
 

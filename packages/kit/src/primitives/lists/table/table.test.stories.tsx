@@ -14,7 +14,7 @@ const onSortChange = fn();
 const onRowPress = fn();
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Table',
+  title: 'Tests/Design System/Primitives/Lists/Table',
   parameters: { screenPreview: true },
   beforeEach: (): void => {
     onSortChange.mockClear();

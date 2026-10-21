@@ -13,7 +13,7 @@ import type { Story } from '../../../../../mocks/composer/composer-story-context
 import { imageComposer } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer/Attachment limit' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/AttachmentLimit' };
 
 export default meta;
 

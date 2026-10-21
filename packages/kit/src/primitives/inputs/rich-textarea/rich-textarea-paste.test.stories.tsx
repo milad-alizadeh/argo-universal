@@ -16,7 +16,7 @@ import {
 
 // Pasting into the web drawing (Lexical): HTML keeps what markdown can express, ⌘⇧V pastes plain text.
 const meta = {
-  title: 'Tests/RichTextarea/Paste',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/Paste',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {

@@ -9,7 +9,7 @@ const label = 'Notify team';
 const failure = 'Choose whether to notify the team';
 
 const meta = {
-  title: 'Tests/Checkbox',
+  title: 'Tests/Design System/Primitives/Inputs/Checkbox',
   component: Checkbox,
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);

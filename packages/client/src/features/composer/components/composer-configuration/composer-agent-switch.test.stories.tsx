@@ -23,7 +23,7 @@ const addAgents = fn();
 
 const meta = {
   ...pickerStoryMeta,
-  title: 'Tests/ComposerAgentSwitch',
+  title: 'Tests/Composer/ComposerConfiguration/AgentSwitch',
 } satisfies Meta<typeof ComposerAgentModelControl>;
 
 export default meta;

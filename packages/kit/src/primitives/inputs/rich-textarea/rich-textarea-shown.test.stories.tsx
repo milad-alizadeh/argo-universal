@@ -6,7 +6,7 @@ import { RichTextareaExample } from './rich-textarea-example.mocks';
 // A draft that arrives from outside, drawn by the web drawing (Lexical) with its blocks.
 
 const meta = {
-  title: 'Tests/RichTextareaShownBlocks',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/Shown',
   component: RichTextareaExample,
   args: { onChangeText: fn() },
 } satisfies Meta<typeof RichTextareaExample>;

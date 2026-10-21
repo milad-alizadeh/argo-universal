@@ -13,7 +13,7 @@ import {
 // Lists, quotes and code blocks in the web drawing (Lexical), typed through the browser.
 
 const meta = {
-  title: 'Tests/RichTextareaBlocks',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/Blocks',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {

@@ -33,7 +33,7 @@ function GrowingCode(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/StreamingCode',
+  title: 'Tests/Design System/Patterns/StreamingCode',
   component: GrowingCode,
 } satisfies Meta<typeof GrowingCode>;
 

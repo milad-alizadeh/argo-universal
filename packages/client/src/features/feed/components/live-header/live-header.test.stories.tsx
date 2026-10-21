@@ -12,7 +12,7 @@ import {
 } from './live-header.mocks';
 
 const meta = {
-  title: 'Tests/LiveHeader',
+  title: 'Tests/Feed/LiveHeader',
   component: LiveHeader,
   args: { liveHeader: requestHeader, now: liveHeaderNow },
 } satisfies Meta<typeof LiveHeader>;

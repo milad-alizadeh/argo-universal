@@ -15,7 +15,7 @@ const newIssue = 'New Issue';
 const disabledAttribute = 'aria-disabled';
 
 const meta = {
-  title: 'Tests/Plugin registry/Page',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Page',
   render: (): React.JSX.Element => <PluginTree root={root} onEvent={onEvent} />,
 } satisfies Meta;
 

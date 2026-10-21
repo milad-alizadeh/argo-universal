@@ -9,7 +9,7 @@ import { SessionLayout } from './session-layout';
 const feedText = 'Read 2 files, edited 1 file';
 
 const meta = {
-  title: 'Tests/SessionLayout',
+  title: 'Tests/Design System/Patterns/SessionLayout',
   component: SessionLayout,
   parameters: { screenPreview: true },
   args: {

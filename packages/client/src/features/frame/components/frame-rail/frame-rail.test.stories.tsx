@@ -8,7 +8,7 @@ import {
 import { FrameRail } from './frame-rail';
 
 const meta = {
-  title: 'Tests/FrameRail',
+  title: 'Tests/Frame/FrameRail',
   component: FrameRail,
   args: {
     items: pluginNavigationItems,

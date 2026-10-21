@@ -11,7 +11,7 @@ import { webPreview } from './link-preview.mocks';
 const href = 'https://example.com/guide';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/LinkPreview',
+  title: 'Tests/Design System/Primitives/Overlays/LinkPreview',
 } satisfies Meta;
 
 export default meta;

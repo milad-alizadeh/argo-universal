@@ -5,7 +5,7 @@ import { ListItem } from './index';
 import { Settings } from './list-item-settings.stories';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/ListItem/Settings',
+  title: 'Tests/Design System/Primitives/Lists/ListItem/Settings',
   component: ListItem,
   args: { title: 'Settings' },
   parameters: { screenPreview: true },

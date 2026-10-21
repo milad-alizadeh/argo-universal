@@ -7,7 +7,7 @@ import { Switch } from './switch';
 const accessibilityLabel = 'Notify team';
 
 const meta = {
-  title: 'Tests/Switch',
+  title: 'Tests/Design System/Primitives/Inputs/Switch',
   component: Switch,
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);

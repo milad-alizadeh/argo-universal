@@ -7,7 +7,7 @@ import { SearchFieldExample } from './search-field-example.mocks';
 const label = 'Search Agents';
 
 const meta = {
-  title: 'Tests/SearchField',
+  title: 'Tests/Design System/Primitives/Inputs/SearchField',
   component: SearchFieldExample,
 } satisfies Meta<typeof SearchFieldExample>;
 

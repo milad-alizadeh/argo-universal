@@ -3,7 +3,7 @@ import { expect, fn } from 'storybook/test';
 import * as Native from './collapsible.native';
 
 const meta = {
-  title: 'Tests/CollapsibleNative',
+  title: 'Tests/Design System/Primitives/Layout/Collapsible/Native',
   component: Native.Collapsible,
   args: { onOpenChange: fn() },
 } satisfies Meta<typeof Native.Collapsible>;

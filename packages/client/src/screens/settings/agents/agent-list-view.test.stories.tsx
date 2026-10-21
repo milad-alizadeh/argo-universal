@@ -14,7 +14,7 @@ import {
 import { agentsLoadingTitle } from './catalog';
 
 const meta = {
-  title: 'Tests/Agents page',
+  title: 'Tests/Screens/Settings/Agents',
   component: AgentListView,
   args: agentListArgs(),
   parameters: { screenPreview: true },

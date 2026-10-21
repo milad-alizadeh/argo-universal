@@ -12,7 +12,7 @@ const onArchive = fn();
 const onClose = fn();
 
 const meta = {
-  title: 'Tests/ArchiveSessionAlert',
+  title: 'Tests/Sessions/ArchiveSessionAlert',
   component: ArchiveSessionAlert,
   args: { open: true, onArchive, onClose },
 } satisfies Meta<typeof ArchiveSessionAlert>;

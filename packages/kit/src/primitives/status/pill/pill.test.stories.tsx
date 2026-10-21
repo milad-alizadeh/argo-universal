@@ -16,7 +16,9 @@ const tones = [
 
 const trackerColor = ['#', '82', '50', 'df'].join('');
 
-const meta = { title: 'Tests/Pill' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Status/Pill',
+} satisfies Meta;
 
 export default meta;
 

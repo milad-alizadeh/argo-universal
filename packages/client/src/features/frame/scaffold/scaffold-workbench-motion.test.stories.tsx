@@ -5,7 +5,7 @@ import { expect, waitFor } from 'storybook/test';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {
-  title: 'Tests/Scaffold/WorkbenchMotion',
+  title: 'Tests/Frame/Scaffold/WorkbenchMotion',
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
   args: { stageOpen: true },

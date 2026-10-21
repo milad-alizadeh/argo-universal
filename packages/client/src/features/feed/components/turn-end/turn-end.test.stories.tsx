@@ -8,7 +8,7 @@ import { Feed } from '../feed/feed';
 import { endings, turnEndItems } from './turn-end.mocks';
 
 const meta = {
-  title: 'Tests/TurnEnd',
+  title: 'Tests/Feed/TurnEnd',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedContentArgs,

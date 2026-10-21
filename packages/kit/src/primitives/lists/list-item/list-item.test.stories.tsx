@@ -7,7 +7,7 @@ import { ListItem } from './index';
 const title = 'Item one';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/ListItem',
+  title: 'Tests/Design System/Primitives/Lists/ListItem',
   component: ListItem,
   args: { title, onPress: fn() },
 } satisfies Meta<typeof ListItem>;

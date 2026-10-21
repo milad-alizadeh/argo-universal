@@ -17,7 +17,9 @@ function firstSvgXml(): string {
   return fixture.xml;
 }
 
-const meta = { title: 'Tests/Plugin registry/Svg' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/Svg',
+} satisfies Meta;
 
 export default meta;
 

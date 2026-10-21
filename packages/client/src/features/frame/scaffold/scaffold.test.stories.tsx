@@ -22,7 +22,7 @@ import {
 import { ScaffoldMock } from './scaffold.mocks';
 
 const meta = {
-  title: 'Tests/Scaffold',
+  title: 'Tests/Frame/Scaffold',
   ...scaffoldMeta,
 } satisfies Meta<typeof ScaffoldMock>;
 

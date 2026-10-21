@@ -4,7 +4,7 @@ import { Action, ActionList } from '#primitives/actions/action-list';
 import { Page, PageHeaderActions } from './index';
 
 const meta = {
-  title: 'Tests/Page/Content actions',
+  title: 'Tests/Design System/Primitives/Scaffolds/Page/ContentActions',
   component: Page,
   args: { title: 'Projects' },
 } satisfies Meta<typeof Page>;

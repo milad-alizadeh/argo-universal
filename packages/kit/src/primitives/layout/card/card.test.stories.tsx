@@ -16,7 +16,7 @@ const pressed = fn();
 const removed = fn();
 
 const meta = {
-  title: 'Tests/Card',
+  title: 'Tests/Design System/Primitives/Layout/Card',
   component: Card,
   args: { title },
 } satisfies Meta<typeof Card>;

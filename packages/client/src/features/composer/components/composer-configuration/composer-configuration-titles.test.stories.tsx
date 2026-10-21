@@ -12,7 +12,7 @@ import {
 
 const meta = {
   ...pickerStoryMeta,
-  title: 'Tests/ComposerConfigurationTitles',
+  title: 'Tests/Composer/ComposerConfiguration/Titles',
 } satisfies Meta<typeof ComposerAgentModelControl>;
 
 export default meta;

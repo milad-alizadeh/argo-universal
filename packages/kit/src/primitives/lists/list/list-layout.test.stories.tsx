@@ -7,7 +7,7 @@ import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
 
 const meta = {
-  title: 'Tests/List layout',
+  title: 'Tests/Design System/Primitives/Lists/List/Layout',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
     await settleViewport(layoutWidths.tablet);

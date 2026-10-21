@@ -6,7 +6,7 @@ import { ConnectionBanner } from './connection-banner';
 const serverName = "Milad's Mac mini";
 
 const meta = {
-  title: 'Tests/ConnectionBanner',
+  title: 'Tests/Connection/ConnectionBanner',
   component: ConnectionBanner,
   args: { state: 'reconnecting', serverName, onRetry: fn() },
 } satisfies Meta<typeof ConnectionBanner>;

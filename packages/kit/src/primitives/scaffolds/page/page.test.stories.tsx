@@ -7,7 +7,7 @@ import { Page } from './index';
 import { atWidth, pageWidths as widths } from './page-widths.mocks';
 
 const meta = {
-  title: 'Tests/Page',
+  title: 'Tests/Design System/Primitives/Scaffolds/Page',
   component: Page,
   args: { title: 'Title' },
 } satisfies Meta<typeof Page>;

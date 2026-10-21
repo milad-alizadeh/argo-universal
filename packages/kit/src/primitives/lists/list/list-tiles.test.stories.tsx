@@ -9,7 +9,7 @@ import { List } from './list';
 import { GridExample } from './list-tiles.stories';
 
 const meta = {
-  title: 'Tests/List tiles',
+  title: 'Tests/Design System/Primitives/Lists/List/Tiles',
   beforeEach: async (): Promise<void> => {
     await settleViewport(layoutWidths.wide);
   },

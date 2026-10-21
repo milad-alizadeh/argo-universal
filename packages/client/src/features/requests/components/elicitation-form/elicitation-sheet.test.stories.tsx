@@ -12,7 +12,7 @@ import {
 import { ElicitationSheet } from './elicitation-sheet';
 
 const meta = {
-  title: 'Tests/ElicitationSheet',
+  title: 'Tests/Requests/ElicitationSheet',
   component: ElicitationSheet,
   beforeEach: async (): Promise<void> => {
     await settleViewport(390);

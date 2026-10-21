@@ -14,7 +14,7 @@ import { settleViewport } from '../../../settle-viewport';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Popover',
+  title: 'Tests/Design System/Primitives/Overlays/Popover',
 } satisfies Meta;
 
 export default meta;

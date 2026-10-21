@@ -13,7 +13,7 @@ import { idleSession, runningSession } from './session-detail-view.mocks';
 import { Elicitation } from './session-detail-view.stories';
 
 const meta = {
-  title: 'Tests/SessionElicitation',
+  title: 'Tests/Screens/Sessions/Session/Elicitation',
   parameters: { screenPreview: true },
   render: Elicitation.render,
 } satisfies Meta<{ view: SessionDetailViewProps }>;

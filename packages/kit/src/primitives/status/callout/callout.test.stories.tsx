@@ -5,7 +5,7 @@ import { settleViewport } from '../../../settle-viewport';
 import { Callout } from './callout';
 
 const meta = {
-  title: 'Tests/Callout',
+  title: 'Tests/Design System/Primitives/Status/Callout',
   component: Callout,
   args: { title: 'Failed to Launch', description: 'Agent exited' },
 } satisfies Meta<typeof Callout>;
