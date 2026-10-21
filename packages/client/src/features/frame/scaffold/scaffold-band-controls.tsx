@@ -4,7 +4,10 @@ import {
   IconButton,
   type IconButtonProps,
 } from '#primitives/actions/icon-button';
-import { bandControlAppearance } from './band-control-appearance';
+import {
+  bandControlAppearance,
+  bandToggleAppearance,
+} from './band-control-appearance';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
 
 function workbenchProps({
@@ -14,9 +17,8 @@ function workbenchProps({
   const visible = ['docked', 'floating'].includes(layout.frame.workbenchState);
 
   return {
-    ...bandControlAppearance,
+    ...bandToggleAppearance(visible),
     icon: 'workbench',
-    selected: visible,
     accessibilityLabel: 'Toggle Workbench',
     disabled: !scaffold.band?.workbench,
     onPress: () => scaffold.onWorkbenchShownChange?.(!visible),
@@ -32,9 +34,8 @@ function StageExpand({ scaffold, layout }: ScaffoldPartProps): ReactElement {
 
   return (
     <IconButton
-      {...bandControlAppearance}
+      {...bandToggleAppearance(expanded)}
       icon={expanded ? 'collapse' : 'expand'}
-      selected={expanded}
       accessibilityLabel={expanded ? 'Restore Stage' : 'Expand Stage'}
       disabled={!layout.inspectorOpen}
       onPress={() =>
@@ -50,9 +51,8 @@ function StageToggle({ scaffold, layout }: ScaffoldPartProps): ReactElement {
 
   return (
     <IconButton
-      {...bandControlAppearance}
+      {...bandToggleAppearance(open)}
       icon="stage"
-      selected={open}
       accessibilityLabel={label}
       onPress={() => toggleStage(scaffold, open)}
     />
