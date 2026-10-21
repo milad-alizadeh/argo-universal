@@ -12,7 +12,7 @@ const feature = /^features\/([^/]+)\//;
 
 // A feature's components group under its own name.
 
-const pascal = (name: string): string =>
+export const pascal = (name: string): string =>
   name
     .split('-')
     .map((part): string => part.charAt(0).toUpperCase() + part.slice(1))
@@ -67,12 +67,27 @@ const packages: readonly [string, readonly Rule[]][] = [
   [clientSource, clientRules],
 ];
 
+// `pnpm new:story` names a file by its absolute path, so the package's folder may sit anywhere in it.
 const packageOf = (file: string): [string, readonly Rule[]] | undefined =>
-  packages.find(([source]): boolean => file.startsWith(source));
+  packages.find(([source]): boolean => file.includes(source));
 
 // A story outside every rule's folder would start a new top-level group, so it has none.
 const allowedGroups = (rules: readonly Rule[], path: string): string[] =>
   rules.find((rule): boolean => rule.test(path))?.groups(path) ?? [];
+
+// Where a story file sits: the path inside its package, and the groups that path allows.
+export interface StoryPlacement {
+  path: string;
+  groups: string[];
+}
+
+// A file in no package has no path inside one and no groups, which reads as "no group belongs here".
+export const storyPlacement = (file: string): StoryPlacement => {
+  const [source, rules] = packageOf(file) ?? ['', []];
+  const path = file.slice(file.indexOf(source) + source.length);
+
+  return { path, groups: allowedGroups(rules, path) };
+};
 
 const quoted = (group: string): string => `'${group}'`;
 
@@ -90,8 +105,7 @@ const groupProblem = ({ file, title, groups }: Placement): string[] => {
 };
 
 const titleProblem = (file: string, title: string): string[] => {
-  const [source, rules] = packageOf(file) ?? ['', []];
-  const groups = allowedGroups(rules, file.slice(source.length));
+  const { groups } = storyPlacement(file);
 
   return groups.length === 0
     ? [`${file}: no story group belongs to this folder`]

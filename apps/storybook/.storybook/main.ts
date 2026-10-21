@@ -79,7 +79,9 @@ const vitePlugins = (): PluginOption[] => [
   }),
 ];
 
-const config: StorybookConfig = {
+const config: StorybookConfig & {
+  reactNativeServerOptions: { host: string; port: number };
+} = {
   staticDirs: [
     { from: '../../universal-app/public/fonts', to: '/fonts' },
     {
@@ -101,7 +103,9 @@ const config: StorybookConfig = {
     getAbsolutePath('@chromatic-com/storybook'),
     getAbsolutePath('@storybook/addon-vitest'),
     getAbsolutePath('@storybook/addon-docs'),
+    getAbsolutePath('@storybook/addon-react-native-server'),
   ],
+  reactNativeServerOptions: { host: '127.0.0.1', port: 7007 },
   typescript: { reactDocgen: 'react-docgen' },
   framework: getAbsolutePath('@storybook/react-native-web-vite'),
   // Uniwind styles the screens; the Vitest addon reuses this hook.

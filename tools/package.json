@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@babel/parser": "catalog:",
+    "@babel/types": "catalog:",
     "@playwright/test": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/typescript": "workspace:*",

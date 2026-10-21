@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { view } from './storybook.requires';
 
 const StorybookUIRoot = view.getStorybookUI({
@@ -7,6 +8,12 @@ const StorybookUIRoot = view.getStorybookUI({
     getItem: AsyncStorage.getItem,
     setItem: AsyncStorage.setItem,
   },
+  enableWebsockets: true,
+  host:
+    Platform.OS === 'android'
+      ? (process.env.EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST ?? '127.0.0.1')
+      : '127.0.0.1',
+  port: 7007,
 });
 
 // Default export instead of registerRootComponent: the (dev)/storybook route renders it.

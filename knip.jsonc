@@ -79,7 +79,7 @@
     },
     "tools": {
       // Each script runs by path from a package script, a hook config or by hand; `pnpm perf` runs the perf suites.
-      "entry": ["*.{mts,mjs}", "perf/*.perf.mts", "paper-sync/cli.mts"]
+      "entry": ["*.{mts,mjs}", "perf/*.perf.mts"]
     }
   }
 }

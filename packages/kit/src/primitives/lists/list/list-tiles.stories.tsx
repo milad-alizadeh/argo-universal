@@ -14,7 +14,8 @@ const meta = {
   component: List,
   argTypes: kitArgTypes('List'),
   parameters: { screenPreview: true },
-  includeStories: ['AutoColumns', 'Shelf', 'Media'],
+  // Not includeStories: React Native Storybook drops the default export from files that use it.
+  excludeStories: ['GridExample'],
 } satisfies Meta;
 
 export default meta;

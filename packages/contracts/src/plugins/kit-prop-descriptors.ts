@@ -10,6 +10,10 @@ type SchemaNode = z.core.JSONSchema._JSONSchema;
 
 export type KitPartName = keyof typeof pluginPartSchemas;
 
+// A name read from source, such as `KitProps<'Button'>`, checked against the schemas.
+export const isKitPartName = (name: string): name is KitPartName =>
+  Object.hasOwn(pluginPartSchemas, name);
+
 /*
  * What a reader can set from a props table. A prop whose value is an object or a
  * handler is `opaque`: the table shows its type and leaves it alone.
