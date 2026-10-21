@@ -28,6 +28,22 @@ interface ResourceReferenceProps {
   text?: string;
 }
 
+// The resource's own uri names the file, so its extension colours the text the same way a fence's tag does.
+function ResourceCode(props: {
+  uri: string;
+  text?: string;
+  description?: string;
+}): React.JSX.Element {
+  return (
+    <FeedCodeBlock
+      uri={props.uri}
+      code={props.text}
+      description={props.description}
+      language={props.uri}
+    />
+  );
+}
+
 // A supplied resource: its name heads the disclosure; open, a code block shows its URI and its text or description.
 function ResourceReference({
   name,
@@ -37,7 +53,7 @@ function ResourceReference({
 }: ResourceReferenceProps): React.JSX.Element {
   return (
     <FeedDisclosure label={name} icon={resourceIcon(uri)}>
-      <FeedCodeBlock uri={uri} code={text} description={description} />
+      <ResourceCode uri={uri} text={text} description={description} />
     </FeedDisclosure>
   );
 }

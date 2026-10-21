@@ -43,9 +43,20 @@ function sourceTitle({ resource, uri }: CodeBlockSource): string | undefined {
   return resource?.name ?? uri;
 }
 
+const ownName = ({
+  title,
+  language,
+}: {
+  title?: string;
+  language?: string;
+}): string => title ?? language ?? '';
+
+/*
+ * A resource names itself; otherwise the caller's own title wins, and a plain fence falls back to
+ * the tag it is written in. Title and language travel together, so they arrive together.
+ */
 export function headerTitle(
-  source: CodeBlockSource,
-  language: string | undefined,
+  source: CodeBlockSource & { language?: string; title?: string },
 ): string {
-  return sourceTitle(source) ?? language ?? '';
+  return sourceTitle(source) ?? ownName(source);
 }

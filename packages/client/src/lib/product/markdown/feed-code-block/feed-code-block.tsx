@@ -12,7 +12,10 @@ import {
 } from './code-block-source';
 
 export type FeedCodeBlockProps = {
+  // What the fence is written in, which decides the highlighting; the header shows it when nothing else names the block.
   language?: string;
+  // A heading of Argo's own, such as a command's "Shell" or a file's name, for a block that is not a plain fence.
+  title?: string;
   footer?: ReactNode;
   textClassName?: string;
 } & CodeBlockSource;
@@ -30,7 +33,7 @@ function SourceHeader(props: FeedCodeBlockProps): ReactElement {
 
   return (
     <CodeBlockHeader
-      title={headerTitle(props, props.language)}
+      title={headerTitle(props)}
       copyValue={copy.value}
       copyLabel={copy.label}
       resource={props.resource}
@@ -46,6 +49,7 @@ export function FeedCodeBlock(props: FeedCodeBlockProps): ReactElement {
       <CodeBlockBody
         code={props.code}
         description={props.description}
+        language={props.language}
         textClassName={props.textClassName}
       />
       {props.footer}

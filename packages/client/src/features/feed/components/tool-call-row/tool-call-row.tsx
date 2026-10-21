@@ -44,7 +44,7 @@ function ToolCallRowOutput({
     <>
       <ToolOutput
         content={row.content}
-        language={toolCallPath(row)?.split('/').at(-1)}
+        fileName={toolCallPath(row)?.split('/').at(-1)}
       />
       <SettledStatus status={row.status} />
     </>

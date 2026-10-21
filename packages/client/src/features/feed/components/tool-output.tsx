@@ -26,60 +26,65 @@ function ToolDiffOutput({ block }: { block: ToolCallDiff }): React.JSX.Element {
 
 function ToolOutputBlock({
   block,
-  language,
+  fileName,
 }: {
   block: ToolCallContent;
-  language?: string;
+  fileName?: string;
 }): React.JSX.Element {
   if (block.type === 'diff') return <ToolDiffOutput block={block} />;
 
   if (block.type === 'terminal')
-    return <FeedCodeBlock code={block.output} language="Output" />;
+    return <FeedCodeBlock code={block.output} title="Output" />;
 
-  return <ToolContentOrPlaceholder block={block} language={language} />;
+  return <ToolContentOrPlaceholder block={block} fileName={fileName} />;
 }
 
 function ToolContentOrPlaceholder({
   block,
-  language,
+  fileName,
 }: {
   block: Exclude<ToolCallContent, { type: 'diff' | 'terminal' }>;
-  language?: string;
+  fileName?: string;
 }): React.JSX.Element {
   return block.type === 'content' ? (
-    <ToolContentBlock block={block.content} language={language} />
+    <ToolContentBlock block={block.content} fileName={fileName} />
   ) : (
     <UnsupportedFeedContent block={block} />
   );
 }
 
-function ToolContentBlock({
-  block,
-  language,
-}: {
+function ToolContentBlock(props: {
   block: ContentBlock;
-  language?: string;
+  fileName?: string;
 }): React.JSX.Element {
-  if (block.type === 'text')
-    return <FeedCodeBlock code={block.text} language={language ?? 'Output'} />;
+  const { block, fileName } = props;
 
-  return <FeedContent content={[block]} />;
+  if (block.type !== 'text') return <FeedContent content={[block]} />;
+
+  // The file's name titles the block and, by its extension, decides the highlighting.
+  return (
+    <FeedCodeBlock
+      code={block.text}
+      title={fileName ?? 'Output'}
+      language={fileName}
+    />
+  );
 }
 
 interface ToolOutputProps {
   content: readonly ToolCallContent[];
-  language?: string;
+  fileName?: string;
 }
 
 export function ToolOutput({
   content,
-  language,
+  fileName,
 }: ToolOutputProps): React.JSX.Element {
   return (
     <View className="gap-2">
       {withOccurrenceKeys(content, (block) => block.type).map(
         ({ item: block, key }) => (
-          <ToolOutputBlock key={key} block={block} language={language} />
+          <ToolOutputBlock key={key} block={block} fileName={fileName} />
         ),
       )}
     </View>
