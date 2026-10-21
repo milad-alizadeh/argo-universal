@@ -31,8 +31,7 @@ type ListItemGroup = {
 
 export function useListItemGroup(description?: string): ListItemGroup {
   const list = useContext(ListContext);
-  const tile = useContext(ListTileContext);
-  const rowDescription = tile ? undefined : description;
+  const rowDescription = useRowDescription(description);
   const ends = useContext(ListGroupEndsContext);
   const closes = endsGroup(rowDescription);
   useMarkGroupEnd(ends, list.index, closes);
@@ -44,6 +43,10 @@ export function useListItemGroup(description?: string): ListItemGroup {
   );
 
   return drawing(list, position, rowDescription);
+}
+
+function useRowDescription(description?: string): string | undefined {
+  return useContext(ListTileContext) ? undefined : description;
 }
 
 const endsGroup = (description?: string): boolean =>
