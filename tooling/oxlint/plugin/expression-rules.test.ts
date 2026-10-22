@@ -8,6 +8,14 @@ import { vendorName } from './vendor-name.ts';
 const rendererLoader =
   '/repo/apps/codemap-834-prototype/src/code-map/renderer-loader.web.tsx';
 
+const canvasLoader =
+  '/repo/packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx';
+
+const canvasImport = "await import('./canvas-renderer');";
+
+const orbLoader =
+  '/repo/packages/kit/src/primitives/status/orb/orb-loader.web.tsx';
+
 ruleTester.run('vendor-name', vendorName, {
   valid: ["const agent = 'anthropic';", "const name = 'claudette';"],
   invalid: [
@@ -69,14 +77,27 @@ ruleTester.run('static-imports', staticImports, {
     },
     { code: "await import('./flat/flat-map.web');", filename: rendererLoader },
     {
-      code: "await import('./canvas-renderer');",
-      filename:
-        '/repo/packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx',
+      code: canvasImport,
+      filename: canvasLoader,
+    },
+    {
+      code: "await import('./orb-renderer');",
+      filename: orbLoader,
     },
   ],
   invalid: [
     {
-      code: "await import('./canvas-renderer');",
+      code: canvasImport,
+      filename: orbLoader,
+      errors: [{ messageId: 'staticImports' }],
+    },
+    {
+      code: "await import('./orb-renderer');",
+      filename: canvasLoader,
+      errors: [{ messageId: 'staticImports' }],
+    },
+    {
+      code: canvasImport,
       filename: '/repo/another-loader.tsx',
       errors: [{ messageId: 'staticImports' }],
     },

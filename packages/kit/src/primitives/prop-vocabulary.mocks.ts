@@ -41,6 +41,7 @@ import type * as ToastKit from '#primitives/overlays/toast';
 import type * as CalloutKit from '#primitives/status/callout';
 import type * as CountBadgeKit from '#primitives/status/count-badge';
 import type * as DisclosureChevronKit from '#primitives/status/disclosure-chevron';
+import type * as OrbKit from '#primitives/status/orb';
 import type * as PillKit from '#primitives/status/pill';
 import type * as ProgressBarKit from '#primitives/status/progress-bar';
 import type * as SelectedCheckKit from '#primitives/status/selected-check';
@@ -51,6 +52,7 @@ export type Primitives = {
   ImageProps: ImageKit.ImageProps;
   ProgressBarProps: ProgressBarKit.ProgressBarProps;
   LabelProps: LabelKit.LabelProps;
+  OrbProps: OrbKit.OrbProps;
   PillProps: PillKit.PillProps;
   ListProps: ListKit.ListProps<string>;
   ListSectionProps: ListKit.ListSectionProps;
@@ -138,6 +140,8 @@ export type Aliases = {
   FieldErrors: FieldErrorsKit.FieldErrors;
   SheetDetent: SheetKit.SheetDetent;
   NativeTextRole: NativeTextKit.NativeTextRole;
+  OrbSize: OrbKit.OrbSize;
+  OrbState: OrbKit.OrbState;
   TextRole: TextKit.TextRole;
   Tone: TextKit.Tone;
   RowBadge: ListItemKit.RowBadge;

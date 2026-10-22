@@ -39,6 +39,7 @@ export const exemptFolders = {
   'overlays/portal': 'Where overlays mount; no props of its own.',
   'status/count-badge': 'App-only badge on rail and drawer items.',
   'status/disclosure-chevron': 'The chevron a collapsible row draws.',
+  'status/orb': 'App-only for now; a Plugin sends a Spinner.',
   'status/selected-check': 'The check a selected row draws.',
 } satisfies Record<string, string>;
 

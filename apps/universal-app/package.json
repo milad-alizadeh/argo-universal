@@ -30,6 +30,7 @@
     "@storybook/react-native": "catalog:",
     "burnt": "catalog:",
     "expo": "catalog:",
+    "expo-asset": "catalog:",
     "expo-audio": "catalog:",
     "expo-build-properties": "catalog:",
     "expo-clipboard": "catalog:",
@@ -83,6 +84,8 @@
     },
     "install": {
       "exclude": [
+        "@expo/ui",
+        "@shopify/react-native-skia",
         "typescript"
       ]
     }
