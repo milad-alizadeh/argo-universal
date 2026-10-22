@@ -5,22 +5,30 @@ interface ModuleRewrite {
 
 const modulePathOf = (id: string): string | undefined => id.split('?')[0];
 
+// These four imports only supply Expo's ambient namespace declarations; the built file keeps them as imports of modules that export nothing.
+const declarationRewrites = [
+  {
+    file: '/expo-modules-core/src/ts-declarations/global.ts',
+    pattern: /^import \{/gm,
+    to: 'import type {',
+  },
+  {
+    file: '/expo-modules-core/build/ts-declarations/global.js',
+    pattern: /^import \{.*$/gm,
+    to: '',
+  },
+];
+
 export const expoDeclarationImports = {
   name: 'expo-declaration-imports',
   enforce: 'pre' as const,
   transform(code: string, id: string): ModuleRewrite | undefined {
-    const file = modulePathOf(id);
+    const rewrite = declarationRewrites.find(({ file }) =>
+      modulePathOf(id)?.endsWith(file),
+    );
 
-    // These four imports only supply Expo's ambient namespace declarations.
-    if (file?.endsWith('/expo-modules-core/src/ts-declarations/global.ts'))
-      return {
-        code: code.replaceAll(/^import \{/gm, 'import type {'),
-        map: null,
-      };
-
-    // The built file keeps them as imports of modules that export nothing.
-    if (file?.endsWith('/expo-modules-core/build/ts-declarations/global.js'))
-      return { code: code.replaceAll(/^import \{.*$/gm, ''), map: null };
+    if (rewrite)
+      return { code: code.replaceAll(rewrite.pattern, rewrite.to), map: null };
   },
 };
 
