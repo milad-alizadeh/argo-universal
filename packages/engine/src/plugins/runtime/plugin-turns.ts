@@ -10,6 +10,7 @@ export class PluginTurns {
     this.running = active;
 
     if (active) return;
+
     for (const plugin of this.plugins()) plugin.flushReload();
   }
 }

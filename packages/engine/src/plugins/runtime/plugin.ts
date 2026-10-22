@@ -121,6 +121,7 @@ export class RuntimePlugin {
 
       return false;
     }
+
     this.deferredReplay = replay;
     this.input.log(
       `Plugin ${this.input.entry.pluginId}: dev build deferred until Turn ends`,
