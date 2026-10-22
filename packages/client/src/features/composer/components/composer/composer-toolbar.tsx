@@ -101,6 +101,7 @@ function sendButtonProps(
   return {
     ...action,
     ...filledSendProps,
+    'aria-busy': layout.sendState === 'sending',
   };
 }
 

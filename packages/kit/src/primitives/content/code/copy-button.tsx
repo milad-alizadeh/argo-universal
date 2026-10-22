@@ -1,6 +1,5 @@
 import { setStringAsync } from 'expo-clipboard';
 import type * as React from 'react';
-import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#kit/utils';
@@ -44,45 +43,44 @@ function useCopy(): [boolean, (value: string) => void] {
   return [copyRevision > 0, copy];
 }
 
-const revealClassName = (
-  props: CopyButtonProps,
-  copied: boolean,
-  shown: boolean,
-): string =>
-  cn(
-    !copied && 'web:transition-opacity',
-    props.revealOnHover && hoverRevealClassName(shown),
-    props.className,
-  );
+const revealClassName = (props: CopyButtonProps, shown: boolean): string =>
+  cn(props.revealOnHover && hoverRevealClassName(shown), props.className);
 
-// The wrapper's class and focus handlers: no fade while the copied check shows, so it is there at once; focus inside keeps it shown.
-function useReveal(
-  props: CopyButtonProps,
-  copied: boolean,
-): Pick<ComponentProps<typeof View>, 'className' | 'onFocus' | 'onBlur'> {
-  const [focused, setFocused] = useState(false);
-
-  return {
-    className: revealClassName(props, copied, copied || focused),
-    onFocus: () => setFocused(true),
-    onBlur: () => setFocused(false),
-  };
-}
-
-// Copies a value and shows a check for two seconds.
+// No fade, so the button is there at once when copied or focused.
 export function CopyButton(props: CopyButtonProps): React.JSX.Element {
   const [copied, copy] = useCopy();
+  const [focused, setFocused] = useState(false);
 
   return (
-    <View {...useReveal(props, copied)}>
-      <IconButton
-        size="xs"
-        variant="ghost"
-        muted
-        icon={copied ? 'check' : 'copy'}
-        accessibilityLabel={copied ? 'Copied' : props.label}
-        onPress={() => copy(props.value)}
+    <View className={revealClassName(props, copied || focused)}>
+      <CopyControl
+        {...props}
+        copied={copied}
+        onCopy={copy}
+        onFocusChange={setFocused}
       />
     </View>
+  );
+}
+
+type CopyControlProps = CopyButtonProps & {
+  copied: boolean;
+  onCopy: (value: string) => void;
+  onFocusChange: (focused: boolean) => void;
+};
+
+// Copies a value and shows a check for two seconds.
+function CopyControl(props: CopyControlProps): React.JSX.Element {
+  return (
+    <IconButton
+      onFocus={() => props.onFocusChange(true)}
+      onBlur={() => props.onFocusChange(false)}
+      size="xs"
+      variant="ghost"
+      muted
+      icon={props.copied ? 'check' : 'copy'}
+      accessibilityLabel={props.copied ? 'Copied' : props.label}
+      onPress={() => props.onCopy(props.value)}
+    />
   );
 }
