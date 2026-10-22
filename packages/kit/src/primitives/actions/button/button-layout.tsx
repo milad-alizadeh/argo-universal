@@ -50,3 +50,12 @@ export const widths = {
     edge: null,
   },
 } as const;
+
+export const variantOf = (
+  props: ButtonProps,
+): NonNullable<ButtonProps['variant']> => props.variant ?? 'primary';
+
+export const widthOf = (
+  props: ButtonProps,
+): (typeof widths)[keyof typeof widths] =>
+  widths[`${props.fullWidth === true}`];

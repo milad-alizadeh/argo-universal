@@ -1,5 +1,4 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { useWide } from '@repo/kit/use-wide/use-wide';
 import type { ReactNode } from 'react';
 
 export interface RequestActionProps {
@@ -11,23 +10,15 @@ export interface RequestActionProps {
 }
 
 // Wide, a small action in the card's foot; a compact window stacks full-width actions with an edge, from the Button's narrow layout.
-export function RequestAction({
-  children,
-  primary,
-  loading,
-  disabled,
-  onPress,
-}: RequestActionProps): ReactNode {
-  const wide = useWide();
-
+export function RequestAction(props: RequestActionProps): ReactNode {
   return (
     <Button
-      onPress={onPress}
-      disabled={disabled || loading}
-      variant={primary ? 'primary' : 'text'}
+      onPress={props.onPress}
+      disabled={props.disabled || props.loading}
+      variant={props.primary ? 'primary' : 'text'}
       size="sm"
-      fullWidth={!wide}
-      label={children}
+      fullWidth="narrow"
+      label={props.children}
     />
   );
 }

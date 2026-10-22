@@ -43,18 +43,21 @@ function useCopy(): [boolean, (value: string) => void] {
   return [copyRevision > 0, copy];
 }
 
+// The reveal's classes: hidden until hover where a pointer hovers; no fade while the copied check shows, so it is there at once.
+function wrapperClassName(props: CopyButtonProps, copied: boolean): string {
+  return cn(
+    !copied && 'web:transition-opacity',
+    props.revealOnHover && hoverRevealClassName(copied),
+    props.className,
+  );
+}
+
 // Copies a value and shows a check for two seconds.
 export function CopyButton(props: CopyButtonProps): React.JSX.Element {
   const [copied, copy] = useCopy();
 
   return (
-    <View
-      className={cn(
-        'web:transition-opacity',
-        props.revealOnHover && hoverRevealClassName(copied),
-        props.className,
-      )}
-    >
+    <View className={wrapperClassName(props, copied)}>
       <IconButton
         size="xs"
         variant="ghost"

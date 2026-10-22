@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@repo/kit/primitives/overlays/dialog';
-import { useWide } from '@repo/kit/use-wide/use-wide';
 import { type ReactElement, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { renamedTitle } from './renamed-title';
@@ -81,12 +80,10 @@ function RenameHeading(): ReactElement {
 }
 
 function RenameActions(props: { onSave: () => void }): ReactElement {
-  const wide = useWide();
-
   return (
     <DialogFooter>
       <DialogCancel label={copy.cancel} />
-      <Button fullWidth={!wide} label={copy.save} onPress={props.onSave} />
+      <Button fullWidth="narrow" label={copy.save} onPress={props.onSave} />
     </DialogFooter>
   );
 }

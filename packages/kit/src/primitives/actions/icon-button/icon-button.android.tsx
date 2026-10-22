@@ -24,20 +24,31 @@ const controls = {
 
 // Compose's own icon buttons: a circle of exactly the size modifier, which a Compose Button's padding and minimum width cannot give.
 export function IconButton(props: IconButtonProps): ReactElement {
-  const Control = controls[props.variant ?? iconButtonDefaults.variant];
-  const size = sizes[props.size ?? iconButtonDefaults.size];
-
   return (
     <Host seed="primary" matchContents>
-      <Control {...useComposeProps(props)}>
-        <NativeIcon
-          name={props.icon}
-          size={size.iconSize}
-          filled={props.selected ?? false}
-          color={undefined}
-        />
-      </Control>
+      <ComposeControl {...props} />
     </Host>
+  );
+}
+
+function ComposeControl(props: IconButtonProps): ReactElement {
+  const Control = controls[props.variant ?? iconButtonDefaults.variant];
+
+  return (
+    <Control {...useComposeProps(props)}>
+      <ControlIcon {...props} />
+    </Control>
+  );
+}
+
+function ControlIcon(props: IconButtonProps): ReactElement {
+  return (
+    <NativeIcon
+      name={props.icon}
+      size={sizes[props.size ?? iconButtonDefaults.size].iconSize}
+      filled={props.selected ?? false}
+      color={undefined}
+    />
   );
 }
 

@@ -121,16 +121,6 @@ export const iconSymbols = {
     sfFilled: 'bubble.left.and.bubble.right.fill',
     material: 'forum',
   },
-  settings: {
-    sf: 'gearshape',
-    sfFilled: 'gearshape.fill',
-    material: 'settings',
-  },
-  sidebar: {
-    sf: 'sidebar.left',
-    sfFilled: 'rectangle.leftthird.inset.filled',
-    material: 'side_navigation',
-  },
   sparkle: { sf: 'sparkles', material: 'auto_awesome' },
   'state-machine': { sf: 'circle.hexagonpath', material: 'hub' },
   steer: { sf: 'arrow.turn.down.right', material: 'subdirectory_arrow_right' },

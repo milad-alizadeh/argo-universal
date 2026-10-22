@@ -38,6 +38,7 @@ function LogoSvg({
   tintColor,
 }: LogoGlyphProps): React.JSX.Element {
   const Logo = source.svg;
+
   return <Logo width={pixels} height={pixels} color={tintColor} />;
 }
 

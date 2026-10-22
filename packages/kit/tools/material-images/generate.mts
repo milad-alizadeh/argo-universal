@@ -101,9 +101,8 @@ function imageTable(drawn: Drawings['drawn']): string[] {
   ];
 }
 
-function moduleText({ drawn, undrawn }: Drawings, filled: string[]): string {
+function importLines({ drawn }: Drawings, filled: string[]): string[] {
   return [
-    header,
     ...drawn.map(
       ([name, path]) => `import ${identifier(name)} from '${path}';`,
     ),
@@ -111,16 +110,29 @@ function moduleText({ drawn, undrawn }: Drawings, filled: string[]): string {
       (name) =>
         `import filled_${identifier(name)} from '../assets/material-filled/${name}.xml';`,
     ),
-    '',
-    ...imageTable(drawn),
-    '',
+  ];
+}
+
+function filledTable(filled: string[]): string[] {
+  return [
     '// The same names filled, which @expo/material-symbols does not ship.',
     'export const materialFilledImages = {',
     ...filled.map((name) => `  ${name}: filled_${identifier(name)},`),
     '} as const;',
+  ];
+}
+
+function moduleText(drawings: Drawings, filled: string[]): string {
+  return [
+    header,
+    ...importLines(drawings, filled),
+    '',
+    ...imageTable(drawings.drawn),
+    '',
+    ...filledTable(filled),
     '',
     "// Material names with no drawing; their icons stay drawn by Argo's Icon.",
-    `export const undrawnMaterialNames = ${JSON.stringify(undrawn)} as const;`,
+    `export const undrawnMaterialNames = ${JSON.stringify(drawings.undrawn)} as const;`,
     '',
   ].join('\n');
 }
