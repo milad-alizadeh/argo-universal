@@ -27,8 +27,9 @@ export const expoDeclarationImports = {
       modulePathOf(id)?.endsWith(file),
     );
 
-    if (rewrite)
-      return { code: code.replaceAll(rewrite.pattern, rewrite.to), map: null };
+    return rewrite === undefined
+      ? undefined
+      : { code: code.replaceAll(rewrite.pattern, rewrite.to), map: null };
   },
 };
 
@@ -71,8 +72,9 @@ const webImports = (
       modulePathOf(id)?.endsWith(file),
     );
 
-    if (rewrite)
-      return { code: code.replace(rewrite.from, rewrite.to), map: null };
+    return rewrite === undefined
+      ? undefined
+      : { code: code.replace(rewrite.from, rewrite.to), map: null };
   },
 });
 

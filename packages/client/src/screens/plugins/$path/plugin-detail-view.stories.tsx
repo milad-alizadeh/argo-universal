@@ -9,6 +9,11 @@ import { PluginDetailView } from './plugin-detail-view';
 const meta = {
   title: 'Screens/Plugins/Plugin page',
   component: PluginDetailView,
+  argTypes: {
+    title: { control: 'text' },
+    root: { control: false },
+    viewId: { control: false },
+  },
   parameters: { screenPreview: true },
   args: {
     root: counterRoot,

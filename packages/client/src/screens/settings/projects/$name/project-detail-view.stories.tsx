@@ -12,6 +12,13 @@ import { ProjectDetailView } from './project-detail-view';
 const meta = {
   title: 'Screens/Settings/Project',
   component: ProjectDetailView,
+  argTypes: {
+    name: { control: 'text' },
+    caption: { control: 'text' },
+    otherDevice: { control: 'text' },
+    project: { control: false },
+    renderPluginSlot: { control: false },
+  },
   parameters: { screenPreview: true },
   args: {
     name: worktreeProject.name,
@@ -34,7 +41,7 @@ export const Local: Story = {
 };
 
 // A Plugin's content in the Project details Slot, in its own titled section.
-export const WithPluginContent: Story = {
+export const PluginSection: Story = {
   args: {
     renderPluginSlot: () => (
       <PluginSlot

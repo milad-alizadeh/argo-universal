@@ -6,6 +6,11 @@ import { ProjectListView } from './project-list-view';
 const meta = {
   title: 'Screens/Settings/Projects',
   component: ProjectListView,
+  argTypes: {
+    caption: { control: 'text' },
+    initialSearch: { control: 'text' },
+    projects: { control: false },
+  },
   parameters: { screenPreview: true },
   args: {
     projects: { status: 'loaded', projects: settingsProjects },

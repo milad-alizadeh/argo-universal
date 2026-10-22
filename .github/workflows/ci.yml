@@ -1,4 +1,4 @@
-# Quality, Engine tests, story tests and web e2e on every push, and on a pull request when its changes need them; the Electron smoke e2e on main and release/*.
+# Quality, Engine tests, story tests, the story render gates and web e2e on every push, and on a pull request when its changes need them; the Electron smoke e2e on main and release/*.
 # The jobs run in parallel and the Engine tests, story tests and web e2e are split into shards, so a run takes as long as its slowest job.
 name: CI
 
@@ -183,6 +183,26 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
+  # The render gates draw every story and compare the drawings, so they need the whole set in one run and cannot shard.
+  story-renders:
+    name: Story render gates
+    needs: changes
+    if: ${{ needs.changes.outputs.stories == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      - name: Story render gates
+        run: pnpm check:story-renders
+
   e2e-web:
     name: End-to-end tests (web ${{ matrix.shard }}/6)
     needs: changes
@@ -296,7 +316,16 @@ jobs:
   ci:
     name: Quality and end-to-end tests
     if: ${{ always() }}
-    needs: [changes, quality, engine-tests, stories, e2e-web, e2e-electron]
+    needs:
+      [
+        changes,
+        quality,
+        engine-tests,
+        stories,
+        story-renders,
+        e2e-web,
+        e2e-electron,
+      ]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

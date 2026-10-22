@@ -6,6 +6,11 @@ import { onboardingArgs } from './onboarding-view.mocks';
 const meta = {
   title: 'Screens/Onboarding/Set up Argo',
   component: OnboardingView,
+  argTypes: {
+    serverName: { control: 'text' },
+    agent: { control: false },
+    github: { control: false },
+  },
   args: onboardingArgs(),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof OnboardingView>;

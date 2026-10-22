@@ -25,12 +25,6 @@ export const threeColumnsGrid = {
   children,
 } satisfies GridProps;
 
-export const fourColumnsGrid = {
-  columns: 4,
-  gap: 3,
-  children,
-} satisfies GridProps;
-
 export const narrowGapGrid = {
   columns: 2,
   gap: 2,

@@ -4,6 +4,23 @@ import { Orb } from './orb';
 const meta = {
   title: 'Design System/Primitives/Status/Orb',
   component: Orb,
+  // App-only for now, so no Contracts schema to read the prop domain from.
+  argTypes: {
+    state: {
+      control: 'select',
+      options: [
+        'working',
+        'searching',
+        'solving',
+        'listening',
+        'composing',
+        'shaping',
+      ],
+    },
+    size: { control: 'select', options: ['sm', 'md'] },
+    paused: { control: 'boolean' },
+    accessibilityLabel: { control: 'text' },
+  },
   args: { state: 'working', size: 'md' },
 } satisfies Meta<typeof Orb>;
 

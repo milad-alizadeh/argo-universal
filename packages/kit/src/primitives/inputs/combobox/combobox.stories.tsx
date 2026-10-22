@@ -1,18 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List, ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Combobox } from './combobox';
-import {
-  couldNotLoadComboboxContent,
-  emptyComboboxContent,
-  loadingComboboxContent,
-} from './combobox-content-fixtures';
 import { defaultCombobox, rowCombobox } from './combobox-fixtures';
-import type { ComboboxContentProps } from './combobox-props';
 
 // A Combobox is controlled, so a story draws through a wrapper that keeps the selected value.
 function Example({
@@ -49,31 +42,6 @@ export const Row: Story = {
     },
   },
 };
-
-export const Loading: Story = {
-  render: (): ReactElement => <StatusExample {...loadingComboboxContent} />,
-};
-
-export const Empty: Story = {
-  render: (): ReactElement => <StatusExample {...emptyComboboxContent} />,
-};
-
-export const CouldNotLoad: Story = {
-  render: (): ReactElement => (
-    <StatusExample {...couldNotLoadComboboxContent} />
-  ),
-};
-
-// The choices themselves, drawn without their overlay, so a load state reads on the page.
-function StatusExample(
-  props: Omit<ComboboxContentProps<string>, 'onValueChange'>,
-): ReactElement {
-  return (
-    <View className="native:h-64">
-      <Combobox.Content {...props} onValueChange={() => {}} />
-    </View>
-  );
-}
 
 function ProjectSheet(): ReactElement {
   const [open, setOpen] = useState(false);
