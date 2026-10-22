@@ -5,19 +5,15 @@ import {
 import type { IconName } from '@repo/kit/symbols/icon-names';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import { Platform, View, type ViewProps } from 'react-native';
+import { Platform, View } from 'react-native';
 
-export interface HeaderButtonProps {
+export type HeaderButtonProps = Omit<IconButtonProps, 'variant' | 'size'> & {
   ref?: React.ComponentProps<typeof View>['ref'];
-  accessibilityState?: ViewProps['accessibilityState'];
-  onPress?: () => void;
-  icon: IconName;
-  accessibilityLabel: string;
   // Paired trailing items are 32pt wide; a lone item fills its 44pt slot.
   paired?: boolean;
   // A dot on the icon: Sessions need attention, or a filter other than the default is set.
   dot?: 'attention' | 'filter';
-}
+};
 
 interface HeaderButtonFit {
   dot: HeaderButtonDotProps['on'];
@@ -57,7 +53,7 @@ export function HeaderButton({
 }: HeaderButtonProps): React.JSX.Element {
   return (
     <View ref={ref}>
-      <IconButton variant="ghost" {...buttonProps(props)} />
+      <IconButton variant="ghost" {...props} />
       {headerDot(dot, headerButtonFit(paired))}
     </View>
   );
@@ -92,14 +88,10 @@ function HeaderButtonDot(props: HeaderButtonDotProps): React.JSX.Element {
   );
 }
 
-interface ListHeaderButtonProps {
+type ListHeaderButtonProps = Omit<IconButtonProps, 'variant' | 'size'> & {
   ref?: React.ComponentProps<typeof View>['ref'];
-  accessibilityState?: ViewProps['accessibilityState'];
-  onPress?: () => void;
-  icon: IconName;
-  accessibilityLabel: string;
   dot?: HeaderButtonProps['dot'];
-}
+};
 
 // A wide window's list header action, such as the Sessions view menu's trigger: a small ghost button with a header button's dot (Paper "SessionsList").
 export function ListHeaderButton({
@@ -109,19 +101,11 @@ export function ListHeaderButton({
 }: ListHeaderButtonProps): React.JSX.Element {
   return (
     <View ref={ref}>
-      <IconButton variant="ghost" size="xs" {...buttonProps(props)} />
+      <IconButton variant="ghost" size="xs" {...props} />
       {dot && <HeaderButtonDot dot={dot} on="small" />}
     </View>
   );
 }
-
-const buttonProps = (
-  props: Pick<ListHeaderButtonProps, 'icon' | 'accessibilityLabel' | 'onPress'>,
-): Pick<IconButtonProps, 'icon' | 'accessibilityLabel' | 'onPress'> => ({
-  icon: props.icon,
-  accessibilityLabel: props.accessibilityLabel,
-  onPress: props.onPress,
-});
 
 // A header's trailing items in one row, for a header option that takes a single element.
 export function HeaderItems({
