@@ -9,16 +9,18 @@ export const expoDeclarationImports = {
   name: 'expo-declaration-imports',
   enforce: 'pre' as const,
   transform(code: string, id: string): ModuleRewrite | undefined {
+    const file = modulePathOf(id);
+
     // These four imports only supply Expo's ambient namespace declarations.
-    if (
-      modulePathOf(id)?.endsWith(
-        '/expo-modules-core/src/ts-declarations/global.ts',
-      )
-    )
+    if (file?.endsWith('/expo-modules-core/src/ts-declarations/global.ts'))
       return {
         code: code.replaceAll(/^import \{/gm, 'import type {'),
         map: null,
       };
+
+    // The built file keeps them as imports of modules that export nothing.
+    if (file?.endsWith('/expo-modules-core/build/ts-declarations/global.js'))
+      return { code: code.replaceAll(/^import \{.*$/gm, ''), map: null };
   },
 };
 
