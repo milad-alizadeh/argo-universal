@@ -10,9 +10,9 @@ Remove the corresponding changes when `expo-symbols` supports asset-catalog symb
 
 ## react-native@0.88.0
 
-`react-native@0.88.0.patch` adds `blockquote` and `code` to the two published `Role` declarations. React Native Web already maps these roles to their semantic HTML elements. Argo selects them only on web; native roles and all dependency runtime files stay unchanged.
+`react-native@0.88.0.patch` adds `blockquote` and `code` to the two published `Role` declarations: `types_generated`, which TypeScript resolves, and `types_DEPRECATED`, which only the legacy deep-import condition reads. React Native Web already maps these roles to their semantic HTML elements. Argo selects them only on web; native roles and all dependency runtime files stay unchanged.
 
-Remove this patch when the pinned React Native declarations include both roles. When upgrading React Native, check both declaration entry points before carrying the patch forward.
+Remove this patch when the pinned React Native `types_generated` declarations include both roles. When upgrading React Native, check both declaration entry points before carrying the patch forward.
 
 ## xstate@5.33.2
 

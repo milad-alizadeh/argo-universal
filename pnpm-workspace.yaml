@@ -144,7 +144,7 @@ catalog:
   react-native-svg: 15.16.0
   # Imports a logo SVG as a react-native-svg component in Metro (ADR-0019).
   react-native-svg-transformer: 1.5.3
-  # 0.21.2, not 0.21.3: Uniwind 1.12.1 crashes on web start with 0.21.3 (uni-stack/uniwind#704, fix pending).
+  # ~0.21.4 excludes 0.21.3: Uniwind 1.12.1 crashes on web start with it (uni-stack/uniwind#704).
   react-native-web: ~0.21.4
   react-native-worklets: 0.13.0
   sf-symbols-typescript: 2.2.0
@@ -190,6 +190,7 @@ minimumReleaseAgeExclude:
   # The persisters ship with @tanstack/react-query at the same version.
   - "@tanstack/query-persist-client-core@5.104.1"
   - marked@18.1.0
+  # pnpm added these: the Expo SDK 58 packages are under the release-age gate.
   - "@expo/cli@58.1.14"
   - "@expo/config-plugins@58.0.10"
   - "@expo/config@58.0.7"
