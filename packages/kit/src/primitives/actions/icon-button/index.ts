@@ -1,1 +1,6 @@
-export { IconButton, type IconButtonProps } from './icon-button';
+export {
+  IconButton,
+  type IconButtonDataProps,
+  type IconButtonProps,
+  type IconButtonSize,
+} from './icon-button';
