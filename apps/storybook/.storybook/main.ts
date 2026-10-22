@@ -3,7 +3,12 @@ import { fileURLToPath } from 'node:url';
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
 import tailwindcss from '@tailwindcss/vite';
 import { uniwind } from 'uniwind/vite';
-import { type InlineConfig, mergeConfig, type PluginOption } from 'vite';
+import {
+  type DepOptimizationConfig,
+  type InlineConfig,
+  mergeConfig,
+  type PluginOption,
+} from 'vite';
 import svgr from 'vite-plugin-svgr';
 import { sfSymbolImages } from '../../../tools/sf-symbols/sf-symbol-images.mts';
 import {
@@ -93,13 +98,13 @@ const vitePlugins = (): PluginOption[] => [
   }),
 ];
 
-const OPTIMIZE_DEPS = {
+const OPTIMIZE_DEPS: DepOptimizationConfig = {
   include: PREBUNDLED_DEPENDENCIES,
   rolldownOptions: {
     plugins: WEB_IMPORT_REWRITES,
     moduleTypes: { '.ts': 'ts' },
   },
-} as const;
+};
 
 const viteOverrides = (): InlineConfig => ({
   // Resolve public font URLs during CSS compilation; staticDirs copies the files.
