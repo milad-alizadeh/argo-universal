@@ -8,6 +8,9 @@ import { loadedSessionListView } from './session-list-view.mocks';
 const meta = {
   title: 'Screens/Sessions/Sessions',
   component: SessionListView,
+  argTypes: {
+    loadState: { control: 'select', options: ['loading', 'error', 'ready'] },
+  },
   parameters: { screenPreview: true },
   args: {
     ...loadedSessionListView,

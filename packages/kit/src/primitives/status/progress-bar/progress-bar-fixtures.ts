@@ -14,6 +14,14 @@ export const waitingProgressBar = {
   accessibilityLabel: 'Jobs',
 } satisfies ProgressBarProps;
 
+export const indeterminateProgressBar = {
+  value: 1,
+  indeterminate: true,
+  tone: 'accent',
+  active: true,
+  accessibilityLabel: 'Installing',
+} satisfies ProgressBarProps;
+
 export const notStartedProgressBar = {
   value: 0,
   tone: 'muted',

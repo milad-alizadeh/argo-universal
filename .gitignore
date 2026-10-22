@@ -53,3 +53,7 @@ apps/universal-app/public/codemap-834/
 apps/universal-app/dist-codemap-834/
 # CanvasKit is copied from the pinned Skia dependency at install time.
 apps/universal-app/public/canvaskit.wasm
+
+# The render gates' scratch: the plan `tools/check-story-renders.mts` hands the browser, and the fingerprints it reads back.
+apps/storybook/story-render-plan.json
+apps/storybook/story-render-fingerprints.json

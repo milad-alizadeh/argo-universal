@@ -5,6 +5,7 @@ import { loadedServer } from './connection-detail-view.fixtures';
 const meta = {
   title: 'Screens/Settings/Connection',
   component: ConnectionDetailView,
+  argTypes: { server: { control: false } },
   args: { server: loadedServer },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof ConnectionDetailView>;

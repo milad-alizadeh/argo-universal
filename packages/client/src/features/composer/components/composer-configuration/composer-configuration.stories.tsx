@@ -63,11 +63,19 @@ export const FastMode: Story = {
   render: DefaultEffort.render,
 };
 
-// Fast mode and an Agent's other select options sit in Configure beside its model and effort.
+/*
+ * Fast mode and an Agent's other select options sit in Configure beside its model and effort, so
+ * the closed trigger cannot show them: this story opens Configure.
+ */
 export const OtherOptions: Story = {
   name: 'Other options',
   args: otherOptionsConfiguration,
   render: DefaultEffort.render,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Agent and model' }),
+    );
+  },
 };
 
 // Before Send the same Drill adds Agent selection; after Send its row is read-only.

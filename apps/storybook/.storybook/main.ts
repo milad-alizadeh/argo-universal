@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
 import tailwindcss from '@tailwindcss/vite';
 import { uniwind } from 'uniwind/vite';
-import { mergeConfig, type PluginOption } from 'vite';
+import { type InlineConfig, mergeConfig, type PluginOption } from 'vite';
 import svgr from 'vite-plugin-svgr';
 import { sfSymbolImages } from '../../../tools/sf-symbols/sf-symbol-images.mts';
 import {
@@ -101,6 +101,22 @@ const OPTIMIZE_DEPS = {
   },
 } as const;
 
+const viteOverrides = (): InlineConfig => ({
+  // Resolve public font URLs during CSS compilation; staticDirs copies the files.
+  publicDir: `${import.meta.dirname}/../../universal-app/public`,
+  build: { copyPublicDir: false },
+  optimizeDeps: OPTIMIZE_DEPS,
+  resolve: VITE_RESOLVE,
+  plugins: vitePlugins(),
+});
+
+/*
+ * Uniwind styles the screens, so every Vite build of this Storybook goes through here: the dev
+ * server and the Vitest addon as `viteFinal`, and the render gates' own Vitest project directly.
+ */
+export const storybookVite = (config: InlineConfig): InlineConfig =>
+  mergeConfig(config, viteOverrides());
+
 const config: StorybookConfig & {
   reactNativeServerOptions: { host: string; port: number };
 } = {
@@ -139,17 +155,7 @@ const config: StorybookConfig & {
       },
     },
   },
-  // Uniwind styles the screens; the Vitest addon reuses this hook.
-  viteFinal(config) {
-    return mergeConfig(config, {
-      // Resolve public font URLs during CSS compilation; staticDirs copies the files.
-      publicDir: `${import.meta.dirname}/../../universal-app/public`,
-      build: { copyPublicDir: false },
-      optimizeDeps: OPTIMIZE_DEPS,
-      resolve: VITE_RESOLVE,
-      plugins: vitePlugins(),
-    });
-  },
+  viteFinal: storybookVite,
 };
 
 export default config;

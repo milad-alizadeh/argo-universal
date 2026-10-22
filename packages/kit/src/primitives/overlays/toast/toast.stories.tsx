@@ -21,7 +21,8 @@ export const ErrorToast: Story = {
   render: () => <ErrorToastExample />,
 };
 
-// The web only: a toast there can carry one action.
-export const WithAction: Story = {
+// The web only: a toast there can carry one action, such as undoing an archive.
+export const UndoToast: Story = {
+  name: 'Undo',
   render: () => <ActionToastExample onUndo={action('undo')} />,
 };

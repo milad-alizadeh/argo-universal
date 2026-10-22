@@ -1,10 +1,17 @@
 {
   "extends": "@repo/typescript/react-native.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    // className props on React Native components come from Uniwind's type augmentation.
+    "types": ["uniwind/types"]
+  },
+  // A bare ".storybook" entry matches nothing, so the config folder is globbed by hand.
   "include": [
-    ".storybook",
-    "vitest.config.ts",
-    "vitest.global-setup.ts",
-    "vitest.setup.ts",
-    "vitest.shims.d.ts"
+    "*.ts",
+    ".storybook/**/*",
+    // The kit's React Native typing for the inert prop, which its components use.
+    "../../packages/kit/src/view-inert.d.ts",
+    // Prism's DOM-free core, which the package itself leaves untyped.
+    "../../packages/kit/src/primitives/content/code/code-highlight/prism-core.d.ts"
   ]
 }
