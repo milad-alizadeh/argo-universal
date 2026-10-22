@@ -55,11 +55,12 @@ export const looks: Record<Variant, WebStyle> = {
 /*
  * A disabled Button on the web: the lit look in muted neutrals. The same gradient, top highlight, bottom edge and
  * hairline, but a lighter highlight and no drop shadow or glow, so it does not look raised. Expo also dims the
- * whole web Button to half opacity, so the fill is the border token, which stays visible through that.
+ * whole web Button to half opacity, so the fill is the muted token.
  * Disabled is a state, not a variant: its own lookup, spread after the variant's look. Text looks stay bare.
  */
 const unlitFill = (top: string): WebStyle => ({
-  backgroundImage: `linear-gradient(to bottom, ${top}, color-mix(in srgb, var(--color-border) 88%, var(--color-black)))`,
+  backgroundColor: 'var(--color-muted)',
+  backgroundImage: `linear-gradient(to bottom, ${top}, color-mix(in srgb, var(--color-muted) 90%, var(--color-black)))`,
   boxShadow: [
     '0 0 0 1px var(--color-border)',
     `inset 0 1px 0 ${tint('white', '20%')}`,
@@ -68,11 +69,18 @@ const unlitFill = (top: string): WebStyle => ({
 });
 
 const disabledLook = unlitFill(
-  'color-mix(in srgb, var(--color-border) 85%, var(--color-white))',
+  'color-mix(in srgb, var(--color-muted) 85%, var(--color-white))',
 );
 
-export const disabledLooks: Record<'true' | 'false', Record<Variant, WebStyle>> =
-  {
-    true: { primary: disabledLook, secondary: disabledLook, text: {}, danger: {} },
-    false: { primary: {}, secondary: {}, text: {}, danger: {} },
-  };
+export const disabledLooks: Record<
+  'true' | 'false',
+  Record<Variant, WebStyle>
+> = {
+  true: {
+    primary: disabledLook,
+    secondary: disabledLook,
+    text: {},
+    danger: {},
+  },
+  false: { primary: {}, secondary: {}, text: {}, danger: {} },
+};

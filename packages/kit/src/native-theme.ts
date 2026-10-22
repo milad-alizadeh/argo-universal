@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useCSSVariable, useUniwind } from 'uniwind';
-import { disabledContentClass } from './disabled-content-class';
 import { usePrimitiveColor } from '#primitives/native/primitive-color';
 import {
   resolvedToneShades,
   toneShadeTokens,
 } from '#primitives/native/tone-shades';
+import { disabledContentClass } from './disabled-content-class';
 
 const colorTokens = [
   ['accent', '--color-accent'],

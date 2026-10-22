@@ -59,14 +59,15 @@ function expoProps(props: ButtonProps): ExpoButtonProps {
     onPress: props.onPress,
     disabled: props.disabled,
     testID: props.testID,
-    style: {
-      ...size.style,
-      ...looks[variantOf(props)],
-      ...disabledLooks[`${props.disabled ?? false}`][variantOf(props)],
-    },
+    style: { ...size.style, ...looksOf(props) },
     modifiers: [...size.modifiers, ...widthOf(props).modifiers],
   };
 }
+
+const looksOf = (props: ButtonProps): (typeof looks)[Variant] => ({
+  ...looks[variantOf(props)],
+  ...disabledLooks[`${props.disabled ?? false}`][variantOf(props)],
+});
 
 const variants = {
   primary: 'filled',
