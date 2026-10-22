@@ -1,8 +1,7 @@
-diff --git a/Libraries/Components/View/ViewAccessibility.d.ts b/Libraries/Components/View/ViewAccessibility.d.ts
-index c4f462739efb0041e05fe304f6e7cedaf3ae441b..c4ea02315ec613b87e4014569c3da20e35cec8d5 100644
---- a/Libraries/Components/View/ViewAccessibility.d.ts
-+++ b/Libraries/Components/View/ViewAccessibility.d.ts
-@@ -357,9 +357,11 @@ export type Role =
+diff --git a/types_DEPRECATED/Libraries/Components/View/ViewAccessibility.d.ts b/types_DEPRECATED/Libraries/Components/View/ViewAccessibility.d.ts
+--- a/types_DEPRECATED/Libraries/Components/View/ViewAccessibility.d.ts
++++ b/types_DEPRECATED/Libraries/Components/View/ViewAccessibility.d.ts
+@@ -360,9 +360,11 @@
    | 'application'
    | 'article'
    | 'banner'
@@ -15,7 +14,6 @@ index c4f462739efb0041e05fe304f6e7cedaf3ae441b..c4ea02315ec613b87e4014569c3da20e
    | 'combobox'
    | 'complementary'
 diff --git a/types_generated/Libraries/Components/View/ViewAccessibility.d.ts b/types_generated/Libraries/Components/View/ViewAccessibility.d.ts
-index 1c29b54b5fafe133403d6f50ce94cf7551ae569d..92b6b962b65a2138f24b101c091c94c53f973f3b 100644
 --- a/types_generated/Libraries/Components/View/ViewAccessibility.d.ts
 +++ b/types_generated/Libraries/Components/View/ViewAccessibility.d.ts
 @@ -12,7 +12,7 @@

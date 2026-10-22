@@ -1,8 +1,7 @@
 diff --git a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
-index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..71ad6bd03bc58cdeafd87f2b5a2554a74ad379fd 100644
 --- a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
 +++ b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
-@@ -64,6 +64,10 @@ import androidx.compose.ui.layout.onVisibilityChanged
+@@ -68,6 +68,10 @@
  import androidx.compose.ui.layout.positionInWindow
  import androidx.compose.ui.platform.LocalDensity
  import androidx.compose.ui.semantics.Role
@@ -13,7 +12,7 @@ index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..71ad6bd03bc58cdeafd87f2b5a2554a7
  import androidx.compose.ui.semantics.contentDescription
  import androidx.compose.ui.semantics.contentType
  import androidx.compose.ui.semantics.semantics
-@@ -677,16 +681,24 @@ object ModifierRegistry {
+@@ -706,16 +710,24 @@
        } ?: Modifier
      }
  
@@ -21,8 +20,8 @@ index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..71ad6bd03bc58cdeafd87f2b5a2554a7
 +      Modifier.clearAndSetSemantics {}
 +    }
 +
-     register("semantics") { map, _, _, _ ->
-       val params = recordFromMap<SemanticsParams>(map)
+     register("semantics") { map, _, appContext, _ ->
+       val params = recordFromMap<SemanticsParams>(map, appContext)
        val type = params.contentType.toContentType()
        val description = params.contentDescription
 -      if (type == null && description == null) {
@@ -40,10 +39,9 @@ index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..71ad6bd03bc58cdeafd87f2b5a2554a7
        }
      }
 diff --git a/android/src/main/java/expo/modules/ui/SemanticsModifier.kt b/android/src/main/java/expo/modules/ui/SemanticsModifier.kt
-index 6c36d1fcad46d12b693fe962b8594534b8fb2cbe..e29db61a5eed74b7f6b22ce68365640cd8859ecc 100644
 --- a/android/src/main/java/expo/modules/ui/SemanticsModifier.kt
 +++ b/android/src/main/java/expo/modules/ui/SemanticsModifier.kt
-@@ -8,7 +8,9 @@ import expo.modules.kotlin.types.OptimizedRecord
+@@ -8,7 +8,9 @@
  @OptimizedRecord
  internal data class SemanticsParams(
    @Field val contentType: String? = null,
@@ -55,10 +53,9 @@ index 6c36d1fcad46d12b693fe962b8594534b8fb2cbe..e29db61a5eed74b7f6b22ce68365640c
  
  internal fun String?.toContentType(): ContentType? = when (this) {
 diff --git a/build/jetpack-compose/modifiers/index.d.ts b/build/jetpack-compose/modifiers/index.d.ts
-index 7c6245da00fefd2741f659b963f6b45cfbbc85b4..546ce6a6e7f833efb908221f1635ef54a4cdf285 100644
 --- a/build/jetpack-compose/modifiers/index.d.ts
 +++ b/build/jetpack-compose/modifiers/index.d.ts
-@@ -330,11 +330,17 @@ export type SemanticsConfig = {
+@@ -344,11 +344,17 @@
       * content does not read well aloud, as with an abbreviation or a glyph.
       */
      contentDescription?: string;
@@ -77,10 +74,9 @@ index 7c6245da00fefd2741f659b963f6b45cfbbc85b4..546ce6a6e7f833efb908221f1635ef54
  type CornerRadii = {
      topStart?: number;
 diff --git a/src/jetpack-compose/modifiers/index.ts b/src/jetpack-compose/modifiers/index.ts
-index 8484690b71dfc1acc458b35641754e2c5e05a931..d1c63fc6e55f717f0777188407b5cb9eba450a71 100644
 --- a/src/jetpack-compose/modifiers/index.ts
 +++ b/src/jetpack-compose/modifiers/index.ts
-@@ -470,6 +470,10 @@ export type SemanticsConfig = {
+@@ -488,6 +488,10 @@
     * content does not read well aloud, as with an abbreviation or a glyph.
     */
    contentDescription?: string;
@@ -91,7 +87,7 @@ index 8484690b71dfc1acc458b35641754e2c5e05a931..d1c63fc6e55f717f0777188407b5cb9e
  };
  
  /**
-@@ -477,6 +481,9 @@ export type SemanticsConfig = {
+@@ -495,6 +499,9 @@
   */
  export const semantics = (params: SemanticsConfig) => createModifier('semantics', params);
  

@@ -1,16 +1,16 @@
 # Dependency declarations
 
-## expo-symbols@57.0.3
+## expo-symbols@58.0.4
 
-`expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before.
+`expo-symbols@58.0.4.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before.
 
 It also disables font scaling on the internal Material font glyph on Android, so a 16dp icon stays inside its 16dp box at enlarged font settings instead of being clipped. Labels and values keep their normal font scaling.
 
 Remove the corresponding changes when `expo-symbols` supports asset-catalog symbols and keeps font glyphs within their fixed-size boxes. When upgrading, check `ios/SymbolView.swift`, `src/SymbolView.tsx` and its published JavaScript.
 
-## react-native@0.86.3
+## react-native@0.88.0
 
-`react-native@0.86.3.patch` adds `blockquote` and `code` to the two published `Role` declarations. React Native Web already maps these roles to their semantic HTML elements. Argo selects them only on web; native roles and all dependency runtime files stay unchanged.
+`react-native@0.88.0.patch` adds `blockquote` and `code` to the two published `Role` declarations. React Native Web already maps these roles to their semantic HTML elements. Argo selects them only on web; native roles and all dependency runtime files stay unchanged.
 
 Remove this patch when the pinned React Native declarations include both roles. When upgrading React Native, check both declaration entry points before carrying the patch forward.
 
@@ -28,9 +28,9 @@ Remove this patch when the pinned XState release provides these graph signatures
 
 Remove this patch when the pinned `node-pty` release ships `spawn-helper` as executable.
 
-## @expo/ui@57.0.22
+## @expo/ui@58.0.22
 
-`@expo__ui@57.0.22.patch` exposes Compose's `clearAndSetSemantics {}` as the `clearSemantics()` modifier. GroupedListItem uses it to suppress duplicate text without hiding sibling controls.
+`@expo__ui@58.0.22.patch` exposes Compose's `clearAndSetSemantics {}` as the `clearSemantics()` modifier. GroupedListItem uses it to suppress duplicate text without hiding sibling controls.
 
 It also exposes semantic `text` and `stateDescription`. TalkBack uses these to announce a Slider's name and human-readable value while the stock control supplies its range and actions.
 
