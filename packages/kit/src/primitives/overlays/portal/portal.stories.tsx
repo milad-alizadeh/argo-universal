@@ -5,13 +5,11 @@ import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Portal, PortalHost } from './portal';
 
-/*
- * No argTypes: Portal is a children-only wrapper from @gorhom/portal with no enumerable props, so its
- * Docs page has no props table (docs/agents/storybook.md records it as one of those pages).
- */
+// Portal is a children-only wrapper from @gorhom/portal, so there is nothing for a Control or a props table to carry.
 const meta = {
   title: 'Design System/Primitives/Overlays/Portal',
   component: Portal,
+  tags: ['!autodocs'],
 } satisfies Meta<typeof Portal>;
 
 export default meta;

@@ -12,7 +12,7 @@ import {
   fitsItsContentSheet,
   fullHeightSheet,
   settingsSheet,
-  withFooterSheet,
+  pinnedSubmitSheet,
   type SheetFixture,
 } from './sheet-fixtures';
 import { useSheet } from './sheet-pages';
@@ -38,15 +38,17 @@ export const FitsItsContent: Story = {
   render: () => <ExampleSheet {...fitsItsContentSheet} />,
 };
 
-export const WithFooter: Story = {
-  render: () => <ExampleSheet {...withFooterSheet} />,
+// Submit sits below the choices, pinned while they scroll.
+export const PinnedSubmit: Story = {
+  render: () => <ExampleSheet {...pinnedSubmitSheet} />,
 };
 
 export const FullHeight: Story = {
   render: () => <ExampleSheet {...fullHeightSheet} />,
 };
 
-export const WithPages: Story = { render: () => <PagedSheet /> };
+// Settings drills in to Select Fruit and back, the pages sliding in one sheet.
+export const PageStack: Story = { render: () => <PagedSheet /> };
 
 const choices = ['Option one', 'Option two', 'Option three'];
 

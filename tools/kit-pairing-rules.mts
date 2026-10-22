@@ -1,3 +1,5 @@
+import { pascal } from './story-title-rules.mts';
+
 // A kit component has two halves: its props schema in Contracts and its drawing in `@repo/kit`. They pair by name and by group (ADR-0040).
 export interface SchemaEntry {
   name: string;
@@ -49,12 +51,6 @@ export const exemptSchemas = {
 const schemaFile = 'packages/contracts/src/plugins/parts';
 
 const kitFolder = 'packages/kit/src/primitives';
-
-export const pascal = (folder: string): string =>
-  folder
-    .split('-')
-    .map((word): string => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('');
 
 const kebab = (name: string): string =>
   name.replaceAll(/(?<=[a-z])(?=[A-Z])/g, '-').toLowerCase();

@@ -10,15 +10,11 @@ export const expoDeclarationImports = {
   enforce: 'pre' as const,
   transform(code: string, id: string): ModuleRewrite | undefined {
     // These four imports only supply Expo's ambient namespace declarations.
-    if (
-      modulePathOf(id)?.endsWith(
-        '/expo-modules-core/src/ts-declarations/global.ts',
-      )
+    return modulePathOf(id)?.endsWith(
+      '/expo-modules-core/src/ts-declarations/global.ts',
     )
-      return {
-        code: code.replaceAll(/^import \{/gm, 'import type {'),
-        map: null,
-      };
+      ? { code: code.replaceAll(/^import \{/gm, 'import type {'), map: null }
+      : undefined;
   },
 };
 
@@ -46,7 +42,8 @@ export const expoSymbolsWebImports = {
       modulePathOf(id)?.endsWith(file),
     );
 
-    if (rewrite)
-      return { code: code.replace(rewrite.from, rewrite.to), map: null };
+    return rewrite === undefined
+      ? undefined
+      : { code: code.replace(rewrite.from, rewrite.to), map: null };
   },
 };

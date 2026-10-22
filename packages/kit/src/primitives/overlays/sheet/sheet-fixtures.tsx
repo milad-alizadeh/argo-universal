@@ -10,8 +10,8 @@ export type SheetFixture = Pick<SheetProps, 'detents' | 'footer'> & {
 
 export const fitsItsContentSheet = { label: 'Options' } satisfies SheetFixture;
 
-export const withFooterSheet = {
-  label: 'Footer',
+export const pinnedSubmitSheet = {
+  label: 'Submit',
   footer: (
     <View className="p-4">
       <Button label="Submit" />
