@@ -14,7 +14,7 @@ import {
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import { sessionRowMocks } from './session-row.mocks';
 
-const meta = { ...sessionRowTestMeta, title: 'Tests/SessionRow' };
+const meta = { ...sessionRowTestMeta, title: 'Tests/Sessions/SessionRow' };
 
 export default meta;
 

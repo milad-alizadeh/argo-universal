@@ -10,7 +10,7 @@ import {
   testMeta,
 } from './changes-inspector.test.mocks';
 
-const meta = { ...testMeta, title: 'Tests/ChangesInspectorStage' };
+const meta = { ...testMeta, title: 'Tests/Frame/ChangesInspector/Stage' };
 
 export default meta;
 

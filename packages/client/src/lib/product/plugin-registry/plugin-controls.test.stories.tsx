@@ -5,7 +5,7 @@ import { expect, fn, waitFor, within, fireEvent } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const meta = {
-  title: 'Tests/Plugin controls',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Controls',
   render: (): React.JSX.Element => (
     <>
       {roots.slice(2).map((root) => (

@@ -11,7 +11,7 @@ const onRename = fn();
 const onArchive = fn();
 
 const meta = {
-  title: 'Tests/SessionRow/Menu',
+  title: 'Tests/Sessions/SessionRow/Menu',
   component: SessionRow,
   args: {
     session: sessionRows.running,

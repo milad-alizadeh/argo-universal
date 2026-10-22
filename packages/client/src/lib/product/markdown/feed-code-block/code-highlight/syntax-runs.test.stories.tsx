@@ -13,7 +13,7 @@ const source = [
 ].join('\n');
 
 const meta = {
-  title: 'Tests/SyntaxRuns',
+  title: 'Tests/Design System/Patterns/SyntaxRuns',
   component: FeedCodeBlock,
   args: { code: source, language: 'ts' },
 } satisfies Meta<typeof FeedCodeBlock>;

@@ -38,7 +38,7 @@ function LabelsPicker(props: {
 }
 
 const meta = {
-  title: 'Tests/Picker/Multiple',
+  title: 'Tests/Design System/Primitives/Inputs/Picker/Multiple',
   render: (): React.JSX.Element => <LabelsPicker />,
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);

@@ -4,7 +4,7 @@ import { expect, waitFor } from 'storybook/test';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {
-  title: 'Tests/ScaffoldSidebarIntent',
+  title: 'Tests/Frame/Scaffold/SidebarIntent',
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(1180),

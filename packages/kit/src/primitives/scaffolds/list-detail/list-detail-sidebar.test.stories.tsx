@@ -16,7 +16,7 @@ import { at, heading } from './list-detail-test.mocks';
 import { ExampleListDetail, issues, syncIssue } from './list-detail.mocks';
 
 const meta = {
-  title: 'Tests/ListDetail/Sidebar',
+  title: 'Tests/Design System/Primitives/Scaffolds/ListDetail/Sidebar',
   component: ListDetail,
   args: { list: null },
 } satisfies Meta<typeof ListDetail>;

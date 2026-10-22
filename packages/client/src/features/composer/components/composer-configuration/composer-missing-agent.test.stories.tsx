@@ -23,7 +23,7 @@ const configuration = {
 const agentModelLabel = 'Agent and model';
 
 const meta = {
-  title: 'Tests/ComposerMissingAgent',
+  title: 'Tests/Composer/ComposerConfiguration/MissingAgent',
   component: ComposerAgentModelControl,
   args: { configuration, disabled: false },
   render: (args): React.JSX.Element => (

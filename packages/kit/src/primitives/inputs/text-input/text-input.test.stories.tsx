@@ -36,7 +36,7 @@ function Example(props: ExampleProps): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/TextInput',
+  title: 'Tests/Design System/Primitives/Inputs/TextInput',
   component: Example,
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);

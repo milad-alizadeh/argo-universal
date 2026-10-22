@@ -9,7 +9,7 @@ import { SessionDetailView } from './session-detail-view';
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {
-  title: 'Tests/SessionUsage',
+  title: 'Tests/Screens/Sessions/Session/Usage',
   parameters: { screenPreview: true },
   render: (): React.JSX.Element => (
     <SessionDetailView state="open" {...idleSession} />

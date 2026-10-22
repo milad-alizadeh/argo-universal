@@ -16,7 +16,7 @@ const markdownAnswerId = 'markdown-answer';
 const streamingCaretId = 'streaming-caret';
 
 const meta = {
-  title: 'Tests/AgentMessage',
+  title: 'Tests/Feed/AgentMessage',
   globals: { mode: 'light' },
   component: AgentMessage,
   // The Feed gives every row its full width.

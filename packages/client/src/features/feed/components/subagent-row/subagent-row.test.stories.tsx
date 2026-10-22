@@ -14,7 +14,7 @@ import rowMeta from './subagent-row.stories';
 
 const meta = {
   ...rowMeta,
-  title: 'Tests/SubagentRow',
+  title: 'Tests/Feed/SubagentRow',
   args: { ...rowMeta.args, onOpen: fn() },
 };
 

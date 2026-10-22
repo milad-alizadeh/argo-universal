@@ -12,7 +12,7 @@ const onAgentChange = fn();
 const onAddAgents = fn();
 
 const meta = {
-  title: 'Tests/New Session Agent picker',
+  title: 'Tests/Composer/StartSessionIn/AgentPicker',
   component: ComposerAgentModelControl,
   args: {
     disabled: false,

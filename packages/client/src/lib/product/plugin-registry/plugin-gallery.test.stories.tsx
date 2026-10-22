@@ -4,7 +4,7 @@ import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const meta = {
-  title: 'Tests/Plugin registry/Gallery',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Gallery',
   parameters: { screenPreview: true },
 } satisfies Meta;
 

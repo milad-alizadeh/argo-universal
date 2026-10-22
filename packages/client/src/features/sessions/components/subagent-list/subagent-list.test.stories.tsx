@@ -7,7 +7,7 @@ import listMeta from './subagent-list.stories';
 
 const meta = {
   ...listMeta,
-  title: 'Tests/SubagentList',
+  title: 'Tests/Sessions/SubagentList',
   args: { ...listMeta.args, onSelect: fn() },
 };
 

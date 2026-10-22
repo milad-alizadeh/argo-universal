@@ -13,7 +13,7 @@ import {
 } from './list-detail.mocks';
 
 const meta = {
-  title: 'Tests/ListDetail',
+  title: 'Tests/Design System/Primitives/Scaffolds/ListDetail',
   component: ListDetail,
   args: { list: null },
   render: (): ReactElement => <ExampleListDetail example={issues} />,

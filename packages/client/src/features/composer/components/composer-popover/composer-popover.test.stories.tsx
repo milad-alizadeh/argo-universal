@@ -10,7 +10,7 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import { ComposerPopover } from './composer-popover';
 
 const meta = {
-  title: 'Tests/ComposerPopover',
+  title: 'Tests/Composer/ComposerPopover',
   component: ComposerPopover,
   parameters: { screenPreview: true },
   render: (args): React.JSX.Element => (

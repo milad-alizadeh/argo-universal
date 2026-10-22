@@ -7,7 +7,7 @@ import { expect, fn, waitFor } from 'storybook/test';
 import { WorkbenchCard } from './workbench-card';
 
 const meta = {
-  title: 'Tests/WorkbenchCard',
+  title: 'Tests/Sessions/WorkbenchCard',
   component: WorkbenchCard,
   decorators: [
     (Story): ReactElement => (

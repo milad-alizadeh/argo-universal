@@ -7,7 +7,7 @@ import { Action, ActionList, ContextActions } from './index';
 const archived = fn();
 
 const meta = {
-  title: 'Tests/ContextActions',
+  title: 'Tests/Design System/Primitives/Actions/ActionList/ContextActions',
   component: ContextActions,
 } satisfies Meta<typeof ContextActions>;
 

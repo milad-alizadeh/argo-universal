@@ -13,7 +13,7 @@ const content = {
 };
 
 const meta = {
-  title: 'Tests/EmptyState',
+  title: 'Tests/Design System/Primitives/Status/EmptyState',
   component: EmptyState,
   args: content,
 } satisfies Meta<typeof EmptyState>;

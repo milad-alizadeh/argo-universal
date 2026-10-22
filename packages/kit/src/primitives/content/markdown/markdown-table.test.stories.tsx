@@ -7,7 +7,7 @@ import { canPointAt } from '../../../../mocks/point-hit';
 import { Markdown } from './index';
 
 const meta = {
-  title: 'Tests/MarkdownTable',
+  title: 'Tests/Design System/Primitives/Content/Markdown/Table',
   component: Markdown,
   args: { text: '' },
 } satisfies Meta<typeof Markdown>;

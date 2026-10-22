@@ -6,7 +6,9 @@ const onPress = fn();
 
 const onActivate = fn();
 
-const meta = { title: 'Tests/Button' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Actions/Button',
+} satisfies Meta;
 
 export default meta;
 

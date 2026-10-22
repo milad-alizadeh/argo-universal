@@ -5,7 +5,7 @@ import { settleViewport } from '#kit/settle-viewport';
 import { ExampleTabsPane } from './inspector.mocks';
 
 const meta = {
-  title: 'Tests/InspectorTabs',
+  title: 'Tests/Design System/Primitives/Scaffolds/Inspector/Tabs',
   component: ExampleTabsPane,
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof ExampleTabsPane>;

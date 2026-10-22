@@ -29,7 +29,7 @@ const root: WireNode = {
 const onEvent = fn();
 
 const meta = {
-  title: 'Tests/Plugin settings rows',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Settings',
   component: PluginTree,
   args: { root, onEvent },
   parameters: { screenPreview: true },

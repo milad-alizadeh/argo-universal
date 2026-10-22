@@ -21,7 +21,7 @@ const loadFailure = "Couldn't load Sessions";
 
 const loadMoreFailure = "Couldn't load more Sessions";
 
-const meta = { ...sessionListViewMeta, title: 'Tests/SessionListView' };
+const meta = { ...sessionListViewMeta, title: 'Tests/Screens/Sessions' };
 
 export default meta;
 

@@ -19,7 +19,7 @@ import {
 import { ScaffoldMock } from './scaffold.mocks';
 
 const meta = {
-  title: 'Tests/Scaffold/Composer width',
+  title: 'Tests/Frame/Scaffold/ComposerWidth',
   ...scaffoldMeta,
 } satisfies Meta<typeof ScaffoldMock>;
 

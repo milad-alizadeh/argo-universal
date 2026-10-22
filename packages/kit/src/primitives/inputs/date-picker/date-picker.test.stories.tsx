@@ -35,7 +35,7 @@ function Field(
 }
 
 const meta = {
-  title: 'Tests/DatePicker',
+  title: 'Tests/Design System/Primitives/Inputs/DatePicker',
   render: (): React.JSX.Element => <Field />,
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);

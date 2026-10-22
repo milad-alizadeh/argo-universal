@@ -18,7 +18,9 @@ const toggleLabel = 'Toggle details';
 
 const expanded = 'aria-expanded';
 
-const meta = { title: 'Tests/Collapsible' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Layout/Collapsible',
+} satisfies Meta;
 
 export default meta;
 

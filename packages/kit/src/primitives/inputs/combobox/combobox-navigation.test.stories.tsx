@@ -12,7 +12,7 @@ import {
 const cherryTrigger = 'Fruit: Cherry';
 
 const meta = {
-  title: 'Tests/ComboboxNavigation',
+  title: 'Tests/Design System/Primitives/Inputs/Combobox/Navigation',
   beforeEach: async (): Promise<void> => {
     await settleViewport(390);
     changed.mockClear();

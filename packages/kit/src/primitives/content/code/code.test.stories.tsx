@@ -5,7 +5,7 @@ import { settleViewport } from '../../../settle-viewport';
 import { Code } from './index';
 
 const meta = {
-  title: 'Tests/Code',
+  title: 'Tests/Design System/Primitives/Content/Code',
   component: Code,
   args: { code: 'const value = 42;', language: 'ts' },
 } satisfies Meta<typeof Code>;

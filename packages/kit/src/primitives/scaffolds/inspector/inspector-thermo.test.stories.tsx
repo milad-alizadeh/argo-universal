@@ -4,7 +4,7 @@ import { settleViewport } from '#kit/settle-viewport';
 import { LoadingPage } from './inspector-restore.test.mocks';
 
 const meta = {
-  title: 'Tests/InspectorRestore',
+  title: 'Tests/Design System/Primitives/Scaffolds/Inspector/Thermo',
   component: LoadingPage,
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(1440),

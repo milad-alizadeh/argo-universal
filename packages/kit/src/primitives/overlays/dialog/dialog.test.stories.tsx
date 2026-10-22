@@ -15,7 +15,7 @@ import {
 } from './dialog';
 
 const meta = {
-  title: 'Tests/Dialog',
+  title: 'Tests/Design System/Primitives/Overlays/Dialog',
   render: (): React.JSX.Element => (
     <Dialog>
       {/* A Pressable forwards its ref, which the dialog needs to hand focus back. */}

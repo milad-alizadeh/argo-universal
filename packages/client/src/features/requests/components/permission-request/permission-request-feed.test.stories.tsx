@@ -15,7 +15,10 @@ import {
 import { RequestFrame } from '../../../../lib/product/request-frame';
 import { permissionProps, permissionMocks } from '../request.mocks';
 
-const meta = { ...permissionTestMeta, title: 'Tests/PermissionRequest/Feed' };
+const meta = {
+  ...permissionTestMeta,
+  title: 'Tests/Requests/PermissionRequest/Feed',
+};
 
 export default meta;
 

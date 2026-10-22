@@ -9,7 +9,7 @@ import { SessionRow } from '../../src/features/sessions/components/session-row/s
 import type { SessionsLayout } from '../../src/features/sessions/stores/sessions-view';
 
 export const meta = {
-  title: 'Tests/SessionRow',
+  title: 'Tests/Sessions/SessionRow',
   component: SessionRow,
   args: {
     session: sessionRows.running,

@@ -9,7 +9,7 @@ import { Page } from '#primitives/scaffolds/page';
 import { List } from './list';
 
 const meta = {
-  title: 'Tests/List shelf regressions',
+  title: 'Tests/Design System/Primitives/Lists/List/ShelfRegressions',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
     await settleViewport(layoutWidths.wide);

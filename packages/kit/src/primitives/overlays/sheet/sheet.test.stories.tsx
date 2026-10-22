@@ -10,7 +10,7 @@ import { Sheet } from './sheet';
 import { PagedSheet } from './sheet.stories';
 
 const meta = {
-  title: 'Tests/Sheet',
+  title: 'Tests/Design System/Primitives/Overlays/Sheet',
   component: PagedSheet,
 } satisfies Meta<typeof PagedSheet>;
 

@@ -30,7 +30,7 @@ function OptionsMenu(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Menu/Actions',
+  title: 'Tests/Design System/Primitives/Overlays/Menu/Actions',
   component: OptionsMenu,
 } satisfies Meta<typeof OptionsMenu>;
 

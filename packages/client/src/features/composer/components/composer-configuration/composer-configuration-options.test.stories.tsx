@@ -16,7 +16,7 @@ const onConfigChange = fn();
 // An Agent with a Fast mode switch and two other select options beside its model and effort.
 const meta = {
   ...pickerStoryMeta,
-  title: 'Tests/ComposerConfigurationOptions',
+  title: 'Tests/Composer/ComposerConfiguration/Options',
   args: {
     disabled: false,
     configuration: {

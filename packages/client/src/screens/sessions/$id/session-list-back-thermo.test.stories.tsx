@@ -5,7 +5,7 @@ import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import { Stage } from './session-inspector-stage.test.mocks';
 
 const meta = {
-  title: 'Tests/SessionInspectorBack',
+  title: 'Tests/Screens/Sessions/Session/ListBackThermo',
   render: (): ReactElement => <Stage />,
   beforeEach: (): Promise<void> => settleViewport(1920),
 } satisfies Meta;

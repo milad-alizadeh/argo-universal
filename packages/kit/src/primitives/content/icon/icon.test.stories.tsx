@@ -3,7 +3,9 @@ import { expect } from 'storybook/test';
 import { logoSources } from '../../../symbols/logo-source';
 import { Icon } from './icon';
 
-const meta = { title: 'Tests/Icon' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Content/Icon',
+} satisfies Meta;
 
 export default meta;
 

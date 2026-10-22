@@ -16,7 +16,9 @@ import {
 import { ReplaceableSlotView } from './replaceable-slot';
 import { coreSlotState, type ReplaceableState } from './replaceable-state';
 
-const meta = { title: 'Tests/Replaceable Slots' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/ReplaceableSlot',
+} satisfies Meta;
 
 export default meta;
 

@@ -16,7 +16,7 @@ import {
 } from './settings-layout.mocks';
 
 const meta = {
-  title: 'Tests/SettingsLayout',
+  title: 'Tests/Design System/Primitives/Scaffolds/SettingsLayout',
   component: SettingsLayout,
   args: { sections: exampleSections },
   render: (): ReactElement => <ExampleSettingsLayout initial="projects" />,

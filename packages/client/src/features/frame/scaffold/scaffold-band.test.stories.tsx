@@ -9,9 +9,10 @@ import {
 } from './scaffold-test.mocks';
 import { ScaffoldMock } from './scaffold.mocks';
 
-const meta = { title: 'Tests/Scaffold/Band', ...scaffoldMeta } satisfies Meta<
-  typeof ScaffoldMock
->;
+const meta = {
+  title: 'Tests/Frame/Scaffold/Band',
+  ...scaffoldMeta,
+} satisfies Meta<typeof ScaffoldMock>;
 
 export default meta;
 

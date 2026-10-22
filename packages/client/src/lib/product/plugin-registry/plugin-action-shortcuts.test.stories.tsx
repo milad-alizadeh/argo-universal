@@ -57,7 +57,9 @@ const contributions = [
   },
 ];
 
-const meta = { title: 'Tests/Plugin registry/Action shortcuts' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/ActionShortcuts',
+} satisfies Meta;
 
 export default meta;
 

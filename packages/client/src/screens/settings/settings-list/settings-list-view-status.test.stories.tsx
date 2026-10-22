@@ -11,7 +11,7 @@ const onSelect = fn();
 const onThemeChange = fn();
 
 const meta = {
-  title: 'Tests/SettingsListView status',
+  title: 'Tests/Screens/Settings/Status',
   component: SettingsListView,
   args: {
     projectCount: 1,

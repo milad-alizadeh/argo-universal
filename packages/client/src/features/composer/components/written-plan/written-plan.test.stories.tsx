@@ -13,7 +13,7 @@ import type { MockAgent } from '../../../../lib/product/feed-message.mocks';
 import { Composer } from '../composer/composer';
 
 const meta = {
-  title: 'Tests/WrittenPlan',
+  title: 'Tests/Composer/WrittenPlan',
   decorators: [
     (Story): React.JSX.Element => (
       <SessionColumn>

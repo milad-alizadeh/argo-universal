@@ -12,7 +12,7 @@ import {
 // Where a line ends in a list item: ⇧Return, ⇧Tab and a marker typed after a line break.
 
 const meta = {
-  title: 'Tests/RichTextareaLines',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/Lines',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {

@@ -14,7 +14,7 @@ import {
 } from './inspector.mocks';
 
 const meta = {
-  title: 'Tests/Inspector',
+  title: 'Tests/Design System/Primitives/Scaffolds/Inspector',
   component: Inspector,
   args: { title: inspectorTitle, open: false, onOpenChange: (): void => {} },
   render: (): ReactElement => <ExampleInspector />,

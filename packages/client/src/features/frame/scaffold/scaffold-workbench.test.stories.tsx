@@ -4,7 +4,7 @@ import { expect, waitFor } from 'storybook/test';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {
-  title: 'Tests/Scaffold/Workbench',
+  title: 'Tests/Frame/Scaffold/Workbench',
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof WorkbenchScaffold>;

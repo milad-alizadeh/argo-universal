@@ -26,7 +26,7 @@ const references: ReferenceOption[] = [
 ];
 
 const meta = {
-  title: 'Tests/RichTextareaReferences',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea/References',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn(), references },
   beforeEach: async (): Promise<void> => {

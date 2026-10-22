@@ -7,7 +7,7 @@ import { runningSubagent } from '../../../features/sessions/components/subagent-
 import { Stage } from './session-inspector-stage.test.mocks';
 
 const meta = {
-  title: 'Tests/SessionInspectorStage',
+  title: 'Tests/Screens/Sessions/Session/InspectorStage',
   render: (): JSX.Element => <Stage />,
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta;

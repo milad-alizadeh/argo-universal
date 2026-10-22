@@ -16,7 +16,7 @@ import {
 } from './popover';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Popover focus',
+  title: 'Tests/Design System/Primitives/Overlays/Popover/Focus',
 } satisfies Meta;
 
 export default meta;

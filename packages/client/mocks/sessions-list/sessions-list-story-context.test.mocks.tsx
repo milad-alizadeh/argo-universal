@@ -14,7 +14,7 @@ export const onNewSession = fn();
 export const onProjectSettings = fn();
 
 export const meta = {
-  title: 'Tests/SessionsList',
+  title: 'Tests/Sessions/SessionsList',
   component: SessionsList,
   args: {
     ...sessionsListProps,

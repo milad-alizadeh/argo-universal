@@ -8,7 +8,7 @@ import { PluginTree } from './plugin-registry';
 const onEvent = fn(async () => {});
 
 const meta = {
-  title: 'Tests/Plugin Table',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Table',
   beforeEach: (): void => {
     onEvent.mockClear();
   },

@@ -35,7 +35,9 @@ const root: WireNode = {
   ],
 };
 
-const meta = { title: 'Tests/Plugin Prose' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/Prose',
+} satisfies Meta;
 
 export default meta;
 

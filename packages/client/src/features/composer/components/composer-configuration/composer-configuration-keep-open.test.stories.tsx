@@ -16,7 +16,7 @@ import {
 
 const meta = {
   ...pickerStoryMeta,
-  title: 'Tests/ComposerConfigurationKeepOpen',
+  title: 'Tests/Composer/ComposerConfiguration/KeepOpen',
 } satisfies Meta<typeof ComposerAgentModelControl>;
 
 export default meta;

@@ -8,9 +8,10 @@ const pressed = fn();
 
 const archived = fn();
 
-const meta = { title: 'Tests/Surface', component: Surface } satisfies Meta<
-  typeof Surface
->;
+const meta = {
+  title: 'Tests/Design System/Primitives/Layout/Surface',
+  component: Surface,
+} satisfies Meta<typeof Surface>;
 
 export default meta;
 

@@ -7,7 +7,7 @@ import panelMeta from './shell-panel.stories';
 
 const meta = {
   ...panelMeta,
-  title: 'Tests/ShellPanel',
+  title: 'Tests/Sessions/ShellPanel',
   args: { ...panelMeta.args, onSelect: fn(), onStop: fn() },
 };
 

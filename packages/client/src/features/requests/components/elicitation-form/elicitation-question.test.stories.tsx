@@ -13,7 +13,10 @@ import {
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-question-story.test.mocks';
 
-const meta = { ...questionTestMeta, title: 'Tests/ElicitationQuestions' };
+const meta = {
+  ...questionTestMeta,
+  title: 'Tests/Requests/ElicitationForm/Question',
+};
 
 export default meta;
 

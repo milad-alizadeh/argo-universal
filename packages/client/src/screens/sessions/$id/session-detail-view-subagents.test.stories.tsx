@@ -26,7 +26,7 @@ const triggerName = (wide: boolean, count: number): string =>
 
 const meta = {
   ...sessionDetailViewTestMeta,
-  title: 'Tests/SessionDetailViewSubagents',
+  title: 'Tests/Screens/Sessions/Session/Subagents',
   render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 

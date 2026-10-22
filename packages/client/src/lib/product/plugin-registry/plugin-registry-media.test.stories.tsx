@@ -7,7 +7,7 @@ import { PluginTree } from './plugin-registry';
 const root = WireNode.parse(fixture);
 
 const meta = {
-  title: 'Tests/Plugin registry/Media',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Media',
   render: (): React.JSX.Element => <PluginTree root={root} onEvent={fn()} />,
 } satisfies Meta;
 

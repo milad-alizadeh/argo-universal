@@ -13,7 +13,7 @@ import {
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 
 const meta = {
-  title: 'Tests/ToolCallGroup',
+  title: 'Tests/Feed/ToolCallGroup',
   component: ToolCallGroup,
   args: {
     group: toolCallGroupMock.group,

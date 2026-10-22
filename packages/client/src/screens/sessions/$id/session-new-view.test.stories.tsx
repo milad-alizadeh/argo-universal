@@ -30,7 +30,10 @@ const failedStartMessage = 'Agent exited with status 1';
 
 const projectLabel = `Project: ${exampleProject.name}`;
 
-const meta = { ...sessionNewViewTestMeta, title: 'Tests/SessionNewView' };
+const meta = {
+  ...sessionNewViewTestMeta,
+  title: 'Tests/Screens/Sessions/New Session',
+};
 
 export default meta;
 

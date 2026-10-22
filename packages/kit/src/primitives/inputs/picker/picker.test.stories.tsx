@@ -32,7 +32,7 @@ function EffortPicker(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Picker',
+  title: 'Tests/Design System/Primitives/Inputs/Picker',
   render: (): React.JSX.Element => <EffortPicker />,
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);

@@ -9,7 +9,7 @@ import presentationMeta, { Grouped } from './list.stories';
 
 const meta = {
   ...presentationMeta,
-  title: 'Tests/Design System/Primitives/List',
+  title: 'Tests/Design System/Primitives/Lists/List',
   parameters: { screenPreview: true },
 } satisfies Meta;
 

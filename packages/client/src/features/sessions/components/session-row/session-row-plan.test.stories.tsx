@@ -7,7 +7,7 @@ import {
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 
 // A Regular row's Plan bar on a phone and a wide window.
-const meta = { ...sessionRowTestMeta, title: 'Tests/SessionRow Plan' };
+const meta = { ...sessionRowTestMeta, title: 'Tests/Sessions/SessionRow/Plan' };
 
 export default meta;
 

@@ -21,7 +21,7 @@ const options = [
 ];
 
 const meta = {
-  title: 'Tests/Combobox',
+  title: 'Tests/Design System/Primitives/Inputs/Combobox',
   beforeEach: (): void => {
     changed.mockClear();
   },

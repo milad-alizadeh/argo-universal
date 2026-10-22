@@ -16,7 +16,7 @@ const onRename = fn();
 const onArchive = fn();
 
 const meta = {
-  title: 'Tests/ContextMenu',
+  title: 'Tests/Design System/Primitives/Overlays/ContextMenu',
   component: ContextMenu,
   args: {
     groups: [

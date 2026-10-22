@@ -7,7 +7,7 @@ import {
 import { readyNewSession } from '../../src/screens/sessions/$id/session-new-view.mocks';
 
 export const meta = {
-  title: 'Tests/SessionNewView',
+  title: 'Tests/Screens/Sessions/New Session',
   parameters: { screenPreview: true },
   args: { view: { state: 'ready', ...readyNewSession } },
   render: ({ view }): React.JSX.Element => <SessionNewView {...view} />,

@@ -54,7 +54,7 @@ function States({ kind, loading, onChoose }: StatesProps): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Menu/States',
+  title: 'Tests/Design System/Primitives/Overlays/Menu/States',
   component: States,
   args: { kind: 'choice', onChoose: fn() },
 } satisfies Meta<typeof States>;

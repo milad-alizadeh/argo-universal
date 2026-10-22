@@ -12,7 +12,7 @@ import {
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {
-  title: 'Tests/SessionDetailView/Workbench',
+  title: 'Tests/Screens/Sessions/Session/Workbench',
   parameters: { screenPreview: true },
   args: {
     view: {

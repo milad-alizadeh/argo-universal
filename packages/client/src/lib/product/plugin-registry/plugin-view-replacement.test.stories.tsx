@@ -54,7 +54,7 @@ function Replacement(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Plugin view replacement',
+  title: 'Tests/Design System/Patterns/PluginRegistry/ViewReplacement',
   render: Replacement,
   beforeEach: (): (() => void) => {
     confirmation = Promise.withResolvers<void>();

@@ -14,7 +14,7 @@ import {
 import { UserMessage } from './user-message';
 
 const meta = {
-  title: 'Tests/UserMessage',
+  title: 'Tests/Feed/UserMessage',
   globals: { mode: 'light' },
   component: UserMessage,
   // The Feed gives every row its full width.

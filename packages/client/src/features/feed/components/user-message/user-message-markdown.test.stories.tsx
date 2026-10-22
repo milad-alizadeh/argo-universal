@@ -15,7 +15,7 @@ import { UserMessage } from './user-message';
 const markdownPrompt = 'markdown-prompt';
 
 const meta = {
-  title: 'Tests/UserMessageMarkdown',
+  title: 'Tests/Feed/UserMessage/Markdown',
   globals: { mode: 'light' },
   component: UserMessage,
   // The Feed gives every row its full width.

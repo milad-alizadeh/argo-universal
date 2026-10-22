@@ -9,7 +9,7 @@ import {
 } from './feed-content.mocks';
 
 const meta = {
-  title: 'Tests/FeedContent/Notices',
+  title: 'Tests/Feed/FeedContent/Notices',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedContentArgs,

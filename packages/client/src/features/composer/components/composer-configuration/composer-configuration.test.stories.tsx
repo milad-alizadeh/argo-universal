@@ -28,7 +28,7 @@ export const FastModeSwitchWide = fastModeWide;
 export const FastModeOnMarksTrigger = fastModeMarker;
 
 const meta = {
-  title: 'Tests/ComposerConfiguration',
+  title: 'Tests/Composer/ComposerConfiguration',
   component: ComposerAgentModelControl,
   render: DefaultEffort.render,
   args: { disabled: false },

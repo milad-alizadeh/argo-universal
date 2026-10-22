@@ -23,7 +23,7 @@ const apply = { name: 'Apply alert' };
 const cancel = { name: 'Cancel alert' };
 
 const meta = {
-  title: 'Tests/Plugin overlays',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Overlays',
   args: { overlay: 'sheet' },
   render: ({ overlay }): React.JSX.Element => (
     <PluginTree root={roots[overlay]} onEvent={onEvent} />

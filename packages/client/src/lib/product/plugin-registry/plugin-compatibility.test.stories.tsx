@@ -6,7 +6,9 @@ const onEvent = fn();
 
 const updateMessage = /Update Argo/;
 
-const meta = { title: 'Tests/Plugin compatibility' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/Compatibility',
+} satisfies Meta;
 
 export default meta;
 

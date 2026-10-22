@@ -7,7 +7,7 @@ import { RenameSessionDialog } from './rename-session-dialog';
 const title = 'Build the Session layout';
 
 const meta = {
-  title: 'Tests/RenameSessionDialog',
+  title: 'Tests/Sessions/RenameSessionDialog',
   component: RenameSessionDialog,
   args: { title, open: true, onRename: fn(), onClose: fn() },
 } satisfies Meta<typeof RenameSessionDialog>;

@@ -4,7 +4,9 @@ import { expect, waitFor } from 'storybook/test';
 import { MediaUrlContext, useMediaUrl } from '#primitives/content/media-url';
 import { Video } from './video';
 
-const meta = { title: 'Tests/Video' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Content/Video',
+} satisfies Meta;
 
 export default meta;
 

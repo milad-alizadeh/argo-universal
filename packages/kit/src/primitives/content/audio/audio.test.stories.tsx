@@ -5,7 +5,9 @@ import { MediaUrlContext, useMediaUrl } from '#primitives/content/media-url';
 import { Audio } from './audio';
 import { AudioTransport } from './audio-transport';
 
-const meta = { title: 'Tests/Audio' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Content/Audio',
+} satisfies Meta;
 
 export default meta;
 

@@ -14,7 +14,7 @@ const defaults: SessionsView = {
 };
 
 const meta = {
-  title: 'Tests/SessionsViewMenu',
+  title: 'Tests/Sessions/SessionsViewMenu',
   component: SessionsViewMenu,
   args: { view: defaults, onViewChange },
   beforeEach: (): void => {

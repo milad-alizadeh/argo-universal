@@ -15,7 +15,7 @@ export const rejectOptions = 'Reject options';
 export const alwaysReject = 'Always Reject';
 
 export const meta: Meta<typeof PermissionRequest> = {
-  title: 'Tests/PermissionRequest',
+  title: 'Tests/Requests/PermissionRequest',
   component: PermissionRequest,
   parameters: { previewPadding: false },
   render: (args) => (

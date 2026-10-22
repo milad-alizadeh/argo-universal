@@ -6,7 +6,7 @@ import { readTerminalFrame } from './terminal.mocks';
 import { useTerminalAppearance } from './use-terminal-appearance';
 
 const meta = {
-  title: 'Tests/AgentLoginTerminal',
+  title: 'Tests/Agents/AgentLoginTerminal',
   component: TerminalRenderer,
   render: (args): React.JSX.Element => <ThemedTerminal {...args} />,
   args: {

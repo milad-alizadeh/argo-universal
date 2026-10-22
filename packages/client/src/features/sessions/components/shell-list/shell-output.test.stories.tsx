@@ -17,7 +17,7 @@ import {
 } from './shell-output.mocks';
 import outputMeta from './shell-output.stories';
 
-const meta = { ...outputMeta, title: 'Tests/ShellOutput' };
+const meta = { ...outputMeta, title: 'Tests/Sessions/ShellOutput' };
 
 export default meta;
 

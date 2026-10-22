@@ -21,7 +21,7 @@ const roots = fixtures
   .map(localControl);
 
 const meta = {
-  title: 'Tests/Plugin local controls',
+  title: 'Tests/Design System/Patterns/PluginRegistry/LocalControls',
   render: (): React.JSX.Element => (
     <>
       {roots.map((root) => (

@@ -89,17 +89,6 @@ const screenExpected = (section: string, base: string): Expected => ({
   why: "a screen's last segment is its visible page title, which the folder cannot give",
 });
 
-/*
- * Exception 2: a test title mirrors its subject's title, which #1200 derives; until then only the
- * root is checked, and the aspect segment #1197 gave each file keeps whatever reads best.
- */
-const testExpected = (dirs: readonly string[], path: StoryPath): Expected => ({
-  kind: 'prefix',
-  prefix: 'Tests/',
-  seed: `Tests/${leafOf(dirs, path).name}`,
-  why: "a test's title mirrors its subject's, which #1200 derives",
-});
-
 // Only a view of a route, or a file in `screens/`, draws a screen; `diff-view` is a component.
 const screenView = /-(?:list|detail|new|edit)-view$|-page$/;
 
@@ -110,15 +99,6 @@ interface Rule {
   test: (path: StoryPath) => boolean;
   expected: (path: StoryPath) => Expected;
 }
-
-const testStories: Rule = {
-  test: ({ base }) => base.endsWith('.test'),
-  expected: (path) =>
-    testExpected(path.dirs, {
-      ...path,
-      base: path.base.replace(/\.test$/, ''),
-    }),
-};
 
 /*
  * One depth per kit root (#1199): a primitive is `Design System/Primitives/<Category>/<Name>`, four
@@ -133,7 +113,6 @@ const kitHome =
   'a kit story is a primitive in `primitives/<category>/<name>/` or a foundation in `foundations/<topic>/`';
 
 const kitRules: readonly Rule[] = [
-  testStories,
   {
     test: ({ dirs }) => dirs[0] === 'foundations' && dirs.length > 1,
     expected: (path) =>
@@ -168,7 +147,6 @@ const isFeatureScreen = ({ dirs, base }: StoryPath): boolean =>
 
 // The first rule whose test matches the path gives the title that path expects.
 const clientRules: readonly Rule[] = [
-  testStories,
   // A route's own folder in `screens/` draws that page (#761).
   {
     test: isScreenFolder,
@@ -201,6 +179,17 @@ const packages: readonly [string, readonly Rule[]][] = [
 const packageOf = (file: string): [string, readonly Rule[]] | undefined =>
   packages.find(([source]): boolean => file.includes(source));
 
+// A story file's own name, without the `.stories.tsx` every story shares.
+const baseOf = (file: string): string =>
+  (file.split('/').at(-1) ?? '').replace(story, '');
+
+/*
+ * The folder a file sits in, as a whole path. `StoryPath.dirs` drops the package, so it cannot name
+ * a neighbour of the file, which is what a test's subject is looked up by.
+ */
+const dirOf = (file: string): string =>
+  file.slice(0, file.lastIndexOf('/') + 1);
+
 const pathIn = (
   source: string,
   file: string,
@@ -208,24 +197,227 @@ const pathIn = (
 ): StoryPath => {
   const parts = file.slice(file.indexOf(source) + source.length).split('/');
 
-  return {
-    dirs: parts.slice(0, -1),
-    base: (parts.at(-1) ?? '').replace(story, ''),
-    component,
-  };
+  return { dirs: parts.slice(0, -1), base: baseOf(file), component };
 };
 
 // A story outside every rule's folder would start a new top-level group, so no title belongs to it.
-const expectedIn = (rules: readonly Rule[], path: StoryPath): Expected =>
+const placedIn = (rules: readonly Rule[], path: StoryPath): Expected =>
   rules.find((rule): boolean => rule.test(path))?.expected(path) ?? nowhere();
 
+/*
+ * Exception 2: a test's title is its subject's title under `Tests/`, so a component's tests hang off
+ * the component and not off a flat shadow tree. The subject is the presentation story beside it, by
+ * the title that story declares; the rest of the test file's name is the aspect segment (#1197).
+ */
+export type StoryTitles = ReadonlyMap<string, string>;
+
+const noTitles: StoryTitles = new Map();
+
+const testFile = /\.test$/;
+
+// The words a `-` name is built from, which decide where a test file's name stops being its subject's.
+const words = (base: string): readonly string[] => base.split('-');
+
+// How many leading words two names share: the whole of a subject's name, or the stem a sibling shares.
+const sharedWords = (
+  base: readonly string[],
+  parts: readonly string[],
+): number => {
+  const differs = base.findIndex(
+    (word, index): boolean => parts[index] !== word,
+  );
+
+  return differs === -1 ? base.length : differs;
+};
+
+// A test's subject: the title it mirrors, and the words of its own name that name the aspect.
+interface Subject {
+  title: string;
+  aspect: readonly string[];
+}
+
+/*
+ * The story files a test file sits among, and the words of its own name, which together find its subject.
+ */
+interface Neighbours {
+  titles: StoryTitles;
+  dir: string;
+  folder: string;
+  parts: readonly string[];
+}
+
+/*
+ * What is left of the test's name once its subject's own words are taken: `plugin-canvas` under
+ * `plugin-registry.stories.tsx` is the registry's `Canvas`.
+ */
+const subjectOf = (
+  { parts }: Neighbours,
+  title: string,
+  base: string,
+): Subject => ({ title, aspect: parts.slice(sharedWords(words(base), parts)) });
+
+// The story whose name the test's name extends: `composer-send` beside `composer.stories.tsx`.
+const extendedSubject = ({
+  titles,
+  dir,
+  parts,
+}: Neighbours): Subject | undefined => {
+  for (let taken = parts.length; taken > 0; taken -= 1) {
+    const base = parts.slice(0, taken).join('-');
+    const title = titles.get(`${dir}${base}.stories.tsx`);
+
+    if (title !== undefined) return { title, aspect: parts.slice(taken) };
+  }
+
+  return undefined;
+};
+
+// One neighbour as the subject: the title it declares, and the words of its name the test shares.
+const subjectIn = (
+  neighbours: Neighbours,
+  file: string,
+): Subject | undefined => {
+  const title = neighbours.titles.get(file);
+
+  return title === undefined
+    ? undefined
+    : subjectOf(neighbours, title, baseOf(file));
+};
+
+// The folder's own story, which a test named for one part of it belongs under.
+const folderSubject = (neighbours: Neighbours): Subject | undefined =>
+  subjectIn(neighbours, `${neighbours.dir}${neighbours.folder}.stories.tsx`);
+
+const storiesIn = (titles: StoryTitles, dir: string): string[] =>
+  [...titles.keys()].filter(
+    (file): boolean =>
+      file.startsWith(dir) && !file.slice(dir.length).includes('/'),
+  );
+
+// A route folder (`$id/`) is named for nothing, so the view of its own route is the subject there.
+const routeView = /-detail-view$/;
+
+const detailViewIn = (titles: StoryTitles, dir: string): string | undefined =>
+  storiesIn(titles, dir).find((file): boolean => routeView.test(baseOf(file)));
+
+const routeDetailView = ({
+  titles,
+  dir,
+  folder,
+}: Neighbours): string | undefined =>
+  folder.startsWith('$') ? detailViewIn(titles, dir) : undefined;
+
+const routeSubject = (neighbours: Neighbours): Subject | undefined => {
+  const view = routeDetailView(neighbours);
+
+  return view === undefined ? undefined : subjectIn(neighbours, view);
+};
+
+const subjectBeside = (neighbours: Neighbours): Subject | undefined =>
+  extendedSubject(neighbours) ??
+  folderSubject(neighbours) ??
+  routeSubject(neighbours);
+
+// Where the test file sits, as its subject's neighbours are looked up from.
+const neighboursOf = (
+  file: string,
+  path: StoryPath,
+  titles: StoryTitles,
+): Neighbours => ({
+  titles,
+  dir: dirOf(file),
+  folder: path.dirs.at(-1) ?? '',
+  parts: words(path.base.replace(testFile, '')),
+});
+
+// `Tests/Composer/Composer/Send` says Composer twice; the sidebar reads it once.
+const collapsed = (title: string): string =>
+  title
+    .split('/')
+    .filter(
+      (segment, index, all): boolean =>
+        index === 0 || segment !== all[index - 1],
+    )
+    .join('/');
+
+const aspectTitle = (aspect: readonly string[]): string =>
+  aspect.length === 0 ? '' : `/${pascal(aspect.join('-'))}`;
+
+const testTitle = ({ title, aspect }: Subject): string =>
+  collapsed(`Tests/${title}${aspectTitle(aspect)}`);
+
+const underTests = (expected: Expected): Expected => {
+  if (expected.kind === 'prefix')
+    return {
+      kind: 'prefix',
+      prefix: `Tests/${expected.prefix}`,
+      seed: collapsed(`Tests/${expected.seed}`),
+      why: expected.why,
+    };
+
+  return expected.kind === 'exact'
+    ? { kind: 'exact', title: collapsed(`Tests/${expected.title}`) }
+    : expected;
+};
+
+/*
+ * No presentation story beside it: the test's own folder is its subject's folder, so the same rules
+ * derive the subject's title from it. A folder no story group belongs to leaves the leaf alone.
+ */
+const derivedTestExpected = (
+  rules: readonly Rule[],
+  path: StoryPath,
+): Expected => {
+  const subject: StoryPath = {
+    ...path,
+    base: path.base.replace(testFile, ''),
+    component: pascal(path.dirs.at(-1) ?? ''),
+  };
+
+  const under = placedIn(rules, subject);
+
+  return under.kind === 'none'
+    ? {
+        kind: 'exact',
+        title: `Tests/${leafTitle(leafOf(subject.dirs, subject))}`,
+      }
+    : underTests(under);
+};
+
+const testExpected = (
+  rules: readonly Rule[],
+  path: StoryPath,
+  neighbours: Neighbours,
+): Expected => {
+  const subject = subjectBeside(neighbours);
+
+  return subject === undefined
+    ? derivedTestExpected(rules, path)
+    : { kind: 'exact', title: testTitle(subject) };
+};
+
+const expectedFor = (
+  rules: readonly Rule[],
+  path: StoryPath,
+  neighbours: Neighbours,
+): Expected =>
+  testFile.test(path.base)
+    ? testExpected(rules, path, neighbours)
+    : placedIn(rules, path);
+
 // The title the file's own path derives, which the check compares and `pnpm new:story` writes.
-const expectedTitle = (file: string, component?: string): Expected => {
+const expectedTitle = (
+  file: string,
+  component?: string,
+  titles: StoryTitles = noTitles,
+): Expected => {
   const found = packageOf(file);
 
-  return found === undefined
-    ? nowhere()
-    : expectedIn(found[1], pathIn(found[0], file, component));
+  if (found === undefined) return nowhere();
+
+  const path = pathIn(found[0], file, component);
+
+  return expectedFor(found[1], path, neighboursOf(file, path, titles));
 };
 
 /*
@@ -296,26 +488,38 @@ const expectedProblem = (
     : prefixProblem(file, title, expected);
 };
 
-const titleProblem = (file: string, source: string, title: string): string[] =>
+const titleProblem = (
+  { file, source }: StoryFile,
+  title: string,
+  titles: StoryTitles,
+): string[] =>
   expectedProblem(
     file,
     title,
-    expectedTitle(file, metaComponent.exec(source)?.[1]),
+    expectedTitle(file, metaComponent.exec(source)?.[1], titles),
   );
 
 const isPlacedStory = (file: string): boolean =>
   story.test(file) && packageOf(file) !== undefined;
 
-const metaTitleProblem = (file: string, source: string): string[] => {
-  const title = metaTitle.exec(source)?.[1];
+const metaTitleProblem = (story: StoryFile, titles: StoryTitles): string[] => {
+  const title = metaTitle.exec(story.source)?.[1];
 
   return title === undefined
-    ? [`${file}: the story meta needs a literal title`]
-    : titleProblem(file, source, title);
+    ? [`${story.file}: the story meta needs a literal title`]
+    : titleProblem(story, title, titles);
 };
 
-export const storyTitleProblems = (file: string, source: string): string[] =>
-  isPlacedStory(file) ? metaTitleProblem(file, source) : [];
+/*
+ * `titles` is every presentation story's declared title by file, which a test file's title mirrors.
+ * Each of those is checked against its own path in the same pass, so a wrong one is reported there.
+ */
+export const storyTitleProblems = (
+  file: string,
+  source: string,
+  titles: StoryTitles = noTitles,
+): string[] =>
+  isPlacedStory(file) ? metaTitleProblem({ file, source }, titles) : [];
 
 // A story file and what it holds, as the checker reads it off disk.
 export interface StoryFile {
@@ -326,6 +530,19 @@ export interface StoryFile {
 // A placed story file's title; an unplaced file or a missing literal has none.
 const placedTitle = ({ file, source }: StoryFile): string | undefined =>
   isPlacedStory(file) ? metaTitle.exec(source)?.[1] : undefined;
+
+const presentationTitle = (story: StoryFile): string | undefined =>
+  testFile.test(baseOf(story.file)) ? undefined : placedTitle(story);
+
+// What each presentation story calls itself, which is the title its own test files mirror.
+export const presentationTitles = (files: readonly StoryFile[]): StoryTitles =>
+  new Map(
+    files.flatMap((story): [string, string][] => {
+      const title = presentationTitle(story);
+
+      return title === undefined ? [] : [[story.file, title]];
+    }),
+  );
 
 const addTitle = (
   titles: Map<string, string[]>,

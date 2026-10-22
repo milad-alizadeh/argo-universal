@@ -28,7 +28,7 @@ function fileAt(path: string): FileDiff {
 }
 
 const meta = {
-  title: 'Tests/DiffSyntax',
+  title: 'Tests/Feed/DiffView/Syntax',
   component: DiffView,
   globals: { mode: 'light' },
   decorators: [

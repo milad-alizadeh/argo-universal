@@ -45,7 +45,7 @@ function ViewMenu(props: {
 }
 
 const meta = {
-  title: 'Tests/Menu/Groups',
+  title: 'Tests/Design System/Primitives/Overlays/Menu/Groups',
   component: ViewMenu,
   args: { groups: viewGroups },
 } satisfies Meta<typeof ViewMenu>;

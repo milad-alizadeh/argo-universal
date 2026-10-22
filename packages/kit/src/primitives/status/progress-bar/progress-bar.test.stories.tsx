@@ -11,7 +11,7 @@ const valueAttribute = 'aria-valuenow';
 
 const meta = {
   ...presentationMeta,
-  title: 'Tests/Design System/Primitives/progress-bar',
+  title: 'Tests/Design System/Primitives/Status/ProgressBar',
 };
 
 export default meta;

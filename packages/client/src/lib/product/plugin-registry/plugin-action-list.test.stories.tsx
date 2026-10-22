@@ -15,7 +15,9 @@ const fixture: WireNode = JSON.parse(`{
 
 const onEvent = fn();
 
-const meta = { title: 'Tests/Plugin registry/ActionList' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/ActionList',
+} satisfies Meta;
 
 export default meta;
 

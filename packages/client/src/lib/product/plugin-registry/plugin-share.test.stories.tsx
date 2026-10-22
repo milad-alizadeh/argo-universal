@@ -31,7 +31,7 @@ function sharePort(): () => void {
 }
 
 const meta = {
-  title: 'Tests/Plugin sharing',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Share',
   beforeEach: sharePort,
   render: (): React.JSX.Element => <PluginTree root={root} onEvent={onEvent} />,
 } satisfies Meta;

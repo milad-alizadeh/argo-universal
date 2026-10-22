@@ -10,7 +10,7 @@ import type { DetailProps } from './detail-props';
 import { issue } from './detail.mocks';
 
 const meta = {
-  title: 'Tests/Detail',
+  title: 'Tests/Design System/Primitives/Scaffolds/Detail',
   component: Detail,
   args: issue.detail,
   render: (args): React.JSX.Element => (

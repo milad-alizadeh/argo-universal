@@ -27,7 +27,7 @@ import { runningSession } from './session-detail-view.mocks';
 
 const meta = {
   ...sessionDetailViewTestMeta,
-  title: 'Tests/SessionDetailViewSubagentFeed',
+  title: 'Tests/Screens/Sessions/Session/SubagentFeed',
   render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 

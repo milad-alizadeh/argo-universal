@@ -52,7 +52,7 @@ function ChoosingProject(props: StartSessionInProps): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/StartSessionIn',
+  title: 'Tests/Composer/StartSessionIn',
   component: StartSessionIn,
   render: (args): React.JSX.Element => <ChoosingProject {...args} />,
   args: {

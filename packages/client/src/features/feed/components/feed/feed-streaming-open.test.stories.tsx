@@ -14,7 +14,7 @@ import { longRows, streamedRow } from './feed.mocks';
 import { feedArgs, PagedFeed, sendRow } from './paged-feed.mocks';
 
 const meta = {
-  title: 'Tests/Feed/Streaming open',
+  title: 'Tests/Feed/StreamingOpen',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedArgs,

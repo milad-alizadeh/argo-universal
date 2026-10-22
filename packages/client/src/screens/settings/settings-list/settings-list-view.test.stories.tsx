@@ -15,7 +15,7 @@ import {
   themeChoosesInPlace,
 } from '../../../../mocks/settings/settings-list-theme.test.mocks';
 
-const meta = { ...settingsListTestMeta, title: 'Tests/SettingsListView' };
+const meta = { ...settingsListTestMeta, title: 'Tests/Screens/Settings' };
 
 export default meta;
 

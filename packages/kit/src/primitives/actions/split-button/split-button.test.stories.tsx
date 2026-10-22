@@ -46,7 +46,7 @@ function ScopeSplit(props: ScopeSplitProps): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/SplitButton',
+  title: 'Tests/Design System/Primitives/Actions/SplitButton',
   component: ScopeSplit,
   args: { narrow: false, onAllow: fn(), onValueChange: fn() },
 } satisfies Meta<typeof ScopeSplit>;

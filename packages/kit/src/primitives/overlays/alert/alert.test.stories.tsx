@@ -66,7 +66,7 @@ function RemovingAgent(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Alert',
+  title: 'Tests/Design System/Primitives/Overlays/Alert',
   render: (): React.JSX.Element => <RemoveAgent />,
   beforeEach: (): void => {
     onAnswer.mockClear();

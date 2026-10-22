@@ -9,7 +9,10 @@ import {
 import { sessionRowMocks } from './session-row.mocks';
 
 // A Compact row's one line: the title, then its PR's state or how long ago the Session was active.
-const meta = { ...sessionRowTestMeta, title: 'Tests/SessionRow Compact' };
+const meta = {
+  ...sessionRowTestMeta,
+  title: 'Tests/Sessions/SessionRow/Compact',
+};
 
 export default meta;
 

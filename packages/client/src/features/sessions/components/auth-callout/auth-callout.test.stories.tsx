@@ -8,7 +8,7 @@ import { authCallouts, codexMethods } from './auth-callout.mocks';
 const menuLabel = 'Authentication options';
 
 const meta = {
-  title: 'Tests/AuthCallout',
+  title: 'Tests/Sessions/AuthCallout',
   component: AuthCallout,
   args: {
     ...authCallouts.severalMethods,

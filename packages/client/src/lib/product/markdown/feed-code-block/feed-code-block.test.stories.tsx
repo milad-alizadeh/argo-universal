@@ -12,7 +12,7 @@ import { longCodeBlockTitle } from '../code-block-title/code-block-title.mocks';
 const codeScrollId = 'code-scroll';
 
 const meta = {
-  title: 'Tests/FeedCodeBlock',
+  title: 'Tests/Design System/Patterns/FeedCodeBlock',
   component: FeedCodeBlock,
   args: {
     code: recordedFile('agent-2', 'edit-states')

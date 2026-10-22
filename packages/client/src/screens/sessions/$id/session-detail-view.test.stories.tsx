@@ -23,7 +23,10 @@ import {
   runningHeader,
 } from './session-detail-view.mocks';
 
-const meta = { ...sessionDetailViewTestMeta, title: 'Tests/SessionDetailView' };
+const meta = {
+  ...sessionDetailViewTestMeta,
+  title: 'Tests/Screens/Sessions/Session',
+};
 
 export default meta;
 

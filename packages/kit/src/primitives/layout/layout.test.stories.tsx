@@ -9,7 +9,7 @@ import { Spacer } from './spacer';
 import { Stack } from './stack';
 import { Surface } from './surface';
 
-const meta = { title: 'Tests/Layout parts' } satisfies Meta;
+const meta = { title: 'Tests/Layout' } satisfies Meta;
 
 export default meta;
 

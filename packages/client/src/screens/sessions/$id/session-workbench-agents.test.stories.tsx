@@ -11,7 +11,7 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 
 const meta = {
-  title: 'Tests/SessionWorkbenchAgents',
+  title: 'Tests/Screens/Sessions/Session/WorkbenchAgents',
   parameters: { screenPreview: true },
   args: { view: subagentsSession },
   render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,

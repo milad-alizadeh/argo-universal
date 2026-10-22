@@ -7,7 +7,7 @@ import listMeta from './shell-list.stories';
 
 const meta = {
   ...listMeta,
-  title: 'Tests/ShellList',
+  title: 'Tests/Sessions/ShellList',
   args: { ...listMeta.args, onSelect: fn() },
 };
 

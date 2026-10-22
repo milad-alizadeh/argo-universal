@@ -2,7 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { Avatar } from './avatar';
 
-const meta = { title: 'Tests/Avatar' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Primitives/Content/Avatar',
+} satisfies Meta;
 
 export default meta;
 

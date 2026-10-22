@@ -9,7 +9,7 @@ const labels = [
 ];
 
 const meta = {
-  title: 'Tests/Picker/Multiple states',
+  title: 'Tests/Design System/Primitives/Inputs/Picker/MultipleStates',
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);
   },

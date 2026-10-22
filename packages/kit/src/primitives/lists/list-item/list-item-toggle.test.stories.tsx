@@ -6,7 +6,7 @@ import { ListItem } from './index';
 const title = 'Show closed pull requests';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/ListItem/Toggle',
+  title: 'Tests/Design System/Primitives/Lists/ListItem/Toggle',
   component: ListItem.Toggle,
   args: { title, value: false, onValueChange: fn() },
   render: (args): React.JSX.Element => (

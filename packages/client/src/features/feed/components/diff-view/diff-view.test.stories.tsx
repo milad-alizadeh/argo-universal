@@ -16,7 +16,7 @@ const largeHeader = { name: 'Diff for /repo/large.txt' };
 const expanded = 'aria-expanded';
 
 const meta = {
-  title: 'Tests/DiffView',
+  title: 'Tests/Feed/DiffView',
   component: DiffView,
   globals: { mode: 'light' },
   decorators: [

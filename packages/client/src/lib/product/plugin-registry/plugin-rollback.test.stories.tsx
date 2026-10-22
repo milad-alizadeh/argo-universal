@@ -5,7 +5,9 @@ import { useState } from 'react';
 import { expect, fn, fireEvent, waitFor } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
-const meta = { title: 'Tests/Plugin rollback' } satisfies Meta;
+const meta = {
+  title: 'Tests/Design System/Patterns/PluginRegistry/Rollback',
+} satisfies Meta;
 
 export default meta;
 

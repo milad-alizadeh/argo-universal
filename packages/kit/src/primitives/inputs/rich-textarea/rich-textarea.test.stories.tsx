@@ -13,7 +13,7 @@ import {
 // These stories cover the web drawing (Lexical) only; the phone drawing is checked in the app.
 
 const meta = {
-  title: 'Tests/RichTextarea',
+  title: 'Tests/Design System/Primitives/Inputs/RichTextarea',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {

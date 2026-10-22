@@ -6,7 +6,7 @@ import { completedRead, readMocks } from '../tool-call.mocks';
 import { ToolCallRow } from './tool-call-row';
 
 const meta = {
-  title: 'Tests/ToolCallRow',
+  title: 'Tests/Feed/ToolCallRow',
   component: ToolCallRow,
   args: { row: completedRead },
 } satisfies Meta<typeof ToolCallRow>;
