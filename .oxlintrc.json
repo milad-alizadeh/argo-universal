@@ -18,6 +18,8 @@
     "**/*.gen.*",
     // Metro and `uniwind generate-artifacts` rewrite this file on every run.
     "**/uniwind-types.d.ts",
+    // Ported line for line from RareFormLabs/thinking-orbs (MIT), so it stays diffable against the original.
+    "packages/kit/src/primitives/status/orb/engine/**",
     // Installed by the skills tool and agent clients, not written in this repo.
     ".agent/**",
     ".agents/**",

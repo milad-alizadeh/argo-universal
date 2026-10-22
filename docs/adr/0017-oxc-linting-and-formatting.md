@@ -138,3 +138,9 @@ This preserves [ADR-0028](0028-plugins-draw-svg-charts-and-canvases-on-every-app
 The owner approved Canvas implementation on 2026-10-19 (#836), including ADR-0028's deferred web loading.
 `packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx` may import only `./canvas-renderer` at runtime, after `WithSkiaWeb` initializes CanvasKit.
 The lint rule checks both literal paths. It still refuses other runtime imports in that file and Canvas imports elsewhere.
+
+## Orb deferred renderer and ported engine
+
+The owner approved both on 2026-10-22.
+`packages/kit/src/primitives/status/orb/orb-loader.web.tsx` may import only `./orb-renderer` at runtime, after `WithSkiaWeb` initializes CanvasKit, under the same check as Canvas.
+`packages/kit/src/primitives/status/orb/engine/` is ported line for line from [RareFormLabs/thinking-orbs](https://github.com/RareFormLabs/thinking-orbs) (MIT, licence beside it), so `.oxlintrc.json` and `.jscpd.json` ignore it to keep it diffable against the original. `orb-engine.test.ts`, which is linted, pins its output to the original's frames instead. The rest of the orb folder takes the full rules.

@@ -18,22 +18,29 @@ const isDeferredRenderer = (node: ESTree.ImportExpression): boolean =>
   node.source.type === 'Literal' &&
   deferredRenderers.has(stringValue(node.source));
 
-function isCanvasLoader(
+// Each kit loader may import only its own renderer, after `WithSkiaWeb` initializes CanvasKit.
+const skiaLoaders = new Map([
+  [
+    '/packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx',
+    './canvas-renderer',
+  ],
+  [
+    '/packages/kit/src/primitives/status/orb/orb-loader.web.tsx',
+    './orb-renderer',
+  ],
+]);
+
+function isSkiaLoaderImport(
   filename: string,
   node: ESTree.ImportExpression,
 ): boolean {
-  const canvasLoader =
-    '/packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx';
+  const path = filename.replaceAll('\\', '/');
+  const loader = [...skiaLoaders.keys()].find((key) => path.endsWith(key));
 
   return (
-    filename.replaceAll('\\', '/').endsWith(canvasLoader) && canvasImport(node)
-  );
-}
-
-function canvasImport(node: ESTree.ImportExpression): boolean {
-  return (
+    loader !== undefined &&
     node.source.type === 'Literal' &&
-    stringValue(node.source) === './canvas-renderer'
+    stringValue(node.source) === skiaLoaders.get(loader)
   );
 }
 
@@ -47,10 +54,10 @@ export const staticImports = defineRule({
   },
   create: (context): Visitor => ({
     ImportExpression: (node): void => {
-      // ADR-0017 permits only these two deferred prototype renderers.
+      // ADR-0017 permits only these deferred imports: the prototype's two renderers, and each Skia loader's.
       if (isPrototypeImport(context.filename, node)) return;
 
-      if (isCanvasLoader(context.filename, node)) return;
+      if (isSkiaLoaderImport(context.filename, node)) return;
       context.report({ node, messageId: 'staticImports' });
     },
     TSImportType: (node): void =>
