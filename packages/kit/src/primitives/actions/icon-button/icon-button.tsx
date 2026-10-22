@@ -23,7 +23,11 @@ import { sizes } from './icon-button-layout';
 // What a Plugin sends for an IconButton over the wire.
 export type IconButtonDataProps = KitProps<'IconButton'>;
 
-export type IconButtonProps = IconButtonDataProps & { testID?: string };
+// `muted` is for the app's own screens, not the wire: a ghost glyph in the secondary tone, as an Icon's muted tone.
+export type IconButtonProps = IconButtonDataProps & {
+  testID?: string;
+  muted?: boolean;
+};
 
 export type IconButtonSize = NonNullable<IconButtonProps['size']>;
 
@@ -92,7 +96,7 @@ function NativeGlyph(props: IconButtonProps): ReactElement {
   return (
     <NativeIcon
       name={props.icon}
-      role={sizeOf(props).iconRole}
+      size={sizeOf(props).iconSize}
       filled={props.selected ?? false}
       color={color}
     />
@@ -116,14 +120,12 @@ function WebIconButton(props: IconButtonProps): ReactElement {
 }
 
 function WebGlyph(props: IconButtonProps): ReactElement {
-  const glyph = props.disabled
-    ? 'text-foreground/38'
-    : webGlyphs[variantOf(props)];
+  const glyph = props.disabled ? 'text-foreground/38' : webGlyph(props);
 
   return (
     <Icon
       name={props.icon}
-      role={sizeOf(props).iconRole}
+      size={sizeOf(props).iconSize}
       filled={props.selected ?? false}
       className={glyph}
     />
@@ -133,11 +135,17 @@ function WebGlyph(props: IconButtonProps): ReactElement {
 const webClass =
   'shrink-0 items-center justify-center rounded-full web:transition-all web:duration-150 web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
 
-// Ghost has no fill, so it takes the hover and pressed tints; the lit looks carry their own.
+// Ghost has no fill, so it takes the hover and pressed tints, and the theme's selected tint when selected; the lit looks carry their own.
 const ghostClass = (props: IconButtonProps): string =>
   variantOf(props) === 'ghost'
-    ? 'web:hover:bg-hover web:active:bg-pressed'
+    ? cn(
+        'web:hover:bg-hover web:active:bg-pressed',
+        props.selected && 'bg-selected',
+      )
     : '';
+
+const webGlyph = (props: IconButtonProps): string =>
+  props.muted ? 'text-muted-foreground' : webGlyphs[variantOf(props)];
 
 const webGlyphs = {
   primary: 'text-primary-foreground',

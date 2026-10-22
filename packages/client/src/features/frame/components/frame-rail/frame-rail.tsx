@@ -43,7 +43,7 @@ function TileIcon(props: SectionButtonProps): React.JSX.Element {
   return (
     <Icon
       name={props.section.icon}
-      role="nav"
+      size="lg"
       filled={props.selected}
       tone={props.selected ? undefined : 'muted'}
     />

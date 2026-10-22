@@ -36,11 +36,7 @@ export function ComboboxTrigger(props: Props): ReactElement {
     <View className="min-w-0 flex-1">
       <Text>{props.valueLabel}</Text>
     </View>,
-    <Icon
-      name={props.chevron ?? 'chevron-up-down'}
-      role="control"
-      aria-hidden
-    />,
+    <Icon name={props.chevron ?? 'chevron-up-down'} size="sm" aria-hidden />,
   );
 }
 

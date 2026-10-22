@@ -21,7 +21,7 @@ type HeaderProps = ProjectHeadingProps &
   ContextMenuTriggerProps & { actions?: React.ReactNode };
 
 function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {
-  return <Icon role="body" name={collapsed ? 'folder' : 'folder-open'} />;
+  return <Icon size="sm" name={collapsed ? 'folder' : 'folder-open'} />;
 }
 
 // Desktop and web draw the heading as Paper's sidebar section (Paper "SessionsList").

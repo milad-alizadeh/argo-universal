@@ -60,7 +60,7 @@ function OutcomeIcon({
     <View className="h-6 shrink-0 justify-center wide-type:h-5">
       <Icon
         name={allowedKinds.has(kind) ? 'check' : 'close'}
-        role="body"
+        size="sm"
         className="text-muted-foreground"
       />
     </View>

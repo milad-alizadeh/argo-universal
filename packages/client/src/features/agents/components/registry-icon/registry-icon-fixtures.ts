@@ -7,12 +7,12 @@ const agentName = iconAgent.entry.name;
 export const unavailableRegistryIcon = {
   uri: undefined,
   agentName,
-  role: 'control',
+  size: 'sm',
 } satisfies RegistryIconProps;
 
 // The Registry's own encoded SVG, painted in the foreground.
 export const loadedRegistryIcon = {
   uri: encodedIcon,
   agentName,
-  role: 'control',
+  size: 'sm',
 } satisfies RegistryIconProps;

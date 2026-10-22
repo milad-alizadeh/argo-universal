@@ -22,13 +22,12 @@ export function DisclosureChevron(
 }
 
 /*
- * One size, with no say in it from the caller: every chevron in the app is the `chevron` role, so a
- * collapsible's chevron and a row's are the same glyph at the same size wherever they sit.
+ * Every row's chevron is sm; a collapsible's header passes xs, one size smaller.
  */
 function ChevronGlyph(props: DisclosureChevronProps): React.JSX.Element {
   return (
     <Icon
-      role="chevron"
+      size={props.size ?? 'sm'}
       name="chevron-right"
       className={cn('text-muted-foreground', props.className)}
     />

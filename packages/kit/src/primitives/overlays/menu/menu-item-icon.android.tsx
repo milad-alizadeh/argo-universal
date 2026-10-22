@@ -35,7 +35,7 @@ function HostedIcon(
 ): React.JSX.Element {
   return (
     <View className={props.disabled ? 'opacity-38' : undefined}>
-      <Icon name={props.icon} role="grouped-row" tone={props.tone ?? 'muted'} />
+      <Icon name={props.icon} size="lg" tone={props.tone ?? 'muted'} />
     </View>
   );
 }

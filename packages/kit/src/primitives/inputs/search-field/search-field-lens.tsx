@@ -16,8 +16,7 @@ const lensBox = ({
 
 const muted = 'text-muted-foreground';
 
-const lensRole = (sidebar?: boolean): 'action' | 'control' =>
-  sidebar ? 'control' : 'action';
+const lensSize = (sidebar?: boolean): 'sm' | 'md' => (sidebar ? 'sm' : 'md');
 
 // Drawn above the surface, so the button's lens becomes the field's; a sidebar's is the 16 control glyph.
 export function Lens(props: MorphState): React.JSX.Element {
@@ -29,7 +28,7 @@ export function Lens(props: MorphState): React.JSX.Element {
       className="absolute inset-y-0 right-0 items-center justify-center"
       style={[lensBox(props.geometry), style]}
     >
-      <Icon name="search" role={lensRole(props.sidebar)} className={muted} />
+      <Icon name="search" size={lensSize(props.sidebar)} className={muted} />
     </Animated.View>
   );
 }

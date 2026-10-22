@@ -17,7 +17,7 @@ export function WrittenPlanTrigger(
 ): React.JSX.Element {
   return (
     <Pressable {...triggerProps(props)}>
-      <Icon role="control" name="file-text" className="text-muted-foreground" />
+      <Icon size="sm" name="file-text" className="text-muted-foreground" />
       <Text role="secondary" className={cn(!props.wide && 'text-foreground')}>
         Written plan
       </Text>
@@ -61,11 +61,7 @@ function WideTitle({
   return (
     <>
       <Text {...wideTitleTextProps}>{title}</Text>
-      <Icon
-        role="chevron"
-        name="chevron-up"
-        className="text-muted-foreground"
-      />
+      <Icon size="sm" name="chevron-up" className="text-muted-foreground" />
     </>
   );
 }

@@ -40,7 +40,7 @@ function DrawerItemContent(props: DrawerItemProps): React.JSX.Element {
 
   return (
     <>
-      <Icon name={icon} role="nav" filled={selected} className={muted} />
+      <Icon name={icon} size="lg" filled={selected} className={muted} />
       <Text role="body" className={labelClass}>
         {label}
       </Text>

@@ -1,14 +1,14 @@
 import { Icon } from '@expo/ui';
 import type { ReactElement } from 'react';
 import type { ColorValue } from 'react-native';
-import { type IconRole, useIconPixels } from './icon-role';
+import { type IconSize, useIconPixels } from './icon-size';
 import type { IconSymbol } from './icon-symbol';
 import { NativeIconFallback } from './native-icon-fallback';
 import { nativeIconName, nativeIconSize } from './native-icon-name';
 
 export interface NativeIconProps {
   name: IconSymbol;
-  role: IconRole;
+  size: IconSize;
   // A native theme colour; unset, the icon takes the Compose control's content colour (iOS: the tint).
   color: ColorValue | undefined;
   filled?: boolean;
@@ -18,7 +18,7 @@ export interface NativeIconProps {
 
 // An Argo icon inside an Expo UI tree: Expo UI's own Icon where the platform has the drawing (nativeIconName).
 export function NativeIcon(props: NativeIconProps): ReactElement | null {
-  const pixels = useIconPixels(props.role);
+  const pixels = useIconPixels(props.size);
   const name = nativeIconName(props.name, props.filled);
 
   if (name === undefined)

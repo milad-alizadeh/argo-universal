@@ -121,7 +121,7 @@ function PageFooter({ text }: { text?: string }): ReactNode {
 
   return (
     <View className="flex-row items-center px-4">
-      {Platform.OS === 'android' ? <Icon name="info" role="body" /> : null}
+      {Platform.OS === 'android' ? <Icon name="info" size="sm" /> : null}
       <ListFooter text={text} />
     </View>
   );

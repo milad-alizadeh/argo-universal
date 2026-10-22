@@ -43,7 +43,7 @@ function OutcomeIcon({ failed }: { failed: boolean }): React.JSX.Element {
   return (
     <Icon
       name={failed ? 'close' : 'check'}
-      role="secondary"
+      size="xs"
       className={cn('text-success', failed && destructiveClassName)}
     />
   );

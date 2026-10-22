@@ -8,7 +8,7 @@ type ValuedAttribute = ESTree.JSXAttribute & {
 const iconComponents = new Set(['Icon', 'IconSpinner', 'IconSlot']);
 
 const pixelSizes = new Map([
-  ['size', /./],
+  ['size', /^\{\s*\d/],
   ['className', /(?:^|[^-\w])size-/],
 ]);
 
@@ -35,7 +35,7 @@ const isPixelModifier = (node: ESTree.CallExpression): boolean =>
   node.callee.name === 'size' &&
   node.arguments.some(isNumber);
 
-// SwiftUI's Image, which takes a pixel size; NativeSymbol wraps it with a role.
+// SwiftUI's Image, which takes a pixel size; NativeSymbol wraps it with a size.
 const isSwiftUIImage = (node: ESTree.ImportDeclaration): boolean =>
   node.source.value === '@expo/ui/swift-ui' &&
   node.specifiers.some(
@@ -78,20 +78,20 @@ const nativeSymbolChecks = (
   ImportDeclaration: reportNativeSymbol(context, isSwiftUIImage),
 });
 
-export const iconRole = defineRule({
+export const iconSize = defineRule({
   meta: {
     type: 'problem',
     messages: {
-      iconRole:
-        'Icons take a role (body, secondary, control, mark, row, action, nav, title), never a size prop or size-* class.',
+      iconSize:
+        'Icons take a size (xs, sm, md, lg), never a pixel number or a size-* class.',
       nativeSymbol:
-        'Draw a native symbol with NativeSymbol, or size it with useIconPixels(role), so native icons follow the same roles.',
+        'Draw a native symbol with NativeSymbol, or size it with useIconPixels(size), so native icons follow the same sizes.',
     },
   },
   create: (context): IconVisitor => ({
     JSXOpeningElement: (node): void => {
       if (isIcon(node) && node.attributes.some(hasPixelSize(context)))
-        context.report({ node, messageId: 'iconRole' });
+        context.report({ node, messageId: 'iconSize' });
     },
     ...nativeSymbolChecks(context),
   }),

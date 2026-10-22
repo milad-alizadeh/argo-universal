@@ -59,9 +59,10 @@ async function hasDrawing(name: string): Promise<boolean> {
   }
 }
 
+// Android draws the light weight (300), cut with `add-material-symbols -w 300` (assets/README.md); the package itself ships 400.
 function drawingPath(name: string, packaged: boolean): string | undefined {
   return packaged
-    ? `@expo/material-symbols/${name}.xml`
+    ? `../assets/material-light/${name}.xml`
     : ownDrawings.get(name);
 }
 

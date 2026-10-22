@@ -43,7 +43,7 @@ Native frames use the platform's type scale as literals (SF Pro on iOS, Roboto o
 
 `tooling/uniwind/theme.css` is the only source of token values. The Paper file holds its own copy so it can draw; that copy is a convenience, not a second source. Do not hand-sync it, and do not report it as drift. When a Paper drawing looks wrong because a token moved, update the token in Paper and move on.
 
-Text uses the four roles — Title, Heading, Body, Secondary — as `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`, never a scale step such as `--text-sm`. Icon dimensions come from the role table in `packages/kit/src/symbols/icon-role.ts`.
+Text uses the four roles — Title, Heading, Body, Secondary — as `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`, never a scale step such as `--text-sm`. Icon dimensions come from the role table in `packages/kit/src/symbols/icon-size.ts`.
 
 ## Icons
 

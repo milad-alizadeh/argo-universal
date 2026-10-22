@@ -1,6 +1,6 @@
 import type { SessionInfo } from '@repo/contracts';
 import { fullTurnDegrees } from '@repo/kit/motion';
-import { useIconBox } from '@repo/kit/symbols/icon-role';
+import { useIconBox } from '@repo/kit/symbols/icon-size';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import type { ViewStyle } from 'react-native';
@@ -50,11 +50,11 @@ export function SessionLogo(props: SessionLogoProps): React.JSX.Element {
   const logoStyle = useLogoRotation(props.status);
 
   return (
-    <Animated.View style={[useIconBox('body'), logoStyle]}>
+    <Animated.View style={[useIconBox('sm'), logoStyle]}>
       <AgentLogo
         logo={props.logo}
         label="Agent"
-        role="body"
+        size="sm"
         testID="session-logo"
       />
     </Animated.View>

@@ -32,7 +32,7 @@ export function IconButton(props: IconButtonProps): ReactElement {
       <Control {...useComposeProps(props)}>
         <NativeIcon
           name={props.icon}
-          role={size.iconRole}
+          size={size.iconSize}
           filled={props.selected ?? false}
           color={undefined}
         />

@@ -120,7 +120,7 @@ export function WorkingMark(): React.JSX.Element {
   const motion = { step: useStep(still), still };
 
   return (
-    <IconSlot role="control" testID="working-mark">
+    <IconSlot size="sm" testID="working-mark">
       {cellElements(motion)}
     </IconSlot>
   );

@@ -35,7 +35,7 @@ export const TitleOnly: Story = {
 export const Anatomy: Story = {
   args: {
     subtitle: 'Production',
-    icon: <Icon role="row" name="server" />,
+    icon: <Icon size="md" name="server" />,
     children: <Text>Deployed 12 min ago</Text>,
   },
   play: async ({ canvas }) => {

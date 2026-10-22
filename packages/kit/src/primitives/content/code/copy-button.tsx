@@ -40,7 +40,9 @@ export function CopyButton(props: CopyButtonProps): React.JSX.Element {
 
   return (
     <IconButton
+      size="xs"
       variant="ghost"
+      muted
       icon={copied ? 'check' : 'copy'}
       accessibilityLabel={copied ? 'Copied' : props.label}
       onPress={() => copy(props.value)}

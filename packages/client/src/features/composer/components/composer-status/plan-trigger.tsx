@@ -66,7 +66,7 @@ function CurrentPlanStep({ entries, expanded }: CurrentStepProps): JSX.Element {
   return (
     <>
       <CurrentStepLabel entries={entries} />
-      <Icon role="chevron" name="chevron-up" className={className} />
+      <Icon size="sm" name="chevron-up" className={className} />
     </>
   );
 }

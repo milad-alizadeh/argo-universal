@@ -55,7 +55,7 @@ const noticeRowProps = ({
 function NoticeIcon({ icon, color }: Appearance): React.JSX.Element {
   return (
     <View className="h-6 shrink-0 items-center justify-center wide-type:h-5">
-      <Icon name={icon} role="body" className={color} />
+      <Icon name={icon} size="sm" className={color} />
     </View>
   );
 }

@@ -25,7 +25,7 @@ describe('a rule allowlist', (): void => {
       overrides: [
         {
           files: [row],
-          rules: { 'argo/kit-styling': 'off', 'argo/icon-role': 'off' },
+          rules: { 'argo/kit-styling': 'off', 'argo/icon-size': 'off' },
         },
       ],
     };

@@ -25,5 +25,5 @@ export function showActionToast(toast: Toast, action: ToastAction): boolean {
 const toneIcons = { success: 'check', danger: 'close' } as const;
 
 const ToneIcon = ({ tone }: Pick<Toast, 'tone'>): React.JSX.Element => (
-  <Icon name={toneIcons[tone]} role="control" tone={tone} />
+  <Icon name={toneIcons[tone]} size="sm" tone={tone} />
 );

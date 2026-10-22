@@ -1,5 +1,5 @@
 import type { ActivityIndicatorProps, ViewProps } from 'react-native';
-import type { IconRole, IconRoleValue } from '../../../symbols/icon-role';
+import type { IconSize, IconSizeValue } from '../../../symbols/icon-size';
 import type { LogoSource } from '../../../symbols/logo-source';
 import type { KitProps } from '../../kit-props';
 
@@ -15,7 +15,7 @@ export type IconProps = IconDrawing & {
 };
 
 export type IconSpinnerProps = Omit<ActivityIndicatorProps, 'size'> & {
-  iconRole: IconRole;
+  iconSize: IconSize;
 };
 
-export type IconSlotProps = Omit<ViewProps, 'role'> & { role: IconRoleValue };
+export type IconSlotProps = ViewProps & { size: IconSizeValue };

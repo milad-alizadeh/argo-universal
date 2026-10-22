@@ -56,7 +56,7 @@ function AgentLeading({ configuration }: Props): ReactElement {
   return configuration.agent ? (
     <AgentIcon
       agent={configuration.agent}
-      role={{ compact: 'body', wide: 'row' }}
+      size={{ compact: 'sm', wide: 'md' }}
     />
   ) : (
     <ConfigurationRowIcon name="agent" />

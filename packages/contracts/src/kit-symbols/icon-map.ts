@@ -48,6 +48,7 @@ export const iconSymbols = {
   'code-map': { sf: 'cube', material: 'deployed_code' },
   collapse: {
     sf: 'arrow.down.right.and.arrow.up.left',
+    sfFilled: 'arrow.down.right.and.arrow.up.left.circle.fill',
     material: 'close_fullscreen',
   },
   compaction: {
@@ -65,6 +66,7 @@ export const iconSymbols = {
   engine: { sf: 'gearshape.2', material: 'manufacturing' },
   expand: {
     sf: 'arrow.up.left.and.arrow.down.right',
+    sfFilled: 'arrow.up.left.and.arrow.down.right.circle.fill',
     material: 'open_in_full',
   },
   explore: { sf: 'safari', material: 'explore' },
@@ -124,7 +126,11 @@ export const iconSymbols = {
     sfFilled: 'gearshape.fill',
     material: 'settings',
   },
-  sidebar: { sf: 'sidebar.left', material: 'side_navigation' },
+  sidebar: {
+    sf: 'sidebar.left',
+    sfFilled: 'rectangle.leftthird.inset.filled',
+    material: 'side_navigation',
+  },
   sparkle: { sf: 'sparkles', material: 'auto_awesome' },
   'state-machine': { sf: 'circle.hexagonpath', material: 'hub' },
   steer: { sf: 'arrow.turn.down.right', material: 'subdirectory_arrow_right' },

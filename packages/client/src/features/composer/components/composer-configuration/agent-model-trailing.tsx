@@ -35,7 +35,7 @@ function FastModeIndicator({
   );
 
   return fastOn ? (
-    <Icon role="control" name="fast-mode" filled testID="fast-mode-on" />
+    <Icon size="sm" name="fast-mode" filled testID="fast-mode-on" />
   ) : null;
 }
 

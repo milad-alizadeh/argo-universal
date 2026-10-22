@@ -47,7 +47,7 @@ function SummaryIcons({
     <View {...markStackProps}>
       {uniqueIcons(icons).map(({ icon, tone }, index) => (
         <View key={icon} className={index > 0 ? '-ml-1.5' : undefined}>
-          <ToneMark icon={icon} tone={tone} role="control" form="disc" />
+          <ToneMark icon={icon} tone={tone} size="sm" form="disc" />
         </View>
       ))}
     </View>

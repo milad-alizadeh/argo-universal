@@ -18,6 +18,16 @@ Metro imports the font as an asset ID; Vite imports its URL. `expo-symbols` pass
 
 To add a logo, copy its SVG into `logos/` with `currentColor` fills, add a `<name>.svg.d.ts` beside it like `brand-github.svg.d.ts`, and add it to `logoSources`.
 
+# Android light drawings
+
+`material-light/` holds each drawn Material name as an outlined Android vector drawable at weight 300, since `@expo/material-symbols` ships weight 400, which draws heavier than the iOS symbols. `generate:material-images` imports them in place of the package's. To add a name, cut it and rename the file:
+
+```bash
+pnpm exec add-material-symbols -w 300 -o src/symbols/assets/material-light <name>
+```
+
+The CLI names its file `<name>_wght300.xml`; rename it to `<name>.xml`. It takes one name per run.
+
 # Android filled drawings
 
 `material-filled/` holds each drawn Material name as a filled Android vector drawable. `@expo/material-symbols` ships the outlined style only, so these give Expo UI's `Icon` a filled drawing for the selected state. Expo's own CLI makes them, as its README describes:

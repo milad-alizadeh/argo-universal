@@ -30,7 +30,7 @@ const disclosureIcon = (
 function disclosure(props: HeaderProps): ReactNode {
   if (!props.onExpandedChange) return null;
 
-  return <Icon role="chevron" name={disclosureIcon(props.isExpanded)} />;
+  return <Icon size="sm" name={disclosureIcon(props.isExpanded)} />;
 }
 
 function leadingIcon(props: HeaderProps): ReactNode {

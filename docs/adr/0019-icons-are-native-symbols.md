@@ -10,11 +10,11 @@ Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-1
 | Electron on Windows and Linux | Material Symbols | as on web |
 | Electron on macOS | SF Symbols | macOS, at runtime |
 
-One map, `packages/kit/src/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" role="control" />`; colour comes from the text class. The one exception is a Plugin's icon (owner, 2026-10-16, [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md)): a Plugin names its own SF and Material symbols, so `Icon` also takes an `{ sf, sfFilled?, material }` pair that bypasses the map. Screens never write a pair; only Plugin navigation passes one.
+One map, `packages/kit/src/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" size="sm" />`; colour comes from the text class. The one exception is a Plugin's icon (owner, 2026-10-16, [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md)): a Plugin names its own SF and Material symbols, so `Icon` also takes an `{ sf, sfFilled?, material }` pair that bypasses the map. Screens never write a pair; only Plugin navigation passes one.
 
-## Icon roles
+## Icon sizes
 
-An icon takes a role, never a size (owner, 2026-10-12): where it sits decides its size, and an icon beside text steps up on the phone as the text does. `packages/kit/src/symbols/icon-role.ts` is the one table of roles and their wide and phone sizes, on the 12, 14, 16, 20 and 24 scale. SwiftUI and Compose trees, which cannot hold `Icon`, read the same table through `useIconPixels(role)` or draw with `SwiftUISymbol`, so native icons cannot drift from the rest. The `argo/icon-role` lint rule rejects a size prop, a `size-*` class on an icon, a hand-written `systemName` and a numeric Compose `size` modifier outside the kit's `symbols/`.
+An icon takes one of four sizes, `xs`, `sm`, `md` and `lg`, and an IconButton takes the same four (owner, 2026-10-22, replacing the role-per-place table of 2026-10-12). `packages/contracts/src/kit-symbols/icon-size.ts` is the one table of pixels, in a wide column and a phone column; the phone steps one size up, to a limit of 24, as its text does. Nothing else holds an icon pixel value, and a font change on desktop adjusts that one column. SwiftUI and Compose trees, which cannot hold `Icon`, read the same table through `useIconPixels(size)` or draw with `NativeSymbol`, so native icons cannot drift from the rest. The `argo/icon-size` lint rule rejects a pixel number as an icon size, a `size-*` class on an icon, a hand-written `systemName` and a numeric Compose `size` modifier outside the kit's `symbols/`. iOS list rows and chevrons draw at the same fixed sizes as every other icon, not text-sized.
 
 Apple's licence allows SF Symbols only in apps for Apple platforms, so no SF Symbol image is committed or shipped in the web build. On macOS, the Electron main process draws the symbol with `nativeImage.createFromNamedImage` and the preload script returns it as a PNG data URL. The page uses that image as a CSS mask filled with the text colour, caches it, and keeps an empty box of the same size while it loads. The IPC request is validated; an unrecognised request is rejected, reported and counted.
 
@@ -43,7 +43,7 @@ Logos are plain SVG assets, not symbols (owner, 2026-10-19). A brand mark such a
 - The SVG files and their licences are committed in `packages/kit/src/symbols/assets/logos`, with `currentColor` fills. The first is GitHub's Octicons mark (MIT), which the Agent card's repository link draws (owner decision, 2026-10-16).
 - `logo-source.ts` imports each file and gives it a name to speak; `Icon` draws one through its `source` prop, and `IconButton` through `iconSource`. A logo has no Argo icon name, so it never reaches the symbol map, the asset catalog or a Plugin.
 - One renderer draws it on iOS, Android, web and Electron: `react-native-svg`, from a component the bundler makes of the file. Metro uses `react-native-svg-transformer` for the app and the desktop app's web build, and Storybook's Vite uses `vite-plugin-svgr` with SVGR's native output.
-- It draws at the role's size from `icon-role.ts`, filling the share of the box that `circle` fills, so a round mark matches the symbols beside it, and takes the icon's text colour as every other icon does.
+- It draws at the icon's size from `icon-size.ts`, filling the share of the box that `circle` fills, so a round mark matches the symbols beside it, and takes the icon's text colour as every other icon does.
 
 ## Considered options
 

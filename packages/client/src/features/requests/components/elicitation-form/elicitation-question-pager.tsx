@@ -40,7 +40,7 @@ function PagerButton({ model, direction }: PagerProps): ReactElement {
     <IconButton
       {...pageProps({ model, direction })}
       variant="ghost"
-      size="sm"
+      size="xs"
     />
   );
 }

@@ -22,7 +22,7 @@ interface PlanHeaderProps {
 type ViewProps = Pick<PlanHeaderProps, 'view'>;
 
 // As the Written plan tray's row: small ghost buttons.
-const controlAppearance = { variant: 'ghost', size: 'sm' } as const;
+const controlAppearance = { variant: 'ghost', size: 'xs' } as const;
 
 /*
  * The plan's title as its heading, then its controls.
@@ -96,7 +96,7 @@ function PhoneRow({ title }: Pick<PlanHeaderProps, 'title'>): ReactNode {
   return (
     <View className="min-h-11 flex-row items-center gap-1.5">
       <PlanTitle title={title} />
-      <Icon role="chevron" name="chevron-up" tone="muted" />
+      <Icon size="sm" name="chevron-up" tone="muted" />
     </View>
   );
 }

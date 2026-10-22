@@ -3,7 +3,7 @@ import {
   createModifier,
   fillMaxWidth,
 } from '@expo/ui/jetpack-compose/modifiers';
-import type { IconRole } from '../../../symbols/icon-role';
+import type { IconSize } from '../../../symbols/icon-size';
 import type { ButtonProps } from './button';
 
 type ButtonSize = NonNullable<ButtonProps['size']>;
@@ -22,13 +22,13 @@ export const sizes = {
   sm: {
     modifiers: [swiftControlSize],
     style: { height: smallHeight },
-    iconRole: 'mark',
+    iconSize: 'sm',
   },
-  md: { modifiers: [], style: {}, iconRole: 'control' },
+  md: { modifiers: [], style: {}, iconSize: 'sm' },
 } satisfies Record<
   ButtonSize,
   Required<Pick<ExpoButtonProps, 'modifiers' | 'style'>> & {
-    iconRole: IconRole;
+    iconSize: IconSize;
   }
 >;
 

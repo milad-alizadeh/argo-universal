@@ -42,7 +42,7 @@ interface GroupProps extends Pick<FormatBarProps, 'onFormat'> {
 
 type ToggleProps = GroupProps & { button: FormatButton };
 
-const toggleLook = { variant: 'ghost', size: 'sm' } as const;
+const toggleLook = { variant: 'ghost', size: 'xs' } as const;
 
 function FormatToggle(props: ToggleProps): React.JSX.Element {
   return (

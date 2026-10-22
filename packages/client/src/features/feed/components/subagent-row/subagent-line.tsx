@@ -42,8 +42,8 @@ function RowChevron({ opens }: { opens: boolean }): React.JSX.Element | null {
   if (!opens) return null;
 
   return (
-    <IconSlot role="chevron">
-      <Icon name="disclosure" role="chevron" />
+    <IconSlot size="sm">
+      <Icon name="disclosure" size="sm" />
     </IconSlot>
   );
 }
@@ -73,7 +73,7 @@ export function SpawnPrompt({
 
   return (
     <View className="flex-row items-start gap-1.5">
-      <IconSlot role="row" />
+      <IconSlot size="md" />
       <ClampedLine text={item.text} className="min-w-0 flex-1" />
     </View>
   );

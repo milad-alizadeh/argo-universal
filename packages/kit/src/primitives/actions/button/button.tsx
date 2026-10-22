@@ -159,7 +159,7 @@ function LeadingIcon(
   return (
     <NativeIcon
       name={props.icon}
-      role={sizes[props.size ?? buttonDefaults.size].iconRole}
+      size={sizes[props.size ?? buttonDefaults.size].iconSize}
       color={props.color}
     />
   );

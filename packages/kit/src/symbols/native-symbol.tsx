@@ -36,7 +36,7 @@ function HostedSymbol({
 }: NativeSymbolProps): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <IconSlot role={props.role} {...hostedIconSlot}>
+      <IconSlot size={props.size} {...hostedIconSlot}>
         <Icon {...props} className={mutedClassName(muted)} />
       </IconSlot>
     </RNHostView>

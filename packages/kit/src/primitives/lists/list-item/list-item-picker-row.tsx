@@ -15,7 +15,7 @@ export function PickerRow<Value extends string>(
       role="button"
       value={pickerRowValue(props)}
       trailing={
-        <Icon name="chevron-up-down" role="chevron" className="text-tertiary" />
+        <Icon name="chevron-up-down" size="sm" className="text-tertiary" />
       }
     />
   );

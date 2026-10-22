@@ -49,7 +49,7 @@ function TriggerValue(props: TriggerFields): ReactElement {
   return (
     <Row alignment="center" spacing={6}>
       <NativeText>{props.valueLabel}</NativeText>
-      <NativeSymbol name="chevron-up-down" role="chevron" />
+      <NativeSymbol name="chevron-up-down" size="sm" />
     </Row>
   );
 }

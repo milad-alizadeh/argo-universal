@@ -28,8 +28,8 @@ function SubagentLead({ item }: { item: FeedSubagent }): React.JSX.Element {
     return <TintedAvatar {...subagentRoleMark(item.role)} size="inline" />;
 
   return (
-    <IconSlot role="row">
-      <Icon name={markIcons[item.kind]} role="body" />
+    <IconSlot size="md">
+      <Icon name={markIcons[item.kind]} size="sm" />
     </IconSlot>
   );
 }

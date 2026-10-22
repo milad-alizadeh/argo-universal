@@ -6,12 +6,9 @@ export const bandControlAppearance = {
   size: 'sm',
 } as const;
 
-// Foundations / IconButton Off and On: only the band's toggles take the filled On state.
+// Foundations / IconButton Off and On: the toggles stay ghost and take the IconButton's own selected state.
 export function bandToggleAppearance(
   selected: boolean,
-): Pick<IconButtonProps, 'size' | 'variant'> {
-  return {
-    ...bandControlAppearance,
-    variant: selected ? 'primary' : 'ghost',
-  };
+): Pick<IconButtonProps, 'selected' | 'size' | 'variant'> {
+  return { ...bandControlAppearance, selected };
 }

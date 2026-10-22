@@ -50,11 +50,11 @@ function SymbolCells({ name }: { name: IconName }): React.JSX.Element {
     <>
       <View className="w-10">
         <SymbolImagesProvider render={renderStorybookSymbol}>
-          <Icon name={name} role="action" testID={`sf-${name}`} />
+          <Icon name={name} size="md" testID={`sf-${name}`} />
         </SymbolImagesProvider>
       </View>
       <View className="w-10">
-        <Icon name={name} role="action" testID={`material-${name}`} />
+        <Icon name={name} size="md" testID={`material-${name}`} />
       </View>
     </>
   );

@@ -14,7 +14,7 @@ export function ComboboxSearch(props: ComboboxSearchProps): React.JSX.Element {
     <View className={containerClasses(props.className)}>
       <Icon
         name="search"
-        role="control"
+        size="sm"
         className="text-foreground wide:text-muted-foreground"
       />
       <SearchInput {...props} />

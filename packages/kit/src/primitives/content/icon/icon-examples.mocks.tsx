@@ -2,22 +2,13 @@ import { View } from 'react-native';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { iconNames } from '../../../symbols/icon-names';
-import { type IconRole, useIconPixels } from '../../../symbols/icon-role';
+import { type IconSize, useIconPixels } from '../../../symbols/icon-size';
 import { logoSources } from '../../../symbols/logo-source';
 import { Icon } from './icon';
 
 type IconName = (typeof iconNames)[number];
 
-const roles: IconRole[] = [
-  'body',
-  'secondary',
-  'control',
-  'mark',
-  'row',
-  'action',
-  'nav',
-  'title',
-];
+const sizes: IconSize[] = ['xs', 'sm', 'md', 'lg'];
 
 const iconButtonExamples = [
   { label: 'Add', icon: 'add' },
@@ -32,11 +23,11 @@ const colorClasses = [
   'text-danger',
 ];
 
-function RoleSample({ role }: { role: IconRole }): React.JSX.Element {
+function SizeSample({ size }: { size: IconSize }): React.JSX.Element {
   return (
     <View className="items-center gap-1">
-      <Icon name="add" role={role} />
-      <Text role="secondary">{`${role} ${useIconPixels(role)}`}</Text>
+      <Icon name="add" size={size} />
+      <Text role="secondary">{`${size} ${useIconPixels(size)}`}</Text>
     </View>
   );
 }
@@ -44,7 +35,7 @@ function RoleSample({ role }: { role: IconRole }): React.JSX.Element {
 function IconCell({ name }: { name: IconName }): React.JSX.Element {
   return (
     <View className="w-28 items-center gap-1">
-      <Icon name={name} role="control" />
+      <Icon name={name} size="sm" />
       <Text role="secondary">{name}</Text>
     </View>
   );
@@ -69,7 +60,7 @@ function FilledIconButton(props: {
       aria-label={props.label}
       icon={props.icon}
       accessibilityLabel={props.label}
-      size="sm"
+      size="xs"
       variant="primary"
     />
   );
@@ -85,18 +76,18 @@ export function IconButtonsExample(): React.JSX.Element {
   );
 }
 
-export function RolesExample(): React.JSX.Element {
+export function SizesExample(): React.JSX.Element {
   return (
     <View className="flex-row flex-wrap items-end gap-4">
-      {roles.map((role) => (
-        <RoleSample key={role} role={role} />
+      {sizes.map((size) => (
+        <SizeSample key={size} size={size} />
       ))}
     </View>
   );
 }
 
 function ColoredIcon({ className }: { className: string }): React.JSX.Element {
-  return <Icon name="warning" role="control" className={className} />;
+  return <Icon name="warning" size="sm" className={className} />;
 }
 
 export function ColorsExample(): React.JSX.Element {
@@ -113,10 +104,10 @@ export function ColorsExample(): React.JSX.Element {
 export function LogoExample(): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-3">
-      <Icon source={logoSources.github} role="control" />
-      <Icon name="web" role="control" />
-      <Icon source={logoSources.github} role="control" tone="muted" />
-      <Icon name="web" role="control" tone="muted" />
+      <Icon source={logoSources.github} size="sm" />
+      <Icon name="web" size="sm" />
+      <Icon source={logoSources.github} size="sm" tone="muted" />
+      <Icon name="web" size="sm" tone="muted" />
     </View>
   );
 }
@@ -124,13 +115,9 @@ export function LogoExample(): React.JSX.Element {
 export function CornerStatusExample(): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-4">
-      <Icon name="agent" role="control" status={{ tone: 'success' }} />
-      <Icon
-        name="agent"
-        role="control"
-        status={{ tone: 'warning', pulse: true }}
-      />
-      <Icon name="agent" role="control" status={{ tone: 'danger' }} />
+      <Icon name="agent" size="sm" status={{ tone: 'success' }} />
+      <Icon name="agent" size="sm" status={{ tone: 'warning', pulse: true }} />
+      <Icon name="agent" size="sm" status={{ tone: 'danger' }} />
     </View>
   );
 }

@@ -47,7 +47,7 @@ function WorkChip(props: WorkChipProps): JSX.Element | null {
   return (
     <ChipSurface glass={label === 'Subagents'}>
       <Pressable {...pressableProps} role="button">
-        <Icon role="control" name={icon} className={mutedTextClassName} />
+        <Icon size="sm" name={icon} className={mutedTextClassName} />
         <WorkCount label={label} work={work} />
       </Pressable>
     </ChipSurface>

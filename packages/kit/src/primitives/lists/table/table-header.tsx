@@ -105,11 +105,7 @@ function SortChevron({
   direction,
 }: Pick<TableSort, 'direction'>): ReactElement {
   return (
-    <Icon
-      role="chevron"
-      name={chevrons[direction]}
-      className="text-foreground"
-    />
+    <Icon size="sm" name={chevrons[direction]} className="text-foreground" />
   );
 }
 

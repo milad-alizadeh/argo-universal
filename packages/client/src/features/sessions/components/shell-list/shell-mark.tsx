@@ -11,5 +11,5 @@ export function ShellMark({ shell }: { shell: Shell }): JSX.Element {
   if (!outcome.icon)
     return <StatusDot tone={outcome.tone} accessibilityLabel={outcome.label} />;
 
-  return <Icon name={outcome.icon} role="body" tone={outcome.tone} />;
+  return <Icon name={outcome.icon} size="sm" tone={outcome.tone} />;
 }

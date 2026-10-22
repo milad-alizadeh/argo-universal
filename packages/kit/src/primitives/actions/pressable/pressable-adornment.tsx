@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon, type IconProps, IconSpinner } from '#primitives/content/icon';
-import type { IconRole } from '../../../symbols/icon-role';
+import { Icon, IconSpinner } from '#primitives/content/icon';
+import type { IconSize } from '../../../symbols/icon-size';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { LogoSource } from '../../../symbols/logo-source';
 
@@ -14,7 +14,7 @@ interface AdornmentProps {
   textClass: string;
   // ActivityIndicator takes its colour from an `accent-*` class, so the spinner carries the label colour as one.
   spinnerClass: string;
-  role: IconRole;
+  size: IconSize;
   filled?: boolean;
 }
 
@@ -40,7 +40,7 @@ function adornment(
 ): ReactElement {
   if (props.loading || !glyph)
     return (
-      <IconSpinner colorClassName={props.spinnerClass} iconRole={props.role} />
+      <IconSpinner colorClassName={props.spinnerClass} iconSize={props.size} />
     );
 
   return <AdornmentIcon {...props} glyph={glyph} />;
@@ -50,7 +50,7 @@ function AdornmentIcon(props: AdornmentProps & { glyph: Glyph }): ReactElement {
   return (
     <Icon
       {...props.glyph}
-      role={props.role}
+      size={props.size}
       filled={props.filled}
       className={props.textClass}
     />

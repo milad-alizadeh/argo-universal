@@ -41,7 +41,7 @@ export function HeaderIconButton(props: HeaderIconButtonProps): ReactElement {
         onPress={props.onPress}
         disabled={props.disabled}
       >
-        <Icon name={props.icon} role="action" />
+        <Icon name={props.icon} size="md" />
       </ButtonIcon>
     </IconButton>
   );

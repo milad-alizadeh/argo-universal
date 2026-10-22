@@ -4,8 +4,16 @@
  */
 export const gitSymbols = {
   pencil: { sf: 'pencil', material: 'edit' },
-  workbench: { sf: 'list.clipboard', material: 'assignment' },
-  stage: { sf: 'sidebar.right', material: 'right_panel_open' },
+  workbench: {
+    sf: 'list.clipboard',
+    sfFilled: 'list.clipboard.fill',
+    material: 'assignment',
+  },
+  stage: {
+    sf: 'sidebar.right',
+    sfFilled: 'rectangle.rightthird.inset.filled',
+    material: 'right_panel_open',
+  },
   commit: { svg: 'git-commit' },
   'git-issue-open': { sf: 'smallcircle.filled.circle', material: 'adjust' },
   'git-issue-closed': { sf: 'checkmark.circle', material: 'check_circle' },

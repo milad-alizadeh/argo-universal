@@ -227,11 +227,11 @@
     {
       // Icons take a role, so where an icon sits decides its size on every platform; only the kit's symbols folder turns roles into pixels.
       "files": ["packages/client/src/**", "packages/kit/src/**"],
-      "rules": { "argo/icon-role": "error" }
+      "rules": { "argo/icon-size": "error" }
     },
     {
       "files": ["packages/kit/src/symbols/**"],
-      "rules": { "argo/icon-role": "off" }
+      "rules": { "argo/icon-size": "off" }
     },
     {
       // Kit components take props, never className, style or a *ClassName slot; only @repo/kit styles them. kit-styling-allowlist.json holds the files not yet moved over.

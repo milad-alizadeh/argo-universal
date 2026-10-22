@@ -51,7 +51,7 @@ function RowLabel(props: CheckboxProps): React.JSX.Element {
 
 // The check takes the label's colour: native rows get no colour but the Host's tint.
 export function CheckMark(): React.JSX.Element {
-  return <NativeSymbol name="check" role="mark" />;
+  return <NativeSymbol name="check" size="sm" />;
 }
 
 function rowLayout(option: boolean): Modifiers {

@@ -12,7 +12,7 @@ export const themeSection = (props: ThemeProps): ReactElement => (
   <ListSection title="Theme">
     <ListItem.Picker
       title="Appearance"
-      leading={<Icon name="appearance" role="row" />}
+      leading={<Icon name="appearance" size="md" />}
       value={props.theme ?? 'system'}
       options={themeChoices}
       onValueChange={props.onThemeChange}

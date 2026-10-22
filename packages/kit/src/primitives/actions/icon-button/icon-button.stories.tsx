@@ -39,7 +39,7 @@ const largeIconButton = {
 
 const extraLargeIconButton = {
   ...primaryIconButton,
-  size: 'xl',
+  size: 'lg',
 } satisfies IconButtonProps;
 
 const selectedIconButton = {

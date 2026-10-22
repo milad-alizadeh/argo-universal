@@ -362,8 +362,8 @@
       /* Interaction states on a row, item or button with no fill of its own:
          hover lighter than selected, pressed darker. A flat tint, no border or shadow. */
       --color-hover: color-mix(in oklab, var(--color-black) 2%, transparent);
-      --color-selected: color-mix(in oklab, var(--color-black) 3%, transparent);
-      --color-pressed: color-mix(in oklab, var(--color-black) 4%, transparent);
+      --color-selected: color-mix(in oklab, var(--color-black) 5%, transparent);
+      --color-pressed: color-mix(in oklab, var(--color-black) 6%, transparent);
       /* A fill that must show on the content surface: a user message, the
          Inspector pane, an icon button's chip. The pressed step of black, see-through
          as Paper draws it. */
@@ -503,8 +503,8 @@
       --color-glass: color-mix(in oklab, var(--color-white) 4%, transparent);
       --color-tray: color-mix(in oklab, var(--color-white) 3%, transparent);
       --color-hover: color-mix(in oklab, var(--color-white) 4%, transparent);
-      --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
-      --color-pressed: color-mix(in oklab, var(--color-white) 8%, transparent);
+      --color-selected: color-mix(in oklab, var(--color-white) 8%, transparent);
+      --color-pressed: color-mix(in oklab, var(--color-white) 10%, transparent);
       --color-tint: color-mix(in oklab, var(--color-white) 8%, transparent);
       /* Graphite lifts every code colour to the light end of its ramp, so each
          one carries on the near-black ground at the same strength as light. */

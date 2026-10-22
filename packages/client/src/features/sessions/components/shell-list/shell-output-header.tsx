@@ -72,7 +72,7 @@ export function ShellOutputHeader(props: ShellOutputHeaderProps): JSX.Element {
   return (
     <View className="h-11 shrink-0 flex-row items-center gap-1.5 pr-2 pl-1.5">
       <IconButton {...backAppearance} onPress={props.onBack} />
-      <Icon name="terminal" role="body" />
+      <Icon name="terminal" size="sm" />
       <Command command={props.shell.command} />
       <Heading shell={props.shell} now={props.now} />
       <StopButton shell={props.shell} onStop={props.onStop} />

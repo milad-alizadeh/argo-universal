@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import type { IconName } from './symbols/icon-names';
-import type { IconRoleValue } from './symbols/icon-role';
+import type { IconSizeValue } from './symbols/icon-size';
 
 // Foundations / ChangeStage uses the same tone pairing on desktop and phone.
 const palettes = {
@@ -45,7 +45,7 @@ interface ToneMarkProps {
   icon: IconName;
   tone: MarkTone;
   form?: 'bare' | 'disc';
-  role?: IconRoleValue;
+  size?: IconSizeValue;
 }
 
 function glyph(props: ToneMarkProps): ReactElement {
@@ -54,7 +54,7 @@ function glyph(props: ToneMarkProps): ReactElement {
   return (
     <Icon
       name={props.icon}
-      role={props.role ?? 'secondary'}
+      size={props.size ?? 'xs'}
       className={props.form === 'disc' ? palette.ink : palette.bare}
     />
   );

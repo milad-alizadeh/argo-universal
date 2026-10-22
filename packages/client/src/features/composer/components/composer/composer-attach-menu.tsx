@@ -31,7 +31,7 @@ export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
 const attachTriggerProps = {
   icon: 'add',
   variant: 'ghost',
-  size: 'sm',
+  size: 'xs',
   accessibilityLabel: 'Attach',
 } as const;
 
@@ -136,7 +136,7 @@ function ComposerAttachItem({
   return (
     <ListItem
       title={item.label}
-      leading={<Icon name={item.icon} role="row" />}
+      leading={<Icon name={item.icon} size="md" />}
       accessibilityRole="button"
 
       disabled={!item.onPress}

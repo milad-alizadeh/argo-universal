@@ -109,7 +109,7 @@ export function ListHeaderButton({
 }: ListHeaderButtonProps): React.JSX.Element {
   return (
     <View ref={ref}>
-      <IconButton variant="ghost" size="sm" {...buttonProps(props)} />
+      <IconButton variant="ghost" size="xs" {...buttonProps(props)} />
       {dot && <HeaderButtonDot dot={dot} on="small" />}
     </View>
   );

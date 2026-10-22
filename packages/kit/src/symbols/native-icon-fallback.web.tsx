@@ -9,7 +9,7 @@ export function NativeIconFallback(props: NativeIconProps): ReactElement {
     <Text style={{ color: props.color }}>
       <Icon
         name={props.name}
-        role={props.role}
+        size={props.size}
         filled={props.filled}
         className="text-inherit"
       />

@@ -4,7 +4,7 @@ import type { VirtualListItemProps } from './virtual-list-item-props';
 
 type VirtualListItemFixture = Omit<VirtualListItemProps, 'onPress'>;
 
-const leading = <Icon role="body" name="agent" />;
+const leading = <Icon size="sm" name="agent" />;
 
 export const firstInSectionVirtualListItem = {
   title: 'Item one',

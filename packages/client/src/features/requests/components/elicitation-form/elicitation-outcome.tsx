@@ -64,7 +64,7 @@ function OutcomeSummary({ label, count }: SummaryProps): React.JSX.Element {
     <View className="flex-row items-center gap-1.5">
       <Icon
         name="question"
-        role="body"
+        size="sm"
         className="shrink-0 text-muted-foreground"
       />
       <MutedText>{label}</MutedText>

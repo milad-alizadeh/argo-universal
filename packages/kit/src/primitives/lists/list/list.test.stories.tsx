@@ -49,7 +49,7 @@ function CollapsingSection(): React.JSX.Element {
       <List.Section
         title="Runs"
         leading={
-          <Icon role="body" name={isExpanded ? 'folder-open' : 'folder'} />
+          <Icon size="sm" name={isExpanded ? 'folder-open' : 'folder'} />
         }
         footer="Latest builds"
         isExpanded={isExpanded}

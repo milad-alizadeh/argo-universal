@@ -1,20 +1,16 @@
 import { Button as SwiftButton } from '@expo/ui/swift-ui';
 import {
+  accessibilityLabel,
   // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- SwiftUI's own modifier name.
   buttonBorderShape,
   buttonStyle,
   controlSize,
   disabled,
-  font,
-  labelStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import { iconButtonDefaults } from '@repo/contracts/kit-tokens';
 import type { ComponentProps, ReactElement } from 'react';
-import type { SFSymbol } from 'sf-symbols-typescript';
 import { liquidGlassAvailable } from '#primitives/content/liquid-glass';
 import { Host } from '#primitives/native/host';
-import { useIconPixels } from '../../../symbols/icon-role';
-import { nativeIconName } from '../../../symbols/native-icon-name';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { IconButtonProps } from './icon-button';
 import { sizes } from './icon-button-layout';
@@ -42,14 +38,11 @@ const styles = liquidGlassAvailable ? glassStyles : borderedStyles;
 
 // Expo UI's SwiftUI Button with `labelStyle('iconOnly')`: the label stays as the spoken name and the system draws the icon alone.
 export function IconButton(props: IconButtonProps): ReactElement {
-  const iconPixels = useIconPixels(sizeOf(props).iconRole);
-
   return (
     <Host seed="primary" matchContents>
       <SwiftButton
-        label={props.accessibilityLabel}
         onPress={props.onPress}
-        modifiers={modifiers(props, iconPixels)}
+        modifiers={modifiers(props)}
         {...glyph(props)}
       />
     </Host>
@@ -57,15 +50,11 @@ export function IconButton(props: IconButtonProps): ReactElement {
 }
 
 // The iOS 26 glass looks; the control size gives the padding round the icon.
-function modifiers(
-  props: IconButtonProps,
-  iconPixels: number,
-): SwiftProps['modifiers'] {
+function modifiers(props: IconButtonProps): SwiftProps['modifiers'] {
   return [
     buttonStyle(styles[variantOf(props)]),
     controlSize(sizeOf(props).iosControlSize),
-    labelStyle('iconOnly'),
-    font({ size: iconPixels }),
+    accessibilityLabel(props.accessibilityLabel),
     // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- SwiftUI's own modifier name.
     buttonBorderShape('circle'),
     disabled(props.disabled ?? false),
@@ -78,23 +67,15 @@ const variantOf = (props: IconButtonProps): Variant =>
 const sizeOf = (props: IconButtonProps): (typeof sizes)[Size] =>
   sizes[props.size ?? iconButtonDefaults.size];
 
-// An SF Symbol rides `systemImage`; Argo's own and Tabler icons live in the asset catalog, so they draw as the label's content.
-function glyph(
-  props: IconButtonProps,
-): Pick<SwiftProps, 'systemImage' | 'children'> {
-  const systemImage = nativeIconName(props.icon, props.selected ?? false);
-
-  // On iOS the name is always an SF Symbol string; Expo's IconName also admits Android's drawable numbers.
-  if (typeof systemImage === 'string')
-    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: on iOS nativeIconName returns an SF Symbol name.
-    return { systemImage: systemImage as SFSymbol };
-
+// The glyph draws through NativeSymbol, as every Icon does, so a button's icon is the size and tone of an Icon. Content replaces the label text, so the spoken name rides an accessibility label.
+function glyph(props: IconButtonProps): Pick<SwiftProps, 'children'> {
   return {
     children: (
       <NativeSymbol
         name={props.icon}
-        role={sizeOf(props).iconRole}
+        size={sizeOf(props).iconSize}
         filled={props.selected ?? false}
+        muted={props.muted}
       />
     ),
   };
