@@ -8,7 +8,11 @@ import {
   SettingsListView,
   type SettingsListViewProps,
 } from './settings-list-view';
-import { settingsListViewMocks } from './settings-list-view.mocks';
+import {
+  disconnectedSettings,
+  loadingSettings,
+  readySettings,
+} from './settings-list-view-fixtures';
 
 const meta = {
   title: 'Screens/Settings/Settings',
@@ -21,11 +25,7 @@ const meta = {
     },
   },
   args: {
-    ...settingsListViewMocks,
-    projectsNeedAttention: true,
-    accountState: 'GitHub',
-    deviceCount: 2,
-    selectedPath: '/settings/accounts',
+    ...readySettings,
     onSelect: action('select Settings page'),
     onThemeChange: action('choose theme'),
   },
@@ -73,3 +73,7 @@ function SettingsPreview(args: SettingsListViewProps): React.JSX.Element {
 export const Settings: Story = {
   render: (args) => <SettingsPreview {...args} />,
 };
+
+export const Loading: Story = { args: loadingSettings };
+
+export const Disconnected: Story = { args: disconnectedSettings };
