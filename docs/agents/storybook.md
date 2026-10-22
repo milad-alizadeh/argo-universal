@@ -8,7 +8,7 @@ For side-by-side previews, run `pnpm dev:storybook:all`. It starts web Storybook
 
 ## Static build
 
-`pnpm --filter @repo/storybook build-storybook` (`storybook build`) writes the static Storybook to `apps/storybook/storybook-static`. It is what Chromatic publishes and what a deployable preview serves; it also proves the production pass, which resolves modules differently from the dev server. Skia's web entry needs the `skiaAssetRegistry` resolver in `apps/storybook/.storybook/main.ts` to build.
+`pnpm --filter @repo/storybook build-storybook` (`storybook build`) writes the static Storybook to `apps/storybook/storybook-static`. It is what Chromatic publishes and what a deployable preview serves; it also proves the production pass, which resolves modules differently from the dev server. Skia's web entry needs the `skiaAssetRegistry` resolver (`apps/storybook/.storybook/expo-web-imports.ts`, registered in `main.ts`) to build.
 
 ## The shape of a story file
 
