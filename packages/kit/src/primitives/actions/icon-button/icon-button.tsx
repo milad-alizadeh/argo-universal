@@ -8,7 +8,12 @@ import type { ReactElement } from 'react';
 import { Platform, Pressable, type ViewStyle } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
 import { cn } from '#kit/utils';
-import { buttonDisabledLooks, buttonLooks } from '#primitives/actions/button';
+import {
+  buttonDisabledLooks,
+  buttonHoveredLooks,
+  buttonLooks,
+  buttonPressedLooks,
+} from '#primitives/actions/button';
 import { Icon } from '#primitives/content/icon';
 import { Host } from '#primitives/native/host';
 import { NativeIcon } from '../../../symbols/native-icon';
@@ -103,7 +108,7 @@ function WebIconButton(props: IconButtonProps): ReactElement {
       onPress={props.onPress}
       testID={props.testID}
       className={cn(webClass, sizeOf(props).webClass, ghostClass(props))}
-      style={webLook(props, props.disabled ?? false)}
+      style={(state) => webLook(props, state)}
     >
       <WebGlyph {...props} />
     </Pressable>
@@ -126,7 +131,7 @@ function WebGlyph(props: IconButtonProps): ReactElement {
 }
 
 const webClass =
-  'shrink-0 items-center justify-center rounded-full web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
+  'shrink-0 items-center justify-center rounded-full web:transition-all web:duration-150 web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
 
 // Ghost has no fill, so it takes the hover and pressed tints; the lit looks carry their own.
 const ghostClass = (props: IconButtonProps): string =>
@@ -147,8 +152,20 @@ const buttonVariants = {
   ghost: 'text',
 } as const satisfies Record<Variant, keyof typeof buttonLooks>;
 
-function webLook(props: IconButtonProps, disabled: boolean): ViewStyle {
-  const name = buttonVariants[variantOf(props)];
+interface WebState {
+  pressed: boolean;
+  hovered?: boolean;
+}
 
-  return { ...buttonLooks[name], ...buttonDisabledLooks[`${disabled}`][name] };
+// Hovered and pressed spread after the lit look; a disabled button takes neither.
+function webLook(props: IconButtonProps, state: WebState): ViewStyle {
+  const name = buttonVariants[variantOf(props)];
+  const disabled = props.disabled ?? false;
+
+  return {
+    ...buttonLooks[name],
+    ...(!disabled && state.hovered ? buttonHoveredLooks[name] : {}),
+    ...(!disabled && state.pressed ? buttonPressedLooks[name] : {}),
+    ...buttonDisabledLooks[`${disabled}`][name],
+  };
 }

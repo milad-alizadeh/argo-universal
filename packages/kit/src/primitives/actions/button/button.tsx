@@ -6,15 +6,27 @@ import {
 } from '@expo/ui';
 import { buttonDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
-import { type ColorValue, Platform } from 'react-native';
+import {
+  type ColorValue,
+  Platform,
+  Pressable,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
+import { cn } from '#kit/utils';
 import { Host } from '#primitives/native/host';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { KitProps } from '../../kit-props';
 import { type LabelColor, labelColors } from './button-labels';
 import { sizes, widths } from './button-layout';
-import { disabledLooks, looks } from './button-looks';
+import {
+  disabledLooks,
+  hoveredLooks,
+  looks,
+  pressedLooks,
+} from './button-looks';
 
 // What a Plugin sends for a Button over the wire.
 export type ButtonDataProps = KitProps<'Button'>;
@@ -41,11 +53,60 @@ type Variant = NonNullable<ButtonProps['variant']>;
 export function Button(props: ButtonProps): ReactElement {
   return (
     <Host seed="primary" {...widthOf(props).host}>
-      <ExpoButton {...expoProps(props)}>
-        <ButtonLabel {...props} />
-      </ExpoButton>
+      {Platform.OS === 'web' ? (
+        <WebButton {...props} />
+      ) : (
+        <ExpoButton {...expoProps(props)}>
+          <ButtonLabel {...props} />
+        </ExpoButton>
+      )}
     </Host>
   );
+}
+
+/*
+ * The web draws its own Pressable, since Expo's web Button takes one static `style` and so cannot swap the lit look
+ * for a hovered or pressed one. It keeps Expo's box: 40px high (32 small), 16px padding, 8px radius.
+ */
+function WebButton(props: ButtonProps): ReactElement {
+  const size = sizes[props.size ?? buttonDefaults.size];
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={props.label}
+      disabled={props.disabled ?? false}
+      onPress={props.onPress}
+      testID={props.testID}
+      className={cn(webClass, props.fullWidth && 'w-full')}
+      style={(state) => ({ ...size.style, ...webLook(props, state) })}
+    >
+      <View className={cn(props.disabled && 'opacity-40')}>
+        <ButtonLabel {...props} />
+      </View>
+    </Pressable>
+  );
+}
+
+const webClass =
+  'h-10 shrink-0 items-center justify-center rounded-lg px-4 web:transition-all web:duration-150 web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
+
+interface WebState {
+  pressed: boolean;
+  hovered?: boolean;
+}
+
+// Hovered and pressed spread after the lit look; a disabled button takes neither.
+function webLook(props: ButtonProps, state: WebState): ViewStyle {
+  const name = variantOf(props);
+  const disabled = props.disabled ?? false;
+
+  return {
+    ...looks[name],
+    ...(!disabled && state.hovered ? hoveredLooks[name] : {}),
+    ...(!disabled && state.pressed ? pressedLooks[name] : {}),
+    ...disabledLooks[`${disabled}`][name],
+  };
 }
 
 const variantOf = (props: ButtonProps): Variant => props.variant ?? 'primary';
@@ -59,19 +120,10 @@ function expoProps(props: ButtonProps): ExpoButtonProps {
     onPress: props.onPress,
     disabled: props.disabled,
     testID: props.testID,
-    style: { ...size.style, ...looksOf(props) },
+    style: size.style,
     modifiers: [...size.modifiers, ...widthOf(props).modifiers],
   };
 }
-
-// The lit looks are CSS strings (`var(--color-muted)`) only the web reads; Android's transformStyle would hand them to Color.parseColor and crash.
-const looksOf = (props: ButtonProps): (typeof looks)[Variant] =>
-  Platform.OS === 'web'
-    ? {
-        ...looks[variantOf(props)],
-        ...disabledLooks[`${props.disabled ?? false}`][variantOf(props)],
-      }
-    : {};
 
 const variants = {
   primary: 'filled',

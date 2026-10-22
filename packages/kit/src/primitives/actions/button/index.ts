@@ -7,5 +7,7 @@ export {
 
 export {
   disabledLooks as buttonDisabledLooks,
+  hoveredLooks as buttonHoveredLooks,
   looks as buttonLooks,
+  pressedLooks as buttonPressedLooks,
 } from './button-looks';
