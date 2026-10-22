@@ -4,7 +4,7 @@ import type { RailTiles } from './rail-tiles';
 // Paper "Rail · narrow variants", Variant B: 40 tiles 4 apart with the control radius, the selected one a flat tint; collapsed, the rail's glass starts at the top bar's foot and its tiles 8 below.
 export const railTiles: RailTiles = {
   size: 'size-10',
-  corners: '',
+  corners: 'rounded-lg',
   selected: 'bg-selected',
   column: 'gap-1',
   collapsedColumn: 'gap-1',
