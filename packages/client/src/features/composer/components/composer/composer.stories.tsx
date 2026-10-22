@@ -15,10 +15,12 @@ import {
   attachedImageComposer,
   disabledComposer,
   emptyComposer,
+  multiLineComposer,
   oversizedAttachmentComposer,
   planlessSessionComposer,
   readyComposer,
   runningTurnComposer,
+  scrollableDraftComposer,
   sendingComposer,
   startedSessionComposer,
 } from './composer-fixtures';
@@ -118,6 +120,12 @@ export const Empty: Story = { args: emptyComposer };
 
 // A prompt with something in it: Send is ready.
 export const Ready: Story = { args: readyComposer };
+
+// A draft that wraps: the field grows to hold every line.
+export const MultiLine: Story = { args: multiLineComposer };
+
+// A draft past the max height: the envelope scrolls.
+export const ScrollableDraft: Story = { args: scrollableDraftComposer };
 
 // The prompt is on its way.
 export const Sending: Story = { args: sendingComposer };
