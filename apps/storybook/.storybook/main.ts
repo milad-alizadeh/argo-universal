@@ -9,6 +9,7 @@ import { sfSymbolImages } from '../../../tools/sf-symbols/sf-symbol-images.mts';
 import {
   expoDeclarationImports,
   expoSymbolsWebImports,
+  reactNativeSvgWebImports,
 } from './expo-web-imports.ts';
 
 function getAbsolutePath(value: string): string {
@@ -61,6 +62,11 @@ const VITE_RESOLVE = {
       find: /^#primitives\/(.+)$/,
       replacement: `${PRIMITIVES_FOLDER}/$1/index.ts`,
     },
+    // React Native 0.87 stopped shipping this package, which react-native-svg's web build still imports.
+    {
+      find: '@react-native/assets-registry/registry',
+      replacement: `${getAbsolutePath('react-native-web')}/dist/modules/AssetRegistry/index.js`,
+    },
   ],
   extensions: RESOLVED_EXTENSIONS,
 };
@@ -68,6 +74,7 @@ const VITE_RESOLVE = {
 const vitePlugins = (): PluginOption[] => [
   expoDeclarationImports,
   expoSymbolsWebImports,
+  reactNativeSvgWebImports,
   sfSymbolImages,
   // A logo SVG imports as a react-native-svg component, as Metro's react-native-svg-transformer gives the app (ADR-0019).
   svgr({ include: '**/*.svg', svgrOptions: { native: true } }),
@@ -126,7 +133,11 @@ const config: StorybookConfig & {
       optimizeDeps: {
         include: PREBUNDLED_DEPENDENCIES,
         rolldownOptions: {
-          plugins: [expoDeclarationImports, expoSymbolsWebImports],
+          plugins: [
+            expoDeclarationImports,
+            expoSymbolsWebImports,
+            reactNativeSvgWebImports,
+          ],
           moduleTypes: { '.ts': 'ts' },
         },
       },

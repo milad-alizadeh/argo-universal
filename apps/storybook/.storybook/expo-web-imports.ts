@@ -48,15 +48,38 @@ const expoSymbolsRewrites = [
   })),
 ];
 
-export const expoSymbolsWebImports = {
-  name: 'expo-symbols-web-imports',
+interface Rewrite {
+  file: string;
+  from: string;
+  to: string;
+}
+
+const webImports = (name: string, rewrites: readonly Rewrite[]) => ({
+  name,
   enforce: 'pre' as const,
   transform(code: string, id: string): ModuleRewrite | undefined {
-    const rewrite = expoSymbolsRewrites.find(({ file }) =>
+    const rewrite = rewrites.find(({ file }) =>
       modulePathOf(id)?.endsWith(file),
     );
 
     if (rewrite)
       return { code: code.replace(rewrite.from, rewrite.to), map: null };
   },
-};
+});
+
+export const expoSymbolsWebImports = webImports(
+  'expo-symbols-web-imports',
+  expoSymbolsRewrites,
+);
+
+// SvgTouchableMixin requires this native module inside a function, which the bundle hoists; the web never plays the touch sound.
+export const reactNativeSvgWebImports = webImports(
+  'react-native-svg-web-imports',
+  [
+    {
+      file: '/react-native-svg/lib/module/fabric/NativeSvgSoundModule.js',
+      from: "import { TurboModuleRegistry } from 'react-native';\nexport default TurboModuleRegistry.getEnforcing('RNSVGSoundModule');",
+      to: 'export default { playTouchSound() {} };',
+    },
+  ],
+);
