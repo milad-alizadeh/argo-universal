@@ -17,7 +17,6 @@ import {
 
 export type ComposedStory = {
   run: (context: { canvasElement: HTMLElement }) => Promise<void>;
-  play?: unknown;
 };
 
 export type StoryModule = Record<string, ComposedStory>;
@@ -91,10 +90,13 @@ const drawMasked = async (
   };
 };
 
+/*
+ * Every story the plan names, a story with a `play` included: `run` plays it before this module
+ * reads the DOM, so the fingerprint is of what the story ends up drawing. Skipping those stories
+ * instead would let a `play` take one out of the gate's reach.
+ */
 export const presentationStories = (module: StoryModule): string[] =>
-  Object.keys(module).filter(
-    (name): boolean => module[name]?.play === undefined,
-  );
+  Object.keys(module);
 
 export const drawStory = async (story: ComposedStory): Promise<DrawnStory> => {
   await draw(story);

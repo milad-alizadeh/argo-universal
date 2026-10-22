@@ -92,9 +92,10 @@ const files = presentationFiles()
   .filter((file): boolean => file.includes(only))
   .flatMap(planFor);
 
-writeFileSync(planPath, JSON.stringify({ files }, undefined, 2));
-
 const release = await lockBrowserSuite();
+
+/* Under the lock: two runs share one plan file, so writing it early hands the waiting run the other's. */
+writeFileSync(planPath, JSON.stringify({ files }, undefined, 2));
 
 try {
   runStorybookProject();

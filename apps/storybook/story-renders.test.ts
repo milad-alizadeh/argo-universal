@@ -40,6 +40,9 @@ const modules = import.meta.glob<StoryExports>(
 
 const plan: Plan = JSON.parse(await server.commands.readFile(PLAN_FILE));
 
+/* A narrowed run can plan nothing to draw; only a planned file that drew nothing is a fault. */
+const DRAWINGS_EXPECTED = plan.files.length > 0 ? 1 : 0;
+
 const renders: StoryRender[] = [];
 
 const childPairs: ChildStatePair[] = [];
@@ -58,11 +61,25 @@ const moduleFor = async (file: string): Promise<StoryModule> => {
   return composeStories(await load());
 };
 
+/*
+ * A cold first draw paints differently from every warm one after it — fonts land, an entry
+ * animation starts from nothing — so the first story is drawn once and thrown away. Without it a
+ * story in the first slot never matches its own copy, and a duplicate of it goes unreported.
+ */
+const warmUp = async (module: StoryModule): Promise<void> => {
+  const first = presentationStories(module)[0];
+  const story = first === undefined ? undefined : module[first];
+
+  if (story !== undefined) await drawStory(story);
+};
+
 const drawFile = async (
   file: string,
   module: StoryModule,
 ): Promise<Map<string, PairSubject>> => {
   const subjects = new Map<string, PairSubject>();
+
+  await warmUp(module);
 
   for (const name of presentationStories(module)) {
     const story = module[name];
@@ -121,5 +138,5 @@ test('fingerprints every planned story render', async (): Promise<void> => {
     JSON.stringify({ renders, childPairs, failures }, undefined, 2),
   );
 
-  expect(renders.length).toBeGreaterThan(0);
+  expect(renders.length).toBeGreaterThanOrEqual(DRAWINGS_EXPECTED);
 });

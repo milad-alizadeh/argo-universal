@@ -1,10 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import {
-  allFinishedSubagents,
-  oneRunningSubagent,
-  severalMixedSubagents,
-} from './subagent-list-fixtures';
+import { severalMixedSubagents } from './subagent-list-fixtures';
 import { SubagentSheet } from './subagent-sheet';
 
 const meta = {
@@ -40,6 +36,7 @@ type Story = StoryObj<typeof meta>;
 // The sheet's first page is the Subagents list; its second is one Subagent's Feed.
 export const SeveralMixed: Story = { args: severalMixedSubagents };
 
-export const OneRunning: Story = { args: oneRunningSubagent };
-
-export const AllFinished: Story = { args: allFinishedSubagents };
+/*
+ * No OneRunning or AllFinished story: with one Subagent running or every one finished the sheet
+ * draws the same page around the list, so SubagentList's own stories own those states.
+ */

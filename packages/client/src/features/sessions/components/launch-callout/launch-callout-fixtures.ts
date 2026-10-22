@@ -19,11 +19,6 @@ export const installing = {
   progress: 0.48,
 } satisfies CalloutLoadingProps;
 
-export const installingWithoutTotal = {
-  title: 'Installing…',
-  progress: null,
-} satisfies CalloutLoadingProps;
-
 export const loadingConfiguration = {
   title: 'Loading configuration…',
 } satisfies CalloutLoadingProps;

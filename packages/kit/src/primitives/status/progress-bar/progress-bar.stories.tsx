@@ -5,6 +5,7 @@ import {
   accentProgressBar,
   completeProgressBar,
   failedProgressBar,
+  indeterminateProgressBar,
   infoProgressBar,
   neutralProgressBar,
   notStartedProgressBar,
@@ -25,6 +26,9 @@ type Story = StoryObj<typeof meta>;
 export const Running: Story = { args: runningProgressBar };
 
 export const Waiting: Story = { args: waitingProgressBar };
+
+// A length nobody knows yet: the fill sweeps the track instead of reading a share of it.
+export const Indeterminate: Story = { args: indeterminateProgressBar };
 
 export const NotStarted: Story = { args: notStartedProgressBar };
 

@@ -9,10 +9,18 @@ import { storybookVite } from './.storybook/main.ts';
 
 const RUN_TIMEOUT_MS = 1_800_000;
 
+/*
+ * The preview pins `viewport: 'desktop'` so a story draws the desktop layout, and the gate must draw
+ * the same thing: at Vitest's own default width the shell falls back to the phone layout, where a
+ * component that sizes itself by width draws one thing for several states and reads as a duplicate.
+ */
+const DESKTOP_VIEWPORT = { width: 1440, height: 900 };
+
 const browser = {
   enabled: true,
   headless: true,
   screenshotFailures: false,
+  viewport: DESKTOP_VIEWPORT,
   provider: playwright({
     launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
   }),

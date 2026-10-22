@@ -83,8 +83,19 @@ const pause = (): Promise<void> =>
     setTimeout(done, SETTLE_MS);
   });
 
+/*
+ * Back to the top before the camera: a `play` that opens a tall card scrolls the page, and a
+ * screenshot is of the viewport, so two identical drawings read as two until the scroll is level.
+ */
+const rewind = (): void => {
+  window.scrollTo(0, 0);
+
+  for (const element of document.querySelectorAll('*')) element.scrollTop = 0;
+};
+
 export const settle = async (): Promise<void> => {
   await document.fonts.ready;
+  rewind();
   await nextFrame();
   await pause();
 };
