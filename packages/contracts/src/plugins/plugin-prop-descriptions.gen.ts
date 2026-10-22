@@ -252,9 +252,6 @@ export type WireSchemaHints = {
     /** Toggle selection; omit for a plain button. */
     "selected": PropValue<"IconButton", "selected">;
   };
-  "ButtonGroup": {
-
-  };
   "SplitButton": {
     /** Primary action label. */
     "label": PropValue<"SplitButton", "label">;
