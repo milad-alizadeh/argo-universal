@@ -1,5 +1,6 @@
 import { setStringAsync } from 'expo-clipboard';
 import type * as React from 'react';
+import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#kit/utils';
@@ -19,10 +20,10 @@ const copiedMilliseconds = 2000;
 export const codeBlockGroup = 'group/code-block';
 
 // Hidden where a pointer hovers, until the code block is hovered or the button has focus; shown while it reports a copy.
-const hoverRevealClassName = (copied: boolean): string =>
+const hoverRevealClassName = (shown: boolean): string =>
   cn(
-    !copied && 'web:pointer-fine:opacity-0',
-    'web:group-hover/code-block:opacity-100 web:focus-within:opacity-100',
+    !shown && 'web:pointer-fine:opacity-0',
+    'web:group-hover/code-block:opacity-100',
   );
 
 // Copies a value and reports it as copied for two seconds.
@@ -43,13 +44,29 @@ function useCopy(): [boolean, (value: string) => void] {
   return [copyRevision > 0, copy];
 }
 
-// The reveal's classes: hidden until hover where a pointer hovers; no fade while the copied check shows, so it is there at once.
-function wrapperClassName(props: CopyButtonProps, copied: boolean): string {
-  return cn(
+const revealClassName = (
+  props: CopyButtonProps,
+  copied: boolean,
+  shown: boolean,
+): string =>
+  cn(
     !copied && 'web:transition-opacity',
-    props.revealOnHover && hoverRevealClassName(copied),
+    props.revealOnHover && hoverRevealClassName(shown),
     props.className,
   );
+
+// The wrapper's class and focus handlers: no fade while the copied check shows, so it is there at once; focus inside keeps it shown.
+function useReveal(
+  props: CopyButtonProps,
+  copied: boolean,
+): Pick<ComponentProps<typeof View>, 'className' | 'onFocus' | 'onBlur'> {
+  const [focused, setFocused] = useState(false);
+
+  return {
+    className: revealClassName(props, copied, copied || focused),
+    onFocus: () => setFocused(true),
+    onBlur: () => setFocused(false),
+  };
 }
 
 // Copies a value and shows a check for two seconds.
@@ -57,7 +74,7 @@ export function CopyButton(props: CopyButtonProps): React.JSX.Element {
   const [copied, copy] = useCopy();
 
   return (
-    <View className={wrapperClassName(props, copied)}>
+    <View {...useReveal(props, copied)}>
       <IconButton
         size="xs"
         variant="ghost"
