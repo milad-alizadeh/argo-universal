@@ -1,3 +1,4 @@
+import { buttonDefaults } from '@repo/contracts/kit-tokens';
 import { cva } from 'class-variance-authority';
 import { cn } from '#kit/utils';
 import type { ButtonProps, DrawnButtonProps } from './button-props';
@@ -26,7 +27,7 @@ const buttonClasses = cva(
       fullWidth: { true: 'w-full' },
       disabled: { true: 'opacity-50' },
     },
-    defaultVariants: { variant: 'default', size: 'md' },
+    defaultVariants: buttonDefaults,
   },
 );
 
@@ -50,7 +51,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
     },
     disabled: { true: 'ios:opacity-38 android:opacity-38' },
   },
-  defaultVariants: { variant: 'default' },
+  defaultVariants: { variant: buttonDefaults.variant },
 });
 
 // iOS labels its buttons at the size of its header text buttons, in medium weight.
@@ -71,7 +72,7 @@ const textClasses = cva(
       },
       destructive: { true: 'text-danger' },
     },
-    defaultVariants: { variant: 'default' },
+    defaultVariants: { variant: buttonDefaults.variant },
   },
 );
 
@@ -88,7 +89,7 @@ const spinnerClasses = cva('', {
     },
     destructive: { true: 'accent-danger' },
   },
-  defaultVariants: { variant: 'default' },
+  defaultVariants: { variant: buttonDefaults.variant },
 });
 
 type ButtonClassProps = Pick<

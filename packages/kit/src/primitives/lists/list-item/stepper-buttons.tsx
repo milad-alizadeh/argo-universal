@@ -1,3 +1,4 @@
+import { listStepperDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { Button, type ButtonProps } from '#primitives/actions/button';
@@ -46,7 +47,10 @@ function nextValue(props: ListItemStepperProps, direction: number): number {
 
   return Math.min(
     max,
-    Math.max(min, props.value + direction * (props.step ?? 1)),
+    Math.max(
+      min,
+      props.value + direction * (props.step ?? listStepperDefaults.step),
+    ),
   );
 }
 

@@ -1,3 +1,4 @@
+import { iconButtonDefaults } from '@repo/contracts/kit-tokens';
 import { cva } from 'class-variance-authority';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
@@ -52,7 +53,7 @@ export const iconButtonClasses = cva(
       { bleed: true, size: 'md', className: 'web:sm:-m-3' },
       { bleed: true, size: 'xl', className: '-m-4' },
     ],
-    defaultVariants: { size: 'sm', variant: 'default', corners: 'control' },
+    defaultVariants: { ...iconButtonDefaults, corners: 'control' },
   },
 );
 
@@ -68,7 +69,7 @@ const iconSpinnerClasses = cva('accent-foreground', {
     muted: { true: 'accent-muted-foreground' },
     danger: { true: 'accent-danger' },
   },
-  defaultVariants: { variant: 'default' },
+  defaultVariants: { variant: iconButtonDefaults.variant },
 });
 
 export function iconSpinnerClass(

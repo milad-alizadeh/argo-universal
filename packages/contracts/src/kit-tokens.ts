@@ -51,3 +51,17 @@ export const buttonVariants = [
 ] as const;
 
 export const buttonSizes = ['xs', 'sm', 'md', 'lg'] as const;
+
+/*
+ * Where a kit component's defaults are declared. A schema marks a prop with
+ * `.meta({ default })` from these, so the props table reads it from the schema
+ * and the component's styles apply the same value. Nothing is parsed or filled:
+ * a Plugin that omits the prop still sends nothing.
+ */
+export const buttonDefaults = { variant: 'default', size: 'md' } as const;
+
+export const iconButtonDefaults = { variant: 'default', size: 'sm' } as const;
+
+export const textDefaults = { role: 'body' } as const;
+
+export const listStepperDefaults = { step: 1 } as const;

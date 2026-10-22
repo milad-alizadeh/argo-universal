@@ -1,3 +1,4 @@
+import { listStepperDefaults } from '@repo/contracts/kit-tokens';
 import type { ListItemStepperProps } from './list-item-stepper';
 
 type NativeRange = { value: number; step: number; min: number; max: number };
@@ -8,7 +9,7 @@ export function nativeStepperRange(
 ): NativeRange | undefined {
   const range = {
     value: props.value,
-    step: props.step ?? 1,
+    step: props.step ?? listStepperDefaults.step,
     ...nativeBounds(props),
   };
 

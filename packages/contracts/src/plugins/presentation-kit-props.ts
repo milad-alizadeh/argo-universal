@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { iconSymbol, iconRole } from '../kit-symbols/icon-schema';
-import { tones } from '../kit-tokens';
+import { iconButtonDefaults, tones } from '../kit-tokens';
 import { imageAsset } from './image-wire-part';
 import { handler } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
@@ -52,11 +52,13 @@ export const iconButtonProps = z.object({
   size: z
     .enum(['2xs', 'xs', 'sm', 'md', 'lg', 'xl'])
     .optional()
+    .meta({ default: iconButtonDefaults.size })
     .describe('Button size.'),
   loading: z.boolean().optional().describe('The action is running.'),
   variant: z
     .enum(['default', 'ghost', 'outline', 'filled'])
     .optional()
+    .meta({ default: iconButtonDefaults.variant })
     .describe('Button treatment.'),
   selected: z
     .boolean()
