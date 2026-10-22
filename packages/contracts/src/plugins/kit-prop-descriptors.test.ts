@@ -71,3 +71,9 @@ describe('a kit prop default', () => {
     expect(prop('Button', 'label').defaultValue).toBeUndefined();
   });
 });
+
+describe('a list stepper default', () => {
+  it('reads the step as 1', () => {
+    expect(prop('ListItem.Stepper', 'step').defaultValue).toBe('1');
+  });
+});

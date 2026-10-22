@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { listStepperDefaults } from '../kit-tokens';
 import { listItemProps } from './list-kit-props';
 import { handler } from './plugin-part-props';
 import { pickerSchema } from './selection-schemas';
@@ -31,7 +32,12 @@ export const listStepperProps = settingsRowProps.extend({
   value: z.number().finite().describe('The current value.'),
   min: z.number().finite().optional().describe('The minimum value.'),
   max: z.number().finite().optional().describe('The maximum value.'),
-  step: z.number().positive().optional().describe('The increment.'),
+  step: z
+    .number()
+    .positive()
+    .optional()
+    .meta({ default: listStepperDefaults.step })
+    .describe('The increment.'),
   onValueChange: handler('onValueChange'),
 });
 

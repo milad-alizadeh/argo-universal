@@ -45,7 +45,7 @@ function textClassName(
 ): string {
   return cn(
     'text-foreground web:[user-select:inherit]',
-    // The default role goes first, so an inherited class or an explicit role replaces it.
+    // The default role goes first: `cn` (utils.ts, the type-role / type-face groups) drops it when an inherited class or an explicit role follows.
     textRoles[textDefaults.role],
     inherited,
     role && textRoles[role],

@@ -63,3 +63,5 @@ export const buttonDefaults = { variant: 'default', size: 'md' } as const;
 export const iconButtonDefaults = { variant: 'default', size: 'sm' } as const;
 
 export const textDefaults = { role: 'body' } as const;
+
+export const listStepperDefaults = { step: 1 } as const;
