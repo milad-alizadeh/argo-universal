@@ -84,7 +84,9 @@ export type Primitives = {
   FieldProps: FieldKit.FieldProps;
   FilterPillProps: FilterPillKit.FilterPillProps;
   HostProps: HostKit.HostProps;
+  IconButtonDataProps: IconButtonKit.IconButtonDataProps;
   IconButtonProps: IconButtonKit.IconButtonProps;
+  IconButtonSize: IconButtonKit.IconButtonSize;
   IconProps: IconKit.IconProps;
   IconSlotProps: IconKit.IconSlotProps;
   IconSpinnerProps: IconKit.IconSpinnerProps;

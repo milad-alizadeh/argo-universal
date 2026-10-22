@@ -60,7 +60,7 @@ describe('a kit prop default', () => {
   it.each([
     ['Button', 'variant', "'default'"],
     ['Button', 'size', "'md'"],
-    ['IconButton', 'size', "'md'"],
+    ['IconButton', 'size', "'sm'"],
     ['IconButton', 'variant', "'primary'"],
     ['Text', 'role', "'body'"],
   ] as const)('reads %s %s as %s', (part, name, defaultValue) => {
