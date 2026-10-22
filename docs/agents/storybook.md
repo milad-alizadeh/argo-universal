@@ -6,6 +6,10 @@ Storybook is the source of truth for built UI: a component's states, its platfor
 
 For side-by-side previews, run `pnpm dev:storybook:all`. It starts web Storybook, opens it in the browser, then starts Expo and opens `/storybook` in the iOS Simulator and Android Emulator apps. Selecting a story in the browser selects the same shared story on the devices. The web addon serves a local WebSocket on port 7007; the launcher supplies Android Emulator's host address while iOS Simulator uses loopback. Interactions are exercised separately on each platform. A native development build must already be installed; rebuild it after native dependency changes. To run one platform manually, start `pnpm dev:storybook` first, then `pnpm --filter @repo/universal-app exec expo start --ios` or `EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST=10.0.2.2 pnpm --filter @repo/universal-app exec expo start --android`.
 
+## Static build
+
+`pnpm --filter @repo/storybook build-storybook` (`storybook build`) writes the static Storybook to `apps/storybook/storybook-static`. It is what Chromatic publishes and what a deployable preview serves; it also proves the production pass, which resolves modules differently from the dev server. Skia's web entry needs the `skiaAssetRegistry` resolver in `apps/storybook/.storybook/main.ts` to build.
+
 ## The shape of a story file
 
 Run `pnpm new:story <component-path>`, then edit what it wrote to match [storybook-template.md](storybook-template.md). [ADR-0040](../adr/0040-one-shape-for-a-story.md) records the rules and why.
