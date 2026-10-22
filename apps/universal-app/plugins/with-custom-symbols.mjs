@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import customSymbols from '@repo/kit/custom-symbol-paths.json' with { type: 'json' };
 import tablerSymbols from '@repo/kit/tabler-symbol-paths.json' with { type: 'json' };
-import configPlugins from 'expo/config-plugins.js';
+import configPlugins from 'expo/config-plugins';
 
 /*
  * Guides from Apple's SF Symbols template v3.0. The glyph is drawn Regular at every scale: Xcode finds no variant
