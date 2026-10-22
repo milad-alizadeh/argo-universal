@@ -6,7 +6,7 @@ import type { ButtonIconProps, HostedPressProps } from './button-icon-props';
 
 /*
  * The icon of a stock Compose control: its Material XML drawing in Expo UI's Icon at Material's 24dp, as
- * Expo Router's Android toolbar draws one, so the whole control takes the tap. An icon without one (a Tabler icon,
+ * Expo Router's Android toolbar draws one, so the whole control takes the tap. An icon without one (an SVG icon,
  * or a Material name @expo/material-symbols lacks) is hosted from React Native and runs the press itself.
  */
 export function ButtonIcon(props: ButtonIconProps): ReactElement {

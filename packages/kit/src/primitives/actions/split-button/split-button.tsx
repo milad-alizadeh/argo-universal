@@ -55,19 +55,13 @@ function chevron<Value extends string>(
   return (
     <IconButton
       icon="chevron-down"
-      variant={props.primary ? 'filled' : 'outline'}
-      {...chevronFits[props.size ?? 'sm']}
+      variant={props.primary ? 'primary' : 'secondary'}
+      size={props.size === 'xs' ? 'sm' : 'md'}
       accessibilityLabel={props.menuLabel}
       disabled={props.disabled}
     />
   );
 }
-
-// The button's own height at every width: Expo's button keeps it, where IconButton grows to the touch size on a compact window.
-const chevronFits = {
-  sm: { size: 'md', className: 'size-10 min-h-0 min-w-0' },
-  xs: { size: 'sm', className: 'size-8 min-h-0 min-w-0' },
-} as const;
 
 function StackedSplit<Value extends string>(
   props: LaidSplitProps<Value>,

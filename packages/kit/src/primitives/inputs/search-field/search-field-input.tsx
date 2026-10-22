@@ -80,11 +80,8 @@ function queryProps(
 const clearDefaults: ComponentProps<typeof IconButton> = {
   icon: 'close',
   variant: 'ghost',
-  size: 'xs',
+  size: 'sm',
   accessibilityLabel: 'Clear search',
-  iconClassName: 'text-muted-foreground',
-  className:
-    'size-5 min-h-5 min-w-5 sm:size-5 android:min-h-5 android:min-w-5 rounded-full web:rounded-full',
 };
 
 function ClearSearch(

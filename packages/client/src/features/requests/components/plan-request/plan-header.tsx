@@ -22,7 +22,7 @@ interface PlanHeaderProps {
 type ViewProps = Pick<PlanHeaderProps, 'view'>;
 
 // As the Written plan tray's row: small ghost buttons.
-const controlAppearance = { variant: 'ghost', size: 'xs' } as const;
+const controlAppearance = { variant: 'ghost', size: 'sm' } as const;
 
 /*
  * The plan's title as its heading, then its controls.
@@ -63,9 +63,7 @@ function ShowPlanButton({ view }: ViewProps): ReactNode {
     <IconButton
       {...controlAppearance}
       accessibilityLabel={showPlanLabels[`${view.open}`]}
-      aria-expanded={view.open}
       icon={view.open ? 'chevron-up' : 'chevron-down'}
-      iconRole="secondary"
       onPress={view.toggleOpen}
     />
   );

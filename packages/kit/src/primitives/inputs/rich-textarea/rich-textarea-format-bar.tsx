@@ -42,21 +42,14 @@ interface GroupProps extends Pick<FormatBarProps, 'onFormat'> {
 
 type ToggleProps = GroupProps & { button: FormatButton };
 
-// Link opens an editor rather than toggling, so it has no pressed state.
-const isPressed = ({ button, applied }: ToggleProps): boolean | undefined =>
-  button.format === 'link' ? undefined : applied.includes(button.format);
-
-const toggleLook = { variant: 'ghost', size: 'xs' } as const;
+const toggleLook = { variant: 'ghost', size: 'sm' } as const;
 
 function FormatToggle(props: ToggleProps): React.JSX.Element {
-  const pressed = isPressed(props);
-
   return (
     <IconButton
       {...toggleLook}
       icon={props.button.icon}
       accessibilityLabel={props.button.label}
-      selected={pressed}
       onPress={() => props.onFormat(props.button.format)}
     />
   );

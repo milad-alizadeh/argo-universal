@@ -35,13 +35,10 @@ function BackButton({ onBack }: { onBack: () => void }): ReactElement {
   return (
     <IconButton
       icon="chevron-left"
-      iconRole="title"
-      iconClassName="text-foreground"
-      size="xs"
+      size="sm"
       variant="ghost"
       accessibilityLabel="Back"
       onPress={onBack}
-      className="web:[app-region:no-drag]"
     />
   );
 }

@@ -1,32 +1,65 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { expect, fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Text } from '../../content/text';
-import { IconButton } from './icon-button';
-import {
-  badgeIconButton,
-  bleedLogoIconButton,
-  bleedWebIconButton,
-  defaultIconButton,
-  disabledIconButton,
-  extraLargeIconButton,
-  extraSmallIconButton,
-  largeIconButton,
-  loadingIconButton,
-  mediumIconButton,
-  selectedIconButton,
-  smallIconButton,
-} from './icon-button-fixtures';
+import { IconButton, type IconButtonProps } from './icon-button';
+
+const accessibilityLabel = 'Favourite';
+
+const primaryIconButton = {
+  icon: 'heart',
+  accessibilityLabel,
+} satisfies IconButtonProps;
+
+const secondaryIconButton = {
+  ...primaryIconButton,
+  variant: 'secondary',
+} satisfies IconButtonProps;
+
+const ghostIconButton = {
+  ...primaryIconButton,
+  variant: 'ghost',
+} satisfies IconButtonProps;
+
+const extraSmallIconButton = {
+  ...primaryIconButton,
+  size: 'xs',
+} satisfies IconButtonProps;
+
+const smallIconButton = {
+  ...primaryIconButton,
+  size: 'sm',
+} satisfies IconButtonProps;
+
+const largeIconButton = {
+  ...primaryIconButton,
+  size: 'lg',
+} satisfies IconButtonProps;
+
+const extraLargeIconButton = {
+  ...primaryIconButton,
+  size: 'xl',
+} satisfies IconButtonProps;
+
+const selectedIconButton = {
+  ...primaryIconButton,
+  selected: true,
+} satisfies IconButtonProps;
+
+const disabledIconButton = {
+  ...primaryIconButton,
+  disabled: true,
+} satisfies IconButtonProps;
 
 const meta = {
   title: 'Design System/Primitives/Actions/IconButton',
   component: IconButton,
   argTypes: kitArgTypes('IconButton'),
-  // A row keeps the button at its own width, as it sits in a product layout.
+  // The button keeps its own width, as it sits in a product layout.
   decorators: [
     (Story): React.JSX.Element => (
-      <View className="flex-row items-center">
+      <View className="w-full items-start">
         <Story />
       </View>
     ),
@@ -35,41 +68,45 @@ const meta = {
 
 export default meta;
 
-// IconButtonProps is a union (a named icon or a logo source), so stories type against the component.
-type Story = StoryObj<typeof IconButton>;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { args: defaultIconButton };
+export const Primary: Story = { args: primaryIconButton };
+
+export const Secondary: Story = { args: secondaryIconButton };
+
+export const Ghost: Story = { args: ghostIconButton };
 
 export const ExtraSmall: Story = { args: extraSmallIconButton };
 
-export const Small: Story = { args: smallIconButton };
+export const Selected: Story = { args: selectedIconButton };
 
-export const Medium: Story = { args: mediumIconButton };
+export const Small: Story = { args: smallIconButton };
 
 export const Large: Story = { args: largeIconButton };
 
 export const ExtraLarge: Story = { args: extraLargeIconButton };
 
-export const Selected: Story = { args: selectedIconButton };
-
 export const Disabled: Story = { args: disabledIconButton };
 
-export const Loading: Story = { args: loadingIconButton };
+// Test-only: hidden from the sidebar and Docs, still run by the story tests.
+export const Activation: Story = {
+  tags: ['!dev', '!autodocs'],
+  args: { ...primaryIconButton, onPress: fn() },
+  play: async ({ canvas, userEvent, args }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: accessibilityLabel }),
+    );
+    await expect(args.onPress).toHaveBeenCalledOnce();
+  },
+};
 
-export const Badge: Story = { args: badgeIconButton };
-
-/*
- * Each glyph sits on the text line and the row's gap; its hit area bleeds past it.
- * A logo and a symbol side by side, so the row keeps its own render.
- */
-export const Bleed: Story = {
-  render: () => (
-    <View className="flex-row items-center gap-3">
-      <Text role="secondary" tone="muted">
-        v1.0.0
-      </Text>
-      <IconButton {...bleedLogoIconButton} />
-      <IconButton {...bleedWebIconButton} />
-    </View>
-  ),
+export const DisabledIgnoresPress: Story = {
+  tags: ['!dev', '!autodocs'],
+  args: { ...disabledIconButton, onPress: fn() },
+  play: async ({ canvas, args }) => {
+    const button = canvas.getByRole('button', { name: accessibilityLabel });
+    await expect(button).toBeDisabled();
+    button.click();
+    await expect(args.onPress).not.toHaveBeenCalled();
+  },
 };

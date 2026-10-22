@@ -62,9 +62,7 @@ function Command({ command }: { command: string }): JSX.Element {
 
 const backAppearance = {
   variant: 'ghost',
-  size: 'xs',
-  corners: 'tight',
-  iconRole: 'chevron',
+  size: 'sm',
   icon: 'chevron-left',
   accessibilityLabel: 'Back to Shells',
 } as const;

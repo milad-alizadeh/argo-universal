@@ -1,7 +1,6 @@
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
-import { Platform } from 'react-native';
 import type { ProjectHeadingProps } from './project-heading';
 
 interface ProjectActionButtonProps {
@@ -32,20 +31,12 @@ function actionButtons({
   ];
 }
 
-// A desktop sidebar draws each action in its own 24 box, always shown (Paper "SessionsList"); phones keep the header's bleed.
-const sidebarAction =
-  Platform.OS === 'web'
-    ? { bleed: false, className: 'web:sm:size-6' }
-    : undefined;
-
 function ProjectAction(props: ProjectActionButtonProps): React.JSX.Element {
   return (
     <IconButton
       {...props}
-      {...sidebarAction}
       variant="ghost"
-      size="xs"
-      iconTone="muted"
+      size="sm"
       disabled={!props.onPress}
     />
   );

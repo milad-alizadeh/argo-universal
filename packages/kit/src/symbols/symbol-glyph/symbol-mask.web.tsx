@@ -25,26 +25,20 @@ interface PathMaskProps extends Pick<SymbolGlyphProps, 'pixels'> {
 export function PathMask({ path, pixels }: PathMaskProps): React.JSX.Element {
   const size = symbolPathSize(path, pixels);
 
-  return <SymbolMask url={symbolPathImage(path)} {...size} scale={1} />;
+  return <SymbolMask url={symbolPathImage(path)} {...size} />;
 }
 
 interface SymbolMaskProps extends SymbolBox {
   url: string;
-  scale: number;
 }
 
-function maskStyle({
-  url,
-  width,
-  height,
-  scale,
-}: SymbolMaskProps): CSSProperties {
+function maskStyle({ url, width, height }: SymbolMaskProps): CSSProperties {
   const mask = `url("${url}") center / 100% 100% no-repeat`;
 
   return {
     ...maskBox,
-    width: width * scale,
-    height: height * scale,
+    width,
+    height,
     mask,
     WebkitMask: mask,
   };

@@ -13,18 +13,15 @@ import type { SymbolGlyphProps } from './symbol-glyph-props';
 
 interface AssetSymbolProps extends Omit<
   SymbolGlyphProps,
-  'symbol' | 'colorClassName' | 'fitArtwork'
+  'symbol' | 'colorClassName'
 > {
   assetName: string;
 }
 
-function hostStyle({ pixels, glyphScale }: AssetSymbolProps): ViewStyle {
-  const box = { width: pixels, height: pixels };
-
-  return glyphScale === 1
-    ? box
-    : { ...box, transform: [{ scale: glyphScale }] };
-}
+const hostStyle = ({ pixels }: AssetSymbolProps): ViewStyle => ({
+  width: pixels,
+  height: pixels,
+});
 
 /*
  * The symbol set's box is fitted to the icon box, as SymbolView fits a system symbol's image, so a custom symbol is the

@@ -241,16 +241,10 @@ export type WireSchemaHints = {
     "disabled": PropValue<"IconButton", "disabled">;
     /** Action run on activation. */
     "onPress": PropValue<"IconButton", "onPress">;
-    /** Danger treatment. */
-    "tone": PropValue<"IconButton", "tone">;
     /** Button size. */
     "size": PropValue<"IconButton", "size">;
-    /** The action is running. */
-    "loading": PropValue<"IconButton", "loading">;
     /** Button treatment. */
     "variant": PropValue<"IconButton", "variant">;
-    /** Toggle selection; omit for a plain button. */
-    "selected": PropValue<"IconButton", "selected">;
   };
   "SplitButton": {
     /** Primary action label. */

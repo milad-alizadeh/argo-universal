@@ -47,7 +47,7 @@ Text uses the four roles — Title, Heading, Body, Secondary — as `--text-<rol
 
 ## Icons
 
-Icons are SF Symbols drawn as SVG paths; Android frames use Material Symbols; git and file-type glyphs are Tabler on every platform (ADR-0019). `iconSymbols` in `packages/kit/src/symbols/icon-names.ts` is the only list of icons — an icon a design needs that the app lacks is added there first. Copy icons from the library on the Icons page.
+Icons are SF Symbols drawn as SVG paths; Android frames use Material Symbols; git glyphs are small SVG components on every platform (ADR-0041). `iconSymbols` in `packages/kit/src/symbols/icon-names.ts` is the only list of icons — an icon a design needs that the app lacks is added there first. Copy icons from the library on the Icons page.
 
 `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box.
 

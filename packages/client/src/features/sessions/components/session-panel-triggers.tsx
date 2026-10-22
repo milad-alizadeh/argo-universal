@@ -37,8 +37,6 @@ function PanelTrigger({ panel, panels }: PanelTriggerProps): React.JSX.Element {
 
 interface PanelTriggerControl {
   accessibilityLabel: string;
-  selected: boolean;
-  'aria-expanded': boolean;
   onPress: () => void;
   icon: IconName;
 }
@@ -48,8 +46,6 @@ const panelTriggerProps = ({
   panels,
 }: PanelTriggerProps): PanelTriggerControl => ({
   accessibilityLabel: sessionPanelLabels[panel].label,
-  selected: panels.shown === panel,
-  'aria-expanded': panels.shown === panel,
   onPress: () => panels.onToggle(panel),
   icon: sessionPanelLabels[panel].icon,
 });

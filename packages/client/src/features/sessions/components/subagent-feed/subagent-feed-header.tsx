@@ -16,10 +16,8 @@ function BackButton({
   return (
     <IconButton
       variant="ghost"
-      size="xs"
+      size="sm"
       icon="chevron-left"
-      iconRole="title"
-      iconTone="muted"
       accessibilityLabel={subagentFeedBackLabel}
       onPress={onBack}
     />

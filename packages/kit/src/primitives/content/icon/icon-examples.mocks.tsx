@@ -70,7 +70,7 @@ function FilledIconButton(props: {
       icon={props.icon}
       accessibilityLabel={props.label}
       size="sm"
-      variant="filled"
+      variant="primary"
     />
   );
 }

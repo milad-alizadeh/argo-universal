@@ -24,15 +24,10 @@ export function DisclosureChevron(
 /*
  * One size, with no say in it from the caller: every chevron in the app is the `chevron` role, so a
  * collapsible's chevron and a row's are the same glyph at the same size wherever they sit.
- *
- * Always fitted to its artwork. Material's chevron_right inks under half its em box, so sizing it by the
- * role's pixels alone draws 7px of chevron beside 10px capitals, while the SF path normalises every symbol
- * against `circle` and needs no such opt-in. Fitting here is what keeps the two paths the same size.
  */
 function ChevronGlyph(props: DisclosureChevronProps): React.JSX.Element {
   return (
     <Icon
-      fitArtwork
       role="chevron"
       name="chevron-right"
       className={cn('text-muted-foreground', props.className)}

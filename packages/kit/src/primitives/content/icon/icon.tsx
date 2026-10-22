@@ -19,9 +19,6 @@ import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
 import { useSlotIconRole } from './icon-role-context';
 
-// Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
-const materialGlyphScale = 1.125;
-
 // Web colours the glyph with CSS from `colorClassName`, so only native resolves the class to a tint, which costs a style lookup each render on web.
 const TintedSymbol =
   Platform.OS === 'web'
@@ -32,8 +29,6 @@ const TintedSymbol =
           styleProperty: 'color',
         },
       });
-
-const glyphScale = Platform.OS === 'android' ? materialGlyphScale : 1;
 
 const iconDrawing = (
   { symbol, materialFill }: ResolvedIcon,
@@ -107,9 +102,6 @@ function useSymbolDrawingProps(
     symbol: iconDrawing(icon, props.filled),
     colorClassName,
     pixels: useIconPixels(props.role),
-    glyphScale,
-    fitArtwork: props.fitArtwork,
-    weight: props.weight,
     testID: props.testID ?? `icon-${icon.key}`,
   };
 }

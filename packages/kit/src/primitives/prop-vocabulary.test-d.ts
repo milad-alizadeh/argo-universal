@@ -192,11 +192,6 @@ expectTypeOf<
   Extract<Keys<Primitives['SplitButtonProps']>, 'options'>
 >().toEqualTypeOf<'options'>();
 
-// A chosen IconButton is `selected`; its glyph fill is apart from its variant.
-expectTypeOf<Primitives['IconButtonProps']['selected']>().toEqualTypeOf<
-  boolean | undefined
->();
-
 expectTypeOf<
   Extract<keyof Primitives['IconButtonProps'], 'filled'>
 >().toBeNever();

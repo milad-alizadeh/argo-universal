@@ -9,9 +9,6 @@ interface SymbolBox {
   height: number;
 }
 
-// SF Symbols draw like text: every symbol in a role at the size that makes `circle` fill this share of the role's box.
-export const referenceShare = 0.88;
-
 function symbolBox(path: SymbolPath): SymbolBox {
   const [, , width = 0, height = 0] = path.viewBox.split(' ').map(Number);
 

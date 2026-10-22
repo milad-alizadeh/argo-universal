@@ -8,7 +8,7 @@ import githubMark from './assets/logos/brand-github.svg';
  */
 export type LogoSvg = React.ComponentType<SvgProps>;
 
-// A brand mark, drawn from its own SVG the same on every platform; native symbols and the Tabler paths are for glyphs (ADR-0019).
+// A brand mark, drawn from its own SVG the same on every platform; native symbols and the SVG symbol components are for glyphs (ADR-0019, ADR-0041).
 export interface LogoSource {
   svg: LogoSvg;
   // The brand's name, which the logo speaks when it stands alone.

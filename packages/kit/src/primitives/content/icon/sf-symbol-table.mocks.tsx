@@ -25,8 +25,8 @@ function SfAndMaterialHeader(): React.JSX.Element {
 function symbolNames(name: IconName): [string, string] {
   const symbol = drawnSymbol(iconSymbols[name]);
 
-  return symbol.kind === 'tabler'
-    ? [`Tabler ${symbol.tabler}`, `Tabler ${symbol.tabler}`]
+  return symbol.kind === 'svg'
+    ? [`SVG ${symbol.svg}`, `SVG ${symbol.svg}`]
     : [symbol.sf, symbol.material];
 }
 

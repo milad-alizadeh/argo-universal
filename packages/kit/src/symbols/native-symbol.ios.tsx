@@ -8,7 +8,6 @@ import { type DrawnSymbol, drawnSymbol } from './drawn-symbol';
 import { type IconRole, useIconPixels } from './icon-role';
 import { resolveIcon } from './icon-symbol';
 import type { NativeSymbolProps } from './native-symbol-props';
-import { tablerAsset } from './tabler-symbols';
 
 /*
  * A list row's icon is a Label's, sized by the row's body text so it scales with Dynamic Type, as
@@ -24,12 +23,11 @@ const textSizedRoles: Partial<Record<IconRole, ImageProps['modifiers']>> = {
   ],
 };
 
-// Argo's custom and Tabler symbols are in the app's asset catalog.
+// Argo's custom symbols are in the app's asset catalog; an SVG symbol has no image a SwiftUI tree can draw.
 function imageSource(
   symbol: DrawnSymbol,
 ): Pick<ImageProps, 'assetName' | 'systemName'> {
-  if (symbol.kind === 'tabler')
-    return { assetName: tablerAsset(symbol.tabler) };
+  if (symbol.kind === 'svg') return {};
 
   return isCustomSymbol(symbol.sf)
     ? { assetName: symbol.sf }

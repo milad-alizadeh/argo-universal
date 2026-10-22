@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     "./custom-symbol-paths.json": "./src/symbols/custom-symbol-paths.json",
-    "./tabler-symbol-paths.json": "./src/symbols/tabler-symbol-paths.json",
     "./mocks/*": "./mocks/*.ts",
     "./native-theme": "./src/native-theme.ts",
     "./text": "./src/primitives/content/text/index.ts",

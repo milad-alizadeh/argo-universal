@@ -48,22 +48,21 @@ export const iconButtonProps = z.object({
   accessibilityLabel: z.string().describe('Spoken action name.'),
   disabled: z.boolean().nullable().optional().describe('Disable activation.'),
   onPress: handler('onPress').optional().describe('Action run on activation.'),
-  tone: z.literal('danger').optional().describe('Danger treatment.'),
+  selected: z
+    .boolean()
+    .nullable()
+    .optional()
+    .describe('Draw the filled icon, for a button that is on.'),
   size: z
-    .enum(['2xs', 'xs', 'sm', 'md', 'lg', 'xl'])
+    .enum(['xs', 'sm', 'md', 'lg', 'xl'])
     .optional()
     .meta({ default: iconButtonDefaults.size })
     .describe('Button size.'),
-  loading: z.boolean().optional().describe('The action is running.'),
   variant: z
-    .enum(['default', 'ghost', 'outline', 'filled'])
+    .enum(['primary', 'secondary', 'ghost'])
     .optional()
     .meta({ default: iconButtonDefaults.variant })
     .describe('Button treatment.'),
-  selected: z
-    .boolean()
-    .optional()
-    .describe('Toggle selection; omit for a plain button.'),
 });
 
 export const filterPillProps = z.object({

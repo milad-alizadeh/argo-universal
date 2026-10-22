@@ -75,14 +75,14 @@ function submenuAction(
   };
 }
 
-// The system menus take SF Symbol names only, so Argo's custom and Tabler symbols draw none.
+// The system menus take SF Symbol names only, so Argo's custom and SVG symbols draw none.
 export const menuSymbol = (icon: IconName | undefined): SFSymbol | undefined =>
   icon ? systemSymbol(icon) : undefined;
 
 function systemSymbol(icon: IconName): SFSymbol | undefined {
   const symbol = drawnSymbol(iconSymbols[icon]);
 
-  if (symbol.kind === 'tabler' || isCustomSymbol(symbol.sf)) return undefined;
+  if (symbol.kind === 'svg' || isCustomSymbol(symbol.sf)) return undefined;
 
   return symbol.sf;
 }

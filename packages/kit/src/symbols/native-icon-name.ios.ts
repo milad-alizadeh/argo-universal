@@ -5,7 +5,7 @@ import { type IconSymbol, resolveIcon } from './icon-symbol';
 
 /*
  * The SF Symbol Expo UI's Icon draws for an Argo icon. Its Icon takes only system symbols, so Argo's own
- * symbols (`custom.robot`) and Tabler icons, which live in the asset catalog, have none.
+ * symbol (`custom.robot`), which lives in the asset catalog, and SVG icons have none.
  */
 export function nativeIconName(
   icon: IconSymbol,
@@ -13,7 +13,7 @@ export function nativeIconName(
 ): IconName | undefined {
   const drawn = drawnSymbol(resolveIcon(icon).symbol, filled);
 
-  if (drawn.kind === 'tabler' || isCustomSymbol(drawn.sf)) return undefined;
+  if (drawn.kind === 'svg' || isCustomSymbol(drawn.sf)) return undefined;
 
   return drawn.sf;
 }

@@ -1,12 +1,11 @@
-import type { TablerSymbol } from './tabler-symbols';
+import type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
+import type { SvgSymbolName } from './svg-symbols';
 
 export type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
 
-import type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
-
-// A git icon: one Tabler path, drawn on every platform (ADR-0019), so it has no SF or Material name.
-export interface TablerSymbolSource {
-  tabler: TablerSymbol;
+// A git icon or the web chevron: one SVG component, drawn on every platform (ADR-0041), so it has no SF or Material name.
+export interface SvgSymbolSource {
+  svg: SvgSymbolName;
 }
 
-export type SymbolSource = SystemSymbolSource | TablerSymbolSource;
+export type SymbolSource = SystemSymbolSource | SvgSymbolSource;

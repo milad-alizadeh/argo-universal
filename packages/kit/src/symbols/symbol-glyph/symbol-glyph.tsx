@@ -1,20 +1,20 @@
 import type * as React from 'react';
 import { isCustomSymbol } from '../custom-symbols';
-import { tablerAsset } from '../tabler-symbols';
 import { AssetSymbol } from './asset-symbol';
 import { NativeSymbolView } from './native-symbol-view';
+import { SvgSymbolGlyph } from './svg-symbol';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 
 /*
- * iOS draws SF Symbols through SymbolView, and Argo's custom and Tabler symbols from the app's asset catalog through
- * SwiftUI's Image, since SymbolView looks up system symbols only (ADR-0019).
+ * iOS draws SF Symbols through SymbolView, and Argo's custom symbols from the app's asset catalog through
+ * SwiftUI's Image, since SymbolView looks up system symbols only (ADR-0019); its SVG symbols draw from components (ADR-0041).
  */
 export function SymbolGlyph({
   symbol,
   ...props
 }: SymbolGlyphProps): React.JSX.Element {
-  if (symbol.kind === 'tabler')
-    return <AssetSymbol {...props} assetName={tablerAsset(symbol.tabler)} />;
+  if (symbol.kind === 'svg')
+    return <SvgSymbolGlyph {...props} name={symbol.svg} />;
 
   if (isCustomSymbol(symbol.sf))
     return <AssetSymbol {...props} assetName={symbol.sf} />;

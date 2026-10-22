@@ -72,10 +72,8 @@ function ActionButton(props: AgentCardProps): React.JSX.Element {
   return (
     <IconButton
       icon={action.icon}
-      tone={action.tone}
       accessibilityLabel={`${action.label} ${props.agent.name}`}
       variant="ghost"
-      bleed
       onPress={() => onPress(props)}
     />
   );

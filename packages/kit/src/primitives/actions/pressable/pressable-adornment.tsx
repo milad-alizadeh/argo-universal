@@ -16,7 +16,6 @@ interface AdornmentProps {
   spinnerClass: string;
   role: IconRole;
   filled?: boolean;
-  weight?: IconProps['weight'];
 }
 
 type Glyph = { source: LogoSource } | { name: IconSymbol };
@@ -53,7 +52,6 @@ function AdornmentIcon(props: AdornmentProps & { glyph: Glyph }): ReactElement {
       {...props.glyph}
       role={props.role}
       filled={props.filled}
-      weight={props.weight}
       className={props.textClass}
     />
   );

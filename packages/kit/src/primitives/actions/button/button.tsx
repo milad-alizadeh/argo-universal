@@ -6,7 +6,7 @@ import {
 } from '@expo/ui';
 import { buttonDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
-import type { ColorValue } from 'react-native';
+import { type ColorValue, Platform } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
 import { Host } from '#primitives/native/host';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
@@ -64,10 +64,14 @@ function expoProps(props: ButtonProps): ExpoButtonProps {
   };
 }
 
-const looksOf = (props: ButtonProps): (typeof looks)[Variant] => ({
-  ...looks[variantOf(props)],
-  ...disabledLooks[`${props.disabled ?? false}`][variantOf(props)],
-});
+// The lit looks are CSS strings (`var(--color-muted)`) only the web reads; Android's transformStyle would hand them to Color.parseColor and crash.
+const looksOf = (props: ButtonProps): (typeof looks)[Variant] =>
+  Platform.OS === 'web'
+    ? {
+        ...looks[variantOf(props)],
+        ...disabledLooks[`${props.disabled ?? false}`][variantOf(props)],
+      }
+    : {};
 
 const variants = {
   primary: 'filled',

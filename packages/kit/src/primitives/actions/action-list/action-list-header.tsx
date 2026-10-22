@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import type { IconSymbol } from '#kit/symbols/icon-symbol';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Menu, type MenuEntry } from '#primitives/overlays/menu';
-import { ItemBadge } from '../../../row-badge';
 import {
   submenuGroups,
   isSubmenu,
@@ -108,18 +107,6 @@ function HeaderOverflow({
   return <ActionMenu groups={groups} label={label} trigger={trigger} />;
 }
 
-// Android clips what hangs outside the button, so its badge sits on the glyph's corner, inside the 48 box.
-function submenuBadge(submenu: DeclaredSubmenu): ReactElement | undefined {
-  if (!submenu.badge) return undefined;
-
-  return (
-    <ItemBadge
-      badge={submenu.badge}
-      className="android:right-2 android:top-2"
-    />
-  );
-}
-
 // A submenu opens its own Sections from its icon, its badge on the icon.
 function HeaderSubmenu({
   submenu,
@@ -127,13 +114,12 @@ function HeaderSubmenu({
   submenu: DeclaredSubmenu;
 }): ReactElement {
   const label = submenuLabel(submenu);
-  const badge = submenuBadge(submenu);
 
   return (
     <ActionMenu
       groups={submenuGroups(submenu)}
       label={label}
-      trigger={headerButton(submenu.icon, label, badge)}
+      trigger={headerButton(submenu.icon, label)}
     />
   );
 }
@@ -142,7 +128,6 @@ function HeaderAction({ action }: { action: IconAction }): ReactElement {
   return (
     <IconButton
       icon={action.icon}
-      iconRole="action"
       accessibilityLabel={action.label}
       disabled={action.disabled}
       onPress={action.onPress}
@@ -151,18 +136,6 @@ function HeaderAction({ action }: { action: IconAction }): ReactElement {
   );
 }
 
-function headerButton(
-  icon: IconSymbol,
-  label: string,
-  badge?: ReactElement,
-): ReactElement {
-  return (
-    <IconButton
-      icon={icon}
-      iconRole="action"
-      accessibilityLabel={label}
-      variant="ghost"
-      badge={badge}
-    />
-  );
+function headerButton(icon: IconSymbol, label: string): ReactElement {
+  return <IconButton icon={icon} accessibilityLabel={label} variant="ghost" />;
 }

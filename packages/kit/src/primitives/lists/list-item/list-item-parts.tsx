@@ -120,9 +120,8 @@ export function Accessory({ children }: { children?: ReactNode }): ReactNode {
 /*
  * The disclosure chevron of a row that pushes a page; Android draws none. The two glyphs fill their
  * boxes differently, so each takes the role that lands it on the same 12pt chevron beside the title:
- * SF's inks most of its point size and takes the chevron role, while Tabler's `web-disclosure` is
- * drawn as a 7x12 chevron inside its box and takes the full disclosure slot. iOS draws SF's, since
- * the iOS asset catalog leaves out `web-disclosure`.
+ * SF's inks most of its point size and takes the chevron role, while the SVG `web-disclosure` is
+ * drawn inside its 24-point box and takes the full disclosure slot. iOS draws SF's.
  */
 export function LinkAccessory(): ReactElement | null {
   if (Platform.OS === 'android') return null;

@@ -37,7 +37,6 @@ function PlayButton(props: AudioTransportProps): React.JSX.Element {
       variant="ghost"
       icon={playing(props.phase) ? 'pause' : 'play'}
       accessibilityLabel={`${verb} ${props.label}`}
-      loading={props.phase === 'loading'}
       onPress={props.onToggle}
     />
   );

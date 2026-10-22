@@ -88,9 +88,7 @@ const addAgentsProps = (
   props: AgentChoiceProps,
 ): React.ComponentProps<typeof ListItem> => ({
   title: 'Add Agents',
-  leading: (
-    <Icon fitArtwork name="add" role={{ compact: 'body', wide: 'row' }} />
-  ),
+  leading: <Icon name="add" role={{ compact: 'body', wide: 'row' }} />,
   onPress: () => props.close(props.onAddAgents),
 });
 

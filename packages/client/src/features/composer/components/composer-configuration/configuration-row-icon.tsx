@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function ConfigurationRowIcon(props: Props): ReactElement {
-  return <Icon {...props} fitArtwork role={{ compact: 'body', wide: 'row' }} />;
+  return <Icon {...props} role={{ compact: 'body', wide: 'row' }} />;
 }
 
 /*

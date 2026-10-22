@@ -14,11 +14,11 @@ const filledBolt: SystemSymbolSource = { sf: 'bolt.fill', material: 'bolt' };
 
 describe('drawnSymbol', () => {
   it.each([undefined, false, true])(
-    'draws a Tabler source as its one path, with no SF or Material name, when filled is %s',
+    'draws an SVG source as its one component, with no SF or Material name, when filled is %s',
     (filled) => {
-      expect(drawnSymbol({ tabler: 'git-branch' }, filled)).toEqual({
-        kind: 'tabler',
-        tabler: 'git-branch',
+      expect(drawnSymbol({ svg: 'git-branch' }, filled)).toEqual({
+        kind: 'svg',
+        svg: 'git-branch',
       });
     },
   );

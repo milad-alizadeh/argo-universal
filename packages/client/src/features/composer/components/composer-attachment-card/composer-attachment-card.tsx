@@ -5,7 +5,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { fileTypeIcon } from '@repo/kit/symbols/file-type-icon';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import { Image, Platform, View } from 'react-native';
+import { Image, View } from 'react-native';
 
 export interface ComposerAttachment {
   id: string;
@@ -36,35 +36,7 @@ const kindClass = 'items-center justify-center gap-1 bg-muted';
 
 const mutedClass = 'text-muted-foreground';
 
-const removeClass = 'absolute rounded-full web:rounded-full web:wide:opacity-0';
-
-/*
- * A 20 disc with its 14 mark, tight in the corner: a seventh of the tile's width, where the xs button stood a third
- * of it and the 10 disc before this one was a speck (owner, 2026-10-21). hitSlop restores the 44 (iOS) or 48
- * (Android) target; the phones' disc is card-coloured, the web's filled.
- */
-const removeDisc = 'right-1.5 top-1.5 size-5 sm:size-5 min-h-0 min-w-0';
-
-const phoneRemove = {
-  variant: 'ghost',
-  iconRole: 'mark',
-  className: `${removeDisc} bg-card active:bg-muted`,
-} as const;
-
-const removeFit = Platform.select({
-  web: {
-    variant: 'filled',
-    iconRole: 'mark',
-    className: removeDisc,
-    hitSlop: 4,
-  },
-  android: {
-    ...phoneRemove,
-    className: `${removeDisc} android:min-h-0 android:min-w-0 bg-card active:bg-muted`,
-    hitSlop: 14,
-  },
-  default: { ...phoneRemove, hitSlop: 12 },
-} as const);
+const removeClass = 'absolute right-1.5 top-1.5 web:wide:opacity-0';
 
 const removeHoverClass = (disabled: boolean): string =>
   disabled
@@ -162,17 +134,16 @@ function FileName({ name }: { name: string }): React.JSX.Element {
 }
 
 function RemoveButton(props: ComposerAttachmentCardProps): React.JSX.Element {
-  const { className, ...fit } = removeFit;
-
   return (
-    <IconButton
-      {...fit}
-      disabled={props.disabled}
-      accessibilityLabel={`Remove ${props.attachment.name}`}
-      icon="close"
-      size="xs"
-      className={cn(removeClass, className, removeHoverClass(props.disabled))}
-      onPress={props.onRemove}
-    />
+    <View className={cn(removeClass, removeHoverClass(props.disabled))}>
+      <IconButton
+        disabled={props.disabled}
+        accessibilityLabel={`Remove ${props.attachment.name}`}
+        icon="close"
+        size="sm"
+        variant="secondary"
+        onPress={props.onRemove}
+      />
+    </View>
   );
 }
