@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { contentActionClass } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Menu } from '#primitives/overlays/menu';
 import { Pressable } from './pressable';
+import { contentActionClass } from './pressable-styles';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Actions/Pressable',

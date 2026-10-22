@@ -1,10 +1,10 @@
 import { Button } from '@repo/kit/primitives/actions/button';
+import { useWide } from '@repo/kit/use-wide/use-wide';
 import type { ReactNode } from 'react';
 
 export interface RequestActionProps {
   disabled?: boolean;
   onPress: () => void;
-  accessibilityLabel?: string;
   children: string;
   primary?: boolean;
   loading?: boolean;
@@ -14,14 +14,19 @@ export interface RequestActionProps {
 export function RequestAction({
   children,
   primary,
-  ...props
+  loading,
+  disabled,
+  onPress,
 }: RequestActionProps): ReactNode {
+  const wide = useWide();
+
   return (
     <Button
-      {...props}
-      variant={primary ? 'default' : 'ghost'}
+      onPress={onPress}
+      disabled={disabled || loading}
+      variant={primary ? 'primary' : 'text'}
       size="sm"
-      fullWidth="narrow"
+      fullWidth={!wide}
       label={children}
     />
   );

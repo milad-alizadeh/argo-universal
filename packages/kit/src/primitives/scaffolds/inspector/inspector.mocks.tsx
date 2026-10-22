@@ -51,7 +51,7 @@ function BranchesButton(): ReactElement | null {
   return (
     <Button
       label="Show branches"
-      variant="outline"
+      variant="secondary"
       onPress={() => sheet.push(branchesPage)}
     />
   );

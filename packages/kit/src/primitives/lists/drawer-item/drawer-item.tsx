@@ -1,6 +1,5 @@
 import type * as React from 'react';
-import { contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
+import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';

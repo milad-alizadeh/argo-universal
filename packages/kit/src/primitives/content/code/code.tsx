@@ -69,5 +69,5 @@ function showAllProps(
   count: number,
   onPress: () => void,
 ): React.ComponentProps<typeof Button> {
-  return { variant: 'link', label: `Show all ${count} lines`, onPress };
+  return { variant: 'text', label: `Show all ${count} lines`, onPress };
 }

@@ -100,9 +100,8 @@ function Action({ action }: TitleRowProps): ReactElement | null {
 
   return (
     <Button
-      variant="ghost"
+      variant={action.destructive ? 'danger' : 'text'}
       size="sm"
-      tone={action.destructive ? 'danger' : undefined}
       label={action.label}
       onPress={action.onPress}
     />

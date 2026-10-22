@@ -96,14 +96,10 @@ function usePaneStyles(props: FramePaneProps): PaneStyles {
   usePaneMotion({ width, shift }, props);
 
   return {
-    widthStyle: useAnimatedStyle<ViewStyle>(
-      () => ({ width: width.get() }),
-      [width],
-    ),
-    shiftStyle: useAnimatedStyle<ViewStyle>(
-      () => ({ transform: [{ translateX: shift.get() }] }),
-      [shift],
-    ),
+    widthStyle: useAnimatedStyle<ViewStyle>(() => ({ width: width.get() })),
+    shiftStyle: useAnimatedStyle<ViewStyle>(() => ({
+      transform: [{ translateX: shift.get() }],
+    })),
   };
 }
 

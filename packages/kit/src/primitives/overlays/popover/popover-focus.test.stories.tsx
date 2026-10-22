@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { expect, waitFor, within } from 'storybook/test';
-import { contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
+import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';

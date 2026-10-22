@@ -25,9 +25,9 @@ function PanelTrigger({ panel, panels }: PanelTriggerProps): React.JSX.Element {
   if (panel === 'changes' && panels.changesSummary)
     return (
       <Button
-        variant="ghost"
-        size="xs"
-        {...props}
+        variant="text"
+        size="sm"
+        onPress={props.onPress}
         {...countedChangeLabels(panels.changesSummary)}
       />
     );
@@ -58,14 +58,8 @@ function countedChangeLabels({
   files,
   additions,
   deletions,
-}: ChangesSummary): Pick<
-  React.ComponentProps<typeof Button>,
-  'label' | 'accessibilityLabel'
-> {
-  return {
-    label: `${files} +${additions} −${deletions}`,
-    accessibilityLabel: `Changed files · ${files}, +${additions}, −${deletions}`,
-  };
+}: ChangesSummary): Pick<React.ComponentProps<typeof Button>, 'label'> {
+  return { label: `${files} +${additions} −${deletions}` };
 }
 
 // Subagents, Shells and Changes, each pressed while the Inspector shows its tab; a panel the Session lacks has none.

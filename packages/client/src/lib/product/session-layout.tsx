@@ -181,8 +181,7 @@ function useHomeIndicatorSpace(): ReturnType<
   const { bottom } = useSafeAreaInsets();
   const { progress } = useReanimatedKeyboardAnimation();
 
-  return useAnimatedStyle(
-    () => ({ paddingBottom: bottom * (1 - progress.get()) }),
-    [bottom, progress],
-  );
+  return useAnimatedStyle(() => ({
+    paddingBottom: bottom * (1 - progress.get()),
+  }));
 }

@@ -1,8 +1,7 @@
 /*
  * The universal Picker's Android tree: Material's ExposedDropdownMenuBox around a read-only filled
- * TextField, with Argo's colours through TextField `colors` (TextFieldColors), ExposedDropdownMenu
- * `containerColor` and DropdownMenuItem `elementColors`. The universal Picker takes none, and the
- * Host's tonal palette tints its field and menu teal.
+ * TextField. The menu takes the Host's roles; the field and its items keep their own `colors`
+ * (TextFieldColors, DropdownMenuItem `elementColors`), where Argo departs from Material's defaults.
  */
 import {
   DropdownMenuItem,
@@ -88,7 +87,6 @@ function PickerItems(props: ItemsProps): ReactElement {
     <ExposedDropdownMenu
       expanded={props.expanded}
       onDismissRequest={props.onClose}
-      containerColor={useMaterialPalette().roles.surfaceContainer}
     >
       {props.items.map((item) => (
         <PickerItem key={item.value} {...props} item={item} />

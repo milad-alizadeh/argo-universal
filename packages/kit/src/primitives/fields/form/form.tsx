@@ -36,7 +36,7 @@ function FormFooter(props: FormProps & { submit: () => void }): ReactElement {
       {centred ? <CancelButton {...props} /> : null}
       <Button
         label={props.submitLabel}
-        loading={props.loading}
+        disabled={props.loading}
         fullWidth={!centred}
         onPress={props.submit}
       />
@@ -50,7 +50,7 @@ function CancelButton(props: FormProps): ReactElement | null {
 
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       label={props.cancelLabel ?? 'Cancel'}
       disabled={props.loading}
       onPress={props.onCancel}

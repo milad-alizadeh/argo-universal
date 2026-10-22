@@ -123,7 +123,6 @@ export type Primitives = {
   SpinnerProps: SpinnerKit.SpinnerProps;
   SplitButtonOption: SplitButtonKit.SplitButtonOption<string>;
   SplitButtonProps: SplitButtonKit.SplitButtonProps;
-  SplitMenuProps: SplitButtonKit.SplitMenuProps;
   StandaloneTextInputProps: TextInputKit.StandaloneTextInputProps;
   SwitchProps: SwitchKit.SwitchProps;
   TextInputProps: TextInputKit.TextInputProps;

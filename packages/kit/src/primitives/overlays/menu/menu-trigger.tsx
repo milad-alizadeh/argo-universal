@@ -2,7 +2,7 @@ import type { ComponentProps, ReactElement } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
-import { buttonInteractionProps } from '#primitives/actions/button';
+import { buttonInteractionProps } from '#primitives/actions/pressable';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import type { MenuTriggerProps } from './menu-props';

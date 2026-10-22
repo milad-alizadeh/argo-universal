@@ -129,7 +129,7 @@ function StepButton(props: StepAdd & { mark: StepMark }): React.JSX.Element {
     <Button
       label={props.label}
       icon={next ? 'add' : undefined}
-      variant={next ? 'default' : 'outline'}
+      variant={next ? 'primary' : 'secondary'}
       size="sm"
       disabled={!props.onPress}
       onPress={props.onPress}

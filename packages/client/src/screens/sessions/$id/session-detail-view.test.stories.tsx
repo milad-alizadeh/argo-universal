@@ -109,11 +109,6 @@ export const BandOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
   },
 };
 
-/*
- * Spec 0020 removes the header's Merge control and single-Change chooser.
- * Merge behavior lives at MergePrButton's public component tests; the Workbench checks suite covers summary checks.
- */
-
 export const EmptyFeed: Story = {
   args: { view: { state: 'open', ...emptySession } },
   play: async ({ canvas }) =>

@@ -46,12 +46,9 @@ function useKeyboardSpace(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const { height, progress } = useReanimatedKeyboardAnimation();
 
-  return useAnimatedStyle(
-    () => ({
-      paddingBottom: keyboardSpace(height.get(), inset, progress.get()),
-    }),
-    [inset],
-  );
+  return useAnimatedStyle(() => ({
+    paddingBottom: keyboardSpace(height.get(), inset, progress.get()),
+  }));
 }
 
 // A screen's content, following the keyboard frame by frame on both phones.

@@ -2,7 +2,6 @@
 import { Checkbox } from '@expo/ui/jetpack-compose';
 import { size } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
-import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { CheckboxIndicatorProps } from './checkbox-props';
 import { RadioMark } from './checkbox-radio';
 
@@ -42,7 +41,6 @@ function BoxMark(
   return createElement(Checkbox, {
     value: props.value,
     enabled: !props.disabled,
-    colors: useMaterialPalette().checkboxColors,
     modifiers: props.modifiers,
   });
 }

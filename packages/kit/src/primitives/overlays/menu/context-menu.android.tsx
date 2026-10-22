@@ -5,7 +5,6 @@ import { type ComponentType, type ReactElement, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Host } from '#primitives/native/host';
-import { useMaterialPalette } from '#primitives/native/material-palette';
 import { contextMenuSections } from './context-menu-native-items';
 import type { ContextMenuProps } from './context-menu-props';
 import { MenuDropdownItems } from './menu-dropdown-items';
@@ -52,10 +51,8 @@ function LongPressTrigger({
 type AnchoredProps = ContextMenuProps & { menu: OpenableMenu };
 
 function AnchoredDropdown(props: AnchoredProps): ReactElement {
-  const { roles } = useMaterialPalette();
-
   return (
-    <DropdownMenu {...props.menu.state} color={roles.surfaceContainer}>
+    <DropdownMenu {...props.menu.state}>
       <DropdownMenu.Trigger>
         <Box modifiers={anchorFrame} />
       </DropdownMenu.Trigger>

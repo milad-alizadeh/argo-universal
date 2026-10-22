@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Button, contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
+import { Button } from '#primitives/actions/button';
+import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { Combobox } from '#primitives/inputs/combobox';
 import { TextInput } from '#primitives/inputs/text-input';
@@ -93,7 +93,7 @@ function AnchoredListPreview(): React.JSX.Element {
       <PopoverAnchor>
         <Button
           label="Choose a fruit"
-          variant="outline"
+          variant="secondary"
           onPress={() => setOpen(true)}
         />
       </PopoverAnchor>

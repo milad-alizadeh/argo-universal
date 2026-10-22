@@ -48,11 +48,7 @@ export function useProgressFillWidth(share: number): ProgressFillWidth {
   const trackWidth = useSharedValue(0);
   const shown = useShownShare(share);
 
-  // The dependencies are listed, since web has no worklet closure to find them in.
-  const fillWidth = useDerivedValue(
-    () => trackWidth.get() * shown.get(),
-    [trackWidth, shown],
-  );
+  const fillWidth = useDerivedValue(() => trackWidth.get() * shown.get());
 
   return {
     fillWidth,
@@ -64,5 +60,5 @@ export function useProgressFillWidth(share: number): ProgressFillWidth {
 export function useProgressFillStyle(
   fillWidth: SharedValue<number>,
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
-  return useAnimatedStyle(() => ({ width: fillWidth.get() }), [fillWidth]);
+  return useAnimatedStyle(() => ({ width: fillWidth.get() }));
 }

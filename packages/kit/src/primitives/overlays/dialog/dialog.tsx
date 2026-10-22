@@ -1,8 +1,9 @@
 import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
+import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
 import { Button } from '#primitives/actions/button';
-import type { ButtonDataProps } from '#primitives/actions/button';
+import type { ButtonProps } from '#primitives/actions/button';
 import {
   CentredOverlayScope,
   useInCentredOverlay,
@@ -104,15 +105,16 @@ function DialogFooter({ className, ...props }: ViewProps): React.JSX.Element {
 
 // The dialog's own dismiss action, drawn as the same Button as its other actions so they share shape and height.
 function DialogCancel(
-  props: Omit<ButtonDataProps, 'onPress' | 'variant' | 'fullWidth'>,
+  props: Omit<ButtonProps, 'onPress' | 'variant' | 'fullWidth'>,
 ): React.JSX.Element {
   const { onOpenChange } = useDialogState();
+  const wide = useWide();
 
   return (
     <Button
       {...props}
-      variant="outline"
-      fullWidth="narrow"
+      variant="secondary"
+      fullWidth={!wide}
       onPress={() => onOpenChange(false)}
     />
   );

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useCSSVariable, useUniwind } from 'uniwind';
+import { disabledContentClass } from './disabled-content-class';
 import { usePrimitiveColor } from '#primitives/native/primitive-color';
 import {
   resolvedToneShades,
@@ -31,7 +32,7 @@ const tokenNames = colorTokens.map(([, name]) => name);
 
 type TokenRole = (typeof colorTokens)[number][0];
 
-// Material's disabled content (38%) and container (12%), and the sheet scrim (32%), over the foreground.
+// Material's disabled content (38%; the web keeps the foreground, see disabled-content-class) and container (12%), and the sheet scrim (32%), over the foreground.
 type DerivedRole = 'disabledContent' | 'disabledContainer' | 'scrim';
 
 // A colour is missing only while Uniwind has not resolved its token.
@@ -63,7 +64,7 @@ export function useNativeTheme(options?: { toneShades: boolean }): NativeTheme {
 }
 
 function useDerivedColors(): Partial<Record<DerivedRole, string>> {
-  const disabledContent = usePrimitiveColor('text-foreground/38');
+  const disabledContent = usePrimitiveColor(disabledContentClass);
   const disabledContainer = usePrimitiveColor('text-foreground/12');
   const scrim = usePrimitiveColor('text-foreground/32');
 

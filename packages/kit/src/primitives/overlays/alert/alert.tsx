@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/actions/button';
+import { Button, type ButtonProps } from '#primitives/actions/button';
 import {
   Dialog,
   DialogDescriptionText,
@@ -86,6 +86,14 @@ type AlertButtonProps = Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'> & {
   action: AlertAction;
 };
 
+function alertVariant(
+  action: AlertButtonProps['action'],
+): ButtonProps['variant'] {
+  if (isDestructive(action)) return 'danger';
+
+  return isCancel(action) ? 'secondary' : 'primary';
+}
+
 // A running answer draws the Button's own spinner; every answer waits for it.
 function AlertButton(props: AlertButtonProps): React.JSX.Element {
   const { action } = props;
@@ -93,10 +101,8 @@ function AlertButton(props: AlertButtonProps): React.JSX.Element {
   return (
     <Button
       label={action.label}
-      variant={isCancel(action) ? 'outline' : 'default'}
-      tone={isDestructive(action) ? 'danger' : undefined}
-      loading={action.loading}
-      disabled={!isAlertActionEnabled(action, props.actions)}
+      variant={alertVariant(action)}
+      disabled={!isAlertActionEnabled(action, props.actions) || action.loading}
       onPress={alertActionPress(action, props.onOpenChange)}
     />
   );

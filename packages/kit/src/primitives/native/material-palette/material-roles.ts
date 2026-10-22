@@ -40,9 +40,8 @@ interface StateRoles {
 export type MaterialRoles = SurfaceRoles & StateRoles;
 
 /*
- * Material 3's colour roles, each bound to an Argo token. Expo's Host builds a tonal palette from the
- * seed, which turns a grey accent teal, so Android controls take these roles through their own
- * `colors` props instead. Material's monochrome scheme guides which token fills which role.
+ * Material 3's colour roles, each bound to an Argo token, for the Android controls whose `colors` depart
+ * from Material's defaults. Everything else takes its colour from the Host's `colorOverrides`.
  */
 export function materialRoles(colors: Colors): MaterialRoles {
   return { ...surfaceRoles(colors), ...stateRoles(colors) };

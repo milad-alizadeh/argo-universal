@@ -166,10 +166,6 @@ expectTypeOf<
   Values<Primitives['AlertAction'], 'tone'>
 >().toEqualTypeOf<'danger'>();
 
-expectTypeOf<
-  Values<Primitives['ButtonProps'], 'tone'>
->().toEqualTypeOf<'danger'>();
-
 // `role` is for typography and icon placement only.
 expectTypeOf<OwnRoles>().toEqualTypeOf<Each<never>>();
 

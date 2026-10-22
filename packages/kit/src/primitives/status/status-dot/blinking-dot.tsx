@@ -71,7 +71,7 @@ function useBlinkingStyle(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const opacity = useBlinkingOpacity(blinking);
 
-  return useAnimatedStyle(() => ({ opacity: opacity.get() }), [opacity]);
+  return useAnimatedStyle(() => ({ opacity: opacity.get() }));
 }
 
 function useBlinkingOpacity(blinking: boolean): SharedValue<number> {

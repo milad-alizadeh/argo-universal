@@ -1,11 +1,11 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { DrawnButton } from '#primitives/actions/button';
+import { IconButton } from '#primitives/actions/icon-button';
 import type { ListItemStepperProps } from './list-item-stepper';
-import { stepButton } from './stepper-buttons';
+import { stepAction } from './stepper-buttons';
 
-const buttonClass =
-  'h-8 min-h-8 w-11 gap-0 rounded-full p-0 web:sm:h-8 web:sm:min-h-8';
+// Each half of the 32-tall pill is 44 wide, so the −/+ glyphs sit apart either side of the divider.
+const buttonClass = 'h-8 min-h-8 w-11 web:sm:h-8 web:sm:w-11';
 
 export function StepperControl(props: ListItemStepperProps): ReactElement {
   return (
@@ -24,10 +24,12 @@ interface StepActionProps {
 
 function StepAction({ row, direction }: StepActionProps): ReactElement {
   return (
-    <DrawnButton
-      {...stepButton(row, direction)}
-      label=""
+    <IconButton
+      {...stepAction(row, direction)}
       icon={direction < 0 ? 'subtract' : 'add'}
+      variant="ghost"
+      size="sm"
+      corners="round"
       className={buttonClass}
     />
   );

@@ -42,7 +42,6 @@ function inputControls(
   return {
     switchColors: inputs.switchColors(roles),
     sliderColors: inputs.sliderColors(roles),
-    checkboxColors: inputs.checkboxColors(roles),
     radioColors: inputs.radioColors(roles),
     outlinedFieldColors: inputs.outlinedFieldColors(roles),
     filledFieldColors: inputs.filledFieldColors(roles),
@@ -53,10 +52,6 @@ function surfaceControls(
   roles: MaterialRoles,
 ): Omit<Pick<Controls, keyof typeof surfaces>, 'dialogButtonColors'> {
   return {
-    filledButtonColors: surfaces.filledButtonColors(roles),
-    tonalButtonColors: surfaces.tonalButtonColors(roles),
-    bareButtonColors: surfaces.bareButtonColors(roles),
-    dialogColors: surfaces.dialogColors(roles),
     menuItemColors: surfaces.menuItemColors(roles),
     chipColors: surfaces.chipColors(roles),
     listItemColors: surfaces.listItemColors(roles),

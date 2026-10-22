@@ -1,10 +1,11 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon, IconSpinner } from '#primitives/content/icon';
-import type { IconProps } from '#primitives/content/icon';
+import { Icon, type IconProps, IconSpinner } from '#primitives/content/icon';
 import type { IconRole } from '../../../symbols/icon-role';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { LogoSource } from '../../../symbols/logo-source';
+
+// The icon or spinner a pressable button draws, hidden from assistive tech: IconButton's glyph.
 
 interface AdornmentProps {
   icon?: IconSymbol;

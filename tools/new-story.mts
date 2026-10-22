@@ -44,7 +44,7 @@ const folderSources = (folder: string): string[] =>
     .filter((file) => drawing.test(file) && !skipped.test(file))
     .map((file) => readFileSync(path.join(folder, file), 'utf8'));
 
-// The export named for the file wins, as `Button` over the kit-only `DrawnButton` beside it.
+// The export named for the file wins, as `Button` over a kit-only component beside it.
 function exportedComponent(source: string, named: string): string {
   const exported = [
     ...source.matchAll(/export (?:const|function) ([A-Z]\w*)/g),

@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useInstalledAgents } from '#features/agents';
 import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
-import { useConnectionDropped, useMergeMethod } from '#features/sessions';
+import { useConnectionDropped } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
@@ -83,7 +83,6 @@ type SessionSurroundings =
   | 'connected'
   | 'elicitation'
   | 'permission'
-  | 'mergeMethod'
   | 'onAtEndChange';
 
 function useSessionSurroundings(
@@ -96,7 +95,6 @@ function useSessionSurroundings(
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
-    mergeMethod: useMergeMethod(),
     onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
   };
 }

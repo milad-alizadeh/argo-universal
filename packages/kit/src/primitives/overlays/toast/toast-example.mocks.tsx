@@ -24,7 +24,7 @@ export function ErrorToastExample(): React.JSX.Element {
       <FailedOpen key={attempt} />
       <Button
         label="Fail again"
-        variant="outline"
+        variant="secondary"
         onPress={() => setAttempt((count) => count + 1)}
       />
     </View>
@@ -50,7 +50,7 @@ export function ActionToastExample({
     <View className="items-start">
       <Button
         label="Archive"
-        variant="outline"
+        variant="secondary"
         onPress={() => showArchived(onUndo)}
       />
     </View>

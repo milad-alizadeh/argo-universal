@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
+import { useWide } from '#kit/use-wide/use-wide';
 import { Button } from '#primitives/actions/button';
-import { contentActionClass } from '#primitives/actions/button';
-import { Pressable } from '#primitives/actions/pressable';
+import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { TextInput } from '#primitives/inputs/text-input';
 import {
@@ -70,11 +70,13 @@ function ProfileFields(): React.JSX.Element {
 }
 
 function ProfileFooter(): React.JSX.Element {
+  const wide = useWide();
+
   return (
     <DialogFooter>
       <DialogCancel label="Cancel" />
       {/* A phone's Save fills the sheet's width, as Cancel does. */}
-      <Button label="Save changes" fullWidth="narrow" />
+      <Button label="Save changes" fullWidth={!wide} />
     </DialogFooter>
   );
 }

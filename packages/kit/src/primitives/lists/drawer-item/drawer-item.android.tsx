@@ -122,12 +122,10 @@ function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   );
 }
 
-// Material's Badge in Argo's danger red; TalkBack reads it with the row.
+// Material's Badge, on the Host's error role (Argo's danger red); TalkBack reads it with the row.
 function NativeBadge({ badge }: { badge: CountBadge }): React.JSX.Element {
-  const { roles } = useMaterialPalette();
-
   return (
-    <Badge containerColor={roles.error} contentColor={roles.onError}>
+    <Badge>
       <Text>{badge.text}</Text>
     </Badge>
   );

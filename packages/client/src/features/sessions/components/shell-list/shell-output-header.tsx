@@ -17,9 +17,8 @@ export interface ShellOutputHeaderProps {
 
 // Stop ends a run, so it reads as danger does everywhere: red text, no fill and no border.
 const stopAppearance = {
-  variant: 'ghost',
-  tone: 'danger',
-  size: 'xs',
+  variant: 'danger',
+  size: 'sm',
   label: 'Stop',
 } as const;
 
@@ -30,13 +29,7 @@ function StopButton({
 }: Pick<ShellOutputHeaderProps, 'shell' | 'onStop'>): JSX.Element | null {
   if (shell.status !== 'running' || !shell.canStop) return null;
 
-  return (
-    <Button
-      {...stopAppearance}
-      accessibilityLabel={`Stop ${shell.command}`}
-      onPress={() => onStop(shell)}
-    />
-  );
+  return <Button {...stopAppearance} onPress={() => onStop(shell)} />;
 }
 
 // How the Shell stands, filling the gap between its command and Stop.

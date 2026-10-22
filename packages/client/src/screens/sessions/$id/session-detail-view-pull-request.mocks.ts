@@ -18,8 +18,6 @@ export function withPullRequests(
       ...session.header,
       pullRequests,
       changes: session.header.changes ?? changesHeader(pullRequests),
-      onMerge: fn(),
-      onMergeMethodChange: fn(),
     },
   };
 }

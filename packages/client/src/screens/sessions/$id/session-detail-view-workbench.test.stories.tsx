@@ -56,7 +56,7 @@ export const SeveralPullRequestsInStage: Story = {
   },
 };
 
-export const MergesFromChangeDetail: Story = {
+export const SwitchesChangeAndFiles: Story = {
   args: {
     view: {
       state: 'open',
@@ -64,7 +64,7 @@ export const MergesFromChangeDetail: Story = {
       changes: changesArgs,
     },
   },
-  play: async ({ canvas, userEvent, args }) => {
+  play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: firstChangeLabel }),
     );
@@ -73,23 +73,9 @@ export const MergesFromChangeDetail: Story = {
       canvas.getAllByRole('button', { name: /^Diff for/ }).length,
     ).toBeGreaterThan(0);
     await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
-    await expect(canvas.queryByRole('button', { name: 'Merge' })).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
     await expect(
-      await canvas.findByRole('button', { name: 'Merge' }),
-    ).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Files' }));
-    await expect(canvas.queryByRole('button', { name: 'Merge' })).toBeNull();
-    await expect(
-      canvas.getAllByRole('button', { name: /^Diff for/ }).length,
-    ).toBeGreaterThan(0);
-    await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
-    const merge = await canvas.findByRole('button', { name: 'Merge' });
-
-    await userEvent.click(merge);
-
-    if (args.view.state !== 'open') throw new Error('Open Session required');
-
-    await expect(args.view.header.onMerge).toHaveBeenCalledWith(45, 'squash');
+      canvas.queryByRole('button', { name: /^Diff for/ }),
+    ).toBeNull();
   },
 };

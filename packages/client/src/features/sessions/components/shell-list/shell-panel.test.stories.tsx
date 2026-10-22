@@ -30,7 +30,7 @@ export const StopsARunningShell: Story = {
     await openWide(canvas, userEvent, /pnpm dev/);
     await expect(canvas.getByText('Running · 4m 12s')).toBeVisible();
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Stop pnpm dev' }),
+      canvas.getByRole('button', { name: 'Stop' }),
     );
     await expect(args.onStop).toHaveBeenCalledWith(runningShell);
   },

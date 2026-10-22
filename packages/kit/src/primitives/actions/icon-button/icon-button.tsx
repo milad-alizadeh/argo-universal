@@ -1,8 +1,10 @@
 import { useContext, type ComponentProps, type ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { cn } from '#kit/utils';
-import { ButtonAdornment } from '#primitives/actions/button';
-import { buttonInteractionProps } from '#primitives/actions/button';
+import {
+  ButtonAdornment,
+  buttonInteractionProps,
+} from '#primitives/actions/pressable';
 import { IconButtonBleed } from './icon-button-bleed';
 import type { IconButtonProps } from './icon-button-props';
 import {
