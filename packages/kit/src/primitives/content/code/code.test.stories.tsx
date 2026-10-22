@@ -111,7 +111,13 @@ export const ExpandsDiff: Story = {
   },
 };
 
-// The feedback interval belongs to the latest successful copy.
+function endInterval(end: TimerHandler | undefined): void {
+  if (typeof end !== 'function') throw new Error('No interval to end');
+
+  end();
+}
+
+// The feedback interval belongs to the latest successful copy: a second copy clears the first interval, and only the second one ends the feedback.
 export const RepeatedCopyRestartsFeedback: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
@@ -121,17 +127,36 @@ export const RepeatedCopyRestartsFeedback: Story = {
       'writeText',
     ).mockResolvedValue();
 
+    const setTimeoutSpy = spyOn(window, 'setTimeout');
+
+    // The calls that started a feedback interval, with the id each one returned.
+    const feedback = (): { id: unknown; end: TimerHandler }[] =>
+      setTimeoutSpy.mock.calls.flatMap(([handler, delay], index) =>
+        delay === 2000
+          ? [{ id: setTimeoutSpy.mock.results[index]?.value, end: handler }]
+          : [],
+      );
+
+    const clearTimeoutSpy = spyOn(window, 'clearTimeout');
+
     try {
       canvas.getByRole('button', { name: 'Copy code' }).focus();
       await userEvent.keyboard('{Enter}');
       await canvas.findByRole('button', { name: 'Copied' });
-      await new Promise((resolve) => setTimeout(resolve, 1300));
-      await userEvent.click(canvas.getByRole('button', { name: 'Copied' }));
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(feedback()).toHaveLength(2));
+      await expect(clearTimeoutSpy).toHaveBeenCalledWith(feedback()[0]?.id);
+
+      endInterval(feedback()[1]?.end);
       await expect(
-        canvas.getByRole('button', { name: 'Copied' }),
-      ).toBeVisible();
+        await canvas.findByRole('button', { name: 'Copy code' }),
+      ).toBeInTheDocument();
+      await expect(
+        canvas.queryByRole('button', { name: 'Copied' }),
+      ).not.toBeInTheDocument();
     } finally {
+      setTimeoutSpy.mockRestore();
+      clearTimeoutSpy.mockRestore();
       clipboard.mockRestore();
     }
   },
