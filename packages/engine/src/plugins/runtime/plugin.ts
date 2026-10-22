@@ -14,8 +14,7 @@ export class RuntimePlugin {
   private source = { text: '', version: '' };
   private buildError: string | null = null;
   private generation = 0;
-  // The newest build outcome that arrived while a Turn was running; replayed when the last Turn ends.
-  private pendingReload: (() => void) | null = null;
+  private deferredReplay: (() => void) | null = null;
   // Nothing is granted until the first activation names the manifest's Capabilities.
   private granted: ActivatedPlugin;
 
@@ -109,15 +108,20 @@ export class RuntimePlugin {
   }
 
   public flushReload(): void {
-    const replay = this.pendingReload;
-    this.pendingReload = null;
+    const replay = this.deferredReplay;
+    this.deferredReplay = null;
 
     if (replay && !this.closed) replay();
   }
 
   private defer(replay: () => void): boolean {
-    if (this.generation === 0 || !this.input.deferReload()) return false;
-    this.pendingReload = replay;
+    if (this.generation === 0 || !this.input.deferReload()) {
+      // A build applying now supersedes anything deferred earlier.
+      this.deferredReplay = null;
+
+      return false;
+    }
+    this.deferredReplay = replay;
     this.input.log(
       `Plugin ${this.input.entry.pluginId}: dev build deferred until Turn ends`,
     );
