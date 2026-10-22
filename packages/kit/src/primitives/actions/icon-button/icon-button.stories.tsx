@@ -27,16 +27,6 @@ const extraSmallIconButton = {
   size: 'xs',
 } satisfies IconButtonProps;
 
-const smallIconButton = {
-  ...primaryIconButton,
-  size: 'sm',
-} satisfies IconButtonProps;
-
-const largeIconButton = {
-  ...primaryIconButton,
-  size: 'lg',
-} satisfies IconButtonProps;
-
 const extraLargeIconButton = {
   ...primaryIconButton,
   size: 'lg',
@@ -80,13 +70,17 @@ export const ExtraSmall: Story = { args: extraSmallIconButton };
 
 export const Selected: Story = { args: selectedIconButton };
 
-export const Small: Story = { args: smallIconButton };
-
-export const Large: Story = { args: largeIconButton };
-
 export const ExtraLarge: Story = { args: extraLargeIconButton };
 
-export const Disabled: Story = { args: disabledIconButton };
+export const Disabled: Story = {
+  args: { ...disabledIconButton, onPress: fn() },
+  play: async ({ canvas, args }) => {
+    const button = canvas.getByRole('button', { name: accessibilityLabel });
+    await expect(button).toBeDisabled();
+    button.click();
+    await expect(args.onPress).not.toHaveBeenCalled();
+  },
+};
 
 // Test-only: hidden from the sidebar and Docs, still run by the story tests.
 export const Activation: Story = {
@@ -97,16 +91,5 @@ export const Activation: Story = {
       canvas.getByRole('button', { name: accessibilityLabel }),
     );
     await expect(args.onPress).toHaveBeenCalledOnce();
-  },
-};
-
-export const DisabledIgnoresPress: Story = {
-  tags: ['!dev', '!autodocs'],
-  args: { ...disabledIconButton, onPress: fn() },
-  play: async ({ canvas, args }) => {
-    const button = canvas.getByRole('button', { name: accessibilityLabel });
-    await expect(button).toBeDisabled();
-    button.click();
-    await expect(args.onPress).not.toHaveBeenCalled();
   },
 };

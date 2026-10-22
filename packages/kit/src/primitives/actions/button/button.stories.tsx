@@ -70,9 +70,22 @@ export const Small: Story = { args: smallButton };
 
 export const FullWidth: Story = { args: fullWidthButton };
 
-export const Disabled: Story = { args: disabledButton };
+export const Disabled: Story = {
+  args: { ...disabledButton, onPress: fn() },
+  play: async ({ canvas, args }) => {
+    const button = canvas.getByRole('button', { name: label });
+    await expect(button).toBeDisabled();
+    button.click();
+    await expect(args.onPress).not.toHaveBeenCalled();
+  },
+};
 
-export const LeadingIcon: Story = { args: leadingIconButton };
+export const LeadingIcon: Story = {
+  args: leadingIconButton,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: 'Add' })).toBeVisible();
+  },
+};
 
 export const SmallLeadingIcon: Story = { args: smallLeadingIconButton };
 
@@ -83,24 +96,5 @@ export const Activation: Story = {
   play: async ({ canvas, userEvent, args }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Continue' }));
     await expect(args.onPress).toHaveBeenCalledOnce();
-  },
-};
-
-export const DisabledIgnoresPress: Story = {
-  tags: ['!dev', '!autodocs'],
-  args: { ...disabledButton, onPress: fn() },
-  play: async ({ canvas, args }) => {
-    const button = canvas.getByRole('button', { name: label });
-    await expect(button).toBeDisabled();
-    button.click();
-    await expect(args.onPress).not.toHaveBeenCalled();
-  },
-};
-
-export const LeadingIconRenders: Story = {
-  tags: ['!dev', '!autodocs'],
-  args: leadingIconButton,
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', { name: 'Add' })).toBeVisible();
   },
 };
