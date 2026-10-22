@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { notConnectedGitHub } from './github-step-fixtures';
 import { OnboardingView } from './onboarding-view';
-import { onboardingArgs, githubSteps } from './onboarding-view.mocks';
+import { onboardingArgs } from './onboarding-view.mocks';
 
 const meta = {
   title: 'Screens/Onboarding/Set up Argo',
@@ -22,7 +23,7 @@ export const NotInstalled: Story = {
 // What the App shows today: no GitHub sign-in or Add Project flow yet, so their buttons are disabled.
 export const FirstRun: Story = {
   args: {
-    github: githubSteps.notConnected,
+    github: notConnectedGitHub.github,
     onConnectGitHub: undefined,
     onAddProject: undefined,
   },

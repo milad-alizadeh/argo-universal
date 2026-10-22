@@ -11,8 +11,3 @@ export const devicesPlaceholder = {
   title: 'Devices',
   description: 'Devices will appear here.',
 } satisfies PlaceholderDetailViewProps;
-
-export const notificationsPlaceholder = {
-  title: 'Notifications',
-  description: 'Notifications will appear here.',
-} satisfies PlaceholderDetailViewProps;

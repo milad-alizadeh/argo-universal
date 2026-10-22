@@ -28,7 +28,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {};
+// The Sessions of every Project, newest first, under the list's own search field.
+export const Sessions: Story = {};
 
 export const Loading: Story = { args: { loadState: 'loading' } };
 
@@ -38,10 +39,6 @@ export const LoadError: Story = { args: { loadState: 'error' } };
 
 export const LiveUpdatesStopped: Story = {
   args: { liveUpdatesStopped: true },
-};
-
-export const NoMatchingSessions: Story = {
-  args: { query: 'xyz', sessions: [] },
 };
 
 export const SearchMatches: Story = {

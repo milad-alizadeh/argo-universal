@@ -8,15 +8,19 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { questionPlan } from '../../../../mocks/elicitation-questions';
-import type { SessionDetailViewProps } from './session-detail-view';
+import {
+  SessionDetailView,
+  type SessionDetailViewProps,
+} from './session-detail-view';
 import { idleSession, runningSession } from './session-detail-view.mocks';
 import { Elicitation } from './session-detail-view.stories';
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/Elicitation',
   parameters: { screenPreview: true },
+  component: SessionDetailView,
   render: Elicitation.render,
-} satisfies Meta<{ view: SessionDetailViewProps }>;
+} satisfies Meta<typeof SessionDetailView>;
 
 export default meta;
 
@@ -34,7 +38,7 @@ function anchoredSession(agent: Agent): Story {
   const onAnswer = fn();
 
   return {
-    args: { view: pendingSession(agent, onAnswer) },
+    args: pendingSession(agent, onAnswer),
     beforeEach: async (): Promise<void> => {
       await settleViewport(1440);
     },

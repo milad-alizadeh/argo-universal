@@ -5,16 +5,9 @@ import {
   questionsRequest,
   questionsValues,
 } from '../../../../mocks/elicitation';
-import {
-  SessionDetailView,
-  type SessionDetailViewProps,
-} from './session-detail-view';
+import { SessionDetailView } from './session-detail-view';
 import { ElicitationPreview } from './session-detail-view-elicitation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
-import {
-  severalPullRequests,
-  withPullRequests,
-} from './session-detail-view-pull-request.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import {
   emptySession,
@@ -25,79 +18,51 @@ import {
 
 const meta = {
   title: 'Screens/Sessions/Session',
-  /*
-   * No `component`: its stories pass the whole view as one `view` arg, which a SessionDetailView
-   * meta cannot type. Ticket #1203 flattens the wrapper; the Docs page comes with it.
-   */
-  tags: ['!autodocs'],
+  component: SessionDetailView,
   parameters: { screenPreview: true },
-  args: { view: { state: 'open', ...runningSession } },
-  render: ({ view }): React.JSX.Element => <SessionDetailView {...view} />,
-} satisfies Meta<{ view: SessionDetailViewProps }>;
+  argTypes: {
+    state: { control: 'select', options: ['open', 'opening', 'failed'] },
+  },
+} satisfies Meta<typeof SessionDetailView>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {};
+// A Turn running: the header's clock, the Feed's live line, and the Composer offering Stop.
+export const Running: Story = { args: { state: 'open', ...runningSession } };
 
-export const SeveralPullRequests: Story = {
-  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(runningSession, severalPullRequests),
-    },
-  },
-};
-
-export const Idle: Story = {
-  args: { view: { state: 'open', ...idleSession } },
-};
-
-export const LoadingEarlier: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...longSession,
-      feed: { ...longSession.feed, loadingOlder: true },
-    },
-  },
-};
-
-export const LongFeed: Story = {
-  args: { view: { state: 'open', ...longSession } },
-};
+// Every recording in turn, so the Feed scrolls under a pinned header and Composer.
+export const LongFeed: Story = { args: { state: 'open', ...longSession } };
 
 // A long Feed in the Frame: the rail's toggle collapses and expands the sidebar while the Feed keeps its layout and only slides.
 export const LongFeedInFrame: Story = {
-  args: { view: { state: 'open', ...longSession } },
-  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
+  args: { state: 'open', ...longSession },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
 export const Empty: Story = {
-  args: { view: { state: 'open', ...emptySession } },
-  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
+  args: { state: 'open', ...emptySession },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
 // The Connection is down: the draft stays editable but Send waits.
 export const Disconnected: Story = {
   args: {
-    view: {
-      state: 'open',
-      ...idleSession,
-      composer: { ...idleSession.composer, sendable: false },
-    },
+    state: 'open',
+    ...idleSession,
+    composer: { ...idleSession.composer, sendable: false },
   },
 };
 
 // Archived: the Feed reads as before; a banner takes the Composer's place.
 export const Archived: Story = {
-  args: { view: { state: 'open', ...idleSession, archived: true } },
+  args: { state: 'open', ...idleSession, archived: true },
 };
 
 // Files dragged over the window: the pane below the header shows where they land, and the Feed recedes behind the label.
 export const DraggingFiles: Story = {
+  args: { state: 'open', ...runningSession },
   play: async ({ canvasElement }) => {
     const transfer = new DataTransfer();
 
@@ -108,35 +73,34 @@ export const DraggingFiles: Story = {
   },
 };
 
-export const Opening: Story = { args: { view: { state: 'opening' } } };
+export const Opening: Story = { args: { state: 'opening' } };
 
 // The page behind the failure's toast stays blank, whether or not the Server gave a reason.
-export const Failed: Story = { args: { view: { state: 'failed' } } };
+export const Failed: Story = { args: { state: 'failed' } };
 
+// The Elicitation's sheet takes the Composer's place until the reader answers.
 export const Elicitation: Story = {
   args: {
-    view: {
-      state: 'open',
-      ...runningSession,
-      header: { ...runningSession.header, status: 'needs_input' },
-      composer: {
-        ...runningSession.composer,
-        configuration: runningSession.composer.configuration && {
-          ...runningSession.composer.configuration,
-          turnRunning: true,
-        },
+    state: 'open',
+    ...runningSession,
+    header: { ...runningSession.header, status: 'needs_input' },
+    composer: {
+      ...runningSession.composer,
+      configuration: runningSession.composer.configuration && {
+        ...runningSession.composer.configuration,
+        turnRunning: true,
       },
-      elicitation: elicitationProps({
-        request: questionsRequest,
-        values: questionsValues,
-      }),
     },
+    elicitation: elicitationProps({
+      request: questionsRequest,
+      values: questionsValues,
+    }),
   },
-  render: ({ view }): React.JSX.Element => <ElicitationPreview {...view} />,
+  render: (args): React.JSX.Element => <ElicitationPreview {...args} />,
 };
 
 // The header opens the same Subagents list as the phone Composer, inside the Frame's Inspector.
 export const Subagents: Story = {
-  args: { view: subagentsSession },
-  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
+  args: subagentsSession,
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
