@@ -103,12 +103,28 @@ function NativeGlyph(props: IconButtonProps): ReactElement {
   );
 }
 
+// Radix triggers clone their child with handlers, aria state and a ref, so whatever the control does not own passes to the Pressable.
 function WebIconButton(props: IconButtonProps): ReactElement {
+  const {
+    icon,
+    size,
+    variant,
+    selected,
+    muted,
+    accessibilityLabel,
+    disabled,
+    onPress,
+    testID,
+    ...forwarded
+  } = props as IconButtonProps & Record<string, unknown>;
+
   return (
     <Pressable
+      {...forwarded}
       accessibilityRole="button"
       accessibilityLabel={props.accessibilityLabel}
       disabled={props.disabled ?? false}
+      aria-pressed={props.selected}
       onPress={props.onPress}
       testID={props.testID}
       className={cn(webClass, sizeOf(props).webClass, ghostClass(props))}
