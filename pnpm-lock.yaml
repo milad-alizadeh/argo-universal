@@ -591,8 +591,8 @@ catalogs:
       specifier: 7.0.2
       version: 7.0.2
     uniwind:
-      specifier: 1.12.1
-      version: 1.12.1
+      specifier: 1.13.0
+      version: 1.13.0
     vaul:
       specifier: 1.1.2
       version: 1.1.2
@@ -859,7 +859,7 @@ importers:
         version: 1.4.0
       uniwind:
         specifier: 'catalog:'
-        version: 1.12.1(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
+        version: 1.13.0(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
     devDependencies:
       '@chromatic-com/storybook':
         specifier: 'catalog:'
@@ -1067,7 +1067,7 @@ importers:
         version: 1.4.0
       uniwind:
         specifier: 'catalog:'
-        version: 1.12.1(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
+        version: 1.13.0(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
     devDependencies:
       '@gorhom/bottom-sheet':
         specifier: 'catalog:'
@@ -1252,7 +1252,7 @@ importers:
         version: 15.16.0(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
       uniwind:
         specifier: 'catalog:'
-        version: 1.12.1(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
+        version: 1.13.0(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
       zod:
         specifier: 'catalog:'
         version: 4.6.5
@@ -1632,7 +1632,7 @@ importers:
         version: 3.7.0
       uniwind:
         specifier: 'catalog:'
-        version: 1.12.1(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
+        version: 1.13.0(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
       vaul:
         specifier: 'catalog:'
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -9417,8 +9417,8 @@ packages:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
 
-  uniwind@1.12.1:
-    resolution: {integrity: sha512-u0OVMVqefGchOpsPIwIYvcF2Jl9JtVVaXBb+wfqAYoyLrhN27Ll50aQ7aFT81k73JSq+He6dNlcbTl2Qb9cTMw==}
+  uniwind@1.13.0:
+    resolution: {integrity: sha512-kr9mFYQIUmYlyV6Pm663EsE9UVJSRZM1XYOwQ8BVUpRIhfKw6dOoqqZCFzCj9PqVIcVXY16J702C8rFmUjNR6Q==}
     hasBin: true
     peerDependencies:
       '@expo/metro-config': '*'
@@ -17712,7 +17712,7 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  uniwind@1.12.1(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3):
+  uniwind@1.13.0(@expo/metro-config@57.0.12(expo@58.0.17)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(patch_hash=02e3baf05e188460967bd58f916b8744d7bc230d3106c840aa778c8ebdfd9831)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3):
     dependencies:
       '@tailwindcss/node': 4.3.3
       '@tailwindcss/oxide': 4.3.3
