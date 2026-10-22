@@ -86,6 +86,18 @@ const vitePlugins = (): PluginOption[] => [
   }),
 ];
 
+const OPTIMIZE_DEPS = {
+  include: PREBUNDLED_DEPENDENCIES,
+  rolldownOptions: {
+    plugins: [
+      expoDeclarationImports,
+      expoSymbolsWebImports,
+      reactNativeSvgWebImports,
+    ],
+    moduleTypes: { '.ts': 'ts' },
+  },
+} as const;
+
 const config: StorybookConfig & {
   reactNativeServerOptions: { host: string; port: number };
 } = {
@@ -130,17 +142,7 @@ const config: StorybookConfig & {
       // Resolve public font URLs during CSS compilation; staticDirs copies the files.
       publicDir: `${import.meta.dirname}/../../universal-app/public`,
       build: { copyPublicDir: false },
-      optimizeDeps: {
-        include: PREBUNDLED_DEPENDENCIES,
-        rolldownOptions: {
-          plugins: [
-            expoDeclarationImports,
-            expoSymbolsWebImports,
-            reactNativeSvgWebImports,
-          ],
-          moduleTypes: { '.ts': 'ts' },
-        },
-      },
+      optimizeDeps: OPTIMIZE_DEPS,
       resolve: VITE_RESOLVE,
       plugins: vitePlugins(),
     });

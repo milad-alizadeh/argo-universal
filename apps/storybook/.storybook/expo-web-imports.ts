@@ -54,9 +54,18 @@ interface Rewrite {
   to: string;
 }
 
-const webImports = (name: string, rewrites: readonly Rewrite[]) => ({
+interface WebImports {
+  name: string;
+  enforce: 'pre';
+  transform(code: string, id: string): ModuleRewrite | undefined;
+}
+
+const webImports = (
+  name: string,
+  rewrites: readonly Rewrite[],
+): WebImports => ({
   name,
-  enforce: 'pre' as const,
+  enforce: 'pre',
   transform(code: string, id: string): ModuleRewrite | undefined {
     const rewrite = rewrites.find(({ file }) =>
       modulePathOf(id)?.endsWith(file),
