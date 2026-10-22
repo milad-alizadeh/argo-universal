@@ -81,6 +81,23 @@ export const expoSymbolsWebImports = webImports(
   expoSymbolsRewrites,
 );
 
+/*
+ * Worklets reads NODE_ENV to spot Jest, and Vitest sets it to "test". Its Jest
+ * path swaps the global requestAnimationFrame for a setTimeout shim and drains
+ * the UI queue synchronously, so a frame stops waiting for the browser to
+ * redraw. The stories run in a real browser, where neither belongs.
+ */
+export const reactNativeWorkletsWebImports = webImports(
+  'react-native-worklets-web-imports',
+  [
+    {
+      file: '/react-native-worklets/lib/module/platformChecker.js',
+      from: "typeof globalThis.jest !== 'undefined' || process.env.NODE_ENV === 'test'",
+      to: "typeof globalThis.jest !== 'undefined'",
+    },
+  ],
+);
+
 // SvgTouchableMixin requires this native module inside a function, which the bundle hoists; the web never plays the touch sound.
 export const reactNativeSvgWebImports = webImports(
   'react-native-svg-web-imports',

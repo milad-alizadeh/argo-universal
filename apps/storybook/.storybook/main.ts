@@ -10,6 +10,7 @@ import {
   expoDeclarationImports,
   expoSymbolsWebImports,
   reactNativeSvgWebImports,
+  reactNativeWorkletsWebImports,
 } from './expo-web-imports.ts';
 
 function getAbsolutePath(value: string): string {
@@ -39,6 +40,14 @@ const PREBUNDLED_DEPENDENCIES = [
   '@repo/kit > expo-audio',
   '@repo/kit > expo-symbols/androidWeights/extraLight',
   'storybook/actions',
+];
+
+// Dependency files Metro reads one way and the web build another; both the server and the dependency pre-bundle need them.
+const WEB_IMPORT_REWRITES = [
+  expoDeclarationImports,
+  expoSymbolsWebImports,
+  reactNativeSvgWebImports,
+  reactNativeWorkletsWebImports,
 ];
 
 const PRIMITIVES_FOLDER = `${import.meta.dirname}/../../../packages/kit/src/primitives`;
@@ -72,9 +81,7 @@ const VITE_RESOLVE = {
 };
 
 const vitePlugins = (): PluginOption[] => [
-  expoDeclarationImports,
-  expoSymbolsWebImports,
-  reactNativeSvgWebImports,
+  ...WEB_IMPORT_REWRITES,
   sfSymbolImages,
   // A logo SVG imports as a react-native-svg component, as Metro's react-native-svg-transformer gives the app (ADR-0019).
   svgr({ include: '**/*.svg', svgrOptions: { native: true } }),
@@ -89,11 +96,7 @@ const vitePlugins = (): PluginOption[] => [
 const OPTIMIZE_DEPS = {
   include: PREBUNDLED_DEPENDENCIES,
   rolldownOptions: {
-    plugins: [
-      expoDeclarationImports,
-      expoSymbolsWebImports,
-      reactNativeSvgWebImports,
-    ],
+    plugins: WEB_IMPORT_REWRITES,
     moduleTypes: { '.ts': 'ts' },
   },
 } as const;
