@@ -85,6 +85,7 @@
     "react-native-reanimated": "catalog:",
     "react-native-safe-area-context": "catalog:",
     "react-native-svg": "catalog:",
+    "react-native-worklets": "catalog:",
     "sonner": "catalog:",
     "tailwind-merge": "catalog:",
     "uniwind": "catalog:",

@@ -16,7 +16,8 @@
     "**/.rnstorybook/storybook.requires.ts",
     "**/uniwind-types.d.ts",
     "packages/db/drizzle/**",
-    "tooling/oxlint/anti-slop/**"
+    "tooling/oxlint/anti-slop/**",
+    "packages/kit/src/primitives/status/orb/engine/**"
   ],
   "reasons": {
     "ignore": {
@@ -24,6 +25,7 @@
       "*.stories.tsx": "Stories repeat the same render shape by design.",
       "tests, mocks, e2e, tools": "Not production logic; a new-clones-only gate for tests comes later.",
       "tooling/oxlint/anti-slop": "Vendored upstream code; tooling/oxlint/anti-slop/UPSTREAM.md records its source.",
+      "packages/kit/src/primitives/status/orb/engine": "Ported line for line from RareFormLabs/thinking-orbs (MIT); ADR-0017 keeps it diffable against the original.",
       "generated files": "Fix the generator, not the output: *.gen.*, storybook.requires.ts, uniwind-types.d.ts, packages/db/drizzle."
     },
     "baseline": "The one entry in .jscpd-baseline.json is the Claude and Codex converter row helpers; each adapter keeps its own, and a shared helper would be shallow."

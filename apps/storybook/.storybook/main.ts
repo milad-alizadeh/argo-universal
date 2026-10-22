@@ -108,7 +108,15 @@ const config: StorybookConfig & {
   ],
   reactNativeServerOptions: { host: '127.0.0.1', port: 7007 },
   typescript: { reactDocgen: 'react-docgen' },
-  framework: getAbsolutePath('@storybook/react-native-web-vite'),
+  framework: {
+    name: getAbsolutePath('@storybook/react-native-web-vite'),
+    options: {
+      // Reanimated's Babel plugin, as Storybook's react-native-web-vite guide sets it; without it no derived value updates on web.
+      pluginReactOptions: {
+        babel: { plugins: ['react-native-worklets/plugin'] },
+      },
+    },
+  },
   // Uniwind styles the screens; the Vitest addon reuses this hook.
   viteFinal(config) {
     return mergeConfig(config, {
