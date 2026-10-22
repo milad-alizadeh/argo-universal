@@ -11,6 +11,7 @@ import {
 import { iconButtonDefaults } from '@repo/contracts/kit-tokens';
 import type { ComponentProps, ReactElement } from 'react';
 import type { SFSymbol } from 'sf-symbols-typescript';
+import { liquidGlassAvailable } from '#primitives/content/liquid-glass';
 import { Host } from '#primitives/native/host';
 import { useIconPixels } from '../../../symbols/icon-role';
 import { nativeIconName } from '../../../symbols/native-icon-name';
@@ -24,11 +25,20 @@ type Variant = NonNullable<IconButtonProps['variant']>;
 
 type Size = NonNullable<IconButtonProps['size']>;
 
-const styles = {
+const glassStyles = {
   primary: 'glassProminent',
   secondary: 'glass',
   ghost: 'borderless',
 } as const satisfies Record<Variant, Parameters<typeof buttonStyle>[0]>;
+
+// Before iOS 26 the glass styles draw nothing, so a button takes the bordered looks that have a filled or tinted circle.
+const borderedStyles = {
+  primary: 'borderedProminent',
+  secondary: 'bordered',
+  ghost: 'borderless',
+} as const satisfies Record<Variant, Parameters<typeof buttonStyle>[0]>;
+
+const styles = liquidGlassAvailable ? glassStyles : borderedStyles;
 
 // Expo UI's SwiftUI Button with `labelStyle('iconOnly')`: the label stays as the spoken name and the system draws the icon alone.
 export function IconButton(props: IconButtonProps): ReactElement {
