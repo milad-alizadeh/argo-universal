@@ -14,7 +14,7 @@ export const deniedOutcome = {
 } satisfies PermissionOutcomeFixture;
 
 // An ACP Agent named its own allow option and the user chose it.
-export const otherAllowOptionOutcome = {
+export const choseAnotherAllowOptionOutcome = {
   outcome: {
     outcome: 'selected',
     optionId: 'allow-always',
@@ -24,7 +24,7 @@ export const otherAllowOptionOutcome = {
 } satisfies PermissionOutcomeFixture;
 
 // An ACP Agent named its own reject option and the user chose it.
-export const otherRejectOptionOutcome = {
+export const choseAnotherRejectOptionOutcome = {
   outcome: {
     outcome: 'selected',
     optionId: 'reject-always',
