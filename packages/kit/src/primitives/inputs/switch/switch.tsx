@@ -1,12 +1,7 @@
 import type * as React from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, type KeyDownEvent } from 'react-native';
 import { cn } from '#kit/utils';
 import type { SwitchProps } from './switch-props';
-
-// React Native's types leave out the web's keyboard handler, which React Native Web passes to the element.
-type SwitchWebProps = React.ComponentProps<typeof Pressable> & {
-  onKeyDown: React.KeyboardEventHandler;
-};
 
 /*
  * The web's switch, drawn by Argo on the ARIA switch pattern: role `switch`, `aria-checked`, a press or Space
@@ -28,7 +23,10 @@ function Switch(props: SwitchProps): React.JSX.Element {
   );
 }
 
-function switchState(props: SwitchProps, toggle: () => void): SwitchWebProps {
+function switchState(
+  props: SwitchProps,
+  toggle: () => void,
+): React.ComponentProps<typeof Pressable> {
   return {
     onKeyDown: spaceToggles(toggle, props.disabled),
     role: 'switch',
@@ -44,22 +42,25 @@ function switchState(props: SwitchProps, toggle: () => void): SwitchWebProps {
 function spaceToggles(
   toggle: () => void,
   disabled: boolean | undefined,
-): React.KeyboardEventHandler {
+): NonNullable<React.ComponentProps<typeof Pressable>['onKeyDown']> {
   return (event) => {
     if (!isOwnSpace(event)) return;
     // The page would scroll on Space.
     event.preventDefault();
 
-    if (canToggle(disabled, event.repeat)) toggle();
+    if (canToggle(disabled, event.nativeEvent.repeat)) toggle();
   };
 }
 
-function canToggle(disabled: boolean | undefined, repeat: boolean): boolean {
+function canToggle(
+  disabled: boolean | undefined,
+  repeat: boolean | undefined,
+): boolean {
   return !disabled && !repeat;
 }
 
-function isOwnSpace(event: React.KeyboardEvent): boolean {
-  return event.key === ' ' && event.target === event.currentTarget;
+function isOwnSpace(event: KeyDownEvent): boolean {
+  return event.nativeEvent.key === ' ' && event.target === event.currentTarget;
 }
 
 function switchClass(props: SwitchProps): string {

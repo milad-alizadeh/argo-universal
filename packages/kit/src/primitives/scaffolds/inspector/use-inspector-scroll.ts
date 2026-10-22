@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import type { ScrollView, View } from 'react-native';
+import type { ScrollViewInstance, ViewInstance } from 'react-native';
 import type { ScrollFadeViewProps } from '../../../scroll-fade/scroll-fade';
 import type { InspectorBodyProps } from './inspector-pane';
 import { inspectorScrollIntent } from './inspector-scroll-intent';
@@ -18,8 +18,8 @@ type SizeHandler = NonNullable<ScrollFadeViewProps['onContentSizeChange']>;
 type ScrollHandler = NonNullable<ScrollFadeViewProps['onScroll']>;
 
 type Elements = {
-  ref: React.RefObject<ScrollView | null>;
-  contentRef: React.RefObject<View | null>;
+  ref: React.RefObject<ScrollViewInstance | null>;
+  contentRef: React.RefObject<ViewInstance | null>;
 };
 
 type Measures = Pick<
@@ -73,8 +73,8 @@ function useController(state: State): ScrollRestoration {
 }
 
 function useScrollElements(): Elements {
-  const ref = useRef<ScrollView>(null);
-  const contentRef = useRef<View>(null);
+  const ref = useRef<ScrollViewInstance>(null);
+  const contentRef = useRef<ViewInstance>(null);
 
   return { ref, contentRef };
 }

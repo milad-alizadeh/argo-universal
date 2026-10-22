@@ -5,10 +5,10 @@ import {
   useState,
   type RefObject,
 } from 'react';
-import { View, type LayoutChangeEvent } from 'react-native';
+import { type LayoutChangeEvent, type ViewInstance } from 'react-native';
 
 interface ContentMeasurement {
-  content: RefObject<View | null>;
+  content: RefObject<ViewInstance | null>;
   contentHeight: RefObject<number>;
   renderedHeight: number;
   measured: boolean;
@@ -16,7 +16,7 @@ interface ContentMeasurement {
 }
 
 function measureContent(
-  content: RefObject<View | null>,
+  content: RefObject<ViewInstance | null>,
   recordHeight: (height: number) => void,
 ): void {
   content.current?.measure((...measurements) => {
@@ -44,7 +44,7 @@ function useMeasuredHeight(): Omit<
 }
 
 export function useContentMeasurement(open: boolean): ContentMeasurement {
-  const content = useRef<View>(null);
+  const content = useRef<ViewInstance>(null);
   const { recordHeight, ...measurement } = useMeasuredHeight();
   useLayoutEffect(() => {
     if (open && !measurement.measured) measureContent(content, recordHeight);

@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react';
-import type { View } from 'react-native';
+import type { ViewInstance } from 'react-native';
 import type { ListVisibility } from './list-visibility';
 
 // The browser observer includes clipping by every enclosing scroll view.
 export function useListVisibility(): ListVisibility {
   const [visible, setVisible] = useState(false);
 
-  const attach = useCallback((node: View | null) => {
+  const attach = useCallback((node: ViewInstance | null) => {
     if (!(node instanceof Element)) return;
 
     const observer = new IntersectionObserver(([entry]) => {

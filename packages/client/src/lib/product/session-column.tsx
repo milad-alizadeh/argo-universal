@@ -1,7 +1,7 @@
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { Ref } from 'react';
-import { View, type ViewProps } from 'react-native';
+import { type ViewProps, View, type ViewInstance } from 'react-native';
 import { filledClass } from './session-fill';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
@@ -14,7 +14,7 @@ const paneClass = (fill: boolean | undefined): string =>
 export function SessionColumn({
   fill,
   ...props
-}: ViewProps & { ref?: Ref<View>; fill?: boolean }): React.JSX.Element {
+}: ViewProps & { ref?: Ref<ViewInstance>; fill?: boolean }): React.JSX.Element {
   return (
     <View pointerEvents={props.pointerEvents} className={paneClass(fill)}>
       <View
@@ -30,7 +30,7 @@ export function SessionColumn({
 // A filled column runs the pane's height, as a plan read full page does.
 export function ComposerColumn(
   props: Pick<ViewProps, 'onLayout' | 'children'> & {
-    ref?: Ref<View>;
+    ref?: Ref<ViewInstance>;
     fill?: boolean;
   },
 ): React.JSX.Element {

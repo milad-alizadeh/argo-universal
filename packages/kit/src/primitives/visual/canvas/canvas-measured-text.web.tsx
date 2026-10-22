@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import type { Text as NativeText } from 'react-native';
+import type { TextInstance } from 'react-native';
 import { Text } from '#primitives/content/text';
 import type {
   MeasuredTextProps,
@@ -29,7 +29,7 @@ function observe(
   return () => observer.disconnect();
 }
 
-type TextRef = React.RefCallback<NativeText>;
+type TextRef = React.RefCallback<TextInstance>;
 
 function useTextNode(): [HTMLElement | null, TextRef] {
   const [node, setNode] = useState<HTMLElement | null>(null);

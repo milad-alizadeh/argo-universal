@@ -1,6 +1,6 @@
 import { textRoles } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
-import type { Text as RNText } from 'react-native';
+import type { Text as RNText, TextInstance } from 'react-native';
 import type { KitProps } from '../../kit-props';
 
 export { textRoles };
@@ -11,7 +11,7 @@ export type TextProps = Omit<
   React.ComponentProps<typeof RNText>,
   keyof KitProps<'Text'> | 'accessibilityRole'
 > &
-  React.RefAttributes<RNText> &
+  React.RefAttributes<TextInstance> &
   KitProps<'Text'> & {
     // De-emphasized supporting text, using the tertiary token.
     dimmed?: boolean;

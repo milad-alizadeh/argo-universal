@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { Platform } from 'react-native';
 import { useSizeClassValue } from '../use-size-class/use-size-class-value';
+import { assignRef, useLegendScrollRef } from './legend-scroll-ref';
 import { MeasuredLegendList } from './remeasure-after-entrance';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import {
@@ -117,11 +118,6 @@ function useFrameSize(
   };
 }
 
-const assignRef = <T,>(ref: Ref<T> | undefined, instance: T | null): void => {
-  if (typeof ref === 'function') ref(instance);
-  else if (ref) ref.current = instance;
-};
-
 // One ref that sets both.
 function useBothRefs<T>(
   first: Ref<T> | undefined,
@@ -147,7 +143,7 @@ function useFadingList<T>({
   ...props
 }: Omit<ScrollFadeListProps<T>, 'ref' | 'maxHeight'>): FadingList<T> {
   const fade = useScrollFade(useSizeClassListProps(props));
-  const scrollRef = useBothRefs(fade.attachScrollView, refScrollView);
+  const scrollRef = useLegendScrollRef(fade.attachScrollView, refScrollView);
   const scroll = { ...fade.scroll, refScrollView: scrollRef };
 
   return {

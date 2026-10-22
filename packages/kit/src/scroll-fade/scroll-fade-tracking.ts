@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { ScrollView } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import {
   type AnimatedRef,
   type SharedValue,
@@ -10,10 +10,10 @@ import {
 import type { ScrollFadeTracking } from './scroll-fade-options';
 
 function useAttach(
-  scrollView: AnimatedRef<ScrollView>,
-): (instance: ScrollView | null) => void {
+  scrollView: AnimatedRef<ScrollViewInstance>,
+): (instance: ScrollViewInstance | null) => void {
   return useCallback(
-    (instance: ScrollView | null) => {
+    (instance: ScrollViewInstance | null) => {
       if (instance) scrollView(instance);
     },
     [scrollView],
@@ -41,7 +41,7 @@ function useContentLength(horizontal: boolean): ContentLength {
 export function useScrollFadeTracking(
   horizontal = false,
 ): Required<ScrollFadeTracking> {
-  const scrollView = useAnimatedRef<ScrollView>();
+  const scrollView = useAnimatedRef<ScrollViewInstance>();
   const offset = useScrollOffset(scrollView);
   const viewport = useSharedValue(0);
   const { content, onContentSizeChange } = useContentLength(horizontal);

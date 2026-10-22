@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useWindowDimensions, type View } from 'react-native';
+import { useWindowDimensions, type ViewInstance } from 'react-native';
 import type { ListVisibility } from './list-visibility';
 import { observeNativeVisibility } from './native-visibility';
 
 // Host-tree measurements include every enclosing native ScrollView, even outside the kit.
 export function useListVisibility(): ListVisibility {
-  const [node, attach] = useState<View | null>(null);
+  const [node, attach] = useState<ViewInstance | null>(null);
   const [visible, report] = useState(false);
   const { width, height } = useWindowDimensions();
 

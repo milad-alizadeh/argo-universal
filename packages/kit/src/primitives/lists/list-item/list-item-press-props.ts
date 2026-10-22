@@ -1,4 +1,4 @@
-import type { ComponentProps, KeyboardEventHandler, ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
@@ -12,12 +12,15 @@ export interface DrawingProps extends PlacedContentProps {
   content?: ReactNode;
 }
 
+export type RowKeyDown = NonNullable<
+  ComponentProps<typeof Pressable>['onKeyDown']
+>;
+
 export type RowPressProps = ComponentProps<typeof Pressable> &
   Pick<
     ListItemProps,
     'href' | 'aria-haspopup' | 'aria-expanded' | 'aria-controls'
   > & {
-    onKeyDown?: KeyboardEventHandler;
     'aria-pressed'?: boolean;
     'aria-current'?: 'page';
   };

@@ -1,7 +1,7 @@
 import { liquidGlassAvailable } from '@repo/kit/primitives/content/liquid-glass';
 import { type SpacingToken, useSpacing } from '@repo/kit/use-spacing';
 import { createContext, useCallback, useContext, useState } from 'react';
-import type { LayoutChangeEvent, View } from 'react-native';
+import type { LayoutChangeEvent, ViewInstance } from 'react-native';
 import { useKeyboardState } from 'react-native-keyboard-controller';
 import { useContentWide } from './content-layout';
 
@@ -47,7 +47,7 @@ export function useComposerFadeDepth(atEnd: boolean): number {
 
 export interface GlassCover {
   cover: number;
-  measureComposer: (view: View | null) => void;
+  measureComposer: (view: ViewInstance | null) => void;
   onComposerLayout: (event: LayoutChangeEvent) => void;
 }
 
@@ -58,7 +58,7 @@ function useComposerHeight(): Omit<GlassCover, 'cover'> & {
   const [height, setHeight] = useState<number>();
 
   // Fabric measures synchronously while the ref attaches, before the first paint, so the Feed's end never draws against a guess.
-  const measureComposer = useCallback((view: View | null) => {
+  const measureComposer = useCallback((view: ViewInstance | null) => {
     view?.measure((...box: number[]) => setHeight(box[3]));
   }, []);
 

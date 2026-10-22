@@ -1,6 +1,12 @@
 import type * as React from 'react';
 import { type RefObject, useRef } from 'react';
-import { Pressable, type TextInput, View } from 'react-native';
+import {
+  Pressable,
+  type TextInputInstance,
+  type TextInput,
+  View,
+  type ViewInstance,
+} from 'react-native';
 import { iconButtonClasses } from '#primitives/actions/icon-button';
 import { Lens } from './search-field-lens';
 import { type MorphState, OpenField } from './search-field-parts';
@@ -21,14 +27,14 @@ export interface ControlsProps {
   onTriggerLayout: LayoutHandler;
 }
 
-type TriggerRef = RefObject<View | null>;
+type TriggerRef = RefObject<ViewInstance | null>;
 
-type InputRef = RefObject<TextInput | null>;
+type InputRef = RefObject<TextInputInstance | null>;
 
 // Closing hands focus back to the search button, so the keyboard keeps its place.
 export function SearchControls(props: ControlsProps): React.JSX.Element {
-  const input = useRef<TextInput>(null);
-  const trigger = useRef<View>(null);
+  const input = useRef<TextInputInstance>(null);
+  const trigger = useRef<ViewInstance>(null);
   const close = useCloseSearch(props, input, trigger);
   const open = useOpenSearch(props.setOpen, input);
 

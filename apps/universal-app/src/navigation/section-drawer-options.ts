@@ -2,14 +2,14 @@ import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import {
   getFocusedRouteNameFromRoute,
   type ParamListBase,
-  type RouteProp,
+  type DescriptorRouteProp,
 } from 'expo-router/react-navigation';
 import { Platform } from 'react-native';
 
 // Android's back gesture owns the screen edge, so there only ☰ opens the drawer.
 const edgeSwipeOpens = Platform.OS === 'ios';
 
-const atSectionRoot = (route: RouteProp<ParamListBase>): boolean =>
+const atSectionRoot = (route: DescriptorRouteProp<ParamListBase>): boolean =>
   (getFocusedRouteNameFromRoute(route) ?? 'index') === 'index';
 
 // A pushed page, and every page of a wide window, keeps its stack's header; its edge swipe goes back.
@@ -28,5 +28,9 @@ export const drawerRootOptions: DrawerNavigationOptions = {
 // Each section's options on the Frame's drawer: only its root keeps the edge swipe that opens the drawer.
 export const drawerScreenOptions =
   (framed: boolean) =>
-  ({ route }: { route: RouteProp<ParamListBase> }): DrawerNavigationOptions =>
+  ({
+    route,
+  }: {
+    route: DescriptorRouteProp<ParamListBase>;
+  }): DrawerNavigationOptions =>
     framed || !atSectionRoot(route) ? stackOwnsHeader : drawerRootOptions;

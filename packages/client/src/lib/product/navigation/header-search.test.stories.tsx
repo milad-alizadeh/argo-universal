@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { NavigationContainer } from 'expo-router/build/fork/NavigationContainer.js';
 import {
   DefaultTheme,
   Header,
-  NavigationContainer,
   SafeAreaProviderCompat,
 } from 'expo-router/react-navigation';
 import type * as React from 'react';

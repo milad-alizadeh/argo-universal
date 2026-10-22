@@ -1,4 +1,4 @@
-import type { ScrollView } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
 // A vertical scroll view's edges are its top and bottom; a horizontal one's, its leading and trailing.
@@ -78,7 +78,7 @@ export interface ScrollFadeMetrics {
 // What a scroll view and its ScrollFadeFrame share. The web needs none of it.
 export interface ScrollFadeTracking {
   // For the scroll view's ref, or a Legend List's `refScrollView`.
-  attachScrollView?: (scrollView: ScrollView | null) => void;
+  attachScrollView?: (scrollView: ScrollViewInstance | null) => void;
   onContentSizeChange?: SizeChange;
   metrics?: ScrollFadeMetrics;
 }

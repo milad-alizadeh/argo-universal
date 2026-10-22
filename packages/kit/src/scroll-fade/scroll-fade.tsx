@@ -1,5 +1,9 @@
 import { useCallback, type RefObject, type JSX } from 'react';
-import { ScrollView, type ScrollViewProps } from 'react-native';
+import {
+  ScrollView,
+  type ScrollViewInstance,
+  type ScrollViewProps,
+} from 'react-native';
 import { cn } from '#kit/utils';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import type { ScrollFadeOptions } from './scroll-fade-options';
@@ -9,7 +13,7 @@ export type ScrollFadeViewProps = ScrollViewProps &
   ScrollFadeOptions & {
     // Grows with its content up to the max height in `className`, then scrolls; otherwise it fills its parent. A horizontal one always fits its content's height.
     fitContent?: boolean;
-    ref?: RefObject<ScrollView | null>;
+    ref?: RefObject<ScrollViewInstance | null>;
   };
 
 interface Sizing {
@@ -66,9 +70,9 @@ export function ScrollFadeView({
 }
 
 function useScrollRef(
-  attach: ((view: ScrollView | null) => void) | undefined,
-  ref: RefObject<ScrollView | null> | undefined,
-): (view: ScrollView | null) => void {
+  attach: ((view: ScrollViewInstance | null) => void) | undefined,
+  ref: RefObject<ScrollViewInstance | null> | undefined,
+): (view: ScrollViewInstance | null) => void {
   return useCallback(
     (view) => {
       attach?.(view);

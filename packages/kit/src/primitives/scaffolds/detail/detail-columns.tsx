@@ -5,7 +5,7 @@ import {
   type ReactElement,
   type RefObject,
 } from 'react';
-import { View, type LayoutChangeEvent } from 'react-native';
+import { type LayoutChangeEvent, View, type ViewInstance } from 'react-native';
 import type { DetailColumnsProps } from './detail-props';
 
 // The narrowest container that holds the content beside the 280 Metadata column.
@@ -37,13 +37,13 @@ export function DetailColumns(props: DetailColumnsProps): ReactElement {
 }
 
 interface ColumnsLayout {
-  ref: RefObject<View | null>;
+  ref: RefObject<ViewInstance | null>;
   layout: Layout;
   onLayout: (event: LayoutChangeEvent) => void;
 }
 
 function useColumnsLayout(): ColumnsLayout {
-  const ref = useRef<View>(null);
+  const ref = useRef<ViewInstance>(null);
   const [width, setWidth] = useState(0);
 
   // Measure before the first paint so a wide container never flashes the stacked layout.

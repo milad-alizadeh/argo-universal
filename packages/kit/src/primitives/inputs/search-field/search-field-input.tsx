@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { type ComponentProps, type RefObject, useRef } from 'react';
-import { TextInput, View } from 'react-native';
+import { TextInput, type TextInputInstance, View } from 'react-native';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import type { SearchQueryProps } from './search-field-props';
@@ -19,14 +19,14 @@ export function SearchFieldInput(props: SearchQueryProps): React.JSX.Element {
 }
 
 interface InputControls {
-  input: RefObject<TextInput | null>;
+  input: RefObject<TextInputInstance | null>;
   clear: () => void;
 }
 
 function useInputControls(
   onChangeText: SearchQueryProps['onChangeText'],
 ): InputControls {
-  const input = useRef<TextInput>(null);
+  const input = useRef<TextInputInstance>(null);
 
   return {
     input,
