@@ -7,12 +7,11 @@ import { Menu, type MenuAction } from './menu';
 import {
   choices,
   disabledMenu,
-  disabledOptionMenu,
-  loadingMenu,
   type MenuFixture,
   type Permission,
 } from './menu-fixtures';
 import { ViewOptionsMenu } from './menu-groups.mocks';
+import { MenuLoadingRow } from './menu-loading';
 import { MenuTrigger } from './menu-trigger';
 
 type PermissionsMenuProps = MenuFixture;
@@ -25,10 +24,9 @@ function PermissionsMenu(props: PermissionsMenuProps): React.JSX.Element {
     <Menu
       accessibilityLabel="Options"
       value={value}
-      options={props.options ?? choices}
+      options={choices}
       onValueChange={setValue}
       disabled={disabled}
-      loading={props.loading}
       trigger={renderPermissionsTrigger(disabled, labelOf(value))}
     />
   );
@@ -104,19 +102,16 @@ export const Disabled: Story = {
   render: () => <PermissionsMenu {...disabledMenu} />,
 };
 
-export const DisabledOption: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'The third option is shown but cannot be chosen.',
-      },
-    },
-  },
-  render: () => <PermissionsMenu {...disabledOptionMenu} />,
-};
-
+/*
+ * The one row an open menu draws while its options load: the trigger says nothing of it, so the
+ * story draws the row at the width the menu gives it.
+ */
 export const Loading: Story = {
-  render: () => <PermissionsMenu {...loadingMenu} />,
+  render: () => (
+    <View className="w-65">
+      <MenuLoadingRow />
+    </View>
+  ),
 };
 
 // Two headed groups of choices in one menu.

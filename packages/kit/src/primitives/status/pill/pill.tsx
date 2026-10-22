@@ -5,8 +5,11 @@ import { Text, type Tone } from '#primitives/content/text';
 import type { PillProps } from './pill-props';
 
 const fills = {
-  // Tint, not muted: a muted fill vanishes on the neutral-100 content surface.
-  neutral: 'bg-tint',
+  /*
+   * Muted takes the tint because a muted fill vanishes on the neutral-100 content surface, and neutral
+   * stays the stronger of the two, as it is in every other tone map in the kit.
+   */
+  neutral: 'bg-foreground/14',
   muted: 'bg-tint',
   accent: 'bg-accent/10',
   info: 'bg-info/14',
@@ -16,9 +19,9 @@ const fills = {
   done: 'bg-done/14',
 } satisfies Record<Tone, string>;
 
-// Neutral text is muted; warning text stays foreground, as amber text on amber reads poorly.
+// Warning text stays foreground, as amber text on amber reads poorly.
 const textTones = {
-  neutral: 'muted',
+  neutral: 'neutral',
   muted: 'muted',
   accent: 'accent',
   info: 'info',

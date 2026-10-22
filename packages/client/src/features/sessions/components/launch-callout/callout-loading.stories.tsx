@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { CalloutLoading } from './launch-callout';
 import {
   installing,
-  installingWithoutTotal,
   loading,
   loadingConfiguration,
 } from './launch-callout-fixtures';
@@ -24,8 +23,10 @@ export const Loading: Story = { args: loading };
 // Downloading the Agent, with how much of it has arrived.
 export const Installing: Story = { args: installing };
 
-// The same download before its total is known, so the bar runs on.
-export const InstallingWithoutTotal: Story = { args: installingWithoutTotal };
+/*
+ * No story for a download without a total: the Callout draws the same page either way, and the
+ * bar that sweeps instead of filling is ProgressBar's own Indeterminate story.
+ */
 
 // A step with no bar at all: the title alone.
 export const LoadingConfiguration: Story = { args: loadingConfiguration };

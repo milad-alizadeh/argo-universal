@@ -55,8 +55,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/*
+ * The closed trigger draws the same for every Plan, since it names the Plan only when the column
+ * is wide, so each story presses it to draw what its Plan reads like.
+ */
+const openPlan: Story['play'] = async ({ canvas, userEvent }) => {
+  await userEvent.click(canvas.getByRole('button', { name: 'Written plan' }));
+};
+
 // Markdown the Agent wrote out: the trigger takes its title and the Plan reads at full height.
-export const Document: Story = { args: { writtenPlan: markdownWrittenPlan } };
+export const Document: Story = {
+  args: { writtenPlan: markdownWrittenPlan },
+  play: openPlan,
+};
 
 // A Plan written to a file: the trigger names the file and its card is as tall as itself.
-export const UriOnly: Story = { args: { writtenPlan: planFileWrittenPlan } };
+export const UriOnly: Story = {
+  args: { writtenPlan: planFileWrittenPlan },
+  play: openPlan,
+};

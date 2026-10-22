@@ -3,7 +3,6 @@ import { kitArgTypes } from '#kit/kit-arg-types';
 import { Grid } from './grid';
 import {
   columnsPerSizeClassGrid,
-  fourColumnsGrid,
   narrowGapGrid,
   threeColumnsGrid,
   twoColumnsGrid,
@@ -23,8 +22,6 @@ type Story = StoryObj<typeof meta>;
 export const TwoColumns: Story = { args: twoColumnsGrid };
 
 export const ThreeColumns: Story = { args: threeColumnsGrid };
-
-export const FourColumns: Story = { args: fourColumnsGrid };
 
 export const NarrowGap: Story = { args: narrowGapGrid };
 

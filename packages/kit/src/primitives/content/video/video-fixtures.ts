@@ -6,7 +6,7 @@ const source = { pluginId: 'hello', hash, format: 'mp4' } as const;
 
 const poster = { pluginId: 'hello', hash, format: 'jpeg' } as const;
 
-export const withPosterVideo = {
+export const stillFrameVideo = {
   source,
   accessibilityLabel: 'Demo clip',
   poster,

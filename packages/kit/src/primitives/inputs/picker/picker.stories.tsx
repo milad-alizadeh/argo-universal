@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState } from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Picker } from './picker';
+import { MultipleExample, SingleExample } from './picker-examples';
 import {
   disabledPicker,
   loadingOptionsPicker,
@@ -17,31 +17,14 @@ import {
   multipleOptionsUnavailablePicker,
   multiplePreviousChoiceUnavailablePicker,
   multipleSeveralSelectedPicker,
-  noOptionsPicker,
-  optionsUnavailablePicker,
   placeholderPicker,
   previousChoiceUnavailablePicker,
   requiredWithErrorPicker,
   rowPicker,
-  searchableListPicker,
   selectedPicker,
 } from './picker-fixtures';
-import { MultipleExample } from './picker-multiple-examples';
-import type { SinglePickerProps } from './picker-props';
-
-// A Picker is controlled, so a story draws through a wrapper that keeps the choice.
-function PickerExample({
-  value: initial,
-  ...props
-}: SinglePickerProps<string>): React.JSX.Element {
-  const [value, setValue] = useState(initial);
-
-  return (
-    <View className="w-full max-w-96">
-      <Picker {...props} value={value} onValueChange={setValue} />
-    </View>
-  );
-}
+import { Choices } from './picker-multiple-choices';
+import type { MultiplePickerProps, SinglePickerProps } from './picker-props';
 
 /*
  * The meta is typed by the single Picker's props: `multiple` splits the props into a union, and the
@@ -53,12 +36,26 @@ const meta = {
   args: { ...placeholderPicker, onValueChange: (): void => {} },
   argTypes: kitArgTypes('Picker'),
   parameters: { screenPreview: true },
-  render: (args): React.JSX.Element => <PickerExample {...args} />,
+  render: (args): React.JSX.Element => <SingleExample {...args} />,
 } satisfies Meta<SinglePickerProps<string>>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+/*
+ * Nothing to choose from says nothing in the field, whose trigger keeps its placeholder, so those
+ * states are drawn where their message is: in the choices the Picker opens.
+ */
+function ChoicesExample(
+  props: Omit<MultiplePickerProps<string>, 'onValueChange'>,
+): React.JSX.Element {
+  return (
+    <View className="w-full max-w-96">
+      <Choices {...props} onValueChange={(): void => {}} />
+    </View>
+  );
+}
 
 export const Row: Story = {
   render: (args): React.JSX.Element => (
@@ -66,7 +63,7 @@ export const Row: Story = {
       <ListSection title="ListItem accessory">
         <ListItem
           title="Effort"
-          trailing={<PickerExample {...args} {...rowPicker} />}
+          trailing={<SingleExample {...args} {...rowPicker} />}
         />
       </ListSection>
     </List>
@@ -83,23 +80,8 @@ export const Disabled: Story = { args: disabledPicker };
 
 export const LoadingOptions: Story = { args: loadingOptionsPicker };
 
-export const NoOptions: Story = { args: noOptionsPicker };
-
-export const OptionsUnavailable: Story = { args: optionsUnavailablePicker };
-
 export const PreviousChoiceUnavailable: Story = {
   args: previousChoiceUnavailablePicker,
-};
-
-export const SearchableList: Story = {
-  args: searchableListPicker,
-  parameters: {
-    docs: {
-      description: {
-        story: 'Enough options to search, with long labels and a disabled one.',
-      },
-    },
-  },
 };
 
 export const MultipleNoneSelected: Story = {
@@ -134,13 +116,13 @@ export const MultipleLoadingOptions: Story = {
 
 export const MultipleNoOptions: Story = {
   render: (): React.JSX.Element => (
-    <MultipleExample {...multipleNoOptionsPicker} />
+    <ChoicesExample {...multipleNoOptionsPicker} />
   ),
 };
 
 export const MultipleOptionsUnavailable: Story = {
   render: (): React.JSX.Element => (
-    <MultipleExample {...multipleOptionsUnavailablePicker} />
+    <ChoicesExample {...multipleOptionsUnavailablePicker} />
   ),
 };
 

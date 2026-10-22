@@ -56,14 +56,6 @@ export const loadingOptionsPicker = {
   loading: true,
 } satisfies PickerFixture;
 
-export const noOptionsPicker = { label, options: [] } satisfies PickerFixture;
-
-export const optionsUnavailablePicker = {
-  label,
-  options,
-  loadError: 'Could not load options',
-} satisfies PickerFixture;
-
 export const previousChoiceUnavailablePicker = {
   label,
   options,

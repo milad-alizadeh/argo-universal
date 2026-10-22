@@ -2,10 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { severalPullRequests } from './session-pull-request.mocks';
-import { runningShells } from './shell-list/shell-list-fixtures';
-import { severalMixedSubagents } from './subagent-list/subagent-list-fixtures';
 import { WorkbenchColumn } from './workbench-column';
+import { allSections } from './workbench-column-fixtures';
 
 // Paper 24JC-0: Components / WorkbenchColumn at its product width.
 const meta = {
@@ -28,15 +26,7 @@ const meta = {
   },
   args: {
     panels: {
-      offered: ['changes', 'subagents', 'shells'],
-      counts: {
-        changes: severalPullRequests.length,
-        subagents: severalMixedSubagents.subagents.length,
-        shells: runningShells.shells.length,
-      },
-      pullRequests: severalPullRequests,
-      changesSummary: { files: 11, additions: 267, deletions: 61 },
-      agents: severalMixedSubagents,
+      ...allSections,
       onSelect: fn(),
       onToggle: fn(),
       onOpenChanges: fn(),

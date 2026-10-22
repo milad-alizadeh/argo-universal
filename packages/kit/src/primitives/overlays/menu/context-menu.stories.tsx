@@ -22,6 +22,13 @@ function ContextMenuExample(
 const meta = {
   title: 'Design System/Primitives/Overlays/ContextMenu',
   component: ContextMenuExample,
+  // No Contracts schema: the props ContextMenuProps declares, less the element it opens on.
+  argTypes: {
+    groups: { control: false },
+    groupTitles: { control: false },
+    title: { control: 'text' },
+    preview: { control: false },
+  },
   args: {
     groups: [
       [{ label: 'Rename', icon: 'rename', onPress: action('rename') }],

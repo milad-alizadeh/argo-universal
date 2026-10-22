@@ -6,6 +6,10 @@ import { pluginRows } from './plugin-settings.fixtures';
 const meta = {
   title: 'Screens/Settings/Plugins',
   component: PluginListView,
+  argTypes: {
+    caption: { control: 'text' },
+    plugins: { control: false },
+  },
   parameters: { screenPreview: true },
   args: {
     plugins: { status: 'loaded', plugins: pluginRows },

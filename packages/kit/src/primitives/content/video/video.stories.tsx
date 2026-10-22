@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
 import { Video } from './video';
-import { autoplayVideo, failedVideo, withPosterVideo } from './video-fixtures';
+import { autoplayVideo, failedVideo, stillFrameVideo } from './video-fixtures';
 
 // A source the browser refuses at once, with no network.
 const missing: MediaUrl = () => 'data:video/mp4;base64,AAAA';
@@ -17,7 +17,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithPoster: Story = { args: withPosterVideo };
+// At rest the frame holds the poster image, with the controls over it.
+export const StillFrame: Story = { args: stillFrameVideo };
 
 export const Autoplay: Story = {
   args: autoplayVideo,

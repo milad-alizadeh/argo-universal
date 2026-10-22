@@ -1,24 +1,25 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import {
-  savedSettings,
-  savedSettingsWithToken,
-  settingsSchema,
-} from '../plugin-settings.fixtures';
 import { PluginSettingsDetailView } from './plugin-settings-detail-view';
+import {
+  loadedPlugin,
+  pluginWithoutSettings,
+  pluginWithSecret,
+  turnedOffPlugin,
+} from './plugin-settings-detail-view-fixtures';
 
 const meta = {
   title: 'Screens/Settings/Plugin',
   component: PluginSettingsDetailView,
+  argTypes: {
+    title: { control: 'text' },
+    caption: { control: 'text' },
+    plugin: { control: false },
+  },
   parameters: { screenPreview: true },
   args: {
     title: 'GitHub',
-    plugin: {
-      status: 'loaded',
-      enabled: true,
-      fields: settingsSchema,
-      settings: savedSettings,
-    },
+    plugin: loadedPlugin,
     onEnabledChange: action('turn Plugin on or off'),
     onSettingChange: action('change setting'),
     onBack: action('back'),
@@ -31,38 +32,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const SecretSaved: Story = {
-  args: {
-    plugin: {
-      status: 'loaded',
-      enabled: true,
-      fields: settingsSchema,
-      settings: savedSettingsWithToken,
-    },
-  },
-};
+export const SecretSaved: Story = { args: { plugin: pluginWithSecret } };
 
-export const TurnedOff: Story = {
-  args: {
-    plugin: {
-      status: 'loaded',
-      enabled: false,
-      fields: settingsSchema,
-      settings: savedSettings,
-    },
-  },
-};
+export const TurnedOff: Story = { args: { plugin: turnedOffPlugin } };
 
 export const NoSettings: Story = {
-  args: {
-    title: 'Hello',
-    plugin: {
-      status: 'loaded',
-      enabled: true,
-      fields: [],
-      settings: { values: {}, secretsSet: [] },
-    },
-  },
+  args: { title: 'Hello', plugin: pluginWithoutSettings },
 };
 
 export const Loading: Story = { args: { plugin: { status: 'loading' } } };
