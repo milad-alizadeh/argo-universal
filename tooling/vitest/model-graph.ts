@@ -36,33 +36,42 @@ type GraphOptions<
 
 type AnyGraphOptions = GraphOptions<AnyActorLogic, EventObject>;
 
-export function getShortestPaths<
+type AnyPaths = (
+  logic: AnyActorLogic,
+  options?: AnyGraphOptions,
+) => StatePath<SnapshotOf<AnyActorLogic>, EventObject>[];
+
+type TypedPaths = <
   TLogic extends AnyActorLogic,
   TEvent extends GraphEventFromLogic<NoInfer<TLogic>> = EventFromLogic<TLogic>,
 >(
   logic: TLogic,
   options?: GraphOptions<TLogic, TEvent>,
-): StatePath<SnapshotOf<TLogic>, TEvent>[];
-export function getShortestPaths(
-  logic: AnyActorLogic,
-  options?: AnyGraphOptions,
-): StatePath<SnapshotOf<AnyActorLogic>, EventObject>[] {
-  return graph.getShortestPaths(logic, options);
+) => StatePath<SnapshotOf<TLogic>, TEvent>[];
+
+// Shortest and simple paths share one typed signature over the stock traversal.
+function typedPaths(traverse: AnyPaths): TypedPaths {
+  function paths<
+    TLogic extends AnyActorLogic,
+    TEvent extends GraphEventFromLogic<NoInfer<TLogic>> =
+      EventFromLogic<TLogic>,
+  >(
+    logic: TLogic,
+    options?: GraphOptions<TLogic, TEvent>,
+  ): StatePath<SnapshotOf<TLogic>, TEvent>[];
+  function paths(
+    logic: AnyActorLogic,
+    options?: AnyGraphOptions,
+  ): StatePath<SnapshotOf<AnyActorLogic>, EventObject>[] {
+    return traverse(logic, options);
+  }
+
+  return paths;
 }
 
-export function getSimplePaths<
-  TLogic extends AnyActorLogic,
-  TEvent extends GraphEventFromLogic<NoInfer<TLogic>> = EventFromLogic<TLogic>,
->(
-  logic: TLogic,
-  options?: GraphOptions<TLogic, TEvent>,
-): StatePath<SnapshotOf<TLogic>, TEvent>[];
-export function getSimplePaths(
-  logic: AnyActorLogic,
-  options?: AnyGraphOptions,
-): StatePath<SnapshotOf<AnyActorLogic>, EventObject>[] {
-  return graph.getSimplePaths(logic, options);
-}
+export const getShortestPaths = typedPaths(graph.getShortestPaths);
+
+export const getSimplePaths = typedPaths(graph.getSimplePaths);
 
 export function getAdjacencyMap<
   TLogic extends AnyActorLogic,
