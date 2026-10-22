@@ -14,7 +14,7 @@ export class RuntimePlugin {
   private source = { text: '', version: '' };
   private buildError: string | null = null;
   private generation = 0;
-  private pendingReload = false;
+  private deferredReplay: (() => void) | null = null;
   // Nothing is granted until the first activation names the manifest's Capabilities.
   private granted: ActivatedPlugin;
 
@@ -107,21 +107,22 @@ export class RuntimePlugin {
     if (this.source.version !== '') this.load();
   }
 
-  public async flushReload(): Promise<void> {
-    if (!this.pendingReload || this.closed) return;
-    this.pendingReload = false;
+  public flushReload(): void {
+    const replay = this.deferredReplay;
+    this.deferredReplay = null;
 
-    await this.rebuild();
+    if (replay && !this.closed) replay();
   }
 
-  private async rebuild(): Promise<void> {
-    // Build callbacks publish the refusal; the Turn ending still succeeds.
-    await this.build?.then((build) => build.rebuild()).catch(() => {});
-  }
+  private defer(replay: () => void): boolean {
+    if (this.generation === 0 || !this.input.deferReload()) {
+      // A build applying now supersedes anything deferred earlier.
+      this.deferredReplay = null;
 
-  private defer(): boolean {
-    if (this.generation === 0 || !this.input.deferReload()) return false;
-    this.pendingReload = true;
+      return false;
+    }
+
+    this.deferredReplay = replay;
     this.input.log(
       `Plugin ${this.input.entry.pluginId}: dev build deferred until Turn ends`,
     );
@@ -130,7 +131,7 @@ export class RuntimePlugin {
   }
 
   private reloaded(source: string, version: string): void {
-    if (this.skipReload(version)) return;
+    if (this.skipReload(source, version)) return;
     this.source = { text: source, version };
     this.buildError = null;
     this.status = notStarted;
@@ -141,8 +142,9 @@ export class RuntimePlugin {
     this.load();
   }
 
-  private skipReload(version: string): boolean {
-    if (this.closed || this.defer()) return true;
+  private skipReload(source: string, version: string): boolean {
+    if (this.closed || this.defer(() => this.reloaded(source, version)))
+      return true;
 
     return this.unchanged(version);
   }
@@ -181,7 +183,7 @@ export class RuntimePlugin {
   }
 
   private buildFailed(error: string): void {
-    if (this.closed || this.defer()) return;
+    if (this.closed || this.defer(() => this.buildFailed(error))) return;
     this.buildError = error;
     this.fail(error);
   }

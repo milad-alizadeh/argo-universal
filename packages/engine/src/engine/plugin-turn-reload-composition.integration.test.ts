@@ -62,6 +62,11 @@ it('keeps a dev Plugin alive until all active Turns end and loads only its final
   );
   expect(await readFile(loaded, 'utf8')).toBe('initial\n');
   await host.caller.session.cancel({ sessionId: second.sessionId });
+  await waitForAcpSnapshot(
+    host,
+    second.sessionId,
+    (snapshot) => snapshot.activeTurnId === null,
+  );
   await expect
     .poll(() => readFile(loaded, 'utf8'), processWait)
     .toBe('initial\nfinal\n');

@@ -6,12 +6,11 @@ export class PluginTurns {
 
   constructor(private readonly plugins: () => Iterable<RuntimePlugin>) {}
 
-  async changed(active: boolean): Promise<void> {
+  changed(active: boolean): void {
     this.running = active;
 
     if (active) return;
-    await Promise.all(
-      [...this.plugins()].map((plugin) => plugin.flushReload()),
-    );
+
+    for (const plugin of this.plugins()) plugin.flushReload();
   }
 }
