@@ -1,13 +1,12 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
-import { afterAll, expect, it } from 'vitest';
-import { createActor, type SnapshotFrom } from 'xstate';
 import {
   getAdjacencyMap,
   getShortestPaths,
   type GraphEventFromLogic,
-  type StatePath,
-  type AdjacencyMap,
-} from 'xstate/graph';
+} from '@repo/vitest/model-graph';
+import { afterAll, expect, it } from 'vitest';
+import { createActor, type SnapshotFrom } from 'xstate';
+import type { StatePath, AdjacencyMap } from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
 import { writerMachine } from '../../storage';
 import { registryMachine } from './registry-machine';

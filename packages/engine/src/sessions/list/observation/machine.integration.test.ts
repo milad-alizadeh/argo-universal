@@ -1,14 +1,14 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import {
+  type GraphEventFromLogic,
+  getAdjacencyMap,
+  getShortestPaths,
+} from '@repo/vitest/model-graph';
 import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterAll, expect, it } from 'vitest';
 import { fromCallback } from 'xstate';
 import { createActor, SimulatedClock, type SnapshotFrom } from 'xstate';
-import {
-  type AdjacencyMap,
-  type GraphEventFromLogic,
-  getAdjacencyMap,
-  getShortestPaths,
-} from 'xstate/graph';
+import type { AdjacencyMap } from 'xstate/graph';
 import { openSessionListModel } from '#mocks/session-list-model';
 import { sessionListMachine } from './machine';
 

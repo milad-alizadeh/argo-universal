@@ -1,11 +1,10 @@
-import type { SnapshotFrom } from 'xstate';
 import {
   getAdjacencyMap,
   getShortestPaths,
   type GraphEventFromLogic,
-  type StatePath,
-  type AdjacencyMap,
-} from 'xstate/graph';
+} from '@repo/vitest/model-graph';
+import type { SnapshotFrom } from 'xstate';
+import type { StatePath, AdjacencyMap } from 'xstate/graph';
 import type { AcpSessionLease } from '../src/agents';
 import { sessionMachine } from '../src/sessions';
 

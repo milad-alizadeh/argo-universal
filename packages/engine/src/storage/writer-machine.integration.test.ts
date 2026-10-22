@@ -1,5 +1,11 @@
 import { type Database, openDatabase } from '@repo/db';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import {
+  type GraphEventFromLogic,
+  getAdjacencyMap,
+  getShortestPaths,
+  getSimplePaths,
+} from '@repo/vitest/model-graph';
 import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -9,15 +15,7 @@ import {
   fromPromise,
   type SnapshotFrom,
 } from 'xstate';
-import {
-  type AdjacencyMap,
-  type EventExecutor,
-  type GraphEventFromLogic,
-  type StatePath,
-  getAdjacencyMap,
-  getShortestPaths,
-  getSimplePaths,
-} from 'xstate/graph';
+import type { AdjacencyMap, EventExecutor, StatePath } from 'xstate/graph';
 import { SqlJob } from '#mocks/storage-job';
 import type { WriterJob, writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';

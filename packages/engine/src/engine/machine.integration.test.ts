@@ -1,10 +1,7 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { getAdjacencyMap } from '@repo/vitest/model-graph';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  type StatePath,
-  type AdjacencyMap,
-  getAdjacencyMap,
-} from 'xstate/graph';
+import type { StatePath, AdjacencyMap } from 'xstate/graph';
 import { type EngineEvent } from '#mocks/engine-model-events';
 import { latest, settle } from '#mocks/engine-model-executors';
 import {
