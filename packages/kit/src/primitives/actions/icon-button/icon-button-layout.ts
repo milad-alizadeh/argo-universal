@@ -1,6 +1,7 @@
 import type { ButtonProps as ExpoButtonProps } from '@expo/ui';
 import { size } from '@expo/ui/jetpack-compose/modifiers';
 import type { controlSize } from '@expo/ui/swift-ui/modifiers';
+import { iconButtonDefaults } from '@repo/contracts/kit-tokens';
 import type { IconSize } from '../../../symbols/icon-size';
 import type { IconButtonProps } from './icon-button';
 
@@ -55,3 +56,13 @@ export const sizes = {
     webClass: string;
   }
 >;
+
+export const variantOf = (
+  props: IconButtonProps,
+): NonNullable<IconButtonProps['variant']> =>
+  props.variant ?? iconButtonDefaults.variant;
+
+export const sizeOf = (
+  props: IconButtonProps,
+): (typeof sizes)[IconButtonSize] =>
+  sizes[props.size ?? iconButtonDefaults.size];
