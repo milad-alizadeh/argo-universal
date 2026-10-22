@@ -134,7 +134,7 @@ function writeSymbolSets(modConfig) {
   return modConfig;
 }
 
-// Writes Argo's custom symbols and the Tabler git icons as symbol sets in the app's asset catalog, where the patched SymbolView finds them.
+// Writes Argo's custom symbols and the Tabler git icons as symbol sets in the app's asset catalog, where Expo UI's SwiftUI Image finds them by `assetName`.
 export default function withCustomSymbols(config) {
   return configPlugins.withDangerousMod(config, ['ios', writeSymbolSets]);
 }

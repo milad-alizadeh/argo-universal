@@ -1,23 +1,25 @@
 import type * as React from 'react';
-import type { AppleSymbol } from '../custom-symbols';
-import type { DrawnSymbol } from '../drawn-symbol';
-import { type TablerAsset, tablerAsset } from '../tabler-symbols';
+import { isCustomSymbol } from '../custom-symbols';
+import { tablerAsset } from '../tabler-symbols';
+import { AssetSymbol } from './asset-symbol';
 import { NativeSymbolView } from './native-symbol-view';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 
-const appleName = (symbol: DrawnSymbol): AppleSymbol | TablerAsset =>
-  symbol.kind === 'tabler' ? tablerAsset(symbol.tabler) : symbol.sf;
-
-// iOS finds Argo's custom and Tabler symbols in the app's asset catalog, through the patched SymbolView (patches/README.md).
+/*
+ * iOS draws SF Symbols through SymbolView, and Argo's custom and Tabler symbols from the app's asset catalog through
+ * SwiftUI's Image, since SymbolView looks up system symbols only (ADR-0019).
+ */
 export function SymbolGlyph({
   symbol,
   ...props
 }: SymbolGlyphProps): React.JSX.Element {
-  return (
-    <NativeSymbolView
-      {...props}
-      name={{ ios: appleName(symbol) }}
-      filled={symbol.kind === 'system' && symbol.filled}
-    />
-  );
+  if (symbol.kind === 'tabler')
+    return <AssetSymbol {...props} assetName={tablerAsset(symbol.tabler)} />;
+
+  if (isCustomSymbol(symbol.sf))
+    return <AssetSymbol {...props} assetName={symbol.sf} />;
+
+  const name = { ios: symbol.sf };
+
+  return <NativeSymbolView {...props} name={name} filled={symbol.filled} />;
 }

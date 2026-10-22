@@ -1,6 +1,6 @@
 import type { FeedChange } from '@repo/contracts';
+import type { GraphEventFromLogic } from '@repo/vitest/model-graph';
 import type { SnapshotFrom } from 'xstate';
-import type { GraphEventFromLogic } from 'xstate/graph';
 import {
   feedMachine,
   turnEndingEvent,

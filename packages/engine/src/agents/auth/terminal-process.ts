@@ -1,3 +1,6 @@
+import { chmodSync, existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { spawn, type IPty } from 'node-pty';
 import type {
   AgentLaunch,
@@ -58,14 +61,39 @@ class AuthTerminalProcess {
   }
 }
 
-const spawnTerminal = (launch: AgentLaunch): IPty =>
-  spawn(launch.executable, [...launch.args], {
+// node-pty 1.1.0 ships its macOS `spawn-helper` without the execute bit, so spawning fails until it is set.
+const executableMode = 0o755;
+
+let helperReady = process.platform !== 'darwin';
+
+const spawnHelperPath = (): string =>
+  join(
+    dirname(createRequire(import.meta.url).resolve('node-pty/package.json')),
+    'prebuilds',
+    `darwin-${process.arch}`,
+    'spawn-helper',
+  );
+
+const ensureSpawnHelper = (): void => {
+  if (helperReady) return;
+
+  const helper = spawnHelperPath();
+
+  if (existsSync(helper)) chmodSync(helper, executableMode);
+  helperReady = true;
+};
+
+const spawnTerminal = (launch: AgentLaunch): IPty => {
+  ensureSpawnHelper();
+
+  return spawn(launch.executable, [...launch.args], {
     cwd: launch.cwd,
     env: { ...launch.env, TERM: 'xterm-256color' },
     name: 'xterm-256color',
     cols: terminalCols,
     rows: terminalRows,
   });
+};
 
 // node-pty owns the sign-in terminal; closing it hangs up its program.
 export const launchLoginTerminal: LaunchLoginTerminal = async (

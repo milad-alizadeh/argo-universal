@@ -1,12 +1,12 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
-import { terminalPaths } from '@repo/vitest/model-paths';
-import { describe, expect, it } from 'vitest';
 import {
-  type AdjacencyMap,
   getShortestPaths,
   getSimplePaths,
   getAdjacencyMap,
-} from 'xstate/graph';
+} from '@repo/vitest/model-graph';
+import { terminalPaths } from '@repo/vitest/model-paths';
+import { describe, expect, it } from 'vitest';
+import type { AdjacencyMap } from 'xstate/graph';
 import {
   machine,
   events,

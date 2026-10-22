@@ -4,7 +4,7 @@ Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-1
 
 | Platform | Symbol set | Drawn by |
 | --- | --- | --- |
-| iOS | SF Symbols | `SymbolView`, natively |
+| iOS | SF Symbols | `SymbolView`, natively; Argo's custom symbols through Expo UI's SwiftUI `Image` |
 | Android | Material Symbols | `SymbolView`, natively |
 | Web | Material Symbols | `SymbolView`, from the Material Symbols font |
 | Electron on Windows and Linux | Material Symbols | as on web |
@@ -22,11 +22,11 @@ Apple's licence allows SF Symbols only in apps for Apple platforms, so no SF Sym
 
 Where SF Symbols has no symbol for an Argo icon, Argo draws a custom SF Symbol (owner, 2026-10-10). The first is `custom.robot`, the Agent icon; SF Symbols 8 has no robot. Each custom symbol is one Regular-M template path in `packages/kit/src/symbols/custom-symbol-paths.json`, named `custom.<name>` so it cannot clash with Apple's names:
 
-- iOS: the Expo plugin `apps/universal-app/plugins/with-custom-symbols.mjs` writes it into the app's asset catalog as a symbol set, and `SymbolView`, patched to fall back to `UIImage(named:)`, draws it natively, so it follows weight and size like the system symbols.
+- iOS: the Expo plugin `apps/universal-app/plugins/with-custom-symbols.mjs` writes it into the app's asset catalog as a symbol set. `SymbolView` looks up system symbols only, so `Icon` draws a custom symbol with Expo UI's SwiftUI `Image` and its `assetName`, in a `Host` the size of the icon box, natively and with no patch to `expo-symbols`; it follows weight and colour like the system symbols. Inside a SwiftUI tree, `NativeSymbol` draws it with the same `Image`.
 - Electron on macOS: the page masks the path itself; no IPC is needed, since the art is Argo's own and its licence allows shipping it.
 - Android, web, Windows and Linux: the Material name, as for every icon.
 
-`SymbolView` fits a custom symbol's box to the icon box, so where the page or Android draws a custom path, its box fills the icon box too, and the symbol is one size on every platform.
+On iOS the `Image` is resizable and fitted to the icon box, as `SymbolView` fits a system symbol's image, so where the page or Android draws a custom path, its box fills the icon box too, and the symbol is one size on every platform.
 
 A filled icon uses the platform's filled variant (owner correction, 2026-10-11). Apple drawings select the mapped SF filled name. Android and web pass a bundled Material Symbols filled font to `expo-symbols`; it has the same weight and optical size as Expo's outlined font. The font is subset to Argo's icon map and retains Google's Apache licence. A Plugin icon's Material glyph therefore never draws filled. No SF paths are shipped as a Material fallback. The Icon component owns this choice and isolates glyph weight from surrounding text.
 
@@ -37,7 +37,7 @@ Paper designs may use SF Symbols exported as SVG as mockups only; they never rea
 Git icons are the first exception to native symbols (owner, 2026-10-16). Neither SF Symbols nor Material Symbols has a full set for branches and pull request states, and mixing the nearest names drew a different, incomplete set on each platform. Branch, pull request, every PR state (open, draft, merged, closed, conflict), Merge PR and Changes use Tabler Icons v3.49.0 (MIT, © Paweł Kuna), drawn from the same paths on every platform. These icons take priority over SF Symbols, Material Symbols and any other set. The source SVGs and licences are committed in `packages/kit/src/symbols/assets/tabler`.
 
 - The source SVGs and Tabler's licence are committed in `packages/kit/src/symbols/assets/tabler`. The Swift package `tools/sf-symbols/tabler-symbols` outlines their 2-point strokes and unions them with Core Graphics, so every platform gets filled paths, and writes `tabler-symbol-paths.json` in the custom symbols' units and box.
-- iOS: `with-custom-symbols` writes them into the asset catalog with the other custom symbols, and `SymbolView` draws them.
+- iOS: `with-custom-symbols` writes them into the asset catalog with the other custom symbols, and Expo UI's SwiftUI `Image` draws them by `assetName`, as for the other custom symbols.
 - Electron on macOS and web, Windows and Linux: the page masks the path, as for the other custom symbols.
 - Android: `react-native-svg` draws the path, filled with the icon's colour.
 

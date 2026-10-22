@@ -237,10 +237,3 @@ allowBuilds:
 # pnpm's default, written out: Electron Forge refuses to start unless node-linker is hoisted or a hoist pattern is set.
 hoistPattern:
   - "*"
-
-patchedDependencies:
-  "@expo/ui@58.0.22": patches/@expo__ui@58.0.22.patch
-  expo-symbols@58.0.4: patches/expo-symbols@58.0.4.patch
-  node-pty@1.1.0: patches/node-pty@1.1.0.patch
-  react-native@0.88.0: patches/react-native@0.88.0.patch
-  xstate@5.33.2: patches/xstate@5.33.2.patch

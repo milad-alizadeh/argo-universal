@@ -1,5 +1,11 @@
 import type { ServerAddress } from '@repo/contracts';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import {
+  type GraphEventFromLogic,
+  getShortestPaths,
+  getSimplePaths,
+  getAdjacencyMap,
+} from '@repo/vitest/model-graph';
 import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -17,11 +23,7 @@ import {
   type DirectedGraphNode,
   type EventExecutor,
   type StatePath,
-  type GraphEventFromLogic,
   type AdjacencyMap,
-  getShortestPaths,
-  getSimplePaths,
-  getAdjacencyMap,
   toDirectedGraph,
 } from 'xstate/graph';
 import {

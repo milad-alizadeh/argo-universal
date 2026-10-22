@@ -1,5 +1,6 @@
+import { getShortestPaths } from '@repo/vitest/model-graph';
 import { terminalPaths } from '@repo/vitest/model-paths';
-import { type StatePath, getShortestPaths } from 'xstate/graph';
+import type { StatePath } from 'xstate/graph';
 import { type EngineEvent } from './engine-model-events';
 import { options } from './engine-model-graph';
 import { machine, type EngineSnapshot } from './engine-model-logic';
