@@ -9,7 +9,9 @@ export type SheetDetent = NonNullable<KitProps<'Sheet'>['detents']>[number];
 export type SheetProps = KitProps<'Sheet'> & {
   style?: StyleProp<ViewStyle>;
   onClosed?: () => void;
-  trigger?: ReactElement<Pick<PressableProps, 'disabled' | 'onPress'>>;
+  trigger?: ReactElement<
+    Pick<PressableProps, 'onPress'> & { disabled?: boolean | null }
+  >;
   bottomEdge?: boolean;
   // A detached phone sheet, inset from the screen edges, as the Session's Git sheet.
   floating?: boolean;

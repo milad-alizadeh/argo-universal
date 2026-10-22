@@ -1,4 +1,4 @@
-import type { KeyboardEvent, KeyboardEventHandler } from 'react';
+import type { KeyDownEvent, PressableProps } from 'react-native';
 import type { InspectorTab, InspectorTabsProps } from './inspector-props';
 
 function destination(
@@ -17,23 +17,30 @@ function destination(
   return destinations.get(key);
 }
 
-function focusTab(event: KeyboardEvent<HTMLElement>, index: number): void {
-  const list = event.currentTarget.closest('[role="tablist"]');
+// On the web the tab is a DOM element; native tabs use their platform's focus navigation.
+function tabList(event: KeyDownEvent): Element | null {
+  const tab = event.currentTarget;
 
-  if (!list) return;
+  return tab instanceof HTMLElement ? tab.closest('[role="tablist"]') : null;
+}
 
-  const buttons = list.querySelectorAll<HTMLElement>('[role="tab"]');
+function tabButtons(event: KeyDownEvent): ArrayLike<HTMLElement> {
+  const list = tabList(event);
 
-  buttons[index]?.focus();
+  return list ? list.querySelectorAll<HTMLElement>('[role="tab"]') : [];
+}
+
+function focusTab(event: KeyDownEvent, index: number): void {
+  tabButtons(event)[index]?.focus();
 }
 
 function pressTabKey(
-  event: KeyboardEvent<HTMLElement>,
+  event: KeyDownEvent,
   tab: InspectorTab,
   tabs: InspectorTabsProps,
 ): void {
   const index = tabs.items.findIndex((item) => item.key === tab.key);
-  const next = destination(event.key, index, tabs.items.length);
+  const next = destination(event.nativeEvent.key, index, tabs.items.length);
 
   if (next === undefined) return;
 
@@ -46,9 +53,7 @@ function pressTabKey(
   focusTab(event, next);
 }
 
-interface TabKeys {
-  onKeyDown: KeyboardEventHandler<HTMLElement>;
-}
+type TabKeys = Pick<PressableProps, 'onKeyDown'>;
 
 // React Native Web forwards keyboard events; native tabs use their platform's focus navigation.
 export const tabKeys = (

@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import type { Ref } from 'react';
-import { TextInput } from 'react-native';
+import { TextInput, type TextInputInstance } from 'react-native';
 
 interface QueryInputProps {
   onFocus?: React.ComponentProps<typeof TextInput>['onFocus'];
   onBlur?: React.ComponentProps<typeof TextInput>['onBlur'];
-  ref: Ref<TextInput>;
+  ref: Ref<TextInputInstance>;
   editable: boolean;
   label: string;
   value: string;

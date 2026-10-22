@@ -6,20 +6,23 @@ export type TriggerHandlers = Pick<
   'onPress' | 'onHoverIn' | 'onHoverOut'
 >;
 
-type TriggerAttributes = Pick<PressableProps, 'role' | 'disabled'>;
+// A popover's `disabled` may arrive as null; the trigger leaves it off the element then.
+type TriggerAttributes = Pick<PressableProps, 'role'> & {
+  disabled?: boolean | null;
+};
 
 // The caller's own element, which the overlay's trigger draws; an overlay the app opens itself has none.
 export type TriggerElement =
   | ReactElement<TriggerHandlers & TriggerAttributes>
   | undefined;
 
-type Handler<Event> = ((event: Event) => void) | null | undefined;
+type Handler<Event> = ((event: Event) => void) | undefined;
 
 function chained<Event>(
-  own: Handler<Event>,
+  own: Handler<Event> | null,
   added: Handler<Event>,
 ): Handler<Event> {
-  if (!added) return own;
+  if (!added) return own ?? undefined;
 
   return (event) => {
     own?.(event);

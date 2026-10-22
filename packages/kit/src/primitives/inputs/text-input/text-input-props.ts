@@ -1,6 +1,6 @@
 import type { RefAttributes } from 'react';
 import type {
-  TextInput as NativeTextInput,
+  TextInputInstance,
   TextInputProps as NativeTextInputProps,
 } from 'react-native';
 import {
@@ -48,7 +48,7 @@ export type StandaloneTextInputProps = TextFieldProps &
 
 // The bare box with no label or footer, for a caller that lays out its own label.
 export type BareTextInputProps = NativeTextInputProps &
-  RefAttributes<NativeTextInput> & {
+  RefAttributes<TextInputInstance> & {
     variant: 'bare';
     // `muted` is the compact borderless box inside a popover, such as the link editor's.
     tone?: 'neutral' | 'muted';

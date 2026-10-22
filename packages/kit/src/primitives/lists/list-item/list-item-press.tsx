@@ -1,5 +1,5 @@
 import { type ReactElement, type ComponentProps } from 'react';
-import { Platform, Pressable } from 'react-native';
+import { Platform, Pressable, type KeyDownEvent } from 'react-native';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
@@ -12,7 +12,11 @@ import { useRowFocus } from './use-row-focus';
 
 export type { DrawingProps } from './list-item-press-props';
 
-import type { DrawingProps, RowPressProps } from './list-item-press-props';
+import type {
+  DrawingProps,
+  RowKeyDown,
+  RowPressProps,
+} from './list-item-press-props';
 
 function rowLabel(props: ListItemProps): string {
   return [props.title, props.value]
@@ -69,8 +73,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
   return {
     ...accessibilityProps(props),
     ...pressHandlers(props),
-    onKeyDown:
-      props.checked === undefined ? props.onKeyDown : switchKeyDown(props),
+    onKeyDown: rowKeyDown(props),
     android_ripple: usePressRipple(),
     testID: props.testID,
     ...triggerProps(props),
@@ -95,17 +98,21 @@ function triggerProps(props: DrawingProps): RowPressProps {
   };
 }
 
-function isSwitchSpace(event: React.KeyboardEvent): boolean {
-  return event.key === ' ' && event.target === event.currentTarget;
+function isSwitchSpace(event: KeyDownEvent): boolean {
+  return event.nativeEvent.key === ' ' && event.target === event.currentTarget;
 }
 
-function canToggle(props: DrawingProps, event: React.KeyboardEvent): boolean {
-  return !props.disabled && !event.repeat;
+function canToggle(props: DrawingProps, event: KeyDownEvent): boolean {
+  return !props.disabled && !event.nativeEvent.repeat;
 }
 
 const pressRow = (props: DrawingProps): void => props.onPress?.();
 
-function switchKeyDown(props: DrawingProps): React.KeyboardEventHandler {
+function rowKeyDown(props: DrawingProps): RowKeyDown | undefined {
+  return props.checked === undefined ? props.onKeyDown : switchKeyDown(props);
+}
+
+function switchKeyDown(props: DrawingProps): RowKeyDown {
   return (event) => {
     if (!isSwitchSpace(event)) return;
 

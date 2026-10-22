@@ -15,7 +15,7 @@ export type ListItemProps = KitProps<'ListItem'> & {
   // The title and subtitle wrap rather than truncate, for a row whose words are its content, such as a plan step.
   multiline?: boolean;
   onPointerDown?: ComponentProps<typeof Pressable>['onPointerDown'];
-  onKeyDown?: React.KeyboardEventHandler;
+  onKeyDown?: ComponentProps<typeof Pressable>['onKeyDown'];
   role?: 'button' | 'link' | 'group';
   onHoverIn?: ComponentProps<typeof Pressable>['onHoverIn'];
   onHoverOut?: ComponentProps<typeof Pressable>['onHoverOut'];

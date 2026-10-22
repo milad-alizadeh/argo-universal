@@ -2,7 +2,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { ScrollFadeGradient } from '@repo/kit/scroll-fade/scroll-fade-gradient';
 import type * as React from 'react';
 import { useRef } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, type ScrollViewInstance, View } from 'react-native';
 
 function FolderName({ folder }: { folder: string }): React.JSX.Element {
   return (
@@ -47,7 +47,7 @@ function PathFade(): React.JSX.Element {
 
 // Start at the file name; sideways scrolling reveals the clipped folder without changing the file's fold.
 function PathScroll({ path }: { path: string }): React.JSX.Element {
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
 
   const showFileName = (): void =>
     scroll.current?.scrollToEnd({ animated: false });

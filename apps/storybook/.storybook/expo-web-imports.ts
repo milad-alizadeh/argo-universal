@@ -5,16 +5,31 @@ interface ModuleRewrite {
 
 const modulePathOf = (id: string): string | undefined => id.split('?')[0];
 
+// These four imports only supply Expo's ambient namespace declarations; the built file keeps them as imports of modules that export nothing.
+const declarationRewrites = [
+  {
+    file: '/expo-modules-core/src/ts-declarations/global.ts',
+    pattern: /^import \{/gm,
+    to: 'import type {',
+  },
+  {
+    file: '/expo-modules-core/build/ts-declarations/global.js',
+    pattern: /^import \{.*$/gm,
+    to: '',
+  },
+];
+
 export const expoDeclarationImports = {
   name: 'expo-declaration-imports',
   enforce: 'pre' as const,
   transform(code: string, id: string): ModuleRewrite | undefined {
-    // These four imports only supply Expo's ambient namespace declarations.
-    return modulePathOf(id)?.endsWith(
-      '/expo-modules-core/src/ts-declarations/global.ts',
-    )
-      ? { code: code.replaceAll(/^import \{/gm, 'import type {'), map: null }
-      : undefined;
+    const rewrite = declarationRewrites.find(({ file }) =>
+      modulePathOf(id)?.endsWith(file),
+    );
+
+    return rewrite === undefined
+      ? undefined
+      : { code: code.replaceAll(rewrite.pattern, rewrite.to), map: null };
   },
 };
 
@@ -34,11 +49,26 @@ const expoSymbolsRewrites = [
   })),
 ];
 
-export const expoSymbolsWebImports = {
-  name: 'expo-symbols-web-imports',
-  enforce: 'pre' as const,
+interface Rewrite {
+  file: string;
+  from: string;
+  to: string;
+}
+
+interface WebImports {
+  name: string;
+  enforce: 'pre';
+  transform(code: string, id: string): ModuleRewrite | undefined;
+}
+
+const webImports = (
+  name: string,
+  rewrites: readonly Rewrite[],
+): WebImports => ({
+  name,
+  enforce: 'pre',
   transform(code: string, id: string): ModuleRewrite | undefined {
-    const rewrite = expoSymbolsRewrites.find(({ file }) =>
+    const rewrite = rewrites.find(({ file }) =>
       modulePathOf(id)?.endsWith(file),
     );
 
@@ -46,4 +76,38 @@ export const expoSymbolsWebImports = {
       ? undefined
       : { code: code.replace(rewrite.from, rewrite.to), map: null };
   },
-};
+});
+
+export const expoSymbolsWebImports = webImports(
+  'expo-symbols-web-imports',
+  expoSymbolsRewrites,
+);
+
+/*
+ * Worklets reads NODE_ENV to spot Jest, and Vitest sets it to "test". Its Jest
+ * path swaps the global requestAnimationFrame for a setTimeout shim and drains
+ * the UI queue synchronously, so a frame stops waiting for the browser to
+ * redraw. The stories run in a real browser, where neither belongs.
+ */
+export const reactNativeWorkletsWebImports = webImports(
+  'react-native-worklets-web-imports',
+  [
+    {
+      file: '/react-native-worklets/lib/module/platformChecker.js',
+      from: "typeof globalThis.jest !== 'undefined' || process.env.NODE_ENV === 'test'",
+      to: "typeof globalThis.jest !== 'undefined'",
+    },
+  ],
+);
+
+// SvgTouchableMixin requires this native module inside a function, which the bundle hoists; the web never plays the touch sound.
+export const reactNativeSvgWebImports = webImports(
+  'react-native-svg-web-imports',
+  [
+    {
+      file: '/react-native-svg/lib/module/fabric/NativeSvgSoundModule.js',
+      from: "import { TurboModuleRegistry } from 'react-native';\nexport default TurboModuleRegistry.getEnforcing('RNSVGSoundModule');",
+      to: 'export default { playTouchSound() {} };',
+    },
+  ],
+);

@@ -1,6 +1,9 @@
 import { pluginAt, type PluginSection } from '@repo/client';
 import type { DrawerNavigationOptions } from 'expo-router/drawer';
-import type { ParamListBase, RouteProp } from 'expo-router/react-navigation';
+import type {
+  DescriptorRouteProp,
+  ParamListBase,
+} from 'expo-router/react-navigation';
 import {
   drawerRootOptions,
   drawerScreenOptions,
@@ -11,7 +14,11 @@ type PluginLocation = { plugins: readonly PluginSection[]; path: string };
 
 export const frameDrawerOptions =
   (framed: boolean, sections: PluginLocation) =>
-  ({ route }: { route: RouteProp<ParamListBase> }): DrawerNavigationOptions => {
+  ({
+    route,
+  }: {
+    route: DescriptorRouteProp<ParamListBase>;
+  }): DrawerNavigationOptions => {
     if (route.name === 'plugins') return pluginDrawerOptions(framed, sections);
 
     return drawerScreenOptions(framed)({ route });

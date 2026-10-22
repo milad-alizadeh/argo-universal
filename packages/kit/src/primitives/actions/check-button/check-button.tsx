@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Platform } from 'react-native';
+import { Platform, type PressableProps } from 'react-native';
 import { cn } from '#kit/utils';
 import { Pressable } from '#primitives/actions/pressable';
 import { Icon } from '#primitives/content/icon';
@@ -28,14 +28,12 @@ export function CheckButton(props: CheckButtonProps): React.JSX.Element {
 }
 
 // React Native Web's checkbox role needs Space explicitly; its press responder already handles Enter.
-function spaceKey(
-  props: CheckButtonProps,
-): Pick<React.DOMAttributes<HTMLElement>, 'onKeyDown'> {
+function spaceKey(props: CheckButtonProps): Pick<PressableProps, 'onKeyDown'> {
   if (Platform.OS !== 'web') return {};
 
   return {
     onKeyDown: (event) => {
-      if (event.key !== ' ') return;
+      if (event.nativeEvent.key !== ' ') return;
       event.preventDefault();
       props.onValueChange(!props.value);
     },

@@ -96,9 +96,22 @@ function iconPressableProps({
     props;
 
   return createIconPressable(
-    { ...pressable, ...pressedAttribute(selected) },
+    { ...pressable, ...pressableState(pressable.disabled, selected) },
     { size, variant, loading, selected, bleed, corners },
   );
+}
+
+// Pressable takes no null `disabled`.
+interface PressableState {
+  disabled: boolean | undefined;
+  'aria-pressed'?: boolean;
+}
+
+function pressableState(
+  disabled: boolean | null | undefined,
+  selected?: boolean,
+): PressableState {
+  return { disabled: disabled ?? undefined, ...pressedAttribute(selected) };
 }
 
 // The web reads a toggle's state from aria-pressed, which React Native's own types leave out.

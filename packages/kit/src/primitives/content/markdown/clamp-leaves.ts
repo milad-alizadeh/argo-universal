@@ -1,9 +1,13 @@
-import type * as React from 'react';
-import { createContext, useCallback, useContext } from 'react';
-import type { View } from 'react-native';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  type RefCallback,
+} from 'react';
+import type { ViewInstance } from 'react-native';
 import { type TextRole, useTextStyle } from '#primitives/content/text';
 
-type MeasurableNode = Pick<React.ComponentRef<typeof View>, 'measureLayout'>;
+type MeasurableNode = Pick<ViewInstance, 'measureLayout'>;
 
 // A drawn piece of markdown a clamp may cut below; text also gives its line height.
 export interface ClampLeaf {
@@ -23,14 +27,19 @@ export function useLineHeight(role: TextRole): number | undefined {
   return Number.isFinite(lineHeight) ? lineHeight : undefined;
 }
 
-export function useClampLeaf(
-  lineHeight?: number,
-): (node: MeasurableNode | null) => (() => void) | undefined {
+export function useClampLeaf(lineHeight?: number): RefCallback<MeasurableNode> {
   const register = useContext(ClampLeaves);
 
   return useCallback(
-    (node: MeasurableNode | null) =>
-      node && register ? register({ node, lineHeight }) : undefined,
+    (node) => {
+      if (!node || !register) return;
+
+      const release = register({ node, lineHeight });
+
+      return () => {
+        release();
+      };
+    },
     [register, lineHeight],
   );
 }

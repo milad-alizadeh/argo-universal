@@ -13,7 +13,7 @@ packages:
 
 # Every shared dependency is pinned here; packages refer to it as "catalog:".
 catalog:
-  "@expo/metro-runtime": ~57.0.17
+  "@expo/metro-runtime": ~58.0.15
   "@jridgewell/trace-mapping": 0.3.31
   "@xterm/xterm": 6.0.0
   "@xterm/addon-fit": 0.11.0
@@ -44,10 +44,10 @@ catalog:
   "@electron-forge/plugin-vite": 8.0.1
   "@electron-forge/shared-types": 8.0.1
   "@electron/fuses": 2.1.3
-  "@expo/ui": 57.0.22
+  "@expo/ui": 58.0.22
   # The drawer @expo/ui's universal BottomSheet draws on the web; the web Sheet uses it directly for what that wrapper leaves out.
   vaul: 1.1.2
-  # Native toasts; Expo SDK 57 lists no version for it, so this is its newest release.
+  # Native toasts; Expo SDK 58 lists no version for it, so this is its newest release.
   burnt: 0.13.0
   # The web toast library under Burnt's Toaster; a toast with an action (Undo) calls it directly. Burnt 0.13.0's own version.
   sonner: 2.0.8
@@ -56,13 +56,13 @@ catalog:
   # Portals for every platform, with named hosts.
   "@gorhom/portal": 1.0.14
   "@react-native-async-storage/async-storage": 2.2.0
-  "@react-native-community/datetimepicker": 9.1.0
-  "@react-native-community/slider": 5.2.0
-  "expo-file-system": ~57.0.7
-  "expo-haptics": ~57.0.3
-  "expo-document-picker": ~57.0.3
-  "expo-image-picker": ~57.0.20
-  "expo-clipboard": ~57.0.2
+  "@react-native-community/datetimepicker": 9.2.1
+  "@react-native-community/slider": 5.2.1
+  "expo-file-system": ~58.0.10
+  "expo-haptics": ~58.0.7
+  "expo-document-picker": ~58.0.4
+  "expo-image-picker": ~58.0.10
+  "expo-clipboard": ~58.0.4
   parse5: 8.0.1
   marked: 18.1.0
   # Code block highlighting: the core plus one grammar per language it is registered for.
@@ -111,43 +111,43 @@ catalog:
   drizzle-kit: 1.0.0-rc.4
   drizzle-orm: 1.0.0-rc.4
   electron: 44.5.1
-  # Expo SDK 57 ranges as create-expo-app writes them, so `expo install --check` agrees.
-  expo: ~57.0.31
-  expo-build-properties: ~57.0.22
-  expo-constants: ~57.0.22
-  expo-dev-client: ~57.0.20
-  expo-font: ~57.0.4
-  expo-glass-effect: ~57.0.4
-  expo-linking: ~57.0.13
-  expo-router: ~57.0.29
-  expo-screen-orientation: ~57.0.2
-  expo-splash-screen: ~57.0.10
-  expo-status-bar: ~57.0.1
-  expo-symbols: ~57.0.3
-  expo-asset: ~57.0.18
-  expo-audio: ~57.0.5
-  expo-video: ~57.0.5
-  expo-system-ui: ~57.0.4
+  # Expo SDK 58 ranges as create-expo-app writes them, so `expo install --check` agrees.
+  expo: ~58.0.17
+  expo-build-properties: ~58.0.11
+  expo-constants: ~58.0.13
+  expo-dev-client: ~58.0.14
+  expo-font: ~58.0.9
+  expo-glass-effect: ~58.0.4
+  expo-linking: ~58.0.14
+  expo-router: ~58.0.25
+  expo-screen-orientation: ~58.0.3
+  expo-splash-screen: ~58.0.11
+  expo-status-bar: ~58.0.4
+  expo-symbols: ~58.0.4
+  expo-asset: ~58.0.18
+  expo-audio: ~58.0.10
+  expo-video: ~58.0.12
+  expo-system-ui: ~58.0.6
   jscpd: 5.4.0
   jsonc-parser: 3.3.1
   json-schema-to-typescript: 16.0.0
   knip: 6.39.0
   playwright: 1.63.0
   playwright-bdd: 9.2.1
-  react: 19.2.3
-  react-dom: 19.2.3
-  react-native: 0.86.3
-  react-native-gesture-handler: ~2.32.0
-  react-native-keyboard-controller: 1.21.9
-  react-native-reanimated: 4.5.1
-  react-native-safe-area-context: ~5.7.0
-  react-native-screens: ~4.26.0
-  react-native-svg: 15.15.4
+  react: 19.3.0
+  react-dom: 19.3.0
+  react-native: 0.88.0
+  react-native-gesture-handler: ~3.3.0
+  react-native-keyboard-controller: 1.22.7
+  react-native-reanimated: 4.7.1
+  react-native-safe-area-context: ~5.10.1
+  react-native-screens: ~4.30.0
+  react-native-svg: 15.16.0
   # Imports a logo SVG as a react-native-svg component in Metro (ADR-0019).
   react-native-svg-transformer: 1.5.3
-  # 0.21.2, not 0.21.3: Uniwind 1.12.1 crashes on web start with 0.21.3 (uni-stack/uniwind#704, fix pending).
-  react-native-web: 0.21.2
-  react-native-worklets: 0.10.1
+  # ~0.21.4 excludes 0.21.3: Uniwind 1.12.1 crashes on web start with it (uni-stack/uniwind#704).
+  react-native-web: ~0.21.4
+  react-native-worklets: 0.13.0
   sf-symbols-typescript: 2.2.0
   sherif: 1.13.0
   storybook: 10.6.1
@@ -156,7 +156,7 @@ catalog:
   tsx: 4.23.15
   turbo: 2.11.7
   typescript: 7.0.2
-  uniwind: 1.12.1
+  uniwind: 1.13.0
   vite: 8.3.2
   # The same SVG import in Storybook's Vite build, with SVGR's native output.
   vite-plugin-svgr: 5.2.0
@@ -166,7 +166,7 @@ catalog:
   xstate: 5.33.2
   zod: 4.6.5
   diff: 9.0.0
-  expo-crypto: ~57.0.4
+  expo-crypto: ~58.0.7
   fflate: 0.8.3
   tar: 7.5.22
   # Android header icons as vector drawables, the source the Stack Toolbar guide recommends.
@@ -179,7 +179,7 @@ catalog:
   "@shopify/react-native-skia": 2.14.0
   "@babel/parser": 7.29.9
   "@babel/types": 7.29.8
-  expo-image: ~57.0.5
+  expo-image: ~58.0.16
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict
@@ -191,15 +191,42 @@ minimumReleaseAgeExclude:
   # The persisters ship with @tanstack/react-query at the same version.
   - "@tanstack/query-persist-client-core@5.104.1"
   - marked@18.1.0
-  - expo-crypto@57.0.4
-  - "@expo/cli@57.0.32"
-  - "@expo/config-plugins@57.0.11"
-  - "@expo/router-server@57.0.14"
-  - "@expo/ui@57.0.26"
-  - expo-modules-core@57.0.24
-  - expo-modules-jsi@57.1.3
-  - expo-router@57.0.29
-  - expo@57.0.31
+  # pnpm added these: the Expo SDK 58 packages are under the release-age gate.
+  - "@expo/cli@58.1.14"
+  - "@expo/config-plugins@58.0.10"
+  - "@expo/config@58.0.7"
+  - "@expo/env@2.5.3"
+  - "@expo/fingerprint@0.21.6"
+  - "@expo/inline-modules@0.2.7"
+  - "@expo/local-build-cache-provider@58.0.7"
+  - "@expo/log-box@58.0.13"
+  - "@expo/metro-config@58.0.16"
+  - "@expo/prebuild-config@58.0.15"
+  - "@expo/router-server@58.0.16"
+  - "@noxcturnal/noxcturnal-darwin-arm64@0.1.8"
+  - "@noxcturnal/noxcturnal-darwin-x64@0.1.8"
+  - "@noxcturnal/noxcturnal-linux-arm64-gnu@0.1.8"
+  - "@noxcturnal/noxcturnal-linux-arm64-musl@0.1.8"
+  - "@noxcturnal/noxcturnal-linux-x64-gnu@0.1.8"
+  - "@noxcturnal/noxcturnal-linux-x64-musl@0.1.8"
+  - "@noxcturnal/noxcturnal-win32-arm64-msvc@0.1.8"
+  - "@noxcturnal/noxcturnal-win32-x64-msvc@0.1.8"
+  - babel-preset-expo@58.0.19
+  - expo-asset@58.0.18
+  - expo-constants@58.0.13
+  - expo-modules-autolinking@58.0.14
+  - expo-modules-core@58.0.24
+  - expo-modules-jsi@58.0.17
+  - expo@58.0.17
+  - noxcturnal@0.1.8
+  - "@expo/metro-runtime@58.0.15"
+  - "@expo/ui@58.0.22"
+  - expo-audio@58.0.10
+  - expo-clipboard@58.0.4
+  - expo-linking@58.0.14
+  - expo-router@58.0.25
+  - expo-splash-screen@58.0.11
+  - expo-status-bar@58.0.4
 
 # drizzle-kit pulls esbuild; `drizzle-kit generate` works without its install script.
 allowBuilds:
@@ -212,8 +239,8 @@ hoistPattern:
   - "*"
 
 patchedDependencies:
-  "@expo/ui@57.0.22": patches/@expo__ui@57.0.22.patch
-  expo-symbols@57.0.3: patches/expo-symbols@57.0.3.patch
+  "@expo/ui@58.0.22": patches/@expo__ui@58.0.22.patch
+  expo-symbols@58.0.4: patches/expo-symbols@58.0.4.patch
   node-pty@1.1.0: patches/node-pty@1.1.0.patch
-  react-native@0.86.3: patches/react-native@0.86.3.patch
+  react-native@0.88.0: patches/react-native@0.88.0.patch
   xstate@5.33.2: patches/xstate@5.33.2.patch

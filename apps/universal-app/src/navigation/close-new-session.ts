@@ -4,6 +4,7 @@ import type { Stack } from 'expo-router';
 import {
   CommonActions,
   type NavigationProp,
+  type NavigationState,
   type ParamListBase,
 } from 'expo-router/react-navigation';
 import type { ComponentProps } from 'react';
@@ -14,16 +15,34 @@ type PageListeners = NonNullable<
 
 const noListeners: PageListeners = {};
 
+type Navigation = NavigationProp<ParamListBase>;
+
+/*
+ * The Frame's own state carries the section's shorter stack: Expo Router 58 reads a reset that
+ * shortens a stack as a browser Back, which would drop the page New Session was opened from out of
+ * the browser's history, while the Frame's own routes are untouched and its history stands.
+ */
+const withStack = (
+  frame: NavigationState,
+  pages: NavigationState,
+): NavigationState => ({
+  ...frame,
+  routes: frame.routes.map((route) =>
+    route.state?.key === pages.key ? { ...route, state: pages } : route,
+  ),
+});
+
 // Drops New Session from the section's stack, which closes its empty Session.
-function closeNewSession(navigation: NavigationProp<ParamListBase>): void {
+function closeNewSession(navigation: Navigation): void {
   const pages = navigation.getState();
   const next = withoutNewSession(pages);
+  const frame = navigation.getParent();
 
-  if (next)
-    navigation.dispatch({
-      ...CommonActions.reset({ ...pages, ...next }),
-      target: pages.key,
-    });
+  if (!next || !frame) return;
+
+  const state = withStack(frame.getState(), { ...pages, ...next });
+
+  frame.dispatch({ ...CommonActions.reset(state), target: state.key });
 }
 
 /*

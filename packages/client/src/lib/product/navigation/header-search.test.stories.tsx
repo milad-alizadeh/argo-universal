@@ -1,9 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type {
+  NavigationProp,
+  ParamListBase,
+} from 'expo-router/react-navigation';
 import {
   DefaultTheme,
   Header,
-  NavigationContainer,
+  NavigationContext,
   SafeAreaProviderCompat,
+  ThemeProvider,
 } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { expect, fn } from 'storybook/test';
@@ -13,27 +18,42 @@ const title = 'Sessions';
 
 const label = 'Search Sessions';
 
-// The real web JS header, as a narrow web window's stack draws it, with the app's search row options. The header reads the navigation and its theme from the app's container; here a bare one with the stock theme stands in.
+const partialNavigation: Partial<NavigationProp<ParamListBase>> = {
+  goBack: () => {},
+};
+
+/*
+ * SAFETY: Header reads two things from the app around it, a theme and a navigation object, and it
+ * asks the second only for `goBack`, only when a `back` is given — which this story never gives.
+ * SDK 58's container cannot stand outside ExpoRoot, so the story provides both directly, and
+ * NavigationProp carries a brand that no stand-in can satisfy structurally.
+ */
+// oxlint-disable-next-line typescript/consistent-type-assertions -- the brand admits no other way to stand one in.
+const standInNavigation = partialNavigation as NavigationProp<ParamListBase>;
+
+// The real web JS header, as a narrow web window's stack draws it, with the app's search row options.
 function WebHeaderWithSearch({
   onChangeText,
 }: {
   onChangeText: (text: string) => void;
 }): React.JSX.Element {
   return (
-    <NavigationContainer theme={DefaultTheme}>
-      <SafeAreaProviderCompat>
-        <Header
-          title={title}
-          headerTitle={() => (
-            <HeaderSearchRow
-              title={title}
-              search={{ placeholder: label, onChangeText }}
-            />
-          )}
-          {...headerSearchRowLayout}
-        />
-      </SafeAreaProviderCompat>
-    </NavigationContainer>
+    <ThemeProvider value={DefaultTheme}>
+      <NavigationContext.Provider value={standInNavigation}>
+        <SafeAreaProviderCompat>
+          <Header
+            title={title}
+            headerTitle={() => (
+              <HeaderSearchRow
+                title={title}
+                search={{ placeholder: label, onChangeText }}
+              />
+            )}
+            {...headerSearchRowLayout}
+          />
+        </SafeAreaProviderCompat>
+      </NavigationContext.Provider>
+    </ThemeProvider>
   );
 }
 

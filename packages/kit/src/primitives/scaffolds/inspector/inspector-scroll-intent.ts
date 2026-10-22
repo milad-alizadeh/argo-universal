@@ -6,9 +6,8 @@ type NativeIntent = Pick<
   'onTouchStart' | 'onScrollBeginDrag' | 'onPointerDown'
 >;
 
-type WebIntent = {
+type WebIntent = Pick<ScrollFadeViewProps, 'onKeyDown'> & {
   onWheel?: () => void;
-  onKeyDown?: (event: { key: string }) => void;
 };
 
 const scrollKeys = new Set([
@@ -39,7 +38,7 @@ const webIntent = (cancel: () => void): WebIntent =>
     ? {
         onWheel: cancel,
         onKeyDown: (event) => {
-          if (scrollKeys.has(event.key)) cancel();
+          if (scrollKeys.has(event.nativeEvent.key)) cancel();
         },
       }
     : {};

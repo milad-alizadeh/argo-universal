@@ -9,7 +9,12 @@ import {
 import { useWide } from '@repo/client/size-class';
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { Stack, useFocusEffect, useNavigation } from 'expo-router';
-import { CommonActions, DrawerActions } from 'expo-router/react-navigation';
+import {
+  CommonActions,
+  DrawerActions,
+  type NavigationProp,
+  type ParamListBase,
+} from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { useCallback, type PropsWithChildren } from 'react';
 import { Platform, View } from 'react-native';
@@ -20,7 +25,7 @@ interface OpenFirstPageProps {
 
 // Opens `first` over the section's index each time the index is focused; the index stays below it for a narrow window's Back.
 function useOpenOverIndex(first: FirstPage | undefined): void {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   useFocusEffect(
     useCallback(() => {
@@ -31,7 +36,10 @@ function useOpenOverIndex(first: FirstPage | undefined): void {
         { name: first.page, params: first.params },
       ];
 
-      navigation.dispatch(CommonActions.reset({ index: 1, routes }));
+      // The router no longer completes a partial state, so the stack's own state carries the new routes.
+      const stack = navigation.getState();
+
+      navigation.dispatch(CommonActions.reset({ ...stack, index: 1, routes }));
     }, [navigation, first]),
   );
 }

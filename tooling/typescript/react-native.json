@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./base.json",
-  // Mirrors expo/tsconfig.base from Expo SDK 57, so shared React Native code checks like the app.
+  // Mirrors expo/tsconfig.base from Expo SDK 58, so shared React Native code checks like the app.
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["DOM", "ESNext"],

@@ -13,6 +13,7 @@
     "@repo/client": "workspace:*",
     "@repo/kit": "workspace:*",
     "@repo/uniwind": "workspace:*",
+    "expo": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",

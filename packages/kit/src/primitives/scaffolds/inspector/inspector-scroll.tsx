@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactElement, ReactNode, RefObject } from 'react';
-import { View } from 'react-native';
+import { View, type ViewInstance } from 'react-native';
 import { cn } from '#kit/utils';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import type { InspectorBodyProps } from './inspector-pane';
@@ -23,7 +23,7 @@ export function InspectorScroll({
 // A layout-only View can be flattened on native; measurement needs this host node to exist.
 function measuredContent(
   children: ReactNode,
-  ref: RefObject<View | null>,
+  ref: RefObject<ViewInstance | null>,
   onLayout: ComponentProps<typeof View>['onLayout'],
 ): ReactElement {
   return (
