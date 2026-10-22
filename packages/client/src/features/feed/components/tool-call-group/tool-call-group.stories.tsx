@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ToolCallGroup } from './tool-call-group';
 import {
+  allowedOnceGroup,
+  awaitingApprovalGroup,
   parallelGroup,
   runningGroup,
   settledGroup,
@@ -31,3 +33,9 @@ export const Parallel: Story = { args: parallelGroup };
 
 // Settled: the group's own title heads it, with no duration.
 export const Settled: Story = { args: settledGroup };
+
+// The Tool call waits for a permission answer.
+export const AwaitingApproval: Story = { args: awaitingApprovalGroup };
+
+// The permission was answered with Allow once.
+export const AllowedOnce: Story = { args: allowedOnceGroup };

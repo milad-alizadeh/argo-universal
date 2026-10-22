@@ -44,6 +44,22 @@ export const disabledComposer = {
   disabled: true,
 } satisfies ComposerFixture;
 
+// A draft long enough to wrap: the field grows to hold every line.
+export const multiLineComposer = {
+  draft: {
+    text: 'Match the spacing and colours.\nKeep the phone layout readable.\nUse the shared light and dark themes.',
+    attachments: [],
+  },
+} satisfies ComposerFixture;
+
+// A draft past the Composer's max height: the envelope scrolls.
+export const scrollableDraftComposer = {
+  draft: {
+    text: 'First line\nSecond line\nThird line\nFourth line\nFifth line\nSixth line',
+    attachments: [],
+  },
+} satisfies ComposerFixture;
+
 // An image in the draft: the card grows a row of attachment tiles above the field.
 export const attachedImageComposer = {
   draft: {
