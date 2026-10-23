@@ -18,6 +18,7 @@
     },
     "./symbols/assets/*": "./src/symbols/assets/*",
     "./symbols/symbol-images": "./src/symbols/symbol-images.tsx",
+    "./pushed-page/routes": "./src/pushed-page/routes.tsx",
     "./story-stack": "./src/story-stack/index.ts",
     "./story-stack/routes": "./src/story-stack/routes.tsx",
     "./tinted-avatar": "./src/tinted-avatar.tsx",
@@ -37,6 +38,7 @@
       "default": "./src/primitives/*/index.ts"
     },
     "#kit/*": "./src/*.ts",
+    "#pushed-page": "./src/pushed-page/index.ts",
     "#story-stack": "./src/story-stack/index.ts"
   },
   "scripts": {

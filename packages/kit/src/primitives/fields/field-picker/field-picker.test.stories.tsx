@@ -1,30 +1,17 @@
-import type {
-  Decorator,
-  Meta,
-  StoryObj,
-} from '@storybook/react-native-web-vite';
-import type * as React from 'react';
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
 import { settleViewport } from '#kit/settle-viewport';
-import { FieldGroup } from '#primitives/fields/field-group';
 import { ControlledPicker } from './field-picker-controlled';
+import { inStackedSection } from './field-picker-decorators';
 import {
-  chosen,
   emptyOption,
-  multiple,
-  multipleMenu,
-  pageAction,
-  pageSearchable,
+  menu,
+  menuMultiple,
+  pageMultiple,
+  pageWithButton,
+  pageWithSearch,
 } from './field-picker-fixtures';
-
-const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
-  <FieldGroup>
-    <FieldGroup.Section title="Section">
-      <Story />
-    </FieldGroup.Section>
-  </FieldGroup>
-);
 
 const changed = fn<(value: string | readonly string[]) => void>();
 
@@ -36,7 +23,7 @@ const meta = {
     changed.mockClear();
     pressed.mockClear();
   },
-  decorators: [inFieldGroupSection],
+  decorators: inStackedSection,
 } satisfies Meta;
 
 export default meta;
@@ -46,18 +33,18 @@ type Story = StoryObj<typeof meta>;
 const searchLabel = 'Search Label';
 
 export const ShowsTitle: Story = {
-  render: () => <ControlledPicker {...chosen} onValueChange={changed} />,
+  render: () => <ControlledPicker {...menu} onValueChange={changed} />,
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Label')).toBeVisible();
   },
 };
 
-// A page shows the chosen label on its row; choosing another reports it, closes the page and shows on the row.
+// A page shows the chosen label on its row; choosing another reports it, closes the page (a popover on a desktop window, Back on a phone) and shows on the row.
 function choosing(width: number): Story {
   return {
     beforeEach: (): Promise<void> => settleViewport(width),
     render: () => (
-      <ControlledPicker {...pageSearchable} onValueChange={changed} />
+      <ControlledPicker {...pageWithSearch} onValueChange={changed} />
     ),
     play: async ({ canvas, userEvent }) => {
       const page = within(document.body);
@@ -75,12 +62,12 @@ function choosing(width: number): Story {
 
 export const ChoosesInPopover = choosing(layoutWidths.wide);
 
-export const ChoosesInSheet = choosing(layoutWidths.phone);
+export const ChoosesOnPushedPage = choosing(layoutWidths.phone);
 
 export const SearchFiltersAndShowsEmptyState: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: () => (
-    <ControlledPicker {...pageSearchable} onValueChange={changed} />
+    <ControlledPicker {...pageWithSearch} onValueChange={changed} />
   ),
   play: async ({ canvas, userEvent }) => {
     const page = within(document.body);
@@ -104,7 +91,7 @@ export const SearchFiltersAndShowsEmptyState: Story = {
 export const ArrowKeysAndEnterChoose: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: () => (
-    <ControlledPicker {...pageSearchable} onValueChange={changed} />
+    <ControlledPicker {...pageWithSearch} onValueChange={changed} />
   ),
   play: async ({ canvas, userEvent }) => {
     const page = within(document.body);
@@ -121,7 +108,7 @@ export const ArrowKeysAndEnterChoose: Story = {
 // A multiple page stays open, and every toggle reports the whole list in the options' order.
 export const MultipleReportsEachToggle: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
-  render: () => <ControlledPicker {...multiple} onValueChange={changed} />,
+  render: () => <ControlledPicker {...pageMultiple} onValueChange={changed} />,
   play: async ({ canvas, userEvent }) => {
     const page = within(document.body);
     await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
@@ -143,7 +130,7 @@ export const ActionRunsAndCloses: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: () => (
     <ControlledPicker
-      {...pageAction}
+      {...pageWithButton}
       footerAction={{ label: 'Add options', onPress: pressed }}
       onValueChange={changed}
     />
@@ -164,7 +151,7 @@ export const ActionRunsAndCloses: Story = {
 // A short several-of choice opens in place on the web as the page does, and also reports the list.
 export const MultipleMenuReportsList: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
-  render: () => <ControlledPicker {...multipleMenu} onValueChange={changed} />,
+  render: () => <ControlledPicker {...menuMultiple} onValueChange={changed} />,
   play: async ({ canvas, userEvent }) => {
     const page = within(document.body);
     await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));

@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 /* oxlint-disable-next-line no-restricted-imports -- the Android-only drawing stays out of the folder's index so the web never loads Compose. */
 import { RowListItem } from '../field-row/field-row-list-item.android';
@@ -10,8 +10,6 @@ type ChoiceRowProps = Pick<
 > & {
   summary: string;
   onPress?: () => void;
-  // The Sheet this row opens when no enclosing Sheet holds the page; a Compose dialog takes no room in the list.
-  sheet?: ReactNode;
 };
 
 /*
@@ -20,16 +18,13 @@ type ChoiceRowProps = Pick<
  */
 export function ChoiceRow(props: ChoiceRowProps): ReactElement {
   return (
-    <>
-      <RowListItem
-        title={props.title}
-        leading={props.leading}
-        disabled={props.disabled}
-        supporting={supporting(props.summary)}
-        onPress={props.onPress}
-      />
-      {props.sheet}
-    </>
+    <RowListItem
+      title={props.title}
+      leading={props.leading}
+      disabled={props.disabled}
+      supporting={supporting(props.summary)}
+      onPress={props.onPress}
+    />
   );
 }
 

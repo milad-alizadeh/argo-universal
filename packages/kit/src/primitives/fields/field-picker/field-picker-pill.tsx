@@ -5,8 +5,8 @@ import { choiceSummary, type FieldPickerProps } from './field-picker-model';
 
 /*
  * `trigger: 'pill'` (ADR-0042): the kit's toolbar pill, the chosen label and a down chevron, outside a FieldGroup. The
- * choices open as the picker's own page: a popover with the search field on a desktop window, a pushed page in an
- * enclosing Sheet or a Sheet of its own elsewhere.
+ * choices open as the picker's own page: a popover with the search field on a desktop window, a page pushed on the
+ * stack that holds the pill elsewhere (the enclosing Sheet's, or the screen's own).
  */
 export function FieldPickerPill(props: FieldPickerProps): ReactElement {
   return <FieldPickerDrill {...props} opener={pillTrigger(props)} />;

@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
@@ -26,23 +26,37 @@ export type FieldPickerPageProps = FieldPickerProps & {
   onClose?: () => void;
 };
 
+type PageState = FieldPickerPageProps & {
+  query: string;
+  onQueryChange: (query: string) => void;
+  // A pushed page's header holds the search, so the page draws no field of its own.
+  searchInHeader: boolean;
+};
+
 /*
  * The choices of a `page` presentation (ADR-0042), the same on every platform: the kit's shared search field when
  * `searchable`, the options in sections with a mark on the chosen ones, an empty state, and an action button in a
  * place of its own below. A single choice reports and closes; a `multiple` page stays open and reports each toggle.
  */
-export function FieldPickerPage(props: FieldPickerPageProps): ReactElement {
-  const [query, setQuery] = useState('');
-  const options = matchingOptions(props.options, query);
-
-  const search = props.searchable ? (
-    <PageSearch title={props.title} value={query} onChange={setQuery} />
-  ) : null;
+export function FieldPickerPage(props: PageState): ReactElement {
+  const options = matchingOptions(props.options, props.query);
 
   return (
-    <PageFrame search={search} footer={<PageFooter {...props} />}>
+    <PageFrame search={searchOf(props)} footer={<PageFooter {...props} />}>
       <PageList {...props} options={options} />
     </PageFrame>
+  );
+}
+
+function searchOf(props: PageState): ReactElement | null {
+  if (!props.searchable || props.searchInHeader) return null;
+
+  return (
+    <PageSearch
+      title={props.title}
+      value={props.query}
+      onChange={props.onQueryChange}
+    />
   );
 }
 

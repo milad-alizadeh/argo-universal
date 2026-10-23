@@ -58,7 +58,7 @@ export const PushAndBackPhone = atWidth(widths.Phone, {
   },
 });
 
-// The page picker opens from the settings form, filters by search, and the choice shows on its row.
+// The page picker pushes its page on the stack with Back; its header search filters, and the choice shows on its row after Back.
 export const PagePickerChoosesPhone = atWidth(widths.Phone, {
   decorators: [withStack()],
   render: () => <SettingsPage />,
@@ -69,7 +69,11 @@ export const PagePickerChoosesPhone = atWidth(widths.Phone, {
 
     const page = within(canvasElement.ownerDocument.body);
 
-    const search = await page.findByRole('searchbox', {
+    await userEvent.click(
+      await page.findByRole('button', { name: 'Search Project' }),
+    );
+
+    const search = await page.findByRole('textbox', {
       name: 'Search Project',
     });
 

@@ -11,7 +11,7 @@ const short = [
   { value: 'three', label: 'Three' },
 ];
 
-export const chosen = {
+export const menu = {
   title: 'Label',
   value: 'two',
   options: short,
@@ -24,19 +24,6 @@ export const emptyOption = {
   value: 'one',
   options: [{ value: '', label: 'None' }, ...short],
   presentation: 'menu',
-} satisfies Fixture<FieldPickerSingle>;
-
-const detailed = [
-  { value: 'one', label: 'One', subtitle: 'The first', icon: 'folder' },
-  { value: 'two', label: 'Two', subtitle: 'The second', icon: 'folder' },
-  { value: 'three', label: 'Three', subtitle: 'The third', icon: 'folder' },
-] satisfies FieldPickerSingle['options'];
-
-export const page = {
-  title: 'Label',
-  value: 'two',
-  options: detailed,
-  presentation: 'page',
 } satisfies Fixture<FieldPickerSingle>;
 
 const names = [
@@ -89,7 +76,7 @@ const sectioned = names.map((name, index) => ({
   section: index < 2 ? 'Recent' : 'All',
 }));
 
-export const pageSearchable = {
+export const pageWithSearch = {
   title: 'Label',
   value: 'cedar',
   options: sectioned,
@@ -97,12 +84,12 @@ export const pageSearchable = {
   searchable: true,
 } satisfies Fixture<FieldPickerSingle>;
 
-export const pageAction = {
-  ...pageSearchable,
+export const pageWithButton = {
+  ...pageWithSearch,
   footerAction: { label: 'Add options', onPress: (): void => {} },
 } satisfies Fixture<FieldPickerSingle>;
 
-export const multiple = {
+export const pageMultiple = {
   title: 'Label',
   value: ['alder', 'oak'],
   options: sectioned,
@@ -111,7 +98,7 @@ export const multiple = {
   multiple: true,
 } satisfies Fixture<FieldPickerMultiple>;
 
-export const multipleMenu = {
+export const menuMultiple = {
   title: 'Label',
   value: ['one', 'three'],
   options: short,
@@ -121,7 +108,7 @@ export const multipleMenu = {
 
 // The toolbar pill: the chosen label and a down chevron, outside a FieldGroup, opening the searchable page.
 export const pill = {
-  ...pageSearchable,
+  ...pageWithSearch,
   trigger: 'pill',
   leading: 'folder',
 } satisfies Fixture<FieldPickerSingle>;

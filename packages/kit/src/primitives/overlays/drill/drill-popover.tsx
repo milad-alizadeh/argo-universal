@@ -33,7 +33,7 @@ export function DrillPopover(props: Props): ReactElement {
       <DrillContent
         {...props}
         close={choiceClose(props, setOpen)}
-        onEscapeKeyDown={props.keepOpen ? closeMenu : undefined}
+        onEscapeKeyDown={closeMenu}
       />
     </Popover>
   );
@@ -41,7 +41,7 @@ export function DrillPopover(props: Props): ReactElement {
 
 const stayOpen = (): void => {};
 
-// The choices call close after a pick; keepOpen leaves the popover to a click outside or Escape, which close its menu too.
+// The choices call close after a pick; keepOpen leaves the popover to a click outside or Escape. Escape closes the menu beside it too, as a click outside does.
 function choiceClose(
   props: Props,
   setOpen: Dispatch<SetStateAction<boolean>>,
@@ -68,7 +68,7 @@ function DrillContent(props: ContentProps): ReactElement {
   return createElement(
     PopoverContent,
     placement(props),
-    props.children(props.close),
+    props.children(props.close, false),
   );
 }
 

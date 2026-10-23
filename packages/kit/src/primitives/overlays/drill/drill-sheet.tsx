@@ -1,54 +1,64 @@
+import { useRouter } from 'expo-router';
+import { cloneElement, useId, useLayoutEffect, type ReactElement } from 'react';
 import {
-  cloneElement,
-  useId,
-  useLayoutEffect,
-  useState,
-  type ReactElement,
-} from 'react';
-import {
-  Sheet,
   useOptionalSheet,
   type SheetNavigation,
 } from '#primitives/overlays/sheet';
+import { Page, type PageProps } from '#primitives/scaffolds/page';
+import { usePushedPage } from '#pushed-page';
 import { useCompletion, type Completion } from './drill-completion';
 import type { DrillProps } from './drill-props';
 import { useStandby } from './drill-standby';
 
 type Props = DrillProps & { trigger: NonNullable<DrillProps['trigger']> };
 
-// Choice belongs to the field; presentation and navigation belong to Sheet.
+/*
+ * Choice belongs to the field; presentation and navigation belong to the stack that holds the row: the enclosing
+ * Sheet's own stack, or else the screen's (a pushed page with a native header and Back). It never opens a Sheet of its
+ * own.
+ */
 export function DrillSheet(props: Props): ReactElement {
   const presentation = useDrillPresentation(props);
 
-  if (presentation.parent)
-    return cloneElement(props.trigger, { onPress: presentation.show });
-
-  return <StandaloneChoices {...props} {...presentation} />;
+  return cloneElement(props.trigger, { onPress: presentation.show });
 }
 
-type Presentation = {
-  parent?: SheetNavigation;
-  open: boolean;
-  show: () => void;
-  close: () => void;
-};
+type Presentation = { show: () => void };
 
 function useDrillPresentation(props: DrillProps): Presentation {
   const parent = useOptionalSheet();
   const name = useId();
-  const [open, setOpen] = useState(false);
   const completion = useCompletion(props.onClose);
   useLiveDestination(props, { parent, name, onExit: completion.finish });
+  const pushPage = useRoutedPage(props, completion);
 
-  const close = closeChoices(setOpen, completion);
-
-  return {
-    parent,
-    open,
-    close,
-    show: showChoices(props, { parent, name, completion, setOpen }),
-  };
+  return { show: showChoices(props, { parent, name, completion, pushPage }) };
 }
+
+// The page pushed on the screen's own stack, where no Sheet holds the row; Back is the stack's.
+function useRoutedPage(props: DrillProps, completion: Completion): () => void {
+  const router = useRouter();
+
+  return usePushedPage({
+    content: () => (
+      <Page title={props.title} {...pageSearch(props.search)}>
+        {props.children(() => router.back(), props.search !== undefined)}
+      </Page>
+    ),
+    onExit: completion.finish,
+  });
+}
+
+const pageSearch = (
+  search: DrillProps['search'],
+): Pick<PageProps, 'search' | 'value' | 'onChangeText'> =>
+  search
+    ? {
+        search: { label: search.label },
+        value: search.value,
+        onChangeText: search.onChangeText,
+      }
+    : {};
 
 type DestinationOwner = {
   parent?: SheetNavigation;
@@ -77,28 +87,18 @@ function hand(props: DrillProps, live: Live): void {
     placeholder: props.placeholder,
     standby: live.standby,
     onExit: live.onExit,
-    children: props.children(live.parent.back),
+    children: props.children(live.parent.back, false),
   };
 
   if (live.standby) live.parent.standby(page);
   else live.parent.update(page);
 }
 
-function closeChoices(
-  setOpen: (open: boolean) => void,
-  completion: Completion,
-): () => void {
-  return (): void => {
-    setOpen(false);
-    completion.finish();
-  };
-}
-
 type Opening = {
   parent?: SheetNavigation;
   name: string;
   completion: Completion;
-  setOpen: (open: boolean) => void;
+  pushPage: () => void;
 };
 
 function showChoices(props: DrillProps, opening: Opening): () => void {
@@ -111,7 +111,7 @@ function showChoices(props: DrillProps, opening: Opening): () => void {
         name: opening.name,
         onExit: opening.completion.finish,
       });
-    else opening.setOpen(true);
+    else opening.pushPage();
   };
 }
 
@@ -126,42 +126,6 @@ function pushChoices(
     contentScrolls: props.contentScrolls,
     placeholder: props.placeholder,
     standby: props.mount === 'eager',
-    children: props.children(parent.back),
+    children: props.children(parent.back, false),
   });
-}
-
-function StandaloneChoices(props: Props & Presentation): ReactElement {
-  return (
-    <Sheet {...standaloneProps(props)}>
-      <Sheet.Page name="options" title={props.title}>
-        {props.open && props.children(props.close)}
-      </Sheet.Page>
-    </Sheet>
-  );
-}
-
-type StandaloneProps = Pick<
-  DrillProps,
-  'label' | 'title' | 'trigger' | 'contentScrolls'
-> &
-  Presentation;
-
-function standaloneProps(
-  props: StandaloneProps,
-): Omit<React.ComponentProps<typeof Sheet>, 'children'> {
-  return {
-    open: props.open,
-    trigger: props.trigger,
-    label: props.title,
-    detents: ['large'],
-    contentScrolls: props.contentScrolls,
-    onOpenChange: changePresentation(props),
-  };
-}
-
-function changePresentation(props: Presentation): (next: boolean) => void {
-  return (next): void => {
-    if (next) props.show();
-    else props.close();
-  };
 }

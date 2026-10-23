@@ -3,6 +3,7 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
 import { settleViewport } from '#kit/settle-viewport';
 import { ControlledPicker } from './field-picker-controlled';
+import { inStackedPage } from './field-picker-decorators';
 import { pill, pillLoadError, pillLoading } from './field-picker-fixtures';
 
 const changed = fn<(value: string | readonly string[]) => void>();
@@ -12,6 +13,7 @@ const meta = {
   beforeEach: (): void => {
     changed.mockClear();
   },
+  decorators: inStackedPage,
   render: (): React.JSX.Element => (
     <ControlledPicker {...pill} onValueChange={changed} />
   ),
@@ -48,7 +50,7 @@ function choosing(width: number): Story {
 
 export const ChoosesInPopover = choosing(layoutWidths.wide);
 
-export const ChoosesInSheet = choosing(layoutWidths.phone);
+export const ChoosesOnPushedPage = choosing(layoutWidths.phone);
 
 // The search field has focus as the popover opens; typing narrows the rows, and nothing is reported until a choice.
 export const SearchFilters: Story = {

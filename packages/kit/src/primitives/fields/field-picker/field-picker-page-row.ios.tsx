@@ -8,7 +8,6 @@ import {
   foregroundStyle,
   shapes,
 } from '@expo/ui/swift-ui/modifiers';
-import type { ModifierConfig } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
@@ -28,19 +27,16 @@ const disclosureStyle = [
  */
 export function PageRow(props: PageRowProps): ReactElement {
   return (
-    <Button onPress={props.onPress} modifiers={pressing(props.disabled)}>
+    <Button
+      onPress={props.onPress}
+      modifiers={[buttonStyle('plain'), disabled(props.disabled ?? false)]}
+    >
       <HStack modifiers={[contentShape(shapes.rectangle())]}>
         <RowTitle title={props.title} leading={props.leading} />
         <Spacer />
         <NativeText tone="muted">{props.summary}</NativeText>
         <Image systemName="chevron.forward" modifiers={disclosureStyle} />
-        {props.sheet}
       </HStack>
     </Button>
   );
 }
-
-const pressing = (off: boolean | undefined): ModifierConfig[] => [
-  buttonStyle('plain'),
-  disabled(off ?? false),
-];

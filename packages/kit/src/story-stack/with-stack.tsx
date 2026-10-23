@@ -1,6 +1,7 @@
 import { ExpoRoot, Stack, useLocalSearchParams } from 'expo-router';
 import { use, useEffect, useMemo, useState, type ComponentType } from 'react';
 import { PageNavigationEnabled } from '#primitives/scaffolds/page';
+import { PushedPageRoute } from '../pushed-page/routes';
 import { StackScreensContext, type StackPages } from './stack-story-context';
 
 // A story's decorator on web: the story is the root of a real expo-router stack held in memory, so its Page draws the header the App's narrow window does.
@@ -63,6 +64,7 @@ function routes(): ExpoRootContext {
   const files = new Map<string, { default: ComponentType }>([
     ['./_layout.js', { default: StackLayout }],
     ['./index.js', { default: RootRoute }],
+    ['./page/[id].js', { default: PushedPageRoute }],
     ['./[page].js', { default: PageRoute }],
   ]);
 

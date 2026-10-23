@@ -1,6 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 
+export interface DrillSearch {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+}
+
 export interface DrillProps {
   label: string;
   value?: SizeClassValue<string | undefined>;
@@ -21,5 +27,8 @@ export interface DrillProps {
   onClose?: () => void;
   // Desktop: a pick leaves the choices and their menu open, so several picks run in a row; a click outside or Escape closes them. Phones go back as before.
   keepOpen?: boolean;
-  children: (close: () => void) => ReactNode;
+  // The search a pushed page holds in its header, where the platform puts it; a popover or Sheet page draws its own field.
+  search?: DrillSearch;
+  // `inHeader` is true where the page's header holds `search`.
+  children: (close: () => void, inHeader: boolean) => ReactNode;
 }

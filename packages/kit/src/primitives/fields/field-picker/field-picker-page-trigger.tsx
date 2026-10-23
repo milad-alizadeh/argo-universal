@@ -21,7 +21,7 @@ type TriggerProps = Anchor & {
 
 /*
  * The web `page` picker's value, drawn as the borderless select's: the chosen label and the up-down chevron, which a
- * picker whose value changes in place keeps (ADR-0042). It opens the popover or Sheet.
+ * picker whose value changes in place keeps (ADR-0042). It opens the popover, or pushes the page on a phone-width web window.
  */
 export function PageTrigger(props: TriggerProps): ReactElement {
   return (

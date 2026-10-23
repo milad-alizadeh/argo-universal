@@ -99,6 +99,18 @@ export const KeepOpenEscapeClosesBoth: Story = {
   },
 };
 
+// Without a pick, Escape still closes the choices and their menu together, as a click outside does.
+export const EscapeClosesBoth: Story = {
+  play: async ({ userEvent }) => {
+    const { menu, choices } = await openChoices(userEvent, 'Vegetable');
+
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => expect(choices).not.toBeInTheDocument());
+    await waitFor(() => expect(menu).not.toBeInTheDocument());
+  },
+};
+
 // Paper's drilled row: the choices open beside the menu with no title of their own.
 export const RowChoicesHaveNoTitle: Story = {
   play: async ({ userEvent }) => {

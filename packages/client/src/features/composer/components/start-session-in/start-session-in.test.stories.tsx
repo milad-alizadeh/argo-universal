@@ -1,5 +1,7 @@
 import { layoutWidths } from '@repo/kit/each-layout';
+import { Page } from '@repo/kit/primitives/scaffolds/page';
 import { settleViewport } from '@repo/kit/settle-viewport';
+import { withStack } from '@repo/kit/story-stack';
 import { newSessionProjects, serverInfo } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
@@ -8,6 +10,8 @@ import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { ServerPlaceProvider } from '../../../../lib/product/server-place';
 import { StartSessionIn, type StartSessionInProps } from './start-session-in';
+
+const searchName = 'Search Project';
 
 const [exampleProject, landingProject] = ((): [
   (typeof newSessionProjects)[number],
@@ -73,8 +77,35 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// The screen the picker sits on: a phone's stack draws its header and pushes the picker's page over it.
+const onPageInStack: NonNullable<Story['decorators']> = [
+  (Story): React.JSX.Element => (
+    <Page title="New session">
+      <Story />
+    </Page>
+  ),
+  withStack(),
+];
+
+// A phone's pushed page holds its search behind the header's search button, as a native header's bar does.
+async function searchField(
+  width: number,
+  overlay: ReturnType<typeof within>,
+  userEvent: Parameters<NonNullable<Story['play']>>[0]['userEvent'],
+): Promise<HTMLElement> {
+  if (width !== layoutWidths.phone)
+    return overlay.findByRole('searchbox', { name: searchName });
+
+  await userEvent.click(
+    await overlay.findByRole('button', { name: searchName }),
+  );
+
+  return overlay.findByRole('textbox', { name: searchName });
+}
+
 function switchProject(width: number): Story {
   return {
+    decorators: onPageInStack,
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       const overlay = within(document.body);
@@ -84,7 +115,7 @@ function switchProject(width: number): Story {
         }),
       );
       await userEvent.type(
-        await overlay.findByRole('searchbox', { name: 'Search Project' }),
+        await searchField(width, overlay, userEvent),
         landingSearch,
       );
       await expect(
@@ -105,7 +136,7 @@ function switchProject(width: number): Story {
       // One tap picks a Project and closes the picker.
       await waitFor(() =>
         expect(
-          overlay.queryByRole('searchbox', { name: 'Search Project' }),
+          overlay.queryByRole('searchbox', { name: searchName }),
         ).not.toBeInTheDocument(),
       );
     },
