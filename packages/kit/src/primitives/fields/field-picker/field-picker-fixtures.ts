@@ -106,8 +106,12 @@ export const pageWithSearch = {
   searchable: true,
 } satisfies Fixture<FieldPickerSingle>;
 
+// A short page with no search, so its action shows below the choices without scrolling.
 export const pageWithButton = {
-  ...pageWithSearch,
+  title: 'Label',
+  value: 'two',
+  options: short,
+  presentation: 'page',
   footerAction: { label: 'Add options', onPress: (): void => {} },
 } satisfies Fixture<FieldPickerSingle>;
 
