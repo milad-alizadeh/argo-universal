@@ -37,9 +37,9 @@ async function expectNoExtraHeader(page: Page): Promise<void> {
   await expect(
     page.getByRole('button', { name: 'Close Inspector', exact: true }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole('button', { name: /^Comparison/ }),
-  ).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Comparison/ })).toHaveCount(
+    0,
+  );
 }
 
 // The desktop Inspector keeps its comparison controls and resolves a remote ref against the Checkout.
