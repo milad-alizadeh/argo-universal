@@ -24,6 +24,8 @@ export const exemptFolders = {
     'App-only drawing of a check beside a label; a Plugin sends a FieldGroup.Toggle.',
   'actions/pressable':
     'The press and hover primitive the other actions are built on.',
+  'content/agent-logo':
+    "An Agent's logo from the ACP registry, drawn beside a Picker option; a Plugin sends the option's `logo`.",
   'content/liquid-glass': 'A native surface material; only how it looks.',
   'content/media-url':
     'Resolves the src of Image, Video and Audio; no props of its own.',
