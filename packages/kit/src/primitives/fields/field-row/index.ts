@@ -8,4 +8,9 @@ export {
 
 export { useFieldText } from './field-row-text-state';
 
-export { RowPressContext, useRowPressable } from './field-row-press';
+export {
+  RowPressContext,
+  rowPressTargetClassName,
+  useRowPressable,
+} from './field-row-press';
+

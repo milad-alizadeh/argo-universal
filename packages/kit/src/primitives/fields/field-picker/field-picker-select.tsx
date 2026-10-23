@@ -1,5 +1,6 @@
 import * as RadixSelect from '@radix-ui/react-select';
 import type * as React from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useOpenState } from '#primitives/overlays/open-state';
 import type { FieldPickerOption } from './field-picker-model';
@@ -12,6 +13,8 @@ export type FieldPickerSelectProps = {
   options: readonly FieldPickerOption[];
   onValueChange: (value: string) => void;
   disabled?: boolean;
+  // The row's title, drawn inside the trigger so the whole row presses.
+  lead?: ReactNode;
 };
 
 // Radix reserves the empty string to clear a select, and a choice such as "None" may be one: it travels as this.

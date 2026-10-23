@@ -62,6 +62,32 @@ function choosing(width: number): Story {
   };
 }
 
+// A click on the row's title, away from its value, opens the choices, and the row stays one button.
+export const RowOpensFromTitleMenu: Story = {
+  render: () => <ControlledPicker {...menu} onValueChange={changed} />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getAllByRole('button')).toHaveLength(1);
+    await userEvent.click(canvas.getByText('Label'));
+    await expect(
+      await within(document.body).findByRole('option', { name: 'One' }),
+    ).toBeInTheDocument();
+  },
+};
+
+export const RowOpensFromTitlePage: Story = {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  render: () => (
+    <ControlledPicker {...pageWithSearch} onValueChange={changed} />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getAllByRole('button')).toHaveLength(1);
+    await userEvent.click(canvas.getByText('Label'));
+    await expect(
+      await within(document.body).findByRole('radio', { name: 'Elm' }),
+    ).toBeInTheDocument();
+  },
+};
+
 export const ChoosesInPopover = choosing(layoutWidths.wide);
 
 export const ChoosesOnPushedPage = choosing(layoutWidths.phone);

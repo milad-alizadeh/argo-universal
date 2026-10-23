@@ -1,7 +1,9 @@
-import type { ReactElement } from 'react';
-import { Pressable } from 'react-native';
+import type { ReactElement, ReactNode } from 'react';
+import { Pressable, View } from 'react-native';
+import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { rowPressTargetClassName } from '#primitives/fields/field-row';
 
 // Radix's Trigger hands its child the anchor ref and popup state; dropping the ref leaves the popover unplaced.
 type Anchor = Pick<
@@ -15,17 +17,28 @@ type Anchor = Pick<
 type TriggerProps = Anchor & {
   title: string;
   summary: string;
+  // The row's title, drawn inside the trigger so the whole row presses.
+  lead: ReactNode;
   disabled?: boolean;
   onPress?: () => void;
 };
 
 /*
- * The web `page` picker's value, drawn as the borderless select's: the chosen label and the up-down chevron, which a
- * picker whose value changes in place keeps (ADR-0042). It opens the popover, or pushes the page on a phone-width web window.
+ * The web `page` picker's row, drawn as the borderless select's: the title, then the chosen label and the up-down chevron, which a
+ * picker whose value changes in place keeps (ADR-0042). The whole row is the trigger. It opens the popover, or pushes the page on a phone-width web window.
  */
 export function PageTrigger(props: TriggerProps): ReactElement {
   return (
     <Pressable {...triggerProps(props)}>
+      {props.lead}
+      <Choice summary={props.summary} />
+    </Pressable>
+  );
+}
+
+function Choice(props: { summary: string }): ReactElement {
+  return (
+    <View className="flex-row items-center gap-1.5 -mr-1.5 wide:-mr-1.25">
       <Text role="body">{props.summary}</Text>
       <Icon
         name="chevron-up-down"
@@ -33,7 +46,7 @@ export function PageTrigger(props: TriggerProps): ReactElement {
         aria-hidden
         className="text-tertiary"
       />
-    </Pressable>
+    </View>
   );
 }
 
@@ -51,5 +64,7 @@ const triggerProps = (props: TriggerProps): Attributes => ({
   className: triggerClassName,
 });
 
-const triggerClassName =
-  'flex h-8 flex-row items-center gap-1.5 rounded-control pl-2 web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:w-fit web:whitespace-nowrap web:outline-none web:disabled:cursor-not-allowed';
+const triggerClassName = cn(
+  rowPressTargetClassName,
+  'flex flex-row items-center justify-between web:whitespace-nowrap web:outline-none web:focus-visible:-outline-offset-2 web:focus-visible:outline-2 web:focus-visible:outline-focus web:disabled:cursor-not-allowed',
+);

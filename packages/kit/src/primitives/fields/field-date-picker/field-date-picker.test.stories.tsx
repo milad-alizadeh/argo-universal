@@ -4,7 +4,7 @@ import type {
   StoryObj,
 } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { expect, fireEvent, fn } from 'storybook/test';
+import { expect, fireEvent, fn, spyOn } from 'storybook/test';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { ControlledDatePicker } from './field-date-picker-controlled';
 
@@ -38,6 +38,23 @@ export const PicksADate: Story = {
     await fireEvent.change(input, { target: { value: FIRST } });
     await expect(args.onValueChange).toHaveBeenCalledWith(FIRST);
     await expect(input).toHaveValue(FIRST);
+  },
+};
+
+// A click on the row's title, away from the input, opens the browser's picker.
+export const RowOpensFromTitle: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const show = spyOn(
+      HTMLInputElement.prototype,
+      'showPicker',
+    ).mockImplementation(() => void 0);
+
+    try {
+      await userEvent.click(canvas.getByText(LABEL));
+      await expect(show).toHaveBeenCalledOnce();
+    } finally {
+      show.mockRestore();
+    }
   },
 };
 

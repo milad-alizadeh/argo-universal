@@ -1,7 +1,5 @@
-import { Row, Spacer } from '@expo/ui';
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
-import { RowTitle } from '#primitives/fields/field-row';
+import { RowTitle, useRowPressable } from '#primitives/fields/field-row';
 import { FieldPickerDrill } from './field-picker-drill';
 import { inlineOptionRows } from './field-picker-inline-rows';
 import {
@@ -25,20 +23,15 @@ export function FieldPicker(
 ): ReactElement {
   const props = widened(caller);
 
+  useRowPressable(!props.disabled && props.presentation !== 'inline');
+
   // Outside a Section, an `inline` choice is its option rows in place; a Section opens them first (expandInlinePickers).
   if (props.presentation === 'inline') return <>{inlineOptionRows(props)}</>;
 
-  return (
-    <Row alignment="center">
-      <RowTitle {...props} />
-      <Spacer flexible />
-      <View className={chevronEnd}>
-        <Choice {...props} />
-      </View>
-    </Row>
-  );
+  return <Choice {...props} />;
 }
 
+// The title and the choice are one trigger, so a click anywhere on the row opens it.
 function Choice(props: FieldPickerProps): ReactElement {
   if (props.presentation === 'menu' && !props.multiple)
     return <FieldPickerSelect {...selectProps(props)} />;
@@ -54,18 +47,13 @@ function PagePicker(props: FieldPickerProps): ReactElement {
         <PageTrigger
           title={props.title}
           summary={choiceSummary(props)}
+          lead={<RowTitle {...props} />}
           disabled={props.disabled}
         />
       }
     />
   );
 }
-
-/*
- * The up-down chevron's strokes end a third of its box short of the right edge; pulling the picker out by that much
- * lines the ink up with the values in the rows above (to the nearest quarter step).
- */
-const chevronEnd = '-mr-1.5 wide:-mr-1.25';
 
 const selectProps = (
   props: FieldPickerProps,
@@ -75,4 +63,5 @@ const selectProps = (
   options: props.options,
   onValueChange: props.onValueChange,
   disabled: props.disabled,
+  lead: <RowTitle {...props} />,
 });
