@@ -1,4 +1,5 @@
 import type * as ActionListKit from '#primitives/actions/action-list';
+import type * as AgentLogoKit from '#primitives/content/agent-logo';
 import type * as AudioKit from '#primitives/content/audio';
 import type { CodeProps } from '#primitives/content/code';
 import type * as KbdKit from '#primitives/content/kbd';
@@ -29,6 +30,7 @@ import type * as StatusDotKit from '#primitives/status/status-dot';
 import type * as SvgKit from '#primitives/visual';
 
 export type AdditionalPrimitives = {
+  RegistryIconProps: AgentLogoKit.RegistryIconProps;
   LinkPreviewCardData: LinkPreviewKit.LinkPreviewCardData;
   LinkPreviewSource: LinkPreviewKit.LinkPreviewSource;
   MarkdownProps: MarkdownProps;
