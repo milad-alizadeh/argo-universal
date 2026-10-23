@@ -6,6 +6,7 @@ import type { ListItemProps } from './list-item-props';
 
 const appearanceClasses = {
   plain: '',
+  grouped: '',
   cards:
     'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:bg-transparent web:wide:shadow-hairline',
 };

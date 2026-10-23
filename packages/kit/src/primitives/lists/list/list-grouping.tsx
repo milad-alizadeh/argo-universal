@@ -3,6 +3,7 @@ import {
   useContext,
   useMemo,
   useState,
+  type ContextType,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -12,18 +13,23 @@ import {
   type ListAppearance,
   type ListPosition,
 } from '../../../list-context';
+import { childRenderers } from './list-child-renderers';
 import type { ListChild } from './list-children';
 import { ListGroupEnds, ListGroupEndsContext } from './list-group-ends';
+import { GroupedCells } from './list-grouped-cell';
 import type { ListProps } from './list-props';
 import { dataRowPosition, rowPosition } from './list-row-position';
 
 type RowLayout = {
   appearance: ListAppearance;
+  // The appearance a data row draws its card piece in; a fixed child draws its own cell.
+  cellAppearance: ListAppearance;
   positionAt: (index: number) => ListPosition;
 };
 
 const emptyLayout: RowLayout = {
   appearance: 'plain',
+  cellAppearance: 'plain',
   positionAt: () => 'only',
 };
 
@@ -46,11 +52,20 @@ export function ListGrouping<Item>({
   );
 }
 
+const dataCellAppearance = <Item,>(
+  list: ListProps<Item>,
+  appearance: ListAppearance,
+): ListAppearance =>
+  childRenderers.has(list.renderItem ?? {}) ? 'plain' : appearance;
+
 function rowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
   if (!list) return emptyLayout;
 
+  const appearance = list.appearance ?? 'plain';
+
   return {
-    appearance: list.appearance ?? 'plain',
+    appearance,
+    cellAppearance: dataCellAppearance(list, appearance),
     positionAt: (index) => dataRowPosition(list, index),
   };
 }
@@ -73,8 +88,16 @@ type SectionRowProps = {
   children: ReactNode;
 };
 
-export function DataListRow({ index, children }: DataRowProps): ReactElement {
-  const { appearance, positionAt } = useContext(RowLayoutContext);
+type DataRow = {
+  value: ContextType<typeof ListContext>;
+  cellAppearance: ListAppearance;
+  position: ListPosition;
+};
+
+function useDataRow(index: number): DataRow {
+  const { appearance, cellAppearance, positionAt } =
+    useContext(RowLayoutContext);
+
   const position = positionAt(index);
 
   const value = useMemo(
@@ -82,24 +105,49 @@ export function DataListRow({ index, children }: DataRowProps): ReactElement {
     [appearance, position, index],
   );
 
-  return <ListContext value={value}>{children}</ListContext>;
+  return { value, cellAppearance, position };
 }
 
-export function FixedListRow({
-  item,
-  appearance,
-}: FixedRowProps): ReactElement {
-  const parent = useContext(ListContext);
+export function DataListRow({ index, children }: DataRowProps): ReactElement {
+  const { value, cellAppearance, position } = useDataRow(index);
 
-  const value = {
-    ...parent,
-    appearance: appearance ?? 'plain',
-    position: item.position,
-    inList: true,
-    ...selectionOf(item),
-  };
+  return (
+    <ListContext value={value}>
+      <GroupedCells appearance={cellAppearance} position={position}>
+        {children}
+      </GroupedCells>
+    </ListContext>
+  );
+}
 
-  return <ListContext value={value}>{item.content}</ListContext>;
+const fixedValue = (
+  parent: ContextType<typeof ListContext>,
+  { item, appearance }: FixedRowProps,
+): ContextType<typeof ListContext> => ({
+  ...parent,
+  appearance: appearance ?? 'plain',
+  position: item.position,
+  inList: true,
+  ...selectionOf(item),
+});
+
+// A section's header, footer and gap are not rows of its card.
+const cellAppearance = ({ item, appearance }: FixedRowProps): ListAppearance =>
+  item.fullSpan ? 'plain' : (appearance ?? 'plain');
+
+export function FixedListRow(props: FixedRowProps): ReactElement {
+  const value = fixedValue(useContext(ListContext), props);
+
+  return (
+    <ListContext value={value}>
+      <GroupedCells
+        appearance={cellAppearance(props)}
+        position={props.item.position}
+      >
+        {props.item.content}
+      </GroupedCells>
+    </ListContext>
+  );
 }
 
 export function SectionListRow(props: SectionRowProps): ReactElement {

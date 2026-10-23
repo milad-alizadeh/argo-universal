@@ -14,3 +14,4 @@ export {
   useRowPressable,
 } from './field-row-press';
 
+export { RowFrame } from './field-row-frame';

@@ -5,7 +5,7 @@ import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '../list-item';
 import { List } from './list';
-import presentationMeta, { Plain } from './list.stories';
+import presentationMeta, { Grouped, Plain } from './list.stories';
 
 const meta = {
   ...presentationMeta,
@@ -144,5 +144,17 @@ export const LoadingSection: Story = {
     await expect(await canvas.findByText('Section')).toBeInTheDocument();
     await expect(canvas.queryByRole('button')).toBeNull();
     await expect(canvas.queryByRole('heading')).toBeNull();
+  },
+};
+
+export const GroupedSections: Story = {
+  ...Grouped,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Recent')).toBeVisible();
+    await expect(canvas.getByText('All branches')).toBeVisible();
+    await expect(canvas.getByText('The branches you used last.')).toBeVisible();
+    await expect(canvas.getByText('Current')).toBeVisible();
+    await expect(canvas.getByText('develop')).toBeVisible();
+    await expect(canvas.getByText('feature/branch-1')).toBeVisible();
   },
 };
