@@ -20,10 +20,11 @@ export function ViewedMark(props: ViewedMarkProps): React.JSX.Element | null {
   return <DesktopViewedMark {...mark} />;
 }
 
+// An empty circle until the file is viewed, then a checked one, so the two states read apart at a glance.
 function DesktopViewedMark(props: ActiveViewedMark): React.JSX.Element {
   return (
     <IconButton
-      icon="check"
+      icon={props.viewed ? 'passed' : 'pending'}
       accessibilityLabel="Viewed"
       variant="ghost"
       size="sm"

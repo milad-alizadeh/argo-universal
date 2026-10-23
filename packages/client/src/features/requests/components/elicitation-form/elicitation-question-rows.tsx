@@ -21,6 +21,9 @@ const OptionCards = ({ model }: ModelProps): ReactElement => (
   <List
     key={model.question.name}
     appearance="cards"
+    padding={4}
+    paddingTop={0}
+    paddingBottom={0}
     keyboardShouldPersistTaps="handled"
   >
     <ListSection>
