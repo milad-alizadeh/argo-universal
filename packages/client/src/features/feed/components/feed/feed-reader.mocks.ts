@@ -111,7 +111,14 @@ export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
     const settled = canPointAt(findElement()) && box.top === lastTop;
     lastTop = box.top;
 
-    if (!settled) throw new Error('The element is still moving');
+    if (!settled) {
+      const r = (e: Element | null): string => {
+        const b = e?.getBoundingClientRect();
+        return b ? [b.left, b.top, b.width, b.height].map(Math.round).join(',') : 'none';
+      };
+      const pill = document.querySelector('[role="progressbar"]');
+      throw new Error(`DIAG header=${r(findElement())} pill=${r(pill)} pillParent=${r(pill?.parentElement ?? null)} vh=${innerHeight} vw=${innerWidth} pillText=${pill?.textContent}`);
+    }
 
     return box.top;
   }, settleWait);
