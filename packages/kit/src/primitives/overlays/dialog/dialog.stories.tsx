@@ -1,11 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { useWide } from '#kit/use-wide/use-wide';
 import { Button } from '#primitives/actions/button';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
-import { TextInput } from '#primitives/inputs/text-input';
 import {
   Dialog,
   DialogCancel,
@@ -107,7 +106,7 @@ function ProfileField({
   return (
     <View className="grid gap-3">
       <Text>{label}</Text>
-      <TextInput variant="bare" {...inputProps} />
+      <TextInput {...inputProps} />
     </View>
   );
 }

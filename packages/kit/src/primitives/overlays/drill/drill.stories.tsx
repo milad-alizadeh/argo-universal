@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { Combobox } from '#primitives/inputs/combobox';
+import { Combobox } from '#primitives/controls/combobox';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { Sheet } from '#primitives/overlays/sheet';

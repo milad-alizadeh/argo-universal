@@ -54,17 +54,9 @@ export const ActionList: PluginComponents['ActionList'] & {
 
 export const Action: PluginComponents['Action'];
 
-export const Picker: PluginComponents['Picker'];
-
 export const Switch: PluginComponents['Switch'];
 
-export const Checkbox: PluginComponents['Checkbox'];
-
 export const Slider: PluginComponents['Slider'];
-
-export const TextInput: PluginComponents['TextInput'];
-
-export const DatePicker: PluginComponents['DatePicker'];
 
 export const SplitButton: PluginComponents['SplitButton'];
 

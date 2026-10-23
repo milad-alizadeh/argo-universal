@@ -18,18 +18,6 @@ export const previousDraftFixtures: {
     },
   },
   {
-    type: 'Checkbox',
-    props: {
-      value: false,
-      onValueChange: { $event: 'onValueChange' },
-      label: 'Remember',
-    },
-    legacy: {
-      checked: false,
-      label: 'Remember',
-    },
-  },
-  {
     type: 'Slider',
     props: {
       value: 2,
@@ -59,57 +47,6 @@ export const previousDraftFixtures: {
       placeholder: 'Search jobs',
       value: 'build',
     },
-  },
-  {
-    type: 'Picker',
-    props: {
-      label: 'Mode',
-      value: 'fast',
-      options: [{ value: 'fast', label: 'Fast' }],
-      variant: 'row',
-      onValueChange: { $event: 'onValueChange' },
-    },
-    legacy: {
-      label: 'Mode',
-      value: 'fast',
-      options: [{ value: 'fast', label: 'Fast' }],
-      variant: 'menu',
-    },
-  },
-  {
-    type: 'Picker',
-    props: {
-      label: 'Labels',
-      multiple: true,
-      value: ['bug', 'docs'],
-      options: [
-        { value: 'bug', label: 'Bug' },
-        { value: 'docs', label: 'Docs' },
-      ],
-      onValueChange: { $event: 'onValueChange' },
-    },
-    legacy: {
-      label: 'Labels',
-      multiple: true,
-      value: ['bug', 'docs'],
-      options: [
-        { value: 'bug', label: 'Bug' },
-        { value: 'docs', label: 'Docs' },
-      ],
-      variant: 'menu',
-    },
-  },
-  {
-    type: 'DatePicker',
-    props: {
-      label: 'Due date',
-      value: '2026-10-19T14:30',
-      mode: 'datetime',
-      required: true,
-      disabled: true,
-      onValueChange: { $event: 'onValueChange' },
-    },
-    legacy: { label: 'Due date', value: '2026-10-19T14:30', mode: 'datetime' },
   },
   { type: 'Tooltip', props: { label: 'Save' }, legacy: { text: 'Save' } },
   {

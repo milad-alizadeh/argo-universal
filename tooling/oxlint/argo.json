@@ -150,8 +150,6 @@
       // `shape` is @expo/ui Compose's own prop name on Surface and Button; the rule allows member reads but not package prop keys.
       "files": [
         "packages/kit/src/primitives/actions/split-button/split-button-look.android.ts",
-        "packages/kit/src/primitives/inputs/picker/picker-dialog.android.tsx",
-        "packages/kit/src/primitives/inputs/picker/picker-row.android.tsx",
         "packages/kit/src/primitives/lists/grouped-list-item/grouped-list-item.android.tsx"
       ],
       "rules": { "anti-slop/no-shape-in-symbol-names": "off" }
@@ -2160,9 +2158,9 @@
       // ADR-0023: Lexical stays in the RichTextarea web drawing: its view, the web/ folder (with the tests' headless editor) and their tests.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
-        "packages/kit/src/primitives/inputs/rich-textarea/rich-textarea.tsx",
-        "packages/kit/src/primitives/inputs/rich-textarea/web/**",
-        "packages/kit/src/primitives/inputs/rich-textarea/*.test.*"
+        "packages/kit/src/primitives/controls/rich-textarea/rich-textarea.tsx",
+        "packages/kit/src/primitives/controls/rich-textarea/web/**",
+        "packages/kit/src/primitives/controls/rich-textarea/*.test.*"
       ],
       "rules": { "argo/lexical-zone": "error" }
     },

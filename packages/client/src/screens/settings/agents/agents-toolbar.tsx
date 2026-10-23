@@ -1,4 +1,4 @@
-import { FilterPill } from '@repo/kit/primitives/inputs/filter-pill';
+import { FilterPill } from '@repo/kit/primitives/controls/filter-pill';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type AgentsFilter } from '#features/agents';

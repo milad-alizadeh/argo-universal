@@ -1,20 +1,28 @@
 import {
   Button,
+  FieldGroup,
   Sheet,
   Stack,
   Text,
-  TextInput,
   useState,
 } from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
+function nameField(setAnswer) {
+  const field = jsx(
+    FieldGroup.TextField,
+    { title: 'Name', value: 'Initial', onChangeText: setAnswer },
+    'field',
+  );
+
+  const section = jsx(FieldGroup.Section, { children: field }, 'section');
+
+  return jsx(FieldGroup, { children: section }, 'fields');
+}
+
 function sheetContent(setAnswer) {
   return [
-    jsx(
-      TextInput,
-      { label: 'Name', value: 'Initial', onChangeText: setAnswer },
-      'field',
-    ),
+    nameField(setAnswer),
     jsx(
       Button,
       { label: 'Apply', onPress: () => setAnswer('Confirmed') },

@@ -63,14 +63,28 @@ export const openSheetTree = {
 
 export const switchTree = control('switch');
 
-export const checkboxTree = control('checkbox');
-
-export const pickerTree = control('picker');
-
 export const sliderTree = control('slider');
 
-export const textInputTree = control('textinput');
+// A FieldGroup holding a Picker row and a TextField row, as a Plugin sends them.
+export const fieldGroupTree = control('form');
 
 export const iconButtonTree = control('iconbutton');
 
 export const splitButtonTree = control('splitbutton');
+
+const findNode = (
+  nodes: readonly WireNode[],
+  type: string,
+): WireNode | undefined =>
+  nodes
+    .flatMap((node) => [node, findNode(node.children, type)])
+    .find((node) => node?.type === type);
+
+// The TextField row inside the FieldGroup fixture, which a draft story draws on its own.
+export function textFieldNode(): WireNode {
+  const node = findNode([controlTree('form')], 'FieldGroup.TextField');
+
+  if (!node) throw new Error('Missing TextField control fixture');
+
+  return node;
+}

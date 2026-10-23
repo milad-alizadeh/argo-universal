@@ -3,7 +3,7 @@ import { ruleTester } from './rule-tester.ts';
 
 ruleTester.run('lexical-zone', lexicalZone, {
   valid: [
-    "import { RichTextarea } from '#primitives/inputs/rich-textarea';",
+    "import { RichTextarea } from '#primitives/controls/rich-textarea';",
     "import { lexicalish } from 'lexicalish';",
     "import { x } from '@lexicalfork/react';",
   ],

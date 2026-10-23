@@ -1,5 +1,5 @@
 import type { SessionConfigOption } from '@repo/contracts';
-import { Slider } from '@repo/kit/primitives/inputs/slider';
+import { Slider } from '@repo/kit/primitives/controls/slider';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import { SwitchListItem } from '#lib/product/switch-list-item/switch-list-item';

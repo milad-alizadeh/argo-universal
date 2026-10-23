@@ -1,38 +1,15 @@
 import { z } from 'zod';
 import { iconButtonPart } from './icon-button-part';
-import { inputsPartSchemas as inputs } from './parts/inputs';
+import { controlsPartSchemas as controls } from './parts/controls';
 import { selectionPartSchemas } from './selection-parts';
 import type { WirePartDefinition } from './wire-parts';
 
-const [onePick, manyPicks] = inputs.Picker.props.options;
-
-const onePickDraft = onePick.extend({
-  onValueChange: onePick.shape.onValueChange.optional(),
+const toggle = controls.Switch.props.extend({
+  onValueChange: controls.Switch.props.shape.onValueChange.optional(),
 });
 
-const picker = z.union([
-  onePickDraft,
-  manyPicks.extend({ onValueChange: manyPicks.shape.onValueChange.optional() }),
-]);
-
-const toggle = inputs.Switch.props.extend({
-  onValueChange: inputs.Switch.props.shape.onValueChange.optional(),
-});
-
-const checkbox = inputs.Checkbox.props.extend({
-  onValueChange: inputs.Checkbox.props.shape.onValueChange.optional(),
-});
-
-const slider = inputs.Slider.props.extend({
-  onValueChange: inputs.Slider.props.shape.onValueChange.optional(),
-});
-
-const text = inputs.TextInput.props.extend({
-  onChangeText: inputs.TextInput.props.shape.onChangeText.optional(),
-});
-
-const datePicker = inputs.DatePicker.props.extend({
-  onValueChange: inputs.DatePicker.props.shape.onValueChange.optional(),
+const slider = controls.Slider.props.extend({
+  onValueChange: controls.Slider.props.shape.onValueChange.optional(),
 });
 
 const splitChoices = selectionPartSchemas.SplitButton.props.options[0];
@@ -56,12 +33,8 @@ function withDraft<Part extends WirePartDefinition, Schema extends z.ZodType>(
 }
 
 export const controlWireParts = {
-  Picker: withDraft(inputs.Picker, picker),
-  Switch: withDraft(inputs.Switch, toggle),
-  Checkbox: withDraft(inputs.Checkbox, checkbox),
-  Slider: withDraft(inputs.Slider, slider),
-  TextInput: withDraft(inputs.TextInput, text),
-  DatePicker: withDraft(inputs.DatePicker, datePicker),
+  Switch: withDraft(controls.Switch, toggle),
+  Slider: withDraft(controls.Slider, slider),
   SplitButton: withDraft(selectionPartSchemas.SplitButton, split),
   IconButton: iconButtonPart,
 };

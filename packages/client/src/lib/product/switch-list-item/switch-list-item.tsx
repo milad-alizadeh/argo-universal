@@ -1,4 +1,4 @@
-import { Switch } from '@repo/kit/primitives/inputs/switch';
+import { Switch } from '@repo/kit/primitives/controls/switch';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ComponentProps, ReactElement } from 'react';
 import { Platform } from 'react-native';

@@ -1,4 +1,4 @@
-import { SegmentedControl } from '@repo/kit/primitives/inputs/segmented-control';
+import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 

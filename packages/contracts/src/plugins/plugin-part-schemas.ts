@@ -1,7 +1,7 @@
 import { actionsPartSchemas } from './parts/actions';
 import { contentPartSchemas } from './parts/content';
+import { controlsPartSchemas } from './parts/controls';
 import { fieldsPartSchemas } from './parts/fields';
-import { inputsPartSchemas } from './parts/inputs';
 import { layoutPartSchemas } from './parts/layout';
 import { listsPartSchemas } from './parts/lists';
 import { overlaysPartSchemas } from './parts/overlays';
@@ -16,7 +16,7 @@ export const pluginPartSchemas = {
   ...contentPartSchemas,
   ...statusPartSchemas,
   ...actionsPartSchemas,
-  ...inputsPartSchemas,
+  ...controlsPartSchemas,
   ...fieldsPartSchemas,
   ...listsPartSchemas,
   ...overlaysPartSchemas,
@@ -24,11 +24,8 @@ export const pluginPartSchemas = {
   ...visualPartSchemas,
   ...wireParts,
   // The kit receives local handlers; a Plugin can leave its draft controls without wire handlers.
-  Picker: inputsPartSchemas.Picker,
-  Switch: inputsPartSchemas.Switch,
-  Checkbox: inputsPartSchemas.Checkbox,
-  Slider: inputsPartSchemas.Slider,
-  TextInput: inputsPartSchemas.TextInput,
+  Switch: controlsPartSchemas.Switch,
+  Slider: controlsPartSchemas.Slider,
   SplitButton: actionsPartSchemas.SplitButton,
 } satisfies Record<string, WirePartDefinition>;
 
@@ -36,8 +33,8 @@ export const pluginPartSchemas = {
 export const pluginPartGroups = {
   actions: actionsPartSchemas,
   content: contentPartSchemas,
+  controls: controlsPartSchemas,
   fields: fieldsPartSchemas,
-  inputs: inputsPartSchemas,
   layout: layoutPartSchemas,
   lists: listsPartSchemas,
   overlays: overlaysPartSchemas,

@@ -145,10 +145,6 @@ expectTypeOf<Primitives['ComboboxOption']['subtitle']>().toEqualTypeOf<
   string | undefined
 >();
 
-expectTypeOf<
-  Primitives['PickerProps']['options'][number]['subtitle']
->().toEqualTypeOf<string | undefined>();
-
 expectTypeOf<DomainPropNames>().toEqualTypeOf<Each<never>>();
 
 expectTypeOf<Aliases['ButtonSize']>().toExtend<Size>();

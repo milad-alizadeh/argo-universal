@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { TextInput } from 'react-native';
 import { action } from 'storybook/actions';
 import { expect, fireEvent, within } from 'storybook/test';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
-import { Slider } from '#primitives/inputs/slider';
-import { Switch } from '#primitives/inputs/switch';
-import { TextInput } from '#primitives/inputs/text-input';
+import { Slider } from '#primitives/controls/slider';
+import { Switch } from '#primitives/controls/switch';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { layoutWidths } from '../../../each-layout';
@@ -75,7 +75,7 @@ function MenuPopover(): React.JSX.Element {
     <Popover>
       <Trigger />
       <PopoverContent accessibilityLabel="Model" className="p-1">
-        <TextInput variant="bare" accessibilityLabel="Search models" />
+        <TextInput accessibilityLabel="Search models" />
         <List>
           <ListItem title="Small" onPress={action('small')} />
           <ListItem title="Medium" disabled onPress={action('medium')} />

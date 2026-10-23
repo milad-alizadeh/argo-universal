@@ -21,7 +21,7 @@ export const exemptFolders = {
   'kit-props': 'The kit-wide props types; it draws nothing.',
   native: 'Platform-fork helpers for the drawings, not kit components.',
   'actions/check-button':
-    'App-only drawing of a check beside a label; a Plugin sends a Checkbox.',
+    'App-only drawing of a check beside a label; a Plugin sends a FieldGroup.Toggle.',
   'actions/pressable':
     'The press and hover primitive the other actions are built on.',
   'content/liquid-glass': 'A native surface material; only how it looks.',
@@ -37,10 +37,10 @@ export const exemptFolders = {
   'fields/field-value': fieldRow,
   'fields/field-row':
     'The drawing every FieldGroup row shares; it draws no schema of its own.',
-  'inputs/rich-textarea':
+  'controls/rich-textarea':
     'The desktop editor behind the Composer; not on the wire.',
-  'inputs/segmented-control':
-    'The App draws it for its own screens; a Plugin sends a Picker.',
+  'controls/segmented-control':
+    'The App draws it for its own screens; a Plugin sends a FieldGroup.Picker.',
   'layout/spacing': 'The spacing scale the layout components read.',
   'lists/drawer-item': 'The drawer shell draws it; a Plugin has no drawer.',
   'lists/virtual-list-item': 'The virtualised row List draws for ListItem.',

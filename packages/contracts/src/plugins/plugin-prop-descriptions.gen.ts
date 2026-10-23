@@ -304,46 +304,6 @@ export type WireSchemaHints = {
     /** A count or status dot on the icon. */
     "badge": PropValue<"Action", "badge">;
   };
-  "TextInput": {
-    /** Spoken and visible field name. */
-    "label": PropValue<"TextInput", "label">;
-    /** Current field value. */
-    "value": PropValue<"TextInput", "value">;
-    /** Reports value edits. */
-    "onChangeText": PropValue<"TextInput", "onChangeText">;
-    /** Example shown while empty. */
-    "placeholder": PropValue<"TextInput", "placeholder">;
-    /** Draw code in the mono face. */
-    "mono": PropValue<"TextInput", "mono">;
-    /** Disable edits. */
-    "disabled": PropValue<"TextInput", "disabled">;
-    /** Value validation is running. */
-    "loading": PropValue<"TextInput", "loading">;
-    /** Take focus on opening. */
-    "focusOnOpen": PropValue<"TextInput", "focusOnOpen">;
-    /** Select the value on focus. */
-    "selectOnFocus": PropValue<"TextInput", "selectOnFocus">;
-    /** Submit on Return or Enter. */
-    "onSubmit": PropValue<"TextInput", "onSubmit">;
-    /** The field requires a value. */
-    "required": PropValue<"TextInput", "required">;
-    /** Use a numeric keyboard. */
-    "numeric": PropValue<"TextInput", "numeric">;
-    /** Mask secret entry. */
-    "secure": PropValue<"TextInput", "secure">;
-    /** Hide the visible label. */
-    "labelHidden": PropValue<"TextInput", "labelHidden">;
-  };
-  "Textarea": {
-    /** Current field value. */
-    "value": PropValue<"Textarea", "value">;
-    /** Example shown while empty. */
-    "placeholder": PropValue<"Textarea", "placeholder">;
-    /** Reports value edits. */
-    "onChangeText": PropValue<"Textarea", "onChangeText">;
-    /** Disable edits. */
-    "disabled": PropValue<"Textarea", "disabled">;
-  };
   "SearchField": {
     /** Search name and placeholder. */
     "label": PropValue<"SearchField", "label">;
@@ -351,28 +311,6 @@ export type WireSchemaHints = {
     "value": PropValue<"SearchField", "value">;
     /** Reports query edits. */
     "onChangeText": PropValue<"SearchField", "onChangeText">;
-  };
-  "Picker": {
-    /** Spoken and visible selection name. */
-    "label": PropValue<"Picker", "label">;
-    /** Selected values. */
-    "value": PropValue<"Picker", "value">;
-    /** Available choices. */
-    "options": PropValue<"Picker", "options">;
-    /** Reports a selected value. */
-    "onValueChange": PropValue<"Picker", "onValueChange">;
-    /** A value is required. */
-    "required": PropValue<"Picker", "required">;
-    /** Text shown without a selection. */
-    "placeholder": PropValue<"Picker", "placeholder">;
-    /** Disable selection. */
-    "disabled": PropValue<"Picker", "disabled">;
-    /** Choices are loading. */
-    "loading": PropValue<"Picker", "loading">;
-    /** Why choices failed to load. */
-    "loadError": PropValue<"Picker", "loadError">;
-    /** Pick several values. */
-    "multiple": PropValue<"Picker", "multiple">;
   };
   "FilterPill": {
     /** Filter name. */
@@ -414,20 +352,6 @@ export type WireSchemaHints = {
     /** Action below the choices. */
     "footerAction": PropValue<"Combobox", "footerAction">;
   };
-  "Checkbox": {
-    /** The current on or off state. */
-    "value": PropValue<"Checkbox", "value">;
-    /** Called with the new on or off state. */
-    "onValueChange": PropValue<"Checkbox", "onValueChange">;
-    /** Whether interaction is disabled. */
-    "disabled": PropValue<"Checkbox", "disabled">;
-    /** The visible and accessible label. */
-    "label": PropValue<"Checkbox", "label">;
-    /** The option row treatment, or inline beside other content and sized to its label. */
-    "variant": PropValue<"Checkbox", "variant">;
-    /** The selection mode. */
-    "selection": PropValue<"Checkbox", "selection">;
-  };
   "Switch": {
     /** The current on or off state. */
     "value": PropValue<"Switch", "value">;
@@ -455,20 +379,6 @@ export type WireSchemaHints = {
     "valueLabel": PropValue<"Slider", "valueLabel">;
     /** Whether interaction is disabled. */
     "disabled": PropValue<"Slider", "disabled">;
-  };
-  "DatePicker": {
-    /** Spoken and visible field name. */
-    "label": PropValue<"DatePicker", "label">;
-    /** Local ISO value: `YYYY-MM-DD`, `HH:mm`, or `YYYY-MM-DDTHH:mm` by mode. */
-    "value": PropValue<"DatePicker", "value">;
-    /** Pick a date, a time, or both. */
-    "mode": PropValue<"DatePicker", "mode">;
-    /** Reports a picked value. */
-    "onValueChange": PropValue<"DatePicker", "onValueChange">;
-    /** The field requires a value. */
-    "required": PropValue<"DatePicker", "required">;
-    /** Disable picking. */
-    "disabled": PropValue<"DatePicker", "disabled">;
   };
   "FieldGroup": {
     /** Every row holds still. */
@@ -595,6 +505,8 @@ export type WireSchemaHints = {
     "autoFocus": PropValue<"FieldGroup.TextField", "autoFocus">;
     /** Select all of the text when the field takes focus. */
     "selectTextOnFocus": PropValue<"FieldGroup.TextField", "selectTextOnFocus">;
+    /** on Focus for this part. */
+    "onFocus": PropValue<"FieldGroup.TextField", "onFocus">;
     /** on Blur for this part. */
     "onBlur": PropValue<"FieldGroup.TextField", "onBlur">;
     /** on Submit for this part. */
@@ -625,6 +537,8 @@ export type WireSchemaHints = {
     "autoFocus": PropValue<"FieldGroup.SecretField", "autoFocus">;
     /** Select all of the text when the field takes focus. */
     "selectTextOnFocus": PropValue<"FieldGroup.SecretField", "selectTextOnFocus">;
+    /** on Focus for this part. */
+    "onFocus": PropValue<"FieldGroup.SecretField", "onFocus">;
     /** on Blur for this part. */
     "onBlur": PropValue<"FieldGroup.SecretField", "onBlur">;
     /** on Submit for this part. */
@@ -641,7 +555,7 @@ export type WireSchemaHints = {
     "tileSize": PropValue<"List", "tileSize">;
     /** Media aspect: square 1:1, landscape 16:10, portrait 3:4. */
     "aspect": PropValue<"List", "aspect">;
-    /** The list appearance. */
+    /** The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists). */
     "appearance": PropValue<"List", "appearance">;
     /** Page-level supporting text. */
     "footer": PropValue<"List", "footer">;

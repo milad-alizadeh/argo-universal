@@ -1,4 +1,4 @@
-import { SearchField } from '@repo/kit/primitives/inputs/search-field';
+import { SearchField } from '@repo/kit/primitives/controls/search-field';
 import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import { useState } from 'react';

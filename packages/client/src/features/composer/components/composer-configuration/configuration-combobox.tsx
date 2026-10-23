@@ -3,7 +3,7 @@ import {
   Combobox,
   type ComboboxOption,
   type ComboboxProps,
-} from '@repo/kit/primitives/inputs/combobox';
+} from '@repo/kit/primitives/controls/combobox';
 import type { ReactElement } from 'react';
 import { configurationChoices } from '#lib/product/session-configuration';
 import type { ComposerConfigurationProps } from './configuration-types';

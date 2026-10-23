@@ -8,7 +8,7 @@ const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Controls',
   render: (): React.JSX.Element => (
     <>
-      {roots.slice(2).map((root) => (
+      {roots.slice(1).map((root) => (
         <PluginTree key={root.key} root={root} onEvent={onEvent} />
       ))}
     </>
@@ -25,12 +25,17 @@ const disabledAttribute = 'aria-disabled';
 
 const environment = 'Environment';
 
+// The FieldGroup fixture's rows are keyed by their path.
+const pickerKey = 'form/section/picker';
+
+const textKey = 'form/section/textinput';
+
 const roots = fixtures.map((fixture) => WireNode.parse(fixture));
 
 export const BinaryControls: Story = {
   render: () => (
     <>
-      {roots.slice(0, 2).map((root) => (
+      {roots.slice(0, 1).map((root) => (
         <PluginTree key={root.key} root={root} onEvent={onEvent} />
       ))}
     </>
@@ -38,7 +43,6 @@ export const BinaryControls: Story = {
   play: async ({ canvas, userEvent }) => {
     for (const [role, name, key] of [
       ['switch', 'Notifications', 'switch'],
-      ['checkbox', 'Include archived', 'checkbox'],
     ] as const) {
       const answer = Promise.withResolvers<void>();
       onEvent.mockReturnValueOnce(answer.promise);
@@ -72,7 +76,7 @@ export const SelectPicker: Story = {
     await userEvent.click(
       within(document.body).getByRole('option', { name: 'Production' }),
     );
-    await expect(onEvent).toHaveBeenCalledWith('picker', {
+    await expect(onEvent).toHaveBeenCalledWith(pickerKey, {
       event: 'onValueChange',
       payload: 'prod',
     });
@@ -98,13 +102,13 @@ export const EditAndSubmitText: Story = {
     await userEvent.clear(field);
     await userEvent.type(field, 'Atlas');
     await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('textinput', {
+      expect(onEvent).toHaveBeenCalledWith(textKey, {
         event: 'onChangeText',
         payload: 'Atlas',
       }),
     );
     await userEvent.type(field, '{Enter}');
-    await expect(onEvent).toHaveBeenCalledWith('textinput', {
+    await expect(onEvent).toHaveBeenCalledWith(textKey, {
       event: 'onSubmit',
     });
   },

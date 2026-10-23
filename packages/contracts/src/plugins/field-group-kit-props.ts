@@ -68,6 +68,7 @@ export const fieldGroupTextFieldProps = fieldGroupRowProps.extend({
     .boolean()
     .optional()
     .describe('Select all of the text when the field takes focus.'),
+  onFocus: handler('onFocus').optional(),
   onBlur: handler('onBlur').optional(),
   onSubmit: handler('onSubmit').optional(),
 });
@@ -92,8 +93,10 @@ const pressEvents = { onPress: rowPress };
 
 const textEvents = {
   ...textChangeEvents(fieldGroupTextFieldProps),
+  onFocus: z.undefined(),
   onBlur: z.undefined(),
-  onSubmit: z.undefined(),
+  // Return sends the typed text before it submits.
+  onSubmit: z.undefined().meta({ flush: true }),
 };
 
 export const fieldGroupKitParts = {

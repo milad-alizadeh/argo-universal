@@ -12,13 +12,9 @@ import { Link } from '@repo/kit/primitives/content/link';
 import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
+import { Slider } from '@repo/kit/primitives/controls/slider';
+import { Switch } from '@repo/kit/primitives/controls/switch';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { Checkbox } from '@repo/kit/primitives/inputs/checkbox';
-import { DatePicker } from '@repo/kit/primitives/inputs/date-picker';
-import { Picker } from '@repo/kit/primitives/inputs/picker';
-import { Slider } from '@repo/kit/primitives/inputs/slider';
-import { Switch } from '@repo/kit/primitives/inputs/switch';
-import { TextInput } from '@repo/kit/primitives/inputs/text-input';
 import type { KitProps } from '@repo/kit/primitives/kit-props';
 import { Card } from '@repo/kit/primitives/layout/card';
 import { Grid } from '@repo/kit/primitives/layout/grid';
@@ -59,12 +55,8 @@ export const pluginEntries = {
   'ActionList.Section': ActionList.Section,
   Action,
   EmptyState,
-  Picker,
   Switch,
-  Checkbox,
   Slider,
-  TextInput,
-  DatePicker,
   FieldGroup,
   'FieldGroup.Section': FieldGroup.Section,
   'FieldGroup.Value': FieldGroup.Value,

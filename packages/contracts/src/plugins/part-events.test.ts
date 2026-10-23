@@ -4,7 +4,7 @@ import { partEventPayload } from './wire';
 
 it.each([
   { type: 'Button', event: 'onPress', payload: undefined },
-  { type: 'TextInput', event: 'onChangeText', payload: 'draft' },
+  { type: 'FieldGroup.TextField', event: 'onChangeText', payload: 'draft' },
   { type: 'Switch', event: 'onValueChange', payload: true },
   { type: 'List.Section', event: 'onSelectionChange', payload: ['alpha'] },
   { type: 'Sheet', event: 'onOpenChange', payload: false },
@@ -19,7 +19,7 @@ it.each([
 
 it.each([
   { type: 'Button', event: 'onPress', payload: 'unexpected' },
-  { type: 'TextInput', event: 'onChangeText', payload: 42 },
+  { type: 'FieldGroup.TextField', event: 'onChangeText', payload: 42 },
   { type: 'Switch', event: 'onValueChange', payload: 'enabled' },
   { type: 'List.Section', event: 'onSelectionChange', payload: ['a', 42] },
   { type: 'Button', event: 'invented', payload: 'anything' },

@@ -66,17 +66,33 @@
           },
           "children": [
             {
-              "type": "TextInput",
+              "type": "FieldGroup",
               "key": "field",
-              "props": {
-                "label": "Overlay name",
-                "value": "Argo",
-                "onChangeText": {
-                  "$event": "onChangeText"
+              "props": {},
+              "slots": {},
+              "children": [
+                {
+                  "type": "FieldGroup.Section",
+                  "key": "section",
+                  "props": {},
+                  "slots": {},
+                  "children": [
+                    {
+                      "type": "FieldGroup.TextField",
+                      "key": "name",
+                      "props": {
+                        "title": "Overlay name",
+                        "value": "Argo",
+                        "onChangeText": {
+                          "$event": "onChangeText"
+                        }
+                      },
+                      "children": [],
+                      "slots": {}
+                    }
+                  ]
                 }
-              },
-              "children": [],
-              "slots": {}
+              ]
             },
             {
               "type": "Button",

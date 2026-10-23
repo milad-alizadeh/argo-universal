@@ -1,10 +1,10 @@
 import { WireNode, type PartEvent } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
-import controls from '@repo/mocks/plugins/controls.json' with { type: 'json' };
 import overlays from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within, fireEvent } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
+import { textFieldNode } from './plugin-registry-fixtures';
 
 const onEvent = fn();
 
@@ -17,7 +17,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const textField = {
-  root: WireNode.parse(controls.find((node) => node.type === 'TextInput')),
+  root: textFieldNode(),
   name: 'Project name',
   key: 'textinput',
 };
@@ -27,7 +27,7 @@ const sheetField = {
     { op: 'setProps', key: ['sheet'], props: { open: true } },
   ]),
   name: 'Overlay name',
-  key: 'overlays/sheet/body/field',
+  key: 'overlays/sheet/body/field/section/name',
 };
 
 type Row = {

@@ -1,5 +1,5 @@
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
-import { SearchField } from '@repo/kit/primitives/inputs/search-field';
+import { SearchField } from '@repo/kit/primitives/controls/search-field';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { ListTitle } from '#lib/product/list-title';

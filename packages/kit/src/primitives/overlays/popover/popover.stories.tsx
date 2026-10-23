@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
-import { Combobox } from '#primitives/inputs/combobox';
-import { TextInput } from '#primitives/inputs/text-input';
+import { Combobox } from '#primitives/controls/combobox';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { PopoverAnchor } from './popover-anchor';
 import { PopoverTitle } from './popover-title';
@@ -74,7 +73,7 @@ function DimensionField({
   return (
     <View className="flex-row items-center gap-4">
       <Text className="web:block w-24">{label}</Text>
-      <TextInput variant="bare" {...inputProps} className="flex-1 sm:h-8" />
+      <TextInput {...inputProps} className="flex-1 sm:h-8" />
     </View>
   );
 }

@@ -11,7 +11,7 @@ import { Text } from '#primitives/content/text';
 import {
   SearchField,
   type SearchFieldProps,
-} from '#primitives/inputs/search-field';
+} from '#primitives/controls/search-field';
 import { PageBack } from './page-back';
 import { PageColumn } from './page-column';
 import type { PageHeaderInput, PageProps } from './page-props';

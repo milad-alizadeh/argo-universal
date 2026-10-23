@@ -9,7 +9,7 @@ import type { PluginProps } from './index';
  */
 type Handler = () => void | Promise<void>;
 
-type SinglePicker = Extract<PluginProps['Picker'], { multiple?: false }>;
+type PickerRow = PluginProps['FieldGroup.Picker'];
 
 type ActionSplit = Extract<PluginProps['SplitButton'], { options?: undefined }>;
 
@@ -17,13 +17,15 @@ expectTypeOf<PluginProps['Button']['onPress']>().toEqualTypeOf<
   Action | Handler | undefined
 >();
 
-expectTypeOf<SinglePicker['value']>().toEqualTypeOf<string | undefined>();
+expectTypeOf<PickerRow['value']>().toEqualTypeOf<string | readonly string[]>();
 
-expectTypeOf<SinglePicker['onValueChange']>().toEqualTypeOf<
-  Action | ((payload: string) => void | Promise<void>) | undefined
+expectTypeOf<
+  Extract<PickerRow['onValueChange'], (payload: never) => void | Promise<void>>
+>().toEqualTypeOf<
+  (payload: string | readonly string[]) => void | Promise<void>
 >();
 
-expectTypeOf<SinglePicker['options']>().toExtend<readonly unknown[]>();
+expectTypeOf<PickerRow['options']>().toExtend<readonly unknown[]>();
 
 expectTypeOf<ActionSplit['onValueChange']>().toEqualTypeOf<
   ((payload: string) => void | Promise<void>) | undefined

@@ -17,6 +17,7 @@ const inputProps = (
   ...valueProps(props),
   ...focusProps(props),
   onChangeText: props.onChangeText,
+  onFocus: props.onFocus,
   onBlur: props.onBlur,
   onSubmitEditing: () => props.onSubmit?.(),
 });

@@ -1,4 +1,4 @@
-import { SegmentedControl } from '@repo/kit/primitives/inputs/segmented-control';
+import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { Stack } from '@repo/kit/primitives/layout/stack';
 import {
   InspectorBody,

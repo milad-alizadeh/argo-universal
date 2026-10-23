@@ -16,20 +16,6 @@ export const switchProps = binaryControlProps.extend({
     .describe('The spoken name; the switch draws no text.'),
 });
 
-export const checkboxProps = binaryControlProps.extend({
-  label: stringLabel,
-  variant: z
-    .enum(['option', 'inline'])
-    .optional()
-    .describe(
-      'The option row treatment, or inline beside other content and sized to its label.',
-    ),
-  selection: z
-    .enum(['single', 'multiple'])
-    .optional()
-    .describe('The selection mode.'),
-});
-
 export const sliderProps = z.object({
   value: z.number().optional().describe('The current range value.'),
   minimumValue: z.number().describe('The lowest allowed value.'),
