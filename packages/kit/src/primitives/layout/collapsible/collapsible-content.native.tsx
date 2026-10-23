@@ -40,10 +40,10 @@ function useNativeHeightStyle({
   height,
   progress,
 }: NativeMotion): ReturnType<typeof useAnimatedStyle<NativeHeightStyle>> {
-  return useAnimatedStyle(() => ({
-    height: height.get() * progress.get(),
-    overflow: 'hidden',
-  }));
+  return useAnimatedStyle(
+    () => ({ height: height.get() * progress.get(), overflow: 'hidden' }),
+    [height, progress],
+  );
 }
 
 type NativeMeasuredContentProps = {

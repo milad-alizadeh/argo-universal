@@ -69,7 +69,7 @@ export function useRestStyle(progress: SharedValue<number>): AnimatedStyle {
       opacity: interpolate(p, [0, restGone], [1, 0], Extrapolation.CLAMP),
       transform: [{ translateX: -titleShift * Math.min(p, 1) }],
     };
-  });
+  }, [progress]);
 }
 
 // The surface grows from the search button to the whole row: leftwards, and rightwards over any actions after it.
@@ -87,7 +87,7 @@ export function useSurfaceStyle(
       width: triggerWidth + (rowWidth - triggerWidth) * p,
       opacity: interpolate(p, [0, surfaceShown], [0, 1], Extrapolation.CLAMP),
     };
-  });
+  }, [progress, rowWidth, triggerWidth, triggerInset]);
 }
 
 // The search button's centre, from the row's left.
@@ -110,19 +110,22 @@ export function useLensStyle(
         { scale: 1 + lensLift * Math.sin(Math.PI * p) },
       ],
     };
-  });
+  }, [progress, restCentre]);
 }
 
 // Typed text and placeholder appear once the surface is nearly open.
 export function useTextStyle(progress: SharedValue<number>): AnimatedStyle {
-  return useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.get(),
-      [textStarts, textShown],
-      [0, 1],
-      Extrapolation.CLAMP,
-    ),
-  }));
+  return useAnimatedStyle(
+    () => ({
+      opacity: interpolate(
+        progress.get(),
+        [textStarts, textShown],
+        [0, 1],
+        Extrapolation.CLAMP,
+      ),
+    }),
+    [progress],
+  );
 }
 
 // Close turns in from a quarter turn as it grows, and is not drawn at all while the field is shut.
@@ -138,5 +141,5 @@ export function useCloseStyle(progress: SharedValue<number>): AnimatedStyle {
         { scale: closeStartScale + (1 - closeStartScale) * p },
       ],
     };
-  });
+  }, [progress]);
 }

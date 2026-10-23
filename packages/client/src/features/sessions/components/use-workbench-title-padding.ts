@@ -19,7 +19,10 @@ export function useWorkbenchTitlePadding(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const inset = useSpacing('--spacing-3');
   const target = expanded === false ? inset : 0;
-  const padding = useDerivedValue(() => withTiming(target, timing));
+  const padding = useDerivedValue(() => withTiming(target, timing), [target]);
 
-  return useAnimatedStyle<ViewStyle>(() => ({ paddingBottom: padding.value }));
+  return useAnimatedStyle<ViewStyle>(
+    () => ({ paddingBottom: padding.value }),
+    [padding],
+  );
 }

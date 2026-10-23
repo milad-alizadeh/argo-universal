@@ -72,8 +72,11 @@ export function useFrameOffset(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const { shift, opacity } = useOffsetValues(props);
 
-  return useAnimatedStyle<ViewStyle>(() => ({
-    transform: [{ translateX: shift.get() }],
-    opacity: opacity.get(),
-  }));
+  return useAnimatedStyle<ViewStyle>(
+    () => ({
+      transform: [{ translateX: shift.get() }],
+      opacity: opacity.get(),
+    }),
+    [shift, opacity],
+  );
 }
