@@ -44,9 +44,18 @@ function effortSliderProps({
     step: 1,
     // Medium, High: the level's name is shown beside the title and announced with it.
     valueLabel: effort.selected?.name,
-    value: effort.selected ? effort.choices.indexOf(effort.selected) : 0,
+    value: effortIndex(effort),
     onValueChange: (index) => selectEffort({ configuration, effort }, index),
   };
+}
+
+// The selected level can be the fallback, a copy from the option's own choices, so it is found by value.
+function effortIndex(effort: EffortProps['effort']): number {
+  const index = effort.choices.findIndex(
+    (choice) => choice.value === effort.selected?.value,
+  );
+
+  return Math.max(index, 0);
 }
 
 function selectEffort(

@@ -20,6 +20,7 @@ export async function assertDefaultEffort(
   await expect(
     overlay.queryByRole('switch', { name: 'Fast mode' }),
   ).not.toBeInTheDocument();
+  await waitFor(() => expect(slider).toHaveValue(String(recorded.position)));
   await assertDefaultEffortCommit(onConfigChange, recorded);
 }
 
