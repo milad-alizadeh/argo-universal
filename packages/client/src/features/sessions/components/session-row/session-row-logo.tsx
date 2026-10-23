@@ -36,9 +36,10 @@ function useLogoRotation(
     return (): void => cancelAnimation(logoRotation);
   }, [status, logoRotation]);
 
-  return useAnimatedStyle(() => ({
-    transform: [{ rotate: `${logoRotation.get()}deg` }],
-  }));
+  return useAnimatedStyle(
+    () => ({ transform: [{ rotate: `${logoRotation.get()}deg` }] }),
+    [logoRotation],
+  );
 }
 
 interface SessionLogoProps {
