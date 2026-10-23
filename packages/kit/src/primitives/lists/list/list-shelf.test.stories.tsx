@@ -89,6 +89,8 @@ function ShelfControlsExample(): React.JSX.Element {
   );
 }
 
+const edgeWait = { timeout: 5000 };
+
 export const ShelfEndControls: Story = {
   render: () => <ShelfControlsExample />,
   play: async ({ canvas, userEvent }) => {
@@ -97,14 +99,14 @@ export const ShelfEndControls: Story = {
     });
 
     const next = canvas.getByRole('button', { name: 'Next items' });
-    // The edges come from the list's first scroll measurement, which can land after the buttons mount on a busy runner.
-    await waitFor(() => expect(previous).toBeDisabled());
-    await waitFor(() => expect(next).toBeEnabled());
+    // The edges follow the list's scroll measurements and the animated scroll, which a busy runner can take seconds over.
+    await waitFor(() => expect(previous).toBeDisabled(), edgeWait);
+    await waitFor(() => expect(next).toBeEnabled(), edgeWait);
     await userEvent.click(next);
-    await waitFor(() => expect(next).toBeDisabled());
+    await waitFor(() => expect(next).toBeDisabled(), edgeWait);
     await expect(previous).toBeEnabled();
     await userEvent.click(previous);
-    await waitFor(() => expect(previous).toBeDisabled());
+    await waitFor(() => expect(previous).toBeDisabled(), edgeWait);
   },
 };
 
