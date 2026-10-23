@@ -6,7 +6,7 @@ import {
   height,
   imePadding,
 } from '@expo/ui/jetpack-compose/modifiers';
-import { useCallback, type ReactElement } from 'react';
+import { useCallback, type ReactElement, type ReactNode } from 'react';
 import {
   Caption,
   caption,
@@ -14,10 +14,10 @@ import {
   titleInsets,
 } from '#primitives/fields/field-group';
 import { PositionContext } from '#primitives/fields/field-row';
-import { ListEmpty } from './list-data';
-import { PhoneHost } from './list-phone-host';
+import { PhoneGroupedFrame } from './list-phone-host';
 import {
-  phoneSections,
+  estimatedPhoneRowHeight,
+  phoneRowKey,
   type PhoneRow,
   type PhoneSection,
 } from './list-phone-sections';
@@ -38,26 +38,18 @@ const contentPadding = { start: 16, end: 16, top: 16, bottom: 16 };
 
 const listModifiers = [fillMaxSize(), imePadding()];
 
-const estimatedRowHeight = 56;
-
-const rowKey = (row: PhoneRow): string => row.key;
-
 /*
  * ADR-0042: a grouped List on Android is Compose's `LazyColumn` whose rows are `LazyColumn.Items` Expo recycles, drawn
  * as Material's connected rows as Expo's FieldSection.android.tsx does (rounded ends, small corners between, 2dp
  * gaps; each row clips itself by the position it is given). Its rows are FieldGroup rows, as in a FieldGroup.
  */
-export function PhoneGroupedList<Item>(props: ListProps<Item>): ReactElement {
-  const sections = phoneSections(props);
-
-  if (sections.length === 0) return <ListEmpty {...props} />;
-
-  return (
-    <PhoneHost>
-      <GroupedColumn sections={sections} />
-    </PhoneHost>
-  );
+export function PhoneGroupedList<Item>(props: ListProps<Item>): ReactNode {
+  return <PhoneGroupedFrame list={props}>{groupedColumn}</PhoneGroupedFrame>;
 }
+
+const groupedColumn = (sections: PhoneSection[]): ReactElement => (
+  <GroupedColumn sections={sections} />
+);
 
 function GroupedColumn(props: { sections: PhoneSection[] }): ReactElement {
   return (
@@ -126,8 +118,8 @@ function SectionRows({ section }: { section: PhoneSection }): ReactElement {
   return (
     <LazyColumn.Items
       data={section.rows}
-      keyExtractor={rowKey}
-      estimatedItemSize={estimatedRowHeight}
+      keyExtractor={phoneRowKey}
+      estimatedItemSize={estimatedPhoneRowHeight}
     >
       {usePositionedRow(section.rows.length)}
     </LazyColumn.Items>

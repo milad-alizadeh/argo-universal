@@ -3,12 +3,12 @@ import {
   listStyle,
   scrollContentBackground,
 } from '@expo/ui/swift-ui/modifiers';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { NativeText } from '#primitives/content/native-text';
-import { ListEmpty } from './list-data';
-import { PhoneHost } from './list-phone-host';
+import { PhoneGroupedFrame } from './list-phone-host';
 import {
-  phoneSections,
+  estimatedPhoneRowHeight,
+  phoneRowKey,
   type PhoneRow,
   type PhoneSection,
 } from './list-phone-sections';
@@ -16,37 +16,28 @@ import type { ListProps } from './list-props';
 
 export const phoneGrouped = true;
 
-// SwiftUI's own row height until a row is measured.
-const estimatedRowHeight = 56;
-
 // No background of its own, so the page's shows between the section cards, as the FieldGroup's Form does.
 const modifiers = [
   listStyle('insetGrouped'),
   scrollContentBackground('hidden'),
 ];
 
-const rowKey = (row: PhoneRow): string => row.key;
-
 /*
  * ADR-0042: a grouped List on iOS is SwiftUI's `List` (inset grouped) of `Section`s, each section's rows a
  * `List.ForEach` Expo recycles, so a long list mounts only the rows near the screen. Its rows are FieldGroup rows,
  * SwiftUI views, as in a FieldGroup; React Native content cannot sit in it.
  */
-export function PhoneGroupedList<Item>(props: ListProps<Item>): ReactElement {
-  const sections = phoneSections(props);
-
-  if (sections.length === 0) return <ListEmpty {...props} />;
-
-  return (
-    <PhoneHost>
-      <SwiftList modifiers={modifiers}>
-        {sections.map((section) => (
-          <GroupedSection key={section.key} section={section} />
-        ))}
-      </SwiftList>
-    </PhoneHost>
-  );
+export function PhoneGroupedList<Item>(props: ListProps<Item>): ReactNode {
+  return <PhoneGroupedFrame list={props}>{groupedList}</PhoneGroupedFrame>;
 }
+
+const groupedList = (sections: PhoneSection[]): ReactElement => (
+  <SwiftList modifiers={modifiers}>
+    {sections.map((section) => (
+      <GroupedSection key={section.key} section={section} />
+    ))}
+  </SwiftList>
+);
 
 const renderRow = ({ item }: { item: PhoneRow }): ReactElement => item.render();
 
@@ -55,8 +46,8 @@ function GroupedSection({ section }: { section: PhoneSection }): ReactElement {
     <Section header={heading(section.title)} footer={footnote(section.footer)}>
       <SwiftList.ForEach
         data={section.rows}
-        keyExtractor={rowKey}
-        estimatedItemSize={estimatedRowHeight}
+        keyExtractor={phoneRowKey}
+        estimatedItemSize={estimatedPhoneRowHeight}
       >
         {renderRow}
       </SwiftList.ForEach>

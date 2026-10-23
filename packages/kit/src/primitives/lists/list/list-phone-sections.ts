@@ -114,3 +114,8 @@ export const phoneSections = <Item>(props: ListProps<Item>): PhoneSection[] =>
   props.items === undefined
     ? childSections(props.children)
     : dataSections(props);
+
+export const phoneRowKey = (row: PhoneRow): string => row.key;
+
+// The platform's own row height until a row is measured.
+export const estimatedPhoneRowHeight = 56;
