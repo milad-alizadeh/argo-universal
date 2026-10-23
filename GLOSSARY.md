@@ -300,9 +300,13 @@ _Avoid_: Status indicator
 Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar.
 _Avoid_: Properties, key-value list
 
-**ActionList**:
-The Actions a page, a row or a tile offers, declared once and drawn as each platform draws them: header controls for a page, a context menu for a row or tile. The header holds verbs only; a choice is a Menu.
-_Avoid_: Action panel, action menu (for the declaration)
+**Screen**:
+One entry on a navigation stack: its header (title, search, primary Action, Actions) and its content, declared together. A route shows one Screen; a Sheet stacks Screens of its own.
+_Avoid_: Page, view (for a stack entry)
+
+**Actions**:
+The verbs a Screen, a row or a tile offers, in sections, declared once and drawn as each platform draws them: header controls for a Screen, a context menu for a row or tile. They hold verbs only; a choice is a Menu.
+_Avoid_: ActionList, action panel, action menu (for the declaration)
 
 **Frame**:
 The App's chrome around its pages: the rail, the section sidebar and the panes. It places them with a Scaffold.
