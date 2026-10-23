@@ -6,6 +6,8 @@ import { ControlledPicker } from './field-picker-controlled';
 import { inStackedSection } from './field-picker-decorators';
 import {
   emptyOption,
+  inline,
+  inlineMultiple,
   menu,
   menuMultiple,
   pageMultiple,
@@ -169,5 +171,33 @@ export const EmptyValueOptionChooses: Story = {
       await within(document.body).findByRole('option', { name: 'None' }),
     );
     await expect(changed).toHaveBeenCalledWith('');
+  },
+};
+
+// An inline single choice is a radio per option; choosing one reports it and checks it.
+export const InlineChoosesOneRadio: Story = {
+  render: () => <ControlledPicker {...inline} onValueChange={changed} />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByRole('radio', { name: /^Two/ })).toBeChecked();
+    await userEvent.click(canvas.getByRole('radio', { name: /^Three/ }));
+    await expect(changed).toHaveBeenCalledWith('three');
+    await expect(canvas.getByRole('radio', { name: /^Three/ })).toBeChecked();
+    await expect(canvas.getByRole('radio', { name: /^Two/ })).not.toBeChecked();
+  },
+};
+
+// An inline multiple choice is a checkbox per option; each toggles and reports the whole list.
+export const InlineTogglesCheckboxes: Story = {
+  render: () => (
+    <ControlledPicker {...inlineMultiple} onValueChange={changed} />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('checkbox', { name: /^Two/ }));
+    await expect(changed).toHaveBeenCalledWith(['one', 'two', 'three']);
+    await userEvent.click(canvas.getByRole('checkbox', { name: /^One/ }));
+    await expect(changed).toHaveBeenLastCalledWith(['two', 'three']);
+    await expect(
+      canvas.getByRole('checkbox', { name: /^One/ }),
+    ).not.toBeChecked();
   },
 };

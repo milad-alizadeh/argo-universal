@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { RowTitle } from '#primitives/fields/field-row';
 import { FieldPickerDrill } from './field-picker-drill';
+import { inlineOptionRows } from './field-picker-inline-rows';
 import {
   choiceSummary,
   widened,
@@ -23,6 +24,9 @@ export function FieldPicker(
   caller: FieldPickerCallerProps | FieldPickerProps,
 ): ReactElement {
   const props = widened(caller);
+
+  // Outside a Section, an `inline` choice is its option rows in place; a Section opens them first (expandInlinePickers).
+  if (props.presentation === 'inline') return <>{inlineOptionRows(props)}</>;
 
   return (
     <Row alignment="center">

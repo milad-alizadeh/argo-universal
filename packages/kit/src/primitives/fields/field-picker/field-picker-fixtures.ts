@@ -76,6 +76,28 @@ const sectioned = names.map((name, index) => ({
   section: index < 2 ? 'Recent' : 'All',
 }));
 
+const described = [
+  { value: 'one', label: 'One', subtitle: 'The first', icon: 'folder' },
+  { value: 'two', label: 'Two', subtitle: 'The second', icon: 'folder' },
+  { value: 'three', label: 'Three', subtitle: 'The third', icon: 'folder' },
+] as const;
+
+// A short list shown in place as rows of its section, one chosen.
+export const inline = {
+  title: 'Label',
+  value: 'two',
+  options: described,
+  presentation: 'inline',
+} satisfies Fixture<FieldPickerSingle>;
+
+export const inlineMultiple = {
+  title: 'Label',
+  value: ['one', 'three'],
+  options: described,
+  presentation: 'inline',
+  multiple: true,
+} satisfies Fixture<FieldPickerMultiple>;
+
 export const pageWithSearch = {
   title: 'Label',
   value: 'cedar',

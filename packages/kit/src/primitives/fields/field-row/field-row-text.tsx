@@ -2,14 +2,14 @@ import { Row } from '@expo/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { NativeText } from '#primitives/content/native-text';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeIcon } from '../../../symbols/native-icon';
-import type { FieldGroupKitProps } from '../../kit-props';
 
 // What every row but a Button shares with Expo UI's universal ListItem: an icon before the title.
-export type RowTextProps = Pick<
-  FieldGroupKitProps<'FieldGroup.Value'>,
-  'leading'
->;
+export type RowTextProps = {
+  // A stock icon of a row, or any icon of a picker option.
+  leading?: IconSymbol;
+};
 
 // The gap between a leading icon and its title, as the Drawer's rows keep it.
 const iconGap = 12;

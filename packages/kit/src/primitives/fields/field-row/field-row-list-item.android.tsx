@@ -145,7 +145,7 @@ type Toggling = {
 // The whole row toggles, as Expo's labelled Switch and Checkbox do.
 export const toggling = (
   props: Toggling,
-  role: 'switch' | 'checkbox',
+  role: 'switch' | 'checkbox' | 'radioButton',
 ): ModifierConfig[] => [
   toggleable(props.value, () => props.onValueChange(!props.value), {
     role,

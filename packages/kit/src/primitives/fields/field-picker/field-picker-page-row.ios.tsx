@@ -21,6 +21,9 @@ const disclosureStyle = [
   foregroundStyle({ type: 'hierarchical', style: 'tertiary' }),
 ];
 
+// The whole row takes the press, not only its content.
+export const wholeRowPress = contentShape(shapes.rectangle());
+
 /*
  * What SwiftUI's `.navigationLink` Picker draws: the title, the chosen value in the muted tone and the disclosure
  * chevron, because pressing it pushes a page. The content shape lets the whole row take the press.
@@ -31,7 +34,7 @@ export function PageRow(props: PageRowProps): ReactElement {
       onPress={props.onPress}
       modifiers={[buttonStyle('plain'), disabled(props.disabled ?? false)]}
     >
-      <HStack modifiers={[contentShape(shapes.rectangle())]}>
+      <HStack modifiers={[wholeRowPress]}>
         <RowTitle title={props.title} leading={props.leading} />
         <Spacer />
         <NativeText tone="muted">{props.summary}</NativeText>

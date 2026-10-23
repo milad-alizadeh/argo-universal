@@ -1,5 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { FieldPickerDialog } from './field-picker-dialog.android';
+import { inlineOptionRows } from './field-picker-inline-rows';
 import type {
   FieldPickerCallerProps,
   FieldPickerProps,
@@ -16,7 +17,19 @@ export function FieldPicker(props: FieldPickerProps): ReactElement;
 export function FieldPicker(
   caller: FieldPickerCallerProps | FieldPickerProps,
 ): ReactElement {
-  return <NativePicker caller={caller} menu={DialogPicker} row={ChoiceRow} />;
+  return (
+    <NativePicker
+      caller={caller}
+      menu={DialogPicker}
+      row={ChoiceRow}
+      inline={InlineRows}
+    />
+  );
+}
+
+// Outside a Section, an `inline` choice is its option rows in place; a Section opens them first (expandInlinePickers).
+function InlineRows(props: FieldPickerProps): ReactElement {
+  return <>{inlineOptionRows(props)}</>;
 }
 
 function DialogPicker(props: FieldPickerProps): ReactElement {

@@ -34,9 +34,9 @@ export const fieldGroupPickerProps = fieldGroupRowProps.extend({
     .readonly()
     .describe('The options to choose from.'),
   presentation: z
-    .enum(['menu', 'page'])
+    .enum(['menu', 'page', 'inline'])
     .describe(
-      'Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one.',
+      'Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one; `inline` as rows of the enclosing section with a check on the chosen ones, for a short list shown in place in a form.',
     ),
   summary: z
     .string()

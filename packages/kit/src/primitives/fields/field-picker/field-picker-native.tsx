@@ -21,6 +21,8 @@ type NativePickerProps = {
   menu: ComponentType<FieldPickerProps>;
   // The platform's row: it opens the page, or the menu.
   row: ComponentType<NativeRowProps>;
+  // What an `inline` choice draws: the options as rows of the section that holds the picker.
+  inline: ComponentType<FieldPickerProps>;
 };
 
 export const rowProps = (props: FieldPickerProps): NativeRowProps => ({
@@ -31,11 +33,17 @@ export const rowProps = (props: FieldPickerProps): NativeRowProps => ({
 });
 
 /*
- * The phones' picker, whatever the platform draws: a `menu` opens in place, a `page` always opens its page, pushed on
+ * The phones' picker, whatever the platform draws: a `menu` opens in place, an `inline` choice is rows of its section, a `page` always opens its page, pushed on
  * the stack that holds the row (ADR-0042). It never changes with its parent.
  */
 export function NativePicker(props: NativePickerProps): ReactElement {
   const picker = widened(props.caller);
+
+  if (picker.presentation === 'inline') {
+    const Inline = props.inline;
+
+    return <Inline {...picker} />;
+  }
 
   if (picker.presentation === 'menu') {
     const Menu = props.menu;

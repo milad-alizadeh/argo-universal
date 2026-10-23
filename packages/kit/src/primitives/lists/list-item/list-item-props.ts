@@ -27,7 +27,7 @@ export type ListItemProps = KitProps<'ListItem'> & {
   'aria-expanded'?: boolean;
   'aria-controls'?: string;
   id?: string;
-  accessibilityRole?: 'button' | 'radio' | 'checkbox';
+  accessibilityRole?: 'button' | 'radio';
   onLongPress?: () => void;
   // A value that reads as content, such as a Server's details, in the title's colour rather than muted.
   valueTone?: 'neutral';

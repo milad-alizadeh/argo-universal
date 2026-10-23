@@ -8,6 +8,7 @@ import {
   NativeText,
   type NativeTextRole,
 } from '#primitives/content/native-text';
+import { expandInlinePickers } from '#primitives/fields/field-picker';
 import { PositionContext } from '#primitives/fields/field-row';
 import { ButtonCard } from './field-group-button-card.android';
 import type { FieldGroupSectionProps } from './field-group-section';
@@ -70,7 +71,9 @@ function Caption(props: CaptionProps): ReactNode {
 }
 
 function Rows(props: { children: ReactNode }): ReactNode {
-  const rows = flattenedChildren(props.children).filter(isValidElement);
+  const rows = expandInlinePickers(flattenedChildren(props.children)).filter(
+    isValidElement,
+  );
 
   if (rows.length === 0) return null;
 

@@ -2,9 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn, within } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { FieldPicker } from './field-picker';
-import { ControlledPicker } from './field-picker-controlled';
+import { ControlledPicker, ControlledSection } from './field-picker-controlled';
 import { inSection, inStackedSection } from './field-picker-decorators';
 import {
+  inline,
+  inlineMultiple,
   menu,
   menuMultiple,
   pageMultiple,
@@ -48,6 +50,20 @@ export const MenuMultiple: Story = {
   args: { ...menuMultiple, onValueChange: fn() },
   render: (args) => <ControlledPicker {...args} />,
   play: opened,
+};
+
+// A short list shown in place as rows of its section, a check on the chosen one.
+export const Inline: Story = {
+  name: 'Inline',
+  args: { ...inline, onValueChange: fn() },
+  render: (args) => <ControlledSection {...args} />,
+};
+
+// Several choices as rows too: each row toggles its own value.
+export const InlineMultiple: Story = {
+  name: 'Inline multiple',
+  args: { ...inlineMultiple, onValueChange: fn() },
+  render: (args) => <ControlledSection {...args} />,
 };
 
 // A long list opens on a page of its own with a search field: pushed with Back on a phone, a popover on a desktop window.

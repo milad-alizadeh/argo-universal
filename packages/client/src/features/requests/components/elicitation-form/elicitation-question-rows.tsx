@@ -1,75 +1,33 @@
-import { Text } from '@repo/kit/primitives/content/text';
-import { Surface } from '@repo/kit/primitives/layout/surface';
-import { List, ListSection } from '@repo/kit/primitives/lists/list';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
-import { choiceValue, selectedAnswers } from './elicitation-answers';
+import { customAnswer, customValue } from './elicitation-answers';
 import { chooseLabel } from './elicitation-choose-label';
-import { CustomAnswer } from './elicitation-custom-answer';
-import { OptionRows } from './elicitation-option-rows';
+import { questionChoices } from './elicitation-question-choices';
 
 type ModelProps = { model: QuestionModel };
 
-// The options in one card under their hint, and the custom answer as a FieldGroup row below it.
+/*
+ * One FieldGroup section headed by the hint: the options as inline Picker rows, and the custom answer as the
+ * section's last row. Typing an answer chooses it, beside any options already chosen.
+ */
 export function QuestionRows({ model }: ModelProps): ReactElement {
   return (
-    <>
-      <OptionGroup model={model} />
-      <CustomAnswer key={model.question.name} model={model} />
-    </>
+    <FieldGroup key={model.question.name} disabled={model.inactive}>
+      <FieldGroup.Section title={chooseLabel(model.question)}>
+        {questionChoices({ model })}
+        <CustomField model={model} />
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 
-// The hint heads the card as a List section's header does, set in from the rows.
-const OptionGroup = ({ model }: ModelProps): ReactElement => (
-  <View className="gap-2 px-4 wide:px-0">
-    <OptionHint model={model} />
-    <Surface kind="card">
-      <OptionCard model={model} />
-    </Surface>
-  </View>
+const CustomField = ({ model }: ModelProps): ReactElement => (
+  <FieldGroup.TextField
+    title="Custom answer"
+    hideTitle
+    placeholder="Something else…"
+    value={customAnswer(model)}
+    onChangeText={(text) => model.change(customValue(model, text))}
+  />
 );
-
-const OptionHint = ({ model }: ModelProps): ReactElement => (
-  <View className="px-4">
-    <Text
-      role="heading"
-      tone="muted"
-      accessibilityRole="heading"
-      aria-level={2}
-    >
-      {chooseLabel(model.question)}
-    </Text>
-  </View>
-);
-
-const OptionCard = ({ model }: ModelProps): ReactElement => (
-  <List
-    key={model.question.name}
-    appearance="plain"
-    fit
-    padding={0}
-    paddingTop={0}
-    paddingBottom={0}
-    keyboardShouldPersistTaps="handled"
-  >
-    <ListSection>
-      <QuestionOptions model={model} />
-    </ListSection>
-  </List>
-);
-
-function QuestionOptions({ model }: ModelProps): ReactElement {
-  return (
-    <OptionRows
-      options={model.question.options}
-      selected={selectedAnswers(model)}
-      multiple={model.question.multiple}
-      disabled={model.inactive}
-      onToggle={(choice, checked) =>
-        model.change(choiceValue(model, choice, checked))
-      }
-    />
-  );
-}

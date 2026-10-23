@@ -1,6 +1,8 @@
 import { FieldGroup as ExpoFieldGroup } from '@expo/ui';
 import type { ReactElement, ReactNode } from 'react';
+import { flattenedChildren } from '#kit/flattened-children';
 import { NativeText } from '#primitives/content/native-text';
+import { expandInlinePickers } from '#primitives/fields/field-picker';
 import type { FieldGroupKitProps } from '../../kit-props';
 import { sectionRows } from './field-group-rows';
 
@@ -16,7 +18,7 @@ export function sectionElement(props: FieldGroupSectionProps): ReactElement {
   return (
     <ExpoFieldGroup.Section>
       {sectionTitle(props.title)}
-      {sectionRows(props.children)}
+      {sectionRows(expandInlinePickers(flattenedChildren(props.children)))}
       {sectionFooter(props.footer)}
     </ExpoFieldGroup.Section>
   );

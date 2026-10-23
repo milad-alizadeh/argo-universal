@@ -521,7 +521,7 @@ export type WireSchemaHints = {
     "value": PropValue<"FieldGroup.Picker", "value">;
     /** The options to choose from. */
     "options": PropValue<"FieldGroup.Picker", "options">;
-    /** Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one. */
+    /** Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one; `inline` as rows of the enclosing section with a check on the chosen ones, for a short list shown in place in a form. */
     "presentation": PropValue<"FieldGroup.Picker", "presentation">;
     /** The text shown for the current choice, in place of the chosen labels. */
     "summary": PropValue<"FieldGroup.Picker", "summary">;

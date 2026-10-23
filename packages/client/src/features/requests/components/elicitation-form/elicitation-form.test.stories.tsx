@@ -121,7 +121,9 @@ function conflict(width: number, mock?: RequestMock): Story {
         'Already answered on another device',
       );
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
-      await expect(canvas.getByRole('radio', { name: /^Blue/ })).toBeDisabled();
+      await expect(
+        canvas.getByRole('radio', { name: /^Blue/ }),
+      ).toHaveAttribute('aria-disabled', 'true');
       await (width < wideBreakpoint()
         ? expect(
             canvas.queryByRole('button', { name: 'Submit' }),

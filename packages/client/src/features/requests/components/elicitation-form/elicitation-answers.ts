@@ -6,16 +6,6 @@ export function selectedAnswers(model: QuestionModel): string[] {
   return typeof model.value === 'string' ? [model.value] : [];
 }
 
-export function choiceValue(
-  model: QuestionModel,
-  choice: string,
-  checked: boolean,
-): string | string[] {
-  if (!model.question.multiple) return choice;
-
-  return toggledChoice(selectedAnswers(model), choice, checked);
-}
-
 export function toggledChoice(
   values: string[],
   choice: string,

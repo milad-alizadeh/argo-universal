@@ -33,7 +33,7 @@ function pressHandlers(props: ListItemProps): RowPressProps {
 
 function rowRole(
   props: DrawingProps,
-): 'button' | 'link' | 'switch' | 'radio' | 'checkbox' | 'group' | undefined {
+): 'button' | 'link' | 'switch' | 'radio' | 'group' | undefined {
   if (props.checked !== undefined) return 'switch';
 
   return explicitRole(props) ?? pressRole(props.onPress);
@@ -122,14 +122,11 @@ function switchKeyDown(props: DrawingProps): RowKeyDown {
   };
 }
 
-const isChoiceRole = (role: DrawingProps['accessibilityRole']): boolean =>
-  role === 'radio' || role === 'checkbox';
-
 export function ItemPress(props: DrawingProps): ReactElement {
   const press = usePressProps(props);
   const focus = useRowFocus();
 
-  if (Platform.OS === 'web' && isChoiceRole(props.accessibilityRole))
+  if (Platform.OS === 'web' && props.accessibilityRole === 'radio')
     return <RadioRow row={props} className={press.className} />;
 
   return (
