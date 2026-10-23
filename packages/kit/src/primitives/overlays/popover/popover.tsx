@@ -150,19 +150,26 @@ function PopoverSurface(
       data-state={props.open ? 'open' : 'closed'}
     >
       <TextClassContext.Provider value="text-foreground">
-        <InMenu value>{props.children}</InMenu>
+        <PopoverRows>{props.children}</PopoverRows>
       </TextClassContext.Provider>
     </View>
   );
 }
 
+// A popover opened from a Page's column is a surface of its own, so its lists take none of the column's padding.
+function PopoverRows(props: { children: React.ReactNode }): React.JSX.Element {
+  return (
+    <ScrollColumnContext value={undefined}>
+      <InMenu value>{props.children}</InMenu>
+    </ScrollColumnContext>
+  );
+}
+
+// The Portal's direct child stays the content: its Presence needs that child's ref to wait out the close animation.
 function PopoverContent(props: ContentProps): React.JSX.Element {
   return (
     <WebPopover.Portal>
-      {/* A popover opened from a Page's column is a surface of its own, so its lists take none of the column's padding. */}
-      <ScrollColumnContext value={undefined}>
-        <PopoverBody {...props} />
-      </ScrollColumnContext>
+      <PopoverBody {...props} />
     </WebPopover.Portal>
   );
 }
