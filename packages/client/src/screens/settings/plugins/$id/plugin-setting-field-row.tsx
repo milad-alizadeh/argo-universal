@@ -75,6 +75,7 @@ function pickerFieldRow(props: SettingFieldRowProps): React.JSX.Element {
       title={field.label}
       value={textOf(valueOf(props)) ?? ''}
       options={field.type === 'picker' ? field.options : []}
+      presentation="menu"
       onValueChange={props.onChange}
     />
   );

@@ -1,82 +1,67 @@
-import { DropdownMenu, DropdownMenuItem } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import { type ReactElement, useState } from 'react';
-import { NativeText } from '#primitives/content/native-text';
-import type { FieldGroupKitProps } from '../../kit-props';
-/* oxlint-disable-next-line no-restricted-imports -- the Android-only drawing stays out of the folder's index so the web never loads Compose. */
+import { useState, type ReactElement } from 'react';
+import { useOptionalSheet } from '#primitives/overlays/sheet';
+import { FieldPickerDialog } from './field-picker-dialog.android';
+import { FieldPickerDrill } from './field-picker-drill';
 import {
-  RowListItem,
-  rowListItemProps,
-} from '../field-row/field-row-list-item.android';
-
-type PickerProps = FieldGroupKitProps<'FieldGroup.Picker'>;
-
-type Option = PickerProps['options'][number];
+  choiceSummary,
+  widened,
+  type FieldPickerCallerProps,
+  type FieldPickerProps,
+} from './field-picker-model';
+import { ChoiceRow } from './field-picker-row.android';
+import { SheetPicker } from './field-picker-sheet';
 
 /*
- * Android Settings' choice row: a ListItem with the title and the current value as trailing text, and a
- * Material DropdownMenu opening on press.
+ * A `menu` is Android Settings' ListPreference: the row shows the value as its supporting line, and pressing it
+ * opens a dialog of radio buttons (checkboxes when `multiple`). A `page` always opens its page: pushed in the
+ * enclosing Sheet, or on a Sheet of its own when none encloses the row. It never changes with its parent (ADR-0042).
  */
-export function FieldPicker(props: PickerProps): ReactElement {
-  const [open, setOpen] = useState(false);
+export function FieldPicker(props: FieldPickerCallerProps): ReactElement;
+export function FieldPicker(props: FieldPickerProps): ReactElement;
+export function FieldPicker(
+  caller: FieldPickerCallerProps | FieldPickerProps,
+): ReactElement {
+  const props = widened(caller);
+  const sheet = useOptionalSheet();
 
+  if (props.presentation === 'menu') return <DialogPicker {...props} />;
+
+  return sheet ? <PagePicker {...props} /> : <SheetPage {...props} />;
+}
+
+type RowProps = React.ComponentProps<typeof ChoiceRow>;
+
+const rowProps = (props: FieldPickerProps): RowProps => ({
+  title: props.title,
+  leading: props.leading,
+  summary: choiceSummary(props),
+  disabled: props.disabled,
+});
+
+function PagePicker(props: FieldPickerProps): ReactElement {
   return (
-    <DropdownMenu
-      expanded={open}
-      onDismissRequest={() => setOpen(false)}
-      modifiers={[fillMaxWidth()]}
-    >
-      <DropdownMenu.Trigger>
-        <PickerRow {...props} onPress={() => setOpen(true)} />
-      </DropdownMenu.Trigger>
-      <PickerItems {...props} onChosen={() => setOpen(false)} />
-    </DropdownMenu>
+    <FieldPickerDrill {...props} trigger={<ChoiceRow {...rowProps(props)} />} />
   );
 }
 
-function PickerRow(props: PickerProps & { onPress: () => void }): ReactElement {
+function SheetPage(props: FieldPickerProps): ReactElement {
   return (
-    <RowListItem
-      {...rowListItemProps(props)}
-      trailing={<ChosenLabel {...props} />}
-      onPress={props.onPress}
+    <SheetPicker
+      {...props}
+      row={(opening) => <ChoiceRow {...rowProps(props)} {...opening} />}
     />
   );
 }
 
-// The chosen option's label, at the row's trailing edge.
-function ChosenLabel(props: PickerProps): ReactElement {
-  const chosen = props.options.find((option) => option.value === props.value);
-
-  return <NativeText tone="muted">{chosen?.label ?? ''}</NativeText>;
-}
-
-type PickerItemsProps = PickerProps & { onChosen: () => void };
-
-// One DropdownMenuItem per option; choosing one reports it and closes the menu.
-function PickerItems(props: PickerItemsProps): ReactElement {
-  return (
-    <DropdownMenu.Items>
-      {props.options.map((option) => (
-        <PickerItem key={option.value} option={option} {...props} />
-      ))}
-    </DropdownMenu.Items>
-  );
-}
-
-function PickerItem(
-  props: PickerItemsProps & { option: Option },
-): ReactElement {
-  const choose = (): void => {
-    props.onValueChange(props.option.value);
-    props.onChosen();
-  };
+function DialogPicker(props: FieldPickerProps): ReactElement {
+  const [open, setOpen] = useState(false);
 
   return (
-    <DropdownMenuItem onClick={choose}>
-      <DropdownMenuItem.Text>
-        <NativeText>{props.option.label}</NativeText>
-      </DropdownMenuItem.Text>
-    </DropdownMenuItem>
+    <>
+      <ChoiceRow {...rowProps(props)} onPress={() => setOpen(true)} />
+      {open ? (
+        <FieldPickerDialog {...props} onClose={() => setOpen(false)} />
+      ) : null}
+    </>
   );
 }

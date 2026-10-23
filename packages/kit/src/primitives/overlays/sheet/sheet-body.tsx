@@ -5,6 +5,7 @@ import { ScrollEndGapContext } from '#kit/scroll-surface';
 import { cn } from '#kit/utils';
 import { sheetInsetClass } from './sheet-inset';
 import type { SheetProps } from './sheet-props';
+import { ReactContent } from './sheet-react-content';
 
 type BodyProps = Pick<
   SheetProps,
@@ -30,12 +31,14 @@ export function SheetBody(props: BodyProps): ReactElement {
   const gap = useBottomGap(props);
 
   return (
-    <ScrollEndGapContext value={gap.scrolled}>
-      <View {...bodyProps(props)} style={gap.padded}>
-        <PageContent {...props} gap={gap.scrolled} />
-        {props.footer}
-      </View>
-    </ScrollEndGapContext>
+    <ReactContent>
+      <ScrollEndGapContext value={gap.scrolled}>
+        <View {...bodyProps(props)} style={gap.padded}>
+          <PageContent {...props} gap={gap.scrolled} />
+          {props.footer}
+        </View>
+      </ScrollEndGapContext>
+    </ReactContent>
   );
 }
 

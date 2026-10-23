@@ -20,6 +20,7 @@ export const newSessionsSection = (project: ProjectInfo): React.JSX.Element => (
       title="Start in"
       value={project.checkoutChoice.type}
       options={checkoutOptions}
+      presentation="menu"
       disabled
       onValueChange={ignoreChoice}
     />
@@ -45,6 +46,7 @@ function BaseBranchRow({ choice }: ChoiceProps): React.JSX.Element | null {
       title="Base branch"
       value={choice.baseBranch}
       options={[{ value: choice.baseBranch, label: choice.baseBranch }]}
+      presentation="menu"
       disabled
       onValueChange={ignoreChoice}
     />

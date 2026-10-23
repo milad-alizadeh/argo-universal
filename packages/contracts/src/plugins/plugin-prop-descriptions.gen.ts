@@ -517,10 +517,18 @@ export type WireSchemaHints = {
     "disabled": PropValue<"FieldGroup.Picker", "disabled">;
     /** A leading SF Symbol and Material Symbol. */
     "leading": PropValue<"FieldGroup.Picker", "leading">;
-    /** The chosen option value. */
+    /** The chosen option value, or the list of them when `multiple`. */
     "value": PropValue<"FieldGroup.Picker", "value">;
     /** The options to choose from. */
     "options": PropValue<"FieldGroup.Picker", "options">;
+    /** Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one. */
+    "presentation": PropValue<"FieldGroup.Picker", "presentation">;
+    /** A search field above the choices; only a `page` has one. */
+    "searchable": PropValue<"FieldGroup.Picker", "searchable">;
+    /** Several options can be chosen; `value` is then a list. */
+    "multiple": PropValue<"FieldGroup.Picker", "multiple">;
+    /** A button in a section of its own below the choices of a `page`, such as "Add Agents". */
+    "footerAction": PropValue<"FieldGroup.Picker", "footerAction">;
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"FieldGroup.Picker", "onValueChange">;
   };

@@ -19,6 +19,7 @@ describe('a FieldGroup row’s leading icon', () => {
         title: 'Volume',
         value: 'a',
         options: [],
+        presentation: 'menu',
         onValueChange: { $event: 'onValueChange' },
         leading: name,
       }).success,

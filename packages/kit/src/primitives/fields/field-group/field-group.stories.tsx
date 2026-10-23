@@ -83,6 +83,7 @@ function ChoiceRow(): ReactElement {
       title="Choice"
       leading="settings"
       options={options}
+      presentation="menu"
       value={choice}
       onValueChange={setChoice}
     />

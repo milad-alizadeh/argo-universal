@@ -8,11 +8,10 @@ import {
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
-import { Host } from '#primitives/native/host';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
+import { SheetFrame } from './sheet-frame.ios';
 import {
   SheetLink,
   SheetNavigationProvider,
@@ -38,12 +37,9 @@ function SheetRoot(props: SheetProps): ReactElement {
 
   return (
     <SheetNavigationProvider value={stack.navigation}>
-      <View style={props.style} className="min-w-0 shrink">
-        {!popover && <SheetTrigger {...props} />}
-        <Host matchContents>
-          <Presentation {...props} stack={stack} />
-        </Host>
-      </View>
+      <SheetFrame {...props} popover={popover}>
+        <Presentation {...props} stack={stack} />
+      </SheetFrame>
     </SheetNavigationProvider>
   );
 }

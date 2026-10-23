@@ -1,37 +1,62 @@
-import { Picker, Text } from '@expo/ui/swift-ui';
-import { disabled, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
-import { RowTitle } from '#primitives/fields/field-row';
-import type { FieldGroupKitProps } from '../../kit-props';
+import { useOptionalSheet } from '#primitives/overlays/sheet';
+import { FieldPickerDrill } from './field-picker-drill';
+import { MenuPicker, MultipleMenu } from './field-picker-menu.ios';
+import {
+  choiceSummary,
+  widened,
+  type FieldPickerCallerProps,
+  type FieldPickerProps,
+} from './field-picker-model';
+import { PageRow } from './field-picker-page-row.ios';
+import { SheetPicker } from './field-picker-sheet';
 
 /*
- * SwiftUI's Picker with its own label and no wrapping row, so Form draws the stock row: the title at the leading
- * edge, the chosen value and the up-down chevrons at the trailing edge.
+ * A `menu` opens in place: SwiftUI's menu Picker, or a Menu of checked items for a `multiple` choice. A `page`
+ * always opens its page: pushed in the enclosing Sheet's NavigationStack, as SwiftUI's `.navigationLink` Picker
+ * does, or on a Sheet of its own when no Sheet encloses the row. It never changes with its parent (ADR-0042).
  */
+export function FieldPicker(props: FieldPickerCallerProps): ReactElement;
+export function FieldPicker(props: FieldPickerProps): ReactElement;
 export function FieldPicker(
-  props: FieldGroupKitProps<'FieldGroup.Picker'>,
+  caller: FieldPickerCallerProps | FieldPickerProps,
 ): ReactElement {
-  return (
-    <Picker
-      label={plain(props) ? props.title : <RowTitle {...props} />}
-      selection={props.value}
-      onSelectionChange={(value: string) => props.onValueChange(value)}
-      modifiers={[pickerStyle('menu'), disabled(props.disabled ?? false)]}
-    >
-      {options(props.options)}
-    </Picker>
+  const props = widened(caller);
+  const sheet = useOptionalSheet();
+
+  if (props.presentation === 'menu') return <InPlace {...props} />;
+
+  return sheet ? <PagePicker {...props} /> : <SheetPage {...props} />;
+}
+
+function InPlace(props: FieldPickerProps): ReactElement {
+  return props.multiple ? (
+    <MultipleMenu {...props} />
+  ) : (
+    <MenuPicker {...props} />
   );
 }
 
-const options = (
-  list: FieldGroupKitProps<'FieldGroup.Picker'>['options'],
-): ReactElement[] =>
-  list.map((option) => (
-    <Text key={option.value} modifiers={[tag(option.value)]}>
-      {option.label}
-    </Text>
-  ));
+const rowProps = (props: FieldPickerProps): RowProps => ({
+  title: props.title,
+  leading: props.leading,
+  summary: choiceSummary(props),
+  disabled: props.disabled,
+});
 
-// A title with no icon is the Picker's own string label.
-const plain = (props: FieldGroupKitProps<'FieldGroup.Picker'>): boolean =>
-  !props.leading;
+type RowProps = React.ComponentProps<typeof PageRow>;
+
+function PagePicker(props: FieldPickerProps): ReactElement {
+  return (
+    <FieldPickerDrill {...props} trigger={<PageRow {...rowProps(props)} />} />
+  );
+}
+
+function SheetPage(props: FieldPickerProps): ReactElement {
+  return (
+    <SheetPicker
+      {...props}
+      row={(opening) => <PageRow {...rowProps(props)} {...opening} />}
+    />
+  );
+}
