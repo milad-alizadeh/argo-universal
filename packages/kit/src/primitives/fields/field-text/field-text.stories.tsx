@@ -45,3 +45,12 @@ export const Secret: Story = { args: { secure: true } };
 export const Empty: Story = { args: { value: '' } };
 
 export const SecretEmpty: Story = { args: { value: '', secure: true } };
+
+export const Multiline: Story = {
+  args: {
+    title: 'Notes',
+    multiline: true,
+    value:
+      'A longer answer that wraps over several lines so the field grows with its text instead of scrolling inside one line.',
+  },
+};

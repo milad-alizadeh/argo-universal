@@ -1,13 +1,14 @@
-import type { DatePickerMode } from './date-picker-props';
+// Local ISO date, time and datetime values, shared by the DatePicker row and the DatePicker input.
+export type DateMode = 'date' | 'time' | 'datetime';
 
 // Values are local ISO strings, the formats `<input type="date|time|datetime-local">` reads and writes.
 const inputTypes = {
   date: 'date',
   time: 'time',
   datetime: 'datetime-local',
-} as const satisfies Record<DatePickerMode, string>;
+} as const satisfies Record<DateMode, string>;
 
-export function inputType(mode: DatePickerMode = 'date'): string {
+export function inputType(mode: DateMode = 'date'): string {
   return inputTypes[mode];
 }
 
@@ -23,9 +24,9 @@ const isoParts = {
   date: datePart,
   time: timePart,
   datetime: (date: Date): string => `${datePart(date)}T${timePart(date)}`,
-} satisfies Record<DatePickerMode, (date: Date) => string>;
+} satisfies Record<DateMode, (date: Date) => string>;
 
-export function isoValue(date: Date, mode: DatePickerMode = 'date'): string {
+export function isoValue(date: Date, mode: DateMode = 'date'): string {
   return isoParts[mode](date);
 }
 
@@ -62,12 +63,12 @@ const readers = {
 
     return withClock(dayDate(day), time);
   },
-} satisfies Record<DatePickerMode, (value: string) => Date>;
+} satisfies Record<DateMode, (value: string) => Date>;
 
 // The local Date a value names; a value that does not write back the same (2026-02-30, 25:99) names none.
 export function valueDate(
   value: string | undefined,
-  mode: DatePickerMode = 'date',
+  mode: DateMode = 'date',
 ): Date | undefined {
   if (!value) return undefined;
 
@@ -77,7 +78,7 @@ export function valueDate(
 function sameValue(
   date: Date,
   value: string,
-  mode: DatePickerMode,
+  mode: DateMode,
 ): Date | undefined {
   if (Number.isNaN(date.getTime())) return undefined;
 
@@ -98,12 +99,12 @@ const displays = {
   date: dayText,
   time: timeText,
   datetime: (date: Date): string => `${dayText(date)}, ${timeText(date)}`,
-} satisfies Record<DatePickerMode, (date: Date) => string>;
+} satisfies Record<DateMode, (date: Date) => string>;
 
 // How Android's read-only field shows the value, in the device's locale.
 export function displayValue(
   value: string | undefined,
-  mode: DatePickerMode = 'date',
+  mode: DateMode = 'date',
 ): string {
   const date = valueDate(value, mode);
 

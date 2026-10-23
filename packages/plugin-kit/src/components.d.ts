@@ -76,6 +76,7 @@ export const FieldGroup: PluginComponents['FieldGroup'] & {
   Link: PluginComponents['FieldGroup.Link'];
   Toggle: PluginComponents['FieldGroup.Toggle'];
   Picker: PluginComponents['FieldGroup.Picker'];
+  DatePicker: PluginComponents['FieldGroup.DatePicker'];
   Slider: PluginComponents['FieldGroup.Slider'];
   TextField: PluginComponents['FieldGroup.TextField'];
   SecretField: PluginComponents['FieldGroup.SecretField'];

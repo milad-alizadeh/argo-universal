@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isoValue, valueDate } from './date-picker-value';
+import { isoValue, valueDate } from './date-value';
 
 describe('DatePicker values', () => {
   it.each([

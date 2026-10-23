@@ -1,6 +1,12 @@
 import { z } from 'zod';
-import { iconName } from '../kit-symbols/icon-schema';
-import { stockIcon } from '../kit-symbols/stock-icon-schema';
+import {
+  fieldGroupDatePickerProps,
+  fieldGroupPickerProps,
+} from './field-group-choice-props';
+import {
+  fieldGroupFieldProps,
+  fieldGroupRowProps,
+} from './field-group-row-props';
 import { rowPress } from './list-kit-props';
 import { echoes, handler } from './plugin-part-props';
 import { textChangeEvents } from './text-field-kit-props';
@@ -14,22 +20,6 @@ export const fieldGroupProps = z.object({
 export const fieldGroupSectionProps = z.object({
   title: z.string().optional().describe('The heading above the section.'),
   footer: z.string().optional().describe('Supporting text below the section.'),
-});
-
-/*
- * Every row mirrors Expo UI's universal ListItem: a `title`, a `leading` icon, and
- * what sits at the end (`trailing` is each control's own value). A row has no free Slots.
- */
-export const fieldGroupFieldProps = z.object({
-  title: z.string().describe('The row’s label.'),
-  disabled: z.boolean().optional().describe('Whether the row is disabled.'),
-});
-
-// A row that leads with an icon, as Expo UI's universal ListItem does.
-export const fieldGroupRowProps = fieldGroupFieldProps.extend({
-  leading: stockIcon
-    .optional()
-    .describe('A leading SF Symbol and Material Symbol.'),
 });
 
 export const fieldGroupToggleProps = fieldGroupFieldProps.extend({
@@ -56,53 +46,14 @@ export const fieldGroupTextFieldProps = fieldGroupRowProps.extend({
     .describe(
       'The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad.',
     ),
+  multiline: z
+    .boolean()
+    .optional()
+    .describe(
+      'The field grows with its text over several lines, for a long answer.',
+    ),
   onBlur: handler('onBlur').optional(),
   onSubmit: handler('onSubmit').optional(),
-});
-
-export const fieldGroupPickerOption = z.object({
-  value: z.string(),
-  label: z.string(),
-  subtitle: z.string().optional().describe('A second line under the label.'),
-  icon: iconName.optional().describe('A leading icon.'),
-  section: z
-    .string()
-    .optional()
-    .describe(
-      'The heading of the section a page lists the option under; options with the same heading sit together.',
-    ),
-});
-
-const pickerChoice = z.union([z.string(), z.array(z.string()).readonly()]);
-
-export const fieldGroupPickerProps = fieldGroupRowProps.extend({
-  value: pickerChoice.describe(
-    'The chosen option value, or the list of them when `multiple`.',
-  ),
-  options: z
-    .array(fieldGroupPickerOption)
-    .readonly()
-    .describe('The options to choose from.'),
-  presentation: z
-    .enum(['menu', 'page'])
-    .describe(
-      'Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one.',
-    ),
-  searchable: z
-    .boolean()
-    .optional()
-    .describe('A search field above the choices; only a `page` has one.'),
-  multiple: z
-    .boolean()
-    .optional()
-    .describe('Several options can be chosen; `value` is then a list.'),
-  footerAction: z
-    .object({ label: z.string(), onPress: handler('onPress') })
-    .optional()
-    .describe(
-      'A button in a section of its own below the choices of a `page`, such as "Add Agents".',
-    ),
-  onValueChange: handler('onValueChange'),
 });
 
 export const fieldGroupSliderProps = fieldGroupFieldProps.extend({
@@ -145,6 +96,10 @@ export const fieldGroupKitParts = {
   'FieldGroup.SecretField': {
     props: fieldGroupTextFieldProps,
     events: textEvents,
+  },
+  'FieldGroup.DatePicker': {
+    props: fieldGroupDatePickerProps,
+    events: { onValueChange: echoes(fieldGroupDatePickerProps, 'value') },
   },
   'FieldGroup.Picker': {
     props: fieldGroupPickerProps,

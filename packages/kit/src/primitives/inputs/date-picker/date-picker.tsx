@@ -1,10 +1,10 @@
 import { createElement, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
+import { inputType } from '#primitives/native/date-value';
 import { requiredLabel } from '../../../required-label';
 import { cn } from '../../../utils';
 import type { DatePickerProps } from './date-picker-props';
-import { inputType } from './date-picker-value';
 
 const rowClasses = cn(
   'min-w-0 flex-1 flex-row items-center gap-4',

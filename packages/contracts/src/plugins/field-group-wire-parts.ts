@@ -6,6 +6,7 @@ const rows = [
   'FieldGroup.Link',
   'FieldGroup.Toggle',
   'FieldGroup.Picker',
+  'FieldGroup.DatePicker',
   'FieldGroup.Slider',
   'FieldGroup.TextField',
   'FieldGroup.SecretField',
@@ -45,6 +46,14 @@ export const fieldGroupWireParts = {
     'A row that chooses one option.',
     fieldGroupKitParts['FieldGroup.Picker'].props,
     { events: fieldGroupKitParts['FieldGroup.Picker'].events, label: rowLabel },
+  ),
+  'FieldGroup.DatePicker': part(
+    'A row that picks a date, a time, or both.',
+    fieldGroupKitParts['FieldGroup.DatePicker'].props,
+    {
+      events: fieldGroupKitParts['FieldGroup.DatePicker'].events,
+      label: rowLabel,
+    },
   ),
   'FieldGroup.Slider': part(
     'A row with a numeric range control.',

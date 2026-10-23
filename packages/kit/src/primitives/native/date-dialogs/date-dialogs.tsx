@@ -1,13 +1,18 @@
-// Android only: Material's stock date and time dialogs, drawn by date-picker.android.tsx.
+// Android only: Material's stock date and time dialogs, opened by the DatePicker row and by the input DatePicker.
 import { DatePickerDialog, TimePickerDialog } from '@expo/ui/jetpack-compose';
 import { type ReactElement, useState } from 'react';
-import { Host } from '#primitives/native/host';
-import type { DatePickerProps } from './date-picker-props';
-import { isoValue, valueDate } from './date-picker-value';
+import {
+  type DateMode,
+  isoValue,
+  valueDate,
+} from '#primitives/native/date-value';
 
 export type DialogStep = 'closed' | 'date' | 'time';
 
-type DialogProps = DatePickerProps & {
+type DialogProps = {
+  value?: string;
+  mode?: DateMode;
+  onValueChange?: (value: string) => void;
   step: DialogStep;
   setStep: (step: DialogStep) => void;
   close: () => void;
@@ -19,12 +24,10 @@ export function DateDialogs(props: DialogProps): ReactElement | null {
   if (props.step === 'closed') return null;
 
   return (
-    <Host matchContents>
-      <OpenDialog
-        {...props}
-        current={valueDate(props.value, props.mode) ?? now}
-      />
-    </Host>
+    <OpenDialog
+      {...props}
+      current={valueDate(props.value, props.mode) ?? now}
+    />
   );
 }
 

@@ -7,6 +7,7 @@ export const fieldsPartSchemas = {
   'FieldGroup.Link': wireParts['FieldGroup.Link'],
   'FieldGroup.Toggle': wireParts['FieldGroup.Toggle'],
   'FieldGroup.Picker': wireParts['FieldGroup.Picker'],
+  'FieldGroup.DatePicker': wireParts['FieldGroup.DatePicker'],
   'FieldGroup.Slider': wireParts['FieldGroup.Slider'],
   'FieldGroup.TextField': wireParts['FieldGroup.TextField'],
   'FieldGroup.SecretField': wireParts['FieldGroup.SecretField'],

@@ -28,6 +28,7 @@ export const exemptFolders = {
   'content/media-url':
     'Resolves the src of Image, Video and Audio; no props of its own.',
   'content/native-text': 'The platform fork of Text.',
+  'fields/field-date-picker': fieldRow,
   'fields/field-link': fieldRow,
   'fields/field-picker': fieldRow,
   'fields/field-slider': fieldRow,

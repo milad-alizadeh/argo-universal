@@ -1,3 +1,4 @@
+import { FieldDatePicker } from '#primitives/fields/field-date-picker';
 import { FieldLink } from '#primitives/fields/field-link';
 import { FieldPicker } from '#primitives/fields/field-picker';
 import { FieldSlider } from '#primitives/fields/field-slider';
@@ -11,6 +12,7 @@ export const fieldGroupRowComponents = {
   Link: FieldLink,
   Toggle: FieldToggle,
   Picker: FieldPicker,
+  DatePicker: FieldDatePicker,
   Slider: FieldSlider,
   TextField: FieldText,
   SecretField: FieldSecret,

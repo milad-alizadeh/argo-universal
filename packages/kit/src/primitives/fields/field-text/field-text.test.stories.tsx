@@ -38,3 +38,13 @@ export const Types: Story = {
     await expect(args.onChangeText).toHaveBeenCalled();
   },
 };
+
+export const MultilineKeepsLineBreaks: Story = {
+  args: { multiline: true, value: 'one' },
+  play: async ({ canvas, userEvent, args }) => {
+    await userEvent.type(canvas.getByDisplayValue('one'), '{Enter}two');
+    await expect(args.onChangeText).toHaveBeenCalledWith(
+      expect.stringContaining('\n'),
+    );
+  },
+};

@@ -532,6 +532,20 @@ export type WireSchemaHints = {
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"FieldGroup.Picker", "onValueChange">;
   };
+  "FieldGroup.DatePicker": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.DatePicker", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.DatePicker", "disabled">;
+    /** A leading SF Symbol and Material Symbol. */
+    "leading": PropValue<"FieldGroup.DatePicker", "leading">;
+    /** Local ISO value: `YYYY-MM-DD`, `HH:mm`, or `YYYY-MM-DDTHH:mm` by mode. */
+    "value": PropValue<"FieldGroup.DatePicker", "value">;
+    /** Pick a date, a time, or both. */
+    "mode": PropValue<"FieldGroup.DatePicker", "mode">;
+    /** Reports a picked value. */
+    "onValueChange": PropValue<"FieldGroup.DatePicker", "onValueChange">;
+  };
   "FieldGroup.Slider": {
     /** The row’s label. */
     "title": PropValue<"FieldGroup.Slider", "title">;
@@ -565,6 +579,8 @@ export type WireSchemaHints = {
     "error": PropValue<"FieldGroup.TextField", "error">;
     /** The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad. */
     "keyboardType": PropValue<"FieldGroup.TextField", "keyboardType">;
+    /** The field grows with its text over several lines, for a long answer. */
+    "multiline": PropValue<"FieldGroup.TextField", "multiline">;
     /** on Blur for this part. */
     "onBlur": PropValue<"FieldGroup.TextField", "onBlur">;
     /** on Submit for this part. */
@@ -587,6 +603,8 @@ export type WireSchemaHints = {
     "error": PropValue<"FieldGroup.SecretField", "error">;
     /** The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad. */
     "keyboardType": PropValue<"FieldGroup.SecretField", "keyboardType">;
+    /** The field grows with its text over several lines, for a long answer. */
+    "multiline": PropValue<"FieldGroup.SecretField", "multiline">;
     /** on Blur for this part. */
     "onBlur": PropValue<"FieldGroup.SecretField", "onBlur">;
     /** on Submit for this part. */

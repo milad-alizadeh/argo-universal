@@ -55,6 +55,7 @@ function useFieldProps(props: FieldTextProps): TextFieldProps {
 
   return {
     text,
+    axis: props.multiline ? 'vertical' : 'horizontal',
     placeholder: props.placeholder,
     onTextChange: props.onChangeText,
     onFocusChange: (focused: boolean): void => {

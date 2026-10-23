@@ -71,6 +71,7 @@ export const pluginEntries = {
   'FieldGroup.Link': FieldGroup.Link,
   'FieldGroup.Toggle': FieldGroup.Toggle,
   'FieldGroup.Picker': FieldGroup.Picker,
+  'FieldGroup.DatePicker': FieldGroup.DatePicker,
   'FieldGroup.Slider': FieldGroup.Slider,
   'FieldGroup.TextField': FieldGroup.TextField,
   'FieldGroup.SecretField': FieldGroup.SecretField,

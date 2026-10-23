@@ -8,13 +8,13 @@ import {
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { type ComponentType, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
+import { DateDialogs, type DialogStep } from '#primitives/native/date-dialogs';
+import { displayValue } from '#primitives/native/date-value';
 import { Host } from '#primitives/native/host';
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import { requiredLabel } from '../../../required-label';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { DateDialogs, type DialogStep } from './date-picker-dialogs';
 import type { DatePickerProps } from './date-picker-props';
-import { displayValue } from './date-picker-value';
 
 type DialogState = {
   step: DialogStep;
@@ -49,10 +49,20 @@ export function DatePicker(props: DatePickerProps): ReactElement {
           onOpen={() => setStep(props.mode === 'time' ? 'time' : 'date')}
         />
       </Host>
-      <DateDialogs {...props} step={step} setStep={setStep} close={close} />
+      <DialogHost {...props} step={step} setStep={setStep} close={close} />
     </View>
   );
 }
+
+type HostProps = DatePickerProps & Omit<DialogState, 'round'>;
+
+// The dialogs sit in a Host of their own, since this field is not inside a Compose tree.
+const DialogHost = (props: HostProps): ReactElement | null =>
+  props.step === 'closed' ? null : (
+    <Host matchContents>
+      <DateDialogs {...props} />
+    </Host>
+  );
 
 const FIELD_FLAGS: Pick<
   OutlinedTextFieldProps,

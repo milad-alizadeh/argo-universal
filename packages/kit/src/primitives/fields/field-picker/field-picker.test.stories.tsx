@@ -11,6 +11,7 @@ import { FieldGroup } from '#primitives/fields/field-group';
 import { ControlledPicker } from './field-picker-controlled';
 import {
   chosen,
+  emptyOption,
   multiple,
   multipleMenu,
   pageAction,
@@ -169,5 +170,17 @@ export const MultipleMenuReportsList: Story = {
     await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
     await userEvent.click(await page.findByRole('button', { name: /Two/ }));
     await expect(changed).toHaveBeenLastCalledWith(['one', 'two', 'three']);
+  },
+};
+
+// A menu option whose value is the empty string chooses and reports like any other.
+export const EmptyValueOptionChooses: Story = {
+  render: () => <ControlledPicker {...emptyOption} onValueChange={changed} />,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
+    await userEvent.click(
+      await within(document.body).findByRole('option', { name: 'None' }),
+    );
+    await expect(changed).toHaveBeenCalledWith('');
   },
 };

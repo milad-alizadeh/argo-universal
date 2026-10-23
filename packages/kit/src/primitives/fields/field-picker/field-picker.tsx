@@ -2,7 +2,6 @@ import { Row, Spacer } from '@expo/ui';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { RowTitle } from '#primitives/fields/field-row';
-import { PlainPicker, type PlainPickerProps } from '#primitives/inputs/picker';
 import { FieldPickerDrill } from './field-picker-drill';
 import {
   choiceSummary,
@@ -11,6 +10,7 @@ import {
   type FieldPickerProps,
 } from './field-picker-model';
 import { PageTrigger } from './field-picker-page-trigger';
+import { FieldPickerSelect } from './field-picker-select';
 
 /*
  * The title, a flexible Spacer, then the choice at the row's end. A `menu` of one value is the kit's borderless
@@ -37,7 +37,7 @@ export function FieldPicker(
 
 function Choice(props: FieldPickerProps): ReactElement {
   if (props.presentation === 'menu' && !props.multiple)
-    return <PlainPicker {...plainPickerProps(props)} />;
+    return <FieldPickerSelect {...selectProps(props)} />;
 
   return <PagePicker {...props} />;
 }
@@ -63,8 +63,10 @@ function PagePicker(props: FieldPickerProps): ReactElement {
  */
 const chevronEnd = '-mr-1.5 wide:-mr-1.25';
 
-const plainPickerProps = (props: FieldPickerProps): PlainPickerProps => ({
-  label: props.title,
+const selectProps = (
+  props: FieldPickerProps,
+): React.ComponentProps<typeof FieldPickerSelect> => ({
+  title: props.title,
   value: typeof props.value === 'string' ? props.value : '',
   options: props.options,
   onValueChange: props.onValueChange,

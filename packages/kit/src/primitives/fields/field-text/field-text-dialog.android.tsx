@@ -103,7 +103,7 @@ function DraftField(props: DraftFieldProps): ReactElement {
 
 const draftEntry = (props: DraftFieldProps): TextFieldProps => ({
   value: props.draft,
-  singleLine: true,
+  singleLine: !props.multiline,
   isError: props.error !== undefined,
   visualTransformation: props.secure ? 'password' : 'none',
   keyboardOptions: { keyboardType: composeKeyboard(props) },

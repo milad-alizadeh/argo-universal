@@ -2,8 +2,8 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
-import { ComboboxSearch } from '#primitives/inputs/combobox';
 import type { FieldPickerPageProps } from './field-picker-page';
+import { PageSearchField } from './field-picker-search';
 
 type SearchProps = {
   title: string;
@@ -14,7 +14,7 @@ type SearchProps = {
 export function PageSearch(props: SearchProps): ReactElement {
   return (
     <View className="px-4 py-3 wide:px-0 wide:py-1">
-      <ComboboxSearch
+      <PageSearchField
         label={`Search ${props.title}`}
         placeholder="Search"
         value={props.value}

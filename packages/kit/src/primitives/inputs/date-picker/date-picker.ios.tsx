@@ -9,10 +9,10 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { useState, type ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
+import { isoValue, valueDate } from '#primitives/native/date-value';
 import { Host } from '#primitives/native/host';
 import { requiredLabel } from '../../../required-label';
 import type { DatePickerMode, DatePickerProps } from './date-picker-props';
-import { isoValue, valueDate } from './date-picker-value';
 
 const components = {
   date: ['date'],

@@ -18,6 +18,14 @@ export const chosen = {
   presentation: 'menu',
 } satisfies Fixture<FieldPickerSingle>;
 
+// A choice that means "none" is an option whose value is the empty string.
+export const emptyOption = {
+  title: 'Label',
+  value: 'one',
+  options: [{ value: '', label: 'None' }, ...short],
+  presentation: 'menu',
+} satisfies Fixture<FieldPickerSingle>;
+
 const detailed = [
   { value: 'one', label: 'One', subtitle: 'The first', icon: 'folder' },
   { value: 'two', label: 'Two', subtitle: 'The second', icon: 'folder' },
