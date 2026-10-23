@@ -18,6 +18,8 @@
     },
     "./symbols/assets/*": "./src/symbols/assets/*",
     "./symbols/symbol-images": "./src/symbols/symbol-images.tsx",
+    "./story-stack": "./src/story-stack/index.ts",
+    "./story-stack/routes": "./src/story-stack/routes.tsx",
     "./tinted-avatar": "./src/tinted-avatar.tsx",
     "./tone-mark": "./src/tone-mark.tsx",
     "./primitives/*": {
@@ -34,7 +36,8 @@
       "types": "./src/primitives/*/index.ts",
       "default": "./src/primitives/*/index.ts"
     },
-    "#kit/*": "./src/*.ts"
+    "#kit/*": "./src/*.ts",
+    "#story-stack": "./src/story-stack/index.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
