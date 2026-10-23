@@ -1,9 +1,11 @@
 import type { ComponentProps, ReactElement } from 'react';
-import { Pressable } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { halfScale } from '#primitives/status/disclosure-chevron';
+import { useIconBox } from '../../../symbols/icon-size';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { MenuProps } from './menu-props';
 
@@ -54,7 +56,27 @@ function MenuTextTriggerContent({ label }: { label: string }): ReactElement {
       <Text role="secondary" className="text-muted-foreground">
         {label}
       </Text>
-      <Icon size="sm" name="chevron-down" className="text-muted-foreground" />
+      <TriggerChevron />
     </>
+  );
+}
+
+/*
+ * iOS draws its SF chevron large beside secondary text, so it takes half its icon, as the disclosure chevron does,
+ * inside the same box. The other platforms draw it whole.
+ */
+function TriggerChevron(): ReactElement {
+  const box = useIconBox('sm');
+
+  const chevron = (
+    <Icon size="sm" name="chevron-down" className="text-muted-foreground" />
+  );
+
+  if (Platform.OS !== 'ios') return chevron;
+
+  return (
+    <View style={box} className="items-center justify-center">
+      <View style={{ transform: [{ scale: halfScale }] }}>{chevron}</View>
+    </View>
   );
 }
