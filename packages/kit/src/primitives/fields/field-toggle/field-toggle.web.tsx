@@ -1,21 +1,26 @@
-import { Row, Spacer, Switch } from '@expo/ui';
+import { Switch } from '@expo/ui';
 import type { ReactElement } from 'react';
 import { RowTitle } from '#primitives/fields/field-row';
 import type { FieldGroupKitProps } from '../../kit-props';
 
-// The web Switch draws its label in Expo's own type, so the title is the row's own text in the kit's body role.
+/*
+ * The web Switch draws its label in Expo's own type, so the title is the row's own text in the kit's body role. The
+ * row is a label around both, as Expo's Switch is: it names the switch, and pressing the title flips it.
+ */
 export function FieldToggle(
   props: FieldGroupKitProps<'FieldGroup.Toggle'>,
 ): ReactElement {
   return (
-    <Row alignment="center">
+    /* oxlint-disable-next-line jsx-a11y/label-has-associated-control -- Expo's Switch draws the checkbox input inside it. */
+    <label className={labelRow}>
       <RowTitle title={props.title} />
-      <Spacer flexible />
       <Switch
         value={props.value}
         onValueChange={props.onValueChange}
         disabled={props.disabled}
       />
-    </Row>
+    </label>
   );
 }
+
+const labelRow = 'flex items-center justify-between';
