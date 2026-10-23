@@ -73,6 +73,8 @@ function rowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
 // Data rows start their own context. Fixed children and standalone Sections adapt it below.
 type DataRowProps = {
   index: number;
+  // A heading, footer or gap the caller draws: not a row of the card.
+  part?: boolean;
   children: ReactNode;
 };
 
@@ -94,7 +96,7 @@ type DataRow = {
   position: ListPosition;
 };
 
-function useDataRow(index: number): DataRow {
+function useDataRow(index: number, part?: boolean): DataRow {
   const { appearance, cellAppearance, positionAt } =
     useContext(RowLayoutContext);
 
@@ -105,16 +107,23 @@ function useDataRow(index: number): DataRow {
     [appearance, position, index],
   );
 
-  return { value, cellAppearance, position };
+  return {
+    value,
+    cellAppearance: part ? 'plain' : cellAppearance,
+    position,
+  };
 }
 
-export function DataListRow({ index, children }: DataRowProps): ReactElement {
-  const { value, cellAppearance, position } = useDataRow(index);
+export function DataListRow(props: DataRowProps): ReactElement {
+  const { value, cellAppearance, position } = useDataRow(
+    props.index,
+    props.part,
+  );
 
   return (
     <ListContext value={value}>
       <GroupedCells appearance={cellAppearance} position={position}>
-        {children}
+        {props.children}
       </GroupedCells>
     </ListContext>
   );

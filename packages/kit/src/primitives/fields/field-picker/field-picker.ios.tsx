@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { InlineChecks, InlinePicker } from './field-picker-inline.ios';
+import { InlineChecks } from './field-picker-inline.ios';
 import { MenuPicker, MultipleMenu } from './field-picker-menu.ios';
 import type {
   FieldPickerCallerProps,
@@ -27,13 +27,9 @@ export function FieldPicker(
   );
 }
 
-// An `inline` choice is the options as rows of the Form's Section: SwiftUI's inline Picker, or a check row each.
+// An `inline` choice is the options as rows of the Form's Section, a check row each (SwiftUI's inline Picker drew them blank).
 function Inline(props: FieldPickerProps): ReactElement {
-  return props.multiple ? (
-    <InlineChecks {...props} />
-  ) : (
-    <InlinePicker {...props} />
-  );
+  return <InlineChecks {...props} />;
 }
 
 function InPlace(props: FieldPickerProps): ReactElement {

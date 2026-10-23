@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { Platform } from 'react-native';
 import { ListContext, type ListAppearance } from './list-context';
 
-// A grouped List is drawn as a web FieldGroup section; the phones don't draw it yet.
+// On the web a grouped List is drawn as a FieldGroup section on LegendList; the phones draw it natively (list-phone-grouped).
 export const isWebGrouped = (appearance?: ListAppearance): boolean =>
   Platform.OS === 'web' && appearance === 'grouped';
 

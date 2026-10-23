@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
 import { settleViewport } from '#kit/settle-viewport';
-import { ControlledPicker } from './field-picker-controlled';
+import { ControlledPage, ControlledPicker } from './field-picker-controlled';
 import { inStackedSection } from './field-picker-decorators';
 import {
   emptyOption,
@@ -20,7 +20,7 @@ const changed = fn<(value: string | readonly string[]) => void>();
 const pressed = fn();
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Fields/FieldPicker',
+  title: 'Tests/Design System/Primitives/Forms/FieldPicker',
   beforeEach: (): void => {
     changed.mockClear();
     pressed.mockClear();
@@ -225,5 +225,15 @@ export const InlineTogglesCheckboxes: Story = {
     await expect(
       canvas.getByRole('checkbox', { name: /^One/ }),
     ).not.toBeChecked();
+  },
+};
+
+// The page's rows report a choice: the web's rows are radios, and a phone's native rows are the same options.
+export const PageRowsChoose: Story = {
+  render: () => <ControlledPage {...pageWithSearch} onValueChange={changed} />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByRole('radio', { name: /^Cedar/ })).toBeVisible();
+    await userEvent.click(canvas.getByRole('radio', { name: /^Elm/ }));
+    await expect(changed).toHaveBeenCalledWith('elm');
   },
 };

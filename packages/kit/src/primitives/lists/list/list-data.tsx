@@ -27,9 +27,13 @@ interface RowProps<Item> {
   props: ListProps<Item>;
 }
 
+// A header, footer or gap the caller renders as an item says so with the item type 'section', as a List's own children do.
+const isPart = <Item,>({ row, props }: RowProps<Item>): boolean =>
+  props.getItemType?.(row.item, row.index) === 'section';
+
 function Row<Item>(rowProps: RowProps<Item>): ReactElement {
   return (
-    <DataListRow index={rowProps.row.index}>
+    <DataListRow index={rowProps.row.index} part={isPart(rowProps)}>
       <PaddedRow row={rowProps.row} props={rowProps.props} />
     </DataListRow>
   );

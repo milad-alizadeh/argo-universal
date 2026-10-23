@@ -1,0 +1,141 @@
+import { getFieldItemPosition } from '@expo/ui';
+import { Column, LazyColumn } from '@expo/ui/jetpack-compose';
+import {
+  fillMaxSize,
+  fillMaxWidth,
+  height,
+  imePadding,
+} from '@expo/ui/jetpack-compose/modifiers';
+import { useCallback, type ReactElement } from 'react';
+import {
+  Caption,
+  caption,
+  footerInsets,
+  titleInsets,
+} from '#primitives/fields/field-group';
+import { PositionContext } from '#primitives/fields/field-row';
+import { ListEmpty } from './list-data';
+import { PhoneHost } from './list-phone-host';
+import {
+  phoneSections,
+  type PhoneRow,
+  type PhoneSection,
+} from './list-phone-sections';
+import type { ListProps } from './list-props';
+
+export const phoneGrouped = true;
+
+/*
+ * The FieldGroup's layout (field-group.android.tsx) as one lazy column: 16dp around, 2dp between rows, 24dp between
+ * sections. Every item of the column is a lazy item, so a title, a footer and the gap each take the column's own
+ * 2dp spacing off the space they add.
+ */
+const rowSpacing = 2;
+
+const sectionSpacing = 24;
+
+const contentPadding = { start: 16, end: 16, top: 16, bottom: 16 };
+
+const listModifiers = [fillMaxSize(), imePadding()];
+
+const estimatedRowHeight = 56;
+
+const rowKey = (row: PhoneRow): string => row.key;
+
+/*
+ * ADR-0042: a grouped List on Android is Compose's `LazyColumn` whose rows are `LazyColumn.Items` Expo recycles, drawn
+ * as Material's connected rows as Expo's FieldSection.android.tsx does (rounded ends, small corners between, 2dp
+ * gaps; each row clips itself by the position it is given). Its rows are FieldGroup rows, as in a FieldGroup.
+ */
+export function PhoneGroupedList<Item>(props: ListProps<Item>): ReactElement {
+  const sections = phoneSections(props);
+
+  if (sections.length === 0) return <ListEmpty {...props} />;
+
+  return (
+    <PhoneHost>
+      <GroupedColumn sections={sections} />
+    </PhoneHost>
+  );
+}
+
+function GroupedColumn(props: { sections: PhoneSection[] }): ReactElement {
+  return (
+    <LazyColumn
+      verticalArrangement={{ spacedBy: rowSpacing }}
+      contentPadding={contentPadding}
+      modifiers={listModifiers}
+    >
+      {props.sections.map(groupedSection)}
+    </LazyColumn>
+  );
+}
+
+const groupedSection = (
+  section: PhoneSection,
+  index: number,
+  all: PhoneSection[],
+): ReactElement => (
+  <GroupedSection
+    key={section.key}
+    section={section}
+    last={index === all.length - 1}
+  />
+);
+
+// The title and footer sit 12dp and 8dp from the rows in a FieldGroup (4dp spacing and 8 or 4 of padding).
+const withinColumn = (insets: typeof titleInsets): typeof titleInsets => ({
+  ...insets,
+  top: Math.max(insets.top - rowSpacing, 0),
+  bottom: Math.max(insets.bottom - rowSpacing, 0),
+});
+
+type SectionProps = { section: PhoneSection; last: boolean };
+
+// Lazy items the column reads as its own children: the title, the rows, the footer and the gap.
+function GroupedSection({ section, last }: SectionProps): ReactElement {
+  return (
+    <>
+      <Caption
+        {...caption(section.title, withinColumn(titleInsets), 'heading')}
+      />
+      <SectionRows section={section} />
+      <Caption
+        {...caption(section.footer, withinColumn(footerInsets), 'secondary')}
+      />
+      {last ? null : <Gap />}
+    </>
+  );
+}
+
+// Each row is told where it sits in its section, for the corners of Material's connected rows.
+function usePositionedRow(
+  count: number,
+): (info: { item: PhoneRow; index: number }) => ReactElement {
+  return useCallback(
+    ({ item, index }) => (
+      <PositionContext.Provider value={getFieldItemPosition(index, count)}>
+        {item.render()}
+      </PositionContext.Provider>
+    ),
+    [count],
+  );
+}
+
+function SectionRows({ section }: { section: PhoneSection }): ReactElement {
+  return (
+    <LazyColumn.Items
+      data={section.rows}
+      keyExtractor={rowKey}
+      estimatedItemSize={estimatedRowHeight}
+    >
+      {usePositionedRow(section.rows.length)}
+    </LazyColumn.Items>
+  );
+}
+
+const gap = sectionSpacing - 2 * rowSpacing;
+
+const gapModifiers = [fillMaxWidth(), height(gap)];
+
+const Gap = (): ReactElement => <Column modifiers={gapModifiers} />;

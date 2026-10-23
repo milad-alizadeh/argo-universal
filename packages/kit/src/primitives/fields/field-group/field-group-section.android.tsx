@@ -1,16 +1,18 @@
 import { getFieldItemPosition } from '@expo/ui';
 import { Column } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
+import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
 import { Button } from '#primitives/actions/button';
-import {
-  NativeText,
-  type NativeTextRole,
-} from '#primitives/content/native-text';
 import { expandInlinePickers } from '#primitives/fields/field-picker';
 import { PositionContext } from '#primitives/fields/field-row';
 import { ButtonCard } from './field-group-button-card.android';
+import {
+  caption,
+  footerInsets,
+  titleInsets,
+} from './field-group-caption-insets';
+import { Caption } from './field-group-caption.android';
 import type { FieldGroupSectionProps } from './field-group-section';
 
 /*
@@ -23,27 +25,6 @@ const headingSpacing = 4;
 
 const rowSpacing = 2;
 
-const titleInsets = { start: 16, top: 0, end: 16, bottom: 8 };
-
-const footerInsets = { start: 16, top: 4, end: 16, bottom: 0 };
-
-type Insets = typeof titleInsets;
-
-type CaptionProps = {
-  text: string | undefined;
-  insets: Insets;
-  role: NativeTextRole;
-};
-
-const caption = (
-  text: string | undefined,
-  insets: Insets,
-  role: NativeTextRole,
-): CaptionProps => ({ text, insets, role });
-
-const inset = (insets: Insets): ReturnType<typeof padding> =>
-  padding(insets.start, insets.top, insets.end, insets.bottom);
-
 export function FieldGroupSection(props: FieldGroupSectionProps): ReactElement {
   return (
     <Column
@@ -53,19 +34,6 @@ export function FieldGroupSection(props: FieldGroupSectionProps): ReactElement {
       <Caption {...caption(props.title, titleInsets, 'heading')} />
       <Rows>{props.children}</Rows>
       <Caption {...caption(props.footer, footerInsets, 'secondary')} />
-    </Column>
-  );
-}
-
-// The section's title or footer in the kit's type role, muted as Material's variant colour.
-function Caption(props: CaptionProps): ReactNode {
-  if (!props.text) return null;
-
-  return (
-    <Column modifiers={[inset(props.insets)]}>
-      <NativeText role={props.role} tone="muted">
-        {props.text}
-      </NativeText>
     </Column>
   );
 }

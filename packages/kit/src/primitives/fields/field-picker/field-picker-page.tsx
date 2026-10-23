@@ -1,26 +1,13 @@
 import type { ReactElement } from 'react';
-import { Platform } from 'react-native';
-import { InChoiceMenu } from '#kit/menu-rows-context';
-import { Icon } from '#primitives/content/icon';
-import { List } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
-import {
-  chosenValues,
-  matchingOptions,
-  optionSections,
-  type FieldPickerOption,
-  type FieldPickerProps,
-  type OptionSection,
-} from './field-picker-model';
-import { change } from './field-picker-page-choice';
+import { matchingOptions, type FieldPickerProps } from './field-picker-model';
 import { PageFrame } from './field-picker-page-frame';
 import {
-  EmptyState,
   PageFooter,
   PageSearch,
   PageStatus,
   pageStatus,
 } from './field-picker-page-parts';
+import { PageRows } from './field-picker-page-rows';
 
 export type FieldPickerPageProps = FieldPickerProps & {
   // Called after a single choice, so the page it sits on can close.
@@ -61,36 +48,6 @@ function searchOf(props: PageState): ReactElement | null {
   );
 }
 
-type ListProps = Omit<
-  React.ComponentProps<typeof List>,
-  'items' | 'renderItem' | 'children'
->;
-
-const maximumHeight = 320;
-
-// The web page is a menu's plain rows that grow to fit; a phone's is a list of cards that fills its page.
-const looks = {
-  web: {
-    fit: true,
-    maxHeight: maximumHeight,
-    appearance: 'plain',
-    // The page frame holds the popover's one inset around the search, the rows and the action.
-    padding: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
-  },
-  native: { fit: false, maxHeight: undefined, appearance: 'cards' },
-} as const;
-
-function listProps(props: FieldPickerPageProps): ListProps {
-  return {
-    ...looks[Platform.OS === 'web' ? 'web' : 'native'],
-    accessibilityRole: props.multiple ? 'list' : 'radiogroup',
-    accessibilityLabel: props.title,
-    drawDistance: Number.MAX_SAFE_INTEGER,
-  };
-}
-
 function PageList(props: FieldPickerPageProps): ReactElement {
   return (
     <>
@@ -98,63 +55,4 @@ function PageList(props: FieldPickerPageProps): ReactElement {
       <PageStatus {...pageStatus(props)} />
     </>
   );
-}
-
-function PageRows(props: FieldPickerPageProps): ReactElement {
-  return (
-    <List {...listProps(props)} empty={<EmptyState />}>
-      {optionSections(props.options).map((section) => (
-        <PageSection key={section.title ?? ''} {...props} section={section} />
-      ))}
-    </List>
-  );
-}
-
-type SectionProps = FieldPickerPageProps & { section: OptionSection };
-
-function PageSection(props: SectionProps): ReactElement {
-  return (
-    <InChoiceMenu value>
-      <ChoiceSection {...props} />
-    </InChoiceMenu>
-  );
-}
-
-function ChoiceSection(props: SectionProps): ReactElement {
-  return (
-    <List.Section
-      title={props.section.title}
-      selectionMode={props.multiple ? 'multiple' : 'single'}
-      selection={chosenValues(props)}
-      onSelectionChange={(next) => change(props, next)}
-    >
-      {props.section.options.map((option) => (
-        <PageRow key={option.value} {...props} option={option} />
-      ))}
-    </List.Section>
-  );
-}
-
-function PageRow(
-  props: FieldPickerPageProps & { option: FieldPickerOption },
-): ReactElement {
-  const { option } = props;
-
-  return (
-    <ListItem
-      id={option.value}
-      title={option.label}
-      subtitle={option.subtitle}
-      leading={option.icon ? <Icon name={option.icon} size="md" /> : undefined}
-      accessibilityLabel={option.label}
-      accessibilityRole={rowRole(props)}
-    />
-  );
-}
-
-// A web single choice is a radio; a multiple choice's rows take the role the List gives a toggled row.
-function rowRole(props: FieldPickerPageProps): 'radio' | 'button' | undefined {
-  if (Platform.OS !== 'web') return 'button';
-
-  return props.multiple ? undefined : 'radio';
 }

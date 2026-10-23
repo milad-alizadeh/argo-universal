@@ -2,7 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn, within } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { FieldPicker } from './field-picker';
-import { ControlledPicker, ControlledSection } from './field-picker-controlled';
+import {
+  ControlledPage,
+  ControlledPicker,
+  ControlledSection,
+} from './field-picker-controlled';
 import { inSection, inStackedSection } from './field-picker-decorators';
 import {
   inline,
@@ -15,7 +19,7 @@ import {
 } from './field-picker-fixtures';
 
 const meta = {
-  title: 'Design System/Primitives/Fields/FieldPicker',
+  title: 'Design System/Primitives/Forms/FieldPicker',
   component: FieldPicker,
   argTypes: kitArgTypes('FieldGroup.Picker'),
   parameters: { screenPreview: true },
@@ -91,4 +95,11 @@ export const PageMultiple: Story = {
   decorators: inStackedSection,
   render: (args) => <ControlledPicker {...args} />,
   play: opened,
+};
+
+// The page's own choices, sectioned and long, with a mark on the chosen one: a native grouped List on a phone.
+export const PageRows: Story = {
+  name: 'Page rows',
+  args: { ...pageWithSearch, onValueChange: fn() },
+  render: (args) => <ControlledPage {...args} />,
 };
