@@ -111,7 +111,10 @@ export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
     const settled = canPointAt(findElement()) && box.top === lastTop;
     lastTop = box.top;
 
-    if (!settled) throw new Error(`DIAG still moving top=${box.top} last=${lastTop} h=${box.height} w=${box.width} point=${canPointAt(findElement())}`);
+    if (!settled)
+      throw new Error(
+        `DIAG still moving top=${box.top} last=${lastTop} h=${box.height} w=${box.width} point=${canPointAt(findElement())}`,
+      );
 
     return box.top;
   }, settleWait);
