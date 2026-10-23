@@ -28,7 +28,8 @@ export async function submitElicitationTitle(
   title: string,
 ): Promise<void> {
   const form = page.getByRole('region', { name: trayLabel });
-  await form.getByRole('textbox', { name: 'Title', exact: true }).fill(title);
+  // A required field's accessible name carries its marker: "Title *".
+  await form.getByRole('textbox', { name: /^Title\b/ }).fill(title);
   await form.getByRole('button', { name: 'Submit', exact: true }).click();
 }
 
