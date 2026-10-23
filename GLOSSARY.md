@@ -301,7 +301,7 @@ Read-only label and value fields for a detail view, such as a Project's Device a
 _Avoid_: Properties, key-value list
 
 **ActionList**:
-The Actions offered by one page, row or tile, shown as header controls or a context menu on each platform.
+The Actions a page, a row or a tile offers, declared once and drawn as each platform draws them: header controls for a page, a context menu for a row or tile. The header holds verbs only; a choice is a Menu.
 _Avoid_: Action panel, action menu (for the declaration)
 
 **Frame**:
