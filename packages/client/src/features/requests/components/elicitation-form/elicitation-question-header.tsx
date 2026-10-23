@@ -8,7 +8,7 @@ import { useContentWide } from '#lib/product/content-layout';
 
 export type ElicitationHeaderProps = {
   title: string;
-  // What to do and where in the questions, such as "Choose one · 2 of 3".
+  // What to do and where in the questions, such as "2 of 3".
   progress?: string;
   // The question pager, when the request asks more than one.
   pager?: ReactNode;

@@ -7,12 +7,10 @@ import { customAnswer, customValue } from './elicitation-answers';
 // A field, not an option row: typing an answer chooses it, beside any options already chosen.
 type ModelProps = { model: QuestionModel };
 
-// A FieldGroup fills its page, so the one row it holds is given the height of a section of one row.
-const sectionHeight = 'h-24';
-
+// A native FieldGroup fills its page, so there the one row it holds is given the height of a section of one row.
 export function CustomAnswer({ model }: ModelProps): ReactElement {
   return (
-    <View className={sectionHeight}>
+    <View className="native:h-24">
       <FieldGroup disabled={model.inactive}>
         <FieldGroup.Section>
           <CustomField model={model} />

@@ -40,6 +40,7 @@ function optionItems(props: OptionRowsProps): ReactElement[] {
       id={option.const}
       title={option.title}
       subtitle={option.description}
+      accessibilityRole={props.multiple ? 'checkbox' : 'radio'}
       disabled={props.disabled}
     />
   ));

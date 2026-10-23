@@ -31,7 +31,7 @@ function radioProps(
 ): React.ComponentProps<'button'> & { 'data-testid'?: string } {
   return {
     type: 'button',
-    role: 'radio',
+    role: row.accessibilityRole === 'checkbox' ? 'checkbox' : 'radio',
     'aria-label': row.accessibilityLabel ?? row.title,
     'aria-checked': !!row.selected,
     disabled: row.disabled,
