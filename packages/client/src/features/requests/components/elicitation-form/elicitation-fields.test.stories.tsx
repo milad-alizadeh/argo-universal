@@ -43,9 +43,8 @@ function formFields(width: number): Story {
       await expect(canvas.getByText(/whole number/)).toBeVisible();
       await userEvent.clear(port);
       await userEvent.type(port, '8080');
-      await userEvent.click(
-        canvas.getByRole('switch', { name: 'Enable logging' }),
-      );
+      // Expo's web switch hides its input under the drawn track, so a press lands on its title.
+      await userEvent.click(canvas.getByText('Enable logging'));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
@@ -59,7 +58,7 @@ export const FormFieldsPhone = formFields(390);
 
 export const FormFieldsWide = formFields(1440);
 
-// The message asks for the one string, so its field is named but draws no label.
+// The message asks for the one string, and its row is titled by the field's name.
 function textField(width: number): Story {
   return {
     args: { request: functionNameRequest },
@@ -68,9 +67,8 @@ function textField(width: number): Story {
       await expect(
         canvas.getByRole('heading', { name: functionNameRequest.message }),
       ).toBeVisible();
-      const name = canvas.getByRole('textbox', { name: 'Function name' });
+      const name = canvas.getByRole('textbox', { name: /^Function name/ });
       await expect(name).toHaveValue('processData');
-      await expect(canvas.queryByText('Function name')).not.toBeInTheDocument();
       await expect(canvas.queryByText(choiceHint)).not.toBeInTheDocument();
       await userEvent.clear(name);
       await userEvent.type(name, 'parseConfig');

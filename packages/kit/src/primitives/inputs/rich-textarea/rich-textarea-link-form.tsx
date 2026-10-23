@@ -2,8 +2,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/actions/button';
-import { Text } from '#primitives/content/text';
-import { TextInput } from '#primitives/inputs/text-input';
+import { FieldGroup } from '#primitives/fields/field-group';
 
 export interface LinkFields {
   text: string;
@@ -11,28 +10,10 @@ export interface LinkFields {
 }
 
 interface LinkFieldProps {
-  label: string;
+  title: string;
   value: string;
   onChangeText: (value: string) => void;
-  onSubmitEditing: () => void;
-}
-
-const urlInput = {
-  variant: 'bare',
-  autoCapitalize: 'none',
-  autoCorrect: false,
-  tone: 'muted',
-} as const;
-
-function LinkField({ label, ...input }: LinkFieldProps): React.JSX.Element {
-  return (
-    <View className="gap-1">
-      <Text aria-hidden role="secondary" className="text-muted-foreground">
-        {label}
-      </Text>
-      <TextInput {...input} {...urlInput} accessibilityLabel={label} />
-    </View>
-  );
+  onSubmit: () => void;
 }
 
 function LinkActions({
@@ -69,15 +50,18 @@ function useLinkFields({
   const [fields, setFields] = useState(initial);
   const save = (): void => onSave(fields);
 
-  const field = (label: string, key: keyof LinkFields): LinkFieldProps => ({
-    label,
+  const field = (title: string, key: keyof LinkFields): LinkFieldProps => ({
+    title,
     value: fields[key],
     onChangeText: (value) => setFields({ ...fields, [key]: value }),
-    onSubmitEditing: save,
+    onSubmit: save,
   });
 
   return { field, save };
 }
+
+// A FieldGroup fills its page, so its two rows are given the height of a section of two.
+const fieldsHeight = 'h-36';
 
 // The link editor's Text and Link fields, with Cancel and Save.
 export function LinkForm(props: LinkFormProps): React.JSX.Element {
@@ -85,9 +69,23 @@ export function LinkForm(props: LinkFormProps): React.JSX.Element {
 
   return (
     <>
-      <LinkField {...field('Text', 'text')} />
-      <LinkField {...field('Link', 'url')} />
+      <View className={fieldsHeight}>
+        <FieldGroup>
+          <FieldGroup.Section>{linkRows(field)}</FieldGroup.Section>
+        </FieldGroup>
+      </View>
       <LinkActions onSave={save} onCancel={props.onCancel} />
     </>
   );
 }
+
+const linkRows = (
+  field: (title: string, key: keyof LinkFields) => LinkFieldProps,
+): React.JSX.Element[] => [
+  <FieldGroup.TextField key="text" {...field('Text', 'text')} />,
+  <FieldGroup.TextField
+    key="url"
+    {...field('Link', 'url')}
+    keyboardType="url"
+  />,
+];

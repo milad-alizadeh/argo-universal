@@ -33,7 +33,8 @@ const widePages = [
   'Notifications',
 ];
 
-const groups = ['Workspace', 'Account', 'Connection', 'Theme'];
+// Theme's title is the FieldGroup section's own caption, not a heading.
+const groups = ['Workspace', 'Account', 'Connection'];
 
 // Every width lists its pages under the groups' headings, Theme last; Appearance chooses in place, so it is no link.
 async function expectGroupedPages(
@@ -50,6 +51,7 @@ async function expectGroupedPages(
   await expect(
     canvas.getAllByRole('heading').map((heading) => heading.textContent),
   ).toEqual(groups);
+  await expect(canvas.getByText('Theme')).toBeVisible();
   await expect(appearanceRow(canvas)).toBeVisible();
 }
 

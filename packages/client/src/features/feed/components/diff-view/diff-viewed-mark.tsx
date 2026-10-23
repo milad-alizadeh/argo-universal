@@ -1,5 +1,5 @@
 import { CheckButton } from '@repo/kit/primitives/actions/check-button';
-import { Checkbox } from '@repo/kit/primitives/inputs/checkbox';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type * as React from 'react';
 import type { FileHeaderProps } from './diff-file-header';
 
@@ -22,11 +22,13 @@ export function ViewedMark(props: ViewedMarkProps): React.JSX.Element | null {
 
 function DesktopViewedMark(props: ActiveViewedMark): React.JSX.Element {
   return (
-    <Checkbox
-      label="Viewed"
-      variant="inline"
-      value={props.viewed ?? false}
-      onValueChange={props.onViewedChange}
+    <IconButton
+      icon="check"
+      accessibilityLabel="Viewed"
+      variant="ghost"
+      size="sm"
+      selected={props.viewed ?? false}
+      onPress={() => props.onViewedChange(!props.viewed)}
     />
   );
 }

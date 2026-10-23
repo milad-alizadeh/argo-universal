@@ -1,27 +1,33 @@
-import { ListSection } from '@repo/kit/primitives/lists/list';
+import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import type { ReactElement } from 'react';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { choiceValue, selectedAnswers } from './elicitation-answers';
 import { CustomAnswer } from './elicitation-custom-answer';
-import { ElicitationList } from './elicitation-list';
 import { OptionRows } from './elicitation-option-rows';
-import { TextFields } from './elicitation-text-fields';
 
 type ModelProps = { model: QuestionModel };
 
-// The options in one card, and the custom answer as a field under it.
+// The options in one card, and the custom answer as a FieldGroup row under it.
 export function QuestionRows({ model }: ModelProps): ReactElement {
   return (
-    <ElicitationList key={model.question.name}>
-      <ListSection>
-        <QuestionOptions model={model} />
-      </ListSection>
-      <TextFields>
-        <CustomAnswer model={model} />
-      </TextFields>
-    </ElicitationList>
+    <>
+      <OptionCards model={model} />
+      <CustomAnswer key={model.question.name} model={model} />
+    </>
   );
 }
+
+const OptionCards = ({ model }: ModelProps): ReactElement => (
+  <List
+    key={model.question.name}
+    appearance="cards"
+    keyboardShouldPersistTaps="handled"
+  >
+    <ListSection>
+      <QuestionOptions model={model} />
+    </ListSection>
+  </List>
+);
 
 function QuestionOptions({ model }: ModelProps): ReactElement {
   return (

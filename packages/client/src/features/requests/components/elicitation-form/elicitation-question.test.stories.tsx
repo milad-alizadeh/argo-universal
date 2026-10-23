@@ -126,15 +126,26 @@ export const KeyboardSelection: Story = {
   },
 };
 
+// The form's one multiple Picker holds at most one work type, and its page stays open across toggles.
 export const KeepConstrainedFormValidation: Story = {
   args: { request: boundedChoicesRequest },
   play: async ({ canvas, userEvent }) => {
+    const page = within(document.body);
+    const submit = canvas.getByRole('button', { name: 'Submit' });
     await expect(
       canvas.queryByRole('textbox', { name: customAnswer }),
     ).not.toBeInTheDocument();
-    await userEvent.click(option(canvas, buildFeature));
-    await expect(canvas.getByRole('button', { name: 'Submit' })).toBeEnabled();
-    await userEvent.click(option(canvas, fixBug));
-    await expect(canvas.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    await userEvent.click(canvas.getByRole('button', { name: /^Work types/ }));
+    await userEvent.click(
+      await page.findByRole('button', { name: new RegExp(`^${buildFeature}`) }),
+    );
+    await userEvent.keyboard('{Escape}');
+    await expect(submit).toBeEnabled();
+    await userEvent.click(canvas.getByRole('button', { name: /^Work types/ }));
+    await userEvent.click(
+      await page.findByRole('button', { name: new RegExp(`^${fixBug}`) }),
+    );
+    await userEvent.keyboard('{Escape}');
+    await expect(submit).toBeDisabled();
   },
 };

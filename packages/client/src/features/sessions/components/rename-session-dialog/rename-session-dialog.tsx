@@ -1,9 +1,6 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
-import {
-  TextInput,
-  type StandaloneTextInputProps,
-} from '@repo/kit/primitives/inputs/text-input';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import {
   Dialog,
   DialogCancel,
@@ -13,7 +10,7 @@ import {
   DialogTitle,
 } from '@repo/kit/primitives/overlays/dialog';
 import { type ReactElement, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { renamedTitle } from './renamed-title';
 
 export type RenameSessionDialogProps = {
@@ -74,14 +71,35 @@ function saveDraft(draft: string, props: RenameSessionDialogProps): void {
   else props.onRename(title);
 }
 
-function RenameField(
-  props: Pick<
-    StandaloneTextInputProps,
-    'value' | 'onChangeText' | 'onSubmit' | 'invalid'
-  >,
-): ReactElement {
-  return <TextInput {...titleField} {...props} />;
+type RenameFieldProps = {
+  value: string;
+  onChangeText: (value: string) => void;
+  onSubmit: () => void;
+  invalid: boolean;
+};
+
+// A FieldGroup fills its page, so the one row it holds is given the height of a section of one row.
+const sectionHeight = 'h-24';
+
+function RenameField(props: RenameFieldProps): ReactElement {
+  return (
+    <View className={sectionHeight}>
+      <FieldGroup>
+        <FieldGroup.Section>{titleRow(props)}</FieldGroup.Section>
+      </FieldGroup>
+    </View>
+  );
 }
+
+const titleRow = (props: RenameFieldProps): ReactElement => (
+  <FieldGroup.TextField
+    title={copy.field}
+    value={props.value}
+    error={props.invalid ? '' : undefined}
+    onChangeText={props.onChangeText}
+    onSubmit={props.onSubmit}
+  />
+);
 
 function RenameError({ error }: { error?: string }): ReactElement | null {
   if (!error) return null;
@@ -110,11 +128,3 @@ function RenameActions(props: { onSave: () => void }): ReactElement {
     </DialogFooter>
   );
 }
-
-// The field opens focused with the whole title selected, so typing replaces it. Android's outlined field carries its label in its outline; elsewhere the dialog's title says what the field holds.
-const titleField = {
-  label: copy.field,
-  labelHidden: Platform.OS !== 'android',
-  focusOnOpen: true,
-  selectOnFocus: true,
-};
