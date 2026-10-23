@@ -14,7 +14,7 @@ export interface PluginSection extends NavigationSection {
   pluginId: string;
   name: string;
   // The nav item's root page, as `/plugins/<Plugin id>/<nav id>/<manifest path>`.
-  rootPath: string;
+  rootPath: PluginPath;
   segments: string[];
 }
 
@@ -66,8 +66,11 @@ export function usePluginAt(
   return { ...pluginAt(sections, path), loaded };
 }
 
+// A Plugin page's path, typed so Expo Router's typed routes accept it.
+export type PluginPath = `/plugins/${string}`;
+
 // A catch-all route's segments as the path they name.
-export const pluginPath = (segments: readonly string[]): string =>
+export const pluginPath = (segments: readonly string[]): PluginPath =>
   `/plugins/${segments.join('/')}`;
 
 type Manifest = PluginList['plugins'][number]['manifest'];
