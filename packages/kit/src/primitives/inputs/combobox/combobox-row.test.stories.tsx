@@ -10,6 +10,7 @@ import {
 } from '#primitives/overlays/popover';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
+import { withPageStack } from '../../../story-stack';
 import { Combobox } from './combobox';
 
 const changed = fn<(value: string) => void>();
@@ -25,6 +26,7 @@ const meta = {
     changed.mockClear();
   },
   render: (): ReactElement => <Menu />,
+  decorators: [withPageStack()],
 } satisfies Meta;
 
 export default meta;

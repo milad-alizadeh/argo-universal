@@ -4,6 +4,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 import { InMenu } from '#kit/menu-rows-context';
 import { menuSurfaceClassName } from '#kit/menu-surface';
+import { ScrollColumnContext } from '#kit/scroll-column';
 import { cn } from '#kit/utils';
 import { TextClassContext } from '#primitives/content/text';
 import { useOpenState } from '#primitives/overlays/open-state';
@@ -158,7 +159,10 @@ function PopoverSurface(
 function PopoverContent(props: ContentProps): React.JSX.Element {
   return (
     <WebPopover.Portal>
-      <PopoverBody {...props} />
+      {/* A popover opened from a Page's column is a surface of its own, so its lists take none of the column's padding. */}
+      <ScrollColumnContext value={undefined}>
+        <PopoverBody {...props} />
+      </ScrollColumnContext>
     </WebPopover.Portal>
   );
 }

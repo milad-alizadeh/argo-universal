@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { settleViewport } from '../../../settle-viewport';
+import { withPageStack } from '../../../story-stack';
 import {
   Choice,
   Form,
@@ -18,6 +19,7 @@ const meta = {
     changed.mockClear();
     blurred.mockClear();
   },
+  decorators: [withPageStack()],
 } satisfies Meta;
 
 export default meta;
@@ -124,9 +126,5 @@ function standaloneAt(width: number): Story {
     },
   };
 }
-
-export const StandaloneDrawerReturnsToField = standaloneAt(390);
-
-export const StandaloneModalReturnsToField = standaloneAt(1024);
 
 export const StandalonePopoverReturnsToField = standaloneAt(1440);

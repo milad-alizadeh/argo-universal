@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
+import { withPageStack } from '../../../story-stack';
 import { Combobox } from './combobox';
 
 const changed = fn<(value: string) => void>();
@@ -26,6 +27,7 @@ const meta = {
     changed.mockClear();
   },
   render: (): React.JSX.Element => <Example />,
+  decorators: [withPageStack()],
 } satisfies Meta;
 
 export default meta;
