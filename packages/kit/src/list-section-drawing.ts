@@ -1,3 +1,4 @@
+import { useInMenu } from './menu-rows-context';
 import { useRowDrawing } from './row-drawing-context';
 
 export interface SectionDrawing {
@@ -36,6 +37,13 @@ const plain = {
   ...rowInset,
 } satisfies SectionDrawing;
 
+// A popover's section heading starts where its rows' text does: the row's 8 padding in from the card's inset.
+const menu = { ...plain, inset: 'px-2' } satisfies SectionDrawing;
+
 export function useSectionDrawing(): SectionDrawing {
-  return useRowDrawing() === 'sidebar' ? sidebar : plain;
+  const inMenu = useInMenu();
+
+  if (useRowDrawing() === 'sidebar') return sidebar;
+
+  return inMenu ? menu : plain;
 }

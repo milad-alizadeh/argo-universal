@@ -69,7 +69,15 @@ const maximumHeight = 320;
 
 // The web page is a menu's plain rows that grow to fit; a phone's is a list of cards that fills its page.
 const looks = {
-  web: { fit: true, maxHeight: maximumHeight, appearance: 'plain' },
+  web: {
+    fit: true,
+    maxHeight: maximumHeight,
+    appearance: 'plain',
+    // The page frame holds the popover's one inset around the search, the rows and the action.
+    padding: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
   native: { fit: false, maxHeight: undefined, appearance: 'cards' },
 } as const;
 
