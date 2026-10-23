@@ -17,6 +17,8 @@ import type * as SpacerKit from '#primitives/layout/spacer';
 import type * as SurfaceKit from '#primitives/layout/surface';
 import type * as ListItemKit from '#primitives/lists/list-item';
 import type * as TableKit from '#primitives/lists/table';
+import type * as DateDialogsKit from '#primitives/native/date-dialogs';
+import type * as DateValueKit from '#primitives/native/date-value';
 import type * as LinkPreviewKit from '#primitives/overlays/link-preview';
 import type * as DetailKit from '#primitives/scaffolds/detail';
 import type * as InspectorKit from '#primitives/scaffolds/inspector';
@@ -81,6 +83,8 @@ export type AdditionalPrimitives = {
   SvgProps: SvgKit.SvgProps;
   CanvasProps: SvgKit.CanvasProps;
   DatePickerProps: DatePickerKit.DatePickerProps;
+  DateMode: DateValueKit.DateMode;
+  DialogStep: DateDialogsKit.DialogStep;
   FieldGroupProps: FieldGroupKit.FieldGroupProps;
   FieldGroupSectionProps: FieldGroupKit.FieldGroupSectionProps;
   RowTextProps: FieldRowKit.RowTextProps;
