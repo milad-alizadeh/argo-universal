@@ -35,14 +35,7 @@ export const List: PluginComponents['List'] & {
   Section: PluginComponents['List.Section'];
 };
 
-export const ListItem: PluginComponents['ListItem'] & {
-  Link: PluginComponents['ListItem.Link'];
-  Toggle: PluginComponents['ListItem.Toggle'];
-  Picker: PluginComponents['ListItem.Picker'];
-  Stepper: PluginComponents['ListItem.Stepper'];
-  TextField: PluginComponents['ListItem.TextField'];
-  Button: PluginComponents['ListItem.Button'];
-};
+export const ListItem: PluginComponents['ListItem'];
 
 export const Label: PluginComponents['Label'];
 
@@ -73,11 +66,20 @@ export const TextInput: PluginComponents['TextInput'];
 
 export const DatePicker: PluginComponents['DatePicker'];
 
-export const Form: PluginComponents['Form'];
-
 export const SplitButton: PluginComponents['SplitButton'];
 
 export const IconButton: PluginComponents['IconButton'];
+
+export const FieldGroup: PluginComponents['FieldGroup'] & {
+  Section: PluginComponents['FieldGroup.Section'];
+  Value: PluginComponents['FieldGroup.Value'];
+  Link: PluginComponents['FieldGroup.Link'];
+  Toggle: PluginComponents['FieldGroup.Toggle'];
+  Picker: PluginComponents['FieldGroup.Picker'];
+  Slider: PluginComponents['FieldGroup.Slider'];
+  TextField: PluginComponents['FieldGroup.TextField'];
+  SecretField: PluginComponents['FieldGroup.SecretField'];
+};
 
 export const Alert: PluginComponents['Alert'];
 

@@ -6,8 +6,7 @@ import type { LinkProps } from '#primitives/content/link';
 import type { MarkdownProps } from '#primitives/content/markdown';
 import type * as MediaUrlKit from '#primitives/content/media-url';
 import type * as VideoKit from '#primitives/content/video';
-import type * as FieldDescriptionKit from '#primitives/fields/field-description';
-import type * as FormKit from '#primitives/fields/form';
+import type * as FieldGroupKit from '#primitives/fields/field-group';
 import type * as DatePickerKit from '#primitives/inputs/date-picker';
 import type * as CardKit from '#primitives/layout/card';
 import type * as GridKit from '#primitives/layout/grid';
@@ -26,6 +25,7 @@ import type * as SettingsLayoutKit from '#primitives/scaffolds/settings-layout';
 import type * as EmptyStateKit from '#primitives/status/empty-state';
 import type * as StatusDotKit from '#primitives/status/status-dot';
 import type * as SvgKit from '#primitives/visual';
+import type { FieldGroupKitProps } from './kit-props';
 
 export type AdditionalPrimitives = {
   LinkPreviewCardData: LinkPreviewKit.LinkPreviewCardData;
@@ -65,7 +65,6 @@ export type AdditionalPrimitives = {
   DeclaredEntry: ActionListKit.DeclaredEntry;
   DeclaredSubmenu: ActionListKit.DeclaredSubmenu;
   HeaderSink: ActionListKit.HeaderSink;
-  ListItemFieldProps: ListItemKit.ListItemFieldProps;
   LoadingRow: ListItemKit.LoadingRow;
   KbdProps: KbdKit.KbdProps;
   ActionListProps: ActionListKit.ActionListProps;
@@ -81,8 +80,15 @@ export type AdditionalPrimitives = {
   SvgProps: SvgKit.SvgProps;
   CanvasProps: SvgKit.CanvasProps;
   DatePickerProps: DatePickerKit.DatePickerProps;
-  DescribedField: FieldDescriptionKit.DescribedField;
-  FormProps: FormKit.FormProps;
+  FieldGroupProps: FieldGroupKit.FieldGroupProps;
+  FieldGroupSectionProps: FieldGroupKit.FieldGroupSectionProps;
+  FieldGroupToggleProps: FieldGroupKitProps<'FieldGroup.Toggle'>;
+  FieldGroupTextFieldProps: FieldGroupKitProps<'FieldGroup.TextField'>;
+  FieldGroupSecretFieldProps: FieldGroupKitProps<'FieldGroup.SecretField'>;
+  FieldGroupPickerProps: FieldGroupKitProps<'FieldGroup.Picker'>;
+  FieldGroupSliderProps: FieldGroupKitProps<'FieldGroup.Slider'>;
+  FieldGroupValueProps: FieldGroupKitProps<'FieldGroup.Value'>;
+  FieldGroupLinkProps: FieldGroupKitProps<'FieldGroup.Link'>;
   VideoProps: VideoKit.VideoProps;
   AudioProps: AudioKit.AudioProps;
   MediaUrl: MediaUrlKit.MediaUrl;

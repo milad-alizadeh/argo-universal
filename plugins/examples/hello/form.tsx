@@ -1,6 +1,6 @@
 import {
+  Button,
   DatePicker,
-  Form,
   Picker,
   Stack,
   Text,
@@ -37,9 +37,8 @@ export function HelloForm(): JSX.Element {
 
   return (
     <Stack direction="column" gap={4}>
-      <Form submitLabel="Create Issue" onSubmit={() => setSaved(draft.title)}>
-        <IssueFields draft={draft} change={change} />
-      </Form>
+      <IssueFields draft={draft} change={change} />
+      <Button label="Create Issue" onPress={() => setSaved(draft.title)} />
       {saved ? <Text>{`Created ${saved}`}</Text> : null}
     </Stack>
   );

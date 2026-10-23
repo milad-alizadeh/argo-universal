@@ -10,7 +10,6 @@ import {
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
-import { SizedToContent } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
@@ -110,11 +109,9 @@ function PopoverPages(props: PresentationProps): ReactElement {
     <Group
       modifiers={[interactiveDismissDisabled(props.dismissible === false)]}
     >
-      <SizedToContent.Provider value>
-        <CompactScope>
-          <SheetPages {...props} popoverWidth={popoverWidth} />
-        </CompactScope>
-      </SizedToContent.Provider>
+      <CompactScope>
+        <SheetPages {...props} popoverWidth={popoverWidth} />
+      </CompactScope>
     </Group>
   );
 }

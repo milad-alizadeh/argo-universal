@@ -1,7 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fireEvent, fn, waitFor } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const node = (
@@ -11,18 +11,23 @@ const node = (
 ): WireNode => ({ type, key, props, children: [], slots: {} });
 
 const root: WireNode = {
-  ...node('List', 'settings', { appearance: 'grouped' }),
+  ...node('FieldGroup', 'settings', {}),
   children: [
-    node('ListItem.Toggle', 'fast', {
-      title: 'Fast mode',
-      value: false,
-      onValueChange: { $event: 'onValueChange' },
-    }),
-    node('ListItem.TextField', 'name', {
-      label: 'Name',
-      value: '',
-      onChangeText: { $event: 'onChangeText' },
-    }),
+    {
+      ...node('FieldGroup.Section', 'section', {}),
+      children: [
+        node('FieldGroup.Toggle', 'fast', {
+          title: 'Fast mode',
+          value: false,
+          onValueChange: { $event: 'onValueChange' },
+        }),
+        node('FieldGroup.TextField', 'name', {
+          title: 'Name',
+          value: '',
+          onChangeText: { $event: 'onChangeText' },
+        }),
+      ],
+    },
   ],
 };
 
@@ -40,13 +45,16 @@ const meta = {
 
 export default meta;
 
-export const GroupedListUsesSettingsWrappers: StoryObj<typeof meta> = {
-  play: async ({ canvas, userEvent }) => {
+export const FieldGroupDrawsSettingsRows: StoryObj<typeof meta> = {
+  play: async ({ canvas, canvasElement }) => {
     await settleViewport(1440);
-    await userEvent.click(
-      await canvas.findByRole('switch', { name: 'Fast mode' }),
-    );
-    await expect(onEvent).toHaveBeenCalledWith('settings/fast', {
+    await canvas.findByText('Fast mode');
+    // Expo's web switch keeps its unnamed input out of pointer reach, so the change is fired on the input itself.
+    const input = canvasElement.querySelector('input');
+
+    if (!input) throw new Error('The Toggle row draws no switch input');
+    await fireEvent.click(input);
+    await expect(onEvent).toHaveBeenCalledWith('settings/section/fast', {
       event: 'onValueChange',
       payload: true,
     });
@@ -60,7 +68,7 @@ export const FieldDraftSurvivesEventDelivery: StoryObj<typeof meta> = {
     await userEvent.type(name, 'Argo');
     await expect(name).toHaveValue('Argo');
     await waitFor(() =>
-      expect(onEvent).toHaveBeenLastCalledWith('settings/name', {
+      expect(onEvent).toHaveBeenLastCalledWith('settings/section/name', {
         event: 'onChangeText',
         payload: 'Argo',
       }),

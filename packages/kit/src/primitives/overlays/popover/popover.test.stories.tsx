@@ -5,6 +5,7 @@ import { expect, fireEvent, within } from 'storybook/test';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { Slider } from '#primitives/inputs/slider';
+import { Switch } from '#primitives/inputs/switch';
 import { TextInput } from '#primitives/inputs/text-input';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -54,7 +55,18 @@ function EffortSlider(): React.JSX.Element {
 function FastToggle(): React.JSX.Element {
   const [fast, setFast] = useState(false);
 
-  return <ListItem.Toggle title="Fast" value={fast} onValueChange={setFast} />;
+  return (
+    <ListItem
+      title="Fast"
+      trailing={
+        <Switch
+          accessibilityLabel="Fast"
+          value={fast}
+          onValueChange={setFast}
+        />
+      }
+    />
+  );
 }
 
 // A search field above a List of menu rows: one disabled, one with a Slider under its title, one a switch.

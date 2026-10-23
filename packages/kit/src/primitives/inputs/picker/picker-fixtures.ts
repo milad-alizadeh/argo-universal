@@ -40,7 +40,7 @@ export const requiredWithErrorPicker = {
   label,
   options,
   required: true,
-  errors: [{ message: 'Choose an effort' }],
+  invalid: true,
 } satisfies PickerFixture;
 
 export const disabledPicker = {
@@ -65,13 +65,6 @@ export const previousChoiceUnavailablePicker = {
 export const searchableListPicker = {
   label,
   options: longOptions,
-} satisfies PickerFixture;
-
-export const rowPicker = {
-  label,
-  options,
-  value: 'medium',
-  variant: 'row',
 } satisfies PickerFixture;
 
 type MultiplePickerFixture = Omit<MultiplePickerProps<string>, 'onValueChange'>;
@@ -133,5 +126,5 @@ export const multiplePreviousChoiceUnavailablePicker = {
 export const multipleInvalidPicker = {
   ...multiple,
   required: true,
-  errors: [{ message: 'Choose at least one label.' }],
+  invalid: true,
 } satisfies MultiplePickerFixture;

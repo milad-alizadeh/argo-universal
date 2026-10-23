@@ -23,7 +23,7 @@ export function DisclosureChevron(
 }
 
 // iOS draws its SF chevron at half the icon beside it.
-const halfScale = 0.5;
+export const halfScale = 0.5;
 
 type ChevronIconProps = DisclosureChevronProps & {
   size: NonNullable<DisclosureChevronProps['size']>;

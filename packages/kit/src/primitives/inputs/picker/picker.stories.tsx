@@ -1,8 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { List, ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
 import { Picker } from './picker';
 import { MultipleExample, SingleExample } from './picker-examples';
 import {
@@ -20,7 +18,6 @@ import {
   placeholderPicker,
   previousChoiceUnavailablePicker,
   requiredWithErrorPicker,
-  rowPicker,
   selectedPicker,
 } from './picker-fixtures';
 import { Choices } from './picker-multiple-choices';
@@ -56,19 +53,6 @@ function ChoicesExample(
     </View>
   );
 }
-
-export const Row: Story = {
-  render: (args): React.JSX.Element => (
-    <List appearance="grouped">
-      <ListSection title="ListItem accessory">
-        <ListItem
-          title="Effort"
-          trailing={<SingleExample {...args} {...rowPicker} />}
-        />
-      </ListSection>
-    </List>
-  ),
-};
 
 export const Placeholder: Story = { args: placeholderPicker };
 

@@ -1,6 +1,5 @@
 import { createElement } from 'react';
 import { Text } from '#primitives/content/text';
-import type { FieldDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
 import type { PickerOption, SinglePickerProps } from './picker-props';
 import {
@@ -11,16 +10,12 @@ import {
 } from './picker-select';
 import { pickerOptionsMessage, pickerValue } from './picker-selection';
 
-type TriggerProps<Value extends string> = SinglePickerProps<Value> &
-  FieldDescription & { row: boolean };
-
 type TriggerAttributes = React.ComponentProps<typeof SelectTrigger> & {
-  'aria-invalid': boolean;
-  'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
 };
 
 export function PickerTrigger<Value extends string>(
-  props: TriggerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): React.JSX.Element {
   return createElement(
     SelectTrigger,
@@ -30,21 +25,20 @@ export function PickerTrigger<Value extends string>(
 }
 
 function triggerProps<Value extends string>(
-  props: TriggerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): TriggerAttributes {
   return {
     accessibilityLabel: props.label,
     disabled: props.disabled,
     'aria-invalid': props.invalid,
-    'aria-describedby': props.descriptionId,
-    variant: props.row ? 'plain' : 'default',
+    variant: 'default',
     className: triggerClassName(props),
   };
 }
 
-function triggerClassName(props: { row: boolean; invalid: boolean }): string {
+function triggerClassName(props: { invalid?: boolean }): string {
   return cn(
-    !props.row && 'h-9 sm:h-9 w-full! rounded-control bg-card',
+    'h-9 sm:h-9 w-full! rounded-control bg-card',
     props.invalid && 'border-danger',
   );
 }

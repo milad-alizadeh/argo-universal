@@ -1,0 +1,154 @@
+/* oxlint-disable anti-slop/no-shape-in-symbol-names -- Compose's own Shapes modifier. */
+import { Icon, ListItem, useMaterialColors } from '@expo/ui/jetpack-compose';
+import {
+  alpha,
+  clickable,
+  clip,
+  fillMaxWidth,
+  Shapes,
+  toggleable,
+  type ModifierConfig,
+} from '@expo/ui/jetpack-compose/modifiers';
+import { type ReactElement, type ReactNode, useContext } from 'react';
+import type { ImageSourcePropType } from 'react-native';
+import { NativeText } from '#primitives/content/native-text';
+import { useIconPixels } from '../../../symbols/icon-size';
+import { nativeIconName } from '../../../symbols/native-icon-name';
+import {
+  cornerRadii,
+  GroupDisabledContext,
+  PositionContext,
+} from './field-row-position';
+import type { RowTextProps } from './field-row-text';
+
+export type RowListItemProps = Pick<RowTextProps, 'leading'> & {
+  title: string;
+  // What sits under the title: a Slider, or a text row's value as EditTextPreference shows it.
+  supporting?: ReactNode;
+  headline?: ReactNode;
+  trailing?: ReactNode;
+  onPress?: () => void;
+  disabled?: boolean;
+  modifiers?: ModifierConfig[];
+};
+
+// Material's disabled content opacity (38%); ListItem has no disabled colours of its own.
+const disabledContentAlpha = 0.38;
+
+/*
+ * One FieldGroup row as itself: a Material 3 ListItem with headline, supporting, leading and trailing content,
+ * on Expo's surfaceContainer and clipped to its position in the section. Expo's own Section wraps the row in a
+ * ListItem headline instead (expo/expo#50086).
+ */
+export function RowListItem(props: RowListItemProps): ReactElement {
+  return (
+    <ListItem
+      colors={{ containerColor: useMaterialColors().surfaceContainer }}
+      modifiers={useRowModifiers(props)}
+    >
+      <ListItem.HeadlineContent>
+        {props.headline ?? <NativeText>{props.title}</NativeText>}
+      </ListItem.HeadlineContent>
+      <SupportingSlot supporting={props.supporting} />
+      <LeadingSlot leading={props.leading} />
+      <TrailingSlot trailing={props.trailing} />
+    </ListItem>
+  );
+}
+
+function useRowModifiers(props: RowListItemProps): ModifierConfig[] {
+  const corner = Shapes.RoundedCorner(cornerRadii(useContext(PositionContext)));
+  const off = useDisabled(props.disabled);
+
+  return [
+    fillMaxWidth(),
+    clip(corner),
+    ...dimming(off),
+    ...pressing(props, off),
+    ...(props.modifiers ?? []),
+  ];
+}
+
+function useDisabled(own: boolean | undefined): boolean {
+  const group = useContext(GroupDisabledContext);
+
+  return own === true || group;
+}
+
+const dimming = (off: boolean): ModifierConfig[] =>
+  off ? [alpha(disabledContentAlpha)] : [];
+
+const pressing = (props: RowListItemProps, off: boolean): ModifierConfig[] =>
+  props.onPress && !off ? [clickable(props.onPress)] : [];
+
+function SupportingSlot(
+  props: Pick<RowListItemProps, 'supporting'>,
+): ReactNode {
+  if (!props.supporting) return null;
+
+  return (
+    <ListItem.SupportingContent>{props.supporting}</ListItem.SupportingContent>
+  );
+}
+
+function TrailingSlot(props: Pick<RowListItemProps, 'trailing'>): ReactNode {
+  if (!props.trailing) return null;
+
+  return <ListItem.TrailingContent>{props.trailing}</ListItem.TrailingContent>;
+}
+
+function LeadingSlot(props: Pick<RowTextProps, 'leading'>): ReactNode {
+  const source = leadingSource(props.leading);
+  const size = useIconPixels('md');
+
+  if (!source) return null;
+
+  return (
+    <ListItem.LeadingContent>
+      <Icon source={source} size={size} />
+    </ListItem.LeadingContent>
+  );
+}
+
+// The Material XML drawing of a leading icon; a name with none, or an SF Symbol name, draws nothing.
+function leadingSource(
+  leading: RowTextProps['leading'],
+): ImageSourcePropType | undefined {
+  const name = leading ? nativeIconName(leading) : undefined;
+
+  return isDrawing(name) ? name : undefined;
+}
+
+type IconName = ReturnType<typeof nativeIconName>;
+
+const isPair = (name: IconName): boolean =>
+  typeof name === 'object' && name !== null && 'ios' in name;
+
+const isDrawing = (name: IconName): name is ImageSourcePropType =>
+  name !== undefined && typeof name !== 'string' && !isPair(name);
+
+type RowTitleProps = Pick<RowListItemProps, 'title' | 'leading' | 'disabled'>;
+
+// What every row but a Button passes the ListItem: its title and icon.
+export const rowListItemProps = (props: RowTitleProps): RowListItemProps => ({
+  title: props.title,
+  leading: props.leading,
+  disabled: props.disabled,
+});
+
+type Toggling = {
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+  disabled?: boolean;
+};
+
+// The whole row toggles, as Expo's labelled Switch and Checkbox do.
+export const toggling = (
+  props: Toggling,
+  role: 'switch' | 'checkbox',
+): ModifierConfig[] => [
+  toggleable(props.value, () => props.onValueChange(!props.value), {
+    role,
+    enabled: !props.disabled,
+  }),
+];

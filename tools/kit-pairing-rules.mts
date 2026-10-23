@@ -13,6 +13,9 @@ export interface PairingInput {
   folders: string[];
 }
 
+const fieldRow =
+  'A FieldGroup row (ADR-0042); it pairs with the FieldGroup schemas on the Plugin wire.';
+
 // A group (`native`) or one folder (`actions/pressable`) that draws no schema of its own, with the reason it is exempt.
 export const exemptFolders = {
   'kit-props': 'The kit-wide props types; it draws nothing.',
@@ -25,6 +28,14 @@ export const exemptFolders = {
   'content/media-url':
     'Resolves the src of Image, Video and Audio; no props of its own.',
   'content/native-text': 'The platform fork of Text.',
+  'fields/field-link': fieldRow,
+  'fields/field-picker': fieldRow,
+  'fields/field-slider': fieldRow,
+  'fields/field-text': fieldRow,
+  'fields/field-toggle': fieldRow,
+  'fields/field-value': fieldRow,
+  'fields/field-row':
+    'The drawing every FieldGroup row shares; it draws no schema of its own.',
   'inputs/rich-textarea':
     'The desktop editor behind the Composer; not on the wire.',
   'inputs/segmented-control':

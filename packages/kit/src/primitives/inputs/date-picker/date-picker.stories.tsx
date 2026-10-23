@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { List, ListSection } from '#primitives/lists/list';
 import { DatePicker } from './date-picker';
 import {
   dateAndTimeDatePicker,
@@ -30,16 +29,6 @@ const meta = {
   args: { onValueChange: (): void => {} },
   argTypes: kitArgTypes('DatePicker'),
   parameters: { screenPreview: true },
-  // A grouped section keeps the picker in the row it sits in on a settings screen.
-  decorators: [
-    (Story): React.JSX.Element => (
-      <List appearance="grouped">
-        <ListSection>
-          <Story />
-        </ListSection>
-      </List>
-    ),
-  ],
   render: (args): React.JSX.Element => <Example {...args} />,
 } satisfies Meta<typeof DatePicker>;
 

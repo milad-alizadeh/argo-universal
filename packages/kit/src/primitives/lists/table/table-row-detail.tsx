@@ -25,7 +25,7 @@ export function TableRowDetail(props: RowDetailProps): ReactElement {
 
   return (
     <Page title={cellOf(row, titleColumn).text} actions={row.actions}>
-      <List appearance="grouped">
+      <List appearance="plain">
         <DetailItems {...props} />
       </List>
     </Page>

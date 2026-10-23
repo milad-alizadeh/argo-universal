@@ -6,8 +6,6 @@ import { Checkbox } from './checkbox';
 
 const label = 'Notify team';
 
-const failure = 'Choose whether to notify the team';
-
 const meta = {
   title: 'Tests/Design System/Primitives/Inputs/Checkbox',
   component: Checkbox,
@@ -77,12 +75,10 @@ export const Disabled: Story = {
   },
 };
 
-export const AnnouncesError: Story = {
-  args: { errors: [failure] },
+export const MarksInvalid: Story = {
+  args: { invalid: true },
   play: async ({ canvas }) => {
     const checkbox = canvas.getByRole('checkbox', { name: label });
     await expect(checkbox).toHaveAttribute('aria-invalid', 'true');
-    await expect(checkbox).toHaveAccessibleDescription(failure);
-    await expect(canvas.getByRole('alert')).toHaveTextContent(failure);
   },
 };

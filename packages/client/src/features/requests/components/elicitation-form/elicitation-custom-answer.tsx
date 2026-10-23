@@ -1,4 +1,4 @@
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { TextInput } from '@repo/kit/primitives/inputs/text-input';
 import type { ReactElement } from 'react';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { customAnswer, customValue } from './elicitation-answers';
@@ -8,7 +8,7 @@ type ModelProps = { model: QuestionModel };
 
 export function CustomAnswer({ model }: ModelProps): ReactElement {
   return (
-    <ListItem.TextField
+    <TextInput
       labelHidden
       label="Custom answer"
       placeholder="Something else…"

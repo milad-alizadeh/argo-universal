@@ -7,7 +7,7 @@ export function ElicitationList({
   children: ReactNode;
 }): ReactElement {
   return (
-    <List appearance="grouped" keyboardShouldPersistTaps="handled">
+    <List appearance="cards" keyboardShouldPersistTaps="handled">
       {children}
     </List>
   );

@@ -87,7 +87,8 @@ export function SheetLink(props: SheetLinkProps): ReactElement {
   const sheet = useSheet();
 
   return (
-    <ListItem.Link
+    <ListItem
+      disclosure
       title={props.label}
       value={props.value}
       leading={props.valueLeading}

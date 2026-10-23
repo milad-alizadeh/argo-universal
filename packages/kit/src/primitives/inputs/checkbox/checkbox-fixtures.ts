@@ -20,5 +20,5 @@ export const disabledCheckbox = {
 export const invalidCheckbox = {
   label,
   value: false,
-  errors: ['Confirm your choice'],
+  invalid: true,
 } satisfies CheckboxFixture;

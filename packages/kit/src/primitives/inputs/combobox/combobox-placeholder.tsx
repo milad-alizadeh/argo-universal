@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { Platform } from 'react-native';
 import { List } from '#primitives/lists/list';
 import { loadingRows, type LoadingRow } from '#primitives/lists/list-item';
 import type { ComboboxOption, ComboboxProps } from './combobox-props';
@@ -12,7 +13,10 @@ export function comboboxPlaceholder<Value extends string>(
   props: Pick<ComboboxProps<Value>, 'options' | 'label'>,
 ): ReactElement {
   return (
-    <List appearance="grouped" accessibilityLabel={props.label}>
+    <List
+      appearance={Platform.OS === 'web' ? 'plain' : 'cards'}
+      accessibilityLabel={props.label}
+    >
       <List.Section>
         {loadingRows(props.options.map(placeholderRow))}
       </List.Section>

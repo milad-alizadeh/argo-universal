@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, within } from 'storybook/test';
-import { ListSection } from '#primitives/lists/list';
 import { settleViewport } from '../../../settle-viewport';
 import { Picker } from './picker';
 
@@ -73,20 +72,11 @@ export const KeyboardTypeahead: Story = {
 
 export const InvalidAnnouncement: Story = {
   render: () => (
-    <ListSection footer="Choose an effort" tone="danger">
-      <Picker
-        label="Effort"
-        options={options}
-        errors={[{ message: 'Choose an effort' }]}
-        onValueChange={changed}
-      />
-    </ListSection>
+    <Picker label="Effort" options={options} invalid onValueChange={changed} />
   ),
   play: async ({ canvas }) => {
     const trigger = canvas.getByRole('button', { name: 'Effort' });
     await expect(trigger).toHaveAttribute('aria-invalid', 'true');
-    await expect(trigger).toHaveAccessibleDescription('Choose an effort');
-    await expect(canvas.getAllByRole('alert')).toHaveLength(1);
   },
 };
 

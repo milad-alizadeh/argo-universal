@@ -3,8 +3,6 @@ import type * as React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Icon, IconSlot } from '#primitives/content/icon';
 import { SelectedCheck } from '#primitives/status/selected-check';
-import type { IconName } from '../../../symbols/icon-names';
-import { useWide } from '../../../use-wide/use-wide';
 import { SelectContent } from './picker-select-content';
 import { Select, SelectValue, useSelectState } from './picker-select-root';
 import {
@@ -31,25 +29,27 @@ type ItemProps = {
   className?: string;
 };
 
-// A plain picker on a phone row reads like a navigation row (Paper 2V85).
-function chevronName(
-  variant: TriggerProps['variant'],
-  wide: boolean,
-): IconName {
-  if (variant !== 'plain') return 'chevron-down';
-
-  return wide ? 'chevron-up-down' : 'chevron-right';
-}
+/*
+ * A plain picker ends a settings row (FieldGroup.Picker) in a down chevron, so it reads as a menu and not as a row
+ * that opens a page. It takes the row's disclosure size and tertiary colour (LinkAccessory); a boxed trigger keeps
+ * its small muted one.
+ */
+const chevronLooks = {
+  plain: { size: 'md', className: 'text-tertiary' },
+  boxed: { size: 'sm', className: 'text-muted-foreground' },
+} as const;
 
 function TriggerChevron({
   variant,
 }: Pick<TriggerProps, 'variant'>): React.JSX.Element {
+  const look = chevronLooks[variant === 'plain' ? 'plain' : 'boxed'];
+
   return (
     <Icon
-      name={chevronName(variant, useWide())}
-      size="sm"
+      name="chevron-down"
+      size={look.size}
       aria-hidden={true}
-      className="text-muted-foreground"
+      className={look.className}
     />
   );
 }

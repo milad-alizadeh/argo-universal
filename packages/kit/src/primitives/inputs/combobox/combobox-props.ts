@@ -10,7 +10,7 @@ export type ComboboxOption<Value extends string> = KitProps<
 
 // Kit-only: local form validation, filtering and interactive trigger.
 export type ComboboxProps<Value extends string> = KitProps<'Combobox', Value> &
-  Pick<PickerProps<Value>, 'invalid' | 'errors' | 'hint' | 'onBlur'> & {
+  Pick<PickerProps<Value>, 'invalid' | 'onBlur'> & {
     valueLeading?: ReactElement;
     filter?: (option: ComboboxOption<Value>, query: string) => boolean;
     trigger?: ReactElement<{ disabled?: boolean; onPress?: () => void }>;

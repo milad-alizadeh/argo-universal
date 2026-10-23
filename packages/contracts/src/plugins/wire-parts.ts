@@ -3,6 +3,7 @@ import { actionListWireParts } from './action-list-wire-parts';
 import { canvasWireParts } from './canvas-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
+import { fieldGroupWireParts } from './field-group-wire-parts';
 import { imageWirePart } from './image-wire-part';
 import { buttonProps, stackProps, textProps, svgProps } from './kit-props';
 import { layoutWireParts } from './layout-wire-parts';
@@ -30,6 +31,7 @@ export const wireParts = {
   ...tableWireParts,
   ...actionListWireParts,
   ...controlWireParts,
+  ...fieldGroupWireParts,
   ...overlayWireParts,
   ...mediaWireParts,
   Image: imageWirePart,

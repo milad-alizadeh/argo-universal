@@ -13,10 +13,9 @@ export function themeChoosesInPlace(width: number): Story {
       await settleViewport(width);
       await userEvent.click(appearanceRow(canvas));
       await userEvent.click(
-        await within(canvasElement.ownerDocument.body).findByRole(
-          'menuitemradio',
-          { name: 'Dark' },
-        ),
+        await within(canvasElement.ownerDocument.body).findByRole('radio', {
+          name: 'Dark',
+        }),
       );
       await expect(args.onThemeChange).toHaveBeenLastCalledWith('dark');
       await expect(args.onSelect).not.toHaveBeenCalled();

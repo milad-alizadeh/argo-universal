@@ -21,12 +21,6 @@ export const plainList = {
   children,
 } satisfies ListProps<unknown>;
 
-export const groupedList = {
-  appearance: 'grouped',
-  maxHeight: 400,
-  children,
-} satisfies ListProps<unknown>;
-
 export const cardsList = {
   appearance: 'cards',
   maxHeight: 400,

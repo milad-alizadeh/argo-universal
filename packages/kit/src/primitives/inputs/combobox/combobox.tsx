@@ -1,11 +1,6 @@
 import { createElement, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '#primitives/content/text';
-import {
-  FieldDescriptionFooter,
-  useFieldDescription,
-  type FieldDescription,
-} from '#primitives/fields/field-description';
 import { Drill, type DrillProps } from '#primitives/overlays/drill';
 import { ComboboxContent } from './combobox-content';
 import { comboboxPlaceholder } from './combobox-placeholder';
@@ -16,17 +11,15 @@ import { comboboxValue } from './combobox-value';
 function ComboboxRoot<Value extends string>(
   props: ComboboxProps<Value>,
 ): ReactElement {
-  const field = useFieldDescription(props);
-
   return props.variant === 'row' ? (
     <ComboboxControl {...props} />
   ) : (
-    <ComboboxField {...props} field={field} />
+    <ComboboxField {...props} />
   );
 }
 
 function ComboboxField<Value extends string>(
-  props: ComboboxProps<Value> & { field: FieldDescription },
+  props: ComboboxProps<Value>,
 ): ReactElement {
   const trigger = props.trigger ?? <FieldTrigger {...props} />;
 
@@ -35,20 +28,13 @@ function ComboboxField<Value extends string>(
     { className: 'gap-2' },
     <FieldLabel label={props.label} required={props.required} />,
     <ComboboxControl {...props} trigger={trigger} />,
-    <FieldDescriptionFooter {...props.field} />,
   );
 }
 
 function FieldTrigger<Value extends string>(
-  props: ComboboxProps<Value> & { field: FieldDescription },
+  props: ComboboxProps<Value>,
 ): ReactElement {
-  return (
-    <ComboboxTrigger
-      {...props}
-      {...props.field}
-      valueLabel={comboboxValue(props)}
-    />
-  );
+  return <ComboboxTrigger {...props} valueLabel={comboboxValue(props)} />;
 }
 
 function FieldLabel(props: {

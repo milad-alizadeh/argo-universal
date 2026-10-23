@@ -26,7 +26,7 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
 
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <List fit={false} appearance="grouped" padding={{ compact: 4, wide: 0 }}>
+      <List fit={false} appearance="cards" padding={{ compact: 4, wide: 0 }}>
         {projectRows({ ...props, found, searching: query !== '' })}
       </List>
     </View>
@@ -101,6 +101,8 @@ type ProjectRowProps = {
   onOpen: (name: string) => void;
 };
 
+type LinkProps = ProjectRowProps & { compact?: boolean };
+
 // One line at every width: the folder path sits only on the Project's own page.
 function ProjectRow(props: ProjectRowProps): React.JSX.Element {
   return (
@@ -111,13 +113,13 @@ function ProjectRow(props: ProjectRowProps): React.JSX.Element {
   );
 }
 
-function ProjectLink(
-  props: ProjectRowProps & { compact?: boolean },
-): React.JSX.Element {
+function ProjectLink(props: LinkProps): React.JSX.Element {
   const detail = projectDetail(props.project, props.compact);
 
   return (
-    <ListItem.Link
+    <ListItem
+      disclosure
+      role="link"
       leading={<Icon name="folder" size="md" />}
       title={props.project.name}
       {...detail}

@@ -1,7 +1,10 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
-import { type StandaloneTextInputProps } from '@repo/kit/primitives/inputs/text-input';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import {
+  TextInput,
+  type StandaloneTextInputProps,
+} from '@repo/kit/primitives/inputs/text-input';
 import type { ReactElement } from 'react';
+import { SwitchListItem } from '#lib/product/switch-list-item/switch-list-item';
 import { toggledChoice } from './elicitation-answers';
 import { OptionRows } from './elicitation-option-rows';
 import { elicitationChoices, numericProperty } from './elicitation-property';
@@ -34,7 +37,7 @@ export function FieldRows(props: ElicitationFieldProps): ReactElement {
 
   if (elicitationChoices(props.property)) return <ChoiceRows {...props} />;
 
-  return <ListItem.TextField {...textProps(props)} />;
+  return <TextInput {...textProps(props)} />;
 }
 
 function textProps(props: ElicitationFieldProps): StandaloneTextInputProps {
@@ -47,16 +50,12 @@ function textProps(props: ElicitationFieldProps): StandaloneTextInputProps {
     onChangeText: props.onChange,
     onBlur: props.onBlur,
     disabled: props.inactive,
-    errors: shownErrors(props),
-    hint: props.property.description,
+    invalid: props.showError && props.error !== undefined,
   };
 }
 
 const textValue = (value: ElicitationValue | undefined): string =>
   value === undefined ? '' : String(value);
-
-const shownErrors = (props: ElicitationFieldProps): string[] =>
-  props.showError && props.error ? [props.error] : [];
 
 function ChoiceRows(props: ElicitationFieldProps): ReactElement {
   const multiple = props.property.type === 'array';
@@ -95,11 +94,10 @@ function selectedValues(value: ElicitationValue | undefined): string[] {
 
 function SwitchRow(props: ElicitationFieldProps): ReactElement {
   return (
-    <ListItem.Toggle
+    <SwitchListItem
       title={fieldLabel(props)}
-      value={props.value === true}
       disabled={props.inactive}
-      description={props.property.description}
+      value={props.value === true}
       onValueChange={props.onChange}
     />
   );

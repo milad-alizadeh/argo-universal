@@ -52,7 +52,7 @@ async function turnFastModeOn(
   { userEvent, args }: PlayContext,
   fast: HTMLElement,
 ): Promise<void> {
-  await userEvent.click(within(fast).getByText('Fast mode'));
+  await userEvent.click(fast);
   await expect(args.configuration?.onConfigChange).toHaveBeenCalledOnce();
   await expect(args.configuration?.onConfigChange).toHaveBeenCalledWith(
     'fast',

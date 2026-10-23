@@ -33,5 +33,5 @@ export const disabledDatePicker = {
 export const invalidDatePicker = {
   label: 'Due date',
   value: '2026-10-18',
-  errors: [{ message: 'Pick today or a later date.' }],
+  invalid: true,
 } satisfies DatePickerFixture;

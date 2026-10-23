@@ -28,6 +28,8 @@ export interface ButtonProps {
   // `narrow` is full width on a compact or medium window only, from the window's size class.
   fullWidth?: boolean | 'narrow';
   disabled?: boolean;
+  // Kit-only, web only: a segment of a split button, its corners facing the other segment drawn small.
+  joined?: 'start' | 'end';
   testID?: string;
 }
 

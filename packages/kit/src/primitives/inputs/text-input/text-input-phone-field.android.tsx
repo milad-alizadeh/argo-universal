@@ -8,15 +8,14 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { codeFace } from '#primitives/content/native-text';
-import type { FieldProps } from '#primitives/fields/field';
-import { requiredLabel } from '#primitives/fields/field';
-import { errorMessage } from '#primitives/fields/field-errors';
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import { useFormFocus } from '../../../form-focus';
+import { requiredLabel } from '../../../required-label';
+/* oxlint-disable-next-line no-restricted-imports -- a native-only helper stays out of the folder's index so the web never loads SwiftUI. */
+import { codeFace } from '../../content/native-text/native-text-exceptions';
 import { useFieldText } from './text-input-field-text';
 import { FieldProgress } from './text-input-progress';
-import { isInvalid, type PhoneFieldProps } from './text-input-props';
+import type { PhoneFieldProps } from './text-input-props';
 
 const fullWidth = [fillMaxWidth()];
 
@@ -42,14 +41,10 @@ function FieldSlots(props: PhoneFieldProps): React.JSX.Element {
     <>
       <Label {...props} />
       <Placeholder text={props.placeholder} />
-      <SupportingText text={supportingLine(props)} />
       <Progress {...props} />
     </>
   );
 }
-
-const supportingLine = (props: PhoneFieldProps): string | undefined =>
-  errorMessage(props.errors ?? []) ?? props.hint;
 
 // Compose has no select-on-focus: a field that selects its value opens with all of it selected, the caret otherwise at its end.
 type FieldSelection = { start: number; end: number };
@@ -81,7 +76,6 @@ function useFieldValue(props: PhoneFieldProps): FieldValue {
 function fieldBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
   return {
     enabled: !props.disabled,
-    isError: isInvalid(props),
     singleLine: true,
     visualTransformation: props.secure ? 'password' : 'none',
     modifiers: fieldModifiers(props),
@@ -160,21 +154,6 @@ function Progress(props: PhoneFieldProps): React.JSX.Element | null {
       <FieldProgress label={props.label} loading />
     </OutlinedTextField.TrailingIcon>
   );
-}
-
-function SupportingText(props: { text?: string }): React.JSX.Element | null {
-  if (!props.text) return null;
-
-  return (
-    <OutlinedTextField.SupportingText>
-      <Text>{props.text}</Text>
-    </OutlinedTextField.SupportingText>
-  );
-}
-
-// The field says its own hint and error as supporting text, so no footer repeats them.
-export function PhoneFieldWithFooter(props: FieldProps): React.ReactNode {
-  return props.children;
 }
 
 PhoneField satisfies React.ComponentType<PhoneFieldProps>;

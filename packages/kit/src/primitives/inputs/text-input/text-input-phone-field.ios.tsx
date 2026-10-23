@@ -2,23 +2,20 @@ import { Row, TextInput, type TextInputProps, useNativeState } from '@expo/ui';
 import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { KeyboardController } from 'react-native-keyboard-controller';
-import { codeFace, NativeText } from '#primitives/content/native-text';
-import { Field } from '#primitives/fields/field';
-import { requiredLabel } from '#primitives/fields/field';
+import { NativeText } from '#primitives/content/native-text';
+import { requiredLabel } from '../../../required-label';
+/* oxlint-disable-next-line no-restricted-imports -- a native-only helper stays out of the folder's index so the web never loads SwiftUI. */
+import { codeFace } from '../../content/native-text/native-text-exceptions';
 import { useFieldText } from './text-input-field-text';
 import { FieldProgress } from './text-input-progress';
-import { isInvalid, type PhoneFieldProps } from './text-input-props';
+import type { PhoneFieldProps } from './text-input-props';
 
 export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
   const label = requiredLabel(props);
 
   return (
     <Row alignment="center">
-      {!props.labelHidden && (
-        <NativeText tone={isInvalid(props) ? 'danger' : undefined}>
-          {label}
-        </NativeText>
-      )}
+      {!props.labelHidden && <NativeText>{label}</NativeText>}
       <NativeTextField {...props} label={label} />
       <FieldProgress label={props.label} loading={props.loading} />
     </Row>
@@ -76,7 +73,5 @@ function entryBehaviour(props: PhoneFieldProps): TextInputProps {
 
   return { ...focus, onSubmitEditing: () => submit(), returnKeyType: 'done' };
 }
-
-export const PhoneFieldWithFooter = Field;
 
 PhoneField satisfies React.ComponentType<PhoneFieldProps>;

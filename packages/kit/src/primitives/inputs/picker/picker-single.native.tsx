@@ -1,9 +1,4 @@
-import { type ComponentType, createElement, useState } from 'react';
-import { View } from 'react-native';
-import {
-  FieldDescriptionFooter,
-  useFieldDescription,
-} from '#primitives/fields/field-description';
+import { type ComponentType, useState } from 'react';
 import { ChoiceField, ChoiceHost } from '#primitives/native/choice-field';
 import { PickerDrillIn, drillInLimit } from './picker-drill-in';
 import { menuTag, messageTag, placeholderTag } from './picker-menu-tags';
@@ -28,16 +23,9 @@ type MenuChoice = Pick<PickerMenuProps, 'selectedValue' | 'onValueChange'> & {
 export function SinglePicker<Value extends string>(
   props: SinglePickerProps<Value>,
 ): React.JSX.Element {
-  const field = useFieldDescription(props);
-
   if (props.options.length > drillInLimit) return <PickerDrillIn {...props} />;
 
-  return createElement(
-    View,
-    { className: 'gap-2' },
-    <PickerControl {...props} invalid={field.invalid} />,
-    <FieldDescriptionFooter {...field} />,
-  );
+  return <PickerControl {...props} />;
 }
 
 function PickerControl<Value extends string>(

@@ -142,7 +142,10 @@ function describe(
  * props table built from it cannot drift from the component.
  */
 export function kitPropDescriptors(name: KitPartName): KitPropDescriptor[] {
-  const schema = partObjectSchema(pluginPartSchemas[name]);
+  return objectDescriptors(partObjectSchema(pluginPartSchemas[name]));
+}
+
+function objectDescriptors(schema: JsonSchema): KitPropDescriptor[] {
   const required = new Set(schema.required ?? []);
 
   return Object.entries(schema.properties ?? {}).map(([prop, node]) =>

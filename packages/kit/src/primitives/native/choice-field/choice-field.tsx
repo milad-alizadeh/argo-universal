@@ -5,7 +5,6 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { NativeText } from '#primitives/content/native-text';
 import { Host, type HostProps } from '#primitives/native/host';
-import { useInListItem } from '../../../list-item-control-context';
 
 type FieldProps = {
   label: string;
@@ -20,24 +19,24 @@ const materialColumn = { spacing: 4, modifiers: [fillMaxWidth()] };
 
 const fieldPadding = { paddingHorizontal: 16, paddingVertical: 12 };
 
+const hostSize = {
+  matchContents: { vertical: true },
+  style: { width: '100%' },
+} satisfies Pick<HostProps, 'matchContents' | 'style'>;
+
 export function ChoiceHost(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
-  return <Host {...useHostSize()}>{props.children}</Host>;
+  return <Host {...hostSize}>{props.children}</Host>;
 }
 
-// A row's trailing slot has no width to fill, so there the Picker takes its own; elsewhere it spans the field.
-function useHostSize(): Pick<HostProps, 'matchContents' | 'style'> {
-  if (useInListItem()) return { matchContents: true };
-
-  return { matchContents: { vertical: true }, style: { width: '100%' } };
-}
-
-// In a row the ListItem names the Picker, so only a field draws its own label.
+// A Drill row names its own Combobox, so only a field draws its own label.
 export function ChoiceField(props: FieldProps): React.JSX.Element {
-  const row = useInListItem() || props.variant === 'row';
-
-  return row ? props.children : <LabelledField {...props} />;
+  return props.variant === 'row' ? (
+    props.children
+  ) : (
+    <LabelledField {...props} />
+  );
 }
 
 // iOS sets a field's label beside its value, as Settings does; Material puts it above the field.

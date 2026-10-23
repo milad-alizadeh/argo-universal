@@ -2,14 +2,12 @@
 import { Row } from '@expo/ui';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import {
-  accessibilityHint,
   accessibilityLabel,
   accessibilityValue,
 } from '@expo/ui/swift-ui/modifiers';
 import { createElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { NativeText } from '#primitives/content/native-text';
-import type { FieldDescription } from '#primitives/fields/field-description';
 import { ChoiceField, ChoiceHost } from '#primitives/native/choice-field';
 import { NativeButton } from '#primitives/native/native-button';
 import { NativeSymbol } from '../../../symbols/native-symbol';
@@ -17,8 +15,9 @@ import type { ComboboxProps } from './combobox-props';
 import type { TriggerFields } from './combobox-trigger';
 
 type TriggerProps = TriggerFields &
-  Pick<ComboboxProps<string>, 'required' | 'variant'> &
-  FieldDescription & { onPress?: () => void };
+  Pick<ComboboxProps<string>, 'required' | 'variant'> & {
+    onPress?: () => void;
+  };
 
 export function ComboboxTrigger(props: TriggerProps): ReactElement {
   return (
@@ -67,6 +66,5 @@ function triggerModifiers(
   return [
     accessibilityLabel(props.label),
     accessibilityValue(props.valueLabel),
-    accessibilityHint(props.description ?? ''),
   ];
 }

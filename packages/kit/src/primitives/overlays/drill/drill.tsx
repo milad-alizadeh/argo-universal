@@ -37,5 +37,5 @@ function useDrillTrigger(
     accessibilityRole: 'button',
   };
 
-  return props.trigger ?? createElement(ListItem.Link, row);
+  return props.trigger ?? createElement(ListItem, { ...row, disclosure: true });
 }

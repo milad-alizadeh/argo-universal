@@ -48,7 +48,7 @@ function Menu(): ReactElement {
 
 function Rows(): ReactElement {
   return (
-    <List appearance="grouped" fit>
+    <List appearance="plain" fit>
       <List.Section>
         <Row label="Project" keepOpen searchable={false} />
         <Row label="Branch" />

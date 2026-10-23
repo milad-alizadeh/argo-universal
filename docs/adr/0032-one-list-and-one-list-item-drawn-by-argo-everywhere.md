@@ -1,5 +1,7 @@
 # One List and one ListItem, drawn by Argo everywhere
 
+[ADR-0042](0042-field-groups-and-lists-are-separate-kit-components.md) supersedes the `grouped` appearance, the settings wrappers on `ListItem` and Argo drawing settings rows on phones: those are now `FieldGroup` and its rows. The data-list half stands.
+
 This amends [ADR-0020](0020-argo-owns-its-primitives.md) for lists and rows (Spec 0017 #959). Argo has two list families:
 
 - `GroupedList`, `GroupedListSection` and `GroupedListItem` draw native rows on phones: SwiftUI's FieldGroup on iOS, stock Compose ListItems on Android.

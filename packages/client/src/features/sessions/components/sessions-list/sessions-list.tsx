@@ -96,13 +96,11 @@ const standardTopPadding = { compact: 5, wide: 1 } as const;
 
 const searchTopPadding = { compact: 0, wide: 2 } as const;
 
-// Web draws Session rows flat on the sidebar, with no card, edge or separator (Paper "Screen / 1 Porcelain · Ring · Regular"); phones keep their cards and grouped lists.
-function sessionListAppearance(
-  props: SessionsListProps,
-): 'plain' | 'grouped' | 'cards' {
+// Web draws Session rows flat on the sidebar, with no card, edge or separator (Paper "Screen / 1 Porcelain · Ring · Regular"); phones keep their cards and plain lists.
+function sessionListAppearance(props: SessionsListProps): 'plain' | 'cards' {
   if (Platform.OS === 'web') return 'plain';
 
-  return props.view.layout === 'compact' ? 'grouped' : 'cards';
+  return props.view.layout === 'compact' ? 'plain' : 'cards';
 }
 
 // Paper "SessionsList": web rows sit 8 in from the sidebar's left, and each row's own margin takes the right to 14.

@@ -65,7 +65,7 @@ function ProjectRow(): ReactElement {
   const [value, setValue] = useState('long');
 
   return (
-    <List appearance="grouped" fit>
+    <List appearance="plain" fit>
       <ListSection>
         <Combobox {...rowCombobox} value={value} onValueChange={setValue} />
       </ListSection>

@@ -3,7 +3,6 @@ import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action-list';
 import { useListItemGroup } from '#primitives/lists/list';
 import { ListContext, ListTileContext } from '../../../list-context';
-import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
@@ -46,12 +45,9 @@ function ItemSeparator(props: ListItemProps): ReactNode {
   ) : null;
 }
 
-function Selection({
-  selected,
-  drawing,
-}: Pick<ListItemProps, 'selected'> & { drawing: ItemDrawing }): ReactNode {
+function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
   return selected ? (
-    <View pointerEvents="none" aria-hidden className={selectionTint(drawing)} />
+    <View pointerEvents="none" aria-hidden className={selectionTint} />
   ) : null;
 }
 
@@ -60,12 +56,12 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
 
   return (
     <ContextActions actions={props.actions}>
-      <InListItem value>
+      <>
         <ListContext value={context}>
           <ItemSurface {...props} />
         </ListContext>
         {footer}
-      </InListItem>
+      </>
     </ContextActions>
   );
 }
@@ -171,10 +167,7 @@ function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
   return (
     <>
       <ItemPress {...drawingContent(props, tile)} />
-      <Selection
-        selected={props.selected && !drawing.menu && !selectionMode}
-        drawing={drawing}
-      />
+      <Selection selected={props.selected && !drawing.menu && !selectionMode} />
     </>
   );
 }

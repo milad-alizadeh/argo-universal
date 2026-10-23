@@ -27,7 +27,7 @@ function listProps<Value extends string>(
     accessibilityLabel: props.label,
     fit: web,
     maxHeight: web ? maximumHeight : undefined,
-    appearance: web ? 'plain' : 'grouped',
+    appearance: web ? 'plain' : 'cards',
     empty: props.message,
     endContent: props.message,
     drawDistance: Number.MAX_SAFE_INTEGER,

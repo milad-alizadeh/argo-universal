@@ -8,13 +8,11 @@ import {
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { type ComponentType, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import { requiredLabel } from '#primitives/fields/field';
-import { errorMessage } from '#primitives/fields/field-errors';
 import { Host } from '#primitives/native/host';
 import { useMaterialPalette } from '#primitives/native/material-palette';
+import { requiredLabel } from '../../../required-label';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { DateDialogs, type DialogStep } from './date-picker-dialogs';
-import { isInvalid } from './date-picker-invalid';
 import type { DatePickerProps } from './date-picker-props';
 import { displayValue } from './date-picker-value';
 
@@ -71,7 +69,7 @@ function DateField(props: FieldProps): ReactElement {
       value={text}
       {...FIELD_FLAGS}
       enabled={!props.disabled}
-      isError={isInvalid(props)}
+      isError={props.invalid}
       onFocusChanged={(focused) => focused && props.onOpen()}
       colors={useMaterialPalette().outlinedFieldColors}
     >
@@ -87,13 +85,9 @@ function FieldSlots(props: DatePickerProps): ReactElement {
         <Text>{requiredLabel(props)}</Text>
       </OutlinedTextField.Label>
       <FieldIcon mode={props.mode} />
-      <SupportingText text={supportingText(props)} />
     </>
   );
 }
-
-const supportingText = (props: DatePickerProps): string | undefined =>
-  errorMessage(props.errors ?? []) ?? props.hint;
 
 function FieldIcon(props: Pick<DatePickerProps, 'mode'>): ReactElement {
   return (
@@ -103,16 +97,6 @@ function FieldIcon(props: Pick<DatePickerProps, 'mode'>): ReactElement {
         size="lg"
       />
     </OutlinedTextField.TrailingIcon>
-  );
-}
-
-function SupportingText(props: { text?: string }): ReactElement | null {
-  if (!props.text) return null;
-
-  return (
-    <OutlinedTextField.SupportingText>
-      <Text>{props.text}</Text>
-    </OutlinedTextField.SupportingText>
   );
 }
 

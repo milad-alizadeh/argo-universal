@@ -264,6 +264,18 @@ _Avoid_: Notice, Feed entry
 Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
 _Avoid_: Design system (for the code), component library
 
+**FieldGroup**:
+A page's fixed rows of values and controls, such as Project details or Plugin settings, arranged in sections. Values save as they change, or a page that sends them puts one submit button below the FieldGroup.
+_Avoid_: Grouped list, settings list, Form
+
+**Field**:
+One row in a FieldGroup, of a fixed type such as a value, a link, a toggle, a text field or a choice.
+_Avoid_: Settings row, ListItem (for a Field)
+
+**List**:
+Rows of data of any length, such as Sessions or Agents, optionally in List sections.
+_Avoid_: FieldGroup (for data rows)
+
 **List section**:
 A distinct group of items in a List, with an optional heading and footer.
 _Avoid_: Group (when naming a List section)

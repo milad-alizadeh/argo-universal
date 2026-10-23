@@ -63,7 +63,7 @@ export const issues: Example = {
 };
 
 const projectFolder = (path: string): ReactNode => (
-  <List appearance="grouped">
+  <List appearance="plain">
     <ListItem title="Folder" value={path} />
   </List>
 );

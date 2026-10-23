@@ -40,7 +40,7 @@ export function AgentModelMenu(props: ContentsProps): ReactElement {
   return (
     <View className="native:flex-1 bg-content web:wide:bg-card" {...layout}>
       <PopoverHoverGroup>
-        <List appearance="grouped" fit={Platform.OS === 'web' || props.wide}>
+        <List appearance="plain" fit={Platform.OS === 'web' || props.wide}>
           {menuSections({ ...props, loading, rows })}
         </List>
         <ConfigurationStatus configuration={props.configuration} />

@@ -1,11 +1,6 @@
-import { Text } from '@repo/kit/primitives/content/text';
-import { List } from '@repo/kit/primitives/lists/list';
-import { ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Page } from '@repo/kit/primitives/scaffolds/page';
-import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
-import { View } from 'react-native';
 
 export interface PlaceholderDetailViewProps {
   title: string;
@@ -14,7 +9,7 @@ export interface PlaceholderDetailViewProps {
   description: string;
 }
 
-// A Settings page whose content the App cannot show yet: its title and caption, and a note in place of its rows.
+// A Settings page whose content the App cannot show yet: its title and caption, and a note where its rows will go.
 export function PlaceholderDetailView({
   title,
   caption,
@@ -22,39 +17,11 @@ export function PlaceholderDetailView({
 }: PlaceholderDetailViewProps): React.JSX.Element {
   return (
     <Page title={title} caption={caption}>
-      <PlaceholderNote description={description} />
+      <FieldGroup>
+        <FieldGroup.Section>
+          <FieldGroup.Value title={description} value="" />
+        </FieldGroup.Section>
+      </FieldGroup>
     </Page>
-  );
-}
-
-type NoteProps = Pick<PlaceholderDetailViewProps, 'description'>;
-
-// A wide page keeps the note in a row's card, where the rows will go; a phone centres it.
-function PlaceholderNote(props: NoteProps): React.JSX.Element {
-  return (
-    <SizeClass
-      compact={<CentredNote {...props} />}
-      wide={<RowNote {...props} />}
-    />
-  );
-}
-
-function RowNote({ description }: NoteProps): React.JSX.Element {
-  return (
-    <List appearance="grouped">
-      <ListSection>
-        <ListItem title={description} tone="muted" />
-      </ListSection>
-    </List>
-  );
-}
-
-function CentredNote({ description }: NoteProps): React.JSX.Element {
-  return (
-    <View className="flex-1 items-center justify-center px-gutter py-6">
-      <Text role="secondary" className="text-center">
-        {description}
-      </Text>
-    </View>
   );
 }

@@ -68,7 +68,7 @@ function phoneRows(props: PhoneProps): JSX.Element[] {
 
 export function PhoneSubagentList(props: PhoneProps): JSX.Element {
   return (
-    <List appearance="grouped" fit={false} accessibilityLabel="Subagents">
+    <List appearance="cards" fit={false} accessibilityLabel="Subagents">
       <List.Section>{phoneRows(props)}</List.Section>
     </List>
   );

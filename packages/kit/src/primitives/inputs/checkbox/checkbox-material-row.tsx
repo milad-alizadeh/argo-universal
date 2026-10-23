@@ -74,11 +74,7 @@ function rowPadding(props: CheckboxProps): Modifiers {
 }
 
 function rowToggle(props: CheckboxRowProps): Modifiers {
-  const description = [props.label, props.state.description].filter(Boolean);
-
-  const semantics = Compose.semantics({
-    contentDescription: description.join('. '),
-  });
+  const semantics = Compose.semantics({ contentDescription: props.label });
 
   return props.disabled ? [semantics] : [semantics, rowPress(props)];
 }

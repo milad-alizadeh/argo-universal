@@ -31,9 +31,7 @@ export const CaptionsTheWidePageOnly: Story = {
       canvas.getByRole('heading', { name: 'Accounts', level: 1 }),
     ).toBeVisible();
     await expect(canvas.getByText(caption)).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: description }),
-    ).toBeVisible();
+    await expect(canvas.getByText(description)).toBeVisible();
     await settleViewport(layoutWidths.phone);
     await expect(canvas.queryByText(caption)).not.toBeInTheDocument();
     await expect(canvas.getByText(description)).toBeVisible();

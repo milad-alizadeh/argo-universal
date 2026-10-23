@@ -4,26 +4,17 @@ import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import type { CheckboxProps, CheckboxIndicatorProps } from './checkbox-props';
-import {
-  CheckboxFooter,
-  type CheckboxState,
-  useCheckboxState,
-} from './checkbox-state';
+import { type CheckboxState, checkboxState } from './checkbox-state';
 
 export type { CheckboxProps } from './checkbox-props';
 
 export function Checkbox(props: CheckboxProps): React.JSX.Element {
-  const state = useCheckboxState(props);
+  const state = checkboxState(props);
 
-  return (
-    <View className="gap-2">
-      {createElement(
-        'button',
-        controlProps(props, state),
-        <CheckboxRow {...props} invalid={state.invalid} />,
-      )}
-      <CheckboxFooter {...state} />
-    </View>
+  return createElement(
+    'button',
+    controlProps(props, state),
+    <CheckboxRow {...props} />,
   );
 }
 
@@ -32,7 +23,7 @@ function controlProps(
   state: CheckboxState,
 ): React.ButtonHTMLAttributes<HTMLButtonElement> {
   return {
-    ...checkboxSemantics(props, state),
+    ...checkboxSemantics(props),
     disabled: props.disabled,
     onClick: state.toggle,
     onBlur: props.onBlur,
@@ -42,7 +33,6 @@ function controlProps(
 
 function checkboxSemantics(
   props: CheckboxProps,
-  state: CheckboxState,
 ): React.ButtonHTMLAttributes<HTMLButtonElement> {
   return {
     type: 'button',
@@ -50,8 +40,7 @@ function checkboxSemantics(
     'aria-label': props.label,
     'aria-disabled': !!props.disabled,
     'aria-checked': props.value,
-    'aria-invalid': state.invalid,
-    'aria-describedby': state.descriptionId,
+    'aria-invalid': props.invalid,
   };
 }
 

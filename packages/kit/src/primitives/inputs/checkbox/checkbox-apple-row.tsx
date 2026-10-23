@@ -74,7 +74,6 @@ function rowSemantics(props: CheckboxRowProps): Modifiers {
     Swift.accessibilityLabel(props.label),
     Swift.accessibilityValue(props.value ? 'Checked' : 'Unchecked'),
     rowTraits(props),
-    Swift.accessibilityHint(props.state.description ?? ''),
   ];
 }
 

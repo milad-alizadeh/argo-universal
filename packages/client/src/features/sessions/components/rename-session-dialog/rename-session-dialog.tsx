@@ -1,5 +1,9 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { TextInput } from '@repo/kit/primitives/inputs/text-input';
+import { Text } from '@repo/kit/primitives/content/text';
+import {
+  TextInput,
+  type StandaloneTextInputProps,
+} from '@repo/kit/primitives/inputs/text-input';
 import {
   Dialog,
   DialogCancel,
@@ -52,11 +56,11 @@ function RenameForm(props: RenameSessionDialogProps): ReactElement {
   return (
     <>
       <RenameHeading />
-      <TextInput
-        {...titleField}
+      <RenameField
+        invalid={props.error !== undefined}
         {...{ value: draft, onChangeText: setDraft, onSubmit: save }}
-        errors={[props.error]}
       />
+      <RenameError error={props.error} />
       <RenameActions onSave={save} />
     </>
   );
@@ -68,6 +72,25 @@ function saveDraft(draft: string, props: RenameSessionDialogProps): void {
 
   if (title === undefined) props.onClose();
   else props.onRename(title);
+}
+
+function RenameField(
+  props: Pick<
+    StandaloneTextInputProps,
+    'value' | 'onChangeText' | 'onSubmit' | 'invalid'
+  >,
+): ReactElement {
+  return <TextInput {...titleField} {...props} />;
+}
+
+function RenameError({ error }: { error?: string }): ReactElement | null {
+  if (!error) return null;
+
+  return (
+    <Text accessibilityRole="alert" role="secondary" tone="danger">
+      {error}
+    </Text>
+  );
 }
 
 function RenameHeading(): ReactElement {

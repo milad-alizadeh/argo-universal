@@ -1,6 +1,5 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
-import { List } from '@repo/kit/primitives/lists/list';
-import { ListSection } from '@repo/kit/primitives/lists/list';
+import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import {
   type ErrorToast,
@@ -8,7 +7,6 @@ import {
 } from '@repo/kit/primitives/overlays/toast';
 import { Page } from '@repo/kit/primitives/scaffolds/page';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
-import { RowDrawingContext } from '@repo/kit/row-drawing-context';
 import type { IconSymbol } from '@repo/kit/symbols/icon-symbol';
 import type * as React from 'react';
 
@@ -37,11 +35,9 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
 
   return (
     <Page title={pluginsTitle} caption={props.caption}>
-      <RowDrawingContext value="content">
-        <List appearance="grouped">
-          <ListSection>{pluginRows(props)}</ListSection>
-        </List>
-      </RowDrawingContext>
+      <List appearance="cards">
+        <ListSection>{pluginRows(props)}</ListSection>
+      </List>
     </Page>
   );
 }
@@ -83,7 +79,9 @@ type PluginItemProps = {
 // Paper's Plugins page: each row pushes the Plugin's page, so it draws the disclosure chevron.
 function PluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
   return (
-    <ListItem.Link
+    <ListItem
+      disclosure
+      role="link"
       leading={<Icon name={plugin.icon} size="md" />}
       title={plugin.name}
       onPress={() => onOpen(plugin.pluginId)}

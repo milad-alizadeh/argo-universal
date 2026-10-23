@@ -1,20 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
-import { ListSection } from '#primitives/lists/list';
 import { settleViewport } from '../../../settle-viewport';
 import { TextInput } from './text-input';
 
 const label = 'Executable';
 
-const failure = 'Error message';
-
-type Variant = 'standalone' | 'row';
+type Variant = 'standalone';
 
 type ExampleProps = {
   variant: Variant;
   onChangeText: (value: string) => void;
-  errors?: string[];
+  invalid?: boolean;
   disabled?: boolean;
   loading?: boolean;
 };
@@ -63,11 +60,9 @@ function typesIn(variant: Variant): Story {
 
 export const StandaloneTypes = typesIn('standalone');
 
-export const RowTypes = typesIn('row');
-
 function marksInvalidIn(variant: Variant): Story {
   return {
-    args: { variant, errors: [failure] },
+    args: { variant, invalid: true },
     play: async ({ canvas }) => {
       await expect(canvas.getByRole('textbox', { name: label })).toBeInvalid();
     },
@@ -75,35 +70,6 @@ function marksInvalidIn(variant: Variant): Story {
 }
 
 export const StandaloneMarksInvalid = marksInvalidIn('standalone');
-
-export const RowMarksInvalid = marksInvalidIn('row');
-
-// A row's error shows in its section's footer, which the field names as its description.
-function InSection(props: ExampleProps): React.JSX.Element {
-  if (props.variant === 'standalone') return <Example {...props} />;
-
-  return (
-    <ListSection footer={failure} tone="danger">
-      <Example {...props} />
-    </ListSection>
-  );
-}
-
-function describesErrorIn(variant: Variant): Story {
-  return {
-    args: { variant, errors: [failure] },
-    render: InSection,
-    play: async ({ canvas }) => {
-      await expect(
-        canvas.getByRole('textbox', { name: label }),
-      ).toHaveAccessibleDescription(failure);
-    },
-  };
-}
-
-export const StandaloneDescribesError = describesErrorIn('standalone');
-
-export const RowDescribesError = describesErrorIn('row');
 
 function lockedIn(variant: Variant): Story {
   return {
@@ -117,8 +83,6 @@ function lockedIn(variant: Variant): Story {
 }
 
 export const StandaloneDisabled = lockedIn('standalone');
-
-export const RowDisabled = lockedIn('row');
 
 // While the value is checked, a spinner says so and the field still takes typing.
 function checkingIn(variant: Variant): Story {
@@ -138,8 +102,6 @@ function checkingIn(variant: Variant): Story {
 }
 
 export const StandaloneChecking = checkingIn('standalone');
-
-export const RowChecking = checkingIn('row');
 
 export const BareTypes: Story = {
   render: function Bare(props): React.JSX.Element {

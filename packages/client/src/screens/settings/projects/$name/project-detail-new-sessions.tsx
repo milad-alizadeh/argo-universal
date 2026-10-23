@@ -1,6 +1,5 @@
 import type { ProjectInfo } from '@repo/contracts';
-import { ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 
 const checkoutOptions = [
@@ -8,86 +7,48 @@ const checkoutOptions = [
   { value: 'main', label: 'Local' },
 ] as const;
 
-// Paper "Settings · Porcelain": each row says what it changes.
-const descriptions = {
-  startIn: "A new worktree keeps each Session's files apart",
-  baseBranch: 'New worktrees branch from it',
-  archive: 'Archiving a Session removes its folder; the branch stays',
-};
-
-type ProjectProps = { project: ProjectInfo };
+// One footer for the section, as iOS Settings explains a group of rows; drawn on every platform.
+const footer =
+  "A new worktree keeps each Session's files apart and branches from the base branch. Archiving a Session removes its folder; the branch stays.";
 
 type ChoiceProps = { choice: ProjectInfo['checkoutChoice'] };
 
-type PickerRowProps = Pick<
-  React.ComponentProps<typeof ListItem.Picker>,
-  'value' | 'options'
-> & {
-  label: string;
-  description: string;
-};
-
 // Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
-export function NewSessionsSection({
-  project,
-}: ProjectProps): React.JSX.Element {
-  return (
-    <ListSection title="New Sessions">
-      <StartInRow choice={project.checkoutChoice} />
-      <BaseBranchRow choice={project.checkoutChoice} />
-      <ArchiveRow />
-    </ListSection>
-  );
-}
-
-// A Picker the Server cannot change yet, in a row titled with its label.
-function PickerRow(props: PickerRowProps): React.JSX.Element {
-  return (
-    <ListItem.Picker
-      title={props.label}
-      value={props.value}
-      options={props.options}
+export const newSessionsSection = (project: ProjectInfo): React.JSX.Element => (
+  <FieldGroup.Section title="New Sessions" footer={footer}>
+    <FieldGroup.Picker
+      title="Start in"
+      value={project.checkoutChoice.type}
+      options={checkoutOptions}
       disabled
       onValueChange={ignoreChoice}
-      description={props.description}
     />
-  );
-}
+    <BaseBranchRow choice={project.checkoutChoice} />
+    <ArchiveRow />
+  </FieldGroup.Section>
+);
 
-function StartInRow({ choice }: ChoiceProps): React.JSX.Element {
-  return (
-    <PickerRow
-      label="Start in"
-      description={descriptions.startIn}
-      value={choice.type}
-      options={checkoutOptions}
-    />
-  );
-}
+const ArchiveRow = (): React.JSX.Element => (
+  <FieldGroup.Toggle
+    title="Delete the worktree on archive"
+    value={false}
+    disabled
+    onValueChange={ignoreChoice}
+  />
+);
 
 function BaseBranchRow({ choice }: ChoiceProps): React.JSX.Element | null {
   if (choice.type !== 'worktree') return null;
 
   return (
-    <PickerRow
-      label="Base branch"
-      description={descriptions.baseBranch}
+    <FieldGroup.Picker
+      title="Base branch"
       value={choice.baseBranch}
       options={[{ value: choice.baseBranch, label: choice.baseBranch }]}
-    />
-  );
-}
-
-function ignoreChoice(): void {}
-
-function ArchiveRow(): React.JSX.Element {
-  return (
-    <ListItem.Toggle
-      title="Delete the worktree on archive"
-      description={descriptions.archive}
-      value={false}
       disabled
       onValueChange={ignoreChoice}
     />
   );
 }
+
+function ignoreChoice(): void {}

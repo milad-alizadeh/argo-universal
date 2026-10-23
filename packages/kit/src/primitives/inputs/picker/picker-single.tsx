@@ -1,13 +1,7 @@
 import { type ComponentType, createElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
-import { requiredLabel } from '#primitives/fields/field';
-import {
-  type FieldDescription,
-  FieldDescriptionFooter,
-  useFieldDescription,
-} from '#primitives/fields/field-description';
-import { useInListItem } from '../../../list-item-control-context';
+import { requiredLabel } from '../../../required-label';
 import type { SinglePickerProps } from './picker-props';
 import { Select } from './picker-select';
 import { choosePickerOption, pickerOption } from './picker-selection';
@@ -16,33 +10,17 @@ import { PickerContent, PickerTrigger } from './picker-web-parts';
 export function SinglePicker<Value extends string>(
   props: SinglePickerProps<Value>,
 ): React.JSX.Element {
-  const field = useFieldDescription(props);
-  const inListItem = useInListItem();
-  const row = props.variant === 'row' || inListItem;
-
-  return <PickerFrame {...props} {...field} row={row} />;
-}
-
-type FrameProps<Value extends string> = SinglePickerProps<Value> &
-  FieldDescription & { row: boolean };
-
-function PickerFrame<Value extends string>(
-  props: FrameProps<Value>,
-): React.JSX.Element {
   return createElement(
     View,
     { className: 'gap-2' },
     <PickerLabel {...props} />,
     <PickerControl {...props} />,
-    <FieldDescriptionFooter {...props} />,
   );
 }
 
 function PickerLabel(
-  props: Pick<FrameProps<string>, 'row' | 'label' | 'required'>,
-): React.JSX.Element | null {
-  if (props.row) return null;
-
+  props: Pick<SinglePickerProps<string>, 'label' | 'required'>,
+): React.JSX.Element {
   return (
     <Text role="body" aria-hidden>
       {requiredLabel(props)}
@@ -51,7 +29,7 @@ function PickerLabel(
 }
 
 function PickerControl<Value extends string>(
-  props: FrameProps<Value>,
+  props: SinglePickerProps<Value>,
 ): React.JSX.Element {
   return (
     <Select {...selectProps(props)}>

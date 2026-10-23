@@ -65,5 +65,3 @@ export const iconButtonSizes = ['sm', 'md', 'lg'] as const;
 export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;
-
-export const listStepperDefaults = { step: 1 } as const;

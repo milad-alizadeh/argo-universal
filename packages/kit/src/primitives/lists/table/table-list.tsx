@@ -26,7 +26,7 @@ export function TableList(props: ListProps): ReactElement {
       <PageHeaderActions>
         <TableSortActions {...props} />
       </PageHeaderActions>
-      <List appearance="grouped" accessibilityLabel={props.accessibilityLabel}>
+      <List appearance="plain" accessibilityLabel={props.accessibilityLabel}>
         <CompactRows {...props} roles={compactColumns(props.columns)} />
       </List>
     </>

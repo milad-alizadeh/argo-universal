@@ -12,10 +12,8 @@ import { listMediaParts } from './list-media-parts';
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { echoes } from './plugin-part-props';
 import { part } from './plugin-part-schema-utils';
-import { settingsRowWireParts } from './settings-row-wire-parts';
 
 export const listWireParts = {
-  ...settingsRowWireParts,
   List: {
     props: contentListProps,
     expansion: listExpansion,

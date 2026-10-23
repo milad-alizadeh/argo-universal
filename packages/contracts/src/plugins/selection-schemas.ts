@@ -33,7 +33,6 @@ export const pickerSchema = z.object({
   disabled: z.boolean().optional().describe('Disable selection.'),
   loading: z.boolean().optional().describe('Choices are loading.'),
   loadError: z.string().optional().describe('Why choices failed to load.'),
-  variant: z.enum(['row', 'field']).optional().describe('Selection placement.'),
 });
 
 // One Picker, one value or several: `multiple` switches `value` and its change to a list.
@@ -59,6 +58,7 @@ const comboboxOption = selectionOption.extend({
 
 export const comboboxSchema = pickerSchema.extend({
   options: z.array(comboboxOption).readonly().describe('Searchable choices.'),
+  variant: z.enum(['row', 'field']).optional().describe('Selection placement.'),
   title: z.string().optional().describe('Overlay heading.'),
   searchPlaceholder: z.string().optional().describe('Search hint.'),
   emptyLabel: z.string().optional().describe('Empty result message.'),

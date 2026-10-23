@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fireEvent, fn } from 'storybook/test';
-import { List, ListSection } from '#primitives/lists/list';
 import { settleViewport } from '../../../settle-viewport';
 import { DatePicker } from './date-picker';
 import type { DatePickerProps } from './date-picker-props';
@@ -18,19 +17,15 @@ function Field(
   const [value, setValue] = useState(props.value);
 
   return (
-    <List appearance="grouped">
-      <ListSection>
-        <DatePicker
-          label={LABEL}
-          {...props}
-          value={value}
-          onValueChange={(next) => {
-            setValue(next);
-            changed(next);
-          }}
-        />
-      </ListSection>
-    </List>
+    <DatePicker
+      label={LABEL}
+      {...props}
+      value={value}
+      onValueChange={(next) => {
+        setValue(next);
+        changed(next);
+      }}
+    />
   );
 }
 
@@ -89,17 +84,10 @@ export const Disabled: Story = {
 };
 
 export const Invalid: Story = {
-  render: () => (
-    <Field
-      value="2026-10-18"
-      required
-      errors={[{ message: 'Error message' }]}
-    />
-  ),
+  render: () => <Field value="2026-10-18" required invalid />,
   play: async ({ canvas }) => {
     const input = canvas.getByLabelText(LABEL);
     await expect(input).toHaveAttribute('aria-invalid', 'true');
     await expect(input).toBeRequired();
-    await expect(input).toHaveAccessibleDescription('Error message');
   },
 };

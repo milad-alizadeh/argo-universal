@@ -6,7 +6,6 @@ type AccessibilityProps = Pick<
   CheckboxProps,
   'label' | 'value' | 'disabled' | 'selection'
 > & {
-  description?: string;
   children: ReactElement;
 };
 
@@ -24,16 +23,12 @@ export function CheckboxAccessibility(props: AccessibilityProps): ReactElement {
 }
 
 function disabledSemantics(
-  props: Pick<
-    AccessibilityProps,
-    'label' | 'value' | 'selection' | 'description'
-  >,
+  props: Pick<AccessibilityProps, 'label' | 'value' | 'selection'>,
 ): ViewProps {
   return {
     accessible: true,
     accessibilityRole: props.selection === 'single' ? 'radio' : 'checkbox',
     accessibilityLabel: props.label,
-    accessibilityHint: props.description,
     accessibilityState: { checked: props.value, disabled: true },
   };
 }

@@ -2,7 +2,6 @@ import { createElement, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import type { FieldDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
 import type { ComboboxProps } from './combobox-props';
 
@@ -26,8 +25,7 @@ export type TriggerFields = Pick<
 };
 
 type Props = TriggerFields &
-  FieldDescription &
-  Anchor & { onPress?: () => void };
+  Anchor & { invalid?: boolean; onPress?: () => void };
 
 export function ComboboxTrigger(props: Props): ReactElement {
   return createElement(
@@ -40,10 +38,7 @@ export function ComboboxTrigger(props: Props): ReactElement {
   );
 }
 
-type Attributes = React.ComponentProps<typeof Pressable> &
-  Anchor & {
-    'aria-describedby'?: string;
-  };
+type Attributes = React.ComponentProps<typeof Pressable> & Anchor;
 
 function triggerProps(props: Props): Attributes {
   return {
@@ -55,14 +50,14 @@ function triggerProps(props: Props): Attributes {
     accessibilityLabel: props.label,
     disabled: props.disabled,
     onPress: props.onPress,
-    'aria-describedby': props.descriptionId,
     className: triggerClass(props),
   };
 }
 
-function triggerClass(
-  props: Pick<FieldDescription, 'invalid'> & { disabled?: boolean },
-): string {
+function triggerClass(props: {
+  invalid?: boolean;
+  disabled?: boolean;
+}): string {
   return cn(
     'min-h-10 flex-row items-center gap-3 rounded-control border border-border bg-card px-3 py-2 web:focus-visible:ring-2 web:focus-visible:ring-focus',
     props.invalid && 'border-danger',

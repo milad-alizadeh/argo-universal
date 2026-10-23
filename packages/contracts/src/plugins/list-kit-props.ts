@@ -33,7 +33,7 @@ export const contentListProps = z.object({
     .optional()
     .describe('Media aspect: square 1:1, landscape 16:10, portrait 3:4.'),
   appearance: z
-    .enum(['plain', 'grouped', 'cards'])
+    .enum(['plain', 'cards'])
     .optional()
     .describe('The list appearance.'),
   footer: z.string().optional().describe('Page-level supporting text.'),

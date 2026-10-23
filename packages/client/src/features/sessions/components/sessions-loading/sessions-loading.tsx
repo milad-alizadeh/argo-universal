@@ -45,7 +45,7 @@ function SkeletonRows({ layout }: SessionsLoadingProps): React.ReactNode {
 function SkeletonList({ layout }: SessionsLoadingProps): React.JSX.Element {
   return (
     <List
-      appearance={layout === 'compact' ? 'grouped' : 'cards'}
+      appearance={layout === 'compact' ? 'plain' : 'cards'}
       fit
       padding={{ compact: 4, wide: 0 }}
       paddingTop={{ compact: 5, wide: 2 }}

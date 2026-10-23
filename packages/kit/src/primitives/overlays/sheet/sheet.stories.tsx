@@ -108,7 +108,7 @@ function fruitPages(
 
 function SingleSection(props: { children: ReactNode }): ReactElement {
   return (
-    <List appearance="grouped" fit>
+    <List appearance="plain" fit>
       <ListSection>{props.children}</ListSection>
     </List>
   );

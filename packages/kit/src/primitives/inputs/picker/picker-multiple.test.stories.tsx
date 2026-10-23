@@ -130,15 +130,12 @@ export const Invalid: Story = {
       multiple
       label="Labels"
       options={labels}
-      errors={[{ message: 'Choose at least one label.' }]}
+      invalid
       onValueChange={picked}
     />
   ),
   play: async ({ canvas }) => {
     const trigger = canvas.getByRole('button', { name: 'Labels' });
-    await expect(trigger).toHaveAccessibleDescription(
-      'Choose at least one label.',
-    );
-    await expect(canvas.getByRole('alert')).toBeVisible();
+    await expect(trigger).toBeVisible();
   },
 };

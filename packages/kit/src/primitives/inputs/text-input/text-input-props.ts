@@ -3,21 +3,13 @@ import type {
   TextInputInstance,
   TextInputProps as NativeTextInputProps,
 } from 'react-native';
-import {
-  errorMessage,
-  type FieldErrors,
-} from '#primitives/fields/field-errors';
 import type { KitProps } from '../../kit-props';
 
-/*
- * A labelled text field; on iOS and the web its hint and its error sit in a footer.
- * Kit-only: local validation, hint and blur handling.
- */
+// A labelled text field. Kit-only: local validation, focus and blur handling.
 export type TextFieldProps = KitProps<'TextInput'> & {
+  invalid?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
-  errors?: FieldErrors;
-  hint?: string;
 };
 
 // What a field's spinner needs: the field's label to speak, and whether it checks the value now.
@@ -26,7 +18,7 @@ export type FieldProgressProps = Pick<TextFieldProps, 'label' | 'loading'>;
 // What the field's spinner says while it checks the value.
 export const fieldLoadingLabel = (label: string): string => `Checking ${label}`;
 
-// What either labelled variant may ask of its entry: a starred label, a numeric keyboard, masked entry for a secret.
+// What a labelled field may ask of its entry: a starred label, a numeric keyboard, masked entry for a secret.
 type EntryProps = Pick<TextFieldProps, 'required' | 'numeric' | 'secure'>;
 
 /*
@@ -36,12 +28,7 @@ type EntryProps = Pick<TextFieldProps, 'required' | 'numeric' | 'secure'>;
  */
 type RowEntryProps = Pick<TextFieldProps, 'labelHidden'>;
 
-// A row inside a List.Section: the label leading, the field taking the rest of the row.
-export type RowTextInputProps = TextFieldProps &
-  EntryProps &
-  RowEntryProps & { variant: 'row' };
-
-// A field on its own, outside a List.Section, with its label above it and its footer under it.
+// A field on its own, with its label above it.
 export type StandaloneTextInputProps = TextFieldProps &
   EntryProps &
   RowEntryProps & { variant?: 'standalone' };
@@ -56,16 +43,9 @@ export type BareTextInputProps = NativeTextInputProps &
     'aria-invalid'?: boolean;
   };
 
-export type TextInputProps =
-  | StandaloneTextInputProps
-  | RowTextInputProps
-  | BareTextInputProps;
+export type TextInputProps = StandaloneTextInputProps | BareTextInputProps;
 
 export type PhoneFieldProps = TextFieldProps & EntryProps & RowEntryProps;
-
-// Invalid only when there is a message to show: a form may pass an empty entry while nothing has failed.
-export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
-  errorMessage(props.errors ?? []) !== undefined;
 
 // The web keyboard an entry asks for: numeric, or masked for a secret.
 export const keyboardOf = ({

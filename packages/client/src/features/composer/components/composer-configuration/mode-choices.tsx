@@ -17,7 +17,7 @@ interface ModeChoiceProps extends ModeContentsProps {
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 native:wide:p-3 bg-content web:wide:bg-card">
-      <List appearance="grouped" fit>
+      <List appearance="plain" fit>
         <ListSection selectionMode="single">
           {configurationChoices(props.mode).map((choice) => (
             <ModeChoice key={choice.value} {...props} choice={choice} />

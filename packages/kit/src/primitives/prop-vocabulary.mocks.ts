@@ -8,9 +8,6 @@ import type * as LabelKit from '#primitives/content/label';
 import type * as LiquidGlassKit from '#primitives/content/liquid-glass';
 import type * as NativeTextKit from '#primitives/content/native-text';
 import type * as TextKit from '#primitives/content/text';
-import type * as FieldKit from '#primitives/fields/field';
-import type * as FieldDescriptionKit from '#primitives/fields/field-description';
-import type * as FieldErrorsKit from '#primitives/fields/field-errors';
 import type * as CheckboxKit from '#primitives/inputs/checkbox';
 import type * as ComboboxKit from '#primitives/inputs/combobox';
 import type * as FilterPillKit from '#primitives/inputs/filter-pill';
@@ -80,8 +77,6 @@ export type Primitives = {
   DrillProps: DrillKit.DrillProps;
   DrawerItemProps: DrawerItemKit.DrawerItemProps;
   ErrorToast: ToastKit.ErrorToast;
-  FieldDescription: FieldDescriptionKit.FieldDescription;
-  FieldProps: FieldKit.FieldProps;
   FilterPillProps: FilterPillKit.FilterPillProps;
   HostProps: HostKit.HostProps;
   IconButtonDataProps: IconButtonKit.IconButtonDataProps;
@@ -111,7 +106,6 @@ export type Primitives = {
   SearchFieldProps: SearchFieldKit.SearchFieldProps;
   SegmentedControlProps: SegmentedControlKit.SegmentedControlProps;
   StackProps: StackKit.StackProps;
-  SectionFooter: FieldDescriptionKit.SectionFooter;
   SelectedCheckProps: SelectedCheckKit.SelectedCheckProps;
   SheetDestination: SheetKit.SheetDestination;
   SheetLinkProps: SheetKit.SheetLinkProps;
@@ -136,7 +130,6 @@ export type Primitives = {
 export type Aliases = {
   ListAppearance: ListKit.ListAppearance;
   ButtonSize: ButtonKit.ButtonSize;
-  FieldErrors: FieldErrorsKit.FieldErrors;
   SheetDetent: SheetKit.SheetDetent;
   NativeTextRole: NativeTextKit.NativeTextRole;
   OrbSize: OrbKit.OrbSize;

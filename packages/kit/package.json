@@ -64,7 +64,6 @@
     "@radix-ui/react-select": "catalog:",
     "@repo/contracts": "workspace:*",
     "@shopify/react-native-skia": "catalog:",
-    "@tanstack/react-form": "catalog:",
     "burnt": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",

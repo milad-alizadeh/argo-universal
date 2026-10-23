@@ -1,21 +1,23 @@
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 import { useState } from 'react';
 
 type TextRowProps = {
   label: string;
-  hint?: string;
   value: string;
   onSave: (value: string) => void;
 };
 
 // Saves when the field loses focus, and only a changed value: a quick Server write, so no spinner.
 export function TextRow({
+  label,
   value,
   onSave,
-  ...row
 }: TextRowProps): React.JSX.Element {
-  return <ListItem.TextField {...row} {...useTextDraft(value, onSave)} />;
+  return (
+    <FieldGroup.TextField title={label} {...useTextDraft(value, onSave)} />
+  );
 }
 
 type Draft = {
@@ -36,31 +38,29 @@ function useTextDraft(value: string, onSave: (value: string) => void): Draft {
 
 type SecretRowProps = Omit<TextRowProps, 'value'> & { set: boolean };
 
-// A secret never comes back from the Server: the field starts empty, says whether one is saved, and a typed value replaces it.
-export function SecretRow(props: SecretRowProps): React.JSX.Element {
-  const { set, onSave, ...row } = props;
-
-  return (
-    <>
-      <ListItem.TextField
-        secure
-        {...row}
-        placeholder={set ? 'Saved in the Keychain' : 'Not set'}
-        {...useSecretDraft(onSave)}
+/*
+ * A secret never comes back from the Server: the field starts empty, says whether one is saved, and a typed value
+ * replaces it. Its rows sit straight in the section, so a saved one adds Clear as a row of its own.
+ */
+export const secretRows = (props: SecretRowProps): React.JSX.Element => (
+  <>
+    <SecretRow {...props} />
+    {props.set ? (
+      <Button
+        label={`Clear ${props.label}`}
+        variant="text"
+        onPress={() => props.onSave('')}
       />
-      {set ? <ClearSecretRow {...props} /> : null}
-    </>
-  );
-}
+    ) : null}
+  </>
+);
 
-// An empty secret clears it from the Keychain.
-function ClearSecretRow({ label, onSave }: SecretRowProps): React.JSX.Element {
+function SecretRow({ label, set, onSave }: SecretRowProps): React.JSX.Element {
   return (
-    <ListItem.Button
-      title={`Clear ${label}`}
-      tone="danger"
-
-      onPress={() => onSave('')}
+    <FieldGroup.SecretField
+      title={label}
+      placeholder={set ? 'Saved in the Keychain' : 'Not set'}
+      {...useSecretDraft(onSave)}
     />
   );
 }

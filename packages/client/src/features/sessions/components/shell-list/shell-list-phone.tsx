@@ -54,7 +54,7 @@ export function PhoneShellList(
   props: ShellListProps & { now: number },
 ): JSX.Element {
   return (
-    <List appearance="grouped" fit={false} accessibilityLabel="Shells">
+    <List appearance="cards" fit={false} accessibilityLabel="Shells">
       <List.Section title={shellsSummary(props.shells)}>
         {props.shells.map((shell) => (
           <ShellRow key={shell.id} {...props} shell={shell} />

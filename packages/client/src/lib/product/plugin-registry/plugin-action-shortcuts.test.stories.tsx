@@ -68,7 +68,7 @@ type Story = StoryObj<typeof meta>;
 export const FirstContributionOwnsShortcut: Story = {
   render: () => (
     <ActionShortcutScope>
-      <List appearance="grouped">
+      <List appearance="plain">
         <PluginSlot contributions={contributions} />
       </List>
     </ActionShortcutScope>

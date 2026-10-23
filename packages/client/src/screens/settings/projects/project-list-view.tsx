@@ -9,7 +9,6 @@ import {
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import { Page, type PageProps } from '@repo/kit/primitives/scaffolds/page';
-import { RowDrawingContext } from '@repo/kit/row-drawing-context';
 import type * as React from 'react';
 import { useState } from 'react';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
@@ -28,9 +27,7 @@ export function ProjectListView(
 function ProjectsPage(props: SearchedProps): React.JSX.Element {
   return (
     <Page {...pageProps(props)}>
-      <RowDrawingContext value="content">
-        <ProjectsBody {...props} />
-      </RowDrawingContext>
+      <ProjectsBody {...props} />
     </Page>
   );
 }
@@ -77,7 +74,7 @@ const loadingProjects: LoadingRow[] = [
 
 function LoadingProjects(): React.JSX.Element {
   return (
-    <List appearance="grouped">
+    <List appearance="cards">
       <List.Section>{loadingRows(loadingProjects)}</List.Section>
     </List>
   );

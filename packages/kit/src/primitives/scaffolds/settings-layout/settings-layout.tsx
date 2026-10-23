@@ -97,7 +97,7 @@ function SettingsGroups({
   ));
 
   return (
-    <List appearance="grouped" fit={!place.fills}>
+    <List appearance="plain" fit={!place.fills}>
       {groups}
       {place.end}
     </List>
@@ -142,18 +142,19 @@ function SettingsGroup({
   );
 }
 
+const pageRow = { disclosure: true, role: 'link' } as const;
+
 function SettingsPageRow({
   item: { id, icon, ...row },
   selected,
   onSelect,
 }: RowSelection & { item: SettingsLayoutItem }): ReactElement {
-  const shown = id === selected;
-
   return (
-    <ListItem.Link
+    <ListItem
       {...row}
+      {...pageRow}
       leading={icon && <Icon name={icon} size="md" />}
-      selected={shown}
+      selected={id === selected}
       onPress={onSelect && (() => onSelect(row.href))}
     />
   );

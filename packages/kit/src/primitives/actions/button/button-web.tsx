@@ -24,13 +24,20 @@ export function WebButton(props: ButtonProps): ReactElement {
       disabled={props.disabled ?? false}
       onPress={props.onPress}
       testID={props.testID}
-      className={cn(webClass, props.fullWidth === true && 'w-full')}
+      className={buttonClass(props)}
       style={(state) => webStyle(props, state)}
     >
       <WebLabel {...props} />
     </Pressable>
   );
 }
+
+const buttonClass = (props: ButtonProps): string =>
+  cn(
+    webClass,
+    joinedClasses[props.joined ?? 'none'],
+    props.fullWidth === true && 'w-full',
+  );
 
 function WebLabel(props: ButtonProps): ReactElement {
   return (
@@ -40,7 +47,17 @@ function WebLabel(props: ButtonProps): ReactElement {
   );
 }
 
-const webClass =
+/*
+ * A segment of a split button keeps the Button's radius on its outer corners; the corners facing the other segment
+ * take a small one, as Material 3's split button draws it.
+ */
+export const joinedClasses = {
+  none: '',
+  start: 'rounded-r-sm',
+  end: 'rounded-l-sm',
+};
+
+export const webClass =
   'h-10 shrink-0 items-center justify-center rounded-lg px-4 web:transition-all web:duration-150 web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
 
 interface WebState {
@@ -48,7 +65,7 @@ interface WebState {
   hovered?: boolean;
 }
 
-function webStyle(props: ButtonProps, state: WebState): ViewStyle {
+export function webStyle(props: ButtonProps, state: WebState): ViewStyle {
   return {
     ...sizes[props.size ?? buttonDefaults.size].style,
     ...webLook(props, state),

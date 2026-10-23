@@ -13,7 +13,7 @@ export function StatusSheetList({
   children: ReactNode;
 }): JSX.Element {
   return (
-    <List appearance="grouped" fit={false}>
+    <List appearance="cards" fit={false}>
       {children}
     </List>
   );

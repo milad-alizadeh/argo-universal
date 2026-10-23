@@ -32,12 +32,10 @@ export const ShowsTheFolderAndCheckout: Story = {
       canvas.getByRole('heading', { name: worktreeProject.name, level: 1 }),
     ).toBeVisible();
     await expect(
-      canvas.getByRole('group', { name: homePath(worktreeProject.path) }),
+      canvas.getByText(homePath(worktreeProject.path)),
     ).toBeVisible();
     await expect(canvas.getByText('New worktree')).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: 'Base branch' }),
-    ).toBeVisible();
+    await expect(canvas.getByText('Base branch')).toBeVisible();
   },
 };
 
@@ -46,7 +44,7 @@ export const OffersNoUnbuiltChanges: Story = {
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('switch', { name: 'Delete the worktree on archive' }),
-    ).toHaveAttribute('aria-disabled', 'true');
+    ).toBeDisabled();
     await expect(
       canvas.getByRole('button', { name: 'Remove Project' }),
     ).toBeDisabled();
@@ -60,25 +58,19 @@ export const BackLeavesTheProject: Story = {
   },
 };
 
-const deviceField = `Device, ${otherDeviceName}`;
-
 export const AProjectOnTheServerDeviceNamesNoDevice: Story = {
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('group', { name: homePath(worktreeProject.path) }),
+      canvas.getByText(homePath(worktreeProject.path)),
     ).toBeVisible();
-    await expect(
-      canvas.queryByRole('group', { name: /^Device/ }),
-    ).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Device')).not.toBeInTheDocument();
   },
 };
 
 export const AProjectOnAnotherDeviceNamesItsDevice: Story = {
   args: { otherDevice: otherDeviceName },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('group', { name: deviceField }),
-    ).toBeVisible();
+    await expect(canvas.getByText(otherDeviceName)).toBeVisible();
   },
 };
 
@@ -89,9 +81,7 @@ export const ALocalProjectHasNoBaseBranch: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Local')).toBeVisible();
-    await expect(
-      canvas.queryByRole('group', { name: 'Base branch' }),
-    ).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Base branch')).not.toBeInTheDocument();
   },
 };
 

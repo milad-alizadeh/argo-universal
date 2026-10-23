@@ -67,7 +67,7 @@ function FruitField(): ReactElement {
   const [value, setValue] = useState('Apple');
 
   return (
-    <List appearance="grouped" fit>
+    <List appearance="plain" fit>
       <ListSection>
         <FruitDrill value={value} onValueChange={setValue} />
       </ListSection>

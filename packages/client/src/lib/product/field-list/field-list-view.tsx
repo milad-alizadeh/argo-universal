@@ -16,7 +16,7 @@ export function FieldList(props: FieldListProps): ReactElement {
   return (
     <List
       fit={false}
-      appearance="grouped"
+      appearance="cards"
       testID={props.testID}
       header={props.header}
     >

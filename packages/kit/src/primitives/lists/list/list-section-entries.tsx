@@ -4,7 +4,7 @@ import { useSectionDrawing } from '../../../list-section-drawing';
 import { useInMenu } from '../../../menu-rows-context';
 import type { ListChild } from './list-children';
 import type { ListBlock } from './list-section-model';
-import { SectionContent, type SectionState } from './list-section-state';
+import type { SectionState } from './list-section-state';
 
 // Rows and grids flatten only at their drawing; shelves consume the blocks directly.
 export function sectionEntries(blocks: readonly ListBlock[]): ListChild[] {
@@ -29,7 +29,7 @@ export function sectionItems(
   return sectionEntries(blocks).map((entry) => ({
     ...entry,
     ...section.selection,
-    content: <SectionContent section={section}>{entry.content}</SectionContent>,
+    content: entry.content,
   }));
 }
 

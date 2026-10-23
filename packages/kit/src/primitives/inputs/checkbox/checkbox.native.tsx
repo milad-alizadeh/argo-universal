@@ -1,6 +1,5 @@
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import {
-  accessibilityHint,
   controlSize,
   type ModifierConfig,
   onTapGesture,
@@ -16,22 +15,19 @@ import { CheckboxBox } from './checkbox-box';
 import { CheckboxMark } from './checkbox-mark';
 import { MaterialRadioRow } from './checkbox-material-row';
 import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
-import { CheckboxFooter, useCheckboxState } from './checkbox-state';
+import { checkboxState } from './checkbox-state';
 
 export type { CheckboxProps } from './checkbox-props';
 
 const RadioRow = Platform.OS === 'ios' ? AppleRadioRow : MaterialRadioRow;
 
 export function Checkbox(props: CheckboxProps): React.JSX.Element {
-  const state = useCheckboxState(props);
+  const state = checkboxState(props);
 
   return (
-    <View className="gap-2">
-      <CheckboxAccessibility {...props} description={state.description}>
-        <CheckboxControl {...props} state={state} />
-      </CheckboxAccessibility>
-      <CheckboxFooter {...state} />
-    </View>
+    <CheckboxAccessibility {...props}>
+      <CheckboxControl {...props} state={state} />
+    </CheckboxAccessibility>
   );
 }
 
@@ -84,16 +80,11 @@ function surfaceClass(props: CheckboxProps): string {
 function checkboxModifiers(
   props: CheckboxRowProps,
 ): ComponentProps<typeof CheckboxBox>['modifiers'] {
-  const description = props.state.description;
-
   if (Platform.OS === 'android')
-    return [semantics({ contentDescription: spokenName(props) })];
+    return [semantics({ contentDescription: props.label })];
 
-  return [...appleStyle(props), accessibilityHint(description ?? '')];
+  return appleStyle(props);
 }
-
-const spokenName = (props: CheckboxRowProps): string =>
-  [props.label, props.state.description].filter(Boolean).join('. ');
 
 function appleStyle(props: CheckboxRowProps): ModifierConfig[] {
   return props.variant === 'inline'

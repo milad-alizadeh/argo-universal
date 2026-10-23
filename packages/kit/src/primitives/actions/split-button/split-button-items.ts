@@ -5,7 +5,7 @@ import type {
   LaidSplitProps,
   SplitButtonProps,
   SplitRows,
-} from './split-button-props';
+} from './split-button';
 
 type Choose<Value extends string> = (value: Value) => void;
 

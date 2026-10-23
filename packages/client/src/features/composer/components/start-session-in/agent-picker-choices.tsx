@@ -39,7 +39,7 @@ function listProps(): ChoiceListProps {
   return {
     fit: web,
     maxHeight: web ? maximumHeight : undefined,
-    appearance: web ? 'plain' : 'grouped',
+    appearance: web ? 'plain' : 'cards',
     testID: choicesTestID,
   };
 }

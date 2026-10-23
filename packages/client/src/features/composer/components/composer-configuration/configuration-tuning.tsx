@@ -2,6 +2,7 @@ import type { SessionConfigOption } from '@repo/contracts';
 import { Slider } from '@repo/kit/primitives/inputs/slider';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
+import { SwitchListItem } from '#lib/product/switch-list-item/switch-list-item';
 import { ConfigurationRowIcon, optionIcon } from './configuration-row-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
@@ -73,7 +74,7 @@ function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {
   const { configuration, option } = props;
 
   return (
-    <ListItem.Toggle
+    <SwitchListItem
       title={option.name}
       leading={optionIcon(option)}
       value={option.currentValue}

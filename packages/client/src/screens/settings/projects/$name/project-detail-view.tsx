@@ -1,15 +1,10 @@
 import type { ProjectInfo } from '@repo/contracts';
-import { List } from '@repo/kit/primitives/lists/list';
-import { ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import { Metadata } from '@repo/kit/primitives/scaffolds/metadata';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Page } from '@repo/kit/primitives/scaffolds/page';
-import { Spinner } from '@repo/kit/primitives/status/spinner';
-import { RowDrawingContext } from '@repo/kit/row-drawing-context';
 import type * as React from 'react';
 import { homePath } from '#features/settings';
-import { NewSessionsSection } from './project-detail-new-sessions';
-import { RemoveProject } from './project-detail-remove';
+import { newSessionsSection } from './project-detail-new-sessions';
+import { removeSection } from './project-detail-remove';
 
 export type ProjectLoad =
   | { status: 'loading' }
@@ -24,7 +19,7 @@ export interface ProjectDetailViewProps {
   // The Device the Project is on, given only when that is another Device; pairing does not exist yet, so the screen passes none.
   otherDevice?: string;
   onBack?: () => void;
-  // What Plugins add to this Project (the `argo/project/details/v1` Slot), drawn after Folder.
+  // What Plugins add to this Project (the `argo/project/details/v1` Slot), drawn below the FieldGroup.
   renderPluginSlot?: (project: ProjectInfo) => React.ReactNode;
 }
 
@@ -46,9 +41,7 @@ export function ProjectDetailView(
 ): React.JSX.Element {
   return (
     <Page title={props.name} caption={props.caption} onBack={props.onBack}>
-      <RowDrawingContext value="content">
-        <ProjectBody {...props} />
-      </RowDrawingContext>
+      <ProjectBody {...props} />
     </Page>
   );
 }
@@ -66,55 +59,51 @@ function ProjectBody({
 
 type UnloadedProps = { status: 'loading' | 'missing'; name: string };
 
-function UnloadedProject(props: UnloadedProps): React.JSX.Element {
+const UnloadedProject = ({
+  status,
+  name,
+}: UnloadedProps): React.JSX.Element => (
+  <FieldGroup>
+    <FieldGroup.Section>
+      <FieldGroup.Value title={unloadedTitle(status, name)} value="" />
+    </FieldGroup.Section>
+  </FieldGroup>
+);
+
+const unloadedTitle = (
+  status: UnloadedProps['status'],
+  name: string,
+): string =>
+  status === 'loading'
+    ? 'Loading the Project…'
+    : `The Server has no Project named ${name}.`;
+
+// FieldGroup finds its sections by element type, so each is an element built here, not a component.
+function ProjectSections(props: SectionsProps): React.JSX.Element {
+  const { project, otherDevice, renderPluginSlot } = props;
+
   return (
-    <List appearance="grouped">
-      <ListSection>
-        <UnloadedRow {...props} />
-      </ListSection>
-    </List>
-  );
-}
-
-function UnloadedRow({ status, name }: UnloadedProps): React.JSX.Element {
-  if (status === 'loading')
-    return (
-      <ListItem
-        title="Loading the Project…"
-        leading={<Spinner accessibilityLabel="Loading" />}
-      />
-    );
-
-  return <ListItem title={`The Server has no Project named ${name}.`} />;
-}
-
-function ProjectSections({
-  project,
-  otherDevice,
-  renderPluginSlot,
-}: SectionsProps): React.JSX.Element {
-  return (
-    <List appearance="grouped">
-      <FolderSection project={project} otherDevice={otherDevice} />
+    <>
+      <FieldGroup>
+        {folderSection(project, otherDevice)}
+        {newSessionsSection(project)}
+        {removeSection()}
+      </FieldGroup>
       {renderPluginSlot?.(project)}
-      <NewSessionsSection project={project} />
-      <RemoveProject />
-    </List>
+    </>
   );
 }
 
-function FolderSection({
-  project,
-  otherDevice,
-}: Pick<SectionsProps, 'project' | 'otherDevice'>): React.JSX.Element {
-  const path = homePath(project.path);
-
+function folderSection(
+  project: ProjectInfo,
+  otherDevice: string | undefined,
+): React.JSX.Element {
   return (
-    <Metadata title="Folder">
+    <FieldGroup.Section title="Folder">
       {otherDevice ? (
-        <Metadata.Label title="Device" text={otherDevice} />
+        <FieldGroup.Value title="Device" value={otherDevice} />
       ) : null}
-      <Metadata.Label title="Path" text={path} accessibilityLabel={path} />
-    </Metadata>
+      <FieldGroup.Value title="Path" value={homePath(project.path)} />
+    </FieldGroup.Section>
   );
 }

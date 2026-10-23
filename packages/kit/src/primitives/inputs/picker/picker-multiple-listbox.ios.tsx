@@ -1,4 +1,4 @@
-// iOS: a grouped List with the system trailing checkmark, inside the drill-in Sheet.
+// iOS: a List of cards with the system trailing checkmark, inside the drill-in Sheet.
 import type { ReactElement } from 'react';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -10,7 +10,7 @@ export function ChoiceListbox<Value extends string>(
   props: ListboxProps<Value>,
 ): ReactElement {
   return (
-    <List appearance="grouped" accessibilityLabel={props.label}>
+    <List appearance="cards" accessibilityLabel={props.label}>
       <List.Section
         selectionMode="multiple"
         selection={props.value ?? []}
