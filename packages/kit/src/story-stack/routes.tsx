@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 import { registeredStack } from './stack-registry';
-import { StackBasePathContext } from './stack-story-context';
+import { StackStoryContext } from './stack-story-context';
 
 // The App's dev route for a story's stack (`(dev)/story-stack/[story]`): a real native Stack, so a Page draws its header and pushes with Back as in the App. Nothing renders in production.
 export function StackStoryLayout(): ReactNode {
@@ -10,9 +10,9 @@ export function StackStoryLayout(): ReactNode {
   if (!__DEV__) return null;
 
   return (
-    <StackBasePathContext value={`/story-stack/${story}`}>
+    <StackStoryContext value={story}>
       <Stack />
-    </StackBasePathContext>
+    </StackStoryContext>
   );
 }
 

@@ -68,6 +68,7 @@ export const PagePickerChoosesPhone = atWidth(widths.Phone, {
     );
 
     const page = within(canvasElement.ownerDocument.body);
+
     const search = await page.findByRole('searchbox', {
       name: 'Search Project',
     });
