@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { createContext, use, type ComponentType } from 'react';
 
 // The pages a story can push to, by name.
@@ -23,6 +23,6 @@ export function useStackPush(): (page: string) => void {
   const router = useRouter();
   const base = use(StackBasePathContext);
 
-  // The dev route is not in the App's typed routes, which only know the App's own.
-  return (page) => router.push(`${base}/${page}`);
+  // The path is built at run time, so it is not one of the typed routes the App's build knows.
+  return (page) => router.push(`${base}/${page}` as Href);
 }

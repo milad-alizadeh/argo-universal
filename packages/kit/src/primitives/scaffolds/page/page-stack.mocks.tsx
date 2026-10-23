@@ -1,8 +1,8 @@
-import { FieldGroup, Host, Picker } from '@expo/ui';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { Action, ActionList } from '#primitives/actions/action-list';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { useStackPush } from '#story-stack';
@@ -74,34 +74,62 @@ export function DetailPage(): React.JSX.Element {
   );
 }
 
-const options = ['System', 'Light', 'Dark'];
+const themes = [
+  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+];
+
+const projects = [
+  'Alder',
+  'Aspen',
+  'Beech',
+  'Birch',
+  'Cedar',
+  'Elm',
+  'Maple',
+  'Oak',
+].map((name) => ({ value: name.toLowerCase(), label: name }));
 
 // A settings form in the stack, so a picker that presents as a page pushes onto it.
 export function SettingsPage(): React.JSX.Element {
+  const [project, setProject] = useState('alder');
+  const [theme, setTheme] = useState('system');
+  const [notify, setNotify] = useState(true);
+  const [name, setName] = useState('Argo');
+
   return (
     <Page title="Settings">
-      <Host style={{ flex: 1 }}>
-        <FieldGroup>
-          <FieldGroup.Section title="Appearance">
-            <AppearancePicker />
-          </FieldGroup.Section>
-        </FieldGroup>
-      </Host>
+      <FieldGroup>
+        <FieldGroup.Section title="General">
+          <FieldGroup.Picker
+            title="Project"
+            options={projects}
+            presentation="page"
+            searchable
+            value={project}
+            onValueChange={setProject}
+          />
+          <FieldGroup.Picker
+            title="Appearance"
+            options={themes}
+            presentation="menu"
+            value={theme}
+            onValueChange={setTheme}
+          />
+          <FieldGroup.Toggle
+            title="Notifications"
+            value={notify}
+            onValueChange={setNotify}
+          />
+          <FieldGroup.TextField
+            title="Name"
+            placeholder="Name"
+            value={name}
+            onChangeText={setName}
+          />
+        </FieldGroup.Section>
+      </FieldGroup>
     </Page>
-  );
-}
-
-function AppearancePicker(): React.JSX.Element {
-  const [selected, setSelected] = useState('System');
-
-  return (
-    <Picker
-      selectedValue={selected}
-      onValueChange={(value) => setSelected(String(value))}
-    >
-      {options.map((label) => (
-        <Picker.Item key={label} label={label} value={label} />
-      ))}
-    </Picker>
   );
 }

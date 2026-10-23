@@ -6,6 +6,7 @@ import {
   DetailPage,
   HeaderActionsPage,
   PushPage,
+  SettingsPage,
   onAction,
 } from './page-stack.mocks';
 import { atWidth, pageWidths as widths } from './page-widths.mocks';
@@ -54,5 +55,30 @@ export const PushAndBackPhone = atWidth(widths.Phone, {
       expect(canvas.getByRole('button', { name: 'Open detail' })).toBeVisible(),
     );
     await expect(canvas.queryByRole('heading', { name: 'Detail' })).toBeNull();
+  },
+});
+
+// The page picker opens from the settings form, filters by search, and the choice shows on its row.
+export const PagePickerChoosesPhone = atWidth(widths.Phone, {
+  decorators: [withStack()],
+  render: () => <SettingsPage />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: /^Project/ }),
+    );
+
+    const page = within(canvasElement.ownerDocument.body);
+    const search = await page.findByRole('searchbox', {
+      name: 'Search Project',
+    });
+
+    await userEvent.type(search, 'ma');
+    await expect(page.queryByRole('radio', { name: /^Oak/ })).toBeNull();
+    await userEvent.click(await page.findByRole('radio', { name: /Maple/ }));
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: /^Project/ }),
+      ).toHaveTextContent('Maple'),
+    );
   },
 });
