@@ -56,7 +56,7 @@ function chevron<Value extends string>(
     <IconButton
       icon="chevron-down"
       variant={props.primary ? 'primary' : 'secondary'}
-      size={props.size === 'xs' ? 'sm' : 'md'}
+      size={props.size === 'xs' ? 'md' : 'lg'}
       accessibilityLabel={props.menuLabel}
       disabled={props.disabled}
     />

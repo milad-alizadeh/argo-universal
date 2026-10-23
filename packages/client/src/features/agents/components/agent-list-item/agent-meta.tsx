@@ -47,7 +47,7 @@ function UnsupportedNote({ agent }: AgentMetaProps): React.JSX.Element | null {
 const linkButton = (link: Link, url: string): React.JSX.Element => (
   <IconButton
     icon={link.icon}
-    size="xs"
+    size="sm"
     variant="ghost"
     accessibilityLabel={link.label}
     onPress={() => void Linking.openURL(url)}

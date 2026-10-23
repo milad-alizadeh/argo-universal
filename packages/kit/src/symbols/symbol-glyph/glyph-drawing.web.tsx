@@ -70,10 +70,25 @@ interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
  */
 const appleSymbolScale = 0.8;
 
+// SF's chevrons read large beside its other symbols, so a chevron draws at three quarters of its set size.
+const chevronScale = 0.75;
+
+const chevrons = new Set<SFSymbol>([
+  'chevron.up',
+  'chevron.down',
+  'chevron.left',
+  'chevron.right',
+  'chevron.forward',
+  'chevron.up.chevron.down',
+]);
+
+const symbolScale = (sf: SFSymbol): number =>
+  appleSymbolScale * (chevrons.has(sf) ? chevronScale : 1);
+
 // The system image is the mask and the text colour fills it, so the symbol follows colour like the other icons.
 function MaskedSymbol(props: MaskedSymbolProps): React.JSX.Element | null {
   const ratio = globalThis.devicePixelRatio;
-  const pointSize = Math.round(props.pixels * appleSymbolScale * ratio);
+  const pointSize = Math.round(props.pixels * symbolScale(props.sf) * ratio);
   const image = useSymbolImage(props.render, { name: props.sf, pointSize });
 
   if (!image) return null;

@@ -80,7 +80,7 @@ function queryProps(
 const clearDefaults: ComponentProps<typeof IconButton> = {
   icon: 'close',
   variant: 'ghost',
-  size: 'xs',
+  size: 'sm',
   accessibilityLabel: 'Clear search',
 };
 

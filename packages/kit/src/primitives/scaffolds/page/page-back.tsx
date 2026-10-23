@@ -35,7 +35,7 @@ function BackButton({ onBack }: { onBack: () => void }): ReactElement {
   return (
     <IconButton
       icon="chevron-left"
-      size="xs"
+      size="sm"
       variant="ghost"
       accessibilityLabel="Back"
       onPress={onBack}

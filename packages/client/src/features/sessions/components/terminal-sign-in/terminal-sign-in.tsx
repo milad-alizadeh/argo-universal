@@ -79,7 +79,7 @@ function CloseButton({
     <IconButton
       icon="close"
       variant="ghost"
-      size="xs"
+      size="sm"
       accessibilityLabel="Close"
       onPress={onClose}
     />

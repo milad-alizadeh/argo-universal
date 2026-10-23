@@ -46,7 +46,7 @@ function HeaderChevron({ hovered }: { hovered: boolean }): ReactElement {
     <LineSlot>
       <DisclosureChevron
         open={useContext(OpenContext)}
-        size="xs"
+        size="sm"
         className={headerColour(hovered)}
       />
     </LineSlot>

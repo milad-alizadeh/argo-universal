@@ -16,17 +16,10 @@ export type ChangeStageProps = ChangeState & {
 
 type GlyphProps = ChangeState & {
   form?: 'bare' | 'disc';
-  size?: 'xs' | 'sm';
 };
 
 export function ChangeStageIcon(props: GlyphProps): ReactElement {
-  return (
-    <ToneMark
-      {...resolveChangeStage(props)}
-      form={props.form}
-      size={props.size}
-    />
-  );
+  return <ToneMark {...resolveChangeStage(props)} form={props.form} />;
 }
 
 function stageLabel(props: ChangeStageProps): string {

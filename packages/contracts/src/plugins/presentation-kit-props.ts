@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { iconSymbol, iconSize } from '../kit-symbols/icon-schema';
-import { iconButtonDefaults, tones } from '../kit-tokens';
+import { iconButtonDefaults, iconButtonSizes, tones } from '../kit-tokens';
 import { imageAsset } from './image-wire-part';
 import { handler } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
@@ -53,7 +53,8 @@ export const iconButtonProps = z.object({
     .nullable()
     .optional()
     .describe('Draw the filled icon, for a button that is on.'),
-  size: iconSize
+  size: z
+    .enum(iconButtonSizes)
     .optional()
     .meta({ default: iconButtonDefaults.size })
     .describe('Button size.'),

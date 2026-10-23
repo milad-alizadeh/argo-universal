@@ -89,11 +89,7 @@ export function CheckboxIndicator(
   return (
     <View aria-hidden className={markClassName(props)}>
       {props.value && (
-        <Icon
-          name="check"
-          size={props.variant ? 'xs' : 'sm'}
-          className="text-primary-foreground"
-        />
+        <Icon name="check" size="sm" className="text-primary-foreground" />
       )}
     </View>
   );
@@ -133,7 +129,7 @@ function optionClass(props: CheckboxProps): string {
 function SelectedMark(props: CheckboxProps): React.JSX.Element | null {
   if (props.selection !== 'single' || !props.value) return null;
 
-  return <Icon name="check" size="xs" />;
+  return <Icon name="check" size="sm" />;
 }
 
 function optionMarkClass(props: CheckboxIndicatorProps): string | undefined {

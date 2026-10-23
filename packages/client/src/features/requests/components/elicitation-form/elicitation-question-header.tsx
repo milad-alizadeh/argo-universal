@@ -89,7 +89,7 @@ function DismissButton(props: ElicitationHeaderProps): ReactElement {
       variant="ghost"
       accessibilityLabel="Dismiss"
       disabled={props.inactive}
-      size="xs"
+      size="sm"
       onPress={props.onDismiss}
     />
   );

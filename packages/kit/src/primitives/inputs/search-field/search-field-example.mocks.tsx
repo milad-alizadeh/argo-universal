@@ -46,7 +46,7 @@ function AddAction(): React.JSX.Element {
   return (
     <IconButton
       icon="add"
-      size="xs"
+      size="sm"
       variant="ghost"
       accessibilityLabel="Add item"
     />

@@ -8,7 +8,7 @@ import { Icon } from './icon';
 
 type IconName = (typeof iconNames)[number];
 
-const sizes: IconSize[] = ['xs', 'sm', 'md', 'lg'];
+const sizes: IconSize[] = ['sm', 'md', 'lg'];
 
 const iconButtonExamples = [
   { label: 'Add', icon: 'add' },
@@ -60,7 +60,7 @@ function FilledIconButton(props: {
       aria-label={props.label}
       icon={props.icon}
       accessibilityLabel={props.label}
-      size="xs"
+      size="sm"
       variant="primary"
     />
   );

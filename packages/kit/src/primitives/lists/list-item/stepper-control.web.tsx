@@ -27,7 +27,7 @@ function StepAction({ row, direction }: StepActionProps): ReactElement {
       {...stepAction(row, direction)}
       icon={direction < 0 ? 'subtract' : 'add'}
       variant="ghost"
-      size="xs"
+      size="sm"
     />
   );
 }

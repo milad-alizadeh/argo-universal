@@ -60,7 +60,9 @@ export const buttonSizes = ['xs', 'sm', 'md', 'lg'] as const;
  */
 export const buttonDefaults = { variant: 'default', size: 'md' } as const;
 
-export const iconButtonDefaults = { variant: 'primary', size: 'sm' } as const;
+export const iconButtonSizes = ['sm', 'md', 'lg'] as const;
+
+export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;
 

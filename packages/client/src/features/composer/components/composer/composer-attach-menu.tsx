@@ -31,7 +31,7 @@ export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
 const attachTriggerProps = {
   icon: 'add',
   variant: 'ghost',
-  size: 'xs',
+  size: 'sm',
   accessibilityLabel: 'Attach',
 } as const;
 

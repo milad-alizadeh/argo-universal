@@ -54,7 +54,7 @@ function glyph(props: ToneMarkProps): ReactElement {
   return (
     <Icon
       name={props.icon}
-      size={props.size ?? 'xs'}
+      size={props.size ?? 'sm'}
       className={props.form === 'disc' ? palette.ink : palette.bare}
     />
   );
