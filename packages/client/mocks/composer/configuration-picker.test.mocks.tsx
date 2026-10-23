@@ -37,7 +37,9 @@ export function pickers(width: number, agentIndex: number): Story {
         await canvas.findByRole('button', { name: agentModelLabel }),
       );
       await waitFor(async () =>
-        expect(await overlay.findByRole('slider')).toBeVisible(),
+        expect(
+          await overlay.findByRole('slider', { name: 'Effort' }),
+        ).toBeVisible(),
       );
       await expectEffortControlsVisible();
       await expectHighEffort({ canvas, userEvent, width, catalog });

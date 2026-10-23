@@ -78,11 +78,23 @@ export const fieldGroupSliderProps = fieldGroupFieldProps.extend({
   min: z.number().finite().describe('The minimum value.'),
   max: z.number().finite().describe('The maximum value.'),
   step: z.number().positive().optional().describe('The increment.'),
+  valueLabel: z
+    .string()
+    .optional()
+    .describe(
+      'The value in words, such as “Medium”: shown at the row’s end and announced with the title by assistive technology.',
+    ),
   onValueChange: handler('onValueChange'),
 });
 
 export const fieldGroupValueProps = fieldGroupRowProps.extend({
   value: z.string().describe('The read-only value at the row’s end.'),
+  loading: z
+    .boolean()
+    .optional()
+    .describe(
+      'The row is a placeholder while its value is on its way: a bar as wide as the title stands in for it, and assistive technology skips it.',
+    ),
 });
 
 export const fieldGroupLinkProps = fieldGroupRowProps.extend({

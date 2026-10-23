@@ -148,6 +148,8 @@ export const RunningTurnWithoutTuning: Story = {
         ),
       ).toBeVisible(),
     );
-    await expect(overlay.queryByRole('slider')).not.toBeInTheDocument();
+    await expect(
+      overlay.queryByRole('slider', { name: 'Effort' }),
+    ).not.toBeInTheDocument();
   },
 };

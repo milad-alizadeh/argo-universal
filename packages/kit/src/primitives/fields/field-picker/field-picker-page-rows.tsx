@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { InChoiceMenu } from '#kit/menu-rows-context';
-import { Icon } from '#primitives/content/icon';
+import { AgentLogo } from '#primitives/content/agent-logo';
+import { Icon, IconSlot } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import {
@@ -79,20 +80,38 @@ function ChoiceSection(props: SectionProps): ReactElement {
 function PageRow(
   props: FieldPickerPageProps & { option: FieldPickerOption },
 ): ReactElement {
-  const { option } = props;
-
   return (
     <ListItem
-      id={option.value}
-      title={option.label}
-      subtitle={option.subtitle}
-      leading={option.icon ? <Icon name={option.icon} size="md" /> : undefined}
-      accessibilityLabel={option.label}
+      {...optionItemProps(props.option)}
       accessibilityRole={rowRole(props)}
     />
   );
 }
 
+const optionItemProps = (
+  option: FieldPickerOption,
+): React.ComponentProps<typeof ListItem> => ({
+  id: option.value,
+  title: option.label,
+  subtitle: option.subtitle,
+  leading: optionLeading(option),
+  tone: option.tone,
+  pending: option.pending,
+  accessibilityLabel: option.label,
+});
+
 // A single choice is a radio; a multiple choice's rows take the role the List gives a toggled row.
 const rowRole = (props: FieldPickerPageProps): 'radio' | undefined =>
   props.multiple ? undefined : 'radio';
+
+// A logo where the option has one, else its icon.
+function optionLeading(option: FieldPickerOption): ReactElement | undefined {
+  if (option.logo)
+    return (
+      <IconSlot size="md">
+        <AgentLogo logo={option.logo} label={option.label} size="md" />
+      </IconSlot>
+    );
+
+  return option.icon ? <Icon name={option.icon} size="md" /> : undefined;
+}

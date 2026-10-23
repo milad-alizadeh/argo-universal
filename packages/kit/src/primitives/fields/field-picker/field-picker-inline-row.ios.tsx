@@ -1,4 +1,10 @@
-import { Button, HStack, Spacer, VStack } from '@expo/ui/swift-ui';
+import {
+  Button,
+  HStack,
+  ProgressView,
+  Spacer,
+  VStack,
+} from '@expo/ui/swift-ui';
 import {
   accessibilityAddTraits,
   buttonStyle,
@@ -29,16 +35,20 @@ const subtitleModifiers = [
 
 // An option's title (and icon) and its subtitle under it.
 function OptionLabel(props: { option: FieldPickerOption }): ReactElement {
+  const { option } = props;
+
   return (
     <>
-      <RowTitle title={props.option.label} leading={props.option.icon} />
-      {props.option.subtitle ? (
-        <NativeText modifiers={subtitleModifiers}>
-          {props.option.subtitle}
-        </NativeText>
-      ) : null}
+      <RowTitle title={option.label} leading={option.icon} tone={option.tone} />
+      <Subtitle text={option.subtitle} />
     </>
   );
+}
+
+function Subtitle(props: { text?: string }): ReactElement | null {
+  if (!props.text) return null;
+
+  return <NativeText modifiers={subtitleModifiers}>{props.text}</NativeText>;
 }
 
 const selectedTrait = accessibilityAddTraits(['isSelected']);
@@ -51,6 +61,16 @@ const pressModifiers = (
   ...offModifiers(props),
   ...(selected ? [selectedTrait] : []),
 ];
+
+// A choice being applied shows a spinner where its check will be.
+function mark(
+  option: FieldPickerOption,
+  selected: boolean,
+): ReactElement | null {
+  if (option.pending) return <ProgressView />;
+
+  return selected ? <NativeSymbol name="check" size="sm" /> : null;
+}
 
 /*
  * One option as a row of its own, a `multiple` inline choice's and a page's: the option and, once chosen, a check at
@@ -66,7 +86,7 @@ export function OptionRow(props: OptionRowProps): ReactElement {
           <OptionLabel option={props.option} />
         </VStack>
         <Spacer />
-        {selected ? <NativeSymbol name="check" size="sm" /> : null}
+        {mark(props.option, selected)}
       </HStack>
     </Button>
   );

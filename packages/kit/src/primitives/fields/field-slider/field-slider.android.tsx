@@ -1,19 +1,35 @@
 import { Slider } from '@expo/ui';
+import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
+import { NativeText } from '#primitives/content/native-text';
 import type { FieldGroupKitProps } from '../../kit-props';
 /* oxlint-disable-next-line no-restricted-imports -- the Android-only drawing stays out of the folder's index so the web never loads Compose. */
 import { RowListItem } from '../field-row/field-row-list-item.android';
-import { sliderProps } from './field-slider-props';
+import { sliderProps, spokenValue } from './field-slider-props';
 
-// A ListItem with the title as its headline and Expo UI's universal Slider under it, in the section's card.
-export function FieldSlider(
-  props: FieldGroupKitProps<'FieldGroup.Slider'>,
-): ReactElement {
+type Props = FieldGroupKitProps<'FieldGroup.Slider'>;
+
+/*
+ * A ListItem with the title as its headline, the value's words at its end and Expo UI's universal Slider under it,
+ * in the section's card. TalkBack hears the name and the value together: Compose's stock semantics take only a
+ * content description.
+ */
+export function FieldSlider(props: Props): ReactElement {
   return (
     <RowListItem
       title={props.title}
       disabled={props.disabled}
-      supporting={<Slider {...sliderProps(props)} />}
+      trailing={<ValueWords {...props} />}
+      supporting={<Slider {...sliderProps(props, [described(props)])} />}
     />
   );
+}
+
+const described = (props: Props): ReturnType<typeof semantics> =>
+  semantics({ contentDescription: `${props.title}, ${spokenValue(props)}` });
+
+function ValueWords(props: Props): ReactElement | null {
+  if (!props.valueLabel) return null;
+
+  return <NativeText tone="muted">{props.valueLabel}</NativeText>;
 }

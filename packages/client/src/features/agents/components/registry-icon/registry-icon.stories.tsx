@@ -1,6 +1,6 @@
 import { iconSizes } from '@repo/contracts/kit-symbols';
+import { RegistryIcon } from '@repo/kit/primitives/content/agent-logo';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { RegistryIcon } from './registry-icon';
 import {
   loadedRegistryIcon,
   unavailableRegistryIcon,

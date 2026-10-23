@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
+import { SkeletonBar } from '../../../list-skeleton';
 import type { FieldGroupKitProps } from '../../kit-props';
 
 type FieldValueProps = FieldGroupKitProps<'FieldGroup.Value'>;
@@ -16,6 +17,8 @@ const spokenLabel = (props: FieldValueProps): string =>
  * Assistive tech reads the pair as one group.
  */
 export function FieldValue(props: FieldValueProps): ReactElement {
+  if (props.loading) return <Placeholder {...props} />;
+
   return (
     <View accessible role="group" accessibilityLabel={spokenLabel(props)}>
       <Row alignment="center">
@@ -23,6 +26,15 @@ export function FieldValue(props: FieldValueProps): ReactElement {
         <Spacer flexible />
         <NativeText tone="muted">{props.value}</NativeText>
       </Row>
+    </View>
+  );
+}
+
+// A bar as wide as the title it stands in for; none of it is read, and the row is not a group of words.
+function Placeholder(props: FieldValueProps): ReactElement {
+  return (
+    <View aria-hidden>
+      <SkeletonBar kind="title" text={props.title} />
     </View>
   );
 }

@@ -91,7 +91,9 @@ export async function browseResponsiveMenu({
         name: `Back to ${agentModelLabel}`,
       }),
     );
-    await expect(await overlay.findByRole('slider')).toBeVisible();
+    await expect(
+      await overlay.findByRole('slider', { name: 'Effort' }),
+    ).toBeVisible();
   } else {
     await waitFor(() =>
       expect(overlay.getByRole('dialog', { name: 'Model' })).toBeVisible(),

@@ -1,7 +1,7 @@
 import { layoutWidths, wideBreakpoint } from '@repo/kit/each-layout';
 import { shownText } from '@repo/kit/mocks/shown-text';
 import { settleViewport } from '@repo/kit/settle-viewport';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -90,5 +90,26 @@ export const ReturnSends: Story = {
       attachments: [],
     });
     await expect(shown).toBe(spacingPrompt);
+  },
+};
+
+// The inline Mode choices are radios: the arrow keys, Home and End move between them, one at a time.
+export const ArrowKeysMoveThroughModeWide: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
+    const overlay = within(document.body);
+    const radios = await overlay.findAllByRole('radio');
+    const [first, second] = radios;
+    const last = radios.at(-1);
+    first?.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(second).toHaveFocus();
+    await userEvent.keyboard('{ArrowUp}');
+    await expect(first).toHaveFocus();
+    await userEvent.keyboard('{End}');
+    await expect(last).toHaveFocus();
+    await userEvent.keyboard('{Home}');
+    await expect(first).toHaveFocus();
   },
 };

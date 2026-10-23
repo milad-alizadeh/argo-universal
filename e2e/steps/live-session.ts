@@ -73,16 +73,16 @@ Then(
 
 const chooseModelLabel = /^Model,/;
 
-// The slider carries no value text; the trigger shows the applied effort on a desktop.
-const effortTrigger = (page: Page): Locator =>
-  page.getByRole('button', { name: agentModelLabel, includeHidden: true });
+// The Effort slider names itself and speaks its level; Configure must be open.
+const effortSlider = (page: Page): Locator =>
+  page.getByRole('slider', { name: 'Effort' });
 
 async function chooseEffort(page: Page, effort: string): Promise<void> {
-  const slider = page.getByRole('slider');
+  const slider = effortSlider(page);
   await slider.focus();
   await slider.press('Home');
 
-  if (!(await effortTrigger(page).innerText()).includes(effort))
+  if ((await slider.getAttribute('aria-valuetext')) !== effort)
     await slider.press('End');
 }
 
@@ -138,5 +138,5 @@ async function expectModel(page: Page, model: string): Promise<void> {
 }
 
 async function expectEffort(page: Page, effort: string): Promise<void> {
-  await expect(effortTrigger(page)).toContainText(effort);
+  await expect(effortSlider(page)).toHaveAttribute('aria-valuetext', effort);
 }

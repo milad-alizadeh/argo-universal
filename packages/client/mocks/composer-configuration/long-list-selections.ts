@@ -45,7 +45,9 @@ async function assertModelMenuInsideWindow(): Promise<void> {
     overlay.getByRole('dialog', { name: 'Model' }).getBoundingClientRect()
       .bottom,
   ).toBeLessThanOrEqual(window.innerHeight);
-  await waitFor(() => expect(overlay.getByRole('slider')).toBeVisible());
+  await waitFor(() =>
+    expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
+  );
 }
 
 async function selectLongModel(

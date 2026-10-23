@@ -38,8 +38,5 @@ Then('the Agent picker remembers {string}', async ({ page }, name: string) => {
     page.getByRole('button', { name: /^Agent(?:,|$)/ }),
   ).toContainText(name);
   await page.getByRole('button', { name: /^Agent(?:,|$)/ }).click();
-  await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
+  await expect(page.getByRole('radio', { name, exact: true })).toBeChecked();
 });

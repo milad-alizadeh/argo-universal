@@ -2,6 +2,7 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { agentName } from './configuration-values';
+import type { AgentPick } from './use-agent-pick';
 
 type Props = { configuration: ComposerConfigurationProps };
 
@@ -13,11 +14,12 @@ type Props = { configuration: ComposerConfigurationProps };
  */
 export function agentRow(
   configuration: Props['configuration'],
+  picking: AgentPick,
 ): ReactElement | null {
   const { agentChoices } = configuration;
 
   return agentChoices
-    ? agentPicker(configuration, agentChoices)
+    ? agentPicker({ configuration, choices: agentChoices, picking })
     : agentValue(configuration);
 }
 
@@ -34,23 +36,44 @@ type Cfg = Props['configuration'];
 
 type Choices = NonNullable<Cfg['agentChoices']>;
 
-function agentPicker(configuration: Cfg, choices: Choices): ReactElement {
+type PickerProps = React.ComponentProps<typeof FieldGroup.Picker>;
+
+interface PickerContext {
+  configuration: Cfg;
+  choices: Choices;
+  picking: AgentPick;
+}
+
+function agentPicker(context: PickerContext): ReactElement {
   return (
     <FieldGroup.Picker
       key="agent"
       title="Agent"
       presentation="page"
-      value={configuration.agent?.id ?? ''}
-      summary={agentSummary(configuration)}
-      options={agentOptions(choices)}
-      onValueChange={choices.onChange}
-      footerAction={{ label: 'Add Agents', onPress: choices.onAdd }}
+      value={context.configuration.agent?.id ?? ''}
+      summary={agentSummary(context.configuration)}
+      options={agentOptions(context)}
+      onValueChange={context.picking.pick}
+      footerAction={{ label: 'Add Agents', onPress: context.choices.onAdd }}
     />
   );
 }
 
-const agentOptions = (choices: Choices): { value: string; label: string }[] =>
-  choices.agents.map(({ id, name }) => ({ value: id, label: name }));
+/*
+ * Each Agent's own logo where the row can draw an image, the Agent glyph where it cannot (a phone's native list), and a
+ * spinner on the Agent whose settings are on their way: the page holds until they are in.
+ */
+const agentOptions = ({
+  choices,
+  picking,
+}: PickerContext): PickerProps['options'] =>
+  choices.agents.map(({ id, name, icon }) => ({
+    value: id,
+    label: name,
+    icon: 'agent',
+    logo: icon,
+    pending: picking.pending === id,
+  }));
 
 const agentSummary = (configuration: Cfg): string =>
   agentName(configuration.agent, configuration.agentId) || 'Choose Agent';

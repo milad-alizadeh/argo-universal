@@ -99,7 +99,9 @@ async function openDefaultEffort(
   const trigger = await canvas.findByRole('button', { name: agentModelLabel });
   await userEvent.click(trigger);
 
-  const slider = await within(document.body).findByRole('slider');
+  const slider = await within(document.body).findByRole('slider', {
+    name: 'Effort',
+  });
 
   await waitFor(() => expect(slider).toBeVisible());
 

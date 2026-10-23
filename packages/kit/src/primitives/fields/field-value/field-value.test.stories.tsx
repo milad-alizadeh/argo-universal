@@ -33,3 +33,13 @@ export const ShowsValue: Story = {
     await expect(canvas.getByText('1.2.3')).toBeVisible();
   },
 };
+
+export const LoadingHidesTheRowFromReaders: Story = {
+  args: { loading: true, value: '' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Version')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+  },
+};

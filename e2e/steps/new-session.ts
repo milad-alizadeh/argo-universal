@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
@@ -68,11 +68,18 @@ export async function openConfiguration(page: Page): Promise<void> {
   await page.getByRole('button', { name: agentModelLabel }).click();
 }
 
+// The Agent page: a pushed page inside Configure, with its own heading.
+function selectAgentPage(page: Page): Locator {
+  return page
+    .getByRole('dialog', { name: 'Agent', exact: true })
+    .or(page.getByRole('heading', { name: 'Agent', exact: true }));
+}
+
 export async function chooseAgent(page: Page, label: string): Promise<void> {
   await openConfiguration(page);
   await page.getByRole('button', { name: /^Agent(?:,|$)/ }).click();
-  await page.getByRole('button', { name: label, exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Agent' })).toHaveCount(0);
+  await page.getByRole('radio', { name: label, exact: true }).click();
+  await expect(selectAgentPage(page)).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: /^Agent(?:,|$)/ }),
   ).toContainText(label);

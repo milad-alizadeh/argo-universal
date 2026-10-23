@@ -39,3 +39,11 @@ export const ShowsTitle: Story = {
     await expect(canvas.getByText('Label')).toBeVisible();
   },
 };
+
+export const NamesItselfAndSpeaksItsValue: Story = {
+  args: { valueLabel: 'Medium' },
+  play: async ({ canvas }) => {
+    const slider = canvas.getByRole('slider', { name: 'Label' });
+    await expect(slider).toHaveAttribute('aria-valuetext', 'Medium');
+  },
+};

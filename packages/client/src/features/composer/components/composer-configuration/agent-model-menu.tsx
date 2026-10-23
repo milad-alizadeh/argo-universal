@@ -3,6 +3,10 @@ import { PopoverHoverGroup } from '@repo/kit/primitives/overlays/popover';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { agentRow } from './agent-row';
+import {
+  loadingSections,
+  useConfigurationRows,
+} from './configuration-skeleton';
 import { effortControl, switchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
@@ -12,6 +16,7 @@ import {
 } from './configuration-values';
 import { modelPicker } from './model-picker';
 import { optionPickers } from './option-pickers';
+import { useAgentPick, type AgentPick } from './use-agent-pick';
 
 interface MenuProps {
   configuration: ComposerConfigurationProps;
@@ -22,6 +27,13 @@ interface ContentsProps extends MenuProps {
   wide: boolean;
 }
 
+interface SectionProps extends ContentsProps {
+  picking: AgentPick;
+  rows: ReturnType<typeof useConfigurationRows>;
+}
+
+const nothing = (): void => {};
+
 /*
  * Configure's settings as a FieldGroup, with no section titles (ADR-0042): the Agent, Model and the Agent's
  * other choices open their pages beside it on a desktop and push them on the Sheet's own stack elsewhere; Effort
@@ -29,23 +41,41 @@ interface ContentsProps extends MenuProps {
  */
 export function AgentModelMenu(props: ContentsProps): ReactElement {
   const layout = useMenuLayout(props);
+  const sections = useMenuSections(props);
 
   return (
     <View className="native:flex-1 bg-content web:wide:bg-card" {...layout}>
       <PopoverHoverGroup>
-        <FieldGroup>{menuSections(props)}</FieldGroup>
+        <FieldGroup>{sections}</FieldGroup>
         <ConfigurationStatus configuration={props.configuration} />
       </PopoverHoverGroup>
     </View>
   );
 }
 
+function useMenuSections(props: ContentsProps): ReactNode[] {
+  const { configuration } = props;
+  const change = configuration.agentChoices?.onChange ?? nothing;
+  const picking = useAgentPick(configuration, change);
+
+  const rows = useConfigurationRows(
+    configuration,
+    loadingConfiguration(configuration),
+  );
+
+  return menuSections({ ...props, picking, rows });
+}
+
 /*
- * The settled sections, or the Agent and a Model row while the Agent's settings are on their way. A FieldGroup
+ * The settled sections, or the Agent and placeholder rows while the Agent's settings are on their way. A FieldGroup
  * reads its sections from what it is given, so these are calls rather than components.
  */
-function menuSections(props: ContentsProps): ReactNode[] {
-  if (loadingConfiguration(props.configuration)) return [loadingSection(props)];
+function menuSections(props: SectionProps): ReactNode[] {
+  if (loadingConfiguration(props.configuration))
+    return loadingSections({
+      rows: props.rows,
+      agent: agentRow(props.configuration, props.picking),
+    });
 
   return [choicesSection(props), tuningSection(props)];
 }
@@ -69,17 +99,7 @@ function configurationNotice(
     : undefined;
 }
 
-// The Agent keeps its place and its press while its settings load: it is how the reader got here.
-function loadingSection(props: ContentsProps): ReactElement {
-  return (
-    <FieldGroup.Section key="choices">
-      {agentRow(props.configuration)}
-      <FieldGroup.Value title="Model" value="Loading" />
-    </FieldGroup.Section>
-  );
-}
-
-function choicesSection(props: ContentsProps): ReactElement {
+function choicesSection(props: SectionProps): ReactElement {
   const { configuration } = props;
 
   const notice = hasTuning(configuration)
@@ -88,7 +108,7 @@ function choicesSection(props: ContentsProps): ReactElement {
 
   return (
     <FieldGroup.Section key="choices" footer={notice}>
-      {agentRow(configuration)}
+      {agentRow(configuration, props.picking)}
       {modelPicker({ configuration })}
       {optionPickers({ configuration })}
     </FieldGroup.Section>

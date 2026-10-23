@@ -15,6 +15,22 @@ export const fieldGroupPickerOption = z.object({
   label: z.string(),
   subtitle: z.string().optional().describe('A second line under the label.'),
   icon: iconName.optional().describe('A leading icon.'),
+  logo: z
+    .string()
+    .optional()
+    .describe(
+      'A logo drawn in the icon’s place where the platform can draw an image in the row: SVG markup or an image URI, such as an Agent’s mark.',
+    ),
+  tone: z
+    .literal('danger')
+    .optional()
+    .describe('`danger` draws the option in the destructive tone.'),
+  pending: z
+    .boolean()
+    .optional()
+    .describe(
+      'The choice is being applied: a spinner stands where the check will be.',
+    ),
   section: z
     .string()
     .optional()

@@ -42,6 +42,8 @@ function effortSliderProps({
     min: 0,
     max: Math.max(1, effort.choices.length - 1),
     step: 1,
+    // Medium, High: the level's name is shown beside the title and announced with it.
+    valueLabel: effort.selected?.name,
     value: effort.selected ? effort.choices.indexOf(effort.selected) : 0,
     onValueChange: (index) => selectEffort({ configuration, effort }, index),
   };

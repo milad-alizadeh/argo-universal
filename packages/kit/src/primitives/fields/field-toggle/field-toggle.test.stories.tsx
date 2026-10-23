@@ -33,3 +33,12 @@ export const Flips: Story = {
     await expect(args.onValueChange).toHaveBeenCalledWith(false);
   },
 };
+
+export const IsASwitchNamedByItsTitle: Story = {
+  play: async ({ canvas, userEvent, args }) => {
+    const toggle = canvas.getByRole('switch', { name: 'Label' });
+    await expect(toggle).toBeChecked();
+    await userEvent.click(toggle);
+    await expect(args.onValueChange).toHaveBeenCalledWith(false);
+  },
+};

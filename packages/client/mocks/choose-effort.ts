@@ -23,7 +23,7 @@ export async function chooseEffort(
   const current = effortIndexOf(slider);
   slider.focus();
 
-  await moveThroughLevels(slider, { current, target });
+  await moveThroughLevels(slider, { current, target, levels });
 }
 
 function effortIndex(levels: string[], name: string): number {
@@ -36,15 +36,28 @@ function effortIndex(levels: string[], name: string): number {
 
 async function moveThroughLevels(
   slider: HTMLElement,
-  { current, target }: { current: number; target: number },
+  {
+    current,
+    target,
+    levels,
+  }: { current: number; target: number; levels: string[] },
 ): Promise<void> {
   const direction = target > current ? 1 : -1;
 
   for (let moved = 1; moved <= Math.abs(target - current); moved += 1) {
-    const index = current + direction * moved;
-    moveTo(slider, index);
-    await waitFor(() => expect(slider).toHaveValue(String(index)));
+    await stepTo(slider, current + direction * moved, levels);
   }
+}
+
+// One step: the slider holds the level and speaks its name.
+async function stepTo(
+  slider: HTMLElement,
+  index: number,
+  levels: string[],
+): Promise<void> {
+  moveTo(slider, index);
+  await waitFor(() => expect(slider).toHaveValue(String(index)));
+  await expect(slider).toHaveAttribute('aria-valuetext', levels[index] ?? '');
 }
 
 // The slider's place in its levels: its range input's value.

@@ -237,3 +237,33 @@ export const PageRowsChoose: Story = {
     await expect(changed).toHaveBeenCalledWith('elm');
   },
 };
+
+export const InlineArrowKeysMoveAndChoose: Story = {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  render: () => <ControlledPicker {...inline} onValueChange={changed} />,
+  play: async ({ canvas, userEvent }) => {
+    const radios = await canvas.findAllByRole('radio');
+    radios[0]?.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(radios[1]).toHaveFocus();
+    await userEvent.keyboard('{End}');
+    await expect(radios.at(-1)).toHaveFocus();
+    await expect(changed).toHaveBeenCalled();
+  },
+};
+
+export const PendingOptionShowsApplying: Story = {
+  render: () => (
+    <ControlledPicker
+      {...inline}
+      options={inline.options.map((option, index) => ({
+        ...option,
+        pending: index === 0,
+      }))}
+      onValueChange={changed}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText('Applying')).toBeVisible();
+  },
+};

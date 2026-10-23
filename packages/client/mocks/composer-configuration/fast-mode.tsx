@@ -63,7 +63,7 @@ async function assertFastModeTabOrder(
   fast: HTMLElement,
   width: number,
 ): Promise<void> {
-  const effort = within(document.body).getByRole('slider');
+  const effort = within(document.body).getByRole('slider', { name: 'Effort' });
 
   const [first, next] =
     width >= layoutWidths.wide ? [effort, fast] : [fast, effort];

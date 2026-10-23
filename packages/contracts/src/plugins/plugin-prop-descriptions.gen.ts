@@ -359,6 +359,8 @@ export type WireSchemaHints = {
     "leading": PropValue<"FieldGroup.Value", "leading">;
     /** The read-only value at the row’s end. */
     "value": PropValue<"FieldGroup.Value", "value">;
+    /** The row is a placeholder while its value is on its way: a bar as wide as the title stands in for it, and assistive technology skips it. */
+    "loading": PropValue<"FieldGroup.Value", "loading">;
   };
   "FieldGroup.Link": {
     /** The row’s label. */
@@ -437,6 +439,8 @@ export type WireSchemaHints = {
     "max": PropValue<"FieldGroup.Slider", "max">;
     /** The increment. */
     "step": PropValue<"FieldGroup.Slider", "step">;
+    /** The value in words, such as “Medium”: shown at the row’s end and announced with the title by assistive technology. */
+    "valueLabel": PropValue<"FieldGroup.Slider", "valueLabel">;
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"FieldGroup.Slider", "onValueChange">;
   };

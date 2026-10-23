@@ -18,7 +18,7 @@ export async function expectHighEffort({
   const overlay = within(document.body);
   const model = catalog.highEffortModel;
   await chooseModel({ userEvent, width, name: model.name });
-  const slider = await overlay.findByRole('slider');
+  const slider = await overlay.findByRole('slider', { name: 'Effort' });
   await chooseEffort(slider, catalog.highEffortLevels, catalog.highEffort);
   await expect(slider).toHaveValue(
     String(catalog.highEffortLevels.indexOf(catalog.highEffort)),
@@ -46,9 +46,13 @@ export async function expectEffortFollowsModel({
   await chooseModel({ userEvent, width, name: model.name });
 
   if (modelSupportsEffort(model))
-    await expect(await overlay.findByRole('slider')).toBeVisible();
+    await expect(
+      await overlay.findByRole('slider', { name: 'Effort' }),
+    ).toBeVisible();
   else {
-    await expect(overlay.queryByRole('slider')).not.toBeInTheDocument();
+    await expect(
+      overlay.queryByRole('slider', { name: 'Effort' }),
+    ).not.toBeInTheDocument();
     await expect(
       within(
         canvas.getByRole('button', { name: agentModelLabel, hidden: true }),

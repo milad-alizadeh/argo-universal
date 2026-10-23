@@ -21,7 +21,7 @@ import {
 } from './field-row-position';
 import type { RowTextProps } from './field-row-text';
 
-export type RowListItemProps = Pick<RowTextProps, 'leading'> & {
+export type RowListItemProps = Pick<RowTextProps, 'leading' | 'tone'> & {
   title: string;
   // What sits under the title: a Slider, or a text row's value as EditTextPreference shows it.
   supporting?: ReactNode;
@@ -47,12 +47,18 @@ export function RowListItem(props: RowListItemProps): ReactElement {
       modifiers={useRowModifiers(props)}
     >
       <ListItem.HeadlineContent>
-        {props.headline ?? <NativeText>{props.title}</NativeText>}
+        <Headline {...props} />
       </ListItem.HeadlineContent>
       <SupportingSlot supporting={props.supporting} />
       <LeadingSlot leading={props.leading} />
       <TrailingSlot trailing={props.trailing} />
     </ListItem>
+  );
+}
+
+function Headline(props: RowListItemProps): ReactNode {
+  return (
+    props.headline ?? <NativeText tone={props.tone}>{props.title}</NativeText>
   );
 }
 

@@ -50,5 +50,7 @@ function openModels(): boolean {
 
 export async function expectEffortControlsVisible(): Promise<void> {
   const overlay = within(document.body);
-  await waitFor(() => expect(overlay.getByRole('slider')).toBeVisible());
+  await waitFor(() =>
+    expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
+  );
 }

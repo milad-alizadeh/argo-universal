@@ -1,6 +1,12 @@
-import { Checkbox, RadioButton } from '@expo/ui/jetpack-compose';
+import {
+  Checkbox,
+  CircularProgressIndicator,
+  RadioButton,
+} from '@expo/ui/jetpack-compose';
+import { semantics, size } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
+import { useIconPixels } from '../../../symbols/icon-size';
 /* oxlint-disable-next-line no-restricted-imports -- the Android-only drawing stays out of the folder's index so the web never loads Compose. */
 import {
   RowListItem,
@@ -22,6 +28,7 @@ export function OptionRow(props: OptionRowProps): ReactElement {
   return (
     <RowListItem
       title={option.label}
+      tone={option.tone === 'danger' ? 'danger' : undefined}
       leading={option.icon}
       disabled={disabled}
       supporting={supporting(option.subtitle)}
@@ -50,6 +57,8 @@ const role = (props: OptionRowProps): 'checkbox' | 'radioButton' =>
 function Mark(props: OptionRowProps & { selected: boolean }): ReactElement {
   const enabled = !props.disabled;
 
+  if (props.option.pending) return <Applying />;
+
   return props.multiple ? (
     <Checkbox value={props.selected} enabled={enabled} />
   ) : (
@@ -64,5 +73,19 @@ function supporting(subtitle: string | undefined): ReactElement | undefined {
     <NativeText role="secondary" tone="muted">
       {subtitle}
     </NativeText>
+  );
+}
+
+// A choice being applied shows a spinner where its radio will be.
+function Applying(): ReactElement {
+  const pixels = useIconPixels('md');
+
+  return (
+    <CircularProgressIndicator
+      modifiers={[
+        size(pixels, pixels),
+        semantics({ contentDescription: 'Applying' }),
+      ]}
+    />
   );
 }

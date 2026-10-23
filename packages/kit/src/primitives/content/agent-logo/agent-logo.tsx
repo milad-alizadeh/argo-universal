@@ -1,10 +1,10 @@
-import { Icon } from '@repo/kit/primitives/content/icon';
-import type { IconSizeValue } from '@repo/kit/symbols/icon-size';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import { RegistryIcon } from '../registry-icon/registry-icon';
+import { Icon } from '#primitives/content/icon';
+import type { IconSizeValue } from '../../../symbols/icon-size';
+import { RegistryIcon } from './registry-icon';
 
 interface AgentLogoProps {
   // SVG markup, the registry's icon URI, or an empty string for an Agent without a logo.
