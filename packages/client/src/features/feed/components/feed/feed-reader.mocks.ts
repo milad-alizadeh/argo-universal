@@ -101,34 +101,32 @@ export function markSettledMiddleOfView(
   }, settleWait);
 }
 
-// Why an element is not at rest: covered or clipped, or still moving between two frames.
+// Why an element is not at rest: covered or clipped, or moving between two frames.
 function unsettledReason(
-  element: HTMLElement,
   box: DOMRect,
-  lastTop: number | undefined,
+  covered: boolean,
+  last?: number,
 ): string {
-  if (!canPointAt(element))
-    return `covered or clipped (top ${box.top}, height ${box.height}, under ${topmostAt(centreOf(box))?.outerHTML.slice(0, 200)})`;
+  const under = topmostAt(centreOf(box))?.outerHTML.slice(0, 200);
 
-  return `still moving (top ${lastTop} then ${box.top})`;
+  return covered
+    ? `covered or clipped (top ${box.top}, height ${box.height}, under ${under})`
+    : `still moving (top ${last} then ${box.top})`;
 }
 
 // Where an element's top settles once it shows at its centre, unclipped, and holds still for two frames.
 export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
-  let lastTop: number | undefined;
+  let last: number | undefined;
 
   return waitFor(async () => {
     await afterTwoFrames();
     const box = findElement().getBoundingClientRect();
-    const settled = canPointAt(findElement()) && box.top === lastTop;
-    const previousTop = lastTop;
-    lastTop = box.top;
+    const covered = !canPointAt(findElement());
+    const previous = last;
+    last = box.top;
 
-    if (!settled) {
-      throw new Error(
-        `The element is ${unsettledReason(findElement(), box, previousTop)}`,
-      );
-    }
+    if (covered || box.top !== previous)
+      throw new Error(unsettledReason(box, covered, previous));
 
     return box.top;
   }, settleWait);
