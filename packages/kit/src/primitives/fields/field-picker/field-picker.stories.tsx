@@ -15,7 +15,6 @@ import {
   multipleMenu as multipleMenuFixture,
   page as pageFixture,
   pageAction as pageActionFixture,
-  pageSearchable as pageSearchableFixture,
 } from './field-picker-fixtures';
 
 // A row's stories draw it as the one row of a FieldGroup section, where Expo UI draws it.
@@ -48,12 +47,6 @@ export const Chosen: Story = {
 // A longer list opens on a page of rows with a mark on the chosen one.
 export const Page: Story = {
   args: { ...pageFixture, onValueChange: fn() },
-  render: (args) => <ControlledPicker {...args} />,
-};
-
-// Forty options in two sections, a search field above them, as many as it takes to need one.
-export const PageSearchable: Story = {
-  args: { ...pageSearchableFixture, onValueChange: fn() },
   render: (args) => <ControlledPicker {...args} />,
 };
 

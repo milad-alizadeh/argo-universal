@@ -9,19 +9,12 @@ import {
   shapes,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ModifierConfig } from '@expo/ui/swift-ui/modifiers';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
+import type { NativeRowProps } from './field-picker-native';
 
-type PageRowProps = {
-  title: string;
-  leading: React.ComponentProps<typeof RowTitle>['leading'];
-  summary: string;
-  disabled?: boolean;
-  onPress?: () => void;
-  // The Sheet this row opens when no enclosing Sheet holds the page, drawn into the row's own tree.
-  sheet?: ReactNode;
-};
+type PageRowProps = NativeRowProps;
 
 // Settings' disclosure: chevron.forward at footnote size, semibold, in the tertiary label colour.
 const disclosureStyle = [
