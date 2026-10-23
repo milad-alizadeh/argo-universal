@@ -7,3 +7,5 @@ export {
 } from './field-row-position';
 
 export { useFieldText } from './field-row-text-state';
+
+export { RowPressContext, useRowPressable } from './field-row-press';

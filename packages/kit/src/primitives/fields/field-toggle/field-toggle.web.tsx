@@ -1,6 +1,6 @@
 import { Switch } from '@expo/ui';
 import type { ReactElement } from 'react';
-import { RowTitle } from '#primitives/fields/field-row';
+import { RowTitle, useRowPressable } from '#primitives/fields/field-row';
 import type { FieldGroupKitProps } from '../../kit-props';
 
 /*
@@ -10,6 +10,8 @@ import type { FieldGroupKitProps } from '../../kit-props';
 export function FieldToggle(
   props: FieldGroupKitProps<'FieldGroup.Toggle'>,
 ): ReactElement {
+  useRowPressable(!props.disabled);
+
   return (
     /* oxlint-disable-next-line jsx-a11y/label-has-associated-control -- Expo's Switch draws the checkbox input inside it. */
     <label className={labelRow}>

@@ -2,7 +2,7 @@ import { Row, Spacer } from '@expo/ui';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
-import { RowTitle } from '#primitives/fields/field-row';
+import { RowTitle, useRowPressable } from '#primitives/fields/field-row';
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { FieldGroupKitProps } from '../../kit-props';
 
@@ -10,6 +10,8 @@ import type { FieldGroupKitProps } from '../../kit-props';
 export function FieldLink(
   props: FieldGroupKitProps<'FieldGroup.Link'>,
 ): ReactElement {
+  useRowPressable(!props.disabled);
+
   return (
     <Row
       alignment="center"
