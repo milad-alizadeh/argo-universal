@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ActionListHeaderContext } from '#primitives/actions/action-list';
 
-// The Inspector's own Actions draw in its header, never in the Page header around it.
+// The Inspector's own Actions draw in its header, never in the Screen header around it.
 export function InspectorActions(props: { children: ReactNode }): ReactNode {
   if (!props.children) return null;
 

@@ -1,0 +1,116 @@
+{
+  "type": "Screen",
+  "key": "page",
+  "props": {
+    "title": "Issues",
+    "search": {
+      "label": "Search Issues"
+    },
+    "value": "",
+    "onChangeText": {
+      "$event": "onChangeText"
+    }
+  },
+  "children": [
+    {
+      "type": "Text",
+      "key": "content",
+      "props": {
+        "children": "Open Issues"
+      },
+      "children": [],
+      "slots": {}
+    }
+  ],
+  "slots": {
+    "actions": [
+      {
+        "type": "ActionList",
+        "key": "actions",
+        "props": {},
+        "children": [
+          {
+            "type": "Action",
+            "key": "filters",
+            "props": {
+              "label": "Filters",
+              "icon": "filters",
+              "onPress": {
+                "$event": "onPress"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "Action",
+            "key": "sort",
+            "props": {
+              "label": "Sort",
+              "icon": "filter-list",
+              "badge": {
+                "kind": "count",
+                "count": 2
+              }
+            },
+            "children": [
+              {
+                "type": "ActionList.Section",
+                "key": "order",
+                "props": {
+                  "title": "Order"
+                },
+                "children": [
+                  {
+                    "type": "Action",
+                    "key": "newest",
+                    "props": {
+                      "label": "Newest",
+                      "icon": "arrow-down",
+                      "onPress": {
+                        "$event": "onPress"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Action",
+                    "key": "oldest",
+                    "props": {
+                      "label": "Oldest",
+                      "icon": "arrow-up",
+                      "onPress": {
+                        "$event": "onPress"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "primaryAction": [
+      {
+        "type": "Action",
+        "key": "new",
+        "props": {
+          "label": "New Issue",
+          "icon": "add",
+          "onPress": {
+            "$event": "onPress"
+          }
+        },
+        "children": [],
+        "slots": {}
+      }
+    ]
+  }
+}

@@ -1,11 +1,11 @@
 import { useState, type ReactElement } from 'react';
 import { Drill, type DrillProps } from '#primitives/overlays/drill';
 import { choiceSummary, type FieldPickerProps } from './field-picker-model';
-import { FieldPickerPage } from './field-picker-page';
+import { FieldPickerScreen } from './field-picker-screen';
 
-export type PageTrigger = NonNullable<DrillProps['trigger']>;
+export type ScreenTrigger = NonNullable<DrillProps['trigger']>;
 
-type DrillPickerProps = FieldPickerProps & { opener: PageTrigger };
+type DrillPickerProps = FieldPickerProps & { opener: ScreenTrigger };
 
 /*
  * A picker's `page` presentation: its row's trigger opens the choices where the platform puts a drill. A desktop
@@ -23,15 +23,15 @@ export function FieldPickerDrill(props: DrillPickerProps): ReactElement {
       search={searchOf(props, typed)}
       onClose={() => setQuery('')}
     >
-      {pageOf(props, typed)}
+      {screenOf(props, typed)}
     </Drill>
   );
 }
 
-const pageOf =
+const screenOf =
   (props: DrillPickerProps, typed: Typed): DrillProps['children'] =>
   (close, inHeader) => (
-    <FieldPickerPage
+    <FieldPickerScreen
       {...props}
       {...typed}
       searchInHeader={inHeader}

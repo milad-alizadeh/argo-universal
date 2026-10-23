@@ -678,17 +678,17 @@ export type WireSchemaHints = {
     /** Action offered on the web. */
     "action": PropValue<"Toast", "action">;
   };
-  "Page": {
-    /** The single-line page title. */
-    "title": PropValue<"Page", "title">;
+  "Screen": {
+    /** The single-line screen title. */
+    "title": PropValue<"Screen", "title">;
     /** A muted line under the title on wide windows; phones hide it. */
-    "caption": PropValue<"Page", "caption">;
+    "caption": PropValue<"Screen", "caption">;
     /** Native search on phones; expanding header search on web. */
-    "search": PropValue<"Page", "search">;
+    "search": PropValue<"Screen", "search">;
     /** The search query; drafts stay in the App. */
-    "value": PropValue<"Page", "value">;
+    "value": PropValue<"Screen", "value">;
     /** Receive the search query when it changes. */
-    "onChangeText": PropValue<"Page", "onChangeText">;
+    "onChangeText": PropValue<"Screen", "onChangeText">;
   };
   "ListDetail": {
 

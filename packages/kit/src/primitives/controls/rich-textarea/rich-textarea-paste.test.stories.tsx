@@ -107,11 +107,11 @@ export const StylingFromGoogleDocsIsDropped = pastedStylingDropped(
 );
 
 // A page's heading and a paragraph with marks, a link and an underline, copied as a person copies them.
-const copiedPage =
+const copiedScreen =
   '<h2>Plan</h2><p><strong>Ship</strong> <u>today</u> with <a href="https://argo.dev/plan">the plan</a></p>';
 
 // Selects the rendered HTML and copies it, so the clipboard holds the browser's own text/html.
-async function copyPage(html: string): Promise<void> {
+async function copyScreen(html: string): Promise<void> {
   const source = document.createElement('div');
   // This represents selectable content on an external page, not App chrome.
   source.style.userSelect = 'text';
@@ -127,7 +127,7 @@ async function copyPage(html: string): Promise<void> {
 
 export const PastingCopiedHtmlKeepsMarkdownMarks: Story = {
   play: async ({ canvas, args }) => {
-    await copyPage(copiedPage);
+    await copyScreen(copiedScreen);
     await userEvent.click(canvas.getByRole('textbox', { name: label }));
     await userEvent.paste();
     await waitFor(() =>
@@ -167,7 +167,7 @@ async function pressPlainPaste(): Promise<void> {
 
 export const ShiftPastePastesPlainText: Story = {
   play: async ({ canvas, args }) => {
-    await copyPage(copiedPage);
+    await copyScreen(copiedScreen);
     await userEvent.click(canvas.getByRole('textbox', { name: label }));
     await pressPlainPaste();
     await waitFor(() =>

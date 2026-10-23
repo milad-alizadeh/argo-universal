@@ -12,7 +12,7 @@ const meta = {
   args: {},
   argTypes: kitArgTypes('FieldGroup'),
   parameters: { screenPreview: true },
-  render: (): ReactElement => <SettingsPage />,
+  render: (): ReactElement => <SettingsScreen />,
 } satisfies Meta<typeof FieldGroup>;
 
 export default meta;
@@ -24,7 +24,7 @@ export const Settings: Story = {};
 
 const onPress = fn();
 
-function SettingsPage(): ReactElement {
+function SettingsScreen(): ReactElement {
   return (
     <FieldGroup>
       {aboutSection}

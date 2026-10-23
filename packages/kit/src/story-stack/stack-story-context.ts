@@ -2,12 +2,12 @@ import { useRouter } from 'expo-router';
 import { createContext, use, type ComponentType } from 'react';
 
 // The pages a story can push to, by name.
-export type StackPages = Record<string, ComponentType>;
+export type StoryScreens = Record<string, ComponentType>;
 
 // A stack's screens: the story itself is the root; `pages` are what it pushes to.
 export interface StackScreens {
   Root: ComponentType;
-  pages: StackPages;
+  pages: StoryScreens;
 }
 
 export const StackScreensContext = createContext<StackScreens>({

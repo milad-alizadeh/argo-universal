@@ -1,6 +1,6 @@
 import {
-  InspectorPage,
-  InspectorPages,
+  InspectorScreen,
+  InspectorScreens,
   InspectorBody,
   type InspectorProps,
 } from '@repo/kit/primitives/scaffolds/inspector';
@@ -25,12 +25,12 @@ type PageProps = Props & { panel: SessionPanel };
 
 function RetainedPage(props: PageProps): ReactElement {
   return (
-    <InspectorPage
+    <InspectorScreen
       active={props.panels.state.shown === props.panel}
       label={sessionPanelLabels[props.panel].label}
     >
       <PageBody {...props} />
-    </InspectorPage>
+    </InspectorScreen>
   );
 }
 
@@ -45,10 +45,10 @@ function PageBody(props: PageProps): ReactElement {
 // Hidden tab pages keep their content tree and native/virtualised scroll views mounted.
 export function RetainedInspectorPages(props: Props): ReactElement {
   return (
-    <InspectorPages>
+    <InspectorScreens>
       {props.panels.state.tabs.map((panel) => (
         <RetainedPage key={panel} {...props} panel={panel} />
       ))}
-    </InspectorPages>
+    </InspectorScreens>
   );
 }

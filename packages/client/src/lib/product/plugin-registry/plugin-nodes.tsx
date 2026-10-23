@@ -90,7 +90,7 @@ function refused(node: WireNode): React.JSX.Element | null {
 
 interface SlotPlace {
   name: string;
-  // The root-only parts this slot holds as the screen's own views, such as ListDetail's detail Page.
+  // The root-only parts this slot holds as the screen's own views, such as ListDetail's detail Screen.
   roots: readonly string[];
 }
 

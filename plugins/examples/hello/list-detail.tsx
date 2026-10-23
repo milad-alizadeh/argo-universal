@@ -8,7 +8,7 @@ import {
   List,
   ListItem,
   Metadata,
-  Page,
+  Screen,
   Pill,
   useState,
   type Argo,
@@ -75,13 +75,13 @@ function BuildPage({ build }: { build: Build }): JSX.Element {
   const toggle = (): void => setCancelled(!cancelled);
 
   return (
-    <Page title={build.title}>
+    <Screen title={build.title}>
       <Detail
         markdown={cancelled ? build.cancelled : build.running}
         metadata={buildMetadata}
         actions={<CancelAction cancelled={cancelled} onToggle={toggle} />}
       />
-    </Page>
+    </Screen>
   );
 }
 

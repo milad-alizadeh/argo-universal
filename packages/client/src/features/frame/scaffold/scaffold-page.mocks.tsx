@@ -1,6 +1,6 @@
 import { Action, ActionList } from '@repo/kit/primitives/actions/action-list';
 import { Text } from '@repo/kit/primitives/content/text';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { View } from 'react-native';
 
@@ -41,10 +41,10 @@ function MoreActionsMenu(): React.JSX.Element {
 // A stand-in page that names its section, with a header menu.
 export function MockPage({ title }: { title: string }): React.JSX.Element {
   return (
-    <Page title={`${title} page`} actions={<MoreActionsMenu />}>
+    <Screen title={`${title} page`} actions={<MoreActionsMenu />}>
       <View className="flex-1 p-4">
         <Text testID="detail-content">{title} detail</Text>
       </View>
-    </Page>
+    </Screen>
   );
 }

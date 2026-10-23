@@ -3,7 +3,7 @@ import { fn, within } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { FieldPicker } from './field-picker';
 import {
-  ControlledPage,
+  ControlledScreen,
   ControlledPicker,
   ControlledSection,
 } from './field-picker-controlled';
@@ -13,9 +13,9 @@ import {
   inlineMultiple,
   menu,
   menuMultiple,
-  pageMultiple,
-  pageWithButton,
-  pageWithSearch,
+  screenMultiple,
+  screenWithButton,
+  screenWithSearch,
 } from './field-picker-fixtures';
 
 const meta = {
@@ -71,35 +71,35 @@ export const InlineMultiple: Story = {
 };
 
 // A long list opens on a page of its own with a search field: pushed with Back on a phone, a popover on a desktop window.
-export const PageWithSearch: Story = {
-  name: 'Page with search',
-  args: { ...pageWithSearch, onValueChange: fn() },
+export const ScreenWithSearch: Story = {
+  name: 'Screen with search',
+  args: { ...screenWithSearch, onValueChange: fn() },
   decorators: inStackedSection,
   render: (args) => <ControlledPicker {...args} />,
   play: opened,
 };
 
 // The page's action sits in a place of its own below the choices.
-export const PageWithButton: Story = {
-  name: 'Page with button',
-  args: { ...pageWithButton, onValueChange: fn() },
+export const ScreenWithButton: Story = {
+  name: 'Screen with button',
+  args: { ...screenWithButton, onValueChange: fn() },
   decorators: inStackedSection,
   render: (args) => <ControlledPicker {...args} />,
   play: opened,
 };
 
 // Several choices: the page stays open and each toggle reports the whole list.
-export const PageMultiple: Story = {
-  name: 'Page multiple',
-  args: { ...pageMultiple, onValueChange: fn() },
+export const ScreenMultiple: Story = {
+  name: 'Screen multiple',
+  args: { ...screenMultiple, onValueChange: fn() },
   decorators: inStackedSection,
   render: (args) => <ControlledPicker {...args} />,
   play: opened,
 };
 
 // The page's own choices, sectioned and long, with a mark on the chosen one: a native grouped List on a phone.
-export const PageRows: Story = {
-  name: 'Page rows',
-  args: { ...pageWithSearch, onValueChange: fn() },
-  render: (args) => <ControlledPage {...args} />,
+export const ScreenRows: Story = {
+  name: 'Screen rows',
+  args: { ...screenWithSearch, onValueChange: fn() },
+  render: (args) => <ControlledScreen {...args} />,
 };

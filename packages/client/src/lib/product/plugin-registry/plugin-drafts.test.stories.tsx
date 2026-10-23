@@ -1,5 +1,5 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
-import page from '@repo/mocks/plugins/page.json' with { type: 'json' };
+import page from '@repo/mocks/plugins/screen.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';

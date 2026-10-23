@@ -27,7 +27,7 @@ export const ShowsServerInfoAndClock: Story = {
   },
 };
 
-// Page owns where its title goes at each width; this checks the caption shows on a wide window only.
+// Screen owns where its title goes at each width; this checks the caption shows on a wide window only.
 export const CaptionsThePageOnWideWindows: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);

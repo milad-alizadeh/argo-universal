@@ -3,7 +3,7 @@ import { TextInput, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { cn } from '../../../utils';
 
-type PageSearchFieldProps = {
+type ScreenSearchFieldProps = {
   // Names the field, such as "Search Branch".
   label: string;
   placeholder: string;
@@ -16,8 +16,8 @@ type PageSearchFieldProps = {
  * The filter above a searchable page's rows on every platform: card on the phone Sheet's content fill, muted inside
  * the wide popover's card. Private to the picker; header and list search is SearchField.
  */
-export function PageSearchField(
-  props: PageSearchFieldProps,
+export function ScreenSearchField(
+  props: ScreenSearchFieldProps,
 ): React.JSX.Element {
   return (
     <View className={containerClasses(props.className)}>
@@ -38,7 +38,7 @@ const containerClasses = (className: string | undefined): string =>
     className,
   );
 
-function SearchInput(props: PageSearchFieldProps): React.JSX.Element {
+function SearchInput(props: ScreenSearchFieldProps): React.JSX.Element {
   return (
     <TextInput
       role="searchbox"

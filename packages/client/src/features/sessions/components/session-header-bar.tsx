@@ -17,7 +17,7 @@ export interface SessionHeaderBarProps {
 
 /*
  * A wide Session page's header row, drawn in the page's own container under the window's top inset and in its centred
- * column. A phone's native header shows the title instead, so there it draws nothing. Other pages use the kit's Page.
+ * column. A phone's native header shows the title instead, so there it draws nothing. Other pages use the kit's Screen.
  */
 export function SessionHeaderBar(
   props: SessionHeaderBarProps,

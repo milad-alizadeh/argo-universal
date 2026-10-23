@@ -22,7 +22,7 @@ import type * as DetailKit from '#primitives/scaffolds/detail';
 import type * as InspectorKit from '#primitives/scaffolds/inspector';
 import type * as ListDetailKit from '#primitives/scaffolds/list-detail';
 import type * as MetadataKit from '#primitives/scaffolds/metadata';
-import type * as PageKit from '#primitives/scaffolds/page';
+import type * as ScreenKit from '#primitives/scaffolds/screen';
 import type * as SettingsLayoutKit from '#primitives/scaffolds/settings-layout';
 import type * as EmptyStateKit from '#primitives/status/empty-state';
 import type * as StatusDotKit from '#primitives/status/status-dot';
@@ -49,7 +49,7 @@ export type AdditionalPrimitives = {
   SpacerProps: SpacerKit.SpacerProps;
   SurfaceProps: SurfaceKit.SurfaceProps;
   ScrollViewProps: ScrollViewKit.ScrollViewProps;
-  PageProps: PageKit.PageProps;
+  ScreenProps: ScreenKit.ScreenProps;
   DetailProps: DetailKit.DetailProps;
   ListDetailProps: ListDetailKit.ListDetailProps;
   ListDetailSidebar: ListDetailKit.ListDetailSidebar;

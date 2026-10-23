@@ -29,7 +29,7 @@ import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
 import { Metadata } from '@repo/kit/primitives/scaffolds/metadata';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
@@ -41,7 +41,7 @@ export const pluginEntries = {
   Markdown,
   Code,
   Link,
-  Page,
+  Screen,
   ListDetail,
   Detail,
   Metadata,

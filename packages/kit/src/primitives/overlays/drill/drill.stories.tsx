@@ -56,9 +56,9 @@ function Configure(): ReactElement {
 
   return (
     <Sheet {...configureSheet} open={open} onOpenChange={setOpen}>
-      <Sheet.Page name="configure" title="Configure">
+      <Sheet.Screen name="configure" title="Configure">
         <FruitField />
-      </Sheet.Page>
+      </Sheet.Screen>
     </Sheet>
   );
 }

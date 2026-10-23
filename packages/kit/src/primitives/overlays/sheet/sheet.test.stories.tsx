@@ -20,10 +20,10 @@ type Story = StoryObj<typeof meta>;
 
 const body = within(document.body);
 
-const fruitPage = { name: 'Select Fruit' };
+const fruitScreen = { name: 'Select Fruit' };
 
 // A link pushes its page, Back returns to the page below, and a pick on the pushed page goes back with the new value.
-function pagesAt(width: number): Story {
+function screensAt(width: number): Story {
   return {
     beforeEach: (): Promise<void> => settleViewport(width),
     play: async ({ canvas, userEvent }) => {
@@ -31,13 +31,13 @@ function pagesAt(width: number): Story {
       await userEvent.click(await body.findByRole('button', { name: /Fruit/ }));
       // A wide window's popover is still fading in from transparent when the page is pushed.
       await waitFor(() =>
-        expect(body.getByRole('heading', fruitPage)).toBeVisible(),
+        expect(body.getByRole('heading', fruitScreen)).toBeVisible(),
       );
       await userEvent.click(
         body.getByRole('button', { name: 'Back to Settings' }),
       );
       await waitFor(() =>
-        expect(body.queryByRole('heading', fruitPage)).toBeNull(),
+        expect(body.queryByRole('heading', fruitScreen)).toBeNull(),
       );
       await userEvent.click(body.getByRole('button', { name: /Fruit/ }));
       await userEvent.click(
@@ -50,9 +50,9 @@ function pagesAt(width: number): Story {
   };
 }
 
-export const PagesInDrawer: Story = pagesAt(layoutWidths.phone);
+export const ScreensInDrawer: Story = screensAt(layoutWidths.phone);
 
-export const PagesInPopover: Story = pagesAt(layoutWidths.wide);
+export const ScreensInPopover: Story = screensAt(layoutWidths.wide);
 
 const answerSheet = { name: 'Sheet' };
 

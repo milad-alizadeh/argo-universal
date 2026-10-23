@@ -8,8 +8,8 @@ import {
   metadataAvatarProps,
   metadataChildParts,
 } from './metadata-props';
-import { pageWirePart } from './page-wire-part';
 import { part } from './plugin-part-schema-utils';
+import { screenWirePart } from './screen-wire-part';
 
 export const detailProps = z.object({
   markdown: z
@@ -26,7 +26,7 @@ const listDetailReader =
   'Reads the list, then the selected item beside it on wide windows; on compact ones the list is the screen and opening a row moves to the item.';
 
 export const scaffoldWireParts = {
-  Page: pageWirePart,
+  Screen: screenWirePart,
   ListDetail: part(
     'A list beside its selected item on wide windows; on compact ones the list drills in to the item.',
     z.object({}),
@@ -35,12 +35,12 @@ export const scaffoldWireParts = {
       // The detail is a whole page: its own title and Actions.
       slots: {
         list: ['List'],
-        detail: ['Page', 'Detail'],
+        detail: ['Screen', 'Detail'],
         empty: ['EmptyState'],
       },
       accessibility: {
         label:
-          'Not labelled itself: the list and the detail name themselves, and the detail Page names the screen.',
+          'Not labelled itself: the list and the detail name themselves, and the detail Screen names the screen.',
         keyboard:
           'The scaffold is not focusable. Tab moves from the list to the detail on wide windows.',
         voiceOver: listDetailReader,

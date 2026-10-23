@@ -6,7 +6,7 @@ import type {
   FieldPickerProps,
 } from './field-picker-model';
 import { NativePicker } from './field-picker-native';
-import { PageRow } from './field-picker-page-row.ios';
+import { ScreenRow } from './field-picker-screen-row.ios';
 
 /*
  * A `menu` opens in place: SwiftUI's menu Picker, or a Menu of checked items for a `multiple` choice. A `page`
@@ -21,7 +21,7 @@ export function FieldPicker(
     <NativePicker
       caller={caller}
       menu={InPlace}
-      row={PageRow}
+      row={ScreenRow}
       inline={Inline}
     />
   );

@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { ContextActions } from '#primitives/actions/action-list';
 import { List } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
-import { PageHeaderActions } from '#primitives/scaffolds/page';
+import { PageHeaderActions } from '#primitives/scaffolds/screen';
 import { nodeValue } from './table-cell';
 import type { TableProps } from './table-props';
 import { TableRowDetail, TableRowDetailHost } from './table-row-detail';
@@ -19,7 +19,7 @@ type ListProps = TableProps & {
   rows: readonly TableRow[];
 };
 
-// Compact widths: a grouped List of ListItems, each opening its Row detail; Sort by joins the Page header.
+// Compact widths: a grouped List of ListItems, each opening its Row detail; Sort by joins the Screen header.
 export function TableList(props: ListProps): ReactElement {
   return (
     <>

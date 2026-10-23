@@ -1,5 +1,5 @@
 import { layoutWidths } from '@repo/kit/each-layout';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import { withStack } from '@repo/kit/story-stack';
 import { newSessionProjects, serverInfo } from '@repo/mocks/app';
@@ -80,9 +80,9 @@ type Story = StoryObj<typeof meta>;
 // The screen the picker sits on: a phone's stack draws its header and pushes the picker's page over it.
 const onPageInStack: NonNullable<Story['decorators']> = [
   (Story): React.JSX.Element => (
-    <Page title="New session">
+    <Screen title="New session">
       <Story />
-    </Page>
+    </Screen>
   ),
   withStack(),
 ];

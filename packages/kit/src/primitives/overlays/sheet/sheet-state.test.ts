@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { SheetProps } from './sheet-props';
-import { popPage, pushPage, sheetDetents, sheetReports } from './sheet-state';
+import {
+  popScreen,
+  pushScreen,
+  sheetDetents,
+  sheetReports,
+} from './sheet-state';
 
 type Reported = Pick<SheetProps, 'open' | 'onOpenChange' | 'onClosed'>;
 
@@ -36,9 +41,9 @@ describe('sheet presentation reports', () => {
 
 describe('sheet pages', () => {
   it('pushes a page once and goes back to the root', () => {
-    const pushed = pushPage(pushPage([], 'model'), 'model');
+    const pushed = pushScreen(pushScreen([], 'model'), 'model');
     expect(pushed).toEqual(['model']);
-    expect(popPage(pushed)).toEqual([]);
+    expect(popScreen(pushed)).toEqual([]);
   });
 
   it('rests a sheet with pages at medium and large unless it names its own', () => {

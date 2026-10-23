@@ -1,2 +1,2 @@
-// A page a component pushes on the stack (`usePushedPage` in @repo/kit/pushed-page): a picker's choices, for one.
-export { PushedPageRoute as default } from '@repo/kit/pushed-page/routes';
+// A screen a component pushes on the stack (`usePushedScreen` in @repo/kit/pushed-screen): a picker's choices, for one.
+export { PushedScreenRoute as default } from '@repo/kit/pushed-screen/routes';

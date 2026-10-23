@@ -21,7 +21,7 @@ import {
   type OptionRowProps,
 } from './field-picker-inline-choice';
 import type { FieldPickerOption, FieldPickerProps } from './field-picker-model';
-import { wholeRowPress } from './field-picker-page-row.ios';
+import { wholeRowPress } from './field-picker-screen-row.ios';
 
 const offModifiers = (
   props: Pick<FieldPickerProps, 'disabled'>,

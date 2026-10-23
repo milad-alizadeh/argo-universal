@@ -17,7 +17,7 @@ type ContentProps = SheetProps & {
  * page under detents. A fitted page has no width to measure against, so it takes the screen's.
  */
 export function SheetContent(props: ContentProps): ReactElement {
-  const width = usePageWidth(props.width);
+  const width = useScreenWidth(props.width);
 
   return (
     <RNHostView matchContents={!props.fill}>
@@ -31,7 +31,7 @@ export function SheetContent(props: ContentProps): ReactElement {
   );
 }
 
-function usePageWidth(popover: number | undefined): number {
+function useScreenWidth(popover: number | undefined): number {
   const screen = useWindowDimensions().width;
 
   return popover ?? screen;

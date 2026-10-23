@@ -3,9 +3,9 @@ import { View } from 'react-native';
 import { useClaim } from '#kit/claim-store';
 import { useWide } from '#kit/use-wide/use-wide';
 import {
-  PageBesideList,
-  PageNavigationEnabled,
-} from '#primitives/scaffolds/page';
+  ScreenBesideList,
+  ScreenNavigationEnabled,
+} from '#primitives/scaffolds/screen';
 import type { ListDetailProps } from './list-detail-props';
 import {
   ListDetailSidebarContext,
@@ -59,8 +59,8 @@ function WithDetail({
 function ListPane({ list }: Pick<ListDetailProps, 'list'>): ReactElement {
   return (
     <Pane className="w-frame-list shrink-0">
-      {/* The detail's Page names the screen; a list's Page only draws its heading. */}
-      <PageNavigationEnabled value={false}>{list}</PageNavigationEnabled>
+      {/* The detail's Screen names the screen; a list's Screen only draws its heading. */}
+      <ScreenNavigationEnabled value={false}>{list}</ScreenNavigationEnabled>
     </Pane>
   );
 }
@@ -69,7 +69,7 @@ function ListPane({ list }: Pick<ListDetailProps, 'list'>): ReactElement {
 function DetailPane(props: ListDetailProps): ReactElement {
   return (
     <Pane className="min-w-0 flex-1">
-      <PageBesideList value>{props.detail ?? props.empty}</PageBesideList>
+      <ScreenBesideList value>{props.detail ?? props.empty}</ScreenBesideList>
     </Pane>
   );
 }

@@ -4,7 +4,7 @@ import type {
   PluginSettings,
 } from '@repo/contracts/plugins';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { settingFieldSection } from './plugin-setting-field-row';
 
@@ -37,9 +37,9 @@ export function PluginSettingsDetailView(
   const { caption, onBack, ...body } = props;
 
   return (
-    <Page title={props.title} caption={caption} onBack={onBack}>
+    <Screen title={props.title} caption={caption} onBack={onBack}>
       <FieldGroup>{pluginSections(body)}</FieldGroup>
-    </Page>
+    </Screen>
   );
 }
 

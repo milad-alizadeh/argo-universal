@@ -7,7 +7,7 @@ const pressed = fn();
 
 const meta = {
   title: 'Tests/Design System/Primitives/Forms/FieldGroup',
-  render: (): ReactElement => <Page />,
+  render: (): ReactElement => <Screen />,
   beforeEach: (): void => {
     pressed.mockClear();
   },
@@ -42,13 +42,13 @@ export const TextFieldTypes: Story = {
   },
 };
 
-function Page(): ReactElement {
+function Screen(): ReactElement {
   const [on, setOn] = useState(true);
   const [name, setName] = useState('Argo');
 
   return (
     <FieldGroup>
-      <FieldGroup.Section title="Page">
+      <FieldGroup.Section title="Screen">
         <FieldGroup.Link title="Licences" onPress={pressed} />
         <FieldGroup.Toggle
           title="Notifications"

@@ -49,7 +49,7 @@ export const meta = {
   component: SessionListView,
   parameters: { screenPreview: true },
   args: { ...loadedSessionListView, ...spies },
-  // Wide, New Session sits in the sidebar's header row above the list, and a phone's Sessions Page has it as its primary Action; the layout choice loads through its own query client.
+  // Wide, New Session sits in the sidebar's header row above the list, and a phone's Sessions Screen has it as its primary Action; the layout choice loads through its own query client.
   render: function WithHeader(args): React.JSX.Element {
     const [client] = useState(() => new QueryClient());
 

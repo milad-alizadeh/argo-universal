@@ -45,7 +45,7 @@ const settingsLayoutProps = z.object({
 });
 
 export const scaffoldsPartSchemas = {
-  Page: wireParts.Page,
+  Screen: wireParts.Screen,
   ListDetail: wireParts.ListDetail,
   Inspector: part(
     'Secondary detail about what is open: its own column on wide screens and a Sheet on compact ones.',

@@ -4,14 +4,14 @@ import { View } from 'react-native';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { registerStack } from './stack-registry';
-import type { StackPages } from './stack-story-context';
+import type { StoryScreens } from './stack-story-context';
 
 interface StoryContext {
   id: string;
 }
 
-// A story's decorator on a phone: the on-device Storybook has no stack of its own, so the story opens in the App's own dev route, a real native stack whose header the Page fills.
-export function withStack(pages: StackPages = {}) {
+// A story's decorator on a phone: the on-device Storybook has no stack of its own, so the story opens in the App's own dev route, a real native stack whose header the Screen fills.
+export function withStack(pages: StoryScreens = {}) {
   return function WithStack(
     Story: ComponentType,
     context: StoryContext,
@@ -23,7 +23,7 @@ export function withStack(pages: StackPages = {}) {
 interface LauncherProps {
   id: string;
   Root: ComponentType;
-  pages: StackPages;
+  pages: StoryScreens;
 }
 
 function Launcher({ id, Root, pages }: LauncherProps): React.JSX.Element {

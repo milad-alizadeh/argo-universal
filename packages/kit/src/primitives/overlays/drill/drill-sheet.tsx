@@ -4,8 +4,8 @@ import {
   useOptionalSheet,
   type SheetNavigation,
 } from '#primitives/overlays/sheet';
-import { Page, type PageProps } from '#primitives/scaffolds/page';
-import { usePushedPage } from '#pushed-page';
+import { Screen, type ScreenProps } from '#primitives/scaffolds/screen';
+import { usePushedScreen } from '#pushed-screen';
 import { useCompletion, type Completion } from './drill-completion';
 import type { DrillProps } from './drill-props';
 import { useStandby } from './drill-standby';
@@ -30,28 +30,31 @@ function useDrillPresentation(props: DrillProps): Presentation {
   const name = useId();
   const completion = useCompletion(props.onClose);
   useLiveDestination(props, { parent, name, onExit: completion.finish });
-  const pushPage = useRoutedPage(props, completion);
+  const pushScreen = useRoutedScreen(props, completion);
 
-  return { show: showChoices(props, { parent, name, completion, pushPage }) };
+  return { show: showChoices(props, { parent, name, completion, pushScreen }) };
 }
 
 // The page pushed on the screen's own stack, where no Sheet holds the row; Back is the stack's.
-function useRoutedPage(props: DrillProps, completion: Completion): () => void {
+function useRoutedScreen(
+  props: DrillProps,
+  completion: Completion,
+): () => void {
   const router = useRouter();
 
-  return usePushedPage({
+  return usePushedScreen({
     content: () => (
-      <Page title={props.title} {...pageSearch(props.search)}>
+      <Screen title={props.title} {...screenSearch(props.search)}>
         {props.children(() => router.back(), props.search !== undefined)}
-      </Page>
+      </Screen>
     ),
     onExit: completion.finish,
   });
 }
 
-const pageSearch = (
+const screenSearch = (
   search: DrillProps['search'],
-): Pick<PageProps, 'search' | 'value' | 'onChangeText'> =>
+): Pick<ScreenProps, 'search' | 'value' | 'onChangeText'> =>
   search
     ? {
         search: { label: search.label },
@@ -98,7 +101,7 @@ type Opening = {
   parent?: SheetNavigation;
   name: string;
   completion: Completion;
-  pushPage: () => void;
+  pushScreen: () => void;
 };
 
 function showChoices(props: DrillProps, opening: Opening): () => void {
@@ -111,7 +114,7 @@ function showChoices(props: DrillProps, opening: Opening): () => void {
         name: opening.name,
         onExit: opening.completion.finish,
       });
-    else opening.pushPage();
+    else opening.pushScreen();
   };
 }
 

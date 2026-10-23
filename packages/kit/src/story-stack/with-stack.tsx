@@ -1,14 +1,14 @@
 import { ExpoRoot, Stack, useLocalSearchParams } from 'expo-router';
 import { use, useEffect, useMemo, useState, type ComponentType } from 'react';
-import { PageNavigationEnabled } from '#primitives/scaffolds/page';
-import { PushedPageRoute } from '../pushed-page/routes';
-import { StackScreensContext, type StackPages } from './stack-story-context';
+import { ScreenNavigationEnabled } from '#primitives/scaffolds/screen';
+import { PushedScreenRoute } from '../pushed-screen/routes';
+import { StackScreensContext, type StoryScreens } from './stack-story-context';
 
 /*
- * A story's decorator on web: the story is the root of a real expo-router stack held in memory, so its Page draws the
+ * A story's decorator on web: the story is the root of a real expo-router stack held in memory, so its Screen draws the
  * header the App's narrow window does. It takes the story context only to match the phone decorator's signature.
  */
-export function withStack(pages: StackPages = {}) {
+export function withStack(pages: StoryScreens = {}) {
   return function WithStack(
     Story: ComponentType,
     _context?: { id: string },
@@ -19,7 +19,7 @@ export function withStack(pages: StackPages = {}) {
 
 interface MemoryStackProps {
   Root: ComponentType;
-  pages: StackPages;
+  pages: StoryScreens;
 }
 
 function MemoryStack({ Root, pages }: MemoryStackProps): React.JSX.Element {
@@ -39,13 +39,13 @@ function RootRoute(): React.JSX.Element {
   const { Root } = use(StackScreensContext);
 
   return (
-    <PageNavigationEnabled value>
+    <ScreenNavigationEnabled value>
       <Root />
-    </PageNavigationEnabled>
+    </ScreenNavigationEnabled>
   );
 }
 
-function PageRoute(): React.JSX.Element | null {
+function ScreenRoute(): React.JSX.Element | null {
   const { pages } = use(StackScreensContext);
   const { page } = useLocalSearchParams<{ page: string }>();
   const Component = pages[page];
@@ -53,9 +53,9 @@ function PageRoute(): React.JSX.Element | null {
   if (!Component) return null;
 
   return (
-    <PageNavigationEnabled value>
+    <ScreenNavigationEnabled value>
       <Component />
-    </PageNavigationEnabled>
+    </ScreenNavigationEnabled>
   );
 }
 
@@ -70,8 +70,8 @@ function routes(): ExpoRootContext {
   const files = new Map<string, { default: ComponentType }>([
     ['./_layout.js', { default: StackLayout }],
     ['./index.js', { default: RootRoute }],
-    ['./page/[id].js', { default: PushedPageRoute }],
-    ['./[page].js', { default: PageRoute }],
+    ['./page/[id].js', { default: PushedScreenRoute }],
+    ['./[page].js', { default: ScreenRoute }],
   ]);
 
   return Object.assign((key: string) => files.get(key), {

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Page } from '#primitives/scaffolds/page';
+import { Screen } from '#primitives/scaffolds/screen';
 import { Detail } from './detail';
 import {
   agentDetail,
@@ -18,15 +18,15 @@ const meta = {
   component: Detail,
   argTypes: kitArgTypes('Detail'),
   /*
-   * A Detail fills the Page that holds it, so each story draws it inside one. A story names its own
-   * page with `parameters.pageTitle`, and asks for the narrow container with `parameters.narrow`.
+   * A Detail fills the Screen that holds it, so each story draws it inside one. A story names its own
+   * page with `parameters.screenTitle`, and asks for the narrow container with `parameters.narrow`.
    */
   decorators: [
     (Story, { parameters }): React.JSX.Element => (
       <View className={parameters.narrow ? 'h-120 w-90' : 'h-96'}>
-        <Page title={parameters.pageTitle ?? issue.title}>
+        <Screen title={parameters.screenTitle ?? issue.title}>
           <Story />
-        </Page>
+        </Screen>
       </View>
     ),
   ],
@@ -40,7 +40,7 @@ export const ContentAndMetadata: Story = { args: contentAndMetadataDetail };
 
 export const Agent: Story = {
   args: agentDetail,
-  parameters: { pageTitle: agent.title },
+  parameters: { screenTitle: agent.title },
 };
 
 export const NarrowContainer: Story = {

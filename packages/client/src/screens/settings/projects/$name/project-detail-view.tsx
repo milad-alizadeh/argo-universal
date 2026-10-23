@@ -1,6 +1,6 @@
 import type { ProjectInfo } from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { homePath } from '#features/settings';
 import { newSessionsSection } from './project-detail-new-sessions';
@@ -40,9 +40,9 @@ export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
   return (
-    <Page title={props.name} caption={props.caption} onBack={props.onBack}>
+    <Screen title={props.name} caption={props.caption} onBack={props.onBack}>
       <ProjectBody {...props} />
-    </Page>
+    </Screen>
   );
 }
 

@@ -16,7 +16,7 @@ const leaf = (
 });
 
 const root = WireNode.parse({
-  type: 'Page',
+  type: 'Screen',
   key: 'page',
   props: { title: 'Sync fails on large repos' },
   children: [

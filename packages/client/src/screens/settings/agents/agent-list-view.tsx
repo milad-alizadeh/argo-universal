@@ -1,4 +1,7 @@
-import { Page, type PageProps } from '@repo/kit/primitives/scaffolds/page';
+import {
+  Screen,
+  type ScreenProps,
+} from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
 import { type AgentRows, type AgentsFilter } from '#features/agents';
@@ -37,13 +40,13 @@ const initialFilter = (props: AgentListViewProps): AgentsFilter =>
 
 function AgentsPage(props: ListProps): React.JSX.Element {
   return (
-    <Page {...pageProps(props)}>
+    <Screen {...pageProps(props)}>
       <AgentCatalog {...props} />
-    </Page>
+    </Screen>
   );
 }
 
-function pageProps(props: ListProps): PageProps {
+function pageProps(props: ListProps): ScreenProps {
   return {
     title: agentsTitle,
     search: { label: searchLabel },

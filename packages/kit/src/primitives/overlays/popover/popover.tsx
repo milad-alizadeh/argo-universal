@@ -156,7 +156,7 @@ function PopoverSurface(
   );
 }
 
-// A popover opened from a Page's column is a surface of its own, so its lists take none of the column's padding.
+// A popover opened from a Screen's column is a surface of its own, so its lists take none of the column's padding.
 function PopoverRows(props: { children: React.ReactNode }): React.JSX.Element {
   return (
     <ScrollColumnContext value={undefined}>

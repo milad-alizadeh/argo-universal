@@ -34,7 +34,7 @@ export function SheetBody(props: BodyProps): ReactElement {
     <ReactContent>
       <ScrollEndGapContext value={gap.scrolled}>
         <View {...bodyProps(props)} style={gap.padded}>
-          <PageContent {...props} gap={gap.scrolled} />
+          <ScreenContent {...props} gap={gap.scrolled} />
           {props.footer}
         </View>
       </ScrollEndGapContext>
@@ -77,8 +77,8 @@ function escape(props: Pick<BodyProps, 'dismissible' | 'onOpenChange'>): void {
 }
 
 // A page that scrolls itself, such as a long list, gets no second scroller around it.
-function PageContent(props: BodyProps & { gap: number }): ReactElement {
-  if (!props.contentScrolls) return <PageScroll {...props} />;
+function ScreenContent(props: BodyProps & { gap: number }): ReactElement {
+  if (!props.contentScrolls) return <ScreenScroll {...props} />;
 
   return (
     <View className={cn(sheetInsetClass(props.inset), props.fill && 'flex-1')}>
@@ -88,7 +88,7 @@ function PageContent(props: BodyProps & { gap: number }): ReactElement {
 }
 
 // The sheet's own scroller ends on the gap, as a List it wraps would.
-function PageScroll(props: BodyProps & { gap: number }): ReactElement {
+function ScreenScroll(props: BodyProps & { gap: number }): ReactElement {
   return (
     <ScrollView
       className={cn('min-h-0 shrink', props.fill && 'flex-1')}

@@ -12,15 +12,15 @@ import { useNativeTheme } from '#kit/native-theme';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
 import { SheetFrame } from './sheet-frame.ios';
+import type { SheetDetent, SheetProps } from './sheet-props';
 import {
   SheetLink,
   SheetNavigationProvider,
-  SheetPage,
+  SheetScreen,
   useSheetStack,
   type SheetStack,
-} from './sheet-pages';
-import type { SheetDetent, SheetProps } from './sheet-props';
-import { SheetPages } from './sheet-stack.ios';
+} from './sheet-screens';
+import { SheetScreens } from './sheet-stack.ios';
 import { sheetDetents } from './sheet-state';
 import { SheetTrigger } from './sheet-trigger';
 
@@ -69,16 +69,16 @@ function SystemSheet(props: PresentationProps): ReactElement {
       onDismiss={props.stack.reports.closed}
       fitToContents={detentsOf(props) === undefined}
     >
-      <SystemSheetPages {...props} />
+      <SystemSheetScreens {...props} />
     </BottomSheet>
   );
 }
 
-function SystemSheetPages(props: PresentationProps): ReactElement {
+function SystemSheetScreens(props: PresentationProps): ReactElement {
   return (
     <Group modifiers={useSheetModifiers(props)}>
       <CompactScope>
-        <SheetPages {...props} />
+        <SheetScreens {...props} />
       </CompactScope>
     </Group>
   );
@@ -94,19 +94,19 @@ function PopoverSheet(props: PresentationProps): ReactElement {
         <HostedTrigger {...props} />
       </Popover.Trigger>
       <Popover.Content>
-        <PopoverPages {...props} />
+        <PopoverScreens {...props} />
       </Popover.Content>
     </Popover>
   );
 }
 
-function PopoverPages(props: PresentationProps): ReactElement {
+function PopoverScreens(props: PresentationProps): ReactElement {
   return (
     <Group
       modifiers={[interactiveDismissDisabled(props.dismissible === false)]}
     >
       <CompactScope>
-        <SheetPages {...props} popoverWidth={popoverWidth} />
+        <SheetScreens {...props} popoverWidth={popoverWidth} />
       </CompactScope>
     </Group>
   );
@@ -169,6 +169,6 @@ function detentsModifier(
 }
 
 export const Sheet = Object.assign(SheetRoot, {
-  Page: SheetPage,
+  Screen: SheetScreen,
   Link: SheetLink,
 });

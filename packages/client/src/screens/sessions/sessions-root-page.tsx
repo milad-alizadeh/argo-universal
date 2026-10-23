@@ -1,5 +1,8 @@
 import { Action, ActionList } from '@repo/kit/primitives/actions/action-list';
-import { Page, type PageProps } from '@repo/kit/primitives/scaffolds/page';
+import {
+  Screen,
+  type ScreenProps,
+} from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import {
   isDefaultSessionsView,
@@ -20,7 +23,7 @@ export interface SessionsRootPageProps extends SessionsViewState {
 const filterLabel = 'Filter Sessions';
 
 /*
- * A narrow window's Sessions root: a Page whose primary Action is New Session (iOS top right, Android's FAB) and whose
+ * A narrow window's Sessions root: a Screen whose primary Action is New Session (iOS top right, Android's FAB) and whose
  * one header Action is the view filter, a checked choice per Section with a dot while the view is not the default.
  */
 export function SessionsRootPage({
@@ -28,13 +31,13 @@ export function SessionsRootPage({
   children,
   ...viewState
 }: SessionsRootPageProps): React.JSX.Element {
-  return <Page {...pageProps(viewState, onNewSession)}>{children}</Page>;
+  return <Screen {...pageProps(viewState, onNewSession)}>{children}</Screen>;
 }
 
 function pageProps(
   viewState: SessionsViewState,
   onNewSession: () => void,
-): Omit<PageProps, 'children'> {
+): Omit<ScreenProps, 'children'> {
   return {
     title: sections.sessions.title,
     search: { label: searchSessionsLabel },

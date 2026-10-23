@@ -2,7 +2,7 @@ import type { Decorator } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { FieldGroup } from '#primitives/fields/field-group';
-import { withPageStack } from '#story-stack';
+import { withScreenStack } from '#story-stack';
 
 // A row's stories draw it as the one row of a FieldGroup section, where Expo UI draws it.
 export const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
@@ -13,12 +13,12 @@ export const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
   </FieldGroup>
 );
 
-// Decorators run innermost first: the row in its section, on the screen's Page, as the root of a stack.
+// Decorators run innermost first: the row in its section, on the screen's Screen, as the root of a stack.
 export const inSection = [inFieldGroupSection];
 
-export const inStackedSection = [inFieldGroupSection, withPageStack()];
+export const inStackedSection = [inFieldGroupSection, withScreenStack()];
 
-export const inStackedPage = [withPageStack()];
+export const inStackedScreen = [withScreenStack()];
 
 // A toolbar holds its pill at the pill's own width, at the start of a row.
 const inToolbarRow: Decorator = (Story): React.JSX.Element => (
@@ -37,4 +37,4 @@ const fillingWidth: Decorator = (Story): React.JSX.Element => (
   </View>
 );
 
-export const inStackedToolbar = [inToolbarRow, withPageStack(), fillingWidth];
+export const inStackedToolbar = [inToolbarRow, withScreenStack(), fillingWidth];

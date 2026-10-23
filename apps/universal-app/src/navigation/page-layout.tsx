@@ -1,5 +1,5 @@
 import {
-  PageBesideList,
+  ScreenBesideList,
   PhoneConnectionBanner,
   ScreenInspector,
 } from '@repo/client';
@@ -39,9 +39,9 @@ const nestedPage = (route: { name: string }): boolean =>
 // The page keeps its place in the tree at every width; while shown, its Inspector draws in the Frame's column.
 export const pageLayout: ScreenLayout = ({ children, options, route }) => (
   <View className="flex-1">
-    <PageBesideList value={!nestedPage(route)}>
+    <ScreenBesideList value={!nestedPage(route)}>
       <ScreenInspector>{children}</ScreenInspector>
-    </PageBesideList>
+    </ScreenBesideList>
     <NarrowBanner overHeader={options.headerTransparent === true} />
   </View>
 );

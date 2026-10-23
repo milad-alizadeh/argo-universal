@@ -22,7 +22,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Every story draws Action children and tracks what the last press did, so each keeps a render.
-export const OnAPage: Story = { render: () => <PageExample /> };
+export const OnAScreen: Story = { render: () => <ScreenExample /> };
 
 export const Choice: Story = {
   render: () => <ChoiceExample />,
@@ -57,7 +57,7 @@ export const Destructive: Story = {
   },
 };
 
-function PageExample(): React.JSX.Element {
+function ScreenExample(): React.JSX.Element {
   const [result, setResult] = useState('Result');
 
   return (

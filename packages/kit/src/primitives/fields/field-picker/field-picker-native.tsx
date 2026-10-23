@@ -51,12 +51,12 @@ export function NativePicker(props: NativePickerProps): ReactElement {
     return <Menu {...picker} />;
   }
 
-  return <PagePicker {...picker} row={props.row} />;
+  return <ScreenPicker {...picker} row={props.row} />;
 }
 
 type RowProp = { row: NativePickerProps['row'] };
 
-function PagePicker(props: FieldPickerProps & RowProp): ReactElement {
+function ScreenPicker(props: FieldPickerProps & RowProp): ReactElement {
   const Row = props.row;
 
   return <FieldPickerDrill {...props} opener={<Row {...rowProps(props)} />} />;

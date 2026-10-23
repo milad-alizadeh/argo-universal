@@ -1,5 +1,5 @@
 import { WireNode, type PartEvent } from '@repo/contracts/plugins/wire';
-import fixture from '@repo/mocks/plugins/page.json' with { type: 'json' };
+import fixture from '@repo/mocks/plugins/screen.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { PluginTree } from './plugin-registry';

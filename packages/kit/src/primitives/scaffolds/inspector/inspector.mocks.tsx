@@ -36,7 +36,7 @@ function InspectorContent(): ReactElement {
   );
 }
 
-const branchesPage = {
+const branchesScreen = {
   name: 'branches',
   title: 'Branches',
   children: <Text>{branchesText}</Text>,
@@ -52,7 +52,7 @@ function BranchesButton(): ReactElement | null {
     <Button
       label="Show branches"
       variant="secondary"
-      onPress={() => sheet.push(branchesPage)}
+      onPress={() => sheet.push(branchesScreen)}
     />
   );
 }
@@ -73,7 +73,7 @@ export function ExampleInspector(props: {
 
   return (
     <View className="flex-1 flex-row bg-content">
-      <ExamplePage onToggle={() => setOpen(!open)} />
+      <ExampleScreen onToggle={() => setOpen(!open)} />
       <Inspector {...example} open={open} onOpenChange={setOpen}>
         <InspectorContent />
       </Inspector>
@@ -81,7 +81,7 @@ export function ExampleInspector(props: {
   );
 }
 
-function ExamplePage(props: { onToggle: () => void }): ReactElement {
+function ExampleScreen(props: { onToggle: () => void }): ReactElement {
   return (
     <View testID="example-page" className="flex-1 items-start p-4">
       <Button label={openLabel} onPress={props.onToggle} />

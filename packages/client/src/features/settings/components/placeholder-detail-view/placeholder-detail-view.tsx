@@ -1,5 +1,5 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 
 export interface PlaceholderDetailViewProps {
@@ -16,12 +16,12 @@ export function PlaceholderDetailView({
   description,
 }: PlaceholderDetailViewProps): React.JSX.Element {
   return (
-    <Page title={title} caption={caption}>
+    <Screen title={title} caption={caption}>
       <FieldGroup>
         <FieldGroup.Section>
           <FieldGroup.Value title={description} value="" />
         </FieldGroup.Section>
       </FieldGroup>
-    </Page>
+    </Screen>
   );
 }

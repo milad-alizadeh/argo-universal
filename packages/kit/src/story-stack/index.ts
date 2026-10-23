@@ -1,5 +1,5 @@
-export { useStackPush, type StackPages } from './stack-story-context';
+export { useStackPush, type StackScreens } from './stack-story-context';
 
 export { withStack } from './with-stack';
 
-export { withPageStack } from './with-page-stack';
+export { withScreenStack } from './with-screen-stack';

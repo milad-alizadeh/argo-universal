@@ -13,15 +13,15 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { Host, InsideHostContext } from '#primitives/native/host';
+import type { SheetProps } from './sheet-props';
 import {
   SheetLink,
   SheetNavigationProvider,
-  SheetPage,
+  SheetScreen,
   useSheetStack,
   type SheetStack,
-} from './sheet-pages';
-import type { SheetProps } from './sheet-props';
-import { SheetPages } from './sheet-stack.android';
+} from './sheet-screens';
+import { SheetScreens } from './sheet-stack.android';
 import { SheetTrigger } from './sheet-trigger';
 
 type SheetRef = RefObject<ModalBottomSheetRef | null>;
@@ -70,7 +70,7 @@ function SheetPresentation({
   return (
     <Host style={{ position: 'absolute' }}>
       <ModalBottomSheet {...useModalProps(props)} ref={sheetRef}>
-        <SheetPages {...props} />
+        <SheetScreens {...props} />
       </ModalBottomSheet>
     </Host>
   );
@@ -173,6 +173,6 @@ function afterHide(
 }
 
 export const Sheet = Object.assign(SheetRoot, {
-  Page: SheetPage,
+  Screen: SheetScreen,
   Link: SheetLink,
 });

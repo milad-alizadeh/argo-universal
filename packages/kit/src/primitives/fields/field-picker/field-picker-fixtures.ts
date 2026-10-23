@@ -98,7 +98,7 @@ export const inlineMultiple = {
   multiple: true,
 } satisfies Fixture<FieldPickerMultiple>;
 
-export const pageWithSearch = {
+export const screenWithSearch = {
   title: 'Label',
   value: 'cedar',
   options: sectioned,
@@ -107,7 +107,7 @@ export const pageWithSearch = {
 } satisfies Fixture<FieldPickerSingle>;
 
 // A short page with no search, so its action shows below the choices without scrolling.
-export const pageWithButton = {
+export const screenWithButton = {
   title: 'Label',
   value: 'two',
   options: short,
@@ -115,7 +115,7 @@ export const pageWithButton = {
   footerAction: { label: 'Add options', onPress: (): void => {} },
 } satisfies Fixture<FieldPickerSingle>;
 
-export const pageMultiple = {
+export const screenMultiple = {
   title: 'Label',
   value: ['alder', 'oak'],
   options: sectioned,
@@ -134,7 +134,7 @@ export const menuMultiple = {
 
 // The toolbar pill: the chosen label and a down chevron, outside a FieldGroup, opening the searchable page.
 export const pill = {
-  ...pageWithSearch,
+  ...screenWithSearch,
   trigger: 'pill',
   leading: 'folder',
 } satisfies Fixture<FieldPickerSingle>;

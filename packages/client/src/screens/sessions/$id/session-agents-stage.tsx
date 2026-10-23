@@ -1,6 +1,6 @@
 import {
-  InspectorPage,
-  InspectorPages,
+  InspectorScreen,
+  InspectorScreens,
 } from '@repo/kit/primitives/scaffolds/inspector';
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
 import { useState, type ReactNode } from 'react';
@@ -49,21 +49,21 @@ function AgentPages(
   props: SubagentListProps & { detail: ReactNode },
 ): ReactNode {
   return (
-    <InspectorPages>
-      <InspectorPage active={!props.detail} label="Agents list">
+    <InspectorScreens>
+      <InspectorScreen active={!props.detail} label="Agents list">
         <AgentList {...props} />
-      </InspectorPage>
+      </InspectorScreen>
       <AgentDetail detail={props.detail} />
-    </InspectorPages>
+    </InspectorScreens>
   );
 }
 
 function AgentDetail({ detail }: { detail: ReactNode }): ReactNode {
   return (
     detail && (
-      <InspectorPage active label="Agent Feed">
+      <InspectorScreen active label="Agent Feed">
         {detail}
-      </InspectorPage>
+      </InspectorScreen>
     )
   );
 }

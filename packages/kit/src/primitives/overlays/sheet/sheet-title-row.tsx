@@ -4,9 +4,9 @@ import { cn } from '#kit/utils';
 import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
-import type { SheetPageEntry } from './sheet-pages';
+import type { SheetScreenEntry } from './sheet-screens';
 
-type TitleRowProps = Pick<SheetPageEntry, 'title' | 'action'> & {
+type TitleRowProps = Pick<SheetScreenEntry, 'title' | 'action'> & {
   // A pushed page's way back to the page below it.
   backLabel?: string;
   onBack: () => void;

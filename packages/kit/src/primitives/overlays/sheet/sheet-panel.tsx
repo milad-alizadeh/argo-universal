@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { SheetPageStack } from './sheet-page-stack';
-import type { SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
+import { SheetScreenStack } from './sheet-screen-stack';
+import type { SheetStack } from './sheet-screens';
 
 export type PresentationProps = SheetProps & { stack: SheetStack };
 
@@ -30,7 +30,7 @@ export function SheetPanel(
 ): ReactElement {
   return (
     <View className="min-h-0 shrink">
-      <SheetPageStack {...props}>{props.children}</SheetPageStack>
+      <SheetScreenStack {...props}>{props.children}</SheetScreenStack>
       {props.footer}
     </View>
   );

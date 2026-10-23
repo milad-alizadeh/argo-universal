@@ -117,9 +117,9 @@ function configurePage(
   configuration: ComposerConfigurationProps,
 ): React.JSX.Element {
   return (
-    <Sheet.Page name="configure" title="Agent and model">
+    <Sheet.Screen name="configure" title="Agent and model">
       <AgentModelMenu configuration={configuration} wide={false} />
-    </Sheet.Page>
+    </Sheet.Screen>
   );
 }
 

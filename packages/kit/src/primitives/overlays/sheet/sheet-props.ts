@@ -21,12 +21,12 @@ export type SheetProps = KitProps<'Sheet'> & {
   inset?: boolean;
 };
 
-export interface SheetPageProps {
+export interface SheetScreenProps {
   name: string;
   // Shown in the page's title row; a pushed page also gets a back button.
   title?: string;
   // The page's one header action, at the trailing end of its title row.
-  action?: SheetPageAction;
+  action?: SheetScreenAction;
   /*
    * The rows the page stands in for while it slides in, as bars of the width its own rows will take.
    * Android draws it; the platforms whose pages are drawn before they move never need it.
@@ -36,7 +36,7 @@ export interface SheetPageProps {
 }
 
 // A text action in a page's header, such as Stop; destructive draws it in the danger colour.
-export interface SheetPageAction {
+export interface SheetScreenAction {
   label: string;
   onPress: () => void;
   destructive?: boolean;
@@ -51,7 +51,7 @@ export interface SheetLinkProps {
 }
 
 // A caller can supply a page when its choices are only known when the field opens.
-export interface SheetDestination extends SheetPageProps {
+export interface SheetDestination extends SheetScreenProps {
   contentScrolls?: boolean;
   onExit?: () => void;
   /*

@@ -8,7 +8,10 @@ import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
-import { Page, type PageProps } from '@repo/kit/primitives/scaffolds/page';
+import {
+  Screen,
+  type ScreenProps,
+} from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
@@ -26,13 +29,13 @@ export function ProjectListView(
 
 function ProjectsPage(props: SearchedProps): React.JSX.Element {
   return (
-    <Page {...pageProps(props)}>
+    <Screen {...pageProps(props)}>
       <ProjectsBody {...props} />
-    </Page>
+    </Screen>
   );
 }
 
-function pageProps(props: SearchedProps): PageProps {
+function pageProps(props: SearchedProps): ScreenProps {
   return {
     title: projectsTitle,
     caption: props.caption,

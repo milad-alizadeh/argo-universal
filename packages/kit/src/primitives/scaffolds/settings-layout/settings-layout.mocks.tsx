@@ -2,7 +2,7 @@ import { useState, type ReactElement, type ReactNode } from 'react';
 import { Text } from '#primitives/content/text';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { Page } from '#primitives/scaffolds/page';
+import { Screen } from '#primitives/scaffolds/screen';
 import { EmptyState } from '#primitives/status/empty-state';
 import { SettingsLayout } from './settings-layout';
 import type {
@@ -15,7 +15,7 @@ export const serverGroup = 'Server';
 
 export const deviceGroup = 'This device';
 
-export const noPages = 'No matching settings';
+export const noScreens = 'No matching settings';
 
 const page = (item: Omit<SettingsLayoutItem, 'href'>): SettingsLayoutItem => ({
   ...item,
@@ -69,15 +69,15 @@ const titleOf = (id: string): string =>
   pages.find((shown) => shown.id === id)?.title ?? id;
 
 // The page a row opens: its title and a line about it.
-function ExamplePage({ id }: { id: string }): ReactElement {
+function ExampleScreen({ id }: { id: string }): ReactElement {
   return (
-    <Page title={titleOf(id)}>
+    <Screen title={titleOf(id)}>
       <Text>{`The ${titleOf(id)} page.`}</Text>
-    </Page>
+    </Screen>
   );
 }
 
-const empty = <EmptyState icon="search" title={noPages} />;
+const empty = <EmptyState icon="search" title={noScreens} />;
 
 export const pinnedGroup = 'Pinned';
 
@@ -106,7 +106,7 @@ export function ExampleSettingsLayout(props: ExampleProps): ReactElement {
       selected={shown}
       onSelect={(href) => setShown(href.split('/').at(-1))}
     >
-      {shown && <ExamplePage id={shown} />}
+      {shown && <ExampleScreen id={shown} />}
     </SettingsLayout>
   );
 }

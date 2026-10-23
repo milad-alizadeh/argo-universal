@@ -5,7 +5,7 @@ import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type { IconSymbol } from '@repo/kit/symbols/icon-symbol';
 import type * as React from 'react';
@@ -34,11 +34,11 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
   useErrorToast(props.plugins.status === 'error' ? loadFailed : undefined);
 
   return (
-    <Page title={pluginsTitle} caption={props.caption}>
+    <Screen title={pluginsTitle} caption={props.caption}>
       <List appearance="cards">
         <ListSection>{pluginRows(props)}</ListSection>
       </List>
-    </Page>
+    </Screen>
   );
 }
 

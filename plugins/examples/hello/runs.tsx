@@ -1,7 +1,7 @@
 import {
   Action,
   ActionList,
-  Page,
+  Screen,
   Pill,
   Table,
   useState,
@@ -137,8 +137,8 @@ export function HelloRunsPage(): JSX.Element {
   const [title, setTitle] = useState('Runs');
 
   return (
-    <Page title={title}>
+    <Screen title={title}>
       <RunsTable onRerun={rerunTitle(setTitle)} />
-    </Page>
+    </Screen>
   );
 }

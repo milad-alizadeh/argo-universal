@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { MenuTrigger } from '#primitives/overlays/menu';
-import { FieldPickerDrill, type PageTrigger } from './field-picker-drill';
+import { FieldPickerDrill, type ScreenTrigger } from './field-picker-drill';
 import { choiceSummary, type FieldPickerProps } from './field-picker-model';
 
 /*
@@ -12,7 +12,7 @@ export function FieldPickerPill(props: FieldPickerProps): ReactElement {
   return <FieldPickerDrill {...props} opener={pillTrigger(props)} />;
 }
 
-function pillTrigger(props: FieldPickerProps): PageTrigger {
+function pillTrigger(props: FieldPickerProps): ScreenTrigger {
   const summary = choiceSummary(props);
 
   return (

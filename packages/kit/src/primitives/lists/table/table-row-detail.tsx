@@ -1,12 +1,12 @@
 import { createContext, type ReactElement } from 'react';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { Page } from '#primitives/scaffolds/page';
+import { Screen } from '#primitives/scaffolds/screen';
 import { nodeValue } from './table-cell';
 import type { TableColumn, TableProps } from './table-props';
 import { cellOf, type TableCell, type TableRow } from './table-rows';
 
-// Pushes a Row detail Page onto the App's stack; without one, a compact row runs its primary Action.
+// Pushes a Row detail Screen onto the App's stack; without one, a compact row runs its primary Action.
 export type OpenRowDetail = (detail: ReactElement) => void;
 
 export const TableRowDetailHost = createContext<OpenRowDetail | undefined>(
@@ -19,16 +19,16 @@ interface RowDetailProps {
   row: TableRow;
 }
 
-// The row's title column names the Page; one ListItem per other column, in column order, hidden ones included.
+// The row's title column names the Screen; one ListItem per other column, in column order, hidden ones included.
 export function TableRowDetail(props: RowDetailProps): ReactElement {
   const { row, titleColumn } = props;
 
   return (
-    <Page title={cellOf(row, titleColumn).text} actions={row.actions}>
+    <Screen title={cellOf(row, titleColumn).text} actions={row.actions}>
       <List appearance="plain">
         <DetailItems {...props} />
       </List>
-    </Page>
+    </Screen>
   );
 }
 

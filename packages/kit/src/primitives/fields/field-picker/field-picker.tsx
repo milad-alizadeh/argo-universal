@@ -8,7 +8,7 @@ import {
   type FieldPickerCallerProps,
   type FieldPickerProps,
 } from './field-picker-model';
-import { PageTrigger } from './field-picker-page-trigger';
+import { ScreenTrigger } from './field-picker-screen-trigger';
 import { FieldPickerSelect } from './field-picker-select';
 
 /*
@@ -36,15 +36,15 @@ function Choice(props: FieldPickerProps): ReactElement {
   if (props.presentation === 'menu' && !props.multiple)
     return <FieldPickerSelect {...selectProps(props)} />;
 
-  return <PagePicker {...props} />;
+  return <ScreenPicker {...props} />;
 }
 
-function PagePicker(props: FieldPickerProps): ReactElement {
+function ScreenPicker(props: FieldPickerProps): ReactElement {
   return (
     <FieldPickerDrill
       {...props}
       opener={
-        <PageTrigger
+        <ScreenTrigger
           title={props.title}
           summary={choiceSummary(props)}
           lead={<RowTitle {...props} />}

@@ -12,7 +12,7 @@ export function InspectorSheet(props: InspectorProps): ReactElement {
   return (
     <InspectorSheetFrame
       inspector={props}
-      pageTitle={props.sheetHeader ? undefined : props.title}
+      screenTitle={props.sheetHeader ? undefined : props.title}
     >
       <SheetContent {...props} />
     </InspectorSheetFrame>

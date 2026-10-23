@@ -1,7 +1,7 @@
 import { errorToast } from '@repo/kit/error-toast';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { formatServerClock, formatServerStart } from '#features/connection';
 
@@ -28,9 +28,12 @@ export function ConnectionDetailView({
   server,
 }: ConnectionDetailViewProps): React.JSX.Element {
   return (
-    <Page title="Connection" caption="The Argo Server this App is talking to.">
+    <Screen
+      title="Connection"
+      caption="The Argo Server this App is talking to."
+    >
       <ServerForm server={server} />
-    </Page>
+    </Screen>
   );
 }
 

@@ -17,7 +17,7 @@ export const Card: PluginComponents['Card'];
 
 export const ScrollView: PluginComponents['ScrollView'];
 
-export const Page: PluginComponents['Page'];
+export const Screen: PluginComponents['Screen'];
 
 export const ListDetail: PluginComponents['ListDetail'];
 

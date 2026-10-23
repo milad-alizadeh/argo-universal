@@ -68,7 +68,7 @@ export const WideWithoutSelectionShowsEmpty = at(layoutWidths.wide, {
   },
 });
 
-// Beside its list a detail is never drilled into, so its Page draws no Back.
+// Beside its list a detail is never drilled into, so its Screen draws no Back.
 export const WideDetailHasNoBack = at(layoutWidths.wide, {
   render: selected,
   play: async ({ canvas }) => {

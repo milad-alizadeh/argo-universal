@@ -232,7 +232,7 @@
       "files": [
         "packages/kit/src/symbols/**",
         "packages/kit/src/primitives/fields/field-link/field-link.ios.tsx",
-        "packages/kit/src/primitives/fields/field-picker/field-picker-page-row.ios.tsx"
+        "packages/kit/src/primitives/fields/field-picker/field-picker-screen-row.ios.tsx"
       ],
       "rules": { "argo/icon-size": "off" }
     },

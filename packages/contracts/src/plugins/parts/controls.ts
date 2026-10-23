@@ -9,7 +9,7 @@ import { sliderProps } from './input-control-props';
 
 export const controlsPartSchemas = {
   SearchField: part(
-    'Search input for Page headers and Lists.',
+    'Search input for Screen headers and Lists.',
     searchFieldProps,
     {
       label:

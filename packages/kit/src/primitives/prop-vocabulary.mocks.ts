@@ -98,8 +98,8 @@ export type Primitives = {
   SheetDestination: SheetKit.SheetDestination;
   SheetLinkProps: SheetKit.SheetLinkProps;
   SheetNavigation: SheetKit.SheetNavigation;
-  SheetPageAction: SheetKit.SheetPageAction;
-  SheetPageProps: SheetKit.SheetPageProps;
+  SheetScreenAction: SheetKit.SheetScreenAction;
+  SheetScreenProps: SheetKit.SheetScreenProps;
   SheetProps: SheetKit.SheetProps;
   SliderProps: SliderKit.SliderProps;
   SpinnerProps: SpinnerKit.SpinnerProps;

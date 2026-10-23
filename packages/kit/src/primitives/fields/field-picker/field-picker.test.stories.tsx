@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
 import { settleViewport } from '#kit/settle-viewport';
-import { ControlledPage, ControlledPicker } from './field-picker-controlled';
+import { ControlledScreen, ControlledPicker } from './field-picker-controlled';
 import { inStackedSection } from './field-picker-decorators';
 import {
   emptyOption,
@@ -10,9 +10,9 @@ import {
   inlineMultiple,
   menu,
   menuMultiple,
-  pageMultiple,
-  pageWithButton,
-  pageWithSearch,
+  screenMultiple,
+  screenWithButton,
+  screenWithSearch,
 } from './field-picker-fixtures';
 
 const changed = fn<(value: string | readonly string[]) => void>();
@@ -46,7 +46,7 @@ function choosing(width: number): Story {
   return {
     beforeEach: (): Promise<void> => settleViewport(width),
     render: () => (
-      <ControlledPicker {...pageWithSearch} onValueChange={changed} />
+      <ControlledPicker {...screenWithSearch} onValueChange={changed} />
     ),
     play: async ({ canvas, userEvent }) => {
       const page = within(document.body);
@@ -74,10 +74,10 @@ export const RowOpensFromTitleMenu: Story = {
   },
 };
 
-export const RowOpensFromTitlePage: Story = {
+export const RowOpensFromTitleScreen: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: () => (
-    <ControlledPicker {...pageWithSearch} onValueChange={changed} />
+    <ControlledPicker {...screenWithSearch} onValueChange={changed} />
   ),
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.getAllByRole('button')).toHaveLength(1);
@@ -90,12 +90,12 @@ export const RowOpensFromTitlePage: Story = {
 
 export const ChoosesInPopover = choosing(layoutWidths.wide);
 
-export const ChoosesOnPushedPage = choosing(layoutWidths.phone);
+export const ChoosesOnPushedScreen = choosing(layoutWidths.phone);
 
 export const SearchFiltersAndShowsEmptyState: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: () => (
-    <ControlledPicker {...pageWithSearch} onValueChange={changed} />
+    <ControlledPicker {...screenWithSearch} onValueChange={changed} />
   ),
   play: async ({ canvas, userEvent }) => {
     const page = within(document.body);
@@ -119,7 +119,7 @@ export const SearchFiltersAndShowsEmptyState: Story = {
 export const ArrowKeysAndEnterChoose: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: () => (
-    <ControlledPicker {...pageWithSearch} onValueChange={changed} />
+    <ControlledPicker {...screenWithSearch} onValueChange={changed} />
   ),
   play: async ({ canvas, userEvent }) => {
     const page = within(document.body);
@@ -136,7 +136,9 @@ export const ArrowKeysAndEnterChoose: Story = {
 // A multiple page stays open, and every toggle reports the whole list in the options' order.
 export const MultipleReportsEachToggle: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
-  render: () => <ControlledPicker {...pageMultiple} onValueChange={changed} />,
+  render: () => (
+    <ControlledPicker {...screenMultiple} onValueChange={changed} />
+  ),
   play: async ({ canvas, userEvent }) => {
     const page = within(document.body);
     await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
@@ -158,7 +160,7 @@ export const ActionRunsAndCloses: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: () => (
     <ControlledPicker
-      {...pageWithButton}
+      {...screenWithButton}
       footerAction={{ label: 'Add options', onPress: pressed }}
       onValueChange={changed}
     />
@@ -229,8 +231,10 @@ export const InlineTogglesCheckboxes: Story = {
 };
 
 // The page's rows report a choice: the web's rows are radios, and a phone's native rows are the same options.
-export const PageRowsChoose: Story = {
-  render: () => <ControlledPage {...pageWithSearch} onValueChange={changed} />,
+export const ScreenRowsChoose: Story = {
+  render: () => (
+    <ControlledScreen {...screenWithSearch} onValueChange={changed} />
+  ),
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.getByRole('radio', { name: /^Cedar/ })).toBeVisible();
     await userEvent.click(canvas.getByRole('radio', { name: /^Elm/ }));

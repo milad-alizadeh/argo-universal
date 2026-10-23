@@ -33,7 +33,7 @@ type Story = StoryObj<typeof meta>;
  * Each story keeps its own render: the page shown is state the example holds, standing in for the
  * App's router. Below the wide breakpoint the list is the screen and a row pushes its page.
  */
-export const PageShown: Story = {
+export const ScreenShown: Story = {
   render: () => <ExampleSettingsLayout initial="projects" />,
 };
 

@@ -27,7 +27,7 @@ function wideFilterTrigger(changed: boolean): React.JSX.Element {
 
 /*
  * How the Sessions list lays out, groups and filters its rows.
- * The wide sidebar's header draws it; a phone's Sessions Page declares the same choices as its filter Action.
+ * The wide sidebar's header draws it; a phone's Sessions Screen declares the same choices as its filter Action.
  * The trigger carries a dot while the view is not the default.
  */
 export function SessionsViewMenu({

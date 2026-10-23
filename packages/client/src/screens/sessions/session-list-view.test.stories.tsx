@@ -44,7 +44,7 @@ export const LoadErrorShowsAToastOnce: Story = {
   play: async ({ canvas }) => {
     await expect(await findToast(loadFailure)).toBeVisible();
     await expect(await allToasts(loadFailure)).toHaveLength(1);
-    // A phone's list sits in its Sessions Page, so a width change mounts it again, as the App's root and sidebar lists are separate.
+    // A phone's list sits in its Sessions Screen, so a width change mounts it again, as the App's root and sidebar lists are separate.
     await eachLayout(async () => {
       await expect(
         canvas.getByRole('status', { name: 'Loading Sessions' }),
@@ -152,7 +152,7 @@ export const ArchiveFromARowOnPhone: Story = archiveFromARowAt('phone');
 
 export const ArchiveFromARowWide: Story = archiveFromARowAt('wide');
 
-// A phone's Sessions Page: New Session is its primary Action, and the filter its one header Action, which marks a changed view.
+// A phone's Sessions Screen: New Session is its primary Action, and the filter its one header Action, which marks a changed view.
 export const PhonePageFiltersTheView: Story = {
   beforeEach: () => settleViewport(layoutWidths.phone),
   play: async ({ canvas, userEvent }) => {
