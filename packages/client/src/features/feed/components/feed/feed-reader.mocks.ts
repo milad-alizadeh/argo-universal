@@ -4,6 +4,16 @@ import { settleViewport } from '@repo/kit/settle-viewport';
 import { expect, waitFor, type within } from 'storybook/test';
 import { splitGroupHeader } from './feed.mocks';
 
+const describeTop = (element: HTMLElement): string => {
+  const box = element.getBoundingClientRect();
+  const hit = document.elementFromPoint(
+    box.left + box.width / 2,
+    box.top + box.height / 2,
+  );
+
+  return `${hit?.tagName}.${String(hit?.className).slice(0, 120)}|testid=${hit?.getAttribute('data-testid')}`;
+};
+
 export const feedScrollId = 'feed-scroll';
 
 export const earlierFeedLoadingLabel = 'Loading earlier';
@@ -113,7 +123,7 @@ export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
 
     if (!settled)
       throw new Error(
-        `DIAG still moving top=${box.top} last=${lastTop} h=${box.height} w=${box.width} point=${canPointAt(findElement())}`,
+        `DIAG still moving top=${box.top} last=${lastTop} h=${box.height} w=${box.width} point=${canPointAt(findElement())} top=${describeTop(findElement())}`,
       );
 
     return box.top;
