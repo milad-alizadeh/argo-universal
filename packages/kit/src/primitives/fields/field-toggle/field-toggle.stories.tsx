@@ -19,7 +19,7 @@ const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
 );
 
 const meta = {
-  title: 'Design System/Primitives/Fields/FieldToggle',
+  title: 'Design System/Primitives/Forms/FieldToggle',
   component: FieldToggle,
   args: { title: 'Label', value: true, onValueChange: fn() },
   argTypes: kitArgTypes('FieldGroup.Toggle'),

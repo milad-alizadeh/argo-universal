@@ -1,12 +1,12 @@
+import { Switch } from '@expo/ui';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { TextInput } from 'react-native';
 import { action } from 'storybook/actions';
 import { expect, fireEvent, within } from 'storybook/test';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { Slider } from '#primitives/controls/slider';
-import { Switch } from '#primitives/controls/switch';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { layoutWidths } from '../../../each-layout';
@@ -58,14 +58,25 @@ function FastToggle(): React.JSX.Element {
   return (
     <ListItem
       title="Fast"
-      trailing={
-        <Switch
-          accessibilityLabel="Fast"
-          value={fast}
-          onValueChange={setFast}
-        />
-      }
+      trailing={<Switch label="Fast" value={fast} onValueChange={setFast} />}
     />
+  );
+}
+
+function SearchModels(): React.JSX.Element {
+  const [query, setQuery] = useState('');
+
+  return (
+    <FieldGroup>
+      <FieldGroup.Section>
+        <FieldGroup.TextField
+          title="Search models"
+          hideTitle
+          value={query}
+          onChangeText={setQuery}
+        />
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 
@@ -75,7 +86,7 @@ function MenuPopover(): React.JSX.Element {
     <Popover>
       <Trigger />
       <PopoverContent accessibilityLabel="Model" className="p-1">
-        <TextInput accessibilityLabel="Search models" />
+        <SearchModels />
         <List>
           <ListItem title="Small" onPress={action('small')} />
           <ListItem title="Medium" disabled onPress={action('medium')} />

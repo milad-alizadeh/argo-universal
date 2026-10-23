@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { Combobox } from '#primitives/controls/combobox';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { Sheet } from '#primitives/overlays/sheet';
 import { configureSheet } from '../sheet/sheet-fixtures';
 import { Drill } from './drill';
@@ -88,5 +88,20 @@ function FruitDrill(props: FruitProps): ReactElement {
 function FruitChoices(
   props: FruitProps & { onClose: () => void },
 ): ReactElement {
-  return <Combobox.Content {...props} label="Fruit" options={options} />;
+  return (
+    <List appearance="plain" fit>
+      <ListSection
+        selectionMode="single"
+        selection={[props.value]}
+        onSelectionChange={([next = props.value]) => {
+          props.onValueChange(next);
+          props.onClose();
+        }}
+      >
+        {options.map((option) => (
+          <ListItem key={option.value} id={option.value} title={option.label} />
+        ))}
+      </ListSection>
+    </List>
+  );
 }

@@ -6,7 +6,7 @@ import { FieldGroup } from './field-group';
 const pressed = fn();
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Fields/FieldGroup',
+  title: 'Tests/Design System/Primitives/Forms/FieldGroup',
   render: (): ReactElement => <Page />,
   beforeEach: (): void => {
     pressed.mockClear();

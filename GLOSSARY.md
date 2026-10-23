@@ -273,7 +273,7 @@ One row in a FieldGroup, of a fixed type such as a value, a link, a toggle, a te
 _Avoid_: Settings row, ListItem (for a Field)
 
 **Control**:
-A standalone input that sits on its own in a screen, such as a search field, a segmented control, a slider or a switch. A value that belongs to a page of fixed rows is a Field in a FieldGroup, not a Control.
+A standalone input that sits on its own in a screen, such as a search field, a segmented control, a filter pill or a slider. A value that belongs to a page of fixed rows is a Field in a FieldGroup, not a Control.
 _Avoid_: Input (for the kit folder), Field (for a standalone control)
 
 **List**:

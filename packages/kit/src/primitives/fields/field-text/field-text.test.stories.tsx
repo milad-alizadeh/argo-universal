@@ -17,7 +17,7 @@ const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
 );
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Fields/FieldText',
+  title: 'Tests/Design System/Primitives/Forms/FieldText',
   component: FieldText,
   args: {
     title: 'Label',

@@ -21,7 +21,7 @@ const LABEL = 'Due date';
 const FIRST = '2026-10-19';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Fields/FieldDatePicker',
+  title: 'Tests/Design System/Primitives/Forms/FieldDatePicker',
   component: ControlledDatePicker,
   args: { title: LABEL, value: undefined, onValueChange: fn() },
   decorators: [inFieldGroupSection],

@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { TextInput, View } from 'react-native';
+import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { useWide } from '#kit/use-wide/use-wide';
 import { Button } from '#primitives/actions/button';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
+import { FieldGroup } from '#primitives/fields/field-group';
 import {
   Dialog,
   DialogCancel,
@@ -60,11 +61,13 @@ const profileFields = [
 
 function ProfileFields(): React.JSX.Element {
   return (
-    <View className="grid gap-4">
-      {profileFields.map((field) => (
-        <ProfileField key={field.id} {...field} />
-      ))}
-    </View>
+    <FieldGroup>
+      <FieldGroup.Section>
+        {profileFields.map((field) => (
+          <ProfileField key={field.id} {...field} />
+        ))}
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 
@@ -97,16 +100,12 @@ export const Default: Story = {
 };
 
 function ProfileField({
-  id,
   label,
   defaultValue,
 }: (typeof profileFields)[number]): React.JSX.Element {
-  const inputProps = { id, accessibilityLabel: label, defaultValue };
+  const [value, setValue] = useState(defaultValue);
 
   return (
-    <View className="grid gap-3">
-      <Text>{label}</Text>
-      <TextInput {...inputProps} />
-    </View>
+    <FieldGroup.TextField title={label} value={value} onChangeText={setValue} />
   );
 }

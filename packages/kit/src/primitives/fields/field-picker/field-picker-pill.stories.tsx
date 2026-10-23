@@ -7,7 +7,7 @@ import { pill } from './field-picker-fixtures';
 import { FieldPicker } from './field-picker-switch';
 
 const meta = {
-  title: 'Design System/Primitives/Fields/FieldPicker/Pill',
+  title: 'Design System/Primitives/Forms/FieldPicker/Pill',
   component: FieldPicker,
   argTypes: kitArgTypes('FieldGroup.Picker'),
   decorators: inStackedToolbar,

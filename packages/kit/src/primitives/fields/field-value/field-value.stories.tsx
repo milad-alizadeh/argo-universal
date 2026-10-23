@@ -18,7 +18,7 @@ const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
 );
 
 const meta = {
-  title: 'Design System/Primitives/Fields/FieldValue',
+  title: 'Design System/Primitives/Forms/FieldValue',
   component: FieldValue,
   args: { title: 'Version', value: '1.2.3' },
   argTypes: kitArgTypes('FieldGroup.Value'),

@@ -17,7 +17,7 @@ const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
 );
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Fields/FieldLink',
+  title: 'Tests/Design System/Primitives/Forms/FieldLink',
   component: FieldLink,
   args: { title: 'Licences', onPress: fn() },
   decorators: [inFieldGroupSection],

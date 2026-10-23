@@ -6,7 +6,7 @@ import { Button } from '#primitives/actions/button';
 import { FieldGroup } from './field-group';
 
 const meta = {
-  title: 'Design System/Primitives/Fields/FieldGroup',
+  title: 'Design System/Primitives/Forms/FieldGroup',
   component: FieldGroup,
   // The page holds each row's value, so the story renders it rather than these args.
   args: {},

@@ -9,7 +9,7 @@ import { pill, pillLoadError, pillLoading } from './field-picker-fixtures';
 const changed = fn<(value: string | readonly string[]) => void>();
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Fields/FieldPicker/Pill',
+  title: 'Tests/Design System/Primitives/Forms/FieldPicker/Pill',
   beforeEach: (): void => {
     changed.mockClear();
   },

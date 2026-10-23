@@ -17,7 +17,7 @@ const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
 );
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Fields/FieldToggle',
+  title: 'Tests/Design System/Primitives/Forms/FieldToggle',
   component: FieldToggle,
   args: { title: 'Label', value: true, onValueChange: fn() },
   decorators: [inFieldGroupSection],

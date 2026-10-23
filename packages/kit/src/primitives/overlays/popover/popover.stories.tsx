@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
-import { Combobox } from '#primitives/controls/combobox';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { List } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { PopoverAnchor } from './popover-anchor';
 import { PopoverTitle } from './popover-title';
@@ -55,26 +57,24 @@ const dimensions = [
 
 function DimensionFields(): React.JSX.Element {
   return (
-    <View className="gap-2">
-      {dimensions.map((dimension) => (
-        <DimensionField key={dimension.id} {...dimension} />
-      ))}
-    </View>
+    <FieldGroup>
+      <FieldGroup.Section>
+        {dimensions.map((dimension) => (
+          <DimensionField key={dimension.id} {...dimension} />
+        ))}
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 
 function DimensionField({
-  id,
   label,
   defaultValue,
 }: (typeof dimensions)[number]): React.JSX.Element {
-  const inputProps = { id, accessibilityLabel: label, defaultValue };
+  const [value, setValue] = useState(defaultValue);
 
   return (
-    <View className="flex-row items-center gap-4">
-      <Text className="web:block w-24">{label}</Text>
-      <TextInput {...inputProps} className="flex-1 sm:h-8" />
-    </View>
+    <FieldGroup.TextField title={label} value={value} onChangeText={setValue} />
   );
 }
 
@@ -105,12 +105,13 @@ function FruitList(props: { onClose: () => void }): React.JSX.Element {
   return (
     <PopoverContent align="start" accessibilityLabel="Fruit" list>
       <PopoverTitle>Fruit</PopoverTitle>
-      <Combobox.Content
-        label="Fruit"
-        options={fruits}
-        onValueChange={props.onClose}
-        onClose={props.onClose}
-      />
+      <List appearance="plain" fit>
+        <List.Section selectionMode="single" onSelectionChange={props.onClose}>
+          {fruits.map((fruit) => (
+            <ListItem key={fruit.value} id={fruit.value} title={fruit.label} />
+          ))}
+        </List.Section>
+      </List>
     </PopoverContent>
   );
 }

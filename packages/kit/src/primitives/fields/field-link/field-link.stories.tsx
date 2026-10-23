@@ -19,7 +19,7 @@ const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
 );
 
 const meta = {
-  title: 'Design System/Primitives/Fields/FieldLink',
+  title: 'Design System/Primitives/Forms/FieldLink',
   component: FieldLink,
   args: { title: 'Licences', onPress: fn() },
   argTypes: kitArgTypes('FieldGroup.Link'),

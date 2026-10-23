@@ -26,7 +26,7 @@ const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
 );
 
 const meta = {
-  title: 'Design System/Primitives/Fields/FieldDatePicker',
+  title: 'Design System/Primitives/Forms/FieldDatePicker',
   component: ControlledDatePicker,
   args: { onValueChange: fn() },
   argTypes: kitArgTypes('FieldGroup.DatePicker'),
