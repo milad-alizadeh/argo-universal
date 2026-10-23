@@ -4,9 +4,15 @@ import { PageNavigationEnabled } from '#primitives/scaffolds/page';
 import { PushedPageRoute } from '../pushed-page/routes';
 import { StackScreensContext, type StackPages } from './stack-story-context';
 
-// A story's decorator on web: the story is the root of a real expo-router stack held in memory, so its Page draws the header the App's narrow window does.
+/*
+ * A story's decorator on web: the story is the root of a real expo-router stack held in memory, so its Page draws the
+ * header the App's narrow window does. It takes the story context only to match the phone decorator's signature.
+ */
 export function withStack(pages: StackPages = {}) {
-  return function WithStack(Story: ComponentType): React.JSX.Element {
+  return function WithStack(
+    Story: ComponentType,
+    _context?: { id: string },
+  ): React.JSX.Element {
     return <MemoryStack Root={Story} pages={pages} />;
   };
 }
