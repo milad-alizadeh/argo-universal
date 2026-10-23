@@ -1,17 +1,18 @@
 import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
+import { InChoiceMenu } from '#kit/menu-rows-context';
 import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import {
   chosenValues,
-  choose,
   matchingOptions,
   optionSections,
   type FieldPickerOption,
   type FieldPickerProps,
   type OptionSection,
 } from './field-picker-model';
+import { change } from './field-picker-page-choice';
 import { PageFrame } from './field-picker-page-frame';
 import {
   EmptyState,
@@ -113,6 +114,14 @@ type SectionProps = FieldPickerPageProps & { section: OptionSection };
 
 function PageSection(props: SectionProps): ReactElement {
   return (
+    <InChoiceMenu value>
+      <ChoiceSection {...props} />
+    </InChoiceMenu>
+  );
+}
+
+function ChoiceSection(props: SectionProps): ReactElement {
+  return (
     <List.Section
       title={props.section.title}
       selectionMode={props.multiple ? 'multiple' : 'single'}
@@ -124,38 +133,6 @@ function PageSection(props: SectionProps): ReactElement {
       ))}
     </List.Section>
   );
-}
-
-function change(props: FieldPickerPageProps, next: readonly string[]): void {
-  if (props.multiple) toggleChange(props, next);
-  else pickChange(props, next);
-}
-
-// A single section reports the pressed value alone, even the chosen one, and a choice closes the page.
-function pickChange(
-  props: FieldPickerPageProps,
-  next: readonly string[],
-): void {
-  const [pressed] = next;
-
-  if (pressed === undefined) return;
-
-  choose(props, pressed);
-  props.onClose?.();
-}
-
-// A multiple section reports its whole selection toggled; the value that differs from the held one is the press.
-function toggleChange(
-  props: FieldPickerPageProps,
-  next: readonly string[],
-): void {
-  const held = chosenValues(props);
-
-  const pressed = [...next, ...held].find(
-    (value) => next.includes(value) !== held.includes(value),
-  );
-
-  if (pressed !== undefined) choose(props, pressed);
 }
 
 function PageRow(

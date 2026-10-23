@@ -1,4 +1,4 @@
-import { useInMenu } from './menu-rows-context';
+import { useInChoiceMenu, useInMenu } from './menu-rows-context';
 import { useRowDrawing } from './row-drawing-context';
 
 export interface SectionDrawing {
@@ -37,13 +37,20 @@ const plain = {
   ...rowInset,
 } satisfies SectionDrawing;
 
-// A popover's section heading starts where its rows' text does: the row's 8 padding in from the card's inset.
+// A popover's section heading starts where its rows' icons do: the row's 8 padding in from the card's inset.
 const menu = { ...plain, inset: 'px-2' } satisfies SectionDrawing;
+
+// A choosing popover's rows keep a lane for the check (16) and a gap (8) before the text, and its heading starts with that text.
+const choosingMenu = { ...menu, inset: 'pl-8 pr-2' } satisfies SectionDrawing;
+
+const menuDrawing = (choosing: boolean): SectionDrawing =>
+  choosing ? choosingMenu : menu;
 
 export function useSectionDrawing(): SectionDrawing {
   const inMenu = useInMenu();
+  const choosing = useInChoiceMenu();
 
   if (useRowDrawing() === 'sidebar') return sidebar;
 
-  return inMenu ? menu : plain;
+  return inMenu ? menuDrawing(choosing) : plain;
 }
