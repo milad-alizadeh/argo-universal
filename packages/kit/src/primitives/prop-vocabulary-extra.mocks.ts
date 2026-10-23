@@ -7,7 +7,9 @@ import type { MarkdownProps } from '#primitives/content/markdown';
 import type * as MediaUrlKit from '#primitives/content/media-url';
 import type * as VideoKit from '#primitives/content/video';
 import type * as FieldGroupKit from '#primitives/fields/field-group';
+import type * as FieldRowKit from '#primitives/fields/field-row';
 import type * as DatePickerKit from '#primitives/inputs/date-picker';
+import type * as PickerKit from '#primitives/inputs/picker';
 import type * as CardKit from '#primitives/layout/card';
 import type * as GridKit from '#primitives/layout/grid';
 import type * as ScrollViewKit from '#primitives/layout/scroll-view';
@@ -25,7 +27,6 @@ import type * as SettingsLayoutKit from '#primitives/scaffolds/settings-layout';
 import type * as EmptyStateKit from '#primitives/status/empty-state';
 import type * as StatusDotKit from '#primitives/status/status-dot';
 import type * as SvgKit from '#primitives/visual';
-import type { FieldGroupKitProps } from './kit-props';
 
 export type AdditionalPrimitives = {
   LinkPreviewCardData: LinkPreviewKit.LinkPreviewCardData;
@@ -82,13 +83,8 @@ export type AdditionalPrimitives = {
   DatePickerProps: DatePickerKit.DatePickerProps;
   FieldGroupProps: FieldGroupKit.FieldGroupProps;
   FieldGroupSectionProps: FieldGroupKit.FieldGroupSectionProps;
-  FieldGroupToggleProps: FieldGroupKitProps<'FieldGroup.Toggle'>;
-  FieldGroupTextFieldProps: FieldGroupKitProps<'FieldGroup.TextField'>;
-  FieldGroupSecretFieldProps: FieldGroupKitProps<'FieldGroup.SecretField'>;
-  FieldGroupPickerProps: FieldGroupKitProps<'FieldGroup.Picker'>;
-  FieldGroupSliderProps: FieldGroupKitProps<'FieldGroup.Slider'>;
-  FieldGroupValueProps: FieldGroupKitProps<'FieldGroup.Value'>;
-  FieldGroupLinkProps: FieldGroupKitProps<'FieldGroup.Link'>;
+  RowTextProps: FieldRowKit.RowTextProps;
+  PlainPickerProps: PickerKit.PlainPickerProps;
   VideoProps: VideoKit.VideoProps;
   AudioProps: AudioKit.AudioProps;
   MediaUrl: MediaUrlKit.MediaUrl;
