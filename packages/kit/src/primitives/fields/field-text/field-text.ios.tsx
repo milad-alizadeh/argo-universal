@@ -3,6 +3,7 @@ import {
   SecureField,
   TextField,
   type TextFieldProps,
+  type TextFieldRef,
   useNativeState,
 } from '@expo/ui/swift-ui';
 import {
@@ -14,7 +15,7 @@ import {
   onSubmit,
   truncationMode,
 } from '@expo/ui/swift-ui/modifiers';
-import { type ReactElement, useEffect } from 'react';
+import { type ReactElement, type RefObject, useEffect, useRef } from 'react';
 import { RowTitle } from '#primitives/fields/field-row';
 import type { FieldGroupKitProps } from '../../kit-props';
 
@@ -34,9 +35,11 @@ export function FieldText(props: FieldTextProps): ReactElement {
 
   return (
     <HStack spacing={8}>
-      <HStack modifiers={titleColumn}>
-        <RowTitle {...props} />
-      </HStack>
+      {props.hideTitle ? null : (
+        <HStack modifiers={titleColumn}>
+          <RowTitle {...props} />
+        </HStack>
+      )}
       {props.secure ? <SecureField {...field} /> : <TextField {...field} />}
     </HStack>
   );
@@ -52,17 +55,36 @@ const titleColumn = [
 
 function useFieldProps(props: FieldTextProps): TextFieldProps {
   const text = useSwiftFieldText(props.value);
+  const ref = useRef<TextFieldRef>(null);
 
   return {
+    ref,
     text,
+    autoFocus: props.autoFocus,
     axis: props.multiline ? 'vertical' : 'horizontal',
     placeholder: props.placeholder,
     onTextChange: props.onChangeText,
-    onFocusChange: (focused: boolean): void => {
-      if (!focused) props.onBlur?.();
-    },
+    onFocusChange: (focused) => focusChanged(props, ref, focused),
     modifiers: modifiers(props),
   };
+}
+
+// SwiftUI has no select-on-focus; the field takes the whole text as its selection once it has focus (iOS 18+). Losing focus is a blur.
+function focusChanged(
+  props: FieldTextProps,
+  ref: RefObject<TextFieldRef | null>,
+  focused: boolean,
+): void {
+  if (focused) selectAll(props, ref);
+  else props.onBlur?.();
+}
+
+function selectAll(
+  props: FieldTextProps,
+  ref: RefObject<TextFieldRef | null>,
+): void {
+  if (props.selectTextOnFocus)
+    void ref.current?.setSelection(0, props.value.length);
 }
 
 function modifiers(props: FieldTextProps): TextFieldProps['modifiers'] {

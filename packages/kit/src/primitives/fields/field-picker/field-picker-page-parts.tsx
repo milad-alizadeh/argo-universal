@@ -24,6 +24,37 @@ export function PageSearch(props: SearchProps): ReactElement {
   );
 }
 
+type PageStatusMessage = {
+  message: string;
+  kind: 'loading' | 'error';
+};
+
+// Loading or failed options say so where the rows would be.
+export function pageStatus(
+  props: Pick<FieldPickerPageProps, 'loading' | 'loadError'>,
+): Partial<PageStatusMessage> {
+  if (props.loadError) return { message: props.loadError, kind: 'error' };
+
+  return props.loading ? { message: 'Loading options…', kind: 'loading' } : {};
+}
+
+// Loading and failed choices say so where the rows would be; a failure is announced.
+export function PageStatus(
+  props: Partial<PageStatusMessage>,
+): ReactElement | null {
+  if (!props.message) return null;
+
+  return (
+    <Text
+      accessibilityRole={props.kind === 'error' ? 'alert' : 'status'}
+      role="secondary"
+      className="px-4 py-3"
+    >
+      {props.message}
+    </Text>
+  );
+}
+
 export function EmptyState(): ReactElement {
   return (
     <Text accessibilityRole="status" role="secondary" className="px-4 py-3">

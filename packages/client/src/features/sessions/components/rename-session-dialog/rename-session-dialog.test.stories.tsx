@@ -35,21 +35,23 @@ async function titleField(): Promise<HTMLInputElement> {
   return field;
 }
 
-// The field opens with the Session's title; nothing has failed yet, so it is valid.
-function opensWithTitleAt(layout: Layout): Story {
+// The field takes focus with the whole title selected, so typing replaces it; nothing has failed yet, so it is valid.
+function opensSelectedAt(layout: Layout): Story {
   return {
     beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
     play: async () => {
       const field = await titleField();
-      await expect(field).toHaveValue(title);
+      await waitFor(() => expect(field).toHaveFocus());
+      await expect(field.selectionStart).toBe(0);
+      await expect(field.selectionEnd).toBe(title.length);
       await expect(field).not.toBeInvalid();
     },
   };
 }
 
-export const OpensWithTitleOnPhone: Story = opensWithTitleAt('phone');
+export const OpensSelectedOnPhone: Story = opensSelectedAt('phone');
 
-export const OpensWithTitleWide: Story = opensWithTitleAt('wide');
+export const OpensSelectedWide: Story = opensSelectedAt('wide');
 
 // Save, or Enter in the field, saves the typed title without its outer spaces.
 function savesAt(layout: Layout, submit: 'button' | 'enter'): Story {

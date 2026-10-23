@@ -21,9 +21,11 @@ const titleColumn = 'w-25 shrink-0';
 export function FieldText(props: FieldTextProps): ReactElement {
   return (
     <Row alignment="center" spacing={titleGap}>
-      <View className={titleColumn}>
-        <RowTitle {...props} numberOfLines={1} />
-      </View>
+      {props.hideTitle ? null : (
+        <View className={titleColumn}>
+          <RowTitle {...props} numberOfLines={1} />
+        </View>
+      )}
       <FieldTextInput {...props} />
     </Row>
   );

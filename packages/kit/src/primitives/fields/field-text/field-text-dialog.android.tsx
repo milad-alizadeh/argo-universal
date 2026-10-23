@@ -5,10 +5,11 @@ import {
   TextField,
   type TextFieldKeyboardType,
   type TextFieldProps,
+  type TextFieldRef,
   useNativeState,
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import type { ReactElement } from 'react';
+import { type ReactElement, useEffect, useRef } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import type { FieldTextProps } from './field-text-props';
 
@@ -89,8 +90,11 @@ type DraftFieldProps = FieldTextProps & {
  * keyboard, as EditTextPreference's dialog does.
  */
 function DraftField(props: DraftFieldProps): ReactElement {
+  const ref = useSelectedOnOpen(props);
+
   return (
     <TextField
+      ref={ref}
       {...draftEntry(props)}
       /* oxlint-disable-next-line jsx-a11y/no-autofocus -- the dialog exists to edit this one field; Android focuses it on open. */
       autoFocus
@@ -99,6 +103,21 @@ function DraftField(props: DraftFieldProps): ReactElement {
       <Placeholder text={props.placeholder} />
     </TextField>
   );
+}
+
+// `selectTextOnFocus`: the dialog's field opens with the whole value selected, so typing replaces it.
+function useSelectedOnOpen(
+  props: DraftFieldProps,
+): React.RefObject<TextFieldRef | null> {
+  const ref = useRef<TextFieldRef>(null);
+
+  useEffect(() => {
+    if (props.selectTextOnFocus)
+      void ref.current?.setSelection(0, props.value.length);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once, as the dialog opens.
+  }, []);
+
+  return ref;
 }
 
 const draftEntry = (props: DraftFieldProps): TextFieldProps => ({

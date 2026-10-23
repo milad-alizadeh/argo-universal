@@ -5,7 +5,7 @@ import { FieldPickerPage } from './field-picker-page';
 
 export type PageTrigger = NonNullable<DrillProps['trigger']>;
 
-type DrillPickerProps = FieldPickerProps & { trigger: PageTrigger };
+type DrillPickerProps = FieldPickerProps & { opener: PageTrigger };
 
 /*
  * A picker's `page` presentation: its row's trigger opens the choices where the platform puts a drill. A desktop
@@ -24,7 +24,7 @@ const drillProps = (props: DrillPickerProps): Omit<DrillProps, 'children'> => ({
   label: props.title,
   title: props.title,
   value: choiceSummary(props),
-  trigger: props.trigger,
+  trigger: props.opener,
   disabled: props.disabled,
   contentScrolls: true,
   keepOpen: props.multiple,

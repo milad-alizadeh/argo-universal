@@ -4,7 +4,7 @@ import type {
   StoryObj,
 } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { FieldText } from './field-text';
 
@@ -46,5 +46,27 @@ export const MultilineKeepsLineBreaks: Story = {
     await expect(args.onChangeText).toHaveBeenCalledWith(
       expect.stringContaining('\n'),
     );
+  },
+};
+
+// `autoFocus` focuses the input as the row appears and `selectTextOnFocus` selects all of its text.
+export const FocusesAndSelectsOnMount: Story = {
+  args: { autoFocus: true, selectTextOnFocus: true },
+  play: async ({ canvas }) => {
+    const field = canvas.getByDisplayValue('Value');
+
+    await waitFor(() => expect(field).toHaveFocus());
+
+    if (!(field instanceof HTMLInputElement))
+      throw new Error('The field is not a text input.');
+
+    await expect(field.selectionStart).toBe(0);
+    await expect(field.selectionEnd).toBe('Value'.length);
+  },
+};
+
+export const FocusesNothingByDefault: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByDisplayValue('Value')).not.toHaveFocus();
   },
 };

@@ -118,3 +118,20 @@ export const multipleMenu = {
   presentation: 'menu',
   multiple: true,
 } satisfies Fixture<FieldPickerMultiple>;
+
+// The toolbar pill: the chosen label and a down chevron, outside a FieldGroup, opening the searchable page.
+export const pill = {
+  ...pageSearchable,
+  trigger: 'pill',
+  leading: 'folder',
+} satisfies Fixture<FieldPickerSingle>;
+
+export const pillLoading = {
+  ...pill,
+  loading: true,
+} satisfies Fixture<FieldPickerSingle>;
+
+export const pillLoadError = {
+  ...pill,
+  loadError: 'Could not load options.',
+} satisfies Fixture<FieldPickerSingle>;

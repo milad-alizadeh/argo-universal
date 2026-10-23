@@ -38,21 +38,15 @@ async function expectNoExtraHeader(page: Page): Promise<void> {
     page.getByRole('button', { name: 'Close Inspector', exact: true }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole('button', { name: 'Comparison', exact: true }),
+    page.getByRole('button', { name: /^Comparison/ }),
   ).toHaveCount(0);
 }
 
 // The desktop Inspector keeps its comparison controls and resolves a remote ref against the Checkout.
 async function compareAgainstRemote(page: Page): Promise<void> {
-  const comparison = page.getByRole('button', {
-    name: 'Comparison',
-    exact: true,
-  });
+  const comparison = page.getByRole('button', { name: /^Comparison/ });
 
   await comparison.click();
-  await page
-    .getByRole('menuitemradio', { name: 'Compare Against', exact: true })
-    .click();
   await page.getByRole('radio', { name: 'origin/main', exact: true }).click();
   await expect(comparison).toContainText('Compare Against origin/main');
 }

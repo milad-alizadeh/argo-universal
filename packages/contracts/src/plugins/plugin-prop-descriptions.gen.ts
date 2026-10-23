@@ -523,6 +523,14 @@ export type WireSchemaHints = {
     "options": PropValue<"FieldGroup.Picker", "options">;
     /** Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one. */
     "presentation": PropValue<"FieldGroup.Picker", "presentation">;
+    /** The text shown for the current choice, in place of the chosen labels. */
+    "summary": PropValue<"FieldGroup.Picker", "summary">;
+    /** What opens the choices: `row`, the default, is a FieldGroup row; `pill` is a label and a down chevron that sits in a toolbar or the Composer, outside a FieldGroup, and always opens the choices on a page or popover. */
+    "trigger": PropValue<"FieldGroup.Picker", "trigger">;
+    /** The options are still loading. */
+    "loading": PropValue<"FieldGroup.Picker", "loading">;
+    /** Why the options failed to load; shown below the rows. */
+    "loadError": PropValue<"FieldGroup.Picker", "loadError">;
     /** A search field above the choices; only a `page` has one. */
     "searchable": PropValue<"FieldGroup.Picker", "searchable">;
     /** Several options can be chosen; `value` is then a list. */
@@ -581,6 +589,12 @@ export type WireSchemaHints = {
     "keyboardType": PropValue<"FieldGroup.TextField", "keyboardType">;
     /** The field grows with its text over several lines, for a long answer. */
     "multiline": PropValue<"FieldGroup.TextField", "multiline">;
+    /** The title names the field for assistive technology but is not drawn, for a field whose surroundings already name it. */
+    "hideTitle": PropValue<"FieldGroup.TextField", "hideTitle">;
+    /** Focus the field as the row appears; on Android, open its dialog. */
+    "autoFocus": PropValue<"FieldGroup.TextField", "autoFocus">;
+    /** Select all of the text when the field takes focus. */
+    "selectTextOnFocus": PropValue<"FieldGroup.TextField", "selectTextOnFocus">;
     /** on Blur for this part. */
     "onBlur": PropValue<"FieldGroup.TextField", "onBlur">;
     /** on Submit for this part. */
@@ -605,6 +619,12 @@ export type WireSchemaHints = {
     "keyboardType": PropValue<"FieldGroup.SecretField", "keyboardType">;
     /** The field grows with its text over several lines, for a long answer. */
     "multiline": PropValue<"FieldGroup.SecretField", "multiline">;
+    /** The title names the field for assistive technology but is not drawn, for a field whose surroundings already name it. */
+    "hideTitle": PropValue<"FieldGroup.SecretField", "hideTitle">;
+    /** Focus the field as the row appears; on Android, open its dialog. */
+    "autoFocus": PropValue<"FieldGroup.SecretField", "autoFocus">;
+    /** Select all of the text when the field takes focus. */
+    "selectTextOnFocus": PropValue<"FieldGroup.SecretField", "selectTextOnFocus">;
     /** on Blur for this part. */
     "onBlur": PropValue<"FieldGroup.SecretField", "onBlur">;
     /** on Submit for this part. */

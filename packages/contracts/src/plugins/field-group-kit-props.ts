@@ -52,6 +52,22 @@ export const fieldGroupTextFieldProps = fieldGroupRowProps.extend({
     .describe(
       'The field grows with its text over several lines, for a long answer.',
     ),
+  hideTitle: z
+    .boolean()
+    .optional()
+    .describe(
+      'The title names the field for assistive technology but is not drawn, for a field whose surroundings already name it.',
+    ),
+  autoFocus: z
+    .boolean()
+    .optional()
+    .describe(
+      'Focus the field as the row appears; on Android, open its dialog.',
+    ),
+  selectTextOnFocus: z
+    .boolean()
+    .optional()
+    .describe('Select all of the text when the field takes focus.'),
   onBlur: handler('onBlur').optional(),
   onSubmit: handler('onSubmit').optional(),
 });

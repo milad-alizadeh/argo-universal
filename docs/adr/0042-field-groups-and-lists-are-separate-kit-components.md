@@ -26,9 +26,9 @@ Expo UI's universal `List` doesn't replace LegendList for data: on web it is a p
 - **A page that submits** is a `FieldGroup` with its buttons placed by the screen below and outside it, so they have no section card: a dialog that creates something has one submit `Button`, and an Elicitation opens a sheet holding a `FieldGroup` with Skip and Submit below it (owner, 2026-10-23). The screen holds the field state (TanStack Form); the kit has no `Form` component.
 - **Every choice control has one job and one component** (owner, 2026-10-23):
   - A choice in a form or settings row is `FieldGroup.Picker`. A page that submits is a FieldGroup, so the standalone `Picker` goes, and `Combobox` and `Drill` fold into `FieldGroup.Picker`: the Combobox's search page becomes the picker's searchable page.
-  - A quick choice from a toolbar pill is `Menu` with choices. It keeps sections (`groups`, each with an optional label).
+  - A quick choice from a toolbar pill is `Menu` with choices. It keeps sections (`groups`, each with an optional label). A `Menu` holds verbs and short choices and has no search: anything searchable is the picker (owner, 2026-10-23).
   - Switching between two to four views is `SegmentedControl`. Acting and choosing at once is `SplitButton`. Both are unchanged.
-- **`FieldGroup.Picker` takes `presentation`, `searchable`, `multiple` and options** (owner, 2026-10-23). Options take an optional `subtitle` and a leading `icon`. `presentation` is `'menu'` or `'page'`, and each call site states it: there is no default that changes with the parent.
+- **`FieldGroup.Picker` takes `presentation`, `searchable`, `multiple`, `trigger` and options** (owner, 2026-10-23). Options take an optional `subtitle` and a leading `icon`. `presentation` is `'menu'` or `'page'`, and each call site states it: there is no default that changes with the parent.
   - `menu` is for a short known list and opens in place:
     - iOS: the stock SwiftUI menu `Picker`;
     - Android: the stock Material `AlertDialog` of radio buttons (checkboxes when `multiple`), as Android Settings' `ListPreference`, with the row showing the value as its supporting line. It is the same pattern as the `TextField`'s `EditTextPreference` dialog;
@@ -39,6 +39,7 @@ Expo UI's universal `List` doesn't replace LegendList for data: on web it is a p
     - web: a popover with the search field at the top, focused on open, where the arrow keys move and Enter chooses.
   - Choosing a single value returns to the previous page. A `searchable` page puts the kit's shared search field (ADR-0020) above the rows and filters them as you type, with an empty state. A page can hold sections (Recent, then All A to Z) and a kit `Button` in a section of its own (such as "Add Agents").
   - A FieldGroup draws every row and does not virtualise. A choice that can reach hundreds, such as the branches of a large repository, uses a `List` page behind the same row and search field.
+  - `trigger` is `'row'` (the default) or `'pill'`. A `row` is the FieldGroup row above. A `pill` is the kit's toolbar pill, the chosen label and a down chevron, and sits outside a FieldGroup, in a toolbar or the Composer; it always opens the picker's searchable page (a popover with the search field on a desktop window, a page on phones, in a Sheet of its own outside a stack). The project and branch-comparison pills are searchable pickers with `trigger="pill"`. A `pill` takes `leading` for its icon and `summary` for the text it shows in place of the chosen label. `loading` and `loadError` show a message below the rows.
 - **Chevrons mean one thing each** (owner, 2026-10-23):
   - up-down: a picker whose value changes in place. It is iOS's stock glyph, and desktop and web copy it, so a picker looks different from a menu;
   - down: a pill that opens a `Menu` or popover;

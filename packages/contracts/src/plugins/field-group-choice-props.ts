@@ -38,6 +38,23 @@ export const fieldGroupPickerProps = fieldGroupRowProps.extend({
     .describe(
       'Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one.',
     ),
+  summary: z
+    .string()
+    .optional()
+    .describe(
+      'The text shown for the current choice, in place of the chosen labels.',
+    ),
+  trigger: z
+    .enum(['row', 'pill'])
+    .optional()
+    .describe(
+      'What opens the choices: `row`, the default, is a FieldGroup row; `pill` is a label and a down chevron that sits in a toolbar or the Composer, outside a FieldGroup, and always opens the choices on a page or popover.',
+    ),
+  loading: z.boolean().optional().describe('The options are still loading.'),
+  loadError: z
+    .string()
+    .optional()
+    .describe('Why the options failed to load; shown below the rows.'),
   searchable: z
     .boolean()
     .optional()

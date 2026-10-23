@@ -61,7 +61,7 @@ type RowProp = { row: NativePickerProps['row'] };
 function PagePicker(props: FieldPickerProps & RowProp): ReactElement {
   const Row = props.row;
 
-  return <FieldPickerDrill {...props} trigger={<Row {...rowProps(props)} />} />;
+  return <FieldPickerDrill {...props} opener={<Row {...rowProps(props)} />} />;
 }
 
 function SheetPage(props: FieldPickerProps & RowProp): ReactElement {

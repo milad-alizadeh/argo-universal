@@ -44,8 +44,10 @@ export const chosenValues = (
 
 // What the row shows as its value: the chosen labels, in the options' order.
 export function choiceSummary(
-  props: Pick<FieldPickerProps, 'value' | 'options'>,
+  props: Pick<FieldPickerProps, 'value' | 'options' | 'summary'>,
 ): string {
+  if (props.summary !== undefined) return props.summary;
+
   const chosen = new Set(chosenValues(props));
 
   return props.options

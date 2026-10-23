@@ -46,7 +46,7 @@ function PagePicker(props: FieldPickerProps): ReactElement {
   return (
     <FieldPickerDrill
       {...props}
-      trigger={
+      opener={
         <PageTrigger
           title={props.title}
           summary={choiceSummary(props)}

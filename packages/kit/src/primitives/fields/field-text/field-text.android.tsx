@@ -13,13 +13,14 @@ import type { FieldTextProps } from './field-text-props';
  * the value as its supporting line. Pressing it opens a dialog to edit the value.
  */
 export function FieldText(props: FieldTextProps): ReactElement {
-  const [open, setOpen] = useState(false);
+  // `autoFocus` opens the dialog as the row appears, as it would be pressed; the dialog focuses its field.
+  const [open, setOpen] = useState(props.autoFocus === true);
 
   return (
     <>
       <RowListItem
-        {...rowListItemProps(props)}
-        supporting={summary(props)}
+        {...rowListItemProps(rowOf(props))}
+        supporting={props.hideTitle ? undefined : summary(props)}
         onPress={() => setOpen(true)}
       />
       {open ? (
@@ -28,6 +29,14 @@ export function FieldText(props: FieldTextProps): ReactElement {
     </>
   );
 }
+
+// A hidden title leaves the value (or its placeholder) as the row's one line.
+function rowOf(props: FieldTextProps): FieldTextProps {
+  return props.hideTitle ? { ...props, title: shownText(props) } : props;
+}
+
+const shownText = (props: FieldTextProps): string =>
+  props.value || props.placeholder || props.title;
 
 // The value under the title, masked for a secret; nothing while empty.
 function summary(props: FieldTextProps): ReactElement | undefined {

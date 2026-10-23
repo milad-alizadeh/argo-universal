@@ -14,6 +14,16 @@ export function FieldTextInput(props: FieldTextProps): ReactElement {
 const inputProps = (
   props: FieldTextProps,
 ): React.ComponentProps<typeof TextInput> & { 'aria-invalid'?: boolean } => ({
+  ...valueProps(props),
+  ...focusProps(props),
+  onChangeText: props.onChangeText,
+  onBlur: props.onBlur,
+  onSubmitEditing: () => props.onSubmit?.(),
+});
+
+const valueProps = (
+  props: FieldTextProps,
+): React.ComponentProps<typeof TextInput> & { 'aria-invalid'?: boolean } => ({
   value: props.value,
   accessibilityLabel: props.title,
   'aria-invalid': props.error !== undefined,
@@ -22,9 +32,17 @@ const inputProps = (
   secureTextEntry: props.secure,
   keyboardType: props.keyboardType,
   multiline: props.multiline,
-  onChangeText: props.onChangeText,
-  onBlur: props.onBlur,
-  onSubmitEditing: () => props.onSubmit?.(),
+});
+
+// Web's TextInput focuses on mount and selects its text on focus.
+const focusProps = (
+  props: FieldTextProps,
+): Pick<
+  React.ComponentProps<typeof TextInput>,
+  'autoFocus' | 'selectTextOnFocus'
+> => ({
+  autoFocus: props.autoFocus,
+  selectTextOnFocus: props.selectTextOnFocus,
 });
 
 const base =

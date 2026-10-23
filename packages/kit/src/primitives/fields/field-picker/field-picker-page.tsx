@@ -13,7 +13,13 @@ import {
   type OptionSection,
 } from './field-picker-model';
 import { PageFrame } from './field-picker-page-frame';
-import { EmptyState, PageFooter, PageSearch } from './field-picker-page-parts';
+import {
+  EmptyState,
+  PageFooter,
+  PageSearch,
+  PageStatus,
+  pageStatus,
+} from './field-picker-page-parts';
 
 export type FieldPickerPageProps = FieldPickerProps & {
   // Called after a single choice, so the page it sits on can close.
@@ -63,6 +69,15 @@ function listProps(props: FieldPickerPageProps): ListProps {
 }
 
 function PageList(props: FieldPickerPageProps): ReactElement {
+  return (
+    <>
+      <PageRows {...props} />
+      <PageStatus {...pageStatus(props)} />
+    </>
+  );
+}
+
+function PageRows(props: FieldPickerPageProps): ReactElement {
   return (
     <List {...listProps(props)} empty={<EmptyState />}>
       {optionSections(props.options).map((section) => (
