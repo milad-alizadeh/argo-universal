@@ -70,9 +70,7 @@ function AgentChoice({ agent, choices }: RowProps): React.JSX.Element {
     <ListItem
       {...agentChoiceProps(agent)}
       pending={choices.pending === agent.id}
-      leading={
-        <AgentIcon agent={agent} role={{ compact: 'body', wide: 'row' }} />
-      }
+      leading={<AgentIcon agent={agent} size={{ compact: 'sm', wide: 'md' }} />}
     />
   );
 }
@@ -88,9 +86,7 @@ const addAgentsProps = (
   props: AgentChoiceProps,
 ): React.ComponentProps<typeof ListItem> => ({
   title: 'Add Agents',
-  leading: (
-    <Icon fitArtwork name="add" role={{ compact: 'body', wide: 'row' }} />
-  ),
+  leading: <Icon name="add" size={{ compact: 'sm', wide: 'md' }} />,
   onPress: () => props.close(props.onAddAgents),
 });
 

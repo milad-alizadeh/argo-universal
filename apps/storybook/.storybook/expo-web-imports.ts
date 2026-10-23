@@ -1,3 +1,5 @@
+import type { Plugin } from 'vite';
+
 interface ModuleRewrite {
   code: string;
   map: null;
@@ -111,3 +113,13 @@ export const reactNativeSvgWebImports = webImports(
     },
   ],
 );
+
+// Skia's web entry requires react-native/Libraries/Image/AssetRegistry. The framework's react-native-web alias rewrites it to a path that does not exist, which the dev server tolerates and rolldown's production build does not; an alias in our config would run after the framework's, so a `pre` resolver takes it first.
+export const skiaAssetRegistry = (assetRegistry: string): Plugin => ({
+  name: 'argo:skia-asset-registry',
+  enforce: 'pre',
+  resolveId: {
+    filter: { id: /^react-native(-web)?\/Libraries\/Image\/AssetRegistry$/ },
+    handler: () => assetRegistry,
+  },
+});

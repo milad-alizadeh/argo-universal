@@ -1,21 +1,29 @@
 /*
- * Branches, pull requests and changes use Tabler Icons (MIT); every platform draws the same paths (ADR-0019).
- * The GitHub mark is a logo, drawn by Icon's `source`, not a symbol name.
+ * Branches, pull requests and changes are small SVG components every platform draws the same (ADR-0041); the rest
+ * name SF and Material symbols. The GitHub mark is a logo, drawn by Icon's `source`, not a symbol name.
  */
 export const gitSymbols = {
-  pencil: { tabler: 'pencil' },
-  workbench: { tabler: 'clipboard-list' },
-  stage: { tabler: 'layout-sidebar-right' },
-  commit: { tabler: 'git-commit' },
-  'git-issue-open': { tabler: 'circle-dot' },
-  'git-issue-closed': { tabler: 'circle-check' },
-  branch: { tabler: 'git-branch' },
-  diff: { tabler: 'file-diff' },
-  merged: { tabler: 'git-merge' },
-  'pull-request': { tabler: 'git-pull-request' },
-  'pr-open': { tabler: 'git-pull-request' },
-  'pr-draft': { tabler: 'git-pull-request-draft' },
-  'pr-merged': { tabler: 'git-merge' },
-  'pr-closed': { tabler: 'git-pull-request-closed' },
-  'pr-conflict': { tabler: 'git-pull-request-conflict' },
+  pencil: { sf: 'pencil', material: 'edit' },
+  workbench: {
+    sf: 'list.clipboard',
+    sfFilled: 'list.clipboard.fill',
+    material: 'assignment',
+  },
+  stage: {
+    sf: 'sidebar.right',
+    sfFilled: 'rectangle.rightthird.inset.filled',
+    material: 'right_panel_open',
+  },
+  commit: { svg: 'git-commit' },
+  'git-issue-open': { sf: 'smallcircle.filled.circle', material: 'adjust' },
+  'git-issue-closed': { sf: 'checkmark.circle', material: 'check_circle' },
+  branch: { svg: 'git-branch' },
+  diff: { svg: 'file-diff' },
+  merged: { svg: 'git-merge' },
+  'pull-request': { svg: 'git-pull-request' },
+  'pr-open': { svg: 'git-pull-request' },
+  'pr-draft': { svg: 'git-pull-request-draft' },
+  'pr-merged': { svg: 'git-merge' },
+  'pr-closed': { svg: 'git-pull-request-closed' },
+  'pr-conflict': { svg: 'git-pull-request-conflict' },
 } as const;

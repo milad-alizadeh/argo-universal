@@ -15,8 +15,8 @@ const palettes = {
 
 // A leading avatar stands beside a row of its own; an inline one sits on the line of text beside it.
 const sizes = {
-  leading: { box: 'size-9 wide-type:size-7', glyph: 'body' },
-  inline: { box: 'size-6 wide-type:size-5', glyph: 'secondary' },
+  leading: { box: 'size-9 wide-type:size-7', glyph: 'sm' },
+  inline: { box: 'size-6 wide-type:size-5', glyph: 'xs' },
 } as const;
 
 interface TintedAvatarProps {
@@ -33,7 +33,7 @@ export function TintedAvatar(props: TintedAvatarProps): ReactElement {
     <View className={avatarClass(props)}>
       <Icon
         name={props.icon}
-        role={sizes[props.size ?? 'leading'].glyph}
+        size={sizes[props.size ?? 'leading'].glyph}
         className={palettes[props.tone].ink}
       />
       <AvatarStatus status={props.status} />

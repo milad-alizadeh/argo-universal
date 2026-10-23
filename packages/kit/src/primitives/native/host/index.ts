@@ -1,1 +1,3 @@
-export { Host, type HostProps } from './host';
+export { Host } from './host';
+
+export type { HostProps } from './host-props';

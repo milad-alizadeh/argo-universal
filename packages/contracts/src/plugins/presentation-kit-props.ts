@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { iconSymbol, iconRole } from '../kit-symbols/icon-schema';
-import { tones } from '../kit-tokens';
+import { iconSymbol, iconSize } from '../kit-symbols/icon-schema';
+import { iconButtonDefaults, tones } from '../kit-tokens';
 import { imageAsset } from './image-wire-part';
 import { handler } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
@@ -12,7 +12,7 @@ export const statusMark = z.object({
 
 export const iconProps = z.object({
   name: iconSymbol.describe('An Argo icon or an SF and Material symbol pair.'),
-  role: perSizeClass(iconRole).describe(
+  size: perSizeClass(iconSize).describe(
     'Semantic icon size, optionally by Size class.',
   ),
   filled: z.boolean().optional().describe('Use the platform filled variant.'),
@@ -48,20 +48,20 @@ export const iconButtonProps = z.object({
   accessibilityLabel: z.string().describe('Spoken action name.'),
   disabled: z.boolean().nullable().optional().describe('Disable activation.'),
   onPress: handler('onPress').optional().describe('Action run on activation.'),
-  tone: z.literal('danger').optional().describe('Danger treatment.'),
-  size: z
-    .enum(['2xs', 'xs', 'sm', 'md', 'lg', 'xl'])
-    .optional()
-    .describe('Button size.'),
-  loading: z.boolean().optional().describe('The action is running.'),
-  variant: z
-    .enum(['default', 'ghost', 'outline', 'filled'])
-    .optional()
-    .describe('Button treatment.'),
   selected: z
     .boolean()
+    .nullable()
     .optional()
-    .describe('Toggle selection; omit for a plain button.'),
+    .describe('Draw the filled icon, for a button that is on.'),
+  size: iconSize
+    .optional()
+    .meta({ default: iconButtonDefaults.size })
+    .describe('Button size.'),
+  variant: z
+    .enum(['primary', 'secondary', 'ghost'])
+    .optional()
+    .meta({ default: iconButtonDefaults.variant })
+    .describe('Button treatment.'),
 });
 
 export const filterPillProps = z.object({

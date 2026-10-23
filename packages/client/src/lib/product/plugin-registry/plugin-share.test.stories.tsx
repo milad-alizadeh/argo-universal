@@ -50,8 +50,8 @@ export const AppShare: Story = {
       url: undefined,
     });
     await expect(onEvent).not.toHaveBeenCalled();
-    await expect(button).toHaveAttribute('aria-busy', 'true');
+    await expect(button).toBeDisabled();
     answer.resolve();
-    await waitFor(() => expect(button).toHaveAttribute('aria-busy', 'false'));
+    await waitFor(() => expect(button).toBeEnabled());
   },
 };

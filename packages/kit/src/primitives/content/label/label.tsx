@@ -50,5 +50,5 @@ function LabelIcon(
 ): ReactElement | null {
   if (!props.icon) return null;
 
-  return <Icon name={props.icon} role="secondary" tone={props.tone} />;
+  return <Icon name={props.icon} size="xs" tone={props.tone} />;
 }

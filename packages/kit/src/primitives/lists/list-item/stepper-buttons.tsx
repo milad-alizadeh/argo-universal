@@ -1,9 +1,10 @@
+import { listStepperDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { Button, type ButtonProps } from '#primitives/actions/button';
 import type { ListItemStepperProps } from './list-item-stepper';
 
-const stepVariant = Platform.OS === 'ios' ? 'outline' : 'ghost';
+const stepVariant = Platform.OS === 'ios' ? 'secondary' : 'text';
 
 export function StepperButtons(
   props: ListItemStepperProps & { children?: ReactNode },
@@ -24,21 +25,32 @@ export function stepButton(
   const value = nextValue(props, direction);
 
   return {
-    ...stepLabel(props.title, direction),
+    label: direction < 0 ? '−' : '+',
     variant: stepVariant,
-    size: 'xs',
+    size: 'sm',
     disabled: props.disabled || value === props.value,
     onPress: () => props.onValueChange(value),
   };
 }
 
-function stepLabel(
-  title: string,
+interface StepAction {
+  accessibilityLabel: string;
+  disabled: boolean;
+  onPress: () => void;
+}
+
+// The web's icon-only step: the new Button has no accessibility label of its own, so the web names each step.
+export function stepAction(
+  props: ListItemStepperProps,
   direction: number,
-): Pick<ButtonProps, 'label' | 'accessibilityLabel'> {
-  return direction < 0
-    ? { label: '−', accessibilityLabel: `Decrease ${title}` }
-    : { label: '+', accessibilityLabel: `Increase ${title}` };
+): StepAction {
+  const value = nextValue(props, direction);
+
+  return {
+    accessibilityLabel: `${direction < 0 ? 'Decrease' : 'Increase'} ${props.title}`,
+    disabled: !!props.disabled || value === props.value,
+    onPress: () => props.onValueChange(value),
+  };
 }
 
 function nextValue(props: ListItemStepperProps, direction: number): number {
@@ -46,7 +58,10 @@ function nextValue(props: ListItemStepperProps, direction: number): number {
 
   return Math.min(
     max,
-    Math.max(min, props.value + direction * (props.step ?? 1)),
+    Math.max(
+      min,
+      props.value + direction * (props.step ?? listStepperDefaults.step),
+    ),
   );
 }
 

@@ -1,0 +1,27 @@
+import { iconSizes, type IconSize } from '@repo/contracts/kit-symbols';
+import type { ViewStyle } from 'react-native';
+import {
+  type SizeClassValue,
+  sizeClassValue,
+} from '../use-size-class/size-class-value';
+import { useSizeClass } from '../use-size-class/use-size-class';
+import { useWide } from '../use-wide/use-wide';
+
+export type { IconSize } from '@repo/contracts/kit-symbols';
+
+// A size, or one per size class when the icon's place changes with the window.
+export type IconSizeValue = SizeClassValue<IconSize>;
+
+export function useIconPixels(size: IconSizeValue): number {
+  const scale = useWide() ? 'wide' : 'phone';
+
+  return iconSizes[sizeClassValue(size, useSizeClass())][scale];
+}
+
+export function useIconBox(
+  size: IconSizeValue,
+): Pick<ViewStyle, 'width' | 'height'> {
+  const pixels = useIconPixels(size);
+
+  return { width: pixels, height: pixels };
+}

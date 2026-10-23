@@ -101,9 +101,7 @@ function sendButtonProps(
   return {
     ...action,
     ...filledSendProps,
-    loading: layout.sendState === 'sending',
-    // Paper dims a disabled Send to 35%, whatever stops it.
-    className: cn('shadow-control', action.disabled && 'opacity-35'),
+    'aria-busy': layout.sendState === 'sending',
   };
 }
 
@@ -132,11 +130,6 @@ function stopButtonAction(
 }
 
 const filledSendProps = {
-  variant: 'filled',
-  size: '2xs',
-  corners: 'round',
-  iconFilled: true,
-  hitSlop: 8,
-  iconRole: 'control',
-  iconWeight: 'light',
+  variant: 'primary',
+  size: 'xs',
 } as const;

@@ -16,7 +16,7 @@ interface StepProps {
 const spinnerProps = {
   accessible: true,
   role: 'progressbar',
-  iconRole: 'control',
+  iconSize: 'sm',
   colorClassName: 'accent-muted-foreground wide:accent-foreground',
 } as const;
 
@@ -106,10 +106,10 @@ export function PlanSteps({ entries }: StepsListProps): JSX.Element {
 
 function IdleStepIndicator({ completed }: { completed: boolean }): JSX.Element {
   return completed ? (
-    <Icon role="control" name="check" className={mutedTextClassName} />
+    <Icon size="sm" name="check" className={mutedTextClassName} />
   ) : (
     <Icon
-      role="control"
+      size="sm"
       name="pending"
       className="text-focus wide:text-muted-foreground"
     />

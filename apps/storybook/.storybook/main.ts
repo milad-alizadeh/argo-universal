@@ -16,6 +16,7 @@ import {
   expoSymbolsWebImports,
   reactNativeSvgWebImports,
   reactNativeWorkletsWebImports,
+  skiaAssetRegistry,
 } from './expo-web-imports.ts';
 
 function getAbsolutePath(value: string): string {
@@ -69,6 +70,8 @@ const RESOLVED_EXTENSIONS = [
   '.json',
 ];
 
+const ASSET_REGISTRY = `${getAbsolutePath('react-native-web')}/dist/modules/AssetRegistry/index.js`;
+
 const VITE_RESOLVE = {
   // #primitives/<group>/<name> is that folder's index, as in @repo/kit's imports map.
   alias: [
@@ -79,13 +82,14 @@ const VITE_RESOLVE = {
     // React Native 0.87 stopped shipping this package, which react-native-svg's web build still imports.
     {
       find: '@react-native/assets-registry/registry',
-      replacement: `${getAbsolutePath('react-native-web')}/dist/modules/AssetRegistry/index.js`,
+      replacement: ASSET_REGISTRY,
     },
   ],
   extensions: RESOLVED_EXTENSIONS,
 };
 
 const vitePlugins = (): PluginOption[] => [
+  skiaAssetRegistry(ASSET_REGISTRY),
   ...WEB_IMPORT_REWRITES,
   sfSymbolImages,
   // A logo SVG imports as a react-native-svg component, as Metro's react-native-svg-transformer gives the app (ADR-0019).

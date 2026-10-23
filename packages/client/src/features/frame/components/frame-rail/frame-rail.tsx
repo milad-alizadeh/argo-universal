@@ -1,9 +1,9 @@
-import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import { ScrollView } from '@repo/kit/primitives/layout/scroll-view';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { memo } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import {
   type Section,
   type NavigationSection,
@@ -31,56 +31,40 @@ type SectionButtonProps = Pick<
   selected: boolean;
 };
 
-interface TileSelection {
-  iconClassName: string;
-  iconWeight?: 'light';
-  className: string;
-  'aria-current'?: 'page';
-}
+const tileClass = (selected: boolean): string =>
+  cn(
+    'items-center justify-center web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
+    railTiles.size,
+    railTiles.corners,
+    selected && railTiles.selected,
+  );
 
-/*
- * Paper draws SF Regular outlines at 24, the selected one filled. Where the browser draws Material Symbols, Light is
- * the stroke closest to that; the filled glyph keeps Argo's one filled font. Dark greys the outlines to
- * muted-foreground, as Graphite does.
- */
-const railIconWeight = 'light';
-
-function selectionProps(selected: boolean): TileSelection {
-  if (!selected)
-    return {
-      iconClassName: 'text-foreground/72 dark:text-muted-foreground',
-      iconWeight: railIconWeight,
-      className: railTiles.corners,
-    };
-
-  return {
-    iconClassName: 'text-foreground',
-    'aria-current': 'page',
-    className: cn(railTiles.corners, railTiles.selected),
-  };
-}
-
-// Android fills the selected tile from the Material palette; the style wins over the class there.
-function useTileSelection(
-  selected: boolean,
-): TileSelection & { style: ReturnType<typeof useRailTileStyle> } {
-  return { ...selectionProps(selected), style: useRailTileStyle(selected) };
+function TileIcon(props: SectionButtonProps): React.JSX.Element {
+  return (
+    <Icon
+      name={props.section.icon}
+      size="lg"
+      filled={props.selected}
+      tone={props.selected ? undefined : 'muted'}
+    />
+  );
 }
 
 function SectionTile(props: SectionButtonProps): React.JSX.Element {
-  const { title, icon } = props.section;
+  // Android fills the selected tile from the Material palette; the style wins over the class there.
+  const style = useRailTileStyle(props.selected);
 
   return (
-    <IconButton
-      icon={icon}
-      iconRole="nav"
-      iconFilled={props.selected}
-      size={railTiles.size}
-      variant="ghost"
-      accessibilityLabel={title}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={props.section.title}
+      aria-current={props.selected ? 'page' : undefined}
       onPress={() => props.onSectionChange(props.section.id)}
-      {...useTileSelection(props.selected)}
-    />
+      className={tileClass(props.selected)}
+      style={style}
+    >
+      <TileIcon {...props} />
+    </Pressable>
   );
 }
 

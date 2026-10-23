@@ -30,10 +30,7 @@ export function ChoicesDialog<Value extends string>(
 
   return (
     <Host matchContents>
-      <AlertDialog
-        colors={useMaterialPalette().dialogColors}
-        onDismissRequest={props.close}
-      >
+      <AlertDialog onDismissRequest={props.close}>
         <DialogSlots {...props} draft={draft} onDraftChange={setDraft} />
       </AlertDialog>
     </Host>

@@ -41,7 +41,7 @@ function SearchLens(): React.JSX.Element {
   return (
     <Icon
       name="search"
-      role="control"
+      size="sm"
       className="text-muted-foreground"
       aria-hidden
     />
@@ -82,9 +82,6 @@ const clearDefaults: ComponentProps<typeof IconButton> = {
   variant: 'ghost',
   size: 'xs',
   accessibilityLabel: 'Clear search',
-  iconClassName: 'text-muted-foreground',
-  className:
-    'size-5 min-h-5 min-w-5 sm:size-5 android:min-h-5 android:min-w-5 rounded-full web:rounded-full',
 };
 
 function ClearSearch(

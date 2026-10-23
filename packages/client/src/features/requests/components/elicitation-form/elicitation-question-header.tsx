@@ -59,7 +59,7 @@ function HeaderIcon(): ReactElement {
   return (
     <Icon
       name="question-bubble"
-      role="body"
+      size="sm"
       className="text-muted-foreground android:text-foreground"
     />
   );
@@ -89,8 +89,7 @@ function DismissButton(props: ElicitationHeaderProps): ReactElement {
       variant="ghost"
       accessibilityLabel="Dismiss"
       disabled={props.inactive}
-      className="w-6 h-7 sm:w-6 sm:h-7"
-      iconClassName="text-muted-foreground"
+      size="xs"
       onPress={props.onDismiss}
     />
   );

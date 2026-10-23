@@ -1,30 +1,14 @@
 # Material filled symbols
 
-`material-filled.ttf` is Google's Material Symbols Outlined, with FILL 1, weight 200, optical size 48 and grade 0. These settings match the outlined font bundled by `expo-symbols`, apart from fill. `LICENSE` is Google's Apache 2.0 licence.
+`material-filled.ttf` is Google's Material Symbols Outlined, with FILL 1, weight 400, optical size 48 and grade 0, the default weight like the outlined font bundled by `expo-symbols`, apart from fill. `LICENSE` is Google's Apache 2.0 licence.
 
-The font contains the 128 distinct Material names that `icon-names.ts`, `file-symbols.ts` and `status-symbols.ts` held when it was cut, plus `play_arrow` and `pause` for the Audio transport; the git icons' former names (`alt_route`, `fork_left`, `merge`, `difference`, `book`) stay in it unused now that those icons draw Tabler paths. The exact Google Fonts request is in `material-filled-source.txt`. To regenerate, fetch that CSS and download its TrueType `src` URL. Update the sorted `icon_names` query when the map gains an icon that needs a filled variant. Check every requested codepoint against Expo's `android/symbols.json` before replacing the asset.
+The font contains the 129 distinct Material names that `icon-names.ts`, `file-symbols.ts` and `status-symbols.ts` held when it was cut, plus `play_arrow` and `pause` for the Audio transport; the git icons' former names (`alt_route`, `fork_left`, `merge`, `difference`, `book`) stay in it unused now that those icons draw SVG components. The exact Google Fonts request is in `material-filled-source.txt`. To regenerate, fetch that CSS and download its TrueType `src` URL. Update the sorted `icon_names` query when the map gains an icon that needs a filled variant. Check every requested codepoint against Expo's `android/symbols.json` before replacing the asset.
 
 Metro imports the font as an asset ID; Vite imports its URL. `expo-symbols` passes either to `expo-font`.
 
 # Compose vector icons
 
 `expand-more.xml` is Material Symbols Outlined `expand_more` (the Material name for `chevron-down`) as an Android vector drawable, sized to the `control` icon role (16dp). The Android SplitButton draws it with `@expo/ui`'s Compose `Icon` inside its stock button, so the whole button takes the tap; an icon hosted from React Native would take the touch itself.
-
-# Tabler git icons
-
-`tabler/` holds the source SVGs of the git icons, unchanged from Tabler Icons v3.49.0's outline set (github.com/tabler/tabler-icons, `icons/outline` at tag `v3.49.0`), and `tabler/LICENSE`, Tabler's MIT licence (ADR-0019).
-
-Tabler draws 2-point strokes on a 24-point grid; the asset catalog and the masks need filled shapes. The Swift package `tools/sf-symbols/tabler-symbols` outlines each icon's strokes with round caps and joins, unions them with Core Graphics, and places them in the custom symbols' 137.5-unit box. It needs macOS 14 or later, for `CGPath.normalized(using:)`, and the Swift toolchain from Xcode. To regenerate, from the repository root:
-
-```sh
-swift run --quiet --package-path tools/sf-symbols/tabler-symbols tabler-symbols \
-  packages/kit/src/symbols/assets/tabler \
-  > packages/kit/src/symbols/tabler-symbol-paths.json
-```
-
-`chevron-right.svg` is the web grouped row's disclosure (ADR-0019, Web disclosure chevron); `with-custom-symbols` leaves it out of the iOS asset catalog.
-
-To add a git icon, copy its outline SVG from the same Tabler release into `tabler/`, regenerate, and map it in `git-symbols.ts`.
 
 # Logos
 
@@ -33,3 +17,23 @@ To add a git icon, copy its outline SVG from the same Tabler release into `table
 `brand-github.svg` is GitHub's Octicons `mark-github-16.svg` from `github.com/primer/octicons` at tag `v19.15.5`, under the MIT licence in `logos/OCTICONS-LICENSE`; the only change is `fill="currentColor"` on its root element. The Agent card's repository link draws it.
 
 To add a logo, copy its SVG into `logos/` with `currentColor` fills, add a `<name>.svg.d.ts` beside it like `brand-github.svg.d.ts`, and add it to `logoSources`.
+
+# Android light drawings
+
+`material-light/` holds each drawn Material name as an outlined Android vector drawable at weight 300, since `@expo/material-symbols` ships weight 400, which draws heavier than the iOS symbols. `generate:material-images` imports them in place of the package's. To add a name, cut it and rename the file:
+
+```bash
+pnpm exec add-material-symbols -w 300 -o src/symbols/assets/material-light <name>
+```
+
+The CLI names its file `<name>_wght300.xml`; rename it to `<name>.xml`. It takes one name per run.
+
+# Android filled drawings
+
+`material-filled/` holds each drawn Material name as a filled Android vector drawable. `@expo/material-symbols` ships the outlined style only, so these give Expo UI's `Icon` a filled drawing for the selected state. Expo's own CLI makes them, as its README describes:
+
+```bash
+pnpm exec add-material-symbols --fill -o src/symbols/assets/material-filled <names…>
+```
+
+The CLI names its files `<name>_fill.xml`; rename each to `<name>.xml`. `generate:material-images` imports them into `materialFilledImages`. `xml.d.ts` types every `.xml` import as an asset.

@@ -4,7 +4,6 @@ import type { ImageSourcePropType } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import { isCustomSymbol } from '#kit/symbols/custom-symbols';
 import { resolveIcon } from '#kit/symbols/icon-symbol';
-import { tablerAsset } from '#kit/symbols/tabler-symbols';
 import {
   isSubmenu,
   submenuBadgeText,
@@ -20,7 +19,7 @@ import { countedTitle } from '#primitives/overlays/menu';
 
 type ToolbarButton = ComponentProps<typeof Stack.Toolbar.Button>;
 
-// Template rendering tints image icons (Tabler, custom symbols) like SF Symbols, in light and dark.
+// Template rendering tints image icons (custom symbols) like SF Symbols, in light and dark.
 const tinted = { iconRenderingMode: 'template' } as const;
 
 // An overflow menu row may have no icon.
@@ -32,10 +31,11 @@ function toolbarIcon(
 
 function symbolSource(
   icon: NonNullable<ActionProps['icon']>,
-): SFSymbol | ImageSourcePropType {
+): SFSymbol | ImageSourcePropType | undefined {
   const source = resolveIcon(icon).symbol;
 
-  if ('tabler' in source) return { uri: tablerAsset(source.tabler) };
+  // An SVG symbol has no image the system toolbar can draw, so its button shows only its label.
+  if ('svg' in source) return undefined;
 
   if (isCustomSymbol(source.sf)) return { uri: source.sf };
 

@@ -35,15 +35,14 @@ function sliderRange(
   };
 }
 
-// TalkBack names seek controls from semantic text, separately from their value.
+// Stock Compose semantics only take a content description, so TalkBack hears the name and readable value together.
 function sliderModifiers(
   props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
 ): UniversalSliderProps['modifiers'] {
   if (Platform.OS === 'android')
     return [
       semantics({
-        text: props.accessibilityLabel,
-        stateDescription: props.valueLabel,
+        contentDescription: `${props.accessibilityLabel}, ${props.valueLabel}`,
       }),
     ];
 

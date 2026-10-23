@@ -28,18 +28,11 @@ export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
   );
 }
 
-// Wide, a 16x28 slot; `2xs` holds the 28 at every other width and hitSlop carries the touch target.
-export const composerIconButton = 'wide:w-4 wide:mr-1.5';
-
 const attachTriggerProps = {
   icon: 'add',
   variant: 'ghost',
-  size: '2xs',
-  iconRole: 'control',
-  hitSlop: 8,
+  size: 'xs',
   accessibilityLabel: 'Attach',
-  className: `p-0 ${composerIconButton}`,
-  iconClassName: 'text-muted-foreground',
 } as const;
 
 function attachTrigger(inactive: boolean): React.JSX.Element {
@@ -143,7 +136,7 @@ function ComposerAttachItem({
   return (
     <ListItem
       title={item.label}
-      leading={<Icon name={item.icon} role="row" />}
+      leading={<Icon name={item.icon} size="md" />}
       accessibilityRole="button"
 
       disabled={!item.onPress}

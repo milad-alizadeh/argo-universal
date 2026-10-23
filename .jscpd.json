@@ -18,7 +18,8 @@
     "**/uniwind-types.d.ts",
     "packages/db/drizzle/**",
     "tooling/oxlint/anti-slop/**",
-    "packages/kit/src/primitives/status/orb/engine/**"
+    "packages/kit/src/primitives/status/orb/engine/**",
+    "packages/kit/src/symbols/svg-symbols/**"
   ],
   "reasons": {
     "ignore": {
@@ -28,6 +29,7 @@
       "tests, mocks, e2e, tools": "Not production logic; a new-clones-only gate for tests comes later.",
       "tooling/oxlint/anti-slop": "Vendored upstream code; tooling/oxlint/anti-slop/UPSTREAM.md records its source.",
       "packages/kit/src/primitives/status/orb/engine": "Ported line for line from RareFormLabs/thinking-orbs (MIT); ADR-0017 keeps it diffable against the original.",
+      "packages/kit/src/symbols/svg-symbols": "Tabler's MIT icon drawings (TABLER-LICENSE), kept as published; two glyphs share circles by design.",
       "generated files": "Fix the generator, not the output: *.gen.*, storybook.requires.ts, uniwind-types.d.ts, packages/db/drizzle."
     },
     "baseline": "The one entry in .jscpd-baseline.json is the Claude and Codex converter row helpers; each adapter keeps its own, and a shared helper would be shallow."

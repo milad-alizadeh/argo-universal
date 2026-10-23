@@ -1,8 +1,5 @@
-import {
-  type DirectedGraphNode,
-  type GraphEventFromLogic,
-  toDirectedGraph,
-} from 'xstate/graph';
+import type { GraphEventFromLogic } from '@repo/vitest/model-graph';
+import { type DirectedGraphNode, toDirectedGraph } from 'xstate/graph';
 import {
   stopEngineEvent,
   mockHttpServer,

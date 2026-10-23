@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     "./custom-symbol-paths.json": "./src/symbols/custom-symbol-paths.json",
-    "./tabler-symbol-paths.json": "./src/symbols/tabler-symbol-paths.json",
     "./mocks/*": "./mocks/*.ts",
     "./native-theme": "./src/native-theme.ts",
     "./text": "./src/primitives/content/text/index.ts",
@@ -39,6 +38,8 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
+    "generate:material-images": "tsx tools/material-images/generate.mts",
+    "check:material-images": "tsx tools/material-images/generate.mts --check",
     "generate:plugin-symbol-names": "node tools/plugin-symbol-names/generate.mts",
     "test": "vitest run"
   },

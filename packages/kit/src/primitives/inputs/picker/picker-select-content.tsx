@@ -41,7 +41,7 @@ function ScrollButton({
 
   return (
     <Component className={scrollClassName}>
-      <Icon name={icon} role="body" />
+      <Icon name={icon} size="sm" />
     </Component>
   );
 }

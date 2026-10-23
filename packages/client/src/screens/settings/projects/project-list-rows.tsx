@@ -118,7 +118,7 @@ function ProjectLink(
 
   return (
     <ListItem.Link
-      leading={<Icon name="folder" role="row" />}
+      leading={<Icon name="folder" size="md" />}
       title={props.project.name}
       {...detail}
       accessibilityLabel={`${props.project.name}, ${detail.value ?? folderNotFound}`}

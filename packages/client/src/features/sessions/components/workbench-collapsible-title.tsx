@@ -60,7 +60,7 @@ function TitleLabel({
   return (
     <>
       <View className="w-7 shrink-0 items-center">
-        <Icon name={icon} role="body" />
+        <Icon name={icon} size="sm" />
       </View>
       <Text role="heading" accessibilityRole="heading" aria-level={3}>
         {title}

@@ -54,11 +54,7 @@ function MenuTextTriggerContent({ label }: { label: string }): ReactElement {
       <Text role="secondary" className="text-muted-foreground">
         {label}
       </Text>
-      <Icon
-        role="secondary"
-        name="chevron-down"
-        className="text-muted-foreground"
-      />
+      <Icon size="xs" name="chevron-down" className="text-muted-foreground" />
     </>
   );
 }

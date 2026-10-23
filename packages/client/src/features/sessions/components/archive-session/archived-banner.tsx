@@ -9,7 +9,7 @@ export const archivedBannerText = 'Archived · read-only';
 export function ArchivedBanner(): React.JSX.Element {
   return (
     <View className="h-12 w-full flex-row items-center gap-2 rounded-2xl bg-muted px-4">
-      <Icon name="archive" role="control" tone="muted" />
+      <Icon name="archive" size="sm" tone="muted" />
       <Text role="body" tone="muted">
         {archivedBannerText}
       </Text>

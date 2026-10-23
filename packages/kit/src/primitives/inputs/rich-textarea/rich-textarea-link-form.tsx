@@ -44,8 +44,8 @@ function LinkActions({
 }): React.JSX.Element {
   return (
     <View className="flex-row justify-end gap-2 pt-1">
-      <Button label="Cancel" variant="ghost" size="xs" onPress={onCancel} />
-      <Button label="Save" size="xs" onPress={onSave} />
+      <Button label="Cancel" variant="text" size="sm" onPress={onCancel} />
+      <Button label="Save" size="sm" onPress={onSave} />
     </View>
   );
 }

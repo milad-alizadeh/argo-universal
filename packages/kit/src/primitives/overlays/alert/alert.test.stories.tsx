@@ -151,7 +151,7 @@ export const DisabledAnswer: Story = {
   },
 };
 
-// A running answer is busy, every answer waits, and Escape leaves the alert up while the work runs.
+// A running answer disables every answer, and Escape leaves the alert up while the work runs.
 export const RunningAnswer: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: () => <RemovingAgent />,
@@ -163,7 +163,6 @@ export const RunningAnswer: Story = {
     );
     const remove = within(alert).getByRole('button', { name: 'Remove' });
 
-    await expect(remove).toHaveAttribute('aria-busy', 'true');
     await expect(remove).toBeDisabled();
     await expect(
       within(alert).getByRole('button', { name: 'Cancel' }),

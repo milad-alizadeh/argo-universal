@@ -11,7 +11,6 @@ import type {
   PermissionRequestProps,
 } from '#features/requests';
 import {
-  type MergeMethodChoice,
   composerStatus,
   decodeOpenFailure,
   toSendError,
@@ -33,7 +32,6 @@ export interface OpenSession {
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
   permission: PermissionRequestProps | undefined;
-  mergeMethod: MergeMethodChoice;
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;

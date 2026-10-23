@@ -102,7 +102,7 @@ const secondTilePosition = {
 function IconTile({ icon }: { icon: IconName }): React.JSX.Element {
   return (
     <View className="absolute left-5 top-2 size-12 items-center justify-center rounded-xl bg-card shadow-empty-state-tile">
-      <Icon name={icon} role="nav" />
+      <Icon name={icon} size="lg" />
     </View>
   );
 }

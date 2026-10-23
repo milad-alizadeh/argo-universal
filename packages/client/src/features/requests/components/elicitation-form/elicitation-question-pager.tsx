@@ -3,10 +3,8 @@ import {
   type IconButtonProps,
 } from '@repo/kit/primitives/actions/icon-button';
 import type { IconSymbol } from '@repo/kit/symbols/icon-symbol';
-import { cn } from '@repo/kit/utils';
 import type { ReactElement } from 'react';
-import { Platform, View } from 'react-native';
-import { useContentWide } from '#lib/product/content-layout';
+import { View } from 'react-native';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 
 type ModelProps = { model: QuestionModel };
@@ -28,8 +26,6 @@ const pages = {
   },
 } as const;
 
-const pagerIconRole = Platform.OS === 'android' ? 'body' : 'secondary';
-
 export function QuestionPager({ model }: ModelProps): ReactElement {
   return (
     <View className="flex-row items-center shrink-0">
@@ -40,18 +36,11 @@ export function QuestionPager({ model }: ModelProps): ReactElement {
 }
 
 function PagerButton({ model, direction }: PagerProps): ReactElement {
-  const wide = useContentWide();
-
   return (
     <IconButton
       {...pageProps({ model, direction })}
-      iconRole={pagerIconRole}
       variant="ghost"
-      className={cn(
-        'min-w-0 android:min-w-0 w-7 android:w-8 h-11 sm:w-7 sm:h-11 justify-start pt-0.75',
-        wide && 'w-6 h-7 sm:w-6 sm:h-7 justify-center pt-0',
-      )}
-      iconClassName="text-muted-foreground"
+      size="xs"
     />
   );
 }

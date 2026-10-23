@@ -1,6 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { IconButtonBleed } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import type { CardProps } from './card-props';
 
@@ -70,13 +69,10 @@ function HeaderLane({ children }: { children?: ReactNode }): ReactNode {
   ) : null;
 }
 
-// An IconButton's glyph sits on the card padding, as the icon does on the other side.
 function ActionLane({ children }: { children?: ReactNode }): ReactNode {
   return children ? (
-    <IconButtonBleed value>
-      <View className="h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end">
-        {children}
-      </View>
-    </IconButtonBleed>
+    <View className="h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end">
+      {children}
+    </View>
   ) : null;
 }

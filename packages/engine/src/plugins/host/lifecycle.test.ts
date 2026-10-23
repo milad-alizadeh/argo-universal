@@ -1,4 +1,5 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { getAdjacencyMap, getShortestPaths } from '@repo/vitest/model-graph';
 import { expect, it } from 'vitest';
 import {
   getInitialSnapshot,
@@ -6,11 +7,7 @@ import {
   type SnapshotFrom,
   type EventFromLogic,
 } from 'xstate';
-import {
-  getAdjacencyMap,
-  getShortestPaths,
-  type AdjacencyMap,
-} from 'xstate/graph';
+import type { AdjacencyMap } from 'xstate/graph';
 import { hostLifecycleMachine } from './lifecycle.machine';
 
 type HostSnapshot = SnapshotFrom<typeof hostLifecycleMachine>;

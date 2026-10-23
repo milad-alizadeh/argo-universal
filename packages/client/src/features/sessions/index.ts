@@ -163,11 +163,6 @@ export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';
 
 export { createCoalescedRefetch } from './api/coalesced-refetch';
 
-export {
-  type MergeMethodChoice,
-  useMergeMethod,
-} from './hooks/use-merge-method';
-
 export { ConfigurationStatus } from './components/session-callout/configuration-status';
 
 export { SessionCallout } from './components/session-callout/session-callout';

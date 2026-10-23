@@ -34,11 +34,7 @@ function HeadingTitle({
 }: Pick<RequestHeadingProps, 'icon' | 'title'>): ReactNode {
   return (
     <View className="flex-row items-start gap-2.5">
-      <Icon
-        name={icon}
-        role="body"
-        className="shrink-0 text-muted-foreground"
-      />
+      <Icon name={icon} size="sm" className="shrink-0 text-muted-foreground" />
       <HeadingText title={title} />
     </View>
   );

@@ -31,7 +31,7 @@ const cardContent = (agent: AgentRowEntry): ListItemProps => ({
 });
 
 const cardLogo = (agent: AgentRowEntry): React.JSX.Element => (
-  <RegistryIcon uri={agent.icon} agentName={agent.name} role="identity" />
+  <RegistryIcon uri={agent.icon} agentName={agent.name} size="lg" />
 );
 
 export const agentRows = (

@@ -1,11 +1,11 @@
 import type { AndroidSymbol } from 'expo-symbols';
 import type { AppleSymbol } from './custom-symbols';
+import type { SvgSymbolName } from './svg-symbols';
 import type {
+  SvgSymbolSource,
   SymbolSource,
   SystemSymbolSource,
-  TablerSymbolSource,
 } from './symbol-source';
-import type { TablerSymbol } from './tabler-symbols';
 
 export interface SystemDrawing {
   kind: 'system';
@@ -15,16 +15,16 @@ export interface SystemDrawing {
   filled: boolean;
 }
 
-export interface TablerDrawing {
-  kind: 'tabler';
-  tabler: TablerSymbol;
+export interface SvgDrawing {
+  kind: 'svg';
+  svg: SvgSymbolName;
 }
 
-// What an icon draws: SF on Apple platforms and Material elsewhere, or one Tabler path on every platform (ADR-0019).
-export type DrawnSymbol = SystemDrawing | TablerDrawing;
+// What an icon draws: SF on Apple platforms and Material elsewhere, or one SVG component on every platform (ADR-0041).
+export type DrawnSymbol = SystemDrawing | SvgDrawing;
 
-function isTablerSource(source: SymbolSource): source is TablerSymbolSource {
-  return 'tabler' in source;
+function isSvgSource(source: SymbolSource): source is SvgSymbolSource {
+  return 'svg' in source;
 }
 
 const drawnSf = (source: SystemSymbolSource, filled: boolean): AppleSymbol =>
@@ -42,13 +42,13 @@ function systemDrawing(
   return { kind: 'system', sf, material: source.material, filled: isFilled };
 }
 
-// A Tabler icon has one path, so a filled request draws it as it is.
+// An SVG icon has one drawing, so a filled request draws it as it is.
 export function drawnSymbol(
   source: SymbolSource,
   filled?: boolean,
   materialFill = true,
 ): DrawnSymbol {
-  if (isTablerSource(source)) return { kind: 'tabler', tabler: source.tabler };
+  if (isSvgSource(source)) return { kind: 'svg', svg: source.svg };
 
   return systemDrawing(source, filled === true, materialFill);
 }

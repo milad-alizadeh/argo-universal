@@ -1,58 +1,61 @@
-import type { ComponentType, ReactElement } from 'react';
-import { useInCentredOverlay } from '#primitives/overlays/centred-overlay';
-import { useWide } from '../../../use-wide/use-wide';
-import type { ButtonProps, ButtonSize, ButtonVariant } from './button-props';
+import { type ButtonProps as ExpoButtonProps, Spacer } from '@expo/ui';
+import {
+  createModifier,
+  fillMaxWidth,
+} from '@expo/ui/jetpack-compose/modifiers';
+import type { IconSize } from '../../../symbols/icon-size';
+import type { ButtonProps } from './button';
 
-const narrowSizes: Record<ButtonSize, ButtonSize> = {
-  xs: 'md',
-  sm: 'md',
-  md: 'md',
-  lg: 'lg',
-};
-
-const narrowVariants: Record<ButtonVariant, ButtonVariant> = {
-  default: 'default',
-  outline: 'outline',
-  secondary: 'secondary',
-  ghost: 'outline',
-  link: 'outline',
-};
-
-// A narrow window gives the button the full width at the phone's height, with an edge that shows its bounds.
-function narrowLayout<Props extends ButtonProps>(props: Props): Props {
-  return {
-    ...props,
-    fullWidth: true,
-    size: narrowSizes[props.size ?? 'md'],
-    variant: props.variant && narrowVariants[props.variant],
-  };
-}
-
-// A centred dialog or sheet keeps the wide layout on a medium window too.
-function useWidthLayout<Props extends ButtonProps>(props: Props): Props {
-  const wide = useWide();
-  const centred = useInCentredOverlay();
-
-  if (wide || centred) return { ...props, fullWidth: props.fullWidth === true };
-
-  return phoneLayout(props);
-}
-
-// A phone has no small buttons; fullWidth "narrow" also fills the width.
-function phoneLayout<Props extends ButtonProps>(props: Props): Props {
-  if (props.fullWidth === 'narrow') return narrowLayout(props);
-
-  return { ...props, size: narrowSizes[props.size ?? 'md'] };
-}
+type ButtonSize = NonNullable<ButtonProps['size']>;
 
 /*
- * Resolves the button's layout by the window's width, so pages never choose a phone button themselves:
- * a phone has no small buttons, and fullWidth "narrow" fills a narrow window.
+ * SwiftUI's controlSize and frame, built with Expo's plain modifier factory: `@expo/ui/swift-ui/modifiers`
+ * loads the ExpoUI native module on import, which the web lacks. Compose ignores both.
  */
-export function withNarrowLayout<Props extends ButtonProps>(
-  Drawing: ComponentType<Props>,
-): ComponentType<Props> {
-  return function Button(props: Props): ReactElement {
-    return <Drawing {...useWidthLayout(props)} />;
-  };
-}
+const swiftControlSize = createModifier('controlSize', { size: 'small' });
+
+const swiftFillWidth = createModifier('frame', { maxWidth: Infinity });
+
+const smallHeight = 32;
+
+export const sizes = {
+  sm: {
+    modifiers: [swiftControlSize],
+    style: { height: smallHeight },
+    iconSize: 'sm',
+  },
+  md: { modifiers: [], style: {}, iconSize: 'sm' },
+} satisfies Record<
+  ButtonSize,
+  Required<Pick<ExpoButtonProps, 'modifiers' | 'style'>> & {
+    iconSize: IconSize;
+  }
+>;
+
+/*
+ * Compose fills on the Button; SwiftUI draws its capsule round the label, so the label takes the frame;
+ * flexible Spacers centre the label, which the web's Row would otherwise start-align.
+ */
+export const widths = {
+  true: {
+    host: { matchContents: { vertical: true }, style: { width: '100%' } },
+    modifiers: [fillMaxWidth()],
+    label: [swiftFillWidth],
+    edge: <Spacer flexible />,
+  },
+  false: {
+    host: { matchContents: true },
+    modifiers: [],
+    label: [],
+    edge: null,
+  },
+} as const;
+
+export const variantOf = (
+  props: ButtonProps,
+): NonNullable<ButtonProps['variant']> => props.variant ?? 'primary';
+
+export const widthOf = (
+  props: ButtonProps,
+): (typeof widths)[keyof typeof widths] =>
+  widths[`${props.fullWidth === true}`];

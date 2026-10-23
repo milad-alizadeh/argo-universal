@@ -94,7 +94,7 @@ function RadioLabel(props: { label: string }): React.JSX.Element {
 
 function RadioIndicator(): React.JSX.Element {
   return (
-    <IconSlot role="body">
+    <IconSlot size="sm">
       <RadixMenu.ItemIndicator asChild>
         <View>
           <SelectedCheck className="text-foreground" />
@@ -109,8 +109,8 @@ function RadioIcon(props: { icon?: IconName }): React.JSX.Element | null {
   if (!props.icon) return null;
 
   return (
-    <IconSlot role="menu">
-      <Icon name={props.icon} role="menu" />
+    <IconSlot size="md">
+      <Icon name={props.icon} size="md" />
     </IconSlot>
   );
 }

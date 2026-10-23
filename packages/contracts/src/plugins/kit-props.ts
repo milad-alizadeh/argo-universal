@@ -1,10 +1,12 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
 import {
+  buttonDefaults,
   buttonSizes,
   buttonVariants,
   stackAlignments,
   spacingSteps,
+  textDefaults,
   textRoles,
   tones,
 } from '../kit-tokens';
@@ -19,6 +21,7 @@ export const textProps = z.object({
     .describe('Text content in source order.'),
   role: perSizeClass(z.enum(textRoles))
     .optional()
+    .meta({ default: textDefaults.role })
     .describe('The typography role, optionally by Size class.'),
   tone: z.enum(tones).optional().describe('The Argo semantic text tone.'),
   accessibilityLabel: z
@@ -29,9 +32,17 @@ export const textProps = z.object({
 
 export const buttonProps = z.object({
   label: z.string().describe('The button label.'),
-  variant: z.enum(buttonVariants).optional().describe('The button treatment.'),
+  variant: z
+    .enum(buttonVariants)
+    .optional()
+    .meta({ default: buttonDefaults.variant })
+    .describe('The button treatment.'),
   tone: z.literal('danger').optional().describe('Semantic danger treatment.'),
-  size: z.enum(buttonSizes).optional().describe('The button size.'),
+  size: z
+    .enum(buttonSizes)
+    .optional()
+    .meta({ default: buttonDefaults.size })
+    .describe('The button size.'),
   disabled: z.boolean().optional().describe('Whether activation is disabled.'),
   onPress: pressHandler.optional().describe('The action run on activation.'),
   icon: iconName.optional().describe('An Argo icon before the label.'),

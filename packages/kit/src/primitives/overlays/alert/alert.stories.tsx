@@ -65,7 +65,7 @@ function AlertPreview(props: AlertPreviewProps): React.JSX.Element {
     <View className="flex-row">
       <Button
         label={props.trigger}
-        variant="outline"
+        variant="secondary"
         onPress={() => setOpen(true)}
       />
       <Alert {...props.alert} open={open} onOpenChange={setOpen} />

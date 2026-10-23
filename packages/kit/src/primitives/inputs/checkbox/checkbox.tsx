@@ -91,7 +91,7 @@ export function CheckboxIndicator(
       {props.value && (
         <Icon
           name="check"
-          role={props.variant ? 'secondary' : 'mark'}
+          size={props.variant ? 'xs' : 'sm'}
           className="text-primary-foreground"
         />
       )}
@@ -133,7 +133,7 @@ function optionClass(props: CheckboxProps): string {
 function SelectedMark(props: CheckboxProps): React.JSX.Element | null {
   if (props.selection !== 'single' || !props.value) return null;
 
-  return <Icon name="check" role="secondary" />;
+  return <Icon name="check" size="xs" />;
 }
 
 function optionMarkClass(props: CheckboxIndicatorProps): string | undefined {

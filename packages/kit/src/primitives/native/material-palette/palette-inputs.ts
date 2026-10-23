@@ -1,5 +1,4 @@
 import type {
-  CheckboxColors,
   RadioButtonColors,
   SliderColors,
   SwitchColors,
@@ -39,18 +38,6 @@ export function sliderColors(roles: MaterialRoles): SliderColors {
     inactiveTrackColor: roles.outlineVariant,
     activeTickColor: roles.onPrimary,
     inactiveTickColor: roles.primary,
-  };
-}
-
-// Checkbox `colors` (CheckboxColors): Material's primary box with its on-primary check.
-export function checkboxColors(roles: MaterialRoles): CheckboxColors {
-  return {
-    checkedColor: roles.primary,
-    checkmarkColor: roles.onPrimary,
-    uncheckedColor: roles.onSurfaceVariant,
-    disabledCheckedColor: roles.disabledContent,
-    disabledUncheckedColor: roles.disabledContent,
-    disabledIndeterminateColor: roles.disabledContent,
   };
 }
 

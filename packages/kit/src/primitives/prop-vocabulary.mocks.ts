@@ -1,5 +1,4 @@
 import type * as ButtonKit from '#primitives/actions/button';
-import type * as ButtonGroupKit from '#primitives/actions/button-group';
 import type * as IconButtonKit from '#primitives/actions/icon-button';
 import type * as SplitButtonKit from '#primitives/actions/split-button';
 import type * as AvatarKit from '#primitives/content/avatar';
@@ -60,7 +59,6 @@ export type Primitives = {
   AlertAction: AlertKit.AlertAction;
   AlertProps: AlertKit.AlertProps;
   ButtonDataProps: ButtonKit.ButtonDataProps;
-  ButtonGroupProps: ButtonGroupKit.ButtonGroupProps;
   ButtonProps: ButtonKit.ButtonProps;
   CalloutButtonProps: CalloutKit.CalloutButtonProps;
   CalloutProps: CalloutKit.CalloutProps;
@@ -86,7 +84,9 @@ export type Primitives = {
   FieldProps: FieldKit.FieldProps;
   FilterPillProps: FilterPillKit.FilterPillProps;
   HostProps: HostKit.HostProps;
+  IconButtonDataProps: IconButtonKit.IconButtonDataProps;
   IconButtonProps: IconButtonKit.IconButtonProps;
+  IconButtonSize: IconButtonKit.IconButtonSize;
   IconProps: IconKit.IconProps;
   IconSlotProps: IconKit.IconSlotProps;
   IconSpinnerProps: IconKit.IconSpinnerProps;
@@ -123,7 +123,6 @@ export type Primitives = {
   SpinnerProps: SpinnerKit.SpinnerProps;
   SplitButtonOption: SplitButtonKit.SplitButtonOption<string>;
   SplitButtonProps: SplitButtonKit.SplitButtonProps;
-  SplitMenuProps: SplitButtonKit.SplitMenuProps;
   StandaloneTextInputProps: TextInputKit.StandaloneTextInputProps;
   SwitchProps: SwitchKit.SwitchProps;
   TextInputProps: TextInputKit.TextInputProps;

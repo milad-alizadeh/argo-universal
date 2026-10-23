@@ -6,4 +6,4 @@ export {
   type IconSpinnerProps,
 } from './icon-props';
 
-export { IconRoleContext } from './icon-role-context';
+export { IconSizeContext } from './icon-size-context';

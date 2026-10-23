@@ -13,7 +13,7 @@ import {
 import { changeDescription } from '../change-stage/change-stage-model';
 import { SessionMark } from './session-row-mark';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
-import { compactGlyphRole, sidebarDrawing } from './session-row-sidebar';
+import { compactGlyphSize, sidebarDrawing } from './session-row-sidebar';
 import { compactStatusDot } from './session-row-status';
 
 type CompactEndProps = Pick<SessionRowProps, 'session' | 'pullRequest' | 'age'>;
@@ -23,7 +23,7 @@ function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
   if (pullRequest)
     return (
       <>
-        <ChangeStageIcon {...pullRequest} role={compactGlyphRole} />
+        <ChangeStageIcon {...pullRequest} size={compactGlyphSize} />
         <ChangeStageModifier {...pullRequest} />
       </>
     );

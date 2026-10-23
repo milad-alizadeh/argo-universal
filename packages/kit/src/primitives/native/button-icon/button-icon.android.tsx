@@ -1,19 +1,18 @@
-import { RNHostView } from '@expo/ui';
-import { Icon } from '@expo/ui/jetpack-compose';
+import { Icon, RNHostView } from '@expo/ui';
 import type { ReactElement } from 'react';
 import { Pressable } from 'react-native';
-import { materialImage } from '../../../symbols/material-images/material-images';
+import { nativeIconName } from '../../../symbols/native-icon-name';
 import type { ButtonIconProps, HostedPressProps } from './button-icon-props';
 
 /*
- * The icon of a stock Compose control: its Material XML drawing in Expo UI's Compose Icon at Material's 24dp, as
- * Expo Router's Android toolbar draws one, so the whole control takes the tap. An icon without one (a Tabler icon,
+ * The icon of a stock Compose control: its Material XML drawing in Expo UI's Icon at Material's 24dp, as
+ * Expo Router's Android toolbar draws one, so the whole control takes the tap. An icon without one (an SVG icon,
  * or a Material name @expo/material-symbols lacks) is hosted from React Native and runs the press itself.
  */
 export function ButtonIcon(props: ButtonIconProps): ReactElement {
-  const source = materialImage(props.name);
+  const name = nativeIconName(props.name);
 
-  if (source) return <Icon source={source} tint={props.tint} />;
+  if (name) return <Icon name={name} color={props.tint} />;
 
   return <HostedPress {...props} />;
 }

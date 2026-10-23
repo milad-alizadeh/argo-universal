@@ -6,10 +6,7 @@ import { type SessionMenu, sessionMenuItems } from './session-menu-items';
 // The header's icon buttons: ghost, extra small and tight-cornered, with 16px foreground icons.
 export const headerActionAppearance = {
   variant: 'ghost',
-  size: 'xs',
-  corners: 'control',
-  iconRole: 'band',
-  iconClassName: 'text-foreground',
+  size: 'sm',
 } as const;
 
 const sessionMenuLabel = 'More';

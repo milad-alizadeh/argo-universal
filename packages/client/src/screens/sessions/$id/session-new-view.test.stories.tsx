@@ -129,9 +129,7 @@ export const FailedStart: Story = {
     draft: typedDraft,
   }),
   play: async ({ canvas, userEvent }) => {
-    const retry = await canvas.findByRole('button', {
-      name: 'Try to restart the Agent',
-    });
+    const retry = await canvas.findByRole('button', { name: 'Retry' });
 
     await expect(canvas.getByText(/Launch/)).toBeVisible();
     await expect(canvas.getByText(failedStartMessage)).toBeVisible();

@@ -32,7 +32,7 @@ function optionContent(
     id: option.value,
     title: option.label,
     subtitle: option.subtitle,
-    leading: option.icon ? <Icon name={option.icon} role="row" /> : undefined,
+    leading: option.icon ? <Icon name={option.icon} size="md" /> : undefined,
     accessibilityLabel: option.accessibilityLabel ?? option.label,
   };
 }

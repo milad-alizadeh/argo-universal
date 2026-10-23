@@ -65,7 +65,7 @@ export function SessionPullRequestLabel(
       {...labelRow}
       accessibilityLabel={`Change #${props.number}, ${label}`}
     >
-      <ChangeStageIcon {...props} role="control" />
+      <ChangeStageIcon {...props} size="sm" />
       <SecondaryPair {...numberPair(props)} />
       <ChangeStageModifier {...props} />
     </View>
@@ -83,7 +83,7 @@ function PullRequestItemContent(
 ): React.JSX.Element {
   return (
     <>
-      <ChangeStageIcon {...pullRequest} role="control" />
+      <ChangeStageIcon {...pullRequest} size="sm" />
       <Text className="font-medium">#{pullRequest.number}</Text>
       <Text numberOfLines={1} className="min-w-0 shrink">
         {pullRequest.title}

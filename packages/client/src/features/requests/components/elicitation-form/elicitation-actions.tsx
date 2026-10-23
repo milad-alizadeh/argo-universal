@@ -40,8 +40,7 @@ function submitProps(
   return {
     ...actionProps(wide),
     label: submitLabel(props),
-    disabled: props.inactive || !props.canSubmit,
-    loading: props.submitting,
+    disabled: props.inactive || !props.canSubmit || props.submitting,
     onPress: props.onSubmit,
   };
 }
@@ -51,7 +50,7 @@ function skipProps(props: ElicitationActionsProps, wide: boolean): ButtonProps {
   return {
     ...actionProps(wide),
     label: 'Skip',
-    variant: 'ghost',
+    variant: 'text',
     disabled: props.inactive,
     onPress: props.onSkip,
   };

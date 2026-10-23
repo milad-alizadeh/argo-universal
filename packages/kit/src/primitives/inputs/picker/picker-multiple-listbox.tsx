@@ -92,7 +92,7 @@ function toggleOption<Value extends string>(
 
 function OptionCheck(props: { checked: boolean }): ReactElement {
   return (
-    <IconSlot role="control">
+    <IconSlot size="sm">
       {props.checked ? <SelectedCheck className="shrink-0" /> : null}
     </IconSlot>
   );

@@ -97,11 +97,9 @@ function Offline({
         <IconButton
           variant="ghost"
           icon="retry"
-          iconRole="action"
           accessibilityLabel="Try again"
           onPress={onRetry}
-          hitSlop={8}
-          className="size-7 min-h-0 min-w-0 rounded-full android:min-h-0 android:min-w-0 sm:size-7"
+          size="xs"
         />
       </View>
     </>

@@ -16,7 +16,7 @@ export type ChangeStageProps = ChangeState & {
 
 type GlyphProps = ChangeState & {
   form?: 'bare' | 'disc';
-  role?: 'secondary' | 'mark' | 'control';
+  size?: 'xs' | 'sm';
 };
 
 export function ChangeStageIcon(props: GlyphProps): ReactElement {
@@ -24,7 +24,7 @@ export function ChangeStageIcon(props: GlyphProps): ReactElement {
     <ToneMark
       {...resolveChangeStage(props)}
       form={props.form}
-      role={props.role}
+      size={props.size}
     />
   );
 }

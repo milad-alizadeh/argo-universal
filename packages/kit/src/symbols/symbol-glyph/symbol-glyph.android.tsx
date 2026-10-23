@@ -1,28 +1,76 @@
+import { Icon, type IconName } from '@expo/ui';
 import type * as React from 'react';
-import { materialGlyphScale } from './material-glyph-scale';
+import { View } from 'react-native';
+import { Host } from '#primitives/native/host';
+import type { DrawnSymbol } from '../drawn-symbol';
+import {
+  materialFilledImage,
+  materialImage,
+} from '../material-images/material-images';
 import { NativeSymbolView } from './native-symbol-view';
+import { SvgSymbolGlyph } from './svg-symbol';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
-import { TablerSymbolPath } from './tabler-symbol-path';
 
-// Android draws the Material Symbol natively, and a Tabler symbol from its path.
-export function SymbolGlyph({
+type MaterialSymbol = Extract<DrawnSymbol, { kind: 'system' }>;
+
+const drawing = (symbol: MaterialSymbol): IconName | undefined =>
+  symbol.filled
+    ? materialFilledImage(symbol.material)
+    : materialImage(symbol.material);
+
+function DrawingGlyph(
+  props: Omit<SymbolGlyphProps, 'symbol'> & { source: IconName },
+): React.JSX.Element {
+  return (
+    <View
+      testID={props.testID}
+      style={{ width: props.pixels, height: props.pixels }}
+    >
+      <Host matchContents>
+        <Icon name={props.source} size={props.pixels} color={props.tintColor} />
+      </Host>
+    </View>
+  );
+}
+
+function FontGlyph({
   symbol,
   ...props
-}: SymbolGlyphProps): React.JSX.Element {
-  if (symbol.kind === 'tabler')
-    return <TablerSymbolPath {...props} name={symbol.tabler} />;
-
+}: Omit<SymbolGlyphProps, 'symbol'> & {
+  symbol: MaterialSymbol;
+}): React.JSX.Element {
   return (
     <NativeSymbolView
       {...props}
       name={{ android: symbol.material }}
-      glyphScale={materialScale({ symbol, ...props })}
       filled={symbol.filled}
     />
   );
 }
 
-// The one Material multiple, as the web's Material path takes, so a glyph is the same size in either.
-function materialScale(props: SymbolGlyphProps): number {
-  return props.symbol.kind === 'system' ? materialGlyphScale : props.glyphScale;
+function MaterialGlyph({
+  symbol,
+  ...props
+}: Omit<SymbolGlyphProps, 'symbol'> & {
+  symbol: MaterialSymbol;
+}): React.JSX.Element {
+  const source = drawing(symbol);
+
+  if (source) return <DrawingGlyph {...props} source={source} />;
+
+  return <FontGlyph {...props} symbol={symbol} />;
+}
+
+/*
+ * Android draws a Material Symbol from the same XML drawing Expo UI's Icon draws inside a button or menu (one source,
+ * one weight); a name with no drawing keeps the font, and an SVG symbol draws from its component.
+ */
+export function SymbolGlyph({
+  symbol,
+  ...props
+}: SymbolGlyphProps): React.JSX.Element {
+  if (symbol.kind === 'svg')
+    return <SvgSymbolGlyph {...props} name={symbol.svg} />;
+
+  return <MaterialGlyph {...props} symbol={symbol} />;
 }

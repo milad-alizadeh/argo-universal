@@ -90,7 +90,7 @@ function DrawerItemIcon({
 }: DrawerItemProps): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <IconSlot role="nav" collapsable={false}>
+      <IconSlot size="lg" collapsable={false}>
         <IconLayer icon={icon} filled shown={selected} />
         <IconLayer icon={icon} filled={false} shown={!selected} />
       </IconSlot>
@@ -109,7 +109,7 @@ function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
 
   return (
     <View className={cn('absolute', !shown && 'opacity-0')}>
-      <Icon name={icon} role="nav" filled={filled} className={tone} />
+      <Icon name={icon} size="lg" filled={filled} className={tone} />
     </View>
   );
 }
@@ -122,12 +122,10 @@ function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   );
 }
 
-// Material's Badge in Argo's danger red; TalkBack reads it with the row.
+// Material's Badge, on the Host's error role (Argo's danger red); TalkBack reads it with the row.
 function NativeBadge({ badge }: { badge: CountBadge }): React.JSX.Element {
-  const { roles } = useMaterialPalette();
-
   return (
-    <Badge containerColor={roles.error} contentColor={roles.onError}>
+    <Badge>
       <Text>{badge.text}</Text>
     </Badge>
   );

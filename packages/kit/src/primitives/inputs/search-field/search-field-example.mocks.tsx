@@ -48,7 +48,6 @@ function AddAction(): React.JSX.Element {
       icon="add"
       size="xs"
       variant="ghost"
-      iconClassName="text-muted-foreground"
       accessibilityLabel="Add item"
     />
   );

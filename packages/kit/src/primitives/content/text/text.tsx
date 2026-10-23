@@ -1,3 +1,4 @@
+import { textDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import * as React from 'react';
 import { Dimensions, PixelRatio, Platform, Text as RNText } from 'react-native';
@@ -44,7 +45,8 @@ function textClassName(
 ): string {
   return cn(
     'text-foreground web:[user-select:inherit]',
-    role === undefined && 'type-body',
+    // The default role goes first: `cn` (utils.ts, the type-role / type-face groups) drops it when an inherited class or an explicit role follows.
+    textRoles[textDefaults.role],
     inherited,
     role && textRoles[role],
     textToneClass(tone, dimmed),

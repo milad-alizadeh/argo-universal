@@ -52,10 +52,7 @@ function PickerDialog<Value extends string>(
 ): ReactElement {
   return (
     <Host matchContents>
-      <AlertDialog
-        onDismissRequest={props.close}
-        colors={useMaterialPalette().dialogColors}
-      >
+      <AlertDialog onDismissRequest={props.close}>
         <DialogContent {...props} />
       </AlertDialog>
     </Host>

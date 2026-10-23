@@ -7,8 +7,6 @@ import { InstallationProgress } from '../session-callout/installation-progress';
 
 export type { LaunchCalloutProps } from '../../types/session-callout';
 
-const retryHint = 'Try to restart the Agent';
-
 // Zed's Failed to Launch callout. Retry re-runs the open and never resends a Turn.
 export function LaunchCallout(props: LaunchCalloutProps): React.JSX.Element {
   const [description, ...stderr] = props.message.split('\n');
@@ -27,11 +25,7 @@ export function LaunchCallout(props: LaunchCalloutProps): React.JSX.Element {
 const RetryButton = ({
   onRetry,
 }: Pick<LaunchCalloutProps, 'onRetry'>): React.JSX.Element => (
-  <CalloutButton
-    label="Retry"
-    accessibilityLabel={retryHint}
-    onPress={onRetry}
-  />
+  <CalloutButton label="Retry" onPress={onRetry} />
 );
 
 export interface CalloutLoadingProps {

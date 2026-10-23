@@ -5,7 +5,7 @@ import { childProcessImport } from './child-process.ts';
 import { crossPackageImport } from './cross-package-import.ts';
 import { databaseClient } from './database-client.ts';
 import { drizzleSchemaBoundary } from './drizzle-schema-boundary.ts';
-import { iconRole } from './icon-role.ts';
+import { iconSize } from './icon-size.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
 import { kitStyling } from './kit-styling.ts';
 import { lexicalZone } from './lexical-zone.ts';
@@ -26,7 +26,7 @@ export default definePlugin({
     'cross-package-import': crossPackageImport,
     'database-client': databaseClient,
     'drizzle-schema-boundary': drizzleSchemaBoundary,
-    'icon-role': iconRole,
+    'icon-size': iconSize,
     'json-parse-cast': jsonParseCast,
     'kit-styling': kitStyling,
     'lexical-zone': lexicalZone,

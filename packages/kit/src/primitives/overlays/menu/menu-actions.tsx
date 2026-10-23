@@ -103,7 +103,7 @@ function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
       <View className={menuRowClass()}>
         <MenuActionLabel {...submenu} />
         <SubmenuCount count={submenu.count} />
-        <Icon name="chevron-right" role="chevron" tone="muted" />
+        <Icon name="chevron-right" size="sm" tone="muted" />
       </View>
     </RadixMenu.SubTrigger>
   );
@@ -154,7 +154,7 @@ function ChoiceCheck({
   if (selected === undefined) return null;
 
   return (
-    <IconSlot role="body">
+    <IconSlot size="sm">
       {selected ? <SelectedCheck className="text-foreground" /> : null}
     </IconSlot>
   );

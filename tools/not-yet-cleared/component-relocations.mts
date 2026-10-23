@@ -79,7 +79,6 @@ const componentFolders: [string, string[]][] = [
     'lib/generic/primitives',
     [
       'actions/button',
-      'actions/button-group',
       'inputs/filter-pill',
       'actions/icon-button',
       'status/badge',

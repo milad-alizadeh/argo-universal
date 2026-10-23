@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import type { ViewStyle } from 'react-native';
+import { Platform, type ViewStyle } from 'react-native';
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -21,19 +21,19 @@ export function DisclosureChevron(
   return <Turning open={props.open}>{chevron}</Turning>;
 }
 
+// Android's Material chevron fills about half its box where the SF Symbol fills most of it, so Android draws one step up to match.
+const sizes = {
+  xs: Platform.OS === 'android' ? 'sm' : 'xs',
+  sm: Platform.OS === 'android' ? 'md' : 'sm',
+} as const;
+
 /*
- * One size, with no say in it from the caller: every chevron in the app is the `chevron` role, so a
- * collapsible's chevron and a row's are the same glyph at the same size wherever they sit.
- *
- * Always fitted to its artwork. Material's chevron_right inks under half its em box, so sizing it by the
- * role's pixels alone draws 7px of chevron beside 10px capitals, while the SF path normalises every symbol
- * against `circle` and needs no such opt-in. Fitting here is what keeps the two paths the same size.
+ * Every row's chevron is sm; a collapsible's header passes xs, one size smaller.
  */
 function ChevronGlyph(props: DisclosureChevronProps): React.JSX.Element {
   return (
     <Icon
-      fitArtwork
-      role="chevron"
+      size={sizes[props.size ?? 'sm']}
       name="chevron-right"
       className={cn('text-muted-foreground', props.className)}
     />

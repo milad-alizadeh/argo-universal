@@ -24,7 +24,7 @@ export class EnginePlugins {
     this.parts = createPluginParts(options, this.hookPort);
     this.plugins = attachHooks(options, this.parts, this.hookPort);
     this.unwatchTurns = watchTurnActivity(options.sessions, (active) => {
-      void this.parts.pluginRuntime.turns.changed(active);
+      this.parts.pluginRuntime.turns.changed(active);
     });
   }
 

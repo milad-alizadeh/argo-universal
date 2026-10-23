@@ -54,6 +54,6 @@ function SiteIcon({ icon }: { icon?: string }): ReactElement {
   return icon ? (
     <Image source={{ uri: icon }} className="size-3.5" />
   ) : (
-    <Icon name="web" role="mark" tone="muted" />
+    <Icon name="web" size="sm" tone="muted" />
   );
 }

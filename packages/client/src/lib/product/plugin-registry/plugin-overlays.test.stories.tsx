@@ -97,9 +97,9 @@ export const ConfirmAcknowledgement: Story = {
     onEvent.mockReturnValueOnce(answer.promise);
     const confirm = await page.findByRole('button', applySheet);
     await userEvent.click(confirm);
-    await expect(confirm).toHaveAttribute('aria-busy', 'true');
+    await expect(confirm).toBeDisabled();
     answer.reject(new Error('Refused'));
-    await waitFor(() => expect(confirm).toHaveAttribute('aria-busy', 'false'));
+    await waitFor(() => expect(confirm).toBeEnabled());
   },
 };
 

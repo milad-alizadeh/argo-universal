@@ -72,7 +72,7 @@ export function VideoError(props: VideoErrorProps): React.JSX.Element {
       onPress={props.onRetry}
       className={cn(frameClass(props), errorClass, focusRing)}
     >
-      <Icon name="image-broken" role="row" tone="muted" />
+      <Icon name="image-broken" size="md" tone="muted" />
     </Pressable>
   );
 }

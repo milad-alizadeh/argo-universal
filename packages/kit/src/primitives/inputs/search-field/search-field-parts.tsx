@@ -139,9 +139,7 @@ function CloseIconButton(
       icon="close"
       variant="ghost"
       accessibilityLabel="Close search"
-      iconClassName="text-muted-foreground"
       onPress={props.onClose}
-      className="size-8 min-h-8 min-w-8 sm:size-8 android:min-h-8 android:min-w-8"
     />
   );
 }

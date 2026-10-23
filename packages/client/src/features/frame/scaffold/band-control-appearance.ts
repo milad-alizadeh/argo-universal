@@ -1,24 +1,14 @@
 import type { IconButtonProps } from '@repo/kit/primitives/actions/icon-button';
 
-// Paper's band controls share their box, glyph role and corners.
+// Paper's band controls share their size.
 export const bandControlAppearance = {
   variant: 'ghost',
-  size: '2xs',
-  iconRole: 'band',
-  corners: 'control',
+  size: 'sm',
 } as const;
 
-// Foundations / IconButton Off and On: only the band's toggles take the filled On state.
+// Foundations / IconButton Off and On: the toggles stay ghost and take the IconButton's own selected state.
 export function bandToggleAppearance(
   selected: boolean,
-): Pick<
-  IconButtonProps,
-  'size' | 'variant' | 'iconRole' | 'corners' | 'selected' | 'iconTone'
-> {
-  return {
-    ...bandControlAppearance,
-    selected,
-    variant: selected ? 'filled' : 'ghost',
-    iconTone: selected ? undefined : 'muted',
-  };
+): Pick<IconButtonProps, 'selected' | 'size' | 'variant'> {
+  return { ...bandControlAppearance, selected };
 }

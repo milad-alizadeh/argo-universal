@@ -2,7 +2,7 @@ import type { ComponentProps, ReactElement } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
-import { buttonInteractionProps } from '#primitives/actions/button';
+import { buttonInteractionProps } from '#primitives/actions/pressable';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import type { MenuTriggerProps } from './menu-props';
@@ -123,7 +123,7 @@ function TriggerLeading(
 
   if (!props.icon) return null;
 
-  return <Icon name={props.icon} role="control" tone={iconTone(props.tone)} />;
+  return <Icon name={props.icon} size="sm" tone={iconTone(props.tone)} />;
 }
 
 function iconTone(tone: MenuTriggerProps['tone']): 'danger' | 'muted' {
@@ -168,7 +168,7 @@ function TriggerLabel(
 function TriggerChevron(): ReactElement {
   return (
     <View className="-ml-0.5">
-      <Icon name="chevron-down" role="chevron" tone="muted" />
+      <Icon name="chevron-down" size="sm" tone="muted" />
     </View>
   );
 }
