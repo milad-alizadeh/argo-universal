@@ -7,14 +7,9 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { FieldLink } from '#primitives/fields/field-link';
-import { FieldPicker } from '#primitives/fields/field-picker';
-import { FieldSlider } from '#primitives/fields/field-slider';
-import { FieldSecret, FieldText } from '#primitives/fields/field-text';
-import { FieldToggle } from '#primitives/fields/field-toggle';
-import { FieldValue } from '#primitives/fields/field-value';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { fieldGroupRowComponents } from './field-group-row-components';
 import {
   FieldGroupSection,
   type FieldGroupSectionProps,
@@ -82,11 +77,5 @@ const isFieldGroupSection = (
 
 export const FieldGroup = Object.assign(FieldGroupRoot, {
   Section: FieldGroupSection,
-  Value: FieldValue,
-  Link: FieldLink,
-  Toggle: FieldToggle,
-  Picker: FieldPicker,
-  Slider: FieldSlider,
-  TextField: FieldText,
-  SecretField: FieldSecret,
+  ...fieldGroupRowComponents,
 });

@@ -2,15 +2,10 @@ import { LazyColumn } from '@expo/ui/jetpack-compose';
 import { fillMaxSize, imePadding } from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
-import { FieldLink } from '#primitives/fields/field-link';
-import { FieldPicker } from '#primitives/fields/field-picker';
 import { GroupDisabledContext } from '#primitives/fields/field-row';
-import { FieldSlider } from '#primitives/fields/field-slider';
-import { FieldSecret, FieldText } from '#primitives/fields/field-text';
-import { FieldToggle } from '#primitives/fields/field-toggle';
-import { FieldValue } from '#primitives/fields/field-value';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { fieldGroupRowComponents } from './field-group-row-components';
 import { FieldGroupSection } from './field-group-section.android';
 
 export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
@@ -87,11 +82,5 @@ const toSection = (run: ReactNode[]): ReactNode =>
 
 export const FieldGroup = Object.assign(FieldGroupRoot, {
   Section: FieldGroupSection,
-  Value: FieldValue,
-  Link: FieldLink,
-  Toggle: FieldToggle,
-  Picker: FieldPicker,
-  Slider: FieldSlider,
-  TextField: FieldText,
-  SecretField: FieldSecret,
+  ...fieldGroupRowComponents,
 });

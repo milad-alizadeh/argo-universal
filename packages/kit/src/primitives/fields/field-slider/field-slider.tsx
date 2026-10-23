@@ -1,7 +1,8 @@
 import { Column, Slider } from '@expo/ui';
-import type { ComponentProps, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { sliderProps } from './field-slider-props';
 
 // The title over Expo UI's universal Slider on every platform; no leading icon.
 export function FieldSlider(
@@ -14,14 +15,3 @@ export function FieldSlider(
     </Column>
   );
 }
-
-const sliderProps = (
-  props: FieldGroupKitProps<'FieldGroup.Slider'>,
-): ComponentProps<typeof Slider> => ({
-  value: props.value,
-  min: props.min,
-  max: props.max,
-  step: props.step,
-  disabled: props.disabled,
-  onValueChange: props.onValueChange,
-});
