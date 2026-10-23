@@ -30,18 +30,20 @@ const stock = (
 export function StockProbe(): ReactElement {
   return (
     <Host matchContents>
-      <HStack spacing={16}>
-        {controlSizes.map((size) => (
-          <VStack key={size} spacing={8}>
-            <Button
-              label="New session"
-              systemImage="square.and.pencil"
-              modifiers={[...stock(size), labelStyle('iconOnly')]}
-            />
-            <Text>{size}</Text>
-          </VStack>
-        ))}
-      </HStack>
+      <HStack spacing={16}>{controlSizes.map(stockColumn)}</HStack>
     </Host>
+  );
+}
+
+function stockColumn(size: (typeof controlSizes)[number]): ReactElement {
+  return (
+    <VStack key={size} spacing={8}>
+      <Button
+        label="New session"
+        systemImage="square.and.pencil"
+        modifiers={[...stock(size), labelStyle('iconOnly')]}
+      />
+      <Text>{size}</Text>
+    </VStack>
   );
 }
