@@ -5,7 +5,6 @@
   "overrides": [
     {
       "files": [
-        "packages/client/src/features/agents/components/agent-logo/agent-logo.tsx",
         "packages/client/src/features/composer/components/composer-attachment-card/composer-attachment-card.tsx",
         "packages/client/src/features/composer/components/composer-popover/composer-popover.tsx",
         "packages/client/src/features/composer/components/composer-status/plan-popover.tsx",
