@@ -97,7 +97,8 @@ export const ShelfEndControls: Story = {
     });
 
     const next = canvas.getByRole('button', { name: 'Next items' });
-    await expect(previous).toBeDisabled();
+    // The edges come from the list's first scroll measurement, which can land after the buttons mount on a busy runner.
+    await waitFor(() => expect(previous).toBeDisabled());
     await waitFor(() => expect(next).toBeEnabled());
     await userEvent.click(next);
     await waitFor(() => expect(next).toBeDisabled());
