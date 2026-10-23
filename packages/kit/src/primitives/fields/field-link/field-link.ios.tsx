@@ -1,4 +1,3 @@
-/* oxlint-disable argo/icon-size -- the stock disclosure chevron is a font-sized SF Symbol (footnote, semibold), not a role-sized icon. */
 /* oxlint-disable anti-slop/no-shape-in-symbol-names -- SwiftUI's own modifier names. */
 import { Button, HStack, Image, Spacer } from '@expo/ui/swift-ui';
 import {

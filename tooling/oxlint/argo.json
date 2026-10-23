@@ -230,7 +230,11 @@
       "rules": { "argo/icon-size": "error" }
     },
     {
-      "files": ["packages/kit/src/symbols/**"],
+      // The symbols folder turns roles into pixels; the iOS Link row's stock disclosure chevron is a font-sized SF Symbol (footnote, semibold), not a role-sized icon.
+      "files": [
+        "packages/kit/src/symbols/**",
+        "packages/kit/src/primitives/fields/field-link/field-link.ios.tsx"
+      ],
       "rules": { "argo/icon-size": "off" }
     },
     {
