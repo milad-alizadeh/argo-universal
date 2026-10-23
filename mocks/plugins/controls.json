@@ -1,18 +1,5 @@
 [
   {
-    "type": "Switch",
-    "key": "switch",
-    "props": {
-      "accessibilityLabel": "Notifications",
-      "value": false,
-      "onValueChange": {
-        "$event": "onValueChange"
-      }
-    },
-    "children": [],
-    "slots": {}
-  },
-  {
     "type": "Slider",
     "key": "slider",
     "props": {
@@ -58,6 +45,19 @@
                   "label": "Production"
                 }
               ],
+              "onValueChange": {
+                "$event": "onValueChange"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Toggle",
+            "key": "toggle",
+            "props": {
+              "title": "Notifications",
+              "value": false,
               "onValueChange": {
                 "$event": "onValueChange"
               }

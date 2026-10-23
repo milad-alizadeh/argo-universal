@@ -4,10 +4,6 @@ import { controlsPartSchemas as controls } from './parts/controls';
 import { selectionPartSchemas } from './selection-parts';
 import type { WirePartDefinition } from './wire-parts';
 
-const toggle = controls.Switch.props.extend({
-  onValueChange: controls.Switch.props.shape.onValueChange.optional(),
-});
-
 const slider = controls.Slider.props.extend({
   onValueChange: controls.Slider.props.shape.onValueChange.optional(),
 });
@@ -33,7 +29,6 @@ function withDraft<Part extends WirePartDefinition, Schema extends z.ZodType>(
 }
 
 export const controlWireParts = {
-  Switch: withDraft(controls.Switch, toggle),
   Slider: withDraft(controls.Slider, slider),
   SplitButton: withDraft(selectionPartSchemas.SplitButton, split),
   IconButton: iconButtonPart,

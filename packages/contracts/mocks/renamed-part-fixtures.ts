@@ -6,18 +6,6 @@ export const previousDraftFixtures: {
   legacy: WireNode['props'];
 }[] = [
   {
-    type: 'Switch',
-    props: {
-      value: true,
-      onValueChange: { $event: 'onValueChange' },
-      accessibilityLabel: 'Enabled',
-    },
-    legacy: {
-      checked: true,
-      label: 'Enabled',
-    },
-  },
-  {
     type: 'Slider',
     props: {
       value: 2,

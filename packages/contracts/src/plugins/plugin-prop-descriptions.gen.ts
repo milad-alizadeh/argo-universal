@@ -322,46 +322,6 @@ export type WireSchemaHints = {
     /** Action run on activation. */
     "onPress": PropValue<"FilterPill", "onPress">;
   };
-  "Combobox": {
-    /** Spoken and visible selection name. */
-    "label": PropValue<"Combobox", "label">;
-    /** Selected value. */
-    "value": PropValue<"Combobox", "value">;
-    /** Searchable choices. */
-    "options": PropValue<"Combobox", "options">;
-    /** Reports a selected value. */
-    "onValueChange": PropValue<"Combobox", "onValueChange">;
-    /** A value is required. */
-    "required": PropValue<"Combobox", "required">;
-    /** Text shown without a selection. */
-    "placeholder": PropValue<"Combobox", "placeholder">;
-    /** Disable selection. */
-    "disabled": PropValue<"Combobox", "disabled">;
-    /** Choices are loading. */
-    "loading": PropValue<"Combobox", "loading">;
-    /** Why choices failed to load. */
-    "loadError": PropValue<"Combobox", "loadError">;
-    /** Selection placement. */
-    "variant": PropValue<"Combobox", "variant">;
-    /** Overlay heading. */
-    "title": PropValue<"Combobox", "title">;
-    /** Search hint. */
-    "searchPlaceholder": PropValue<"Combobox", "searchPlaceholder">;
-    /** Empty result message. */
-    "emptyLabel": PropValue<"Combobox", "emptyLabel">;
-    /** Action below the choices. */
-    "footerAction": PropValue<"Combobox", "footerAction">;
-  };
-  "Switch": {
-    /** The current on or off state. */
-    "value": PropValue<"Switch", "value">;
-    /** Called with the new on or off state. */
-    "onValueChange": PropValue<"Switch", "onValueChange">;
-    /** Whether interaction is disabled. */
-    "disabled": PropValue<"Switch", "disabled">;
-    /** The spoken name; the switch draws no text. */
-    "accessibilityLabel": PropValue<"Switch", "accessibilityLabel">;
-  };
   "Slider": {
     /** The current range value. */
     "value": PropValue<"Slider", "value">;

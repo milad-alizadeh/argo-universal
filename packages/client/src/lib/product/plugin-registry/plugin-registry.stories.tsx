@@ -13,7 +13,6 @@ import {
   slottedRowTree,
   splitButtonTree,
   svgTree,
-  switchTree,
 } from './plugin-registry-fixtures';
 
 const meta = {
@@ -72,8 +71,6 @@ export const Canvas: Story = { args: canvasTree };
 
 // An overlay is an ordinary node: the Sheet opens in place rather than outside the tree.
 export const Overlays: Story = { args: openSheetTree };
-
-export const Switch: Story = { args: switchTree };
 
 export const Slider: Story = { args: sliderTree };
 

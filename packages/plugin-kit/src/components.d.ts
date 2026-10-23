@@ -54,8 +54,6 @@ export const ActionList: PluginComponents['ActionList'] & {
 
 export const Action: PluginComponents['Action'];
 
-export const Switch: PluginComponents['Switch'];
-
 export const Slider: PluginComponents['Slider'];
 
 export const SplitButton: PluginComponents['SplitButton'];

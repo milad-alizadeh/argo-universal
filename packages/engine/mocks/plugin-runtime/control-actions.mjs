@@ -1,7 +1,7 @@
 import {
   Action,
   SplitButton,
-  Switch,
+  Slider,
   Text,
   Stack,
   useState,
@@ -36,14 +36,17 @@ function runButton(setResult) {
   );
 }
 
-function switchControl(setResult) {
+function sliderControl(setResult) {
   return jsx(
-    Switch,
+    Slider,
     {
-      value: false,
-      onValueChange: (value) => setResult(value ? 'Enabled' : 'Disabled'),
+      value: 0,
+      min: 0,
+      max: 10,
+      step: 1,
+      onValueChange: (value) => setResult(`Level ${value}`),
     },
-    'switch',
+    'slider',
   );
 }
 
@@ -55,7 +58,7 @@ function Page() {
     children: [
       jsx(Text, { children: result }, 'result'),
       runButton(setResult),
-      switchControl(setResult),
+      sliderControl(setResult),
     ],
   });
 }

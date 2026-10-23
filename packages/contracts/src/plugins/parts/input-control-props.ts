@@ -1,21 +1,6 @@
 import { z } from 'zod';
 import { handler, stringLabel } from '../plugin-part-props';
 
-const binaryControlProps = z.object({
-  value: z.boolean().describe('The current on or off state.'),
-  onValueChange: handler('onValueChange').describe(
-    'Called with the new on or off state.',
-  ),
-  disabled: z.boolean().optional().describe('Whether interaction is disabled.'),
-});
-
-export const switchProps = binaryControlProps.extend({
-  accessibilityLabel: z
-    .string()
-    .optional()
-    .describe('The spoken name; the switch draws no text.'),
-});
-
 export const sliderProps = z.object({
   value: z.number().optional().describe('The current range value.'),
   minimumValue: z.number().describe('The lowest allowed value.'),

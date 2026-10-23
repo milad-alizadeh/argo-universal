@@ -13,7 +13,6 @@ import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
 import { Slider } from '@repo/kit/primitives/controls/slider';
-import { Switch } from '@repo/kit/primitives/controls/switch';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { KitProps } from '@repo/kit/primitives/kit-props';
 import { Card } from '@repo/kit/primitives/layout/card';
@@ -55,7 +54,6 @@ export const pluginEntries = {
   'ActionList.Section': ActionList.Section,
   Action,
   EmptyState,
-  Switch,
   Slider,
   FieldGroup,
   'FieldGroup.Section': FieldGroup.Section,

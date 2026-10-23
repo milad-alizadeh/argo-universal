@@ -51,7 +51,7 @@ it('refuses a control outside the List empty Slot accepted set', () => {
   });
 });
 
-it.each(['Switch', 'Picker', 'TextInput', 'FieldGroup.Toggle'])(
+it.each(['Picker', 'TextInput', 'FieldGroup.Toggle'])(
   'refuses %s in a row trailing Slot',
   (type) => {
     const row: WireNode = {

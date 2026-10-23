@@ -15,7 +15,7 @@ function localControl(node: WireNode): WireNode {
 }
 
 const roots = fixtures
-  .filter((node) => ['Switch', 'Slider'].includes(node.type))
+  .filter((node) => node.type === 'Slider')
   .map((fixture) => localControl(WireNode.parse(fixture)));
 
 const meta = {
@@ -34,10 +34,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const DraftsWithoutHandlers: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const toggle = canvas.getByRole('switch', { name: 'Notifications' });
-    await userEvent.click(toggle);
-    await expect(toggle).toBeChecked();
+  play: async ({ canvas }) => {
     const slider = canvas.getByRole('slider', { name: 'Concurrency' });
     await fireEvent.change(slider, { target: { value: '7' } });
     await expect(slider).toHaveValue('7');

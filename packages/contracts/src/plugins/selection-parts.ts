@@ -1,18 +1,7 @@
 import { z } from 'zod';
 import { echoes } from './plugin-part-props';
 import { part } from './plugin-part-schema-utils';
-import {
-  pickerSchema,
-  comboboxSchema,
-  menuChoice,
-  menuSchema,
-  splitButtonSchema,
-} from './selection-schemas';
-
-const pickerEvents = {
-  onValueChange: echoes(pickerSchema, 'value'),
-  onPress: z.undefined(),
-};
+import { menuChoice, menuSchema, splitButtonSchema } from './selection-schemas';
 
 const menuEvents = {
   onValueChange: echoes(menuChoice, 'value'),
@@ -20,9 +9,6 @@ const menuEvents = {
 };
 
 export const selectionPartSchemas = {
-  Combobox: part('A searchable Picker.', comboboxSchema, {
-    events: pickerEvents,
-  }),
   Menu: part('A choice or action menu.', menuSchema, {
     events: menuEvents,
   }),

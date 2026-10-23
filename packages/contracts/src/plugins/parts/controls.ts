@@ -4,9 +4,8 @@ import { echoes } from '../plugin-part-props';
 import { part } from '../plugin-part-schema-utils';
 import { searchFieldProps } from '../presentation-kit-props';
 import { filterPillProps } from '../presentation-kit-props';
-import { selectionPartSchemas } from '../selection-parts';
 import { textChangeEvents } from '../text-field-kit-props';
-import { switchProps, sliderProps } from './input-control-props';
+import { sliderProps } from './input-control-props';
 
 export const controlsPartSchemas = {
   SearchField: part(
@@ -22,12 +21,6 @@ export const controlsPartSchemas = {
   ),
   FilterPill: part('A toggleable filter chip.', filterPillProps, {
     events: { onPress: z.undefined() },
-  }),
-  Combobox: selectionPartSchemas.Combobox,
-  Switch: part('An on/off control.', switchProps, {
-    events: { onValueChange: echoes(switchProps, 'value') },
-    label:
-      'Set accessibilityLabel when the surrounding row does not name the control.',
   }),
   Slider: part('A labeled numeric range control.', sliderProps, {
     events: {

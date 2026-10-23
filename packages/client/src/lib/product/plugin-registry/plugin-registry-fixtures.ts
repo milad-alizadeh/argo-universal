@@ -61,8 +61,6 @@ export const openSheetTree = {
   ]),
 } satisfies PluginTreeFixture;
 
-export const switchTree = control('switch');
-
 export const sliderTree = control('slider');
 
 // A FieldGroup holding a Picker row and a TextField row, as a Plugin sends them.

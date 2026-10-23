@@ -24,7 +24,6 @@ export const pluginPartSchemas = {
   ...visualPartSchemas,
   ...wireParts,
   // The kit receives local handlers; a Plugin can leave its draft controls without wire handlers.
-  Switch: controlsPartSchemas.Switch,
   Slider: controlsPartSchemas.Slider,
   SplitButton: actionsPartSchemas.SplitButton,
 } satisfies Record<string, WirePartDefinition>;
