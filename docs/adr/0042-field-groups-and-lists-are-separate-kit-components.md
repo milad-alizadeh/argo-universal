@@ -1,6 +1,6 @@
 # FieldGroups and Lists are separate kit components
 
-A FieldGroup holds a page's fixed rows of values and controls and a List shows data; the kit gives each its own component (owner, 2026-10-23). This supersedes the parts of [ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md) that put settings on `List appearance="grouped"` and have Argo draw every row, and the text-field, destructive-row and footer rules of [ADR-0033](0033-list-items-follow-each-platforms-settings-conventions.md). The data-list half of ADR-0032 stands: one `ListItem` anatomy on LegendList.
+A FieldGroup holds a page's fixed rows of values and controls and a List shows data; the kit gives each its own component (owner, 2026-10-23). This supersedes the parts of [ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md) that put settings on `List appearance="grouped"` and have Argo draw every row, and the text-field, destructive-row and footer rules of [ADR-0033](0033-list-items-follow-each-platforms-settings-conventions.md). It also supersedes ADR-0020's Combobox search line and the standalone `Picker`, `Combobox` and `Drill` choice controls, which become `FieldGroup.Picker` (below). The data-list half of ADR-0032 stands: one `ListItem` anatomy on LegendList.
 
 ADR-0032 merged the two so that no screen had to pick a family. In practice the merge made `ListItem` carry every settings control (Toggle, TextField, Picker, Stepper, Radio, Field) and made `List` copy the native grouped look by hand on LegendList: row positions, group ends, insets, press tiles, keyboard handling and per-platform pickers and steppers. That copy has to chase every OS restyle, and settings pages are short and fixed, so they never needed LegendList. The reasons ADR-0032 gave against native rows (custom Slots, `custom.*` symbols and React Native content in a row) are all list needs. Rows of fixed types have none of them.
 
@@ -24,17 +24,41 @@ Expo UI's universal `List` doesn't replace LegendList for data: on web it is a p
     The rows are `Value`, `Link`, `Picker`, `Toggle`, `TextField` and `SecretField` (which also take numbers) and `Slider`. There is no Radio (a single choice is a `Picker`), no Stepper, and no Checkbox: an on/off setting is a `Toggle` on every platform, as Settings draws it on iOS and Android (owner, 2026-10-23). A row has no free Slots.
   - Every child of a `FieldGroup` is drawn in a section card, as Settings does on both platforms. A button in a section is the kit's own `Button` in its `text` or `danger` look, as in Settings' "Reset" rows; FieldGroup has no button row of its own (owner, 2026-10-23). Footers render as each platform draws them.
 - **A page that submits** is a `FieldGroup` with its buttons placed by the screen below and outside it, so they have no section card: a dialog that creates something has one submit `Button`, and an Elicitation opens a sheet holding a `FieldGroup` with Skip and Submit below it (owner, 2026-10-23). The screen holds the field state (TanStack Form); the kit has no `Form` component.
+- **Every choice control has one job and one component** (owner, 2026-10-23):
+  - A choice in a form or settings row is `FieldGroup.Picker`. A page that submits is a FieldGroup, so the standalone `Picker` goes, and `Combobox` and `Drill` fold into `FieldGroup.Picker`: the Combobox's search page becomes the picker's searchable page.
+  - A quick choice from a toolbar pill is `Menu` with choices. It keeps sections (`groups`, each with an optional label).
+  - Switching between two to four views is `SegmentedControl`. Acting and choosing at once is `SplitButton`. Both are unchanged.
+- **`FieldGroup.Picker` takes `presentation`, `searchable`, `multiple` and options** (owner, 2026-10-23). Options take an optional `subtitle` and a leading `icon`. `presentation` is `'menu'` or `'page'`, and each call site states it: there is no default that changes with the parent.
+  - `menu` is for a short known list and opens in place:
+    - iOS: the stock SwiftUI menu `Picker`;
+    - Android: the stock Material `AlertDialog` of radio buttons (checkboxes when `multiple`), as Android Settings' `ListPreference`, with the row showing the value as its supporting line. It is the same pattern as the `TextField`'s `EditTextPreference` dialog;
+    - web: a popover of menu rows with a leading check.
+  - `page` is for a long or searchable list and pushes a page:
+    - iOS: a page in the sheet's SwiftUI `NavigationStack`, as SwiftUI's `.navigationLink` picker style does;
+    - Android: a page in the kit `Sheet`, drawn as React Native pages as the Sheet already draws them;
+    - web: a popover with the search field at the top, focused on open, where the arrow keys move and Enter chooses.
+  - Choosing a single value returns to the previous page. A `searchable` page puts the kit's shared search field (ADR-0020) above the rows and filters them as you type, with an empty state. A page can hold sections (Recent, then All A to Z) and a kit `Button` in a section of its own (such as "Add Agents").
+  - A FieldGroup draws every row and does not virtualise. A choice that can reach hundreds, such as the branches of a large repository, uses a `List` page behind the same row and search field.
+- **Chevrons mean one thing each** (owner, 2026-10-23):
+  - up-down: a picker whose value changes in place. It is iOS's stock glyph, and desktop and web copy it, so a picker looks different from a menu;
+  - down: a pill that opens a `Menu` or popover;
+  - disclosure (right): a row that opens a page.
+
+  Android settings rows have no chevron, as Material draws them.
+- **Phone Composer configuration is a drill sheet** (owner, 2026-10-23). Its first page is a FieldGroup: Agent, Model and Mode as `page` or `menu` pickers, Effort as a `Slider`, and the Agent's on/off options as `Toggle`s. A Composer pill on a phone opens the sheet already on that pill's page, with Back to the first page. Desktop keeps its popover with menu rows (owner, 2026-10-23: "desktop to stay as is").
 - **Settings navigation** is neither; it becomes a native list in later work.
 - **`List`** is for data of any length: Sessions, Agents, Projects and Plugin data. It is LegendList on every platform, with `sections` flattened into heading and item rows, `getItemType` per kind, `recycleItems` and sticky headings. `ListItem` keeps ADR-0032's anatomy (leading, title, subtitle, meta, trailing, accessory, progress and `actions`) and is the only row it draws.
   - `List appearance` is `plain` or `cards`. `grouped` is removed: a List no longer copies the native grouped look, and a page that wants it is a FieldGroup.
   - `ListItem` no longer has settings wrappers. `ListItem.Toggle`, `.TextField`, `.Picker` and `.Link` become FieldGroup rows, `.Button` becomes the kit `Button` in a section, `.Field` becomes `FieldGroup.Value`, and `.Stepper` goes.
   - Grid layout, shelves, tiles and Spec 0017's list behaviours stay on `List`.
 - **One schema per component.** Each FieldGroup, row and List component has one Zod schema in Contracts; the kit props type and the Plugin wire component derive from it, with one props type for web, iOS and Android (ADR-0020).
-- **The Plugin wire follows.** The `ListItem.*` settings components become `FieldGroup`, `FieldGroup.Section` and its rows, `List appearance` loses `grouped`, and the wire version and minimum move up (ADR-0034). Plugin settings render as a FieldGroup.
+- **The Plugin wire follows.** The `ListItem.*` settings components become `FieldGroup`, `FieldGroup.Section` and its rows, `List appearance` loses `grouped`, and the wire version and minimum move up (ADR-0034). Plugin settings render as a FieldGroup. `Picker` and the `Combobox` schema leave the wire, and `FieldGroup.Picker` takes their props; the wire version and minimum move up for this as well (ADR-0034).
 
 ## Consequences
 
 - The grouped-look code on LegendList and the settings wrappers on `ListItem` are deleted, along with their platform files. The current `fields/` folder (StackedForm, field layout, description and errors) and the inputs' row modes are deleted; `fields/` holds `field-group/` and one folder per row.
+- Screens that used `Picker`, `Combobox` or `Drill` move to `FieldGroup.Picker` (a pill's choices move to `Menu`). Their files, schemas and the Combobox's own search input are deleted; the picker's searchable page uses the kit's shared search field.
+- A phone's Composer pills open one sheet instead of a popover each, so the Composer configuration is written once as a FieldGroup and the desktop popover keeps its own menu rows.
 - A Plugin built for the older wire stops loading until it moves its settings rows to FieldGroup and its grouped Lists to `plain` or `cards`.
 - FieldGroup rows take each platform's stock look from its own components. Argo stops matching row heights, insets and tints by hand.
 - The kit keeps a `.ios` and an `.android` file per row, and an Android FieldGroup, until Expo's universal components draw these rows natively.
@@ -48,3 +72,7 @@ Expo UI's universal `List` doesn't replace LegendList for data: on web it is a p
 - **Rows from Expo's universal components only.** Rejected: on iOS a universal `Picker` inside a `Row` draws a second, taller row and the universal `Icon` has no weight for the stock chevron; on Android every row sits inside a `ListItem` headline.
 - **Expo UI's universal `List` for data lists.** Rejected: not virtualised on web, and React mounts every row on phones.
 - **Keep `grouped` on List for Plugin data.** Rejected: it brings back the copied native look. A Plugin that wants grouped values uses FieldGroup.
+- **Keep `Picker`, `Combobox` and `Drill` as separate components.** Rejected by the owner on 2026-10-23: each was a choice control with its own props and look for the same job, and a page that submits is a FieldGroup, so one row covers all three.
+- **A `presentation` default that follows the parent.** Rejected: the same picker would open in place on one page and push a page on another with no line at the call site saying so. Each call site states it.
+- **Put every choice in a page, or every choice in a menu.** Rejected: a short known list should open in place, as the platforms' own settings do, and a long or searchable one needs a page with a search field.
+- **Redesign the desktop Composer popover as a drill.** Rejected by the owner on 2026-10-23: desktop stays as it is, and only phones get the drill sheet.
