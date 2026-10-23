@@ -28,11 +28,6 @@ const smallIconButton = {
   size: 'sm',
 } satisfies IconButtonProps;
 
-const mediumIconButton = {
-  ...primaryIconButton,
-  size: 'md',
-} satisfies IconButtonProps;
-
 const largeIconButton = {
   ...primaryIconButton,
   size: 'lg',
@@ -73,8 +68,6 @@ export const Secondary: Story = { args: secondaryIconButton };
 export const Ghost: Story = { args: ghostIconButton };
 
 export const Small: Story = { args: smallIconButton };
-
-export const Medium: Story = { args: mediumIconButton };
 
 export const Large: Story = { args: largeIconButton };
 
