@@ -102,7 +102,7 @@ function ImageError({ failed }: { failed: boolean }): React.ReactNode {
 
   return (
     <View className="absolute inset-0 items-center justify-center">
-      <Icon name={brokenImage} role="body" tone="muted" />
+      <Icon name={brokenImage} size="sm" tone="muted" />
     </View>
   );
 }

@@ -72,7 +72,7 @@ function TokensRow({
 const compactItemProps = {
   title: 'Compact',
   description: 'Compact before the next task.',
-  leading: <Icon role="row" name="compaction" />,
+  leading: <Icon size="md" name="compaction" />,
 };
 
 function CompactSection({

@@ -16,15 +16,10 @@ interface GitHubContent {
   chip?: { label: string; tone: Tone };
   caption: string;
   // The outline button, for the states that start a sign-in.
-  connect?: { label: string; accessibilityLabel: string };
+  connect?: string;
   // Signed in: a link to sign in with another account.
   anotherAccount?: boolean;
 }
-
-const connectGitHub = {
-  label: 'Connect',
-  accessibilityLabel: 'Connect GitHub',
-};
 
 // The AccountRow chips and captions designed for Settings › Accounts in Paper, by the signed-in login where there is one.
 const githubContents: Record<
@@ -33,12 +28,12 @@ const githubContents: Record<
 > = {
   'not-connected': () => ({
     caption: 'Optional. Clone repositories, open pull requests, read Issues.',
-    connect: connectGitHub,
+    connect: 'Connect',
   }),
   'login-found': (login) => ({
     chip: { label: 'Login found', tone: 'info' },
     caption: `The GitHub CLI is signed in as ${login}.`,
-    connect: connectGitHub,
+    connect: 'Connect',
   }),
   'signing-in': () => ({
     chip: { label: 'Signing in…', tone: 'muted' },
@@ -52,10 +47,7 @@ const githubContents: Record<
   expired: (login) => ({
     chip: { label: 'Sign-in expired', tone: 'warning' },
     caption: `GitHub rejected the saved login for ${login}.`,
-    connect: {
-      label: 'Sign in again',
-      accessibilityLabel: 'Sign in to GitHub again',
-    },
+    connect: 'Sign in again',
   }),
 };
 
@@ -70,20 +62,20 @@ type OnConnect = GitHubStepViewProps['onConnectGitHub'];
 const anotherAccountLink = (onConnect: OnConnect): React.JSX.Element => (
   <Button
     label="Sign in with another account"
-    variant="link"
-    size="xs"
+    variant="text"
+    size="sm"
     disabled={!onConnect}
     onPress={onConnect}
   />
 );
 
 const connectButton = (
-  connect: NonNullable<GitHubContent['connect']>,
+  label: string,
   onConnect: OnConnect,
 ): React.JSX.Element => (
   <Button
-    {...connect}
-    variant="outline"
+    label={label}
+    variant="secondary"
     size="sm"
     disabled={!onConnect}
     onPress={onConnect}

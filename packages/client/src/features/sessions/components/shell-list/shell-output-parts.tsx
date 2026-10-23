@@ -64,13 +64,7 @@ function OutcomeMark({
 }): JSX.Element | null {
   if (!outcome.icon) return null;
 
-  return (
-    <Icon
-      name={footerIcon(outcome.icon)}
-      role="secondary"
-      tone={outcome.tone}
-    />
-  );
+  return <Icon name={footerIcon(outcome.icon)} size="xs" tone={outcome.tone} />;
 }
 
 function Outcome({ shell }: ShellProps): JSX.Element {

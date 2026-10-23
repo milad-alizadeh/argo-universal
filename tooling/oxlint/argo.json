@@ -176,6 +176,11 @@
       "rules": { "no-magic-numbers": "off" }
     },
     {
+      // A story file lists every state of its component as a fixture, so its length follows the component's states, never a line count; the owner exempted stories on 2026-10-22.
+      "files": ["**/*.stories.*"],
+      "rules": { "max-lines": "off", "max-lines-per-function": "off" }
+    },
+    {
       // Tests, mocks, tools, app scripts and the four log sinks print to the terminal on purpose.
       "files": [
         "**/*.test.*",
@@ -222,11 +227,11 @@
     {
       // Icons take a role, so where an icon sits decides its size on every platform; only the kit's symbols folder turns roles into pixels.
       "files": ["packages/client/src/**", "packages/kit/src/**"],
-      "rules": { "argo/icon-role": "error" }
+      "rules": { "argo/icon-size": "error" }
     },
     {
       "files": ["packages/kit/src/symbols/**"],
-      "rules": { "argo/icon-role": "off" }
+      "rules": { "argo/icon-size": "off" }
     },
     {
       // Kit components take props, never className, style or a *ClassName slot; only @repo/kit styles them. kit-styling-allowlist.json holds the files not yet moved over.

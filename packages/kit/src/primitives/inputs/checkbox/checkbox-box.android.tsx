@@ -1,7 +1,6 @@
 /*
  * The universal Checkbox's Android tree (a clickable Row of a Compose Checkbox and its Text label),
- * with Argo's colours through Checkbox `colors` (CheckboxColors); the universal Checkbox takes none,
- * and the Host's tonal palette turns its checked box teal.
+ * in Material's default colours, which the Host binds to Argo's tokens.
  */
 import type { CheckboxProps } from '@expo/ui';
 import { Checkbox, Row, Text } from '@expo/ui/jetpack-compose';
@@ -10,7 +9,6 @@ import {
   testID as testIDModifier,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
-import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { CheckboxBoxProps } from './checkbox-box';
 
 export function CheckboxBox(props: CheckboxBoxProps): ReactElement {
@@ -37,7 +35,6 @@ function MaterialBox(props: CheckboxProps): ReactElement {
   return (
     <Checkbox
       value={props.value}
-      colors={useMaterialPalette().checkboxColors}
       onCheckedChange={props.disabled ? undefined : props.onValueChange}
       enabled={!props.disabled}
       modifiers={boxModifiers(props)}

@@ -3,7 +3,6 @@ import { type ColorValue, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '../utils';
 import type { LogoSource } from './logo-source';
-import { referenceShare } from './symbol-path';
 
 export interface LogoGlyphProps {
   source: LogoSource;
@@ -39,9 +38,8 @@ function LogoSvg({
   tintColor,
 }: LogoGlyphProps): React.JSX.Element {
   const Logo = source.svg;
-  const size = pixels * referenceShare;
 
-  return <Logo width={size} height={size} color={tintColor} />;
+  return <Logo width={pixels} height={pixels} color={tintColor} />;
 }
 
 export const LogoGlyph =

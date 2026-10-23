@@ -26,7 +26,7 @@ const controlProps = {
   variant: 'ghost',
   className: 'size-8 p-0 sm:size-8',
   iconClassName: 'text-muted-foreground',
-  size: 'sm',
+  size: 'xs',
 } as const;
 
 const expandControl = {

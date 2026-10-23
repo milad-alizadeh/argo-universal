@@ -14,7 +14,6 @@ import {
   type DeclaredSubmenu,
 } from '#primitives/actions/action-list';
 import { Host } from '#primitives/native/host';
-import { useMaterialPalette } from '#primitives/native/material-palette';
 import { MenuDropdown, nativeMenuItems } from '#primitives/overlays/menu';
 import {
   HeaderIconButton,
@@ -98,12 +97,10 @@ function IconBadge({ text, children }: IconBadgeProps): ReactElement {
   );
 }
 
-// Material's Badge in Argo's danger colours: a count in `labelSmall`, as the stock toolbar badge draws it, or a dot.
+// Material's Badge, on the Host's error role (Argo's danger): a count in `labelSmall`, as the stock toolbar badge draws it, or a dot.
 function SubmenuBadge({ text }: { text: string }): ReactElement {
-  const { roles } = useMaterialPalette();
-
   return (
-    <Badge containerColor={roles.error} contentColor={roles.onError}>
+    <Badge>
       {text ? <Text style={{ typography: 'labelSmall' }}>{text}</Text> : null}
     </Badge>
   );

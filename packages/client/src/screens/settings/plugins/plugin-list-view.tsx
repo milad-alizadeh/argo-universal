@@ -84,7 +84,7 @@ type PluginItemProps = {
 function PluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
   return (
     <ListItem.Link
-      leading={<Icon name={plugin.icon} role="row" />}
+      leading={<Icon name={plugin.icon} size="md" />}
       title={plugin.name}
       onPress={() => onOpen(plugin.pluginId)}
     />

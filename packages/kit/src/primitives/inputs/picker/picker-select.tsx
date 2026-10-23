@@ -47,7 +47,7 @@ function TriggerChevron({
   return (
     <Icon
       name={chevronName(variant, useWide())}
-      role="body"
+      size="sm"
       aria-hidden={true}
       className="text-muted-foreground"
     />
@@ -87,7 +87,7 @@ function useTriggerProps(props: TriggerProps): TriggerWebProps {
 
 function ItemIndicator(): React.JSX.Element {
   return (
-    <IconSlot role="control">
+    <IconSlot size="sm">
       <RadixSelect.ItemIndicator asChild>
         <View>
           <SelectedCheck className="text-muted-foreground shrink-0" />

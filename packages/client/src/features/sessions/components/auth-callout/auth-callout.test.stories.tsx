@@ -23,7 +23,7 @@ type Story = StoryObj<typeof meta>;
 
 const { chatGpt, apiKey, openAiKey } = codexMethods;
 
-// The menu lists the methods in the Agent's order; the chosen one is what the button signs in with, and its description names the button.
+// The menu lists the methods in the Agent's order; the chosen one names the button and is what it signs in with.
 function methodOrder(width: number): Story {
   return {
     play: async ({ canvasElement, userEvent, args }) => {
@@ -31,7 +31,7 @@ function methodOrder(width: number): Story {
       // A phone draws the callout in a sheet outside the canvas.
       const page = within(canvasElement.ownerDocument.body);
       await expect(
-        await page.findByRole('button', { name: chatGpt.description }),
+        await page.findByRole('button', { name: chatGpt.name }),
       ).toBeVisible();
       await userEvent.click(page.getByRole('button', { name: menuLabel }));
 
@@ -48,9 +48,7 @@ function methodOrder(width: number): Story {
         expect(page.queryByRole('menu')).not.toBeInTheDocument(),
       );
       await expect(args.onAuthenticate).not.toHaveBeenCalled();
-      await userEvent.click(
-        page.getByRole('button', { name: openAiKey.description }),
-      );
+      await userEvent.click(page.getByRole('button', { name: openAiKey.name }));
       await expect(args.onAuthenticate).toHaveBeenCalledOnce();
       await expect(args.onAuthenticate).toHaveBeenCalledWith(openAiKey.id);
     },
@@ -61,7 +59,7 @@ export const WideMethodOrder = methodOrder(layoutWidths.wide);
 
 export const PhoneMethodOrder = methodOrder(layoutWidths.phone);
 
-// One method is one button, named for screen readers by the method's description.
+// One method is one button, named for the method.
 export const OneMethod: Story = {
   args: authCallouts.oneMethod,
   play: async ({ canvasElement, userEvent, args }) => {
@@ -69,10 +67,9 @@ export const OneMethod: Story = {
     const page = within(canvasElement.ownerDocument.body);
 
     const method = await page.findByRole('button', {
-      name: chatGpt.description,
+      name: chatGpt.name,
     });
 
-    await expect(method).toHaveTextContent(chatGpt.name);
     await expect(page.queryByRole('button', { name: menuLabel })).toBeNull();
     await userEvent.click(method);
     await expect(args.onAuthenticate).toHaveBeenCalledOnce();
@@ -89,9 +86,7 @@ export const PendingCancels: Story = {
     await expect(
       await page.findByText('Authenticating to Codex…'),
     ).toBeVisible();
-    await expect(
-      page.queryByRole('button', { name: chatGpt.description }),
-    ).toBeNull();
+    await expect(page.queryByRole('button', { name: chatGpt.name })).toBeNull();
     await userEvent.click(page.getByRole('button', { name: 'Cancel' }));
     await expect(args.onCancel).toHaveBeenCalledOnce();
     await expect(args.onAuthenticate).not.toHaveBeenCalled();

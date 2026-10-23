@@ -11,7 +11,7 @@ const deployCard = <Card {...anatomyCard} />;
 
 const workerCard = (
   <Card
-    icon={<Icon role="row" name="server" />}
+    icon={<Icon size="md" name="server" />}
     title="worker"
     subtitle="Staging"
   >
@@ -45,7 +45,7 @@ export const InAGrid: Story = {
     <Grid columns={3} gap={3}>
       {deployCard}
       {workerCard}
-      <Card icon={<Icon role="row" name="web" />} title="web" />
+      <Card icon={<Icon size="md" name="web" />} title="web" />
     </Grid>
   ),
 };
@@ -55,7 +55,7 @@ function PressableCard(): React.JSX.Element {
 
   return (
     <Card
-      icon={<Icon role="row" name="activity" />}
+      icon={<Icon size="md" name="activity" />}
       title="Builds"
       subtitle={`Opened ${opened} times`}
       onPress={() => setOpened((count) => count + 1)}

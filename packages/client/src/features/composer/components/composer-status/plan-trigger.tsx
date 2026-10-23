@@ -1,6 +1,6 @@
 import type { PlanEntry } from '@repo/contracts';
 import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
-import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
@@ -66,7 +66,7 @@ function CurrentPlanStep({ entries, expanded }: CurrentStepProps): JSX.Element {
   return (
     <>
       <CurrentStepLabel entries={entries} />
-      <Icon role="chevron" name="chevron-up" className={className} />
+      <Icon size="sm" name="chevron-up" className={className} />
     </>
   );
 }

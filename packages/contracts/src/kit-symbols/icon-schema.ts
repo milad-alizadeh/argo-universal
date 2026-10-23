@@ -3,17 +3,17 @@ import { kitSchemaJson } from '../kit-schema-json';
 import { materialSymbolNames } from '../plugins/material-symbol-names.gen';
 import { sfSymbolNames } from '../plugins/sf-symbol-names.gen';
 import { iconNames, isIconName, type IconName } from './icon-map';
-import { iconRoles, type IconRole } from './icon-role';
+import { iconSizes, type IconSize } from './icon-size';
 
 export const iconName = z
   .custom<IconName>((value) => typeof value === 'string' && isIconName(value))
   .register(kitSchemaJson, { type: 'string', enum: [...iconNames] });
 
-export const iconRole = z
-  .custom<IconRole>(
-    (value) => typeof value === 'string' && Object.hasOwn(iconRoles, value),
+export const iconSize = z
+  .custom<IconSize>(
+    (value) => typeof value === 'string' && Object.hasOwn(iconSizes, value),
   )
-  .register(kitSchemaJson, { type: 'string', enum: Object.keys(iconRoles) });
+  .register(kitSchemaJson, { type: 'string', enum: Object.keys(iconSizes) });
 
 // The one SF Symbols and Material Symbols check for every kit icon.
 export const sfSymbol = z.enum(sfSymbolNames);

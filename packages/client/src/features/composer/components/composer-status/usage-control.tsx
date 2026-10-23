@@ -106,7 +106,7 @@ function UsageTriggerContent({ usage, wide }: UsageProps): JSX.Element {
 
   return (
     <>
-      <Icon role="control" name="usage" className={mutedTextClassName} />
+      <Icon size="sm" name="usage" className={mutedTextClassName} />
       <UsageWord wide={wide} />
       <StatusText role="secondary" className={percentClass}>
         {usage.limits[0]?.usedPercent}%

@@ -43,11 +43,11 @@ Native frames use the platform's type scale as literals (SF Pro on iOS, Roboto o
 
 `tooling/uniwind/theme.css` is the only source of token values. The Paper file holds its own copy so it can draw; that copy is a convenience, not a second source. Do not hand-sync it, and do not report it as drift. When a Paper drawing looks wrong because a token moved, update the token in Paper and move on.
 
-Text uses the four roles — Title, Heading, Body, Secondary — as `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`, never a scale step such as `--text-sm`. Icon dimensions come from the role table in `packages/kit/src/symbols/icon-role.ts`.
+Text uses the four roles — Title, Heading, Body, Secondary — as `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`, never a scale step such as `--text-sm`. Icon dimensions come from the role table in `packages/kit/src/symbols/icon-size.ts`.
 
 ## Icons
 
-Icons are SF Symbols drawn as SVG paths; Android frames use Material Symbols; git and file-type glyphs are Tabler on every platform (ADR-0019). `iconSymbols` in `packages/kit/src/symbols/icon-names.ts` is the only list of icons — an icon a design needs that the app lacks is added there first. Copy icons from the library on the Icons page.
+Icons are SF Symbols drawn as SVG paths; Android frames use Material Symbols; git glyphs are small SVG components on every platform (ADR-0041). `iconSymbols` in `packages/kit/src/symbols/icon-names.ts` is the only list of icons — an icon a design needs that the app lacks is added there first. Copy icons from the library on the Icons page.
 
 `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box.
 

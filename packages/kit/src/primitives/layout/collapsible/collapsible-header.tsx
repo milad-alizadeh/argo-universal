@@ -46,6 +46,7 @@ function HeaderChevron({ hovered }: { hovered: boolean }): ReactElement {
     <LineSlot>
       <DisclosureChevron
         open={useContext(OpenContext)}
+        size="xs"
         className={headerColour(hovered)}
       />
     </LineSlot>
@@ -83,7 +84,7 @@ function HeaderIcon(props: CollapsibleHeaderProps): ReactElement | null {
 
   return (
     <LineSlot>
-      <Icon name={props.icon} role="body" tone={props.iconTone} />
+      <Icon name={props.icon} size="sm" tone={props.iconTone} />
     </LineSlot>
   );
 }

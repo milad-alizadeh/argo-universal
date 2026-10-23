@@ -61,7 +61,7 @@ describe('a kit prop default', () => {
     ['Button', 'variant', "'default'"],
     ['Button', 'size', "'md'"],
     ['IconButton', 'size', "'sm'"],
-    ['IconButton', 'variant', "'default'"],
+    ['IconButton', 'variant', "'primary'"],
     ['Text', 'role', "'body'"],
   ] as const)('reads %s %s as %s', (part, name, defaultValue) => {
     expect(prop(part, name).defaultValue).toBe(defaultValue);

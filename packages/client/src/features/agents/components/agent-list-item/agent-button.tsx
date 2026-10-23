@@ -4,7 +4,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 
 export type AgentActions = {
@@ -53,12 +53,12 @@ function UnavailableStatus(): React.JSX.Element {
   );
 }
 
-const unavailableRole = Platform.OS === 'android' ? 'row' : 'action';
+const unavailableSize = 'md';
 
 function UnavailableIcon(): React.JSX.Element {
   return (
     <View accessible accessibilityLabel={unsupportedLabel}>
-      <Icon name={unavailableIcon} role={unavailableRole} tone="muted" />
+      <Icon name={unavailableIcon} size={unavailableSize} tone="muted" />
     </View>
   );
 }
@@ -72,10 +72,8 @@ function ActionButton(props: AgentCardProps): React.JSX.Element {
   return (
     <IconButton
       icon={action.icon}
-      tone={action.tone}
       accessibilityLabel={`${action.label} ${props.agent.name}`}
       variant="ghost"
-      bleed
       onPress={() => onPress(props)}
     />
   );

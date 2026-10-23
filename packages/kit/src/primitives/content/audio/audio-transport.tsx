@@ -28,7 +28,7 @@ export function AudioTransport(props: AudioTransportProps): React.JSX.Element {
   );
 }
 
-// Loading shows the button's spinner; after an error it stays enabled and retries.
+// Loading marks the button busy and ignores presses; after an error it stays enabled and retries.
 function PlayButton(props: AudioTransportProps): React.JSX.Element {
   const verb = playing(props.phase) ? 'Pause' : 'Play';
 
@@ -37,11 +37,14 @@ function PlayButton(props: AudioTransportProps): React.JSX.Element {
       variant="ghost"
       icon={playing(props.phase) ? 'pause' : 'play'}
       accessibilityLabel={`${verb} ${props.label}`}
-      loading={props.phase === 'loading'}
-      onPress={props.onToggle}
+      aria-busy={props.phase === 'loading'}
+      onPress={pressOf(props)}
     />
   );
 }
+
+const pressOf = (props: AudioTransportProps): (() => void) | undefined =>
+  props.phase === 'loading' ? undefined : props.onToggle;
 
 function Unplayable(): React.JSX.Element {
   return (

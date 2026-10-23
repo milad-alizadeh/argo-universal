@@ -7,7 +7,6 @@ import {
   View,
   type ViewInstance,
 } from 'react-native';
-import { iconButtonClasses } from '#primitives/actions/icon-button';
 import { Lens } from './search-field-lens';
 import { type MorphState, OpenField } from './search-field-parts';
 import { QueryInput } from './search-field-query';
@@ -90,7 +89,7 @@ function SearchTrigger({ trigger, ...props }: TriggerProps): React.JSX.Element {
       role="button"
       onPress={props.onOpen}
       onLayout={props.onTriggerLayout}
-      className={iconButtonClasses({ variant: 'ghost', size: 'xs' })}
+      className="size-8"
     />
   );
 }

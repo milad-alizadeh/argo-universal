@@ -3,7 +3,7 @@ import type { RailTiles } from './rail-tiles';
 
 // A tablet's 80 rail: 48 tiles a hairline apart, the selected one a flat tint.
 export const railTiles: RailTiles = {
-  size: 'xl',
+  size: 'size-12',
   corners: 'rounded-xl',
   selected: 'bg-selected',
   column: 'gap-px',

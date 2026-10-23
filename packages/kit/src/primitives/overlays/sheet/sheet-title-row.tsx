@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
@@ -77,8 +77,6 @@ function LeadingButton(props: TitleRowProps): ReactElement | null {
  * fill their box, so at 24 they read a size larger than the header the sheet sits under. The header role
  * is what matches it by eye (owner, 2026-10-21).
  */
-const leadingRole = Platform.OS === 'android' ? 'action' : 'title';
-
 function LeadingIcon(props: {
   icon: 'chevron-left' | 'close';
   label: string;
@@ -88,7 +86,6 @@ function LeadingIcon(props: {
     <IconButton
       variant="ghost"
       icon={props.icon}
-      iconRole={leadingRole}
       accessibilityLabel={props.label}
       onPress={props.onPress}
     />
@@ -100,9 +97,8 @@ function Action({ action }: TitleRowProps): ReactElement | null {
 
   return (
     <Button
-      variant="ghost"
+      variant={action.destructive ? 'danger' : 'text'}
       size="sm"
-      tone={action.destructive ? 'danger' : undefined}
       label={action.label}
       onPress={action.onPress}
     />

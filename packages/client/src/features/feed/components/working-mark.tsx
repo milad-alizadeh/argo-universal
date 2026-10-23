@@ -1,6 +1,6 @@
-import { IconSlot } from '@repo/kit/primitives/content/icon';
 import type * as React from 'react';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -114,14 +114,14 @@ const cellElements = (motion: CellMotion): React.JSX.Element[] =>
     />
   ));
 
-// Paper's Working mark: a 3×3 grid where one cell at a time lights and fades.
+// Paper's Working mark, drawn in a 16px box at every width: a 3×3 grid where one cell at a time lights and fades.
 export function WorkingMark(): React.JSX.Element {
   const still = useReducedMotion();
   const motion = { step: useStep(still), still };
 
   return (
-    <IconSlot role="control" testID="working-mark">
+    <View testID="working-mark" className="size-4 shrink-0">
       {cellElements(motion)}
-    </IconSlot>
+    </View>
   );
 }

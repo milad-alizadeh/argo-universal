@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
-import { Icon, IconRoleContext } from '#primitives/content/icon';
+import { Icon, IconSizeContext } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useInMenu } from '../../../menu-rows-context';
 import {
@@ -32,11 +32,11 @@ const leadingClasses = {
 
 type LeadingLane = keyof typeof leadingClasses;
 
-const leadingIconRoles = {
+const leadingIconSizes = {
   row: undefined,
-  menu: 'menu',
+  menu: 'md',
   sidebar: undefined,
-} as const satisfies Record<LeadingLane, 'menu' | undefined>;
+} as const satisfies Record<LeadingLane, 'md' | undefined>;
 
 type LeadingProps = Pick<
   ListItemProps,
@@ -57,11 +57,11 @@ export function Leading(props: LeadingProps): ReactNode {
 
   return (
     <View className={leadingClass(lane, props.leadingSize)}>
-      <IconRoleContext value={leadingIconRoles[lane]}>
+      <IconSizeContext value={leadingIconSizes[lane]}>
         <StatusMarkHidden value={hasBadge(props.badge)}>
           {props.leading}
         </StatusMarkHidden>
-      </IconRoleContext>
+      </IconSizeContext>
       <ItemBadge badge={badge} />
     </View>
   );
@@ -120,17 +120,16 @@ export function Accessory({ children }: { children?: ReactNode }): ReactNode {
 /*
  * The disclosure chevron of a row that pushes a page; Android draws none. The two glyphs fill their
  * boxes differently, so each takes the role that lands it on the same 12pt chevron beside the title:
- * SF's inks most of its point size and takes the chevron role, while Tabler's `web-disclosure` is
- * drawn as a 7x12 chevron inside its box and takes the full disclosure slot. iOS draws SF's, since
- * the iOS asset catalog leaves out `web-disclosure`.
+ * SF's inks most of its point size and takes the chevron role, while the SVG `web-disclosure` is
+ * drawn inside its 24-point box and takes the full disclosure slot. iOS draws SF's.
  */
 export function LinkAccessory(): ReactElement | null {
   if (Platform.OS === 'android') return null;
 
   return Platform.OS === 'ios' ? (
-    <Icon name="disclosure" role="chevron" className="text-tertiary" />
+    <Icon name="disclosure" size="sm" className="text-tertiary" />
   ) : (
-    <Icon name="web-disclosure" role="disclosure" className="text-tertiary" />
+    <Icon name="web-disclosure" size="md" className="text-tertiary" />
   );
 }
 

@@ -126,7 +126,7 @@ function Footer({ action, close }: FooterProps): ReactElement | null {
 
   return (
     <Button
-      variant="ghost"
+      variant="text"
       label={action.label}
       onPress={() => {
         close?.();

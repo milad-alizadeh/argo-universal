@@ -37,5 +37,5 @@ export function sidebarDrawing(
   };
 }
 
-// A Compact sidebar row's PR glyph fills a 14 mark's box; a phone's sits beside Secondary text.
-export const compactGlyphRole = sidebarRows ? 'mark' : 'secondary';
+// A Compact sidebar row's PR glyph fills a small icon's box; a phone's sits beside Secondary text.
+export const compactGlyphSize = sidebarRows ? 'sm' : 'xs';

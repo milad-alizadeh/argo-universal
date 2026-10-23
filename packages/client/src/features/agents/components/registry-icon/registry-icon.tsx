@@ -1,9 +1,9 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
 import {
-  type IconRoleValue,
+  type IconSizeValue,
   useIconBox,
   useIconPixels,
-} from '@repo/kit/symbols/icon-role';
+} from '@repo/kit/symbols/icon-size';
 import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { Image, Platform, View } from 'react-native';
@@ -15,7 +15,7 @@ export interface RegistryIconProps {
   // The Registry entry's icon; the Agent glyph stands in when it is missing or fails to load.
   uri: string | undefined;
   agentName: string;
-  role: IconRoleValue;
+  size: IconSizeValue;
 }
 
 type IconSource =
@@ -31,11 +31,11 @@ type ImageProps = Pick<
 export function RegistryIcon({
   uri,
   agentName,
-  role,
+  size,
 }: RegistryIconProps): React.JSX.Element {
-  if (!uri) return <UnavailableIcon agentName={agentName} role={role} />;
+  if (!uri) return <UnavailableIcon agentName={agentName} size={size} />;
 
-  return <LoadedImage uri={uri} agentName={agentName} role={role} />;
+  return <LoadedImage uri={uri} agentName={agentName} size={size} />;
 }
 
 type LoadedIconProps = Required<RegistryIconProps> & { uri: string };
@@ -57,7 +57,7 @@ function WebImage(
       <Image
         accessibilityLabel={`${props.agentName} icon`}
         source={{ uri: cssSafeUri(props.uri) }}
-        style={useIconBox(props.role)}
+        style={useIconBox(props.size)}
         onError={props.onError}
       />
     </View>
@@ -68,7 +68,7 @@ function RegistryImage(props: LoadedIconProps): React.JSX.Element {
   const color = useForegroundColor();
   const { uri } = props;
   const source = useMemo(() => decodeSource(uri, color), [uri, color]);
-  const image = imageProps(props.agentName, useIconPixels(props.role), color);
+  const image = imageProps(props.agentName, useIconPixels(props.size), color);
 
   return renderIcon(source, image, <UnavailableIcon {...props} />);
 }
@@ -168,15 +168,15 @@ function numberAttribute(open: string, name: string): string | undefined {
 
 function UnavailableIcon({
   agentName,
-  role,
-}: Pick<RegistryIconProps, 'agentName' | 'role'>): React.JSX.Element {
+  size,
+}: Pick<RegistryIconProps, 'agentName' | 'size'>): React.JSX.Element {
   return (
     <View
       accessible
       accessibilityRole="image"
       accessibilityLabel={`${agentName} icon unavailable`}
     >
-      <Icon name="agent" role={role} />
+      <Icon name="agent" size={size} />
     </View>
   );
 }

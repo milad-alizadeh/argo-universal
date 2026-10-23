@@ -84,7 +84,6 @@ function MethodButton(props: MethodButtonProps): React.JSX.Element {
   return (
     <CalloutButton
       label={method.name}
-      accessibilityLabel={method.description ?? method.name}
       onPress={() => onAuthenticate(method.id)}
     />
   );
@@ -105,7 +104,7 @@ function MethodSplit(props: MethodSplitProps): React.JSX.Element {
   return (
     <SplitButton
       {...splitDefaults}
-      {...chosenNames(props.methods, chosenId)}
+      label={chosenName(props.methods, chosenId)}
       fullWidth="narrow"
       options={methodOptions(props.methods)}
       value={chosenId}
@@ -115,16 +114,8 @@ function MethodSplit(props: MethodSplitProps): React.JSX.Element {
   );
 }
 
-type ChosenNames = { label: string; accessibilityLabel?: string };
-
-// The button shows the chosen method's name, and screen readers hear its description.
-const chosenNames = (
+// The button shows the chosen method's name.
+const chosenName = (
   methods: readonly AuthCalloutMethod[],
   id: string,
-): ChosenNames => {
-  const { name, description } = methods.find((method) => method.id === id) ?? {
-    name: '',
-  };
-
-  return { label: name, accessibilityLabel: description };
-};
+): string => methods.find((method) => method.id === id)?.name ?? '';

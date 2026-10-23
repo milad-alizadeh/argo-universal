@@ -1,4 +1,4 @@
-import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { StatusText } from './status-text';

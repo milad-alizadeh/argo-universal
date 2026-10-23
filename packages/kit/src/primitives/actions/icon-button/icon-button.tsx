@@ -1,171 +1,96 @@
-import { useContext, type ComponentProps, type ReactElement } from 'react';
-import { Pressable } from 'react-native';
-import { cn } from '#kit/utils';
-import { ButtonAdornment } from '#primitives/actions/button';
-import { buttonInteractionProps } from '#primitives/actions/button';
-import { IconButtonBleed } from './icon-button-bleed';
-import type { IconButtonProps } from './icon-button-props';
 import {
-  iconButtonClasses,
-  iconSpinnerClass,
-  iconToneTextClass,
-} from './icon-button-styles';
+  Button as ExpoButton,
+  type ButtonProps as ExpoButtonProps,
+} from '@expo/ui';
+import { createModifier } from '@expo/ui/jetpack-compose/modifiers';
+import type { ComponentProps, ReactElement } from 'react';
+import { Platform, type Pressable } from 'react-native';
+import { useNativeTheme } from '#kit/native-theme';
+import { Host } from '#primitives/native/host';
+import { NativeIcon } from '../../../symbols/native-icon';
+import type { KitProps } from '../../kit-props';
+import { sizeOf, variantOf } from './icon-button-layout';
+import { WebIconButton } from './icon-button-web';
 
-type IconAppearance = Pick<
-  IconButtonProps,
-  | 'icon'
-  | 'iconSource'
-  | 'iconRole'
-  | 'iconClassName'
-  | 'iconFilled'
-  | 'iconWeight'
->;
+// What a Plugin sends for an IconButton over the wire.
+export type IconButtonDataProps = KitProps<'IconButton'>;
 
-type IconControlProps = Omit<IconButtonProps, keyof IconAppearance | 'badge'>;
+/*
+ * `muted` is for the app's own screens, not the wire: a ghost glyph in the secondary tone, as an Icon's muted tone.
+ * The rest of a Pressable's props pass through on the web, since a Radix trigger clones its child with handlers and aria state.
+ */
+export type IconButtonProps = IconButtonDataProps & {
+  testID?: string;
+  muted?: boolean;
+} & Omit<
+    ComponentProps<typeof Pressable>,
+    keyof IconButtonDataProps | 'children' | 'style' | 'className' | 'ref'
+  >;
 
-type IconPresentation = Pick<
-  IconControlProps,
-  'size' | 'variant' | 'loading' | 'selected' | 'bleed' | 'corners'
->;
+export type IconButtonSize = NonNullable<IconButtonProps['size']>;
 
-type PressableInput = ComponentProps<typeof Pressable>;
+type Variant = NonNullable<IconButtonProps['variant']>;
 
-interface IconDrawing {
-  pressable: PressableInput;
-  adornment: ComponentProps<typeof ButtonAdornment>;
-}
-
-export function IconButton({ badge, ...props }: IconButtonProps): ReactElement {
-  const bleed = useContext(IconButtonBleed);
-  const drawing = iconDrawing({ ...props, bleed: props.bleed ?? bleed });
+/*
+ * Expo UI's universal Button with the icon as its content on iOS and Android, so each platform draws its own
+ * control; the web draws a Pressable in the Button's looks, since Expo's web Button has no icon-only form.
+ */
+export function IconButton(props: IconButtonProps): ReactElement {
+  if (Platform.OS === 'web') return <WebIconButton {...props} />;
 
   return (
-    <Pressable {...drawing.pressable}>
-      <ButtonAdornment {...drawing.adornment} />
-      {badge}
-    </Pressable>
+    <Host seed="primary" matchContents>
+      <ExpoButton {...expoProps(props)}>
+        <NativeGlyph {...props} />
+      </ExpoButton>
+    </Host>
   );
 }
 
-function iconDrawing({
-  icon,
-  iconSource,
-  iconRole,
-  iconClassName,
-  iconFilled,
-  iconWeight,
-  ...props
-}: Omit<IconButtonProps, 'badge'>): IconDrawing {
-  const appearance = { icon, iconRole, iconClassName, iconFilled, iconWeight };
+const variants = {
+  primary: 'filled',
+  secondary: 'outlined',
+  ghost: 'text',
+} as const satisfies Record<Variant, ExpoButtonProps['variant']>;
 
-  return createIconDrawing(props, { ...appearance, iconSource });
-}
+// The spoken name, as Compose's semantics and SwiftUI's accessibility label.
+const nameModifiers = (label: string): ExpoButtonProps['modifiers'] => [
+  createModifier('accessibilityLabel', { label }),
+  createModifier('semantics', { contentDescription: label }),
+];
 
-function createIconDrawing(
-  props: IconControlProps,
-  appearance: IconAppearance,
-): IconDrawing {
+function expoProps(props: IconButtonProps): ExpoButtonProps {
   return {
-    pressable: iconPressableProps(props),
-    adornment: iconAdornment(props, appearance),
+    variant: variants[variantOf(props)],
+    onPress: props.onPress,
+    disabled: props.disabled ?? undefined,
+    testID: props.testID,
+    modifiers: [
+      ...sizeOf(props).androidModifiers,
+      ...(nameModifiers(props.accessibilityLabel) ?? []),
+    ],
   };
 }
 
-function iconAdornment(
-  props: IconControlProps,
-  appearance: IconAppearance,
-): IconDrawing['adornment'] {
-  return {
-    icon: appearance.icon,
-    source: appearance.iconSource,
-    role: appearance.iconRole ?? 'control',
-    filled: appearance.iconFilled,
-    weight: appearance.iconWeight,
-    loading: props.loading,
-    textClass: iconTextClass({ ...props, ...appearance }),
-    spinnerClass: iconSpinnerClass(props),
-  };
-}
+const glyphColors = {
+  primary: 'primaryForeground',
+  secondary: 'foreground',
+  ghost: 'primary',
+} as const satisfies Record<Variant, string>;
 
-function iconPressableProps({
-  tone: _tone,
-  iconTone: _iconTone,
-  ...props
-}: IconControlProps): PressableInput {
-  const { size, variant, loading, selected, bleed, corners, ...pressable } =
-    props;
+function NativeGlyph(props: IconButtonProps): ReactElement {
+  const { colors } = useNativeTheme();
 
-  return createIconPressable(
-    { ...pressable, ...pressableState(pressable.disabled, selected) },
-    { size, variant, loading, selected, bleed, corners },
+  const color = props.disabled
+    ? colors.disabledContent
+    : colors[glyphColors[variantOf(props)]];
+
+  return (
+    <NativeIcon
+      name={props.icon}
+      size={sizeOf(props).iconSize}
+      filled={props.selected ?? false}
+      color={color}
+    />
   );
 }
-
-// Pressable takes no null `disabled`.
-interface PressableState {
-  disabled: boolean | undefined;
-  'aria-pressed'?: boolean;
-}
-
-function pressableState(
-  disabled: boolean | null | undefined,
-  selected?: boolean,
-): PressableState {
-  return { disabled: disabled ?? undefined, ...pressedAttribute(selected) };
-}
-
-// The web reads a toggle's state from aria-pressed, which React Native's own types leave out.
-function pressedAttribute(selected?: boolean): { 'aria-pressed'?: boolean } {
-  return selected === undefined ? {} : { 'aria-pressed': selected };
-}
-
-function createIconPressable(
-  pressable: PressableInput,
-  presentation: IconPresentation,
-): PressableInput {
-  return {
-    ...pressable,
-    ...buttonInteractionProps({ ...pressable, loading: presentation.loading }),
-    // Android fades each child on its own, so a dimmed filled disc would show through its glyph; iOS fades the whole button.
-    needsOffscreenAlphaCompositing: presentation.variant === 'filled',
-    className: iconContainerClass({ ...pressable, ...presentation }),
-  };
-}
-
-type ContainerProps = Pick<
-  IconButtonProps,
-  | 'size'
-  | 'variant'
-  | 'disabled'
-  | 'className'
-  | 'selected'
-  | 'bleed'
-  | 'corners'
->;
-
-function iconContainerClass(props: ContainerProps): string {
-  const { size, variant, corners, className } = props;
-  const disabled = !!props.disabled;
-  const pressed = props.selected === true;
-  const bleed = !!props.bleed;
-
-  return cn(
-    iconButtonClasses({ size, variant, disabled, pressed, bleed, corners }),
-    className,
-  );
-}
-
-function iconTextClass(
-  props: Pick<
-    IconButtonProps,
-    'variant' | 'iconClassName' | 'tone' | 'iconTone'
-  >,
-): string {
-  return cn(
-    props.variant === 'filled' ? 'text-primary-foreground' : 'text-foreground',
-    props.iconClassName,
-    iconToneTextClass(props),
-  );
-}
-
-export type { IconButtonProps } from './icon-button-props';

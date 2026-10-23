@@ -14,10 +14,9 @@ export interface SessionsHeaderProps extends SessionsViewState {
 
 const newSessionAppearance = {
   variant: 'ghost',
-  size: 'sm',
+  size: 'xs',
   className: 'size-7 sm:size-7',
   icon: 'new-session',
-  iconRole: 'control',
   iconClassName: 'text-muted-foreground',
 } as const;
 

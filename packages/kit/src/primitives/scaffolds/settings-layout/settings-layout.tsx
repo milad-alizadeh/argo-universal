@@ -152,7 +152,7 @@ function SettingsPageRow({
   return (
     <ListItem.Link
       {...row}
-      leading={icon && <Icon name={icon} role="row" />}
+      leading={icon && <Icon name={icon} size="md" />}
       selected={shown}
       onPress={onSelect && (() => onSelect(row.href))}
     />

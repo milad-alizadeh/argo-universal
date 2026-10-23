@@ -25,9 +25,7 @@ function MarkContent(props: {
   number: number;
 }): React.JSX.Element {
   if (props.mark === 'done')
-    return (
-      <Icon name="check" role="body" className="text-primary-foreground" />
-    );
+    return <Icon name="check" size="sm" className="text-primary-foreground" />;
 
   return (
     <Text role="badge" className={numberClasses[props.mark]}>
@@ -129,7 +127,7 @@ function StepButton(props: StepAdd & { mark: StepMark }): React.JSX.Element {
     <Button
       label={props.label}
       icon={next ? 'add' : undefined}
-      variant={next ? 'default' : 'outline'}
+      variant={next ? 'primary' : 'secondary'}
       size="sm"
       disabled={!props.onPress}
       onPress={props.onPress}

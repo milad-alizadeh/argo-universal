@@ -63,9 +63,7 @@ function ShowPlanButton({ view }: ViewProps): ReactNode {
     <IconButton
       {...controlAppearance}
       accessibilityLabel={showPlanLabels[`${view.open}`]}
-      aria-expanded={view.open}
       icon={view.open ? 'chevron-up' : 'chevron-down'}
-      iconRole="secondary"
       onPress={view.toggleOpen}
     />
   );
@@ -98,7 +96,7 @@ function PhoneRow({ title }: Pick<PlanHeaderProps, 'title'>): ReactNode {
   return (
     <View className="min-h-11 flex-row items-center gap-1.5">
       <PlanTitle title={title} />
-      <Icon role="chevron" name="chevron-up" tone="muted" />
+      <Icon size="sm" name="chevron-up" tone="muted" />
     </View>
   );
 }

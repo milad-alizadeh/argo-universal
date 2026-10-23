@@ -36,10 +36,7 @@ export function Alert(props: AlertProps): React.JSX.Element | null {
 
 function OpenAlert(props: AnsweredAlertProps): React.JSX.Element {
   return (
-    <AlertDialog
-      colors={useMaterialPalette().dialogColors}
-      onDismissRequest={() => ignoreCloseWhileBusy(props)(false)}
-    >
+    <AlertDialog onDismissRequest={() => ignoreCloseWhileBusy(props)(false)}>
       <AlertTitle title={props.title} />
       <AlertMessage message={props.message} />
       <AlertAnswers {...props} />

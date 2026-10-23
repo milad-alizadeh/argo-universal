@@ -103,10 +103,10 @@ function SplitRing({ checks, state }: ChecksRingProps): React.JSX.Element {
 
 function Ring(props: ChecksRingProps): React.JSX.Element {
   if (props.state === 'passed')
-    return <Icon role="control" name="passed" className="text-success" />;
+    return <Icon size="sm" name="passed" className="text-success" />;
 
   return (
-    <IconSlot role="control">
+    <IconSlot size="sm">
       <SplitRing {...props} />
     </IconSlot>
   );

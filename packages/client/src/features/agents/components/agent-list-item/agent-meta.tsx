@@ -3,24 +3,21 @@ import { Label } from '@repo/kit/primitives/content/label';
 import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { IconName } from '@repo/kit/symbols/icon-names';
-import { type LogoSource, logoSources } from '@repo/kit/symbols/logo-source';
 import type * as React from 'react';
 import { Linking } from 'react-native';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 import { unavailableIcon, unsupportedLabel } from './agent-button';
 
-type LinkGlyph = { icon: IconName } | { iconSource: LogoSource };
-
-type Link = { url?: string; label: string; glyph: LinkGlyph };
+type Link = { url?: string; label: string; icon: IconName };
 
 // Two links only, the repository and the website (owner, 2026-10-19).
 const linksOf = (agent: AgentRowEntry): Link[] => [
   {
     url: agent.repository,
     label: 'Repository',
-    glyph: { iconSource: logoSources.github },
+    icon: 'code',
   },
-  { url: agent.website, label: 'Website', glyph: { icon: 'web' } },
+  { url: agent.website, label: 'Website', icon: 'web' },
 ];
 
 type AgentMetaProps = { agent: AgentRowEntry };
@@ -47,14 +44,11 @@ function UnsupportedNote({ agent }: AgentMetaProps): React.JSX.Element | null {
   ) : null;
 }
 
-// A glyph on the text line with the row's gap around it; its hit area bleeds past it.
 const linkButton = (link: Link, url: string): React.JSX.Element => (
   <IconButton
-    {...link.glyph}
+    icon={link.icon}
     size="xs"
     variant="ghost"
-    iconTone="muted"
-    bleed
     accessibilityLabel={link.label}
     onPress={() => void Linking.openURL(url)}
   />

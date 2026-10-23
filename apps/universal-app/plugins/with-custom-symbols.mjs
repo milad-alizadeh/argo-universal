@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import customSymbols from '@repo/kit/custom-symbol-paths.json' with { type: 'json' };
-import tablerSymbols from '@repo/kit/tabler-symbol-paths.json' with { type: 'json' };
 import configPlugins from 'expo/config-plugins';
 
 /*
@@ -103,21 +102,6 @@ function writeSymbolSet(catalog, name, symbol) {
   );
 }
 
-/*
- * Tabler icons only the web and desktop draw: a grouped row's disclosure, where iOS draws the system
- * chevron.forward (ADR-0019), so the catalog leaves them out.
- */
-const webOnlyTablerSymbols = new Set(['custom.chevron-right']);
-
-const appleSymbols = () => ({
-  ...customSymbols,
-  ...Object.fromEntries(
-    Object.entries(tablerSymbols).filter(
-      ([name]) => !webOnlyTablerSymbols.has(name),
-    ),
-  ),
-});
-
 function writeSymbolSets(modConfig) {
   const { platformProjectRoot, projectName } = modConfig.modRequest;
 
@@ -127,14 +111,14 @@ function writeSymbolSets(modConfig) {
     'Images.xcassets',
   );
 
-  for (const [name, symbol] of Object.entries(appleSymbols())) {
+  for (const [name, symbol] of Object.entries(customSymbols)) {
     writeSymbolSet(catalog, name, symbol);
   }
 
   return modConfig;
 }
 
-// Writes Argo's custom symbols and the Tabler git icons as symbol sets in the app's asset catalog, where Expo UI's SwiftUI Image finds them by `assetName`.
+// Writes Argo's custom symbols as symbol sets in the app's asset catalog, where Expo UI's SwiftUI Image finds them by `assetName`.
 export default function withCustomSymbols(config) {
   return configPlugins.withDangerousMod(config, ['ios', writeSymbolSets]);
 }

@@ -8,7 +8,7 @@ import {
   EveryIconExample,
   IconButtonsExample,
   LogoExample,
-  RolesExample,
+  SizesExample,
 } from './icon-examples.mocks';
 import { SfAndMaterialTable } from './sf-symbol-table.mocks';
 
@@ -16,7 +16,7 @@ const meta = {
   title: 'Design System/Primitives/Content/Icon',
   component: Icon,
   argTypes: kitArgTypes('Icon'),
-  args: { name: 'add', role: 'control' },
+  args: { name: 'add', size: 'sm' },
   tags: ['third-party'],
 } satisfies Meta<typeof Icon>;
 
@@ -29,7 +29,7 @@ export const EveryIcon: Story = { render: EveryIconExample };
 export const InsideIconButtons: Story = { render: IconButtonsExample };
 
 export const Roles: Story = {
-  render: RolesExample,
+  render: SizesExample,
   parameters: {
     docs: {
       description: {

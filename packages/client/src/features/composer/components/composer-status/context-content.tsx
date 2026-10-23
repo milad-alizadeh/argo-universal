@@ -76,7 +76,7 @@ function ContextTotals({
 }
 
 const compactButtonProps = {
-  variant: 'outline',
+  variant: 'secondary',
   label: 'Compact',
   icon: 'compaction',
 } as const;

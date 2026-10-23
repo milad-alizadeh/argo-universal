@@ -18,8 +18,6 @@ function BackButton({
       variant="ghost"
       size="xs"
       icon="chevron-left"
-      iconRole="title"
-      iconTone="muted"
       accessibilityLabel={subagentFeedBackLabel}
       onPress={onBack}
     />

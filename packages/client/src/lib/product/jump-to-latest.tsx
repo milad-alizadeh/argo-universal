@@ -56,7 +56,7 @@ export function JumpToLatestButton(
       onPress={props.onPress}
       className={jumpToLatestClassName}
     >
-      <Icon name="arrow-down" role="control" tone="neutral" />
+      <Icon name="arrow-down" size="sm" tone="neutral" />
       {props.hasNewRows && newRowsDot}
     </Pressable>
   );

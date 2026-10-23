@@ -38,7 +38,6 @@
         "packages/client/src/features/requests/components/elicitation-form/elicitation-form-body.tsx",
         "packages/client/src/features/requests/components/elicitation-form/elicitation-outcome.tsx",
         "packages/client/src/features/requests/components/elicitation-form/elicitation-question-header.tsx",
-        "packages/client/src/features/requests/components/elicitation-form/elicitation-question-pager.tsx",
         "packages/client/src/features/requests/components/request-card/request-card.tsx",
         "packages/client/src/features/requests/components/request-card/request-heading.tsx",
         "packages/client/src/features/requests/components/request-card/request-status.tsx",
@@ -46,8 +45,7 @@
         "packages/client/src/features/sessions/components/session-pull-request.tsx",
         "packages/client/src/features/settings/components/placeholder-detail-view/placeholder-detail-view.tsx",
         "packages/client/src/screens/onboarding/onboarding-view.tsx",
-        "packages/client/src/screens/onboarding/setup-step.tsx",
-        "packages/client/src/lib/product/header-button.tsx"
+        "packages/client/src/screens/onboarding/setup-step.tsx"
       ],
       "rules": { "argo/kit-styling": "off" }
     }

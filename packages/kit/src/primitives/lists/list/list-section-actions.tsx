@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { IconButtonBleed } from '#primitives/actions/icon-button';
 import type { HeaderProps } from './list-section-parts';
 
 /*
@@ -22,9 +21,5 @@ export function HeaderActions({
   if (sidebar)
     return <View className={sidebarActionsClassName}>{trailing}</View>;
 
-  return (
-    <IconButtonBleed value>
-      <View className={actionsClassName}>{trailing}</View>
-    </IconButtonBleed>
-  );
+  return <View className={actionsClassName}>{trailing}</View>;
 }

@@ -44,7 +44,7 @@ function ServerName({
 }: Pick<ServerLocationProps, 'name'>): React.JSX.Element {
   return (
     <>
-      <Icon role="control" name="computer" className="text-muted-foreground" />
+      <Icon size="sm" name="computer" className="text-muted-foreground" />
       <Text numberOfLines={1} role="body">
         {name}
       </Text>

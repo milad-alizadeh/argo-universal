@@ -7,7 +7,7 @@ import { TextClassContext, toneClass } from '#primitives/content/text';
 import { StatusDot } from '#primitives/status/status-dot';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
-import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
+import { useIconBox, useIconPixels } from '../../../symbols/icon-size';
 import {
   type IconSymbol,
   type ResolvedIcon,
@@ -17,10 +17,7 @@ import { LogoGlyph } from '../../../symbols/logo-glyph';
 import type { LogoSource } from '../../../symbols/logo-source';
 import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
-import { useSlotIconRole } from './icon-role-context';
-
-// Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
-const materialGlyphScale = 1.125;
+import { useSlotIconSize } from './icon-size-context';
 
 // Web colours the glyph with CSS from `colorClassName`, so only native resolves the class to a tint, which costs a style lookup each render on web.
 const TintedSymbol =
@@ -32,8 +29,6 @@ const TintedSymbol =
           styleProperty: 'color',
         },
       });
-
-const glyphScale = Platform.OS === 'android' ? materialGlyphScale : 1;
 
 const iconDrawing = (
   { symbol, materialFill }: ResolvedIcon,
@@ -50,7 +45,7 @@ function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
 }
 
 export function Icon(slotted: IconProps): React.JSX.Element {
-  const props = { ...slotted, role: useSlotIconRole(slotted.role) };
+  const props = { ...slotted, size: useSlotIconSize(slotted.size) };
   const glyph = <IconGlyph {...props} />;
 
   const hidden = useContext(StatusMarkHidden);
@@ -79,7 +74,7 @@ function IconLogo(props: LogoIconProps): React.JSX.Element {
   return (
     <LogoGlyph
       source={props.source}
-      pixels={useIconPixels(props.role)}
+      pixels={useIconPixels(props.size)}
       colorClassName={useIconColor(props)}
       testID={props.testID ?? `icon-${props.source.label.toLowerCase()}`}
     />
@@ -106,10 +101,7 @@ function useSymbolDrawingProps(
   return {
     symbol: iconDrawing(icon, props.filled),
     colorClassName,
-    pixels: useIconPixels(props.role),
-    glyphScale,
-    fitArtwork: props.fitArtwork,
-    weight: props.weight,
+    pixels: useIconPixels(props.size),
     testID: props.testID ?? `icon-${icon.key}`,
   };
 }
@@ -121,7 +113,7 @@ function IconWithStatus(
   },
 ): React.JSX.Element {
   return (
-    <View style={useIconBox(props.role)} className="relative">
+    <View style={useIconBox(props.size)} className="relative">
       {props.children}
       <IconStatus status={props.status} testID={props.testID} />
     </View>
@@ -153,21 +145,21 @@ function iconStatusDotProps(
 }
 
 export function IconSpinner({
-  iconRole,
+  iconSize,
   ...props
 }: IconSpinnerProps): React.JSX.Element {
-  return <ActivityIndicator {...props} size={useIconPixels(iconRole)} />;
+  return <ActivityIndicator {...props} size={useIconPixels(iconSize)} />;
 }
 
 export function IconSlot({
-  role,
+  size,
   className,
   ...props
 }: IconSlotProps): React.JSX.Element {
   return (
     <View
       {...props}
-      style={useIconBox(role)}
+      style={useIconBox(size)}
       className={cn('shrink-0 items-center justify-center', className)}
     />
   );

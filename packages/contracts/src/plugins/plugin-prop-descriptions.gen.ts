@@ -66,7 +66,7 @@ export type WireSchemaHints = {
     /** An Argo icon or an SF and Material symbol pair. */
     "name": PropValue<"Icon", "name">;
     /** Semantic icon size, optionally by Size class. */
-    "role": PropValue<"Icon", "role">;
+    "size": PropValue<"Icon", "size">;
     /** Use the platform filled variant. */
     "filled": PropValue<"Icon", "filled">;
     /** Semantic symbol tone. */
@@ -241,19 +241,12 @@ export type WireSchemaHints = {
     "disabled": PropValue<"IconButton", "disabled">;
     /** Action run on activation. */
     "onPress": PropValue<"IconButton", "onPress">;
-    /** Danger treatment. */
-    "tone": PropValue<"IconButton", "tone">;
+    /** Draw the filled icon, for a button that is on. */
+    "selected": PropValue<"IconButton", "selected">;
     /** Button size. */
     "size": PropValue<"IconButton", "size">;
-    /** The action is running. */
-    "loading": PropValue<"IconButton", "loading">;
     /** Button treatment. */
     "variant": PropValue<"IconButton", "variant">;
-    /** Toggle selection; omit for a plain button. */
-    "selected": PropValue<"IconButton", "selected">;
-  };
-  "ButtonGroup": {
-
   };
   "SplitButton": {
     /** Primary action label. */

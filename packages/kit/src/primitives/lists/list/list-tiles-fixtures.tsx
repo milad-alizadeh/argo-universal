@@ -51,7 +51,7 @@ const mediaItems = [
       <Avatar name="Sam Rivera" accessibilityLabel="Sam Rivera" size="xl" />
     ),
   },
-  { title: 'Folder', media: <Icon name="folder" role="title" /> },
+  { title: 'Folder', media: <Icon name="folder" size="lg" /> },
   { title: 'Summary', media: <Text role="title">42</Text> },
 ];
 

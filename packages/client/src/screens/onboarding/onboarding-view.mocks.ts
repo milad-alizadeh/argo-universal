@@ -28,7 +28,7 @@ export const onboardingArgs = (): OnboardingViewProps => ({
 
 // The accessible names of GitHub's sign-in buttons.
 export const githubButtons = {
-  connect: 'Connect GitHub',
-  signInAgain: 'Sign in to GitHub again',
+  connect: 'Connect',
+  signInAgain: 'Sign in again',
   anotherAccount: 'Sign in with another account',
 };

@@ -7,40 +7,21 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 
-export interface HeaderButtonProps extends Pick<
-  IconButtonProps,
-  'ref' | 'accessibilityState'
-> {
-  onPress?: () => void;
-  icon: IconName;
-  accessibilityLabel: string;
+export type HeaderButtonProps = Omit<IconButtonProps, 'variant' | 'size'> & {
+  ref?: React.ComponentProps<typeof View>['ref'];
   // Paired trailing items are 32pt wide; a lone item fills its 44pt slot.
   paired?: boolean;
   // A dot on the icon: Sessions need attention, or a filter other than the default is set.
   dot?: 'attention' | 'filter';
-}
+};
 
 interface HeaderButtonFit {
-  hitSlop: IconButtonProps['hitSlop'];
-  // A square that replaces IconButton's own size classes.
-  size: string;
-  // A narrower item keeps the square's height; a style width overrides the class on every platform.
-  style?: { width: number };
   dot: HeaderButtonDotProps['on'];
 }
 
 const headerButtonFits = {
-  narrow: {
-    hitSlop: { left: 6, right: 6 },
-    size: 'size-11 sm:size-11',
-    style: { width: 32 },
-    dot: 'paired',
-  },
-  slot: {
-    hitSlop: undefined,
-    size: 'size-11 sm:size-11',
-    dot: 'lone',
-  },
+  narrow: { dot: 'paired' },
+  slot: { dot: 'lone' },
 } satisfies Record<string, HeaderButtonFit>;
 
 // Where the dot sits over the icon of each button that carries one.
@@ -59,29 +40,22 @@ function headerButtonFit(paired: boolean): HeaderButtonFit {
   return paired ? headerButtonFits.narrow : headerButtonFits.slot;
 }
 
-// The header fit replaces IconButton's touch minimum, border and focus outline with the header's own.
-const headerChrome =
-  'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all web:focus-visible:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
-
 // A list's filter in a phone header: Android's top app bar draws Material's filter list, as Paper does; iOS and the web keep the sliders.
 export const headerFilterIcon: Extract<IconName, 'filter-list' | 'filters'> =
   Platform.OS === 'android' ? 'filter-list' : 'filters';
 
 // A plain icon button for Android's drawer header and the web's JS header; iOS headers use stock bar button items.
-export function HeaderButton(props: HeaderButtonProps): React.JSX.Element {
-  const { paired = false, dot, ...buttonProps } = props;
-  const fit = headerButtonFit(paired);
-
+export function HeaderButton({
+  ref,
+  paired = false,
+  dot,
+  ...props
+}: HeaderButtonProps): React.JSX.Element {
   return (
-    <IconButton
-      hitSlop={fit.hitSlop}
-      style={fit.style}
-      {...buttonProps}
-      variant="ghost"
-      iconRole="action"
-      className={cn(headerChrome, fit.size)}
-      badge={headerDot(dot, fit)}
-    />
+    <View ref={ref}>
+      <IconButton variant="ghost" {...props} />
+      {headerDot(dot, headerButtonFit(paired))}
+    </View>
   );
 }
 
@@ -114,29 +88,22 @@ function HeaderButtonDot(props: HeaderButtonDotProps): React.JSX.Element {
   );
 }
 
-interface ListHeaderButtonProps extends Pick<
-  IconButtonProps,
-  'ref' | 'accessibilityState' | 'onPress'
-> {
-  icon: IconName;
-  accessibilityLabel: string;
+type ListHeaderButtonProps = Omit<IconButtonProps, 'variant' | 'size'> & {
+  ref?: React.ComponentProps<typeof View>['ref'];
   dot?: HeaderButtonProps['dot'];
-}
+};
 
-// A wide window's list header action, such as the Sessions view menu's trigger: a 28 ghost button with a muted 16 control glyph and a header button's dot (Paper "SessionsList").
+// A wide window's list header action, such as the Sessions view menu's trigger: a small ghost button with a header button's dot (Paper "SessionsList").
 export function ListHeaderButton({
+  ref,
   dot,
-  ...buttonProps
+  ...props
 }: ListHeaderButtonProps): React.JSX.Element {
   return (
-    <IconButton
-      {...buttonProps}
-      variant="ghost"
-      className="size-7 sm:size-7"
-      iconRole="control"
-      iconClassName="text-muted-foreground"
-      badge={dot && <HeaderButtonDot dot={dot} on="small" />}
-    />
+    <View ref={ref}>
+      <IconButton variant="ghost" size="xs" {...props} />
+      {dot && <HeaderButtonDot dot={dot} on="small" />}
+    </View>
   );
 }
 

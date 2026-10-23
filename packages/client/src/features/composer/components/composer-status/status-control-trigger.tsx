@@ -1,4 +1,4 @@
-import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { cn } from '@repo/kit/utils';
 import type { JSX, ReactNode } from 'react';

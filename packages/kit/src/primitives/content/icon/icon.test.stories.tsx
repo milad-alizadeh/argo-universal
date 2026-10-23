@@ -15,7 +15,7 @@ export const ShowsCornerStatus: Story = {
   render: () => (
     <Icon
       name="agent"
-      role="control"
+      size="sm"
       testID="agent-icon"
       status={{ tone: 'warning', pulse: true }}
     />
@@ -26,7 +26,7 @@ export const ShowsCornerStatus: Story = {
 };
 
 export const SpeaksLogoName: Story = {
-  render: () => <Icon source={logoSources.github} role="control" />,
+  render: () => <Icon source={logoSources.github} size="sm" />,
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('img', { name: 'GitHub' })).toBeVisible();
   },

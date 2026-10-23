@@ -1,4 +1,4 @@
-import { iconRoles } from '@repo/contracts/kit-symbols';
+import { iconSizes } from '@repo/contracts/kit-symbols';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { RegistryIcon } from './registry-icon';
 import {
@@ -13,7 +13,7 @@ const meta = {
   argTypes: {
     uri: { control: 'text' },
     agentName: { control: 'text' },
-    role: { control: 'select', options: Object.keys(iconRoles) },
+    size: { control: 'select', options: Object.keys(iconSizes) },
   },
 } satisfies Meta<typeof RegistryIcon>;
 

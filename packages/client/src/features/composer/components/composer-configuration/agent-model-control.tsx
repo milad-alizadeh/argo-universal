@@ -165,9 +165,9 @@ function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   if (!props.wide) return undefined;
 
   if (props.configuration.agent)
-    return <AgentIcon agent={props.configuration.agent} role="control" />;
+    return <AgentIcon agent={props.configuration.agent} size="sm" />;
 
-  return <Icon name="agent" role="control" />;
+  return <Icon name="agent" size="sm" />;
 }
 
 // Unlike Configure's Agent row, the trigger shows no id for an Agent that is not installed.

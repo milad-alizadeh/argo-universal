@@ -17,9 +17,8 @@ export interface ShellOutputHeaderProps {
 
 // Stop ends a run, so it reads as danger does everywhere: red text, no fill and no border.
 const stopAppearance = {
-  variant: 'ghost',
-  tone: 'danger',
-  size: 'xs',
+  variant: 'danger',
+  size: 'sm',
   label: 'Stop',
 } as const;
 
@@ -30,13 +29,7 @@ function StopButton({
 }: Pick<ShellOutputHeaderProps, 'shell' | 'onStop'>): JSX.Element | null {
   if (shell.status !== 'running' || !shell.canStop) return null;
 
-  return (
-    <Button
-      {...stopAppearance}
-      accessibilityLabel={`Stop ${shell.command}`}
-      onPress={() => onStop(shell)}
-    />
-  );
+  return <Button {...stopAppearance} onPress={() => onStop(shell)} />;
 }
 
 // How the Shell stands, filling the gap between its command and Stop.
@@ -69,9 +62,7 @@ function Command({ command }: { command: string }): JSX.Element {
 
 const backAppearance = {
   variant: 'ghost',
-  size: 'xs',
-  corners: 'tight',
-  iconRole: 'chevron',
+  size: 'sm',
   icon: 'chevron-left',
   accessibilityLabel: 'Back to Shells',
 } as const;
@@ -81,7 +72,7 @@ export function ShellOutputHeader(props: ShellOutputHeaderProps): JSX.Element {
   return (
     <View className="h-11 shrink-0 flex-row items-center gap-1.5 pr-2 pl-1.5">
       <IconButton {...backAppearance} onPress={props.onBack} />
-      <Icon name="terminal" role="body" />
+      <Icon name="terminal" size="sm" />
       <Command command={props.shell.command} />
       <Heading shell={props.shell} now={props.now} />
       <StopButton shell={props.shell} onStop={props.onStop} />

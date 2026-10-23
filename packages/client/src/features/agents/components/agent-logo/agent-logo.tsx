@@ -1,5 +1,5 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
-import type { IconRoleValue } from '@repo/kit/symbols/icon-role';
+import type { IconSizeValue } from '@repo/kit/symbols/icon-size';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -10,7 +10,7 @@ interface AgentLogoProps {
   // SVG markup, the registry's icon URI, or an empty string for an Agent without a logo.
   logo: string;
   label: string;
-  role: IconRoleValue;
+  size: IconSizeValue;
   testID?: string;
 }
 
@@ -19,12 +19,12 @@ export function AgentLogo(props: AgentLogoProps): React.JSX.Element {
   const logo = props.logo.trim();
 
   if (!logo)
-    return <Icon name="agent" role={props.role} className="text-foreground" />;
+    return <Icon name="agent" size={props.size} className="text-foreground" />;
 
   if (!logo.startsWith('<'))
     return (
       <View testID={props.testID} className="h-full w-full">
-        <RegistryIcon uri={logo} agentName={props.label} role={props.role} />
+        <RegistryIcon uri={logo} agentName={props.label} size={props.size} />
       </View>
     );
 

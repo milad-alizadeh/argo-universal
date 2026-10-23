@@ -28,8 +28,7 @@ function DangerButton(props: ListItemButtonProps): ReactElement {
     <View className="items-center">
       <Button
         label={props.title}
-        tone="danger"
-        variant="ghost"
+        variant="danger"
         disabled={props.disabled}
         onPress={props.onPress}
       />

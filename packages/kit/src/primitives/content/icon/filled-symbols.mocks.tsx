@@ -35,7 +35,7 @@ function SymbolRow({ filled }: { filled: boolean }): React.JSX.Element {
         <Icon
           key={name}
           name={name}
-          role="action"
+          size="md"
           filled={filled}
           testID={`fill-${name}`}
         />

@@ -100,7 +100,7 @@ function FieldIcon(props: Pick<DatePickerProps, 'mode'>): ReactElement {
     <OutlinedTextField.TrailingIcon>
       <NativeSymbol
         name={props.mode === 'time' ? 'clock' : 'calendar'}
-        role="grouped-row"
+        size="lg"
       />
     </OutlinedTextField.TrailingIcon>
   );

@@ -1,4 +1,4 @@
-import { contentActionClass } from '@repo/kit/primitives/actions/button';
+import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { TextClassContext } from '@repo/kit/primitives/content/text';
 import { DisclosureChevron } from '@repo/kit/primitives/status/disclosure-chevron';

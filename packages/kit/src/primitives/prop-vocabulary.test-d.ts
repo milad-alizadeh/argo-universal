@@ -1,7 +1,7 @@
 import type { ViewProps } from 'react-native';
 import { expectTypeOf } from 'vitest';
 import type { PressActionProps } from '#primitives/actions/action-list';
-import type { IconRole } from '../symbols/icon-role';
+import type { IconSize } from '../symbols/icon-size';
 import type { SizeClassValue } from '../use-size-class/size-class-value';
 import type { Aliases, Primitives } from './prop-vocabulary.mocks';
 
@@ -80,7 +80,10 @@ type RetiredNames = {
 };
 
 type OffScaleSizes = {
-  [Name in keyof Primitives]: Exclude<Values<Primitives[Name], 'size'>, Size>;
+  [Name in keyof Primitives]: Exclude<
+    Values<Primitives[Name], 'size'>,
+    Size | SizeClassValue<IconSize>
+  >;
 };
 
 type OffVocabularyTones = {
@@ -96,7 +99,7 @@ type OwnRoles = {
   [Name in keyof Primitives]: Exclude<
     Values<Primitives[Name], 'role'>,
     | SizeClassValue<Aliases['TextRole']>
-    | SizeClassValue<IconRole>
+    | SizeClassValue<IconSize>
     | NonNullable<PressActionProps['role']>
     | NonNullable<ViewProps['role']>
   >;
@@ -166,10 +169,6 @@ expectTypeOf<
   Values<Primitives['AlertAction'], 'tone'>
 >().toEqualTypeOf<'danger'>();
 
-expectTypeOf<
-  Values<Primitives['ButtonProps'], 'tone'>
->().toEqualTypeOf<'danger'>();
-
 // `role` is for typography and icon placement only.
 expectTypeOf<OwnRoles>().toEqualTypeOf<Each<never>>();
 
@@ -195,11 +194,6 @@ expectTypeOf<
 expectTypeOf<
   Extract<Keys<Primitives['SplitButtonProps']>, 'options'>
 >().toEqualTypeOf<'options'>();
-
-// A chosen IconButton is `selected`; its glyph fill is apart from its variant.
-expectTypeOf<Primitives['IconButtonProps']['selected']>().toEqualTypeOf<
-  boolean | undefined
->();
 
 expectTypeOf<
   Extract<keyof Primitives['IconButtonProps'], 'filled'>

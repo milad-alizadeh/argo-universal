@@ -56,11 +56,7 @@ function FabIcon({ action }: FabProps): ReactElement {
 
   return (
     <ButtonIcon name={action.icon} onPress={action.onPress} tint={tint}>
-      <Icon
-        name={action.icon}
-        role="action"
-        className="text-primary-foreground"
-      />
+      <Icon name={action.icon} size="md" className="text-primary-foreground" />
     </ButtonIcon>
   );
 }

@@ -12,7 +12,6 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { Host } from '#primitives/native/host';
-import { useMaterialPalette } from '#primitives/native/material-palette';
 import {
   SheetLink,
   SheetNavigationProvider,
@@ -66,12 +65,8 @@ type ModalProps = Omit<
 >;
 
 function useModalProps(props: Omit<PresentationProps, 'sheetRef'>): ModalProps {
-  const { roles } = useMaterialPalette();
-
+  // Material's sheet colours: the Host binds surfaceContainerLow to Argo's content surface and the scrim to 32% foreground.
   return {
-    containerColor: roles.surface,
-    contentColor: roles.onSurface,
-    scrimColor: roles.scrim,
     onDismissRequest: props.stack.reports.dismissed,
     skipPartiallyExpanded: !restsHalfOpen(props),
     // ModalBottomSheet/index.d.ts: ignored when skipPartiallyExpanded, so only a half-open sheet opens full.

@@ -1,5 +1,4 @@
 import type {
-  AlertDialogColors,
   ButtonColors,
   CardColors,
   DropdownMenuItem,
@@ -15,34 +14,6 @@ type DropdownMenuItemElementColors = NonNullable<
   ComponentProps<typeof DropdownMenuItem>['elementColors']
 >;
 
-// Button `colors` (ButtonColors): the filled button, on primary.
-export function filledButtonColors(roles: MaterialRoles): ButtonColors {
-  return {
-    containerColor: roles.primary,
-    contentColor: roles.onPrimary,
-    disabledContainerColor: roles.disabledContainer,
-    disabledContentColor: roles.disabledContent,
-  };
-}
-
-// FilledTonalButton `colors` (ButtonColors): the muted fill.
-export function tonalButtonColors(roles: MaterialRoles): ButtonColors {
-  return {
-    containerColor: roles.secondaryContainer,
-    contentColor: roles.onSecondaryContainer,
-    disabledContainerColor: roles.disabledContainer,
-    disabledContentColor: roles.disabledContent,
-  };
-}
-
-// OutlinedButton and TextButton `colors` (ButtonColors): primary content and no fill.
-export function bareButtonColors(roles: MaterialRoles): ButtonColors {
-  return {
-    contentColor: roles.primary,
-    disabledContentColor: roles.disabledContent,
-  };
-}
-
 // A dialog answer's TextButton `colors`: the accent, or danger red.
 export function dialogButtonColors(
   roles: MaterialRoles,
@@ -51,15 +22,6 @@ export function dialogButtonColors(
   return {
     contentColor: danger ? roles.error : roles.accent,
     disabledContentColor: roles.disabledContent,
-  };
-}
-
-// AlertDialog `colors` (AlertDialogColors).
-export function dialogColors(roles: MaterialRoles): AlertDialogColors {
-  return {
-    containerColor: roles.surfaceContainer,
-    titleContentColor: roles.onSurface,
-    textContentColor: roles.onSurfaceVariant,
   };
 }
 

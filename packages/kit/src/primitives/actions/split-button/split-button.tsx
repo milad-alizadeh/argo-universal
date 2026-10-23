@@ -1,63 +1,24 @@
-import type * as React from 'react';
-import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
-import { View } from 'react-native';
+import { type ReactElement, useEffect, useRef } from 'react';
+import { Platform, View } from 'react-native';
 import { cn } from '#kit/utils';
-import { DrawnButton } from '#primitives/actions/button';
-import { ButtonGroup } from '#primitives/actions/button-group';
+import { Button } from '#primitives/actions/button';
+import { IconButton } from '#primitives/actions/icon-button';
 import { Menu } from '#primitives/overlays/menu';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
-import { chevron } from './split-button-chevron';
-import { menuRows } from './split-button-items';
-import type {
-  ResolvedSplitProps,
-  SplitButtonProps,
-  SplitMenuProps,
-} from './split-button-props';
+import { actingButton, menuRows, stackedButtons } from './split-button-items';
+import type { LaidSplitProps, SplitButtonProps } from './split-button-props';
 
-export type {
-  SplitButtonOption,
-  SplitButtonProps,
-  SplitMenuProps,
-} from './split-button-props';
+export type { SplitButtonOption, SplitButtonProps } from './split-button-props';
 
-type DrawnButtonProps = ComponentProps<typeof DrawnButton>;
+// The web draws a button beside a chevron that opens Argo's menu; phones stack every option as a button of its own.
+export function SplitButton<Value extends string>(
+  props: SplitButtonProps<Value>,
+): ReactElement {
+  const laid = { ...props, narrow: useNarrowLayout(props.fullWidth) };
 
-type GroupLook = Pick<SplitMenuProps, 'size' | 'primary' | 'disabled'>;
+  if (Platform.OS === 'web') return <MenuSplit {...laid} />;
 
-// What the acting half reads.
-type ActingLook = Pick<
-  ResolvedSplitProps,
-  | 'label'
-  | 'accessibilityLabel'
-  | 'icon'
-  | 'onPress'
-  | 'disabled'
-  | 'size'
-  | 'primary'
-  | 'narrow'
->;
-
-// ButtonGroup joins its items by passing each a className.
-type JoinedMenuProps<Value extends string> = SplitMenuProps<Value> & {
-  className?: string;
-};
-
-// A button with a chevron that picks what it does or opens actions of its own, from Argo's menu; phones draw it natively.
-export function SplitButton<Value extends string>({
-  fullWidth,
-  ...options
-}: SplitButtonProps<Value>): React.JSX.Element {
-  const props: ResolvedSplitProps<Value> = {
-    ...options,
-    narrow: useNarrowLayout(fullWidth),
-  };
-
-  return (
-    <ButtonGroup className={groupClassName(props)}>
-      {leadingItems(props)}
-      <SplitMenu {...props} />
-    </ButtonGroup>
-  );
+  return <StackedSplit {...laid} />;
 }
 
 // Full width always, or "narrow" on a compact window only, as Button's fullWidth.
@@ -67,69 +28,89 @@ function useNarrowLayout(fullWidth: SplitButtonProps['fullWidth']): boolean {
   return fullWidth === true || (fullWidth === 'narrow' && compact);
 }
 
-// The compact split dims as one group, so its halves do not dim a second time.
-function groupClassName(props: GroupLook): string | undefined {
-  if (props.size !== 'xs') return undefined;
-
-  return cn('rounded-md web:shadow-control', props.disabled && 'opacity-35');
-}
-
-// The acting button, and the compact split's divider after a filled one.
-function leadingItems(props: ActingLook): ReactElement[] {
-  const button = <DrawnButton key="button" {...actingProps(props)} />;
-
-  if (props.size === 'xs' && props.primary) return [button, divider];
-
-  return [button];
-}
-
-/*
- * The acting half: filled beside a primary chevron, otherwise a text button that gains an edge when narrow,
- * where it fills the row beside its chevron. The compact split's group carries the shadow and the dimming.
- */
-function actingProps(props: ActingLook): DrawnButtonProps {
-  return {
-    label: props.label,
-    accessibilityLabel: props.accessibilityLabel,
-    icon: props.icon,
-    onPress: props.onPress,
-    disabled: props.disabled,
-    variant: actingVariant(props),
-    size: props.size === 'xs' ? 'xs' : 'sm',
-    className: actingClassName(props),
-  };
-}
-
-function actingVariant(
-  props: Pick<SplitMenuProps, 'primary' | 'narrow'>,
-): DrawnButtonProps['variant'] {
-  if (props.primary) return 'default';
-
-  return props.narrow ? 'outline' : 'ghost';
-}
-
-function actingClassName(props: GroupLook & { narrow?: boolean }): string {
-  if (props.size === 'xs') return 'web:shadow-none opacity-100';
-
-  return props.narrow ? 'flex-1' : '';
-}
-
-// Spans the group's height, which grows to the touch size on phones, with its line centred.
-const divider = (
-  <View key="divider" className="w-px self-stretch justify-center bg-primary">
-    <View className="h-3.5 bg-primary-foreground/25" />
-  </View>
-);
-
-function SplitMenu<Value extends string>(
-  props: JoinedMenuProps<Value>,
-): ReactNode {
+function MenuSplit<Value extends string>(
+  props: LaidSplitProps<Value>,
+): ReactElement {
   return (
-    <Menu
-      {...menuRows(props)}
-      disabled={props.disabled}
+    <View className={cn('flex-row gap-1', props.narrow && 'w-full')}>
+      <View className={cn(props.narrow && 'flex-1')}>{acting(props)}</View>
+      <Menu
+        {...menuRows(props)}
+        disabled={props.disabled}
+        accessibilityLabel={props.menuLabel}
+        trigger={chevron(props)}
+      />
+    </View>
+  );
+}
+
+const acting = <Value extends string>(
+  props: LaidSplitProps<Value>,
+): ReactElement => <Button {...actingButton(props)} />;
+
+// An IconButton element itself, in the split's look and size, so the menu's asChild trigger can pass its press handlers to it.
+function chevron<Value extends string>(
+  props: LaidSplitProps<Value>,
+): ReactElement {
+  return (
+    <IconButton
+      icon="chevron-down"
+      variant={props.primary ? 'primary' : 'secondary'}
+      size={props.size === 'xs' ? 'sm' : 'md'}
       accessibilityLabel={props.menuLabel}
-      trigger={chevron(props)}
+      disabled={props.disabled}
     />
   );
 }
+
+function StackedSplit<Value extends string>(
+  props: LaidSplitProps<Value>,
+): ReactElement {
+  const choose = useChooseThenPress(props);
+
+  return (
+    <View className={cn('gap-2', props.narrow ? 'w-full' : 'items-start')}>
+      {stackedButtons(props, choose).map((button) => (
+        <Button key={button.label} {...button} />
+      ))}
+    </View>
+  );
+}
+
+/*
+ * A stacked choice picks itself, then acts once the caller has taken the new value,
+ * so the press reads the chosen value rather than the one before it.
+ */
+function useChooseThenPress<Value extends string>(
+  props: LaidSplitProps<Value>,
+): (value: Value) => void {
+  const { value, onPress = noop } = props;
+  const pressWhenChosen = usePressWhenChosen(value, onPress);
+
+  return (next) => {
+    if (next === value) return onPress();
+    pressWhenChosen(next);
+    props.onValueChange?.(next);
+  };
+}
+
+function usePressWhenChosen<Value extends string>(
+  value: Value | undefined,
+  onPress: () => void,
+): (next: Value) => void {
+  const pending = useRef<{ value: Value } | null>(null);
+
+  useEffect(() => {
+    const waiting = pending.current;
+
+    if (!waiting || waiting.value !== value) return;
+    pending.current = null;
+    onPress();
+  }, [value, onPress]);
+
+  return (next) => {
+    pending.current = { value: next };
+  };
+}
+
+const noop = (): void => undefined;
