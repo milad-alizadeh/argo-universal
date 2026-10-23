@@ -20,8 +20,6 @@ export type TriggerFields = Pick<
   'label' | 'disabled'
 > & {
   valueLabel: string;
-  // Web only: a multiple Picker's listbox opens below, so its trigger points down as Select's does.
-  chevron?: 'chevron-up-down' | 'chevron-down';
 };
 
 type Props = TriggerFields &
@@ -34,7 +32,7 @@ export function ComboboxTrigger(props: Props): ReactElement {
     <View className="min-w-0 flex-1">
       <Text>{props.valueLabel}</Text>
     </View>,
-    <Icon name={props.chevron ?? 'chevron-up-down'} size="sm" aria-hidden />,
+    <Icon name="chevron-up-down" size="sm" aria-hidden />,
   );
 }
 

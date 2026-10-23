@@ -37,13 +37,7 @@ function FieldLabel(
 function FieldTrigger<Value extends string>(
   props: MultiplePickerProps<Value>,
 ): ReactElement {
-  return (
-    <ComboboxTrigger
-      {...props}
-      valueLabel={pickerSummary(props)}
-      chevron="chevron-down"
-    />
-  );
+  return <ComboboxTrigger {...props} valueLabel={pickerSummary(props)} />;
 }
 
 type DrillOwner<Value extends string> = MultiplePickerProps<Value> &

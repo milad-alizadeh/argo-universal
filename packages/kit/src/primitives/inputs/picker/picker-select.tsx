@@ -30,12 +30,12 @@ type ItemProps = {
 };
 
 /*
- * A plain picker ends a settings row (FieldGroup.Picker) in a down chevron, so it reads as a menu and not as a row
- * that opens a page. It takes the row's disclosure size and tertiary colour (LinkAccessory); a boxed trigger keeps
- * its small muted one.
+ * Every picker trigger ends in the up-down chevron, so a picker reads as a choice and not as a Menu (which keeps
+ * chevron-down) or a row that opens a page. A plain picker takes the row's tertiary colour; a boxed trigger keeps a
+ * muted one.
  */
 const chevronLooks = {
-  plain: { size: 'md', className: 'text-tertiary' },
+  plain: { size: 'sm', className: 'text-tertiary' },
   boxed: { size: 'sm', className: 'text-muted-foreground' },
 } as const;
 
@@ -46,7 +46,7 @@ function TriggerChevron({
 
   return (
     <Icon
-      name="chevron-down"
+      name="chevron-up-down"
       size={look.size}
       aria-hidden={true}
       className={look.className}
