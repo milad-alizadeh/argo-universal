@@ -48,7 +48,7 @@ function ChangingConfiguration(): React.JSX.Element {
 // Radix marks a closing popover at once, before its exit transition ends.
 const openState = 'data-state';
 
-// Several picks in a row: each applies and both popovers stay open until a click outside.
+// Several picks in a row: each applies, the models page closes and Configure stays open until a click outside.
 export const ModelPicksKeepConfigureOpenWide: Story = {
   render: () => <ChangingConfiguration />,
   play: async ({ canvas, userEvent }) => {
@@ -74,7 +74,6 @@ export const ModelPicksKeepConfigureOpenWide: Story = {
     await userEvent.click(other);
 
     await expect(other).toHaveAttribute('aria-checked', 'true');
-    await expect(picker).toHaveAttribute(openState, 'open');
     await expect(configure).toHaveAttribute(openState, 'open');
     await expect(
       within(configure).getByRole('button', { name: /^Model,/ }),

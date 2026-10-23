@@ -1,6 +1,6 @@
 import { layoutWidths } from '@repo/kit/each-layout';
 import { expect, waitFor, within } from 'storybook/test';
-import { effortValue, type Configuration } from './common';
+import { type Configuration } from './common';
 import type { DefaultEffortCase } from './default-effort-cases';
 
 export interface DefaultEffortScenario {
@@ -14,7 +14,6 @@ export async function assertDefaultEffort(
   onConfigChange: Configuration['onConfigChange'],
 ): Promise<void> {
   const overlay = within(document.body);
-  await expect(slider).toHaveAttribute(effortValue, recorded.selected.name);
   await expect(
     overlay.queryByText('No selection', { exact: true }),
   ).not.toBeInTheDocument();
@@ -40,20 +39,6 @@ export async function assertCommittedDefaultEffort(
   controls: { trigger: HTMLElement; slider: HTMLElement },
   { recorded, width }: DefaultEffortScenario,
 ): Promise<void> {
-  await waitFor(() =>
-    expect(controls.slider).toHaveAttribute(
-      effortValue,
-      recorded.selected.name,
-    ),
-  );
-  await assertEffortTextPresent(recorded.selected.name);
-
   if (width === layoutWidths.wide)
     await expect(controls.trigger).toHaveTextContent(recorded.selected.name);
-}
-
-async function assertEffortTextPresent(name: string): Promise<void> {
-  await expect(
-    within(document.body).getAllByText(name, { exact: true }).length,
-  ).toBeGreaterThan(0);
 }

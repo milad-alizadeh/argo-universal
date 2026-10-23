@@ -77,9 +77,9 @@ export const SwitchKeepsPickerOpenWhileLoading: Story = {
     await userEvent.click(
       within(picker).getByRole('button', { name: /^Agent,/ }),
     );
-    const choices = await body.findByRole('dialog', { name: 'Select Agent' });
+    const choices = await body.findByRole('dialog', { name: 'Agent' });
     await userEvent.click(
-      within(choices).getByRole('button', { name: 'Second Agent' }),
+      within(choices).getByRole('radio', { name: 'Second Agent' }),
     );
     await waitFor(() => expect(choices).not.toBeInTheDocument());
     await expect(picker).toHaveAttribute('data-state', 'open');

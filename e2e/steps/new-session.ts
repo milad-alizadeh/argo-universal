@@ -72,9 +72,7 @@ export async function chooseAgent(page: Page, label: string): Promise<void> {
   await openConfiguration(page);
   await page.getByRole('button', { name: /^Agent(?:,|$)/ }).click();
   await page.getByRole('button', { name: label, exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toHaveCount(
-    0,
-  );
+  await expect(page.getByRole('dialog', { name: 'Agent' })).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: /^Agent(?:,|$)/ }),
   ).toContainText(label);

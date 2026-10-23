@@ -73,23 +73,23 @@ Then(
 
 const chooseModelLabel = /^Model,/;
 
-const effortValueAttribute = 'aria-valuetext';
+// The slider carries no value text; the trigger shows the applied effort on a desktop.
+const effortTrigger = (page: Page): Locator =>
+  page.getByRole('button', { name: agentModelLabel, includeHidden: true });
 
 async function chooseEffort(page: Page, effort: string): Promise<void> {
-  const slider = page.getByRole('slider', { name: 'Effort' });
+  const slider = page.getByRole('slider');
   await slider.focus();
   await slider.press('Home');
 
-  if ((await slider.getAttribute(effortValueAttribute)) !== effort)
+  if (!(await effortTrigger(page).innerText()).includes(effort))
     await slider.press('End');
 }
 
 // Escape closes Configure, and on a desktop the models kept open beside it.
 async function reopenConfiguration(page: Page): Promise<void> {
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Select Model' })).toHaveCount(
-    0,
-  );
+  await expect(page.getByRole('dialog', { name: 'Model' })).toHaveCount(0);
   await page.getByRole('button', { name: agentModelLabel }).click();
 }
 
@@ -138,8 +138,5 @@ async function expectModel(page: Page, model: string): Promise<void> {
 }
 
 async function expectEffort(page: Page, effort: string): Promise<void> {
-  await expect(page.getByRole('slider', { name: 'Effort' })).toHaveAttribute(
-    effortValueAttribute,
-    effort,
-  );
+  await expect(effortTrigger(page)).toContainText(effort);
 }

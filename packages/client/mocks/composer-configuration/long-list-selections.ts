@@ -42,13 +42,10 @@ async function openModelChoices({ userEvent }: PlayContext): Promise<void> {
 async function assertModelMenuInsideWindow(): Promise<void> {
   const overlay = within(document.body);
   await expect(
-    overlay
-      .getByRole('dialog', { name: 'Select Model' })
-      .getBoundingClientRect().bottom,
+    overlay.getByRole('dialog', { name: 'Model' }).getBoundingClientRect()
+      .bottom,
   ).toBeLessThanOrEqual(window.innerHeight);
-  await waitFor(() =>
-    expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
-  );
+  await waitFor(() => expect(overlay.getByRole('slider')).toBeVisible());
 }
 
 async function selectLongModel(

@@ -7,9 +7,7 @@ export async function closeAgentMenus(
 ): Promise<void> {
   await page.mouse.move(0, 0);
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toHaveCount(
-    0,
-  );
+  await expect(page.getByRole('dialog', { name: 'Agent' })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(
     page.getByRole('button', { name: agentModelLabel }),

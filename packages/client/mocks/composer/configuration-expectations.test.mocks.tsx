@@ -2,12 +2,10 @@ import { type SessionConfigSelectOption } from '@repo/contracts';
 import { wideBreakpoint } from '@repo/kit/each-layout';
 import { within, expect, waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { chooseEffort } from '../choose-effort';
+import { chooseEffort, effortIndexOf } from '../choose-effort';
 import {
   type PickerCatalog,
-  valueTextAttribute,
   agentModelLabel,
-  pressedAttribute,
 } from './composer-test-contract.test.mocks';
 import { type PickerStep, chooseModel } from './model-choice.test.mocks';
 
@@ -20,20 +18,21 @@ export async function expectHighEffort({
   const overlay = within(document.body);
   const model = catalog.highEffortModel;
   await chooseModel({ userEvent, width, name: model.name });
-  const slider = await overlay.findByRole('slider', { name: 'Effort' });
+  const slider = await overlay.findByRole('slider');
   await chooseEffort(slider, catalog.highEffortLevels, catalog.highEffort);
-  await expect(slider).toHaveAttribute(valueTextAttribute, catalog.highEffort);
+  await expect(slider).toHaveValue(
+    String(catalog.highEffortLevels.indexOf(catalog.highEffort)),
+  );
   await browserUserEvent.keyboard('{ArrowRight}');
   await expect(
     canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
   ).toHaveTextContent(
     width >= wideBreakpoint()
-      ? (slider.getAttribute(valueTextAttribute) ?? '')
+      ? (catalog.highEffortLevels[effortIndexOf(slider)] ?? '')
       : expectedModelLabel(model.name),
   );
-  await expect(slider).not.toHaveAttribute(
-    valueTextAttribute,
-    catalog.highEffort,
+  await expect(slider).not.toHaveValue(
+    String(catalog.highEffortLevels.indexOf(catalog.highEffort)),
   );
 }
 
@@ -47,13 +46,9 @@ export async function expectEffortFollowsModel({
   await chooseModel({ userEvent, width, name: model.name });
 
   if (modelSupportsEffort(model))
-    await expect(
-      await overlay.findByRole('slider', { name: 'Effort' }),
-    ).toBeVisible();
+    await expect(await overlay.findByRole('slider')).toBeVisible();
   else {
-    await expect(
-      overlay.queryByRole('slider', { name: 'Effort' }),
-    ).not.toBeInTheDocument();
+    await expect(overlay.queryByRole('slider')).not.toBeInTheDocument();
     await expect(
       within(
         canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
@@ -71,12 +66,19 @@ export async function expectDangerousMode({
   const overlay = within(document.body);
   const { planning, dangerous } = catalog;
   await userEvent.click(await canvas.findByRole('button', { name: 'Mode' }));
-  const planMode = await overlay.findByRole('button', { name: planning.name });
+
+  const planMode = await overlay.findByRole('radio', {
+    name: new RegExp('^' + planning.name),
+  });
+
   await waitFor(() => expect(planMode).toBeVisible());
   await expect(
-    overlay.getByRole('button', { name: dangerous.name }),
-  ).toHaveAttribute(pressedAttribute, 'false');
-  await userEvent.click(overlay.getByRole('button', { name: dangerous.name }));
+    overlay.getByRole('radio', { name: new RegExp('^' + dangerous.name) }),
+  ).toHaveAttribute('aria-checked', 'false');
+
+  await userEvent.click(
+    overlay.getByRole('radio', { name: new RegExp('^' + dangerous.name) }),
+  );
   await waitFor(() =>
     expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
   );
@@ -87,8 +89,10 @@ export async function expectDangerousMode({
     ).toHaveTextContent(dangerous.name);
   await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
   await expect(
-    await overlay.findByRole('button', { name: dangerous.name }),
-  ).toHaveAttribute(pressedAttribute, 'true');
+    await overlay.findByRole('radio', {
+      name: new RegExp('^' + dangerous.name),
+    }),
+  ).toHaveAttribute('aria-checked', 'true');
   await userEvent.keyboard('{Escape}');
 }
 

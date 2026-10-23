@@ -102,7 +102,7 @@ async function closeAgentPicker(
   page: Parameters<typeof readAgents>[0],
 ): Promise<void> {
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toBeHidden();
+  await expect(page.getByRole('dialog', { name: 'Agent' })).toBeHidden();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: optionsLabel })).toBeHidden();
 }

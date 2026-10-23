@@ -127,9 +127,7 @@ async function selectHeldEffort({
 async function chooseHeldEffort(
   recorded: HeldScenario['recorded'],
 ): Promise<void> {
-  const slider = await within(document.body).findByRole('slider', {
-    name: 'Effort',
-  });
+  const slider = await within(document.body).findByRole('slider');
 
   await chooseEffort(
     slider,
