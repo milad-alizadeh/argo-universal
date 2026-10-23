@@ -139,5 +139,5 @@ export function usePageSlide(
 
     // The pages are laid out side by side, so a page's own place in the row comes off where it is to stand.
     return { transform: [{ translateX: (offset - index) * width }] };
-  });
+  }, [motion, index, width]);
 }

@@ -55,6 +55,7 @@ function useHeldFrame(frames: Frames, running: boolean): void {
     (isRunning) => {
       if (!isRunning) drawFrame(frames);
     },
+    [frames, running],
   );
 }
 

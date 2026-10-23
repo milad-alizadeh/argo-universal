@@ -63,7 +63,7 @@ function useCellStyle(
           ? 1 - (1 - restingOpacity) * (sinceLit / fadeSteps)
           : restingOpacity,
     };
-  });
+  }, [index, step, still]);
 }
 
 interface CellProps {
