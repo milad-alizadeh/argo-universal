@@ -32,7 +32,7 @@ export type PopoverContentProps = {
   accessibilityLabel?: string;
   className?: string;
   style?: StyleProp<ViewStyle>;
-  // Web only: a choice list at Paper's 320 width, drawing its own insets, as a Combobox's choices.
+  // Web only: a choice list at Paper's 320 width, drawing its own insets, as a picker's choices.
   list?: boolean;
   // Web only: where focus goes as the popover opens and after it closes.
   onOpenAutoFocus?: (event: Event) => void;

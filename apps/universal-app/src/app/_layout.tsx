@@ -112,7 +112,7 @@ function RootStack(): React.JSX.Element {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(frame)" />
-      <Stack.Screen name="page" />
+      <Stack.Screen name="screen" />
       <Stack.Screen
         name="(dev)/storybook"
         options={{ fullScreenGestureEnabled: false }}

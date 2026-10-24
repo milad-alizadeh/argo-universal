@@ -24,12 +24,12 @@ export function StackStoryRoot(): ReactNode {
 }
 
 export function StackStoryScreen(): ReactNode {
-  const { story, page } = useLocalSearchParams<{
+  const { story, screen } = useLocalSearchParams<{
     story: string;
-    page: string;
+    screen: string;
   }>();
 
-  const Screen = registeredStack(story)?.pages[page];
+  const Screen = registeredStack(story)?.pages[screen];
 
   return Screen ? <Screen /> : null;
 }

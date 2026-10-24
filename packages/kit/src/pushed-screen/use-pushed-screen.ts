@@ -11,6 +11,7 @@ import {
   forgetPushedScreen,
   isRouted,
   newScreenId,
+  releasePushedScreen,
   showPushedScreen,
   subscribePushedScreens,
 } from './pushed-screen-store';
@@ -24,7 +25,7 @@ interface PushedScreen {
 
 /*
  * Pushes a page on the screen's own navigation stack, the App's Expo Router stack or a story's `withStack`, through
- * the one route `/page/[id]` that both define. Returns the press that pushes it. The page stays current with this
+ * the one route `/screen/[id]` that both define. Returns the press that pushes it. The page stays current with this
  * component's props while it is shown, and `onExit` runs when Back (or `router.back()`) takes it away.
  */
 export function usePushedScreen(page: PushedScreen): () => void {
@@ -41,7 +42,7 @@ export function usePushedScreen(page: PushedScreen): () => void {
   return () => {
     showPushedScreen(id, page.content());
     setOpen(true);
-    router.push({ pathname: '/page/[id]', params: { id } });
+    router.push({ pathname: '/screen/[id]', params: { id } });
   };
 }
 
@@ -53,6 +54,14 @@ function useLiveContent(
   useLayoutEffect(() => {
     if (open) showPushedScreen(id, content());
   });
+
+  // The opener unmounting lets go of the page, or leaves it for Back when it is still drawn.
+  useEffect(
+    () => (): void => {
+      releasePushedScreen(id);
+    },
+    [id],
+  );
 }
 
 const left = (open: boolean, was: boolean, now: boolean): boolean =>

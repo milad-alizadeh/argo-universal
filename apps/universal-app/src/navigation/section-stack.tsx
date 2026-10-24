@@ -12,7 +12,7 @@ import type { ComponentProps, PropsWithChildren } from 'react';
 import { Platform } from 'react-native';
 import { DrawerMenuButton } from './drawer-menu-button';
 import { headerTitleOptions } from './header-title';
-import { pageLayout } from './page-layout';
+import { screenLayout } from './screen-layout';
 
 type ScreenHeaderProps = SectionList['rootHeader'];
 
@@ -119,7 +119,7 @@ export function PageStack(props: PageStackProps): React.JSX.Element {
   );
 
   return (
-    <Stack screenOptions={screenOptions} screenLayout={pageLayout}>
+    <Stack screenOptions={screenOptions} screenLayout={screenLayout}>
       <Stack.Screen {...rootScreen(props, rootOptions)} />
       {props.children}
     </Stack>
@@ -139,5 +139,5 @@ function rootScreen(
 
 // The stack for pages a component pushes over the Frame (`app/page`): a narrow window's stock header, with Back.
 export function PushedStack(): React.JSX.Element {
-  return <Stack screenOptions={narrowOptions} screenLayout={pageLayout} />;
+  return <Stack screenOptions={narrowOptions} screenLayout={screenLayout} />;
 }

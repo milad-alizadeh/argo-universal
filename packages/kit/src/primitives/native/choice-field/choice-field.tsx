@@ -30,7 +30,7 @@ export function ChoiceHost(props: {
   return <Host {...hostSize}>{props.children}</Host>;
 }
 
-// A Drill row names its own Combobox, so only a field draws its own label.
+// A picker row names its own choice, so only a field draws its own label.
 export function ChoiceField(props: FieldProps): React.JSX.Element {
   return props.variant === 'row' ? (
     props.children

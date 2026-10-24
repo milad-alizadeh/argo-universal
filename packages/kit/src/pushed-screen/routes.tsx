@@ -7,7 +7,7 @@ import {
   subscribePushedScreens,
 } from './pushed-screen-store';
 
-// The one route (`/page/[id]`) every pushed page uses: the App's `app/page/[id].tsx` and a story's `withStack` both render it.
+// The one route (`/screen/[id]`) every pushed page uses: the App's `app/screen/[id].tsx` and a story's `withStack` both render it.
 export function PushedScreenRoute(): ReactNode {
   const { id } = useLocalSearchParams<{ id: string }>();
 

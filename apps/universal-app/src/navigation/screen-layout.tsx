@@ -16,7 +16,7 @@ interface BannerProps {
   overHeader: boolean;
 }
 
-// Under a header that floats over the page, the banner moves down by the header's height, as the stack reports it.
+// Under a header that floats over the screen, the banner moves down by the header's height, as the stack reports it.
 function UnderHeaderBanner({ overHeader }: BannerProps): React.JSX.Element {
   const headerHeight = useAnimatedHeaderHeight();
 
@@ -27,19 +27,19 @@ function UnderHeaderBanner({ overHeader }: BannerProps): React.JSX.Element {
   );
 }
 
-// The phone shell's Connection banner floats under the page's header; a wide window's sits over the panes.
+// The phone shell's Connection banner floats under the screen's header; a wide window's sits over the panes.
 function NarrowBanner(props: BannerProps): React.JSX.Element | null {
   return useWide() ? null : <UnderHeaderBanner {...props} />;
 }
 
-// A page under another page of its section, such as a Project under Projects, which keeps its Back beside the list.
-const nestedPage = (route: { name: string }): boolean =>
+// A screen under another screen of its section, such as a Project under Projects, which keeps its Back beside the list.
+const nestedScreen = (route: { name: string }): boolean =>
   route.name.includes('/') && !route.name.endsWith('/index');
 
-// The page keeps its place in the tree at every width; while shown, its Inspector draws in the Frame's column.
-export const pageLayout: ScreenLayout = ({ children, options, route }) => (
+// The screen keeps its place in the tree at every width; while shown, its Inspector draws in the Frame's column.
+export const screenLayout: ScreenLayout = ({ children, options, route }) => (
   <View className="flex-1">
-    <ScreenBesideList value={!nestedPage(route)}>
+    <ScreenBesideList value={!nestedScreen(route)}>
       <ScreenInspector>{children}</ScreenInspector>
     </ScreenBesideList>
     <NarrowBanner overHeader={options.headerTransparent === true} />

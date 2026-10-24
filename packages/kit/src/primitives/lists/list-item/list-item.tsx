@@ -67,7 +67,7 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
 }
 
 /*
- * Paper's Combobox: a chosen row shows its check only, with no selected fill. Every choosing List
+ * A chosen row shows its check only, with no selected fill. Every choosing List
  * draws that check, on a menu row and in a sheet's grouped card alike, so none of them tints the
  * row behind it; a tint there is the web leaking into a stock picker, and it paints over the
  * separator under the chosen row. A selected row without a check, such as the Sessions sidebar's,
@@ -106,7 +106,7 @@ export function ListItem(props: ListItemProps): ReactElement {
   return <ChoosingItem {...props} />;
 }
 
-// A menu row's check leads the row, as in Paper's Combobox; elsewhere only a choosing List draws it, trailing.
+// A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
   const menu = useInMenu();

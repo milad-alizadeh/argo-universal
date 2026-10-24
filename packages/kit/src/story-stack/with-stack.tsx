@@ -47,8 +47,8 @@ function RootRoute(): React.JSX.Element {
 
 function ScreenRoute(): React.JSX.Element | null {
   const { pages } = use(StackScreensContext);
-  const { page } = useLocalSearchParams<{ page: string }>();
-  const Component = pages[page];
+  const { screen } = useLocalSearchParams<{ screen: string }>();
+  const Component = pages[screen];
 
   if (!Component) return null;
 
@@ -70,8 +70,8 @@ function routes(): ExpoRootContext {
   const files = new Map<string, { default: ComponentType }>([
     ['./_layout.js', { default: StackLayout }],
     ['./index.js', { default: RootRoute }],
-    ['./page/[id].js', { default: PushedScreenRoute }],
-    ['./[page].js', { default: ScreenRoute }],
+    ['./screen/[id].js', { default: PushedScreenRoute }],
+    ['./[screen].js', { default: ScreenRoute }],
   ]);
 
   return Object.assign((key: string) => files.get(key), {
