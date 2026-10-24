@@ -30,6 +30,12 @@ export const actionProps = z.object({
     .boolean()
     .optional()
     .describe('Disable activation without hiding the Action.'),
+  selected: z
+    .boolean()
+    .optional()
+    .describe(
+      'Marks the chosen Action in a submenu of choices, drawn with a check; a top-level header Action is a verb and does not use it.',
+    ),
   onPress: pressHandler.describe('The Plugin handler or built-in App Action.'),
   role: z
     .enum(['cancel', 'destructive'])

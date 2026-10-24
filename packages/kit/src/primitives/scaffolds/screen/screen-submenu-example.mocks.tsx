@@ -53,3 +53,34 @@ function reporting(
     />
   );
 }
+
+const modes = ['Compact', 'Regular'] as const;
+
+function modeAction(
+  mode: (typeof modes)[number],
+  chosen: (typeof modes)[number],
+  choose: Choose,
+): ReactElement {
+  return (
+    <Action
+      key={mode}
+      label={mode}
+      selected={mode === chosen}
+      onPress={() => choose(mode)}
+    />
+  );
+}
+
+// A header submenu of choices: its Section's Actions are `selected` for the chosen one, which a menu draws with a check.
+export function choiceSubmenu(
+  chosen: (typeof modes)[number],
+  choose: Choose,
+): ReactElement {
+  return (
+    <Action key="filter" label="Filter" icon="filters">
+      <Action.Section key="layout" title="Layout">
+        {modes.map((mode) => modeAction(mode, chosen, choose))}
+      </Action.Section>
+    </Action>
+  );
+}

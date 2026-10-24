@@ -9,6 +9,7 @@ import {
   submenuBadgeText,
   submenuCountText,
   submenuGroups,
+  submenuLabel,
   type ActionGroup,
   type ActionProps,
   type DeclaredAction,
@@ -83,7 +84,7 @@ const submenuItem = (submenu: DeclaredSubmenu) =>
   ({
     ...tinted,
     icon: toolbarIcon(submenu.icon),
-    accessibilityLabel: submenu.label,
+    accessibilityLabel: submenuLabel(submenu),
     separateBackground: true,
   }) as const;
 
@@ -173,6 +174,7 @@ function menuAction(action: DeclaredAction): ReactElement {
     onPress: action.onPress,
     disabled: action.disabled,
     destructive: action.tone === 'danger',
+    isOn: action.selected,
   };
 
   return (

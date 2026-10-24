@@ -4,6 +4,7 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import { Action } from '#primitives/actions/action';
 import { Screen } from './index';
 import {
+  choiceSubmenu,
   exampleSubmenu,
   type SubmenuBadge,
 } from './screen-submenu-example.mocks';
@@ -40,6 +41,29 @@ const headerSubmenu: Story = {
 export const HeaderSubmenuPhone = atWidth(screenWidths.Phone, headerSubmenu);
 
 export const HeaderSubmenuWide = atWidth(screenWidths.Wide, headerSubmenu);
+
+const picked = fn();
+
+// A submenu of choices checks the chosen one and runs the Action picked.
+const headerChoices: Story = {
+  args: { actions: choiceSubmenu('Regular', picked) },
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    picked.mockClear();
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
+    await expect(
+      await page.findByRole('menuitemradio', { name: 'Regular' }),
+    ).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(
+      await page.findByRole('menuitemradio', { name: 'Compact' }),
+    );
+    await expect(picked).toHaveBeenLastCalledWith('Compact');
+  },
+};
+
+export const HeaderChoicesPhone = atWidth(screenWidths.Phone, headerChoices);
+
+export const HeaderChoicesWide = atWidth(screenWidths.Wide, headerChoices);
 
 const chosen = fn();
 

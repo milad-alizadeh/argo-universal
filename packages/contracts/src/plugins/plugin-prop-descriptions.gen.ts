@@ -289,6 +289,8 @@ export type WireSchemaHints = {
     "tone": PropValue<"Action", "tone">;
     /** Disable activation without hiding the Action. */
     "disabled": PropValue<"Action", "disabled">;
+    /** Marks the chosen Action in a submenu of choices, drawn with a check; a top-level header Action is a verb and does not use it. */
+    "selected": PropValue<"Action", "selected">;
     /** The Plugin handler or built-in App Action. */
     "onPress": PropValue<"Action", "onPress">;
     /** An Alert answer that dismisses the question, or one that destroys data. */

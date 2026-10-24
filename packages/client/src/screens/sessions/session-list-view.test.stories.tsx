@@ -152,7 +152,7 @@ export const ArchiveFromARowOnPhone: Story = archiveFromARowAt('phone');
 
 export const ArchiveFromARowWide: Story = archiveFromARowAt('wide');
 
-// A phone's Sessions Screen: New Session is its primary Action, and the filter a Menu above the list, since a header holds verbs only; the view it chooses stays chosen.
+// A phone's Sessions Screen: New Session is its primary Action, and the filter a header submenu of checked choices; the view it chooses stays chosen and marks the filter Changed.
 export const PhonePageFiltersTheView: Story = {
   beforeEach: () => settleViewport(layoutWidths.phone),
   play: async ({ canvas, userEvent }) => {
@@ -168,8 +168,11 @@ export const PhonePageFiltersTheView: Story = {
     await userEvent.click(
       await screen.findByRole('menuitemradio', { name: 'Compact' }),
     );
+    await expect(
+      await canvas.findByRole('button', { name: 'Filter Sessions, Changed' }),
+    ).toBeVisible();
     await userEvent.click(
-      canvas.getByRole('button', { name: /^Filter Sessions/ }),
+      canvas.getByRole('button', { name: 'Filter Sessions, Changed' }),
     );
     await expect(
       await screen.findByRole('menuitemradio', { name: 'Compact' }),
