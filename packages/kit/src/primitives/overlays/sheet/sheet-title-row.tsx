@@ -6,18 +6,7 @@ import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import type { SheetScreenAction } from './sheet-props';
-import type { SheetScreenEntry } from './sheet-screens';
-
-type TitleRowProps = Pick<SheetScreenEntry, 'title' | 'action'> & {
-  // A pushed page's way back to the page below it.
-  backLabel?: string;
-  onBack: () => void;
-  /*
-   * The sheet's own way out, which only the root page carries: there is nothing below it to go back to, and
-   * the leading end of its title row would otherwise stand empty (owner, 2026-10-21).
-   */
-  onClose?: () => void;
-};
+import { drawnAsIcon, type TitleRowProps } from './sheet-title-row-props';
 
 // A page's title, centred, with Back or Close before it and the page's action after it.
 export function SheetTitleRow(props: TitleRowProps): ReactElement {
@@ -106,12 +95,6 @@ function Action({ action }: TitleRowProps): ReactElement | null {
 
   return <TextAction {...action} />;
 }
-
-// The header's icon buttons have no danger tone, so a destructive action keeps its red label.
-const drawnAsIcon = (
-  action: SheetScreenAction,
-): action is SheetScreenAction & { icon: IconName } =>
-  action.icon !== undefined && !action.destructive;
 
 function TextAction(action: SheetScreenAction): ReactElement {
   return (

@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
+import { HeaderIconButton } from '#primitives/native/header-icon-button';
 import { Host } from '#primitives/native/host';
-import { HeaderIconButton } from './screen-action-button.android';
 
 // The story's root page is a nested stack's first page, so its header has no Back; this top app bar button returns to Storybook.
 export function ScreenStoryBack(): ReactNode {
@@ -15,7 +15,7 @@ export function ScreenStoryBack(): ReactNode {
 function backButton(back: () => void): ReactNode {
   return (
     <Host matchContents>
-      <HeaderIconButton icon="chevron-left" label="Back" onPress={back} />
+      <HeaderIconButton icon="arrow-left" label="Back" onPress={back} />
     </Host>
   );
 }

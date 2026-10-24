@@ -35,7 +35,7 @@ async function testFastMode(
   await context.userEvent.click(trigger);
   const fast = await assertFastModeOff(context);
   await turnFastModeOn(context);
-  await assertFastModeTabOrder(context, fast, width);
+  await assertFastModeTabOrder(context, fast);
 }
 
 async function assertFastModeOff({ args }: PlayContext): Promise<HTMLElement> {
@@ -57,21 +57,15 @@ async function turnFastModeOn({ userEvent, args }: PlayContext): Promise<void> {
   );
 }
 
-// Tab follows the rows: a phone's sheet puts the switches before Effort, a desktop menu after it (Paper 9FK-0).
+// Tab follows the rows: Effort first and Fast mode last, on every width (owner, 2026-10-24).
 async function assertFastModeTabOrder(
   { userEvent }: PlayContext,
   fast: HTMLElement,
-  width: number,
 ): Promise<void> {
-  const effort = within(document.body).getByRole('slider', { name: 'Effort' });
-
-  const [first, next] =
-    width >= layoutWidths.wide ? [effort, fast] : [fast, effort];
-
-  first.focus();
+  within(document.body).getByRole('slider', { name: 'Effort' }).focus();
 
   await userEvent.tab();
-  await expect(next).toHaveFocus();
+  await expect(fast).toHaveFocus();
   await userEvent.keyboard('{Escape}');
 }
 

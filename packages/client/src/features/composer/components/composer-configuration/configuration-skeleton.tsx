@@ -56,7 +56,7 @@ export function useConfigurationRows(
  */
 const choiceTitles = ['Model', 'Reasoning', 'Response style', 'Sandbox'];
 
-const tuningTitles = ['Fast mode', 'Effort'];
+const tuningTitles = ['Effort', 'Fast mode'];
 
 const titleAt = (titles: string[], index: number): string =>
   titles.at(index) ?? titles.at(-1) ?? '';

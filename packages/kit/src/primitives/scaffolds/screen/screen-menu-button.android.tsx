@@ -13,12 +13,12 @@ import {
   type ActionGroup,
   type DeclaredSubmenu,
 } from '#primitives/actions/action';
-import { Host } from '#primitives/native/host';
-import { MenuDropdown, nativeMenuItems } from '#primitives/overlays/menu';
 import {
   HeaderIconButton,
   type HeaderIconButtonProps,
-} from './screen-action-button.android';
+} from '#primitives/native/header-icon-button';
+import { Host } from '#primitives/native/host';
+import { MenuDropdown, nativeMenuItems } from '#primitives/overlays/menu';
 
 interface ScreenMenuButtonProps {
   icon: HeaderIconButtonProps['icon'];

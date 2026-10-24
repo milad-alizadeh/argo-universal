@@ -115,9 +115,9 @@ function choicesSection(props: SectionProps): ReactElement {
   );
 }
 
-// Paper puts Effort before the switches on a desktop; a phone's sheet keeps its switches first.
+// Effort first and the Agent's switches after it, Fast mode last, on every platform (owner, 2026-10-24).
 function tuningSection(props: ContentsProps): ReactElement | null {
-  const { configuration, wide } = props;
+  const { configuration } = props;
 
   if (!hasTuning(configuration)) return null;
 
@@ -129,7 +129,8 @@ function tuningSection(props: ContentsProps): ReactElement | null {
       key="tuning"
       footer={configurationNotice(configuration)}
     >
-      {wide ? [effort, ...switchRows] : [...switchRows, effort]}
+      {effort}
+      {switchRows}
     </FieldGroup.Section>
   );
 }
