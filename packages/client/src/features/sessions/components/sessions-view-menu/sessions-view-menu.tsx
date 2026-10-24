@@ -18,12 +18,15 @@ export interface SessionsViewMenuProps {
 // The App E2E steps find the trigger by this name.
 const triggerLabel = 'Filter Sessions';
 
+// The dot is only seen, so a changed view says so after the name, as the dot's own label once did.
+const changedLabel = `${triggerLabel}, Changed`;
+
 function filterTrigger(changed: boolean, icon: IconName): React.JSX.Element {
   return (
     <ListHeaderButton
       icon={icon}
       dot={changed ? 'filter' : undefined}
-      accessibilityLabel={triggerLabel}
+      accessibilityLabel={changed ? changedLabel : triggerLabel}
     />
   );
 }
@@ -42,7 +45,7 @@ export function SessionsViewMenu({
 
   return (
     <Menu
-      accessibilityLabel={triggerLabel}
+      accessibilityLabel={changed ? changedLabel : triggerLabel}
       groups={sessionsViewGroups(view, onViewChange)}
       trigger={filterTrigger(changed, icon)}
     />

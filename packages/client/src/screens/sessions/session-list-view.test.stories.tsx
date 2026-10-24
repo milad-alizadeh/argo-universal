@@ -163,13 +163,13 @@ export const PhonePageFiltersTheView: Story = {
       canvas.getByRole('button', { name: 'New Session' }),
     ).toBeEnabled();
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Filter Sessions' }),
+      canvas.getByRole('button', { name: /^Filter Sessions/ }),
     );
     await userEvent.click(
       await screen.findByRole('menuitemradio', { name: 'Compact' }),
     );
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Filter Sessions' }),
+      canvas.getByRole('button', { name: /^Filter Sessions/ }),
     );
     await expect(
       await screen.findByRole('menuitemradio', { name: 'Compact' }),
