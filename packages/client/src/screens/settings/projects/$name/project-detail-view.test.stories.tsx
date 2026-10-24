@@ -1,4 +1,5 @@
 import { layoutWidths } from '@repo/kit/each-layout';
+import { Text } from '@repo/kit/primitives/content/text';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
@@ -89,5 +90,47 @@ export const SaysWhenTheProjectIsMissing: Story = {
   args: { name: 'old-api', project: { status: 'missing' } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/no Project named old-api/)).toBeVisible();
+  },
+};
+
+// ADR-0035: the Project details Slot sits between Folder and New Sessions.
+export const ThePluginSlotSitsBetweenFolderAndNewSessions: Story = {
+  args: { renderPluginSlot: () => <Text>Plugin slot content</Text> },
+  play: async ({ canvas }) => {
+    const folder = await canvas.findByText('Folder');
+    const slot = await canvas.findByText('Plugin slot content');
+    const newSessions = await canvas.findByText('New Sessions');
+
+    await expect(
+      folder.compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    await expect(
+      slot.compareDocumentPosition(newSessions) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  },
+};
+
+export const EachNewSessionsRowShowsItsDescription: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText("A new worktree keeps each Session's files apart"),
+    ).toBeVisible();
+    await expect(
+      canvas.getByText('New worktrees branch from it'),
+    ).toBeVisible();
+    await expect(
+      canvas.getByText(
+        'Archiving a Session removes its folder; the branch stays',
+      ),
+    ).toBeVisible();
+  },
+};
+
+export const ShowsASpinnerWhileTheProjectLoads: Story = {
+  args: { project: { status: 'loading' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Loading the Project…')).toBeVisible();
+    await expect(canvas.getByRole('progressbar')).toBeVisible();
   },
 };

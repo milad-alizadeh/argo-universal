@@ -6,6 +6,7 @@ import type {
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { SettingsLoading } from '../../settings-loading';
 import { settingFieldSection } from './plugin-setting-field-row';
 
 export type PluginLoad =
@@ -38,19 +39,28 @@ export function PluginSettingsDetailView(
 
   return (
     <Screen title={props.title} caption={caption} onBack={onBack}>
-      <FieldGroup>{pluginSections(body)}</FieldGroup>
+      <PluginBody {...body} />
     </Screen>
   );
 }
 
 type BodyProps = Omit<PluginSettingsDetailViewProps, 'caption' | 'onBack'>;
 
-// FieldGroup finds its sections by element type, so each is an element built here, not a component.
-function pluginSections(props: BodyProps): React.JSX.Element {
+function PluginBody(props: BodyProps): React.JSX.Element {
   const { plugin } = props;
 
-  if (plugin.status !== 'loaded')
-    return unloadedSection(plugin.status, props.title);
+  if (plugin.status === 'loading')
+    return <SettingsLoading label="Loading the Plugin…" />;
+
+  return <FieldGroup>{pluginSections(props, plugin)}</FieldGroup>;
+}
+
+// FieldGroup finds its sections by element type, so each is an element built here, not a component.
+function pluginSections(
+  props: BodyProps,
+  plugin: Exclude<PluginLoad, { status: 'loading' }>,
+): React.JSX.Element {
+  if (plugin.status === 'missing') return missingSection(props.title);
 
   return (
     <>
@@ -75,17 +85,10 @@ const enabledSection = (
   </FieldGroup.Section>
 );
 
-const unloadedSection = (
-  status: 'loading' | 'missing',
-  title: string,
-): React.JSX.Element => (
+const missingSection = (title: string): React.JSX.Element => (
   <FieldGroup.Section>
     <FieldGroup.Value
-      title={
-        status === 'loading'
-          ? 'Loading the Plugin…'
-          : `The Server has no Plugin named ${title}.`
-      }
+      title={`The Server has no Plugin named ${title}.`}
       value=""
     />
   </FieldGroup.Section>

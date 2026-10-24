@@ -3,7 +3,8 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { homePath } from '#features/settings';
-import { newSessionsSection } from './project-detail-new-sessions';
+import { SettingsLoading } from '../../settings-loading';
+import { newSessionsSections } from './project-detail-new-sessions';
 import { removeSection } from './project-detail-remove';
 
 export type ProjectLoad =
@@ -19,7 +20,7 @@ export interface ProjectDetailViewProps {
   // The Device the Project is on, given only when that is another Device; pairing does not exist yet, so the screen passes none.
   otherDevice?: string;
   onBack?: () => void;
-  // What Plugins add to this Project (the `argo/project/details/v1` Slot), drawn below the FieldGroup.
+  // What Plugins add to this Project (the `argo/project/details/v1` Slot), drawn between Folder and New Sessions.
   renderPluginSlot?: (project: ProjectInfo) => React.ReactNode;
 }
 
@@ -59,38 +60,31 @@ function ProjectBody({
 
 type UnloadedProps = { status: 'loading' | 'missing'; name: string };
 
-const UnloadedProject = ({
-  status,
-  name,
-}: UnloadedProps): React.JSX.Element => (
-  <FieldGroup>
-    <FieldGroup.Section>
-      <FieldGroup.Value title={unloadedTitle(status, name)} value="" />
-    </FieldGroup.Section>
-  </FieldGroup>
-);
-
-const unloadedTitle = (
-  status: UnloadedProps['status'],
-  name: string,
-): string =>
-  status === 'loading'
-    ? 'Loading the Project…'
-    : `The Server has no Project named ${name}.`;
+const UnloadedProject = ({ status, name }: UnloadedProps): React.JSX.Element =>
+  status === 'loading' ? (
+    <SettingsLoading label="Loading the Project…" />
+  ) : (
+    <FieldGroup>
+      <FieldGroup.Section>
+        <FieldGroup.Value
+          title={`The Server has no Project named ${name}.`}
+          value=""
+        />
+      </FieldGroup.Section>
+    </FieldGroup>
+  );
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
 function ProjectSections(props: SectionsProps): React.JSX.Element {
   const { project, otherDevice, renderPluginSlot } = props;
 
   return (
-    <>
-      <FieldGroup>
-        {folderSection(project, otherDevice)}
-        {newSessionsSection(project)}
-        {removeSection()}
-      </FieldGroup>
+    <FieldGroup>
+      {folderSection(project, otherDevice)}
       {renderPluginSlot?.(project)}
-    </>
+      {newSessionsSections(project)}
+      {removeSection()}
+    </FieldGroup>
   );
 }
 

@@ -4,6 +4,7 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { formatServerClock, formatServerStart } from '#features/connection';
+import { SettingsLoading } from '../settings-loading';
 
 export type ServerDetails =
   | { status: 'loading' }
@@ -45,23 +46,22 @@ function ServerForm({ server }: { server: ServerDetails }): React.JSX.Element {
     ),
   );
 
-  return (
-    <FieldGroup>
-      <FieldGroup.Section title="Server">
-        {serverRows(server)}
-      </FieldGroup.Section>
-    </FieldGroup>
-  );
+  // A failed load keeps the loading note: the toast says why, and the query retries when the Connection reopens.
+  if (server.status !== 'loaded')
+    return <SettingsLoading label="Connecting to the Server…" />;
+
+  return <ServerRows server={server} />;
 }
 
-// A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
-function serverRows(server: ServerDetails): React.JSX.Element {
-  if (server.status !== 'loaded') {
-    return <ConnectingRow />;
-  }
-
-  return loadedRows(server);
-}
+const ServerRows = ({
+  server,
+}: {
+  server: LoadedServer;
+}): React.JSX.Element => (
+  <FieldGroup>
+    <FieldGroup.Section title="Server">{loadedRows(server)}</FieldGroup.Section>
+  </FieldGroup>
+);
 
 function loadedRows(server: LoadedServer): React.JSX.Element {
   return (
@@ -80,9 +80,4 @@ function loadedRows(server: LoadedServer): React.JSX.Element {
 // A Server detail is a read-only value row.
 function DetailRow(props: { title: string; value: string }): React.JSX.Element {
   return <FieldGroup.Value {...props} />;
-}
-
-// Until the Server answers, the one row says so, as a value row with nothing beside it yet.
-function ConnectingRow(): React.JSX.Element {
-  return <FieldGroup.Value title="Connecting to the Server…" value="" />;
 }

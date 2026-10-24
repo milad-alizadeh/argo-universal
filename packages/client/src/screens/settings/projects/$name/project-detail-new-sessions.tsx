@@ -7,50 +7,73 @@ const checkoutOptions = [
   { value: 'main', label: 'Local' },
 ] as const;
 
-// One footer for the section, as iOS Settings explains a group of rows; drawn on every platform.
-const footer =
-  "A new worktree keeps each Session's files apart and branches from the base branch. Archiving a Session removes its folder; the branch stays.";
+/*
+ * Each row says what it changes, as its own section's footer (a FieldGroup row has no description of its own).
+ * FieldGroup finds its sections by element type, so these are elements built here, the first one titled.
+ */
+const descriptions = {
+  startIn: "A new worktree keeps each Session's files apart",
+  baseBranch: 'New worktrees branch from it',
+  archive: 'Archiving a Session removes its folder; the branch stays',
+};
 
-type ChoiceProps = { choice: ProjectInfo['checkoutChoice'] };
+type Choice = ProjectInfo['checkoutChoice'];
 
 // Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
-export const newSessionsSection = (project: ProjectInfo): React.JSX.Element => (
-  <FieldGroup.Section title="New Sessions" footer={footer}>
+export const newSessionsSections = (
+  project: ProjectInfo,
+): React.JSX.Element => (
+  <>
+    {startInSection(project.checkoutChoice)}
+    {baseBranchSection(project.checkoutChoice)}
+    {archiveSection()}
+  </>
+);
+
+const startInSection = (choice: Choice): React.JSX.Element => (
+  <FieldGroup.Section title="New Sessions" footer={descriptions.startIn}>
     <FieldGroup.Picker
       title="Start in"
-      value={project.checkoutChoice.type}
+      value={choice.type}
       options={checkoutOptions}
       presentation="menu"
       disabled
       onValueChange={ignoreChoice}
     />
-    <BaseBranchRow choice={project.checkoutChoice} />
-    <ArchiveRow />
   </FieldGroup.Section>
 );
 
-const ArchiveRow = (): React.JSX.Element => (
-  <FieldGroup.Toggle
-    title="Delete the worktree on archive"
-    value={false}
+const archiveSection = (): React.JSX.Element => (
+  <FieldGroup.Section footer={descriptions.archive}>
+    <FieldGroup.Toggle
+      title="Delete the worktree on archive"
+      value={false}
+      disabled
+      onValueChange={ignoreChoice}
+    />
+  </FieldGroup.Section>
+);
+
+const baseBranchSection = (choice: Choice): React.JSX.Element | null =>
+  choice.type === 'worktree' ? (
+    <FieldGroup.Section footer={descriptions.baseBranch}>
+      <BaseBranchPicker baseBranch={choice.baseBranch} />
+    </FieldGroup.Section>
+  ) : null;
+
+const BaseBranchPicker = ({
+  baseBranch,
+}: {
+  baseBranch: string;
+}): React.JSX.Element => (
+  <FieldGroup.Picker
+    title="Base branch"
+    value={baseBranch}
+    options={[{ value: baseBranch, label: baseBranch }]}
+    presentation="menu"
     disabled
     onValueChange={ignoreChoice}
   />
 );
-
-function BaseBranchRow({ choice }: ChoiceProps): React.JSX.Element | null {
-  if (choice.type !== 'worktree') return null;
-
-  return (
-    <FieldGroup.Picker
-      title="Base branch"
-      value={choice.baseBranch}
-      options={[{ value: choice.baseBranch, label: choice.baseBranch }]}
-      presentation="menu"
-      disabled
-      onValueChange={ignoreChoice}
-    />
-  );
-}
 
 function ignoreChoice(): void {}

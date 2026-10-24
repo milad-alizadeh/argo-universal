@@ -163,3 +163,22 @@ export const SaysWhenThePluginIsMissing: Story = {
     await expect(canvas.getByText(/no Plugin named old-plugin/)).toBeVisible();
   },
 };
+
+export const ShowsASpinnerWhileThePluginLoads: Story = {
+  args: { plugin: { status: 'loading' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Loading the Plugin…')).toBeVisible();
+    await expect(canvas.getByRole('progressbar')).toBeVisible();
+  },
+};
+
+export const EachFieldShowsItsDescription: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText('The GitHub host your repositories are on.'),
+    ).toBeVisible();
+    await expect(
+      canvas.getByText('Closed and merged pull requests stay in the list.'),
+    ).toBeVisible();
+  },
+};

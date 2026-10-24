@@ -53,6 +53,7 @@ export const ShowsConnectingUntilServerAnswers: Story = {
   args: { server: { status: 'loading' } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Connecting to the Server…')).toBeVisible();
+    await expect(canvas.getByRole('progressbar')).toBeVisible();
     await expect(canvas.queryByText('Version')).toBeNull();
   },
 };
