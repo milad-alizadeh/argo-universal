@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@repo/kit/primitives/overlays/dialog';
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { renamedTitle } from './renamed-title';
 
@@ -49,20 +49,42 @@ export function RenameSessionDialog(
 
 // Mounted with the dialog's content, so each opening starts from the Session's title.
 function RenameForm(props: RenameSessionDialogProps): ReactElement {
-  const [draft, setDraft] = useState(props.title);
-  const save = (): void => saveDraft(draft, props);
+  const draft = useDraft(props.title);
+  const save = (): void => saveDraft(draft.latest.current, props);
 
   return (
     <>
       <RenameHeading />
       <RenameField
         invalid={props.error !== undefined}
-        {...{ value: draft, onChangeText: setDraft, onSubmit: save }}
+        {...{ value: draft.text, onChangeText: draft.change, onSubmit: save }}
       />
       <RenameError error={props.error} />
       <RenameActions onSave={save} />
     </>
   );
+}
+
+type Draft = {
+  text: string;
+  latest: { current: string };
+  change: (text: string) => void;
+};
+
+/*
+ * Android commits the text and submits in one tick, before the state re-renders, so a save reads `latest`, which
+ * a change sets at once.
+ */
+function useDraft(title: string): Draft {
+  const [text, setText] = useState(title);
+  const latest = useRef(title);
+
+  const change = (next: string): void => {
+    latest.current = next;
+    setText(next);
+  };
+
+  return { text, latest, change };
 }
 
 // A blank title, or the same one again, closes the dialog and keeps the old title.
