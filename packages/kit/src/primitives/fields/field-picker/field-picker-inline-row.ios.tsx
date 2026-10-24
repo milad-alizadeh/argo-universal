@@ -39,7 +39,12 @@ function OptionLabel(props: { option: FieldPickerOption }): ReactElement {
 
   return (
     <>
-      <RowTitle title={option.label} leading={option.icon} tone={option.tone} />
+      <RowTitle
+        title={option.label}
+        leading={option.icon}
+        logo={option.logo}
+        tone={option.tone}
+      />
       <Subtitle text={option.subtitle} />
     </>
   );

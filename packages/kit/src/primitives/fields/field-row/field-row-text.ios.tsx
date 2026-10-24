@@ -1,9 +1,10 @@
-import { Label } from '@expo/ui/swift-ui';
+import { HStack, Label } from '@expo/ui/swift-ui';
 import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { NativeText } from '#primitives/content/native-text';
 import { nativeIconName } from '../../../symbols/native-icon-name';
+import { RowLogo } from './field-row-logo';
 import type { RowTextProps } from './field-row-text';
 
 type RowTitleProps = RowTextProps & { title: string };
@@ -15,6 +16,14 @@ type RowTitleProps = RowTextProps & { title: string };
 export function RowTitle(props: RowTitleProps): ReactElement {
   const symbol = leadingSymbol(props);
   const tint = useDangerStyle(props.tone);
+
+  if (props.logo)
+    return (
+      <HStack spacing={8}>
+        <RowLogo logo={props.logo} title={props.title} />
+        <NativeText tone={props.tone}>{props.title}</NativeText>
+      </HStack>
+    );
 
   if (symbol)
     return <Label title={props.title} systemImage={symbol} modifiers={tint} />;

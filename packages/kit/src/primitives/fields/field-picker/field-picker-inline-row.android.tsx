@@ -11,6 +11,7 @@ import { useIconPixels } from '../../../symbols/icon-size';
 import {
   RowListItem,
   toggling,
+  type RowListItemProps,
 } from '../field-row/field-row-list-item.android';
 import {
   optionChoice,
@@ -27,9 +28,7 @@ export function OptionRow(props: OptionRowProps): ReactElement {
 
   return (
     <RowListItem
-      title={option.label}
-      tone={option.tone === 'danger' ? 'danger' : undefined}
-      leading={option.icon}
+      {...look(option)}
       disabled={disabled}
       supporting={supporting(option.subtitle)}
       trailing={<Mark {...props} selected={choice.selected} />}
@@ -37,6 +36,15 @@ export function OptionRow(props: OptionRowProps): ReactElement {
     />
   );
 }
+
+const look = (
+  option: OptionRowProps['option'],
+): Pick<RowListItemProps, 'title' | 'tone' | 'leading' | 'logo'> => ({
+  title: option.label,
+  tone: option.tone === 'danger' ? 'danger' : undefined,
+  leading: option.icon,
+  logo: option.logo,
+});
 
 const toggles = (
   props: OptionRowProps,

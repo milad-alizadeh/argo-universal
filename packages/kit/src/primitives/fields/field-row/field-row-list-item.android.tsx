@@ -14,6 +14,7 @@ import type { ImageSourcePropType } from 'react-native';
 import { NativeText } from '#primitives/content/native-text';
 import { useIconPixels } from '../../../symbols/icon-size';
 import { nativeIconName } from '../../../symbols/native-icon-name';
+import { RowLogo } from './field-row-logo';
 import {
   cornerRadii,
   GroupDisabledContext,
@@ -21,7 +22,10 @@ import {
 } from './field-row-position';
 import type { RowTextProps } from './field-row-text';
 
-export type RowListItemProps = Pick<RowTextProps, 'leading' | 'tone'> & {
+export type RowListItemProps = Pick<
+  RowTextProps,
+  'leading' | 'logo' | 'tone'
+> & {
   title: string;
   // What sits under the title: a Slider, or a text row's value as EditTextPreference shows it.
   supporting?: ReactNode;
@@ -50,7 +54,7 @@ export function RowListItem(props: RowListItemProps): ReactElement {
         <Headline {...props} />
       </ListItem.HeadlineContent>
       <SupportingSlot supporting={props.supporting} />
-      <LeadingSlot leading={props.leading} />
+      <LeadingSlot {...props} />
       <TrailingSlot trailing={props.trailing} />
     </ListItem>
   );
@@ -103,7 +107,20 @@ function TrailingSlot(props: Pick<RowListItemProps, 'trailing'>): ReactNode {
   return <ListItem.TrailingContent>{props.trailing}</ListItem.TrailingContent>;
 }
 
-function LeadingSlot(props: Pick<RowTextProps, 'leading'>): ReactNode {
+function LeadingSlot(
+  props: Pick<RowTextProps, 'leading' | 'logo'> & { title: string },
+): ReactNode {
+  if (props.logo)
+    return (
+      <ListItem.LeadingContent>
+        <RowLogo logo={props.logo} title={props.title} />
+      </ListItem.LeadingContent>
+    );
+
+  return <IconSlot leading={props.leading} />;
+}
+
+function IconSlot(props: Pick<RowTextProps, 'leading'>): ReactNode {
   const source = leadingSource(props.leading);
   const size = useIconPixels('md');
 
