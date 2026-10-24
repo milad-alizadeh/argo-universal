@@ -8,7 +8,7 @@ import { nativeKinds } from './list-native-kinds';
 import { hostsNatively } from './list-phone-rows';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Lists/List/Phone Grouped Selection',
+  title: 'Tests/Design System/Primitives/Lists/List/PhoneRows',
 } satisfies Meta;
 
 export default meta;
