@@ -1,5 +1,10 @@
-import { LazyColumn } from '@expo/ui/jetpack-compose';
-import { fillMaxSize, imePadding } from '@expo/ui/jetpack-compose/modifiers';
+import { Column as ComposeColumn, LazyColumn } from '@expo/ui/jetpack-compose';
+import {
+  fillMaxSize,
+  fillMaxWidth,
+  height,
+  imePadding,
+} from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
 import { GroupDisabledContext } from '#primitives/fields/field-row';
@@ -32,7 +37,13 @@ function FieldGroupRoot(props: FieldGroupProps): ReactElement {
  * Expo's layout: a LazyColumn with 24dp between sections and 16dp around them. It fills the page and has no
  * background of its own, so the page's shows between the section cards. It ends above the keyboard, so Compose
  * scrolls a focused field into view as it does in any Material form.
+ *
+ * The column spaces its items by the rows' 2dp and each section break is an item of its own that makes up the
+ * rest, as the grouped List's column does (list-phone-grouped.android.tsx), so two sections never read as one
+ * list of rows whatever the sheet or page they sit in.
  */
+const rowSpacing = 2;
+
 const sectionSpacing = 24;
 
 const contentPadding = { start: 16, end: 16, top: 16, bottom: 16 };
@@ -40,14 +51,31 @@ const contentPadding = { start: 16, end: 16, top: 16, bottom: 16 };
 function Column(props: Pick<FieldGroupProps, 'children'>): ReactElement {
   return (
     <LazyColumn
-      verticalArrangement={{ spacedBy: sectionSpacing }}
+      verticalArrangement={{ spacedBy: rowSpacing }}
       contentPadding={contentPadding}
       modifiers={[fillMaxSize(), imePadding()]}
     >
-      {groupSections(props.children)}
+      {withBreaks(groupSections(props.children))}
     </LazyColumn>
   );
 }
+
+const breakHeight = sectionSpacing - 2 * rowSpacing;
+
+const breakModifiers = [fillMaxWidth(), height(breakHeight)];
+
+const withBreaks = (sections: ReactNode[]): ReactNode[] =>
+  sections.flatMap((section, index) =>
+    index === 0
+      ? [section]
+      : [
+          <ComposeColumn
+            key={`break-${keyOf(section)}`}
+            modifiers={breakModifiers}
+          />,
+          section,
+        ],
+  );
 
 const groupSections = (children: ReactNode): ReactNode[] =>
   flattenedChildren(children)
