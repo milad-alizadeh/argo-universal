@@ -23,7 +23,7 @@ function CommitsInOneTick({ onSave }: HarnessProps): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Settings/PluginTextRows',
+  title: 'Tests/Screens/Settings/Plugin/TextRows',
   component: CommitsInOneTick,
   args: { onSave: fn() },
 } satisfies Meta<typeof CommitsInOneTick>;
