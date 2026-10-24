@@ -93,15 +93,11 @@ function ExampleContent({ query }: { query: string }): React.JSX.Element {
   );
 }
 
-interface ExampleActionsProps {
-  choose: (result: string) => void;
-  submenu?: boolean;
-}
-
-function ExampleActions({
-  choose,
-  submenu,
-}: ExampleActionsProps): React.JSX.Element {
+// The header's Actions as elements: a Screen reads the Actions it is given, so they are not wrapped in a component.
+function exampleActionElements(
+  choose: (result: string) => void,
+  submenu?: boolean,
+): React.JSX.Element {
   return (
     <>
       {exampleActions.map((action) => (
@@ -161,7 +157,5 @@ function exampleHeaderActions(
   { actions, submenu }: Example,
   choose: (value: string) => void,
 ): React.ReactNode {
-  return actions ? (
-    <ExampleActions choose={choose} submenu={submenu} />
-  ) : undefined;
+  return actions ? exampleActionElements(choose, submenu) : undefined;
 }
