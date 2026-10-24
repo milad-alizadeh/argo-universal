@@ -1,4 +1,5 @@
 import { Text, TextButton, TopAppBar } from '@expo/ui/jetpack-compose';
+import { padding } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { HeaderIconButton } from '#primitives/native/header-icon-button';
 import { Host } from '#primitives/native/host';
@@ -19,7 +20,7 @@ export function SheetTitleRow(props: TitleRowProps): ReactElement {
           <LeadingButton {...props} />
         </TopAppBar.NavigationIcon>
         <TopAppBar.Title>
-          <Text style={{ typography: 'titleLarge' }}>{props.title}</Text>
+          <Title title={props.title} />
         </TopAppBar.Title>
         <TopAppBar.Actions>{trailing(props.action)}</TopAppBar.Actions>
       </TopAppBar>
@@ -28,6 +29,22 @@ export function SheetTitleRow(props: TitleRowProps): ReactElement {
 }
 
 const barColors = { containerColor: 'transparent' };
+
+/*
+ * The stack's toolbar starts its title at the 72dp keyline, where Material's bar starts it right after Back at 56dp; the
+ * title steps the other 16 in. The buttons already sit where the toolbar's do.
+ */
+const titleStep = 16;
+
+const stackTitleKeyline = [padding(titleStep, 0, 0, 0)];
+
+function Title(props: Pick<TitleRowProps, 'title'>): ReactElement {
+  return (
+    <Text style={{ typography: 'titleLarge' }} modifiers={stackTitleKeyline}>
+      {props.title}
+    </Text>
+  );
+}
 
 // Back on a pushed page, the sheet's close on the root, and nothing on a page that is given neither.
 function LeadingButton(props: TitleRowProps): ReactElement | null {
