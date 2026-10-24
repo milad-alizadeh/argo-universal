@@ -87,6 +87,8 @@ export function toggled(
 }
 
 export type OptionSection = {
+  // Distinct per section, so a section titled '' never shares the untitled one's React key.
+  key: string;
   title: string | undefined;
   options: readonly FieldPickerOption[];
 };
@@ -104,6 +106,7 @@ export function optionSections(
     ]);
 
   return [...sections].map(([title, members]) => ({
+    key: title === undefined ? 'untitled' : `title:${title}`,
     title,
     options: members,
   }));

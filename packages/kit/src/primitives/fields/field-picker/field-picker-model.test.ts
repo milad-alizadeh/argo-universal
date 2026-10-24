@@ -57,6 +57,15 @@ describe('optionSections', () => {
       ['b'],
     ]);
   });
+
+  it('gives a section titled with an empty string a key of its own', () => {
+    const keys = optionSections([
+      { value: 'a', label: 'A', section: '' },
+      { value: 'b', label: 'B' },
+    ]).map((section) => section.key);
+
+    expect(new Set(keys).size).toBe(2);
+  });
 });
 
 describe('matchingOptions', () => {

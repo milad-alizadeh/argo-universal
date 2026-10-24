@@ -41,9 +41,11 @@ function sliderControl(setResult) {
     Slider,
     {
       value: 0,
-      min: 0,
-      max: 10,
+      minimumValue: 0,
+      maximumValue: 10,
       step: 1,
+      accessibilityLabel: 'Level',
+      valueLabel: 'Level',
       onValueChange: (value) => setResult(`Level ${value}`),
     },
     'slider',
