@@ -111,7 +111,9 @@ export const TriggerlessModalKeepsInput: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.tablet),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
-    await body.findByRole('dialog', answerSheet);
+    const dialog = await body.findByRole('dialog', answerSheet);
+    // The modal fades in; it is open once it is visible, and only then is a dismissal it must refuse tried.
+    await waitFor(() => expect(dialog).toBeVisible());
     const backdrop = document.elementFromPoint(4, 4);
 
     if (!backdrop) throw new Error('Nothing is drawn at the window corner.');
