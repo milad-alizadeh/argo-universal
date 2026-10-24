@@ -48,8 +48,8 @@ function ChangingConfiguration(): React.JSX.Element {
 // Radix marks a closing popover at once, before its exit transition ends.
 const openState = 'data-state';
 
-// Several picks in a row: each applies, the models page closes and Configure stays open until a click outside.
-export const ModelPicksKeepConfigureOpenWide: Story = {
+// A Model pick applies and closes the Model page (ADR-0042: one choice returns to the previous page); Configure stays open until a click outside.
+export const ModelPickClosesModelPageKeepsConfigureOpenWide: Story = {
   render: () => <ChangingConfiguration />,
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
@@ -70,17 +70,18 @@ export const ModelPicksKeepConfigureOpenWide: Story = {
       name: modelPickerLabel,
     });
 
-    const other = within(picker).getByRole('radio', { name: otherModel });
-    await userEvent.click(other);
+    await userEvent.click(
+      within(picker).getByRole('radio', { name: otherModel }),
+    );
 
-    await expect(other).toHaveAttribute('aria-checked', 'true');
+    await waitFor(() => expect(picker).not.toBeInTheDocument());
+    await expect(configure).toBeInTheDocument();
     await expect(configure).toHaveAttribute(openState, 'open');
     await expect(
       within(configure).getByRole('button', { name: /^Model,/ }),
     ).toHaveTextContent(otherModel);
 
     await userEvent.click(document.body);
-    await waitFor(() => expect(picker).not.toBeInTheDocument());
     await waitFor(() => expect(configure).not.toBeInTheDocument());
   },
 };
