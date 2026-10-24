@@ -49,7 +49,8 @@ export const EscapeClosesModelsThenConfigure: Story = {
     await expect(configure).toBeVisible();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(picker).not.toBeInTheDocument());
-    await expect(configure).toBeVisible();
+    // Configure takes focus back as the picker closes; under load it can draw a frame later.
+    await waitFor(() => expect(configure).toBeVisible());
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(configure).not.toBeInTheDocument());
     await waitFor(() => expect(trigger).toHaveFocus());
