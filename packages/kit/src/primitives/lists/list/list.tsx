@@ -11,7 +11,9 @@ import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import { ListGrouping } from './list-grouping';
 import { ListKeyboard } from './list-keyboard';
 import { ListMenuRows } from './list-menu-rows';
+import { nativeKinds } from './list-native-kinds';
 import { phoneGrouped, PhoneGroupedList } from './list-phone-grouped';
+import { hostsNatively } from './list-phone-rows';
 import type { ListProps } from './list-props';
 import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
@@ -107,9 +109,11 @@ function childMaxHeight(
   return props.maxHeight ?? height;
 }
 
-// A grouped List is native on the phones and LegendList on the web (ADR-0042).
+// A grouped List is native on the phones when it holds only FieldGroup rows, and LegendList otherwise and on the web (ADR-0042).
 const drawnNatively = <Item,>(props: ListProps<Item>): boolean =>
-  phoneGrouped && props.appearance === 'grouped';
+  phoneGrouped &&
+  props.appearance === 'grouped' &&
+  hostsNatively(props, nativeKinds);
 
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   if (drawnNatively(props)) return <PhoneGroupedList {...props} />;

@@ -1,9 +1,13 @@
 import type { ReactElement } from 'react';
+import { registerNativeRows } from '#kit/native-row-kinds';
 import { List } from '#primitives/lists/list';
 import { OptionRow } from './field-picker-inline-row';
 import { optionSections, type OptionSection } from './field-picker-model';
 import type { FieldPickerScreenProps } from './field-picker-screen';
 import { EmptyState } from './field-picker-screen-parts';
+
+// The option row is one a phone's native grouped List hosts.
+registerNativeRows([OptionRow]);
 
 /*
  * The options of a `page` on a phone (ADR-0042): a grouped List, so the page is a native, virtualised list drawn in
@@ -33,7 +37,7 @@ function screenSection(
   section: OptionSection,
 ): ReactElement {
   return (
-    <List.Section key={section.title ?? ''} title={section.title}>
+    <List.Section key={section.key} title={section.title}>
       {section.options.map((option) => (
         <OptionRow key={option.value} {...props} option={option} />
       ))}

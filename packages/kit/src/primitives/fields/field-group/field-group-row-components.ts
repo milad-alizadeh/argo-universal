@@ -1,3 +1,4 @@
+import { registerNativeRows } from '#kit/native-row-kinds';
 import { FieldDatePicker } from '#primitives/fields/field-date-picker';
 import { FieldLink } from '#primitives/fields/field-link';
 import { FieldPicker } from '#primitives/fields/field-picker';
@@ -17,3 +18,6 @@ export const fieldGroupRowComponents = {
   TextField: FieldText,
   SecretField: FieldSecret,
 };
+
+// A phone's native grouped List hosts these rows.
+registerNativeRows(Object.values(fieldGroupRowComponents));

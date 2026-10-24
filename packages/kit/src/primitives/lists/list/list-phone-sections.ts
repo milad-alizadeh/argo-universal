@@ -1,17 +1,11 @@
-import {
-  createElement,
-  Fragment,
-  isValidElement,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import type { ListProps, ListSectionProps } from './list-props';
 import { ListSection } from './list-section';
 
 /*
- * What a phone's grouped List draws: sections of rows. A row is only a function that makes its element, so the native
- * list mounts the rows near the viewport and a data row's `renderItem` runs when the row is wanted.
+ * What a phone's native grouped List draws: sections of FieldGroup rows (list-phone-rows). A row is only a function
+ * that makes its element, so the native list mounts the rows near the viewport.
  */
 export type PhoneRow = { key: string; render: () => ReactElement };
 
@@ -69,51 +63,8 @@ const childSections = (children: ReactNode): PhoneSection[] =>
     .map(toSection)
     .filter(hasRows);
 
-type Run = { group: string | undefined; rows: PhoneRow[] };
-
-type Entry = { group: string | undefined; row: PhoneRow };
-
-const keyOf = <Item>(
-  props: ListProps<Item>,
-  item: Item,
-  index: number,
-): string =>
-  props.keyExtractor ? props.keyExtractor(item, index) : String(index);
-
-const entryOf = <Item>(
-  props: ListProps<Item>,
-  item: Item,
-  index: number,
-): Entry => ({
-  group: props.getSectionKey?.(item),
-  row: {
-    key: keyOf(props, item, index),
-    render: () =>
-      createElement(Fragment, null, props.renderItem?.(item, index)),
-  },
-});
-
-function addEntry(runs: Run[], entry: Entry): Run[] {
-  const last = runs.at(-1);
-
-  if (last !== undefined && last.group === entry.group)
-    last.rows.push(entry.row);
-  else runs.push({ group: entry.group, rows: [entry.row] });
-
-  return runs;
-}
-
-// Data rows run together under one section, or split where `getSectionKey` changes.
-const dataSections = <Item>(props: ListProps<Item>): PhoneSection[] =>
-  (props.items ?? [])
-    .map((item, index) => entryOf(props, item, index))
-    .reduce<Run[]>(addEntry, [])
-    .map((run, index) => ({ key: `data-${index}`, rows: run.rows }));
-
 export const phoneSections = <Item>(props: ListProps<Item>): PhoneSection[] =>
-  props.items === undefined
-    ? childSections(props.children)
-    : dataSections(props);
+  childSections(props.children);
 
 export const phoneRowKey = (row: PhoneRow): string => row.key;
 
