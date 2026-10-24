@@ -13,6 +13,12 @@ name: Configure controls own Android accessibility
     index: 1
 - assertVisible:
     text: "^Effort, Medium$"
+    enabled: true
+- assertNotVisible: "^Effort$"
+- assertNotVisible: "^Medium$"
+- assertNotVisible:
+    text: "^Effort, Medium$"
+    index: 1
 - tapOn: "^Fast mode$"
 - assertVisible:
     text: "^Fast mode$"

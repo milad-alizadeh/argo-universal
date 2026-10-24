@@ -27,7 +27,7 @@ const trigger = (page: Page): Locator =>
 
 async function openEffort(page: Page): Promise<Locator> {
   await trigger(page).click();
-  const slider = page.getByRole('slider');
+  const slider = page.getByRole('slider', { name: 'Effort' });
   await expect(slider).toBeVisible();
   await slider.focus();
 
@@ -36,7 +36,8 @@ async function openEffort(page: Page): Promise<Locator> {
 
 async function adjustToLow(page: Page, slider: Locator): Promise<void> {
   await page.keyboard.press('End');
-  // The slider has no value text, so the trigger shows the applied effort, and the applied effort, so a Session's Server round trip has ended before the next adjustment.
+  // The slider reads Low, and the trigger shows the applied effort, so a Session's Server round trip has ended before the next adjustment.
+  await expect(slider).toHaveAttribute('aria-valuetext', 'Low');
   await expect(trigger(page)).toContainText('Low');
   await expect(slider).toBeFocused();
 }

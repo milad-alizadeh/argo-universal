@@ -86,7 +86,7 @@ async function chooseEffort(page: Page, effort: string): Promise<void> {
     await slider.press('End');
 }
 
-// Escape closes Configure, and on a desktop the models kept open beside it.
+// Escape closes Configure; the Model page closed itself when a model was chosen.
 async function reopenConfiguration(page: Page): Promise<void> {
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Model' })).toHaveCount(0);
