@@ -8,7 +8,7 @@ import {
 } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
 import { settleViewport } from '#kit/settle-viewport';
-import { ActionList, Action } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
@@ -30,9 +30,7 @@ const headingRole = 'heading';
 const inspect = fn();
 
 const tileActions = (
-  <ActionList>
-    <Action icon="info" label="Inspect" onPress={inspect} />
-  </ActionList>
+  <Action key="inspect" icon="info" label="Inspect" onPress={inspect} />
 );
 
 export const ContextActions: Story = {

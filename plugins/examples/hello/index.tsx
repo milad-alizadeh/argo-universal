@@ -3,8 +3,8 @@ import {
   Markdown,
   Code,
   Link,
-  ActionList,
   Action,
+  Screen,
   ListItem,
   Stack,
   Text,
@@ -27,18 +27,17 @@ const headingRole = 'heading';
 
 let settings: Argo['settings'];
 
-function Buttons({ onTap }: { onTap: () => void }): JSX.Element {
+// The Screen's header Actions: a Screen declares its verbs as props, content cannot add them.
+function buttons(onTap: () => void): JSX.Element {
   return (
-    <ActionList>
-      <ActionList.Section>
-        <Action label="Tap me" icon="add" onPress={onTap} />
-        <Action
-          label="Say hi"
-          icon="agent"
-          onPress={{ action: 'toast', message: 'Hello from the Plugin' }}
-        />
-      </ActionList.Section>
-    </ActionList>
+    <Action.Section>
+      <Action label="Tap me" icon="add" onPress={onTap} />
+      <Action
+        label="Say hi"
+        icon="agent"
+        onPress={{ action: 'toast', message: 'Hello from the Plugin' }}
+      />
+    </Action.Section>
   );
 }
 
@@ -56,10 +55,9 @@ function useGreeting(): string {
   return greeting;
 }
 
-function HelloPage(): JSX.Element {
-  const [taps, setTaps] = useState(0);
-  const greeting = useGreeting();
+type ContentProps = { greeting: string; taps: number };
 
+function HelloContent({ greeting, taps }: ContentProps): JSX.Element {
   return (
     <Stack direction="column" gap={4}>
       <Text role={headingRole}>{greeting}</Text>
@@ -68,8 +66,18 @@ function HelloPage(): JSX.Element {
       <Markdown text="## Hello kit\n\nShared **Markdown** content." />
       <Code code="const greeting = 'Hello';" language="ts" />
       <Link label="Example website" href="https://example.com" />
-      <Buttons onTap={() => setTaps(taps + 1)} />
     </Stack>
+  );
+}
+
+function HelloPage(): JSX.Element {
+  const [taps, setTaps] = useState(0);
+  const greeting = useGreeting();
+
+  return (
+    <Screen title="Hello" actions={buttons(() => setTaps(taps + 1))}>
+      <HelloContent greeting={greeting} taps={taps} />
+    </Screen>
   );
 }
 

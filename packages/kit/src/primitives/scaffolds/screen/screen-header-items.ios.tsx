@@ -5,7 +5,7 @@ import { useNativeTheme } from '#kit/native-theme';
 import {
   splitHeaderActions,
   type ActionGroup,
-} from '#primitives/actions/action-list';
+} from '#primitives/actions/action';
 import { screenPrimaryAction } from './screen-primary-action';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';

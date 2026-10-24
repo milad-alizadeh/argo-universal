@@ -17,7 +17,7 @@ export const actionProps = z.object({
   icon: iconName
     .optional()
     .describe(
-      'The leading Argo icon; a header ActionList shows only Actions with one as buttons.',
+      'The leading Argo icon; a Screen header shows only Actions with one as buttons.',
     ),
   shortcut: shortcutProps
     .optional()
@@ -39,43 +39,19 @@ export const actionProps = z.object({
     ),
 });
 
-// An Action that opens a menu of its own: its keyed ActionList.Section children hold the entries, and a full header folds it into the overflow menu as a nested menu.
+// An Action that opens a menu of its own: its keyed Action.Section children hold the entries, and a full header folds it into the overflow menu as a nested menu.
 export const submenuActionProps = z.object({
   label: actionProps.shape.label,
   icon: iconName.describe(
-    'The leading Argo icon; a header ActionList shows only Actions with one as buttons, and a submenu needs one.',
+    'The leading Argo icon; a Screen header shows only Actions with one as buttons, and a submenu needs one.',
   ),
   badge: rowBadgeProps
     .optional()
     .describe('A count or status dot on the icon.'),
 });
 
-// A press Action that can be its Section's chosen option, as a filter's: the check marks it, as UIMenu's state and Material's trailing check do.
-export const choiceActionProps = actionProps.extend({
-  selected: z
-    .boolean()
-    .optional()
-    .describe(
-      "Check this Action as its Section's chosen option; pass false on the others.",
-    ),
-});
-
 // An Action runs on press or opens a submenu; only a press Action has `onPress`.
-export const actionEntryProps = z.union([
-  choiceActionProps,
-  submenuActionProps,
-]);
-
-export const actionListProps = z.object({
-  variant: z
-    .enum(['header', 'context'])
-    .optional()
-    .describe('Header buttons and overflow, or a row context menu.'),
-  accessibilityLabel: z
-    .string()
-    .optional()
-    .describe('Spoken overflow menu name.'),
-});
+export const actionEntryProps = z.union([actionProps, submenuActionProps]);
 
 export const actionSectionProps = z.object({
   title: z.string().optional().describe('Optional Section heading.'),

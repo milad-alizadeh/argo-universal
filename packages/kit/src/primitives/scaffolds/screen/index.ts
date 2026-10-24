@@ -8,5 +8,3 @@ export {
   ScreenBesideList,
   ScreenNavigationEnabled,
 } from './screen-navigation-context';
-
-export { PageHeaderActions } from './page-header-actions';

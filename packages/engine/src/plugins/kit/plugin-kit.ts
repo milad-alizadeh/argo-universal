@@ -5,7 +5,7 @@ import {
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
-import { jsx, jsxs } from './jsx-runtime';
+import { jsx, jsxs, registerKitPart } from './jsx-runtime';
 import {
   mountPages,
   type Pages,
@@ -36,7 +36,14 @@ type KitComponent =
 function kitComponent({ part, members }: PluginKitExport): KitComponent {
   if (!Object.keys(members).length) return part;
 
-  return Object.assign((props: ElementProps) => jsx(part, props), members);
+  const component = Object.assign(
+    (props: ElementProps) => jsx(part, props),
+    members,
+  );
+
+  registerKitPart(component, part);
+
+  return component;
 }
 
 // What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.

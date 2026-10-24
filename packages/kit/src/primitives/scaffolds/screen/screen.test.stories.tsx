@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Screen } from './index';
 import { atWidth, screenWidths as widths } from './screen-widths.mocks';
@@ -121,7 +121,7 @@ export const SearchAndClearWide = atWidth(widths.Wide, searchAndClear);
 
 const chosen = fn();
 
-// ActionList's own suite covers disabled and overflow Actions; this checks the Screen draws and runs both kinds.
+// The Action suite covers disabled and overflow Actions; this checks the Screen draws and runs both kinds.
 const headerActions: Story = {
   args: {
     title: 'Title',
@@ -129,13 +129,11 @@ const headerActions: Story = {
       <Action label={primaryLabel} icon="add" onPress={() => chosen('add')} />
     ),
     actions: (
-      <ActionList>
-        <Action
-          label="Filters"
-          icon="filters"
-          onPress={() => chosen('filters')}
-        />
-      </ActionList>
+      <Action
+        label="Filters"
+        icon="filters"
+        onPress={() => chosen('filters')}
+      />
     ),
   },
   play: async ({ canvas, userEvent }) => {

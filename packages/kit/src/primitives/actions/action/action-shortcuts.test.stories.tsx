@@ -4,12 +4,17 @@ import { expect, fn, within } from 'storybook/test';
 import { Button } from '#primitives/actions/button';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
-import { Action, ActionList, ActionShortcutScope } from './index';
+import {
+  Action,
+  ActionButtons,
+  ActionShortcutScope,
+  ContextActions,
+} from './index';
 
 const choose = fn();
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Actions/ActionList/Shortcuts',
+  title: 'Tests/Design System/Primitives/Actions/Action/Shortcuts',
 } satisfies Meta;
 
 export default meta;
@@ -20,34 +25,44 @@ export const ShortcutConflicts: Story = {
   render: () => (
     <ActionShortcutScope>
       <TextInput accessibilityLabel="Draft" />
-      <ActionList>
-        <Action
-          label="First"
-          icon="add"
-          shortcut={{ modifiers: ['alt', 'alt'], key: 'i' }}
-          onPress={() => choose('first')}
-        />
-      </ActionList>
-      <ActionList variant="context" trigger={<Button label="Second list" />}>
-        <Action
-          label="Later"
-          icon="archive"
-          shortcut={{ modifiers: ['alt'], key: 'i' }}
-          onPress={() => choose('later')}
-        />
-      </ActionList>
-      <ActionList
-        variant="context"
-        plugin
-        trigger={<Button label="Plugin row" />}
+      <ActionButtons
+        actions={
+          <Action
+            key="first"
+            label="First"
+            icon="add"
+            shortcut={{ modifiers: ['alt', 'alt'], key: 'i' }}
+            onPress={() => choose('first')}
+          />
+        }
+      />
+      <ContextActions
+        actions={
+          <Action
+            key="later"
+            label="Later"
+            icon="archive"
+            shortcut={{ modifiers: ['alt'], key: 'i' }}
+            onPress={() => choose('later')}
+          />
+        }
       >
-        <Action
-          label="Reserved"
-          icon="rename"
-          shortcut={{ modifiers: [], key: 'Enter' }}
-          onPress={() => choose('reserved')}
-        />
-      </ActionList>
+        <Button label="Second list" />
+      </ContextActions>
+      <ContextActions
+        actions={
+          <Action
+            key="reserved"
+            plugin
+            label="Reserved"
+            icon="rename"
+            shortcut={{ modifiers: [], key: 'Enter' }}
+            onPress={() => choose('reserved')}
+          />
+        }
+      >
+        <Button label="Plugin row" />
+      </ContextActions>
     </ActionShortcutScope>
   ),
   play: async ({ canvas, canvasElement, userEvent }) => {

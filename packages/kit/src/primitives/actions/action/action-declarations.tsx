@@ -3,9 +3,9 @@ import { flattenedChildren } from '../../../flattened-children';
 import type {
   ActionProps,
   ActionSectionProps,
-  PressActionProps,
+  DeclaredPressProps,
   SubmenuActionProps,
-} from './action-list-props';
+} from './action-props';
 import {
   isDanger,
   isPress,
@@ -16,13 +16,16 @@ import {
 } from './declared-entry';
 import { withId } from './entry-ids';
 
-export function Action(_props: ActionProps): null {
-  return null;
-}
-
 export function ActionSection(_props: ActionSectionProps): null {
   return null;
 }
+
+function ActionRoot(_props: ActionProps & { plugin?: boolean }): null {
+  return null;
+}
+
+// Declares one verb; its Sections group Actions, as `Action.Section`.
+export const Action = Object.assign(ActionRoot, { Section: ActionSection });
 
 export {
   isDanger,
@@ -62,7 +65,7 @@ function actionGroup(child: ReactElement<ActionProps>): ActionGroup[] {
   return submenu.sections.length ? [{ actions: [submenu] }] : [];
 }
 
-const isPressProps = (props: ActionProps): props is PressActionProps =>
+const isPressProps = (props: ActionProps): props is DeclaredPressProps =>
   'onPress' in props && props.onPress !== undefined;
 
 function declaredSubmenu(

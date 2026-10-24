@@ -1,6 +1,5 @@
 import {
   Action,
-  ActionList,
   Detail,
   EmptyState,
   Label,
@@ -59,13 +58,11 @@ type CancelProps = { cancelled: boolean; onToggle: () => void };
 
 function CancelAction({ cancelled, onToggle }: CancelProps): JSX.Element {
   return (
-    <ActionList>
-      <Action
-        label={cancelled ? 'Rerun' : 'Cancel'}
-        icon="check"
-        onPress={onToggle}
-      />
-    </ActionList>
+    <Action
+      label={cancelled ? 'Rerun' : 'Cancel'}
+      icon="check"
+      onPress={onToggle}
+    />
   );
 }
 
@@ -75,11 +72,13 @@ function BuildPage({ build }: { build: Build }): JSX.Element {
   const toggle = (): void => setCancelled(!cancelled);
 
   return (
-    <Screen title={build.title}>
+    <Screen
+      title={build.title}
+      actions={<CancelAction cancelled={cancelled} onToggle={toggle} />}
+    >
       <Detail
         markdown={cancelled ? build.cancelled : build.running}
         metadata={buildMetadata}
-        actions={<CancelAction cancelled={cancelled} onToggle={toggle} />}
       />
     </Screen>
   );

@@ -1,10 +1,6 @@
 import { Stack } from 'expo-router';
 import type { ReactNode } from 'react';
 import { useWide } from '#kit/use-wide/use-wide';
-import {
-  ActionShortcutScope,
-  useActionShortcutScope,
-} from '#primitives/actions/action-list';
 import { HeadingRow } from './screen-heading-row';
 import { useScreenNavigator } from './screen-navigation-context';
 import type { ScreenHeaderInput } from './screen-props';
@@ -21,15 +17,9 @@ export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
   return <Stack.Screen options={{ ...options, headerShown: !wide }} />;
 }
 
-// The navigator draws the header outside the Screen's tree, so its Actions join the Screen's shortcut scope explicitly.
+// The navigator draws the header outside the Screen's tree, so it draws the Actions the Screen declared.
 function useHeaderTitle(props: ScreenHeaderInput): () => React.ReactElement {
-  const scope = useActionShortcutScope();
-
-  return () => (
-    <ActionShortcutScope scope={scope}>
-      <HeadingRow {...props} />
-    </ActionShortcutScope>
-  );
+  return () => <HeadingRow {...props} />;
 }
 
 const headerLayout = {

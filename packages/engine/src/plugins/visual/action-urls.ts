@@ -5,7 +5,7 @@ const externalActions = new Set(['openUrl', 'share']);
 
 type ObjectValue = { [key: string]: WireJson } | WireJson[];
 
-// Actions also occur inside ActionLists. Check the whole prop value before it reaches an App.
+// Actions also occur inside Action.Sections. Check the whole prop value before it reaches an App.
 export function actionUrlReason(value: WireJson): string | undefined {
   if (!isObject(value)) return;
 

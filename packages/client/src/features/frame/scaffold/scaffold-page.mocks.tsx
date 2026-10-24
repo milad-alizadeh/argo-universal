@@ -1,4 +1,4 @@
-import { Action, ActionList } from '@repo/kit/primitives/actions/action-list';
+import { Action } from '@repo/kit/primitives/actions/action';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
@@ -28,20 +28,16 @@ const exampleAction = (
 );
 
 // A header menu of its own, so a story can open it without opening the Inspector.
-function MoreActionsMenu(): React.JSX.Element {
-  return (
-    <ActionList>
-      <Action key="more" label="More actions" icon="more">
-        <ActionList.Section key="example">{exampleAction}</ActionList.Section>
-      </Action>
-    </ActionList>
-  );
-}
+const moreActions = (
+  <Action key="more" label="More actions" icon="more">
+    <Action.Section key="example">{exampleAction}</Action.Section>
+  </Action>
+);
 
 // A stand-in page that names its section, with a header menu.
 export function MockPage({ title }: { title: string }): React.JSX.Element {
   return (
-    <Screen title={`${title} page`} actions={<MoreActionsMenu />}>
+    <Screen title={`${title} page`} actions={moreActions}>
       <View className="flex-1 p-4">
         <Text testID="detail-content">{title} detail</Text>
       </View>

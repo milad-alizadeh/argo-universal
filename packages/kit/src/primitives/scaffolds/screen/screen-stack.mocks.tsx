@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -27,22 +27,21 @@ function Rows(): React.JSX.Element {
 // Two buttons and an overflow menu, whose last action is danger.
 export function HeaderActionsScreen(): React.JSX.Element {
   return (
-    <Screen title="Title" actions={<HeaderActions />}>
+    <Screen title="Title" actions={headerActions}>
       <Rows />
     </Screen>
   );
 }
 
-function HeaderActions(): React.JSX.Element {
-  return (
-    <ActionList>
-      <Action label="Filters" icon="filters" onPress={onAction} />
-      <Action label="Archive" icon="archive" onPress={onAction} />
-      <Action label="Copy link" icon="copy" onPress={onAction} />
-      <Action label="Delete" icon="delete" tone="danger" onPress={onAction} />
-    </ActionList>
-  );
-}
+// A Screen reads its Actions from the element it is given, so they are declared here rather than in a component.
+const headerActions = (
+  <>
+    <Action label="Filters" icon="filters" onPress={onAction} />
+    <Action label="Archive" icon="archive" onPress={onAction} />
+    <Action label="Copy link" icon="copy" onPress={onAction} />
+    <Action label="Delete" icon="delete" tone="danger" onPress={onAction} />
+  </>
+);
 
 export function PushScreen(): React.JSX.Element {
   return (

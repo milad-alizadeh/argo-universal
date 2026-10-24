@@ -1,4 +1,5 @@
 import { Menu } from '@repo/kit/primitives/overlays/menu';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
 import { ListHeaderButton } from '#lib/product/header-button';
 import {
@@ -10,15 +11,17 @@ import { sessionsViewGroups } from '../../utils/sessions-view-menu';
 export interface SessionsViewMenuProps {
   view: SessionsView;
   onViewChange: (view: SessionsView) => void;
+  // The trigger's icon; the wide sidebar's sliders unless a phone's platform draws another.
+  icon?: IconName;
 }
 
 // The App E2E steps find the trigger by this name.
 const triggerLabel = 'Filter Sessions';
 
-function wideFilterTrigger(changed: boolean): React.JSX.Element {
+function filterTrigger(changed: boolean, icon: IconName): React.JSX.Element {
   return (
     <ListHeaderButton
-      icon="filters"
+      icon={icon}
       dot={changed ? 'filter' : undefined}
       accessibilityLabel={triggerLabel}
     />
@@ -27,18 +30,21 @@ function wideFilterTrigger(changed: boolean): React.JSX.Element {
 
 /*
  * How the Sessions list lays out, groups and filters its rows.
- * The wide sidebar's header draws it; a phone's Sessions Screen declares the same choices as its filter Action.
+ * The wide sidebar's header draws it; a phone's Sessions root draws it above the list, since a header holds verbs only.
  * The trigger carries a dot while the view is not the default.
  */
 export function SessionsViewMenu({
   view,
   onViewChange,
+  icon = 'filters',
 }: SessionsViewMenuProps): React.JSX.Element {
+  const changed = !isDefaultSessionsView(view);
+
   return (
     <Menu
       accessibilityLabel={triggerLabel}
       groups={sessionsViewGroups(view, onViewChange)}
-      trigger={wideFilterTrigger(!isDefaultSessionsView(view))}
+      trigger={filterTrigger(changed, icon)}
     />
   );
 }

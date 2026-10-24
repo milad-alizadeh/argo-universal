@@ -3,7 +3,7 @@ import { resolveShortcuts } from './action-shortcuts';
 
 const copy = { modifiers: ['meta', 'shift'], key: 'c' } as const;
 
-describe('ActionList shortcut allocation', () => {
+describe('Action shortcut allocation', () => {
   it('keeps the first declaration, including disabled Actions, and normalizes modifier order and key case', () => {
     expect(
       resolveShortcuts(

@@ -43,7 +43,7 @@ function headerAction(name: string, key: string, event: PartEvent): Story {
 
 export const FiltersActionDispatchesItsEvent = headerAction(
   'Filters',
-  'page#actions/actions/filters',
+  'page#actions/filters',
   { event: 'onPress' },
 );
 
@@ -63,7 +63,7 @@ export const SubmenuActionDispatchesItsEvent: Story = {
       await page.findByRole('menuitem', { name: 'Oldest' }),
     );
     await expect(onEvent).toHaveBeenLastCalledWith(
-      'page#actions/actions/sort/order/oldest',
+      'page#actions/sort/order/oldest',
       { event: 'onPress' },
     );
   },

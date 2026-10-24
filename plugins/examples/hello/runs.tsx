@@ -1,6 +1,5 @@
 import {
   Action,
-  ActionList,
   Screen,
   Pill,
   Table,
@@ -87,9 +86,7 @@ const sorted = (sort: Sort): Run[] => {
 };
 
 const rerunAction = (run: Run, onRerun: Rerun): JSX.Element => (
-  <ActionList>
-    <Action label="Re-run" icon="retry" onPress={() => onRerun(run)} />
-  </ActionList>
+  <Action label="Re-run" icon="retry" onPress={() => onRerun(run)} />
 );
 
 function RunRow({ run, onRerun }: { run: Run; onRerun: Rerun }): JSX.Element {

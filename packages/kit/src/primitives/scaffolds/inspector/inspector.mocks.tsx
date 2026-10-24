@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { useOptionalSheet } from '#primitives/overlays/sheet';
@@ -58,9 +58,7 @@ function BranchesButton(): ReactElement | null {
 }
 
 const copyPath = (
-  <ActionList>
-    <Action label="Copy path" icon="copy" onPress={ignore} />
-  </ActionList>
+  <Action key="copy" label="Copy path" icon="copy" onPress={ignore} />
 );
 
 const example = { title: inspectorTitle, actions: copyPath };

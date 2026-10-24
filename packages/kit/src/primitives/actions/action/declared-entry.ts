@@ -1,4 +1,4 @@
-import type { PressActionProps, SubmenuActionProps } from './action-list-props';
+import type { PressActionProps, SubmenuActionProps } from './action-props';
 
 export type DeclaredAction = PressActionProps & { id: string };
 

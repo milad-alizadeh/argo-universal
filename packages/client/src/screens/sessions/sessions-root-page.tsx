@@ -1,15 +1,14 @@
-import { Action, ActionList } from '@repo/kit/primitives/actions/action-list';
+import { Action } from '@repo/kit/primitives/actions/action';
 import {
   Screen,
   type ScreenProps,
 } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { View } from 'react-native';
 import {
-  isDefaultSessionsView,
-  type SessionsViewGroup,
-  type SessionsViewState,
   searchSessionsLabel,
-  sessionsViewGroups,
+  SessionsViewMenu,
+  type SessionsViewState,
 } from '#features/sessions';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { sections } from '../../lib/product/navigation/sections';
@@ -19,19 +18,38 @@ export interface SessionsRootPageProps extends SessionsViewState {
   children: React.ReactNode;
 }
 
-// The App E2E steps find the filter by this name.
-const filterLabel = 'Filter Sessions';
-
 /*
- * A narrow window's Sessions root: a Screen whose primary Action is New Session (iOS top right, Android's FAB) and whose
- * one header Action is the view filter, a checked choice per Section with a dot while the view is not the default.
+ * A narrow window's Sessions root: a Screen whose primary Action is New Session (iOS top right, Android's FAB). The view
+ * filter is a choice, not a verb, so it is a Menu above the list, a dot on it while the view is not the default.
  */
 export function SessionsRootPage({
   onNewSession,
   children,
   ...viewState
 }: SessionsRootPageProps): React.JSX.Element {
-  return <Screen {...pageProps(viewState, onNewSession)}>{children}</Screen>;
+  return (
+    <Screen {...pageProps(viewState, onNewSession)}>
+      <View className="min-h-0 flex-1">
+        <FilterRow {...viewState} />
+        {children}
+      </View>
+    </Screen>
+  );
+}
+
+function FilterRow({
+  view,
+  onViewChange,
+}: SessionsViewState): React.JSX.Element {
+  return (
+    <View className="flex-row justify-end px-4">
+      <SessionsViewMenu
+        view={view}
+        onViewChange={onViewChange}
+        icon={headerFilterIcon}
+      />
+    </View>
+  );
 }
 
 function pageProps(
@@ -44,7 +62,6 @@ function pageProps(
     value: viewState.query,
     onChangeText: viewState.onQueryChange,
     primaryAction: newSession(onNewSession),
-    actions: <SessionsFilter {...viewState} />,
   };
 }
 
@@ -52,57 +69,3 @@ function pageProps(
 const newSession = (onPress: () => void): React.JSX.Element => (
   <Action key="new" label="New Session" icon="new-session" onPress={onPress} />
 );
-
-// A dot on the filter while the view is not the default, read out after its name.
-const changedDot = {
-  kind: 'status',
-  tone: 'accent',
-  label: 'Changed',
-} as const;
-
-function SessionsFilter(viewState: SessionsViewState): React.JSX.Element {
-  return <ActionList>{filterSubmenu(viewState)}</ActionList>;
-}
-
-// The filter is a submenu Action: one Section per view field.
-function filterSubmenu({
-  view,
-  onViewChange,
-}: SessionsViewState): React.JSX.Element {
-  const badge = isDefaultSessionsView(view) ? undefined : changedDot;
-  const filter = { label: filterLabel, icon: headerFilterIcon, badge };
-
-  return (
-    <Action key="filter" {...filter}>
-      {sessionsViewGroups(view, onViewChange).map(filterSection)}
-    </Action>
-  );
-}
-
-type ViewOption = SessionsViewGroup['options'][number];
-
-// Each view field is one Section; each option has its icon, the chosen one checked.
-function filterSection(group: SessionsViewGroup): React.JSX.Element {
-  const options: readonly ViewOption[] = group.options;
-
-  return (
-    <ActionList.Section key={group.label} title={group.label}>
-      {options.map((option) => filterOption(group, option))}
-    </ActionList.Section>
-  );
-}
-
-function filterOption(
-  group: SessionsViewGroup,
-  option: ViewOption,
-): React.JSX.Element {
-  return (
-    <Action
-      key={option.value}
-      label={option.label}
-      icon={option.icon}
-      selected={option.value === group.value}
-      onPress={() => group.onValueChange(option.value)}
-    />
-  );
-}

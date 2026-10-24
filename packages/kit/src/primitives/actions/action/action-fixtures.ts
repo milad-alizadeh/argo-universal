@@ -1,4 +1,4 @@
-import type { PressActionProps } from './action-list-props';
+import type { PressActionProps } from './action-props';
 
 export interface DemoAction extends Omit<PressActionProps, 'onPress'> {
   result: string;
@@ -9,7 +9,7 @@ interface RowFixture {
   actions: DemoAction[];
 }
 
-export const contextMenuActionList = {
+export const contextMenuActions = {
   title: 'Item',
   actions: [
     {
@@ -33,7 +33,7 @@ export const contextMenuActionList = {
   ],
 } satisfies RowFixture;
 
-export const destructiveActionList = {
+export const destructiveActions = {
   title: 'Another item',
   actions: [
     { label: 'Assign', icon: 'agent', result: 'Assigned to you' },

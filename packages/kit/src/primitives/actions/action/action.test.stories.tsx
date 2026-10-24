@@ -3,12 +3,12 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import { Button } from '#primitives/actions/button';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
-import { Action, ActionList } from './index';
+import { Action, ActionButtons, ContextActions } from './index';
 
 const choose = fn();
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Actions/ActionList',
+  title: 'Tests/Design System/Primitives/Actions/Action',
 } satisfies Meta;
 
 export default meta;
@@ -18,36 +18,41 @@ type Story = StoryObj<typeof meta>;
 function header(width: number): Story {
   return {
     render: () => (
-      <ActionList accessibilityLabel="Project actions">
-        <ActionList.Section title="Project">
-          {/* With no icon to draw as a header button, it waits in the menu. */}
-          <Action label="Rename" onPress={() => choose('rename')} />
-          <Action
-            label="Add Project"
-            icon="add"
-            onPress={() => choose('add')}
-          />
-          <Action
-            label="Create branch"
-            icon="branch"
-            onPress={() => choose('branch')}
-            disabled
-          />
-          <Action
-            label="Show archived"
-            icon="archive"
-            onPress={() => choose('show')}
-          />
-        </ActionList.Section>
-        <ActionList.Section>
-          <Action
-            label="Delete"
-            icon="delete"
-            tone="danger"
-            onPress={() => choose('delete')}
-          />
-        </ActionList.Section>
-      </ActionList>
+      <ActionButtons
+        label="Project actions"
+        actions={
+          <>
+            <Action.Section title="Project">
+              {/* With no icon to draw as a header button, it waits in the menu. */}
+              <Action label="Rename" onPress={() => choose('rename')} />
+              <Action
+                label="Add Project"
+                icon="add"
+                onPress={() => choose('add')}
+              />
+              <Action
+                label="Create branch"
+                icon="branch"
+                onPress={() => choose('branch')}
+                disabled
+              />
+              <Action
+                label="Show archived"
+                icon="archive"
+                onPress={() => choose('show')}
+              />
+            </Action.Section>
+            <Action.Section>
+              <Action
+                label="Delete"
+                icon="delete"
+                tone="danger"
+                onPress={() => choose('delete')}
+              />
+            </Action.Section>
+          </>
+        }
+      />
     ),
     play: async ({ canvas, canvasElement, userEvent }) => {
       choose.mockClear();
@@ -85,27 +90,33 @@ export const HeaderPhone = header(layoutWidths.phone);
 function context(width: number): Story {
   return {
     render: () => (
-      <ActionList variant="context" trigger={<Button label="Deploy web" />}>
-        <Action
-          label="Delete"
-          icon="delete"
-          tone="danger"
-          onPress={() => choose('delete')}
-        />
-        <ActionList.Section title="Run">
-          <Action
-            label="Open"
-            icon="external-link"
-            onPress={() => choose('open')}
-          />
-          <Action
-            label="Archive"
-            icon="archive"
-            disabled
-            onPress={() => choose('archive')}
-          />
-        </ActionList.Section>
-      </ActionList>
+      <ContextActions
+        actions={
+          <>
+            <Action
+              label="Delete"
+              icon="delete"
+              tone="danger"
+              onPress={() => choose('delete')}
+            />
+            <Action.Section title="Run">
+              <Action
+                label="Open"
+                icon="external-link"
+                onPress={() => choose('open')}
+              />
+              <Action
+                label="Archive"
+                icon="archive"
+                disabled
+                onPress={() => choose('archive')}
+              />
+            </Action.Section>
+          </>
+        }
+      >
+        <Button label="Deploy web" />
+      </ContextActions>
     ),
     play: async ({ canvas, canvasElement, userEvent }) => {
       choose.mockClear();
@@ -139,7 +150,7 @@ export const ContextWide = context(layoutWidths.wide);
 export const ContextPhone = context(layoutWidths.phone);
 
 export const Empty: Story = {
-  render: () => <ActionList />,
+  render: () => <ActionButtons actions={null} />,
   play: async ({ canvas }) => {
     await expect(canvas.queryByRole('button')).toBeNull();
   },

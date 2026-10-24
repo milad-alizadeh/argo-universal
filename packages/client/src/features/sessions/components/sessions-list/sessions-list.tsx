@@ -1,5 +1,5 @@
 import { hasLiquidGlass } from '@repo/kit/native-header';
-import { ActionShortcutScope } from '@repo/kit/primitives/actions/action-list';
+import { ActionShortcutScope } from '@repo/kit/primitives/actions/action';
 import { List } from '@repo/kit/primitives/lists/list';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';

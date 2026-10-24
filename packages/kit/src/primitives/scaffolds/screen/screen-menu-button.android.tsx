@@ -12,7 +12,7 @@ import {
   submenuLabel,
   type ActionGroup,
   type DeclaredSubmenu,
-} from '#primitives/actions/action-list';
+} from '#primitives/actions/action';
 import { Host } from '#primitives/native/host';
 import { MenuDropdown, nativeMenuItems } from '#primitives/overlays/menu';
 import {

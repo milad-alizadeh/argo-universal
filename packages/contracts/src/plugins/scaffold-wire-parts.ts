@@ -53,7 +53,7 @@ export const scaffoldWireParts = {
     detailProps,
     {
       children: true,
-      slots: { metadata: ['Metadata'], actions: ['ActionList'] },
+      slots: { metadata: ['Metadata'] },
     },
   ),
   Metadata: part(

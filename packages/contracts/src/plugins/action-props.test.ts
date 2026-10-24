@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionEntryProps } from './action-list-props';
+import { actionEntryProps } from './action-props';
 
 const sort = { label: 'Sort', icon: 'filter-list' };
 

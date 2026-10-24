@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { echoes } from './plugin-part-props';
-import { part, stringLabel } from './plugin-part-schema-utils';
+import { actionSlot, part, stringLabel } from './plugin-part-schema-utils';
 import { WireEvent } from './wire';
 
 export const screenProps = z.object({
@@ -35,7 +35,8 @@ export const screenWirePart = part(
     children: true,
     root: true,
     slots: {
-      actions: ['ActionList'],
+      // The header's verbs, in Sections: buttons on wide screens and iOS, the toolbar and overflow menu on Android. Header Actions nested in content are not a header.
+      actions: actionSlot,
       // The main Action: a header button, iOS toolbar item, or Android FAB.
       primaryAction: ['Action'],
     },

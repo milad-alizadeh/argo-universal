@@ -1,7 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Markdown } from '#primitives/content/markdown';
-import { PageHeaderActions } from '#primitives/scaffolds/screen';
 import { Spinner } from '#primitives/status/spinner';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { DetailColumns } from './detail-columns';
@@ -16,7 +15,7 @@ const scroll = {
 
 /*
  * Foundations / Detail: content, then its Metadata beside it on wide containers.
- * Inside a Screen its Actions join the Screen header; on their own they follow the content.
+ * Its Screen declares the header Actions; a Detail has none of its own.
  */
 export function Detail(props: DetailProps): ReactElement {
   return (
@@ -24,7 +23,6 @@ export function Detail(props: DetailProps): ReactElement {
       <DetailColumns metadata={props.metadata}>
         <DetailContent {...props} />
       </DetailColumns>
-      <PageHeaderActions>{props.actions}</PageHeaderActions>
     </ScrollFadeView>
   );
 }

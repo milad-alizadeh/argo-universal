@@ -2,11 +2,10 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { useWide } from '#kit/use-wide/use-wide';
 import {
-  ActionList,
   HeaderActions,
   headerSlots,
   type HeaderActionsProps,
-} from '#primitives/actions/action-list';
+} from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import {
   SearchField,
@@ -78,16 +77,16 @@ function PlainHeading(props: HeadingContent): ReactElement {
   );
 }
 
-// Every ActionList the Screen registered, its own and its content's, split as one header with one overflow menu.
+// The Screen's own Actions, split as one header with one overflow menu, then its primary Action.
 function HeadingActions(
-  props: Pick<ScreenHeaderInput, 'header' | 'primaryAction'>,
+  props: Pick<ScreenHeaderInput, 'header'>,
 ): ReactElement {
-  const { groups, label } = props.header;
+  const { groups, label, primary } = props.header;
 
   return (
     <>
       <DeclaredActions groups={groups} label={label} />
-      {primaryButton(props.primaryAction)}
+      <DeclaredActions groups={primary} label={label} />
     </>
   );
 }
@@ -140,12 +139,6 @@ function searchQuery(
     onFocus: page.onFocus,
     onBlur: page.onBlur,
   };
-}
-
-function primaryButton(action: ScreenProps['primaryAction']): ReactNode {
-  if (!action) return null;
-
-  return <ActionList>{action}</ActionList>;
 }
 
 function ignoreSearch(): void {}

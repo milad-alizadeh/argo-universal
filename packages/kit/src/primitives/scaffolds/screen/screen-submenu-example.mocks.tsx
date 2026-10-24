@@ -1,9 +1,5 @@
 import type { ReactElement } from 'react';
-import {
-  Action,
-  ActionList,
-  type DeclaredSubmenu,
-} from '#primitives/actions/action-list';
+import { Action, type DeclaredSubmenu } from '#primitives/actions/action';
 
 const sections = [
   {
@@ -39,9 +35,9 @@ function submenuSection(
   choose: Choose,
 ): ReactElement {
   return (
-    <ActionList.Section key={section.title} title={section.title}>
+    <Action.Section key={section.title} title={section.title}>
       {section.actions.map((action) => reporting(action, choose))}
-    </ActionList.Section>
+    </Action.Section>
   );
 }
 

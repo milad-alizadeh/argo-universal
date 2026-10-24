@@ -3,7 +3,6 @@ import {
   ListItem,
   type ListItemProps,
 } from '@repo/kit/primitives/lists/list-item';
-import type { ContextMenuTriggerProps } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -12,6 +11,7 @@ import {
 } from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
 import { SessionMark } from './session-row-mark';
+import { sessionRowMenu } from './session-row-menu';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { sidebarDrawing } from './session-row-sidebar';
 import { compactStatusDot } from './session-row-status';
@@ -56,23 +56,20 @@ function compactLabel(props: SessionRowProps): string {
   return `${label}, ${changeDescription(pullRequest)} Change`;
 }
 
-// The row opens its Session; Android's context menu hands it its long press.
-type CompactRowProps = SessionRowProps & ContextMenuTriggerProps;
-
 const compactPresses = (
-  props: CompactRowProps,
-): Pick<ListItemProps, 'onPress' | 'onLongPress'> => ({
+  props: SessionRowProps,
+): Pick<ListItemProps, 'onPress'> => ({
   onPress: () => props.onSelect(props.session.sessionId),
-  onLongPress: props.onLongPress,
 });
 
 // Compact: one line, a row of its Project's grouped list on a phone.
-export function CompactSessionRow(props: CompactRowProps): React.JSX.Element {
+export function CompactSessionRow(props: SessionRowProps): React.JSX.Element {
   const selected = props.selected ?? false;
 
   return (
     <ListItem
       {...compactPresses(props)}
+      {...sessionRowMenu(props)}
       title={props.session.title}
       {...sidebarDrawing(props.session.status, 'compact')}
       accessibilityLabel={compactLabel(props)}

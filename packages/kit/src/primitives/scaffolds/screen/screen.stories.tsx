@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -103,12 +103,12 @@ function ExampleActions({
   submenu,
 }: ExampleActionsProps): React.JSX.Element {
   return (
-    <ActionList>
+    <>
       {exampleActions.map((action) => (
         <Action key={action.label} {...exampleAction(action, choose)} />
       ))}
       {submenu ? exampleSubmenu(choose) : null}
-    </ActionList>
+    </>
   );
 }
 

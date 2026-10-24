@@ -1,6 +1,6 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ContextActions } from '#primitives/actions/action-list';
+import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup } from '#primitives/lists/list';
 import { ListContext, ListTileContext } from '../../../list-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
@@ -55,7 +55,7 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   const { context, footer } = useListItemGroup(props.description);
 
   return (
-    <ContextActions actions={props.actions}>
+    <ContextActions actions={props.actions} menu={props.contextMenu}>
       <>
         <ListContext value={context}>
           <ItemSurface {...props} />

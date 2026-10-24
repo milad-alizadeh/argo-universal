@@ -2,14 +2,19 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
 import { Button } from '#primitives/actions/button';
-import { Action, ActionList, ActionShortcutScope } from './index';
+import {
+  Action,
+  ActionButtons,
+  ActionShortcutScope,
+  ContextActions,
+} from './index';
 
 const choose = fn();
 
 const open = fn();
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Actions/ActionList/Focus',
+  title: 'Tests/Design System/Primitives/Actions/Action/Focus',
 } satisfies Meta;
 
 export default meta;
@@ -18,24 +23,27 @@ type Story = StoryObj<typeof meta>;
 
 export const FocusedRow: Story = {
   render: () => (
-    <ActionList
-      variant="context"
-      trigger={<Button label="Row" onPress={open} />}
+    <ContextActions
+      actions={
+        <>
+          <Action
+            label="Rename"
+            icon="rename"
+            shortcut={{ modifiers: [], key: 'Enter' }}
+            onPress={() => choose('rename')}
+          />
+          <Action
+            label="Archive"
+            icon="archive"
+            disabled
+            shortcut={{ modifiers: [], key: 'Backspace' }}
+            onPress={() => choose('archive')}
+          />
+        </>
+      }
     >
-      <Action
-        label="Rename"
-        icon="rename"
-        shortcut={{ modifiers: [], key: 'Enter' }}
-        onPress={() => choose('rename')}
-      />
-      <Action
-        label="Archive"
-        icon="archive"
-        disabled
-        shortcut={{ modifiers: [], key: 'Backspace' }}
-        onPress={() => choose('archive')}
-      />
-    </ActionList>
+      <Button label="Row" onPress={open} />
+    </ContextActions>
   ),
   play: async ({ canvas, userEvent }) => {
     choose.mockClear();
@@ -57,26 +65,32 @@ function RemovableFirst(): React.JSX.Element {
   return (
     <ActionShortcutScope>
       {shown && (
-        <ActionList>
-          <Action
-            label="First"
-            icon="add"
-            shortcut={{ modifiers: ['alt'], key: 'i' }}
-            onPress={() => {
-              choose('first');
-              setShown(false);
-            }}
-          />
-        </ActionList>
-      )}
-      <ActionList>
-        <Action
-          label="Later"
-          icon="archive"
-          shortcut={{ modifiers: ['alt'], key: 'i' }}
-          onPress={() => choose('later')}
+        <ActionButtons
+          actions={
+            <Action
+              key="first"
+              label="First"
+              icon="add"
+              shortcut={{ modifiers: ['alt'], key: 'i' }}
+              onPress={() => {
+                choose('first');
+                setShown(false);
+              }}
+            />
+          }
         />
-      </ActionList>
+      )}
+      <ActionButtons
+        actions={
+          <Action
+            key="later"
+            label="Later"
+            icon="archive"
+            shortcut={{ modifiers: ['alt'], key: 'i' }}
+            onPress={() => choose('later')}
+          />
+        }
+      />
     </ActionShortcutScope>
   );
 }

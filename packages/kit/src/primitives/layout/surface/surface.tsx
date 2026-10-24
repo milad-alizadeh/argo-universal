@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Pressable, type PressableProps } from 'react-native';
-import { ContextActions } from '#primitives/actions/action-list';
+import { ContextActions } from '#primitives/actions/action';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { SurfaceMaterial } from './surface-material';
 import type { SurfaceProps } from './surface-props';

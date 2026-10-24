@@ -1,7 +1,6 @@
-export { ActionList } from './action-list';
-
 export {
   Action,
+  ActionSection,
   declaredActions,
   submenuGroups,
   type DeclaredAction,
@@ -18,28 +17,26 @@ export {
   useActionShortcutScope,
 } from './action-shortcut-scope';
 
-export { ContextActions } from './context-actions';
+export { ContextActions, type ContextMenuMeta } from './context-actions';
+
+export { ActionButtons, ShortcutAnchor } from './action-buttons';
+
+export { useDeclaredActions, type DeclaredActions } from './declared-actions';
 
 export {
-  type ActionListProps,
   type ActionProps,
   type ActionSectionProps,
   type PressActionProps,
-} from './action-list-props';
+} from './action-props';
 
 export type { ActionShortcut } from './action-shortcuts';
-
-export {
-  ActionListHeaderContext,
-  type HeaderSink,
-} from './action-header-context';
 
 export {
   HeaderActions,
   headerMenuActions,
   overflowIcon,
   type HeaderActionsProps,
-} from './action-list-header';
+} from './header-buttons';
 
 export {
   submenuBadgeText,

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Screen } from './index';
 import {
   exampleSubmenu,
@@ -24,7 +24,7 @@ const sorted = fn();
 // A submenu keeps its own header button, its badge in the spoken name, and runs the Action chosen inside it.
 const headerSubmenu: Story = {
   args: {
-    actions: <ActionList>{exampleSubmenu(sorted)}</ActionList>,
+    actions: exampleSubmenu(sorted),
   },
   play: async ({ canvas, canvasElement, userEvent }) => {
     sorted.mockClear();
@@ -49,12 +49,12 @@ const choose = (label: string) => (): void => chosen(label);
 
 // The overflow menu of a full header, holding the Sort submenu with the given badge.
 const fullHeader = (badge?: SubmenuBadge): ReactElement => (
-  <ActionList>
+  <>
     <Action label="Copy link" icon="copy" onPress={choose('Copy link')} />
     <Action label="Rename" icon="rename" onPress={choose('Rename')} />
     {exampleSubmenu(chosen, badge)}
     <Action label="Archive" icon="archive" onPress={choose('Archive')} />
-  </ActionList>
+  </>
 );
 
 // A full header folds a submenu into the overflow menu, where it opens as a nested menu whose Actions still run.
@@ -112,19 +112,17 @@ export const FoldedSubmenuDot = atWidth(screenWidths.Wide, {
   },
 });
 
-// Two ActionLists share one header: three controls at most, one overflow menu, and each list's Actions still run.
-const twoLists: Story = {
+// Loose Actions and a Section share one header: three controls at most, one overflow menu, and each Action still runs.
+const twoSections: Story = {
   args: {
     actions: (
       <>
-        <ActionList>
-          <Action label="Filters" icon="filters" onPress={choose('Filters')} />
-        </ActionList>
-        <ActionList>
+        <Action label="Filters" icon="filters" onPress={choose('Filters')} />
+        <Action.Section>
           <Action label="Copy link" icon="copy" onPress={choose('Copy link')} />
           <Action label="Rename" icon="rename" onPress={choose('Rename')} />
           <Action label="Archive" icon="archive" onPress={choose('Archive')} />
-        </ActionList>
+        </Action.Section>
       </>
     ),
   },
@@ -142,24 +140,22 @@ const twoLists: Story = {
   },
 };
 
-export const TwoListsPhone = atWidth(screenWidths.Phone, twoLists);
+export const TwoSectionsPhone = atWidth(screenWidths.Phone, twoSections);
 
-export const TwoListsWide = atWidth(screenWidths.Wide, twoLists);
+export const TwoSectionsWide = atWidth(screenWidths.Wide, twoSections);
 
 const renamed = fn();
 
-// The heading draws a list's Actions for it, and the list's shortcuts still run.
+// The heading draws the Screen's Actions, and their shortcuts still run.
 export const HeaderShortcut = atWidth(screenWidths.Wide, {
   args: {
     actions: (
-      <ActionList>
-        <Action
-          label="Rename"
-          icon="rename"
-          shortcut={{ modifiers: ['alt'], key: 'i' }}
-          onPress={renamed}
-        />
-      </ActionList>
+      <Action
+        label="Rename"
+        icon="rename"
+        shortcut={{ modifiers: ['alt'], key: 'i' }}
+        onPress={renamed}
+      />
     ),
   },
   play: async ({ canvas, userEvent }) => {

@@ -1,5 +1,5 @@
 import type { WirePart } from '@repo/contracts/plugins/kit';
-import { ActionList, Action } from '@repo/kit/primitives/actions/action-list';
+import { Action } from '@repo/kit/primitives/actions/action';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { SplitButton } from '@repo/kit/primitives/actions/split-button';
 import { Audio } from '@repo/kit/primitives/content/audio';
@@ -50,9 +50,8 @@ export const pluginEntries = {
   'Metadata.Pills': Metadata.Pills,
   'Metadata.StatusDot': Metadata.StatusDot,
   'Metadata.Avatar': Metadata.Avatar,
-  ActionList,
-  'ActionList.Section': ActionList.Section,
   Action,
+  'Action.Section': Action.Section,
   EmptyState,
   Slider,
   FieldGroup,

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Screen } from '#primitives/scaffolds/screen';
 import { EmptyState } from '#primitives/status/empty-state';
@@ -144,15 +144,17 @@ const closed = fn();
 
 const closeLabel = 'Close Issue';
 
-export const ActionsJoinTheScreenHeader: Story = {
-  args: {
-    ...issue.detail,
-    actions: (
-      <ActionList>
-        <Action label={closeLabel} icon="check" onPress={closed} />
-      </ActionList>
-    ),
-  },
+export const ScreenActionsLeadTheContent: Story = {
+  render: (args) => (
+    <Screen
+      title={issue.title}
+      actions={
+        <Action key="close" label={closeLabel} icon="check" onPress={closed} />
+      }
+    >
+      <Detail {...args} />
+    </Screen>
+  ),
   play: async ({ canvas, userEvent }) => {
     closed.mockClear();
     const button = canvas.getByRole('button', { name: closeLabel });

@@ -48,11 +48,9 @@ export const Table: PluginComponents['Table'] & {
   Cell: PluginComponents['Table.Cell'];
 };
 
-export const ActionList: PluginComponents['ActionList'] & {
-  Section: PluginComponents['ActionList.Section'];
+export const Action: PluginComponents['Action'] & {
+  Section: PluginComponents['Action.Section'];
 };
-
-export const Action: PluginComponents['Action'];
 
 export const Slider: PluginComponents['Slider'];
 

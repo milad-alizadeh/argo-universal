@@ -2,7 +2,12 @@ import { z } from 'zod';
 import { iconName } from '../../kit-symbols/icon-schema';
 import { listItemProps } from '../kit-props';
 import { openChange } from '../overlay-kit-props';
-import { handler, part, stringLabel } from '../plugin-part-schema-utils';
+import {
+  actionSlot,
+  handler,
+  part,
+  stringLabel,
+} from '../plugin-part-schema-utils';
 import { perSizeClass } from '../schema-size-class';
 import { wireParts } from '../wire-parts';
 
@@ -52,7 +57,7 @@ export const scaffoldsPartSchemas = {
     inspectorProps,
     {
       children: true,
-      slots: { actions: ['ActionList'] },
+      slots: { actions: actionSlot },
       events: { onOpenChange: openChange(inspectorProps) },
     },
   ),

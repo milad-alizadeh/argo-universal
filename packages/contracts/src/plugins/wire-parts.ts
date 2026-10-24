@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { actionListWireParts } from './action-list-wire-parts';
+import { actionWireParts } from './action-wire-parts';
 import { canvasWireParts } from './canvas-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
@@ -29,7 +29,7 @@ export const wireParts = {
   ...scaffoldWireParts,
   ...listWireParts,
   ...tableWireParts,
-  ...actionListWireParts,
+  ...actionWireParts,
   ...controlWireParts,
   ...fieldGroupWireParts,
   ...overlayWireParts,

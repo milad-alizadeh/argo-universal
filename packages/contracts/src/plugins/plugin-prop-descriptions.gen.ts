@@ -274,20 +274,14 @@ export type WireSchemaHints = {
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"SplitButton", "onValueChange">;
   };
-  "ActionList": {
-    /** Header buttons and overflow, or a row context menu. */
-    "variant": PropValue<"ActionList", "variant">;
-    /** Spoken overflow menu name. */
-    "accessibilityLabel": PropValue<"ActionList", "accessibilityLabel">;
-  };
-  "ActionList.Section": {
+  "Action.Section": {
     /** Optional Section heading. */
-    "title": PropValue<"ActionList.Section", "title">;
+    "title": PropValue<"Action.Section", "title">;
   };
   "Action": {
     /** The Action label and accessible name. */
     "label": PropValue<"Action", "label">;
-    /** The leading Argo icon; a header ActionList shows only Actions with one as buttons, and a submenu needs one. */
+    /** The leading Argo icon; a Screen header shows only Actions with one as buttons, and a submenu needs one. */
     "icon": PropValue<"Action", "icon">;
     /** Desktop shortcut; Plugins cannot take reserved keys. */
     "shortcut": PropValue<"Action", "shortcut">;
@@ -299,8 +293,6 @@ export type WireSchemaHints = {
     "onPress": PropValue<"Action", "onPress">;
     /** An Alert answer that dismisses the question, or one that destroys data. */
     "role": PropValue<"Action", "role">;
-    /** Check this Action as its Section's chosen option; pass false on the others. */
-    "selected": PropValue<"Action", "selected">;
     /** A count or status dot on the icon. */
     "badge": PropValue<"Action", "badge">;
   };

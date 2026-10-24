@@ -14,7 +14,7 @@ import {
   type DeclaredAction,
   type DeclaredEntry,
   type DeclaredSubmenu,
-} from '#primitives/actions/action-list';
+} from '#primitives/actions/action';
 import { countedTitle } from '#primitives/overlays/menu';
 
 type ToolbarButton = ComponentProps<typeof Stack.Toolbar.Button>;
@@ -173,8 +173,6 @@ function menuAction(action: DeclaredAction): ReactElement {
     onPress: action.onPress,
     disabled: action.disabled,
     destructive: action.tone === 'danger',
-    // A choice's check: UIMenu's on state.
-    isOn: action.selected,
   };
 
   return (

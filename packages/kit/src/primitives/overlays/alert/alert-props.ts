@@ -1,7 +1,7 @@
 import {
   declaredActions,
   type PressActionProps,
-} from '#primitives/actions/action-list';
+} from '#primitives/actions/action';
 import type { KitProps } from '../../kit-props';
 
 // One answer is an Action. Argo's own callers pass answers as data; a Plugin declares them as Action children.

@@ -1,9 +1,8 @@
 import { use, type ReactElement } from 'react';
 import { Platform } from 'react-native';
-import { ContextActions } from '#primitives/actions/action-list';
+import { ContextActions } from '#primitives/actions/action';
 import { List } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
-import { PageHeaderActions } from '#primitives/scaffolds/screen';
 import { nodeValue } from './table-cell';
 import type { TableProps } from './table-props';
 import { TableRowDetail, TableRowDetailHost } from './table-row-detail';
@@ -13,19 +12,17 @@ import {
   type CompactColumns,
   type TableRow,
 } from './table-rows';
-import { TableSortActions } from './table-sort-actions';
+import { TableSortMenu } from './table-sort-menu';
 
 type ListProps = TableProps & {
   rows: readonly TableRow[];
 };
 
-// Compact widths: a grouped List of ListItems, each opening its Row detail; Sort by joins the Screen header.
+// Compact widths: a grouped List of ListItems, each opening its Row detail; Sort by is a Menu above the rows.
 export function TableList(props: ListProps): ReactElement {
   return (
     <>
-      <PageHeaderActions>
-        <TableSortActions {...props} />
-      </PageHeaderActions>
+      <TableSortMenu {...props} />
       <List appearance="plain" accessibilityLabel={props.accessibilityLabel}>
         <CompactRows {...props} roles={compactColumns(props.columns)} />
       </List>

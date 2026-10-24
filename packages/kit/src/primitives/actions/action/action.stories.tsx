@@ -1,42 +1,33 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { ListItem } from '#primitives/lists/list-item';
-import { ChoiceExample } from './action-list-choice.mocks';
 import {
-  contextMenuActionList,
+  contextMenuActions,
   type DemoAction,
-  destructiveActionList,
+  destructiveActions,
   pageActions,
-} from './action-list-fixtures';
-import { Action, ActionList } from './index';
+} from './action-fixtures';
+import { Action, ActionButtons, ContextActions } from './index';
 
 const meta = {
-  title: 'Design System/Primitives/Actions/ActionList',
-  component: ActionList,
-  argTypes: kitArgTypes('ActionList'),
-} satisfies Meta<typeof ActionList>;
+  title: 'Design System/Primitives/Actions/Action',
+  component: Action,
+  argTypes: kitArgTypes('Action'),
+  // The Action itself draws nothing; each story draws Actions where a Screen, a row or a button holds them.
+  args: { label: 'Add', icon: 'add', onPress: fn() },
+} satisfies Meta<typeof Action>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Every story draws Action children and tracks what the last press did, so each keeps a render.
+// Every story draws Actions and tracks what the last press did, so each keeps a render.
 export const OnAScreen: Story = { render: () => <ScreenExample /> };
 
-export const Choice: Story = {
-  render: () => <ChoiceExample />,
-  parameters: {
-    docs: {
-      description: {
-        story: 'A submenu Action whose Sections are each one single choice.',
-      },
-    },
-  },
-};
-
 export const ContextMenu: Story = {
-  render: () => <RowExample {...contextMenuActionList} />,
+  render: () => <RowExample {...contextMenuActions} />,
   parameters: {
     docs: {
       description: {
@@ -47,7 +38,7 @@ export const ContextMenu: Story = {
 };
 
 export const Destructive: Story = {
-  render: () => <RowExample {...destructiveActionList} />,
+  render: () => <RowExample {...destructiveActions} />,
   parameters: {
     docs: {
       description: {
@@ -63,7 +54,7 @@ function ScreenExample(): React.JSX.Element {
   return (
     <>
       <ListItem title={result} />
-      <ActionList>{demoActions(pageActions, setResult)}</ActionList>
+      <ActionButtons actions={demoActions(pageActions, setResult)} />
     </>
   );
 }
@@ -78,9 +69,9 @@ function RowExample({
   const [result, setResult] = useState(title);
 
   return (
-    <ActionList variant="context" trigger={<ListItem title={result} />}>
-      {demoActions(actions, setResult)}
-    </ActionList>
+    <ContextActions actions={demoActions(actions, setResult)}>
+      <ListItem title={result} />
+    </ContextActions>
   );
 }
 
@@ -89,9 +80,9 @@ function demoActions(
   onAction: (result: string) => void,
 ): React.JSX.Element {
   return (
-    <ActionList.Section>
+    <Action.Section>
       {actions.map((action) => demoAction(action, onAction))}
-    </ActionList.Section>
+    </Action.Section>
   );
 }
 

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { Action, ActionList } from '#primitives/actions/action-list';
-import { Screen, PageHeaderActions } from './index';
+import { Action } from '#primitives/actions/action';
+import { Screen } from './index';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Scaffolds/Screen/ContentActions',
@@ -13,37 +13,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const joined = fn();
+const pressed = fn();
 
-// Content parts hand their Actions up beside the Screen's own; none replaces another's.
-export const ContentActionsJoinTheHeader: Story = {
+// The Screen's `actions` are its header; an Action in its content is not a header Action.
+export const ContentAddsNoHeaderActions: Story = {
   args: {
     title: 'Issue',
     actions: (
-      <ActionList>
-        <Action label="Share" icon="filters" onPress={() => joined('share')} />
-      </ActionList>
+      <Action label="Share" icon="filters" onPress={() => pressed('share')} />
     ),
     children: (
-      <>
-        <PageHeaderActions>
-          <ActionList>
-            <Action label="Edit" icon="rename" onPress={() => joined('edit')} />
-          </ActionList>
-        </PageHeaderActions>
-        <PageHeaderActions>
-          <ActionList>
-            <Action label="Pin" icon="archive" onPress={() => joined('pin')} />
-          </ActionList>
-        </PageHeaderActions>
-      </>
+      <Action label="Edit" icon="rename" onPress={() => pressed('edit')} />
     ),
   },
   play: async ({ canvas, userEvent }) => {
-    joined.mockClear();
+    pressed.mockClear();
     await userEvent.click(canvas.getByRole('button', { name: 'Share' }));
-    await userEvent.click(canvas.getByRole('button', { name: 'Pin' }));
-    await expect(joined.mock.calls).toEqual([['share'], ['pin']]);
-    await expect(canvas.getByRole('button', { name: 'Edit' })).toBeVisible();
+    await expect(pressed.mock.calls).toEqual([['share']]);
+    await expect(canvas.queryByRole('button', { name: 'Edit' })).toBeNull();
   },
 };

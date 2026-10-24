@@ -1,4 +1,4 @@
-import { Action } from '@repo/kit/primitives/actions/action-list';
+import { Action } from '@repo/kit/primitives/actions/action';
 import { List } from '@repo/kit/primitives/lists/list';
 import {
   type LoadingRow,

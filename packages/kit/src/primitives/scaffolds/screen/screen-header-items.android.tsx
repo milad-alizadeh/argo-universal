@@ -7,7 +7,7 @@ import {
   splitHeaderActions,
   type HeaderActionsProps,
   type HeaderEntry,
-} from '#primitives/actions/action-list';
+} from '#primitives/actions/action';
 import { ScreenActionButton } from './screen-action-button.android';
 import {
   ScreenOverflowButton,
@@ -18,7 +18,7 @@ import { ScreenSearchBar } from './screen-search-bar.android';
 
 export const screenTitleOptions = { headerTitleAlign: 'left' } as const;
 
-// The toolbar draws its items outside the Screen's tree, so it draws the groups the Screen's ActionLists registered.
+// The toolbar draws its items outside the Screen's tree, so it draws the groups the Screen declared.
 export function ScreenHeaderItems(props: ScreenHeaderInput): ReactElement {
   const { groups, label } = props.header;
   // The search icon takes one of the toolbar's two places.

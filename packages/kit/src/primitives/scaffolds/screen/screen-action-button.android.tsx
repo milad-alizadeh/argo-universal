@@ -3,10 +3,7 @@ import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import type { IconSymbol } from '#kit/symbols/icon-symbol';
-import type {
-  IconAction,
-  PressActionProps,
-} from '#primitives/actions/action-list';
+import type { IconAction, PressActionProps } from '#primitives/actions/action';
 import { Icon } from '#primitives/content/icon';
 import { ButtonIcon } from '#primitives/native/button-icon';
 import { Host } from '#primitives/native/host';

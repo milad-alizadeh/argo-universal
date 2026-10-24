@@ -2,12 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { createElement, Fragment, type ReactNode } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { Text } from '#primitives/content/text';
-import { Action, ActionList, ContextActions } from './index';
+import { Action, ContextActions } from './index';
 
 const archived = fn();
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Actions/ActionList/ContextActions',
+  title: 'Tests/Design System/Primitives/Actions/Action/ContextActions',
   component: ContextActions,
 } satisfies Meta<typeof ContextActions>;
 
@@ -16,16 +16,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const archive = (
-  <ActionList key="archive">
-    <Action icon="archive" label="Archive build" onPress={archived} />
-  </ActionList>
+  <Action
+    key="archive"
+    icon="archive"
+    label="Archive build"
+    onPress={archived}
+  />
 );
 
-const copy = (
-  <ActionList key="copy">
-    <Action icon="copy" label="Copy link" onPress={fn()} />
-  </ActionList>
-);
+const copy = <Action key="copy" icon="copy" label="Copy link" onPress={fn()} />;
 
 async function openMenu(canvasElement: HTMLElement): Promise<void> {
   await userEvent.pointer({
@@ -34,7 +33,7 @@ async function openMenu(canvasElement: HTMLElement): Promise<void> {
   });
 }
 
-// Every ActionList in the Slot lands in one menu, however the Slot holds them.
+// Every Action in the Slot lands in one menu, however the Slot holds them.
 function mergedActions(actions: ReactNode): Story {
   return {
     args: { actions, children: <Text>Build actions</Text> },
@@ -53,10 +52,10 @@ function mergedActions(actions: ReactNode): Story {
   };
 }
 
-export const ArrayOfActionLists = mergedActions([copy, archive]);
+export const ArrayOfActions = mergedActions([copy, archive]);
 
 // The Plugin renderer hands a Slot holding several nodes over as a Fragment.
-export const FragmentOfActionLists = mergedActions(
+export const FragmentOfActions = mergedActions(
   <>
     {copy}
     {archive}

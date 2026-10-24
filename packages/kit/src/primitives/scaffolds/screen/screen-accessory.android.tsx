@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
 import { useWide } from '#kit/use-wide/use-wide';
-import type { IconAction } from '#primitives/actions/action-list';
+import type { IconAction } from '#primitives/actions/action';
 import { Icon } from '#primitives/content/icon';
 import { ButtonIcon } from '#primitives/native/button-icon';
 import { Host } from '#primitives/native/host';

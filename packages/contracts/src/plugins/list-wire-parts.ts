@@ -11,7 +11,7 @@ import { rowPress } from './list-kit-props';
 import { listMediaParts } from './list-media-parts';
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { echoes } from './plugin-part-props';
-import { part } from './plugin-part-schema-utils';
+import { actionSlot, part } from './plugin-part-schema-utils';
 
 export const listWireParts = {
   List: {
@@ -53,7 +53,7 @@ export const listWireParts = {
     container: true,
     children: false,
     slots: {
-      actions: ['ActionList'],
+      actions: actionSlot,
       media: listMediaParts,
       leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
       trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],

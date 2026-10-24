@@ -5,18 +5,17 @@ import { PluginTree } from './plugin-registry';
 
 // JSON is the external Plugin wire boundary; callbacks are supplied by the registry.
 const fixture: WireNode = JSON.parse(`{
-  "type": "ActionList", "key": "actions", "props": { "variant": "context" },
-  "slots": { "trigger": [{ "type": "ListItem", "key": "row", "props": { "title": "Deploy web" }, "slots": {}, "children": [] }] },
-  "children": [{ "type": "ActionList.Section", "key": "run", "props": { "title": "Run" }, "slots": {}, "children": [
+  "type": "ListItem", "key": "row", "props": { "title": "Deploy web" }, "children": [],
+  "slots": { "actions": [{ "type": "Action.Section", "key": "run", "props": { "title": "Run" }, "slots": {}, "children": [
     { "type": "Action", "key": "copy", "props": { "label": "Copy link", "icon": "copy", "shortcut": { "modifiers": ["meta", "shift"], "key": "c" }, "onPress": { "$event": "onPress" } }, "slots": {}, "children": [] },
     { "type": "Action", "key": "disabled", "props": { "label": "Archive", "icon": "archive", "disabled": true, "onPress": { "$event": "onPress" } }, "slots": {}, "children": [] }
-  ] }]
+  ] }] }
 }`);
 
 const onEvent = fn();
 
 const meta = {
-  title: 'Tests/Design System/Patterns/PluginRegistry/ActionList',
+  title: 'Tests/Design System/Patterns/PluginRegistry/Action',
 } satisfies Meta;
 
 export default meta;
@@ -39,7 +38,7 @@ export const ContextDispatch: Story = {
     ).toHaveAttribute('aria-disabled', 'true');
     await userEvent.click(copy);
     await expect(onEvent).toHaveBeenCalledTimes(1);
-    await expect(onEvent).toHaveBeenCalledWith('actions/run/copy', {
+    await expect(onEvent).toHaveBeenCalledWith('row#actions/run/copy', {
       event: 'onPress',
     });
   },
