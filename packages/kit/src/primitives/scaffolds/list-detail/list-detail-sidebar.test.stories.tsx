@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
 import { Text } from '#primitives/content/text';
-import { Page } from '#primitives/scaffolds/page';
+import { Screen } from '#primitives/scaffolds/screen';
 import { ListDetail } from './list-detail';
 import {
   createListDetailSidebar,
@@ -36,19 +36,19 @@ function WithSidebar(props: { nested?: boolean }): ReactElement {
       </View>
       <View testID="host-page" className="flex-1">
         <ListDetailSidebarContext value={sidebar}>
-          <HostPage nested={props.nested} />
+          <HostScreen nested={props.nested} />
         </ListDetailSidebarContext>
       </View>
     </View>
   );
 }
 
-function HostPage(props: { nested?: boolean }): ReactElement {
+function HostScreen(props: { nested?: boolean }): ReactElement {
   const example = <ExampleListDetail example={issues} initial={syncIssue.id} />;
 
   if (!props.nested) return example;
 
-  return <ListDetail list={<Page title="Settings" />} detail={example} />;
+  return <ListDetail list={<Screen title="Settings" />} detail={example} />;
 }
 
 function HostSidebar({
@@ -79,7 +79,7 @@ export const RootListMovesToTheSidebar = at(layoutWidths.wide, {
 });
 
 // A ListDetail in another's detail splits within it; only the outer one takes the host's sidebar.
-export const NestedListDetailSplitsInItsPage = at(layoutWidths.wide, {
+export const NestedListDetailSplitsInItsScreen = at(layoutWidths.wide, {
   render: () => <WithSidebar nested />,
   play: async ({ canvas }) => {
     const page = await canvas.findByTestId('host-page');

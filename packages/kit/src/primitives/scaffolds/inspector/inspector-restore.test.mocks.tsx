@@ -47,7 +47,7 @@ function scrollState(state: State): NonNullable<InspectorProps['scrollState']> {
   };
 }
 
-export function LoadingPage(props: Props): ReactElement {
+export function LoadingScreen(props: Props): ReactElement {
   const [count, setCount] = useState(0);
   const [offset, onScroll] = useState(500);
 

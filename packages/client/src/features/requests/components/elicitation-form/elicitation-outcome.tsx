@@ -4,7 +4,6 @@ import type {
 } from '@repo/contracts';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
@@ -23,6 +22,8 @@ type Entry = [string, Property];
 type AnswersProps = { properties: Entry[]; answer: ElicitationAnswer };
 
 type AnswerProps = { entry: Entry; content: ElicitationAnswer['content'] };
+
+type AnswerFieldProps = { title: string; value: string };
 
 type SummaryProps = { label: string; count: number };
 
@@ -104,14 +105,27 @@ function OutcomeAnswer({ entry, content }: AnswerProps): React.JSX.Element {
   const title = propertyTitle(name, property);
   const value = answerTexts(property, recordedAnswer(content, name)).join(', ');
 
+  return <AnswerField title={title} value={value} />;
+}
+
+function AnswerField({ title, value }: AnswerFieldProps): React.JSX.Element {
   return (
-    <ListItem.Field
-      title={title}
-      valueLabel={value}
-      accessibilityLabel={value ? undefined : title}
+    <View
+      role="group"
+      accessibilityLabel={value ? `${title}, ${value}` : title}
+      className="gap-1 px-4 py-3"
     >
+      <AnswerTitle title={title} />
       <AnswerValue value={value} />
-    </ListItem.Field>
+    </View>
+  );
+}
+
+function AnswerTitle({ title }: { title: string }): React.JSX.Element {
+  return (
+    <Text role="secondary" tone="muted">
+      {title}
+    </Text>
   );
 }
 

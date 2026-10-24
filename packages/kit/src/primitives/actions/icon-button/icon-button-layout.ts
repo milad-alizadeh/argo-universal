@@ -11,47 +11,44 @@ type Modifiers = NonNullable<ExpoButtonProps['modifiers']>;
 
 type ControlSize = Parameters<typeof controlSize>[0];
 
-// The box round the glyph; the glyph is the same size step on `Icon` (the icon size table).
-const extraSmallBox = 24;
-
-const smallBox = 32;
-
-const mediumBox = 40;
-
-const largeBox = 48;
+// Material 3's extra small, small and medium icon buttons: the box round the glyph on Android.
+const androidBoxes = { sm: 32, md: 40, lg: 56 } as const;
 
 const composeSize = (box: number): Modifiers[number] => size(box, box);
 
+/*
+ * Each size is one of the platform's own steps. SwiftUI draws mini as small and extra large as large, so iOS takes
+ * small, regular and large. The web's medium button keeps the small glyph, as the desktop header's buttons draw it;
+ * Android takes Material 3's glyph for each box. The glyph is the `Icon` size table's step.
+ */
 export const sizes = {
-  xs: {
-    iconSize: 'xs',
-    iosControlSize: 'mini',
-    androidModifiers: [composeSize(extraSmallBox)],
-    webClass: 'size-6',
-  },
   sm: {
     iconSize: 'sm',
     iosControlSize: 'small',
-    androidModifiers: [composeSize(smallBox)],
-    webClass: 'size-8',
+    androidIconSize: 'sm',
+    androidModifiers: [composeSize(androidBoxes.sm)],
+    webClass: 'size-6',
   },
   md: {
-    iconSize: 'md',
+    iconSize: 'sm',
     iosControlSize: 'regular',
-    androidModifiers: [composeSize(mediumBox)],
-    webClass: 'size-10',
+    androidIconSize: 'md',
+    androidModifiers: [composeSize(androidBoxes.md)],
+    webClass: 'size-8',
   },
   lg: {
-    iconSize: 'lg',
+    iconSize: 'md',
     iosControlSize: 'large',
-    androidModifiers: [composeSize(largeBox)],
-    webClass: 'size-12',
+    androidIconSize: 'md',
+    androidModifiers: [composeSize(androidBoxes.lg)],
+    webClass: 'size-10',
   },
 } satisfies Record<
   IconButtonSize,
   {
     iconSize: IconSize;
     iosControlSize: ControlSize;
+    androidIconSize: IconSize;
     androidModifiers: Modifiers;
     webClass: string;
   }

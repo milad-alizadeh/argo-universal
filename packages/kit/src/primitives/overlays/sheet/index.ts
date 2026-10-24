@@ -1,13 +1,13 @@
 export { Sheet } from './sheet';
 
-export { useSheet, useOptionalSheet } from './sheet-pages';
+export { useSheet, useOptionalSheet } from './sheet-screens';
 
 export {
   type SheetDetent,
   type SheetDestination,
   type SheetLinkProps,
-  type SheetPageAction,
+  type SheetScreenAction,
   type SheetNavigation,
-  type SheetPageProps,
+  type SheetScreenProps,
   type SheetProps,
 } from './sheet-props';

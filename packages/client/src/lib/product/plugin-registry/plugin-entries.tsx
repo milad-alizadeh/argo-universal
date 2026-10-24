@@ -1,5 +1,5 @@
 import type { WirePart } from '@repo/contracts/plugins/kit';
-import { ActionList, Action } from '@repo/kit/primitives/actions/action-list';
+import { Action } from '@repo/kit/primitives/actions/action';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { SplitButton } from '@repo/kit/primitives/actions/split-button';
 import { Audio } from '@repo/kit/primitives/content/audio';
@@ -12,13 +12,8 @@ import { Link } from '@repo/kit/primitives/content/link';
 import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
-import { Form } from '@repo/kit/primitives/fields/form';
-import { Checkbox } from '@repo/kit/primitives/inputs/checkbox';
-import { DatePicker } from '@repo/kit/primitives/inputs/date-picker';
-import { Picker } from '@repo/kit/primitives/inputs/picker';
-import { Slider } from '@repo/kit/primitives/inputs/slider';
-import { Switch } from '@repo/kit/primitives/inputs/switch';
-import { TextInput } from '@repo/kit/primitives/inputs/text-input';
+import { Slider } from '@repo/kit/primitives/controls/slider';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { KitProps } from '@repo/kit/primitives/kit-props';
 import { Card } from '@repo/kit/primitives/layout/card';
 import { Grid } from '@repo/kit/primitives/layout/grid';
@@ -34,7 +29,7 @@ import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
 import { Metadata } from '@repo/kit/primitives/scaffolds/metadata';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
@@ -46,7 +41,7 @@ export const pluginEntries = {
   Markdown,
   Code,
   Link,
-  Page,
+  Screen,
   ListDetail,
   Detail,
   Metadata,
@@ -55,27 +50,24 @@ export const pluginEntries = {
   'Metadata.Pills': Metadata.Pills,
   'Metadata.StatusDot': Metadata.StatusDot,
   'Metadata.Avatar': Metadata.Avatar,
-  ActionList,
-  'ActionList.Section': ActionList.Section,
   Action,
+  'Action.Section': Action.Section,
   EmptyState,
-  Picker,
-  Switch,
-  Checkbox,
   Slider,
-  TextInput,
-  DatePicker,
-  Form,
+  FieldGroup,
+  'FieldGroup.Section': FieldGroup.Section,
+  'FieldGroup.Value': FieldGroup.Value,
+  'FieldGroup.Link': FieldGroup.Link,
+  'FieldGroup.Toggle': FieldGroup.Toggle,
+  'FieldGroup.Picker': FieldGroup.Picker,
+  'FieldGroup.DatePicker': FieldGroup.DatePicker,
+  'FieldGroup.Slider': FieldGroup.Slider,
+  'FieldGroup.TextField': FieldGroup.TextField,
+  'FieldGroup.SecretField': FieldGroup.SecretField,
   IconButton,
   SplitButton,
   List,
   'List.Section': ListSection,
-  'ListItem.Link': ListItem.Link,
-  'ListItem.Button': ListItem.Button,
-  'ListItem.Toggle': ListItem.Toggle,
-  'ListItem.Picker': ListItem.Picker,
-  'ListItem.Stepper': ListItem.Stepper,
-  'ListItem.TextField': ListItem.TextField,
   ListItem,
   Table,
   'Table.Row': Table.Row,

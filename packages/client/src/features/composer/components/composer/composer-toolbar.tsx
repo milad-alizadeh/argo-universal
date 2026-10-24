@@ -131,5 +131,5 @@ function stopButtonAction(
 
 const filledSendProps = {
   variant: 'primary',
-  size: 'xs',
+  size: 'sm',
 } as const;

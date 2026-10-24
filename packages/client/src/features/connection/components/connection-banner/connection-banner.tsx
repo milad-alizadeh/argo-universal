@@ -99,7 +99,7 @@ function Offline({
           icon="retry"
           accessibilityLabel="Try again"
           onPress={onRetry}
-          size="xs"
+          size="sm"
         />
       </View>
     </>

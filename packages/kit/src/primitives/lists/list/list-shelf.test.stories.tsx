@@ -8,7 +8,7 @@ import {
 } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
 import { settleViewport } from '#kit/settle-viewport';
-import { ActionList, Action } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
@@ -30,9 +30,7 @@ const headingRole = 'heading';
 const inspect = fn();
 
 const tileActions = (
-  <ActionList>
-    <Action icon="info" label="Inspect" onPress={inspect} />
-  </ActionList>
+  <Action key="inspect" icon="info" label="Inspect" onPress={inspect} />
 );
 
 export const ContextActions: Story = {
@@ -89,6 +87,8 @@ function ShelfControlsExample(): React.JSX.Element {
   );
 }
 
+const edgeWait = { timeout: 5000 };
+
 export const ShelfEndControls: Story = {
   render: () => <ShelfControlsExample />,
   play: async ({ canvas, userEvent }) => {
@@ -97,13 +97,14 @@ export const ShelfEndControls: Story = {
     });
 
     const next = canvas.getByRole('button', { name: 'Next items' });
-    await expect(previous).toBeDisabled();
-    await waitFor(() => expect(next).toBeEnabled());
+    // The edges follow the list's scroll measurements and the animated scroll, which a busy runner can take seconds over.
+    await waitFor(() => expect(previous).toBeDisabled(), edgeWait);
+    await waitFor(() => expect(next).toBeEnabled(), edgeWait);
     await userEvent.click(next);
-    await waitFor(() => expect(next).toBeDisabled());
+    await waitFor(() => expect(next).toBeDisabled(), edgeWait);
     await expect(previous).toBeEnabled();
     await userEvent.click(previous);
-    await waitFor(() => expect(previous).toBeDisabled());
+    await waitFor(() => expect(previous).toBeDisabled(), edgeWait);
   },
 };
 

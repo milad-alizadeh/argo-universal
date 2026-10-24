@@ -4,12 +4,8 @@ import { expect, waitFor } from 'storybook/test';
  * Moves the Effort slider one level at a time, as arrow keys would.
  * It sets the value through input events: real key presses give the page user activation, and later
  * stories' image pickers would then open a file dialog that the test browser cancels.
- * `levels` are the level names the slider offers, in order; an unset slider sits at the first stop.
+ * `levels` are the level names the slider offers, in order; the slider's value is the index of the chosen level.
  */
-const noSelection = 'No selection';
-
-const valueText = 'aria-valuetext';
-
 function moveTo(slider: HTMLElement, index: number): void {
   Object.getOwnPropertyDescriptor(
     HTMLInputElement.prototype,
@@ -24,17 +20,10 @@ export async function chooseEffort(
   name: string,
 ): Promise<void> {
   const target = effortIndex(levels, name);
-  const current = currentEffort(slider, levels);
+  const current = effortIndexOf(slider);
   slider.focus();
 
-  if (needsFirstStop(slider, current, target)) {
-    moveTo(slider, current + 1);
-    moveTo(slider, current);
-
-    return;
-  }
-
-  await moveThroughLevels(slider, levels, { current, target });
+  await moveThroughLevels(slider, { current, target, levels });
 }
 
 function effortIndex(levels: string[], name: string): number {
@@ -45,30 +34,36 @@ function effortIndex(levels: string[], name: string): number {
   return target;
 }
 
-function needsFirstStop(
-  slider: HTMLElement,
-  current: number,
-  target: number,
-): boolean {
-  return current === target && slider.getAttribute(valueText) === noSelection;
-}
-
 async function moveThroughLevels(
   slider: HTMLElement,
-  levels: string[],
-  { current, target }: { current: number; target: number },
+  {
+    current,
+    target,
+    levels,
+  }: { current: number; target: number; levels: string[] },
 ): Promise<void> {
   const direction = target > current ? 1 : -1;
 
   for (let moved = 1; moved <= Math.abs(target - current); moved += 1) {
-    const index = current + direction * moved;
-    moveTo(slider, index);
-    await waitFor(() =>
-      expect(slider).toHaveAttribute(valueText, levels[index]),
-    );
+    await stepTo(slider, current + direction * moved, levels);
   }
 }
 
-function currentEffort(slider: HTMLElement, levels: string[]): number {
-  return Math.max(0, levels.indexOf(slider.getAttribute(valueText) ?? ''));
+// One step: the slider holds the level and speaks its name.
+async function stepTo(
+  slider: HTMLElement,
+  index: number,
+  levels: string[],
+): Promise<void> {
+  moveTo(slider, index);
+  await waitFor(() => expect(slider).toHaveValue(String(index)));
+  await expect(slider).toHaveAttribute('aria-valuetext', levels[index] ?? '');
+}
+
+// The slider's place in its levels: its range input's value.
+export function effortIndexOf(slider: HTMLElement): number {
+  if (!(slider instanceof HTMLInputElement))
+    throw new Error('The Effort slider is a range input.');
+
+  return Number(slider.value);
 }

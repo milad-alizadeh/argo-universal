@@ -96,9 +96,7 @@ export async function browseResponsiveMenu({
     ).toBeVisible();
   } else {
     await waitFor(() =>
-      expect(
-        overlay.getByRole('dialog', { name: 'Select Model' }),
-      ).toBeVisible(),
+      expect(overlay.getByRole('dialog', { name: 'Model' })).toBeVisible(),
     );
     await userEvent.keyboard('{Escape}');
   }

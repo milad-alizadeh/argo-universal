@@ -88,7 +88,7 @@ function NativeGlyph(props: IconButtonProps): ReactElement {
   return (
     <NativeIcon
       name={props.icon}
-      size={sizeOf(props).iconSize}
+      size={sizeOf(props).androidIconSize}
       filled={props.selected ?? false}
       color={color}
     />

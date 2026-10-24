@@ -140,7 +140,7 @@ function RemoveButton(props: ComposerAttachmentCardProps): React.JSX.Element {
         disabled={props.disabled}
         accessibilityLabel={`Remove ${props.attachment.name}`}
         icon="close"
-        size="xs"
+        size="sm"
         variant="secondary"
         onPress={props.onRemove}
       />

@@ -15,7 +15,7 @@ const meta = {
   parameters: { screenPreview: true },
   decorators: [
     (Story): ReactElement => (
-      <List appearance="grouped">
+      <List appearance="plain">
         <ListSection>
           <Story />
         </ListSection>

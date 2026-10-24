@@ -31,7 +31,7 @@ Then(
       ).toBeVisible({ timeout: 20_000 });
       await expect(toast(page, "Couldn't reach the Server.")).toBeVisible();
       await expect(
-        page.getByRole('group', { name: 'Connecting to the Server…' }),
+        page.getByText('Connecting to the Server…', { exact: true }),
       ).toBeVisible();
       await expect(row(page, 'Version')).toHaveCount(0);
     });

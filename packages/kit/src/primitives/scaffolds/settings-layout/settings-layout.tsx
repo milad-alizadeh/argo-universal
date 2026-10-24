@@ -25,23 +25,23 @@ export function SettingsLayout(props: SettingsLayoutProps): ReactElement {
   return (
     <ListDetail
       testID={props.testID}
-      list={<SettingsPages {...props} />}
+      list={<SettingsScreens {...props} />}
       detail={props.children}
     />
   );
 }
 
-const hasPages = (sections: SettingsLayoutSections): boolean =>
+const hasScreens = (sections: SettingsLayoutSections): boolean =>
   sections.some((section) => section.items.length > 0);
 
 // The grouped pages at this Size class and any pinned section, or the caller's empty state when there is neither, as when a search matches none.
-function SettingsPages(props: SettingsLayoutProps): ReactNode {
+function SettingsScreens(props: SettingsLayoutProps): ReactNode {
   const sections = useSizeClassValue(props.sections);
   const wide = useWide();
 
-  if (!hasPages(sections) && !props.pinned) return props.empty;
+  if (!hasScreens(sections) && !props.pinned) return props.empty;
 
-  return <PlacedPages {...props} sections={sections} wide={wide} />;
+  return <PlacedScreens {...props} sections={sections} wide={wide} />;
 }
 
 type Placed = Omit<SettingsLayoutProps, 'sections'> & {
@@ -69,10 +69,10 @@ const PinnedBottom = (props: { children: ReactNode }): ReactElement => (
   <SectionEndContext value>{props.children}</SectionEndContext>
 );
 
-function PlacedPages({ sections, wide, ...props }: Placed): ReactElement {
+function PlacedScreens({ sections, wide, ...props }: Placed): ReactElement {
   const sidebar = wide && Platform.OS === 'web';
   const place = pinnedPlace(props.pinned, sidebar);
-  const selection = pageSelection(props, wide);
+  const selection = screenSelection(props, wide);
 
   return (
     <SidebarRows shown={sidebar}>
@@ -97,7 +97,7 @@ function SettingsGroups({
   ));
 
   return (
-    <List appearance="grouped" fit={!place.fills}>
+    <List appearance="plain" fit={!place.fills}>
       {groups}
       {place.end}
     </List>
@@ -105,7 +105,7 @@ function SettingsGroups({
 }
 
 // Only a wide window shows a page beside the list, so only its rows mark one.
-const pageSelection = (
+const screenSelection = (
   props: Pick<SettingsLayoutProps, 'selected' | 'onSelect'>,
   wide: boolean,
 ): RowSelection => ({
@@ -136,24 +136,25 @@ function SettingsGroup({
   return (
     <ListSection title={section.title}>
       {section.items.map((item) => (
-        <SettingsPageRow key={item.id} item={item} {...selection} />
+        <SettingsScreenRow key={item.id} item={item} {...selection} />
       ))}
     </ListSection>
   );
 }
 
-function SettingsPageRow({
+const screenRow = { disclosure: true, role: 'link' } as const;
+
+function SettingsScreenRow({
   item: { id, icon, ...row },
   selected,
   onSelect,
 }: RowSelection & { item: SettingsLayoutItem }): ReactElement {
-  const shown = id === selected;
-
   return (
-    <ListItem.Link
+    <ListItem
       {...row}
+      {...screenRow}
       leading={icon && <Icon name={icon} size="md" />}
-      selected={shown}
+      selected={id === selected}
       onPress={onSelect && (() => onSelect(row.href))}
     />
   );

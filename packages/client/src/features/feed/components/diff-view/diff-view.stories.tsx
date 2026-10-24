@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { action } from 'storybook/actions';
 import { DiffView } from './diff-view';
 import { inlineDiff, inspectorDiff } from './diff-view-fixtures';
 
@@ -34,13 +35,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/*
- * No story for the Viewed fold: without an owner to take onViewedChange the Inspector
- * draws no mark, so the fold belongs to the Change list that owns the marks.
- */
-
 // The Inspector's drawing: a file header and a Viewed fold around the hunks.
 export const Inspector: Story = { args: inspectorDiff };
 
 // The Feed's drawing: the hunks alone, as a patch.
 export const Inline: Story = { args: inlineDiff };
+
+// The Viewed mark, as a Change list that owns the marks draws it: empty while unviewed.
+export const Unviewed: Story = {
+  args: { ...inspectorDiff, viewed: false, onViewedChange: action('viewed') },
+};
+
+// A checked mark, and the diff folded.
+export const Viewed: Story = {
+  args: { ...inspectorDiff, viewed: true, onViewedChange: action('viewed') },
+};

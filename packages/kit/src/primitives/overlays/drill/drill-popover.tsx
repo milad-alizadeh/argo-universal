@@ -11,37 +11,28 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  useEnclosingPopoverClose,
   type PopoverContentProps,
 } from '#primitives/overlays/popover';
 import type { DrillProps } from './drill-props';
 
 type Props = DrillProps & { row: boolean };
 
-type ContentProps = Props & {
-  close: () => void;
-  onEscapeKeyDown?: () => void;
-};
+type ContentProps = Props & { close: () => void };
 
 export function DrillPopover(props: Props): ReactElement {
   const [open, setOpen] = useOpenState(props.onClose);
-  const closeMenu = useEnclosingPopoverClose();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger disabled={props.disabled}>{props.trigger}</PopoverTrigger>
-      <DrillContent
-        {...props}
-        close={choiceClose(props, setOpen)}
-        onEscapeKeyDown={props.keepOpen ? closeMenu : undefined}
-      />
+      <DrillContent {...props} close={choiceClose(props, setOpen)} />
     </Popover>
   );
 }
 
 const stayOpen = (): void => {};
 
-// The choices call close after a pick; keepOpen leaves the popover to a click outside or Escape, which close its menu too.
+// The choices call close after a pick; keepOpen leaves the popover to a click outside or Escape. Escape closes only the choices and returns to the menu beside them; a click outside closes both.
 function choiceClose(
   props: Props,
   setOpen: Dispatch<SetStateAction<boolean>>,
@@ -68,7 +59,7 @@ function DrillContent(props: ContentProps): ReactElement {
   return createElement(
     PopoverContent,
     placement(props),
-    props.children(props.close),
+    props.children(props.close, false),
   );
 }
 
@@ -104,6 +95,5 @@ function placement(props: ContentProps): PopoverContentProps {
     ...placements[props.row ? 'row' : 'field'],
     align: 'start',
     accessibilityLabel: props.title,
-    onEscapeKeyDown: props.onEscapeKeyDown,
   };
 }

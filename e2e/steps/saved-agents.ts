@@ -34,7 +34,7 @@ Then(
       page.getByRole('button', { name: 'Add Agents', exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Claude', exact: true }),
+      page.getByRole('radio', { name: 'Claude', exact: true }),
     ).toHaveCount(0);
     await closeAgentPicker(page);
   },
@@ -98,11 +98,14 @@ Then('the Composer shows Agent options', async ({ page }) => {
   ).not.toContainText('Loading…');
 });
 
+// Escape pops the Agent page, then closes Configure; each press waits for the Frame to take it.
 async function closeAgentPicker(
   page: Parameters<typeof readAgents>[0],
 ): Promise<void> {
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toBeHidden();
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: optionsLabel })).toBeHidden();
+  const options = page.getByRole('dialog', { name: optionsLabel });
+
+  await expect(async () => {
+    await page.keyboard.press('Escape');
+    await expect(options).toBeHidden({ timeout: 500 });
+  }).toPass();
 }

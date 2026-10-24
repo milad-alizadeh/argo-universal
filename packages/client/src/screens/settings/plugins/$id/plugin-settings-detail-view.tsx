@@ -3,13 +3,11 @@ import type {
   PluginSettingValue,
   PluginSettings,
 } from '@repo/contracts/plugins';
-import { List } from '@repo/kit/primitives/lists/list';
-import { ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
-import { Spinner } from '@repo/kit/primitives/status/spinner';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
-import { SettingFieldRow } from './plugin-setting-field-row';
+import { SettingsLoading } from '../../settings-loading';
+import { settingFieldSection } from './plugin-setting-field-row';
 
 export type PluginLoad =
   | { status: 'loading' }
@@ -40,11 +38,9 @@ export function PluginSettingsDetailView(
   const { caption, onBack, ...body } = props;
 
   return (
-    <Page title={props.title} caption={caption} onBack={onBack}>
-      <List appearance="grouped">
-        <PluginBody {...body} />
-      </List>
-    </Page>
+    <Screen title={props.title} caption={caption} onBack={onBack}>
+      <PluginBody {...body} />
+    </Screen>
   );
 }
 
@@ -53,68 +49,59 @@ type BodyProps = Omit<PluginSettingsDetailViewProps, 'caption' | 'onBack'>;
 function PluginBody(props: BodyProps): React.JSX.Element {
   const { plugin } = props;
 
-  if (plugin.status !== 'loaded')
-    return <UnloadedPlugin status={plugin.status} title={props.title} />;
+  if (plugin.status === 'loading')
+    return <SettingsLoading label="Loading the Plugin…" />;
+
+  return <FieldGroup>{pluginSections(props, plugin)}</FieldGroup>;
+}
+
+// FieldGroup finds its sections by element type, so each is an element built here, not a component.
+function pluginSections(
+  props: BodyProps,
+  plugin: Exclude<PluginLoad, { status: 'loading' }>,
+): React.JSX.Element {
+  if (plugin.status === 'missing') return missingSection(props.title);
 
   return (
     <>
-      <EnabledSection {...props} plugin={plugin} />
-      <SettingFields {...props} plugin={plugin} />
+      {enabledSection(plugin, props.onEnabledChange)}
+      {settingSections(plugin, props.onSettingChange)}
     </>
   );
 }
 
 type LoadedPlugin = Extract<PluginLoad, { status: 'loaded' }>;
 
-type EnabledProps = Pick<BodyProps, 'onEnabledChange'> & {
-  plugin: LoadedPlugin;
-};
-
-function EnabledSection(props: EnabledProps): React.JSX.Element {
-  const { plugin, onEnabledChange } = props;
-
-  return (
-    <ListSection>
-      <ListItem.Toggle
-        title={enabledLabel}
-        value={plugin.enabled}
-        onValueChange={onEnabledChange}
-      />
-    </ListSection>
-  );
-}
-
-type UnloadedProps = { status: 'loading' | 'missing'; title: string };
-
-function UnloadedPlugin({ status, title }: UnloadedProps): React.JSX.Element {
-  return (
-    <ListSection>
-      {status === 'loading' ? (
-        <ListItem
-          title="Loading the Plugin…"
-          leading={<Spinner accessibilityLabel="Loading" />}
-        />
-      ) : (
-        <ListItem title={`The Server has no Plugin named ${title}.`} />
-      )}
-    </ListSection>
-  );
-}
-
-type FieldsProps = Pick<BodyProps, 'onSettingChange'> & {
-  plugin: LoadedPlugin;
-};
-
-function SettingFields({
-  plugin,
-  onSettingChange,
-}: FieldsProps): React.JSX.Element[] {
-  return plugin.fields.map((field) => (
-    <SettingFieldRow
-      key={field.key}
-      field={field}
-      settings={plugin.settings}
-      onChange={(value) => onSettingChange(field.key, value)}
+const enabledSection = (
+  plugin: LoadedPlugin,
+  onEnabledChange: BodyProps['onEnabledChange'],
+): React.JSX.Element => (
+  <FieldGroup.Section>
+    <FieldGroup.Toggle
+      title={enabledLabel}
+      value={plugin.enabled}
+      onValueChange={onEnabledChange}
     />
-  ));
-}
+  </FieldGroup.Section>
+);
+
+const missingSection = (title: string): React.JSX.Element => (
+  <FieldGroup.Section>
+    <FieldGroup.Value
+      title={`The Server has no Plugin named ${title}.`}
+      value=""
+    />
+  </FieldGroup.Section>
+);
+
+const settingSections = (
+  plugin: LoadedPlugin,
+  onSettingChange: BodyProps['onSettingChange'],
+): React.JSX.Element[] =>
+  plugin.fields.map((field) =>
+    settingFieldSection({
+      field,
+      settings: plugin.settings,
+      onChange: (value) => onSettingChange(field.key, value),
+    }),
+  );

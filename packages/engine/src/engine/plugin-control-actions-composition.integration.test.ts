@@ -68,19 +68,19 @@ it(
       ...page,
       viewId: view.viewId,
       revision: view.revision,
-      key: '0/switch',
+      key: '0/slider',
       event: 'onValueChange' as const,
     };
 
     await expect(
-      app.client.plugins.dispatch.mutate({ ...target, payload: 'enabled' }),
+      app.client.plugins.dispatch.mutate({ ...target, payload: 'high' }),
     ).rejects.toThrow('Invalid Plugin event payload');
-    await app.client.plugins.dispatch.mutate({ ...target, payload: true });
+    await app.client.plugins.dispatch.mutate({ ...target, payload: 5 });
     await expect
       .poll(() => app.messages.at(-1), { timeout: 10_000 })
       .toMatchObject({
         revision: 2,
-        ops: [{ props: { children: 'Enabled' } }],
+        ops: [{ props: { children: 'Level 5' } }],
       });
   },
 );

@@ -1,9 +1,8 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ContextActions } from '#primitives/actions/action-list';
+import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup } from '#primitives/lists/list';
 import { ListContext, ListTileContext } from '../../../list-context';
-import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
@@ -46,12 +45,9 @@ function ItemSeparator(props: ListItemProps): ReactNode {
   ) : null;
 }
 
-function Selection({
-  selected,
-  drawing,
-}: Pick<ListItemProps, 'selected'> & { drawing: ItemDrawing }): ReactNode {
+function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
   return selected ? (
-    <View pointerEvents="none" aria-hidden className={selectionTint(drawing)} />
+    <View pointerEvents="none" aria-hidden className={selectionTint} />
   ) : null;
 }
 
@@ -59,19 +55,19 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   const { context, footer } = useListItemGroup(props.description);
 
   return (
-    <ContextActions actions={props.actions}>
-      <InListItem value>
+    <ContextActions actions={props.actions} menu={props.contextMenu}>
+      <>
         <ListContext value={context}>
           <ItemSurface {...props} />
         </ListContext>
         {footer}
-      </InListItem>
+      </>
     </ContextActions>
   );
 }
 
 /*
- * Paper's Combobox: a chosen row shows its check only, with no selected fill. Every choosing List
+ * A chosen row shows its check only, with no selected fill. Every choosing List
  * draws that check, on a menu row and in a sheet's grouped card alike, so none of them tints the
  * row behind it; a tint there is the web leaking into a stock picker, and it paints over the
  * separator under the chosen row. A selected row without a check, such as the Sessions sidebar's,
@@ -110,7 +106,7 @@ export function ListItem(props: ListItemProps): ReactElement {
   return <ChoosingItem {...props} />;
 }
 
-// A menu row's check leads the row, as in Paper's Combobox; elsewhere only a choosing List draws it, trailing.
+// A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
   const menu = useInMenu();
@@ -171,10 +167,7 @@ function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
   return (
     <>
       <ItemPress {...drawingContent(props, tile)} />
-      <Selection
-        selected={props.selected && !drawing.menu && !selectionMode}
-        drawing={drawing}
-      />
+      <Selection selected={props.selected && !drawing.menu && !selectionMode} />
     </>
   );
 }

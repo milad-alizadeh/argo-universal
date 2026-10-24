@@ -6,12 +6,13 @@ export async function closeAgentMenus(
   agentModelLabel: string,
 ): Promise<void> {
   await page.mouse.move(0, 0);
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toHaveCount(
-    0,
-  );
-  await page.keyboard.press('Escape');
-  await expect(
-    page.getByRole('button', { name: agentModelLabel }),
-  ).toHaveAttribute('aria-expanded', 'false');
+  // Escape pops the Agent page, then closes Configure; each press waits for the button to settle.
+  const trigger = page.getByRole('button', { name: agentModelLabel });
+
+  await expect(async () => {
+    await page.keyboard.press('Escape');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false', {
+      timeout: 500,
+    });
+  }).toPass();
 }

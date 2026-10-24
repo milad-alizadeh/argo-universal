@@ -1,8 +1,8 @@
+import { RegistryIcon } from '@repo/kit/primitives/content/agent-logo';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import type { AgentRowEntry } from '../../utils/agent-rows';
-import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentButton, type AgentActions } from './agent-button';
 import { AgentMeta } from './agent-meta';
 

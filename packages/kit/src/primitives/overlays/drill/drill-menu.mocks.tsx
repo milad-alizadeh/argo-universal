@@ -32,7 +32,7 @@ export function Menu(): ReactElement {
 
 function MenuRows(): ReactElement {
   return (
-    <List appearance="grouped" fit>
+    <List appearance="plain" fit>
       <List.Section>
         <Choice label="Fruit" choices={fruits} keepOpen />
         <Choice label="Vegetable" choices={vegetables} />
@@ -92,7 +92,7 @@ function drillProps(
 
 function Choices(props: ChoicesProps): ReactElement {
   return (
-    <List appearance="grouped" fit>
+    <List appearance="plain" fit>
       <List.Section
         selectionMode="single"
         selection={[props.value]}

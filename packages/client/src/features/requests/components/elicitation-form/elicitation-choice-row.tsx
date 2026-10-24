@@ -1,0 +1,85 @@
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import type { ComponentProps, ReactElement } from 'react';
+import { toggledChoice } from './elicitation-answers';
+import {
+  rowTitle,
+  type ElicitationFieldProps,
+} from './elicitation-field-props';
+import { elicitationChoices } from './elicitation-property';
+import type { ElicitationValue } from './elicitation-schema';
+
+// A short known list opens in place; a long one gets a page with a search field.
+const menuLimit = 6;
+
+type ChoiceProps = Omit<
+  ComponentProps<typeof FieldGroup.Picker>,
+  'value' | 'multiple' | 'onValueChange'
+>;
+
+function choiceProps(props: ElicitationFieldProps): ChoiceProps {
+  const options = (elicitationChoices(props.property) ?? []).map((choice) => ({
+    value: choice.const,
+    label: choice.title,
+    subtitle: choice.description,
+  }));
+
+  const long = options.length > menuLimit;
+
+  return {
+    title: rowTitle(props),
+    options,
+    presentation: long ? 'page' : 'menu',
+    searchable: long,
+  };
+}
+
+// An unanswered choice matches no option, not even one whose value is the empty string.
+const unanswered = '\u0000unanswered';
+
+export const isChoice = (props: ElicitationFieldProps['property']): boolean =>
+  elicitationChoices(props) !== undefined;
+
+export function ChoiceRow(props: ElicitationFieldProps): ReactElement {
+  return props.property.type === 'array' ? (
+    <MultipleRow {...props} />
+  ) : (
+    <FieldGroup.Picker
+      {...choiceProps(props)}
+      value={selectedValues(props.value)[0] ?? unanswered}
+      onValueChange={props.onChange}
+    />
+  );
+}
+
+function MultipleRow(props: ElicitationFieldProps): ReactElement {
+  const selected = selectedValues(props.value);
+
+  return (
+    <FieldGroup.Picker
+      {...choiceProps(props)}
+      multiple
+      value={selected}
+      onValueChange={(next) => props.onChange(chosenOnly(selected, next))}
+    />
+  );
+}
+
+// The picker reports its whole list; the form keeps toggling one choice at a time.
+function chosenOnly(
+  before: string[],
+  next: readonly string[],
+): ElicitationValue {
+  const changed = [...before, ...next].find(
+    (choice) => before.includes(choice) !== next.includes(choice),
+  );
+
+  return changed === undefined
+    ? before
+    : toggledChoice(before, changed, next.includes(changed));
+}
+
+const selectedValues = (value: ElicitationValue | undefined): string[] =>
+  Array.isArray(value) ? value : stringList(value);
+
+const stringList = (value: ElicitationValue | undefined): string[] =>
+  typeof value === 'string' ? [value] : [];

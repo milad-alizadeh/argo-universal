@@ -12,11 +12,7 @@ import { RowHighlightProvider } from '../../../row-highlights';
 import { SectionEndContext } from '../../../section-end-context';
 import { ListGrouping, SectionListRow } from './list-grouping';
 import type { ListSectionProps } from './list-props';
-import {
-  prepareSection,
-  SectionContent,
-  type SectionState,
-} from './list-section-state';
+import { prepareSection, type SectionState } from './list-section-state';
 
 export function ListSection(props: ListSectionProps): ReactElement {
   const section = prepareSection(props, useId());
@@ -49,12 +45,10 @@ function Rows({ section: prepared }: { section: SectionState }): ReactNode {
 
 function SectionBody({ section }: { section: SectionState }): ReactElement {
   return (
-    <SectionContent section={section}>
-      <ListGrouping>
-        <RowHighlightProvider>
-          <Rows section={section} />
-        </RowHighlightProvider>
-      </ListGrouping>
-    </SectionContent>
+    <ListGrouping>
+      <RowHighlightProvider>
+        <Rows section={section} />
+      </RowHighlightProvider>
+    </ListGrouping>
   );
 }

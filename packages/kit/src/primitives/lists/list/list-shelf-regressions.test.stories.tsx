@@ -5,7 +5,7 @@ import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
 import { settleViewport } from '#kit/settle-viewport';
 import { ListItem } from '#primitives/lists/list-item';
-import { Page } from '#primitives/scaffolds/page';
+import { Screen } from '#primitives/scaffolds/screen';
 import { List } from './list';
 
 const meta = {
@@ -74,7 +74,7 @@ export const LooseKeysPreserveState: Story = {
 export const ManyShelves: Story = {
   render: () => (
     <View style={{ height: 500 }}>
-      <Page title="Gallery">
+      <Screen title="Gallery">
         <List
           testID="section-scroll"
           direction="horizontal"
@@ -86,7 +86,7 @@ export const ManyShelves: Story = {
             </List.Section>
           ))}
         </List>
-      </Page>
+      </Screen>
     </View>
   ),
   play: async ({ canvas }) => {

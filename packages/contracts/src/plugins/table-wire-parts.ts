@@ -1,7 +1,7 @@
 import { listExpansion } from './list-expansion';
 import { rowPress } from './list-kit-props';
 import { echoes } from './plugin-part-props';
-import { part } from './plugin-part-schema-utils';
+import { actionSlot, part } from './plugin-part-schema-utils';
 import {
   tableCellProps,
   tableProps,
@@ -25,7 +25,7 @@ export const tableWireParts = {
           'accessibilityLabel names the table; each column title names its header.',
         accessibility: {
           keyboard:
-            'Each sortable header is a focus stop that sorts with Enter or Space. Each pressable or selectable row is one focus stop; Enter or Space runs it and the context-menu key opens its ActionList.',
+            'Each sortable header is a focus stop that sorts with Enter or Space. Each pressable or selectable row is one focus stop; Enter or Space runs it and the context-menu key opens its Actions.',
           voiceOver:
             'Regular widths read a table of header buttons and rows, announcing the sort order and selection. Compact widths read a list of rows; each opens its Row detail.',
           talkBack:
@@ -38,12 +38,12 @@ export const tableWireParts = {
     expansion: listExpansion,
   },
   'Table.Row': part(
-    'One Table row: a cell per column and an optional row ActionList.',
+    'One Table row: a cell per column and optional row Actions.',
     tableRowProps,
     {
       container: true,
       children: ['Table.Cell'],
-      slots: { actions: ['ActionList'] },
+      slots: { actions: actionSlot },
       events: { onPress: rowPress },
       label:
         'accessibilityLabel names the row; otherwise the cell texts in column order.',

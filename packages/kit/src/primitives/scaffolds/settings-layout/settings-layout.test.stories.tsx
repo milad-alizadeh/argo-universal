@@ -10,7 +10,7 @@ import {
   ExampleSettingsLayout,
   exampleSections,
   examplePinned,
-  noPages,
+  noScreens,
   pinnedGroup,
   serverGroup,
 } from './settings-layout.mocks';
@@ -41,7 +41,7 @@ const pageText = (title: string): string => `The ${title} page.`;
 const current = 'aria-current';
 
 // Wide: the groups beside the page shown, whose row is marked; a row swaps the page.
-export const WideShowsThePageBesideTheList = at(layoutWidths.wide, {
+export const WideShowsTheScreenBesideTheList = at(layoutWidths.wide, {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByText(pageText('Projects'))).toBeVisible();
     await expect(canvas.getByText(serverGroup)).toBeVisible();
@@ -64,7 +64,7 @@ export const WideShowsThePageBesideTheList = at(layoutWidths.wide, {
 });
 
 // A phone: the list alone, with the phone's own pages and no row marked; a row pushes its page in the list's place.
-export const PhonePushesEachPage = at(layoutWidths.phone, {
+export const PhonePushesEachScreen = at(layoutWidths.phone, {
   render: () => <ExampleSettingsLayout />,
   play: async ({ canvas, userEvent }) => {
     await expect(row(canvas, 'Appearance')).toBeVisible();
@@ -87,7 +87,7 @@ export const EmptyShowsTheEmptyState = at(layoutWidths.wide, {
     <ExampleSettingsLayout initial="projects" sections={[{ items: [] }]} />
   ),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText(noPages)).toBeVisible();
+    await expect(await canvas.findByText(noScreens)).toBeVisible();
     await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
     await expect(canvas.getByText(pageText('Projects'))).toBeVisible();
   },
@@ -125,7 +125,7 @@ export const PinnedAloneIsNotEmpty = at(layoutWidths.wide, {
   ),
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Version')).toBeVisible();
-    await expect(canvas.queryByText(noPages)).not.toBeInTheDocument();
+    await expect(canvas.queryByText(noScreens)).not.toBeInTheDocument();
     await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
   },
 });

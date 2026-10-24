@@ -22,7 +22,10 @@ export const containerParts = [
   'Label',
 ] as const;
 
-export const actions = ['Button', 'IconButton', 'Link', 'ActionList'] as const;
+export const actions = ['Button', 'IconButton', 'Link'] as const;
+
+// What a Screen, a row, a tile or an Inspector holds as its Actions: Actions, loose or in Sections.
+export const actionSlot = ['Action', 'Action.Section'] as const;
 
 export const rows = [
   'ListItem',

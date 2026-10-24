@@ -39,6 +39,8 @@ export {
   searchSessionsLabel,
 } from './components/sessions-header';
 
+export { SessionsViewMenu } from './components/sessions-view-menu/sessions-view-menu';
+
 export {
   type SessionsViewGroup,
   sessionsViewGroups,

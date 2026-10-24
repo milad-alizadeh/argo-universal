@@ -16,7 +16,7 @@ const palettes = {
 // A leading avatar stands beside a row of its own; an inline one sits on the line of text beside it.
 const sizes = {
   leading: { box: 'size-9 wide-type:size-7', glyph: 'sm' },
-  inline: { box: 'size-6 wide-type:size-5', glyph: 'xs' },
+  inline: { box: 'size-6 wide-type:size-5', glyph: 'sm' },
 } as const;
 
 interface TintedAvatarProps {

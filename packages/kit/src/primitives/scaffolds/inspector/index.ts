@@ -19,4 +19,4 @@ export {
 
 export { InspectorControlsContext } from './inspector-controls-context';
 
-export { InspectorPage, InspectorPages } from './inspector-page';
+export { InspectorScreen, InspectorScreens } from './inspector-screen';

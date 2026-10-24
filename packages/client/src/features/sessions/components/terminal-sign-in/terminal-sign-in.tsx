@@ -43,11 +43,11 @@ const sheetProps = (
 function TerminalSheet(props: TerminalSignInProps): React.JSX.Element {
   return (
     <Sheet {...sheetProps(props)}>
-      <Sheet.Page name="terminal" title={props.title}>
+      <Sheet.Screen name="terminal" title={props.title}>
         <View className="px-4">
           <AgentLoginTerminal {...props.terminal} enabled />
         </View>
-      </Sheet.Page>
+      </Sheet.Screen>
     </Sheet>
   );
 }
@@ -79,7 +79,7 @@ function CloseButton({
     <IconButton
       icon="close"
       variant="ghost"
-      size="xs"
+      size="sm"
       accessibilityLabel="Close"
       onPress={onClose}
     />

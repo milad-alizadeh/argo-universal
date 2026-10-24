@@ -13,7 +13,7 @@
     "./registry/*": "./registry/*.ts",
     "./plugins/controls.json": "./plugins/controls.json",
     "./plugins/overlays.json": "./plugins/overlays.json",
-    "./plugins/page.json": "./plugins/page.json",
+    "./plugins/screen.json": "./plugins/screen.json",
     "./media/*": {
       "types": "./media/*.d.ts",
       "default": "./media/*"

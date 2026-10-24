@@ -2,7 +2,6 @@ import {
   type LoadingRow,
   loadingRows,
 } from '@repo/kit/primitives/lists/list-item';
-import { RowDrawingContext } from '@repo/kit/row-drawing-context';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -29,14 +28,12 @@ export const agentsCatalogTestId = 'agents-catalog';
 
 export function AgentCatalog(props: CatalogProps): React.JSX.Element {
   return (
-    <RowDrawingContext value="content">
-      <FieldList
-        gap="sm"
-        testID={agentsCatalogTestId}
-        sections={catalogSections(props)}
-        header={<FilterHeader {...props} />}
-      />
-    </RowDrawingContext>
+    <FieldList
+      gap="sm"
+      testID={agentsCatalogTestId}
+      sections={catalogSections(props)}
+      header={<FilterHeader {...props} />}
+    />
   );
 }
 

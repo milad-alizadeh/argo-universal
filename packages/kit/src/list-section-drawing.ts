@@ -1,7 +1,7 @@
 import { use } from 'react';
-import { Platform } from 'react-native';
 import { ListContext } from './list-context';
-import { useInMenu } from './menu-rows-context';
+import { isPhoneGrouped } from './list-grouped';
+import { useInChoiceMenu, useInMenu } from './menu-rows-context';
 import { useRowDrawing } from './row-drawing-context';
 
 export interface SectionDrawing {
@@ -21,58 +21,60 @@ export interface SectionDrawing {
 
 const muted = 'text-muted-foreground';
 
-const phoneMuted = 'text-tone-neutral-600';
-
 // Inset as the rows' content.
 const rowInset = { inset: 'px-4 wide:px-5', gap: 'pb-2', below: 'h-4' };
 
-/*
- * Paper "Settings · Porcelain": a desktop or web grouped card's heading is the foreground, flush with the card, 12
- * above it, and cards sit 24 apart. Phones draw a grouped List's headers and footers on the grouped grey in
- * neutral-600, the shade that keeps AA there. Every other List keeps muted text.
- */
-const drawings = {
-  card: {
-    heading: 'text-foreground',
-    footer: muted,
-    inset: '',
-    gap: 'pb-3',
-    below: 'h-6',
-  },
-  phone: {
-    heading: phoneMuted,
-    title: phoneMuted,
-    footer: phoneMuted,
-    ...rowInset,
-  },
-  // Paper's List / Grouped on a page: a muted heading over the rows' text, 8 above the card; cards sit 16 apart.
-  content: {
-    heading: muted,
-    title: muted,
-    footer: muted,
-    inset: 'px-5',
-    gap: 'pb-2',
-    below: 'h-4',
-  },
-  plain: { heading: muted, footer: muted, ...rowInset },
-} satisfies Record<string, SectionDrawing>;
+// Paper's SettingsList: a sidebar's groups head their flat rows with a muted heading, inset as the rows.
+const sidebar = {
+  heading: muted,
+  title: muted,
+  footer: muted,
+  inset: 'px-5',
+  gap: 'pb-2',
+  below: 'h-4',
+} satisfies SectionDrawing;
 
-function groupedDrawing(content: boolean): SectionDrawing {
-  if (Platform.OS !== 'web') return drawings.phone;
+const phoneMuted = 'text-tone-neutral-600';
 
-  return content ? drawings.content : drawings.card;
-}
+// A phone's grouped List draws its headers and footers on the grouped grey in neutral-600, the shade that keeps AA there.
+const phoneGrouped = {
+  heading: phoneMuted,
+  title: phoneMuted,
+  footer: phoneMuted,
+  ...rowInset,
+} satisfies SectionDrawing;
 
-// Paper's SettingsList: a sidebar's groups head their flat rows as a page's grouped List does, inset as the rows.
+const plain = {
+  heading: muted,
+  footer: muted,
+  ...rowInset,
+} satisfies SectionDrawing;
+
+// A popover's section heading starts where its rows' icons do: the row's 8 padding in from the card's inset.
+const menu = { ...plain, inset: 'px-2' } satisfies SectionDrawing;
+
+// A choosing popover's rows keep a lane for the check (16) and a gap (8) before the text, and its heading starts with that text.
+const choosingMenu = { ...menu, inset: 'pl-8 pr-2' } satisfies SectionDrawing;
+
+const menuDrawing = (choosing: boolean): SectionDrawing =>
+  choosing ? choosingMenu : menu;
+
+const listDrawing = (
+  inMenu: boolean,
+  choosing: boolean,
+  phone: boolean,
+): SectionDrawing => {
+  if (inMenu) return menuDrawing(choosing);
+
+  return phone ? phoneGrouped : plain;
+};
+
 export function useSectionDrawing(): SectionDrawing {
-  const grouped = use(ListContext).appearance === 'grouped';
-  const menu = useInMenu();
-  const drawing = useRowDrawing();
+  const inMenu = useInMenu();
+  const choosing = useInChoiceMenu();
+  const phone = isPhoneGrouped(use(ListContext).appearance);
 
-  if (drawing === 'sidebar') return drawings.content;
+  if (useRowDrawing() === 'sidebar') return sidebar;
 
-  return listDrawing(grouped && !menu, drawing === 'content');
+  return listDrawing(inMenu, choosing, phone);
 }
-
-const listDrawing = (grouped: boolean, content: boolean): SectionDrawing =>
-  grouped ? groupedDrawing(content) : drawings.plain;

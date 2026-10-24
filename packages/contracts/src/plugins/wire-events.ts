@@ -46,10 +46,12 @@ export function partEventPayload(
 /*
  * What a Part event's schema metadata asks of the App. `value` names the prop the App echoes the payload into
  * at once; `blocks` holds the part disabled while the Plugin answers; `flush` sends pending edits first;
- * `throttleMs` coalesces quick edits.
+ * `throttleMs` coalesces quick edits. `within` names the prop object that holds the event's handler, as a Picker's
+ * `footerAction` holds `onPress`.
  */
 const PartEventRules = z.object({
   value: z.string().optional(),
+  within: z.string().optional(),
   blocks: z.boolean().default(true),
   flush: z.boolean().default(false),
   throttleMs: z.number().default(0),

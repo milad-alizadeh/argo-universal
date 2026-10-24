@@ -1,5 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
+import type { SheetScreenAction } from '#primitives/overlays/sheet';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
+
+export interface DrillSearch {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+}
 
 export interface DrillProps {
   label: string;
@@ -21,5 +28,12 @@ export interface DrillProps {
   onClose?: () => void;
   // Desktop: a pick leaves the choices and their menu open, so several picks run in a row; a click outside or Escape closes them. Phones go back as before.
   keepOpen?: boolean;
-  children: (close: () => void) => ReactNode;
+  // Desktop: the choices open beside the row on its right even though the caller drew the trigger, as a picker row in a popover does.
+  beside?: boolean;
+  // The pushed page's one header action; a popover has no header, so its choices draw the action themselves.
+  action?: SheetScreenAction;
+  // The search a pushed page holds in its header, where the platform puts it; a popover or Sheet page draws its own field.
+  search?: DrillSearch;
+  // `inHeader` is true where the page's header holds `search`.
+  children: (close: () => void, inHeader: boolean) => ReactNode;
 }

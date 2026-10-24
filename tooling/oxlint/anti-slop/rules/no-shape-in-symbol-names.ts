@@ -16,6 +16,15 @@ function isBorrowedMemberName(node: ESTree.Node): boolean {
   return parent.property === node && parent.computed === false;
 }
 
+/** Names a vendor library owns, which a file may use but not coin (for example SwiftUI's `contentShape`). */
+function allowedNames(option: unknown): Set<string> {
+  if (typeof option !== "object" || option === null || Array.isArray(option)) return new Set();
+
+  const names: unknown = Reflect.get(option, "allowedNames");
+
+  return new Set(Array.isArray(names) ? names.filter((name) => typeof name === "string") : []);
+}
+
 /** Ban the case-insensitive substring "shape" in every JavaScript and TypeScript symbol name. */
 export const noForbiddenTermInSymbolNamesRule = defineRule({
   meta: {
@@ -24,6 +33,13 @@ export const noForbiddenTermInSymbolNamesRule = defineRule({
       description:
         'Disallow the case-insensitive substring "shape" in JavaScript, TypeScript, private, and JSX symbol names.',
     },
+    schema: [
+      {
+        type: "object",
+        properties: { allowedNames: { type: "array", items: { type: "string" } } },
+        additionalProperties: false,
+      },
+    ],
     messages: {
       forbiddenSymbolName:
         'Rename symbol "{{name}}" for its domain role; "shape" describes structure rather than ownership.',
@@ -32,6 +48,7 @@ export const noForbiddenTermInSymbolNamesRule = defineRule({
   createOnce(context) {
     const reportForbiddenSymbolName = (node: ESTree.Node & { name: string }) => {
       if (!containsForbiddenSymbolName(node.name) || isBorrowedMemberName(node)) return;
+      if (allowedNames(context.options?.[0]).has(node.name)) return;
       context.report({
         node,
         messageId: "forbiddenSymbolName",

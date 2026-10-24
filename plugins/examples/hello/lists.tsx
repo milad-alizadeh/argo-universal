@@ -3,7 +3,7 @@ import {
   Label,
   List,
   ListItem,
-  Page,
+  Screen,
   Pill,
   useState,
 } from '@argo/plugin-kit';
@@ -78,12 +78,12 @@ export function HelloListPage(): JSX.Element {
   const [builds, setBuilds] = useState(firstBuilds);
 
   return (
-    <Page title="Hello lists" primaryAction={addBuild(builds, setBuilds)}>
+    <Screen title="Hello lists" primaryAction={addBuild(builds, setBuilds)}>
       <List
         appearance="cards"
         items={builds}
         renderItem={renderBuild(selected, setSelected)}
       />
-    </Page>
+    </Screen>
   );
 }

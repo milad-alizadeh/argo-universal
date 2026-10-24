@@ -50,6 +50,4 @@ export {
   type PluginRenderContext,
 } from './surface';
 
-export * from './settings-row-props';
-
 export { pluginKitExports, type PluginKitExport } from './plugin-part-names';

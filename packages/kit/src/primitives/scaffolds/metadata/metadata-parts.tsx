@@ -2,10 +2,10 @@ import { isValidElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
-import { ListItem } from '#primitives/lists/list-item';
 import type { PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
 import { flattenedChildren } from '../../../flattened-children';
+import { MetadataField } from './metadata-field';
 import { MetadataPills } from './metadata-pills';
 import type {
   MetadataLabelProps,
@@ -25,32 +25,32 @@ function fieldProps(props: FieldOwnProps): FieldOwnProps {
 
 export function MetadataLabel(props: MetadataLabelProps): ReactElement {
   return (
-    <ListItem.Field {...fieldProps(props)} valueLabel={props.text}>
+    <MetadataField {...fieldProps(props)} valueLabel={props.text}>
       <MetadataText text={props.text}>
         {props.icon ? <Icon name={props.icon} size="sm" /> : null}
       </MetadataText>
-    </ListItem.Field>
+    </MetadataField>
   );
 }
 
 export function MetadataLink(props: MetadataLinkProps): ReactElement {
   return (
-    <ListItem.Field {...fieldProps(props)} valueLabel={props.text}>
+    <MetadataField {...fieldProps(props)} valueLabel={props.text}>
       <MetadataText text={props.text} />
-    </ListItem.Field>
+    </MetadataField>
   );
 }
 
 export function MetadataStatus(props: MetadataStatusDotProps): ReactElement {
   return (
-    <ListItem.Field {...fieldProps(props)} valueLabel={props.text}>
+    <MetadataField {...fieldProps(props)} valueLabel={props.text}>
       <MetadataText text={props.text}>
         <StatusDot
           tone={props.tone}
           size={Platform.OS === 'ios' ? 'md' : 'sm'}
         />
       </MetadataText>
-    </ListItem.Field>
+    </MetadataField>
   );
 }
 
@@ -66,7 +66,7 @@ function initials(name: string): string {
 
 export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
   return (
-    <ListItem.Field {...fieldProps(props)} valueLabel={props.name}>
+    <MetadataField {...fieldProps(props)} valueLabel={props.name}>
       <MetadataText text={props.name}>
         <Avatar
           size="sm"
@@ -76,7 +76,7 @@ export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
           decorative
         />
       </MetadataText>
-    </ListItem.Field>
+    </MetadataField>
   );
 }
 
@@ -91,11 +91,11 @@ export function MetadataPillsField(props: MetadataPillsProps): ReactElement {
   const pills = pillProps(props.children);
 
   return (
-    <ListItem.Field
+    <MetadataField
       {...fieldProps(props)}
       valueLabel={pills.map((pill) => pill.text).join(', ')}
     >
       <MetadataPills pills={pills} />
-    </ListItem.Field>
+    </MetadataField>
   );
 }

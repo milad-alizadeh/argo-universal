@@ -43,9 +43,8 @@ export const SubmitFields: Story = {
   },
   play: async ({ userEvent, args }) => {
     const sheet = within(await within(document.body).findByRole('dialog'));
-    await userEvent.click(
-      sheet.getByRole('switch', { name: 'Enable logging' }),
-    );
+    // Expo's web switch hides its input under the drawn track, so a press lands on its title.
+    await userEvent.click(sheet.getByText('Enable logging'));
     await userEvent.click(sheet.getByRole('button', { name: 'Submit' }));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
     await expect(args.onAnswer).toHaveBeenCalledWith({

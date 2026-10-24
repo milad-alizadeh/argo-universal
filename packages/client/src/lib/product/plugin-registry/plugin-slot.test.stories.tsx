@@ -35,7 +35,7 @@ const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Slot',
   component: PluginSlot,
   render: (args): React.JSX.Element => (
-    <List appearance="grouped">
+    <List appearance="plain">
       <PluginSlot {...args} />
     </List>
   ),

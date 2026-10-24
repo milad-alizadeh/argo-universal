@@ -1,4 +1,4 @@
-import { Action, Page, Text, useState } from '@argo/plugin-kit';
+import { Action, Screen, Text, useState } from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
 const searchPage = (value, onChangeText) => ({
@@ -35,7 +35,7 @@ const Inputs = () => {
   const primaryAction = addInput(setAdded);
 
   return jsxs(
-    Page,
+    Screen,
     { ...searchPage(search, setSearch), primaryAction, children },
     'page',
   );

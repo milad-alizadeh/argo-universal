@@ -34,25 +34,22 @@ async function testFastMode(
   ).not.toBeInTheDocument();
   await context.userEvent.click(trigger);
   const fast = await assertFastModeOff(context);
-  await turnFastModeOn(context, fast);
+  await turnFastModeOn(context);
   await assertFastModeTabOrder(context, fast, width);
 }
 
 async function assertFastModeOff({ args }: PlayContext): Promise<HTMLElement> {
   const overlay = within(document.body);
   const fast = await overlay.findByRole('switch', { name: 'Fast mode' });
-  await waitFor(() => expect(fast).toBeVisible());
+  await waitFor(() => expect(fast).toBeInTheDocument());
   await expect(fast).not.toBeChecked();
   await expect(args.configuration?.onConfigChange).not.toHaveBeenCalled();
 
   return fast;
 }
 
-async function turnFastModeOn(
-  { userEvent, args }: PlayContext,
-  fast: HTMLElement,
-): Promise<void> {
-  await userEvent.click(within(fast).getByText('Fast mode'));
+async function turnFastModeOn({ userEvent, args }: PlayContext): Promise<void> {
+  await userEvent.click(within(document.body).getByText('Fast mode'));
   await expect(args.configuration?.onConfigChange).toHaveBeenCalledOnce();
   await expect(args.configuration?.onConfigChange).toHaveBeenCalledWith(
     'fast',

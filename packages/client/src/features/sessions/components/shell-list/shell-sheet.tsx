@@ -1,7 +1,7 @@
 import {
   Sheet,
-  type SheetPageAction,
-  type SheetPageProps,
+  type SheetScreenAction,
+  type SheetScreenProps,
   type SheetProps,
   useSheet,
 } from '@repo/kit/primitives/overlays/sheet';
@@ -24,7 +24,7 @@ export interface ShellSheetProps extends ShellViewProps {
 function stopAction(
   shell: ShellEntry,
   onStop: ShellSheetProps['onStop'],
-): SheetPageAction | undefined {
+): SheetScreenAction | undefined {
   if (shell.status !== 'running' || !shell.canStop) return undefined;
 
   return { label: 'Stop', destructive: true, onPress: () => onStop(shell) };
@@ -60,7 +60,7 @@ function OutputPage(
 function outputHeading(
   shell: ShellEntry | undefined,
   onStop: ShellSheetProps['onStop'],
-): Pick<SheetPageProps, 'title' | 'action'> {
+): Pick<SheetScreenProps, 'title' | 'action'> {
   return { title: shell?.command, action: shell && stopAction(shell, onStop) };
 }
 
@@ -79,12 +79,12 @@ export function ShellSheet(props: ShellSheetProps): JSX.Element {
 
   return (
     <Sheet {...sheetFrame(props)}>
-      <Sheet.Page name="shells" title="Shells">
+      <Sheet.Screen name="shells" title="Shells">
         <ShellRows shells={props.shells} now={props.now} onOpen={openShell} />
-      </Sheet.Page>
-      <Sheet.Page name="shell" {...outputHeading(shell, props.onStop)}>
+      </Sheet.Screen>
+      <Sheet.Screen name="shell" {...outputHeading(shell, props.onStop)}>
         <OutputPage shell={shell} output={props.output} now={props.now} />
-      </Sheet.Page>
+      </Sheet.Screen>
     </Sheet>
   );
 }

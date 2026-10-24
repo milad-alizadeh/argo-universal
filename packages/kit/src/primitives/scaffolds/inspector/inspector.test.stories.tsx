@@ -36,7 +36,7 @@ const expandLabel = 'Expand Inspector';
 const sheetName = { name: inspectorTitle };
 
 // Without a host, a wide Inspector is its own column beside the page, and its close button hands the page the closing.
-export const WideOpensBesideThePage = at(layoutWidths.wide, {
+export const WideOpensBesideTheScreen = at(layoutWidths.wide, {
   play: async ({ canvas, userEvent }) => {
     const toggle = await canvas.findByRole('button', { name: openLabel });
     await expect(
@@ -123,7 +123,7 @@ export const TabletOpensASheet = at(layoutWidths.tablet, {
 });
 
 // The sheet's root page takes a pushed page over it, and Back returns to the Inspector.
-export const PhoneSheetPushesAPage = at(layoutWidths.phone, {
+export const PhoneSheetPushesAScreen = at(layoutWidths.phone, {
   render: () => <ExampleInspector initiallyOpen />,
   play: async ({ userEvent }) => {
     const sheet = await screen.findByRole('dialog', sheetName);

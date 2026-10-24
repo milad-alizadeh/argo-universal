@@ -1,5 +1,8 @@
 import type {
   DeclaredProps,
+  FieldGroupEvents,
+  FieldGroupKitPart,
+  FieldGroupSchemaProps,
   KitDrawing,
   KitEvents,
   KitHasChildren,
@@ -37,4 +40,12 @@ export type KitProps<
   KitEvents<Name>,
   KitSlots<Name> | (KitHasChildren<Name> extends true ? 'children' : never),
   AppDrawing<Choice, Node, Item>
+>;
+
+// A Form component's props (ADR-0042): its Contracts schema, with handlers as callbacks.
+export type FieldGroupKitProps<Name extends FieldGroupKitPart> = KitMappedProps<
+  FieldGroupSchemaProps<Name>,
+  FieldGroupEvents<Name>,
+  never,
+  AppDrawing<string, ReactNode, unknown>
 >;

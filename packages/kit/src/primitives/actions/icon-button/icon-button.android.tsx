@@ -45,7 +45,7 @@ function ControlIcon(props: IconButtonProps): ReactElement {
   return (
     <NativeIcon
       name={props.icon}
-      size={sizes[props.size ?? iconButtonDefaults.size].iconSize}
+      size={sizes[props.size ?? iconButtonDefaults.size].androidIconSize}
       filled={props.selected ?? false}
       color={undefined}
     />

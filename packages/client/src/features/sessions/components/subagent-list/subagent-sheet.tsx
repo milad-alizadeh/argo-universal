@@ -79,9 +79,9 @@ export function SubagentSheet(props: SubagentSheetProps): React.JSX.Element {
       label="Subagents"
       contentScrolls
     >
-      <Sheet.Page name="subagents" title="Subagents">
+      <Sheet.Screen name="subagents" title="Subagents">
         <SubagentListPage {...pages} />
-      </Sheet.Page>
+      </Sheet.Screen>
     </Sheet>
   );
 }

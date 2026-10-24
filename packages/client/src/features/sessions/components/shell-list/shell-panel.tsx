@@ -1,6 +1,6 @@
 import {
-  InspectorPage,
-  InspectorPages,
+  InspectorScreen,
+  InspectorScreens,
 } from '@repo/kit/primitives/scaffolds/inspector';
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
 import { useClock } from '@repo/kit/use-clock';
@@ -61,16 +61,16 @@ type ShellPagesProps = { list: ReactElement; detail: ReactElement | null };
 
 function ShellPages(props: ShellPagesProps): ReactElement {
   return (
-    <InspectorPages>
-      <InspectorPage active={!props.detail} label="Shells list">
+    <InspectorScreens>
+      <InspectorScreen active={!props.detail} label="Shells list">
         {props.list}
-      </InspectorPage>
+      </InspectorScreen>
       {props.detail && (
-        <InspectorPage active label="Shell output">
+        <InspectorScreen active label="Shell output">
           {props.detail}
-        </InspectorPage>
+        </InspectorScreen>
       )}
-    </InspectorPages>
+    </InspectorScreens>
   );
 }
 

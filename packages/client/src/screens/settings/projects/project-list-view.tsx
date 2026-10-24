@@ -1,4 +1,5 @@
-import { Action } from '@repo/kit/primitives/actions/action-list';
+import { groupedOnPhones } from '@repo/kit/list-grouped';
+import { Action } from '@repo/kit/primitives/actions/action';
 import { List } from '@repo/kit/primitives/lists/list';
 import {
   type LoadingRow,
@@ -8,8 +9,10 @@ import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
-import { Page, type PageProps } from '@repo/kit/primitives/scaffolds/page';
-import { RowDrawingContext } from '@repo/kit/row-drawing-context';
+import {
+  Screen,
+  type ScreenProps,
+} from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
@@ -27,15 +30,13 @@ export function ProjectListView(
 
 function ProjectsPage(props: SearchedProps): React.JSX.Element {
   return (
-    <Page {...pageProps(props)}>
-      <RowDrawingContext value="content">
-        <ProjectsBody {...props} />
-      </RowDrawingContext>
-    </Page>
+    <Screen {...screenProps(props)}>
+      <ProjectsBody {...props} />
+    </Screen>
   );
 }
 
-function pageProps(props: SearchedProps): PageProps {
+function screenProps(props: SearchedProps): ScreenProps {
   return {
     title: projectsTitle,
     caption: props.caption,
@@ -77,7 +78,7 @@ const loadingProjects: LoadingRow[] = [
 
 function LoadingProjects(): React.JSX.Element {
   return (
-    <List appearance="grouped">
+    <List appearance={groupedOnPhones('cards')}>
       <List.Section>{loadingRows(loadingProjects)}</List.Section>
     </List>
   );

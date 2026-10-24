@@ -1,22 +1,28 @@
 import { Host as ComposeHost } from '@expo/ui/jetpack-compose';
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import type * as React from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { materialColorOverrides } from '#primitives/native/material-palette';
+import { InsideHostContext } from './host-nesting';
 import type { HostProps } from './host-props';
 
 /*
  * Compose's Host: the seed alone would build a tonal palette that turns Argo's grey primary green, so every
  * Material 3 role Argo has a token for replaces the seeded one, and stock Compose controls draw in Argo's colours.
+ * Inside a FieldGroup it draws its children into the FieldGroup's tree, which keeps its own seed.
  */
 export function Host({
   children,
   seed,
   ignoreSafeArea: _iOSOnly,
   ...props
-}: HostProps): React.JSX.Element {
+}: HostProps): React.ReactNode {
+  const theme = useHostTheme(seed);
+
+  if (useContext(InsideHostContext)) return children;
+
   return (
-    <ComposeHost {...props} {...useHostTheme(seed)}>
+    <ComposeHost {...props} {...theme}>
       {children}
     </ComposeHost>
   );

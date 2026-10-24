@@ -173,7 +173,7 @@ export type WireSchemaHints = {
     "size": PropValue<"StatusDot", "size">;
     /** Whether to animate the status pulse. */
     "pulse": PropValue<"StatusDot", "pulse">;
-    /** label for this part. */
+    /** accessibility Label for this part. */
     "accessibilityLabel": PropValue<"StatusDot", "accessibilityLabel">;
   };
   "Spinner": {
@@ -274,20 +274,14 @@ export type WireSchemaHints = {
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"SplitButton", "onValueChange">;
   };
-  "ActionList": {
-    /** Header buttons and overflow, or a row context menu. */
-    "variant": PropValue<"ActionList", "variant">;
-    /** Spoken overflow menu name. */
-    "accessibilityLabel": PropValue<"ActionList", "accessibilityLabel">;
-  };
-  "ActionList.Section": {
+  "Action.Section": {
     /** Optional Section heading. */
-    "title": PropValue<"ActionList.Section", "title">;
+    "title": PropValue<"Action.Section", "title">;
   };
   "Action": {
     /** The Action label and accessible name. */
     "label": PropValue<"Action", "label">;
-    /** The leading Argo icon; a header ActionList shows only Actions with one as buttons, and a submenu needs one. */
+    /** The leading Argo icon; a Screen header shows only Actions with one as buttons, and a submenu needs one. */
     "icon": PropValue<"Action", "icon">;
     /** Desktop shortcut; Plugins cannot take reserved keys. */
     "shortcut": PropValue<"Action", "shortcut">;
@@ -295,54 +289,14 @@ export type WireSchemaHints = {
     "tone": PropValue<"Action", "tone">;
     /** Disable activation without hiding the Action. */
     "disabled": PropValue<"Action", "disabled">;
+    /** Marks the chosen Action in a submenu of choices, drawn with a check; a top-level header Action is a verb and does not use it. */
+    "selected": PropValue<"Action", "selected">;
     /** The Plugin handler or built-in App Action. */
     "onPress": PropValue<"Action", "onPress">;
     /** An Alert answer that dismisses the question, or one that destroys data. */
     "role": PropValue<"Action", "role">;
-    /** Check this Action as its Section's chosen option; pass false on the others. */
-    "selected": PropValue<"Action", "selected">;
     /** A count or status dot on the icon. */
     "badge": PropValue<"Action", "badge">;
-  };
-  "TextInput": {
-    /** Spoken and visible field name. */
-    "label": PropValue<"TextInput", "label">;
-    /** Current field value. */
-    "value": PropValue<"TextInput", "value">;
-    /** Reports value edits. */
-    "onChangeText": PropValue<"TextInput", "onChangeText">;
-    /** Example shown while empty. */
-    "placeholder": PropValue<"TextInput", "placeholder">;
-    /** Draw code in the mono face. */
-    "mono": PropValue<"TextInput", "mono">;
-    /** Disable edits. */
-    "disabled": PropValue<"TextInput", "disabled">;
-    /** Value validation is running. */
-    "loading": PropValue<"TextInput", "loading">;
-    /** Take focus on opening. */
-    "focusOnOpen": PropValue<"TextInput", "focusOnOpen">;
-    /** Select the value on focus. */
-    "selectOnFocus": PropValue<"TextInput", "selectOnFocus">;
-    /** Submit on Return or Enter. */
-    "onSubmit": PropValue<"TextInput", "onSubmit">;
-    /** The field requires a value. */
-    "required": PropValue<"TextInput", "required">;
-    /** Use a numeric keyboard. */
-    "numeric": PropValue<"TextInput", "numeric">;
-    /** Mask secret entry. */
-    "secure": PropValue<"TextInput", "secure">;
-    /** Hide the visible label. */
-    "labelHidden": PropValue<"TextInput", "labelHidden">;
-  };
-  "Textarea": {
-    /** Current field value. */
-    "value": PropValue<"Textarea", "value">;
-    /** Example shown while empty. */
-    "placeholder": PropValue<"Textarea", "placeholder">;
-    /** Reports value edits. */
-    "onChangeText": PropValue<"Textarea", "onChangeText">;
-    /** Disable edits. */
-    "disabled": PropValue<"Textarea", "disabled">;
   };
   "SearchField": {
     /** Search name and placeholder. */
@@ -351,30 +305,6 @@ export type WireSchemaHints = {
     "value": PropValue<"SearchField", "value">;
     /** Reports query edits. */
     "onChangeText": PropValue<"SearchField", "onChangeText">;
-  };
-  "Picker": {
-    /** Spoken and visible selection name. */
-    "label": PropValue<"Picker", "label">;
-    /** Selected values. */
-    "value": PropValue<"Picker", "value">;
-    /** Available choices. */
-    "options": PropValue<"Picker", "options">;
-    /** Reports a selected value. */
-    "onValueChange": PropValue<"Picker", "onValueChange">;
-    /** A value is required. */
-    "required": PropValue<"Picker", "required">;
-    /** Text shown without a selection. */
-    "placeholder": PropValue<"Picker", "placeholder">;
-    /** Disable selection. */
-    "disabled": PropValue<"Picker", "disabled">;
-    /** Choices are loading. */
-    "loading": PropValue<"Picker", "loading">;
-    /** Why choices failed to load. */
-    "loadError": PropValue<"Picker", "loadError">;
-    /** Selection placement. */
-    "variant": PropValue<"Picker", "variant">;
-    /** Pick several values. */
-    "multiple": PropValue<"Picker", "multiple">;
   };
   "FilterPill": {
     /** Filter name. */
@@ -385,60 +315,6 @@ export type WireSchemaHints = {
     "selected": PropValue<"FilterPill", "selected">;
     /** Action run on activation. */
     "onPress": PropValue<"FilterPill", "onPress">;
-  };
-  "Combobox": {
-    /** Spoken and visible selection name. */
-    "label": PropValue<"Combobox", "label">;
-    /** Selected value. */
-    "value": PropValue<"Combobox", "value">;
-    /** Searchable choices. */
-    "options": PropValue<"Combobox", "options">;
-    /** Reports a selected value. */
-    "onValueChange": PropValue<"Combobox", "onValueChange">;
-    /** A value is required. */
-    "required": PropValue<"Combobox", "required">;
-    /** Text shown without a selection. */
-    "placeholder": PropValue<"Combobox", "placeholder">;
-    /** Disable selection. */
-    "disabled": PropValue<"Combobox", "disabled">;
-    /** Choices are loading. */
-    "loading": PropValue<"Combobox", "loading">;
-    /** Why choices failed to load. */
-    "loadError": PropValue<"Combobox", "loadError">;
-    /** Selection placement. */
-    "variant": PropValue<"Combobox", "variant">;
-    /** Overlay heading. */
-    "title": PropValue<"Combobox", "title">;
-    /** Search hint. */
-    "searchPlaceholder": PropValue<"Combobox", "searchPlaceholder">;
-    /** Empty result message. */
-    "emptyLabel": PropValue<"Combobox", "emptyLabel">;
-    /** Action below the choices. */
-    "footerAction": PropValue<"Combobox", "footerAction">;
-  };
-  "Checkbox": {
-    /** The current on or off state. */
-    "value": PropValue<"Checkbox", "value">;
-    /** Called with the new on or off state. */
-    "onValueChange": PropValue<"Checkbox", "onValueChange">;
-    /** Whether interaction is disabled. */
-    "disabled": PropValue<"Checkbox", "disabled">;
-    /** The visible and accessible label. */
-    "label": PropValue<"Checkbox", "label">;
-    /** The option row treatment, or inline beside other content and sized to its label. */
-    "variant": PropValue<"Checkbox", "variant">;
-    /** The selection mode. */
-    "selection": PropValue<"Checkbox", "selection">;
-  };
-  "Switch": {
-    /** The current on or off state. */
-    "value": PropValue<"Switch", "value">;
-    /** Called with the new on or off state. */
-    "onValueChange": PropValue<"Switch", "onValueChange">;
-    /** Whether interaction is disabled. */
-    "disabled": PropValue<"Switch", "disabled">;
-    /** The spoken name; the switch draws no text. */
-    "accessibilityLabel": PropValue<"Switch", "accessibilityLabel">;
   };
   "Slider": {
     /** The current range value. */
@@ -458,40 +334,173 @@ export type WireSchemaHints = {
     /** Whether interaction is disabled. */
     "disabled": PropValue<"Slider", "disabled">;
   };
-  "DatePicker": {
-    /** Spoken and visible field name. */
-    "label": PropValue<"DatePicker", "label">;
+  "FieldGroup": {
+    /** Every row holds still. */
+    "disabled": PropValue<"FieldGroup", "disabled">;
+  };
+  "FieldGroup.Section": {
+    /** The heading above the section. */
+    "title": PropValue<"FieldGroup.Section", "title">;
+    /** Supporting text below the section. */
+    "footer": PropValue<"FieldGroup.Section", "footer">;
+  };
+  "FieldGroup.Value": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.Value", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.Value", "disabled">;
+    /** A leading SF Symbol and Material Symbol. */
+    "leading": PropValue<"FieldGroup.Value", "leading">;
+    /** The read-only value at the row’s end. */
+    "value": PropValue<"FieldGroup.Value", "value">;
+    /** The row is a placeholder while its value is on its way: a bar as wide as the title stands in for it, and assistive technology skips it. */
+    "loading": PropValue<"FieldGroup.Value", "loading">;
+  };
+  "FieldGroup.Link": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.Link", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.Link", "disabled">;
+    /** A leading SF Symbol and Material Symbol. */
+    "leading": PropValue<"FieldGroup.Link", "leading">;
+    /** Action or Plugin event invoked by onPress. */
+    "onPress": PropValue<"FieldGroup.Link", "onPress">;
+  };
+  "FieldGroup.Toggle": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.Toggle", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.Toggle", "disabled">;
+    /** Whether the field is on. */
+    "value": PropValue<"FieldGroup.Toggle", "value">;
+    /** Action or Plugin event invoked by onValueChange. */
+    "onValueChange": PropValue<"FieldGroup.Toggle", "onValueChange">;
+  };
+  "FieldGroup.Picker": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.Picker", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.Picker", "disabled">;
+    /** A leading SF Symbol and Material Symbol. */
+    "leading": PropValue<"FieldGroup.Picker", "leading">;
+    /** The chosen option value, or the list of them when `multiple`. */
+    "value": PropValue<"FieldGroup.Picker", "value">;
+    /** The options to choose from. */
+    "options": PropValue<"FieldGroup.Picker", "options">;
+    /** Where the choices open: `menu` in place, for a short known list; `page` on a page of their own, for a long or searchable one; `inline` as rows of the enclosing section with a check on the chosen ones, for a short list shown in place in a form. */
+    "presentation": PropValue<"FieldGroup.Picker", "presentation">;
+    /** The text shown for the current choice, in place of the chosen labels. */
+    "summary": PropValue<"FieldGroup.Picker", "summary">;
+    /** What opens the choices: `row`, the default, is a FieldGroup row; `pill` is a label and a down chevron that sits in a toolbar or the Composer, outside a FieldGroup, and always opens the choices on a page or popover. */
+    "trigger": PropValue<"FieldGroup.Picker", "trigger">;
+    /** The options are still loading. */
+    "loading": PropValue<"FieldGroup.Picker", "loading">;
+    /** Why the options failed to load; shown below the rows. */
+    "loadError": PropValue<"FieldGroup.Picker", "loadError">;
+    /** A search field above the choices; only a `page` has one. */
+    "searchable": PropValue<"FieldGroup.Picker", "searchable">;
+    /** Several options can be chosen; `value` is then a list. */
+    "multiple": PropValue<"FieldGroup.Picker", "multiple">;
+    /** The `page`'s one action, such as "Add Agents": in the pushed page's header on phones, an icon button when it has an icon; a button below the choices in a desktop popover, which has no header. */
+    "footerAction": PropValue<"FieldGroup.Picker", "footerAction">;
+    /** Action or Plugin event invoked by onValueChange. */
+    "onValueChange": PropValue<"FieldGroup.Picker", "onValueChange">;
+  };
+  "FieldGroup.DatePicker": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.DatePicker", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.DatePicker", "disabled">;
+    /** A leading SF Symbol and Material Symbol. */
+    "leading": PropValue<"FieldGroup.DatePicker", "leading">;
     /** Local ISO value: `YYYY-MM-DD`, `HH:mm`, or `YYYY-MM-DDTHH:mm` by mode. */
-    "value": PropValue<"DatePicker", "value">;
+    "value": PropValue<"FieldGroup.DatePicker", "value">;
     /** Pick a date, a time, or both. */
-    "mode": PropValue<"DatePicker", "mode">;
+    "mode": PropValue<"FieldGroup.DatePicker", "mode">;
     /** Reports a picked value. */
-    "onValueChange": PropValue<"DatePicker", "onValueChange">;
-    /** The field requires a value. */
-    "required": PropValue<"DatePicker", "required">;
-    /** Disable picking. */
-    "disabled": PropValue<"DatePicker", "disabled">;
+    "onValueChange": PropValue<"FieldGroup.DatePicker", "onValueChange">;
   };
-  "Field": {
-
+  "FieldGroup.Slider": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.Slider", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.Slider", "disabled">;
+    /** The current value. */
+    "value": PropValue<"FieldGroup.Slider", "value">;
+    /** The minimum value. */
+    "min": PropValue<"FieldGroup.Slider", "min">;
+    /** The maximum value. */
+    "max": PropValue<"FieldGroup.Slider", "max">;
+    /** The increment. */
+    "step": PropValue<"FieldGroup.Slider", "step">;
+    /** The value in words, such as “Medium”: shown at the row’s end and announced with the title by assistive technology. */
+    "valueLabel": PropValue<"FieldGroup.Slider", "valueLabel">;
+    /** Action or Plugin event invoked by onValueChange. */
+    "onValueChange": PropValue<"FieldGroup.Slider", "onValueChange">;
   };
-  "FieldLayout": {
-    /** label for this part. */
-    "label": PropValue<"FieldLayout", "label">;
+  "FieldGroup.TextField": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.TextField", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.TextField", "disabled">;
+    /** A leading SF Symbol and Material Symbol. */
+    "leading": PropValue<"FieldGroup.TextField", "leading">;
+    /** The current text. */
+    "value": PropValue<"FieldGroup.TextField", "value">;
+    /** Action or Plugin event invoked by onChangeText. */
+    "onChangeText": PropValue<"FieldGroup.TextField", "onChangeText">;
+    /** Example shown while empty. */
+    "placeholder": PropValue<"FieldGroup.TextField", "placeholder">;
+    /** Why the value is not accepted. */
+    "error": PropValue<"FieldGroup.TextField", "error">;
+    /** The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad. */
+    "keyboardType": PropValue<"FieldGroup.TextField", "keyboardType">;
+    /** The field grows with its text over several lines, for a long answer. */
+    "multiline": PropValue<"FieldGroup.TextField", "multiline">;
+    /** The title names the field for assistive technology but is not drawn, for a field whose surroundings already name it. */
+    "hideTitle": PropValue<"FieldGroup.TextField", "hideTitle">;
+    /** Focus the field as the row appears; on Android, open its dialog. */
+    "autoFocus": PropValue<"FieldGroup.TextField", "autoFocus">;
+    /** Select all of the text when the field takes focus. */
+    "selectTextOnFocus": PropValue<"FieldGroup.TextField", "selectTextOnFocus">;
+    /** on Focus for this part. */
+    "onFocus": PropValue<"FieldGroup.TextField", "onFocus">;
+    /** on Blur for this part. */
+    "onBlur": PropValue<"FieldGroup.TextField", "onBlur">;
+    /** on Submit for this part. */
+    "onSubmit": PropValue<"FieldGroup.TextField", "onSubmit">;
   };
-  "FieldDescription": {
-    /** The visible and accessible label. */
-    "text": PropValue<"FieldDescription", "text">;
-  };
-  "FieldErrors": {
-    /** errors for this part. */
-    "errors": PropValue<"FieldErrors", "errors">;
-  };
-  "Form": {
-    /** The submit Button label. */
-    "submitLabel": PropValue<"Form", "submitLabel">;
-    /** Submits every field value. */
-    "onSubmit": PropValue<"Form", "onSubmit">;
+  "FieldGroup.SecretField": {
+    /** The row’s label. */
+    "title": PropValue<"FieldGroup.SecretField", "title">;
+    /** Whether the row is disabled. */
+    "disabled": PropValue<"FieldGroup.SecretField", "disabled">;
+    /** A leading SF Symbol and Material Symbol. */
+    "leading": PropValue<"FieldGroup.SecretField", "leading">;
+    /** The current text. */
+    "value": PropValue<"FieldGroup.SecretField", "value">;
+    /** Action or Plugin event invoked by onChangeText. */
+    "onChangeText": PropValue<"FieldGroup.SecretField", "onChangeText">;
+    /** Example shown while empty. */
+    "placeholder": PropValue<"FieldGroup.SecretField", "placeholder">;
+    /** Why the value is not accepted. */
+    "error": PropValue<"FieldGroup.SecretField", "error">;
+    /** The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad. */
+    "keyboardType": PropValue<"FieldGroup.SecretField", "keyboardType">;
+    /** The field grows with its text over several lines, for a long answer. */
+    "multiline": PropValue<"FieldGroup.SecretField", "multiline">;
+    /** The title names the field for assistive technology but is not drawn, for a field whose surroundings already name it. */
+    "hideTitle": PropValue<"FieldGroup.SecretField", "hideTitle">;
+    /** Focus the field as the row appears; on Android, open its dialog. */
+    "autoFocus": PropValue<"FieldGroup.SecretField", "autoFocus">;
+    /** Select all of the text when the field takes focus. */
+    "selectTextOnFocus": PropValue<"FieldGroup.SecretField", "selectTextOnFocus">;
+    /** on Focus for this part. */
+    "onFocus": PropValue<"FieldGroup.SecretField", "onFocus">;
+    /** on Blur for this part. */
+    "onBlur": PropValue<"FieldGroup.SecretField", "onBlur">;
+    /** on Submit for this part. */
+    "onSubmit": PropValue<"FieldGroup.SecretField", "onSubmit">;
   };
   "List": {
     /** Rows or media tiles. */
@@ -504,7 +513,7 @@ export type WireSchemaHints = {
     "tileSize": PropValue<"List", "tileSize">;
     /** Media aspect: square 1:1, landscape 16:10, portrait 3:4. */
     "aspect": PropValue<"List", "aspect">;
-    /** The list appearance. */
+    /** The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists). */
     "appearance": PropValue<"List", "appearance">;
     /** Page-level supporting text. */
     "footer": PropValue<"List", "footer">;
@@ -663,17 +672,17 @@ export type WireSchemaHints = {
     /** Action offered on the web. */
     "action": PropValue<"Toast", "action">;
   };
-  "Page": {
-    /** The single-line page title. */
-    "title": PropValue<"Page", "title">;
+  "Screen": {
+    /** The single-line screen title. */
+    "title": PropValue<"Screen", "title">;
     /** A muted line under the title on wide windows; phones hide it. */
-    "caption": PropValue<"Page", "caption">;
+    "caption": PropValue<"Screen", "caption">;
     /** Native search on phones; expanding header search on web. */
-    "search": PropValue<"Page", "search">;
+    "search": PropValue<"Screen", "search">;
     /** The search query; drafts stay in the App. */
-    "value": PropValue<"Page", "value">;
+    "value": PropValue<"Screen", "value">;
     /** Receive the search query when it changes. */
-    "onChangeText": PropValue<"Page", "onChangeText">;
+    "onChangeText": PropValue<"Screen", "onChangeText">;
   };
   "ListDetail": {
 
@@ -771,136 +780,6 @@ export type WireSchemaHints = {
     "name": PropValue<"Metadata.Avatar", "name">;
     /** Optional avatar image URI. */
     "src": PropValue<"Metadata.Avatar", "src">;
-  };
-  "ListItem.Link": {
-    /** The row or section title. */
-    "title": PropValue<"ListItem.Link", "title">;
-    /** A second line below the title. */
-    "subtitle": PropValue<"ListItem.Link", "subtitle">;
-    /** Footer on iOS and desktop; supporting text on Android. */
-    "description": PropValue<"ListItem.Link", "description">;
-    /** Whether row activation is disabled. */
-    "disabled": PropValue<"ListItem.Link", "disabled">;
-    /** Optional spoken label; defaults to title and value. */
-    "accessibilityLabel": PropValue<"ListItem.Link", "accessibilityLabel">;
-    /** The current value. */
-    "value": PropValue<"ListItem.Link", "value">;
-    /** The destination URL. */
-    "href": PropValue<"ListItem.Link", "href">;
-    /** on Press for this part. */
-    "onPress": PropValue<"ListItem.Link", "onPress">;
-  };
-  "ListItem.Toggle": {
-    /** The row or section title. */
-    "title": PropValue<"ListItem.Toggle", "title">;
-    /** A second line below the title. */
-    "subtitle": PropValue<"ListItem.Toggle", "subtitle">;
-    /** Footer on iOS and desktop; supporting text on Android. */
-    "description": PropValue<"ListItem.Toggle", "description">;
-    /** Whether row activation is disabled. */
-    "disabled": PropValue<"ListItem.Toggle", "disabled">;
-    /** Optional spoken label; defaults to title and value. */
-    "accessibilityLabel": PropValue<"ListItem.Toggle", "accessibilityLabel">;
-    /** Whether the switch is on. */
-    "value": PropValue<"ListItem.Toggle", "value">;
-    /** Action or Plugin event invoked by onValueChange. */
-    "onValueChange": PropValue<"ListItem.Toggle", "onValueChange">;
-  };
-  "ListItem.Picker": {
-    /** The row or section title. */
-    "title": PropValue<"ListItem.Picker", "title">;
-    /** A second line below the title. */
-    "subtitle": PropValue<"ListItem.Picker", "subtitle">;
-    /** Footer on iOS and desktop; supporting text on Android. */
-    "description": PropValue<"ListItem.Picker", "description">;
-    /** Disable selection. */
-    "disabled": PropValue<"ListItem.Picker", "disabled">;
-    /** Optional spoken label; defaults to title and value. */
-    "accessibilityLabel": PropValue<"ListItem.Picker", "accessibilityLabel">;
-    /** Selected value. */
-    "value": PropValue<"ListItem.Picker", "value">;
-    /** Available choices. */
-    "options": PropValue<"ListItem.Picker", "options">;
-    /** Reports a selected value. */
-    "onValueChange": PropValue<"ListItem.Picker", "onValueChange">;
-    /** A value is required. */
-    "required": PropValue<"ListItem.Picker", "required">;
-    /** Text shown without a selection. */
-    "placeholder": PropValue<"ListItem.Picker", "placeholder">;
-    /** Choices are loading. */
-    "loading": PropValue<"ListItem.Picker", "loading">;
-    /** Why choices failed to load. */
-    "loadError": PropValue<"ListItem.Picker", "loadError">;
-  };
-  "ListItem.Stepper": {
-    /** The row or section title. */
-    "title": PropValue<"ListItem.Stepper", "title">;
-    /** A second line below the title. */
-    "subtitle": PropValue<"ListItem.Stepper", "subtitle">;
-    /** Footer on iOS and desktop; supporting text on Android. */
-    "description": PropValue<"ListItem.Stepper", "description">;
-    /** Whether row activation is disabled. */
-    "disabled": PropValue<"ListItem.Stepper", "disabled">;
-    /** Optional spoken label; defaults to title and value. */
-    "accessibilityLabel": PropValue<"ListItem.Stepper", "accessibilityLabel">;
-    /** The current value. */
-    "value": PropValue<"ListItem.Stepper", "value">;
-    /** The minimum value. */
-    "min": PropValue<"ListItem.Stepper", "min">;
-    /** The maximum value. */
-    "max": PropValue<"ListItem.Stepper", "max">;
-    /** The increment. */
-    "step": PropValue<"ListItem.Stepper", "step">;
-    /** Action or Plugin event invoked by onValueChange. */
-    "onValueChange": PropValue<"ListItem.Stepper", "onValueChange">;
-  };
-  "ListItem.TextField": {
-    /** Spoken and visible field name. */
-    "label": PropValue<"ListItem.TextField", "label">;
-    /** Current field value. */
-    "value": PropValue<"ListItem.TextField", "value">;
-    /** Reports value edits. */
-    "onChangeText": PropValue<"ListItem.TextField", "onChangeText">;
-    /** Example shown while empty. */
-    "placeholder": PropValue<"ListItem.TextField", "placeholder">;
-    /** Draw code in the mono face. */
-    "mono": PropValue<"ListItem.TextField", "mono">;
-    /** Disable edits. */
-    "disabled": PropValue<"ListItem.TextField", "disabled">;
-    /** Value validation is running. */
-    "loading": PropValue<"ListItem.TextField", "loading">;
-    /** Take focus on opening. */
-    "focusOnOpen": PropValue<"ListItem.TextField", "focusOnOpen">;
-    /** Select the value on focus. */
-    "selectOnFocus": PropValue<"ListItem.TextField", "selectOnFocus">;
-    /** Submit on Return or Enter. */
-    "onSubmit": PropValue<"ListItem.TextField", "onSubmit">;
-    /** The field requires a value. */
-    "required": PropValue<"ListItem.TextField", "required">;
-    /** Use a numeric keyboard. */
-    "numeric": PropValue<"ListItem.TextField", "numeric">;
-    /** Mask secret entry. */
-    "secure": PropValue<"ListItem.TextField", "secure">;
-    /** Hide the visible label. */
-    "labelHidden": PropValue<"ListItem.TextField", "labelHidden">;
-    /** Supporting field text. */
-    "description": PropValue<"ListItem.TextField", "description">;
-  };
-  "ListItem.Button": {
-    /** The row or section title. */
-    "title": PropValue<"ListItem.Button", "title">;
-    /** A second line below the title. */
-    "subtitle": PropValue<"ListItem.Button", "subtitle">;
-    /** Footer on iOS and desktop; supporting text on Android. */
-    "description": PropValue<"ListItem.Button", "description">;
-    /** Whether row activation is disabled. */
-    "disabled": PropValue<"ListItem.Button", "disabled">;
-    /** Optional spoken label; defaults to title and value. */
-    "accessibilityLabel": PropValue<"ListItem.Button", "accessibilityLabel">;
-    /** The action tone. */
-    "tone": PropValue<"ListItem.Button", "tone">;
-    /** on Press for this part. */
-    "onPress": PropValue<"ListItem.Button", "onPress">;
   };
   "Canvas": {
     /** label for this part. */

@@ -47,7 +47,7 @@ function CloseTab({ tab, selected, focus }: TabProps): ReactElement | null {
   return (
     <IconButton
       variant="ghost"
-      size="xs"
+      size="sm"
       accessibilityLabel={`Close ${tab.label}`}
       onPress={() => focus.close(tab.key)}
       icon="close"

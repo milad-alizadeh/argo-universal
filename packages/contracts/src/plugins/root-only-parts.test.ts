@@ -4,7 +4,7 @@ import { replacementTreeReason } from './replacement-tree';
 import type { WireNode } from './wire';
 
 const page: WireNode = {
-  type: 'Page',
+  type: 'Screen',
   key: 'page',
   props: { title: 'Issues' },
   children: [],
@@ -26,7 +26,7 @@ describe('a root-only part', () => {
 
   it.each([
     host('Stack', { direction: 'column' }),
-    host('Page', { title: 'Host' }),
+    host('Screen', { title: 'Host' }),
   ])('is refused as a child of $type', (root) => {
     expect(prepareWireTree(root).children).toEqual([
       {
@@ -47,7 +47,7 @@ describe('a root-only part', () => {
     'refuses a Replaceable Slot tree that holds it ($type)',
     (root) => {
       expect(replacementTreeReason(root)).toBe(
-        'Page cannot replace a core component',
+        'Screen cannot replace a core component',
       );
     },
   );
@@ -62,7 +62,7 @@ const listDetail = (slots: WireNode['slots']): WireNode => ({
 });
 
 describe("a root-only part in a root part's slot", () => {
-  it('stays where the root names it, as the detail Page', () => {
+  it('stays where the root names it, as the detail Screen', () => {
     const root = listDetail({ detail: [page] });
 
     expect(prepareWireTree(root).slots.detail).toEqual([page]);

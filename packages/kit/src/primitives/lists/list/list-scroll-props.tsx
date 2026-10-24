@@ -116,7 +116,7 @@ function ScrollEndGap(): ReactElement | null {
   return <View style={{ height: gap }} />;
 }
 
-function PageFooter({ text }: { text?: string }): ReactNode {
+function ScreenFooter({ text }: { text?: string }): ReactNode {
   if (!text) return null;
 
   return (
@@ -133,7 +133,7 @@ export function ListEnd(
   return (
     <>
       {props.endContent}
-      <PageFooter text={props.footer} />
+      <ScreenFooter text={props.footer} />
       <ScrollEndGap />
     </>
   );

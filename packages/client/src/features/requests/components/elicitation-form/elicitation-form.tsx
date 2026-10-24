@@ -100,20 +100,14 @@ function questionActions(
 
 // A lone question is the message itself; several are each headed by their own.
 function questionHeader(model: QuestionModel): ElicitationView['header'] {
-  const choose = chooseLabel(model.question);
-
-  if (model.count === 1)
-    return { title: model.props.request.message, progress: choose };
+  if (model.count === 1) return { title: model.props.request.message };
 
   return {
     title: model.question.title,
-    progress: `${choose} · ${model.index + 1} of ${model.count}`,
+    progress: `${model.index + 1} of ${model.count}`,
     pager: <QuestionPager model={model} />,
   };
 }
-
-const chooseLabel = (question: ElicitationQuestion): string =>
-  question.multiple ? 'Choose one or more' : 'Choose one';
 
 function FieldsContent(props: ContentProps): ReactElement {
   const model = useElicitationForm(props);

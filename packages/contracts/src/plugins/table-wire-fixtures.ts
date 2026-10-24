@@ -17,16 +17,12 @@ type Run = readonly [
   time: string,
 ];
 
-const rerun = (id: string): WireNode => ({
-  ...node('ActionList', `${id}-actions`),
-  children: [
-    node('Action', `${id}-rerun`, {
-      label: 'Re-run',
-      icon: 'retry',
-      onPress: { $event: 'onPress' },
-    }),
-  ],
-});
+const rerun = (id: string): WireNode =>
+  node('Action', `${id}-rerun`, {
+    label: 'Re-run',
+    icon: 'retry',
+    onPress: { $event: 'onPress' },
+  });
 
 const run = (
   id: string,

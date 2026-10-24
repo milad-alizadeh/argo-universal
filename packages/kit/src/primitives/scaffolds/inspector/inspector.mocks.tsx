@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { useOptionalSheet } from '#primitives/overlays/sheet';
@@ -36,7 +36,7 @@ function InspectorContent(): ReactElement {
   );
 }
 
-const branchesPage = {
+const branchesScreen = {
   name: 'branches',
   title: 'Branches',
   children: <Text>{branchesText}</Text>,
@@ -52,15 +52,13 @@ function BranchesButton(): ReactElement | null {
     <Button
       label="Show branches"
       variant="secondary"
-      onPress={() => sheet.push(branchesPage)}
+      onPress={() => sheet.push(branchesScreen)}
     />
   );
 }
 
 const copyPath = (
-  <ActionList>
-    <Action label="Copy path" icon="copy" onPress={ignore} />
-  </ActionList>
+  <Action key="copy" label="Copy path" icon="copy" onPress={ignore} />
 );
 
 const example = { title: inspectorTitle, actions: copyPath };
@@ -73,7 +71,7 @@ export function ExampleInspector(props: {
 
   return (
     <View className="flex-1 flex-row bg-content">
-      <ExamplePage onToggle={() => setOpen(!open)} />
+      <ExampleScreen onToggle={() => setOpen(!open)} />
       <Inspector {...example} open={open} onOpenChange={setOpen}>
         <InspectorContent />
       </Inspector>
@@ -81,7 +79,7 @@ export function ExampleInspector(props: {
   );
 }
 
-function ExamplePage(props: { onToggle: () => void }): ReactElement {
+function ExampleScreen(props: { onToggle: () => void }): ReactElement {
   return (
     <View testID="example-page" className="flex-1 items-start p-4">
       <Button label={openLabel} onPress={props.onToggle} />

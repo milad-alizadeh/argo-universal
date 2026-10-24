@@ -137,7 +137,7 @@ function stateIcon(data: GitItemPreview): ComponentProps<typeof Icon> {
 
   return {
     name: data.kind === 'issue' ? issueIcon(data.state) : drawing.icon,
-    size: 'xs',
+    size: 'sm',
     tone: drawing.tone,
   };
 }

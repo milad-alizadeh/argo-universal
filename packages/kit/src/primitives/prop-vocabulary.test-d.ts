@@ -1,6 +1,6 @@
 import type { ViewProps } from 'react-native';
 import { expectTypeOf } from 'vitest';
-import type { PressActionProps } from '#primitives/actions/action-list';
+import type { PressActionProps } from '#primitives/actions/action';
 import type { IconSize } from '../symbols/icon-size';
 import type { SizeClassValue } from '../use-size-class/size-class-value';
 import type { Aliases, Primitives } from './prop-vocabulary.mocks';
@@ -140,14 +140,6 @@ expectTypeOf<Primitives['StackProps']['direction']>().toEqualTypeOf<
 expectTypeOf<Keys<Primitives['StackProps']>>().toExtend<
   ArrangementPropNames | 'children'
 >();
-
-expectTypeOf<Primitives['ComboboxOption']['subtitle']>().toEqualTypeOf<
-  string | undefined
->();
-
-expectTypeOf<
-  Primitives['PickerProps']['options'][number]['subtitle']
->().toEqualTypeOf<string | undefined>();
 
 expectTypeOf<DomainPropNames>().toEqualTypeOf<Each<never>>();
 

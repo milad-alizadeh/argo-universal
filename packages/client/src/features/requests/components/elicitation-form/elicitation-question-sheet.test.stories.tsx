@@ -19,9 +19,9 @@ const meta = {
 
 export default meta;
 
-// Each option is a row button whose name starts with its title.
+// The work options are checkbox rows whose names start with their titles.
 const option = (scope: ReturnType<typeof within>, title: string): HTMLElement =>
-  scope.getByRole('button', { name: new RegExp(`^${title}`) });
+  scope.getByRole('checkbox', { name: new RegExp(`^${title}`) });
 
 export const RetainAnswersAcrossSheetTransition: Story = {
   render: (args): ReactElement => (
@@ -42,7 +42,7 @@ export const RetainAnswersAcrossSheetTransition: Story = {
     await settleViewport(390);
     const sheet = within(await within(document.body).findByRole('dialog'));
     await expect(option(sheet, buildFeature)).toHaveAttribute(
-      'aria-pressed',
+      'aria-checked',
       'true',
     );
     await userEvent.click(
