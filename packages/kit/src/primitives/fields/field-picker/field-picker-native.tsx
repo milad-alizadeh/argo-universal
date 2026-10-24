@@ -2,6 +2,7 @@ import type { ComponentType, ReactElement } from 'react';
 import { FieldPickerDrill } from './field-picker-drill';
 import {
   choiceSummary,
+  chosenLogo,
   drawingProps,
   type FieldPickerCallerProps,
   type FieldPickerProps,
@@ -11,6 +12,8 @@ export type NativeRowProps = Pick<
   FieldPickerProps,
   'title' | 'leading' | 'disabled'
 > & {
+  // The chosen option's logo, which the row leads with in place of `leading`.
+  logo?: string;
   summary: string;
   onPress?: () => void;
 };
@@ -28,6 +31,7 @@ type NativePickerProps = {
 export const rowProps = (props: FieldPickerProps): NativeRowProps => ({
   title: props.title,
   leading: props.leading,
+  logo: chosenLogo(props),
   summary: choiceSummary(props),
   disabled: props.disabled,
 });

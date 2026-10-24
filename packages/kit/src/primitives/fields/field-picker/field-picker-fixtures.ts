@@ -106,6 +106,21 @@ export const screenWithSearch = {
   searchable: true,
 } satisfies Fixture<FieldPickerSingle>;
 
+// A page whose chosen option has a logo, which its row leads with.
+export const screenWithLogo = {
+  title: 'Label',
+  value: 'two',
+  options: [
+    { value: 'one', label: 'One' },
+    {
+      value: 'two',
+      label: 'Two',
+      logo: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 8 8%22%3E%3Ccircle cx=%224%22 cy=%224%22 r=%224%22/%3E%3C/svg%3E',
+    },
+  ],
+  presentation: 'page',
+} satisfies Fixture<FieldPickerSingle>;
+
 // A short page with no search, so its action shows below the choices without scrolling.
 export const screenWithButton = {
   title: 'Label',

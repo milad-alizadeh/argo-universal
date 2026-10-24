@@ -34,7 +34,7 @@ export function ScreenRow(props: ScreenRowProps): ReactElement {
       modifiers={[buttonStyle('plain'), disabled(props.disabled ?? false)]}
     >
       <HStack modifiers={[wholeRowPress]}>
-        <RowTitle title={props.title} leading={props.leading} />
+        <RowTitle {...titleProps(props)} />
         <Spacer />
         <NativeText tone="muted">{props.summary}</NativeText>
         <Image systemName="chevron.forward" modifiers={disclosureStyle} />
@@ -42,3 +42,12 @@ export function ScreenRow(props: ScreenRowProps): ReactElement {
     </Button>
   );
 }
+
+// The chosen option's logo leads the row where it has one, the row's own icon otherwise.
+const titleProps = (
+  props: ScreenRowProps,
+): React.ComponentProps<typeof RowTitle> => ({
+  title: props.title,
+  leading: props.leading,
+  logo: props.logo,
+});

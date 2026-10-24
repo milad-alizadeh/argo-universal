@@ -7,6 +7,7 @@ type ChoiceRowProps = Pick<
   FieldPickerProps,
   'title' | 'leading' | 'disabled'
 > & {
+  logo?: string;
   summary: string;
   onPress?: () => void;
 };
@@ -20,6 +21,7 @@ export function ChoiceRow(props: ChoiceRowProps): ReactElement {
     <RowListItem
       title={props.title}
       leading={props.leading}
+      logo={props.logo}
       disabled={props.disabled}
       supporting={supporting(props.summary)}
       onPress={props.onPress}

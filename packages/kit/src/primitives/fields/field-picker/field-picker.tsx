@@ -8,6 +8,7 @@ import {
 import { inlineOptionRows } from './field-picker-inline-rows';
 import {
   choiceSummary,
+  chosenLogo,
   drawingProps,
   type FieldPickerCallerProps,
   type FieldPickerProps,
@@ -63,7 +64,7 @@ const screenTrigger = (
   <ScreenTrigger
     title={props.title}
     summary={choiceSummary(props)}
-    lead={<RowTitle {...props} />}
+    lead={<RowTitle {...props} logo={chosenLogo(props)} />}
     disclosure={disclosure}
     disabled={props.disabled}
   />

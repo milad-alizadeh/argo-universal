@@ -12,6 +12,7 @@ import {
   menuMultiple,
   screenMultiple,
   screenWithButton,
+  screenWithLogo,
   screenWithSearch,
 } from './field-picker-fixtures';
 
@@ -71,6 +72,17 @@ export const RowOpensFromTitleMenu: Story = {
     await expect(
       await within(document.body).findByRole('option', { name: 'One' }),
     ).toBeInTheDocument();
+  },
+};
+
+// A page's row leads with the chosen option's logo.
+export const RowLeadsWithChosenLogo: Story = {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  render: () => (
+    <ControlledPicker {...screenWithLogo} onValueChange={changed} />
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText('Label icon')).toBeVisible();
   },
 };
 

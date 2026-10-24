@@ -63,6 +63,15 @@ export const chosenValues = (
 ): readonly string[] =>
   typeof props.value === 'string' ? [props.value] : props.value;
 
+// The logo of the chosen option, for a row that leads with it; with several chosen, the first one's.
+export function chosenLogo(
+  props: Pick<FieldPickerProps, 'value' | 'options'>,
+): string | undefined {
+  const chosen = new Set(chosenValues(props));
+
+  return props.options.find((option) => chosen.has(option.value))?.logo;
+}
+
 // What the row shows as its value: the chosen labels, in the options' order.
 export function choiceSummary(
   props: Pick<FieldPickerProps, 'value' | 'options' | 'summary'>,
