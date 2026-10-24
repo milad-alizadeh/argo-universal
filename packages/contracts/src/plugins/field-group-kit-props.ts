@@ -138,7 +138,7 @@ export const fieldGroupKitParts = {
       // A multiple Picker echoes its whole list and stays open, so a toggle never locks it.
       onValueChange: echoes(fieldGroupPickerProps, 'value', { blocks: false }),
       // The footer action's press, inside the action data.
-      onPress: z.undefined(),
+      onPress: z.undefined().meta({ within: 'footerAction' }),
     },
   },
   'FieldGroup.Slider': {

@@ -1,4 +1,5 @@
-import { WireJson } from '@repo/contracts/plugins/wire';
+import { wirePart } from '@repo/contracts/plugins/kit';
+import { partEventRules, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import type { Prop, Props } from './wire-tree';
 
@@ -8,6 +9,7 @@ export interface ElementProps {
   renderItem?: (item: WireJson, index: number) => ReactNode;
   [name: string]:
     | Prop
+    | ElementProps
     | ReactNode
     | ((item: WireJson, index: number) => ReactNode);
 }
@@ -57,8 +59,45 @@ function checked(
   return value;
 }
 
+const isPlainObject = (value: unknown): value is ElementProps =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.getPrototypeOf(value) === Object.prototype;
+
+type EventPlace = { name: string; within: string };
+
+// The Part events whose schema keeps their handler inside a prop object, such as a Picker's `footerAction.onPress`.
+const eventPlaces = (type: string): EventPlace[] =>
+  Object.entries(wirePart(type)?.events ?? {}).flatMap(([name, schema]) => {
+    const { within } = partEventRules(schema);
+
+    return within === undefined ? [] : [{ name, within }];
+  });
+
+/*
+ * A handler written inside its prop object runs as the node's event of that name: the one nested place a function is
+ * allowed. The Plugin runtime holds it at the node's top level, and the wire puts it back inside (wire-tree).
+ */
+function liftedEvent(raw: ElementProps, place: EventPlace): ElementProps {
+  const holder = raw[place.within];
+
+  if (!isPlainObject(holder) || typeof holder[place.name] !== 'function')
+    return raw;
+
+  const rest = Object.fromEntries(
+    Object.entries(holder).filter(([name]) => name !== place.name),
+  );
+
+  return { ...raw, [place.name]: holder[place.name], [place.within]: rest };
+}
+
+const liftedEvents = (type: string, raw: ElementProps): ElementProps =>
+  eventPlaces(type).reduce(liftedEvent, raw);
+
 // Keeps the props that cross the wire: drops `children`, the key and `undefined`.
-export function toProps(type: string, raw: ElementProps): Props {
+export function toProps(type: string, source: ElementProps): Props {
+  const raw = liftedEvents(type, source);
+
   return Object.fromEntries(
     Object.entries(raw)
       .filter(([name, value]) => !reserved.has(name) && value !== undefined)

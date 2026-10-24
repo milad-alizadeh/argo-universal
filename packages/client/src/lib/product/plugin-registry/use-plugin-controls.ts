@@ -8,6 +8,7 @@ import {
 import { wireNodeKeys } from '@repo/contracts/plugins/wire-node-key';
 import { useEffect, useReducer, useState } from 'react';
 import { eventProps, type Change, type Edit } from './plugin-events';
+import { withNestedEvents } from './plugin-nested-events';
 import type {
   ControlInput,
   PluginProps,
@@ -115,7 +116,12 @@ function propsFor(
   update: () => void,
 ): PluginProps {
   const change = changeFor(field, update);
-  const props = { ...input.node.props, ...eventProps(input, change) };
+
+  const props = withNestedEvents(input, {
+    ...input.node.props,
+    ...eventProps(input, change),
+  });
+
   const prop = field.rules.value;
 
   if (prop !== undefined) props[prop] = currentValue(field);

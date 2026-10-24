@@ -1,5 +1,6 @@
 import { wirePart } from '@repo/contracts/plugins/kit';
 import {
+  partEventHandler,
   partEventPayload,
   WireEvent,
   type PluginDispatchInput,
@@ -17,8 +18,10 @@ export function requireViewHandler(
 ): void {
   const node = requireNode(root, input.key);
 
-  if (!hasHandler(node, input.event)) throw new Error(missingHandler);
-  partEventPayload(eventSchema(node.type, input.event), input.payload);
+  const schema = eventSchema(node.type, input.event);
+
+  if (!hasHandler(node, input.event, schema)) throw new Error(missingHandler);
+  partEventPayload(schema, input.payload);
 }
 
 function eventSchema(type: string, event: string): z.ZodType | undefined {
@@ -39,5 +42,10 @@ function requireNode(root: WireNode | null, key: string): WireNode {
   return node;
 }
 
-const hasHandler = (node: WireNode, event: string): boolean =>
-  WireEvent.safeParse(node.props[event]).data?.$event === event;
+const hasHandler = (
+  node: WireNode,
+  event: string,
+  schema: z.ZodType | undefined,
+): boolean =>
+  WireEvent.safeParse(partEventHandler(node.props, event, schema)).data
+    ?.$event === event;
