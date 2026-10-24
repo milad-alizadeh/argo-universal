@@ -11,5 +11,9 @@ export function localDateTime(instant: string | undefined): string | undefined {
   return `${day}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export const instantOf = (local: string): string =>
-  new Date(local).toISOString();
+// An empty or invalid local time is an empty answer, so the field clears and a required one can say so.
+export function instantOf(local: string): string {
+  const date = new Date(local);
+
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
