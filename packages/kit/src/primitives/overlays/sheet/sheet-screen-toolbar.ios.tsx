@@ -2,6 +2,7 @@ import { Button, Toolbar, ToolbarItem } from '@expo/ui/swift-ui';
 import { type ModifierConfig, tint } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
+import { nativeIconName } from '../../../symbols/native-icon-name';
 import type { SheetScreenAction } from './sheet-props';
 import type { SheetScreenEntry } from './sheet-screens';
 
@@ -63,6 +64,7 @@ function ScreenAction({ action }: { action: SheetScreenAction }): ReactElement {
     <ToolbarItem placement="topBarTrailing">
       <Button
         label={action.label}
+        systemImage={actionSymbol(action)}
         onPress={action.onPress}
         modifiers={actionModifiers(
           action.destructive ? colors.danger : undefined,
@@ -71,6 +73,15 @@ function ScreenAction({ action }: { action: SheetScreenAction }): ReactElement {
     </ToolbarItem>
   );
 }
+
+// An icon action shows only its symbol in the toolbar, as SwiftUI's toolbar draws a labelled Button.
+function actionSymbol(action: SheetScreenAction): SfSymbol | undefined {
+  const name = action.icon ? nativeIconName(action.icon) : undefined;
+
+  return typeof name === 'string' ? name : undefined;
+}
+
+type SfSymbol = NonNullable<React.ComponentProps<typeof Button>['systemImage']>;
 
 function actionModifiers(color: string | undefined): ModifierConfig[] {
   return color ? [tint(color)] : [];

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useDrillBeside } from '#primitives/overlays/drill';
 import { matchingOptions, type FieldPickerProps } from './field-picker-model';
 import { ScreenFrame } from './field-picker-screen-frame';
 import {
@@ -29,9 +30,11 @@ type ScreenState = FieldPickerScreenProps & {
 export function FieldPickerScreen(props: ScreenState): ReactElement {
   const options = matchingOptions(props.options, props.query);
   const chosen = useClosesWhenSettled(props);
+  // A pushed page's header holds the action; a popover has none, so the action sits below the choices.
+  const footer = useDrillBeside() ? <ScreenFooter {...props} /> : null;
 
   return (
-    <ScreenFrame search={searchOf(props)} footer={<ScreenFooter {...props} />}>
+    <ScreenFrame search={searchOf(props)} footer={footer}>
       <ScreenList {...props} options={options} onClose={chosen} />
     </ScreenFrame>
   );

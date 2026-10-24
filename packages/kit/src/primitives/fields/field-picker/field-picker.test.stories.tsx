@@ -167,28 +167,33 @@ export const MultipleReportsEachToggle: Story = {
   },
 };
 
-// The page's action closes the page and runs.
-export const ActionRunsAndCloses: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
-  render: () => (
-    <ControlledPicker
-      {...screenWithButton}
-      footerAction={{ label: 'Add options', onPress: pressed }}
-      onValueChange={changed}
-    />
-  ),
-  play: async ({ canvas, userEvent }) => {
-    const page = within(document.body);
-    await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
-    await userEvent.click(
-      await page.findByRole('button', { name: 'Add options' }),
-    );
-    await expect(pressed).toHaveBeenCalledOnce();
-    await waitFor(() =>
-      expect(page.queryByRole('searchbox', { name: searchLabel })).toBeNull(),
-    );
-  },
-};
+// The page's action closes the page and runs: below the choices in a popover, in the header of a pushed page.
+export const ActionRunsAndCloses = actionRunning(layoutWidths.wide);
+
+export const HeaderActionRunsAndCloses = actionRunning(layoutWidths.phone);
+
+function actionRunning(width: number): Story {
+  return {
+    beforeEach: (): Promise<void> => settleViewport(width),
+    render: () => (
+      <ControlledPicker
+        {...screenWithButton}
+        footerAction={{ label: 'Add options', icon: 'add', onPress: pressed }}
+        onValueChange={changed}
+      />
+    ),
+    play: async ({ canvas, userEvent }) => {
+      const page = within(document.body);
+      await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
+      await page.findByRole('radio', { name: /Three/ });
+      await userEvent.click(page.getByRole('button', { name: 'Add options' }));
+      await expect(pressed).toHaveBeenCalledOnce();
+      await waitFor(() =>
+        expect(page.queryByRole('radio', { name: /Three/ })).toBeNull(),
+      );
+    },
+  };
+}
 
 // A short several-of choice opens in place on the web as the page does, and also reports the list.
 export const MultipleMenuReportsList: Story = {

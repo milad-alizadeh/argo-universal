@@ -55,10 +55,17 @@ function agentPicker(context: PickerContext): ReactElement {
       summary={agentSummary(context.configuration)}
       options={agentOptions(context)}
       onValueChange={context.picking.pick}
-      footerAction={{ label: 'Add Agents', onPress: context.choices.onAdd }}
+      footerAction={addAgents(context.choices)}
     />
   );
 }
+
+// Opens the Agents page; on a phone it is the picker page's header button.
+const addAgents = (choices: Choices): PickerProps['footerAction'] => ({
+  label: 'Add Agents',
+  icon: 'add',
+  onPress: choices.onAdd,
+});
 
 /*
  * Each Agent's own logo where the row can draw an image, the Agent glyph where it cannot (a phone's native list), and a

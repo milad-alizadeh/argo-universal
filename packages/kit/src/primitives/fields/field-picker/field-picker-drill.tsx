@@ -54,6 +54,7 @@ const drillProps = (
   contentScrolls: true,
   keepOpen: props.multiple,
   beside: props.beside,
+  action: props.footerAction,
 });
 
 type Typed = { query: string; onQueryChange: (query: string) => void };

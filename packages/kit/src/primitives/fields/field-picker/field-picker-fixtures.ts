@@ -127,7 +127,11 @@ export const screenWithButton = {
   value: 'two',
   options: short,
   presentation: 'page',
-  footerAction: { label: 'Add options', onPress: (): void => {} },
+  footerAction: {
+    label: 'Add options',
+    icon: 'add',
+    onPress: (): void => {},
+  },
 } satisfies Fixture<FieldPickerSingle>;
 
 export const screenMultiple = {

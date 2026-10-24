@@ -8,7 +8,7 @@ import type { DrillProps } from './drill-props';
 import { DrillSheet } from './drill-sheet';
 
 // True where a drill opens its choices in a popover beside the row: a desktop window.
-function useDrillBeside(): boolean {
+export function useDrillBeside(): boolean {
   return useWide() && Platform.OS === 'web';
 }
 

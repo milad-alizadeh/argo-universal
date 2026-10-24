@@ -1,3 +1,4 @@
+import type { IconName } from '@repo/contracts/kit-symbols';
 import type { ReactElement, ReactNode } from 'react';
 import type { PressableProps, StyleProp, ViewStyle } from 'react-native';
 import type { KitProps } from '../../kit-props';
@@ -35,11 +36,12 @@ export interface SheetScreenProps {
   children: ReactNode;
 }
 
-// A text action in a page's header, such as Stop; destructive draws it in the danger colour.
+// An action in a page's header, such as Stop; destructive draws it in the danger colour. With an icon it is an icon button named by its label.
 export interface SheetScreenAction {
   label: string;
   onPress: () => void;
   destructive?: boolean;
+  icon?: IconName;
 }
 
 // A row that pushes another page of the same sheet.

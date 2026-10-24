@@ -401,7 +401,7 @@ export type WireSchemaHints = {
     "searchable": PropValue<"FieldGroup.Picker", "searchable">;
     /** Several options can be chosen; `value` is then a list. */
     "multiple": PropValue<"FieldGroup.Picker", "multiple">;
-    /** A button in a section of its own below the choices of a `page`, such as "Add Agents". */
+    /** The `page`'s one action, such as "Add Agents": in the pushed page's header on phones, an icon button when it has an icon; a button below the choices in a desktop popover, which has no header. */
     "footerAction": PropValue<"FieldGroup.Picker", "footerAction">;
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"FieldGroup.Picker", "onValueChange">;

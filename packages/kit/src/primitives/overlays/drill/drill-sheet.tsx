@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
 import { cloneElement, useId, useLayoutEffect, type ReactElement } from 'react';
+import { Action } from '#primitives/actions/action';
 import {
   useOptionalSheet,
+  type SheetDestination,
   type SheetNavigation,
 } from '#primitives/overlays/sheet';
 import { Screen, type ScreenProps } from '#primitives/scaffolds/screen';
@@ -43,13 +45,21 @@ function useRoutedScreen(
   const router = useRouter();
 
   return usePushedScreen({
-    content: () => (
-      <Screen title={props.title} {...screenSearch(props.search)}>
-        {props.children(() => router.back(), props.search !== undefined)}
-      </Screen>
-    ),
+    content: () => <RoutedPage {...props} back={() => router.back()} />,
     onExit: completion.finish,
   });
+}
+
+function RoutedPage(props: DrillProps & { back: () => void }): ReactElement {
+  return (
+    <Screen
+      title={props.title}
+      {...screenSearch(props.search)}
+      {...screenAction(props.action, props.back)}
+    >
+      {props.children(props.back, props.search !== undefined)}
+    </Screen>
+  );
 }
 
 const screenSearch = (
@@ -62,6 +72,42 @@ const screenSearch = (
         onChangeText: search.onChangeText,
       }
     : {};
+
+// The page's action leaves the page, then runs, as a pick does; an icon action is the header's primary action.
+function screenAction(
+  action: DrillProps['action'],
+  back: () => void,
+): Pick<ScreenProps, 'primaryAction' | 'actions'> {
+  if (!action) return {};
+
+  const element = (
+    <Action
+      label={action.label}
+      icon={action.icon}
+      onPress={leaving(action, back).onPress}
+    />
+  );
+
+  return action.icon ? { primaryAction: element } : { actions: element };
+}
+
+// The action as the page's header runs it: back to the row first, then the action.
+const leaving = (
+  action: NonNullable<DrillProps['action']>,
+  back: () => void,
+): NonNullable<DrillProps['action']> => ({
+  ...action,
+  onPress: () => {
+    back();
+    action.onPress();
+  },
+});
+
+const sheetAction = (
+  action: DrillProps['action'],
+  back: () => void,
+): Pick<SheetDestination, 'action'> =>
+  action ? { action: leaving(action, back) } : {};
 
 type DestinationOwner = {
   parent?: SheetNavigation;
@@ -90,6 +136,7 @@ function hand(props: DrillProps, live: Live): void {
     placeholder: props.placeholder,
     standby: live.standby,
     onExit: live.onExit,
+    ...sheetAction(props.action, live.parent.back),
     children: props.children(live.parent.back, false),
   };
 
@@ -129,6 +176,7 @@ function pushChoices(
     contentScrolls: props.contentScrolls,
     placeholder: props.placeholder,
     standby: props.mount === 'eager',
+    ...sheetAction(props.action, parent.back),
     children: props.children(parent.back, false),
   });
 }

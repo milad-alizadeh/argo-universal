@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
+import { stockIcon } from '../kit-symbols/stock-icon-schema';
 import { fieldGroupRowProps } from './field-group-row-props';
 import { handler } from './plugin-part-props';
 import { datePickerProps } from './text-field-kit-props';
@@ -87,10 +88,14 @@ export const fieldGroupPickerProps = fieldGroupRowProps.extend({
     .optional()
     .describe('Several options can be chosen; `value` is then a list.'),
   footerAction: z
-    .object({ label: z.string(), onPress: handler('onPress') })
+    .object({
+      label: z.string(),
+      icon: stockIcon.optional(),
+      onPress: handler('onPress'),
+    })
     .optional()
     .describe(
-      'A button in a section of its own below the choices of a `page`, such as "Add Agents".',
+      'The `page`\'s one action, such as "Add Agents": in the pushed page\'s header on phones, an icon button when it has an icon; a button below the choices in a desktop popover, which has no header.',
     ),
   onValueChange: handler('onValueChange'),
 });
