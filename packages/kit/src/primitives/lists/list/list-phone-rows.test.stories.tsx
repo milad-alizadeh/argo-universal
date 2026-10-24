@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
+import { Text } from '#primitives/content/text';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
@@ -18,7 +19,7 @@ const hosts = (props: Parameters<typeof hostsNatively>[0]): boolean =>
   hostsNatively(props, nativeKinds);
 
 export const FieldGroupRowsAreNative: Story = {
-  render: () => <></>,
+  render: () => <Text>Selection</Text>,
   play: async () => {
     await expect(
       hosts({
@@ -34,7 +35,7 @@ export const FieldGroupRowsAreNative: Story = {
 };
 
 export const ListItemRowsFallBack: Story = {
-  render: () => <></>,
+  render: () => <Text>Selection</Text>,
   play: async () => {
     await expect(
       hosts({
@@ -49,7 +50,7 @@ export const ListItemRowsFallBack: Story = {
 };
 
 export const SectionPropsFallBack: Story = {
-  render: () => <></>,
+  render: () => <Text>Selection</Text>,
   play: async () => {
     await expect(
       hosts({
