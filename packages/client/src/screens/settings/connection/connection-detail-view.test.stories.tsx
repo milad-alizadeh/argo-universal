@@ -58,6 +58,15 @@ export const ShowsConnectingUntilServerAnswers: Story = {
   },
 };
 
+// The banner over the page already says the Connection is down, so the page says nothing more.
+export const LeavesTheDownConnectionToTheBanner: Story = {
+  args: { server: { status: 'down' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText(/^Connecting to the Server/)).toBeNull();
+    await expect(canvas.queryByRole('progressbar')).toBeNull();
+  },
+};
+
 export const ShowsSystemInfoErrorAsAToast: Story = {
   args: { server: { status: 'error', message: 'Server is down' } },
   play: async ({ canvas }) => {

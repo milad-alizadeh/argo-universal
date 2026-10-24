@@ -8,6 +8,8 @@ import { SettingsLoading } from '../settings-loading';
 
 export type ServerDetails =
   | { status: 'loading' }
+  // The Connection is down: the banner over the page says so.
+  | { status: 'down' }
   | { status: 'error'; message: string }
   | {
       status: 'loaded';
@@ -40,11 +42,21 @@ export function ConnectionDetailView({
 
 function ServerForm({ server }: { server: ServerDetails }): React.JSX.Element {
   useErrorToast(
-    errorToast(
-      "Could not load the Server's details",
-      server.status === 'error' ? server.message : undefined,
-    ),
+    errorToast("Could not load the Server's details", loadError(server)),
   );
+
+  return <ServerState server={server} />;
+}
+
+const loadError = (server: ServerDetails): string | undefined =>
+  server.status === 'error' ? server.message : undefined;
+
+function ServerState({
+  server,
+}: {
+  server: ServerDetails;
+}): React.JSX.Element | null {
+  if (server.status === 'down') return null;
 
   // A failed load keeps the loading note: the toast says why, and the query retries when the Connection reopens.
   if (server.status !== 'loaded')
