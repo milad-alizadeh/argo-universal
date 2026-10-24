@@ -33,10 +33,12 @@ const widePages = [
   'Notifications',
 ];
 
-// Theme's title is the FieldGroup section's own caption, not a heading.
 const groups = ['Workspace', 'Account', 'Connection'];
 
-// Every width lists its pages under the groups' headings, Theme last; Appearance chooses in place, so it is no link.
+/*
+ * Every width lists its pages under the groups' titles, Theme last; Appearance chooses in place, so it is no link. A
+ * wide sidebar's titles are headings; a phone's FieldGroup draws them as its sections' captions, as Theme's always is.
+ */
 async function expectGroupedPages(
   canvas: PlayContext['canvas'],
   width: number,
@@ -48,17 +50,32 @@ async function expectGroupedPages(
         .map((link) => link.getAttribute('aria-label')?.split(',')[0]),
     ).toEqual(width === layoutWidths.phone ? phonePages : widePages),
   );
-  await expect(
-    canvas.getAllByRole('heading').map((heading) => heading.textContent),
-  ).toEqual(groups);
+  await (width === layoutWidths.phone
+    ? expect(
+        groups.every((group) => canvas.queryAllByText(group).length > 0),
+      ).toBe(true)
+    : expect(
+        canvas.getAllByRole('heading').map((heading) => heading.textContent),
+      ).toEqual(groups));
   await expect(canvas.getByText('Theme')).toBeVisible();
   await expect(appearanceRow(canvas)).toBeVisible();
 }
 
-async function clickEveryWidthsPages({
-  canvas,
-  userEvent,
-}: Pointer): Promise<void> {
+// A wide sidebar's rows are anchors to their pages; a phone's FieldGroup rows open theirs when pressed.
+async function expectAnchor(
+  row: HTMLElement,
+  name: string,
+  width: number,
+): Promise<void> {
+  if (width === layoutWidths.phone) return;
+
+  await expect(row).toHaveAttribute('href', `/settings/${name.toLowerCase()}`);
+}
+
+async function clickEveryWidthsPages(
+  { canvas, userEvent }: Pointer,
+  width: number,
+): Promise<void> {
   for (const name of phonePages) {
     const row = canvas.getByRole('link', {
       name: new RegExp(`^${name}(?:,|$)`),
@@ -67,10 +84,7 @@ async function clickEveryWidthsPages({
     await (name === 'Connection'
       ? expect(row).toHaveAccessibleName(/, available$/)
       : expect(row).not.toHaveAccessibleName(/, available$/));
-    await expect(row).toHaveAttribute(
-      'href',
-      `/settings/${name.toLowerCase()}`,
-    );
+    await expectAnchor(row, name, width);
     await userEvent.click(row);
   }
 }
@@ -97,7 +111,7 @@ export function allPagesNavigate(width: number): Story {
       await settleViewport(width);
       await expectOpened(args.onSelect, []);
       await expectGroupedPages(canvas, width);
-      await clickEveryWidthsPages({ canvas, userEvent });
+      await clickEveryWidthsPages({ canvas, userEvent }, width);
       await expectOpened(
         args.onSelect,
         phonePages.map((name) => `/settings/${name.toLowerCase()}`),

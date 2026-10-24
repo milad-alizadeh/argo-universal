@@ -363,6 +363,8 @@ export type WireSchemaHints = {
     "disabled": PropValue<"FieldGroup.Link", "disabled">;
     /** A leading SF Symbol and Material Symbol. */
     "leading": PropValue<"FieldGroup.Link", "leading">;
+    /** What the page it opens holds, such as a count: before the chevron on iOS and the web, under the title on Android. */
+    "value": PropValue<"FieldGroup.Link", "value">;
     /** Action or Plugin event invoked by onPress. */
     "onPress": PropValue<"FieldGroup.Link", "onPress">;
   };

@@ -1,7 +1,6 @@
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { Text } from '#primitives/content/text';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { Screen } from '#primitives/scaffolds/screen';
 import { EmptyState } from '#primitives/status/empty-state';
 import { SettingsLayout } from './settings-layout';
@@ -83,9 +82,9 @@ export const pinnedGroup = 'Pinned';
 
 // A group whose row opens no page, as Settings' Theme with its inline Picker.
 export const examplePinned = (
-  <ListSection title={pinnedGroup}>
-    <ListItem title="Version" value="1.0" />
-  </ListSection>
+  <FieldGroup.Section title={pinnedGroup}>
+    <FieldGroup.Value title="Version" value="1.0" />
+  </FieldGroup.Section>
 );
 
 interface ExampleProps {

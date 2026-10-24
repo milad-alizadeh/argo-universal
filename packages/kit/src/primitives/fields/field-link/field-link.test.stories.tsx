@@ -33,3 +33,10 @@ export const Presses: Story = {
     await expect(args.onPress).toHaveBeenCalledTimes(1);
   },
 };
+
+export const ShowsItsValue: Story = {
+  args: { title: 'Projects', value: '3' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('3')).toBeVisible();
+  },
+};

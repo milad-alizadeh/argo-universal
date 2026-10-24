@@ -9,6 +9,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ModifierConfig } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
+import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import type { FieldGroupKitProps } from '../../kit-props';
 
@@ -19,8 +20,9 @@ const disclosureStyle = [
 ];
 
 /*
- * A pressable row that opens a page: a plain Button, so its title keeps the label colour, ending in the stock
- * disclosure chevron. The content shape lets the whole row take the press.
+ * A pressable row that opens a page: a plain Button, so its title keeps the label colour, ending in what the page
+ * holds in the secondary colour and the stock disclosure chevron, as Settings' General > About rows do. The content
+ * shape lets the whole row take the press.
  */
 export function FieldLink(
   props: FieldGroupKitProps<'FieldGroup.Link'>,
@@ -30,11 +32,15 @@ export function FieldLink(
       <HStack modifiers={[contentShape(shapes.rectangle())]}>
         <RowTitle {...props} />
         <Spacer />
+        <LinkValue value={props.value} />
         <Image systemName="chevron.forward" modifiers={disclosureStyle} />
       </HStack>
     </Button>
   );
 }
+
+const LinkValue = (props: { value?: string }): ReactElement | null =>
+  props.value ? <NativeText tone="muted">{props.value}</NativeText> : null;
 
 const pressing = (off: boolean | undefined): ModifierConfig[] => [
   buttonStyle('plain'),

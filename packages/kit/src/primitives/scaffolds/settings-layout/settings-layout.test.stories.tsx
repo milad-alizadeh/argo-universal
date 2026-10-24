@@ -93,8 +93,21 @@ export const EmptyShowsTheEmptyState = at(layoutWidths.wide, {
   },
 });
 
-const headings = (canvas: Canvas): (string | null)[] =>
-  canvas.getAllByRole('heading').map((heading) => heading.textContent);
+// Whether each title comes after the one before it on the page.
+function inPageOrder(canvas: Canvas, titles: string[]): boolean {
+  const nodes = titles.map((title) => canvas.getByText(title));
+
+  return nodes.slice(1).every((node, index) => {
+    const before = nodes[index];
+
+    return (
+      before !== undefined &&
+      Boolean(
+        before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING,
+      )
+    );
+  });
+}
 
 // A pinned group ends the list at every width: below the pages' groups, on a wide sidebar pinned under them.
 const pinnedEndsTheList = (width: number): Story =>
@@ -106,11 +119,9 @@ const pinnedEndsTheList = (width: number): Story =>
     ),
     play: async ({ canvas }) => {
       await expect(await canvas.findByText('Version')).toBeVisible();
-      await expect(headings(canvas)).toEqual([
-        serverGroup,
-        deviceGroup,
-        pinnedGroup,
-      ]);
+      await expect(
+        inPageOrder(canvas, [serverGroup, deviceGroup, pinnedGroup]),
+      ).toBe(true);
     },
   });
 

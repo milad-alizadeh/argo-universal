@@ -32,3 +32,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+// What the page it opens holds, as Settings' Projects row counts them.
+export const WithValue: Story = {
+  args: { title: 'Projects', leading: 'folder', value: '3' },
+};

@@ -98,6 +98,12 @@ const fieldGroupValueProps = fieldGroupRowProps.extend({
 });
 
 const fieldGroupLinkProps = fieldGroupRowProps.extend({
+  value: z
+    .string()
+    .optional()
+    .describe(
+      'What the page it opens holds, such as a count: before the chevron on iOS and the web, under the title on Android.',
+    ),
   onPress: handler('onPress'),
 });
 

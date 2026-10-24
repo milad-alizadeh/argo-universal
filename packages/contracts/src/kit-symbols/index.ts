@@ -7,3 +7,5 @@ export { iconSizes } from './icon-size';
 export type { IconSize } from './icon-size';
 
 export type { IconSymbol, SystemSymbolSource } from './icon-schema';
+
+export { isStockIconName } from './stock-icon-schema';
