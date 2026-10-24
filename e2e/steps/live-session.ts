@@ -86,10 +86,15 @@ async function chooseEffort(page: Page, effort: string): Promise<void> {
     await slider.press('End');
 }
 
-// Escape closes Configure; the Model page closed itself when a model was chosen.
+// The Model page closes itself when a model is chosen and Configure stays open; Escape then closes Configure.
 async function reopenConfiguration(page: Page): Promise<void> {
+  await expect(
+    page.getByRole('dialog', { name: 'Model', exact: true }),
+  ).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Model' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: agentModelLabel })).toHaveCount(
+    0,
+  );
   await page.getByRole('button', { name: agentModelLabel }).click();
 }
 

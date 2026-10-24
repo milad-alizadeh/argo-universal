@@ -85,10 +85,8 @@ export const ModelPicksKeepConfigureOpenWide: Story = {
   },
 };
 
-/*
- * Escape from the model picker closes both popovers and returns focus to the trigger.
- */
-export const EscapeFromModelsReturnsFocusWide: Story = {
+// Escape from the Model page closes the page and returns to Configure, with focus on the Model row; a second Escape closes Configure and returns focus to its trigger.
+export const EscapeFromModelsReturnsToConfigureWide: Story = {
   beforeEach: async (): Promise<void> => {
     await settleViewport(layoutWidths.wide);
   },
@@ -110,12 +108,17 @@ export const EscapeFromModelsReturnsFocusWide: Story = {
       name: modelPickerLabel,
     });
 
-    await userEvent.click(
-      within(picker).getByRole('radio', { name: otherModel }),
-    );
     await userEvent.keyboard('{Escape}');
 
     await waitFor(() => expect(picker).not.toBeInTheDocument());
+    await expect(configure).toHaveAttribute(openState, 'open');
+    await waitFor(() =>
+      expect(
+        within(configure).getByRole('button', { name: /^Model,/ }),
+      ).toHaveFocus(),
+    );
+
+    await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(configure).not.toBeInTheDocument());
     await waitFor(() => expect(trigger).toHaveFocus());
   },

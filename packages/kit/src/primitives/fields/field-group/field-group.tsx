@@ -7,8 +7,10 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { useInMenu } from '#kit/menu-rows-context';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { MenuFieldGroup } from './field-group-menu';
 import { fieldGroupRowComponents } from './field-group-row-components';
 import {
   FieldGroupSection,
@@ -27,6 +29,14 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  * draws its own (field-group.android.tsx).
  */
 function FieldGroupRoot(props: FieldGroupProps): ReactElement {
+  return useInMenu() ? (
+    <MenuFieldGroup>{props.children}</MenuFieldGroup>
+  ) : (
+    <PageFieldGroup {...props} />
+  );
+}
+
+function PageFieldGroup(props: FieldGroupProps): ReactElement {
   return (
     <Host style={{ flex: 1 }}>
       <InsideHostContext.Provider value>

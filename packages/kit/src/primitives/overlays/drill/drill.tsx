@@ -18,7 +18,11 @@ export function Drill(props: DrillProps): ReactElement {
   const trigger = useDrillTrigger(props);
 
   return desktop ? (
-    <DrillPopover {...props} trigger={trigger} row={!props.trigger} />
+    <DrillPopover
+      {...props}
+      trigger={trigger}
+      row={!props.trigger || !!props.beside}
+    />
   ) : (
     <DrillSheet {...props} trigger={trigger} />
   );

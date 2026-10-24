@@ -19,6 +19,8 @@ type TriggerProps = Anchor & {
   summary: string;
   // The row's title, drawn inside the trigger so the whole row presses.
   lead: ReactNode;
+  // In a popover the row opens its choices beside it, so it ends in the right chevron of a row that opens a page.
+  disclosure?: boolean;
   disabled?: boolean;
   onPress?: () => void;
 };
@@ -31,24 +33,32 @@ export function ScreenTrigger(props: TriggerProps): ReactElement {
   return (
     <Pressable {...triggerProps(props)}>
       {props.lead}
-      <Choice summary={props.summary} />
+      <Choice summary={props.summary} disclosure={props.disclosure} />
     </Pressable>
   );
 }
 
-function Choice(props: { summary: string }): ReactElement {
+function Choice(props: {
+  summary: string;
+  disclosure?: boolean;
+}): ReactElement {
   return (
     <View className="flex-row items-center gap-1.5 -mr-1.5 wide:-mr-1.25">
       <Text role="body">{props.summary}</Text>
-      <Icon
-        name="chevron-up-down"
-        size="sm"
-        aria-hidden
-        className="text-tertiary"
-      />
+      <Icon name={chevronName(props.disclosure)} size="sm" {...chevronLook} />
     </View>
   );
 }
+
+const chevronLook = {
+  'aria-hidden': true,
+  className: 'text-tertiary',
+} as const;
+
+const chevronName = (
+  disclosure: boolean | undefined,
+): 'chevron-right' | 'chevron-up-down' =>
+  disclosure ? 'chevron-right' : 'chevron-up-down';
 
 type Attributes = React.ComponentProps<typeof Pressable> & Anchor;
 

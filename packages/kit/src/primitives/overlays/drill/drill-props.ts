@@ -27,6 +27,8 @@ export interface DrillProps {
   onClose?: () => void;
   // Desktop: a pick leaves the choices and their menu open, so several picks run in a row; a click outside or Escape closes them. Phones go back as before.
   keepOpen?: boolean;
+  // Desktop: the choices open beside the row on its right even though the caller drew the trigger, as a picker row in a popover does.
+  beside?: boolean;
   // The search a pushed page holds in its header, where the platform puts it; a popover or Sheet page draws its own field.
   search?: DrillSearch;
   // `inHeader` is true where the page's header holds `search`.

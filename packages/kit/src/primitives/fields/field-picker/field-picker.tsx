@@ -1,6 +1,10 @@
 import type { ReactElement } from 'react';
+import { useInMenu } from '#kit/menu-rows-context';
 import { RowTitle, useRowPressable } from '#primitives/fields/field-row';
-import { FieldPickerDrill } from './field-picker-drill';
+import {
+  FieldPickerDrill,
+  type ScreenTrigger as ScreenOpener,
+} from './field-picker-drill';
 import { inlineOptionRows } from './field-picker-inline-rows';
 import {
   choiceSummary,
@@ -39,21 +43,31 @@ function Choice(props: FieldPickerProps): ReactElement {
   return <ScreenPicker {...props} />;
 }
 
+// In a popover the page opens beside the row on its right, behind a right chevron, as a drill (ADR-0042).
 function ScreenPicker(props: FieldPickerProps): ReactElement {
+  const inPopover = useInMenu();
+
   return (
     <FieldPickerDrill
       {...props}
-      opener={
-        <ScreenTrigger
-          title={props.title}
-          summary={choiceSummary(props)}
-          lead={<RowTitle {...props} />}
-          disabled={props.disabled}
-        />
-      }
+      beside={inPopover}
+      opener={screenTrigger(props, inPopover)}
     />
   );
 }
+
+const screenTrigger = (
+  props: FieldPickerProps,
+  disclosure: boolean,
+): ScreenOpener => (
+  <ScreenTrigger
+    title={props.title}
+    summary={choiceSummary(props)}
+    lead={<RowTitle {...props} />}
+    disclosure={disclosure}
+    disabled={props.disabled}
+  />
+);
 
 const selectProps = (
   props: FieldPickerProps,

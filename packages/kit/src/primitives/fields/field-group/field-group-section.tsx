@@ -1,9 +1,11 @@
 import { FieldGroup as ExpoFieldGroup } from '@expo/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
+import { useInMenu } from '#kit/menu-rows-context';
 import { NativeText } from '#primitives/content/native-text';
 import { expandInlinePickers } from '#primitives/fields/field-picker';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { MenuSection } from './field-group-menu';
 import { sectionRows } from './field-group-rows';
 
 export type FieldGroupSectionProps =
@@ -11,7 +13,9 @@ export type FieldGroupSectionProps =
 
 // Expo UI's FieldGroup.Section, its title and footer in its header and footer slots in the kit's type roles.
 export function FieldGroupSection(props: FieldGroupSectionProps): ReactElement {
-  return sectionElement(props);
+  const inMenu = useInMenu();
+
+  return inMenu ? <MenuSection {...props} /> : sectionElement(props);
 }
 
 export function sectionElement(props: FieldGroupSectionProps): ReactElement {

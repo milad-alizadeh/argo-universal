@@ -5,7 +5,11 @@ import { FieldPickerScreen } from './field-picker-screen';
 
 export type ScreenTrigger = NonNullable<DrillProps['trigger']>;
 
-type DrillPickerProps = FieldPickerProps & { opener: ScreenTrigger };
+type DrillPickerProps = FieldPickerProps & {
+  opener: ScreenTrigger;
+  // The row sits in a popover: its choices open beside it, on its right.
+  beside?: boolean;
+};
 
 /*
  * A picker's `page` presentation: its row's trigger opens the choices where the platform puts a drill. A desktop
@@ -49,6 +53,7 @@ const drillProps = (
   disabled: props.disabled,
   contentScrolls: true,
   keepOpen: props.multiple,
+  beside: props.beside,
 });
 
 type Typed = { query: string; onQueryChange: (query: string) => void };
