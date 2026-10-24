@@ -18,6 +18,7 @@ import type * as ListItemKit from '#primitives/lists/list-item';
 import type * as TableKit from '#primitives/lists/table';
 import type * as DateDialogsKit from '#primitives/native/date-dialogs';
 import type * as DateValueKit from '#primitives/native/date-value';
+import type * as HeaderIconButtonKit from '#primitives/native/header-icon-button';
 import type * as LinkPreviewKit from '#primitives/overlays/link-preview';
 import type * as DetailKit from '#primitives/scaffolds/detail';
 import type * as InspectorKit from '#primitives/scaffolds/inspector';
@@ -84,6 +85,7 @@ export type AdditionalPrimitives = {
   CanvasProps: SvgKit.CanvasProps;
   DateMode: DateValueKit.DateMode;
   DialogStep: DateDialogsKit.DialogStep;
+  HeaderIconButtonProps: HeaderIconButtonKit.HeaderIconButtonProps;
   FieldGroupProps: FieldGroupKit.FieldGroupProps;
   FieldGroupSectionProps: FieldGroupKit.FieldGroupSectionProps;
   RowTextProps: FieldRowKit.RowTextProps;
