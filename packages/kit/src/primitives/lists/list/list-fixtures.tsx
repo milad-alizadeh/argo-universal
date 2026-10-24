@@ -56,3 +56,10 @@ export const groupedList = {
   maxHeight: 520,
   children: groupedChildren,
 } satisfies ListProps<unknown>;
+
+// ListItem rows in a grouped List: the phones draw each section as a card of rounded ends, with a title and footer.
+export const groupedItemsList = {
+  appearance: 'grouped',
+  maxHeight: 520,
+  children,
+} satisfies ListProps<unknown>;

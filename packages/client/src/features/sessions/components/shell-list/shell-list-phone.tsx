@@ -1,3 +1,4 @@
+import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { List } from '@repo/kit/primitives/lists/list';
 import {
   ListItem,
@@ -50,11 +51,13 @@ function ShellRow(props: RowProps): JSX.Element {
 }
 
 // The Session's background Shells under a count of the running ones.
+const appearance = groupedOnPhones('cards');
+
 export function PhoneShellList(
   props: ShellListProps & { now: number },
 ): JSX.Element {
   return (
-    <List appearance="cards" fit={false} accessibilityLabel="Shells">
+    <List appearance={appearance} fit={false} accessibilityLabel="Shells">
       <List.Section title={shellsSummary(props.shells)}>
         {props.shells.map((shell) => (
           <ShellRow key={shell.id} {...props} shell={shell} />

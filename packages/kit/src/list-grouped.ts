@@ -6,6 +6,14 @@ import { ListContext, type ListAppearance } from './list-context';
 export const isWebGrouped = (appearance?: ListAppearance): boolean =>
   Platform.OS === 'web' && appearance === 'grouped';
 
+export const isPhoneGrouped = (appearance?: ListAppearance): boolean =>
+  Platform.OS !== 'web' && appearance === 'grouped';
+
+// A list of ListItems is grouped cards on the phones (owner, 2026-10-24); the web and desktop keep the appearance they draw.
+export const groupedOnPhones = (
+  webAppearance: ListAppearance,
+): ListAppearance => (Platform.OS === 'web' ? webAppearance : 'grouped');
+
 export function useWebGrouped(): boolean {
   return isWebGrouped(useContext(ListContext).appearance);
 }

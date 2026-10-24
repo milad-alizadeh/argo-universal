@@ -1,3 +1,6 @@
+import { use } from 'react';
+import { ListContext } from './list-context';
+import { isPhoneGrouped } from './list-grouped';
 import { useInChoiceMenu, useInMenu } from './menu-rows-context';
 import { useRowDrawing } from './row-drawing-context';
 
@@ -31,6 +34,16 @@ const sidebar = {
   below: 'h-4',
 } satisfies SectionDrawing;
 
+const phoneMuted = 'text-tone-neutral-600';
+
+// A phone's grouped List draws its headers and footers on the grouped grey in neutral-600, the shade that keeps AA there.
+const phoneGrouped = {
+  heading: phoneMuted,
+  title: phoneMuted,
+  footer: phoneMuted,
+  ...rowInset,
+} satisfies SectionDrawing;
+
 const plain = {
   heading: muted,
   footer: muted,
@@ -46,11 +59,22 @@ const choosingMenu = { ...menu, inset: 'pl-8 pr-2' } satisfies SectionDrawing;
 const menuDrawing = (choosing: boolean): SectionDrawing =>
   choosing ? choosingMenu : menu;
 
+const listDrawing = (
+  inMenu: boolean,
+  choosing: boolean,
+  phone: boolean,
+): SectionDrawing => {
+  if (inMenu) return menuDrawing(choosing);
+
+  return phone ? phoneGrouped : plain;
+};
+
 export function useSectionDrawing(): SectionDrawing {
   const inMenu = useInMenu();
   const choosing = useInChoiceMenu();
+  const phone = isPhoneGrouped(use(ListContext).appearance);
 
   if (useRowDrawing() === 'sidebar') return sidebar;
 
-  return inMenu ? menuDrawing(choosing) : plain;
+  return listDrawing(inMenu, choosing, phone);
 }

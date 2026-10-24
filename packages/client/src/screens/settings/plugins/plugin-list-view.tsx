@@ -1,3 +1,4 @@
+import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
@@ -35,7 +36,7 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
 
   return (
     <Screen title={pluginsTitle} caption={props.caption}>
-      <List appearance="cards">
+      <List appearance={groupedOnPhones('cards')}>
         <ListSection>{pluginRows(props)}</ListSection>
       </List>
     </Screen>

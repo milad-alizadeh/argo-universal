@@ -1,4 +1,4 @@
-import { isWebGrouped } from '../../../list-grouped';
+import { isPhoneGrouped, isWebGrouped } from '../../../list-grouped';
 import type { ListProps } from './list-props';
 
 type Insets = Pick<
@@ -6,7 +6,7 @@ type Insets = Pick<
   'padding' | 'paddingTop' | 'paddingBottom'
 >;
 
-type Options = Insets & Pick<ListProps<never>, 'appearance'>;
+type Options = Insets & Pick<ListProps<never>, 'appearance' | 'fit'>;
 
 // Paper's Configure popover (menu-surface.ts): a list in a popover holds its rows 4px in from every side.
 const menuInset = { sides: 1, ends: 1 } as const;
@@ -14,7 +14,22 @@ const menuInset = { sides: 1, ends: 1 } as const;
 export function listInsets(props: Options, menu: boolean): Insets {
   if (menu) return menuInsets(props);
 
+  return appearanceInsets(props);
+}
+
+function appearanceInsets(props: Options): Insets {
+  if (isPhoneGrouped(props.appearance)) return phoneInsets(props);
+
   return isWebGrouped(props.appearance) ? groupedInsets(props) : props;
+}
+
+// A phone's grouped List of ListItems holds its cards 16 from the sides, as it did before FieldGroup.
+function phoneInsets(props: Options): Insets {
+  return {
+    padding: orInset(props.padding, { compact: 4, wide: props.fit ? 1 : 0 }),
+    paddingTop: orInset(props.paddingTop, { compact: 4, wide: 0 }),
+    paddingBottom: orInset(props.paddingBottom, { compact: 8, wide: 6 }),
+  };
 }
 
 // A web grouped list holds its cards 16 from the sides, as a FieldGroup does on a page, and its first heading 8 down.

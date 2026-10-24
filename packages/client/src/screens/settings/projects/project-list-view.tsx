@@ -1,3 +1,4 @@
+import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { Action } from '@repo/kit/primitives/actions/action';
 import { List } from '@repo/kit/primitives/lists/list';
 import {
@@ -77,7 +78,7 @@ const loadingProjects: LoadingRow[] = [
 
 function LoadingProjects(): React.JSX.Element {
   return (
-    <List appearance="cards">
+    <List appearance={groupedOnPhones('cards')}>
       <List.Section>{loadingRows(loadingProjects)}</List.Section>
     </List>
   );

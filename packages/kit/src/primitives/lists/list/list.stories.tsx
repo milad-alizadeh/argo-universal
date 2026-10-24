@@ -1,7 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from './list';
-import { cardsList, groupedList, plainList } from './list-fixtures';
+import {
+  cardsList,
+  groupedItemsList,
+  groupedList,
+  plainList,
+} from './list-fixtures';
 
 const meta = {
   title: 'Design System/Primitives/Lists/List',
@@ -19,5 +24,10 @@ export const Cards: Story = { args: cardsList };
 
 export const Grouped: Story = {
   args: groupedList,
+  parameters: { screenPreview: true },
+};
+
+export const GroupedItems: Story = {
+  args: groupedItemsList,
   parameters: { screenPreview: true },
 };

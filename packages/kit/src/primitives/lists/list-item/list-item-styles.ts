@@ -1,12 +1,36 @@
 import { Platform } from 'react-native';
 import type { ListAppearance, ListPosition } from '../../../list-context';
+import { isPhoneGrouped } from '../../../list-grouped';
 import type { RowDrawing } from '../../../row-drawing-context';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
 
+/*
+ * A phone's grouped List draws a section as one card of ListItems (ADR-0042, owner 2026-10-24): each row is its share of
+ * the card, rounded by its position. iOS draws one plate, with separators. Android draws segments: small inner corners
+ * and a 2dp gap instead of separators. The web draws its own cell frame (list-grouped-cell).
+ */
+const phoneCorners = {
+  ios: {
+    only: 'rounded-grouped',
+    first: 'rounded-t-grouped',
+    middle: '',
+    last: 'rounded-b-grouped',
+  },
+  android: {
+    only: 'rounded-grouped',
+    first: 'rounded-t-grouped rounded-b-grouped-inner mb-0.5',
+    middle: 'rounded-grouped-inner mb-0.5',
+    last: 'rounded-b-grouped rounded-t-grouped-inner',
+  },
+} satisfies Record<string, Record<ListPosition, string>>;
+
+const sectionCorners =
+  Platform.OS === 'android' ? phoneCorners.android : phoneCorners.ios;
+
 const appearanceClasses = {
   plain: '',
-  grouped: '',
+  grouped: Platform.OS === 'web' ? '' : 'bg-card',
   cards:
     'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:bg-transparent web:wide:shadow-hairline',
 };
@@ -43,6 +67,16 @@ export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
   return rowSurface(drawing, state);
 }
 
+// A muted row, such as an empty section's placeholder, has no surface, so it takes no corners either.
+function corners(
+  drawing: ItemDrawing,
+  tone: ListItemProps['tone'],
+): string | undefined {
+  if (tone === 'muted' || !isPhoneGrouped(drawing.appearance)) return undefined;
+
+  return sectionCorners[drawing.position];
+}
+
 function rowSurface(
   drawing: ItemDrawing,
   { selected, tone }: SurfaceState,
@@ -50,6 +84,7 @@ function rowSurface(
   return cn(
     'relative overflow-hidden',
     tone !== 'muted' && appearanceClasses[drawing.appearance],
+    corners(drawing, tone),
     selected && 'web:wide:shadow-none',
   );
 }

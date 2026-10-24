@@ -1,4 +1,5 @@
 import type { ProjectInfo } from '@repo/contracts';
+import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { List } from '@repo/kit/primitives/lists/list';
 import {
@@ -26,7 +27,11 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
 
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <List fit={false} appearance="cards" padding={{ compact: 4, wide: 0 }}>
+      <List
+        fit={false}
+        appearance={groupedOnPhones('cards')}
+        padding={{ compact: 4, wide: 0 }}
+      >
         {projectRows({ ...props, found, searching: query !== '' })}
       </List>
     </View>
