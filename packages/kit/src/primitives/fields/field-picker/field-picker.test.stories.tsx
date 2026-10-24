@@ -167,6 +167,27 @@ export const MultipleReportsEachToggle: Story = {
   },
 };
 
+// A choice the search hides stays chosen while the reader ticks another.
+export const MultipleKeepsHiddenChoices: Story = {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  render: () => (
+    <ControlledPicker {...screenMultiple} onValueChange={changed} />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const page = within(document.body);
+    await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
+    await userEvent.type(
+      await page.findByRole('searchbox', { name: searchLabel }),
+      'elm',
+    );
+    await waitFor(() =>
+      expect(page.queryByRole('button', { name: /^Alder/ })).toBeNull(),
+    );
+    await userEvent.click(page.getByRole('button', { name: /^Elm/ }));
+    await expect(changed).toHaveBeenLastCalledWith(['alder', 'elm', 'oak']);
+  },
+};
+
 // The page's action closes the page and runs: below the choices in a popover, in the header of a pushed page.
 export const ActionRunsAndCloses = actionRunning(layoutWidths.wide);
 

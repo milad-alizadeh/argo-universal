@@ -21,7 +21,7 @@ export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
       accessibilityLabel={props.title}
       empty={<EmptyState />}
     >
-      {optionSections(props.options).map((section) =>
+      {optionSections(props.shown ?? props.options).map((section) =>
         screenSection(props, section),
       )}
     </List>

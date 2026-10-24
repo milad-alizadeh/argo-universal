@@ -13,6 +13,8 @@ import { ScreenRows } from './field-picker-screen-rows';
 export type FieldPickerScreenProps = FieldPickerProps & {
   // Called after a single choice, so the page it sits on can close.
   onClose?: () => void;
+  // The options the search leaves, which the rows draw; a choice still counts every option, hidden ones included.
+  shown?: FieldPickerProps['options'];
 };
 
 type ScreenState = FieldPickerScreenProps & {
@@ -28,14 +30,14 @@ type ScreenState = FieldPickerScreenProps & {
  * an action button in a place of its own below (a pushed page's header holds it). A single choice reports and closes; a `multiple` page stays open and reports each toggle.
  */
 export function FieldPickerScreen(props: ScreenState): ReactElement {
-  const options = matchingOptions(props.options, props.query);
+  const shown = matchingOptions(props.options, props.query);
   const chosen = useClosesWhenSettled(props);
   // A pushed page's header holds the action; a popover has none, so the action sits below the choices.
   const footer = useDrillBeside() ? <ScreenFooter {...props} /> : null;
 
   return (
     <ScreenFrame search={searchOf(props)} footer={footer}>
-      <ScreenList {...props} options={options} onClose={chosen} />
+      <ScreenList {...props} shown={shown} onClose={chosen} />
     </ScreenFrame>
   );
 }

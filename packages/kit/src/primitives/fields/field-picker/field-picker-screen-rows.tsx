@@ -45,7 +45,7 @@ function listProps(props: FieldPickerScreenProps): ListProps {
 export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
   return (
     <List {...listProps(props)} empty={<EmptyState />}>
-      {optionSections(props.options).map((section) => (
+      {optionSections(props.shown ?? props.options).map((section) => (
         <ScreenSection key={section.key} {...props} section={section} />
       ))}
     </List>
