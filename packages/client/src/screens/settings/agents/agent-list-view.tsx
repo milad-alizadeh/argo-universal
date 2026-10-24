@@ -40,13 +40,13 @@ const initialFilter = (props: AgentListViewProps): AgentsFilter =>
 
 function AgentsPage(props: ListProps): React.JSX.Element {
   return (
-    <Screen {...pageProps(props)}>
+    <Screen {...screenProps(props)}>
       <AgentCatalog {...props} />
     </Screen>
   );
 }
 
-function pageProps(props: ListProps): ScreenProps {
+function screenProps(props: ListProps): ScreenProps {
   return {
     title: agentsTitle,
     search: { label: searchLabel },

@@ -96,13 +96,13 @@ export function SectionStack({
   children,
 }: SectionStackProps): React.JSX.Element {
   return (
-    <PageStack header={useSectionList(section).rootHeader}>
+    <ScreenStack header={useSectionList(section).rootHeader}>
       {children}
-    </PageStack>
+    </ScreenStack>
   );
 }
 
-interface PageStackProps extends PropsWithChildren {
+interface ScreenStackProps extends PropsWithChildren {
   header: ScreenHeaderProps;
   root?: boolean;
   rootName?: string;
@@ -111,7 +111,7 @@ interface PageStackProps extends PropsWithChildren {
 }
 
 // Core lists and Plugin pages share stock stack headers, page placement and the Connection banner.
-export function PageStack(props: PageStackProps): React.JSX.Element {
+export function ScreenStack(props: ScreenStackProps): React.JSX.Element {
   const { screenOptions, rootOptions } = useSectionOptions(
     props.header,
     props.root ?? true,
@@ -127,7 +127,7 @@ export function PageStack(props: PageStackProps): React.JSX.Element {
 }
 
 function rootScreen(
-  props: PageStackProps,
+  props: ScreenStackProps,
   options: NativeStackNavigationOptions,
 ): ComponentProps<typeof Stack.Screen> {
   return {

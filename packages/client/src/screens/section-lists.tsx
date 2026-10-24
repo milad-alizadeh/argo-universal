@@ -18,7 +18,7 @@ import {
 import { newSessionId } from '../lib/product/navigation/new-session';
 import { sections } from '../lib/product/navigation/sections';
 import { LiveSessionList } from './sessions/live-session-list';
-import { SessionsRootPage } from './sessions/sessions-root-page';
+import { SessionsRootScreen } from './sessions/sessions-root-screen';
 import { SettingsRootList } from './settings/settings-section';
 
 const searchSettings = 'Search Settings';
@@ -43,7 +43,7 @@ function sessionsList(
     header: <SessionsHeader {...root} />,
     list,
     rootHeader: { title: sections.sessions.title },
-    rootPage: <SessionsRootPage {...root}>{list}</SessionsRootPage>,
+    rootPage: <SessionsRootScreen {...root}>{list}</SessionsRootScreen>,
     emptyPage: noSessionShown,
   };
 }

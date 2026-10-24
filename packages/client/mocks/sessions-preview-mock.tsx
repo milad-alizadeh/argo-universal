@@ -8,7 +8,7 @@ import {
   SessionListView,
   type SessionListViewProps,
 } from '../src/screens/sessions/session-list-view';
-import { SessionsRootPage } from '../src/screens/sessions/sessions-root-page';
+import { SessionsRootScreen } from '../src/screens/sessions/sessions-root-screen';
 
 // A wide window's sidebar list under its header row; a phone's root Screen around the list.
 export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
@@ -29,7 +29,7 @@ function PreviewChrome({
   ...props
 }: PreviewProps & { children: ReactElement }): ReactElement {
   if (!useWide())
-    return <SessionsRootPage {...props}>{children}</SessionsRootPage>;
+    return <SessionsRootScreen {...props}>{children}</SessionsRootScreen>;
 
   return (
     <>

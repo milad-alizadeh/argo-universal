@@ -30,13 +30,13 @@ export function ProjectListView(
 
 function ProjectsPage(props: SearchedProps): React.JSX.Element {
   return (
-    <Screen {...pageProps(props)}>
+    <Screen {...screenProps(props)}>
       <ProjectsBody {...props} />
     </Screen>
   );
 }
 
-function pageProps(props: SearchedProps): ScreenProps {
+function screenProps(props: SearchedProps): ScreenProps {
   return {
     title: projectsTitle,
     caption: props.caption,
