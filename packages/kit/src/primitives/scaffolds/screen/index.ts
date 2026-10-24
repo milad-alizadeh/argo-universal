@@ -8,3 +8,5 @@ export {
   ScreenBesideList,
   ScreenNavigationEnabled,
 } from './screen-navigation-context';
+
+export { ScreenStoryBack } from './screen-story-back';

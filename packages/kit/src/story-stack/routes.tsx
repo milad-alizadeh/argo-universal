@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
+import { ScreenStoryBack } from '#primitives/scaffolds/screen';
 import { registeredStack } from './stack-registry';
 import { StackStoryContext } from './stack-story-context';
 
@@ -20,7 +21,14 @@ export function StackStoryRoot(): ReactNode {
   const { story } = useLocalSearchParams<{ story: string }>();
   const Root = registeredStack(story)?.Root;
 
-  return Root ? <Root /> : null;
+  if (!Root) return null;
+
+  return (
+    <>
+      <Root />
+      <ScreenStoryBack />
+    </>
+  );
 }
 
 export function StackStoryScreen(): ReactNode {
