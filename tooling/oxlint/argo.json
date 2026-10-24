@@ -75,7 +75,18 @@
     // Off: it also rejects narrowing Argo's own unions, such as `typeof breakpoint === 'number'` on `number | string`.
     // Outside data is already parsed with Zod at its boundary (ADR-0015, argo/json-parse-cast), so `typeof` only ever meets owned types.
     "anti-slop/no-runtime-typeof": "off",
-    "anti-slop/no-shape-in-symbol-names": "error",
+    // SwiftUI and Compose name their own modifiers and shape namespaces this way; a file may use them but not coin a new one.
+    "anti-slop/no-shape-in-symbol-names": [
+      "error",
+      {
+        "allowedNames": [
+          "Shapes",
+          "contentShape",
+          "shapes",
+          "buttonBorderShape"
+        ]
+      }
+    ],
     "anti-slop/no-unknown-parameters": "error",
     "anti-slop/no-unknown-returns": "error",
     "anti-slop/no-unknown-type-aliases": "error",
@@ -901,7 +912,7 @@
                 "message": "Import another primitive through its folder's index, #primitives/<group>/<name>."
               },
               {
-                "regex": "^\\.\\./[a-z]",
+                "regex": "^\\.\\./(?!field-row/field-row-list-item\\.android$)[a-z]",
                 "message": "Import another primitive through its folder's index, #primitives/<group>/<name>."
               },
               {

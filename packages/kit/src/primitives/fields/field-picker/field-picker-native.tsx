@@ -2,7 +2,7 @@ import type { ComponentType, ReactElement } from 'react';
 import { FieldPickerDrill } from './field-picker-drill';
 import {
   choiceSummary,
-  widened,
+  drawingProps,
   type FieldPickerCallerProps,
   type FieldPickerProps,
 } from './field-picker-model';
@@ -37,7 +37,7 @@ export const rowProps = (props: FieldPickerProps): NativeRowProps => ({
  * the stack that holds the row (ADR-0042). It never changes with its parent.
  */
 export function NativePicker(props: NativePickerProps): ReactElement {
-  const picker = widened(props.caller);
+  const picker = drawingProps(props.caller);
 
   if (picker.presentation === 'inline') {
     const Inline = props.inline;

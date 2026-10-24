@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import type { FieldGroupKitProps } from '../../kit-props';
-/* oxlint-disable-next-line no-restricted-imports -- the Android-only drawing stays out of the folder's index so the web never loads Compose. */
 import {
   RowListItem,
   rowListItemProps,

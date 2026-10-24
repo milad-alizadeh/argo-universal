@@ -8,7 +8,7 @@ import {
 import { inlineOptionRows } from './field-picker-inline-rows';
 import {
   choiceSummary,
-  widened,
+  drawingProps,
   type FieldPickerCallerProps,
   type FieldPickerProps,
 } from './field-picker-model';
@@ -25,7 +25,7 @@ export function FieldPicker(props: FieldPickerProps): ReactElement;
 export function FieldPicker(
   caller: FieldPickerCallerProps | FieldPickerProps,
 ): ReactElement {
-  const props = widened(caller);
+  const props = drawingProps(caller);
 
   useRowPressable(!props.disabled && props.presentation !== 'inline');
 

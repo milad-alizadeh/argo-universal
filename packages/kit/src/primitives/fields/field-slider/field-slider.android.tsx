@@ -3,7 +3,6 @@ import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import type { FieldGroupKitProps } from '../../kit-props';
-/* oxlint-disable-next-line no-restricted-imports -- the Android-only drawing stays out of the folder's index so the web never loads Compose. */
 import { RowListItem } from '../field-row/field-row-list-item.android';
 import { sliderProps, spokenValue } from './field-slider-props';
 

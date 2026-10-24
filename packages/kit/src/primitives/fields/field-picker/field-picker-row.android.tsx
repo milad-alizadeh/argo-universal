@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
-/* oxlint-disable-next-line no-restricted-imports -- the Android-only drawing stays out of the folder's index so the web never loads Compose. */
 import { RowListItem } from '../field-row/field-row-list-item.android';
 import type { FieldPickerProps } from './field-picker-model';
 

@@ -1,7 +1,6 @@
 // TEMPORARY: stock SwiftUI glass buttons, to measure Apple's own sizes; delete with the Probe story.
 import { Button, HStack, Text, VStack } from '@expo/ui/swift-ui';
 import {
-  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- SwiftUI's own modifier name.
   buttonBorderShape,
   buttonStyle,
   controlSize,
@@ -23,7 +22,6 @@ const stock = (
 ): ReturnType<typeof buttonStyle>[] => [
   buttonStyle('glassProminent'),
   controlSize(size),
-  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- SwiftUI's own modifier name.
   buttonBorderShape('circle'),
 ];
 

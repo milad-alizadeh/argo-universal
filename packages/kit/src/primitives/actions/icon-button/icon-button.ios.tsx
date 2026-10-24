@@ -1,6 +1,5 @@
 import { Button as SwiftButton } from '@expo/ui/swift-ui';
 import {
-  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- SwiftUI's own modifier name.
   buttonBorderShape,
   buttonStyle,
   controlSize,
@@ -55,7 +54,6 @@ function modifiers(props: IconButtonProps): SwiftProps['modifiers'] {
     buttonStyle(styles[variantOf(props)]),
     controlSize(sizeOf(props).iosControlSize),
     labelStyle('iconOnly'),
-    // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- SwiftUI's own modifier name.
     buttonBorderShape('circle'),
     disabled(props.disabled ?? false),
   ];

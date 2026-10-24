@@ -2,7 +2,6 @@ import { type ReactElement, useState } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { DateDialogs, type DialogStep } from '#primitives/native/date-dialogs';
 import { displayValue } from '#primitives/native/date-value';
-/* oxlint-disable-next-line no-restricted-imports -- the Android-only drawing stays out of the folder's index so the web never loads Compose. */
 import {
   RowListItem,
   rowListItemProps,

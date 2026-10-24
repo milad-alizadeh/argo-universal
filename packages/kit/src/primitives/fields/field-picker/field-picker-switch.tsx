@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { FieldPicker as FieldPickerRow } from './field-picker';
 import {
-  widened,
+  drawingProps,
   type FieldPickerCallerProps,
   type FieldPickerProps,
 } from './field-picker-model';
@@ -16,7 +16,7 @@ export function FieldPicker(props: FieldPickerProps): ReactElement;
 export function FieldPicker(
   caller: FieldPickerCallerProps | FieldPickerProps,
 ): ReactElement {
-  const props = widened(caller);
+  const props = drawingProps(caller);
 
   if (props.trigger === 'pill') return <FieldPickerPill {...props} />;
 

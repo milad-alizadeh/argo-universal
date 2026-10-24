@@ -24,14 +24,35 @@ export type FieldPickerCallerProps = FieldPickerSingle | FieldPickerMultiple;
 
 /*
  * The drawings read the wider props the schema gives: a handler that takes either payload. A caller's narrower
- * handler is never given the other kind, because every drawing reports a string only when `multiple` is not set
- * and a list only when it is.
+ * handler is wrapped so it only hears its own kind, which every drawing reports: a string when `multiple` is not
+ * set and a list when it is.
  */
-export function widened(
-  props: FieldPickerCallerProps | FieldPickerProps,
+export function drawingProps(
+  caller: FieldPickerCallerProps | FieldPickerProps,
 ): FieldPickerProps {
-  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: `multiple` decides which payload every drawing reports, so a handler is only given its own kind.
-  return props as FieldPickerProps;
+  return { ...caller, onValueChange: (payload) => report(caller, payload) };
+}
+
+function report(
+  caller: FieldPickerCallerProps | FieldPickerProps,
+  payload: string | readonly string[],
+): void {
+  if (caller.multiple === true) reportList(caller, payload);
+  else reportOne(caller, payload);
+}
+
+function reportList(
+  caller: FieldPickerMultiple | FieldPickerProps,
+  payload: string | readonly string[],
+): void {
+  if (typeof payload !== 'string') caller.onValueChange(payload);
+}
+
+function reportOne(
+  caller: FieldPickerSingle | FieldPickerProps,
+  payload: string | readonly string[],
+): void {
+  if (typeof payload === 'string') caller.onValueChange(payload);
 }
 
 export type FieldPickerOption = FieldPickerProps['options'][number];

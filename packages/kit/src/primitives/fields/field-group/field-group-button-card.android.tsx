@@ -1,4 +1,3 @@
-/* oxlint-disable anti-slop/no-shape-in-symbol-names -- Compose's own Shapes modifier. */
 import { Box, useMaterialColors } from '@expo/ui/jetpack-compose';
 import {
   background,
