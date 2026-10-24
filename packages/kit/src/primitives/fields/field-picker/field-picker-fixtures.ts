@@ -121,7 +121,7 @@ export const screenWithLogo = {
   presentation: 'page',
 } satisfies Fixture<FieldPickerSingle>;
 
-// A short page with no search, so its action shows below the choices without scrolling.
+// A short page with no search, so a popover's action shows below the choices without scrolling.
 export const screenWithButton = {
   title: 'Label',
   value: 'two',

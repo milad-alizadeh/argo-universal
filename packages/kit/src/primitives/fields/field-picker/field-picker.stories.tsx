@@ -79,7 +79,7 @@ export const ScreenWithSearch: Story = {
   play: opened,
 };
 
-// The page's action sits in a place of its own below the choices.
+// The page's action: below the choices in a desktop popover, a header button on a pushed page.
 export const ScreenWithButton: Story = {
   name: 'Screen with button',
   args: { ...screenWithButton, onValueChange: fn() },

@@ -24,8 +24,8 @@ type ScreenState = FieldPickerScreenProps & {
 
 /*
  * The choices of a `page` presentation (ADR-0042), the same on every platform: the kit's shared search field when
- * `searchable`, the options in sections with a mark on the chosen ones, an empty state, and an action button in a
- * place of its own below. A single choice reports and closes; a `multiple` page stays open and reports each toggle.
+ * `searchable`, the options in sections with a mark on the chosen ones, an empty state, and, in a desktop popover,
+ * an action button in a place of its own below (a pushed page's header holds it). A single choice reports and closes; a `multiple` page stays open and reports each toggle.
  */
 export function FieldPickerScreen(props: ScreenState): ReactElement {
   const options = matchingOptions(props.options, props.query);
