@@ -49,7 +49,7 @@ export interface SheetScreenEntry {
 }
 
 // The sheet's Sheet.Screen children, the first one its root; none when the sheet has a single page.
-export function sheetScreens(children: ReactNode): SheetScreenEntry[] {
+function sheetScreens(children: ReactNode): SheetScreenEntry[] {
   return Children.toArray(children)
     .filter(isScreen)
     .map((page) => ({

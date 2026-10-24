@@ -13,21 +13,21 @@ import { textChangeEvents } from './text-field-kit-props';
 
 // The App's FieldGroup and its rows (ADR-0042): one schema per component, shared by web, iOS and Android and by the Plugin wire.
 
-export const fieldGroupProps = z.object({
+const fieldGroupProps = z.object({
   disabled: z.boolean().optional().describe('Every row holds still.'),
 });
 
-export const fieldGroupSectionProps = z.object({
+const fieldGroupSectionProps = z.object({
   title: z.string().optional().describe('The heading above the section.'),
   footer: z.string().optional().describe('Supporting text below the section.'),
 });
 
-export const fieldGroupToggleProps = fieldGroupFieldProps.extend({
+const fieldGroupToggleProps = fieldGroupFieldProps.extend({
   value: z.boolean().describe('Whether the field is on.'),
   onValueChange: handler('onValueChange'),
 });
 
-export const fieldGroupTextFieldProps = fieldGroupRowProps.extend({
+const fieldGroupTextFieldProps = fieldGroupRowProps.extend({
   value: z.string().describe('The current text.'),
   onChangeText: handler('onChangeText'),
   placeholder: z.string().optional().describe('Example shown while empty.'),
@@ -73,7 +73,7 @@ export const fieldGroupTextFieldProps = fieldGroupRowProps.extend({
   onSubmit: handler('onSubmit').optional(),
 });
 
-export const fieldGroupSliderProps = fieldGroupFieldProps.extend({
+const fieldGroupSliderProps = fieldGroupFieldProps.extend({
   value: z.number().finite().describe('The current value.'),
   min: z.number().finite().describe('The minimum value.'),
   max: z.number().finite().describe('The maximum value.'),
@@ -87,7 +87,7 @@ export const fieldGroupSliderProps = fieldGroupFieldProps.extend({
   onValueChange: handler('onValueChange'),
 });
 
-export const fieldGroupValueProps = fieldGroupRowProps.extend({
+const fieldGroupValueProps = fieldGroupRowProps.extend({
   value: z.string().describe('The read-only value at the row’s end.'),
   loading: z
     .boolean()
@@ -97,7 +97,7 @@ export const fieldGroupValueProps = fieldGroupRowProps.extend({
     ),
 });
 
-export const fieldGroupLinkProps = fieldGroupRowProps.extend({
+const fieldGroupLinkProps = fieldGroupRowProps.extend({
   onPress: handler('onPress'),
 });
 

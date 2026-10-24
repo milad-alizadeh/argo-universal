@@ -87,4 +87,4 @@ function useGeometry(): [SearchFieldGeometry, LayoutHandler, LayoutHandler] {
   ];
 }
 
-export type { SearchFieldProps, SearchQueryProps } from './search-field-props';
+export type { SearchFieldProps } from './search-field-props';

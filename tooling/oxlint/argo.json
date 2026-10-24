@@ -147,14 +147,6 @@
       "rules": { "no-console": ["error", { "allow": ["error", "warn"] }] }
     },
     {
-      // `shape` is @expo/ui Compose's own prop name on Surface and Button; the rule allows member reads but not package prop keys.
-      "files": [
-        "packages/kit/src/primitives/actions/split-button/split-button-look.android.ts",
-        "packages/kit/src/primitives/lists/grouped-list-item/grouped-list-item.android.tsx"
-      ],
-      "rules": { "anti-slop/no-shape-in-symbol-names": "off" }
-    },
-    {
       // A Feed candidate is unparsed by design: a row assembled from a Feed patch, which acceptFeedCandidate parses with SessionUpdate before use.
       "files": ["packages/engine/src/feed/feed-change-candidate.ts"],
       "rules": { "anti-slop/no-unsafe-dictionary-type": "off" }
@@ -254,11 +246,6 @@
     {
       // Only the vendor module names Registry vendors (ADR-0004, #717).
       "files": ["packages/engine/src/agents/vendor.ts"],
-      "rules": { "argo/vendor-name": "off" }
-    },
-    {
-      // #721 requires these four featured Registry ids for presentation only.
-      "files": ["packages/client/src/features/agents/utils/featured-ids.ts"],
       "rules": { "argo/vendor-name": "off" }
     },
     {

@@ -23,7 +23,7 @@ const dividerAfter = new Set<ListPosition>(['first', 'middle']);
 const cellClass = (position: ListPosition): string =>
   cn('overflow-hidden border-hairline bg-card', pieces[position]);
 
-export function GroupedCell(props: {
+function GroupedCell(props: {
   position: ListPosition;
   children: ReactNode;
 }): ReactElement {

@@ -25,7 +25,7 @@ export interface HeaderActionsProps {
   slots: number;
 }
 
-export interface HeaderOverflowProps {
+interface HeaderOverflowProps {
   groups: ActionGroup[];
   label: string;
 }

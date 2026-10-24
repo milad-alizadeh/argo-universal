@@ -3,7 +3,7 @@ import { echoes } from './plugin-part-props';
 import { actionSlot, part, stringLabel } from './plugin-part-schema-utils';
 import { WireEvent } from './wire';
 
-export const screenProps = z.object({
+const screenProps = z.object({
   title: stringLabel.describe('The single-line screen title.'),
   caption: z
     .string()

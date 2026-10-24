@@ -35,7 +35,6 @@ export {
   type ActionGroup,
   type DeclaredAction,
   type DeclaredEntry,
-  type DeclaredSection,
   type DeclaredSubmenu,
 } from './declared-entry';
 

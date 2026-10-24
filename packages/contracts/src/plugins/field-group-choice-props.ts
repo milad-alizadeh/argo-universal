@@ -15,7 +15,7 @@ const logoPattern = /^(\s*<svg[\s>/]|data:image\/svg\+xml|https:\/\/)/i;
 
 const logoMaxLength = 100_000;
 
-export const fieldGroupPickerOption = z.object({
+const fieldGroupPickerOption = z.object({
   value: z.string(),
   label: z.string(),
   subtitle: z.string().optional().describe('A second line under the label.'),

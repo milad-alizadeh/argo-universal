@@ -7,7 +7,7 @@ import type { ListProps } from './list-props';
 const fill = { flex: 1 };
 
 // The one Host of a phone's grouped List; its rows are FieldGroup rows, which draw into it.
-export function PhoneHost(props: { children: ReactNode }): ReactElement {
+function PhoneHost(props: { children: ReactNode }): ReactElement {
   return (
     <Host style={fill}>
       <InsideHostContext.Provider value>
