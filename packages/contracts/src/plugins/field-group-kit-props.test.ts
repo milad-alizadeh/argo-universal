@@ -4,12 +4,14 @@ import { fieldGroupKitParts } from './field-group-kit-props';
 import { kitPropDescriptors } from './kit-prop-descriptors';
 
 describe('a FieldGroup row’s leading icon', () => {
-  it('takes a system symbol', () => {
-    expect(isStockIconName('settings')).toBe(true);
+  it.each([
+    ['a system symbol', 'settings'],
+    ['Argo’s own symbol', 'agent'],
+  ])('takes %s', (_, name) => {
+    expect(isStockIconName(name)).toBe(true);
   });
 
   it.each([
-    ['Argo’s own symbol', 'agent'],
     ['an SVG icon', 'branch'],
     ['an unknown name', 'nope'],
   ])('refuses %s', (_, name) => {
@@ -44,8 +46,8 @@ describe('a FieldGroup props table', () => {
       (prop) => prop.name === 'leading',
     );
 
-    expect(icon?.options).toContain('settings');
-    expect(icon?.options).not.toContain('agent');
+    expect(icon?.options).toContain('agent');
+    expect(icon?.options).not.toContain('branch');
   });
 });
 

@@ -49,6 +49,7 @@ function agentPicker(context: PickerContext): ReactElement {
     <FieldGroup.Picker
       key="agent"
       title="Agent"
+      leading="agent"
       presentation="page"
       value={context.configuration.agent?.id ?? ''}
       summary={agentSummary(context.configuration)}

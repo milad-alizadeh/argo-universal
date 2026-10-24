@@ -3,7 +3,10 @@ import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { NativeText } from '#primitives/content/native-text';
+import { drawnSymbol } from '../../../symbols/drawn-symbol';
+import { type IconSymbol, resolveIcon } from '../../../symbols/icon-symbol';
 import { nativeIconName } from '../../../symbols/native-icon-name';
+import { NativeSymbol } from '../../../symbols/native-symbol';
 import { RowLogo } from './field-row-logo';
 import type { RowTextProps } from './field-row-text';
 
@@ -14,7 +17,7 @@ type RowTitleProps = RowTextProps & { title: string };
  * explanation goes in its Section's footer, as iOS Settings does.
  */
 export function RowTitle(props: RowTitleProps): ReactElement {
-  const symbol = leadingSymbol(props);
+  const icon = labelIcon(props);
   const tint = useDangerStyle(props.tone);
 
   if (props.logo)
@@ -25,8 +28,7 @@ export function RowTitle(props: RowTitleProps): ReactElement {
       </HStack>
     );
 
-  if (symbol)
-    return <Label title={props.title} systemImage={symbol} modifiers={tint} />;
+  if (icon) return <Label title={props.title} {...icon} modifiers={tint} />;
 
   return <NativeText tone={props.tone}>{props.title}</NativeText>;
 }
@@ -40,11 +42,29 @@ function useDangerStyle(
   return tone === 'danger' && color ? [foregroundStyle(color)] : [];
 }
 
-// The SF Symbol of a row's leading icon; a name with no system symbol draws none.
-function leadingSymbol(props: RowTextProps): SfSymbol | undefined {
-  const name = props.leading ? nativeIconName(props.leading) : undefined;
+type LabelIcon = Pick<LabelProps, 'systemImage' | 'icon'>;
 
-  return typeof name === 'string' ? name : undefined;
+/*
+ * A row's leading icon as the Label takes it: a system SF Symbol by name, Argo's own symbol (`custom.robot`, an
+ * asset-catalog image) as the Label's icon view, at the size nearest the Label's body font so it matches a system
+ * symbol. An SVG icon has no symbol, so the row draws none.
+ */
+function labelIcon(props: RowTextProps): LabelIcon | undefined {
+  if (!props.leading) return undefined;
+
+  const name = nativeIconName(props.leading);
+
+  return typeof name === 'string'
+    ? { systemImage: name }
+    : customIcon(props.leading);
 }
 
-type SfSymbol = NonNullable<React.ComponentProps<typeof Label>['systemImage']>;
+function customIcon(leading: IconSymbol): LabelIcon | undefined {
+  const drawn = drawnSymbol(resolveIcon(leading).symbol);
+
+  return drawn.kind === 'svg'
+    ? undefined
+    : { icon: <NativeSymbol name={leading} size="sm" /> };
+}
+
+type LabelProps = React.ComponentProps<typeof Label>;
