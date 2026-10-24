@@ -182,7 +182,7 @@ export async function readBackToSplitGroup(
 ): Promise<SplitGroupAtTop> {
   await settleViewport(layoutWidths.phone);
   const scroll = await canvas.findByTestId(feedScrollId);
-  await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+  await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
   await scrollToTop(scroll);
 
   const header = await canvas.findByRole(
