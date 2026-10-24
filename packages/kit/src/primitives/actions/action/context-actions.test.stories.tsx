@@ -24,11 +24,15 @@ const archive = (
   />
 );
 
-const copy = <Action key="copy" icon="copy" label="Copy link" onPress={fn()} />;
+const trigger = 'Build actions';
+
+const copyLabel = 'Copy link';
+
+const copy = <Action key="copy" icon="copy" label={copyLabel} onPress={fn()} />;
 
 async function openMenu(canvasElement: HTMLElement): Promise<void> {
   await userEvent.pointer({
-    target: within(canvasElement).getByText('Build actions'),
+    target: within(canvasElement).getByText(trigger),
     keys: '[MouseRight]',
   });
 }
@@ -36,7 +40,7 @@ async function openMenu(canvasElement: HTMLElement): Promise<void> {
 // Every Action in the Slot lands in one menu, however the Slot holds them.
 function mergedActions(actions: ReactNode): Story {
   return {
-    args: { actions, children: <Text>Build actions</Text> },
+    args: { actions, children: <Text>{trigger}</Text> },
     play: async ({ canvasElement }) => {
       await openMenu(canvasElement);
       const menu = within(canvasElement.ownerDocument.body);
@@ -65,13 +69,33 @@ export const FragmentOfActions = mergedActions(
 export const EmptySlotDrawsTriggerAlone: Story = {
   args: {
     actions: createElement(Fragment),
-    children: <Text>Build actions</Text>,
+    children: <Text>{trigger}</Text>,
   },
   play: async ({ canvasElement }) => {
     await openMenu(canvasElement);
     const body = within(canvasElement.ownerDocument.body);
 
-    await expect(body.getByText('Build actions')).toBeVisible();
+    await expect(body.getByText(trigger)).toBeVisible();
+    await expect(body.queryByRole('menuitem')).toBeNull();
+  },
+};
+
+// A context menu is one level, so Actions that are all submenus leave it nothing to list.
+export const OnlySubmenusDrawTriggerAlone: Story = {
+  args: {
+    actions: (
+      <Action key="more" icon="copy" label="More">
+        <Action.Section key="section">{copy}</Action.Section>
+      </Action>
+    ),
+    children: <Text>{trigger}</Text>,
+  },
+  play: async ({ canvasElement }) => {
+    await openMenu(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    await expect(body.getByText(trigger)).toBeVisible();
+    await expect(body.queryByRole('menu')).toBeNull();
     await expect(body.queryByRole('menuitem')).toBeNull();
   },
 };

@@ -25,16 +25,21 @@ export interface ContextActionsProps {
  */
 export function ContextActions(props: ContextActionsProps): ReactElement {
   const declared = useDeclaredActions(props.actions, true);
+  const groups = pressGroups(declared.groups);
 
-  if (!declared.actions.length) return props.children;
+  // Actions that are all submenus leave a context menu with nothing to show, so it never opens.
+  if (!groups.length) return props.children;
 
-  return <AnchoredMenu {...props} declared={declared} />;
+  return <AnchoredMenu {...props} declared={declared} groups={groups} />;
 }
 
 function AnchoredMenu(
-  props: ContextActionsProps & { declared: DeclaredActions },
+  props: ContextActionsProps & {
+    declared: DeclaredActions;
+    groups: ReturnType<typeof pressGroups>;
+  },
 ): ReactElement {
-  const groups = pressGroups(props.declared.groups);
+  const { groups } = props;
 
   return (
     <View nativeID={props.declared.id}>

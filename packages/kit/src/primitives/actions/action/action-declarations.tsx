@@ -87,8 +87,21 @@ function nestedGroups(child: ReactNode): ActionGroup[] {
   return sectionGroups(child);
 }
 
+const elementName = (child: ReactElement): string =>
+  typeof child.type === 'string' ? child.type : child.type.name || 'Component';
+
+// Only Action and Action.Section elements declare Actions; any other element is left out, so in development it says so.
+function unexpectedElement(child: ReactElement): ActionGroup[] {
+  if (process.env.NODE_ENV !== 'production')
+    console.error(
+      `Actions: <${elementName(child)}> is not an Action or Action.Section, so it declares no Actions. Pass Action elements, not a component that renders them.`,
+    );
+
+  return [];
+}
+
 function sectionGroups(child: ReactElement<ActionSectionProps>): ActionGroup[] {
-  if (child.type !== ActionSection) return [];
+  if (child.type !== ActionSection) return unexpectedElement(child);
 
   const groups = prefixedGroups(
     actionGroups(child.props.children),
