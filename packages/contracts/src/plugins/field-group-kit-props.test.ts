@@ -48,3 +48,35 @@ describe('a FieldGroup props table', () => {
     expect(icon?.options).not.toContain('agent');
   });
 });
+
+const parseLogo = (logo: string): boolean =>
+  fieldGroupKitParts['FieldGroup.Picker'].props.safeParse({
+    title: 'Agent',
+    value: 'a',
+    options: [{ value: 'a', label: 'A', logo }],
+    presentation: 'menu',
+    onValueChange: { $event: 'onValueChange' },
+  }).success;
+
+describe('a FieldGroup.Picker option’s logo', () => {
+  it.each([
+    ['inline SVG markup', '<svg xmlns="http://www.w3.org/2000/svg"></svg>'],
+    ['padded inline SVG markup', '\n  <svg viewBox="0 0 1 1"/>'],
+    ['an SVG data URI', 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4='],
+    ['an https URL', 'https://cdn.agentclientprotocol.com/a/icon.svg'],
+  ])('takes %s', (_, logo) => {
+    expect(parseLogo(logo)).toBe(true);
+  });
+
+  it.each([
+    ['an http URL', 'http://example.com/a.svg'],
+    ['a file URL', 'file:///etc/passwd'],
+    ['a javascript URL', 'javascript:alert(1)'],
+    ['a PNG data URI', 'data:image/png;base64,AAAA'],
+    ['plain text', 'logo'],
+    ['an empty string', ''],
+    ['a longer one than the cap', `<svg>${'a'.repeat(100_000)}</svg>`],
+  ])('refuses %s', (_, logo) => {
+    expect(parseLogo(logo)).toBe(false);
+  });
+});

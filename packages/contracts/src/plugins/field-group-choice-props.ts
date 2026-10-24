@@ -10,6 +10,11 @@ export const fieldGroupDatePickerProps = fieldGroupRowProps.extend(
   datePickerProps.pick({ value: true, mode: true, onValueChange: true }).shape,
 );
 
+// What AgentLogo draws: inline SVG markup, an SVG data URI, or the Registry's https icon URL. No other scheme is drawn.
+const logoPattern = /^(\s*<svg[\s>/]|data:image\/svg\+xml|https:\/\/)/i;
+
+const logoMaxLength = 100_000;
+
 export const fieldGroupPickerOption = z.object({
   value: z.string(),
   label: z.string(),
@@ -17,9 +22,11 @@ export const fieldGroupPickerOption = z.object({
   icon: iconName.optional().describe('A leading icon.'),
   logo: z
     .string()
+    .max(logoMaxLength)
+    .regex(logoPattern)
     .optional()
     .describe(
-      'A logo drawn in the icon’s place where the platform can draw an image in the row: SVG markup or an image URI, such as an Agent’s mark.',
+      'A logo drawn in the icon’s place where the platform can draw an image in the row: inline `<svg` markup, a `data:image/svg+xml` URI or an `https://` URL, up to 100,000 characters, such as an Agent’s mark.',
     ),
   tone: z
     .literal('danger')
