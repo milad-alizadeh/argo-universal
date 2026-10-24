@@ -10,7 +10,7 @@ When(
     const original = await slider.elementHandle();
     await adjustToLow(page, slider);
     // A second keyboard adjustment must still reach the same focused slider.
-    await page.keyboard.press('Home');
+    await page.keyboard.press('End');
     await expect(trigger(page)).toContainText('High');
     expect(await original?.evaluate((element) => element.isConnected)).toBe(
       true,
@@ -35,7 +35,7 @@ async function openEffort(page: Page): Promise<Locator> {
 }
 
 async function adjustToLow(page: Page, slider: Locator): Promise<void> {
-  await page.keyboard.press('End');
+  await page.keyboard.press('Home');
   // The slider reads Low, and the trigger shows the applied effort, so a Session's Server round trip has ended before the next adjustment.
   await expect(slider).toHaveAttribute('aria-valuetext', 'Low');
   await expect(trigger(page)).toContainText('Low');
