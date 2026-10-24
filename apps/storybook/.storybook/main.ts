@@ -32,6 +32,7 @@ const PREBUNDLED_DEPENDENCIES = [
   '@repo/kit > @radix-ui/react-select',
   '@repo/kit > @radix-ui/react-dropdown-menu',
   '@repo/kit > @gorhom/portal',
+  '@repo/client > @tanstack/react-form',
   '@repo/client > ajv',
   '@repo/client > ajv-formats',
   '@repo/kit > burnt',

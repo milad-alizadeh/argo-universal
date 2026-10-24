@@ -41,12 +41,12 @@ function OpenDialog(props: DialogProps & { current: Date }): ReactElement {
 
 type DayProps = DialogProps & { current: Date; onDay: (day: Date) => void };
 
-// A date alone commits; a datetime keeps the day and asks for the time.
+// A date alone commits; a datetime keeps the day, at the time it held, and asks for the time.
 function chooseDay(props: DayProps, picked: Date): void {
   const day = localDay(picked);
 
   if (props.mode === 'datetime') {
-    props.onDay(day);
+    props.onDay(withTime(day, props.current));
     props.setStep('time');
 
     return;

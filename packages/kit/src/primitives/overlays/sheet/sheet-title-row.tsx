@@ -95,7 +95,7 @@ function HeaderIcon(props: {
 function Action({ action }: TitleRowProps): ReactElement | null {
   if (!action) return null;
 
-  if (action.icon)
+  if (drawnAsIcon(action))
     return (
       <HeaderIcon
         icon={action.icon}
@@ -106,6 +106,12 @@ function Action({ action }: TitleRowProps): ReactElement | null {
 
   return <TextAction {...action} />;
 }
+
+// The header's icon buttons have no danger tone, so a destructive action keeps its red label.
+const drawnAsIcon = (
+  action: SheetScreenAction,
+): action is SheetScreenAction & { icon: IconName } =>
+  action.icon !== undefined && !action.destructive;
 
 function TextAction(action: SheetScreenAction): ReactElement {
   return (

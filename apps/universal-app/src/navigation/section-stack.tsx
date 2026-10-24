@@ -137,7 +137,7 @@ function rootScreen(
   };
 }
 
-// The stack for pages a component pushes over the Frame (`app/page`): a narrow window's stock header, with Back.
+// The stack for pages a component pushes over the Frame (`app/screen`): a narrow window's stock header, with Back.
 export function PushedStack(): React.JSX.Element {
   return <Stack screenOptions={narrowOptions} screenLayout={screenLayout} />;
 }
