@@ -14,13 +14,9 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { useState, type ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
-import {
-  chosenValues,
-  type FieldPickerOption,
-  type FieldPickerProps,
-} from './field-picker-model';
+import { type FieldPickerOption, type PickerProps } from './field-picker-model';
 
-type DialogProps = FieldPickerProps & { onClose: () => void };
+type DialogProps = PickerProps & { onClose: () => void };
 
 type Draft = {
   draft: readonly string[];
@@ -33,7 +29,7 @@ type Draft = {
  * drops, as MultiSelectListPreference does.
  */
 export function FieldPickerDialog(props: DialogProps): ReactElement {
-  const [draft, setDraft] = useState<readonly string[]>(chosenValues(props));
+  const [draft, setDraft] = useState<readonly string[]>(props.held);
 
   return (
     <AlertDialog onDismissRequest={props.onClose}>
@@ -92,7 +88,7 @@ function pick(props: ChoiceProps): void {
     return;
   }
 
-  props.onValueChange(props.option.value);
+  props.pick(props.option.value);
   props.onClose();
 }
 

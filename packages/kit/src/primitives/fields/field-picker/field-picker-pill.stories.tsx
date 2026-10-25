@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn, within } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
+import { FieldPicker } from './field-picker';
 import { ControlledPicker } from './field-picker-controlled';
 import { inStackedToolbar } from './field-picker-decorators';
 import { pill } from './field-picker-fixtures';
-import { FieldPicker } from './field-picker-switch';
 
 const meta = {
   title: 'Design System/Primitives/Forms/FieldPicker/Pill',

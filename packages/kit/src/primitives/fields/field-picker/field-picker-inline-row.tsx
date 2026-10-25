@@ -4,12 +4,8 @@ import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import { SelectedCheck } from '#primitives/status/selected-check';
 import { Spinner } from '#primitives/status/spinner';
-import {
-  optionChoice,
-  type OptionRowProps,
-} from './field-picker-inline-choice';
 import { moveThroughRadios } from './field-picker-inline-keys';
-import { chosenValues } from './field-picker-model';
+import { optionChoice, type OptionRowProps } from './field-picker-kind';
 
 /*
  * One option as a row of its own: the title (and icon or logo), the subtitle under it, and the check at the end once
@@ -43,7 +39,7 @@ const tabStop = (props: OptionRowProps, selected: boolean): boolean =>
   selected || (noneChosen(props) && props.option === props.options[0]);
 
 const noneChosen = (props: OptionRowProps): boolean =>
-  !props.options.some((option) => chosenValues(props).includes(option.value));
+  !props.options.some((option) => props.held.includes(option.value));
 
 const pressProps = (
   props: OptionRowProps,

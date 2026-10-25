@@ -1,10 +1,6 @@
-import {
-  chosenValues,
-  choose,
-  type FieldPickerProps,
-} from './field-picker-model';
+import type { PickerProps } from './field-picker-model';
 
-type ScreenChoiceProps = FieldPickerProps & { onClose?: () => void };
+type ScreenChoiceProps = PickerProps & { onClose?: () => void };
 
 export function change(
   props: ScreenChoiceProps,
@@ -20,17 +16,17 @@ function pickChange(props: ScreenChoiceProps, next: readonly string[]): void {
 
   if (pressed === undefined) return;
 
-  choose(props, pressed);
+  props.pick(pressed);
   props.onClose?.();
 }
 
 // A multiple section reports its whole selection toggled; the value that differs from the held one is the press.
 function toggleChange(props: ScreenChoiceProps, next: readonly string[]): void {
-  const held = chosenValues(props);
+  const { held } = props;
 
   const pressed = [...next, ...held].find(
     (value) => next.includes(value) !== held.includes(value),
   );
 
-  if (pressed !== undefined) choose(props, pressed);
+  if (pressed !== undefined) props.pick(pressed);
 }

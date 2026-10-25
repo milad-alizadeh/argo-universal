@@ -1,12 +1,10 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
-import { List } from '@repo/kit/primitives/lists/list';
-import { ListSection } from '@repo/kit/primitives/lists/list';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { MenuTrigger } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { ComposerPopover } from '../composer-popover/composer-popover';
-import { ConfigurationChoice } from './configuration-choice';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { checkoutName } from './configuration-values';
 
@@ -19,51 +17,39 @@ interface ContentsProps extends CheckoutProps {
   close: () => void;
 }
 
-interface ChoiceProps extends ContentsProps {
-  newWorktree: boolean;
-}
+const checkoutOptions = [
+  { value: 'local', label: 'Local', icon: 'folder' },
+  { value: 'worktree', label: 'New worktree', icon: 'branch' },
+] as const;
 
 export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 native:wide:p-3 bg-content web:wide:bg-card">
-      {/* A phone's sheet fills its height, so the List scrolls in it; a web popover fits its rows. */}
-      <List appearance="plain" fit={Platform.OS === 'web'}>
-        {checkoutChoices(props)}
-      </List>
+    <View className="native:flex-1 bg-content web:wide:bg-card">
+      <FieldGroup>
+        <FieldGroup.Section>{checkoutPicker(props)}</FieldGroup.Section>
+      </FieldGroup>
     </View>
   );
 }
 
-// List reads sections from its direct children to trim the final menu gap.
-function checkoutChoices(props: ContentsProps): React.JSX.Element {
+function checkoutPicker(props: ContentsProps): React.JSX.Element {
   return (
-    <ListSection selectionMode="single">
-      {[false, true].map((newWorktree) => (
-        <CheckoutChoice
-          key={String(newWorktree)}
-          {...props}
-          newWorktree={newWorktree}
-        />
-      ))}
-    </ListSection>
+    <FieldGroup.Picker
+      title="Checkout"
+      presentation="inline"
+      value={props.checkout.newWorktree ? 'worktree' : 'local'}
+      options={checkoutOptions}
+      disabled={props.disabled}
+      onValueChange={(value) => chooseCheckout(props, value)}
+    />
   );
 }
 
-function CheckoutChoice(props: ChoiceProps): React.JSX.Element {
-  const select = (): void => {
-    if (props.disabled) return;
-    props.checkout.onNewWorktreeChange?.(props.newWorktree);
-    props.close();
-  };
+function chooseCheckout(props: ContentsProps, value: string): void {
+  if (props.disabled) return;
 
-  return (
-    <ConfigurationChoice
-      label={props.newWorktree ? 'New worktree' : 'Local'}
-      selected={props.checkout.newWorktree === props.newWorktree}
-      leading={<CheckoutIcon newWorktree={props.newWorktree} />}
-      onPress={select}
-    />
-  );
+  props.checkout.onNewWorktreeChange?.(value === 'worktree');
+  props.close();
 }
 
 export function ComposerCheckoutControl(

@@ -5,7 +5,6 @@ import { Icon, IconSlot } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import {
-  chosenValues,
   optionSections,
   type FieldPickerOption,
   type OptionSection,
@@ -67,7 +66,7 @@ function ChoiceSection(props: SectionProps): ReactElement {
     <List.Section
       title={props.section.title}
       selectionMode={props.multiple ? 'multiple' : 'single'}
-      selection={chosenValues(props)}
+      selection={props.held}
       onSelectionChange={(next) => change(props, next)}
     >
       {props.section.options.map((option) => (

@@ -1,10 +1,10 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
-import type { ListProps, ListSectionProps } from './list-props';
+import type { ListSectionProps } from './list-props';
 import { ListSection } from './list-section';
 
 /*
- * What a phone's native grouped List draws: sections of FieldGroup rows (list-phone-rows). A row is only a function
+ * What a phone's native grouped List draws: sections of FieldGroup rows (list-phone-props). A row is only a function
  * that makes its element, so the native list mounts the rows near the viewport.
  */
 export type PhoneRow = { key: string; render: () => ReactElement };
@@ -63,8 +63,7 @@ const childSections = (children: ReactNode): PhoneSection[] =>
     .map(toSection)
     .filter(hasRows);
 
-export const phoneSections = <Item>(props: ListProps<Item>): PhoneSection[] =>
-  childSections(props.children);
+export const phoneSections = childSections;
 
 export const phoneRowKey = (row: PhoneRow): string => row.key;
 

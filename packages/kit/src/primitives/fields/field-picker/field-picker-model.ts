@@ -4,7 +4,7 @@ export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'>;
 
 /*
  * What a caller writes: a single Picker holds one value and a `multiple` one a list, so a handler takes the value it
- * is given. The schema's echo carries either, so the drawings below read the wider FieldPickerProps.
+ * is given. The schema's echo carries either, so the drawings read the narrowed PickerProps below.
  */
 type Narrowed = Omit<FieldPickerProps, 'value' | 'multiple' | 'onValueChange'>;
 
@@ -22,98 +22,106 @@ export type FieldPickerMultiple = Narrowed & {
 
 export type FieldPickerCallerProps = FieldPickerSingle | FieldPickerMultiple;
 
+export type FieldPickerOption = FieldPickerProps['options'][number];
+
 /*
- * The drawings read the wider props the schema gives: a handler that takes either payload. A caller's narrower
- * handler is wrapped so it only hears its own kind, which every drawing reports: a string when `multiple` is not
- * set and a list when it is.
+ * What a caller's value comes to once: whether the choice is `multiple`, the values held, and `pick`, which a drawing
+ * calls with the value a person pressed. A single choice reports that string; a `multiple` one reports the held list
+ * with the value toggled, in the options' order.
  */
-export function drawingProps(
+export type Picking = {
+  multiple: boolean;
+  held: readonly string[];
+  pick: (value: string) => void;
+};
+
+// The props every drawing reads: the schema's, with the value narrowed. `onValueChange` reports a payload of the caller's own kind only.
+export type PickerProps = FieldPickerProps & Picking;
+
+export function narrowed(
   caller: FieldPickerCallerProps | FieldPickerProps,
-): FieldPickerProps {
-  return { ...caller, onValueChange: (payload) => report(caller, payload) };
+): PickerProps {
+  const multiple = caller.multiple === true;
+  const held = heldOf(caller.value);
+  const report = reporterOf(caller);
+
+  return {
+    ...caller,
+    multiple,
+    held,
+    onValueChange: report,
+    pick: (value) =>
+      report(multiple ? toggled(held, caller.options, value) : value),
+  };
 }
 
-function report(
+const reporterOf =
+  (caller: FieldPickerCallerProps | FieldPickerProps) =>
+  (payload: string | readonly string[]): void => {
+    reportTo(caller, payload);
+  };
+
+const heldOf = (value: string | readonly string[]): readonly string[] =>
+  typeof value === 'string' ? [value] : value;
+
+// A wide handler may be given either payload; a caller's own hears only its kind, a string or a list, and the other is dropped.
+function reportTo(
   caller: FieldPickerCallerProps | FieldPickerProps,
   payload: string | readonly string[],
 ): void {
-  if (caller.multiple === true) reportList(caller, payload);
-  else reportOne(caller, payload);
+  if (caller.multiple === true) sendList(caller, payload);
+  else sendOne(caller, payload);
 }
 
-function reportList(
+function sendList(
   caller: FieldPickerMultiple | FieldPickerProps,
   payload: string | readonly string[],
 ): void {
   if (typeof payload !== 'string') caller.onValueChange(payload);
 }
 
-function reportOne(
+function sendOne(
   caller: FieldPickerSingle | FieldPickerProps,
   payload: string | readonly string[],
 ): void {
   if (typeof payload === 'string') caller.onValueChange(payload);
 }
 
-export type FieldPickerOption = FieldPickerProps['options'][number];
+function toggled(
+  held: readonly string[],
+  options: readonly FieldPickerOption[],
+  value: string,
+): readonly string[] {
+  const next = new Set(held);
 
-// The chosen values as a list, whether the picker holds one value or several.
-export const chosenValues = (
-  props: Pick<FieldPickerProps, 'value'>,
-): readonly string[] =>
-  typeof props.value === 'string' ? [props.value] : props.value;
+  if (!next.delete(value)) next.add(value);
+
+  return options.flatMap((option) =>
+    next.has(option.value) ? [option.value] : [],
+  );
+}
 
 // The logo of the chosen option, for a row that leads with it; with several chosen, the first one's.
 export function chosenLogo(
-  props: Pick<FieldPickerProps, 'value' | 'options'>,
+  props: Pick<PickerProps, 'held' | 'options'>,
 ): string | undefined {
-  const chosen = new Set(chosenValues(props));
+  const chosen = new Set(props.held);
 
   return props.options.find((option) => chosen.has(option.value))?.logo;
 }
 
 // What the row shows as its value: the chosen labels, in the options' order.
 export function choiceSummary(
-  props: Pick<FieldPickerProps, 'value' | 'options' | 'summary'>,
+  props: Pick<PickerProps, 'held' | 'options' | 'summary'>,
 ): string {
   if (props.summary !== undefined) return props.summary;
 
-  const chosen = new Set(chosenValues(props));
+  const chosen = new Set(props.held);
 
   return props.options
     .filter((option) => chosen.has(option.value))
     .map((option) => option.label)
     .join(', ');
-}
-
-// A choice reports one value, or with `multiple` the whole list in the options' order.
-export function choose(
-  props: Pick<
-    FieldPickerProps,
-    'value' | 'options' | 'multiple' | 'onValueChange'
-  >,
-  value: string,
-): void {
-  if (!props.multiple) {
-    props.onValueChange(value);
-
-    return;
-  }
-
-  props.onValueChange(toggled(props, value));
-}
-
-export function toggled(
-  props: Pick<FieldPickerProps, 'value' | 'options'>,
-  value: string,
-): readonly string[] {
-  const next = new Set(chosenValues(props));
-
-  if (!next.delete(value)) next.add(value);
-
-  return props.options
-    .filter((option) => next.has(option.value))
-    .map((option) => option.value);
 }
 
 export type OptionSection = {

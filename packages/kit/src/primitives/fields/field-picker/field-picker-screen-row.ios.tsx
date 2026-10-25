@@ -10,9 +10,9 @@ import {
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
-import type { NativeRowProps } from './field-picker-native';
+import type { PickerRowProps } from './field-picker-kind';
 
-type ScreenRowProps = NativeRowProps;
+type ScreenRowProps = PickerRowProps;
 
 // Settings' disclosure: chevron.forward at footnote size, semibold, in the tertiary label colour.
 const disclosureStyle = [

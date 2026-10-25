@@ -1,11 +1,11 @@
 import { useState, type ReactElement } from 'react';
 import { Drill, type DrillProps } from '#primitives/overlays/drill';
-import { choiceSummary, type FieldPickerProps } from './field-picker-model';
+import { choiceSummary, type PickerProps } from './field-picker-model';
 import { FieldPickerScreen } from './field-picker-screen';
 
 export type ScreenTrigger = NonNullable<DrillProps['trigger']>;
 
-type DrillPickerProps = FieldPickerProps & {
+type DrillPickerProps = PickerProps & {
   opener: ScreenTrigger;
   // The row sits in a popover: its choices open beside it, on its right.
   beside?: boolean;
