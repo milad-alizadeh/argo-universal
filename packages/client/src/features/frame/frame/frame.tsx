@@ -16,7 +16,7 @@ import {
   PhoneDrawerContent,
   type PhoneDrawerContentProps,
 } from '../components/phone-drawer-content/phone-drawer-content';
-import { useAttentionCount } from '../hooks/use-attention-count';
+import { useSectionBadgeCounts } from '../hooks/use-section-badge-counts';
 import {
   ScaffoldFrame,
   ScaffoldPage,
@@ -137,7 +137,7 @@ function LiveRail({
       selectedSection={frame.section}
       items={frame.items}
       hasSidebar={isCoreSection(frame.section) || frame.listDetail.held}
-      attentionCount={useAttentionCount()}
+      {...useSectionBadgeCounts()}
       {...{ sidebarShown, onSidebarShownChange, onSectionChange }}
     />
   );
@@ -172,13 +172,12 @@ export const frameSidebarWidth = (frame: FrameParts): number =>
 
 export type SectionDrawerProps = Omit<
   PhoneDrawerContentProps,
-  'attentionCount'
+  'attentionCount' | 'pluginBadges'
 >;
 
-// A compact window's drawer of sections, with the live attention count; the drawing is `PhoneDrawerContent`.
+// A compact window's drawer of sections, with the live attention and Plugin badge counts; the drawing is `PhoneDrawerContent`.
 export function SectionDrawer(props: SectionDrawerProps): React.JSX.Element {
-  return <PhoneDrawerContent {...props} attentionCount={useAttentionCount()} />;
+  return <PhoneDrawerContent {...props} {...useSectionBadgeCounts()} />;
 }
 
-// Whether any Session needs attention, which ☰ marks with a dot or badge on a narrow root.
-export const useNeedsAttention = (): boolean => useAttentionCount() > 0;
+export { useNeedsAttention } from '../hooks/use-section-badge-counts';

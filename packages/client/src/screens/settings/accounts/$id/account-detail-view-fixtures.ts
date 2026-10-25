@@ -15,6 +15,13 @@ export const sharedAccount = {
   host: 'api.github.com',
   provider: 'GitHub',
   borrowers: [issuesBorrower, pullRequestsBorrower],
+  refused: [],
+} satisfies AccountDetailLoad;
+
+export const refusedAccount = {
+  ...sharedAccount,
+  borrowers: [issuesBorrower],
+  refused: [pullRequestsBorrower],
 } satisfies AccountDetailLoad;
 
 export const unsharedAccount = {

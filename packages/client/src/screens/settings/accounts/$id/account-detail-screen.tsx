@@ -5,7 +5,11 @@ import {
   AccountDetailView,
   type AccountDetailViewProps,
 } from './account-detail-view';
-import { useAccountDetail, useRevoke, useSignOut } from './use-account-detail';
+import {
+  useAccountDetail,
+  useGrantAccess,
+  useSignOut,
+} from './use-account-detail';
 
 export interface AccountDetailScreenProps {
   accountId: string;
@@ -21,7 +25,8 @@ function useAccountDetailProps(accountId: string): AccountDetailViewProps {
     title,
     caption: useServerPageCaption(),
     account,
-    onRevoke: useRevoke(accountId, host),
+    onRevoke: useGrantAccess(accountId, host, false),
+    onAllow: useGrantAccess(accountId, host, true),
     onSignOut: useSignOut(accountId, back),
     onBack: back,
   };

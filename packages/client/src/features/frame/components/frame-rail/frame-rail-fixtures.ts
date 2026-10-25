@@ -1,5 +1,8 @@
 import { coreNavigationSections } from '../../../../lib/product/navigation/sections';
-import { manyPluginNavigationItems } from '../navigation-items.mocks';
+import {
+  manyPluginNavigationItems,
+  pluginNavigationItems,
+} from '../navigation-items.mocks';
 import type { FrameRailProps } from './frame-rail';
 
 // A story supplies the callbacks; a fixture is the rail's sections and what is open.
@@ -26,4 +29,14 @@ export const collapsedRail = {
 export const manyPluginSectionsRail = {
   ...expandedRail,
   items: manyPluginNavigationItems,
+} satisfies FrameRailFixture;
+
+// Paper "Navigation Desktop · Plugin badge counts": a Plugin's nav item counts 12, and another goes over 99.
+export const pluginBadgeRail = {
+  ...expandedRail,
+  items: pluginNavigationItems,
+  pluginBadges: [
+    { pluginId: 'issue-tracker', id: 'issues', count: 12 },
+    { pluginId: 'hello', id: 'hello', count: 100 },
+  ],
 } satisfies FrameRailFixture;

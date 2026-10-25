@@ -4,6 +4,7 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
 import { SettingsLoading } from '../../settings-loading';
+import { refusedSections } from './account-refused-sections';
 import { AccountSignOutAlert, signOutCopy } from './account-sign-out-alert';
 
 export interface AccountBorrower {
@@ -21,26 +22,35 @@ export type AccountDetailLoad =
       provider: string;
       // The other Plugins allowed to borrow it.
       borrowers: AccountBorrower[];
+      // The Plugins refused its use, which can be allowed again.
+      refused: AccountBorrower[];
     };
 
 type LoadedAccount = Extract<AccountDetailLoad, { status: 'loaded' }>;
 
+export const accountDetailTitle = 'Account detail';
+
 export interface AccountDetailViewProps {
-  // The Account's label, or its id until the Account loads.
+  // The Account's label, or its id until the Account loads; it heads the Account's first section.
   title: string;
   caption?: string;
   account: AccountDetailLoad;
   onRevoke: (pluginId: string) => void;
+  onAllow: (pluginId: string) => void;
   onSignOut: () => void;
   onBack?: () => void;
 }
 
-// One Account: where it signs in, who provides it, who borrows it, and Sign out.
+// One Account: where it signs in, who provides it, who borrows it, who was refused, and Sign out.
 export function AccountDetailView(
   props: AccountDetailViewProps,
 ): React.JSX.Element {
   return (
-    <Screen title={props.title} caption={props.caption} onBack={props.onBack}>
+    <Screen
+      title={accountDetailTitle}
+      caption={props.caption}
+      onBack={props.onBack}
+    >
       <AccountBody {...props} />
     </Screen>
   );
@@ -89,15 +99,19 @@ const accountSections = (
   onSignOutPress: () => void,
 ): React.JSX.Element => (
   <>
-    {detailsSection(props.account)}
+    {detailsSection(props.title, props.account)}
     {borrowerSections(props.account, props.onRevoke)}
+    {refusedSections(props.account.refused, props.onAllow)}
     {signOutSection(props.account, onSignOutPress)}
   </>
 );
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
-const detailsSection = (account: LoadedAccount): React.JSX.Element => (
-  <FieldGroup.Section>
+const detailsSection = (
+  title: string,
+  account: LoadedAccount,
+): React.JSX.Element => (
+  <FieldGroup.Section title={title}>
     <FieldGroup.Value title="Host" value={account.host} />
     <FieldGroup.Value title="Provided by" value={account.provider} />
   </FieldGroup.Section>

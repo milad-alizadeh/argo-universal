@@ -28,9 +28,11 @@ function useChosenIds(
   const trpc = useTRPC();
 
   const gets = useQueries({
-    queries: hosts.map((host) =>
-      trpc.plugins.accounts.get.queryOptions({ projectId, host }),
-    ),
+    queries: hosts.map((host) => ({
+      ...trpc.plugins.accounts.get.queryOptions({ projectId, host }),
+      // The Project's id is empty while the Project loads.
+      enabled: projectId !== '',
+    })),
   });
 
   if (gets.some((query) => query.isPending)) return undefined;

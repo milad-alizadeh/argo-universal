@@ -2,12 +2,16 @@ import { existsSync } from 'node:fs';
 import { appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { openReadOnlyDatabase } from '@repo/db/plugin-database';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { GatedKeychain } from '#mocks/gated-keychain';
+import { journeyMs } from '#mocks/journey-budget';
 import { MemoryKeychain } from '#mocks/memory-keychain';
 import { pluginHostPids } from '#mocks/plugin-host-log';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
+
+// Plugin workers start a real process: budget this file's tests for startup.
+vi.setConfig({ testTimeout: journeyMs });
 
 // Starting a dev Plugin bundles it first, which is slow on a busy machine.
 const pollOptions = { timeout: 30_000 };

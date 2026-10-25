@@ -3,8 +3,11 @@ import { createServer } from 'node:http';
 import { expect, it } from 'vitest';
 import { overlappingOAuth, viewlessOAuth } from '#mocks/oauth-origin';
 import { oauthPlugins, challenge } from '#mocks/oauth-plugins';
+import { serialiseOnOAuthPort } from '#mocks/oauth-port-lock';
 
 const journeyMs = 30_000;
+
+serialiseOnOAuthPort();
 
 const networkFailure = 'fetch failed';
 

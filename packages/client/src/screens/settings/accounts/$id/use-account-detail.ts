@@ -7,7 +7,7 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import { usePluginNames } from '../use-accounts';
-import type { AccountDetailLoad } from './account-detail-view';
+import type { AccountBorrower, AccountDetailLoad } from './account-detail-view';
 
 export interface AccountDetail {
   // The Account's label, or its id until the Account loads.
@@ -72,21 +72,34 @@ const withGrants = (
 ): AccountDetailLoad =>
   grants ? loadedAccount(account, grants, pluginName) : loading;
 
-// The Plugins allowed to borrow the Account; the provider is named on its own line.
+// The Plugins whose grant says `allowed`, by name.
+const pluginsWhere = (
+  grants: PluginAccountGrant[],
+  allowed: boolean,
+  pluginName: PluginName,
+): AccountBorrower[] =>
+  grants.flatMap((grant) =>
+    grant.allowed === allowed
+      ? [{ pluginId: grant.plugin, name: pluginName(grant.plugin) }]
+      : [],
+  );
+
+// The Plugins allowed to borrow the Account and those refused; the provider is named on its own line.
 const loadedAccount = (
   account: PluginAccount,
   grants: PluginAccountGrant[],
   pluginName: PluginName,
-): AccountDetailLoad => ({
-  status: 'loaded',
-  host: account.host,
-  provider: pluginName(account.providedBy),
-  borrowers: grants.flatMap((grant) =>
-    grant.allowed && grant.plugin !== account.providedBy
-      ? [{ pluginId: grant.plugin, name: pluginName(grant.plugin) }]
-      : [],
-  ),
-});
+): AccountDetailLoad => {
+  const others = grants.filter((grant) => grant.plugin !== account.providedBy);
+
+  return {
+    status: 'loaded',
+    host: account.host,
+    provider: pluginName(account.providedBy),
+    borrowers: pluginsWhere(others, true, pluginName),
+    refused: pluginsWhere(others, false, pluginName),
+  };
+};
 
 function useGrantChange(): (change: PluginAccountGrant) => void {
   const trpc = useTRPC();
@@ -99,21 +112,21 @@ function useGrantChange(): (change: PluginAccountGrant) => void {
     trpc.plugins.accounts.grant.mutationOptions({ onSuccess }),
   );
 
-  useErrorToast(errorToast('Could not revoke access', grant.error));
+  useErrorToast(errorToast('Could not change access', grant.error));
 
   return grant.mutate;
 }
 
-// Refuses one Plugin's use of the Account, leaving it signed in for the others; a failure shows one toast.
-export function useRevoke(
+// Refuses or allows one Plugin's use of the Account, leaving it signed in for the others; a failure shows one toast.
+export function useGrantAccess(
   accountId: string,
   host: string | undefined,
+  allowed: boolean,
 ): (pluginId: string) => void {
   const change = useGrantChange();
 
   return (plugin) =>
-    host !== undefined &&
-    change({ host, account: accountId, plugin, allowed: false });
+    host !== undefined && change({ host, account: accountId, plugin, allowed });
 }
 
 // Once the Server has signed the Account out, its page has nothing left to show.

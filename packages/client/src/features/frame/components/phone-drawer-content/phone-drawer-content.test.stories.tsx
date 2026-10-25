@@ -58,6 +58,29 @@ export const OverflowAttention = attentionBadge({
   text: '99+',
 });
 
+// A Plugin nav item's count shows on its own row, capped at 99+.
+export const PluginBadgeShowsOnItsRow: Story = {
+  args: {
+    pluginBadges: [
+      { pluginId: 'issue-tracker', id: 'issues', count: 12 },
+      { pluginId: 'hello', id: 'hello', count: 100 },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText('12')).toHaveTextContent('12');
+    await expect(canvas.getByLabelText('99+')).toHaveTextContent('99+');
+  },
+};
+
+export const ZeroPluginBadgeShowsNothing: Story = {
+  args: {
+    pluginBadges: [{ pluginId: 'issue-tracker', id: 'issues', count: 0 }],
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByLabelText('0')).toBeNull();
+  },
+};
+
 function selectedRow(section: Section): Story {
   return {
     args: { selectedSection: section },

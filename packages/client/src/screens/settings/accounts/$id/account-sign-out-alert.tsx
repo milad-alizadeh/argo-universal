@@ -36,9 +36,11 @@ function signOutMessage({
   provider,
   borrowers,
 }: AccountSignOutAlertProps['account']): string {
-  const names = joinNames([provider, ...borrowers.map((b) => b.name)]);
+  const lead = `${provider} provides this Account and will lose access`;
 
-  return `${provider} provides this Account. ${names} will lose access.`;
+  return borrowers.length === 0
+    ? `${lead}.`
+    : `${lead}, as will ${joinNames(borrowers.map((b) => b.name))}.`;
 }
 
 function joinNames(names: string[]): string {

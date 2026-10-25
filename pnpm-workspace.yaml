@@ -3,6 +3,7 @@ packages:
   - packages/*
   - plugins/issue-tracker
   - plugins/examples/hello
+  - plugins/examples/github-sign-in
   - tooling/*
   # Playwright suite as its own package, as Turborepo's Playwright guide recommends (docs/research/playwright.md).
   - e2e

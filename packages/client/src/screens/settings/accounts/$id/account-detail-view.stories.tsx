@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { AccountDetailView } from './account-detail-view';
-import { sharedAccount, unsharedAccount } from './account-detail-view-fixtures';
+import {
+  refusedAccount,
+  sharedAccount,
+  unsharedAccount,
+} from './account-detail-view-fixtures';
 
 const meta = {
   title: 'Screens/Settings/Account',
@@ -16,6 +20,7 @@ const meta = {
     title: 'milad-alizadeh',
     account: sharedAccount,
     onRevoke: action('revoke access'),
+    onAllow: action('allow access'),
     onSignOut: action('sign out'),
     onBack: action('back'),
   },
@@ -28,6 +33,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const NoOtherPlugins: Story = { args: { account: unsharedAccount } };
+
+export const RefusedPlugin: Story = { args: { account: refusedAccount } };
 
 export const Loading: Story = { args: { account: { status: 'loading' } } };
 

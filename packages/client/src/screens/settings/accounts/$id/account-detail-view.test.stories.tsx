@@ -6,6 +6,7 @@ import { AccountDetailView } from './account-detail-view';
 import {
   issuesBorrower,
   pullRequestsBorrower,
+  refusedAccount,
   sharedAccount,
   unsharedAccount,
 } from './account-detail-view-fixtures';
@@ -28,6 +29,7 @@ const meta = {
     title: 'milad-alizadeh',
     account: sharedAccount,
     onRevoke: fn(),
+    onAllow: fn(),
     onSignOut: fn(),
   },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
@@ -59,6 +61,20 @@ export const RevokeEndsOnePluginsAccess: Story = {
     await expect(args.onRevoke).toHaveBeenCalledOnce();
     await expect(args.onRevoke).toHaveBeenCalledWith(issuesBorrower.pluginId);
     await expect(args.onSignOut).not.toHaveBeenCalled();
+  },
+};
+
+export const ARefusedPluginCanBeAllowedAgain: Story = {
+  args: { account: refusedAccount },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.getByText(pullRequestsBorrower.name)).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Allow access' }));
+    await expect(args.onAllow).toHaveBeenCalledWith(
+      pullRequestsBorrower.pluginId,
+    );
+    await expect(
+      canvas.getAllByRole('button', { name: revokeName }),
+    ).toHaveLength(1);
   },
 };
 

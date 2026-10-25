@@ -1,11 +1,14 @@
-import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { Text } from '@repo/kit/primitives/content/text';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { View } from 'react-native';
+import { SettingsLoading } from '../settings-loading';
 
 export interface AccountRow {
   id: string;
@@ -33,7 +36,7 @@ const loadFailed: ErrorToast = {
   message: 'The Server did not send its Accounts.',
 };
 
-// One row per Account, naming its host, its label and the Plugin that provides it; each opens the Account's page.
+// One row per Account: its host, then its label and the Plugin that provides it; each opens the Account's page.
 export function AccountListView(
   props: AccountListViewProps,
 ): React.JSX.Element {
@@ -41,52 +44,60 @@ export function AccountListView(
 
   return (
     <Screen title={accountsTitle} caption={props.caption}>
-      <List appearance="grouped">
-        <ListSection footer={footer(props.accounts)}>
-          {accountRows(props)}
-        </ListSection>
-      </List>
+      <AccountsBody {...props} />
     </Screen>
   );
 }
 
-const footer = (accounts: AccountsLoad): string | undefined =>
-  accounts.status === 'loaded' && accounts.accounts.length > 0
-    ? 'Each Account is provided by the Plugin named on its row.'
-    : undefined;
-
-// A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
-function accountRows(
-  props: AccountListViewProps,
-): React.JSX.Element | React.JSX.Element[] {
+function AccountsBody(props: AccountListViewProps): React.JSX.Element {
   const { accounts } = props;
 
-  if (accounts.status !== 'loaded') return loadingAccounts;
+  // A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
+  if (accounts.status !== 'loaded')
+    return <SettingsLoading label="Loading Accounts…" />;
 
-  return accounts.accounts.length === 0
-    ? noAccounts
-    : linkRows(props, accounts);
+  return accounts.accounts.length === 0 ? (
+    noAccounts
+  ) : (
+    <AccountRows {...props} accounts={accounts.accounts} />
+  );
 }
 
-const loadingAccounts = <FieldGroup.Value title="Loading Accounts…" value="" />;
+const footer = 'Each Account is provided by the Plugin named on its row.';
 
-// The section's rows as its own children, so the card knows its first and last row.
-const linkRows = (
-  props: AccountListViewProps,
-  loaded: Extract<AccountsLoad, { status: 'loaded' }>,
-): React.JSX.Element[] =>
-  loaded.accounts.map((account) => (
-    <FieldGroup.Link
-      key={account.id}
-      title={account.host}
-      value={`${account.label} · ${account.provider}`}
-      onPress={() => props.onOpenAccount(account.id)}
-    />
-  ));
+type RowsProps = Pick<AccountListViewProps, 'onOpenAccount'> & {
+  accounts: AccountRow[];
+};
+
+const accountItem = (
+  account: AccountRow,
+  onOpenAccount: RowsProps['onOpenAccount'],
+): React.JSX.Element => (
+  <ListItem
+    key={account.id}
+    title={account.host}
+    subtitle={`${account.label} · ${account.provider}`}
+    onPress={() => onOpenAccount(account.id)}
+  />
+);
+
+const AccountRows = (props: RowsProps): React.JSX.Element => (
+  <List appearance="grouped">
+    <ListSection footer={footer}>
+      {props.accounts.map((account) =>
+        accountItem(account, props.onOpenAccount),
+      )}
+    </ListSection>
+  </List>
+);
 
 const noAccounts = (
-  <FieldGroup.Value
-    title="No Accounts yet. Sign in from a Plugin's page."
-    value=""
-  />
+  <View className="gap-6 p-4">
+    <Text role="title" accessibilityRole="heading" aria-level={2}>
+      No Accounts yet
+    </Text>
+    <Text role="secondary" tone="muted">
+      Sign in from a Plugin's page. Its Account will appear here.
+    </Text>
+  </View>
 );
