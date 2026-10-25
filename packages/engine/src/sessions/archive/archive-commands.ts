@@ -70,11 +70,14 @@ function startArchive(deps: ArchiveDeps, sessionId: string): SessionActorRef {
   return requireOpenSessionActor(deps.sessions, sessionId);
 }
 
+// The limit stays in the log; the person sees that the change may still land.
 const timedOut = (limitMs: number, cause: unknown): TRPCError =>
   new TRPCError({
     code: 'TIMEOUT',
-    message: `The Session did not settle within ${limitMs} ms`,
-    cause,
+    message: 'This is taking longer than expected and may still finish',
+    cause: new Error(`The Session did not settle within ${limitMs} ms`, {
+      cause,
+    }),
   });
 
 async function settleWithin(

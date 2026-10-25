@@ -9,8 +9,6 @@ import {
   type RegistryDeps,
 } from './registry-operations';
 
-export type { RegistryDeps } from './registry-operations';
-
 export const createRegistryRouter = routerFactory((deps: RegistryDeps) =>
   router({
     registry: publicProcedure.query(() =>
