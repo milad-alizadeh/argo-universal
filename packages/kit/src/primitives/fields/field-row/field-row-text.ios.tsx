@@ -66,7 +66,7 @@ function customIcon(leading: IconSymbol): LabelIcon | undefined {
 
   return drawn.kind === 'svg'
     ? undefined
-    : { icon: <NativeSymbol name={leading} size="sm" /> };
+    : { icon: <NativeSymbol name={leading} /> };
 }
 
 type LabelProps = React.ComponentProps<typeof Label>;

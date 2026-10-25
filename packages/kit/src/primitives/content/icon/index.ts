@@ -8,7 +8,11 @@ export {
   type IconSpinnerProps,
 } from './icon-props';
 
-export { IconSizeContext, type IconSizing } from './icon-size-context';
+export {
+  IconSizeContext,
+  type IconSizing,
+  useIconSize,
+} from './icon-size-context';
 
 export {
   IconSizeProvider,
