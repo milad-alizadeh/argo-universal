@@ -5,12 +5,13 @@ import {
   ShareMenu,
   type IpcMainInvokeEvent,
 } from 'electron';
+import { readShareRequest } from './share-request';
 
 export function handleShareMenu(windowOrigin: string): void {
   if (process.platform !== 'darwin') return;
   ipcMain.handle('share:open', (event, input): Promise<void> => {
     const window = shareWindow(event, windowOrigin);
-    const content = DesktopShare.parse(input);
+    const content = readShareRequest(DesktopShare.safeParse(input));
 
     return openShareMenu(window, content);
   });
