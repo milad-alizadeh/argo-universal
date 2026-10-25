@@ -51,3 +51,39 @@ it.each([
 
   expect(report.diagnostics).toEqual([]);
 });
+
+it.each([
+  ['argo/nowhere/v1', 'Unknown Slot'],
+  ['argo/session/row/v1', 'Undeclared Slot'],
+  ['argo/composer/above/v1', 'drawn through ui.render'],
+])('reports registering Slot %s', (slotId, reason) => {
+  const report = inspectSource(
+    {
+      file: 'index.js',
+      source: `export function register(api) { api.slots.register('${slotId}', () => null); }`,
+    },
+    PluginManifest.parse({
+      ...manifest,
+      contributes: { nav: [], slots: ['argo/composer/above/v1'] },
+    }),
+  );
+
+  expect(report.diagnostics).toEqual([
+    expect.objectContaining({ message: expect.stringContaining(reason) }),
+  ]);
+});
+
+it('accepts a declared add-only Slot', () => {
+  const report = inspectSource(
+    {
+      file: 'index.js',
+      source: `export function register(api) { api.slots.register('argo/project/details/v1', () => null); }`,
+    },
+    PluginManifest.parse({
+      ...manifest,
+      contributes: { nav: [], slots: ['argo/project/details/v1'] },
+    }),
+  );
+
+  expect(report.diagnostics).toEqual([]);
+});

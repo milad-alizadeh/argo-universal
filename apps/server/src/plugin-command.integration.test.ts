@@ -11,8 +11,12 @@ it.each([
   ['process.cwd();', 'Node global process'],
   ["new URL('https://example.com');", 'Node global URL'],
   [
-    "argo.slots.register('argo/composer/above/v1', () => null);",
+    "argo.slots.register('argo/session/row/v1', () => null);",
     'Undeclared Slot',
+  ],
+  [
+    "argo.slots.register('argo/composer/above/v1', () => null);",
+    'drawn through ui.render',
   ],
   ["argo.on('unknown.event', () => null);", 'Unknown Hook event'],
 ])(

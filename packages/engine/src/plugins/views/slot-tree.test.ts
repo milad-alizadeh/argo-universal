@@ -1,4 +1,8 @@
-import { sessionRowSlotId, type WireNode } from '@repo/contracts/plugins/wire';
+import {
+  projectDetailsSlotId,
+  sessionRowSlotId,
+  type WireNode,
+} from '@repo/contracts/plugins/wire';
 import { expect, it, vi } from 'vitest';
 import { prepareSlotTree } from './slot-tree';
 
@@ -53,10 +57,11 @@ it('treats a lone non-Stack root as the one meta node', () => {
   expect(refused).not.toHaveBeenCalled();
 });
 
-it('returns the tree untouched for other Slot ids', () => {
+it('returns the tree untouched for Slots that take any tree', () => {
   const refused = vi.fn<(type: string) => void>();
   const tree = stack(node('Button', 'b'));
 
+  expect(prepareSlotTree(projectDetailsSlotId, tree, refused)).toBe(tree);
   expect(prepareSlotTree('argo/other/v1', tree, refused)).toBe(tree);
   expect(prepareSlotTree(undefined, tree, refused)).toBe(tree);
   expect(refused).not.toHaveBeenCalled();

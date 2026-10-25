@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { PluginDataState } from '#plugin-argo-calls';
-import { ReplaceableSlotId } from '#plugin-replaceable-slot-id';
 import { PluginSurface } from '#plugin-surface';
 import { WireJson } from '#plugin-wire-json';
-import { PluginSlotInput } from '#plugin-wire-slot';
+import { PluginSlotInput, ReplaceableSlotId } from '#plugin-wire-slot';
 
 export const PluginViewId = z.string().min(1).brand<'PluginViewId'>();
 
