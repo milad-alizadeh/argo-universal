@@ -2,6 +2,7 @@ import { wireParts } from '@repo/contracts/plugins/kit';
 import {
   slotContentRule,
   type SlotContentRule,
+  type SlotId,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
 
@@ -9,7 +10,7 @@ type Refused = (type: string) => void;
 
 // A Slot that takes only one kit slot's parts gets a row of those parts; any other Slot keeps its tree.
 export function prepareSlotTree(
-  slotId: string | undefined,
+  slotId: SlotId | undefined,
   root: WireNode,
   refused: Refused,
 ): WireNode {

@@ -144,3 +144,26 @@ it('orders contributors by Plugin id, not by folder', async () => {
   });
   controller.abort();
 }, 20_000);
+
+it('orders contributors by declared order before Plugin id', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'alpha', fixture: 'slot', slots: [projectDetailsSlotId], order: 2 },
+    { id: 'beta', fixture: 'slot', slots: [projectDetailsSlotId], order: 1 },
+    { id: 'gamma', fixture: 'slot', slots: [projectDetailsSlotId] },
+  ]);
+
+  const { createCaller } = await startEngineTestHost({ home });
+  const controller = new AbortController();
+
+  const messages = (
+    await createCaller({ signal: controller.signal }).plugins.slot(
+      projectDetails('bento'),
+    )
+  )[Symbol.asyncIterator]();
+
+  expect((await messages.next()).value).toEqual({
+    type: 'contributors',
+    pluginIds: ['gamma', 'beta', 'alpha'],
+  });
+  controller.abort();
+}, 20_000);

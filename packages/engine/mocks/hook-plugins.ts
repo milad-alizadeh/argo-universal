@@ -12,7 +12,7 @@ export type HookPlugin = {
   hooks?: HookEventName[];
   slots?: SlotId[];
   capabilities?: PluginCapability[];
-  renderOrder?: number;
+  order?: number;
 };
 
 const recordFile = 'records.json';

@@ -16,8 +16,8 @@ function reportOwnedDrawing(
   input: RenderFailureInput,
   log: (line: string) => void,
 ): void {
-  if (!ownsDrawing(view, input) || view.kind.kind !== 'replaceable') return;
-  const { slotId } = view.kind;
+  if (!ownsDrawing(view, input) || view.draws.kind !== 'replaceable') return;
+  const { slotId } = view.draws;
 
   logOnce(
     log,

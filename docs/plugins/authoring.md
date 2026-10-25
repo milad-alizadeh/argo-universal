@@ -207,10 +207,10 @@ The core Hook events are `prompt.submit`, `tool.check`, and `process.spawn` (ADR
 Both `prompt.submit` and `tool.check` carry `sessionId` and `projectId`.
 The separate `ui.render` Hook draws Replaceable Slots with its existing payload and answer.
 
-Order a Plugin's `ui.render` Hooks with `contributes.renderOrder` in `plugin.json`, an integer that defaults to 0 (ADR-0035).
-A Feed row's chain runs first-party Plugins first, then lower `renderOrder` first, then by Plugin id; folder names do not change it.
-The order is the Plugin's, so it covers all of its `ui.render` Hooks and only those. The other events keep worker order (ADR-0038).
-Declaring `renderOrder` without the `ui.render` Hook is a manifest error.
+Order a Plugin with `contributes.order` in `plugin.json`, an integer that defaults to 0 (ADR-0035).
+A Slot's contributors and a Feed row's `ui.render` chain both run first-party Plugins first, then lower `order` first, then by Plugin id; folder names do not change it.
+The order is the Plugin's, so it covers all of its Slots and `ui.render` Hooks. The other Hook events keep worker order (ADR-0038).
+Declaring `order` without a Slot in `contributes.slots` is a manifest error.
 The Server logs, once per Plugin and Slot, each Plugin that changed a row's props, and each Plugin shadowed because a Hook before it answered with a tree:
 
 ```text

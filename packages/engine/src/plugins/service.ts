@@ -39,7 +39,7 @@ import {
   startPlugins,
   type PluginServiceDeps,
 } from './located-plugins';
-import { startRenderPlugins, startSlotPlugins } from './plugin-order';
+import { startOrderedPlugins } from './plugin-order';
 import { renderSlot } from './slots/render-slot';
 import { slotViews } from './slots/slot-views';
 
@@ -131,7 +131,7 @@ export class PluginService {
     slot: PluginSlotInput,
     connection: RpcConnection,
   ): AsyncGenerator<SlotMessage> {
-    const { running: pluginIds } = await startSlotPlugins(
+    const { running: pluginIds } = await startOrderedPlugins(
       this.deps,
       ({ plugin }) => fillsSlot(plugin, slot),
     );
@@ -155,7 +155,7 @@ export class PluginService {
     input: ReplaceableInput,
     connection: RpcConnection,
   ): AsyncGenerator<ReplaceableMessage> {
-    const plugins = await startRenderPlugins(this.deps, ({ plugin }) =>
+    const plugins = await startOrderedPlugins(this.deps, ({ plugin }) =>
       rendersSlot(plugin, input.slotId),
     );
 

@@ -24,7 +24,7 @@ export type ViewKind =
 
 export interface OpenView extends ViewSnapshot {
   pluginId: string;
-  kind: ViewKind;
+  draws: ViewKind;
   projectId?: string;
   connectionId: string;
   opening: Open;
@@ -39,7 +39,7 @@ export function createOpenView(
 ): OpenView {
   return {
     pluginId,
-    kind: viewKind(opening),
+    draws: viewKind(opening),
     projectId: projectOfOpening(opening),
     connectionId,
     events: viewEvents(),
@@ -69,7 +69,7 @@ export type HeadlessView = { viewId: PluginViewId; close: () => void };
 
 export function temporary(view: OpenView): boolean {
   return (
-    view.kind.kind === 'replaceable' || view.backgroundInterval !== undefined
+    view.draws.kind === 'replaceable' || view.backgroundInterval !== undefined
   );
 }
 

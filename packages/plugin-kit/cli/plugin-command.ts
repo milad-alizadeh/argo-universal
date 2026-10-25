@@ -73,15 +73,15 @@ function writeReport(
 
 type ValidatedManifest = Awaited<ReturnType<typeof validatePlugin>>['manifest'];
 
-const rendersSlots = (
-  manifest: ValidatedManifest,
-): manifest is NonNullable<ValidatedManifest> =>
-  (manifest?.contributes.hooks ?? []).includes('ui.render');
-
-// Where the Plugin's `ui.render` Hooks sit in a Replaceable Slot's chain.
 function writeOrder(manifest: ValidatedManifest, write: Write): void {
-  if (rendersSlots(manifest))
-    write(`order: ui.render ${manifest.contributes.renderOrder ?? 0}`);
+  if (manifest?.contributes.slots) writeDeclaredOrder(manifest, write);
+}
+
+function writeDeclaredOrder(
+  { contributes }: NonNullable<ValidatedManifest>,
+  write: Write,
+): void {
+  write(`order: ${contributes.order ?? 0}`);
 }
 
 function formatUses(uses: string[]): string {

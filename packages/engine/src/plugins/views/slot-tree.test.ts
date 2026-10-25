@@ -62,7 +62,6 @@ it('returns the tree untouched for Slots that take any tree', () => {
   const tree = stack(node('Button', 'b'));
 
   expect(prepareSlotTree(projectDetailsSlotId, tree, refused)).toBe(tree);
-  expect(prepareSlotTree('argo/other/v1', tree, refused)).toBe(tree);
   expect(prepareSlotTree(undefined, tree, refused)).toBe(tree);
   expect(refused).not.toHaveBeenCalled();
 });

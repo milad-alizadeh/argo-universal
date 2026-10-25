@@ -108,17 +108,14 @@ export const PluginManifest = z
             'Hook events must be unique',
           )
           .optional(),
-        // Where the Plugin's `ui.render` Hooks sit in a Replaceable Slot's chain: lower runs first, 0 when left out (ADR-0035).
-        renderOrder: z.int().optional(),
+        // Where the Plugin sits among a Slot's contributors and in a Replaceable Slot's `ui.render` chain: lower comes first, 0 when left out (ADR-0035).
+        order: z.int().optional(),
       })
       .refine(
         (contributes) =>
-          contributes.renderOrder === undefined ||
-          (contributes.hooks ?? []).includes('ui.render'),
-        {
-          message: 'renderOrder needs the ui.render Hook',
-          path: ['renderOrder'],
-        },
+          contributes.order === undefined ||
+          (contributes.slots ?? []).length > 0,
+        { message: 'order needs a Slot', path: ['order'] },
       ),
     capabilities: z.array(PluginCapability).optional(),
   })

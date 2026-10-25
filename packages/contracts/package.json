@@ -7,6 +7,7 @@
     "#plugin-argo-calls": "./src/plugins/argo-calls.ts",
     "#plugin-identifier": "./src/plugins/plugin-identifier.ts",
     "#plugin-assets": "./src/plugins/assets.ts",
+    "#plugin-slot-registry": "./src/plugins/slot-registry.ts",
     "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
     "#plugin-wire-events": "./src/plugins/wire-events.ts",
     "#plugin-wire-part-events": "./src/plugins/wire-part-events.ts",

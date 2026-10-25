@@ -26,14 +26,14 @@ it('runs ui.render Hooks by declared order and logs the props change and the sha
       id: 'a-late',
       hooks: ['ui.render'],
       slots: [slotId],
-      renderOrder: 20,
+      order: 20,
       source: treeSource(`return jsx(Text, { children: 'Late tree' });`),
     },
     {
       id: 'b-early',
       hooks: ['ui.render'],
       slots: [slotId],
-      renderOrder: 10,
+      order: 10,
       source: treeSource(`
         await next(${JSON.stringify(rewrittenMessage())});
         return jsx(Text, { children: 'Early tree' });`),
