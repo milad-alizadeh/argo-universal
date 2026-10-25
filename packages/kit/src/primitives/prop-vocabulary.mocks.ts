@@ -36,6 +36,7 @@ import type * as OrbKit from '#primitives/status/orb';
 import type * as PillKit from '#primitives/status/pill';
 import type * as ProgressBarKit from '#primitives/status/progress-bar';
 import type * as SelectedCheckKit from '#primitives/status/selected-check';
+import type * as SkeletonKit from '#primitives/status/skeleton';
 import type * as SpinnerKit from '#primitives/status/spinner';
 
 export type Primitives = {
@@ -105,6 +106,8 @@ export type Primitives = {
   SheetScreenAction: SheetKit.SheetScreenAction;
   SheetScreenProps: SheetKit.SheetScreenProps;
   SheetProps: SheetKit.SheetProps;
+  SkeletonIgnoreProps: SkeletonKit.SkeletonIgnoreProps;
+  SkeletonProps: SkeletonKit.SkeletonProps;
   SliderProps: SliderKit.SliderProps;
   SpinnerProps: SpinnerKit.SpinnerProps;
   SplitButtonOption: SplitButtonKit.SplitButtonOption<string>;
