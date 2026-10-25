@@ -6,12 +6,7 @@ import type {
   SessionListUpdate,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { findMachineActor } from '../../lib/machine-actor';
-import {
-  databaseWriterId,
-  writerMachine,
-  type WriterActorRef,
-} from '../../storage';
+import type { WriterActorRef } from '../../storage';
 import type { OpenSessionsActorRef } from '../open-sessions-machine';
 import {
   selectSessionChanges,
@@ -36,8 +31,8 @@ export function createSessionList(options: ListOptions): SessionList {
 }
 
 function createObserver(options: ListOptions): SessionListObserver {
-  const writer = (): WriterActorRef | undefined =>
-    findMachineActor(options.sessions.system, databaseWriterId, writerMachine);
+  const writer = (): WriterActorRef =>
+    options.sessions.getSnapshot().context.writer;
 
   return new SessionListObserver({
     ...createSessionListReader({ ...options, writer }),

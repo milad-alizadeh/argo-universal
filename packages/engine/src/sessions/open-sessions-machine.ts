@@ -9,6 +9,7 @@ import {
   setup,
 } from 'xstate';
 import type { AcpResources, InstalledAgents } from '../agents';
+import type { WriterActorRef } from '../storage';
 import { createSessionActorInput } from './session-actor-input';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
@@ -35,6 +36,8 @@ export interface OpenSessionsInput {
   installedAgents: InstalledAgents;
   // Plugin Hooks each Session runs on Permission requests and settled Turns.
   hooks: CoreHooks;
+  // Handed to every Session: the Engine starts the writer before the open Sessions.
+  writer: WriterActorRef;
 }
 
 interface OpenSessionsContext extends OpenSessionsInput {

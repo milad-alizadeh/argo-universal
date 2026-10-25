@@ -24,7 +24,6 @@ import {
   stopChild,
   or,
   and,
-  type AnyActorRef,
   type InputFrom,
 } from 'xstate';
 import { AgentProcessExitError } from '../agents';
@@ -45,12 +44,7 @@ import {
 } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
-import { findMachineActor } from '../lib/machine-actor';
-import {
-  databaseWriterId,
-  type WriterActorRef,
-  writerMachine,
-} from '../storage';
+import type { WriterActorRef } from '../storage';
 import { readAcpConfiguration } from './acp/acp-configuration';
 import {
   AcpSessionLifetime,
@@ -194,6 +188,8 @@ export type SessionMachineInput = SessionInput & {
   now: () => number;
   createId: () => string;
   acp: AcpSessionDependencies;
+  // The Engine's database writer, resolved once when the Session is opened.
+  writer: WriterActorRef;
   archive?: boolean;
   // Plugin Hooks on Permission requests and settled Turns (ADR-0027).
   hooks: CoreHooks;
@@ -289,14 +285,8 @@ const connectionLostDuringTurn = interruptedTurn(
 const connectionLostBeforePrompt =
   'The Agent connection failed before the prompt was sent';
 
-const writer = ({
-  system,
-  self,
-}: {
-  system: AnyActorRef['system'];
-  self: AnyActorRef;
-}): AnyActorRef =>
-  findMachineActor(system, databaseWriterId, writerMachine) ?? self;
+const writer = ({ context }: { context: SessionContext }): WriterActorRef =>
+  context.input.writer;
 
 const readConfigurationUpdate = (
   context: SessionContext,
@@ -492,13 +482,12 @@ const sessionSetup = setup({
       assertEvent(event, acpUpdateEvent);
       const parentFeed = self.getSnapshot().children.feed;
 
-      const databaseWriter = findMachineActor(
-        self.system,
-        databaseWriterId,
-        writerMachine,
-      );
+      if (!parentFeed)
+        throw new Error(
+          `Session ${context.sessionId} has no Feed to route a Subagent update to`,
+        );
 
-      if (!parentFeed || !databaseWriter) return {};
+      const databaseWriter = context.input.writer;
 
       return {
         subagentFeeds: routeSubagentUpdate(
@@ -1329,8 +1318,7 @@ export const sessionMachine = sessionSetup.createMachine({
     const shellRuntime = new ShellRuntime({
       sessionId: input.sessionId,
       home: input.runtimeDirectory,
-      writer: (): WriterActorRef | undefined =>
-        findMachineActor(self.system, databaseWriterId, writerMachine),
+      writer: input.writer,
       now: input.now,
       createId: input.createId,
       changed: (shell): void =>
@@ -1439,13 +1427,9 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'loadSession',
         src: 'loadSession',
-        input: ({ context, self }): LoadSessionInput => ({
+        input: ({ context }): LoadSessionInput => ({
           session: context.input,
-          writer: findMachineActor(
-            self.system,
-            databaseWriterId,
-            writerMachine,
-          ),
+          writer: context.input.writer,
         }),
         ...sessionEntryOutcome,
       },
@@ -1471,10 +1455,10 @@ export const sessionMachine = sessionSetup.createMachine({
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
               database: context.input.database,
-              pending: readQueuedFeedRow(
-                findMachineActor(self.system, databaseWriterId, writerMachine),
-                { sessionId: context.sessionId, id },
-              ),
+              pending: readQueuedFeedRow(context.input.writer, {
+                sessionId: context.sessionId,
+                id,
+              }),
               sessionId: context.sessionId,
               id,
             }),
@@ -1484,11 +1468,7 @@ export const sessionMachine = sessionSetup.createMachine({
           ): ReturnType<typeof readUnaddressedPlan> =>
             readUnaddressedPlan({
               database: context.input.database,
-              writer: findMachineActor(
-                self.system,
-                databaseWriterId,
-                writerMachine,
-              ),
+              writer: context.input.writer,
               sessionId: context.sessionId,
               acpSessionId,
             }),
@@ -1586,13 +1566,9 @@ export const sessionMachine = sessionSetup.createMachine({
               invoke: {
                 id: 'saveArchive',
                 src: 'saveArchive',
-                input: ({ context, self }) => ({
+                input: ({ context }) => ({
                   context,
-                  writer: findMachineActor(
-                    self.system,
-                    databaseWriterId,
-                    writerMachine,
-                  ),
+                  writer: context.input.writer,
                 }),
                 onDone: { target: 'closing' },
                 onError: {
@@ -2035,15 +2011,11 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'discardSession',
         src: 'discardSession',
-        input: ({ context, self }): SessionDiscard => ({
+        input: ({ context }): SessionDiscard => ({
           input: context.input,
           data: context,
           stored: context.stored,
-          writer: findMachineActor(
-            self.system,
-            databaseWriterId,
-            writerMachine,
-          ),
+          writer: context.input.writer,
         }),
         onDone: { target: 'closed' },
         onError: { target: 'closed', actions: 'addDiscardFailure' },
@@ -2067,13 +2039,9 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'undoArchive',
         src: 'undoArchive',
-        input: ({ context, self }) => ({
+        input: ({ context }) => ({
           context,
-          writer: findMachineActor(
-            self.system,
-            databaseWriterId,
-            writerMachine,
-          ),
+          writer: context.input.writer,
         }),
         ...archiveOperationOutcome,
       },

@@ -15,7 +15,7 @@ import { terminalReferences } from './shells';
 type ShellRuntimeInput = {
   sessionId: string;
   home: string;
-  writer: () => WriterActorRef | undefined;
+  writer: WriterActorRef;
   now: () => number;
   createId: () => string;
   changed: (record: ShellRecord) => void;
@@ -100,17 +100,9 @@ export class ShellRuntime {
       ...this.input,
       id,
       request,
-      writer: this.requireWriter(),
       cwd: this.cwd,
       path: this.outputPath(id),
     };
-  }
-  private requireWriter(): WriterActorRef {
-    const writer = this.input.writer();
-
-    if (!writer) throw new Error('Shell Writer is unavailable');
-
-    return writer;
   }
   private outputPath(id: string): string {
     return shellOutputPath(this.input.home, this.input.sessionId, id);
