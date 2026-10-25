@@ -20,12 +20,12 @@ import { FieldPickerPill } from './field-picker-pill';
 const { Row, Menu, OptionRow, menuHoldsMultiple } = pickerDrawing;
 
 const kindOf = (props: PickerProps): PickerKind =>
-  pickerKind(
-    props.presentation,
-    props.multiple,
-    props.trigger,
+  pickerKind({
+    presentation: props.presentation,
+    multiple: props.multiple,
+    trigger: props.trigger,
     menuHoldsMultiple,
-  );
+  });
 
 /*
  * The picker: the caller's value is narrowed once, then its kind picks the drawing: a toolbar pill, the options as

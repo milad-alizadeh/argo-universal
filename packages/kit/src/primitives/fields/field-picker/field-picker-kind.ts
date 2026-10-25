@@ -14,16 +14,17 @@ export type PickerKind = 'pill' | 'inline' | 'menu' | 'page';
  * is option rows, `menu` opens in place when the platform's menu can hold the choice (a `multiple` one only where
  * `menuHoldsMultiple`), and a `page`, or any other `menu`, opens the page.
  */
-// oxlint-disable-next-line max-params -- the four facts the picker's kind rests on, read as one table.
-export function pickerKind(
-  presentation: FieldPickerProps['presentation'],
-  multiple: boolean,
-  trigger: FieldPickerProps['trigger'],
-  menuHoldsMultiple: boolean,
-): PickerKind {
-  if (trigger === 'pill') return 'pill';
+export type KindFacts = Pick<FieldPickerProps, 'presentation' | 'trigger'> & {
+  multiple: boolean;
+  menuHoldsMultiple: boolean;
+};
 
-  return kindOfPresentation(!multiple || menuHoldsMultiple)[presentation];
+export function pickerKind(facts: KindFacts): PickerKind {
+  if (facts.trigger === 'pill') return 'pill';
+
+  const menuHoldsChoice = !facts.multiple || facts.menuHoldsMultiple;
+
+  return kindOfPresentation(menuHoldsChoice)[facts.presentation];
 }
 
 const kindOfPresentation = (

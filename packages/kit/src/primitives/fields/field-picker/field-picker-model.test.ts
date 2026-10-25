@@ -104,7 +104,9 @@ describe('pickerKind', () => {
   it.each(kinds)('%s, multiple %s, trigger %s, holds %s is %s', (...row) => {
     const [presentation, multiple, trigger, holds, kind] = row;
 
-    expect(pickerKind(presentation, multiple, trigger, holds)).toBe(kind);
+    const facts = { presentation, multiple, trigger, menuHoldsMultiple: holds };
+
+    expect(pickerKind(facts)).toBe(kind);
   });
 });
 
