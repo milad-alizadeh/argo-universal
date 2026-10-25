@@ -9,6 +9,11 @@ import {
   use,
 } from 'react';
 import type { ViewStyle } from 'react-native';
+import {
+  groupedRowInset,
+  HeadingInsetContext,
+  useGroupedContent,
+} from '#kit/heading-inset';
 import { useInMenu } from '#kit/menu-rows-context';
 import { ScrollColumnContext } from '#kit/scroll-column';
 import { Host, InsideHostContext } from '#primitives/native/host';
@@ -40,10 +45,14 @@ function FieldGroupRoot(props: FieldGroupProps): ReactElement {
 }
 
 function PageFieldGroup(props: FieldGroupProps): ReactElement {
+  useGroupedContent();
+
   return (
     <Host style={{ flex: 1 }}>
       <InsideHostContext.Provider value>
-        <ColumnFieldGroup {...props} />
+        <HeadingInsetContext value={undefined}>
+          <ColumnFieldGroup {...props} />
+        </HeadingInsetContext>
       </InsideHostContext.Provider>
     </Host>
   );
@@ -89,9 +98,7 @@ function useColumnStyle(): ViewStyle {
 // Expo's own content padding, and the rows' inset the cards stand out by.
 const expoContentPadding = 16;
 
-const rowInset = 16;
-
-const columnGivenUp = expoContentPadding + rowInset;
+const columnGivenUp = expoContentPadding + groupedRowInset;
 
 /*
  * No background of its own, so the page's shows between the section cards. SwiftUI's Form draws its grouped

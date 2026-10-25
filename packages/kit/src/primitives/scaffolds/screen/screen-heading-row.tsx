@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
+import { useHeadingInset } from '#kit/heading-inset';
 import { useWide } from '#kit/use-wide/use-wide';
 import {
   HeaderActions,
@@ -20,7 +21,7 @@ export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
   return (
     <View className="py-6">
       <ScreenColumn>
-        <View className="gap-1">
+        <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />
           <ScreenCaption caption={props.caption} />
         </View>
@@ -28,6 +29,12 @@ export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
     </View>
   );
 }
+
+// A phone-width page of grouped cards starts its title and caption on its rows' text line.
+const headingInset = (inset: number): ViewStyle => ({
+  paddingLeft: inset,
+  paddingRight: inset,
+});
 
 // A wide page's caption; a phone leaves it out, as its native header has no room for it.
 function ScreenCaption({ caption }: Pick<ScreenProps, 'caption'>): ReactNode {
