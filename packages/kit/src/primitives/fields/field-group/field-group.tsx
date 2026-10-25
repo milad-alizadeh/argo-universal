@@ -68,7 +68,8 @@ function ColumnFieldGroup(props: FieldGroupProps): ReactElement {
 
 /*
  * A wide pane's column, as its header keeps to: the FieldGroup scrolls itself and takes no content style, so the
- * scroll view is the column, and its own padding sets the cards in it as a List's are.
+ * scroll view is the column. Expo's web FieldGroup pads its content 16 on its own, so the column gives up those 16
+ * and the cards line up with the page title, as a List's do.
  */
 function useColumnStyle(): ViewStyle {
   const column = use(ScrollColumnContext);
@@ -80,10 +81,12 @@ function useColumnStyle(): ViewStyle {
     width: '100%',
     maxWidth: column.maxWidth,
     alignSelf: 'center',
-    paddingLeft: column.paddingLeft,
-    paddingRight: column.paddingRight,
+    paddingLeft: Math.max(0, column.paddingLeft - expoContentInset),
+    paddingRight: Math.max(0, column.paddingRight - expoContentInset),
   };
 }
+
+const expoContentInset = 16;
 
 /*
  * No background of its own, so the page's shows between the section cards. SwiftUI's Form draws its grouped
