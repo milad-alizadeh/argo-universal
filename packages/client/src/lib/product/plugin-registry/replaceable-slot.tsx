@@ -1,7 +1,4 @@
-import {
-  replaceableRewriteSchema,
-  type ReplaceableInput,
-} from '@repo/contracts/plugins/replaceable';
+import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
 import { replacementTreeReason } from '@repo/contracts/plugins/replacement-tree';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
@@ -52,7 +49,7 @@ function coreInput(
   refused: boolean,
 ): ReplaceableInput {
   if (refused) return input;
-  const parsed = replaceableRewriteSchema(input).safeParse(state.input).data;
+  const parsed = ReplaceableInput.safeParse(state.input).data;
 
   return matchingCore(input, parsed);
 }

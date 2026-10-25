@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import type { ReplaceableMessage } from '@repo/contracts/plugins/replaceable';
-import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
-import { traySlotFixture } from '@repo/contracts/plugins/replaceable-fixtures';
+import { toolCallSlotId } from '@repo/contracts/plugins/replaceable';
+import { toolCallSlotFixture } from '@repo/contracts/plugins/replaceable-fixtures';
 import { PluginViewId } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
@@ -27,7 +27,7 @@ async function counterHome(): Promise<string> {
     {
       id: 'counter',
       hooks: ['ui.render'],
-      slots: [composerAboveSlotId],
+      slots: [toolCallSlotId],
       source,
     },
   ]);
@@ -38,7 +38,11 @@ async function counterHome(): Promise<string> {
 it('retains a replacement handler and restores core when its Plugin is turned off', async () => {
   const { url } = await startEngineTestHost({ home: await counterHome() });
 
-  const app = renderApp(url, traySlotFixture, currentPluginSurface('desktop'));
+  const app = renderApp(
+    url,
+    toolCallSlotFixture,
+    currentPluginSurface('desktop'),
+  );
 
   await expect
     .poll(() => app.messages[0], { timeout: 10_000 })
@@ -68,7 +72,7 @@ it('retains a replacement handler and restores core when its Plugin is turned of
   });
   await expect
     .poll(() => app.messages.at(-1), { timeout: 10_000 })
-    .toEqual({ type: 'core', input: traySlotFixture });
+    .toEqual({ type: 'core', input: toolCallSlotFixture });
   await expect(app.client.plugins.dispatch.mutate(target)).rejects.toThrow(
     'Plugin view changed',
   );
@@ -78,8 +82,8 @@ it('accepts drawing failure reports only from the Connection that owns the repla
   const home = await counterHome();
   const { url } = await startEngineTestHost({ home });
   const surface = currentPluginSurface('web');
-  const app = renderApp(url, traySlotFixture, surface);
-  const stranger = renderApp(url, traySlotFixture, surface);
+  const app = renderApp(url, toolCallSlotFixture, surface);
+  const stranger = renderApp(url, toolCallSlotFixture, surface);
   await expect
     .poll(() => app.messages[0], { timeout: 10_000 })
     .toMatchObject({ type: 'replacement' });
@@ -106,7 +110,7 @@ it('accepts drawing failure reports only from the Connection that owns the repla
     log.split('\n').filter((line) => line.includes('core fallback')),
   ).toHaveLength(1);
   expect(log).toContain(
-    'Plugin counter: core fallback argo/composer/above/v1: App drawing failed',
+    'Plugin counter: core fallback argo/feed/tool-call/v1: App drawing failed',
   );
 }, 20_000);
 

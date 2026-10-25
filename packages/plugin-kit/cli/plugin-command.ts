@@ -62,12 +62,26 @@ function writeReport(
 ): void {
   for (const key of ['hooks', 'calls', 'slots'] as const)
     write(`${key}: ${formatUses(report[key])}`);
+  writeOrder(report.manifest, write);
 
   for (const diagnostic of report.diagnostics)
     write(
       `${diagnostic.file}:${diagnostic.line}:${diagnostic.column}: ${diagnostic.message}`,
     );
   write(validationMessage(report.diagnostics.length));
+}
+
+type ValidatedManifest = Awaited<ReturnType<typeof validatePlugin>>['manifest'];
+
+function writeOrder(manifest: ValidatedManifest, write: Write): void {
+  if (manifest?.contributes.slots) writeDeclaredOrder(manifest, write);
+}
+
+function writeDeclaredOrder(
+  { contributes }: NonNullable<ValidatedManifest>,
+  write: Write,
+): void {
+  write(`order: ${contributes.order ?? 0}`);
 }
 
 function formatUses(uses: string[]): string {

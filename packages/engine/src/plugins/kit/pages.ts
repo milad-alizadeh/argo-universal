@@ -1,9 +1,9 @@
 import type { Page, SlotContent } from '@repo/contracts/plugins/argo-api';
-import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
+import { slotContentRule } from '@repo/contracts/plugins/wire';
 import type {
+  AddOnlySlotId,
   PluginEvent,
   PluginViewId,
-  SlotId,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
@@ -28,7 +28,7 @@ type Dispatch = Extract<PluginEvent, { type: 'dispatch' }>;
 
 export interface Pages {
   register: (path: string, page: Page) => void;
-  registerSlot: (slotId: SlotId, content: SlotContent) => void;
+  registerSlot: (slotId: AddOnlySlotId, content: SlotContent) => void;
   receive: (event: Exclude<PluginEvent, { type: 'data' }>) => void;
   registerReplacement: (path: string, element: ReactNode) => void;
   requirePage: (path: string, contribution?: string) => void;
@@ -69,14 +69,14 @@ function openElement(hub: Hub, event: Open): void {
       viewId: event.viewId,
       element,
       replaceable: Boolean(event.renderSlot),
-      rowMeta: rowMeta(event),
+      partList: partList(event),
       background: event.background,
     });
   missingRender(hub, event);
 }
 
-function rowMeta(event: Open): boolean {
-  return event.slot?.slotId === sessionRowSlotId;
+function partList(event: Open): boolean {
+  return slotContentRule(event.slot?.slotId) !== 'tree';
 }
 
 function close(hub: Hub, viewId: PluginViewId): void {

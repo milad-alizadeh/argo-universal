@@ -1,15 +1,9 @@
 import {
   ReplaceableInput,
-  composerAboveSlotId,
   messageSlotId,
   toolCallSlotId,
 } from '../src/plugins/replaceable-input';
 import type { WireNode } from '../src/plugins/wire';
-
-export const traySlotFixture: ReplaceableInput = {
-  slotId: composerAboveSlotId,
-  props: { wide: true, inactive: false },
-};
 
 const envelope = {
   id: '00000000-0000-4000-8000-000000000823',
@@ -67,11 +61,6 @@ export const refusedTreeFixture: WireNode = {
 };
 
 export const renderThrowReason = 'fixture drawing failed';
-
-export const rewrittenTrayFixture = ReplaceableInput.parse({
-  slotId: composerAboveSlotId,
-  props: { wide: true, inactive: true },
-});
 
 export function rewrittenMessage(): ReplaceableInput {
   if (messageSlotFixture.slotId !== messageSlotId)

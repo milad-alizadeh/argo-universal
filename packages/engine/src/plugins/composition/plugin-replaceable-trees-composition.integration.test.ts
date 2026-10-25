@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { currentPluginSurface } from '@repo/contracts/plugins/kit';
-import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
+import { toolCallSlotId } from '@repo/contracts/plugins/replaceable';
 import {
-  traySlotFixture,
+  toolCallSlotFixture,
   renderThrowReason,
   replacementTreeFixture,
   refusedTreeFixture,
@@ -32,35 +32,35 @@ it.each([
     scenario: 'refuse',
     surface: current,
     body: `return jsx(Stack, { direction: 'column', children: [jsx(Text, ${JSON.stringify(refusedTreeFixture.children[0]?.props)}), jsx('FuturePart', {})] })`,
-    expected: { type: 'core', input: traySlotFixture },
+    expected: { type: 'core', input: toolCallSlotFixture },
     fallbacks: 1,
   },
   {
     scenario: 'missing tree',
     surface: current,
     body: '',
-    expected: { type: 'core', input: traySlotFixture },
+    expected: { type: 'core', input: toolCallSlotFixture },
     fallbacks: 1,
   },
   {
     scenario: 'throw',
     surface: current,
     body: `throw new Error('${renderThrowReason}')`,
-    expected: { type: 'core', input: traySlotFixture },
+    expected: { type: 'core', input: toolCallSlotFixture },
     fallbacks: 1,
   },
   {
     scenario: 'nested handler',
     surface: current,
     body: `return jsx(Text, { children: 'Go', data: { onPress: () => {} } })`,
-    expected: { type: 'core', input: traySlotFixture },
+    expected: { type: 'core', input: toolCallSlotFixture },
     fallbacks: 1,
   },
   {
     scenario: 'App below the wire minimum',
     surface: { platform: 'web' } as const,
     body: `return jsx(Text, { children: 'Plugin replacement' })`,
-    expected: { type: 'core', input: traySlotFixture },
+    expected: { type: 'core', input: toolCallSlotFixture },
     fallbacks: 1,
   },
 ])(
@@ -72,7 +72,7 @@ it.each([
       {
         id: 'tree',
         hooks: ['ui.render'],
-        slots: [composerAboveSlotId],
+        slots: [toolCallSlotId],
         source: `
     import { Text, Stack } from '@argo/plugin-kit';
     import { jsx } from '@argo/plugin-kit/jsx-runtime';
@@ -84,7 +84,7 @@ it.each([
     const { url, caller } = await startEngineTestHost({ home });
 
     for (let count = 0; count < 2; count++) {
-      const app = renderApp(url, traySlotFixture, surface);
+      const app = renderApp(url, toolCallSlotFixture, surface);
       await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(1);
       const result = app.messages[0];
 

@@ -22,7 +22,7 @@ import { PluginAssetRef, PluginAssetSource } from './assets';
 import type { Hook, HookArgs, HookEventName } from './hooks';
 import type { PluginRenderContext } from './kit';
 import { PluginSettingValue } from './plugin-settings';
-import type { PluginSlotInput, SlotId } from './wire';
+import type { AddOnlySlotId, PluginSlotInput } from './wire';
 
 /*
  * The Plugin API's calls to the Server: each method's arguments come from the call schema it sends, and
@@ -156,7 +156,7 @@ export type Argo = Omit<PluginApiCalls, 'accounts'> &
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
     pages: Readonly<{ register: (path: string, page: Page) => void }>;
     slots: Readonly<{
-      register: (slotId: SlotId, content: SlotContent) => void;
+      register: (slotId: AddOnlySlotId, content: SlotContent) => void;
     }>;
     on: <Name extends HookEventName>(
       name: Name,
