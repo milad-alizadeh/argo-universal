@@ -10,7 +10,7 @@ import {
   scratch,
 } from '#mocks/probe-plugin';
 import { pluginLog, refusal, refusedLines, runProbe } from '#mocks/probe-run';
-import { argoLimitBytes } from '../plugins/services/plugin-limits';
+import { argoLimitBytes } from '../services/plugin-limits';
 
 const outsideReason = 'outside';
 

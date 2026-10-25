@@ -32,6 +32,8 @@ export * from './rename';
 
 export * from './save-plan';
 
+export * from './session-configuration';
+
 export * from './set-config-option';
 
 export * from './shells';

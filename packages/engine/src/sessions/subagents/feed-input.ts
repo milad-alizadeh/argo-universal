@@ -1,6 +1,7 @@
 import { feedRow } from '@repo/db/schema';
-import { and, eq, max } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import {
+  highestFeedPosition,
   readQueuedFeed,
   readQueuedFeedRow,
   readWrittenRow,
@@ -10,13 +11,6 @@ import {
   storedFeedColumns,
 } from '../../feed';
 import type { SubagentRouting } from './routing-types';
-
-const highestPosition = (input: SubagentRouting, sessionId: string): number =>
-  input.database
-    .select({ value: max(feedRow.position) })
-    .from(feedRow)
-    .where(eq(feedRow.sessionId, sessionId))
-    .get()?.value ?? -1;
 
 const writtenRow =
   (input: SubagentRouting, sessionId: string): FeedInput['findWrittenRow'] =>
@@ -73,7 +67,8 @@ const nextPosition = (
   input: SubagentRouting,
   sessionId: string,
   queued: number,
-): number => Math.max(highestPosition(input, sessionId), queued) + 1;
+): number =>
+  Math.max(highestFeedPosition(input.database, sessionId), queued) + 1;
 
 const storedOpenRows = (
   input: SubagentRouting,

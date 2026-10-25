@@ -2,7 +2,7 @@ import type { SessionSetConfigOptionInput } from '@repo/contracts';
 
 type AgentConfigValue = Pick<SessionSetConfigOptionInput, 'configId' | 'value'>;
 
-import type { SessionConfigOption } from '@repo/contracts';
+import { isModelOption, type SessionConfigOption } from '@repo/contracts';
 
 export const toConfigValues = (
   configOptions: SessionConfigOption[],
@@ -15,9 +15,7 @@ export const toConfigValues = (
 export const currentModel = (
   configOptions: SessionConfigOption[],
 ): string | null => {
-  const model = configOptions.find(
-    (option): boolean => option.category === 'model',
-  );
+  const model = configOptions.find(isModelOption);
 
   return model?.type === 'select' ? model.currentValue : null;
 };

@@ -35,8 +35,6 @@ import {
   applyEnabled,
   applyStatus,
   locatePlugin,
-  requireRuntime,
-  requireSettings,
   startPlugin,
   startPlugins,
   type PluginServiceDeps,
@@ -50,20 +48,15 @@ export class PluginService {
   constructor(private readonly deps: PluginServiceDeps) {}
 
   async startBackground(): Promise<void> {
-    await Promise.all([
-      this.list(),
-      requireRuntime(this.deps).refreshProjects(),
-    ]);
+    await Promise.all([this.list(), this.deps.pluginRuntime.refreshProjects()]);
     await startPlugins(this.deps, ({ plugin }) => runsBackground(plugin));
   }
 
   async list(): Promise<PluginList> {
     const result = await discoverWithAccounts(this.deps);
 
-    if (this.deps.pluginSettings)
-      applyEnabled(result, this.deps.pluginSettings);
-
-    if (this.deps.pluginRuntime) applyStatus(result, this.deps.pluginRuntime);
+    applyEnabled(result, this.deps.pluginSettings);
+    applyStatus(result, this.deps.pluginRuntime);
 
     return result;
   }
@@ -75,16 +68,16 @@ export class PluginService {
   // Turning a Plugin off stops its worker and releases what it holds; it starts again when next asked for.
   async setEnabled(pluginId: string, enabled: boolean): Promise<void> {
     await locatePlugin(this.deps, pluginId);
-    await requireSettings(this.deps).setEnabled(pluginId, enabled);
+    await this.deps.pluginSettings.setEnabled(pluginId, enabled);
 
-    if (!enabled) return this.deps.pluginRuntime?.deactivate(pluginId);
+    if (!enabled) return this.deps.pluginRuntime.deactivate(pluginId);
 
     // The toggle is answered once the setting is durable; `list` reports a Plugin that then fails to start.
     void this.startBackground().catch(() => null);
   }
 
   settings(pluginId: string): Promise<PluginSettingsOutput> {
-    return requireSettings(this.deps).values(pluginId);
+    return this.deps.pluginSettings.values(pluginId);
   }
 
   setSetting(change: {
@@ -92,12 +85,12 @@ export class PluginService {
     key: string;
     value: PluginSettingValue;
   }): Promise<void> {
-    return requireSettings(this.deps).change(change);
+    return this.deps.pluginSettings.change(change);
   }
 
   // Starts each Plugin that hooks the event, in load order, then runs their Hooks over core (ADR-0027).
   async runHooks(name: HookEventName, event: JsonObject): Promise<Json> {
-    const { hooks } = requireRuntime(this.deps);
+    const { hooks } = this.deps.pluginRuntime;
     const exempt = hooks.exempt(callerOf(name, event));
 
     const started = await startPlugins(
@@ -113,7 +106,7 @@ export class PluginService {
     connection: RpcConnection,
     input: PluginDispatchInput,
   ): Promise<void> {
-    await requireRuntime(this.deps).views.dispatch(connection, input);
+    await this.deps.pluginRuntime.views.dispatch(connection, input);
   }
 
   async *view(
@@ -125,7 +118,7 @@ export class PluginService {
     if (status.state !== 'running')
       throw new Error(status.error ?? `Plugin ${pluginId} is not running`);
 
-    yield* requireRuntime(this.deps).views.watch(
+    yield* this.deps.pluginRuntime.views.watch(
       pluginId,
       { path, projectId },
       connection,
@@ -143,7 +136,7 @@ export class PluginService {
 
     yield { type: 'contributors', pluginIds };
     yield* slotViews(
-      requireRuntime(this.deps).views,
+      this.deps.pluginRuntime.views,
       { pluginIds, slot },
       connection,
     );
@@ -157,25 +150,21 @@ export class PluginService {
       rendersSlot(plugin, input.slotId),
     );
 
-    yield* renderSlot(
-      requireRuntime(this.deps),
-      { input, plugins },
-      connection,
-    );
+    yield* renderSlot(this.deps.pluginRuntime, { input, plugins }, connection);
   }
 
   public renderFailed(
     connection: RpcConnection,
     input: RenderFailureInput,
   ): void {
-    requireRuntime(this.deps).views.renderFailed(connection, input);
+    this.deps.pluginRuntime.views.renderFailed(connection, input);
   }
 
   public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
-    return requireRuntime(this.deps).watchFailures(signal);
+    return this.deps.pluginRuntime.watchFailures(signal);
   }
 
   public badges(signal: AbortSignal): AsyncGenerator<PluginBadge[]> {
-    return requireRuntime(this.deps).data.badges.watch(signal);
+    return this.deps.pluginRuntime.data.badges.watch(signal);
   }
 }

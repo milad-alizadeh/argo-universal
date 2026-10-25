@@ -2,7 +2,7 @@ import type { PluginCapability } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
 import { registeredProject } from '#mocks/probe-plugin';
 import { refusal, refusedLines, runProbe } from '#mocks/probe-run';
-import { argoLimitBytes } from '../plugins/services/plugin-limits';
+import { argoLimitBytes } from '../services/plugin-limits';
 
 const exec = 'process:exec';
 

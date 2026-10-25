@@ -10,7 +10,7 @@ import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished } from 'vitest';
 import { dataFixture, dataPluginId } from '#mocks/data-fixture';
 import { startEngineTestHost } from '#mocks/engine';
-import { writeDatabaseJobAndWaitForCommit } from '../storage';
+import { writeDatabaseJobAndWaitForCommit } from '../../storage';
 
 const laterProject = 'later-project';
 

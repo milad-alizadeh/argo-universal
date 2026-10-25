@@ -1,16 +1,63 @@
-import type { SessionUpdate, FeedChange, TurnEnd } from '@repo/contracts';
+import type {
+  FeedChange,
+  Notice,
+  SessionUpdate,
+  TurnEnd,
+} from '@repo/contracts';
 import {
   applyFeedChange,
   changedRowId,
   type Feed,
   type FeedStreamEvent,
 } from './feed-change';
-import { turnEndChange } from './turn-end';
 import {
   cancelledPermissionOutcome,
   turnEndingNotice,
   type TurnEndingNotice,
 } from './turn-ending';
+
+/*
+ * A Turn ending settles its Feed in one rule (ADR-0024), `settleFeedTurn`, whichever adapter runs it:
+ * - live (`feed-turn-settlement.ts`): the Feed machine's context; its rows leave through a queued `FeedRowsJob`.
+ * - stored (`stored-turn-settlement.ts`): a database transaction, for Engine restart and archive; its rows are written in that transaction and never queued as a job.
+ * Only a `FeedRowsJob` reaches `committedTurnEndings`, so a restart or archive ending raises no notification.
+ */
+
+// A durable Feed marker: #148 owns its drawing, separately from crash Notices.
+const turnEndChange = (turnId: string, end: TurnEnd): FeedChange => ({
+  type: 'upsert',
+  update: {
+    id: `${turnId}:end`,
+    sessionUpdate: 'notice',
+    state: 'settled',
+    severity: 'info',
+    title: 'Turn ended',
+    _meta: { argo: { turnEnd: end } },
+  },
+});
+
+export type CommittedTurnEnding = { sessionId: string; turnId: string };
+
+const argoMeta = (notice: Notice): NonNullable<Notice['_meta']>['argo'] =>
+  notice._meta?.argo;
+
+const endsTurn = (row: SessionUpdate): boolean =>
+  row.sessionUpdate === 'notice' && argoMeta(row)?.turnEnd !== undefined;
+
+const endedTurnIds = (row: SessionUpdate): string[] =>
+  endsTurn(row) && row.turnId ? [row.turnId] : [];
+
+// The Turns whose `turnEndChange` marker is among `rows`.
+export const turnEndingsOf = (
+  sessionId: string,
+  rows: readonly SessionUpdate[],
+): CommittedTurnEnding[] =>
+  rows.flatMap(endedTurnIds).map((turnId) => ({ sessionId, turnId }));
+
+export const restartTurnError = {
+  code: 'interrupted',
+  message: 'The Server stopped during the Turn',
+} as const;
 
 const unfinishedTool = (row: SessionUpdate): boolean =>
   row.sessionUpdate === 'tool_call_update' &&

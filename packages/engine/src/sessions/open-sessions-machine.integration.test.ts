@@ -13,6 +13,7 @@ import { coreOnlyHooks } from '#mocks/core-hooks';
 import { openTestDatabase } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createOpenSessionsModelMachine } from '#mocks/open-sessions';
+import { unstartedWriter } from '#mocks/unstarted-writer';
 import { createAcpResources } from '../agents';
 import type { OpenSessionsInput } from './open-sessions-machine';
 import { sessionMachine } from './session-machine';
@@ -35,6 +36,7 @@ const input: OpenSessionsInput = {
   runtimeDirectory,
   acpResources: createAcpResources(),
   installedAgents: unlaunchedInstalledAgents(database, runtimeDirectory),
+  writer: unstartedWriter(database),
 };
 
 // Two ids exercise duplicate opens, removal with another Session left, and the last Session stopping.
@@ -79,6 +81,7 @@ const events: OpenSessionsEvent[] = [
             resources: input.acpResources,
             installedAgents: input.installedAgents,
           },
+          writer: input.writer,
           sessionId,
         },
       }).getSnapshot(),

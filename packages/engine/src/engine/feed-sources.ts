@@ -8,7 +8,6 @@ import {
   sessionActorId,
   sessionMachine,
 } from '../sessions';
-import { databaseWriterId, writerMachine } from '../storage';
 
 export type FeedSourcesInput = {
   database: Database;
@@ -35,7 +34,6 @@ export function createFeedSources(input: FeedSourcesInput): FeedSources {
     ...input,
     findSession: findLiveSession(input.sessions),
     findFeed: (sessionId) => findSessionFeed(input.sessions.system, sessionId),
-    findWriter: () =>
-      findMachineActor(input.sessions.system, databaseWriterId, writerMachine),
+    findWriter: () => input.sessions.getSnapshot().context.writer,
   };
 }

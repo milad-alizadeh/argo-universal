@@ -1,7 +1,7 @@
 import type { SessionConfigSelectOption } from '@repo/contracts';
+import { configurationChoices } from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ComponentProps, ReactElement } from 'react';
-import { configurationChoices } from '#lib/product/session-configuration';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { isDangerous, type SelectConfiguration } from './configuration-values';
 

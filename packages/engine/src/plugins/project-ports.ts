@@ -1,15 +1,18 @@
 import { ProjectsBranchesInput } from '@repo/contracts';
-import type { createPluginRuntime } from '../plugins';
+import type { Database } from '@repo/db';
 import {
   readPluginProjects,
   readProjectPath,
   readProjectPaths,
   watchProjectChanges,
 } from '../projects';
-import type { HttpServerOptions } from './http-server';
+import type { WriterActorRef } from '../storage';
+import type { createPluginRuntime } from './runtime/create-runtime';
 
-export function projectOptions(
-  options: HttpServerOptions,
+type ProjectSources = { database: Database; databaseWriter: WriterActorRef };
+
+export function projectPorts(
+  options: ProjectSources,
 ): Pick<
   Parameters<typeof createPluginRuntime>[1],
   'watchProjects' | 'projects' | 'projectInfo' | 'projectPath'
@@ -23,10 +26,7 @@ export function projectOptions(
   };
 }
 
-function pluginProjectPath(
-  options: HttpServerOptions,
-  projectId: string,
-): string {
+function pluginProjectPath(options: ProjectSources, projectId: string): string {
   return readProjectPath(
     options.database,
     ProjectsBranchesInput.parse({ projectId }).projectId,

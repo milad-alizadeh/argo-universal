@@ -1,6 +1,6 @@
 import { emptyStateProps } from './kit-props';
 import { part } from './plugin-part-schema-utils';
-import type { WirePartDefinition } from './wire-parts';
+import type { WirePartDefinition } from './wire-part-definition';
 
 export const emptyStateWirePart = {
   props: emptyStateProps,
@@ -8,10 +8,13 @@ export const emptyStateWirePart = {
   children: false,
   slots: { action: ['Button'] },
   events: {},
+  group: 'status',
+  wire: true,
   reference: part(
     'A centred message for an empty container with an optional icon, description, and one action.',
     emptyStateProps,
     {
+      group: 'status',
       slots: { action: ['Button'] },
       appearance:
         'Uses Argo semantic tokens and the approved EmptyState master; its icon illustration is decorative.',

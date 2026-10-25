@@ -5,9 +5,7 @@ import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { requireInstalledAgent } from '../agents';
-import { findMachineActor } from '../lib/machine-actor';
 import { readProjectPath } from '../projects';
-import { databaseWriterId, writerMachine } from '../storage';
 import { isOfferedConfigChoice } from './admission/config-admission';
 import type { SessionRouterDeps } from './router-deps';
 import {
@@ -66,17 +64,11 @@ async function waitForSessionStored(
 async function waitForSessionInsertCommitted(
   sessionActor: SessionActorRef,
 ): Promise<void> {
-  const databaseWriter = findMachineActor(
-    sessionActor.system,
-    databaseWriterId,
-    writerMachine,
-  );
-
-  if (!databaseWriter || databaseWriter.getSnapshot().status !== 'active')
-    throw new Error('Database Writer is unavailable');
-
-  const { sessionId, sessionInsertCommitted } =
+  const { sessionId, sessionInsertCommitted, input } =
     sessionActor.getSnapshot().context;
+
+  if (input.writer.getSnapshot().status !== 'active')
+    throw new Error('Database Writer is unavailable');
 
   const outcome = await sessionInsertCommitted;
 

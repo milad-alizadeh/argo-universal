@@ -42,17 +42,8 @@ describe('pairingProblems', () => {
     });
 
     expect(rest).toEqual([]);
-    expect(problem).toContain('parts/forms.ts');
+    expect(problem).toContain("group 'forms'");
     expect(problem).toContain('fields/form');
-  });
-
-  it('skips the group of a part declared outside the group files', () => {
-    expect(
-      pairingProblems({
-        schemas: [{ name: 'Canvas', group: undefined }],
-        folders: ['visual/canvas'],
-      }),
-    ).toEqual([]);
   });
 
   it('leaves exempt folders alone', () => {
@@ -87,7 +78,7 @@ describe('pairingProblems', () => {
 
   it('asks for the parent folder of a compound name', () => {
     const problems = pairingProblems({
-      schemas: [{ name: 'Metadata.Avatar', group: undefined }],
+      schemas: [{ name: 'Metadata.Avatar', group: 'scaffolds' }],
       folders: [],
     });
 

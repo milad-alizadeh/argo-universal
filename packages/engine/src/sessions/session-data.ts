@@ -11,9 +11,10 @@ import {
   discardCheckout,
   isSessionBranch,
 } from '@repo/git';
-import { and, desc, eq, max } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import {
+  highestFeedPosition,
   interruptionDisclosureId,
   readQueuedFeed,
   titleFromPrompt,
@@ -209,11 +210,7 @@ export async function loadSession(
   if (!row) throw new Error(`No Session ${input.sessionId}`);
   const pendingFeed = readQueuedFeed(writer, input.sessionId);
 
-  const position = input.database
-    .select({ highest: max(feedRow.position) })
-    .from(feedRow)
-    .where(eq(feedRow.sessionId, input.sessionId))
-    .get()?.highest;
+  const position = highestFeedPosition(input.database, input.sessionId);
 
   return {
     sessionId: row.id,
@@ -226,7 +223,7 @@ export async function loadSession(
     epoch: row.epoch,
     maxRevision: row.maxRevision,
     activityAt: row.activityAt,
-    nextPosition: Math.max(position ?? -1, pendingFeed.highestPosition) + 1,
+    nextPosition: Math.max(position, pendingFeed.highestPosition) + 1,
     kept: true,
     undisclosedInterruptedTurnId: readUndisclosedInterruption(
       input.database,

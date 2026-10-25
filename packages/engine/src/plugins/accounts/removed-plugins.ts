@@ -3,8 +3,7 @@ import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
 import { z } from 'zod';
 import { discoverPlugins } from '../discovery/loader';
-import type { PluginServiceDeps } from '../located-plugins';
-import type { PluginAccounts } from './plugin-accounts';
+import type { PluginServiceDeps, ServiceAccounts } from '../located-plugins';
 
 export async function discoverWithAccounts(
   deps: PluginServiceDeps,
@@ -23,23 +22,16 @@ async function reconcileAccounts(
   discovered: PluginList,
   recorded: readonly string[],
 ): Promise<void> {
-  const accounts = deps.pluginAccounts;
-
-  if (!accounts) return;
   const present = await presentPlugins(discovered);
 
   if (!present) return;
 
   await Promise.all(
-    recorded.flatMap((id) =>
-      present.has(id) ? [] : [removePlugin(deps, accounts, id)],
-    ),
+    recorded.flatMap((id) => (present.has(id) ? [] : [removePlugin(deps, id)])),
   );
 }
 
-function recordedPlugins(accounts?: PluginAccounts): string[] {
-  if (!accounts) return [];
-
+function recordedPlugins(accounts: ServiceAccounts): string[] {
   return [
     ...new Set([
       ...accounts.list().map(({ providedBy }) => providedBy),
@@ -50,11 +42,10 @@ function recordedPlugins(accounts?: PluginAccounts): string[] {
 
 async function removePlugin(
   deps: PluginServiceDeps,
-  accounts: PluginAccounts,
   id: string,
 ): Promise<void> {
-  await deps.pluginRuntime?.deactivate(id);
-  await accounts.removePlugin(id);
+  await deps.pluginRuntime.deactivate(id);
+  await deps.pluginAccounts.removePlugin(id);
 }
 
 const ManifestIdentity = z.object({ id: z.string().min(1) });

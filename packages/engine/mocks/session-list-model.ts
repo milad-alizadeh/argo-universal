@@ -5,6 +5,7 @@ import { openSessionsMachine } from '../src/sessions';
 import { coreOnlyHooks } from './core-hooks';
 import { openTestDatabase } from './database';
 import { unlaunchedInstalledAgents } from './installed-agents';
+import { unstartedWriter } from './unstarted-writer';
 
 type ListInput = {
   sessions: ReturnType<typeof createActor<typeof openSessionsMachine>>;
@@ -50,6 +51,7 @@ function modelSessions(
         runtime.database,
         runtime.directory,
       ),
+      writer: unstartedWriter(runtime.database),
     },
   });
 }

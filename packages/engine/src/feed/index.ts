@@ -9,6 +9,7 @@ export {
 
 export {
   type FeedRowWrite,
+  highestFeedPosition,
   hydrateStoredFeedRow,
   newestRows,
   payloadVersion,
@@ -22,6 +23,7 @@ export type { FeedDeps } from './feed';
 export { readFeedRows } from './merged-rows';
 
 export {
+  committedTurnEndings,
   FeedRowsJob,
   projectQueuedFeedSession,
   queuedFeedSessionId,
@@ -51,22 +53,16 @@ export { titleFromPrompt } from './prompt-title';
 export type { Feed, FeedStreamEvent } from './feed-change';
 
 export {
-  settleFeedTurn,
+  restartTurnError,
+  type CommittedTurnEnding,
   type FeedTurnEnding,
-  type SettledFeed,
 } from './turn-settlement';
 
 export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';
 
-export { recoverTurnEnd } from './turn-end-recovery';
-
 export {
-  committedTurnEndings,
-  type CommittedTurnEnding,
-} from './committed-turn-endings';
-
-export { restartTurnError } from './turn-end';
-
-export { settleArchivedChild } from './archive-settlement';
+  settleArchivedChild,
+  settleStoredTurn,
+} from './stored-turn-settlement';
 
 export { mapSupportedContentBlock } from './acp/content';

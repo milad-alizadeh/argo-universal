@@ -43,6 +43,7 @@ export const createSessionActorInput = ({
   createId: context.createId,
   acp: createAcpSessionDependencies(context),
   hooks: context.hooks,
+  writer: context.writer,
   sessionId: event.sessionId,
   ...(event.type === 'sessions.create'
     ? createSessionCreationInput(event)

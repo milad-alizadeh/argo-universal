@@ -10,6 +10,7 @@ import {
   openTestDatabase,
 } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
+import { unstartedWriter } from '#mocks/unstarted-writer';
 import { createAcpResources } from '../../../agents';
 import { openSessionsMachine } from '../../open-sessions-machine';
 import { createSessionListReader } from './reader';
@@ -51,6 +52,7 @@ it('reads the existence of a running Subagent Turn without fetching its history'
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
       installedAgents,
+      writer: unstartedWriter(database),
     },
   });
 
