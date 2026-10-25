@@ -15,7 +15,7 @@ it.each([
     'Undeclared Slot',
   ],
   [
-    "argo.slots.register('argo/composer/above/v1', () => null);",
+    "argo.slots.register('argo/feed/tool-call/v1', () => null);",
     'drawn through ui.render',
   ],
   ["argo.on('unknown.event', () => null);", 'Unknown Hook event'],

@@ -10,8 +10,6 @@ export const toolCallSlotId = 'argo/feed/tool-call/v1';
 
 export const messageSlotId = 'argo/feed/message/v1';
 
-export const composerAboveSlotId = 'argo/composer/above/v1';
-
 type WireParts = typeof wireParts;
 
 // What a Slot takes: any kit tree, or only the parts one kit component's slot accepts.
@@ -76,7 +74,6 @@ const addOnlySlots = [
 const replaceableSlots = [
   replaceable(toolCallSlotId),
   replaceable(messageSlotId),
-  replaceable(composerAboveSlotId),
 ] as const;
 
 export const slotRegistry = [...addOnlySlots, ...replaceableSlots] as const;

@@ -55,7 +55,8 @@ it.each([
 it.each([
   ['argo/nowhere/v1', 'Unknown Slot'],
   ['argo/session/row/v1', 'Undeclared Slot'],
-  ['argo/composer/above/v1', 'drawn through ui.render'],
+  ['argo/composer/above/v1', 'Unknown Slot'],
+  ['argo/feed/tool-call/v1', 'drawn through ui.render'],
 ])('reports registering Slot %s', (slotId, reason) => {
   const report = inspectSource(
     {
@@ -64,7 +65,7 @@ it.each([
     },
     PluginManifest.parse({
       ...manifest,
-      contributes: { nav: [], slots: ['argo/composer/above/v1'] },
+      contributes: { nav: [], slots: ['argo/feed/tool-call/v1'] },
     }),
   );
 

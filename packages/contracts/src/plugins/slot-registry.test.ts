@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { PluginManifest } from './plugins';
+import { ReplaceableInput } from './replaceable-input';
 import {
   AddOnlySlotId,
   PluginSlotInput,
@@ -24,7 +25,6 @@ it('keeps every Slot id', () => {
     ['argo/session/row/v1', 'add-only'],
     ['argo/feed/tool-call/v1', 'replaceable'],
     ['argo/feed/message/v1', 'replaceable'],
-    ['argo/composer/above/v1', 'replaceable'],
   ]);
 });
 
@@ -40,7 +40,7 @@ it.each(Object.entries(contexts))(
   },
 );
 
-it.each(['argo/feed/tool-call/v1', 'argo/composer/above/v1'])(
+it.each(['argo/feed/tool-call/v1', 'argo/feed/message/v1'])(
   'takes no context for Replaceable Slot %s',
   (slotId) => {
     expect(
@@ -67,6 +67,30 @@ it('lets a manifest declare add-only and Replaceable Slots', () => {
   });
 
   expect(manifest.contributes.slots).toEqual(slots);
+});
+
+it('refuses the Composer tray as a Slot', () => {
+  const slotId = 'argo/composer/above/v1';
+
+  expect(SlotId.safeParse(slotId).success).toBe(false);
+  expect(
+    ReplaceableInput.safeParse({
+      slotId,
+      props: { wide: true, inactive: false },
+    }).success,
+  ).toBe(false);
+  expect(
+    PluginManifest.safeParse({
+      id: 'tray',
+      name: 'Tray',
+      version: '1.0.0',
+      engines: { argo: '>=0.0.0' },
+      main: 'index.js',
+      icon: { material: 'extension' },
+      capabilities: [],
+      contributes: { nav: [], slots: [slotId] },
+    }).success,
+  ).toBe(false);
 });
 
 it('names the parts each Slot accepts', () => {
