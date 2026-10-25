@@ -4,6 +4,7 @@ import { part } from './plugin-part-schema-utils';
 
 export const actionWireParts = {
   'Action.Section': part('A group of Actions.', actionSectionProps, {
+    group: 'actions',
     children: true,
   }),
   Action: {
@@ -11,6 +12,7 @@ export const actionWireParts = {
       'One Action in a Screen header, a row or tile menu, a SplitButton or an Alert: it runs on press, or opens a submenu of keyed Action.Section children.',
       actionEntryProps,
       {
+        group: 'actions',
         // Only a submenu holds children; a press Action's are ignored.
         children: ['Action.Section'],
         container: false,

@@ -52,11 +52,9 @@ export const Action: PluginComponents['Action'] & {
   Section: PluginComponents['Action.Section'];
 };
 
-export const Slider: PluginComponents['Slider'];
-
 export const SplitButton: PluginComponents['SplitButton'];
 
-export const IconButton: PluginComponents['IconButton'];
+export const Slider: PluginComponents['Slider'];
 
 export const FieldGroup: PluginComponents['FieldGroup'] & {
   Section: PluginComponents['FieldGroup.Section'];
@@ -69,6 +67,8 @@ export const FieldGroup: PluginComponents['FieldGroup'] & {
   TextField: PluginComponents['FieldGroup.TextField'];
   SecretField: PluginComponents['FieldGroup.SecretField'];
 };
+
+export const IconButton: PluginComponents['IconButton'];
 
 export const Alert: PluginComponents['Alert'];
 
@@ -84,6 +84,16 @@ export const Avatar: PluginComponents['Avatar'];
 
 export const Icon: PluginComponents['Icon'];
 
+export const Text: PluginComponents['Text'];
+
+export const Button: PluginComponents['Button'];
+
+export const Stack: PluginComponents['Stack'];
+
+export const Svg: PluginComponents['Svg'];
+
+export const EmptyState: PluginComponents['EmptyState'];
+
 export const Canvas: PluginComponents['Canvas'] & {
   Rect: PluginComponents['Canvas.Rect'];
   Circle: PluginComponents['Canvas.Circle'];
@@ -92,15 +102,5 @@ export const Canvas: PluginComponents['Canvas'] & {
   Text: PluginComponents['Canvas.Text'];
   Group: PluginComponents['Canvas.Group'];
 };
-
-export const Text: PluginComponents['Text'];
-
-export const Button: PluginComponents['Button'];
-
-export const Stack: PluginComponents['Stack'];
-
-export const EmptyState: PluginComponents['EmptyState'];
-
-export const Svg: PluginComponents['Svg'];
 
 export const ListSection: PluginComponents['List.Section'];

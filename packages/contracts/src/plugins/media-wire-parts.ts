@@ -52,6 +52,7 @@ export const mediaWireParts = {
     'A video drawn by the stock player: AVPlayerViewController on iOS, Media3 on Android, the browser’s video controls on web and desktop.',
     videoProps,
     {
+      group: 'content',
       label: 'The required `accessibilityLabel` names the video.',
       accessibility: {
         keyboard:
@@ -69,6 +70,7 @@ export const mediaWireParts = {
     'An Argo transport row on a tint tray: play or pause, a scrubber and elapsed / total time.',
     audioProps,
     {
+      group: 'content',
       label: 'The required `accessibilityLabel` names the audio.',
       accessibility: {
         keyboard:

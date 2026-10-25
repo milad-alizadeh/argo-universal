@@ -1,20 +1,9 @@
 import { z } from 'zod';
 import { tones } from '../../kit-tokens';
-import {
-  spinnerAccessibility,
-  statusDotAccessibility,
-} from '../part-accessibility-metadata';
-import {
-  part,
-  stringLabel,
-  optionalLabel,
-  onPress,
-} from '../plugin-part-schema-utils';
+import { part, stringLabel, optionalLabel } from '../plugin-part-schema-utils';
 import { calloutProps } from '../presentation-kit-props';
-import { wireParts } from '../wire-parts';
 
 export const statusPartSchemas = {
-  Pill: wireParts.Pill,
   StatusDot: part(
     'A compact semantic status mark with an optional pulse.',
     z.object({
@@ -27,24 +16,42 @@ export const statusPartSchemas = {
       accessibilityLabel: optionalLabel,
     }),
     {
+      group: 'status',
+      wire: false,
       label:
         'Provide `accessibilityLabel` when the status mark conveys information.',
-      accessibility: statusDotAccessibility,
+      accessibility: {
+        keyboard:
+          'StatusDot adds no keyboard focus stop; informative status is announced in reading order.',
+        voiceOver:
+          'VoiceOver skips a decorative StatusDot and announces accessibilityLabel when the mark conveys status.',
+        talkBack:
+          'TalkBack skips a decorative StatusDot and announces accessibilityLabel when the mark conveys status.',
+      },
     },
   ),
   Spinner: part(
     'An indeterminate progress indicator.',
     z.object({ accessibilityLabel: stringLabel }),
     {
+      group: 'status',
+      wire: false,
       label: 'The required accessibilityLabel names the loading work.',
-      accessibility: spinnerAccessibility,
+      accessibility: {
+        keyboard: 'Spinner adds no keyboard focus stop or shortcut.',
+        voiceOver:
+          'VoiceOver exposes an indeterminate progress indicator and announces Loading, or the supplied accessibilityLabel.',
+        talkBack:
+          'TalkBack exposes an indeterminate progress indicator and announces Loading, or the supplied accessibilityLabel.',
+      },
     },
   ),
-  ProgressBar: wireParts.ProgressBar,
   Callout: part(
     'A heading, description, detail, and optional actions.',
     calloutProps,
     {
+      group: 'status',
+      wire: false,
       events: { onPress: z.undefined() },
       accessibility: {
         keyboard:
@@ -55,26 +62,6 @@ export const statusPartSchemas = {
           'TalkBack reads the Callout title and description before announcing its optional actions.',
       },
       slots: { actions: ['Button', 'IconButton'] },
-    },
-  ),
-  EmptyState: part(
-    'An icon, title, description, and one action for an empty view.',
-    z.object({
-      icon: z.string().optional(),
-      title: stringLabel,
-      description: optionalLabel,
-      action: onPress.optional(),
-    }),
-    {
-      events: { onPress: z.undefined() },
-      accessibility: {
-        keyboard:
-          'The EmptyState title and description remain in reading order; keyboard focus reaches its optional action in platform order.',
-        voiceOver:
-          'VoiceOver announces the EmptyState title and description, then the optional action.',
-        talkBack:
-          'TalkBack announces the EmptyState title and description, then the optional action.',
-      },
     },
   ),
 };

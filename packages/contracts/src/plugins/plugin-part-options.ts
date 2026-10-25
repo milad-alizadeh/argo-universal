@@ -1,8 +1,11 @@
 import type { z } from 'zod';
+import type { PartGroup, WirePartDefinition } from './wire-part-definition';
 import type { WirePartReference } from './wire-part-reference';
-import type { WirePartDefinition } from './wire-parts';
 
 export interface PartOptions {
+  group: PartGroup;
+  wire?: boolean;
+  wireProps?: z.ZodType;
   slots?: Record<string, readonly string[]>;
   events?: Record<string, z.ZodType>;
   children?: boolean | readonly string[];
@@ -13,8 +16,11 @@ export interface PartOptions {
   accessibility?: Partial<WirePartReference['accessibility']>;
 }
 
-export type ResolvedPartOptions = Required<Omit<PartOptions, 'container'>> & {
+export type ResolvedPartOptions = Required<
+  Omit<PartOptions, 'container' | 'wireProps'>
+> & {
   container: boolean;
+  wireProps?: z.ZodType;
 };
 
 type Option<Options, Key extends PropertyKey, Fallback> =
@@ -34,12 +40,22 @@ type PartEvents<Schema extends z.ZodType, Options> = Omit<
 > &
   Option<Options, 'events', Record<never, never>>;
 
+type Draft<Options> = Options extends { wireProps: infer Props }
+  ? { wireProps: Props }
+  : unknown;
+
 export type PartDefinition<
   Schema extends z.ZodType,
   Options extends PartOptions,
-> = Omit<WirePartDefinition, 'props' | 'slots' | 'events' | 'children'> & {
-  props: Schema;
-  slots: Option<Options, 'slots', Record<never, never>>;
-  events: PartEvents<Schema, Options>;
-  children: Option<Options, 'children', false>;
-};
+> = Omit<
+  WirePartDefinition,
+  'props' | 'wireProps' | 'slots' | 'events' | 'children' | 'group' | 'wire'
+> &
+  Draft<Options> & {
+    props: Schema;
+    slots: Option<Options, 'slots', Record<never, never>>;
+    events: PartEvents<Schema, Options>;
+    children: Option<Options, 'children', false>;
+    group: Options['group'];
+    wire: Option<Options, 'wire', true>;
+  };

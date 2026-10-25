@@ -32,6 +32,7 @@ export const screenWirePart = part(
   'A screen with a title, header Actions, a primary Action, optional search, and content.',
   screenProps,
   {
+    group: 'scaffolds',
     children: true,
     root: true,
     slots: {

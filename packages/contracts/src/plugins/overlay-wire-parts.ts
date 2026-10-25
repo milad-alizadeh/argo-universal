@@ -7,12 +7,14 @@ export const overlayWireParts = {
     'A question asked over the page; its Actions answer it.',
     alertProps,
     {
+      group: 'overlays',
       children: true,
       events: { onOpenChange: openChange(alertProps) },
     },
   ),
   Sheet: {
     ...part('A sheet raised over the page.', sheetProps, {
+      group: 'overlays',
       children: true,
       events: { onOpenChange: openChange(sheetProps) },
     }),

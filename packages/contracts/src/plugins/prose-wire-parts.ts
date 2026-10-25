@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import * as accessibility from './part-accessibility-metadata';
 import { part } from './plugin-part-schema-utils';
 
 const line = z.object({
@@ -43,11 +42,22 @@ export const proseWireParts = {
         .optional()
         .describe('Show a caret at the end of the content.'),
     }),
-    { accessibility: accessibility.markdownAccessibility },
+    {
+      group: 'content',
+      accessibility: {
+        keyboard:
+          'Markdown adds no focus stop; keyboard focus reaches links and other interactive content in document order.',
+        voiceOver:
+          'VoiceOver reads the Markdown in document order and exposes links as separate link controls.',
+        talkBack:
+          'TalkBack reads the Markdown in document order and exposes links as separate link controls.',
+      },
+    },
   ),
   Code: part(
     'A code block or diff with a copy action; provide either code or diff.',
     codeProps,
+    { group: 'content' },
   ),
   Link: part(
     'Text that opens an allowed URL or an Argo route.',
@@ -59,6 +69,16 @@ export const proseWireParts = {
         .optional()
         .describe('An absolute route within the App.'),
     }),
-    { accessibility: accessibility.linkAccessibility },
+    {
+      group: 'content',
+      accessibility: {
+        keyboard:
+          'Keyboard focus reaches the Link in platform order; Enter opens its destination.',
+        voiceOver:
+          'VoiceOver exposes a link, reads its label, and opens its destination when activated.',
+        talkBack:
+          'TalkBack exposes a link, reads its label, and opens its destination when activated.',
+      },
+    },
   ),
 };

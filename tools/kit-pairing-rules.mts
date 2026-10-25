@@ -3,8 +3,8 @@ import { pascal } from './story-title-rules.mts';
 // A kit component has two halves: its props schema in Contracts and its drawing in `@repo/kit`. They pair by name and by group (ADR-0040).
 export interface SchemaEntry {
   name: string;
-  // The Contracts group file that declares it; undefined for a part declared outside the group files.
-  group: string | undefined;
+  // The `group` its Contracts definition names; the kit draws it in the folder of the same name.
+  group: string;
 }
 
 export interface PairingInput {
@@ -63,7 +63,7 @@ export const exemptSchemas = {
   Chart: 'Declared for Plugins; no drawing yet.',
 } satisfies Record<string, string>;
 
-const schemaFile = 'packages/contracts/src/plugins/parts';
+const schemaFile = 'packages/contracts/src/plugins';
 
 const kitFolder = 'packages/kit/src/primitives';
 
@@ -84,19 +84,21 @@ const exemptSchemaNames = new Set(Object.keys(exemptSchemas));
 const isExemptFolder = (path: string): boolean =>
   exemptFolderKeys.has(path) || exemptFolderKeys.has(groupOf(path));
 
-const expectedPath = (name: string, schemas: SchemaEntry[]): string =>
-  `${schemas.find((entry): boolean => entry.name === name)?.group ?? '<group>'}/${kebab(name)}`;
+const expectedPath = (
+  name: string,
+  declared: Map<string, SchemaEntry>,
+): string => `${declared.get(name)?.group ?? '<group>'}/${kebab(name)}`;
 
 const withoutDrawing = (
-  schemas: SchemaEntry[],
+  declared: Map<string, SchemaEntry>,
   drawn: Map<string, string>,
 ): string[] =>
-  [...new Set(schemas.map(({ name }): string => parentName(name)))].flatMap(
+  [...new Set([...declared.keys()].map(parentName))].flatMap(
     (name): string[] =>
       drawn.has(name) || exemptSchemaNames.has(name)
         ? []
         : [
-            `${name} has a schema in ${schemaFile}/ but no drawing folder in ${kitFolder}/ (expected ${expectedPath(name, schemas)}).`,
+            `${name} has a definition in ${schemaFile}/ but no drawing folder in ${kitFolder}/ (expected ${expectedPath(name, declared)}).`,
           ],
   );
 
@@ -108,28 +110,23 @@ const withoutSchema = (
     declared.has(name)
       ? []
       : [
-          `${kitFolder}/${path} draws ${name}, which has no schema in ${schemaFile}/. Add the schema, or exempt the folder in tools/kit-pairing-rules.mts with a reason.`,
+          `${kitFolder}/${path} draws ${name}, which has no definition in ${schemaFile}/. Add the definition, or exempt the folder in tools/kit-pairing-rules.mts with a reason.`,
         ],
   );
-
-const misplacedProblem = (
-  name: string,
-  path: string,
-  group: string | undefined,
-): string[] =>
-  group === undefined || group === groupOf(path)
-    ? []
-    : [
-        `${name} is declared in ${schemaFile}/${group}.ts but drawn in ${kitFolder}/${path}; move one so the group is the same word.`,
-      ];
 
 const misplaced = (
   declared: Map<string, SchemaEntry>,
   drawn: Map<string, string>,
 ): string[] =>
-  [...drawn].flatMap(([name, path]): string[] =>
-    misplacedProblem(name, path, declared.get(name)?.group),
-  );
+  [...declared.values()].flatMap(({ name, group }): string[] => {
+    const path = drawn.get(name);
+
+    return path === undefined || group === groupOf(path)
+      ? []
+      : [
+          `${name} is defined with group '${group}' but drawn in ${kitFolder}/${path}; change one so the group is the same word.`,
+        ];
+  });
 
 export const pairingProblems = ({
   schemas,
@@ -146,7 +143,7 @@ export const pairingProblems = ({
   );
 
   return [
-    ...withoutDrawing(schemas, drawn),
+    ...withoutDrawing(declared, drawn),
     ...withoutSchema(declared, drawn),
     ...misplaced(declared, drawn),
   ];
