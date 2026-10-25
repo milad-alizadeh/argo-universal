@@ -49,7 +49,7 @@ Accepted by the owner on 2026-10-18 with these checks still to run. If any check
 
 ## Open questions
 
-- **Chart text.** CanvasKit cannot reach system fonts, and SF Pro cannot be bundled for web. Either axis and value labels are kit `Text` over the canvas in the system font (to be proved), or a bundled font is named here and the system-font rule is amended.
+- **Chart text: resolved by the owner, 2026-10-25 (#835).** CanvasKit cannot reach system fonts, and SF Pro cannot be bundled for web, so axis and value labels are kit `Text` laid over the canvas in the system font. Victory draws without a font, and the labels sit at the positions from its scales. No font is bundled.
 - **More chart colours.** Charts are capped at one series per tone. More series would need a categorical token set, which amends ADR-0026's deletion of `chart-1` to `chart-5`.
 - **Tone shades for `intensity`: resolved by the owner, 2026-10-19 (#836).** The approved Canvas master uses Tailwind 100–900 tone ramps, with the order reversed in dark mode. ADR-0026 records the mapping.
 - **Which Argo screen uses `Canvas` first,** so it can turn stable under ADR-0031.

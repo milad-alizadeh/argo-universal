@@ -19,7 +19,8 @@
       "default": "./media/*"
     },
     "./plugins/media.json": "./plugins/media.json",
-    "./plugins/canvas.json": "./plugins/canvas.json"
+    "./plugins/canvas.json": "./plugins/canvas.json",
+    "./plugins/chart.json": "./plugins/chart.json"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

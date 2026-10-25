@@ -51,7 +51,6 @@ class HostedPlugin implements PluginTest {
     this.service.failures(signal);
   private readonly runtime: PluginRuntime;
   private readonly service: PluginService;
-  private readonly data: PluginStorage;
   readonly projects;
   private readonly views = new Set<PluginTestView>();
   readonly session = testSession;
@@ -64,7 +63,7 @@ class HostedPlugin implements PluginTest {
       queries: Parameters<PluginStorage['execute']>[1],
       pluginId = this.options.pluginId,
     ): ReturnType<PluginStorage['execute']> =>
-      this.data.execute(pluginId, queries),
+      this.runtime.services.storage.execute(pluginId, queries),
   };
 
   public constructor(
@@ -73,7 +72,6 @@ class HostedPlugin implements PluginTest {
   ) {
     this.runtime = runtimeFor(home, options);
     this.projects = new TestProjects(options, this.runtime);
-    this.data = new PluginStorage(home);
     this.service = serviceFor(home, options, this.runtime);
   }
 
@@ -158,7 +156,6 @@ class HostedPlugin implements PluginTest {
     try {
       await this.runtime.close();
     } finally {
-      this.data.close();
       await rm(this.home, { recursive: true, force: true });
     }
   }

@@ -24,6 +24,7 @@ type OAuthJourney = EngineHost & {
   opened: string[];
   started: (id?: string) => Promise<StartRecord>;
   result: (id?: string) => Promise<Result>;
+  failure: (id?: string) => Promise<string | null>;
 };
 
 export async function oauthPlugins(ids = ['alice']): Promise<OAuthJourney> {
@@ -49,6 +50,7 @@ export async function oauthPlugins(ids = ['alice']): Promise<OAuthJourney> {
     opened,
     started: startReader(home),
     result: resultReader(home),
+    failure: failureReader(home),
   };
 }
 
@@ -66,7 +68,9 @@ async function writeOAuthPlugins(ids: string[]): Promise<string> {
     export function register(argo) { argo.pages.register('/', function Page({ context }) {
       useEffect(() => { (async () => {
         const unknown = await argo.oauth.await('unissued-state', 'https://authorize.example/');
-        const start = await argo.oauth.start();
+        const failure = { message: null };
+        const start = await argo.oauth.start().catch((error) => { failure.message = error.message; return null; });
+        await argo.fs.write('${home}/plugin-data/${id}/failure.json', JSON.stringify(failure.message));
         await argo.fs.write('${home}/plugin-data/${id}/start.json', JSON.stringify({ ...start, unknown, serverDevice: context.serverDevice }));
         const result = start && await argo.oauth.await(start.state, 'https://authorize.example/?state=' + start.state);
         await argo.fs.write('${home}/plugin-data/${id}/result.json', JSON.stringify(result));
@@ -123,6 +127,21 @@ function resultReader(home: string): OAuthJourney['result'] {
       .not.toBe('pending');
 
     return OAuthResult.nullable().parse(await read(home, id, 'result'));
+  };
+}
+
+function failureReader(home: string): OAuthJourney['failure'] {
+  return async (id = 'alice') => {
+    await expect
+      .poll(() => read(home, id, 'failure').catch(() => 'pending'), {
+        timeout: 10_000,
+      })
+      .not.toBe('pending');
+
+    return z
+      .string()
+      .nullable()
+      .parse(await read(home, id, 'failure'));
   };
 }
 

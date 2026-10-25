@@ -29,7 +29,15 @@ export const scaffoldWireParts = {
   Screen: screenWirePart,
   ListDetail: part(
     'A list beside its selected item on wide windows; on compact ones the list drills in to the item.',
-    z.object({}),
+    z.object({
+      title: z
+        .string()
+        .min(1)
+        .optional()
+        .describe(
+          'The list screen’s title on compact windows, where the list is the screen; the header returns to it when the item closes.',
+        ),
+    }),
     {
       group: 'scaffolds',
       root: true,

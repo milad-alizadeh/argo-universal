@@ -25,6 +25,10 @@ const skiaLoaders = new Map([
     './canvas-renderer',
   ],
   [
+    '/packages/kit/src/primitives/visual/chart/chart-loader.web.tsx',
+    './chart-renderer',
+  ],
+  [
     '/packages/kit/src/primitives/status/orb/orb-loader.web.tsx',
     './orb-renderer',
   ],

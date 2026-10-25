@@ -1,4 +1,4 @@
-import { Button, Stack, Text } from '@argo/plugin-kit';
+import { EmptyState, List, ListDetail, ListItem, Pill } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
 import { githubError, githubRepositoryFromOrigin } from './github-tracker';
@@ -6,124 +6,113 @@ import { loadIssue } from './issue-data';
 import { IssueDetail } from './issue-detail';
 import type { IssueSelection, PageProps } from './use-issues';
 
-const headingRole = 'heading';
+type ListProps = PageProps & { selected?: Issue };
 
-type GroupProps = PageProps & { title: string };
+type IssueProps = Omit<ListProps, 'issues'> & { issue: Issue };
 
-type IssueProps = Omit<GroupProps, 'issues'> & { issue: Issue };
+const noRemote = 'No GitHub remote';
 
-export function IssueList(props: PageProps): JSX.Element {
+const statuses = [
+  { title: 'Open', status: 'open' },
+  { title: 'Closed', status: 'closed' },
+];
+
+const noSelection = (
+  <EmptyState
+    title="Select an Issue"
+    description="Choose an Issue from the list."
+  />
+);
+
+export function IssuePageView({ selected, ...props }: ListProps): JSX.Element {
   return (
-    <Stack direction="column" gap={3}>
-      <IssueHeading />
-      <ProjectChoices {...props} />
-      <ProjectSummary {...props} />
-      <IssueGroups {...props} />
-    </Stack>
+    <ListDetail
+      title="Issues"
+      list={<IssueList {...props} selected={selected} />}
+      detail={selected && <IssueDetail {...props} issue={selected} />}
+      empty={noSelection}
+    />
   );
 }
 
-function IssueHeading(): JSX.Element {
-  return <Text role={headingRole}>Issues</Text>;
-}
-
-function ProjectChoices(props: PageProps): JSX.Element {
-  const { projectId, onIssue } = props;
+// The footer names the Project's repository, or the latest load message in its place.
+function IssueList(props: ListProps): JSX.Element {
+  const { message } = props;
 
   return (
-    <Stack direction="column" gap={2}>
+    <List
+      footer={message || repositoryFooter(props)}
+      empty={<EmptyState title={message || 'No Issues.'} />}
+    >
+      {projectSection(props)}
+      {issueSections(props)}
+    </List>
+  );
+}
+
+function repositoryFooter(props: ListProps): string {
+  const project = props.projects.find((row) => row.id === props.projectId);
+  const repository = githubRepositoryFromOrigin(project?.originUrl);
+
+  return repositoryText(project?.name, repository);
+}
+
+function repositoryText(name = '', repository: string | null): string {
+  return [name, repository ?? noRemote].filter(Boolean).join(' · ');
+}
+
+// A Project to show Issues of, only when there is a choice.
+function projectSection(props: ListProps): JSX.Element | null {
+  if (props.projects.length < 2) return null;
+
+  return (
+    <List.Section key="projects" title="Project">
       {props.projects.map((project) => (
-        <Button
+        <ListItem
           key={project.id}
-          label={project.name}
-          variant={project.id === projectId ? 'default' : 'outline'}
-          onPress={() => onIssue({ type: 'project', id: project.id })}
+          title={project.name}
+          selected={project.id === props.projectId}
+          onPress={() => props.onIssue({ type: 'project', id: project.id })}
         />
       ))}
-    </Stack>
+    </List.Section>
   );
 }
 
-function ProjectSummary({
-  projects,
-  projectId,
-  message,
-}: PageProps): JSX.Element {
+function issueSections(props: ListProps): JSX.Element[] {
+  return statuses.flatMap(({ title, status }) => {
+    const issues = props.issues.filter((issue) => issue.status === status);
+
+    return issues.length === 0 ? [] : issueSection(props, title, issues);
+  });
+}
+
+function issueSection(
+  props: ListProps,
+  title: string,
+  issues: Issue[],
+): JSX.Element {
   return (
-    <>
-      <ProjectRepository projects={projects} projectId={projectId} />
-      <StatusMessage message={message} />
-    </>
+    <List.Section key={title} title={title}>
+      {issues.map((issue) => (
+        <IssueRow key={issue.number} {...props} issue={issue} />
+      ))}
+    </List.Section>
   );
 }
 
-function ProjectRepository({
-  projects,
-  projectId,
-}: Pick<PageProps, 'projects' | 'projectId'>): JSX.Element | null {
-  const project = projects.find((row) => row.id === projectId);
-
-  if (!project) return null;
-
-  return (
-    <Text>
-      {githubRepositoryFromOrigin(project.originUrl) ?? 'No GitHub remote'}
-    </Text>
-  );
-}
-
-const StatusMessage = ({ message }: { message: string }): JSX.Element | '' =>
-  message && <Text>{message}</Text>;
-
-function IssueGroups(props: PageProps): JSX.Element {
-  return (
-    <>
-      <IssueGroup title="Open" {...props} />
-      <IssueGroup title="Closed" {...props} />
-    </>
-  );
-}
-
-function IssueGroup({ title, issues, ...props }: GroupProps): JSX.Element {
-  const visible = issues.filter(
-    (issue) => issue.status === title.toLowerCase(),
-  );
+function IssueRow(props: IssueProps): JSX.Element {
+  const { issue } = props;
 
   return (
-    <Stack direction="column" gap={2}>
-      <Text role={headingRole}>{title}</Text>
-      <IssueRows issues={visible} title={title} {...props} />
-    </Stack>
-  );
-}
-
-function IssueRows(props: GroupProps): JSX.Element {
-  return (
-    <>
-      {emptyState(props.title, props.issues)}
-      <IssueButtons {...props} />
-    </>
-  );
-}
-
-function IssueButtons({ issues, ...props }: GroupProps): JSX.Element[] {
-  return issues.map((issue) => (
-    <IssueButton key={issue.number} issue={issue} {...props} />
-  ));
-}
-
-function emptyState(title: string, issues: Issue[]): JSX.Element | false {
-  return (
-    issues.length === 0 && <Text>{`No ${title.toLowerCase()} Issues.`}</Text>
-  );
-}
-
-function IssueButton(props: IssueProps): JSX.Element {
-  return (
-    <Button
-      label={`#${props.issue.number}  ${props.issue.title}`}
-      variant="outline"
+    <ListItem
+      title={issue.title}
+      subtitle={`#${issue.number}`}
+      selected={props.selected?.number === issue.number}
       onPress={() => void fetchIssue(props)}
+      meta={issue.labels.map((label) => (
+        <Pill key={label} text={label} />
+      ))}
     />
   );
 }
@@ -151,5 +140,3 @@ async function selectedIssue({
     issue: await loadIssue({ project: project!, issue, storage, trackers }),
   };
 }
-
-export { IssueDetail };

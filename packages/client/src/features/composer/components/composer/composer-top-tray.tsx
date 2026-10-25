@@ -1,8 +1,6 @@
-import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { ReplaceableSlot } from '#lib/product/plugin-registry/replaceable-slot';
 import {
   ComposerPlan,
   ComposerWorkChips,
@@ -16,24 +14,10 @@ import type {
   LivePlanLayout,
 } from './composer-tray-types';
 import type { ComposerProps } from './composer-types';
-import { trayInput, rewrittenTray } from './replaceable-tray';
 
 export function ComposerTopTray(
   layout: TopTrayLayout,
 ): React.JSX.Element | null {
-  return (
-    <ReplaceableSlot
-      input={trayInput(layout)}
-      renderCore={(input) =>
-        input.slotId === composerAboveSlotId ? (
-          <CoreTopTray {...rewrittenTray(layout, input.props)} />
-        ) : null
-      }
-    />
-  );
-}
-
-function CoreTopTray(layout: TopTrayLayout): React.JSX.Element | null {
   return layout.wide ? (
     <ComposerWidePlan {...layout} />
   ) : (

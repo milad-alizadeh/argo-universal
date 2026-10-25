@@ -1,5 +1,13 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import {
+  trackedFiles,
+  untrackedFile,
+  untrackedPaths,
+  type CheckoutFile,
+} from './changes-parse';
+
+export type { CheckoutFile } from './changes-parse';
 
 const execute = promisify(execFile);
 
@@ -9,20 +17,10 @@ const headsPrefix = 'refs/heads/';
 
 const remotesPrefix = 'refs/remotes/';
 
-const porcelainCodeLength = 3;
-
 export type ChangeComparison =
   | { type: 'main' }
   | { type: 'uncommitted' }
   | { type: 'branch'; branch: string };
-
-export type CheckoutFile = {
-  operation: 'add' | 'delete' | 'modify' | 'move';
-  path: string;
-  oldPath?: string;
-  additions: number | null;
-  deletions: number | null;
-};
 
 export type CheckoutChanges = {
   mainBranch: string | null;
@@ -113,107 +111,7 @@ export async function listComparisonBranches(
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-type LineCounts = Pick<CheckoutFile, 'additions' | 'deletions'>;
-
-function numstatCounts(numstat: string): Map<string, LineCounts> {
-  const counts = new Map<
-    string,
-    Pick<CheckoutFile, 'additions' | 'deletions'>
-  >();
-
-  const stats = numstat.split('\0');
-
-  for (let index = 0; index < stats.length - 1; index += 1) {
-    const match = /^(\d+|-)\t(\d+|-)\t(.*)$/s.exec(stats[index] ?? '');
-
-    if (!match) throw new Error('Unrecognised git numstat response');
-    const path = match[3] || stats[index + 2];
-
-    if (!match[3]) index += 2;
-
-    if (!path) throw new Error('Unrecognised git numstat path');
-    counts.set(path, {
-      additions: match[1] === '-' ? null : Number(match[1]),
-      deletions: match[2] === '-' ? null : Number(match[2]),
-    });
-  }
-
-  return counts;
-}
-
-function statusOperation(code: string): CheckoutFile['operation'] {
-  const operations = new Map<string, CheckoutFile['operation']>([
-    ['A', 'add'],
-    ['C', 'add'],
-    ['D', 'delete'],
-    ['R', 'move'],
-  ]);
-
-  return operations.get(code[0] ?? '') ?? 'modify';
-}
-
-type ParsedStatusFile = { file: CheckoutFile; next: number };
-
-function statusFile(
-  fields: string[],
-  index: number,
-  counts: Map<string, LineCounts>,
-): ParsedStatusFile {
-  const code = fields[index] ?? '';
-  const oldPath = fields[index + 1];
-
-  if (!oldPath) throw new Error('Unrecognised git name-status response');
-
-  const renamed = code.startsWith('R') || code.startsWith('C');
-  const path = renamed ? fields[index + 2] : oldPath;
-
-  if (!path) throw new Error('Unrecognised git rename response');
-
-  const file: CheckoutFile = {
-    operation: statusOperation(code),
-    path,
-    ...(counts.get(path) ?? { additions: 0, deletions: 0 }),
-  };
-
-  if (renamed) file.oldPath = oldPath;
-
-  return { file, next: index + (renamed ? porcelainCodeLength : 2) };
-}
-
-function trackedFiles(status: string, numstat: string): CheckoutFile[] {
-  const counts = numstatCounts(numstat);
-  const files: CheckoutFile[] = [];
-  const fields = status.split('\0');
-
-  for (let index = 0; index < fields.length - 1;) {
-    const next = statusFile(fields, index, counts);
-
-    files.push(next.file);
-    index = next.next;
-  }
-
-  return files;
-}
-
-function untrackedPaths(status: string): string[] {
-  const fields = status.split('\0');
-  const paths: string[] = [];
-
-  for (let index = 0; index < fields.length - 1; index += 1) {
-    const field = fields[index] ?? '';
-
-    if (field.startsWith('?? ')) {
-      const path = field.slice(porcelainCodeLength);
-
-      // Git reports nested repositories as directories, not individual files.
-      if (!path.endsWith('/')) paths.push(path);
-    } else if (/^[RC]/.test(field.slice(0, 2))) index += 1;
-  }
-
-  return paths;
-}
-
-async function untrackedFile(
+async function untrackedChange(
   checkout: string,
   path: string,
 ): Promise<CheckoutFile> {
@@ -225,16 +123,7 @@ async function untrackedFile(
     path,
   ]);
 
-  const match = /^(\d+|-)\t(\d+|-)\t/s.exec(stat);
-
-  if (!match) throw new Error('Unrecognised git untracked numstat response');
-
-  return {
-    operation: 'add',
-    path,
-    additions: match[1] === '-' ? null : Number(match[1]),
-    deletions: match[2] === '-' ? null : Number(match[2]),
-  };
+  return untrackedFile(path, stat);
 }
 
 export async function readCheckoutChanges(
@@ -259,7 +148,8 @@ export async function readCheckoutChanges(
     (file) => !untrackedSet.has(file.path),
   );
 
-  for (const path of untracked) files.push(await untrackedFile(checkout, path));
+  for (const path of untracked)
+    files.push(await untrackedChange(checkout, path));
   files.sort((a, b) => a.path.localeCompare(b.path));
 
   return {

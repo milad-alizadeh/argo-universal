@@ -1,3 +1,5 @@
+import type { PluginBadge } from '@repo/contracts/plugins/runtime';
+import type { BadgeCount } from '@repo/kit/badge-count';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { ScrollView } from '@repo/kit/primitives/layout/scroll-view';
 import { cn } from '@repo/kit/utils';
@@ -8,7 +10,7 @@ import {
   type Section,
   type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
-import { sectionAttentionCount } from '../../utils/attention-badge';
+import { sectionBadge } from '../../utils/section-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
 import { railTiles, useRailTileStyle } from './rail-tile-style';
 
@@ -18,16 +20,16 @@ export interface FrameRailProps {
   hasSidebar: boolean;
   selectedSection: Section;
   attentionCount: number;
+  // Each Plugin nav item's own count.
+  pluginBadges?: readonly PluginBadge[];
   sidebarShown: boolean;
   onSectionChange: (section: Section) => void;
   onSidebarShownChange: (shown: boolean) => void;
 }
 
-type SectionButtonProps = Pick<
-  FrameRailProps,
-  'attentionCount' | 'onSectionChange'
-> & {
+type SectionButtonProps = Pick<FrameRailProps, 'onSectionChange'> & {
   section: NavigationSection;
+  badge: BadgeCount;
   selected: boolean;
 };
 
@@ -72,7 +74,7 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
   return (
     <View>
       <SectionTile {...props} />
-      <AttentionBadge count={props.attentionCount} />
+      <AttentionBadge badge={props.badge} />
     </View>
   );
 });
@@ -103,7 +105,11 @@ function railSectionProps(
   return {
     section,
     selected: props.selectedSection === section.id,
-    attentionCount: sectionAttentionCount(section.id, props.attentionCount),
+    badge: sectionBadge(
+      section.id,
+      props.attentionCount,
+      props.pluginBadges ?? [],
+    ),
     onSectionChange: props.onSectionChange,
   };
 }

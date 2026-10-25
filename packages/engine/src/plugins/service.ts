@@ -39,6 +39,7 @@ import {
   startPlugins,
   type PluginServiceDeps,
 } from './located-plugins';
+import { startOrderedPlugins } from './plugin-order';
 import { renderSlot } from './slots/render-slot';
 import { slotViews } from './slots/slot-views';
 
@@ -130,23 +131,31 @@ export class PluginService {
     slot: PluginSlotInput,
     connection: RpcConnection,
   ): AsyncGenerator<SlotMessage> {
-    const { running: pluginIds } = await startPlugins(this.deps, ({ plugin }) =>
-      fillsSlot(plugin, slot),
+    const { running: pluginIds } = await startOrderedPlugins(
+      this.deps,
+      ({ plugin }) => fillsSlot(plugin, slot),
     );
 
     yield { type: 'contributors', pluginIds };
     yield* slotViews(
       this.deps.pluginRuntime.views,
-      { pluginIds, slot },
+      { pluginIds, slot, failed: this.slotFailed },
       connection,
     );
   }
+
+  private readonly slotFailed = (
+    pluginId: string,
+    slotId: string,
+    reason: string,
+  ): void =>
+    this.deps.pluginRuntime.contributionFailed(pluginId, slotId, reason);
 
   public async *render(
     input: ReplaceableInput,
     connection: RpcConnection,
   ): AsyncGenerator<ReplaceableMessage> {
-    const plugins = await startPlugins(this.deps, ({ plugin }) =>
+    const plugins = await startOrderedPlugins(this.deps, ({ plugin }) =>
       rendersSlot(plugin, input.slotId),
     );
 

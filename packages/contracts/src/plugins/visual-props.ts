@@ -18,7 +18,10 @@ const point = z.strictObject({ x: number, y: number });
 const series = z.strictObject({
   name: label,
   tone: z.enum(tones),
-  points: z.array(point).max(pointLimit),
+  points: z
+    .array(point)
+    .max(pointLimit)
+    .refine(distinctXs, 'each series must use distinct x values'),
 });
 
 export const chartProps = z.strictObject({
@@ -91,4 +94,8 @@ export const visualSchemas = new Map<string, z.ZodObject>(
 
 function distinctTones(data: z.output<typeof series>[]): boolean {
   return new Set(data.map((item) => item.tone)).size === data.length;
+}
+
+function distinctXs(points: z.output<typeof point>[]): boolean {
+  return new Set(points.map((item) => item.x)).size === points.length;
 }

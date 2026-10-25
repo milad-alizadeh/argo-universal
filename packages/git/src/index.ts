@@ -4,8 +4,8 @@ import { existsSync } from 'node:fs';
 import { mkdir, realpath } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
+import { rejectResponse } from './reject-response';
 
 export * from './changes';
 
@@ -19,8 +19,6 @@ const run = (
   stderr: string;
 }> => execute('git', arguments_, { signal });
 
-const rejections = createRejectionCounter('git');
-
 const branchRefPrefix = 'refs/heads/';
 
 const sessionBranchPrefix = 'argo/';
@@ -31,12 +29,6 @@ const branchName = z
   .startsWith(branchRefPrefix)
   .min(branchRefPrefix.length + 1)
   .transform((ref): string => ref.slice(branchRefPrefix.length));
-
-// Reports and counts a git answer this module does not recognise, then throws.
-const rejectResponse = (what: string, detail?: string): never => {
-  rejections.report(`rejected ${what} response`, detail);
-  throw new Error(`Unrecognised git ${what} response`);
-};
 
 const checkoutRecord = z
   .strictObject({

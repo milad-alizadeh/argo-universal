@@ -1,6 +1,7 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { localhost } from '#mocks/fetch-fixture-server';
+import { journeyMs } from '#mocks/journey-budget';
 import {
   fixtureNetwork,
   httpsServer,
@@ -8,6 +9,9 @@ import {
   probeResult,
   probeSource,
 } from '#mocks/probe-plugin';
+
+// Plugin workers start a real process: budget this file's tests for startup.
+vi.setConfig({ testTimeout: journeyMs });
 
 it.each([
   { format: 'png', contentType: 'image/png' },

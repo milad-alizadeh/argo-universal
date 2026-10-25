@@ -1,4 +1,8 @@
 import type { LinkPreviewData } from '@repo/contracts';
+import { createRejectionCounter } from '@repo/machine-log';
+import { PreviewUnavailable } from './preview-unavailable';
+
+const rejections = createRejectionCounter('Link preview');
 
 type Entry = { expires: number; value: Promise<LinkPreviewData | null> };
 
@@ -35,7 +39,7 @@ export class PreviewCache {
     const entry = pendingEntry();
 
     entry.value = this.fetch(href)
-      .catch(() => null)
+      .catch(noPreview)
       .then((value) => settle(entry, value))
       .finally(() => {
         this.pending--;
@@ -51,6 +55,14 @@ export class PreviewCache {
 
     if (oldest) this.entries.delete(oldest);
   }
+}
+
+// A page that cannot give a preview is expected. Any other failure is a fault: it is reported and counted, and the link shows no preview.
+function noPreview(cause: unknown): null {
+  if (!(cause instanceof PreviewUnavailable))
+    rejections.report('Unexpected preview failure', cause);
+
+  return null;
 }
 
 function settle(

@@ -8,7 +8,10 @@ import type {
   ResourceLink,
   UnsupportedContent,
 } from '@repo/contracts';
+import { createRejectionCounter } from '@repo/machine-log';
 import { assignPresentField } from './present-field';
+
+const rejections = createRejectionCounter('ACP content');
 
 export const createAcpContentMetadata = (
   metadata: AcpContentBlock['_meta'],
@@ -40,6 +43,8 @@ const parseInertReference = (uri: string): string | undefined => {
 
     return hasReferenceCredentials(parsed) ? undefined : uri;
   } catch {
+    rejections.report('unparseable resource URI');
+
     return undefined;
   }
 };

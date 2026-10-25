@@ -13,8 +13,9 @@ import type { RegisteredHook } from './hook-registry';
 import { coreAnswer } from './hook-rules';
 import {
   discardUnusedReplacements,
-  type RenderedReplacement,
+  type RetainedReplacement,
 } from './render-answer';
+import { logShadowed, passOn } from './render-log';
 import { RunningHook, type HookStep } from './running-hook';
 
 export type HookChainInput = {
@@ -34,7 +35,7 @@ type Chain = {
   hooks: readonly RegisteredHook[];
   ancestors: ReadonlySet<string>;
   surface?: PluginSurface;
-  replacements: RenderedReplacement[];
+  replacements: RetainedReplacement[];
 };
 
 // Runs Hooks as a middleware chain over core (ADR-0027), one worker call per Hook.
@@ -57,6 +58,7 @@ export class HookChain {
 
       return answer;
     } finally {
+      logShadowed(this.input.log, chain, { event, answer });
       discardUnusedReplacements(chain.replacements, answer, this.input.discard);
     }
   }
@@ -101,7 +103,8 @@ export class HookChain {
       const hook = chain.hooks[index];
 
       if (!hook) return coreAnswer(chain.name, event);
-      const rest = this.from(chain, index + 1);
+      const below = this.from(chain, index + 1);
+      const rest = passOn(this.input.log, hook, { ...chain, event, below });
 
       return this.invoke(hook, { ...chainStep(chain), event, rest }, chain);
     };

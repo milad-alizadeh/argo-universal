@@ -11,10 +11,9 @@ import type {
 } from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
 import {
-  fallbackKey,
   forgetOnce,
-  logOnce,
-  renderFallbackLine,
+  logFallback,
+  type Fallback,
 } from '../views/render-fallback';
 import { answerPluginCall } from './calls';
 import type { PluginLocation } from './plugin-location';
@@ -34,7 +33,7 @@ export class PluginRuntime {
 
   constructor(
     private readonly log: (line: string) => void,
-    private readonly services: PluginServices,
+    readonly services: PluginServices,
     clock: PluginClock = realClock,
   ) {
     this.host = new HostConnection(this.callbacks());
@@ -87,16 +86,12 @@ export class PluginRuntime {
     return this.clock.advance(() => this.plugins.runningIds(), ms);
   }
 
-  public renderFallback(
-    pluginId: string,
-    slotId: string,
-    reason: string,
-  ): void {
-    logOnce(
-      this.log,
-      fallbackKey('runtime', pluginId, slotId),
-      renderFallbackLine(pluginId, slotId, reason),
-    );
+  public renderFallback(...fallback: Fallback): void {
+    logFallback(this.log, 'runtime', fallback);
+  }
+
+  public contributionFailed(...fallback: Fallback): void {
+    logFallback(this.log, 'contribution', fallback);
   }
 
   private callbacks(): ConstructorParameters<typeof HostConnection>[0] {

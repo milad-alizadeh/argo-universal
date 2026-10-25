@@ -11,8 +11,12 @@ it.each([
   ['process.cwd();', 'Node global process'],
   ["new URL('https://example.com');", 'Node global URL'],
   [
-    "argo.slots.register('argo/composer/above/v1', () => null);",
+    "argo.slots.register('argo/session/row/v1', () => null);",
     'Undeclared Slot',
+  ],
+  [
+    "argo.slots.register('argo/feed/tool-call/v1', () => null);",
+    'drawn through ui.render',
   ],
   ["argo.on('unknown.event', () => null);", 'Unknown Hook event'],
 ])(
@@ -66,6 +70,36 @@ it('validate reports the hello Plugin contributions', async () => {
   expect(await run('validate', example)).toMatchObject({
     code: 0,
     output: expect.stringContaining('argo.slots.register'),
+  });
+}, 30_000);
+
+it('validate reports the declared order', async () => {
+  const directory = await fixture(
+    "export function register(argo) { argo.on('ui.render', (ctx, e, next) => next()); }",
+  );
+
+  const file = join(directory, 'plugin.json');
+
+  const manifest = PluginManifest.parse(
+    JSON.parse(await readFile(file, 'utf8')),
+  );
+
+  await writeFile(
+    file,
+    JSON.stringify({
+      ...manifest,
+      contributes: {
+        ...manifest.contributes,
+        hooks: ['ui.render'],
+        slots: ['argo/feed/message/v1'],
+        order: 5,
+      },
+    }),
+  );
+
+  expect(await run('validate', directory)).toMatchObject({
+    code: 0,
+    output: expect.stringContaining('order: 5'),
   });
 }, 30_000);
 

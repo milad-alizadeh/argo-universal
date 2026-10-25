@@ -81,7 +81,8 @@ export type WireSchemaHints = {
     "onChangeText": PropValue<"Screen", "onChangeText">;
   };
   "ListDetail": {
-
+    /** The list screen’s title on compact windows, where the list is the screen; the header returns to it when the item closes. */
+    "title": PropValue<"ListDetail", "title">;
   };
   "Detail": {
     /** The content drawn by the kit Markdown part. */

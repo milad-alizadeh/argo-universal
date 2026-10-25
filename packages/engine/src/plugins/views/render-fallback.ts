@@ -12,14 +12,32 @@ export const belowWireMinimum = 'App is below the wire minimum';
 export const updateArgoLine = (pluginId: string, path: string): string =>
   `Plugin ${pluginId}: Update Argo ${path}: ${belowWireMinimum}`;
 
-// Where a Slot's fall back to core came from: the runtime itself, an App that failed to draw, or a `ui.render` Hook.
-export type FallbackSource = 'runtime' | 'drawing' | 'hook';
+// Where a Slot's fall back to core came from: the runtime itself, an App that failed to draw, a `ui.render` Hook, or a Slot contribution that threw.
+export type FallbackSource = 'runtime' | 'drawing' | 'hook' | 'contribution';
+
+export type Fallback = [pluginId: string, slotId: string, reason: string];
+
+// A contribution that threw is logged once per Plugin, Slot and reason, however many contexts the Slot is open in.
+export function logFallback(
+  log: (line: string) => void,
+  source: FallbackSource,
+  [pluginId, slotId, reason]: Fallback,
+): void {
+  const parts = source === 'contribution' ? [reason] : [];
+
+  logOnce(
+    log,
+    fallbackKey(source, pluginId, slotId, ...parts),
+    renderFallbackLine(pluginId, slotId, reason),
+  );
+}
 
 export const fallbackKey = (
   source: FallbackSource,
   pluginId: string,
   slotId: string,
-): OnceKey => [pluginId, 'core-fallback', source, slotId];
+  ...reason: string[]
+): OnceKey => [pluginId, 'core-fallback', source, slotId, ...reason];
 
 export const updateArgoKey = (pluginId: string, path: string): OnceKey => [
   pluginId,
@@ -72,5 +90,5 @@ function take(log: Log, pluginId: string): Held[] {
 export function forgetOnce(log: Log, pluginId: string): void {
   for (const { identity, count } of take(log, pluginId))
     if (count > 0)
-      log(`Plugin ${pluginId}: ${count} more repeats of ${identity}`);
+      log(`Plugin ${pluginId}: ${count} more repeats of ${oneLine(identity)}`);
 }

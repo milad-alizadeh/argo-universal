@@ -8,7 +8,7 @@ import type { PluginSettings } from './settings/plugin-settings';
 
 type PluginDescriptor = PluginList['plugins'][number];
 
-type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
+export type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
 
 export type StartedPlugins = { running: string[]; stopped: string[] };
 
@@ -144,8 +144,24 @@ export async function startPlugins(
   deps: PluginServiceDeps,
   declares: (located: LocatedPlugin) => boolean,
 ): Promise<StartedPlugins> {
+  return startLocated(deps, (await locatePlugins(deps)).filter(declares));
+}
+
+// Starts the located Plugins that `declares` picks, whatever their folders, in `order` (ADR-0035).
+export async function startSortedPlugins(
+  deps: PluginServiceDeps,
+  declares: (located: LocatedPlugin) => boolean,
+  order: (a: LocatedPlugin, b: LocatedPlugin) => number,
+): Promise<StartedPlugins> {
   const declaring = (await locatePlugins(deps)).filter(declares);
 
+  return startLocated(deps, declaring.toSorted(order));
+}
+
+async function startLocated(
+  deps: PluginServiceDeps,
+  declaring: LocatedPlugin[],
+): Promise<StartedPlugins> {
   const isRunning = await Promise.all(
     declaring.map((located) => isStarted(deps, located)),
   );

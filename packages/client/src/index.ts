@@ -33,6 +33,8 @@ export { SessionDetailScreen } from './screens/sessions/$id/session-detail-scree
 
 export { AccountListScreen } from './screens/settings/accounts/account-list-screen';
 
+export { AccountDetailScreen } from './screens/settings/accounts/$id/account-detail-screen';
+
 export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
 
 export { useRestoredThemeChoice } from '#features/settings';

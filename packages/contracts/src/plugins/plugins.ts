@@ -57,57 +57,66 @@ export const PluginManifest = z
         /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.(?:js|mjs|cjs|ts|tsx)$/,
       ),
     icon: PluginIcon,
-    contributes: z.strictObject({
-      accounts: z
-        .array(
-          z.strictObject(
-            { host: AccountHost, page: PluginPath },
-            {
-              error: ({ input }) =>
-                typeof input === 'string'
-                  ? `Account ${input} must declare { host, page } and its verbatim fetch Capability`
-                  : 'Account must declare { host, page }',
-            },
+    contributes: z
+      .strictObject({
+        accounts: z
+          .array(
+            z.strictObject(
+              { host: AccountHost, page: PluginPath },
+              {
+                error: ({ input }) =>
+                  typeof input === 'string'
+                    ? `Account ${input} must declare { host, page } and its verbatim fetch Capability`
+                    : 'Account must declare { host, page }',
+              },
+            ),
+          )
+          .optional(),
+        nav: z
+          .array(
+            z.strictObject({
+              id: PluginIdentifier,
+              title: z.string().trim().min(1),
+              path: PluginPath,
+            }),
+          )
+          .refine(
+            (items) =>
+              new Set(items.map((item) => item.id)).size === items.length,
+            'Nav ids must be unique',
           ),
-        )
-        .optional(),
-      nav: z
-        .array(
-          z.strictObject({
-            id: PluginIdentifier,
-            title: z.string().trim().min(1),
+        settings: PluginSettingsSchema.optional(),
+        background: z
+          .strictObject({
             path: PluginPath,
-          }),
-        )
-        .refine(
-          (items) =>
-            new Set(items.map((item) => item.id)).size === items.length,
-          'Nav ids must be unique',
-        ),
-      settings: PluginSettingsSchema.optional(),
-      background: z
-        .strictObject({
-          path: PluginPath,
-          interval: z.number().finite().nonnegative(),
-        })
-        .optional(),
-      // The Slots the Plugin fills; core asks only these Plugins for a Slot's content.
-      slots: z
-        .array(SlotId)
-        .refine(
-          (slots) => new Set(slots).size === slots.length,
-          'Slot ids must be unique',
-        )
-        .optional(),
-      // The core events the Plugin hooks; its worker starts when one fires (ADR-0027).
-      hooks: z
-        .array(HookEventName)
-        .refine(
-          (events) => new Set(events).size === events.length,
-          'Hook events must be unique',
-        )
-        .optional(),
-    }),
+            interval: z.number().finite().nonnegative(),
+          })
+          .optional(),
+        // The Slots the Plugin fills; core asks only these Plugins for a Slot's content.
+        slots: z
+          .array(SlotId)
+          .refine(
+            (slots) => new Set(slots).size === slots.length,
+            'Slot ids must be unique',
+          )
+          .optional(),
+        // The core events the Plugin hooks; its worker starts when one fires (ADR-0027).
+        hooks: z
+          .array(HookEventName)
+          .refine(
+            (events) => new Set(events).size === events.length,
+            'Hook events must be unique',
+          )
+          .optional(),
+        // Where the Plugin sits among a Slot's contributors and in a Replaceable Slot's `ui.render` chain: lower comes first, 0 when left out (ADR-0035).
+        order: z.int().optional(),
+      })
+      .refine(
+        (contributes) =>
+          contributes.order === undefined ||
+          (contributes.slots ?? []).length > 0,
+        { message: 'order needs a Slot', path: ['order'] },
+      ),
     capabilities: z.array(PluginCapability).optional(),
   })
   .superRefine(validateAccountCapabilities);

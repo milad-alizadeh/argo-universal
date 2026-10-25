@@ -38,6 +38,7 @@ function SelectMenu(props: PickerProps): ReactElement {
       options={props.options}
       onValueChange={props.pick}
       disabled={props.disabled}
+      summary={props.summary}
       lead={<RowTitle title={props.title} leading={props.leading} />}
     />
   );
