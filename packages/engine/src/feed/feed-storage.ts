@@ -6,6 +6,7 @@ import {
 } from '../storage';
 import { newestRows } from './feed-row';
 import { FeedRowsJob, type QueuedFeedRows } from './feed-rows-job';
+import type { CommittedTurnEnding } from './turn-settlement';
 
 export { FeedRowsJob } from './feed-rows-job';
 
@@ -15,6 +16,12 @@ function queuedRows(job: WriterJob, sessionId: string): QueuedFeedRows[] {
 
   return queued ? [queued] : [];
 }
+
+// The live Turn endings in a Writer commit. Only a `FeedRowsJob` carries one: stored settlement (Engine restart, archive) writes in its own transaction, so its endings never appear here.
+export const committedTurnEndings = (
+  jobs: readonly WriterJob[],
+): readonly CommittedTurnEnding[] =>
+  jobs.flatMap((job) => (job instanceof FeedRowsJob ? job.turnEndings() : []));
 
 export type QueuedFeed = QueuedFeedRows & { highestPosition: number };
 

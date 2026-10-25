@@ -5,9 +5,9 @@ import { createRejectionCounter } from '@repo/machine-log';
 import { and, eq, or, sql, type SQL } from 'drizzle-orm';
 import {
   advanceRecoveredSession,
-  recoverTurnEnd,
-  restartTurnError,
   recoverStoredFeedRow,
+  restartTurnError,
+  settleStoredTurn,
   storedFeedColumns,
 } from '../feed';
 
@@ -71,13 +71,16 @@ export function recoverAfterRestart(database: Database): void {
       advanceRecoveredSession(transaction, sessionId, maxRevision);
 
     for (const row of ended)
-      recoverTurnEnd(transaction, {
+      settleStoredTurn(transaction, {
         sessionId: row.sessionId,
         turnId: row.id,
-        end: {
-          stopReason: 'error',
-          error: restartTurnError,
-          durationMs: Math.max(0, endedAt - row.startedAt),
+        ending: {
+          kind: 'engine_restart',
+          turnEnd: {
+            stopReason: 'error',
+            error: restartTurnError,
+            durationMs: Math.max(0, endedAt - row.startedAt),
+          },
         },
       });
   });

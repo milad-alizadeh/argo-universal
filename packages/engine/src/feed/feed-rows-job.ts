@@ -12,7 +12,7 @@ import {
   upsertFeedRows,
 } from './feed-rows-write';
 import { titleFromRows } from './prompt-title';
-import { turnEndingsOf, type CommittedTurnEnding } from './turn-end';
+import { turnEndingsOf, type CommittedTurnEnding } from './turn-settlement';
 
 type FeedRowsJobInput = FeedRowsWrite & {
   // The blobs the job's prompt rows show.
