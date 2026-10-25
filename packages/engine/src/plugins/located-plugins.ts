@@ -12,15 +12,26 @@ type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
 
 export type StartedPlugins = { running: string[]; stopped: string[] };
 
+// What the service asks of settings and Accounts: the Server gives it the real ones, a Plugin's own tests plain ones.
+export type ServiceSettings = Pick<
+  PluginSettings,
+  'enabled' | 'setEnabled' | 'values' | 'change'
+>;
+
+export type ServiceAccounts = Pick<
+  PluginAccounts,
+  'list' | 'grants' | 'removePlugin'
+>;
+
 export type PluginServiceDeps = PluginsDeps & {
-  pluginAccounts: PluginAccounts;
+  pluginAccounts: ServiceAccounts;
   pluginRuntime: PluginRuntime;
-  pluginSettings: PluginSettings;
+  pluginSettings: ServiceSettings;
 };
 
 export function applyEnabled(
   result: PluginList,
-  settings: PluginSettings,
+  settings: ServiceSettings,
 ): void {
   for (const plugin of result.plugins)
     plugin.enabled = settings.enabled(plugin.manifest.id);

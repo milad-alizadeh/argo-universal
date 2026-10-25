@@ -3,8 +3,7 @@ import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
 import { z } from 'zod';
 import { discoverPlugins } from '../discovery/loader';
-import type { PluginServiceDeps } from '../located-plugins';
-import type { PluginAccounts } from './plugin-accounts';
+import type { PluginServiceDeps, ServiceAccounts } from '../located-plugins';
 
 export async function discoverWithAccounts(
   deps: PluginServiceDeps,
@@ -32,7 +31,7 @@ async function reconcileAccounts(
   );
 }
 
-function recordedPlugins(accounts: PluginAccounts): string[] {
+function recordedPlugins(accounts: ServiceAccounts): string[] {
   return [
     ...new Set([
       ...accounts.list().map(({ providedBy }) => providedBy),

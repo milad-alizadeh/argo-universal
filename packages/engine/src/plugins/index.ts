@@ -1,5 +1,13 @@
 export { createPluginsRouter, type PluginsRouterDeps } from './router';
 
+export { createPluginRuntime } from './runtime/create-runtime';
+
+export { PluginService } from './service';
+
+export type { PluginServiceDeps } from './located-plugins';
+
+export { discoverPlugins } from './discovery/loader';
+
 export { Plugins, type PluginServerOptions } from './plugins';
 
 export { PluginRuntime } from './runtime/plugin-runtime';
