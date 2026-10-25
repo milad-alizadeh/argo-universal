@@ -62,6 +62,8 @@ export const buttonDefaults = { variant: 'default', size: 'md' } as const;
 
 export const iconButtonSizes = ['sm', 'md', 'lg'] as const;
 
+export type IconButtonSize = (typeof iconButtonSizes)[number];
+
 export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;

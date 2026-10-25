@@ -52,7 +52,7 @@ function GitIdentity({ data }: { data: GitPreview }): ReactElement {
 
   return (
     <>
-      <Icon name="commit" size="sm" tone="muted" />
+      <Icon name="commit" tone="muted" />
       <Text role="code" tone="muted">
         {data.sha}
       </Text>

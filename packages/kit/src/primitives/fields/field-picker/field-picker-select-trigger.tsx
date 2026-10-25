@@ -45,12 +45,7 @@ function Label(props: TriggerProps): React.JSX.Element {
 const valueClass = 'type-body line-clamp-1 flex flex-row items-center gap-2';
 
 const Chevron = (): React.JSX.Element => (
-  <Icon
-    name="chevron-up-down"
-    size="sm"
-    aria-hidden={true}
-    className="text-tertiary"
-  />
+  <Icon name="chevron-up-down" aria-hidden={true} className="text-tertiary" />
 );
 
 const triggerClassName = cn(

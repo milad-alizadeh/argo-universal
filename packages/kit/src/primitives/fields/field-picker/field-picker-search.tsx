@@ -23,7 +23,6 @@ export function ScreenSearchField(
     <View className={containerClasses(props.className)}>
       <Icon
         name="search"
-        size="sm"
         className="text-foreground wide:text-muted-foreground"
       />
       <SearchInput {...props} />

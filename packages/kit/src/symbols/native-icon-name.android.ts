@@ -23,6 +23,3 @@ export function nativeIconName(
     ? materialFilledImage(drawn.material)
     : materialImage(drawn.material);
 }
-
-// Expo UI's Icon size for an Argo icon role's pixels.
-export const nativeIconSize = (pixels: number): number => pixels;

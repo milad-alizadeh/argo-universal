@@ -52,7 +52,7 @@ function SelectedCheck({
 
   return (
     <FilterChip.LeadingIcon>
-      <NativeSymbol name="check" size="sm" />
+      <NativeSymbol name="check" />
     </FilterChip.LeadingIcon>
   );
 }

@@ -11,9 +11,9 @@ export const iconName = z
 
 export const iconSize = z
   .custom<IconSize>(
-    (value) => typeof value === 'string' && Object.hasOwn(iconSizes, value),
+    (value) => typeof value === 'string' && iconSizes.some((s) => s === value),
   )
-  .register(kitSchemaJson, { type: 'string', enum: Object.keys(iconSizes) });
+  .register(kitSchemaJson, { type: 'string', enum: [...iconSizes] });
 
 // The one SF Symbols and Material Symbols check for every kit icon.
 export const sfSymbol = z.enum(sfSymbolNames);

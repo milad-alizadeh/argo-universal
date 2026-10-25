@@ -6,5 +6,5 @@ import type { SelectedCheckProps } from './selected-check-props';
 export function SelectedCheck({
   className,
 }: SelectedCheckProps): React.JSX.Element {
-  return <Icon name="check" size="sm" className={className} />;
+  return <Icon name="check" className={className} />;
 }

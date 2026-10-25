@@ -19,7 +19,7 @@ const planHeadingProps = {
 function PlanHeading(): JSX.Element {
   return (
     <View className="flex-row items-center gap-2">
-      <Icon size="sm" name="checklist" className="text-foreground" />
+      <Icon name="checklist" className="text-foreground" />
       <Text selectable={false} {...planHeadingProps} className="select-none">
         Plan
       </Text>

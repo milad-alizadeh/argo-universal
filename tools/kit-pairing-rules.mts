@@ -51,6 +51,7 @@ export const exemptFolders = {
   'overlays/link-preview': 'App-only preview of a Link target.',
   'overlays/open-state': 'The open and close state the overlays share.',
   'overlays/portal': 'Where overlays mount; no props of its own.',
+  'status/chevron': "The chevron the kit's own triggers and rows draw.",
   'status/count-badge': 'App-only badge on rail and drawer items.',
   'status/disclosure-chevron': 'The chevron a collapsible row draws.',
   'status/orb': 'App-only for now; a Plugin sends a Spinner.',

@@ -27,7 +27,7 @@ export function MetadataLabel(props: MetadataLabelProps): ReactElement {
   return (
     <MetadataField {...fieldProps(props)} valueLabel={props.text}>
       <MetadataText text={props.text}>
-        {props.icon ? <Icon name={props.icon} size="sm" /> : null}
+        {props.icon ? <Icon name={props.icon} /> : null}
       </MetadataText>
     </MetadataField>
   );

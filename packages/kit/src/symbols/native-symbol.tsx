@@ -1,7 +1,7 @@
 import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import { useNativeTheme } from '#kit/native-theme';
-import { Icon, IconSlot } from '#primitives/content/icon';
+import { Icon, IconSlot, useIconSize } from '#primitives/content/icon';
 import { NativeIcon } from './native-icon';
 import type { NativeSymbolProps } from './native-symbol-props';
 
@@ -34,10 +34,12 @@ function HostedSymbol({
   muted,
   ...props
 }: NativeSymbolProps): React.JSX.Element {
+  const size = useIconSize(props.size);
+
   return (
     <RNHostView matchContents>
-      <IconSlot size={props.size} {...hostedIconSlot}>
-        <Icon {...props} className={mutedClassName(muted)} />
+      <IconSlot size={size} {...hostedIconSlot}>
+        <Icon {...props} size={size} className={mutedClassName(muted)} />
       </IconSlot>
     </RNHostView>
   );

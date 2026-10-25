@@ -1,13 +1,17 @@
 import type * as React from 'react';
 import { useContext } from 'react';
-import { ActivityIndicator, Platform, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#kit/utils';
 import { TextClassContext, toneClass } from '#primitives/content/text';
 import { StatusDot } from '#primitives/status/status-dot';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
-import { useIconBox, useIconPixels } from '../../../symbols/icon-size';
+import {
+  type IconSizeValue,
+  useIconBox,
+  useIconPixels,
+} from '../../../symbols/icon-size';
 import {
   type IconSymbol,
   type ResolvedIcon,
@@ -16,8 +20,8 @@ import {
 import { LogoGlyph } from '../../../symbols/logo-glyph';
 import type { LogoSource } from '../../../symbols/logo-source';
 import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
-import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
-import { useSlotIconSize } from './icon-size-context';
+import type { IconProps } from './icon-props';
+import { useIconSize } from './icon-size-context';
 
 // Web colours the glyph with CSS from `colorClassName`, so only native resolves the class to a tint, which costs a style lookup each render on web.
 const TintedSymbol =
@@ -45,7 +49,7 @@ function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
 }
 
 export function Icon(slotted: IconProps): React.JSX.Element {
-  const props = { ...slotted, size: useSlotIconSize(slotted.size) };
+  const props = { ...slotted, size: useIconSize(slotted.size) };
   const glyph = <IconGlyph {...props} />;
 
   const hidden = useContext(StatusMarkHidden);
@@ -59,11 +63,14 @@ export function Icon(slotted: IconProps): React.JSX.Element {
   );
 }
 
-type LogoIconProps = IconProps & { source: LogoSource };
+// An icon whose size its surrounding control has settled.
+type Sized<P> = P & { size: IconSizeValue };
 
-type SymbolIconProps = IconProps & { name: IconSymbol };
+type LogoIconProps = Sized<IconProps> & { source: LogoSource };
 
-function IconGlyph(props: IconProps): React.JSX.Element {
+type SymbolIconProps = Sized<IconProps> & { name: IconSymbol };
+
+function IconGlyph(props: Sized<IconProps>): React.JSX.Element {
   if (props.source) return <IconLogo {...props} source={props.source} />;
 
   return <IconSymbolGlyph {...props} name={props.name} />;
@@ -107,7 +114,7 @@ function useSymbolDrawingProps(
 }
 
 function IconWithStatus(
-  props: IconProps & {
+  props: Sized<IconProps> & {
     status: NonNullable<IconProps['status']>;
     children: React.ReactElement;
   },
@@ -142,25 +149,4 @@ function iconStatusDotProps(
     pulse: props.status.pulse,
     testID: props.testID ? `${props.testID}-${props.status.tone}` : undefined,
   };
-}
-
-export function IconSpinner({
-  iconSize,
-  ...props
-}: IconSpinnerProps): React.JSX.Element {
-  return <ActivityIndicator {...props} size={useIconPixels(iconSize)} />;
-}
-
-export function IconSlot({
-  size,
-  className,
-  ...props
-}: IconSlotProps): React.JSX.Element {
-  return (
-    <View
-      {...props}
-      style={useIconBox(size)}
-      className={cn('shrink-0 items-center justify-center', className)}
-    />
-  );
 }

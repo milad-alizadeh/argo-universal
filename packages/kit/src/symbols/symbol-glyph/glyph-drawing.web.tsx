@@ -1,7 +1,9 @@
 import type { SFSymbol } from 'expo-symbols';
 import type * as React from 'react';
+import { chevronSymbols } from '../chevron-scale';
 import { customSymbolPath, isCustomSymbol } from '../custom-symbols';
 import type { SystemDrawing } from '../drawn-symbol';
+import { appleSymbolShare } from '../glyph-sizing';
 import {
   type RenderSymbolImage,
   useSymbolImage,
@@ -64,31 +66,11 @@ interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
   sf: SFSymbol;
 }
 
-/*
- * An SF Symbol fills most of its point size where a Material glyph keeps padding in its 24-unit grid, so at one size
- * the SF Symbol reads larger. Every SF Symbol on desktop draws at this share of its box to match Material.
- */
-const appleSymbolScale = 0.8;
-
-// SF's chevrons read large beside its other symbols, so a chevron draws at three quarters of its set size.
-const chevronScale = 0.75;
-
-const chevrons = new Set<SFSymbol>([
-  'chevron.up',
-  'chevron.down',
-  'chevron.left',
-  'chevron.right',
-  'chevron.forward',
-  'chevron.up.chevron.down',
-]);
-
-const symbolScale = (sf: SFSymbol): number =>
-  appleSymbolScale * (chevrons.has(sf) ? chevronScale : 1);
-
 // The system image is the mask and the text colour fills it, so the symbol follows colour like the other icons.
 function MaskedSymbol(props: MaskedSymbolProps): React.JSX.Element | null {
   const ratio = globalThis.devicePixelRatio;
-  const pointSize = Math.round(props.pixels * symbolScale(props.sf) * ratio);
+  const share = appleSymbolShare(chevronSymbols.has(props.sf));
+  const pointSize = Math.round(props.pixels * share * ratio);
   const image = useSymbolImage(props.render, { name: props.sf, pointSize });
 
   if (!image) return null;

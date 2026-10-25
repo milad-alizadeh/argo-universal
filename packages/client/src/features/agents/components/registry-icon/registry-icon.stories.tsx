@@ -13,7 +13,7 @@ const meta = {
   argTypes: {
     uri: { control: 'text' },
     agentName: { control: 'text' },
-    size: { control: 'select', options: Object.keys(iconSizes) },
+    size: { control: 'select', options: [...iconSizes] },
   },
 } satisfies Meta<typeof RegistryIcon>;
 

@@ -71,7 +71,7 @@ function mark(
 ): ReactElement | null {
   if (option.pending) return <ProgressView />;
 
-  return selected ? <NativeSymbol name="check" size="sm" /> : null;
+  return selected ? <NativeSymbol name="check" /> : null;
 }
 
 /*

@@ -9,7 +9,7 @@ import {
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
-import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
+import { Chevron } from '#primitives/status/chevron';
 import { OpenContext } from './collapsible-context';
 import type { CollapsibleHeaderProps } from './collapsible-props';
 
@@ -44,9 +44,9 @@ function HeaderLabel({ label }: { label: string }): ReactElement {
 function HeaderChevron({ hovered }: { hovered: boolean }): ReactElement {
   return (
     <LineSlot>
-      <DisclosureChevron
+      <Chevron
+        direction="right"
         open={useContext(OpenContext)}
-        size="sm"
         className={headerColour(hovered)}
       />
     </LineSlot>
@@ -84,7 +84,7 @@ function HeaderIcon(props: CollapsibleHeaderProps): ReactElement | null {
 
   return (
     <LineSlot>
-      <Icon name={props.icon} size="sm" tone={props.iconTone} />
+      <Icon name={props.icon} tone={props.iconTone} />
     </LineSlot>
   );
 }

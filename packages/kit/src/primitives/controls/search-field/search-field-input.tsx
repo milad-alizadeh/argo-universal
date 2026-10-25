@@ -38,14 +38,7 @@ function useInputControls(
 }
 
 function SearchLens(): React.JSX.Element {
-  return (
-    <Icon
-      name="search"
-      size="sm"
-      className="text-muted-foreground"
-      aria-hidden
-    />
-  );
+  return <Icon name="search" className="text-muted-foreground" aria-hidden />;
 }
 
 const queryDefaults: ComponentProps<typeof TextInput> = {

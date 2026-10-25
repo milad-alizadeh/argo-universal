@@ -59,7 +59,6 @@ function HeaderIcon(): ReactElement {
   return (
     <Icon
       name="question-bubble"
-      size="sm"
       className="text-muted-foreground android:text-foreground"
     />
   );

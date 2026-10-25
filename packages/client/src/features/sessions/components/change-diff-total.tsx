@@ -9,7 +9,7 @@ export function ChangeDiffTotal(
 ): ReactElement {
   return (
     <View className="flex-row items-center gap-1">
-      {props.icon && <Icon name="diff" size="sm" />}
+      {props.icon && <Icon name="diff" />}
       <Text role="secondary">{props.files} files</Text>
       <DiffDeltas {...props} />
     </View>
