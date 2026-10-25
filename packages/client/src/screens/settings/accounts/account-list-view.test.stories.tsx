@@ -26,7 +26,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ListsEachAccountWithItsLabelAndProvider: Story = {
+export const ListsEachAccountWithItsLabel: Story = {
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('heading', { name: 'Accounts', level: 1 }),
@@ -34,18 +34,18 @@ export const ListsEachAccountWithItsLabelAndProvider: Story = {
 
     await expect(canvas.getAllByText(githubAccount.host)).toHaveLength(2);
     await expect(canvas.getByText(linearAccount.host)).toBeVisible();
-    await expect(
-      canvas.getByText(`${linearAccount.label} · ${linearAccount.provider}`),
-    ).toBeVisible();
-    await expect(
-      canvas.getByText(secondGithubAccount.label, { exact: false }),
-    ).toBeVisible();
+    await expect(canvas.getByText(linearAccount.label)).toBeVisible();
+    await expect(canvas.getByText(secondGithubAccount.label)).toBeVisible();
   },
 };
 
 export const ARowOpensItsAccount: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByText(linearAccount.host));
+    await userEvent.click(
+      canvas.getByRole('link', {
+        name: `${linearAccount.host}, ${linearAccount.label}`,
+      }),
+    );
     await expect(args.onOpenAccount).toHaveBeenCalledWith(linearAccount.id);
   },
 };

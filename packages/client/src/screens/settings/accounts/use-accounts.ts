@@ -17,24 +17,18 @@ export function usePluginNames(): (pluginId: string) => string {
   return (pluginId) => names.get(pluginId) ?? pluginId;
 }
 
-const toAccountRow =
-  (pluginName: (pluginId: string) => string) =>
-  (account: PluginAccount): AccountRow => ({
-    id: account.id,
-    host: account.host,
-    label: account.label,
-    provider: pluginName(account.providedBy),
-  });
+const toAccountRow = (account: PluginAccount): AccountRow => ({
+  id: account.id,
+  host: account.host,
+  label: account.label,
+});
 
 export function useAccountsLoad(): AccountsLoad {
   const { data, isError } = useQuery(
     useTRPC().plugins.accounts.list.queryOptions(),
   );
 
-  const pluginName = usePluginNames();
-
-  if (data)
-    return { status: 'loaded', accounts: data.map(toAccountRow(pluginName)) };
+  if (data) return { status: 'loaded', accounts: data.map(toAccountRow) };
 
   return isError ? { status: 'error' } : { status: 'loading' };
 }

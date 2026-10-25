@@ -3,8 +3,6 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
-import { SettingsLoading } from '../../settings-loading';
-import { refusedSections } from './account-refused-sections';
 import { AccountSignOutAlert, signOutCopy } from './account-sign-out-alert';
 
 export interface AccountBorrower {
@@ -41,7 +39,7 @@ export interface AccountDetailViewProps {
   onBack?: () => void;
 }
 
-// One Account: where it signs in, who provides it, who borrows it, who was refused, and Sign out.
+// One Account: where it signs in, who provides it, which other Plugins may borrow it, and Sign out.
 export function AccountDetailView(
   props: AccountDetailViewProps,
 ): React.JSX.Element {
@@ -59,21 +57,19 @@ export function AccountDetailView(
 function AccountBody(props: AccountDetailViewProps): React.JSX.Element {
   const { account } = props;
 
-  if (account.status === 'loading')
-    return <SettingsLoading label="Loading the Account…" />;
+  if (account.status === 'loading') return oneRow('Loading the Account…');
 
-  if (account.status === 'missing') return missingAccount(props.title);
+  if (account.status === 'missing')
+    return oneRow(`The Server has no Account named ${props.title}.`);
 
   return <LoadedAccountBody {...props} account={account} />;
 }
 
-const missingAccount = (title: string): React.JSX.Element => (
+// While loading, or when the Account is gone, the page is one row saying so.
+const oneRow = (title: string): React.JSX.Element => (
   <FieldGroup>
     <FieldGroup.Section>
-      <FieldGroup.Value
-        title={`The Server has no Account named ${title}.`}
-        value=""
-      />
+      <FieldGroup.Value title={title} value="" />
     </FieldGroup.Section>
   </FieldGroup>
 );
@@ -100,8 +96,7 @@ const accountSections = (
 ): React.JSX.Element => (
   <>
     {detailsSection(props.title, props.account)}
-    {borrowerSections(props.account, props.onRevoke)}
-    {refusedSections(props.account.refused, props.onAllow)}
+    {accessSection(props)}
     {signOutSection(props.account, onSignOutPress)}
   </>
 );
@@ -117,52 +112,41 @@ const detailsSection = (
   </FieldGroup.Section>
 );
 
-const borrowersTitle = 'Plugins using this Account';
+const accessFooter =
+  'A Plugin turned off can no longer borrow this Account. Turn it on to allow it again.';
 
-const emptyBorrowers = (
-  <FieldGroup.Section title={borrowersTitle}>
-    <FieldGroup.Value title="No other Plugins use this Account." value="" />
+// One switch per other Plugin: on while it may borrow the Account, off once refused.
+const accessSection = (props: LoadedProps): React.JSX.Element => (
+  <FieldGroup.Section title="Plugins using this Account" footer={accessFooter}>
+    {accessRows(props)}
   </FieldGroup.Section>
 );
 
-// One section per Plugin, so each Revoke access sits under the Plugin it ends.
-function borrowerSections(
-  account: LoadedAccount,
-  onRevoke: AccountDetailViewProps['onRevoke'],
-): React.JSX.Element | React.JSX.Element[] {
-  if (account.borrowers.length === 0) return emptyBorrowers;
+function accessRows({
+  account,
+  onRevoke,
+  onAllow,
+}: LoadedProps): React.JSX.Element | React.JSX.Element[] {
+  // By name, so a Plugin keeps its row when its switch flips.
+  const plugins = [
+    ...account.borrowers.map((plugin) => ({ plugin, allowed: true })),
+    ...account.refused.map((plugin) => ({ plugin, allowed: false })),
+  ].toSorted((a, b) => a.plugin.name.localeCompare(b.plugin.name));
 
-  return account.borrowers.map((borrower, index) =>
-    borrowerSection({
-      borrower,
-      host: account.host,
-      first: index === 0,
-      onRevoke,
-    }),
-  );
+  if (plugins.length === 0) return noOtherPlugins;
+
+  return plugins.map(({ plugin, allowed }) => (
+    <FieldGroup.Toggle
+      key={plugin.pluginId}
+      title={plugin.name}
+      value={allowed}
+      onValueChange={(on) => (on ? onAllow : onRevoke)(plugin.pluginId)}
+    />
+  ));
 }
 
-interface BorrowerSectionProps {
-  borrower: AccountBorrower;
-  host: string;
-  first: boolean;
-  onRevoke: AccountDetailViewProps['onRevoke'];
-}
-
-const usesHost = (props: BorrowerSectionProps): string => `Uses ${props.host}`;
-
-const borrowerSection = (props: BorrowerSectionProps): React.JSX.Element => (
-  <FieldGroup.Section
-    key={props.borrower.pluginId}
-    title={props.first ? borrowersTitle : undefined}
-  >
-    <FieldGroup.Value title={props.borrower.name} value={usesHost(props)} />
-    {revokeButton(() => props.onRevoke(props.borrower.pluginId))}
-  </FieldGroup.Section>
-);
-
-const revokeButton = (onPress: () => void): React.JSX.Element => (
-  <Button label="Revoke access" variant="secondary" onPress={onPress} />
+const noOtherPlugins = (
+  <FieldGroup.Value title="No other Plugins use this Account." value="" />
 );
 
 const signOutSection = (

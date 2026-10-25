@@ -1,21 +1,15 @@
-import { Text } from '@repo/kit/primitives/content/text';
-import { List, ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { SettingsLoading } from '../settings-loading';
 
 export interface AccountRow {
   id: string;
   host: string;
   label: string;
-  // The name of the Plugin that signed the Account in.
-  provider: string;
 }
 
 export type AccountsLoad =
@@ -36,7 +30,7 @@ const loadFailed: ErrorToast = {
   message: 'The Server did not send its Accounts.',
 };
 
-// One row per Account: its host, then its label and the Plugin that provides it; each opens the Account's page.
+// One row per Account in one card: its host, then its label; each opens the Account's page.
 export function AccountListView(
   props: AccountListViewProps,
 ): React.JSX.Element {
@@ -44,60 +38,45 @@ export function AccountListView(
 
   return (
     <Screen title={accountsTitle} caption={props.caption}>
-      <AccountsBody {...props} />
+      <FieldGroup>
+        <FieldGroup.Section>{accountRows(props)}</FieldGroup.Section>
+      </FieldGroup>
     </Screen>
   );
 }
 
-function AccountsBody(props: AccountListViewProps): React.JSX.Element {
-  const { accounts } = props;
+/*
+ * The section's rows as its own children, so the card knows its first and last row. A failed load keeps the loading
+ * row: the toast says why, and the query retries when the Connection reopens.
+ */
+function accountRows({
+  accounts,
+  onOpenAccount,
+}: AccountListViewProps): React.JSX.Element | React.JSX.Element[] {
+  if (accounts.status !== 'loaded') return loadingAccounts;
 
-  // A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
-  if (accounts.status !== 'loaded')
-    return <SettingsLoading label="Loading Accounts…" />;
+  if (accounts.accounts.length === 0) return noAccounts;
 
-  return accounts.accounts.length === 0 ? (
-    noAccounts
-  ) : (
-    <AccountRows {...props} accounts={accounts.accounts} />
-  );
+  return accounts.accounts.map((account) => accountRow(account, onOpenAccount));
 }
 
-const footer = 'Each Account is provided by the Plugin named on its row.';
+const loadingAccounts = <FieldGroup.Value title="Loading Accounts…" value="" />;
 
-type RowsProps = Pick<AccountListViewProps, 'onOpenAccount'> & {
-  accounts: AccountRow[];
-};
-
-const accountItem = (
-  account: AccountRow,
-  onOpenAccount: RowsProps['onOpenAccount'],
-): React.JSX.Element => (
-  <ListItem
-    key={account.id}
-    title={account.host}
-    subtitle={`${account.label} · ${account.provider}`}
-    onPress={() => onOpenAccount(account.id)}
+const noAccounts = (
+  <FieldGroup.Value
+    title="No Accounts yet. Sign in from a Plugin's page."
+    value=""
   />
 );
 
-const AccountRows = (props: RowsProps): React.JSX.Element => (
-  <List appearance="grouped">
-    <ListSection footer={footer}>
-      {props.accounts.map((account) =>
-        accountItem(account, props.onOpenAccount),
-      )}
-    </ListSection>
-  </List>
-);
-
-const noAccounts = (
-  <View className="gap-6 p-4">
-    <Text role="title" accessibilityRole="heading" aria-level={2}>
-      No Accounts yet
-    </Text>
-    <Text role="secondary" tone="muted">
-      Sign in from a Plugin's page. Its Account will appear here.
-    </Text>
-  </View>
+const accountRow = (
+  account: AccountRow,
+  onOpenAccount: AccountListViewProps['onOpenAccount'],
+): React.JSX.Element => (
+  <FieldGroup.Link
+    key={account.id}
+    title={account.host}
+    value={account.label}
+    onPress={() => onOpenAccount(account.id)}
+  />
 );

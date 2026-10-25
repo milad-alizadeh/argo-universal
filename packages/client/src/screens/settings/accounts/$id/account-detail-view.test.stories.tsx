@@ -14,8 +14,6 @@ import { signOutCopy } from './account-sign-out-alert';
 
 const signOutName = 'Sign out';
 
-const revokeName = 'Revoke access';
-
 const body = within(document.body);
 
 const openAlert = async (): Promise<ReturnType<typeof within>> =>
@@ -44,37 +42,39 @@ export const ShowsHostProviderAndBorrowers: Story = {
     await expect(canvas.getByText('Host')).toBeVisible();
     await expect(canvas.getByText(sharedAccount.host)).toBeVisible();
     await expect(canvas.getByText(sharedAccount.provider)).toBeVisible();
-    await expect(canvas.getByText(issuesBorrower.name)).toBeVisible();
-    await expect(canvas.getByText(pullRequestsBorrower.name)).toBeVisible();
     await expect(
-      canvas.getAllByRole('button', { name: revokeName }),
-    ).toHaveLength(2);
+      canvas.getByRole('switch', { name: issuesBorrower.name }),
+    ).toBeChecked();
+    await expect(
+      canvas.getByRole('switch', { name: pullRequestsBorrower.name }),
+    ).toBeChecked();
   },
 };
 
-export const RevokeEndsOnePluginsAccess: Story = {
+export const TurningAPluginOffRevokesItsAccess: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    const [first] = canvas.getAllByRole('button', { name: revokeName });
-
-    if (!first) throw new Error('Recorded Account needs a Plugin to revoke');
-    await userEvent.click(first);
+    await userEvent.click(
+      canvas.getByRole('switch', { name: issuesBorrower.name }),
+    );
     await expect(args.onRevoke).toHaveBeenCalledOnce();
     await expect(args.onRevoke).toHaveBeenCalledWith(issuesBorrower.pluginId);
     await expect(args.onSignOut).not.toHaveBeenCalled();
   },
 };
 
-export const ARefusedPluginCanBeAllowedAgain: Story = {
+export const TurningARefusedPluginOnAllowsItAgain: Story = {
   args: { account: refusedAccount },
   play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.getByText(pullRequestsBorrower.name)).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Allow access' }));
+    const refused = canvas.getByRole('switch', {
+      name: pullRequestsBorrower.name,
+    });
+
+    await expect(refused).not.toBeChecked();
+    await userEvent.click(refused);
     await expect(args.onAllow).toHaveBeenCalledWith(
       pullRequestsBorrower.pluginId,
     );
-    await expect(
-      canvas.getAllByRole('button', { name: revokeName }),
-    ).toHaveLength(1);
+    await expect(args.onRevoke).not.toHaveBeenCalled();
   },
 };
 
@@ -82,7 +82,7 @@ export const SaysWhenNoOtherPluginUsesIt: Story = {
   args: { account: unsharedAccount },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/No other Plugins/)).toBeVisible();
-    await expect(canvas.queryByRole('button', { name: revokeName })).toBeNull();
+    await expect(canvas.queryByRole('switch')).toBeNull();
   },
 };
 
