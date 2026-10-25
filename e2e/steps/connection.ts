@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect, serverVersion } from '../fixtures';
 import { When, Then } from './fixtures';
 import { onPhone, openConnection, reloadApp } from './frame';
-import { toast } from './toasts';
+import { shownToasts } from './toasts';
 
 // A Server row is named "<label>, <value>".
 function row(page: Page, label: string): Locator {
@@ -19,20 +19,26 @@ When('I view the Connection', async ({ page }): Promise<void> => {
   await viewConnection(page);
 });
 
+// The banner while the Connection reconnects or is offline; each page in a stack has one, the shown page's is visible.
+const banner = (page: Page): Locator =>
+  page
+    .getByText(/^(Reconnecting…|Can't reach .+)$/)
+    .filter({ visible: true })
+    .first();
+
+// While the Server is unavailable the banner over the page says so; the page adds no toast or note of its own.
 Then(
-  'the Connection explains why details cannot load while the Server is unavailable',
+  'the Connection leaves an unavailable Server to the banner',
   async ({ app, page }): Promise<void> => {
     await app.restartEngine(async () => {
       // A fresh App has no cached details: its real query must cross the unavailable Server boundary.
       await reloadApp(page);
       await viewConnection(page);
-      await expect(
-        toast(page, "Could not load the Server's details"),
-      ).toBeVisible({ timeout: 20_000 });
-      await expect(toast(page, "Couldn't reach the Server.")).toBeVisible();
+      await expect(banner(page)).toBeVisible({ timeout: 20_000 });
+      await expect(shownToasts(page)).toHaveCount(0);
       await expect(
         page.getByText('Connecting to the Server…', { exact: true }),
-      ).toBeVisible();
+      ).toHaveCount(0);
       await expect(row(page, 'Version')).toHaveCount(0);
     });
   },
