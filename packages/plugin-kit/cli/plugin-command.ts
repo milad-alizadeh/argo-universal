@@ -81,7 +81,7 @@ function writeOrder(manifest: ValidatedManifest, write: Write): void {
 const ordersSlots = ({
   contributes,
 }: NonNullable<ValidatedManifest>): boolean =>
-  Boolean(contributes.slots ?? contributes.renders);
+  [contributes.slots, contributes.renders].some((ids) => Boolean(ids?.length));
 
 function writeDeclaredOrder(
   { contributes }: NonNullable<ValidatedManifest>,

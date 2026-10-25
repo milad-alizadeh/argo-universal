@@ -80,7 +80,7 @@ async function askMissing(
   if (!input.contexts.length) return { ok: true, items: {} };
 
   const { epoch } = worker;
-  const answer = checked(entry, await ask(input));
+  const answer = requested(entry, input, checked(entry, await ask(input)));
 
   if (worker.epoch === epoch) remember(worker, entry, answer);
 
@@ -96,6 +96,19 @@ function checked(entry: AnyItemsSlot, reply: Reply): ItemsAnswer {
   return parsed.success
     ? { ok: true, items: parsed.data }
     : leftOut(itemsLeftOut.schema);
+}
+
+// Only the contexts asked for are kept, each with no items when the answer leaves it out.
+function requested(
+  entry: AnyItemsSlot,
+  input: SlotItemsInput,
+  answer: ItemsAnswer,
+): ItemsAnswer {
+  if (!answer.ok) return answer;
+
+  const answered = new Map(Object.entries(answer.items));
+
+  return { ok: true, items: itemsFor(entry, answered, input) };
 }
 
 const answerSchema = ({ content }: AnyItemsSlot): z.ZodType<PluginItems> =>
@@ -137,7 +150,6 @@ function remember(
   else worker.failed.set(entry.id, answer);
 }
 
-// A context the answer leaves out has no items, and is kept as such.
 function keep(kept: Kept, items: PluginItems): void {
   for (const [key, answered] of Object.entries(items)) kept.set(key, answered);
 }
