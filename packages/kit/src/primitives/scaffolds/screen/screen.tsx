@@ -1,5 +1,6 @@
-import { use, type ReactElement } from 'react';
+import { use, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
+import { HeadingInsetContext, useHeadingInsetScope } from '#kit/heading-inset';
 import { ScrollColumnContext } from '#kit/scroll-column';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
@@ -19,9 +20,20 @@ export function Screen(props: ScreenProps): ReactElement {
   return (
     <SvgBudget>
       <ActionShortcutScope>
-        <ScreenSurface {...props} />
+        <HeadingInsetScope>
+          <ScreenSurface {...props} />
+        </HeadingInsetScope>
       </ActionShortcutScope>
     </SvgBudget>
+  );
+}
+
+// The Screen's heading learns from its content whether that is grouped cards.
+function HeadingInsetScope(props: { children: ReactNode }): ReactElement {
+  return (
+    <HeadingInsetContext value={useHeadingInsetScope()}>
+      {props.children}
+    </HeadingInsetContext>
   );
 }
 
