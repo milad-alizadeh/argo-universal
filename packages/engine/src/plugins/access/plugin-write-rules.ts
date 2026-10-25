@@ -36,7 +36,8 @@ const writeRules: WriteRule[] = [
   },
   {
     refuses: (target, { data }) =>
-      dirname(target) === data && databaseNames.has(basename(target)),
+      dirname(target) === data &&
+      databaseNames.has(basename(target).toLowerCase()),
     reason: (shown) =>
       `${shown} is the Plugin's database, which argo.storage owns`,
   },

@@ -67,11 +67,13 @@ const refusals: Case[] = [
   },
   { name: 'a path above the data folder', target: '/store', reason: 'outside' },
   { name: 'an unrelated path', target: '/etc/passwd', reason: 'outside' },
-  ...['plugin.db', 'plugin.db-wal', 'plugin.db-shm'].map((file): Case => ({
-    name: `${file} in the data folder`,
-    target: `/store/data/${file}`,
-    reason: 'database',
-  })),
+  ...['plugin.db', 'plugin.db-wal', 'plugin.db-shm', 'PLUGIN.DB'].map(
+    (file): Case => ({
+      name: `${file} in the data folder`,
+      target: `/store/data/${file}`,
+      reason: 'database',
+    }),
+  ),
   {
     name: 'a `.git` entry in the data folder',
     target: '/store/data/.git',
