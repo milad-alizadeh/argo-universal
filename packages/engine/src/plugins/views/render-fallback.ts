@@ -90,5 +90,5 @@ function take(log: Log, pluginId: string): Held[] {
 export function forgetOnce(log: Log, pluginId: string): void {
   for (const { identity, count } of take(log, pluginId))
     if (count > 0)
-      log(`Plugin ${pluginId}: ${count} more repeats of ${identity}`);
+      log(`Plugin ${pluginId}: ${count} more repeats of ${oneLine(identity)}`);
 }
