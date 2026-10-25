@@ -24,12 +24,7 @@ function HiddenText({
   textRole = 'row',
 }: SkeletonBarProps): ReactElement {
   return (
-    <Text
-      role={textRole}
-      numberOfLines={1}
-      aria-hidden
-      className="opacity-0"
-    >
+    <Text role={textRole} numberOfLines={1} aria-hidden className="opacity-0">
       {text}
     </Text>
   );
@@ -70,4 +65,18 @@ export function SkeletonContent(props: {
       <DetailBar kind="meta" text={props.meta} />
     </View>
   );
+}
+
+export interface SkeletonRow {
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  meta?: ReactNode;
+  // Undefined leaves the leading lane out; any other value draws the icon's place.
+  leading?: ReactNode;
+}
+
+// A loading row's leading and content lanes, as its row frame takes them.
+export interface LoadingLanes {
+  leading?: ReactNode;
+  content: ReactNode;
 }

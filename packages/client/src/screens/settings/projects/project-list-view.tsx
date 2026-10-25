@@ -1,4 +1,3 @@
-import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { Action } from '@repo/kit/primitives/actions/action';
 import { List } from '@repo/kit/primitives/lists/list';
 import {
@@ -15,8 +14,9 @@ import {
 } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
+import { Platform } from 'react-native';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
-import { LoadedProjects } from './project-list-rows';
+import { LoadedProjects, ProjectsColumn } from './project-list-rows';
 import { projectsTitle, searchLabel } from './project-list-search';
 
 // The Server's Projects, found by name or folder; each opens its own page.
@@ -69,17 +69,23 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
   return <LoadedProjects {...props} projects={projects.projects} />;
 }
 
-// Widths, not words: a Project row is its folder icon and one line, so these stand in for the names.
+/*
+ * Widths, not words: a Project row is its folder icon, its name and its remote, so these stand in for them. Android
+ * draws a Link's value under its title, so there its stand-ins are two lines, as the loaded rows are.
+ */
 const loadingProjects: LoadingRow[] = [
-  { title: 'Argo Universal' },
-  { title: 'Server' },
-  { title: 'Plugin kit' },
-];
+  { title: 'Argo Universal', subtitle: 'GitHub' },
+  { title: 'Server', subtitle: 'No remote' },
+  { title: 'Plugin kit', subtitle: 'GitHub' },
+].map((row) => (Platform.OS === 'android' ? row : { title: row.title }));
 
+// The count's heading says what the rows wait for, so the card stands where the loaded one will.
 function LoadingProjects(): React.JSX.Element {
   return (
-    <List appearance={groupedOnPhones('cards')}>
-      <List.Section>{loadingRows(loadingProjects)}</List.Section>
-    </List>
+    <ProjectsColumn>
+      <List.Section title="Loading Projects…">
+        {loadingRows(loadingProjects)}
+      </List.Section>
+    </ProjectsColumn>
   );
 }
