@@ -28,10 +28,12 @@ export async function chooseModel({
   await userEvent.click(choice);
   await (width >= wideBreakpoint()
     ? expect(choice).toHaveAttribute('aria-checked', 'true')
-    : expectConfigureShown());
+    : expectConfigureShown(choice));
 }
 
-async function expectConfigureShown(): Promise<void> {
+// A phone's models page slides back to Configure; the next pick waits until it has gone, or its click lands mid-slide.
+async function expectConfigureShown(choice: HTMLElement): Promise<void> {
+  await waitFor(() => expect(choice).not.toBeInTheDocument());
   await expect(
     await within(document.body).findByRole('button', {
       name: chooseModelLabel,
