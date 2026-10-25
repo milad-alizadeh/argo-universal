@@ -42,8 +42,8 @@ function RowChevron({ opens }: { opens: boolean }): React.JSX.Element | null {
   if (!opens) return null;
 
   return (
-    <IconSlot size="sm">
-      <Icon name="disclosure" size="sm" />
+    <IconSlot>
+      <Icon name="disclosure" />
     </IconSlot>
   );
 }

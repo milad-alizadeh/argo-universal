@@ -3,7 +3,7 @@ import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Detail } from '#primitives/scaffolds/detail';
 import { Metadata } from '#primitives/scaffolds/metadata';
-import { Page } from '#primitives/scaffolds/page';
+import { Screen } from '#primitives/scaffolds/screen';
 import { EmptyState } from '#primitives/status/empty-state';
 import { ListDetail } from './list-detail';
 
@@ -63,7 +63,7 @@ export const issues: Example = {
 };
 
 const projectFolder = (path: string): ReactNode => (
-  <List appearance="grouped">
+  <List appearance="plain">
     <ListItem title="Folder" value={path} />
   </List>
 );
@@ -121,13 +121,13 @@ export function ExampleListDetail(props: ExampleProps): ReactElement {
 
 function ExampleList({ example, ...selection }: Selection): ReactElement {
   return (
-    <Page title={example.title}>
+    <Screen title={example.title}>
       <List appearance="cards">
         {example.items.map((item) => (
           <ExampleRow key={item.id} item={item} {...selection} />
         ))}
       </List>
-    </Page>
+    </Screen>
   );
 }
 
@@ -156,8 +156,8 @@ function ExampleDetail({
   if (!item) return null;
 
   return (
-    <Page title={item.title} onBack={() => onSelect()}>
+    <Screen title={item.title} onBack={() => onSelect()}>
       {item.detail}
-    </Page>
+    </Screen>
   );
 }

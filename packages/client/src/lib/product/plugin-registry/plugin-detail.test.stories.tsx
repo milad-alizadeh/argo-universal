@@ -16,7 +16,7 @@ const leaf = (
 });
 
 const root = WireNode.parse({
-  type: 'Page',
+  type: 'Screen',
   key: 'page',
   props: { title: 'Sync fails on large repos' },
   children: [
@@ -64,25 +64,19 @@ const root = WireNode.parse({
             slots: {},
           },
         ],
-        actions: [
-          {
-            type: 'ActionList',
-            key: 'actions',
-            props: {},
-            children: [
-              leaf('Action', 'close', {
-                label: 'Close Issue',
-                icon: 'check',
-                onPress: { $event: 'onPress' },
-              }),
-            ],
-            slots: {},
-          },
-        ],
       },
     },
   ],
-  slots: {},
+  // A Screen declares its header Actions; the Detail beneath it cannot.
+  slots: {
+    actions: [
+      leaf('Action', 'close', {
+        label: 'Close Issue',
+        icon: 'check',
+        onPress: { $event: 'onPress' },
+      }),
+    ],
+  },
 });
 
 const onEvent = fn();
@@ -111,9 +105,8 @@ export const DrawsContentMetadataAndActions: StoryObj<typeof meta> = {
       await expect(canvas.getByRole('group', { name })).toBeVisible();
     await expect(canvas.queryByText(/Update Argo/)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Close Issue' }));
-    await expect(onEvent).toHaveBeenLastCalledWith(
-      'page/detail#actions/actions/close',
-      { event: 'onPress' },
-    );
+    await expect(onEvent).toHaveBeenLastCalledWith('page#actions/close', {
+      event: 'onPress',
+    });
   },
 };

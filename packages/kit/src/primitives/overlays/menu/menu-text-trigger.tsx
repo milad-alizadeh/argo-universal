@@ -2,8 +2,8 @@ import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
-import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { Chevron } from '#primitives/status/chevron';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { MenuProps } from './menu-props';
 
@@ -54,7 +54,7 @@ function MenuTextTriggerContent({ label }: { label: string }): ReactElement {
       <Text role="secondary" className="text-muted-foreground">
         {label}
       </Text>
-      <Icon size="xs" name="chevron-down" className="text-muted-foreground" />
+      <Chevron direction="down" />
     </>
   );
 }

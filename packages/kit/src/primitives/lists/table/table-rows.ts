@@ -29,7 +29,7 @@ export type CompactColumns = Partial<Record<CompactRole, TableColumn>>;
 
 export const emptyCell: TableCell = { text: '' };
 
-// A row the Table reads: its cells, id, primary Action and ActionList.
+// A row the Table reads: its cells, id, primary Action and Actions.
 export function TableRowPart(_props: TableRowProps): null {
   return null;
 }

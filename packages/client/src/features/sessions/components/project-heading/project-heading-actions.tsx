@@ -36,7 +36,7 @@ function ProjectAction(props: ProjectActionButtonProps): React.JSX.Element {
     <IconButton
       {...props}
       variant="ghost"
-      size="xs"
+      size="sm"
       disabled={!props.onPress}
     />
   );

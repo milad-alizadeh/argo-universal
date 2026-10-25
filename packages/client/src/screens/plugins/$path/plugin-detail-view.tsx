@@ -1,6 +1,6 @@
 import { isRootOnly } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import {
@@ -32,15 +32,15 @@ export function PluginDetailView(
   if (ownsPage(props.root)) return <PluginContent {...props} />;
 
   return (
-    <Page title={props.title ?? 'Plugin'}>
+    <Screen title={props.title ?? 'Plugin'}>
       <ScrollFadeView {...pageScroll}>
         <PluginContent {...props} />
       </ScrollFadeView>
-    </Page>
+    </Screen>
   );
 }
 
-// A root-only part, Page or ListDetail, draws its own screen and header.
+// A root-only part, Screen or ListDetail, draws its own screen and header.
 function ownsPage(root: WireNode | null): boolean {
   return root ? isRootOnly(root) : false;
 }

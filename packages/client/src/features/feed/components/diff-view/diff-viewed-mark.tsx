@@ -1,5 +1,5 @@
 import { CheckButton } from '@repo/kit/primitives/actions/check-button';
-import { Checkbox } from '@repo/kit/primitives/inputs/checkbox';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type * as React from 'react';
 import type { FileHeaderProps } from './diff-file-header';
 
@@ -20,13 +20,16 @@ export function ViewedMark(props: ViewedMarkProps): React.JSX.Element | null {
   return <DesktopViewedMark {...mark} />;
 }
 
+// An empty circle until the file is viewed, then a checked one, so the two states read apart at a glance.
 function DesktopViewedMark(props: ActiveViewedMark): React.JSX.Element {
   return (
-    <Checkbox
-      label="Viewed"
-      variant="inline"
-      value={props.viewed ?? false}
-      onValueChange={props.onViewedChange}
+    <IconButton
+      icon={props.viewed ? 'passed' : 'pending'}
+      accessibilityLabel="Viewed"
+      variant="ghost"
+      size="sm"
+      selected={props.viewed ?? false}
+      onPress={() => props.onViewedChange(!props.viewed)}
     />
   );
 }

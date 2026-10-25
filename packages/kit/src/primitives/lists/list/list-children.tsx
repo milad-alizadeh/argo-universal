@@ -1,6 +1,7 @@
 import { useId, useMemo, type ReactNode, type ReactElement } from 'react';
 import type { ListPosition, ListSelection } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
+import { childRenderers } from './list-child-renderers';
 import type { ChildrenOptions } from './list-children-options';
 import { FixedListRow } from './list-grouping';
 import type { ListProps } from './list-props';
@@ -17,7 +18,13 @@ export interface ListChild extends ListSelection {
 export function childRenderer(
   appearance: ListProps<never>['appearance'],
 ): (item: ListChild) => ReactElement {
-  return (item) => <FixedListRow item={item} appearance={appearance} />;
+  const render = (item: ListChild): ReactElement => (
+    <FixedListRow item={item} appearance={appearance} />
+  );
+
+  childRenderers.add(render);
+
+  return render;
 }
 
 interface PreparedChildren {

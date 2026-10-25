@@ -1,5 +1,4 @@
-import { ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
@@ -11,7 +10,7 @@ import {
 
 // How many rows each of Configure's two sections holds, beside the Agent row that stays put.
 export interface ConfigurationRows {
-  drills: number;
+  choices: number;
   tuning: number;
 }
 
@@ -20,16 +19,16 @@ function rowsOf(configuration: ComposerConfigurationProps): ConfigurationRows {
   const effort = currentEffort(configuration).selected ? 1 : 0;
 
   return {
-    drills: model + otherSelections(configuration).length,
+    choices: model + otherSelections(configuration).length,
     tuning: switches(configuration).length + effort,
   };
 }
 
 // Before any Agent has answered: a Model row, a switch and Effort, which is what most Agents send.
-const firstRows: ConfigurationRows = { drills: 1, tuning: 2 };
+const firstRows: ConfigurationRows = { choices: 1, tuning: 2 };
 
 const sameRows = (a: ConfigurationRows, b: ConfigurationRows): boolean =>
-  a.drills === b.drills && a.tuning === b.tuning;
+  a.choices === b.choices && a.tuning === b.tuning;
 
 /*
  * How many rows the skeleton stands in for. Every Agent sends settings of its own, so how many the one
@@ -55,20 +54,21 @@ export function useConfigurationRows(
  * A loading row is a bar as wide as the title it stands in for, so these are widths rather than words:
  * none of them is shown, and the Agent's own names arrive with its settings.
  */
-const drillTitles = ['Model', 'Reasoning', 'Response style', 'Sandbox'];
+const choiceTitles = ['Model', 'Reasoning', 'Response style', 'Sandbox'];
 
-const tuningTitles = ['Fast mode', 'Effort'];
+const tuningTitles = ['Effort', 'Fast mode'];
 
 const titleAt = (titles: string[], index: number): string =>
   titles.at(index) ?? titles.at(-1) ?? '';
 
+// Calls, not components: a Section reads its rows by element type.
 function skeletonRows(titles: string[], count: number): ReactElement[] {
   return Array.from({ length: count }, (_unused, index) => (
-    <ListItem
+    <FieldGroup.Value
       key={index}
-      isLoading
-      leading={null}
+      loading
       title={titleAt(titles, index)}
+      value=""
     />
   ));
 }
@@ -82,17 +82,18 @@ interface LoadingProps {
 // Configure's sections while an Agent's settings are on their way, as many rows as the last one had.
 export function loadingSections(props: LoadingProps): ReactElement[] {
   const sections = [
-    <ListSection key="drills">
+    <FieldGroup.Section key="choices">
       {props.agent}
-      {skeletonRows(drillTitles, props.rows.drills)}
-    </ListSection>,
+      {skeletonRows(choiceTitles, props.rows.choices)}
+    </FieldGroup.Section>,
   ];
 
-  if (props.rows.tuning > 0) sections.push(tuningSkeleton(props.rows.tuning));
+  if (props.rows.tuning > 0)
+    sections.push(
+      <FieldGroup.Section key="tuning">
+        {skeletonRows(tuningTitles, props.rows.tuning)}
+      </FieldGroup.Section>,
+    );
 
   return sections;
 }
-
-const tuningSkeleton = (count: number): ReactElement => (
-  <ListSection key="tuning">{skeletonRows(tuningTitles, count)}</ListSection>
-);

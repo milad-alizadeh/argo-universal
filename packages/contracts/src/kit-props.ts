@@ -14,6 +14,12 @@ export type { KitChoiceValue } from './plugins/selection-value';
 
 export type { WireNode } from './plugins/wire';
 
+export type {
+  FieldGroupEvents,
+  FieldGroupKitPart,
+  FieldGroupSchemaProps,
+} from './plugins/field-group-kit-props';
+
 // Index signatures from passthrough schemas are not props.
 export type DeclaredProps<Props> = Props extends object
   ? {

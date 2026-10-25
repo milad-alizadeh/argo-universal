@@ -1,6 +1,5 @@
 import { use } from 'react';
 import { ListTileContext } from '../../../list-context';
-import { ListContext } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
 import { cn } from '../../../utils';
@@ -37,7 +36,6 @@ export function usePressClass(props: DrawingProps): string {
   const place = {
     menu: useInMenu(),
     rows: useRowDrawing(),
-    appearance: use(ListContext).appearance,
   };
 
   const tile = use(ListTileContext);

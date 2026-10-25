@@ -1,11 +1,11 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import type { SheetDetent, SheetProps } from './sheet-props';
 
-export function pushPage(path: string[], name: string): string[] {
+export function pushScreen(path: string[], name: string): string[] {
   return path.at(-1) === name ? path : [...path, name];
 }
 
-export function popPage(path: string[]): string[] {
+export function popScreen(path: string[]): string[] {
   return path.slice(0, -1);
 }
 

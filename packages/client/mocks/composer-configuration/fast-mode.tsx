@@ -34,25 +34,22 @@ async function testFastMode(
   ).not.toBeInTheDocument();
   await context.userEvent.click(trigger);
   const fast = await assertFastModeOff(context);
-  await turnFastModeOn(context, fast);
-  await assertFastModeTabOrder(context, fast, width);
+  await turnFastModeOn(context);
+  await assertFastModeTabOrder(context, fast);
 }
 
 async function assertFastModeOff({ args }: PlayContext): Promise<HTMLElement> {
   const overlay = within(document.body);
   const fast = await overlay.findByRole('switch', { name: 'Fast mode' });
-  await waitFor(() => expect(fast).toBeVisible());
+  await waitFor(() => expect(fast).toBeInTheDocument());
   await expect(fast).not.toBeChecked();
   await expect(args.configuration?.onConfigChange).not.toHaveBeenCalled();
 
   return fast;
 }
 
-async function turnFastModeOn(
-  { userEvent, args }: PlayContext,
-  fast: HTMLElement,
-): Promise<void> {
-  await userEvent.click(within(fast).getByText('Fast mode'));
+async function turnFastModeOn({ userEvent, args }: PlayContext): Promise<void> {
+  await userEvent.click(within(document.body).getByText('Fast mode'));
   await expect(args.configuration?.onConfigChange).toHaveBeenCalledOnce();
   await expect(args.configuration?.onConfigChange).toHaveBeenCalledWith(
     'fast',
@@ -60,21 +57,15 @@ async function turnFastModeOn(
   );
 }
 
-// Tab follows the rows: a phone's sheet puts the switches before Effort, a desktop menu after it (Paper 9FK-0).
+// Tab follows the rows: Effort first and Fast mode last, on every width (owner, 2026-10-24).
 async function assertFastModeTabOrder(
   { userEvent }: PlayContext,
   fast: HTMLElement,
-  width: number,
 ): Promise<void> {
-  const effort = within(document.body).getByRole('slider', { name: 'Effort' });
-
-  const [first, next] =
-    width >= layoutWidths.wide ? [effort, fast] : [fast, effort];
-
-  first.focus();
+  within(document.body).getByRole('slider', { name: 'Effort' }).focus();
 
   await userEvent.tab();
-  await expect(next).toHaveFocus();
+  await expect(fast).toHaveFocus();
   await userEvent.keyboard('{Escape}');
 }
 

@@ -14,7 +14,7 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { hasRowDetail, PluginRowDetails } from './plugin-row-detail';
 import { MenuToolbar } from './section-root';
-import { PageStack } from './section-stack';
+import { ScreenStack } from './section-stack';
 
 type RowParams = { row?: string };
 
@@ -33,7 +33,7 @@ export function PluginLayout(): React.JSX.Element {
   const root = useNavRoot(pathname, useGlobalSearchParams<RowParams>().row);
 
   return (
-    <PageStack
+    <ScreenStack
       header={{ title: section?.title ?? '' }}
       root={root}
       rootName="[...path]"

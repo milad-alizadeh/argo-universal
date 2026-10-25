@@ -4,3 +4,8 @@ import { createContext, useContext } from 'react';
 export const InMenu = createContext(false);
 
 export const useInMenu = (): boolean => useContext(InMenu);
+
+// A popover whose sections choose: every row keeps a lane for its check, so a section's heading starts with the rows' text.
+export const InChoiceMenu = createContext(false);
+
+export const useInChoiceMenu = (): boolean => useContext(InChoiceMenu);

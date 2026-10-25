@@ -10,11 +10,9 @@ import { listExpansion } from './list-expansion';
 import { rowPress } from './list-kit-props';
 import { listMediaParts } from './list-media-parts';
 import { echoes } from './plugin-part-props';
-import { part } from './plugin-part-schema-utils';
-import { settingsRowWireParts } from './settings-row-wire-parts';
+import { actionSlot, part } from './plugin-part-schema-utils';
 
 export const listWireParts = {
-  ...settingsRowWireParts,
   List: {
     ...part(
       'A content list with rows, adaptive media grids or horizontal shelves.',
@@ -53,7 +51,7 @@ export const listWireParts = {
       container: true,
       children: false,
       slots: {
-        actions: ['ActionList'],
+        actions: actionSlot,
         media: listMediaParts,
         leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
         trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],

@@ -37,7 +37,7 @@ export const LongPath: Story = {
 // Inside a grouped List, such as a Settings page, the fields are rows of the section's card.
 export const InAGroupedList: Story = {
   render: () => (
-    <List appearance="grouped" maxHeight={400}>
+    <List appearance="plain" maxHeight={400}>
       <Metadata {...groupedPathMetadata} />
     </List>
   ),

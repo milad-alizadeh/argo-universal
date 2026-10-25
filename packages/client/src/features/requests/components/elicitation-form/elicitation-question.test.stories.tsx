@@ -20,11 +20,14 @@ const meta = {
 
 export default meta;
 
-const pressed = 'aria-pressed';
+const checked = 'aria-checked';
 
-// Each option is a row button whose name starts with its title.
-const option = (scope: ReturnType<typeof within>, title: string): HTMLElement =>
-  scope.getByRole('button', { name: new RegExp(`^${title}`) });
+// Each option is a radio (one choice) or a checkbox (several) row whose name starts with its title.
+const option = (
+  scope: ReturnType<typeof within>,
+  title: string,
+  role: 'radio' | 'checkbox' = 'radio',
+): HTMLElement => scope.getByRole(role, { name: new RegExp(`^${title}`) });
 
 function answers(width: number): Story {
   return {
@@ -38,12 +41,12 @@ function answers(width: number): Story {
       await userEvent.click(option(canvas, buildFeature));
       await userEvent.click(option(canvas, fixBug));
       await expect(option(canvas, buildFeature)).toHaveAttribute(
-        pressed,
+        checked,
         'false',
       );
       await userEvent.click(canvas.getByRole('button', { name: /^Next$/ }));
-      await userEvent.click(option(canvas, buildFeature));
-      await userEvent.click(option(canvas, exploreIdea));
+      await userEvent.click(option(canvas, buildFeature, 'checkbox'));
+      await userEvent.click(option(canvas, exploreIdea, 'checkbox'));
       await userEvent.type(
         canvas.getByRole('textbox', { name: customAnswer }),
         releaseReview,
@@ -51,13 +54,13 @@ function answers(width: number): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: previousQuestion }),
       );
-      await expect(option(canvas, fixBug)).toHaveAttribute(pressed, 'true');
+      await expect(option(canvas, fixBug)).toHaveAttribute(checked, 'true');
       await userEvent.click(canvas.getByRole('button', { name: nextQuestion }));
       await expect(
         canvas.getByRole('textbox', { name: customAnswer }),
       ).toHaveValue(releaseReview);
-      await expect(option(canvas, buildFeature)).toHaveAttribute(
-        pressed,
+      await expect(option(canvas, buildFeature, 'checkbox')).toHaveAttribute(
+        checked,
         'true',
       );
       await userEvent.click(canvas.getByRole('button', { name: /^Next$/ }));
@@ -116,25 +119,35 @@ export const KeyboardSelection: Story = {
     await userEvent.click(option(canvas, buildFeature));
     option(canvas, fixBug).focus();
     await userEvent.keyboard('{Enter}');
-    await expect(option(canvas, fixBug)).toHaveAttribute(pressed, 'true');
-    await expect(
-      canvas.getByText('Choose one · 1 of 3', { exact: false }),
-    ).toBeVisible();
+    await expect(option(canvas, fixBug)).toHaveAttribute(checked, 'true');
+    await expect(canvas.getByText('Choose one')).toBeVisible();
+    await expect(canvas.getByText('1 of 3')).toBeVisible();
     await expect(args.onAnswer).not.toHaveBeenCalled();
     await userEvent.keyboard('{Escape}');
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });
   },
 };
 
+// The form's one multiple Picker holds at most one work type, and its page stays open across toggles.
 export const KeepConstrainedFormValidation: Story = {
   args: { request: boundedChoicesRequest },
   play: async ({ canvas, userEvent }) => {
+    const page = within(document.body);
+    const submit = canvas.getByRole('button', { name: 'Submit' });
     await expect(
       canvas.queryByRole('textbox', { name: customAnswer }),
     ).not.toBeInTheDocument();
-    await userEvent.click(option(canvas, buildFeature));
-    await expect(canvas.getByRole('button', { name: 'Submit' })).toBeEnabled();
-    await userEvent.click(option(canvas, fixBug));
-    await expect(canvas.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    await userEvent.click(canvas.getByRole('button', { name: /^Work types/ }));
+    await userEvent.click(
+      await page.findByRole('button', { name: new RegExp(`^${buildFeature}`) }),
+    );
+    await userEvent.keyboard('{Escape}');
+    await expect(submit).toBeEnabled();
+    await userEvent.click(canvas.getByRole('button', { name: /^Work types/ }));
+    await userEvent.click(
+      await page.findByRole('button', { name: new RegExp(`^${fixBug}`) }),
+    );
+    await userEvent.keyboard('{Escape}');
+    await expect(submit).toBeDisabled();
   },
 };

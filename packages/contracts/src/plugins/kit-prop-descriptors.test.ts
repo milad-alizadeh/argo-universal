@@ -60,7 +60,7 @@ describe('a kit prop default', () => {
   it.each([
     ['Button', 'variant', "'default'"],
     ['Button', 'size', "'md'"],
-    ['IconButton', 'size', "'sm'"],
+    ['IconButton', 'size', "'md'"],
     ['IconButton', 'variant', "'primary'"],
     ['Text', 'role', "'body'"],
   ] as const)('reads %s %s as %s', (part, name, defaultValue) => {
@@ -69,11 +69,5 @@ describe('a kit prop default', () => {
 
   it('is absent where the schema declares none', () => {
     expect(prop('Button', 'label').defaultValue).toBeUndefined();
-  });
-});
-
-describe('a list stepper default', () => {
-  it('reads the step as 1', () => {
-    expect(prop('ListItem.Stepper', 'step').defaultValue).toBe('1');
   });
 });

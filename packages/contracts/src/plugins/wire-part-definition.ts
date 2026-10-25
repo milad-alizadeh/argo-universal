@@ -5,8 +5,8 @@ import type { WirePartReference } from './wire-part-reference';
 export const partGroups = [
   'actions',
   'content',
+  'controls',
   'fields',
-  'inputs',
   'layout',
   'lists',
   'overlays',
@@ -26,7 +26,7 @@ export interface WirePartDefinition {
   expansion?: z.ZodType;
   container: boolean;
   children: boolean | readonly string[];
-  // Only a tree's root may be this part, such as a Page that owns the screen's header.
+  // Only a tree's root may be this part, such as a Screen that owns the screen's header.
   root?: boolean;
   slots: Record<string, readonly string[]>;
   events: Record<string, z.ZodType>;

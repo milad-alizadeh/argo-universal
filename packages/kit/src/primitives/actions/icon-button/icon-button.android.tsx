@@ -4,13 +4,13 @@ import {
   FilledTonalIconButton,
 } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
-import { iconButtonDefaults } from '@repo/contracts/kit-tokens';
 import type { ComponentProps, ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { Host } from '#primitives/native/host';
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { IconButtonProps } from './icon-button';
-import { sizes } from './icon-button-layout';
+import { androidGlyphOf, androidModifiersOf } from './icon-button-android-size';
+import { sizeOf, variantOf } from './icon-button-defaults';
 
 type Variant = NonNullable<IconButtonProps['variant']>;
 
@@ -32,7 +32,7 @@ export function IconButton(props: IconButtonProps): ReactElement {
 }
 
 function ComposeControl(props: IconButtonProps): ReactElement {
-  const Control = controls[props.variant ?? iconButtonDefaults.variant];
+  const Control = controls[variantOf(props)];
 
   return (
     <Control {...useComposeProps(props)}>
@@ -45,7 +45,7 @@ function ControlIcon(props: IconButtonProps): ReactElement {
   return (
     <NativeIcon
       name={props.icon}
-      size={sizes[props.size ?? iconButtonDefaults.size].iconSize}
+      size={androidGlyphOf(sizeOf(props))}
       filled={props.selected ?? false}
       color={undefined}
     />
@@ -75,14 +75,14 @@ function useColors(variant: Variant): NonNullable<ComposeProps['colors']> {
 }
 
 function useComposeProps(props: IconButtonProps): ComposeProps {
-  const colors = useColors(props.variant ?? iconButtonDefaults.variant);
+  const colors = useColors(variantOf(props));
 
   return {
     onClick: props.onPress,
     enabled: !props.disabled,
     colors,
     modifiers: [
-      ...sizes[props.size ?? iconButtonDefaults.size].androidModifiers,
+      ...androidModifiersOf(sizeOf(props)),
       semantics({ contentDescription: props.accessibilityLabel }),
     ],
   };

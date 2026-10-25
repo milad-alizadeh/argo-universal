@@ -18,24 +18,16 @@ type Story = StoryObj<typeof meta>;
 
 export const ShowsServerInfoAndClock: Story = {
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('group', { name: 'Version, 1.2.3' }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: /^Started, .+ at \d{2}:\d{2}$/ }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: 'PID, 4242' }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: /^Clock, \d{2}:\d{2}:\d{2}$/ }),
-    ).toBeVisible();
+    await expect(canvas.getByText('1.2.3')).toBeVisible();
+    await expect(canvas.getByText(/^.+ at \d{2}:\d{2}$/)).toBeVisible();
+    await expect(canvas.getByText('4242')).toBeVisible();
+    await expect(canvas.getByText(/^\d{2}:\d{2}:\d{2}$/)).toBeVisible();
     // An open Connection shows no banner.
     await expect(canvas.queryByRole('status')).toBeNull();
   },
 };
 
-// Page owns where its title goes at each width; this checks the caption shows on a wide window only.
+// Screen owns where its title goes at each width; this checks the caption shows on a wide window only.
 export const CaptionsThePageOnWideWindows: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
@@ -45,9 +37,7 @@ export const CaptionsThePageOnWideWindows: Story = {
     await expect(canvas.getByText(/Argo Server/)).toBeVisible();
     await settleViewport(layoutWidths.phone);
     await expect(canvas.queryByText(/Argo Server/)).toBeNull();
-    await expect(
-      canvas.getByRole('group', { name: 'PID, 4242' }),
-    ).toBeVisible();
+    await expect(canvas.getByText('4242')).toBeVisible();
   },
 };
 
@@ -62,32 +52,33 @@ export const LeavesRouteAndUnpairOut: Story = {
 export const ShowsConnectingUntilServerAnswers: Story = {
   args: { server: { status: 'loading' } },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('group', { name: 'Connecting to the Server…' }),
-    ).toBeVisible();
-    await expect(canvas.queryByRole('group', { name: /^Version/ })).toBeNull();
+    await expect(canvas.getByText('Connecting to the Server…')).toBeVisible();
+    await expect(canvas.getByRole('progressbar')).toBeVisible();
+    await expect(canvas.queryByText('Version')).toBeNull();
+  },
+};
+
+// The banner over the page already says the Connection is down, so the page says nothing more.
+export const LeavesTheDownConnectionToTheBanner: Story = {
+  args: { server: { status: 'down' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText(/^Connecting to the Server/)).toBeNull();
+    await expect(canvas.queryByRole('progressbar')).toBeNull();
   },
 };
 
 export const ShowsSystemInfoErrorAsAToast: Story = {
   args: { server: { status: 'error', message: 'Server is down' } },
   play: async ({ canvas }) => {
-    await expect(
-      await findToast("Could not load the Server's details"),
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: /^Connecting to the Server/ }),
-    ).toBeVisible();
-    await expect(
-      canvas.queryByRole('group', { name: 'Server is down' }),
-    ).toBeNull();
-    await expect(canvas.queryByRole('group', { name: /^Version/ })).toBeNull();
+    await expect(await findToast('Could not load the Server')).toBeVisible();
+    await expect(canvas.getByText(/^Connecting to the Server/)).toBeVisible();
+    await expect(canvas.queryByText('Version')).toBeNull();
   },
 };
 
 export const ShowsPlaceholderBeforeFirstClockTick: Story = {
   args: { server: { ...loadedServer, clock: undefined } },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('group', { name: 'Clock, …' })).toBeVisible();
+    await expect(canvas.getByText('…')).toBeVisible();
   },
 };

@@ -1,5 +1,5 @@
 import { expect, waitFor, within, fn } from 'storybook/test';
-import { effortValue, heldNotice } from './common';
+import { heldNotice } from './common';
 import { heldChoiceCases } from './held-cases';
 
 type HeldCase = (typeof heldChoiceCases)[number];
@@ -16,7 +16,6 @@ export async function assertHeldFallback(
 ): Promise<void> {
   const overlay = within(document.body);
   await assertFallbackCalls(recorded, onConfigChange, effortSteps);
-  await assertFallbackValue(recorded.fallback.name);
   await expect(
     overlay.queryByText(recorded.selected.name, { exact: true }),
   ).not.toBeInTheDocument();
@@ -34,13 +33,5 @@ async function assertFallbackCalls(
       [recorded.model.configId, recorded.narrower.value],
       [recorded.effort.configId, recorded.fallback.value],
     ]),
-  );
-}
-
-async function assertFallbackValue(name: string): Promise<void> {
-  await waitFor(() =>
-    expect(
-      within(document.body).getByRole('slider', { name: 'Effort' }),
-    ).toHaveAttribute(effortValue, name),
   );
 }

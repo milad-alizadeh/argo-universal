@@ -8,6 +8,3 @@ export function nativeIconName(
 ): IconName | undefined {
   return undefined;
 }
-
-// Expo UI's Icon size for an Argo icon role's pixels.
-export const nativeIconSize = (pixels: number): number => pixels;

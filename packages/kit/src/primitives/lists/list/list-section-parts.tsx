@@ -1,7 +1,7 @@
-import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
+import { groupedHeading, useWebGrouped } from '../../../list-grouped';
 import {
   type SectionDrawing,
   useSectionDrawing,
@@ -10,6 +10,7 @@ import { SkeletonBar } from '../../../list-skeleton';
 import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
 import { HeaderActions } from './list-section-actions';
+import { HeaderLeading } from './list-section-leading';
 import { HeaderTitleLine } from './list-section-title-line';
 
 /*
@@ -21,38 +22,6 @@ export type HeaderProps = Omit<ListSectionProps, 'children'> & {
 };
 
 type DrawnHeaderProps = HeaderProps & { drawing: SectionDrawing };
-
-const disclosureIcon = (
-  isExpanded?: boolean,
-): 'chevron-right' | 'chevron-down' =>
-  isExpanded === false ? 'chevron-right' : 'chevron-down';
-
-function disclosure(props: HeaderProps): ReactNode {
-  if (!props.onExpandedChange) return null;
-
-  return <Icon size="sm" name={disclosureIcon(props.isExpanded)} />;
-}
-
-function leadingIcon(props: HeaderProps): ReactNode {
-  if (props.isLoading)
-    return <View className="size-5 rounded-sm bg-foreground/5 wide:size-4" />;
-
-  return props.leading === undefined ? disclosure(props) : props.leading;
-}
-
-// The leading icon sits 8 before the title, in the label's colour, the actions' size; a sidebar's 16 glyph sits 6 before it.
-const leadingSlot = (sidebar?: boolean): string =>
-  sidebar
-    ? 'mr-1.5 h-6 w-4 shrink-0 items-center justify-center'
-    : 'h-6 wide-type:h-5 shrink-0 flex-row items-center pr-1';
-
-function HeaderLeading(props: HeaderProps): ReactNode {
-  const icon = leadingIcon(props);
-
-  return icon ? (
-    <View className={leadingSlot(props.sidebar)}>{icon}</View>
-  ) : null;
-}
 
 // The drawing's title colour, or a sidebar section's muted title.
 const titleLook = (
@@ -144,16 +113,22 @@ function HeaderButton(props: DrawnHeaderProps): ReactElement {
 const headerClassName = (
   props: HeaderProps,
   drawing: SectionDrawing,
+  grouped: boolean,
 ): string =>
   props.sidebar
     ? 'group min-h-6 flex-row items-center gap-1 px-3'
-    : cn('group flex-row items-start gap-1', drawing.inset);
+    : cn(
+        'group flex-row items-start gap-1',
+        drawing.inset,
+        grouped && groupedHeading,
+      );
 
 export function SectionHeader(props: HeaderProps): ReactElement {
   const drawing = useSectionDrawing();
+  const className = headerClassName(props, drawing, useWebGrouped());
 
   return (
-    <View className={headerClassName(props, drawing)}>
+    <View className={className}>
       <HeaderToggle {...props} drawing={drawing} />
       <HeaderActions trailing={props.trailing} sidebar={props.sidebar} />
     </View>

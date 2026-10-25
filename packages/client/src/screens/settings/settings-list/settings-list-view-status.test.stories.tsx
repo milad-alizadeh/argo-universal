@@ -44,8 +44,8 @@ const serverPages = (width: number): string[] => [
 ];
 
 const connectionNames: Record<Unavailable, string> = {
-  loading: 'Connection, Connecting…, connecting',
-  disconnected: 'Connection, Disconnected, server unavailable',
+  loading: 'Connection, Connecting…',
+  disconnected: 'Connection, Disconnected',
 };
 
 function unavailable(status: Unavailable, width: number): Story {
@@ -61,7 +61,7 @@ function unavailable(status: Unavailable, width: number): Story {
 
         await expect(row).toHaveAttribute('aria-disabled', 'true');
         await expect(row).not.toHaveAccessibleName(
-          /, (?:connecting|server unavailable)$/,
+          /, (?:Connecting…|Disconnected)$/,
         );
       }
 
@@ -77,7 +77,7 @@ function unavailable(status: Unavailable, width: number): Story {
       await expect(onSelect).toHaveBeenLastCalledWith('/settings/connection');
       // The theme is this Device's own, so it stays choosable without the Server.
       await expect(
-        canvas.getByRole('button', { name: 'Appearance, System' }),
+        canvas.getByRole('button', { name: 'Appearance' }),
       ).toBeEnabled();
       await expect(canvas.queryByText(/Loading Server/)).toBeNull();
       await expect(canvas.queryByText(/reconnect/)).toBeNull();

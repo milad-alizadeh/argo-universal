@@ -67,8 +67,8 @@ describe('a story title', (): void => {
     ],
     // Exception 2: a test's title is its subject's under `Tests/`; with no story beside it, its own path.
     [
-      `${kit}/primitives/overlays/sheet/sheet-root-page.test.stories.tsx`,
-      'Tests/Design System/Primitives/Overlays/Sheet/RootPage',
+      `${kit}/primitives/overlays/sheet/sheet-root-screen.test.stories.tsx`,
+      'Tests/Design System/Primitives/Overlays/Sheet/RootScreen',
     ],
   ])('passes in its folder: %s', (file, title): void => {
     expect(storyTitleProblems(file, meta(title))).toEqual([]);

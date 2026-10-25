@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { spacingSteps } from '../kit-tokens';
 import { onPress } from './plugin-part-props';
-import { part } from './plugin-part-schema-utils';
+import { actionSlot, part } from './plugin-part-schema-utils';
 import { perSizeClass } from './schema-size-class';
 
 const spacerProps = z.object({});
@@ -68,7 +68,7 @@ export const layoutWireParts = {
   Surface: part('A named Surface with fill, radius and depth.', surfaceProps, {
     group: 'layout',
     children: true,
-    slots: { actions: ['ActionList'] },
+    slots: { actions: actionSlot },
     appearance:
       'background is flat content; card is flat card; muted is recessed tray; glass is sidebar material, with a plain fill below iOS 26 and on Android.',
   }),

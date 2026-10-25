@@ -17,6 +17,3 @@ export function nativeIconName(
 
   return drawn.sf;
 }
-
-// SF Symbols draw at the role's point size, as Argo's Icon draws them.
-export const nativeIconSize = (pixels: number): number => pixels;

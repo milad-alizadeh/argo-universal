@@ -116,12 +116,12 @@ function ScrollEndGap(): ReactElement | null {
   return <View style={{ height: gap }} />;
 }
 
-function PageFooter({ text }: { text?: string }): ReactNode {
+function ScreenFooter({ text }: { text?: string }): ReactNode {
   if (!text) return null;
 
   return (
     <View className="flex-row items-center px-4">
-      {Platform.OS === 'android' ? <Icon name="info" size="sm" /> : null}
+      {Platform.OS === 'android' ? <Icon name="info" /> : null}
       <ListFooter text={text} />
     </View>
   );
@@ -133,7 +133,7 @@ export function ListEnd(
   return (
     <>
       {props.endContent}
-      <PageFooter text={props.footer} />
+      <ScreenFooter text={props.footer} />
       <ScrollEndGap />
     </>
   );

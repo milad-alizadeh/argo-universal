@@ -112,6 +112,12 @@ const primitivesHome =
 const kitHome =
   'a kit story is a primitive in `primitives/<category>/<name>/` or a foundation in `foundations/<topic>/`';
 
+// The sidebar names the `fields` folder's group for what a reader does there: fill in a form.
+const categoryLabels = new Map([['fields', 'Forms']]);
+
+const categoryOf = (folder = ''): string =>
+  categoryLabels.get(folder) ?? pascal(folder);
+
 const kitRules: readonly Rule[] = [
   {
     test: ({ dirs }) => dirs[0] === 'foundations' && dirs.length > 1,
@@ -122,7 +128,7 @@ const kitRules: readonly Rule[] = [
     test: ({ dirs }) => dirs[0] === 'primitives' && dirs.length > 2,
     expected: (path) =>
       titleUnder(
-        `Design System/Primitives/${pascal(path.dirs[1] ?? '')}`,
+        `Design System/Primitives/${categoryOf(path.dirs[1])}`,
         path.dirs.slice(2),
         path,
       ),

@@ -75,7 +75,7 @@ function CopyControl(props: CopyControlProps): React.JSX.Element {
     <IconButton
       onFocus={() => props.onFocusChange(true)}
       onBlur={() => props.onFocusChange(false)}
-      size="xs"
+      size="sm"
       variant="ghost"
       muted
       icon={props.copied ? 'check' : 'copy'}

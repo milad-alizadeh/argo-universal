@@ -36,6 +36,3 @@ export function sidebarDrawing(
     subtitleTone: activityTones[status],
   };
 }
-
-// A Compact sidebar row's PR glyph fills a small icon's box; a phone's sits beside Secondary text.
-export const compactGlyphSize = sidebarRows ? 'sm' : 'xs';

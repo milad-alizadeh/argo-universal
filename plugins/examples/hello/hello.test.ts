@@ -13,8 +13,8 @@ test('pressing Tap me updates the hello page', async ({ mount }) => {
   assert.equal((await page.find('Tapped 1 times')).type, 'Text');
 });
 
-// The primary Action is a keyed Action in the Page's `primaryAction` Slot, pressed by its label.
-test('the lists Page primary Action adds a build', async ({ mount }) => {
+// The primary Action is a keyed Action in the Screen's `primaryAction` Slot, pressed by its label.
+test('the lists Screen primary Action adds a build', async ({ mount }) => {
   const page = await mount({ page: '/lists', surface: { platform: 'web' } });
 
   const add = await page.find('Add build');
@@ -35,10 +35,6 @@ test('the dashboard shows the week of Issues', async ({ mount }) => {
   for (const title of ['Open', 'In progress', 'Done', 'Blocked'])
     assert.equal((await page.find(title)).type, 'Card');
 });
-
-// The Form's key is its fields' parent key.
-const formKey = (fieldKey: string): string =>
-  fieldKey.slice(0, fieldKey.lastIndexOf('/'));
 
 // Each edit re-renders the page, so the next one waits for the field to show it.
 const keyOf = (page: PluginTestView, label: string): string => {
@@ -73,8 +69,7 @@ test('the form submits the drafted Issue', async ({ mount, clock }) => {
   await edit('Title', 'onChangeText', 'Crash');
   await edit('Labels', 'onValueChange', ['bug']);
   await edit('Due', 'onValueChange', '2026-10-30');
-  const form = formKey(keyOf(page, 'Title'));
-  await page.dispatch({ key: form, event: 'onSubmit' });
+  await page.press('Create Issue');
   assert.equal((await page.find('Created Crash')).type, 'Text');
 });
 

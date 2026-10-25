@@ -124,8 +124,8 @@ export const ViewedMarkFromOwnerFolds: Story = {
   render: (args) => <LateViewedMark {...args} />,
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('checkbox', { name: 'Viewed' }),
-    ).toHaveAttribute('aria-checked', 'true');
+      canvas.getByRole('button', { name: 'Viewed' }),
+    ).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() =>
       expect(canvas.getByRole('button', largeHeader)).toHaveAttribute(
         expanded,
@@ -142,7 +142,7 @@ export const ClearingViewedOpens: Story = {
     const header = canvas.getByRole('button', largeHeader);
 
     await expect(header).toHaveAttribute(expanded, 'false');
-    await userEvent.click(canvas.getByRole('checkbox', { name: 'Viewed' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Viewed' }));
     await expect(args.onViewedChange).toHaveBeenCalledWith(false);
     await expect(header).toHaveAttribute(expanded, 'true');
   },
@@ -167,5 +167,6 @@ export const FeedDiffHasNoViewedMark: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId('code-block-title')).toBeVisible();
     await expect(canvas.queryByRole('checkbox')).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Viewed' })).toBeNull();
   },
 };

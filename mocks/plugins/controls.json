@@ -1,54 +1,5 @@
 [
   {
-    "type": "Switch",
-    "key": "switch",
-    "props": {
-      "accessibilityLabel": "Notifications",
-      "value": false,
-      "onValueChange": {
-        "$event": "onValueChange"
-      }
-    },
-    "children": [],
-    "slots": {}
-  },
-  {
-    "type": "Checkbox",
-    "key": "checkbox",
-    "props": {
-      "label": "Include archived",
-      "value": false,
-      "onValueChange": {
-        "$event": "onValueChange"
-      }
-    },
-    "children": [],
-    "slots": {}
-  },
-  {
-    "type": "Picker",
-    "key": "picker",
-    "props": {
-      "label": "Environment",
-      "value": "dev",
-      "options": [
-        {
-          "value": "dev",
-          "label": "Development"
-        },
-        {
-          "value": "prod",
-          "label": "Production"
-        }
-      ],
-      "onValueChange": {
-        "$event": "onValueChange"
-      }
-    },
-    "children": [],
-    "slots": {}
-  },
-  {
     "type": "Slider",
     "key": "slider",
     "props": {
@@ -66,20 +17,73 @@
     "slots": {}
   },
   {
-    "type": "TextInput",
-    "key": "textinput",
-    "props": {
-      "label": "Project name",
-      "value": "Argo",
-      "onChangeText": {
-        "$event": "onChangeText"
-      },
-      "onSubmit": {
-        "$event": "onSubmit"
+    "type": "FieldGroup",
+    "key": "form",
+    "props": {},
+    "slots": {},
+    "children": [
+      {
+        "type": "FieldGroup.Section",
+        "key": "section",
+        "props": {},
+        "slots": {},
+        "children": [
+          {
+            "type": "FieldGroup.Picker",
+            "key": "picker",
+            "props": {
+              "title": "Environment",
+              "presentation": "menu",
+              "value": "dev",
+              "options": [
+                {
+                  "value": "dev",
+                  "label": "Development"
+                },
+                {
+                  "value": "prod",
+                  "label": "Production"
+                }
+              ],
+              "onValueChange": {
+                "$event": "onValueChange"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Toggle",
+            "key": "toggle",
+            "props": {
+              "title": "Notifications",
+              "value": false,
+              "onValueChange": {
+                "$event": "onValueChange"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.TextField",
+            "key": "textinput",
+            "props": {
+              "title": "Project name",
+              "value": "Argo",
+              "onChangeText": {
+                "$event": "onChangeText"
+              },
+              "onSubmit": {
+                "$event": "onSubmit"
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ]
       }
-    },
-    "children": [],
-    "slots": {}
+    ]
   },
   {
     "type": "IconButton",

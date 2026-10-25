@@ -1,5 +1,7 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { TextInput } from '@repo/kit/primitives/inputs/text-input';
+import { Text } from '@repo/kit/primitives/content/text';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { useInCentredOverlay } from '@repo/kit/primitives/overlays/centred-overlay';
 import {
   Dialog,
   DialogCancel,
@@ -8,8 +10,8 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@repo/kit/primitives/overlays/dialog';
-import { type ReactElement, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { type ReactElement, useRef, useState } from 'react';
+import { View } from 'react-native';
 import { renamedTitle } from './renamed-title';
 
 export type RenameSessionDialogProps = {
@@ -28,6 +30,7 @@ const copy = {
   title: 'Rename Session',
   description: 'Keep it short and easy to find in the list.',
   field: 'Title',
+  placeholder: 'Session title',
   save: 'Save',
   cancel: 'Cancel',
 };
@@ -46,20 +49,42 @@ export function RenameSessionDialog(
 
 // Mounted with the dialog's content, so each opening starts from the Session's title.
 function RenameForm(props: RenameSessionDialogProps): ReactElement {
-  const [draft, setDraft] = useState(props.title);
-  const save = (): void => saveDraft(draft, props);
+  const draft = useDraft(props.title);
+  const save = (): void => saveDraft(draft.latest.current, props);
 
   return (
     <>
       <RenameHeading />
-      <TextInput
-        {...titleField}
-        {...{ value: draft, onChangeText: setDraft, onSubmit: save }}
-        errors={[props.error]}
+      <RenameField
+        invalid={props.error !== undefined}
+        {...{ value: draft.text, onChangeText: draft.change, onSubmit: save }}
       />
+      <RenameError error={props.error} />
       <RenameActions onSave={save} />
     </>
   );
+}
+
+type Draft = {
+  text: string;
+  latest: { current: string };
+  change: (text: string) => void;
+};
+
+/*
+ * Android commits the text and submits in one tick, before the state re-renders, so a save reads `latest`, which
+ * a change sets at once.
+ */
+function useDraft(title: string): Draft {
+  const [text, setText] = useState(title);
+  const latest = useRef(title);
+
+  const change = (next: string): void => {
+    latest.current = next;
+    setText(next);
+  };
+
+  return { text, latest, change };
 }
 
 // A blank title, or the same one again, closes the dialog and keeps the old title.
@@ -68,6 +93,54 @@ function saveDraft(draft: string, props: RenameSessionDialogProps): void {
 
   if (title === undefined) props.onClose();
   else props.onRename(title);
+}
+
+type RenameFieldProps = {
+  value: string;
+  onChangeText: (value: string) => void;
+  onSubmit: () => void;
+  invalid: boolean;
+};
+
+/*
+ * A FieldGroup fills its page and insets its section card: the box is the height of a section of one row, and the
+ * inset is pulled back so the card lines up with the heading and the buttons.
+ */
+const sectionBox = 'h-20 -mx-4 -mb-3';
+
+function RenameField(props: RenameFieldProps): ReactElement {
+  return (
+    <View className={sectionBox}>
+      <FieldGroup>
+        <FieldGroup.Section>{titleRow(props)}</FieldGroup.Section>
+      </FieldGroup>
+    </View>
+  );
+}
+
+const titleRow = (props: RenameFieldProps): ReactElement => (
+  <FieldGroup.TextField
+    title={copy.field}
+    hideTitle
+    placeholder={copy.placeholder}
+    value={props.value}
+    error={props.invalid ? '' : undefined}
+    /* oxlint-disable-next-line jsx-a11y/no-autofocus -- the dialog exists to rename; the title opens focused and selected, so typing replaces it. */
+    autoFocus
+    selectTextOnFocus
+    onChangeText={props.onChangeText}
+    onSubmit={props.onSubmit}
+  />
+);
+
+function RenameError({ error }: { error?: string }): ReactElement | null {
+  if (!error) return null;
+
+  return (
+    <Text accessibilityRole="alert" role="secondary" tone="danger">
+      {error}
+    </Text>
+  );
 }
 
 function RenameHeading(): ReactElement {
@@ -79,19 +152,14 @@ function RenameHeading(): ReactElement {
   );
 }
 
+// A centred dialog lines Cancel and Save up; a sheet stacks them, Save filling the width.
 function RenameActions(props: { onSave: () => void }): ReactElement {
+  const centred = useInCentredOverlay();
+
   return (
     <DialogFooter>
       <DialogCancel label={copy.cancel} />
-      <Button fullWidth="narrow" label={copy.save} onPress={props.onSave} />
+      <Button fullWidth={!centred} label={copy.save} onPress={props.onSave} />
     </DialogFooter>
   );
 }
-
-// The field opens focused with the whole title selected, so typing replaces it. Android's outlined field carries its label in its outline; elsewhere the dialog's title says what the field holds.
-const titleField = {
-  label: copy.field,
-  labelHidden: Platform.OS !== 'android',
-  focusOnOpen: true,
-  selectOnFocus: true,
-};

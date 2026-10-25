@@ -1,14 +1,37 @@
-import { type ReactElement, useEffect, useRef } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#kit/utils';
 import { Button } from '#primitives/actions/button';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Menu } from '#primitives/overlays/menu';
+import { Menu, type MenuAction } from '#primitives/overlays/menu';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
+import type { KitProps } from '../../kit-props';
 import { actingButton, menuRows, stackedButtons } from './split-button-items';
-import type { LaidSplitProps, SplitButtonProps } from './split-button-props';
+import { SplitChevron } from './split-chevron';
 
-export type { SplitButtonOption, SplitButtonProps } from './split-button-props';
+type Derived<Value extends string> = KitProps<'SplitButton', Value>;
+
+type Choices<Value extends string> = Extract<
+  Derived<Value>,
+  { options: readonly unknown[] }
+>;
+
+export type SplitButtonOption<Value extends string> =
+  Choices<Value>['options'][number];
+
+// Kit-only: Argo's own callers pass menu actions as data, with custom web content.
+export type SplitButtonProps<Value extends string = string> = Derived<Value> & {
+  actions?: readonly MenuAction[];
+  children?: ReactNode;
+};
+
+// What the split offers besides its button: the choices, or the actions.
+export type SplitRows<Value extends string = string> =
+  | Pick<Choices<Value>, 'options' | 'value' | 'onValueChange'>
+  | { actions: readonly MenuAction[] };
+
+// The split's props once its width is resolved: `narrow` fills the row.
+export type LaidSplitProps<Value extends string = string> =
+  SplitButtonProps<Value> & { narrow: boolean };
 
 // The web draws a button beside a chevron that opens Argo's menu; phones stack every option as a button of its own.
 export function SplitButton<Value extends string>(
@@ -32,7 +55,7 @@ function MenuSplit<Value extends string>(
   props: LaidSplitProps<Value>,
 ): ReactElement {
   return (
-    <View className={cn('flex-row gap-1', props.narrow && 'w-full')}>
+    <View className={cn('flex-row gap-0.5', props.narrow && 'w-full')}>
       <View className={cn(props.narrow && 'flex-1')}>{acting(props)}</View>
       <Menu
         {...menuRows(props)}
@@ -44,24 +67,21 @@ function MenuSplit<Value extends string>(
   );
 }
 
+// The acting segment keeps the Button's radius on its start side and a small one beside the chevron.
 const acting = <Value extends string>(
   props: LaidSplitProps<Value>,
-): ReactElement => <Button {...actingButton(props)} />;
+): ReactElement => <Button {...actingButton(props)} joined="start" />;
 
-// An IconButton element itself, in the split's look and size, so the menu's asChild trigger can pass its press handlers to it.
-function chevron<Value extends string>(
+const chevron = <Value extends string>(
   props: LaidSplitProps<Value>,
-): ReactElement {
-  return (
-    <IconButton
-      icon="chevron-down"
-      variant={props.primary ? 'primary' : 'secondary'}
-      size={props.size === 'xs' ? 'sm' : 'md'}
-      accessibilityLabel={props.menuLabel}
-      disabled={props.disabled}
-    />
-  );
-}
+): ReactElement => (
+  <SplitChevron
+    primary={props.primary === true}
+    size={props.size === 'xs' ? 'sm' : 'md'}
+    accessibilityLabel={props.menuLabel}
+    disabled={props.disabled}
+  />
+);
 
 function StackedSplit<Value extends string>(
   props: LaidSplitProps<Value>,

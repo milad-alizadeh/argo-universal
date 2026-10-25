@@ -1,5 +1,5 @@
+import type { RegistryIconProps } from '@repo/kit/primitives/content/agent-logo';
 import { encodedIcon, iconAgent } from '../registry-icons.mocks';
-import type { RegistryIconProps } from './registry-icon';
 
 const agentName = iconAgent.entry.name;
 

@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fireEvent, waitFor } from 'storybook/test';
 import { settleViewport } from '#kit/settle-viewport';
-import { LoadingPage } from './inspector-restore.test.mocks';
+import { LoadingScreen } from './inspector-restore.test.mocks';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Scaffolds/Inspector/Thermo',
-  component: LoadingPage,
+  component: LoadingScreen,
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(1440),
-} satisfies Meta<typeof LoadingPage>;
+} satisfies Meta<typeof LoadingScreen>;
 
 export default meta;
 

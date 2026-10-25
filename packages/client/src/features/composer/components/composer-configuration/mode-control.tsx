@@ -94,8 +94,8 @@ function modePage(
   close: () => void,
 ): React.JSX.Element {
   return (
-    <Sheet.Page name="mode" title="Mode">
+    <Sheet.Screen name="mode" title="Mode">
       <ModeContents {...props} close={close} />
-    </Sheet.Page>
+    </Sheet.Screen>
   );
 }

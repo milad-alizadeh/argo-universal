@@ -1,8 +1,6 @@
 import type { SessionConfigOption } from '@repo/contracts';
-import { Slider } from '@repo/kit/primitives/inputs/slider';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
-import { ConfigurationRowIcon, optionIcon } from './configuration-row-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 
@@ -18,38 +16,46 @@ interface SwitchProps extends TuningProps {
   option: BooleanOption;
 }
 
-export function EffortControl(props: TuningProps): React.JSX.Element | null {
+/*
+ * Effort and the switches are calls, as a Section reads its rows by element type.
+ * Effort steps through the model's levels: the slider's value is the level's place in the list.
+ */
+export function effortControl(props: TuningProps): React.JSX.Element | null {
   const effort = currentEffort(props.configuration);
 
   if (!effort.option || !effort.selected) return null;
 
   return (
-    <ListItem
-      title="Effort"
-      leading={<ConfigurationRowIcon name="thinking" />}
-      value={effort.selected.name}
-      control={<EffortSlider {...props} effort={effort} />}
+    <FieldGroup.Slider
+      key="effort"
+      {...effortSliderProps({ ...props, effort })}
     />
   );
-}
-
-function EffortSlider(props: EffortProps): React.JSX.Element {
-  return <Slider {...effortSliderProps(props)} />;
 }
 
 function effortSliderProps({
   configuration,
   effort,
-}: EffortProps): React.ComponentProps<typeof Slider> {
+}: EffortProps): React.ComponentProps<typeof FieldGroup.Slider> {
   return {
-    accessibilityLabel: 'Effort',
-    valueLabel: selectedEffortLabel(effort),
-    minimumValue: 0,
-    maximumValue: Math.max(1, effort.choices.length - 1),
+    title: 'Effort',
+    min: 0,
+    max: Math.max(1, effort.choices.length - 1),
     step: 1,
-    value: effort.selected ? effort.choices.indexOf(effort.selected) : 0,
+    // Medium, High: the level's name is shown beside the title and announced with it.
+    valueLabel: effort.selected?.name,
+    value: effortIndex(effort),
     onValueChange: (index) => selectEffort({ configuration, effort }, index),
   };
+}
+
+// The selected level can be the fallback, a copy from the option's own choices, so it is found by value.
+function effortIndex(effort: EffortProps['effort']): number {
+  const index = effort.choices.findIndex(
+    (choice) => choice.value === effort.selected?.value,
+  );
+
+  return Math.max(index, 0);
 }
 
 function selectEffort(
@@ -62,28 +68,24 @@ function selectEffort(
     configuration.onConfigChange(effort.option.configId, choice.value);
 }
 
-// A call, so the list places each switch row.
+// A call, so the section places each switch row.
 export function switchOptions(props: TuningProps): React.JSX.Element[] {
-  return switches(props.configuration).map((option) => (
-    <ConfigurationSwitch key={option.configId} {...props} option={option} />
-  ));
+  return switches(props.configuration).map((option) =>
+    configurationSwitch({ ...props, option }),
+  );
 }
 
-function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {
+function configurationSwitch(props: SwitchProps): React.JSX.Element {
   const { configuration, option } = props;
 
   return (
-    <ListItem.Toggle
+    <FieldGroup.Toggle
+      key={option.configId}
       title={option.name}
-      leading={optionIcon(option)}
       value={option.currentValue}
       onValueChange={(checked) =>
         configuration.onConfigChange(option.configId, checked)
       }
     />
   );
-}
-
-function selectedEffortLabel(effort: ReturnType<typeof currentEffort>): string {
-  return effort.selected?.name ?? '';
 }

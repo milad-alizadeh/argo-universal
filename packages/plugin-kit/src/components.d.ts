@@ -17,7 +17,7 @@ export const Card: PluginComponents['Card'];
 
 export const ScrollView: PluginComponents['ScrollView'];
 
-export const Page: PluginComponents['Page'];
+export const Screen: PluginComponents['Screen'];
 
 export const ListDetail: PluginComponents['ListDetail'];
 
@@ -35,14 +35,7 @@ export const List: PluginComponents['List'] & {
   Section: PluginComponents['List.Section'];
 };
 
-export const ListItem: PluginComponents['ListItem'] & {
-  Link: PluginComponents['ListItem.Link'];
-  Toggle: PluginComponents['ListItem.Toggle'];
-  Picker: PluginComponents['ListItem.Picker'];
-  Stepper: PluginComponents['ListItem.Stepper'];
-  TextField: PluginComponents['ListItem.TextField'];
-  Button: PluginComponents['ListItem.Button'];
-};
+export const ListItem: PluginComponents['ListItem'];
 
 export const Label: PluginComponents['Label'];
 
@@ -55,27 +48,25 @@ export const Table: PluginComponents['Table'] & {
   Cell: PluginComponents['Table.Cell'];
 };
 
-export const ActionList: PluginComponents['ActionList'] & {
-  Section: PluginComponents['ActionList.Section'];
+export const Action: PluginComponents['Action'] & {
+  Section: PluginComponents['Action.Section'];
 };
-
-export const Action: PluginComponents['Action'];
-
-export const Picker: PluginComponents['Picker'];
 
 export const SplitButton: PluginComponents['SplitButton'];
 
-export const TextInput: PluginComponents['TextInput'];
-
-export const Checkbox: PluginComponents['Checkbox'];
-
-export const Switch: PluginComponents['Switch'];
-
 export const Slider: PluginComponents['Slider'];
 
-export const DatePicker: PluginComponents['DatePicker'];
-
-export const Form: PluginComponents['Form'];
+export const FieldGroup: PluginComponents['FieldGroup'] & {
+  Section: PluginComponents['FieldGroup.Section'];
+  Value: PluginComponents['FieldGroup.Value'];
+  Link: PluginComponents['FieldGroup.Link'];
+  Toggle: PluginComponents['FieldGroup.Toggle'];
+  Picker: PluginComponents['FieldGroup.Picker'];
+  DatePicker: PluginComponents['FieldGroup.DatePicker'];
+  Slider: PluginComponents['FieldGroup.Slider'];
+  TextField: PluginComponents['FieldGroup.TextField'];
+  SecretField: PluginComponents['FieldGroup.SecretField'];
+};
 
 export const IconButton: PluginComponents['IconButton'];
 

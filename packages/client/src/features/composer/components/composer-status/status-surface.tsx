@@ -1,3 +1,4 @@
+import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
 import { List } from '@repo/kit/primitives/lists/list';
 import type { ReactNode, JSX } from 'react';
@@ -13,7 +14,7 @@ export function StatusSheetList({
   children: ReactNode;
 }): JSX.Element {
   return (
-    <List appearance="grouped" fit={false}>
+    <List appearance={groupedOnPhones('cards')} fit={false}>
       {children}
     </List>
   );

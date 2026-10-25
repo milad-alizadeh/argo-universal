@@ -2,7 +2,7 @@ import { use, type ReactElement, type ReactNode } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
-import { ContextActions } from '#primitives/actions/action-list';
+import { ContextActions } from '#primitives/actions/action';
 import { ListContext, type ListPosition } from '../../../list-context';
 import { useRowHighlight, useSeparatorCovered } from '../../../row-highlights';
 import { GridCell } from './table-cell';
@@ -16,7 +16,7 @@ export type GridProps = TableProps & {
 
 type RowProps = GridProps & { row: TableRow };
 
-// One row of the grid, drawn with List's press, selection, separators and ActionList.
+// One row of the grid, drawn with List's press, selection, separators and Actions.
 export function GridRow(props: RowProps): ReactElement {
   const selected = props.selectionMode
     ? isSelected(props, props.row.id)

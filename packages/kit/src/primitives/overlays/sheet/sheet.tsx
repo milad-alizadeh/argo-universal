@@ -6,12 +6,6 @@ import { useCentresOverlays } from '#primitives/overlays/centred-overlay';
 import { useWide } from '../../../use-wide/use-wide';
 import { ModalSheet } from './sheet-modal';
 import {
-  SheetLink,
-  SheetNavigationProvider,
-  SheetPage,
-  useSheetStack,
-} from './sheet-pages';
-import {
   openChange,
   SheetPanel,
   sheetHeightClass,
@@ -19,6 +13,12 @@ import {
 } from './sheet-panel';
 import { PopoverSheet } from './sheet-popover';
 import type { SheetProps } from './sheet-props';
+import {
+  SheetLink,
+  SheetNavigationProvider,
+  SheetScreen,
+  useSheetStack,
+} from './sheet-screens';
 
 /*
  * A compact window raises the sheet from the bottom edge as a drawer; a wide one opens a sheet
@@ -157,6 +157,6 @@ function DrawerTrigger(props: TriggerProps): ReactElement | null {
 type TriggerProps = Pick<SheetProps, 'trigger' | 'onOpenChange'>;
 
 export const Sheet = Object.assign(SheetRoot, {
-  Page: SheetPage,
+  Screen: SheetScreen,
   Link: SheetLink,
 });

@@ -1,7 +1,7 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactElement } from 'react';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
-import type { ElicitationFieldProps } from './elicitation-field-rows';
+import type { ElicitationFieldProps } from './elicitation-field-props';
 import type { ElicitationValue } from './elicitation-schema';
 
 export type ElicitationEntry = ElicitationModel['schema']['fields'][number];
@@ -50,7 +50,6 @@ function boundProps(
     ...bindingProps(field),
     showError: field.state.meta.isTouched || hasInitialValue(props),
     inactive: model.inactive,
-    lone: model.schema.fields.length === 1,
   };
 }
 

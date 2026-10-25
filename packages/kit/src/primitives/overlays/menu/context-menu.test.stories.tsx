@@ -3,11 +3,14 @@ import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { Text } from '#primitives/content/text';
-import { TextInput } from '#primitives/inputs/text-input';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { Dialog, DialogContent } from '#primitives/overlays/dialog';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { ContextMenu } from './context-menu';
+
+// The Dialog's field takes focus as it opens.
+const focusOnOpen = { autoFocus: true };
 
 const rowTitle = 'Item';
 
@@ -87,7 +90,16 @@ function RenameInDialog(): ReactElement {
       </ContextMenu>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent accessibilityLabel="Dialog">
-          <TextInput label="Title" value="" onChangeText={fn()} focusOnOpen />
+          <FieldGroup>
+            <FieldGroup.Section>
+              <FieldGroup.TextField
+                title="Title"
+                value=""
+                onChangeText={fn()}
+                {...focusOnOpen}
+              />
+            </FieldGroup.Section>
+          </FieldGroup>
         </DialogContent>
       </Dialog>
     </>

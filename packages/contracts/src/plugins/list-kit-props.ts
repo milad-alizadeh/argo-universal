@@ -33,9 +33,11 @@ export const contentListProps = z.object({
     .optional()
     .describe('Media aspect: square 1:1, landscape 16:10, portrait 3:4.'),
   appearance: z
-    .enum(['plain', 'grouped', 'cards'])
+    .enum(['plain', 'cards', 'grouped'])
     .optional()
-    .describe('The list appearance.'),
+    .describe(
+      'The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists).',
+    ),
   footer: z.string().optional().describe('Page-level supporting text.'),
   isLoading: z.boolean().optional().describe('Whether the list is loading.'),
 });

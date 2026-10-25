@@ -128,7 +128,7 @@ function offsetAt(index: number, places: Places, progress: number): number {
   return Math.sign(index - places.to);
 }
 
-export function usePageSlide(
+export function useScreenSlide(
   motion: SlideMotion,
   index: number,
   width: number,

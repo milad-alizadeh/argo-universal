@@ -18,7 +18,7 @@ export const noChanges = 'No changes';
 
 export const loadErrorTitle = "Couldn't load changes";
 
-export const compareAgainst = 'Compare Against';
+export const comparisonDialog = 'Comparison';
 
 // The Inspector at the height the phone sheet and the wide column give it.
 export const testMeta = {
@@ -34,9 +34,9 @@ export const testMeta = {
   args: changesArgs,
 } satisfies Meta<typeof ChangesInspector>;
 
-// The picker's trigger is named by its Menu and shows the chosen comparison.
+// The picker's pill is named by its title and shows the chosen comparison.
 export async function picker(label: string): Promise<HTMLElement> {
-  const trigger = screen.getByRole('button', { name: 'Comparison' });
+  const trigger = screen.getByRole('button', { name: /^Comparison/ });
   await expect(trigger).toHaveTextContent(label);
 
   return trigger;
@@ -48,7 +48,7 @@ export async function expectComparison(
   width: number,
 ): Promise<void> {
   await (width === layoutWidths.phone
-    ? expect(screen.queryByRole('button', { name: 'Comparison' })).toBeNull()
+    ? expect(screen.queryByRole('button', { name: /^Comparison/ })).toBeNull()
     : expect(await picker(label)).toBeVisible());
 }
 

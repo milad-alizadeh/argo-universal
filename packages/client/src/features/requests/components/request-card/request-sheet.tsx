@@ -34,11 +34,11 @@ function RequestSheet(props: SheetRequestProps): ReactNode {
       label={props.sheetLabel}
       footer={<SheetFooter {...props} />}
     >
-      <Sheet.Page name="request" title={props.sheetLabel}>
+      <Sheet.Screen name="request" title={props.sheetLabel}>
         <ContentWidthProvider wide={false}>
           {props.children}
         </ContentWidthProvider>
-      </Sheet.Page>
+      </Sheet.Screen>
     </Sheet>
   );
 }

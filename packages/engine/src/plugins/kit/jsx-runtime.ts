@@ -78,15 +78,31 @@ function prepare(
   };
 }
 
+// A kit component that carries members, as `List` carries `List.Section`, with the wire type it stands for.
+type KitComponent = React.ComponentType<ElementProps>;
+
+const kitParts = new WeakMap<KitComponent, string>();
+
+export function registerKitPart(component: KitComponent, part: string): void {
+  kitParts.set(component, part);
+}
+
+type ElementType = React.ComponentType<ElementProps> | string;
+
+// A kit component is its wire type, so its author key reaches the node; any other component renders itself.
+const wireType = (type: ElementType): string | undefined =>
+  typeof type === 'string' ? type : kitParts.get(type);
+
 function create(
-  type: React.ComponentType<ElementProps> | string,
+  type: ElementType,
   props: ElementProps,
   key?: string | number,
 ): React.ReactElement {
-  if (typeof type !== 'string')
-    return React.createElement(type, { ...props, key });
+  const wire = wireType(type);
 
-  return React.createElement(type, { ...prepare(type, props, key), key });
+  if (wire === undefined) return React.createElement(type, { ...props, key });
+
+  return React.createElement(wire, { ...prepare(wire, props, key), key });
 }
 
 export const jsx = create;

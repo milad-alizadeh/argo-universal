@@ -1,4 +1,6 @@
-export { Icon, IconSlot, IconSpinner } from './icon';
+export { Icon } from './icon';
+
+export { IconSlot, IconSpinner } from './icon-slot';
 
 export {
   type IconProps,
@@ -6,4 +8,13 @@ export {
   type IconSpinnerProps,
 } from './icon-props';
 
-export { IconSizeContext } from './icon-size-context';
+export {
+  IconSizeContext,
+  type IconSizing,
+  useIconSize,
+} from './icon-size-context';
+
+export {
+  IconSizeProvider,
+  type IconSizeProviderProps,
+} from './icon-size-provider';

@@ -1,4 +1,4 @@
-import { PageBesideList } from '@repo/kit/primitives/scaffolds/page';
+import { ScreenBesideList } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { ProjectDetailPane } from './project-detail-pane';
 
@@ -10,8 +10,8 @@ export function ProjectDetailScreen({
   name,
 }: ProjectDetailScreenProps): React.JSX.Element {
   return (
-    <PageBesideList value={false}>
+    <ScreenBesideList value={false}>
       <ProjectDetailPane name={name} />
-    </PageBesideList>
+    </ScreenBesideList>
   );
 }

@@ -1,5 +1,6 @@
 import {
   Handler,
+  partEventHandler,
   WireJson,
   partEventRules,
   type PartEventRules,
@@ -25,7 +26,9 @@ export type Change = (edit: Edit) => void;
 export function eventProps(input: Input, change: Change): PluginProps {
   return Object.fromEntries(
     Object.entries(input.part.events).map(([name, schema]) => {
-      const handler = Handler.safeParse(input.node.props[name]).data;
+      const handler = Handler.safeParse(
+        partEventHandler(input.node.props, name, schema),
+      ).data;
 
       return [name, callback(input, { name, schema, handler }, change)];
     }),

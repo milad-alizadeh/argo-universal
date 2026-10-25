@@ -1,4 +1,9 @@
-import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
+import { wirePart } from '@repo/contracts/plugins/kit';
+import {
+  placedPartEvent,
+  type WireJson,
+  type WireNode,
+} from '@repo/contracts/plugins/wire';
 import {
   childNodeKey,
   slotParentKey,
@@ -82,11 +87,21 @@ function wireNode(source: Instance, id: string, handlers: Handlers): WireNode {
   return {
     type: instance.type,
     key: decodeURIComponent(id.slice(id.lastIndexOf('/') + 1)),
-    props: wireProps(instance.props, id, handlers),
+    props: placedEvents(instance.type, wireProps(instance.props, id, handlers)),
     children: wireChildren(content, id, handlers),
     slots: wireSlots(instance, id, handlers),
   };
 }
+
+// An event a part keeps inside a prop object goes there on the wire, such as a Picker's `footerAction.onPress`.
+const placedEvents = (
+  type: string,
+  props: WireNode['props'],
+): WireNode['props'] =>
+  Object.entries(wirePart(type)?.events ?? {}).reduce(
+    (placed, [name, schema]) => placedPartEvent(placed, name, schema),
+    props,
+  );
 
 function wireChildren(
   instances: Instance[],

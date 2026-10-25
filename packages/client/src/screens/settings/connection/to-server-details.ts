@@ -8,9 +8,10 @@ interface InfoQuery {
   data?: { version: string; startedAt: string; pid: number };
 }
 
+// While the Connection is down the Frame's banner says so, and the page adds nothing of its own.
 const unavailableDetails = (connection?: ConnectionState): ServerDetails =>
-  connection === 'offline'
-    ? { status: 'error', message: "Couldn't reach the Server." }
+  connection === 'reconnecting' || connection === 'offline'
+    ? { status: 'down' }
     : { status: 'loading' };
 
 const unloadedDetails = (

@@ -85,16 +85,25 @@ export const ManyFilesScroll: Story = {
   },
 };
 
+// A phone ticks a check; a desktop toggles a button.
+const checks = { role: 'checkbox', state: 'aria-checked' } as const;
+
+const toggles = { role: 'button', state: 'aria-pressed' } as const;
+
 // Marking a file viewed folds it and tells the owner; one story per width, each with a fresh spy.
-function marksViewed(width: number): Story {
+function marksViewed(
+  width: number,
+  mark: typeof checks | typeof toggles,
+): Story {
   return {
     args: { onViewedChange: fn() },
     play: async ({ args, canvas, userEvent }) => {
       await settleViewport(width);
-      const [large, feed] = canvas.getAllByRole('checkbox', { name: 'Viewed' });
 
-      if (!large || !feed) throw new Error('Missing Viewed checkboxes');
-      await expect(feed).toHaveAttribute('aria-checked', 'true');
+      const [large, feed] = canvas.getAllByRole(mark.role, { name: 'Viewed' });
+
+      if (!large || !feed) throw new Error('Missing Viewed marks');
+      await expect(feed).toHaveAttribute(mark.state, 'true');
       await userEvent.click(large);
       await expect(args.onViewedChange).toHaveBeenCalledWith(largeFile, true);
       await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
@@ -102,9 +111,9 @@ function marksViewed(width: number): Story {
   };
 }
 
-export const MarksViewedPhone = marksViewed(layoutWidths.phone);
+export const MarksViewedPhone = marksViewed(layoutWidths.phone, checks);
 
-export const MarksViewedWide = marksViewed(layoutWidths.wide);
+export const MarksViewedWide = marksViewed(layoutWidths.wide, toggles);
 
 // Expanded, the Inspector keeps the comparison, totals and files, and offers Restore in place of Expand.
 export const ExpandedKeepsTheChanges: Story = {

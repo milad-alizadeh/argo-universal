@@ -10,8 +10,6 @@ import {
   waitForEmptySession,
 } from './new-session';
 
-const checkedAttribute = 'aria-checked';
-
 const argoBranches = async (projectPath: string): Promise<string[]> =>
   (await readSessionCheckouts(projectPath)).branches;
 
@@ -72,7 +70,7 @@ When('I enable Fast mode', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: agentModelLabel }).click();
   await expect(
     page.getByRole('switch', { name: 'Fast mode', exact: true }),
-  ).toHaveAttribute(checkedAttribute, 'true');
+  ).toBeChecked();
   await page.keyboard.press('Escape');
 });
 
@@ -80,6 +78,6 @@ Then('Fast mode remains enabled', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: agentModelLabel }).click();
   await expect(
     page.getByRole('switch', { name: 'Fast mode', exact: true }),
-  ).toHaveAttribute(checkedAttribute, 'true');
+  ).toBeChecked();
   await page.keyboard.press('Escape');
 });

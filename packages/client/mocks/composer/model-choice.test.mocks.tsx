@@ -1,5 +1,6 @@
 import { wideBreakpoint } from '@repo/kit/each-layout';
 import { expect, within, waitFor } from 'storybook/test';
+import { configurationLabel } from '../../src/features/composer/components/composer-configuration/configuration-values';
 import type { PlayContext } from './composer-story-context.test.mocks';
 import { chooseModelLabel } from './composer-test-contract.test.mocks';
 
@@ -19,14 +20,20 @@ export async function chooseModel({
     await userEvent.click(
       await overlay.findByRole('button', { name: chooseModelLabel }),
     );
-  const choice = await overlay.findByRole('radio', { name });
+
+  const choice = await overlay.findByRole('radio', {
+    name: configurationLabel(name),
+  });
+
   await userEvent.click(choice);
   await (width >= wideBreakpoint()
     ? expect(choice).toHaveAttribute('aria-checked', 'true')
-    : expectConfigureShown());
+    : expectConfigureShown(choice));
 }
 
-async function expectConfigureShown(): Promise<void> {
+// A phone's models page slides back to Configure; the next pick waits until it has gone, or its click lands mid-slide.
+async function expectConfigureShown(choice: HTMLElement): Promise<void> {
+  await waitFor(() => expect(choice).not.toBeInTheDocument());
   await expect(
     await within(document.body).findByRole('button', {
       name: chooseModelLabel,
@@ -38,7 +45,7 @@ async function expectConfigureShown(): Promise<void> {
 function openModels(): boolean {
   return (
     within(document.body)
-      .queryByRole('dialog', { name: 'Select Model' })
+      .queryByRole('dialog', { name: 'Model' })
       ?.getAttribute('data-state') === 'open'
   );
 }

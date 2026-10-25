@@ -58,7 +58,7 @@ describe('pairingProblems', () => {
   it('leaves an exempt schema without a drawing alone', () => {
     expect(
       pairingProblems({
-        schemas: [{ name: 'Action', group: actions }],
+        schemas: [{ name: 'Chart', group: 'content' }],
         folders: [],
       }),
     ).toEqual([]);

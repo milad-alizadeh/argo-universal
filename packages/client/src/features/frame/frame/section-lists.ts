@@ -15,7 +15,7 @@ export interface SectionList {
   query?: string;
   // The header over the list when the list is the section's root page, as Android's drawer header and the web's JS header draw it.
   rootHeader: ScreenHeaderProps;
-  // A narrow window's root page, such as a Page around the list, which then fills the root header itself; without it, the root shows the list under `rootHeader`.
+  // A narrow window's root page, such as a Screen around the list, which then fills the root header itself; without it, the root shows the list under `rootHeader`.
   rootPage?: ReactNode;
   /*
    * The page a window with the list beside it opens at the section's root, or undefined while

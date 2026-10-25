@@ -3,10 +3,9 @@ import type {
   PluginSettingValue,
   PluginSettings,
 } from '@repo/contracts/plugins';
-import { ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
-import { SecretRow, TextRow } from './plugin-text-rows';
+import { secretRows, TextRow } from './plugin-text-rows';
 
 export interface SettingFieldRowProps {
   field: PluginSettingField;
@@ -14,17 +13,16 @@ export interface SettingFieldRowProps {
   onChange: (value: PluginSettingValue) => void;
 }
 
-// One schema field as its own section: the kit row its type names, its description the footer.
-export function SettingFieldRow(
+// One schema field as its own section: the FieldGroup row its type names, its description the footer.
+export function settingFieldSection(
   props: SettingFieldRowProps,
 ): React.JSX.Element {
   const { field } = props;
-  const Row = fieldRows[field.type];
 
   return (
-    <ListSection>
-      <Row {...props} />
-    </ListSection>
+    <FieldGroup.Section key={field.key} footer={field.description}>
+      {fieldRows[field.type](props)}
+    </FieldGroup.Section>
   );
 }
 
@@ -37,68 +35,59 @@ const valueOf = ({
 }: SettingFieldRowProps): PluginSettingValue | undefined =>
   settings.values[field.key];
 
-function TextFieldRow(props: SettingFieldRowProps): React.JSX.Element {
+function textFieldRow(props: SettingFieldRowProps): React.JSX.Element {
   const value = textOf(valueOf(props)) ?? '';
 
   return (
     <TextRow
       key={value}
       label={props.field.label}
-      hint={props.field.description}
       value={value}
       onSave={props.onChange}
     />
   );
 }
 
-function SecretFieldRow({
+const secretFieldRows = ({
   field,
   settings,
   onChange,
-}: SettingFieldRowProps): React.JSX.Element {
-  return (
-    <SecretRow
-      label={field.label}
-      hint={field.description}
-      set={settings.secretsSet.includes(field.key)}
-      onSave={onChange}
-    />
-  );
-}
+}: SettingFieldRowProps): React.JSX.Element =>
+  secretRows({
+    label: field.label,
+    set: settings.secretsSet.includes(field.key),
+    onSave: onChange,
+  });
 
-function ToggleFieldRow(props: SettingFieldRowProps): React.JSX.Element {
-  return (
-    <ListItem.Toggle
-      title={props.field.label}
-      description={props.field.description}
-      value={valueOf(props) === true}
-      onValueChange={props.onChange}
-    />
-  );
-}
+const toggleFieldRow = (props: SettingFieldRowProps): React.JSX.Element => (
+  <FieldGroup.Toggle
+    title={props.field.label}
+    value={valueOf(props) === true}
+    onValueChange={props.onChange}
+  />
+);
 
-function PickerFieldRow({
-  field,
-  ...props
-}: SettingFieldRowProps): React.JSX.Element {
+function pickerFieldRow(props: SettingFieldRowProps): React.JSX.Element {
+  const { field } = props;
+
   return (
-    <ListItem.Picker
+    <FieldGroup.Picker
       title={field.label}
-      description={field.description}
-      value={textOf(valueOf({ field, ...props }))}
+      value={textOf(valueOf(props)) ?? ''}
       options={field.type === 'picker' ? field.options : []}
+      presentation="menu"
       onValueChange={props.onChange}
     />
   );
 }
 
-// Each field type's row; the schema's own `type` picks it.
+// Each field type's rows; the schema's own `type` picks them.
 const fieldRows: Record<
   PluginSettingField['type'],
   (props: SettingFieldRowProps) => React.JSX.Element
 > = {
-  text: TextFieldRow,
-  secret: SecretFieldRow,
-  toggle: ToggleFieldRow,
-  picker: PickerFieldRow,
+  text: textFieldRow,
+  secret: secretFieldRows,
+  toggle: toggleFieldRow,
+  picker: pickerFieldRow,
 };

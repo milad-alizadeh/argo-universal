@@ -69,13 +69,13 @@ function useRetryRotation(): RotationStyle {
 function RetryIcon(): React.JSX.Element {
   return (
     <Animated.View testID="live-header-retry" style={useRetryRotation()}>
-      <Icon name="retry" size="sm" className="text-muted-foreground" />
+      <Icon name="retry" className="text-muted-foreground" />
     </Animated.View>
   );
 }
 
 const mutedIcon = (name: IconName): React.JSX.Element => (
-  <Icon name={name} size="sm" className="text-muted-foreground" />
+  <Icon name={name} className="text-muted-foreground" />
 );
 
 const sourceIcons: Record<
@@ -134,7 +134,7 @@ export function LiveHeader(props: LiveHeaderProps): React.JSX.Element {
 
   return (
     <View role="status" accessibilityLabel={title} className={rowClassName}>
-      <IconSlot size="sm">
+      <IconSlot>
         <SourceIcon source={liveHeader.source} toolCall={props.toolCall} />
       </IconSlot>
       <LiveTitle title={title} source={liveHeader.source} />

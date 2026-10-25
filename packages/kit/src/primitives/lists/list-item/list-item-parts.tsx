@@ -1,6 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
-import { Icon, IconSizeContext } from '#primitives/content/icon';
+import {
+  Icon,
+  IconSizeContext,
+  type IconSizing,
+} from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useInMenu } from '../../../menu-rows-context';
 import {
@@ -34,9 +38,9 @@ type LeadingLane = keyof typeof leadingClasses;
 
 const leadingIconSizes = {
   row: undefined,
-  menu: 'md',
+  menu: { size: 'md', fixed: true },
   sidebar: undefined,
-} as const satisfies Record<LeadingLane, 'md' | undefined>;
+} as const satisfies Record<LeadingLane, IconSizing | undefined>;
 
 type LeadingProps = Pick<
   ListItemProps,
@@ -127,7 +131,7 @@ export function LinkAccessory(): ReactElement | null {
   if (Platform.OS === 'android') return null;
 
   return Platform.OS === 'ios' ? (
-    <Icon name="disclosure" size="sm" className="text-tertiary" />
+    <Icon name="disclosure" className="text-tertiary" />
   ) : (
     <Icon name="web-disclosure" size="md" className="text-tertiary" />
   );

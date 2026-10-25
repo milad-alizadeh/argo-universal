@@ -7,7 +7,7 @@ type RecyclingFixture = Omit<
 >;
 
 export const recyclingList = {
-  appearance: 'grouped',
+  appearance: 'plain',
   recycleItems: true,
   drawDistance: 0,
   estimatedItemSize: 56,

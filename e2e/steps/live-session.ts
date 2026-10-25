@@ -73,21 +73,26 @@ Then(
 
 const chooseModelLabel = /^Model,/;
 
-const effortValueAttribute = 'aria-valuetext';
+// The Effort slider names itself and speaks its level; Configure must be open.
+const effortSlider = (page: Page): Locator =>
+  page.getByRole('slider', { name: 'Effort' });
 
 async function chooseEffort(page: Page, effort: string): Promise<void> {
-  const slider = page.getByRole('slider', { name: 'Effort' });
+  const slider = effortSlider(page);
   await slider.focus();
   await slider.press('Home');
 
-  if ((await slider.getAttribute(effortValueAttribute)) !== effort)
+  if ((await slider.getAttribute('aria-valuetext')) !== effort)
     await slider.press('End');
 }
 
-// Escape closes Configure, and on a desktop the models kept open beside it.
+// The Model page closes itself when a model is chosen and Configure stays open; Escape then closes Configure.
 async function reopenConfiguration(page: Page): Promise<void> {
+  await expect(
+    page.getByRole('dialog', { name: 'Model', exact: true }),
+  ).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Select Model' })).toHaveCount(
+  await expect(page.getByRole('dialog', { name: agentModelLabel })).toHaveCount(
     0,
   );
   await page.getByRole('button', { name: agentModelLabel }).click();
@@ -138,8 +143,5 @@ async function expectModel(page: Page, model: string): Promise<void> {
 }
 
 async function expectEffort(page: Page, effort: string): Promise<void> {
-  await expect(page.getByRole('slider', { name: 'Effort' })).toHaveAttribute(
-    effortValueAttribute,
-    effort,
-  );
+  await expect(effortSlider(page)).toHaveAttribute('aria-valuetext', effort);
 }

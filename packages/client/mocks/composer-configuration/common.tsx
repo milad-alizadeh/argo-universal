@@ -13,8 +13,6 @@ export const agentModelLabel = 'Agent and model';
 
 export const modelsScrollId = 'composer-models-scroll';
 
-export const effortValue = 'aria-valuetext';
-
 export const heldNotice =
   'A Turn is running. Changes apply from the next Turn.';
 

@@ -1,7 +1,8 @@
-import { actionListWireParts } from './action-list-wire-parts';
+import { actionWireParts } from './action-wire-parts';
 import { canvasWireParts } from './canvas-wire-parts';
 import { coreWireParts } from './core-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
+import { fieldGroupWireParts } from './field-group-wire-parts';
 import { iconButtonPart } from './icon-button-part';
 import { imageWirePart } from './image-wire-part';
 import { layoutWireParts } from './layout-wire-parts';
@@ -9,8 +10,7 @@ import { listWireParts } from './list-wire-parts';
 import { mediaWireParts } from './media-wire-parts';
 import { overlayWireParts } from './overlay-wire-parts';
 import { contentPartSchemas } from './parts/content';
-import { fieldsPartSchemas } from './parts/fields';
-import { inputsPartSchemas } from './parts/inputs';
+import { controlsPartSchemas } from './parts/controls';
 import { layoutPartSchemas } from './parts/layout';
 import { overlaysPartSchemas } from './parts/overlays';
 import { scaffoldsPartSchemas } from './parts/scaffolds';
@@ -29,10 +29,10 @@ export const pluginPartSchemas = {
   ...scaffoldWireParts,
   ...listWireParts,
   ...tableWireParts,
-  ...actionListWireParts,
+  ...actionWireParts,
   ...selectionPartSchemas,
-  ...inputsPartSchemas,
-  ...fieldsPartSchemas,
+  ...controlsPartSchemas,
+  ...fieldGroupWireParts,
   IconButton: iconButtonPart,
   ...overlayWireParts,
   ...mediaWireParts,

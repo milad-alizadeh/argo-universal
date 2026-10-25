@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
 
 // Argo reports the new sort; the page re-sorts its runs.
-test('the runs Page sorts its table of runs', async ({ mount, clock }) => {
+test('the runs Screen sorts its table of runs', async ({ mount, clock }) => {
   const page = await mount({
     page: '/runs',
     surface: { platform: 'web' },

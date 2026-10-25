@@ -79,24 +79,17 @@ export const RowsNameTheProjectWithoutItsFolder: Story = {
   },
 };
 
+// A missing folder says so in words at every width, as the row's value, with no badge beside it.
 export const RowsSayWhereEachProjectIs: Story = {
   play: async ({ canvas }) => {
-    for (const { project, detail } of rowDetails) {
-      await expect(
-        canvas.getByRole('link', { name: `${project.name}, ${detail}` }),
-      ).toBeVisible();
-      await expect(canvas.getByText(detail)).toBeVisible();
-    }
-  },
-};
-
-export const PhoneMarksAMissingFolderWithItsDotAlone: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('link', { name: rowName(missingFolderProject) }),
-    ).toBeVisible();
-    await expect(canvas.queryByText(folderNotFound)).toBeNull();
+    await eachLayout(async () => {
+      for (const { project, detail } of rowDetails) {
+        await expect(
+          canvas.getByRole('link', { name: `${project.name}, ${detail}` }),
+        ).toBeVisible();
+        await expect(canvas.getByText(detail)).toBeVisible();
+      }
+    });
   },
 };
 

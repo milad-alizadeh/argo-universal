@@ -110,7 +110,7 @@ function FilePreview({ attachment }: PreviewProps): React.JSX.Element {
 function FileKind({ name }: { name: string }): React.JSX.Element {
   return (
     <View aria-hidden className={cn(previewClass, kindClass)}>
-      <Icon size="sm" name={fileTypeIcon(name)} className={mutedClass} />
+      <Icon name={fileTypeIcon(name)} className={mutedClass} />
       <Text role="badge" className={mutedClass}>
         {extensionOf(name)}
       </Text>
@@ -121,7 +121,7 @@ function FileKind({ name }: { name: string }): React.JSX.Element {
 function FileName({ name }: { name: string }): React.JSX.Element {
   return (
     <View className="h-7 flex-row items-center gap-1.5 border-t border-border px-2">
-      <Icon size="sm" name={fileTypeIcon(name)} />
+      <Icon name={fileTypeIcon(name)} />
       <Text
         role="badge"
         numberOfLines={1}
@@ -140,7 +140,7 @@ function RemoveButton(props: ComposerAttachmentCardProps): React.JSX.Element {
         disabled={props.disabled}
         accessibilityLabel={`Remove ${props.attachment.name}`}
         icon="close"
-        size="xs"
+        size="sm"
         variant="secondary"
         onPress={props.onRemove}
       />

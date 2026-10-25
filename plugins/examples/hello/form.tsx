@@ -1,12 +1,4 @@
-import {
-  DatePicker,
-  Form,
-  Picker,
-  Stack,
-  Text,
-  TextInput,
-  useState,
-} from '@argo/plugin-kit';
+import { Button, FieldGroup, Stack, Text, useState } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 
 const labels = [
@@ -37,27 +29,49 @@ export function HelloForm(): JSX.Element {
 
   return (
     <Stack direction="column" gap={4}>
-      <Form submitLabel="Create Issue" onSubmit={() => setSaved(draft.title)}>
-        <IssueFields draft={draft} change={change} />
-      </Form>
+      <IssueFields draft={draft} change={change} />
+      <Button label="Create Issue" onPress={() => setSaved(draft.title)} />
       {saved ? <Text>{`Created ${saved}`}</Text> : null}
     </Stack>
   );
 }
 
 function IssueFields(props: { draft: Draft; change: Change }): JSX.Element {
+  return (
+    <FieldGroup>
+      <FieldGroup.Section>
+        <IssueRows {...props} />
+      </FieldGroup.Section>
+    </FieldGroup>
+  );
+}
+
+function IssueRows(props: { draft: Draft; change: Change }): JSX.Element {
   const { draft, change } = props;
 
   return (
     <>
-      <TextInput
-        label="Title"
+      <FieldGroup.TextField
+        title="Title"
         value={draft.title}
         onChangeText={change('title')}
       />
       <LabelsPicker value={draft.labels} onValueChange={change('labels')} />
-      <DatePicker label="Due" value={draft.due} onValueChange={change('due')} />
+      <DueDate value={draft.due} onValueChange={change('due')} />
     </>
+  );
+}
+
+function DueDate(props: {
+  value: string | undefined;
+  onValueChange: (value: string) => void;
+}): JSX.Element {
+  return (
+    <FieldGroup.DatePicker
+      title="Due"
+      value={props.value}
+      onValueChange={props.onValueChange}
+    />
   );
 }
 
@@ -65,9 +79,21 @@ function LabelsPicker(props: {
   value: readonly string[];
   onValueChange: (value: readonly string[]) => void;
 }): JSX.Element {
+  // A multiple picker reports its whole list.
+  const change = (value: string | readonly string[]): void =>
+    props.onValueChange(typeof value === 'string' ? [value] : value);
+
+  return <LabelChoices value={props.value} onValueChange={change} />;
+}
+
+function LabelChoices(props: {
+  value: readonly string[];
+  onValueChange: (value: string | readonly string[]) => void;
+}): JSX.Element {
   return (
-    <Picker
-      label="Labels"
+    <FieldGroup.Picker
+      title="Labels"
+      presentation="menu"
       multiple
       options={labels}
       value={props.value}

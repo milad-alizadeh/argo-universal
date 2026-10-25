@@ -8,7 +8,7 @@ const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Controls',
   render: (): React.JSX.Element => (
     <>
-      {roots.slice(2).map((root) => (
+      {roots.map((root) => (
         <PluginTree key={root.key} root={root} onEvent={onEvent} />
       ))}
     </>
@@ -21,46 +21,41 @@ type Story = StoryObj<typeof meta>;
 
 const onEvent = fn();
 
-const disabledAttribute = 'aria-disabled';
-
 const environment = 'Environment';
+
+// The FieldGroup fixture's rows are keyed by their path.
+const pickerKey = 'form/section/picker';
+
+const toggleKey = 'form/section/toggle';
+
+const textKey = 'form/section/textinput';
 
 const roots = fixtures.map((fixture) => WireNode.parse(fixture));
 
 export const BinaryControls: Story = {
-  render: () => (
-    <>
-      {roots.slice(0, 2).map((root) => (
-        <PluginTree key={root.key} root={root} onEvent={onEvent} />
-      ))}
-    </>
-  ),
   play: async ({ canvas, userEvent }) => {
     for (const [role, name, key] of [
-      ['switch', 'Notifications', 'switch'],
-      ['checkbox', 'Include archived', 'checkbox'],
+      ['switch', 'Notifications', toggleKey],
     ] as const) {
       const answer = Promise.withResolvers<void>();
       onEvent.mockReturnValueOnce(answer.promise);
       const control = canvas.getByRole(role, { name });
-      await userEvent.click(control);
+      await userEvent.click(canvas.getByText(name));
       await expect(control).toBeChecked();
-      await expect(control).toHaveAttribute(disabledAttribute, 'true');
+      await expect(control).toBeDisabled();
       await expect(onEvent).toHaveBeenCalledWith(key, {
         event: 'onValueChange',
         payload: true,
       });
       answer.reject(new Error('Handler failed'));
       await waitFor(() => expect(control).not.toBeChecked());
-      await expect(control).not.toHaveAttribute(disabledAttribute, 'true');
+      await expect(control).not.toBeDisabled();
       const accepted = Promise.withResolvers<void>();
       onEvent.mockReturnValueOnce(accepted.promise);
-      await userEvent.click(control);
-      await expect(control).toHaveAttribute(disabledAttribute, 'true');
+      await userEvent.click(canvas.getByText(name));
+      await expect(control).toBeDisabled();
       accepted.resolve();
-      await waitFor(() =>
-        expect(control).not.toHaveAttribute(disabledAttribute, 'true'),
-      );
+      await waitFor(() => expect(control).not.toBeDisabled());
       await expect(control).toBeChecked();
     }
   },
@@ -72,7 +67,7 @@ export const SelectPicker: Story = {
     await userEvent.click(
       within(document.body).getByRole('option', { name: 'Production' }),
     );
-    await expect(onEvent).toHaveBeenCalledWith('picker', {
+    await expect(onEvent).toHaveBeenCalledWith(pickerKey, {
       event: 'onValueChange',
       payload: 'prod',
     });
@@ -98,13 +93,13 @@ export const EditAndSubmitText: Story = {
     await userEvent.clear(field);
     await userEvent.type(field, 'Atlas');
     await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('textinput', {
+      expect(onEvent).toHaveBeenCalledWith(textKey, {
         event: 'onChangeText',
         payload: 'Atlas',
       }),
     );
     await userEvent.type(field, '{Enter}');
-    await expect(onEvent).toHaveBeenCalledWith('textinput', {
+    await expect(onEvent).toHaveBeenCalledWith(textKey, {
       event: 'onSubmit',
     });
   },

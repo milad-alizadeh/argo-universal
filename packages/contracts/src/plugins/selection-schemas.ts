@@ -20,54 +20,6 @@ export const selectionOption = z.object({
   subtitle: z.string().optional(),
 });
 
-export const pickerSchema = z.object({
-  label: z.string().describe('Spoken and visible selection name.'),
-  value: selectionValue.optional().describe('Selected value.'),
-  options: z.array(selectionOption).readonly().describe('Available choices.'),
-  onValueChange: handler('onValueChange').describe('Reports a selected value.'),
-  required: z.boolean().optional().describe('A value is required.'),
-  placeholder: z
-    .string()
-    .optional()
-    .describe('Text shown without a selection.'),
-  disabled: z.boolean().optional().describe('Disable selection.'),
-  loading: z.boolean().optional().describe('Choices are loading.'),
-  loadError: z.string().optional().describe('Why choices failed to load.'),
-  variant: z.enum(['row', 'field']).optional().describe('Selection placement.'),
-});
-
-// One Picker, one value or several: `multiple` switches `value` and its change to a list.
-export const pickerPartSchema = z.union([
-  pickerSchema.extend({
-    multiple: z.literal(false).optional().describe('Pick several values.'),
-  }),
-  pickerSchema.extend({
-    multiple: z.literal(true).describe('Pick several values.'),
-    value: z
-      .array(selectionValue)
-      .readonly()
-      .optional()
-      .describe('Selected values.'),
-  }),
-]);
-
-const comboboxOption = selectionOption.extend({
-  accessibilityLabel: z.string().optional(),
-  code: z.boolean().optional(),
-  icon: iconName.optional(),
-});
-
-export const comboboxSchema = pickerSchema.extend({
-  options: z.array(comboboxOption).readonly().describe('Searchable choices.'),
-  title: z.string().optional().describe('Overlay heading.'),
-  searchPlaceholder: z.string().optional().describe('Search hint.'),
-  emptyLabel: z.string().optional().describe('Empty result message.'),
-  footerAction: z
-    .object({ label: z.string(), onPress: handler('onPress') })
-    .optional()
-    .describe('Action below the choices.'),
-});
-
 export const menuOption = selectionOption
   .omit({ subtitle: true })
   .extend({ icon: iconName.optional() });

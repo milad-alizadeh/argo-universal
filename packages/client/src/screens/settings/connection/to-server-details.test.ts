@@ -16,6 +16,17 @@ describe('toServerDetails', () => {
     ).toEqual({ status: 'loading' });
   });
 
+  it('leaves a down Connection to the banner', () => {
+    const pending = { isPending: true, isError: false, error: null };
+
+    expect(toServerDetails(pending, undefined, 'reconnecting')).toEqual({
+      status: 'down',
+    });
+    expect(toServerDetails(pending, undefined, 'offline')).toEqual({
+      status: 'down',
+    });
+  });
+
   it('carries the error message when the Server info fails', () => {
     expect(
       toServerDetails({

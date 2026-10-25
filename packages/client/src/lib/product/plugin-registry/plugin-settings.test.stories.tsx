@@ -11,18 +11,23 @@ const node = (
 ): WireNode => ({ type, key, props, children: [], slots: {} });
 
 const root: WireNode = {
-  ...node('List', 'settings', { appearance: 'grouped' }),
+  ...node('FieldGroup', 'settings', {}),
   children: [
-    node('ListItem.Toggle', 'fast', {
-      title: 'Fast mode',
-      value: false,
-      onValueChange: { $event: 'onValueChange' },
-    }),
-    node('ListItem.TextField', 'name', {
-      label: 'Name',
-      value: '',
-      onChangeText: { $event: 'onChangeText' },
-    }),
+    {
+      ...node('FieldGroup.Section', 'section', {}),
+      children: [
+        node('FieldGroup.Toggle', 'fast', {
+          title: 'Fast mode',
+          value: false,
+          onValueChange: { $event: 'onValueChange' },
+        }),
+        node('FieldGroup.TextField', 'name', {
+          title: 'Name',
+          value: '',
+          onChangeText: { $event: 'onChangeText' },
+        }),
+      ],
+    },
   ],
 };
 
@@ -40,13 +45,11 @@ const meta = {
 
 export default meta;
 
-export const GroupedListUsesSettingsWrappers: StoryObj<typeof meta> = {
+export const FieldGroupDrawsSettingsRows: StoryObj<typeof meta> = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(1440);
-    await userEvent.click(
-      await canvas.findByRole('switch', { name: 'Fast mode' }),
-    );
-    await expect(onEvent).toHaveBeenCalledWith('settings/fast', {
+    await userEvent.click(await canvas.findByText('Fast mode'));
+    await expect(onEvent).toHaveBeenCalledWith('settings/section/fast', {
       event: 'onValueChange',
       payload: true,
     });
@@ -60,7 +63,7 @@ export const FieldDraftSurvivesEventDelivery: StoryObj<typeof meta> = {
     await userEvent.type(name, 'Argo');
     await expect(name).toHaveValue('Argo');
     await waitFor(() =>
-      expect(onEvent).toHaveBeenLastCalledWith('settings/name', {
+      expect(onEvent).toHaveBeenLastCalledWith('settings/section/name', {
         event: 'onChangeText',
         payload: 'Argo',
       }),

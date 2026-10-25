@@ -76,26 +76,6 @@ export const Value: Story = {
   },
 };
 
-export const StepperBounds: Story = {
-  render: () => (
-    <ListItem.Stepper
-      title="Count"
-      value={1}
-      min={1}
-      max={2}
-      onValueChange={fn()}
-    />
-  ),
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('button', { name: 'Decrease Count' }),
-    ).toBeDisabled();
-    await expect(
-      canvas.getByRole('button', { name: 'Increase Count' }),
-    ).toBeEnabled();
-  },
-};
-
 export const Loading: Story = {
   args: { isLoading: true, subtitle: 'main' },
   play: async ({ args, canvas, userEvent }) => {

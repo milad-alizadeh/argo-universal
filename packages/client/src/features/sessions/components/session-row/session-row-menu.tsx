@@ -1,37 +1,28 @@
-import {
-  ActionList,
-  Action,
-  type ActionListProps,
-} from '@repo/kit/primitives/actions/action-list';
-import { type ContextMenuTriggerProps } from '@repo/kit/primitives/overlays/menu';
+import { Action } from '@repo/kit/primitives/actions/action';
+import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { sessionMenuItems, type SessionMenuItem } from '../session-menu-items';
 import type { SessionRowProps } from './session-row-props';
 
-type SessionRowMenuProps = SessionRowProps & {
-  children: ReactElement<ContextMenuTriggerProps>;
-};
+type SessionRowMenu = Pick<ListItemProps, 'actions' | 'contextMenu'>;
 
 // A right-click opens Rename and Archive at the pointer, and a double-click renames; an archived Session has neither. A phone's long press opens them under the Session's title; iOS previews the Session above them.
-export function SessionRowMenu(props: SessionRowMenuProps): ReactElement {
+export function sessionRowMenu(props: SessionRowProps): SessionRowMenu {
   const groups = sessionMenuGroups(props);
 
-  if (groups.length === 0) return props.children;
+  if (groups.length === 0) return {};
 
-  return <SessionActionList {...props} groups={groups} />;
-}
-
-function SessionActionList(
-  props: SessionRowMenuProps & { groups: SessionMenuItem[][] },
-): ReactElement {
-  return (
-    <ActionList {...sessionContext(props)}>
-      <ActionList.Section>
-        {props.groups.flat().map(sessionAction)}
-      </ActionList.Section>
-    </ActionList>
-  );
+  return {
+    actions: (
+      <Action.Section>{groups.flat().map(sessionAction)}</Action.Section>
+    ),
+    contextMenu: {
+      title: props.session.title,
+      preview: sessionHref(props.session.sessionId),
+      onDoubleClick: renameSession(props),
+    },
+  };
 }
 
 function sessionAction(item: SessionMenuItem): ReactElement {
@@ -61,14 +52,4 @@ export function sessionMenuGroups(props: SessionRowProps): SessionMenuItem[][] {
   });
 
   return items.length > 0 ? [items] : [];
-}
-
-function sessionContext(props: SessionRowMenuProps): ActionListProps {
-  return {
-    variant: 'context',
-    trigger: props.children,
-    title: props.session.title,
-    preview: sessionHref(props.session.sessionId),
-    onDoubleClick: renameSession(props),
-  };
 }

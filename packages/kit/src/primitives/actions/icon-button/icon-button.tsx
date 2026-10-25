@@ -9,7 +9,8 @@ import { useNativeTheme } from '#kit/native-theme';
 import { Host } from '#primitives/native/host';
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { KitProps } from '../../kit-props';
-import { sizeOf, variantOf } from './icon-button-layout';
+import { androidGlyphOf, androidModifiersOf } from './icon-button-android-size';
+import { sizeOf, variantOf } from './icon-button-defaults';
 import { WebIconButton } from './icon-button-web';
 
 // What a Plugin sends for an IconButton over the wire.
@@ -27,7 +28,7 @@ export type IconButtonProps = IconButtonDataProps & {
     keyof IconButtonDataProps | 'children' | 'style' | 'className' | 'ref'
   >;
 
-export type IconButtonSize = NonNullable<IconButtonProps['size']>;
+export type { IconButtonSize } from '@repo/contracts/kit-tokens';
 
 type Variant = NonNullable<IconButtonProps['variant']>;
 
@@ -66,7 +67,7 @@ function expoProps(props: IconButtonProps): ExpoButtonProps {
     disabled: props.disabled ?? undefined,
     testID: props.testID,
     modifiers: [
-      ...sizeOf(props).androidModifiers,
+      ...androidModifiersOf(sizeOf(props)),
       ...(nameModifiers(props.accessibilityLabel) ?? []),
     ],
   };
@@ -88,7 +89,7 @@ function NativeGlyph(props: IconButtonProps): ReactElement {
   return (
     <NativeIcon
       name={props.icon}
-      size={sizeOf(props).iconSize}
+      size={androidGlyphOf(sizeOf(props))}
       filled={props.selected ?? false}
       color={color}
     />

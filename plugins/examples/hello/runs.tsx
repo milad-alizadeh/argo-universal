@@ -1,7 +1,6 @@
 import {
   Action,
-  ActionList,
-  Page,
+  Screen,
   Pill,
   Table,
   useState,
@@ -87,9 +86,7 @@ const sorted = (sort: Sort): Run[] => {
 };
 
 const rerunAction = (run: Run, onRerun: Rerun): JSX.Element => (
-  <ActionList>
-    <Action label="Re-run" icon="retry" onPress={() => onRerun(run)} />
-  </ActionList>
+  <Action label="Re-run" icon="retry" onPress={() => onRerun(run)} />
 );
 
 function RunRow({ run, onRerun }: { run: Run; onRerun: Rerun }): JSX.Element {
@@ -137,8 +134,8 @@ export function HelloRunsPage(): JSX.Element {
   const [title, setTitle] = useState('Runs');
 
   return (
-    <Page title={title}>
+    <Screen title={title}>
       <RunsTable onRerun={rerunTitle(setTitle)} />
-    </Page>
+    </Screen>
   );
 }

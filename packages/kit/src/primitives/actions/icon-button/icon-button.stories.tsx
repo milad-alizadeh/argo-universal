@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { expect, fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { IconButton, type IconButtonProps } from './icon-button';
+import { StockProbe } from './stock-probe';
 
 const accessibilityLabel = 'Favourite';
 
@@ -22,12 +23,12 @@ const ghostIconButton = {
   variant: 'ghost',
 } satisfies IconButtonProps;
 
-const extraSmallIconButton = {
+const smallIconButton = {
   ...primaryIconButton,
-  size: 'xs',
+  size: 'sm',
 } satisfies IconButtonProps;
 
-const extraLargeIconButton = {
+const largeIconButton = {
   ...primaryIconButton,
   size: 'lg',
 } satisfies IconButtonProps;
@@ -66,11 +67,11 @@ export const Secondary: Story = { args: secondaryIconButton };
 
 export const Ghost: Story = { args: ghostIconButton };
 
-export const ExtraSmall: Story = { args: extraSmallIconButton };
+export const Small: Story = { args: smallIconButton };
+
+export const Large: Story = { args: largeIconButton };
 
 export const Selected: Story = { args: selectedIconButton };
-
-export const ExtraLarge: Story = { args: extraLargeIconButton };
 
 export const Disabled: Story = {
   args: { ...disabledIconButton, onPress: fn() },
@@ -80,6 +81,24 @@ export const Disabled: Story = {
     button.click();
     await expect(args.onPress).not.toHaveBeenCalled();
   },
+};
+
+// TEMPORARY: every size in each variant side by side, to compare platforms; delete once the iOS sizing is fixed.
+export const Probe: Story = {
+  args: primaryIconButton,
+  render: () => (
+    <View className="gap-8">
+      <View className="flex-row items-end gap-6">
+        {(['sm', 'md', 'lg'] as const).map((size) => (
+          <View key={size} className="items-center gap-2">
+            <IconButton {...primaryIconButton} icon="heart" size={size} />
+            <Text>{size}</Text>
+          </View>
+        ))}
+      </View>
+      <StockProbe />
+    </View>
+  ),
 };
 
 // Test-only: hidden from the sidebar and Docs, still run by the story tests.

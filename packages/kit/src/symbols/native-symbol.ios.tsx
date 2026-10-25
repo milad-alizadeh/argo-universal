@@ -3,6 +3,7 @@ import { Image, type ImageProps } from '@expo/ui/swift-ui';
 import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#kit/native-theme';
+import { useIconSize } from '#primitives/content/icon';
 import { isCustomSymbol } from './custom-symbols';
 import { type DrawnSymbol, drawnSymbol } from './drawn-symbol';
 import { useIconPixels } from './icon-size';
@@ -36,7 +37,7 @@ export function NativeSymbol({
   filled,
   muted,
 }: NativeSymbolProps): React.JSX.Element {
-  const pixels = useIconPixels(size);
+  const pixels = useIconPixels(useIconSize(size));
 
   return (
     <Image

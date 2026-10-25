@@ -2,12 +2,11 @@ import {
   ListItem,
   type ListItemProps,
 } from '@repo/kit/primitives/lists/list-item';
-import type { ContextMenuTriggerProps } from '@repo/kit/primitives/overlays/menu';
 import { memo } from 'react';
 import type * as React from 'react';
 import { CompactSessionRow } from './session-row-compact';
 import { SessionMark } from './session-row-mark';
-import { SessionRowMenu } from './session-row-menu';
+import { sessionRowMenu } from './session-row-menu';
 import { sessionMetadata } from './session-row-metadata';
 import { sessionProgress } from './session-row-plan';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
@@ -16,36 +15,29 @@ import { rowStatusDot } from './session-row-status';
 
 export type { SessionRowProps } from './session-row-props';
 
-type SessionRowPressProps = SessionRowProps & ContextMenuTriggerProps;
-
 type RowIdentity = Pick<
   ListItemProps,
-  | 'title'
-  | 'subtitle'
-  | 'accessibilityLabel'
-  | 'onPress'
-  | 'onLongPress'
-  | 'selected'
+  'title' | 'subtitle' | 'accessibilityLabel' | 'onPress' | 'selected'
 >;
 
-function rowIdentity(props: SessionRowPressProps): RowIdentity {
+function rowIdentity(props: SessionRowProps): RowIdentity {
   return {
     title: props.session.title,
     subtitle: props.session.activity,
     accessibilityLabel: sessionRowLabel(props.session),
     onPress: () => props.onSelect(props.session.sessionId),
-    onLongPress: props.onLongPress,
     selected: props.selected,
   };
 }
 
 // Regular: the time leads the meta line, and a status dot ends the title line.
-function RegularRow(props: SessionRowPressProps): React.JSX.Element {
+function RegularRow(props: SessionRowProps): React.JSX.Element {
   const selected = props.selected ?? false;
 
   return (
     <ListItem
       {...rowIdentity(props)}
+      {...sessionRowMenu(props)}
       {...sidebarDrawing(props.session.status, 'regular')}
       leading={<SessionMark {...props} />}
       trailing={rowStatusDot(props.session.status)}
@@ -55,7 +47,7 @@ function RegularRow(props: SessionRowPressProps): React.JSX.Element {
   );
 }
 
-function SessionRowLayout(props: SessionRowPressProps): React.JSX.Element {
+function SessionRowLayout(props: SessionRowProps): React.JSX.Element {
   return props.layout === 'compact' ? (
     <CompactSessionRow {...props} />
   ) : (
@@ -64,9 +56,5 @@ function SessionRowLayout(props: SessionRowPressProps): React.JSX.Element {
 }
 
 export const SessionRow = memo(function SessionRow(props: SessionRowProps) {
-  return (
-    <SessionRowMenu {...props}>
-      <SessionRowLayout {...props} />
-    </SessionRowMenu>
-  );
+  return <SessionRowLayout {...props} />;
 });

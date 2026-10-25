@@ -28,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 
 const menu = (): ReturnType<typeof within> => within(document.body);
 
-const trigger = { name: 'Filter Sessions' };
+const trigger = { name: /^Filter Sessions/ };
 
 // Paper's options in order, each group's under its heading, with its icon and which are checked at the default.
 const paperOptions = [
@@ -111,7 +111,7 @@ export const ChoosesActiveFromArchived = chooses(
 
 export const ChoosesCompact = chooses('Compact', { layout: 'compact' });
 
-// The trigger carries its dot only while the view is not the default.
+// The trigger carries its dot, and says "Changed" after its name, only while the view is not the default.
 function dotShown(view: SessionsView, shown: boolean): Story {
   return {
     args: { view },
@@ -119,6 +119,11 @@ function dotShown(view: SessionsView, shown: boolean): Story {
       eachLayout(async () => {
         const dots = canvas.queryAllByTestId('header-button-dot');
         await expect(dots).toHaveLength(shown ? 1 : 0);
+        await expect(
+          canvas.getByRole('button', {
+            name: shown ? 'Filter Sessions, Changed' : /^Filter Sessions$/,
+          }),
+        ).toBeInTheDocument();
       }),
   };
 }

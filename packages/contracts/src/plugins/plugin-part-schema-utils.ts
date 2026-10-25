@@ -13,6 +13,9 @@ export const noSlots: Record<string, readonly string[]> = {};
 
 export const noEvents: Record<string, z.ZodType> = {};
 
+// What a Screen, a row, a tile or an Inspector holds as its Actions: Actions, loose or in Sections.
+export const actionSlot = ['Action', 'Action.Section'] as const;
+
 const defaultAppearance =
   'Uses Argo semantic tokens, which adapt to light and dark appearance. No arbitrary color or Image prop is declared unless listed below.';
 

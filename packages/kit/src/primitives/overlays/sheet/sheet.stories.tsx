@@ -15,7 +15,7 @@ import {
   pinnedSubmitSheet,
   type SheetFixture,
 } from './sheet-fixtures';
-import { useSheet } from './sheet-pages';
+import { useSheet } from './sheet-screens';
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Sheet',
@@ -48,7 +48,7 @@ export const FullHeight: Story = {
 };
 
 // Settings drills in to Select Fruit and back, the pages sliding in one sheet.
-export const PageStack: Story = { render: () => <PagedSheet /> };
+export const ScreenStack: Story = { render: () => <PagedSheet /> };
 
 const choices = ['Option one', 'Option two', 'Option three'];
 
@@ -85,30 +85,30 @@ export function PagedSheet(): ReactElement {
 
   return (
     <Sheet open={open} onOpenChange={setOpen} {...settingsSheet}>
-      {fruitPages(fruit, setFruit)}
+      {fruitScreens(fruit, setFruit)}
     </Sheet>
   );
 }
 
-function fruitPages(
+function fruitScreens(
   fruit: string | undefined,
   onSelect: (fruit: string) => void,
 ): ReactElement[] {
   return [
-    <Sheet.Page key="settings" name="settings" title="Settings">
+    <Sheet.Screen key="settings" name="settings" title="Settings">
       <SingleSection>
         <Sheet.Link to="fruit" label="Fruit" value={fruit} />
       </SingleSection>
-    </Sheet.Page>,
-    <Sheet.Page key="fruit" name="fruit" title="Select Fruit">
+    </Sheet.Screen>,
+    <Sheet.Screen key="fruit" name="fruit" title="Select Fruit">
       <FruitChoices onSelect={onSelect} />
-    </Sheet.Page>,
+    </Sheet.Screen>,
   ];
 }
 
 function SingleSection(props: { children: ReactNode }): ReactElement {
   return (
-    <List appearance="grouped" fit>
+    <List appearance="plain" fit>
       <ListSection>{props.children}</ListSection>
     </List>
   );

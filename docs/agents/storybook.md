@@ -10,6 +10,22 @@ For side-by-side previews, run `pnpm dev:storybook:all`. It starts web Storybook
 
 `pnpm --filter @repo/storybook build-storybook` (`storybook build`) writes the static Storybook to `apps/storybook/storybook-static`. It is what Chromatic publishes and what a deployable preview serves; it also proves the production pass, which resolves modules differently from the dev server. Skia's web entry needs the `skiaAssetRegistry` resolver (`apps/storybook/.storybook/expo-web-imports.ts`, registered in `main.ts`) to build.
 
+## Stories inside a navigation stack
+
+`withStack(pages?)` from `#story-stack` (`packages/kit/src/story-stack/`) is a story decorator: the story is the root screen of a real expo-router `Stack`, and `pages` maps a name to a component the story can push. Inside any page, `useStackPush()` returns `push(name)`; a pushed page gets Back from the stack's header, and `useRouter().back()` serves a wide window's own Back (`onBack`). Examples: `Design System/Primitives/Scaffolds/Screen/Stack` (`screen-stack.stories.tsx`, pages in `screen-stack.mocks.tsx`), tested in `screen-stack.test.stories.tsx`.
+
+```tsx
+export const PushedScreen: Story = {
+  decorators: [withStack({ detail: DetailScreen })],
+  render: () => <ListScreen />, // calls useStackPush()('detail')
+};
+```
+
+- Web: the stack is expo-router's own, held in memory through `ExpoRoot`'s `context`. A phone width draws the stack header with the Screen's title, header Actions and overflow menu; a wide window draws the Screen's own heading, as the App does. The router writes its path into the preview's address bar and the decorator restores the story's address when it unmounts, so a pushed page shows `/detail` there until you leave the story.
+- iOS and Android (on-device Storybook): the app already runs the one expo-router store, so a second router cannot start inside it. The decorator instead draws an "Open stack" button; it pushes the dev route `(dev)/story-stack/[story]` (`apps/universal-app/src/app/(dev)/story-stack/`), a real native Stack that renders the story and its pages from a registry (`stack-registry.ts`). The native header is therefore the App's: iOS toolbar items, Android top app bar. Back from the root page returns to Storybook.
+- The pages render outside Storybook's tree on a phone, so they get the App's providers, not the preview's decorators; a page that needs fixtures passes them itself.
+- Not for `ListDetail` or other wide-only layouts: use a plain story.
+
 ## The shape of a story file
 
 Run `pnpm new:story <component-path>`, then edit what it wrote to match [storybook-template.md](storybook-template.md). [ADR-0040](../adr/0040-one-shape-for-a-story.md) records the rules and why.
@@ -27,7 +43,7 @@ Run `pnpm new:story <component-path>`, then edit what it wrote to match [storybo
 - Data: stable mock IDs, dates and ordering, so interactive changes are reproducible.
 - Platforms: share presentation stories and mock data across web and iOS. Check both previews when changing shared UI; keep intentional platform differences.
 - Native drawings: there is no native CI (ADR-0011), so a primitive's iOS and Android drawings are checked in the iOS and Android Storybook previews, or, where no Android preview exists, by the PR evidence table of the parent spec's decision 14 (the PR says which). Platforms share one story per state, not one story per platform.
-- Native headers: a phone page's header comes from its section Stack or Drawer options, which no story renders. A view built on the kit `Page` needs nothing: with no navigator, Page draws its own heading, search and Actions. Other views that need the narrow web header pass `ScreenHeaderMock` (or `mockHeader`) into their `renderHeader` slot. Check iOS and Android headers in the real App on a simulator or emulator, not in the on-device Storybook, whose pages sit under its own hidden route.
+- Native headers: a view built on the kit `Screen` with no navigator draws its own heading, search and Actions, because the preview turns the Screen's navigator off (`ScreenNavigationEnabled`). To see the header a navigator draws, or a push with Back, use `withStack` (next section). Other views that need the narrow web header pass `ScreenHeaderMock` (or `mockHeader`) into their `renderHeader` slot. Check iOS and Android headers in the real App on a simulator or emulator when a change touches the native header code.
 - Local runs: one Storybook or Playwright browser suite runs at a time on a Mac. A run waits for `@repo/browser-suite-lock`, which holds a localhost port until the suite ends or dies, and prints which checkout holds it. CI and watch runs, including Storybook's test widget, skip the lock. Locally Storybook opens fewer browser pages than in CI (`apps/storybook/vitest.config.ts`); `VITEST_MAX_WORKERS` overrides both.
 - SettingsListView: keep one interactive `Settings` presentation story; clicking its rows demonstrates selection.
 - Discovery: Storybook previews load presentation stories only. Vitest also loads test-only stories, whose static browser imports need its runner.

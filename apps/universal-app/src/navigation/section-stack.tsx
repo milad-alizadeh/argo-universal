@@ -12,7 +12,7 @@ import type { ComponentProps, PropsWithChildren } from 'react';
 import { Platform } from 'react-native';
 import { DrawerMenuButton } from './drawer-menu-button';
 import { headerTitleOptions } from './header-title';
-import { pageLayout } from './page-layout';
+import { screenLayout } from './screen-layout';
 
 type ScreenHeaderProps = SectionList['rootHeader'];
 
@@ -96,13 +96,13 @@ export function SectionStack({
   children,
 }: SectionStackProps): React.JSX.Element {
   return (
-    <PageStack header={useSectionList(section).rootHeader}>
+    <ScreenStack header={useSectionList(section).rootHeader}>
       {children}
-    </PageStack>
+    </ScreenStack>
   );
 }
 
-interface PageStackProps extends PropsWithChildren {
+interface ScreenStackProps extends PropsWithChildren {
   header: ScreenHeaderProps;
   root?: boolean;
   rootName?: string;
@@ -111,7 +111,7 @@ interface PageStackProps extends PropsWithChildren {
 }
 
 // Core lists and Plugin pages share stock stack headers, page placement and the Connection banner.
-export function PageStack(props: PageStackProps): React.JSX.Element {
+export function ScreenStack(props: ScreenStackProps): React.JSX.Element {
   const { screenOptions, rootOptions } = useSectionOptions(
     props.header,
     props.root ?? true,
@@ -119,7 +119,7 @@ export function PageStack(props: PageStackProps): React.JSX.Element {
   );
 
   return (
-    <Stack screenOptions={screenOptions} screenLayout={pageLayout}>
+    <Stack screenOptions={screenOptions} screenLayout={screenLayout}>
       <Stack.Screen {...rootScreen(props, rootOptions)} />
       {props.children}
     </Stack>
@@ -127,7 +127,7 @@ export function PageStack(props: PageStackProps): React.JSX.Element {
 }
 
 function rootScreen(
-  props: PageStackProps,
+  props: ScreenStackProps,
   options: NativeStackNavigationOptions,
 ): ComponentProps<typeof Stack.Screen> {
   return {
@@ -135,4 +135,9 @@ function rootScreen(
     options,
     dangerouslySingular: props.singular,
   };
+}
+
+// The stack for pages a component pushes over the Frame (`app/screen`): a narrow window's stock header, with Back.
+export function PushedStack(): React.JSX.Element {
+  return <Stack screenOptions={narrowOptions} screenLayout={screenLayout} />;
 }

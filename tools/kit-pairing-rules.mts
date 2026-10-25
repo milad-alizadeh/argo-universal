@@ -13,22 +13,36 @@ export interface PairingInput {
   folders: string[];
 }
 
+const fieldRow =
+  'A FieldGroup row (ADR-0042); it pairs with the FieldGroup schemas on the Plugin wire.';
+
 // A group (`native`) or one folder (`actions/pressable`) that draws no schema of its own, with the reason it is exempt.
 export const exemptFolders = {
   'kit-props': 'The kit-wide props types; it draws nothing.',
   native: 'Platform-fork helpers for the drawings, not kit components.',
   'actions/check-button':
-    'App-only drawing of a check beside a label; a Plugin sends a Checkbox.',
+    'App-only drawing of a check beside a label; a Plugin sends a FieldGroup.Toggle.',
   'actions/pressable':
     'The press and hover primitive the other actions are built on.',
+  'content/agent-logo':
+    "An Agent's logo from the ACP registry, drawn beside a Picker option; a Plugin sends the option's `logo`.",
   'content/liquid-glass': 'A native surface material; only how it looks.',
   'content/media-url':
     'Resolves the src of Image, Video and Audio; no props of its own.',
   'content/native-text': 'The platform fork of Text.',
-  'inputs/rich-textarea':
+  'fields/field-date-picker': fieldRow,
+  'fields/field-link': fieldRow,
+  'fields/field-picker': fieldRow,
+  'fields/field-slider': fieldRow,
+  'fields/field-text': fieldRow,
+  'fields/field-toggle': fieldRow,
+  'fields/field-value': fieldRow,
+  'fields/field-row':
+    'The drawing every FieldGroup row shares; it draws no schema of its own.',
+  'controls/rich-textarea':
     'The desktop editor behind the Composer; not on the wire.',
-  'inputs/segmented-control':
-    'The App draws it for its own screens; a Plugin sends a Picker.',
+  'controls/segmented-control':
+    'The App draws it for its own screens; a Plugin sends a FieldGroup.Picker.',
   'layout/spacing': 'The spacing scale the layout components read.',
   'lists/drawer-item': 'The drawer shell draws it; a Plugin has no drawer.',
   'lists/virtual-list-item': 'The virtualised row List draws for ListItem.',
@@ -37,6 +51,7 @@ export const exemptFolders = {
   'overlays/link-preview': 'App-only preview of a Link target.',
   'overlays/open-state': 'The open and close state the overlays share.',
   'overlays/portal': 'Where overlays mount; no props of its own.',
+  'status/chevron': "The chevron the kit's own triggers and rows draw.",
   'status/count-badge': 'App-only badge on rail and drawer items.',
   'status/disclosure-chevron': 'The chevron a collapsible row draws.',
   'status/orb': 'App-only for now; a Plugin sends a Spinner.',
@@ -45,7 +60,6 @@ export const exemptFolders = {
 
 // A schema name that has no drawing folder of its own, with the reason it is exempt.
 export const exemptSchemas = {
-  Action: 'Drawn by ActionList as one of its rows.',
   Chart: 'Declared for Plugins; no drawing yet.',
 } satisfies Record<string, string>;
 
