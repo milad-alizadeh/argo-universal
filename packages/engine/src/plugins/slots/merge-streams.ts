@@ -10,10 +10,29 @@ async function drain<T>(
     events.emit('item', next.value);
 }
 
-const ignore = (): void => {};
+export type SourceFailed = (index: number, reason: string) => void;
+
+const reasonOf = (error: Error | string): string =>
+  typeof error === 'string' ? error : error.message;
+
+const pump = <T>(
+  source: AsyncIterator<T>,
+  index: number,
+  { events, failed, ended }: Pump<T>,
+): void => {
+  void drain(source, events)
+    .catch((error: Error | string) => failed(index, reasonOf(error)))
+    .finally(ended);
+};
+
+type Pump<T> = { events: Merge<T>; failed: SourceFailed; ended: () => void };
 
 // Emits `done` once every source has ended, whether it finished or threw.
-function pumpAll<T>(sources: AsyncIterator<T>[], events: Merge<T>): void {
+function pumpAll<T>(
+  sources: AsyncIterator<T>[],
+  events: Merge<T>,
+  failed: SourceFailed,
+): void {
   let open = sources.length;
 
   const ended = (): void => {
@@ -24,8 +43,8 @@ function pumpAll<T>(sources: AsyncIterator<T>[], events: Merge<T>): void {
 
   if (open === 0) events.emit('done');
 
-  for (const source of sources)
-    void drain(source, events).catch(ignore).finally(ended);
+  for (const [index, source] of sources.entries())
+    pump(source, index, { events, failed, ended });
 }
 
 const stop = (source: AsyncIterator<unknown>): void => void source.return?.();
@@ -40,16 +59,18 @@ async function stopAll<T>(
 
 /*
  * Yields each source's items as they arrive and ends once every source has ended. A source that
- * throws ends on its own, so one Plugin's broken contribution never ends another's.
+ * throws ends on its own and is reported to `failed`, so one Plugin's broken contribution never ends
+ * another's.
  */
 export async function* merged<T>(
   sources: AsyncIterable<T>[],
+  failed: SourceFailed,
 ): AsyncGenerator<T> {
   const events: Merge<T> = new EventEmitter();
   const stream = on(events, 'item', { close: ['done'] });
   const iterators = sources.map((source) => source[Symbol.asyncIterator]());
 
-  pumpAll(iterators, events);
+  pumpAll(iterators, events, failed);
 
   try {
     for await (const [item] of stream) yield item;
