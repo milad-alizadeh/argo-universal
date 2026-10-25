@@ -1,4 +1,4 @@
-import { HStack, Label } from '@expo/ui/swift-ui';
+import { Label } from '@expo/ui/swift-ui';
 import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
@@ -20,12 +20,14 @@ export function RowTitle(props: RowTitleProps): ReactElement {
   const icon = labelIcon(props);
   const tint = useDangerStyle(props.tone);
 
+  // A logo is the Label's icon too, so its title starts where the other rows' titles do.
   if (props.logo)
     return (
-      <HStack spacing={8}>
-        <RowLogo logo={props.logo} title={props.title} />
-        <NativeText tone={props.tone}>{props.title}</NativeText>
-      </HStack>
+      <Label
+        title={props.title}
+        icon={<RowLogo logo={props.logo} title={props.title} />}
+        modifiers={tint}
+      />
     );
 
   if (icon) return <Label title={props.title} {...icon} modifiers={tint} />;
