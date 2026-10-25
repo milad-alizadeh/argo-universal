@@ -1,6 +1,6 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { resolve, join } from 'node:path';
+import { join } from 'node:path';
 import {
   hookEvents,
   type HookEventName,
@@ -12,11 +12,11 @@ import {
   PluginService,
   PluginStorage,
   type PluginRuntime,
-  type PluginServiceDeps,
 } from '@repo/engine/plugins';
 import { mountOpening, requireAccepted, testSession } from './test-mount';
 import { TestProjects } from './test-projects';
 import { configureTest, runtimeFor, type ConfiguredTest } from './test-runtime';
+import { serviceFor } from './test-services';
 import type { PluginTest, PluginTestOptions } from './test-types';
 import { PluginTestView, type Opening, type PluginMount } from './view';
 
@@ -40,21 +40,6 @@ export async function startPluginTest(
 
   return plugin;
 }
-
-// A Plugin's own tests turn nothing off and hold no Accounts; settings reach the runtime through `settings`.
-const unmanagedSettings: PluginServiceDeps['pluginSettings'] = {
-  enabled: () => true,
-  setEnabled: () =>
-    Promise.reject(new Error('Plugin settings are not available')),
-  values: () => Promise.reject(new Error('Plugin settings are not available')),
-  change: () => Promise.reject(new Error('Plugin settings are not available')),
-};
-
-const noAccounts: PluginServiceDeps['pluginAccounts'] = {
-  list: () => [],
-  grants: () => [],
-  removePlugin: () => Promise.resolve(),
-};
 
 class HostedPlugin implements PluginTest {
   startBackground(): Promise<void> {
@@ -89,14 +74,7 @@ class HostedPlugin implements PluginTest {
     this.runtime = runtimeFor(home, options);
     this.projects = new TestProjects(options, this.runtime);
     this.data = new PluginStorage(home);
-    this.service = new PluginService({
-      home,
-      version: options.version,
-      firstPartyPluginsDirectory: resolve(options.directory),
-      pluginRuntime: this.runtime,
-      pluginSettings: unmanagedSettings,
-      pluginAccounts: noAccounts,
-    });
+    this.service = serviceFor(home, options, this.runtime);
   }
 
   get settings(): Map<string, PluginSettingValue> {

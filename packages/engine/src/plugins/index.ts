@@ -8,7 +8,9 @@ export type { PluginServiceDeps } from './located-plugins';
 
 export { discoverPlugins } from './discovery/loader';
 
-export { Plugins, type PluginServerOptions } from './plugins';
+export { Plugins } from './plugins';
+
+export type { PluginServerOptions } from './assemble';
 
 export { PluginRuntime } from './runtime/plugin-runtime';
 
