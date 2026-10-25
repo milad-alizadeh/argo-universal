@@ -4,7 +4,7 @@ import type { ColorValue } from 'react-native';
 import { type IconSize, useIconPixels } from './icon-size';
 import type { IconSymbol } from './icon-symbol';
 import { NativeIconFallback } from './native-icon-fallback';
-import { nativeIconName, nativeIconSize } from './native-icon-name';
+import { nativeIconName } from './native-icon-name';
 
 export interface NativeIconProps {
   name: IconSymbol;
@@ -24,5 +24,5 @@ export function NativeIcon(props: NativeIconProps): ReactElement | null {
   if (name === undefined)
     return props.fallback ?? <NativeIconFallback {...props} />;
 
-  return <Icon name={name} size={nativeIconSize(pixels)} color={props.color} />;
+  return <Icon name={name} size={pixels} color={props.color} />;
 }

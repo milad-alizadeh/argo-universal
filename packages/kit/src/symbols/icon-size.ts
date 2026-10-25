@@ -1,4 +1,4 @@
-import { iconSizes, type IconSize } from '@repo/contracts/kit-symbols';
+import type { IconSize } from '@repo/contracts/kit-symbols';
 import type { ViewStyle } from 'react-native';
 import {
   type SizeClassValue,
@@ -6,6 +6,7 @@ import {
 } from '../use-size-class/size-class-value';
 import { useSizeClass } from '../use-size-class/use-size-class';
 import { useWide } from '../use-wide/use-wide';
+import { glyphPixels } from './glyph-sizing';
 
 export type { IconSize } from '@repo/contracts/kit-symbols';
 
@@ -15,7 +16,7 @@ export type IconSizeValue = SizeClassValue<IconSize>;
 export function useIconPixels(size: IconSizeValue): number {
   const scale = useWide() ? 'wide' : 'phone';
 
-  return iconSizes[sizeClassValue(size, useSizeClass())][scale];
+  return glyphPixels(sizeClassValue(size, useSizeClass()), scale);
 }
 
 export function useIconBox(
