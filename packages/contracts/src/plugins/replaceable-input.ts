@@ -9,14 +9,14 @@ import {
   toolCallSlotId,
   messageSlotId,
   composerAboveSlotId,
-} from './replaceable-slot-id';
+} from './wire-slot';
 
 export {
   toolCallSlotId,
   messageSlotId,
   composerAboveSlotId,
   ReplaceableSlotId,
-} from './replaceable-slot-id';
+} from './wire-slot';
 
 const work = z.strictObject({
   count: z.int().nonnegative(),

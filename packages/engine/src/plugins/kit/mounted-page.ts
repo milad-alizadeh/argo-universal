@@ -21,7 +21,7 @@ type Content = {
   viewId: PluginViewId;
   element: ReactNode;
   replaceable: boolean;
-  rowMeta: boolean;
+  partList: boolean;
   background?: boolean;
 };
 
@@ -102,7 +102,7 @@ function pageView(content: Content): OpenView {
   return {
     viewId: content.viewId,
     replaceable: content.replaceable,
-    rowMeta: content.rowMeta,
+    partList: content.partList,
     background: content.background,
     frame: undefined,
     tree: null,
@@ -131,7 +131,7 @@ function tryCommit(
 }
 
 function pageRoot(view: OpenView, container: Instance): Instance | undefined {
-  if (view.rowMeta) return metaRoot(container);
+  if (view.partList) return partRow(container);
   requireReplacementRoot(view, container);
 
   return container.children[0];
@@ -142,7 +142,8 @@ function requireReplacementRoot(view: OpenView, container: Instance): void {
     throw new Error('A replacement must draw one component');
 }
 
-function metaRoot(container: Instance): Instance {
+// A Slot that takes a list of parts keeps every top-level part, as a fragment draws them.
+function partRow(container: Instance): Instance {
   return {
     type: 'Stack',
     props: { direction: 'row' },

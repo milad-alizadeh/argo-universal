@@ -3,11 +3,16 @@ import { WebUrl } from '#plugin-account-calls';
 import { PluginViewId } from '#plugin-wire-events';
 
 export {
+  AddOnlySlotId,
   PluginSlotInput,
+  ReplaceableSlotId,
   SlotId,
   projectDetailsSlotId,
   sessionRowSlotId,
+  slotContentRule,
   slotPath,
+  slotRegistry,
+  type SlotContentRule,
 } from '#plugin-wire-slot';
 
 import { WireJson } from '#plugin-wire-json';
