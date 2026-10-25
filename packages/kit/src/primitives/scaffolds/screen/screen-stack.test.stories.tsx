@@ -2,6 +2,7 @@ import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { withStack } from '#story-stack';
 import { Screen } from './index';
+import { SettingsScreen } from './screen-stack-settings.mocks';
 import {
   DetailScreen,
   HeaderActionsScreen,
@@ -11,7 +12,6 @@ import {
   onAction,
   onSearch,
 } from './screen-stack.mocks';
-import { SettingsScreen } from './screen-stack-settings.mocks';
 import { atWidth, screenWidths as widths } from './screen-widths.mocks';
 
 const openDetail = { name: 'Open detail' };
@@ -49,9 +49,7 @@ export const PushAndBackPhone = atWidth(widths.Phone, {
   decorators: [withStack({ detail: DetailScreen })],
   render: () => <PushScreen />,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', openDetail),
-    );
+    await userEvent.click(await canvas.findByRole('button', openDetail));
     await waitFor(() =>
       expect(canvas.getByRole('heading', { name: 'Detail' })).toBeVisible(),
     );
@@ -73,9 +71,7 @@ export const MenuRootPushesBackPhone = atWidth(widths.Phone, {
       await canvas.findByRole('button', { name: 'Open navigation' }),
     );
     await expect(onAction).toHaveBeenCalledOnce();
-    await userEvent.click(
-      await canvas.findByRole('button', openDetail),
-    );
+    await userEvent.click(await canvas.findByRole('button', openDetail));
     await waitFor(() =>
       expect(canvas.getByRole('heading', { name: 'Detail' })).toBeVisible(),
     );

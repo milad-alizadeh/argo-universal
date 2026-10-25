@@ -6,8 +6,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { ComposerAgentModelControl } from '../../src/features/composer/components/composer-configuration/composer-configuration';
-import { configure, type Configure } from '../composer/configure.test.mocks';
 import { updateComposerSettings } from '../composer-mock';
+import { configure, type Configure } from '../composer/configure.test.mocks';
 import {
   heldNotice,
   type Story,

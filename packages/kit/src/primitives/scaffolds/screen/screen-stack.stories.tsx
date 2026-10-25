@@ -2,12 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { withStack } from '#story-stack';
 import { Screen } from './index';
+import { SettingsScreen } from './screen-stack-settings.mocks';
 import {
   DetailScreen,
   HeaderActionsScreen,
   PushScreen,
 } from './screen-stack.mocks';
-import { SettingsScreen } from './screen-stack-settings.mocks';
 
 /*
  * Each story draws a real navigation stack (`withStack`): a phone shows the stack's header with the Screen's title,
