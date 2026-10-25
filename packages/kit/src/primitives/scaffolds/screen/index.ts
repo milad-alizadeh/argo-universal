@@ -5,6 +5,13 @@ export type { ScreenProps } from './screen-props';
 export { ScreenColumn } from './screen-column';
 
 export {
+  ScreenStackHeader,
+  type ScreenStackHeaderProps,
+} from './screen-stack-header';
+
+export { ScreenMenuContext, type ScreenMenu } from './screen-menu-context';
+
+export {
   ScreenBesideList,
   ScreenNavigationEnabled,
 } from './screen-navigation-context';

@@ -1,5 +1,5 @@
+import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
-import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { EmptySessionOpening } from './opening';
 import { SessionNewView } from './session-new-view';
 
@@ -14,7 +14,7 @@ export function SessionNewScreen({
   // The header stays empty until the first prompt starts the Session and gives it a title.
   return (
     <>
-      <ScreenHeader title="" />
+      <ScreenStackHeader title="" />
       <EmptySessionOpening projectId={projectId}>
         {(props) => <SessionNewView {...props} />}
       </EmptySessionOpening>

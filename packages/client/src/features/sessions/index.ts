@@ -133,9 +133,10 @@ export {
 
 export { SessionHeaderMenu } from './components/session-header-menu';
 
-export { type SessionMenu } from './components/session-menu-items';
-
-export { SessionMenuToolbar } from './components/session-menu-toolbar';
+export {
+  sessionMenuItems,
+  type SessionMenu,
+} from './components/session-menu-items';
 
 export { type SessionPullRequest } from './components/session-pull-request';
 

@@ -2,10 +2,12 @@
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
+import { iconSymbols } from '#kit/symbols/icon-names';
 import {
   splitHeaderActions,
   type ActionGroup,
 } from '#primitives/actions/action';
+import { useScreenMenu } from './screen-menu-context';
 import { screenPrimaryAction } from './screen-primary-action';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';
@@ -25,9 +27,29 @@ export function ScreenHeaderItems(props: ScreenHeaderInput): ReactElement {
 
   return (
     <>
+      <MenuItem />
       <HeaderItems {...props} declared={groups} label={label} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
+  );
+}
+
+// A narrow root leads with ☰ as a stock bar button item, which the system places like the back chevron, with the stock badge.
+function MenuItem(): ReactElement | null {
+  const menu = useScreenMenu();
+
+  if (!menu) return null;
+
+  return (
+    <Stack.Toolbar placement="left">
+      <Stack.Toolbar.Button
+        icon={iconSymbols.menu.sf}
+        accessibilityLabel="Open navigation"
+        onPress={menu.onOpen}
+      >
+        {menu.badge ? <Stack.Toolbar.Badge /> : null}
+      </Stack.Toolbar.Button>
+    </Stack.Toolbar>
   );
 }
 

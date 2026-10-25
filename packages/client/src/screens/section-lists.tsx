@@ -19,9 +19,10 @@ import { newSessionId } from '../lib/product/navigation/new-session';
 import { sections } from '../lib/product/navigation/sections';
 import { LiveSessionList } from './sessions/live-session-list';
 import { SessionsRootScreen } from './sessions/sessions-root-screen';
-import { SettingsRootList } from './settings/settings-section';
-
-const searchSettings = 'Search Settings';
+import {
+  searchSettings,
+  SettingsRootScreen,
+} from './settings/settings-section';
 
 // The Session a path shows, which the sidebar marks; New Session is none.
 function shownSessionId(path: string): string | undefined {
@@ -42,7 +43,6 @@ function sessionsList(
   return {
     header: <SessionsHeader {...root} />,
     list,
-    rootHeader: { title: sections.sessions.title },
     rootPage: <SessionsRootScreen {...root}>{list}</SessionsRootScreen>,
     emptyPage: noSessionShown,
   };
@@ -86,15 +86,6 @@ function SettingsSearch({
   );
 }
 
-const settingsRootHeader = (
-  onQueryChange: (query: string) => void,
-): SectionList['rootHeader'] => ({
-  title: sections.settings.title,
-  ...(settingsSearches && {
-    search: { placeholder: searchSettings, onChangeText: onQueryChange },
-  }),
-});
-
 const settingsFirstPage: FirstPage = { page: 'accounts' };
 
 // `/settings`: the Settings pages the search narrows, which Settings' SettingsLayout draws; with the list beside the pages, the root opens Accounts.
@@ -103,14 +94,15 @@ function settingsList({ query, onQueryChange }: SettingsQuery): SectionList {
     header: <SettingsSearch query={query} onQueryChange={onQueryChange} />,
     list: null,
     query,
-    rootHeader: settingsRootHeader(onQueryChange),
-    rootPage: <SettingsRootList query={query} />,
+    rootPage: (
+      <SettingsRootScreen query={query} onQueryChange={onQueryChange} />
+    ),
     useFirstPage: () => settingsFirstPage,
   };
 }
 
 /*
- * Each section's list, its header and its root header, with the Sessions view and the
+ * Each section's list, its header and its root page, with the Sessions view and the
  * Settings search held once for the Frame: the sidebar's list, a root page's list and its
  * header share them, so a width change keeps them.
  */

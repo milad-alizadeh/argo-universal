@@ -9,10 +9,12 @@ import {
   type HeaderEntry,
 } from '#primitives/actions/action';
 import { ScreenActionButton } from './screen-action-button.android';
+import { ScreenDrawerButton } from './screen-drawer-button';
 import {
   ScreenOverflowButton,
   ScreenSubmenuButton,
 } from './screen-menu-button.android';
+import { useScreenMenu } from './screen-menu-context';
 import type { ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.android';
 
@@ -23,10 +25,15 @@ export function ScreenHeaderItems(props: ScreenHeaderInput): ReactElement {
   const { groups, label } = props.header;
   // The search icon takes one of the toolbar's two places.
   const options = headerOptions({ groups, label, slots: props.search ? 1 : 2 });
+  const menu = useScreenMenu();
+  // A narrow root leads with ☰ in the top app bar.
+  const leading = menu
+    ? { headerLeft: () => <ScreenDrawerButton menu={menu} /> }
+    : {};
 
   return (
     <>
-      <Stack.Screen options={options} />
+      <Stack.Screen options={{ ...options, ...leading }} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );

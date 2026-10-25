@@ -14,7 +14,6 @@ export {
   type SectionList,
   type SectionLists,
   useFrame,
-  SectionMenuButton,
   useNeedsAttention,
   usePhoneDrawerWidth,
   useSectionList,
@@ -77,14 +76,10 @@ export {
 } from '#lib/product/navigation/navigation';
 
 export {
-  nativeHeaderOptions,
-  screenHeaderOptions,
-} from '#lib/product/navigation/screen-header';
-
-export {
   type Section,
   sectionOf,
   sectionOrder,
+  sections,
 } from './lib/product/navigation/sections';
 
 export { withoutNewSession } from './lib/product/navigation/new-session';

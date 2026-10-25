@@ -6,7 +6,7 @@ import { FieldGroup } from '#primitives/fields/field-group';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { useStackPush } from '#story-stack';
-import { Screen } from './index';
+import { Screen, ScreenMenuContext } from './index';
 
 export const onAction = fn();
 
@@ -51,6 +51,35 @@ export function PushScreen(): React.JSX.Element {
           <OpenDetail />
         </List.Section>
       </List>
+    </Screen>
+  );
+}
+
+// The root as the App draws a narrow one: its provider gives it ☰; the page it pushes is outside the provider.
+export function MenuRootScreen(): React.JSX.Element {
+  return (
+    <ScreenMenuContext value={{ onOpen: onAction, badge: false }}>
+      <PushScreen />
+    </ScreenMenuContext>
+  );
+}
+
+export const onSearch = fn();
+
+export function SearchScreen(): React.JSX.Element {
+  const [value, setValue] = useState('');
+
+  return (
+    <Screen
+      title="Title"
+      search={{ label: 'Search Items' }}
+      value={value}
+      onChangeText={(text) => {
+        setValue(text);
+        onSearch(text);
+      }}
+    >
+      <Rows />
     </Screen>
   );
 }

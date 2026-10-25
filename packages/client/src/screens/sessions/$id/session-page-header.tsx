@@ -1,14 +1,11 @@
+import { Action } from '@repo/kit/primitives/actions/action';
+import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import {
-  SessionHeaderMenu,
   type SessionHeaderProps,
   type SessionMenu,
-  SessionMenuToolbar,
+  sessionMenuItems,
 } from '#features/sessions';
-import {
-  ScreenHeader,
-  type ScreenHeaderProps,
-} from '#lib/product/navigation/screen-header';
 import {
   type SessionDetailViewProps,
   sessionPageTitle,
@@ -37,28 +34,37 @@ function menuChanges(
   };
 }
 
-// The web's narrow header: the Session's title, and ⋯ as its trailing item. Native stack headers take only the title.
-export function sessionScreenHeader(
-  props: SessionDetailViewProps,
-): ScreenHeaderProps {
-  const menu = headerMenuOf(props);
+// The Session's ⋯: one header Action whose menu holds changed files, Rename and Archive. A Screen reads its Actions from the element it is given.
+function sessionActions(
+  menu: SessionMenu | undefined,
+): React.JSX.Element | undefined {
+  const items = menu ? sessionMenuItems(menu) : [];
 
-  return {
-    title: sessionPageTitle(props),
-    right: menu ? [<SessionHeaderMenu key="menu" menu={menu} />] : [],
-  };
+  if (!items.length) return undefined;
+
+  return (
+    <Action label="More" icon="more">
+      {items.map((item) => (
+        <Action
+          key={item.label}
+          label={item.label}
+          icon={item.icon === 'diff' ? 'changed-files' : item.icon}
+          disabled={item.disabled}
+          onPress={item.onPress}
+        />
+      ))}
+    </Action>
+  );
 }
 
-// A narrow window's header: the Session's title, and ⋯ with its menu; native stack headers take the toolbar's stock item.
+// A narrow window's header: the Session's title and its ⋯ menu. The page's body is the Session's own, so only the header is a Screen's.
 export function SessionPageHeader(
   props: SessionDetailViewProps,
 ): React.JSX.Element {
-  const menu = headerMenuOf(props);
-
   return (
-    <>
-      <ScreenHeader {...sessionScreenHeader(props)} />
-      {menu && <SessionMenuToolbar menu={menu} />}
-    </>
+    <ScreenStackHeader
+      title={sessionPageTitle(props)}
+      actions={sessionActions(headerMenuOf(props))}
+    />
   );
 }

@@ -7,93 +7,23 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 
-export type HeaderButtonProps = Omit<IconButtonProps, 'variant' | 'size'> & {
-  ref?: React.ComponentProps<typeof View>['ref'];
-  // Paired trailing items are 32pt wide; a lone item fills its 44pt slot.
-  paired?: boolean;
-  // A dot on the icon: Sessions need attention, or a filter other than the default is set.
-  dot?: 'attention' | 'filter';
-};
-
-interface HeaderButtonFit {
-  dot: HeaderButtonDotProps['on'];
-}
-
-const headerButtonFits = {
-  narrow: { dot: 'paired' },
-  slot: { dot: 'lone' },
-} satisfies Record<string, HeaderButtonFit>;
-
-// Where the dot sits over the icon of each button that carries one.
-const dotPlaces = {
-  paired: 'top-2.5 right-1',
-  lone: 'top-2.5 right-2.25',
-  small: 'top-1 right-1',
-} as const;
+// A dot on the icon while a filter other than the default is set.
+type HeaderDot = 'filter';
 
 const dotColors = {
-  attention: 'bg-warning',
   filter: 'bg-foreground',
-} satisfies Record<NonNullable<HeaderButtonProps['dot']>, string>;
-
-function headerButtonFit(paired: boolean): HeaderButtonFit {
-  return paired ? headerButtonFits.narrow : headerButtonFits.slot;
-}
+} satisfies Record<HeaderDot, string>;
 
 // A list's filter in a phone header: Android's top app bar draws Material's filter list, as Paper does; iOS and the web keep the sliders.
 export const headerFilterIcon: Extract<IconName, 'filter-list' | 'filters'> =
   Platform.OS === 'android' ? 'filter-list' : 'filters';
 
-// A plain icon button for Android's drawer header and the web's JS header; iOS headers use stock bar button items.
-export function HeaderButton({
-  ref,
-  paired = false,
-  dot,
-  ...props
-}: HeaderButtonProps): React.JSX.Element {
-  return (
-    <View ref={ref}>
-      <IconButton variant="ghost" {...props} />
-      {headerDot(dot, headerButtonFit(paired))}
-    </View>
-  );
-}
-
-function headerDot(
-  dot: HeaderButtonProps['dot'],
-  fit: HeaderButtonFit,
-): React.JSX.Element | undefined {
-  if (!dot) return undefined;
-
-  return <HeaderButtonDot dot={dot} on={fit.dot} />;
-}
-
-interface HeaderButtonDotProps {
-  dot: NonNullable<HeaderButtonProps['dot']>;
-  // The button it sits on: a paired or lone header item, or a wide window's small icon button.
-  on: keyof typeof dotPlaces;
-}
-
-// The dot a header button draws, also for a wide window's small icon button that carries the same state.
-function HeaderButtonDot(props: HeaderButtonDotProps): React.JSX.Element {
-  return (
-    <View
-      testID="header-button-dot"
-      className={cn(
-        'absolute size-1.75 rounded-full border-2 border-card',
-        dotColors[props.dot],
-        dotPlaces[props.on],
-      )}
-    />
-  );
-}
-
 type ListHeaderButtonProps = Omit<IconButtonProps, 'variant' | 'size'> & {
   ref?: React.ComponentProps<typeof View>['ref'];
-  dot?: HeaderButtonProps['dot'];
+  dot?: HeaderDot;
 };
 
-// A wide window's list header action, such as the Sessions view menu's trigger: a small ghost button with a header button's dot (Paper "SessionsList").
+// A wide window's list header action, such as the Sessions view menu's trigger: a small ghost button with a dot (Paper "SessionsList").
 export function ListHeaderButton({
   ref,
   dot,
@@ -102,16 +32,19 @@ export function ListHeaderButton({
   return (
     <View ref={ref}>
       <IconButton variant="ghost" size="sm" {...props} />
-      {dot && <HeaderButtonDot dot={dot} on="small" />}
+      {dot && <HeaderButtonDot dot={dot} />}
     </View>
   );
 }
 
-// A header's trailing items in one row, for a header option that takes a single element.
-export function HeaderItems({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  return <View className="flex-row items-center gap-1">{children}</View>;
+function HeaderButtonDot({ dot }: { dot: HeaderDot }): React.JSX.Element {
+  return (
+    <View
+      testID="header-button-dot"
+      className={cn(
+        'absolute top-1 right-1 size-1.75 rounded-full border-2 border-card',
+        dotColors[dot],
+      )}
+    />
+  );
 }

@@ -180,4 +180,5 @@ export function SectionDrawer(props: SectionDrawerProps): React.JSX.Element {
   return <PhoneDrawerContent {...props} attentionCount={useAttentionCount()} />;
 }
 
-export { SectionMenuButton, useNeedsAttention } from './section-menu-button';
+// Whether any Session needs attention, which ☰ marks with a dot or badge on a narrow root.
+export const useNeedsAttention = (): boolean => useAttentionCount() > 0;
