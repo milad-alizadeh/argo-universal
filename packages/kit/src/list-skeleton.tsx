@@ -19,12 +19,18 @@ interface SkeletonBarProps {
   textRole?: TextRole;
 }
 
+// Android's Text role colour outranks text-transparent, so there the words are hidden by opacity instead.
 function HiddenText({
   text,
   textRole = 'row',
 }: SkeletonBarProps): ReactElement {
   return (
-    <Text role={textRole} numberOfLines={1} aria-hidden className="opacity-0">
+    <Text
+      role={textRole}
+      numberOfLines={1}
+      aria-hidden
+      className="text-transparent android:opacity-0"
+    >
       {text}
     </Text>
   );
