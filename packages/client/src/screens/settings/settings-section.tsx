@@ -2,6 +2,7 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
 import { SectionListDetail, useSectionList } from '#features/frame';
@@ -85,14 +86,18 @@ interface SettingsRootScreenProps {
   onQueryChange: (query: string) => void;
 }
 
-// A narrow window's Settings root: a Screen with a title and search around the pages.
+// Native Settings has no search, at any size; the web searches.
+const settingsSearch =
+  Platform.OS === 'web' ? { label: searchSettings } : undefined;
+
+// A narrow window's Settings root: a Screen with a title, and the web's search, around the pages.
 export function SettingsRootScreen(
   props: SettingsRootScreenProps,
 ): React.JSX.Element {
   return (
     <Screen
       title={sections.settings.title}
-      search={{ label: searchSettings }}
+      search={settingsSearch}
       value={props.query}
       onChangeText={props.onQueryChange}
     >
