@@ -127,12 +127,6 @@ Spec 421 moves each component, with behaviour unchanged, into its own folder ins
 
 Component folders whose files break no waived rule move without an entry.
 
-## Deferred CodeMap renderers
-
-The owner approved two runtime imports in `apps/codemap-834-prototype/src/code-map/renderer-loader.web.tsx` (2026-10-16, #834). `loadThree` may import `./three/three-map.web` when the 3D view is used. `loadFlat` may import `./flat/flat-map.web` after `WithSkiaWeb` initializes CanvasKit.
-
-This preserves [ADR-0028](0028-plugins-draw-svg-charts-and-canvases-on-every-app.md)'s deferred loading and Skia's initialization order. The `argo/static-imports` rule permits these two literal module paths only in this file. The rule remains enforced for every other expression, including those in the same file. This exception ends when the throwaway prototype is removed.
-
 ## Canvas deferred renderer
 
 The owner approved Canvas implementation on 2026-10-19 (#836), including ADR-0028's deferred web loading.
