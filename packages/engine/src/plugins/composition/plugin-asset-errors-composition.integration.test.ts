@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { localhost } from '#mocks/fetch-fixture-server';
 import { httpsServer } from '#mocks/probe-plugin';
 import { runProbe } from '#mocks/probe-run';
-import { pluginAssetLimitBytes } from '../plugins/assets/content';
+import { pluginAssetLimitBytes } from '../assets/content';
 
 it.each([
   {
