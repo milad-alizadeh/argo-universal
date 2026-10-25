@@ -41,17 +41,21 @@ function collectRows(series: readonly ChartSeries[], blank: Blank): RowMap {
   return rows;
 }
 
+const isFlat = (kind: ChartProps['kind']): boolean =>
+  kind === 'line' || kind === 'scatter';
+
+// Only bars and areas stack; lines and dots draw each series on its own.
+const stacks = ({ kind, stacked }: ChartData): boolean =>
+  stacked === true && !isFlat(kind);
+
 // Victory reads one row per x; a series without a point at that x leaves a gap, or adds nothing to a stack.
-export function cartesianData({ series, stacked }: ChartData): CartesianData {
-  const keys = series.map((_, index) => seriesKey(index));
-  const missing = stacked ? 0 : null;
-  const rows = collectRows(series, (x) => emptyRow(x, keys, missing));
+export function cartesianData(data: ChartData): CartesianData {
+  const keys = data.series.map((_, index) => seriesKey(index));
+  const missing = stacks(data) ? 0 : null;
+  const rows = collectRows(data.series, (x) => emptyRow(x, keys, missing));
 
   return { keys, rows: [...rows.values()].sort(byX) };
 }
-
-const isFlat = (kind: ChartProps['kind']): boolean =>
-  kind === 'line' || kind === 'scatter';
 
 const stackSum = (values: number[], sign: number): number =>
   values.reduce((total, value) => total + (value * sign > 0 ? value : 0), 0);

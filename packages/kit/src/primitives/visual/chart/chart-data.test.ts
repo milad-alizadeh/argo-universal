@@ -27,9 +27,19 @@ const tests: ChartSeries = {
   ],
 };
 
+const loss: ChartSeries = {
+  name: 'Loss',
+  tone: 'danger',
+  points: [{ x: 1, y: -4 }],
+};
+
 describe('cartesianData', () => {
-  it('joins every series on its x values, in order', () => {
-    expect(cartesianData({ kind: 'line', series: [files, tests] })).toEqual({
+  // Lines and dots never stack, so a stacked one still leaves gaps.
+  it.each([
+    { kind: 'line', stacked: false },
+    { kind: 'scatter', stacked: true },
+  ] as const)('joins every series on its x values, in order: %o', (chart) => {
+    expect(cartesianData({ ...chart, series: [files, tests] })).toEqual({
       keys: ['s0', 's1'],
       rows: [
         { x: 1, s0: 3, s1: 4 },
@@ -78,12 +88,6 @@ describe('yDomain', () => {
   });
 
   it('reaches below zero for negative bars', () => {
-    const loss: ChartSeries = {
-      name: 'Loss',
-      tone: 'danger',
-      points: [{ x: 1, y: -4 }],
-    };
-
     const bar = { kind: 'bar' as const, series: [loss] };
 
     expect(yDomain(bar, cartesianData(bar))).toEqual([-4, 0]);
@@ -132,12 +136,6 @@ describe('pieSlices', () => {
   });
 
   it('leaves out negative values, which a slice cannot show', () => {
-    const loss: ChartSeries = {
-      name: 'Loss',
-      tone: 'danger',
-      points: [{ x: 1, y: -4 }],
-    };
-
     expect(pieSlices([loss])).toEqual([]);
   });
 });

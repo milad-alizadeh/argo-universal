@@ -13,11 +13,16 @@ const hidden = {
 // Cells have no id of their own, so a cell is told apart by where it sits.
 const place = (position: number): string => `${position}`;
 
+// Series names may repeat, so a header is told apart by its column too.
 function HeaderRow({ columns }: { columns: string[] }): React.JSX.Element {
   return (
     <View role="row">
-      {columns.map((column) => (
-        <Text key={column} role="body" accessibilityRole="columnheader">
+      {columns.map((column, position) => (
+        <Text
+          key={place(position)}
+          role="body"
+          accessibilityRole="columnheader"
+        >
           {column}
         </Text>
       ))}
