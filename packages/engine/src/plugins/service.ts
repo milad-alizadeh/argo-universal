@@ -37,6 +37,7 @@ import {
   locatePlugin,
   startPlugin,
   startPlugins,
+  startSlotPlugins,
   type PluginServiceDeps,
 } from './located-plugins';
 import { renderSlot } from './slots/render-slot';
@@ -130,8 +131,9 @@ export class PluginService {
     slot: PluginSlotInput,
     connection: RpcConnection,
   ): AsyncGenerator<SlotMessage> {
-    const { running: pluginIds } = await startPlugins(this.deps, ({ plugin }) =>
-      fillsSlot(plugin, slot),
+    const { running: pluginIds } = await startSlotPlugins(
+      this.deps,
+      ({ plugin }) => fillsSlot(plugin, slot),
     );
 
     yield { type: 'contributors', pluginIds };

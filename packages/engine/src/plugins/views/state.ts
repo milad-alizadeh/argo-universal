@@ -57,7 +57,7 @@ interface TreeReception {
 }
 
 function receiveTree({ view, message, root, reception }: TreeReception): void {
-  if (view.opening.renderSlot)
+  if (view.kind.kind === 'replaceable')
     return updateView(view, message, reception.revision);
   const sanitized = sanitizeTree(root);
 
@@ -103,7 +103,7 @@ function refusalReason(view: OpenView, message: ViewMessage): string | null {
 function refuse(view: OpenView, reason: string, reception: Reception): void {
   if (view.refused) return;
 
-  if (!view.opening.renderSlot)
+  if (view.kind.kind === 'page')
     reception.log(
       `Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`,
     );
@@ -129,7 +129,7 @@ const ignoresPatch = (view: OpenView, message: ViewMessage): boolean =>
   view.refused && message.type === 'patch';
 
 function refusedRoot(view: OpenView): WireNode {
-  return view.opening.renderSlot
+  return view.kind.kind === 'replaceable'
     ? {
         type: '#render-error',
         key: '0',

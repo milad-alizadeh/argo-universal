@@ -5,6 +5,7 @@ import {
   PluginViewId,
   type PluginDispatchId,
   type PluginEvent,
+  type ReplaceableSlotId,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import { requireViewHandler } from './handler';
@@ -16,8 +17,14 @@ export type Open = Extract<PluginEvent, { type: 'open' }>;
 
 export type Opening = Omit<Open, 'type' | 'viewId'>;
 
+// A page draws a Plugin route; a replaceable view draws a Replaceable Slot's replacement tree (ADR-0035).
+export type ViewKind =
+  | { kind: 'page' }
+  | { kind: 'replaceable'; slotId: ReplaceableSlotId };
+
 export interface OpenView extends ViewSnapshot {
   pluginId: string;
+  kind: ViewKind;
   projectId?: string;
   connectionId: string;
   opening: Open;
@@ -32,12 +39,19 @@ export function createOpenView(
 ): OpenView {
   return {
     pluginId,
+    kind: viewKind(opening),
     projectId: projectOfOpening(opening),
     connectionId,
     events: viewEvents(),
     opening: { ...opening, type: 'open', viewId: createPluginViewId() },
     ...blankView(),
   };
+}
+
+function viewKind(opening: Opening): ViewKind {
+  return opening.renderSlot
+    ? { kind: 'replaceable', slotId: opening.renderSlot }
+    : { kind: 'page' };
 }
 
 export function projectOfOpening(opening: Opening): string | undefined {
@@ -55,7 +69,7 @@ export type HeadlessView = { viewId: PluginViewId; close: () => void };
 
 export function temporary(view: OpenView): boolean {
   return (
-    Boolean(view.opening.renderSlot) || view.backgroundInterval !== undefined
+    view.kind.kind === 'replaceable' || view.backgroundInterval !== undefined
   );
 }
 
