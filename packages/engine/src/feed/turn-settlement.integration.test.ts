@@ -4,8 +4,6 @@ import { eq } from 'drizzle-orm';
 import { beforeEach, expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { hydrateStoredFeedRow, storedFeedColumns } from './feed-row';
-import { FeedRowsJob } from './feed-rows-job';
-import { committedTurnEndings } from './feed-storage';
 import { prepareTurnSettlement } from './feed-turn-settlement';
 import {
   settleArchivedChild,

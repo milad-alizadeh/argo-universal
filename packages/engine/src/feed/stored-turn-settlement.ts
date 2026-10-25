@@ -62,12 +62,30 @@ export const settleStoredTurn = (
   });
 };
 
+type StoredRow = Parameters<typeof hydrateStoredFeedRow>[1];
+
+const byTurn = (
+  sessionId: string,
+  stored: StoredRow[],
+): Map<string, Feed['rows']> => {
+  const turns = new Map<string, Feed['rows']>();
+
+  for (const row of stored) {
+    const turnId = row.turnId ?? '';
+
+    turns.set(turnId, {
+      ...turns.get(turnId),
+      [row.id]: hydrateStoredFeedRow(sessionId, row),
+    });
+  }
+
+  return turns;
+};
+
 const runningTurnRows = (
   transaction: StorageTransaction,
   sessionId: string,
 ): Map<string, Feed['rows']> => {
-  const byTurn = new Map<string, Feed['rows']>();
-
   const stored = transaction
     .select(storedFeedColumns)
     .from(feedRow)
@@ -75,13 +93,7 @@ const runningTurnRows = (
     .where(and(eq(feedRow.sessionId, sessionId), eq(turn.status, 'running')))
     .all();
 
-  for (const row of stored)
-    byTurn.set(row.turnId ?? '', {
-      ...byTurn.get(row.turnId ?? ''),
-      [row.id]: hydrateStoredFeedRow(sessionId, row),
-    });
-
-  return byTurn;
+  return byTurn(sessionId, stored);
 };
 
 // Borrowed Checkouts have no Session actor: archive lends the Writer's transaction to Feed.
