@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useClaim } from '#kit/claim-store';
 import { useWide } from '#kit/use-wide/use-wide';
 import {
+  Screen,
   ScreenBesideList,
   ScreenNavigationEnabled,
 } from '#primitives/scaffolds/screen';
@@ -28,8 +29,15 @@ export function ListDetail(props: ListDetailProps): ReactElement {
   return <WithDetail {...props} wide={false} />;
 }
 
+// A titled list is the screen's own: its Screen replaces the header an item's Screen left in the navigator.
 function ListOnly(props: ListDetailProps): ReactElement {
-  return <Pane testID={props.testID}>{props.list}</Pane>;
+  const { title, list } = props;
+
+  return (
+    <Pane testID={props.testID}>
+      {title ? <Screen title={title}>{list}</Screen> : list}
+    </Pane>
+  );
 }
 
 /*

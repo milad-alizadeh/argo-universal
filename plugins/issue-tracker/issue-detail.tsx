@@ -1,49 +1,88 @@
-import { Button, Stack, Text } from '@argo/plugin-kit';
+import { Action, Detail, Metadata, Pill, Screen } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
 import type { PageProps } from './use-issues';
 
-const headingRole = 'heading';
-
 type IssueDetailProps = PageProps & { issue: Issue };
+
+const closed = 'closed';
 
 export function IssueDetail(props: IssueDetailProps): JSX.Element {
   const { issue } = props;
 
   return (
-    <Stack direction="column" gap={3}>
-      <Button label="Back to Issues" variant="outline" onPress={props.onBack} />
-      <Text role={headingRole}>{`#${issue.number} ${issue.title}`}</Text>
-      <IssueMetadata issue={issue} />
-      <Button
-        label="Open in GitHub"
-        variant="outline"
-        onPress={{ action: 'openUrl', url: issue.url }}
+    <Screen
+      title={issue.title}
+      caption={`#${issue.number}`}
+      actions={<IssueActions issue={issue} onBack={props.onBack} />}
+    >
+      <Detail
+        markdown={issue.body || 'No description.'}
+        metadata={<IssueMetadata issue={issue} />}
       />
-    </Stack>
+    </Screen>
+  );
+}
+
+type IssueActionsProps = Pick<IssueDetailProps, 'issue' | 'onBack'>;
+
+function IssueActions({ issue, onBack }: IssueActionsProps): JSX.Element[] {
+  return [
+    <BackAction key="back" onBack={onBack} />,
+    <OpenAction key="open" url={issue.url} />,
+  ];
+}
+
+function BackAction({ onBack }: { onBack: () => void }): JSX.Element {
+  return <Action label="Back to Issues" icon="arrow-left" onPress={onBack} />;
+}
+
+function OpenAction({ url }: { url: string }): JSX.Element {
+  return (
+    <Action
+      label="Open in GitHub"
+      icon="external-link"
+      onPress={{ action: 'openUrl', url }}
+    />
   );
 }
 
 function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
   return (
-    <>
-      <IssueDescription body={issue.body} />
+    <Metadata>
+      <Metadata.StatusDot
+        title="Status"
+        text={issue.status === closed ? 'Closed' : 'Open'}
+        tone={issue.status === closed ? 'done' : 'success'}
+      />
       <IssueLabels labels={issue.labels} />
-      <IssueAssignees assignees={issue.assignees} />
-    </>
+      <Assignees assignees={issue.assignees} />
+      <Metadata.Link title="GitHub" text={issue.url} href={issue.url} />
+    </Metadata>
   );
 }
 
-const IssueDescription = ({ body }: { body: string }): JSX.Element => (
-  <Text>{body || 'No description.'}</Text>
-);
+function IssueLabels({ labels }: { labels: string[] }): JSX.Element {
+  return (
+    <Metadata.Pills title="Labels">
+      {labels.length === 0 ? (
+        <Pill text="None" tone="muted" />
+      ) : (
+        labels.map((label) => <Pill key={label} text={label} />)
+      )}
+    </Metadata.Pills>
+  );
+}
 
-const IssueLabels = ({ labels }: { labels: string[] }): JSX.Element => (
-  <Text>Labels: {labels.join(', ') || 'None'}</Text>
-);
+function Assignees({ assignees }: { assignees: string[] }): JSX.Element {
+  if (assignees.length === 0)
+    return <Metadata.Label title="Assignees" text="None" />;
 
-const IssueAssignees = ({
-  assignees,
-}: {
-  assignees: string[];
-}): JSX.Element => <Text>Assignees: {assignees.join(', ') || 'None'}</Text>;
+  return (
+    <>
+      {assignees.map((name) => (
+        <Metadata.Avatar key={name} title="Assignee" name={name} />
+      ))}
+    </>
+  );
+}
