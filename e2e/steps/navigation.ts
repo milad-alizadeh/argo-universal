@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
 import {
@@ -43,6 +43,10 @@ Then(
   },
 );
 
+// The Accounts page's own title, which it shows with or without Accounts.
+const accountsPage = (page: Page): Locator =>
+  page.getByRole('heading', { name: 'Accounts', level: 1 });
+
 Then(
   'the phone Frame shows the Settings list without Accounts detail',
   async ({ page }): Promise<void> => {
@@ -51,7 +55,7 @@ Then(
     await expect(
       page.getByRole('link', { name: /^Accounts(?:,|$)/ }),
     ).toBeVisible();
-    await expect(page.getByText('Accounts will appear here.')).toHaveCount(0);
+    await expect(accountsPage(page)).toHaveCount(0);
   },
 );
 
@@ -63,7 +67,7 @@ Then(
     await expect(
       page.getByRole('link', { name: /^Accounts(?:,|$)/ }),
     ).toBeVisible();
-    await expect(page.getByText('Accounts will appear here.')).toBeVisible();
+    await expect(accountsPage(page)).toBeVisible();
   },
 );
 
