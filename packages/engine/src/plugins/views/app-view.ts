@@ -15,7 +15,7 @@ export function appView(
 ): AsyncGenerator<ViewMessage> {
   const source = messages(view, connection.signal);
 
-  if (view.opening.renderSlot) return source;
+  if (view.kind.kind === 'replaceable') return source;
 
   if (!drawsPluginWire(connection.surface)) {
     logUpdateArgo(view, log);

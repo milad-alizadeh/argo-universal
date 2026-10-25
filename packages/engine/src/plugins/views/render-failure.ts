@@ -16,15 +16,14 @@ function reportOwnedDrawing(
   input: RenderFailureInput,
   log: (line: string) => void,
 ): void {
-  if (!ownsDrawing(view, input)) return;
-  const slotId = view.opening.renderSlot;
+  if (!ownsDrawing(view, input) || view.kind.kind !== 'replaceable') return;
+  const { slotId } = view.kind;
 
-  if (slotId)
-    logOnce(
-      log,
-      fallbackKey('drawing', view.pluginId, slotId),
-      renderFallbackLine(view.pluginId, slotId, input.reason),
-    );
+  logOnce(
+    log,
+    fallbackKey('drawing', view.pluginId, slotId),
+    renderFallbackLine(view.pluginId, slotId, input.reason),
+  );
 }
 
 const ownsDrawing = (view: OpenView, input: RenderFailureInput): boolean =>

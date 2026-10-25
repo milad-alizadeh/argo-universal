@@ -144,8 +144,30 @@ export async function startPlugins(
   deps: PluginServiceDeps,
   declares: (located: LocatedPlugin) => boolean,
 ): Promise<StartedPlugins> {
+  return startLocated(deps, (await locatePlugins(deps)).filter(declares));
+}
+
+// A Slot's contributors, whatever their folders: first-party Plugins first, then by Plugin id (ADR-0035).
+export async function startSlotPlugins(
+  deps: PluginServiceDeps,
+  declares: (located: LocatedPlugin) => boolean,
+): Promise<StartedPlugins> {
   const declaring = (await locatePlugins(deps)).filter(declares);
 
+  return startLocated(deps, declaring.toSorted(slotOrder));
+}
+
+const slotOrder = (
+  { plugin: a }: LocatedPlugin,
+  { plugin: b }: LocatedPlugin,
+): number =>
+  Number(b.firstParty) - Number(a.firstParty) ||
+  (a.manifest.id < b.manifest.id ? -1 : 1);
+
+async function startLocated(
+  deps: PluginServiceDeps,
+  declaring: LocatedPlugin[],
+): Promise<StartedPlugins> {
   const isRunning = await Promise.all(
     declaring.map((located) => isStarted(deps, located)),
   );
