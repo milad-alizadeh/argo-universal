@@ -1,9 +1,7 @@
 import type { ReactElement } from 'react';
-import type { ListProps } from './list-props';
+import type { PhoneGroupedProps } from './list-phone-props';
 
-// Only the phones draw `grouped` natively (ADR-0042); the web draws it on LegendList (list-grouped-cell.tsx).
-export const phoneGrouped = false;
-
-export function PhoneGroupedList<Item>(_props: ListProps<Item>): ReactElement {
-  throw new Error('A grouped List is drawn natively on phones only.');
+// Only the phones draw a native grouped list (ADR-0042), for the picker page; the web has no use for one.
+export function PhoneGroupedList(_props: PhoneGroupedProps): ReactElement {
+  throw new Error('A native grouped list is drawn on phones only.');
 }
