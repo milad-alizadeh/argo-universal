@@ -1,9 +1,11 @@
 import type { ProcessResult } from '@repo/contracts/plugins/argo-calls';
 import { createRejectionCounter } from '@repo/machine-log';
+import { z } from 'zod';
 import { shellEnvironment } from '../agents';
 import type { CheckedCommand } from '../plugins/access/plugin-access';
 import { PluginProcesses } from '../plugins/services/plugin-processes';
 import { GitCommit, type GitData, GitItem } from './github';
+import { PreviewUnavailable, unavailable } from './preview-unavailable';
 
 const timeoutMs = 8000;
 
@@ -16,7 +18,7 @@ export async function readGitHub(
   path: string,
   execute: GitHubCommand = ghOutput,
 ): Promise<GitData> {
-  const stdout = await execute(path);
+  const stdout = await execute(path).catch(missingGhIsExpected);
 
   return decode(path, stdout);
 }
@@ -28,7 +30,7 @@ function decode(path: string, stdout: string): GitData {
     return schema.parse(JSON.parse(stdout));
   } catch {
     rejections.report('Rejected response');
-    throw new Error('Invalid GitHub preview response');
+    throw new PreviewUnavailable('Invalid GitHub preview response');
   }
 }
 
@@ -59,9 +61,21 @@ async function ghCommand(path: string): Promise<CheckedCommand> {
   };
 }
 
+const missingGh = z.object({
+  code: z.literal('ENOENT'),
+  syscall: z.string().startsWith('spawn'),
+});
+
+// Without `gh` on the Server there is no private preview to give; any other spawn fault is not expected.
+function missingGhIsExpected(cause: unknown): never {
+  if (missingGh.safeParse(cause).success) throw unavailable(cause);
+
+  throw cause;
+}
+
 function successfulOutput(result: ProcessResult): string {
   if ([result.exitCode !== 0, result.timedOut, result.truncated].some(Boolean))
-    throw new Error('GitHub preview fetch failed');
+    throw new PreviewUnavailable('GitHub preview fetch failed');
 
   return result.stdout;
 }

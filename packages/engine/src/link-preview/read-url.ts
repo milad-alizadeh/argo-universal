@@ -6,10 +6,12 @@ import {
 } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import type { LookupFunction } from 'node:net';
+import { CapabilityRefusal } from '../plugins/access/capability-refusal';
 import {
   allowLiteral,
   checkedLookup,
 } from '../plugins/access/plugin-addresses';
+import { PreviewUnavailable, unavailable } from './preview-unavailable';
 
 export type PreviewResponse = { url: string; type: string; bytes: Buffer };
 
@@ -33,24 +35,40 @@ const redirectStatuses = new Set(Object.values(redirects));
 
 const publicHost = { private: false };
 
-export function previewUrl(href: string): URL {
-  const url = new URL(href);
+export function previewUrl(href: string, base?: URL): URL {
+  const url = parsedUrl(href, base);
   requireProtocol(url);
   requireAnonymous(url);
-  allowLiteral(url, publicHost);
+  requirePublic(url);
   url.hash = '';
 
   return url;
 }
 
+function parsedUrl(href: string, base?: URL): URL {
+  try {
+    return new URL(href, base);
+  } catch (error) {
+    throw unavailable(error);
+  }
+}
+
+function requirePublic(url: URL): void {
+  try {
+    allowLiteral(url, publicHost);
+  } catch (error) {
+    throw error instanceof CapabilityRefusal ? unavailable(error) : error;
+  }
+}
+
 function requireProtocol(url: URL): void {
   if (!['http:', 'https:'].includes(url.protocol))
-    throw new Error('Unsupported preview protocol');
+    throw new PreviewUnavailable('Unsupported preview protocol');
 }
 
 function requireAnonymous(url: URL): void {
   if ([url.username, url.password, url.port].some(Boolean))
-    throw new Error('Unsupported preview authority');
+    throw new PreviewUnavailable('Unsupported preview authority');
 }
 
 // Every redirect and its socket's addresses are checked before the Server connects.
@@ -83,18 +101,21 @@ async function follow(
 }
 
 function nextUrl(response: IncomingMessage, url: URL, redirects: number): URL {
-  if (redirects >= redirectLimit) throw new Error('Too many preview redirects');
+  if (redirects >= redirectLimit)
+    throw new PreviewUnavailable('Too many preview redirects');
 
-  if (!response.headers.location) throw new Error('Missing redirect location');
+  if (!response.headers.location)
+    throw new PreviewUnavailable('Missing redirect location');
 
-  return previewUrl(new URL(response.headers.location, url).href);
+  return previewUrl(response.headers.location, url);
 }
 
 async function readResponse(
   response: IncomingMessage,
   url: URL,
 ): Promise<PreviewResponse> {
-  if (response.statusCode !== ok) throw new Error('Preview fetch failed');
+  if (response.statusCode !== ok)
+    throw new PreviewUnavailable('Preview fetch failed');
 
   return {
     url: url.href,
@@ -122,12 +143,20 @@ function send(url: URL, network: PreviewNetwork): Promise<IncomingMessage> {
 
   return new Promise((resolve, reject) => {
     const outgoing = request(url, requestOptions(network), resolve);
-    outgoing.once('error', reject);
+    outgoing.once('error', (error) => reject(unavailable(error)));
     outgoing.end();
   });
 }
 
 async function readBytes(response: IncomingMessage): Promise<Buffer> {
+  try {
+    return Buffer.concat(await collect(response));
+  } catch (cause) {
+    throw unavailable(cause);
+  }
+}
+
+async function collect(response: IncomingMessage): Promise<Buffer[]> {
   const chunks: Buffer[] = [];
   let size = 0;
 
@@ -135,9 +164,10 @@ async function readBytes(response: IncomingMessage): Promise<Buffer> {
     const bytes = Buffer.from(chunk);
     size += bytes.length;
 
-    if (size > byteLimit) throw new Error('Preview exceeds byte limit');
+    if (size > byteLimit)
+      throw new PreviewUnavailable('Preview exceeds byte limit');
     chunks.push(bytes);
   }
 
-  return Buffer.concat(chunks);
+  return chunks;
 }

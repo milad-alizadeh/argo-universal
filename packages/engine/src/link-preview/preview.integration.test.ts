@@ -1,15 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PreviewFixture, item } from './preview.mocks';
+import { PreviewUnavailable } from './preview-unavailable';
+import { PreviewFixture, guide } from './preview.mocks';
 
-const guide = 'https://example.com/guide';
+afterEach(() => vi.restoreAllMocks());
 
-const issueUrl = 'https://github.com/acme/private/issues/42';
-
-const pullUrl = 'https://github.com/acme/private/pull/42';
-
-afterEach(() => vi.useRealTimers());
-
-describe('Link preview query', () => {
+describe('Link preview of a web page', () => {
   it('fetches OpenGraph and proxies images once for concurrent readers', async () => {
     const fixture = new PreviewFixture();
 
@@ -32,26 +27,12 @@ describe('Link preview query', () => {
     expect(fixture.read).toHaveBeenCalledTimes(2);
   });
 
-  it('uses Server GitHub access for private issues without fetching their page', async () => {
-    const fixture = new PreviewFixture();
-    expect(await fixture.caller.get({ href: issueUrl })).toMatchObject({
-      kind: 'issue',
-      title: 'Fix hover cards',
-      number: 42,
-      repository: 'acme/private',
-      state: 'open',
-      author: 'octocat',
-    });
-    expect(fixture.github).toHaveBeenCalledWith('repos/acme/private/issues/42');
-    expect(fixture.read).not.toHaveBeenCalled();
-  });
-
   it.each([
     'file:///etc/passwd',
     'mailto:hello@example.com',
-    'http://127.0.0.1',
-    'http://[::1]',
-    'http://169.254.169.254',
+    'https://127.0.0.1',
+    'https://[::1]',
+    'https://169.254.169.254',
     'https://user:secret@example.com',
     'https://example.com:9000',
   ])('refuses %s before making any request', async (href) => {
@@ -67,7 +48,7 @@ describe('Link preview query', () => {
       url: guide,
       type: 'text/html',
       bytes: Buffer.from(
-        '<meta property="og:title" content="Safe"><meta property="og:image" content="http://127.0.0.1/image">',
+        '<meta property="og:title" content="Safe"><meta property="og:image" content="https://127.0.0.1/image">',
       ),
     });
     expect(await fixture.caller.get({ href: guide })).toMatchObject({
@@ -78,78 +59,24 @@ describe('Link preview query', () => {
     expect(fixture.storeImage).not.toHaveBeenCalled();
   });
 
-  it('returns no preview for a page without OpenGraph or a failed private GitHub query', async () => {
+  it('keeps the text card without a report when an image cannot be fetched', async () => {
+    const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => {});
     const fixture = new PreviewFixture();
-    fixture.read.mockResolvedValueOnce({
-      url: guide,
-      type: 'text/html',
-      bytes: Buffer.from('<title>No OpenGraph</title>'),
-    });
-    expect(await fixture.caller.get({ href: guide })).toBeNull();
-    fixture.github.mockRejectedValueOnce(new Error('Not found'));
-    expect(await fixture.caller.get({ href: issueUrl })).toBeNull();
-    expect(fixture.read).toHaveBeenCalledTimes(1);
-  });
+    fixture.read.mockImplementation(async (url) => {
+      if (url.endsWith('.png')) throw new PreviewUnavailable('Not OK');
 
-  it('refreshes a failed preview after the negative cache expires', async () => {
-    vi.useFakeTimers();
-    const fixture = new PreviewFixture();
-    fixture.github.mockRejectedValueOnce(new Error('Not signed in'));
-    expect(await fixture.caller.get({ href: issueUrl })).toBeNull();
-    expect(await fixture.caller.get({ href: issueUrl })).toBeNull();
-    expect(fixture.github).toHaveBeenCalledTimes(1);
-    vi.advanceTimersByTime(30_001);
-    expect(await fixture.caller.get({ href: issueUrl })).toMatchObject({
-      kind: 'issue',
+      return {
+        url,
+        type: 'text/html',
+        bytes: Buffer.from(
+          '<meta property="og:title" content="Safe"><meta property="og:image" content="/cover.png">',
+        ),
+      };
     });
-    expect(fixture.github).toHaveBeenCalledTimes(2);
-  });
-
-  it.each([
-    { state: 'open', draft: true, expected: 'draft' },
-    { state: 'closed', draft: true, expected: 'closed' },
-    { state: 'closed', merged_at: '2026-10-20T12:00:00Z', expected: 'merged' },
-  ] as const)(
-    'draws a $expected pull request with its diff totals',
-    async ({ expected, ...state }) => {
-      const fixture = new PreviewFixture();
-      fixture.github.mockResolvedValueOnce({
-        ...item,
-        ...state,
-        additions: 18,
-        deletions: 4,
-      });
-      expect(await fixture.caller.get({ href: pullUrl })).toMatchObject({
-        kind: 'pullRequest',
-        state: expected,
-        additions: 18,
-        deletions: 4,
-      });
-      expect(fixture.github).toHaveBeenCalledWith(
-        'repos/acme/private/pulls/42',
-      );
-    },
-  );
-
-  it('uses a commit first line and falls back to its author when no GitHub user exists', async () => {
-    const fixture = new PreviewFixture();
-    fixture.github.mockResolvedValueOnce({
-      sha: 'abcdef0123456789',
-      author: null,
-      commit: {
-        message: 'Fix the card\n\nMore detail',
-        author: { name: 'A Person', date: item.created_at },
-      },
+    expect(await fixture.caller.get({ href: guide })).toMatchObject({
+      kind: 'web',
+      title: 'Safe',
     });
-    expect(
-      await fixture.caller.get({
-        href: 'https://github.com/acme/private/commit/abcdef0',
-      }),
-    ).toMatchObject({
-      kind: 'commit',
-      sha: 'abcdef0',
-      title: 'Fix the card',
-      author: 'A Person',
-    });
+    expect(diagnostic).not.toHaveBeenCalled();
   });
 });

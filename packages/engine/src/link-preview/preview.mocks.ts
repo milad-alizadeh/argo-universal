@@ -7,6 +7,12 @@ const html =
 
 const image = Buffer.from('89504e470d0a1a0a', 'hex');
 
+export const guide = 'https://example.com/guide';
+
+export const issueUrl = 'https://github.com/acme/private/issues/42';
+
+export const pullUrl = 'https://github.com/acme/private/pull/42';
+
 export const item = {
   title: 'Fix hover cards',
   state: 'open',

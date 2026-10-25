@@ -2,6 +2,7 @@ import { LinkPreviewData, LinkPreviewInput } from '@repo/contracts';
 import { publicProcedure, router, routerFactory } from '../rpc';
 import { PreviewCache } from './cache';
 import { fetchPreview } from './fetch-preview';
+import { PreviewUnavailable } from './preview-unavailable';
 import { previewUrl } from './read-url';
 import type { PreviewSources } from './sources';
 
@@ -24,7 +25,9 @@ async function get(
 ): Promise<LinkPreviewData | null> {
   try {
     return await cache.get(previewUrl(href).href);
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof PreviewUnavailable) return null;
+
+    throw error;
   }
 }
