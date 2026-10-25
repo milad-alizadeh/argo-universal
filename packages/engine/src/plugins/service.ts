@@ -146,7 +146,8 @@ export class PluginService {
     pluginId: string,
     slotId: string,
     reason: string,
-  ): void => this.deps.pluginRuntime.renderFallback(pluginId, slotId, reason);
+  ): void =>
+    this.deps.pluginRuntime.contributionFailed(pluginId, slotId, reason);
 
   public async *render(
     input: ReplaceableInput,

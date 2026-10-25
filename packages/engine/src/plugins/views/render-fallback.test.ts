@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest';
 import {
   fallbackKey,
   forgetOnce,
+  logFallback,
   logOnce,
   updateArgoKey,
 } from './render-fallback';
@@ -29,6 +30,20 @@ it('keys on identity, so a Plugin changing its reason does not make a new line',
     logOnce(log, fallbackKey('drawing', 'counter', 'slot'), reason);
 
   expect(log).toHaveBeenCalledOnce();
+});
+
+it('logs a failing contribution once per Plugin, Slot id and reason', () => {
+  const log = vi.fn<(line: string) => void>();
+  const slot = 'argo/session/row/v1';
+
+  logFallback(log, 'contribution', ['a', slot, 'boom']);
+  logFallback(log, 'contribution', ['a', slot, 'boom']);
+  logFallback(log, 'contribution', ['a', slot, 'bang']);
+
+  expect(log.mock.calls.flat()).toEqual([
+    `Plugin a: core fallback ${slot}: boom`,
+    `Plugin a: core fallback ${slot}: bang`,
+  ]);
 });
 
 it('keeps Plugins, sources and logs apart', () => {

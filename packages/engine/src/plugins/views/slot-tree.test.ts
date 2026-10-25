@@ -15,19 +15,27 @@ const stack = (...children: WireNode[]): WireNode => ({
   children,
 });
 
-it('wraps Session row nodes in a row Stack and refuses parts outside ListItem meta', () => {
-  const refused = vi.fn<(type: string) => void>();
-
-  const tree = stack(
-    node('Label', 'a'),
-    node('Button', 'b'),
-    node('Pill', 'c'),
+it('wraps Session row nodes in a row Stack', () => {
+  const prepared = prepareSlotTree(
+    sessionRowSlotId,
+    stack(node('Label', 'a'), node('Pill', 'c')),
+    vi.fn<(type: string) => void>(),
   );
-
-  const prepared = prepareSlotTree(sessionRowSlotId, tree, refused);
 
   expect(prepared.type).toBe('Stack');
   expect(prepared.props).toEqual({ direction: 'row' });
+  expect(prepared.children.map(({ key }) => key)).toEqual(['a', 'c']);
+});
+
+it('refuses parts outside ListItem meta', () => {
+  const refused = vi.fn<(type: string) => void>();
+
+  const prepared = prepareSlotTree(
+    sessionRowSlotId,
+    stack(node('Label', 'a'), node('Button', 'b'), node('Pill', 'c')),
+    refused,
+  );
+
   expect(prepared.children.map(({ key }) => key)).toEqual(['a', 'c']);
   expect(refused).toHaveBeenCalledExactlyOnceWith('Button');
 });

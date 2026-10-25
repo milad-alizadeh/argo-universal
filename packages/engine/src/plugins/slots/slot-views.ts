@@ -20,10 +20,11 @@ export async function* slotViews(
 ): AsyncGenerator<SlotMessage> {
   const path = slotPath(slot);
   yield* merged(
-    pluginIds.map((pluginId) =>
-      contribution(views, { pluginId, path, slot }, connection),
-    ),
-    (index, reason) => failed(pluginIds[index] ?? '', path, reason),
+    pluginIds.map((pluginId) => ({
+      id: pluginId,
+      source: contribution(views, { pluginId, path, slot }, connection),
+    })),
+    (pluginId, reason) => failed(pluginId, slot.slotId, reason),
   );
 }
 
