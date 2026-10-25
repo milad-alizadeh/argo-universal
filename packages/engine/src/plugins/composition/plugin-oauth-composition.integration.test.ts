@@ -23,7 +23,16 @@ it(
     expect(
       (await fetch(`${alice.redirectUri}?state=unissued&code=wrong`)).status,
     ).toBe(400);
-    await fetch(`${bob.redirectUri}?state=${bob.state}&code=code-bob`);
+
+    const page = await fetch(
+      `${bob.redirectUri}?state=${bob.state}&code=code-bob`,
+    );
+
+    const body = await page.text();
+    expect(page.headers.get('content-type')).toBe('text/html; charset=utf-8');
+    expect(page.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(body).toContain('You can close this tab and return to Argo.');
+    expect(body).not.toContain('code-bob');
     const bobResult = await host.result('bob');
 
     if (!bobResult) throw new Error('Missing Bob OAuth result');
@@ -108,7 +117,7 @@ it(
 );
 
 it(
-  'returns nothing when the callback port is already occupied',
+  'fails the sign-in naming the port when the callback port is already occupied',
   async () => {
     const occupied = createServer();
     await new Promise<void>((resolve, reject) => {
@@ -118,6 +127,7 @@ it(
 
     try {
       const host = await oauthPlugins();
+      expect(await host.failure()).toContain('51789');
       expect(await host.result()).toBeNull();
       expect(host.opened).toEqual([]);
     } finally {

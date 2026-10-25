@@ -4,6 +4,10 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { homePath } from '#features/settings';
 import { SettingsLoading } from '../../settings-loading';
+import {
+  accountsSection,
+  type ProjectAccountsProps,
+} from './project-detail-accounts';
 import { newSessionsSections } from './project-detail-new-sessions';
 import { removeSection } from './project-detail-remove';
 
@@ -22,21 +26,23 @@ export interface ProjectDetailViewProps {
   onBack?: () => void;
   // What Plugins add to this Project (the `argo/project/details/v1` Slot), drawn between Folder and New Sessions.
   renderPluginSlot?: (project: ProjectInfo) => React.ReactNode;
+  // The Accounts this Project chose per host, drawn below Folder; omitted until the Server has answered.
+  accounts?: ProjectAccountsProps;
 }
 
 type BodyProps = Pick<
   ProjectDetailViewProps,
-  'project' | 'name' | 'otherDevice' | 'renderPluginSlot'
+  'project' | 'name' | 'otherDevice' | 'renderPluginSlot' | 'accounts'
 >;
 
 type SectionsProps = Pick<
   ProjectDetailViewProps,
-  'otherDevice' | 'renderPluginSlot'
+  'otherDevice' | 'renderPluginSlot' | 'accounts'
 > & {
   project: ProjectInfo;
 };
 
-// One Project: its folder, what Plugins add, where its new Sessions start, and Remove.
+// One Project: its folder, its Accounts, what Plugins add, where its new Sessions start, and Remove.
 export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
@@ -76,11 +82,12 @@ const UnloadedProject = ({ status, name }: UnloadedProps): React.JSX.Element =>
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
 function ProjectSections(props: SectionsProps): React.JSX.Element {
-  const { project, otherDevice, renderPluginSlot } = props;
+  const { project, otherDevice, renderPluginSlot, accounts } = props;
 
   return (
     <FieldGroup>
       {folderSection(project, otherDevice)}
+      {accountsSection(accounts)}
       {renderPluginSlot?.(project)}
       {newSessionsSections(project)}
       {removeSection()}
