@@ -36,6 +36,7 @@ it('rejects a malformed stored Session before a pending patch can replace its in
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
       installedAgents: unlaunchedInstalledAgents(database, directory),
+      writer,
     },
   });
 

@@ -51,6 +51,7 @@ it.each(writerTurnCases)(
         runtimeDirectory: directory,
         acpResources: createAcpResources(),
         installedAgents: unlaunchedInstalledAgents(database, directory),
+        writer,
       },
     });
 

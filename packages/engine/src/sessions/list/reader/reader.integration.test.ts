@@ -5,6 +5,7 @@ import { createActor } from 'xstate';
 import { coreOnlyHooks } from '#mocks/core-hooks';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
+import { unstartedWriter } from '#mocks/unstarted-writer';
 import { createAcpResources } from '../../../agents';
 import { openSessionsMachine } from '../../open-sessions-machine';
 import { createSessionList } from '../session-list';
@@ -47,6 +48,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
       installedAgents,
+      writer: unstartedWriter(database),
     },
   });
 
@@ -78,6 +80,7 @@ it('rejects a malformed cursor before reading Session rows', async (): Promise<v
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
       installedAgents,
+      writer: unstartedWriter(database),
     },
   });
 

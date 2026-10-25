@@ -127,6 +127,7 @@ it('gives the list and the snapshot the same Live header for a running root Sess
       runtimeDirectory: host.directory,
       acpResources: createAcpResources(),
       installedAgents: unlaunchedInstalledAgents(host.database, host.directory),
+      writer: host.writer,
     },
   });
 
