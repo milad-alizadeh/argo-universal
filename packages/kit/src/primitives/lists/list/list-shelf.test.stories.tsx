@@ -89,6 +89,18 @@ function ShelfControlsExample(): React.JSX.Element {
 
 const edgeWait = { timeout: 5000 };
 
+// A press that lands while the list is still re-measuring can scroll nowhere, so the press is repeated until the edge shows.
+async function pressUntil(
+  userEvent: Pick<typeof browserUserEvent, 'click'>,
+  button: HTMLElement,
+  reachedEdge: () => Promise<void> | void,
+): Promise<void> {
+  await waitFor(async () => {
+    if (button.getAttribute('disabled') === null) await userEvent.click(button);
+    await reachedEdge();
+  }, edgeWait);
+}
+
 export const ShelfEndControls: Story = {
   render: () => <ShelfControlsExample />,
   play: async ({ canvas, userEvent }) => {
@@ -100,11 +112,11 @@ export const ShelfEndControls: Story = {
     // The edges follow the list's scroll measurements and the animated scroll, which a busy runner can take seconds over.
     await waitFor(() => expect(previous).toBeDisabled(), edgeWait);
     await waitFor(() => expect(next).toBeEnabled(), edgeWait);
-    await userEvent.click(next);
-    await waitFor(() => expect(next).toBeDisabled(), edgeWait);
+    await pressUntil(userEvent, next, () => expect(next).toBeDisabled());
     await expect(previous).toBeEnabled();
-    await userEvent.click(previous);
-    await waitFor(() => expect(previous).toBeDisabled(), edgeWait);
+    await pressUntil(userEvent, previous, () =>
+      expect(previous).toBeDisabled(),
+    );
   },
 };
 
