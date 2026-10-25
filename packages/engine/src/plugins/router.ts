@@ -24,8 +24,9 @@ import {
   type RpcConnection,
 } from '../rpc';
 import type { RpcContext } from '../rpc/connection';
+import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
-import { PluginService, type PluginServiceDeps } from './service';
+import type { PluginService } from './service';
 
 function requireSignal(signal: AbortSignal | undefined): AbortSignal {
   if (!signal) throw new Error('Plugin subscription signal is missing');
@@ -131,14 +132,18 @@ const createViewEventsRouter = routerFactory((plugins: PluginService) =>
   }),
 );
 
-export const createPluginsRouter = routerFactory((deps: PluginServiceDeps) => {
-  const plugins = new PluginService(deps);
+export type PluginsRouterDeps = {
+  plugins: PluginService;
+  accounts: PluginAccounts;
+};
 
-  return mergeRouters(
-    router({ accounts: accountsRouter(deps.pluginAccounts) }),
-    createLifecycleRouter(plugins),
-    createSettingsRouter(plugins),
-    createViewsRouter(plugins),
-    createViewEventsRouter(plugins),
-  );
-});
+export const createPluginsRouter = routerFactory(
+  ({ plugins, accounts }: PluginsRouterDeps) =>
+    mergeRouters(
+      router({ accounts: accountsRouter(accounts) }),
+      createLifecycleRouter(plugins),
+      createSettingsRouter(plugins),
+      createViewsRouter(plugins),
+      createViewEventsRouter(plugins),
+    ),
+);

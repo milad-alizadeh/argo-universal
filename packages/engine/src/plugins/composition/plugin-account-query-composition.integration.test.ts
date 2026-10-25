@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { accountPlugins, accountNetwork } from '#mocks/account-plugins';
 import { startEngineTestHost } from '#mocks/engine';
 import { installed, registeredProject } from '#mocks/probe-plugin';
-import { PluginTestClock } from '../plugins/worker/test-clock';
+import { PluginTestClock } from '../worker/test-clock';
 
 it('reports an unavailable Borrow as a Query error', async () => {
   await registeredProject();

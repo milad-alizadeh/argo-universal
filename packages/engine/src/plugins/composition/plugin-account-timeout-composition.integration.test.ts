@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { borrow } from '#mocks/account-journey';
 import { MemoryKeychain } from '#mocks/memory-keychain';
-import { PluginTestClock } from '../plugins/worker/test-clock';
+import { PluginTestClock } from '../worker/test-clock';
 
 const journeyMs = 30_000;
 

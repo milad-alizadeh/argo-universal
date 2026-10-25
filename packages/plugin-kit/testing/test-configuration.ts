@@ -4,7 +4,7 @@ import type {
   PluginSettingField,
   PluginSettingValue,
 } from '@repo/contracts/plugins';
-import { PluginService } from '@repo/engine/plugins';
+import { discoverPlugins } from '@repo/engine/plugins';
 import type { PluginTestOptions } from './test-types';
 
 export type ConfiguredTest = PluginTestOptions & {
@@ -43,10 +43,10 @@ function settingsRegistry(
 }
 
 async function discover(options: PluginTestOptions): Promise<PluginManifest[]> {
-  const found = await new PluginService({
+  const found = await discoverPlugins({
     version: options.version,
     firstPartyPluginsDirectory: options.directory,
-  }).list();
+  });
 
   if (found.errors.length)
     throw new Error(found.errors.map(({ message }) => message).join('\n'));
