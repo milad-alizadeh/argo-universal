@@ -45,7 +45,7 @@ function Choice(props: {
   return (
     <View className="flex-row items-center gap-1.5 -mr-1.5 wide:-mr-1.25">
       <Text role="body">{props.summary}</Text>
-      <Icon name={chevronName(props.disclosure)} size="sm" {...chevronLook} />
+      <Icon name={chevronName(props.disclosure)} {...chevronLook} />
     </View>
   );
 }

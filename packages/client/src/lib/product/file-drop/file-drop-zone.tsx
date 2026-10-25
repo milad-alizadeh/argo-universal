@@ -82,7 +82,7 @@ export function FileDropLabel(): React.JSX.Element {
     <View className="pointer-events-none absolute inset-0 items-center justify-center">
       <View className="rounded-full shadow-control">
         <View className="flex-row items-center gap-1.5 rounded-full bg-card px-3.5 py-2 shadow-hairline">
-          <Icon size="sm" name="attach" />
+          <Icon name="attach" />
           <Text role="body">Drop files to attach</Text>
         </View>
       </View>

@@ -63,7 +63,7 @@ function TabLabel({
 
   return (
     <>
-      <Icon name={tab.icon} size="sm" tone={tone} />
+      <Icon name={tab.icon} tone={tone} />
       <Text role="body" tone={tone} numberOfLines={1} className="font-medium">
         {tab.label}
       </Text>

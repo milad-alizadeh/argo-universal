@@ -106,12 +106,8 @@ export function PlanSteps({ entries }: StepsListProps): JSX.Element {
 
 function IdleStepIndicator({ completed }: { completed: boolean }): JSX.Element {
   return completed ? (
-    <Icon size="sm" name="check" className={mutedTextClassName} />
+    <Icon name="check" className={mutedTextClassName} />
   ) : (
-    <Icon
-      size="sm"
-      name="pending"
-      className="text-focus wide:text-muted-foreground"
-    />
+    <Icon name="pending" className="text-focus wide:text-muted-foreground" />
   );
 }

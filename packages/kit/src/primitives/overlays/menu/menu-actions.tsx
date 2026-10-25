@@ -155,7 +155,7 @@ function ChoiceCheck({
   if (selected === undefined) return null;
 
   return (
-    <IconSlot size="sm">
+    <IconSlot>
       {selected ? <SelectedCheck className="text-foreground" /> : null}
     </IconSlot>
   );

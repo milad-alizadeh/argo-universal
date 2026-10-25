@@ -63,11 +63,7 @@ export function ElicitationOutcome({
 function OutcomeSummary({ label, count }: SummaryProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-1.5">
-      <Icon
-        name="question"
-        size="sm"
-        className="shrink-0 text-muted-foreground"
-      />
+      <Icon name="question" className="shrink-0 text-muted-foreground" />
       <MutedText>{label}</MutedText>
       <MutedText>
         {count} {count === 1 ? 'question' : 'questions'}

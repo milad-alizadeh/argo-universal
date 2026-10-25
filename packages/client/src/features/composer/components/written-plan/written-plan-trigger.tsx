@@ -18,7 +18,7 @@ export function WrittenPlanTrigger(
 ): React.JSX.Element {
   return (
     <Pressable {...triggerProps(props)}>
-      <Icon size="sm" name="file-text" className="text-muted-foreground" />
+      <Icon name="file-text" className="text-muted-foreground" />
       <Text role="secondary" className={cn(!props.wide && 'text-foreground')}>
         Written plan
       </Text>

@@ -119,9 +119,7 @@ function CheckoutIcon({
 }: {
   newWorktree: boolean;
 }): React.JSX.Element {
-  return (
-    <Icon size="sm" name={newWorktree ? 'branch' : 'folder'} tone="muted" />
-  );
+  return <Icon name={newWorktree ? 'branch' : 'folder'} tone="muted" />;
 }
 
 function checkoutTrigger({

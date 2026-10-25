@@ -28,7 +28,7 @@ export const selectItem = (option: FieldPickerOption): React.JSX.Element => (
 );
 
 const Check = (): React.JSX.Element => (
-  <IconSlot size="sm">
+  <IconSlot>
     <RadixSelect.ItemIndicator asChild>
       <View>
         <SelectedCheck className="text-muted-foreground shrink-0" />

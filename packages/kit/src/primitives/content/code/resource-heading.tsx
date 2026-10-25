@@ -49,11 +49,7 @@ function ResourceUri({ uri }: { uri: string }): React.JSX.Element {
 function ResourceIcon({ uri }: { uri: string }): React.JSX.Element {
   return (
     <View className="h-6 w-icon-md shrink-0 items-center justify-center wide-type:h-5">
-      <Icon
-        size="sm"
-        name={resourceIcon(uri)}
-        className="text-muted-foreground"
-      />
+      <Icon name={resourceIcon(uri)} className="text-muted-foreground" />
     </View>
   );
 }

@@ -121,7 +121,7 @@ function ScreenFooter({ text }: { text?: string }): ReactNode {
 
   return (
     <View className="flex-row items-center px-4">
-      {Platform.OS === 'android' ? <Icon name="info" size="sm" /> : null}
+      {Platform.OS === 'android' ? <Icon name="info" /> : null}
       <ListFooter text={text} />
     </View>
   );

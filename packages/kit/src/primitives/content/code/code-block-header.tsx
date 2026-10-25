@@ -48,7 +48,7 @@ function LanguageTitle({
 }: Pick<CodeBlockHeaderProps, 'title'>): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-1.5 pr-2">
-      <Icon name={languageIcon(title)} size="sm" tone="muted" />
+      <Icon name={languageIcon(title)} tone="muted" />
       <CodeBlockTitle title={title} />
     </View>
   );

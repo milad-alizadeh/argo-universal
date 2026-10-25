@@ -124,7 +124,7 @@ function TriggerLeading(
 
   if (!props.icon) return null;
 
-  return <Icon name={props.icon} size="sm" tone={iconTone(props.tone)} />;
+  return <Icon name={props.icon} tone={iconTone(props.tone)} />;
 }
 
 function iconTone(tone: MenuTriggerProps['tone']): 'danger' | 'muted' {

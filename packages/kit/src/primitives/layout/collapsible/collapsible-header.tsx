@@ -84,7 +84,7 @@ function HeaderIcon(props: CollapsibleHeaderProps): ReactElement | null {
 
   return (
     <LineSlot>
-      <Icon name={props.icon} size="sm" tone={props.iconTone} />
+      <Icon name={props.icon} tone={props.iconTone} />
     </LineSlot>
   );
 }
