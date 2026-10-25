@@ -28,7 +28,7 @@ function HiddenText({
       role={textRole}
       numberOfLines={1}
       aria-hidden
-      className="text-transparent"
+      className="opacity-0"
     >
       {text}
     </Text>
