@@ -4,7 +4,6 @@ import { listItemProps } from '../kit-props';
 import { openChange } from '../overlay-kit-props';
 import { handler, part, stringLabel } from '../plugin-part-schema-utils';
 import { perSizeClass } from '../schema-size-class';
-import { wireParts } from '../wire-parts';
 
 const inspectorProps = z.object({
   title: stringLabel.describe(
@@ -45,12 +44,12 @@ const settingsLayoutProps = z.object({
 });
 
 export const scaffoldsPartSchemas = {
-  Page: wireParts.Page,
-  ListDetail: wireParts.ListDetail,
   Inspector: part(
     'Secondary detail about what is open: its own column on wide screens and a Sheet on compact ones.',
     inspectorProps,
     {
+      group: 'scaffolds',
+      wire: false,
       children: true,
       slots: { actions: ['ActionList'] },
       events: { onOpenChange: openChange(inspectorProps) },
@@ -59,6 +58,11 @@ export const scaffoldsPartSchemas = {
   SettingsLayout: part(
     'Settings pages: a grouped list of links beside the page shown on wide screens; on compact ones the list pushes each page.',
     settingsLayoutProps,
-    { children: true, slots: { empty: ['EmptyState'] } },
+    {
+      group: 'scaffolds',
+      wire: false,
+      children: true,
+      slots: { empty: ['EmptyState'] },
+    },
   ),
 };

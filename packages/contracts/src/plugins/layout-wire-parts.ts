@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { spacingSteps } from '../kit-tokens';
-import { gridAccessibility } from './part-accessibility-metadata';
 import { onPress } from './plugin-part-props';
 import { part } from './plugin-part-schema-utils';
 import { perSizeClass } from './schema-size-class';
@@ -47,12 +46,27 @@ const scrollViewProps = z.object({
 });
 
 export const layoutWireParts = {
-  Spacer: part('Flexible space along its parent Stack direction.', spacerProps),
+  Spacer: part(
+    'Flexible space along its parent Stack direction.',
+    spacerProps,
+    {
+      group: 'layout',
+    },
+  ),
   Grid: part('Static equal-column grid; use List for long grids.', gridProps, {
-    accessibility: gridAccessibility,
+    group: 'layout',
+    accessibility: {
+      keyboard:
+        'Grid is a static layout; keyboard focus moves through interactive children in platform order.',
+      voiceOver:
+        'VoiceOver traverses the Grid children in source order; the layout adds no grid navigation semantics.',
+      talkBack:
+        'TalkBack traverses the Grid children in source order; the layout adds no grid navigation semantics.',
+    },
     children: true,
   }),
   Surface: part('A named Surface with fill, radius and depth.', surfaceProps, {
+    group: 'layout',
     children: true,
     slots: { actions: ['ActionList'] },
     appearance:
@@ -62,6 +76,7 @@ export const layoutWireParts = {
     'A card on the card Surface: media, an icon, title and subtitle, one action and a body.',
     cardProps,
     {
+      group: 'layout',
       children: true,
       slots: {
         media: ['Image', 'Video', 'Svg'],
@@ -84,6 +99,7 @@ export const layoutWireParts = {
     'A scroll container owning its scroll fade.',
     scrollViewProps,
     {
+      group: 'layout',
       children: true,
     },
   ),

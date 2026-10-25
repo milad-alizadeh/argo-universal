@@ -32,6 +32,7 @@ export const pageWirePart = part(
   'A page with a title, header Actions, a primary Action, optional search, and content.',
   pageProps,
   {
+    group: 'scaffolds',
     children: true,
     root: true,
     slots: {

@@ -63,19 +63,19 @@ export const Action: PluginComponents['Action'];
 
 export const Picker: PluginComponents['Picker'];
 
-export const Switch: PluginComponents['Switch'];
+export const SplitButton: PluginComponents['SplitButton'];
+
+export const TextInput: PluginComponents['TextInput'];
 
 export const Checkbox: PluginComponents['Checkbox'];
 
-export const Slider: PluginComponents['Slider'];
+export const Switch: PluginComponents['Switch'];
 
-export const TextInput: PluginComponents['TextInput'];
+export const Slider: PluginComponents['Slider'];
 
 export const DatePicker: PluginComponents['DatePicker'];
 
 export const Form: PluginComponents['Form'];
-
-export const SplitButton: PluginComponents['SplitButton'];
 
 export const IconButton: PluginComponents['IconButton'];
 
@@ -93,6 +93,16 @@ export const Avatar: PluginComponents['Avatar'];
 
 export const Icon: PluginComponents['Icon'];
 
+export const Text: PluginComponents['Text'];
+
+export const Button: PluginComponents['Button'];
+
+export const Stack: PluginComponents['Stack'];
+
+export const Svg: PluginComponents['Svg'];
+
+export const EmptyState: PluginComponents['EmptyState'];
+
 export const Canvas: PluginComponents['Canvas'] & {
   Rect: PluginComponents['Canvas.Rect'];
   Circle: PluginComponents['Canvas.Circle'];
@@ -101,15 +111,5 @@ export const Canvas: PluginComponents['Canvas'] & {
   Text: PluginComponents['Canvas.Text'];
   Group: PluginComponents['Canvas.Group'];
 };
-
-export const Text: PluginComponents['Text'];
-
-export const Button: PluginComponents['Button'];
-
-export const Stack: PluginComponents['Stack'];
-
-export const EmptyState: PluginComponents['EmptyState'];
-
-export const Svg: PluginComponents['Svg'];
 
 export const ListSection: PluginComponents['List.Section'];

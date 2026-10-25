@@ -6,32 +6,12 @@ import type {
   ResolvedPartOptions,
 } from './plugin-part-options';
 import { schemaProperties } from './schema-properties';
+import type { WirePartDefinition } from './wire-part-definition';
 import type { WirePartReference } from './wire-part-reference';
-import type { WirePartDefinition } from './wire-parts';
 
 export const noSlots: Record<string, readonly string[]> = {};
 
 export const noEvents: Record<string, z.ZodType> = {};
-
-export const containerParts = [
-  'Text',
-  'Button',
-  'Icon',
-  'Image',
-  'Pill',
-  'Label',
-] as const;
-
-export const actions = ['Button', 'IconButton', 'Link', 'ActionList'] as const;
-
-export const rows = [
-  'ListItem',
-  'Text',
-  'Label',
-  'Pill',
-  'StatusDot',
-  'ProgressBar',
-] as const;
 
 const defaultAppearance =
   'Uses Argo semantic tokens, which adapt to light and dark appearance. No arbitrary color or Image prop is declared unless listed below.';
@@ -60,6 +40,7 @@ function partReference(input: PartReferenceInput): WirePartReference {
 }
 
 const defaultOptions = {
+  wire: true,
   slots: noSlots,
   events: noEvents,
   children: false,
@@ -67,7 +48,7 @@ const defaultOptions = {
   label: '',
   appearance: defaultAppearance,
   accessibility: {},
-} satisfies Required<Omit<PartOptions, 'container'>>;
+} satisfies Required<Omit<PartOptions, 'container' | 'wireProps' | 'group'>>;
 
 function resolveOptions(
   schema: z.ZodType,
@@ -136,27 +117,44 @@ function definition(
 
 type PartStructure = Pick<
   WirePartDefinition,
-  'container' | 'children' | 'root' | 'slots' | 'events'
+  | 'container'
+  | 'children'
+  | 'root'
+  | 'slots'
+  | 'events'
+  | 'group'
+  | 'wire'
+  | 'wireProps'
 >;
 
 function structure(config: ResolvedPartOptions): PartStructure {
-  const { container, children, root, slots, events } = config;
+  const { container, children, root, slots, events, group, wire, wireProps } =
+    config;
 
-  return { container, children, root, slots, events };
+  return {
+    container,
+    children,
+    root,
+    slots,
+    events,
+    group,
+    wire,
+    ...(wireProps && { wireProps }),
+  };
 }
 
 export function part<
   Schema extends z.ZodType,
-  const Options extends PartOptions = Record<never, never>,
+  const Options extends PartOptions,
 >(
   summary: string,
   schema: Schema,
-  options?: Options,
+  options: Options,
 ): PartDefinition<Schema, Options>;
 export function part(
   summary: string,
-  schema: z.ZodType = z.object({}),
-  options: PartOptions = {},
+  schema: z.ZodType,
+  options: PartOptions,
 ): WirePartDefinition {
   describeProps(schema);
 

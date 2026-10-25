@@ -31,6 +31,7 @@ export const scaffoldWireParts = {
     'A list beside its selected item on wide windows; on compact ones the list drills in to the item.',
     z.object({}),
     {
+      group: 'scaffolds',
       root: true,
       // The detail is a whole page: its own title and Actions.
       slots: {
@@ -52,6 +53,7 @@ export const scaffoldWireParts = {
     'An item page: content beside its Metadata on wide screens, above it on narrow ones.',
     detailProps,
     {
+      group: 'scaffolds',
       children: true,
       slots: { metadata: ['Metadata'], actions: ['ActionList'] },
     },
@@ -59,21 +61,27 @@ export const scaffoldWireParts = {
   Metadata: part(
     'Read-only label/value fields for a detail view.',
     metadataProps,
-    { children: metadataChildParts },
+    { group: 'scaffolds', children: metadataChildParts },
   ),
-  'Metadata.Label': part('A text Metadata field.', metadataLabelProps),
+  'Metadata.Label': part('A text Metadata field.', metadataLabelProps, {
+    group: 'scaffolds',
+  }),
   'Metadata.Link': part(
     'A link Metadata field, currently drawn as plain text.',
     metadataLinkProps,
+    { group: 'scaffolds' },
   ),
   'Metadata.Pills': part(
     'A Metadata field containing Pills.',
     metadataPillsProps,
-    { children: ['Pill'] },
+    { group: 'scaffolds', children: ['Pill'] },
   ),
   'Metadata.StatusDot': part(
     'A labelled status Metadata field.',
     metadataStatusDotProps,
+    { group: 'scaffolds' },
   ),
-  'Metadata.Avatar': part('A person Metadata field.', metadataAvatarProps),
+  'Metadata.Avatar': part('A person Metadata field.', metadataAvatarProps, {
+    group: 'scaffolds',
+  }),
 };

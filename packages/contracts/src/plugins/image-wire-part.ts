@@ -53,4 +53,5 @@ export const imageProps = z.object({
 export const imageWirePart = part(
   'An image loaded through the Server, with loading and error frames.',
   imageProps,
+  { group: 'content' },
 );

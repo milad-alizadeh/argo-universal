@@ -15,6 +15,7 @@ export const tableWireParts = {
       'Rows of data in columns on regular widths; a list of rows, or a sideways-scrolling grid, on compact widths.',
       tableProps,
       {
+        group: 'lists',
         children: ['Table.Row'],
         events: {
           // The Plugin sorts the rows; the header stays live while it answers.
@@ -41,6 +42,7 @@ export const tableWireParts = {
     'One Table row: a cell per column and an optional row ActionList.',
     tableRowProps,
     {
+      group: 'lists',
       container: true,
       children: ['Table.Cell'],
       slots: { actions: ['ActionList'] },
@@ -53,6 +55,7 @@ export const tableWireParts = {
     "One cell; text alone, or a Pill, Label, StatusDot or Text drawn in the text's place.",
     tableCellProps,
     {
+      group: 'lists',
       children: ['Text', 'Label', 'Pill', 'StatusDot'],
       label: 'The required `text` is the spoken value.',
     },

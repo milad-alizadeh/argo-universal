@@ -9,7 +9,6 @@ import {
 import { listExpansion } from './list-expansion';
 import { rowPress } from './list-kit-props';
 import { listMediaParts } from './list-media-parts';
-import { progressBarAccessibility } from './part-accessibility-metadata';
 import { echoes } from './plugin-part-props';
 import { part } from './plugin-part-schema-utils';
 import { settingsRowWireParts } from './settings-row-wire-parts';
@@ -17,97 +16,78 @@ import { settingsRowWireParts } from './settings-row-wire-parts';
 export const listWireParts = {
   ...settingsRowWireParts,
   List: {
-    props: contentListProps,
-    expansion: listExpansion,
-    container: true,
-    children: true,
-    slots: {
-      empty: ['Text', 'Stack', 'EmptyState'],
-      header: ['Text', 'Label'],
-    },
-    events: {},
-    reference: part(
+    ...part(
       'A content list with rows, adaptive media grids or horizontal shelves.',
       contentListProps,
       {
+        group: 'lists',
         children: true,
+        slots: {
+          empty: ['Text', 'Stack', 'EmptyState'],
+          header: ['Text', 'Label'],
+        },
       },
-    ).reference,
+    ),
+    expansion: listExpansion,
   },
-  'List.Section': {
-    props: listSectionProps,
-    container: true,
-    children: true,
-    slots: { leading: ['Text', 'Label'], trailing: ['Text', 'Label', 'Pill'] },
-    events: {
-      onSelectionChange: echoes(listSectionProps, 'selection'),
+  'List.Section': part(
+    'A titled List section with optional subtitle and footer.',
+    listSectionProps,
+    {
+      group: 'lists',
+      children: true,
+      slots: {
+        leading: ['Text', 'Label'],
+        trailing: ['Text', 'Label', 'Pill'],
+      },
+      events: {
+        onSelectionChange: echoes(listSectionProps, 'selection'),
+      },
     },
-    reference: part(
-      'A titled List section with optional subtitle and footer.',
-      listSectionProps,
-      {
-        children: true,
+  ),
+  ListItem: part(
+    'A slotted row or media tile, arranged by its List, with selection, a corner badge and context Actions.',
+    listItemProps,
+    {
+      group: 'lists',
+      container: true,
+      children: false,
+      slots: {
+        actions: ['ActionList'],
+        media: listMediaParts,
+        leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
+        trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],
+        meta: ['Label', 'Pill'],
       },
-    ).reference,
-  },
-  ListItem: {
-    props: listItemProps,
-    container: true,
-    children: false,
-    slots: {
-      actions: ['ActionList'],
-      media: listMediaParts,
-      leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
-      trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],
-      meta: ['Label', 'Pill'],
+      events: { onPress: rowPress },
+      label:
+        'The title and optional value supply the accessible name; accessibilityLabel overrides it.',
     },
-    events: { onPress: rowPress },
-    reference: part(
-      'A slotted row or media tile, arranged by its List, with selection, a corner badge and context Actions.',
-      listItemProps,
-      {
-        container: true,
-        label:
-          'The title and optional value supply the accessible name; accessibilityLabel overrides it.',
+  ),
+  Label: part(
+    'Short text with an optional icon and semantic tone.',
+    labelProps,
+    {
+      group: 'content',
+      label:
+        'The text supplies the accessible name; accessibilityLabel overrides it.',
+    },
+  ),
+  ProgressBar: part(
+    'A determinate progress indicator with an optional running sweep.',
+    progressBarProps,
+    {
+      group: 'status',
+      accessibility: {
+        keyboard: 'ProgressBar adds no keyboard focus stop or shortcut.',
+        voiceOver:
+          'VoiceOver exposes a progress indicator and announces its value with accessibilityLabel when supplied.',
+        talkBack:
+          'TalkBack exposes a progress indicator and announces its value with accessibilityLabel when supplied.',
       },
-    ).reference,
-  },
-  Label: {
-    props: labelProps,
-    container: false,
-    children: false,
-    slots: {},
-    events: {},
-    reference: part(
-      'Short text with an optional icon and semantic tone.',
-      labelProps,
-      {
-        label:
-          'The text supplies the accessible name; accessibilityLabel overrides it.',
-      },
-    ).reference,
-  },
-  ProgressBar: {
-    props: progressBarProps,
-    container: false,
-    children: false,
-    slots: {},
-    events: {},
-    reference: part(
-      'A determinate progress indicator with an optional running sweep.',
-      progressBarProps,
-      {
-        accessibility: progressBarAccessibility,
-      },
-    ).reference,
-  },
-  Pill: {
-    props: pillProps,
-    container: false,
-    children: false,
-    slots: {},
-    events: {},
-    reference: part('Static short text with a semantic tone.', pillProps)
-      .reference,
-  },
+    },
+  ),
+  Pill: part('Static short text with a semantic tone.', pillProps, {
+    group: 'status',
+  }),
 } as const;

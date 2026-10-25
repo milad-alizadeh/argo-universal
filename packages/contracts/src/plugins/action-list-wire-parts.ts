@@ -9,6 +9,7 @@ import { part } from './plugin-part-schema-utils';
 export const actionListWireParts = {
   ActionList: {
     ...part('Actions offered by a page, row or tile.', actionListProps, {
+      group: 'actions',
       children: true,
       slots: { trigger: ['ListItem', 'Text', 'Stack'] },
       label:
@@ -24,12 +25,14 @@ export const actionListWireParts = {
     })),
   },
   'ActionList.Section': part('A group of Actions.', actionSectionProps, {
+    group: 'actions',
     children: true,
   }),
   Action: part(
     'One Action declared inside ActionList, SplitButton or Alert: it runs on press, or opens a submenu of keyed ActionList.Section children.',
     actionEntryProps,
     {
+      group: 'actions',
       // Only a submenu holds children; a press Action's are ignored.
       children: ['ActionList.Section'],
       container: false,

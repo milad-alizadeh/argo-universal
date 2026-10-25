@@ -1,49 +1,51 @@
-import { actionsPartSchemas } from './parts/actions';
+import { actionListWireParts } from './action-list-wire-parts';
+import { canvasWireParts } from './canvas-wire-parts';
+import { coreWireParts } from './core-wire-parts';
+import { emptyStateWirePart } from './empty-state-wire-part';
+import { iconButtonPart } from './icon-button-part';
+import { imageWirePart } from './image-wire-part';
+import { layoutWireParts } from './layout-wire-parts';
+import { listWireParts } from './list-wire-parts';
+import { mediaWireParts } from './media-wire-parts';
+import { overlayWireParts } from './overlay-wire-parts';
 import { contentPartSchemas } from './parts/content';
 import { fieldsPartSchemas } from './parts/fields';
 import { inputsPartSchemas } from './parts/inputs';
 import { layoutPartSchemas } from './parts/layout';
-import { listsPartSchemas } from './parts/lists';
 import { overlaysPartSchemas } from './parts/overlays';
 import { scaffoldsPartSchemas } from './parts/scaffolds';
 import { statusPartSchemas } from './parts/status';
 import { visualPartSchemas } from './parts/visual';
-import { wireParts } from './wire-parts';
-import type { WirePartDefinition } from './wire-parts';
+import { proseWireParts } from './prose-wire-parts';
+import { scaffoldWireParts } from './scaffold-wire-parts';
+import { selectionPartSchemas } from './selection-parts';
+import { tableWireParts } from './table-wire-parts';
+import type { WirePartDefinition } from './wire-part-definition';
 
+// Every kit component, declared once where its props live; `wire` marks the ones a Plugin can send (wire-parts.ts) and `group` the kit folder that draws it.
 export const pluginPartSchemas = {
-  ...layoutPartSchemas,
-  ...contentPartSchemas,
-  ...statusPartSchemas,
-  ...actionsPartSchemas,
+  ...proseWireParts,
+  ...layoutWireParts,
+  ...scaffoldWireParts,
+  ...listWireParts,
+  ...tableWireParts,
+  ...actionListWireParts,
+  ...selectionPartSchemas,
   ...inputsPartSchemas,
   ...fieldsPartSchemas,
-  ...listsPartSchemas,
+  IconButton: iconButtonPart,
+  ...overlayWireParts,
+  ...mediaWireParts,
+  Image: imageWirePart,
+  ...coreWireParts,
+  EmptyState: emptyStateWirePart,
+  ...canvasWireParts,
+  ...contentPartSchemas,
+  ...layoutPartSchemas,
   ...overlaysPartSchemas,
   ...scaffoldsPartSchemas,
+  ...statusPartSchemas,
   ...visualPartSchemas,
-  ...wireParts,
-  // The kit receives local handlers; a Plugin can leave its draft controls without wire handlers.
-  Picker: inputsPartSchemas.Picker,
-  Switch: inputsPartSchemas.Switch,
-  Checkbox: inputsPartSchemas.Checkbox,
-  Slider: inputsPartSchemas.Slider,
-  TextInput: inputsPartSchemas.TextInput,
-  SplitButton: actionsPartSchemas.SplitButton,
 } satisfies Record<string, WirePartDefinition>;
-
-// Which group file each part is declared in; the kit draws the same group under the same name (tools/kit-pairing-rules.mts).
-export const pluginPartGroups = {
-  actions: actionsPartSchemas,
-  content: contentPartSchemas,
-  fields: fieldsPartSchemas,
-  inputs: inputsPartSchemas,
-  layout: layoutPartSchemas,
-  lists: listsPartSchemas,
-  overlays: overlaysPartSchemas,
-  scaffolds: scaffoldsPartSchemas,
-  status: statusPartSchemas,
-  visual: visualPartSchemas,
-} as const;
 
 export type PluginPartName = keyof typeof pluginPartSchemas;
