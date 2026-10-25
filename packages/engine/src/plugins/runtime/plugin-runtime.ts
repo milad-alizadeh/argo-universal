@@ -34,7 +34,7 @@ export class PluginRuntime {
 
   constructor(
     private readonly log: (line: string) => void,
-    private readonly services: PluginServices,
+    readonly services: PluginServices,
     clock: PluginClock = realClock,
   ) {
     this.host = new HostConnection(this.callbacks());

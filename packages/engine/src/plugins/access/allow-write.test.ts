@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CapabilityRefusal } from './capability-refusal';
-import { allowWrite, type Roots } from './plugin-access-rules';
+import { type Roots } from './plugin-access-rules';
+import { allowWrite } from './plugin-write-rules';
 
 const data = '/store/data';
 
@@ -19,6 +20,7 @@ const reasons = {
   code: `${shown} is in the Plugin's code folder`,
   outside: `${shown} is outside the Plugin's data folder`,
   git: `${shown} would make a git repository`,
+  database: `${shown} is the Plugin's database, which argo.storage owns`,
 };
 
 type Case = {
@@ -65,6 +67,11 @@ const refusals: Case[] = [
   },
   { name: 'a path above the data folder', target: '/store', reason: 'outside' },
   { name: 'an unrelated path', target: '/etc/passwd', reason: 'outside' },
+  ...['plugin.db', 'plugin.db-wal', 'plugin.db-shm'].map((file): Case => ({
+    name: `${file} in the data folder`,
+    target: `/store/data/${file}`,
+    reason: 'database',
+  })),
   {
     name: 'a `.git` entry in the data folder',
     target: '/store/data/.git',
