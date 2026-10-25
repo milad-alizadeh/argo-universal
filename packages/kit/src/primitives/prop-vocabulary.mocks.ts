@@ -29,6 +29,7 @@ import type * as PopoverKit from '#primitives/overlays/popover';
 import type * as SheetKit from '#primitives/overlays/sheet';
 import type * as ToastKit from '#primitives/overlays/toast';
 import type * as CalloutKit from '#primitives/status/callout';
+import type * as ChevronKit from '#primitives/status/chevron';
 import type * as CountBadgeKit from '#primitives/status/count-badge';
 import type * as DisclosureChevronKit from '#primitives/status/disclosure-chevron';
 import type * as OrbKit from '#primitives/status/orb';
@@ -62,6 +63,7 @@ export type Primitives = {
   CountBadgeProps: CountBadgeKit.CountBadgeProps;
   DialogContentProps: DialogKit.DialogContentProps;
   DialogRegionProps: DialogKit.DialogRegionProps;
+  ChevronProps: ChevronKit.ChevronProps;
   DisclosureChevronProps: DisclosureChevronKit.DisclosureChevronProps;
   DrillProps: DrillKit.DrillProps;
   DrawerItemProps: DrawerItemKit.DrawerItemProps;
@@ -72,6 +74,8 @@ export type Primitives = {
   IconButtonProps: IconButtonKit.IconButtonProps;
   IconButtonSize: IconButtonKit.IconButtonSize;
   IconProps: IconKit.IconProps;
+  IconSizeProviderProps: IconKit.IconSizeProviderProps;
+  IconSizing: IconKit.IconSizing;
   IconSlotProps: IconKit.IconSlotProps;
   IconSpinnerProps: IconKit.IconSpinnerProps;
   LiquidGlassProps: LiquidGlassKit.LiquidGlassProps;
