@@ -62,12 +62,26 @@ function writeReport(
 ): void {
   for (const key of ['hooks', 'calls', 'slots'] as const)
     write(`${key}: ${formatUses(report[key])}`);
+  writeOrder(report.manifest, write);
 
   for (const diagnostic of report.diagnostics)
     write(
       `${diagnostic.file}:${diagnostic.line}:${diagnostic.column}: ${diagnostic.message}`,
     );
   write(validationMessage(report.diagnostics.length));
+}
+
+type ValidatedManifest = Awaited<ReturnType<typeof validatePlugin>>['manifest'];
+
+const rendersSlots = (
+  manifest: ValidatedManifest,
+): manifest is NonNullable<ValidatedManifest> =>
+  (manifest?.contributes.hooks ?? []).includes('ui.render');
+
+// Where the Plugin's `ui.render` Hooks sit in a Replaceable Slot's chain.
+function writeOrder(manifest: ValidatedManifest, write: Write): void {
+  if (rendersSlots(manifest))
+    write(`order: ui.render ${manifest.contributes.renderOrder ?? 0}`);
 }
 
 function formatUses(uses: string[]): string {

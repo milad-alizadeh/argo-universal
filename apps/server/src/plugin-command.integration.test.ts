@@ -73,6 +73,35 @@ it('validate reports the hello Plugin contributions', async () => {
   });
 }, 30_000);
 
+it('validate reports the declared ui.render order', async () => {
+  const directory = await fixture(
+    "export function register(argo) { argo.on('ui.render', (ctx, e, next) => next()); }",
+  );
+
+  const file = join(directory, 'plugin.json');
+
+  const manifest = PluginManifest.parse(
+    JSON.parse(await readFile(file, 'utf8')),
+  );
+
+  await writeFile(
+    file,
+    JSON.stringify({
+      ...manifest,
+      contributes: {
+        ...manifest.contributes,
+        hooks: ['ui.render'],
+        renderOrder: 5,
+      },
+    }),
+  );
+
+  expect(await run('validate', directory)).toMatchObject({
+    code: 0,
+    output: expect.stringContaining('order: ui.render 5'),
+  });
+}, 30_000);
+
 it(
   'test runs the hello Plugin worker interaction',
   async () => {

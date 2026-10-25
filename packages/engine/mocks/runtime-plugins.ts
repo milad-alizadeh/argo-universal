@@ -24,6 +24,7 @@ type FixturePlugin = {
   // The Slots the manifest declares.
   slots?: SlotId[];
   accounts?: PluginManifest['contributes']['accounts'];
+  renderOrder?: number;
 };
 
 export async function createRuntimePlugins(
@@ -67,9 +68,16 @@ async function writeManifest({
   slots,
   settings,
   accounts,
+  renderOrder,
 }: Pick<
   FixturePlugin,
-  'id' | 'capabilities' | 'hooks' | 'slots' | 'settings' | 'accounts'
+  | 'id'
+  | 'capabilities'
+  | 'hooks'
+  | 'slots'
+  | 'settings'
+  | 'accounts'
+  | 'renderOrder'
 > & {
   folder: string;
   main: string;
@@ -96,6 +104,7 @@ async function writeManifest({
         slots,
         settings,
         accounts,
+        renderOrder,
       },
     }),
   );

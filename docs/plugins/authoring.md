@@ -55,6 +55,7 @@ pnpm test
 
 `argo-plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
 It reports Hook registrations, `argo` calls, and Slot registrations from the entry and its imports.
+For a Plugin that hooks `ui.render`, it also reports the declared order, as `order: ui.render <n>`.
 Diagnostics include the file, line, column, and refusal reason. A refused Plugin produces a non-zero exit code.
 
 The command checks source without starting the Plugin or running its machine calls.
@@ -205,6 +206,17 @@ The failure subscription records one non-fatal drawing failure per Plugin.
 The core Hook events are `prompt.submit`, `tool.check`, and `process.spawn` (ADR-0038).
 Both `prompt.submit` and `tool.check` carry `sessionId` and `projectId`.
 The separate `ui.render` Hook draws Replaceable Slots with its existing payload and answer.
+
+Order a Plugin's `ui.render` Hooks with `contributes.renderOrder` in `plugin.json`, an integer that defaults to 0 (ADR-0035).
+A Feed row's chain runs first-party Plugins first, then lower `renderOrder` first, then by Plugin id; folder names do not change it.
+The order is the Plugin's, so it covers all of its `ui.render` Hooks and only those. The other events keep worker order (ADR-0038).
+Declaring `renderOrder` without the `ui.render` Hook is a manifest error.
+The Server logs, once per Plugin and Slot, each Plugin that changed a row's props, and each Plugin shadowed because a Hook before it answered with a tree:
+
+```text
+Plugin <id>: changed <slotId> props
+Plugin <id>: <slotId> shadowed by Plugin <id>'s tree
+```
 
 Argo sets each Hook's wall-clock budget: 2000 ms for `prompt.submit`, and 10000 ms for the other events, including `ui.render`.
 Only time spent waiting on `next` stops the budget. Calls to `argo` count against it.
