@@ -1,5 +1,6 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import canvasFixture from '@repo/mocks/plugins/canvas.json' with { type: 'json' };
+import chartFixtures from '@repo/mocks/plugins/chart.json' with { type: 'json' };
 import { expect, it } from 'vitest';
 import { sanitizeTree } from './sanitize-tree';
 
@@ -59,6 +60,15 @@ it('keeps bounded token-based Chart and Canvas data', () => {
 
   expect(sanitizeTree(root)).toMatchObject({ root, refused: [] });
 });
+
+it.each(Object.entries(chartFixtures))(
+  'keeps the shared %s chart fixture',
+  (_name, props) => {
+    const root = node('Chart', props);
+
+    expect(sanitizeTree(root)).toMatchObject({ root, refused: [] });
+  },
+);
 
 it.each([
   { count: 20_000, reason: undefined },

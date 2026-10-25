@@ -94,6 +94,7 @@
     "tailwind-merge": "catalog:",
     "uniwind": "catalog:",
     "vaul": "catalog:",
+    "victory-native": "catalog:",
     "zod": "catalog:"
   },
   "peerDependencies": {

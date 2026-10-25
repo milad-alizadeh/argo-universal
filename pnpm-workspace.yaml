@@ -177,6 +177,8 @@ catalog:
   "@types/react-reconciler": 0.33.0
   react-reconciler: 0.33.0
   "@shopify/react-native-skia": 2.14.0
+  # Last line on Skia 2.x; 43 moves to react-native-skia v3 (ADR-0028).
+  victory-native: 42.0.1
   "@babel/parser": 7.29.9
   "@babel/types": 7.29.8
   expo-image: ~58.0.16

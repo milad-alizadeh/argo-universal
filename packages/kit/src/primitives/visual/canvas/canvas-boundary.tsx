@@ -5,12 +5,13 @@ import { Spinner } from '#primitives/status/spinner';
 
 interface Props {
   label: string;
-  source: ReactNode;
+  // A new source, such as a new scene or new series, retries a drawing that failed.
+  source: unknown;
   children: ReactNode;
 }
 
 interface State {
-  source?: ReactNode;
+  source?: unknown;
   failed: boolean;
 }
 
