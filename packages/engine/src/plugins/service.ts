@@ -137,10 +137,17 @@ export class PluginService {
     yield { type: 'contributors', pluginIds };
     yield* slotViews(
       this.deps.pluginRuntime.views,
-      { pluginIds, slot },
+      { pluginIds, slot, failed: this.slotFailed },
       connection,
     );
   }
+
+  private readonly slotFailed = (
+    pluginId: string,
+    slotId: string,
+    reason: string,
+  ): void =>
+    this.deps.pluginRuntime.contributionFailed(pluginId, slotId, reason);
 
   public async *render(
     input: ReplaceableInput,
