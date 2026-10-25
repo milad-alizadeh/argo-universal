@@ -1,0 +1,594 @@
+{
+  "line": {
+    "kind": "line",
+    "label": "Weekly visits and sign-ups",
+    "series": [
+      {
+        "name": "Visits",
+        "tone": "info",
+        "points": [
+          {
+            "x": 1,
+            "y": 12
+          },
+          {
+            "x": 2,
+            "y": 18
+          },
+          {
+            "x": 3,
+            "y": 15
+          },
+          {
+            "x": 4,
+            "y": 24
+          },
+          {
+            "x": 5,
+            "y": 30
+          },
+          {
+            "x": 6,
+            "y": 27
+          },
+          {
+            "x": 7,
+            "y": 36
+          },
+          {
+            "x": 8,
+            "y": 41
+          }
+        ]
+      },
+      {
+        "name": "Sign-ups",
+        "tone": "success",
+        "points": [
+          {
+            "x": 1,
+            "y": 4
+          },
+          {
+            "x": 2,
+            "y": 6
+          },
+          {
+            "x": 3,
+            "y": 5
+          },
+          {
+            "x": 4,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 12
+          },
+          {
+            "x": 6,
+            "y": 10
+          },
+          {
+            "x": 7,
+            "y": 15
+          },
+          {
+            "x": 8,
+            "y": 18
+          }
+        ]
+      }
+    ]
+  },
+  "bar": {
+    "kind": "bar",
+    "label": "Weekly visits",
+    "series": [
+      {
+        "name": "Visits",
+        "tone": "info",
+        "points": [
+          {
+            "x": 1,
+            "y": 12
+          },
+          {
+            "x": 2,
+            "y": 18
+          },
+          {
+            "x": 3,
+            "y": 15
+          },
+          {
+            "x": 4,
+            "y": 24
+          },
+          {
+            "x": 5,
+            "y": 30
+          },
+          {
+            "x": 6,
+            "y": 27
+          },
+          {
+            "x": 7,
+            "y": 36
+          },
+          {
+            "x": 8,
+            "y": 41
+          }
+        ]
+      }
+    ]
+  },
+  "groupedBar": {
+    "kind": "bar",
+    "label": "Weekly sign-ups and returns",
+    "series": [
+      {
+        "name": "Sign-ups",
+        "tone": "success",
+        "points": [
+          {
+            "x": 1,
+            "y": 4
+          },
+          {
+            "x": 2,
+            "y": 6
+          },
+          {
+            "x": 3,
+            "y": 5
+          },
+          {
+            "x": 4,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 12
+          },
+          {
+            "x": 6,
+            "y": 10
+          },
+          {
+            "x": 7,
+            "y": 15
+          },
+          {
+            "x": 8,
+            "y": 18
+          }
+        ]
+      },
+      {
+        "name": "Returns",
+        "tone": "warning",
+        "points": [
+          {
+            "x": 1,
+            "y": 2
+          },
+          {
+            "x": 2,
+            "y": 3
+          },
+          {
+            "x": 3,
+            "y": 4
+          },
+          {
+            "x": 4,
+            "y": 4
+          },
+          {
+            "x": 5,
+            "y": 6
+          },
+          {
+            "x": 6,
+            "y": 7
+          },
+          {
+            "x": 7,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 9
+          }
+        ]
+      }
+    ]
+  },
+  "stackedBar": {
+    "kind": "bar",
+    "label": "Weekly sign-ups and returns, stacked",
+    "stacked": true,
+    "series": [
+      {
+        "name": "Sign-ups",
+        "tone": "success",
+        "points": [
+          {
+            "x": 1,
+            "y": 4
+          },
+          {
+            "x": 2,
+            "y": 6
+          },
+          {
+            "x": 3,
+            "y": 5
+          },
+          {
+            "x": 4,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 12
+          },
+          {
+            "x": 6,
+            "y": 10
+          },
+          {
+            "x": 7,
+            "y": 15
+          },
+          {
+            "x": 8,
+            "y": 18
+          }
+        ]
+      },
+      {
+        "name": "Returns",
+        "tone": "warning",
+        "points": [
+          {
+            "x": 1,
+            "y": 2
+          },
+          {
+            "x": 2,
+            "y": 3
+          },
+          {
+            "x": 3,
+            "y": 4
+          },
+          {
+            "x": 4,
+            "y": 4
+          },
+          {
+            "x": 5,
+            "y": 6
+          },
+          {
+            "x": 6,
+            "y": 7
+          },
+          {
+            "x": 7,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 9
+          }
+        ]
+      }
+    ]
+  },
+  "area": {
+    "kind": "area",
+    "label": "Weekly visits",
+    "series": [
+      {
+        "name": "Visits",
+        "tone": "info",
+        "points": [
+          {
+            "x": 1,
+            "y": 12
+          },
+          {
+            "x": 2,
+            "y": 18
+          },
+          {
+            "x": 3,
+            "y": 15
+          },
+          {
+            "x": 4,
+            "y": 24
+          },
+          {
+            "x": 5,
+            "y": 30
+          },
+          {
+            "x": 6,
+            "y": 27
+          },
+          {
+            "x": 7,
+            "y": 36
+          },
+          {
+            "x": 8,
+            "y": 41
+          }
+        ]
+      }
+    ]
+  },
+  "stackedArea": {
+    "kind": "area",
+    "label": "Weekly visits by source",
+    "stacked": true,
+    "series": [
+      {
+        "name": "Sign-ups",
+        "tone": "success",
+        "points": [
+          {
+            "x": 1,
+            "y": 4
+          },
+          {
+            "x": 2,
+            "y": 6
+          },
+          {
+            "x": 3,
+            "y": 5
+          },
+          {
+            "x": 4,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 12
+          },
+          {
+            "x": 6,
+            "y": 10
+          },
+          {
+            "x": 7,
+            "y": 15
+          },
+          {
+            "x": 8,
+            "y": 18
+          }
+        ]
+      },
+      {
+        "name": "Returns",
+        "tone": "warning",
+        "points": [
+          {
+            "x": 1,
+            "y": 2
+          },
+          {
+            "x": 2,
+            "y": 3
+          },
+          {
+            "x": 3,
+            "y": 4
+          },
+          {
+            "x": 4,
+            "y": 4
+          },
+          {
+            "x": 5,
+            "y": 6
+          },
+          {
+            "x": 6,
+            "y": 7
+          },
+          {
+            "x": 7,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 9
+          }
+        ]
+      },
+      {
+        "name": "Visits",
+        "tone": "info",
+        "points": [
+          {
+            "x": 1,
+            "y": 12
+          },
+          {
+            "x": 2,
+            "y": 18
+          },
+          {
+            "x": 3,
+            "y": 15
+          },
+          {
+            "x": 4,
+            "y": 24
+          },
+          {
+            "x": 5,
+            "y": 30
+          },
+          {
+            "x": 6,
+            "y": 27
+          },
+          {
+            "x": 7,
+            "y": 36
+          },
+          {
+            "x": 8,
+            "y": 41
+          }
+        ]
+      }
+    ]
+  },
+  "scatter": {
+    "kind": "scatter",
+    "label": "Size against time",
+    "series": [
+      {
+        "name": "Items",
+        "tone": "accent",
+        "points": [
+          {
+            "x": 1,
+            "y": 3
+          },
+          {
+            "x": 2,
+            "y": 7
+          },
+          {
+            "x": 3,
+            "y": 4
+          },
+          {
+            "x": 4,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 6
+          },
+          {
+            "x": 6,
+            "y": 11
+          },
+          {
+            "x": 7,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 13
+          }
+        ]
+      }
+    ]
+  },
+  "pie": {
+    "kind": "pie",
+    "label": "Share by source",
+    "series": [
+      {
+        "name": "Search",
+        "tone": "info",
+        "points": [
+          {
+            "x": 0,
+            "y": 48
+          }
+        ]
+      },
+      {
+        "name": "Direct",
+        "tone": "success",
+        "points": [
+          {
+            "x": 0,
+            "y": 27
+          }
+        ]
+      },
+      {
+        "name": "Referral",
+        "tone": "warning",
+        "points": [
+          {
+            "x": 0,
+            "y": 15
+          }
+        ]
+      },
+      {
+        "name": "Other",
+        "tone": "muted",
+        "points": [
+          {
+            "x": 0,
+            "y": 10
+          }
+        ]
+      }
+    ]
+  },
+  "donut": {
+    "kind": "donut",
+    "label": "Share by source",
+    "series": [
+      {
+        "name": "Search",
+        "tone": "info",
+        "points": [
+          {
+            "x": 0,
+            "y": 48
+          }
+        ]
+      },
+      {
+        "name": "Direct",
+        "tone": "success",
+        "points": [
+          {
+            "x": 0,
+            "y": 27
+          }
+        ]
+      },
+      {
+        "name": "Referral",
+        "tone": "warning",
+        "points": [
+          {
+            "x": 0,
+            "y": 15
+          }
+        ]
+      },
+      {
+        "name": "Other",
+        "tone": "muted",
+        "points": [
+          {
+            "x": 0,
+            "y": 10
+          }
+        ]
+      }
+    ]
+  }
+}

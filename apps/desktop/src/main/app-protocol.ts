@@ -1,23 +1,13 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { net, protocol } from 'electron';
+import { contentSecurityPolicy } from './content-security-policy';
 
 const appScheme = 'app';
 
 export const appOrigin = `${appScheme}://app`;
 
 const temporaryRedirectStatus = 307;
-
-// The Expo web build inlines its style reset, and React Native Web inserts styles at runtime.
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  "script-src 'self' 'wasm-unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://cdn.agentclientprotocol.com http://127.0.0.1:*",
-  "font-src 'self' data:",
-  // Registry resources may also be fetched from the official CDN.
-  "connect-src 'self' data: https://cdn.agentclientprotocol.com ws://127.0.0.1:* http://127.0.0.1:*",
-].join('; ');
 
 // Runs before `ready`: a standard, secure scheme gets relative URLs and web storage.
 export function registerAppScheme(): void {
