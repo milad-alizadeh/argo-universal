@@ -1,21 +1,19 @@
-import { requireNativeView } from 'expo';
-import type { ReactElement } from 'react';
-import type { ViewProps } from 'react-native';
-import { SkeletonRedactedContext } from './skeleton-context';
+import type { ComponentRef, ReactElement } from 'react';
+import { View } from 'react-native';
+import { ignoreAttribute } from './skeleton-marks';
 import type { SkeletonIgnoreProps } from './skeleton-props';
 
-const NativeIgnore = requireNativeView<ViewProps>(
-  'ArgoSkeleton',
-  'ArgoSkeletonIgnoreView',
-);
+const markIgnored = (node: ComponentRef<typeof View> | null): void => {
+  if (node instanceof Element) node.setAttribute(ignoreAttribute, '');
+};
 
-// The native walk skips this subtree, so it stays as drawn; a Host inside it is not redacted either.
+// What a Skeleton walks skips this subtree: it stays as drawn, and so does what assistive technology reads of it.
 export function SkeletonIgnore({
   children,
 }: SkeletonIgnoreProps): ReactElement {
   return (
-    <SkeletonRedactedContext value={false}>
-      <NativeIgnore>{children}</NativeIgnore>
-    </SkeletonRedactedContext>
+    <View ref={markIgnored} className="contents">
+      {children}
+    </View>
   );
 }

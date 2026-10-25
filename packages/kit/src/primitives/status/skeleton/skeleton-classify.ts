@@ -1,45 +1,18 @@
-// Elements that draw themselves with no text node to measure: one placeholder each.
-const mediaTags = new Set([
-  'IMG',
-  'SVG',
-  'CANVAS',
-  'VIDEO',
-  'INPUT',
-  'TEXTAREA',
-  'SELECT',
-  'PROGRESS',
-  'METER',
-]);
-
-const controlRoles = new Set([
-  'switch',
-  'checkbox',
-  'radio',
-  'slider',
-  'progressbar',
-  'img',
-]);
+import { skeletonRules as rules } from './skeleton-rules.gen';
 
 const transparentEndings = [', 0)', '/ 0)'];
 
-// A fill thinner than this is a separator, which stays drawn.
-const hairline = 2;
-
-// A capsule or disc up to this size is a pill, avatar or small control: one placeholder for the whole of it.
-const smallControlHeight = 40;
-
-const smallControlWidth = 240;
-
 const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
-export function radiusOf(style: CSSStyleDeclaration, rect: DOMRect): number {
+function radiusOf(style: CSSStyleDeclaration, rect: DOMRect): number {
   const limit = Math.min(rect.width, rect.height) / 2;
 
   return Math.min(pixels(style.borderTopLeftRadius), limit);
 }
 
 const sameSize = (a: DOMRect, b: DOMRect): boolean =>
-  Math.abs(a.width - b.width) < 2 && Math.abs(a.height - b.height) < 2;
+  Math.abs(a.width - b.width) < rules.sameSizeTolerance &&
+  Math.abs(a.height - b.height) < rules.sameSizeTolerance;
 
 const sameSizeChild = (element: Element, rect: DOMRect): Element | null => {
   const child = element.firstElementChild;
@@ -50,11 +23,37 @@ const sameSizeChild = (element: Element, rect: DOMRect): Element | null => {
 };
 
 // The element's own radius, or the one a child of the same size gives it (an avatar's clipped image or fill).
-export function drawnRadius(element: Element, rect: DOMRect): number {
+function inheritedRadius(element: Element, rect: DOMRect): number {
   const own = radiusOf(getComputedStyle(element), rect);
   const child = sameSizeChild(element, rect);
 
-  return own > 0 || child === null ? own : drawnRadius(child, rect);
+  return own > 0 || child === null ? own : inheritedRadius(child, rect);
+}
+
+const isGlyph = (element: Element): boolean =>
+  rules.glyphTags.has(element.tagName.toUpperCase()) ||
+  rules.glyphRoles.has(element.getAttribute('role') ?? '');
+
+const fitsSmallControl = (rect: DOMRect): boolean =>
+  rect.height <= rules.smallControlHeight &&
+  rect.width <= rules.smallControlWidth;
+
+const isSquareGlyph = (
+  element: Element,
+  rect: DOMRect,
+  radius: number,
+): boolean => radius === 0 && isGlyph(element) && fitsSmallControl(rect);
+
+/*
+ * The radius a whole-drawn element's placeholder takes: its own or its same-size child's, and a small icon with
+ * none is round, as the other two platforms draw it.
+ */
+export function drawnRadius(element: Element, rect: DOMRect): number {
+  const radius = inheritedRadius(element, rect);
+
+  return isSquareGlyph(element, rect, radius)
+    ? Math.min(rect.width, rect.height) / 2
+    : radius;
 }
 
 const isTransparent = (colour: string): boolean =>
@@ -70,30 +69,45 @@ export const isInvisible = (style: CSSStyleDeclaration): boolean =>
   style.opacity === '0';
 
 const isMedia = (element: Element): boolean =>
-  mediaTags.has(element.tagName.toUpperCase()) ||
-  controlRoles.has(element.getAttribute('role') ?? '');
+  rules.atomicTags.has(element.tagName.toUpperCase()) ||
+  rules.atomicRoles.has(element.getAttribute('role') ?? '');
 
-const fitsSmallControl = (rect: DOMRect): boolean =>
-  rect.height <= smallControlHeight && rect.width <= smallControlWidth;
+const hasBorder = (style: CSSStyleDeclaration): boolean =>
+  pixels(style.borderTopWidth) > 0 &&
+  style.borderTopStyle !== 'none' &&
+  !isTransparent(style.borderTopColor);
 
-const isRound = (style: CSSStyleDeclaration, rect: DOMRect): boolean =>
-  radiusOf(style, rect) >= Math.min(rect.width, rect.height) / 2 - 1;
+const isFilledOrOutlined = (style: CSSStyleDeclaration): boolean =>
+  hasFill(style) || hasBorder(style);
 
-const isSmallCapsule = (style: CSSStyleDeclaration, rect: DOMRect): boolean =>
-  hasFill(style) && isRound(style, rect) && fitsSmallControl(rect);
+// A small control drawn as a rounded box, filled or outlined (a button, a pill): one placeholder, whatever it holds.
+const isSmallControl = (style: CSSStyleDeclaration, rect: DOMRect): boolean =>
+  isFilledOrOutlined(style) &&
+  radiusOf(style, rect) > 0 &&
+  fitsSmallControl(rect);
 
 const isEmpty = (element: Element): boolean =>
   element.childElementCount === 0 && (element.textContent ?? '').trim() === '';
 
-// A filled box with nothing inside it: a dot, a switch track, a bar of a chart.
+// A small filled box with nothing inside it: a dot, a switch track, a bar of a chart. A big one is a background.
 const isEmptyFill = (
   element: Element,
   style: CSSStyleDeclaration,
   rect: DOMRect,
-): boolean =>
+): boolean => isSmallBox(style, rect) && isEmpty(element);
+
+const isSmallBox = (style: CSSStyleDeclaration, rect: DOMRect): boolean =>
   hasFill(style) &&
-  isEmpty(element) &&
-  Math.min(rect.width, rect.height) > hairline;
+  fitsSmallControl(rect) &&
+  Math.min(rect.width, rect.height) > rules.hairline;
+
+// A vector too big to be an icon is decoration (a scroll fade): it stays drawn.
+const isDecoration = (element: Element, rect: DOMRect): boolean =>
+  rules.vectorTags.has(element.tagName.toUpperCase()) &&
+  !fitsSmallControl(rect);
+
+const isDrawnMedia = (element: Element, rect: DOMRect): boolean =>
+  isMedia(element) && !isDecoration(element, rect);
 
 // True for what one placeholder covers whole instead of being walked into.
 export const isDrawnWhole = (
@@ -101,6 +115,6 @@ export const isDrawnWhole = (
   style: CSSStyleDeclaration,
   rect: DOMRect,
 ): boolean =>
-  isMedia(element) ||
-  isSmallCapsule(style, rect) ||
+  isDrawnMedia(element, rect) ||
+  isSmallControl(style, rect) ||
   isEmptyFill(element, style, rect);

@@ -13,27 +13,28 @@ import android.widget.TextView
 import androidx.compose.ui.platform.ViewRootForTest
 import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.style.BorderRadiusProp
+import com.facebook.react.uimanager.style.LogicalEdge
 import kotlin.math.min
 
-// A drawn view the walk found, and the shapes that stand in for it (a paragraph gives one per line).
-class Leaf(val view: View, val shapes: List<SkeletonShape>)
+// A drawn view the walk found, and the placeholders that stand in for it (a paragraph gives one per line).
+class SkeletonLeaf(val view: View, val placeholders: List<SkeletonPlaceholder>)
 
-// A Compose tree under the Skeleton: its root view and the shapes read from its semantics, in the root's pixels.
-class ComposeContent(val root: ViewRootForTest, val local: List<SkeletonShape>, val origin: RectF) {
-  val shapes: List<SkeletonShape> get() = local.map { it.translated(origin.left, origin.top) }
+// A Compose tree under the Skeleton: its root view and the placeholders read from its semantics, in the root's pixels.
+class ComposeContent(val root: ViewRootForTest, val local: List<SkeletonPlaceholder>, val origin: RectF) {
+  val placeholders: List<SkeletonPlaceholder> get() = local.map { it.translated(origin.left, origin.top) }
 }
 
-class Collected(val leaves: List<Leaf>, val compose: List<ComposeContent>, val ignored: List<View>)
+class Collected(val leaves: List<SkeletonLeaf>, val compose: List<ComposeContent>, val ignored: List<View>)
 
 /*
  * Walks every descendant of a Skeleton, however deep, and says which views draw content: a paragraph gives one
- * shape per laid-out line; an image, svg, field, switch or small control gives one of its own size and radius.
+ * placeholder per laid-out line; an image, svg, field, switch or small control gives one of its own size and radius.
  * Cards, rows and separators are containers or hairlines and give none, so they stay as drawn. An ignore view's
  * subtree is skipped whole. A Compose tree is read through its semantics (ComposeSemantics).
  */
 class ViewWalk(private val root: ViewGroup) {
   private val density = root.resources.displayMetrics.density
-  private val leaves = mutableListOf<Leaf>()
+  private val leaves = mutableListOf<SkeletonLeaf>()
   private val compose = mutableListOf<ComposeContent>()
   private val ignored = mutableListOf<View>()
 
@@ -50,10 +51,12 @@ class ViewWalk(private val root: ViewGroup) {
     if (view.visibility != View.VISIBLE || view is ArgoSkeletonView) return
     if (view is ViewRootForTest) {
       readCompose(view)
+      // React Native views hosted inside a Compose tree (a Card's text) are its children, not semantics nodes.
+      if (view is ViewGroup) for (index in 0 until view.childCount) walk(view.getChildAt(index))
       return
     }
-    shapesOf(view)?.let {
-      leaves += Leaf(view, it)
+    placeholdersOf(view)?.let {
+      leaves += SkeletonLeaf(view, it)
       return
     }
     if (view is ViewGroup) for (index in 0 until view.childCount) walk(view.getChildAt(index))
@@ -66,19 +69,20 @@ class ViewWalk(private val root: ViewGroup) {
     compose += ComposeContent(rootForTest, read.ifEmpty { glyphOnly(view) }, origin)
   }
 
-  // A small Compose tree with no semantics at all is a glyph (an icon draws none): one shape of its own size.
-  private fun glyphOnly(view: View): List<SkeletonShape> {
-    val small = view.width <= SMALL_HEIGHT * density && view.height <= SMALL_HEIGHT * density
+  // A small Compose tree with no semantics at all is a glyph (an icon draws none): one placeholder of its own size.
+  private fun glyphOnly(view: View): List<SkeletonPlaceholder> {
+    val small = view.width <= SkeletonRules.SMALL_CONTROL_HEIGHT * density && view.height <= SkeletonRules.SMALL_CONTROL_HEIGHT * density
     if (!small || view.width <= 0 || view.height <= 0) return emptyList()
     val rect = RectF(0f, 0f, view.width.toFloat(), view.height.toFloat())
-    return listOf(SkeletonShape(rect, GLYPH_RADIUS * density))
+    return listOf(SkeletonPlaceholder(rect, minOf(rect.width(), rect.height()) / 2))
   }
 
-  private fun shapesOf(view: View): List<SkeletonShape>? {
+  private fun placeholdersOf(view: View): List<SkeletonPlaceholder>? {
     if (view.width <= 0 || view.height <= 0) return null
     if (view !is EditText) textLayout(view)?.let { return lines(view, it) }
-    if (!isAtomic(view) && !isSmallCapsule(view) && !isEmptyFill(view)) return null
-    return listOf(SkeletonShape(rectInRoot(view), radiusOf(view)))
+    if (isDecoration(view)) return null
+    if (!isAtomic(view) && !isSmallControl(view) && !isEmptyFill(view)) return null
+    return listOf(SkeletonPlaceholder(rectInRoot(view), radiusOf(view)))
   }
 
   private fun rectInRoot(view: View): RectF {
@@ -87,10 +91,25 @@ class ViewWalk(private val root: ViewGroup) {
     return RectF(rect)
   }
 
+  // A vector too big to be an icon is decoration (a scroll fade): it stays drawn.
+  private fun isDecoration(view: View): Boolean {
+    val name = view.javaClass.name
+    return SkeletonRules.vectorClasses.any { name.contains(it) } && !fitsSmallControl(view)
+  }
+
+  private fun isGlyph(view: View): Boolean {
+    if (view is ImageView) return true
+    val name = view.javaClass.name
+    return SkeletonRules.glyphClasses.any { name.contains(it) }
+  }
+
+  private fun fitsSmallControl(view: View): Boolean =
+    view.height <= SkeletonRules.SMALL_CONTROL_HEIGHT * density && view.width <= SkeletonRules.SMALL_CONTROL_WIDTH * density
+
   private fun isAtomic(view: View): Boolean {
     if (view is ImageView || view is CompoundButton || view is EditText || view is ProgressBar) return true
     val name = view.javaClass.name
-    return atomicNames.any { name.contains(it) }
+    return SkeletonRules.atomicClasses.any { name.contains(it) }
   }
 
   private fun hasFill(view: View): Boolean {
@@ -98,16 +117,19 @@ class ViewWalk(private val root: ViewGroup) {
     return colour != null && Color.alpha(colour) > 0
   }
 
-  private fun isSmallCapsule(view: View): Boolean {
-    val limit = min(view.width, view.height) / 2f
-    val round = radiusOf(view) >= limit - 1
-    return hasFill(view) && round && view.height <= SMALL_HEIGHT * density && view.width <= SMALL_WIDTH * density
+  private fun hasBorder(view: View): Boolean {
+    val colour = BackgroundStyleApplicator.getBorderColor(view, LogicalEdge.ALL)
+    return colour != null && Color.alpha(colour) > 0
   }
 
-  // A filled box with nothing inside it: a dot, a bar of a chart.
+  // A small control drawn as a rounded box, filled or outlined (a button, a pill): one placeholder, whatever it holds.
+  private fun isSmallControl(view: View): Boolean =
+    (hasFill(view) || hasBorder(view)) && radiusOf(view) > 0f && fitsSmallControl(view)
+
+  // A small filled box with nothing inside it: a dot, a bar of a chart. A big one is a card's background: it stays drawn.
   private fun isEmptyFill(view: View): Boolean {
     val empty = view !is ViewGroup || view.childCount == 0
-    return hasFill(view) && empty && min(view.width, view.height) > HAIRLINE * density
+    return hasFill(view) && empty && fitsSmallControl(view) && min(view.width, view.height) > SkeletonRules.HAIRLINE * density
   }
 
   // The view's own corner radius, or the one a clipping parent of the same size gives it (an avatar's image).
@@ -120,6 +142,7 @@ class ViewWalk(private val root: ViewGroup) {
       parent = parent.parent as? View
     }
     if (view is CompoundButton || view is ProgressBar) radius = limit
+    if (radius == 0f && isGlyph(view) && fitsSmallControl(view)) radius = limit
     return min(radius, limit)
   }
 
@@ -128,7 +151,8 @@ class ViewWalk(private val root: ViewGroup) {
       ?.resolve(min(view.width, view.height).toFloat()) ?: 0f
 
   private fun sameSize(a: View, b: View): Boolean =
-    kotlin.math.abs(a.width - b.width) < 2 && kotlin.math.abs(a.height - b.height) < 2
+    kotlin.math.abs(a.width - b.width) < SkeletonRules.SAME_SIZE_TOLERANCE &&
+      kotlin.math.abs(a.height - b.height) < SkeletonRules.SAME_SIZE_TOLERANCE
 
   private class TextLayout(val layout: Layout, val x: Float, val y: Float, val maxLines: Int)
 
@@ -150,7 +174,7 @@ class ViewWalk(private val root: ViewGroup) {
     return TextLayout(layout, view.paddingLeft.toFloat(), view.paddingTop + offset, maxLines)
   }
 
-  private fun lines(view: View, text: TextLayout): List<SkeletonShape> {
+  private fun lines(view: View, text: TextLayout): List<SkeletonPlaceholder> {
     val origin = rectInRoot(view)
     val count = if (text.maxLines in 1 until text.layout.lineCount) text.maxLines else text.layout.lineCount
     return (0 until count).mapNotNull { line ->
@@ -159,16 +183,11 @@ class ViewWalk(private val root: ViewGroup) {
       val left = origin.left + text.x + text.layout.getLineLeft(line)
       val top = origin.top + text.y + text.layout.getLineTop(line)
       val bottom = origin.top + text.y + text.layout.getLineBottom(line)
-      lineShape(left, top, left + width, bottom)
+      linePlaceholder(left, top, left + width, bottom)
     }
   }
 
   private companion object {
-    const val SMALL_HEIGHT = 40f
-    const val SMALL_WIDTH = 240f
-    const val HAIRLINE = 2f
-    const val GLYPH_RADIUS = 4f
     const val PREPARED_TEXT_VIEW = "com.facebook.react.views.text.PreparedLayoutTextView"
-    val atomicNames = listOf("ImageView", "SvgView", "ReactSlider", "ReactSwitch")
   }
 }

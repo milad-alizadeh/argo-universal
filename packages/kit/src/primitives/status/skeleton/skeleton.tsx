@@ -1,38 +1,80 @@
-import { requireNativeView } from 'expo';
-import type { ReactElement } from 'react';
-import type { ViewProps } from 'react-native';
-import { usePrimitiveColor } from '#primitives/native/primitive-color';
-import { SkeletonRedactedContext } from './skeleton-context';
+import { type ComponentRef, type ReactElement, useRef } from 'react';
+import { View, type ViewProps, type ViewStyle } from 'react-native';
+import { overlayAttribute } from './skeleton-marks';
+import type { SkeletonPlaceholder } from './skeleton-placeholder';
 import type { SkeletonProps } from './skeleton-props';
+import { useSkeletonPlaceholders } from './skeleton-web-measure';
 
-interface NativeSkeletonProps extends ViewProps {
-  loading: boolean;
-  animation: 'pulse' | 'none';
-  // The placeholders' colour, resolved from the foreground token at 5%.
-  color?: string;
+const markOverlay = (node: ComponentRef<typeof View> | null): void => {
+  if (node instanceof Element) node.setAttribute(overlayAttribute, '');
+};
+
+// React Native Web's View is already the positioning context the overlay needs, so the wrapper adds no style.
+const rootProps = (props: SkeletonProps): ViewProps => ({
+  testID: props.testID,
+  role: props.loading ? 'status' : undefined,
+  'aria-busy': props.loading ? true : undefined,
+});
+
+const keyOf = (placeholder: SkeletonPlaceholder): string =>
+  `${placeholder.left},${placeholder.top},${placeholder.width},${placeholder.height}`;
+
+const frameOf = (placeholder: SkeletonPlaceholder): ViewStyle => ({
+  left: placeholder.left,
+  top: placeholder.top,
+  width: placeholder.width,
+  height: placeholder.height,
+  borderRadius: placeholder.radius,
+});
+
+const pulseOf = (animation: SkeletonProps['animation']): string =>
+  animation === 'none' ? '' : 'motion-safe:animate-pulse';
+
+function Placeholder(props: {
+  placeholder: SkeletonPlaceholder;
+}): ReactElement {
+  return (
+    <View
+      className="absolute bg-foreground/15"
+      style={frameOf(props.placeholder)}
+    />
+  );
 }
 
-const NativeSkeleton = requireNativeView<NativeSkeletonProps>('ArgoSkeleton');
+interface PlaceholdersProps {
+  placeholders: SkeletonPlaceholder[];
+  animation: SkeletonProps['animation'];
+}
 
-function NativeSkeletonView({
-  animation = 'pulse',
-  ...rest
-}: SkeletonProps): ReactElement {
-  const color = usePrimitiveColor('text-foreground/5');
-
-  return <NativeSkeleton {...rest} animation={animation} color={color} />;
+function Placeholders(props: PlaceholdersProps): ReactElement {
+  return (
+    <View
+      ref={markOverlay}
+      aria-hidden
+      pointerEvents="none"
+      className={`absolute inset-0 ${pulseOf(props.animation)}`}
+    >
+      {props.placeholders.map((placeholder) => (
+        <Placeholder key={keyOf(placeholder)} placeholder={placeholder} />
+      ))}
+    </View>
+  );
 }
 
 /*
- * The native view (apps/universal-app/modules/argo-skeleton) walks the views under it while loading: text becomes
- * one bar per laid-out line, and an image, svg, field or small control becomes a bar of its size and radius.
- * Expo UI's SwiftUI content redacts itself instead (the kit Host reads the context below), and Compose content
- * is read through its semantics tree.
+ * Works out its placeholders from what its children draw (skeleton-dom.ts). The wrapper is a busy status while
+ * loading, and what it hid is aria-hidden; an ignored subtree stays as drawn and as read.
  */
 export function Skeleton(props: SkeletonProps): ReactElement {
+  const ref = useRef<ComponentRef<typeof View>>(null);
+  const placeholders = useSkeletonPlaceholders(ref, props.loading);
+
   return (
-    <SkeletonRedactedContext value={props.loading}>
-      <NativeSkeletonView {...props} />
-    </SkeletonRedactedContext>
+    <View ref={ref} {...rootProps(props)}>
+      {props.children}
+      {props.loading && (
+        <Placeholders placeholders={placeholders} animation={props.animation} />
+      )}
+    </View>
   );
 }

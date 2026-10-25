@@ -1,10 +1,14 @@
 import { type RefObject, useCallback, useLayoutEffect, useState } from 'react';
+import {
+  hideFromAssistiveTechnology,
+  restoreAssistiveTechnology,
+} from './skeleton-aria';
 import { measureSkeleton } from './skeleton-dom';
 import {
   clearSkeletonMarks,
-  hideFromAssistiveTechnology,
   markSkeleton,
   overlayAttribute,
+  rootAttribute,
 } from './skeleton-marks';
 import type { SkeletonPlaceholder } from './skeleton-placeholder';
 import { ensureSkeletonStyle } from './skeleton-web-style';
@@ -22,13 +26,38 @@ interface Observers {
 
 const noop = (): void => undefined;
 
+const measures = (placeholder: SkeletonPlaceholder): number[] => [
+  placeholder.left,
+  placeholder.top,
+  placeholder.width,
+  placeholder.height,
+  placeholder.radius,
+];
+
+const samePlaceholder = (
+  a: SkeletonPlaceholder,
+  b: SkeletonPlaceholder,
+): boolean =>
+  measures(a).every((measure, index) => measure === measures(b).at(index));
+
 const samePlaceholders = (
   a: SkeletonPlaceholder[],
   b: SkeletonPlaceholder[],
-): boolean => JSON.stringify(a) === JSON.stringify(b);
+): boolean =>
+  a.length === b.length &&
+  a.every((placeholder, index) => {
+    const other = b.at(index);
+
+    return other !== undefined && samePlaceholder(placeholder, other);
+  });
+
+function clearPage(root: Element): void {
+  clearSkeletonMarks(root);
+  restoreAssistiveTechnology(root);
+}
 
 function refresh(root: Element, report: Report): void {
-  clearSkeletonMarks(root);
+  clearPage(root);
 
   const found = measureSkeleton(root);
 
@@ -79,6 +108,7 @@ function observeChanges(root: Element, schedule: () => void): Observers {
 
 function watchSkeleton(root: Element, report: Report): () => void {
   ensureSkeletonStyle();
+  root.setAttribute(rootAttribute, '');
 
   const scheduler = createScheduler(() => refresh(root, report));
   const observers = observeChanges(root, scheduler.schedule);
@@ -89,7 +119,8 @@ function watchSkeleton(root: Element, report: Report): () => void {
   return (): void => {
     scheduler.cancel();
     observers.disconnect();
-    clearSkeletonMarks(root);
+    clearPage(root);
+    root.removeAttribute(rootAttribute);
     report([]);
   };
 }

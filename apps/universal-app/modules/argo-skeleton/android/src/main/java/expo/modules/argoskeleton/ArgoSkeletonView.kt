@@ -5,6 +5,8 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.Build
+import android.os.SystemClock
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.compose.ui.InternalComposeUiApi
@@ -14,7 +16,7 @@ import expo.modules.kotlin.views.ExpoView
 
 /*
  * The Skeleton's native view. While `loading` it walks the views under it (ViewWalk) before every frame, sets
- * each content view's alpha to 0, covers Compose content (ComposeCover), and draws one rounded shape per text
+ * each content view's alpha to 0, covers Compose content (ComposeCover), and draws one rounded placeholder per text
  * line, image or control above its children. It restores every view when loading ends and when it leaves the
  * window, since Fabric recycles views.
  */
@@ -27,16 +29,25 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
   private val covered = mutableListOf<ViewRootForTest>()
   private var loading = false
   private var animation = "pulse"
-  private var shapeColor: Int? = null
-  private var shapes: List<SkeletonShape> = emptyList()
+  private var placeholderColor: Int? = null
+  private var placeholders: List<SkeletonPlaceholder> = emptyList()
   private var fade = 0f
   private var pulse = 1f
   private var fader: ValueAnimator? = null
   private var pulser: ValueAnimator? = null
+  private var pending = false
+  private var lastRefresh = 0L
+  private val coverPlaceholders = HashMap<ViewRootForTest, List<SkeletonPlaceholder>>()
 
   private val preDraw = ViewTreeObserver.OnPreDrawListener {
-    refresh()
+    scheduleRefresh()
     true
+  }
+
+  private val refreshTask = Runnable {
+    pending = false
+    lastRefresh = SystemClock.uptimeMillis()
+    refresh()
   }
 
   init {
@@ -54,14 +65,21 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
     if (loading) applyAnimation()
   }
 
-  fun setShapeColor(value: Int?) {
-    shapeColor = value
+  fun setPlaceholderColor(value: Int?) {
+    placeholderColor = value
     invalidate()
+  }
+
+  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+    super.onLayout(changed, l, t, r, b)
+    if (loading) scheduleRefresh()
   }
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
     viewTreeObserver.removeOnPreDrawListener(preDraw)
+    removeCallbacks(refreshTask)
+    pending = false
     pulser?.cancel()
     restoreAll(animated = false)
   }
@@ -74,17 +92,17 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
   override fun dispatchDraw(canvas: Canvas) {
     super.dispatchDraw(canvas)
     if (!loading && fade == 0f) return
-    val base = shapeColor ?: DEFAULT_COLOR
+    val base = placeholderColor ?: DEFAULT_COLOR
     paint.color = base
     paint.alpha = (Color.alpha(base) * fade * pulse).toInt()
-    for (shape in shapes) canvas.drawRoundRect(shape.rect, shape.radius, shape.radius, paint)
+    for (placeholder in placeholders) canvas.drawRoundRect(placeholder.rect, placeholder.radius, placeholder.radius, paint)
   }
 
   private fun start() {
     if (!isAttachedToWindow) return
     viewTreeObserver.removeOnPreDrawListener(preDraw)
     viewTreeObserver.addOnPreDrawListener(preDraw)
-    contentDescription = "Loading"
+    exposeBusyToAccessibility()
     animateFade(1f)
     applyAnimation()
     refresh()
@@ -94,9 +112,37 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
     viewTreeObserver.removeOnPreDrawListener(preDraw)
     pulser?.cancel()
     pulse = 1f
-    contentDescription = null
+    removeCallbacks(refreshTask)
+    pending = false
+    hideBusyFromAccessibility()
     restoreAll(animated = true)
     animateFade(0f)
+  }
+
+  /*
+   * The walk runs at most once per interval and only after the Skeleton drew or laid out; it re-applies the cover and
+   * redraws only when the placeholders it found differ, so a screen at rest does not draw again because of it.
+   */
+  private fun scheduleRefresh() {
+    if (pending) return
+    pending = true
+    val wait = (REFRESH_MS - (SystemClock.uptimeMillis() - lastRefresh)).coerceAtLeast(0)
+    postDelayed(refreshTask, wait)
+  }
+
+  // A busy status for TalkBack, there from the first frame of loading even when the walk finds no placeholder.
+  private fun exposeBusyToAccessibility() {
+    contentDescription = "Loading"
+    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+    accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) stateDescription = "Busy"
+  }
+
+  private fun hideBusyFromAccessibility() {
+    contentDescription = null
+    accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_NONE
+    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) stateDescription = null
   }
 
   private fun animateFade(target: Float) {
@@ -131,9 +177,9 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
     val found = ViewWalk(this).collect()
     hide(found.leaves.map { it.view })
     cover(found.compose)
-    val next = found.leaves.flatMap { it.shapes } + found.compose.flatMap { it.shapes }
-    if (next == shapes) return
-    shapes = next
+    val next = found.leaves.flatMap { it.placeholders } + found.compose.flatMap { it.placeholders }
+    if (next == placeholders) return
+    placeholders = next
     invalidate()
   }
 
@@ -150,7 +196,10 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
 
   private fun cover(contents: List<ComposeContent>) {
     for (content in contents) {
-      ComposeCover.apply(content.root, content.local)
+      if (coverPlaceholders[content.root] != content.local) {
+        ComposeCover.apply(content.root, content.local)
+        coverPlaceholders[content.root] = content.local
+      }
       content.root.view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
       if (content.root !in covered) covered += content.root
     }
@@ -160,6 +209,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
 
   private fun uncover(root: ViewRootForTest) {
     ComposeCover.clear(root)
+    coverPlaceholders.remove(root)
     root.view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
     covered.remove(root)
   }
@@ -178,9 +228,10 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
   }
 
   private companion object {
+    const val REFRESH_MS = 100L
     const val FADE_MS = 200L
     const val PULSE_MS = 900L
     const val PULSE_LOW = 0.5f
-    val DEFAULT_COLOR = Color.argb(13, 0, 0, 0)
+    val DEFAULT_COLOR = Color.argb(38, 0, 0, 0)
   }
 }

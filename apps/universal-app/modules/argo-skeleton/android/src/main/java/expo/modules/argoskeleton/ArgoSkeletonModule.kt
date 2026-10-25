@@ -14,7 +14,7 @@ class ArgoSkeletonModule : Module() {
     View(ArgoSkeletonView::class) {
       Prop("loading") { view: ArgoSkeletonView, loading: Boolean -> view.setLoading(loading) }
       Prop("animation") { view: ArgoSkeletonView, animation: String -> view.setAnimation(animation) }
-      Prop("color") { view: ArgoSkeletonView, color: Color? -> view.setShapeColor(color?.toArgb()) }
+      Prop("color") { view: ArgoSkeletonView, color: Color? -> view.setPlaceholderColor(color?.toArgb()) }
     }
 
     View(ArgoSkeletonIgnoreView::class) {}
