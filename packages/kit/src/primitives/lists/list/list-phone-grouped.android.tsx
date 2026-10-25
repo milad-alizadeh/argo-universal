@@ -18,15 +18,13 @@ import {
 } from '#primitives/fields/field-group';
 import { PositionContext } from '#primitives/fields/field-row';
 import { PhoneGroupedFrame } from './list-phone-host';
+import type { PhoneGroupedProps } from './list-phone-props';
 import {
   estimatedPhoneRowHeight,
   phoneRowKey,
   type PhoneRow,
   type PhoneSection,
 } from './list-phone-sections';
-import type { ListProps } from './list-props';
-
-export const phoneGrouped = true;
 
 /*
  * The FieldGroup's layout (field-group-caption-insets.ts) as one lazy column. Every item of the column is a lazy
@@ -39,7 +37,7 @@ const listModifiers = [fillMaxSize(), imePadding()];
  * as Material's connected rows as Expo's FieldSection.android.tsx does (rounded ends, small corners between, 2dp
  * gaps; each row clips itself by the position it is given). Its rows are FieldGroup rows, as in a FieldGroup.
  */
-export function PhoneGroupedList<Item>(props: ListProps<Item>): ReactNode {
+export function PhoneGroupedList(props: PhoneGroupedProps): ReactNode {
   return <PhoneGroupedFrame list={props}>{groupedColumn}</PhoneGroupedFrame>;
 }
 

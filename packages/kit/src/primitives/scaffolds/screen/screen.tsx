@@ -3,10 +3,7 @@ import { View } from 'react-native';
 import { ScrollColumnContext } from '#kit/scroll-column';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
-import {
-  ActionShortcutScope,
-  ShortcutAnchor,
-} from '#primitives/actions/action';
+import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';
 import { ScreenAccessory } from './screen-accessory';
 import { useScreenColumn } from './screen-column';
@@ -14,7 +11,8 @@ import { ScreenHeading } from './screen-heading';
 import { ScreenNavigation } from './screen-navigation';
 import { screenPrimaryAction } from './screen-primary-action';
 import type { ScreenProps } from './screen-props';
-import { useScreenHeader, type ScreenHeader } from './use-screen-header';
+import { ShortcutAnchors } from './screen-shortcut-anchors';
+import { useScreenHeader } from './use-screen-header';
 
 // Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Screen(props: ScreenProps): ReactElement {
@@ -42,17 +40,6 @@ function ScreenSurface(props: ScreenProps): ReactElement {
       <ScreenHeading {...props} header={header} />
       <ScreenBody {...props} />
       <ScreenAccessory {...props} />
-    </View>
-  );
-}
-
-// The Actions' shortcuts run while their node is shown, so each keeps an empty one, out of the Screen's layout, ahead of the content's.
-function ShortcutAnchors({ header }: { header: ScreenHeader }): ReactElement {
-  return (
-    <View className="absolute">
-      {header.anchors.map((id) => (
-        <ShortcutAnchor key={id} id={id} />
-      ))}
     </View>
   );
 }

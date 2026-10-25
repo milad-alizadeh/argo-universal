@@ -6,10 +6,9 @@ import type { Dispatch, SetStateAction } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { ComposerAgentModelControl } from '../../src/features/composer/components/composer-configuration/composer-configuration';
-import { chooseEffort } from '../choose-effort';
 import { updateComposerSettings } from '../composer-mock';
+import { configure, type Configure } from '../composer/configure.test.mocks';
 import {
-  agentModelLabel,
   heldNotice,
   type Story,
   type Configuration,
@@ -99,52 +98,29 @@ async function testHeldConfiguration(
 ): Promise<void> {
   await settleViewport(scenario.width);
   const overlay = within(document.body);
-  await context.userEvent.click(
-    context.canvas.getByRole('button', { name: agentModelLabel }),
-  );
+  const picker = configure(context, scenario.width);
+  await picker.open();
   await waitFor(() => expect(overlay.getByText(heldNotice)).toBeVisible());
-  const effortSteps = await selectHeldEffort(scenario);
-  await selectNarrowerModel(context, scenario);
+  const effortSteps = await selectHeldEffort(scenario, picker);
+  await picker.chooseModel(scenario.recorded.narrower.name);
   await assertHeldFallback(scenario, effortSteps);
   await context.userEvent.keyboard('{Escape}');
 }
 
-async function selectHeldEffort({
-  recorded,
-  onConfigChange,
-}: HeldScenario): Promise<string[][]> {
+async function selectHeldEffort(
+  { recorded, onConfigChange }: HeldScenario,
+  picker: Configure,
+): Promise<string[][]> {
   const effortSteps = recorded.steps.map((step) => [
     recorded.effort.configId,
     step.value,
   ]);
 
-  await chooseHeldEffort(recorded);
-  await expect(onConfigChange.mock.calls).toEqual(effortSteps);
-
-  return effortSteps;
-}
-
-async function chooseHeldEffort(
-  recorded: HeldScenario['recorded'],
-): Promise<void> {
-  const slider = await within(document.body).findByRole('slider', {
-    name: 'Effort',
-  });
-
-  await chooseEffort(
-    slider,
+  await picker.chooseEffort(
     recorded.offered.map((choice) => choice.name),
     recorded.selected.name,
   );
-}
+  await expect(onConfigChange.mock.calls).toEqual(effortSteps);
 
-async function selectNarrowerModel(
-  { userEvent }: PlayContext,
-  { recorded }: HeldScenario,
-): Promise<void> {
-  const overlay = within(document.body);
-  await userEvent.click(overlay.getByRole('button', { name: /^Model,/ }));
-  await userEvent.click(
-    await overlay.findByRole('radio', { name: recorded.narrower.name }),
-  );
+  return effortSteps;
 }

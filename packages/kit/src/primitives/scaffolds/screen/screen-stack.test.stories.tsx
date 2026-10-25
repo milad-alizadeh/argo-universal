@@ -2,14 +2,19 @@ import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { withStack } from '#story-stack';
 import { Screen } from './index';
+import { SettingsScreen } from './screen-stack-settings.mocks';
 import {
   DetailScreen,
   HeaderActionsScreen,
+  MenuRootScreen,
   PushScreen,
-  SettingsScreen,
+  SearchScreen,
   onAction,
+  onSearch,
 } from './screen-stack.mocks';
 import { atWidth, screenWidths as widths } from './screen-widths.mocks';
+
+const openDetail = { name: 'Open detail' };
 
 const meta = {
   title: 'Tests/Design System/Primitives/Scaffolds/Screen/Stack',
@@ -44,17 +49,56 @@ export const PushAndBackPhone = atWidth(widths.Phone, {
   decorators: [withStack({ detail: DetailScreen })],
   render: () => <PushScreen />,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Open detail' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', openDetail));
     await waitFor(() =>
       expect(canvas.getByRole('heading', { name: 'Detail' })).toBeVisible(),
     );
     await userEvent.click(canvas.getByRole('link', { name: /back/i }));
     await waitFor(() =>
-      expect(canvas.getByRole('button', { name: 'Open detail' })).toBeVisible(),
+      expect(canvas.getByRole('button', openDetail)).toBeVisible(),
     );
     await expect(canvas.queryByRole('heading', { name: 'Detail' })).toBeNull();
+  },
+});
+
+// A root with the App's menu has ☰; the page it pushes has Back and no ☰.
+export const MenuRootPushesBackPhone = atWidth(widths.Phone, {
+  decorators: [withStack({ detail: DetailScreen })],
+  render: () => <MenuRootScreen />,
+  play: async ({ canvas, userEvent }) => {
+    onAction.mockClear();
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Open navigation' }),
+    );
+    await expect(onAction).toHaveBeenCalledOnce();
+    await userEvent.click(await canvas.findByRole('button', openDetail));
+    await waitFor(() =>
+      expect(canvas.getByRole('heading', { name: 'Detail' })).toBeVisible(),
+    );
+    await expect(canvas.getByRole('link', { name: /back/i })).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: 'Open navigation' }),
+    ).toBeNull();
+  },
+});
+
+// The header's search opens into a field over the title row and filters as you type.
+export const SearchInHeaderPhone = atWidth(widths.Phone, {
+  decorators: [withStack()],
+  render: () => <SearchScreen />,
+  play: async ({ canvas, userEvent }) => {
+    onSearch.mockClear();
+    await expect(
+      await canvas.findByRole('heading', { name: 'Title' }),
+    ).toBeVisible();
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Search Items' }),
+    );
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Search Items' }),
+      'fix',
+    );
+    await expect(onSearch).toHaveBeenLastCalledWith('fix');
   },
 });
 

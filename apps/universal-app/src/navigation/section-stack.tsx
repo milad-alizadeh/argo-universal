@@ -1,20 +1,9 @@
-import {
-  hasLiquidGlass,
-  screenHeaderOptions,
-  type CoreSection,
-  type SectionList,
-  useSectionList,
-} from '@repo/client';
+import { hasLiquidGlass, type CoreSection, sections } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
 import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
-import { Platform } from 'react-native';
-import { DrawerMenuButton } from './drawer-menu-button';
-import { headerTitleOptions } from './header-title';
 import { screenLayout } from './screen-layout';
-
-type ScreenHeaderProps = SectionList['rootHeader'];
 
 type StackProps = ComponentProps<typeof Stack>;
 
@@ -28,7 +17,6 @@ const narrowOptions = {
   headerBackButtonDisplayMode: 'minimal',
   // A page below the shown one keeps its state but skips renders.
   freezeOnBlur: true,
-  ...headerTitleOptions,
 } satisfies StackProps['screenOptions'];
 
 // A wide window shows one page beside the list: it draws its own header, and a new page replaces the shown one without a transition.
@@ -38,73 +26,21 @@ const framedOptions = {
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
 
-const menuButton = (): React.JSX.Element => <DrawerMenuButton />;
-
-/*
- * Who leads a narrow section root: the web's JS header and Android's top app bar draw ☰ themselves, while iOS's
- * root page declares it as a stock bar button item, with the attention dot as its badge (`SectionRoot`).
- */
-const rootMenuOptions: NativeStackNavigationOptions =
-  Platform.OS === 'ios' ? {} : { headerLeft: menuButton };
-
-// A narrow section root's header on the stack, where it belongs to the page it names and leaves with it.
-const stackRootOptions = (
-  header: SectionList['rootHeader'],
-): NativeStackNavigationOptions => ({
-  ...rootMenuOptions,
-  ...screenHeaderOptions(header),
-});
-
-interface SectionOptions {
-  screenOptions: StackProps['screenOptions'];
-  rootOptions: NativeStackNavigationOptions;
-}
-
-// The stack's options at this width, and its root's: the phone shell's root shows the section's header; a wide window's page draws its own.
-function useSectionOptions(
-  header: ScreenHeaderProps,
-  root: boolean,
-  fullScreenGestureEnabled?: boolean,
-): SectionOptions {
-  const wide = useWide();
-
-  return {
-    screenOptions: {
-      ...(wide ? framedOptions : narrowOptions),
-      fullScreenGestureEnabled,
-    },
-    rootOptions: wide ? {} : narrowRootOptions(header, root),
-  };
-}
-
-function narrowRootOptions(
-  header: ScreenHeaderProps,
-  root: boolean,
-): NativeStackNavigationOptions {
-  if (!root) return screenHeaderOptions(header);
-
-  return stackRootOptions(header);
-}
-
 interface SectionStackProps extends PropsWithChildren {
   section: CoreSection;
 }
 
-// A section's pages, always this one stack so a width change keeps them: a narrow window pushes each page over the list under the section's header; a wide one shows the list beside it. Each page names itself through `ScreenHeader`.
+// A section's pages, always this one stack so a width change keeps them: a narrow window pushes each page over the list; a wide one shows the list beside it. Each page declares its header through its `Screen`.
 export function SectionStack({
   section,
   children,
 }: SectionStackProps): React.JSX.Element {
-  return (
-    <ScreenStack header={useSectionList(section).rootHeader}>
-      {children}
-    </ScreenStack>
-  );
+  return <ScreenStack title={sections[section].title}>{children}</ScreenStack>;
 }
 
 interface ScreenStackProps extends PropsWithChildren {
-  header: ScreenHeaderProps;
-  root?: boolean;
+  // The root's title until its Screen mounts, so the web header never shows the route's name.
+  title: string;
   rootName?: string;
   fullScreenGestureEnabled?: boolean;
   singular?: ComponentProps<typeof Stack.Screen>['dangerouslySingular'];
@@ -112,15 +48,16 @@ interface ScreenStackProps extends PropsWithChildren {
 
 // Core lists and Plugin pages share stock stack headers, page placement and the Connection banner.
 export function ScreenStack(props: ScreenStackProps): React.JSX.Element {
-  const { screenOptions, rootOptions } = useSectionOptions(
-    props.header,
-    props.root ?? true,
-    props.fullScreenGestureEnabled,
-  );
+  const wide = useWide();
+
+  const screenOptions = {
+    ...(wide ? framedOptions : narrowOptions),
+    fullScreenGestureEnabled: props.fullScreenGestureEnabled,
+  };
 
   return (
     <Stack screenOptions={screenOptions} screenLayout={screenLayout}>
-      <Stack.Screen {...rootScreen(props, rootOptions)} />
+      <Stack.Screen {...rootScreen(props, wide)} />
       {props.children}
     </Stack>
   );
@@ -128,8 +65,12 @@ export function ScreenStack(props: ScreenStackProps): React.JSX.Element {
 
 function rootScreen(
   props: ScreenStackProps,
-  options: NativeStackNavigationOptions,
+  wide: boolean,
 ): ComponentProps<typeof Stack.Screen> {
+  const options: NativeStackNavigationOptions = wide
+    ? {}
+    : { title: props.title };
+
   return {
     name: props.rootName ?? 'index',
     options,

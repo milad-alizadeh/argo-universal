@@ -1,4 +1,5 @@
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
+import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { Redirect } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -25,10 +26,16 @@ export function PluginDetailScreen({
 
   if (section) return <PluginPage section={section} path={path} />;
 
-  return loaded ? (
-    <PluginUnavailable />
-  ) : (
-    <View className="flex-1 bg-content" />
+  return loaded ? <PluginUnavailable /> : <PluginLoading />;
+}
+
+// The header is declared while the list loads, so a narrow root still has ☰ and a pushed page its Back.
+function PluginLoading(): React.JSX.Element {
+  return (
+    <>
+      <ScreenStackHeader title="" />
+      <View className="flex-1 bg-content" />
+    </>
   );
 }
 

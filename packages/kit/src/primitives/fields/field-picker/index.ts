@@ -1,5 +1,3 @@
-export { FieldPicker } from './field-picker-switch';
+export { FieldPicker, expandInlinePickers } from './field-picker';
 
 export { ScreenSearchField } from './field-picker-search';
-
-export { expandInlinePickers } from './field-picker-inline-expand';

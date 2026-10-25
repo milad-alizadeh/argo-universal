@@ -6,15 +6,13 @@ import {
 import type { ReactElement, ReactNode } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { PhoneGroupedFrame } from './list-phone-host';
+import type { PhoneGroupedProps } from './list-phone-props';
 import {
   estimatedPhoneRowHeight,
   phoneRowKey,
   type PhoneRow,
   type PhoneSection,
 } from './list-phone-sections';
-import type { ListProps } from './list-props';
-
-export const phoneGrouped = true;
 
 // No background of its own, so the page's shows between the section cards, as the FieldGroup's Form does.
 const modifiers = [
@@ -27,7 +25,7 @@ const modifiers = [
  * `List.ForEach` Expo recycles, so a long list mounts only the rows near the screen. Its rows are FieldGroup rows,
  * SwiftUI views, as in a FieldGroup; React Native content cannot sit in it.
  */
-export function PhoneGroupedList<Item>(props: ListProps<Item>): ReactNode {
+export function PhoneGroupedList(props: PhoneGroupedProps): ReactNode {
   return <PhoneGroupedFrame list={props}>{groupedList}</PhoneGroupedFrame>;
 }
 

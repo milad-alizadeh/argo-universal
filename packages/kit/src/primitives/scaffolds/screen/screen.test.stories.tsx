@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
-import { Screen } from './index';
+import { withStack } from '#story-stack';
+import { Screen, ScreenMenuContext } from './index';
 import { atWidth, screenWidths as widths } from './screen-widths.mocks';
 
 const meta = {
@@ -162,3 +163,42 @@ export const DisabledPrimary: Story = {
     ).toBeDisabled();
   },
 };
+
+const opened = fn();
+
+// A narrow root's ☰ is the App's provider; the Screen only draws it, in its stack's header.
+const menuRoot: Story = {
+  decorators: [withStack()],
+  parameters: { screenPreview: true },
+  render: () => (
+    <ScreenMenuContext value={{ onOpen: opened, badge: false }}>
+      <Screen title="Title">
+        <Text>{project}</Text>
+      </Screen>
+    </ScreenMenuContext>
+  ),
+};
+
+export const MenuPhone = atWidth(widths.Phone, {
+  ...menuRoot,
+  play: async ({ canvas, userEvent }) => {
+    opened.mockClear();
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Open navigation' }),
+    );
+    await expect(opened).toHaveBeenCalledOnce();
+  },
+});
+
+// A wide window draws the rail, so the Screen has no ☰.
+export const MenuWide = atWidth(widths.Wide, {
+  ...menuRoot,
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole('heading', { level: 1, name: 'Title' }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: 'Open navigation' }),
+    ).toBeNull();
+  },
+});

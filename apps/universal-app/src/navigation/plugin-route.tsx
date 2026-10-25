@@ -5,15 +5,10 @@ import {
   usePluginAt,
 } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
-import {
-  useGlobalSearchParams,
-  useLocalSearchParams,
-  usePathname,
-} from 'expo-router';
+import { useLocalSearchParams, usePathname } from 'expo-router';
 import type * as React from 'react';
-import { Platform } from 'react-native';
 import { hasRowDetail, PluginRowDetails } from './plugin-row-detail';
-import { MenuToolbar } from './section-root';
+import { NarrowRoot } from './section-root';
 import { ScreenStack } from './section-stack';
 
 type RowParams = { row?: string };
@@ -24,18 +19,15 @@ function useNavRoot(path: string, row: string | undefined): boolean {
 }
 
 /*
- * Each Plugin nav item's pages, under its title on a narrow window; a path whose Plugin is unknown keeps ☰ to leave it.
+ * Each Plugin nav item's pages, under its title on a narrow window until the page's Screen mounts.
  * iOS 26 full-screen Back would steal a Canvas pan; Back from the edge remains available.
  */
 export function PluginLayout(): React.JSX.Element {
-  const pathname = usePathname();
-  const { section } = usePluginAt(pathname);
-  const root = useNavRoot(pathname, useGlobalSearchParams<RowParams>().row);
+  const { section } = usePluginAt(usePathname());
 
   return (
     <ScreenStack
-      header={{ title: section?.title ?? '' }}
-      root={root}
+      title={section?.title ?? ''}
       rootName="[...path]"
       singular
       fullScreenGestureEnabled={false}
@@ -43,27 +35,23 @@ export function PluginLayout(): React.JSX.Element {
   );
 }
 
-const PluginMenuToolbar =
-  Platform.OS === 'ios' ? MenuToolbar : (): null => null;
-
 interface PluginRootProps {
   path: readonly string[];
 }
 
 /*
- * A Plugin page with, at a narrow root on iOS, ☰ as a stock bar button item, as a section root has; elsewhere the
- * stack header draws ☰ itself. A ListDetail page puts its list in the Frame's sidebar on a wide window.
+ * A Plugin page with, at a narrow root, ☰ in its Screen's header, as a section root has. A ListDetail page puts its
+ * list in the Frame's sidebar on a wide window.
  */
 export function PluginRoot({ path }: PluginRootProps): React.JSX.Element {
   return (
-    <>
+    <NarrowRoot root={useNarrowRoot(path)}>
       <SectionListDetail>
         <PluginRowDetails>
           <PluginDetailScreen path={path} />
         </PluginRowDetails>
       </SectionListDetail>
-      {useNarrowRoot(path) ? <PluginMenuToolbar /> : null}
-    </>
+    </NarrowRoot>
   );
 }
 

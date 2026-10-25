@@ -1,82 +1,100 @@
-import type { ReactElement } from 'react';
+import {
+  isValidElement,
+  type ComponentType,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { useInMenu } from '#kit/menu-rows-context';
-import { RowTitle, useRowPressable } from '#primitives/fields/field-row';
+import { useRowPressable } from '#primitives/fields/field-row';
+import { pickerDrawing } from './field-picker-drawing';
+import { FieldPickerDrill } from './field-picker-drill';
+import { pickerKind, rowProps, type PickerKind } from './field-picker-kind';
 import {
-  FieldPickerDrill,
-  type ScreenTrigger as ScreenOpener,
-} from './field-picker-drill';
-import { inlineOptionRows } from './field-picker-inline-rows';
-import {
-  choiceSummary,
-  chosenLogo,
-  drawingProps,
+  narrowed,
   type FieldPickerCallerProps,
   type FieldPickerProps,
+  type PickerProps,
 } from './field-picker-model';
-import { ScreenTrigger } from './field-picker-screen-trigger';
-import { FieldPickerSelect } from './field-picker-select';
+import { FieldPickerPill } from './field-picker-pill';
+
+const { Row, Menu, OptionRow, menuHoldsMultiple } = pickerDrawing;
+
+const kindOf = (props: PickerProps): PickerKind =>
+  pickerKind({
+    presentation: props.presentation,
+    multiple: props.multiple,
+    trigger: props.trigger,
+    menuHoldsMultiple,
+  });
 
 /*
- * The title, a flexible Spacer, then the choice at the row's end. A `menu` of one value is the kit's borderless
- * select; a `page`, or any `multiple` choice, which a select cannot hold, opens the page's popover. Expo UI's web
- * Picker draws a bordered box it takes no style for.
+ * The picker: the caller's value is narrowed once, then its kind picks the drawing: a toolbar pill, the options as
+ * rows of the enclosing section, the platform's menu, or the page the row opens (ADR-0042). The platform's
+ * drawing (field-picker-drawing) holds the row, the menu and the option row.
  */
 export function FieldPicker(props: FieldPickerCallerProps): ReactElement;
 export function FieldPicker(props: FieldPickerProps): ReactElement;
 export function FieldPicker(
   caller: FieldPickerCallerProps | FieldPickerProps,
 ): ReactElement {
-  const props = drawingProps(caller);
+  const props = narrowed(caller);
+  const kind = kindOf(props);
+  const Drawing = drawings[kind];
 
-  useRowPressable(!props.disabled && props.presentation !== 'inline');
+  useRowPressable(!props.disabled && kind !== 'inline');
 
-  // Outside a Section, an `inline` choice is its option rows in place; a Section opens them first (expandInlinePickers).
-  if (props.presentation === 'inline') return <>{inlineOptionRows(props)}</>;
-
-  return <Choice {...props} />;
+  return <Drawing {...props} />;
 }
 
-// The title and the choice are one trigger, so a click anywhere on the row opens it.
-function Choice(props: FieldPickerProps): ReactElement {
-  if (props.presentation === 'menu' && !props.multiple)
-    return <FieldPickerSelect {...selectProps(props)} />;
+const InlineRows = (props: PickerProps): ReactElement => (
+  <>{inlineOptionRows(props)}</>
+);
 
-  return <ScreenPicker {...props} />;
-}
+const drawings: Record<PickerKind, ComponentType<PickerProps>> = {
+  pill: FieldPickerPill,
+  inline: InlineRows,
+  menu: Menu,
+  page: PagePicker,
+};
+
+/*
+ * The options of an `inline` picker as the rows of the section that holds it. The rows sit beside other pickers'
+ * rows, so each key names its picker as well as its option.
+ */
+const inlineOptionRows = (props: PickerProps): ReactElement[] =>
+  props.options.map((option) => (
+    <OptionRow
+      key={`${props.title}:${option.value}`}
+      {...props}
+      option={option}
+    />
+  ));
 
 // In a popover the page opens beside the row on its right, behind a right chevron, as a drill (ADR-0042).
-function ScreenPicker(props: FieldPickerProps): ReactElement {
-  const inPopover = useInMenu();
-
+function PagePicker(props: PickerProps): ReactElement {
   return (
     <FieldPickerDrill
       {...props}
-      beside={inPopover}
-      opener={screenTrigger(props, inPopover)}
+      beside={useInMenu()}
+      opener={<Row {...rowProps(props)} />}
     />
   );
 }
 
-const screenTrigger = (
-  props: FieldPickerProps,
-  disclosure: boolean,
-): ScreenOpener => (
-  <ScreenTrigger
-    title={props.title}
-    summary={choiceSummary(props)}
-    lead={<RowTitle {...props} logo={chosenLogo(props)} />}
-    disclosure={disclosure}
-    disabled={props.disabled}
-  />
-);
+/*
+ * A Section counts and frames its children as rows, so an `inline` picker, which is several rows, is opened into
+ * one row per option before the Section reads them.
+ */
+export const expandInlinePickers = (rows: ReactNode[]): ReactNode[] =>
+  rows.flatMap(opened);
 
-const selectProps = (
-  props: FieldPickerProps,
-): React.ComponentProps<typeof FieldPickerSelect> => ({
-  title: props.title,
-  value: typeof props.value === 'string' ? props.value : '',
-  options: props.options,
-  onValueChange: props.onValueChange,
-  disabled: props.disabled,
-  lead: <RowTitle {...props} />,
-});
+function opened(row: ReactNode): ReactNode[] {
+  const props = pickerOf(row);
+
+  return props && kindOf(props) === 'inline' ? inlineOptionRows(props) : [row];
+}
+
+const pickerOf = (row: ReactNode): PickerProps | undefined =>
+  isValidElement<FieldPickerProps>(row) && row.type === FieldPicker
+    ? narrowed(row.props)
+    : undefined;

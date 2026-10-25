@@ -7,8 +7,12 @@ import {
   useSectionList,
 } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
+import {
+  ScreenMenuContext,
+  type ScreenMenu,
+} from '@repo/kit/primitives/scaffolds/screen';
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
-import { Stack, useFocusEffect, useNavigation } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
 import {
   CommonActions,
   DrawerActions,
@@ -17,7 +21,7 @@ import {
 } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { useCallback, type PropsWithChildren } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 
 interface OpenFirstPageProps {
   useFirstPage: NonNullable<SectionList['useFirstPage']>;
@@ -55,58 +59,44 @@ interface SectionRootProps {
   section: CoreSection;
 }
 
-// A light tap, then the Frame's drawer, which the action reaches from a section's stack.
-function useOpenDrawer(): () => void {
+// ☰ opens the Frame's drawer, which the action reaches from a section's stack, with a light tap and a badge while Sessions need attention.
+function useDrawerMenu(): ScreenMenu {
   const navigation = useNavigation();
+  const badge = useNeedsAttention();
 
-  return () => {
-    void impactAsync(ImpactFeedbackStyle.Light);
-    navigation.dispatch(DrawerActions.openDrawer());
+  return {
+    badge,
+    onOpen: () => {
+      void impactAsync(ImpactFeedbackStyle.Light);
+      navigation.dispatch(DrawerActions.openDrawer());
+    },
   };
 }
-
-// ☰ as a stock bar button item, which the system places like the back chevron, with the stock badge while Sessions need attention.
-export function MenuToolbar(): React.JSX.Element {
-  const badge = useNeedsAttention() ? <Stack.Toolbar.Badge /> : null;
-
-  return (
-    <Stack.Toolbar placement="left">
-      <Stack.Toolbar.Button
-        icon="line.3.horizontal"
-        accessibilityLabel="Open navigation"
-        onPress={useOpenDrawer()}
-      >
-        {badge}
-      </Stack.Toolbar.Button>
-    </Stack.Toolbar>
-  );
-}
-
-// iOS's narrow root leads with ☰ as a stock item; Android's and the web's stack headers draw their own.
-const RootMenu = Platform.OS === 'ios' ? MenuToolbar : (): null => null;
 
 interface RootListProps extends SectionRootProps {
   narrow: boolean;
 }
 
-// The section's list, or on a narrow window its root page when it has one, which fills the header above it.
+// The section's list, or on a narrow window its root page, whose Screen declares the header above it.
 function RootList({ section, narrow }: RootListProps): React.JSX.Element {
   const { list, rootPage } = useSectionList(section);
 
   return (
     <View className="flex-1 bg-content">
-      {narrow ? <NarrowRoot>{rootPage ?? list}</NarrowRoot> : list}
+      {narrow ? <NarrowRoot>{rootPage}</NarrowRoot> : list}
     </View>
   );
 }
 
-// A narrow root's page under ☰, which its own stack header carries everywhere but iOS, where the page declares it.
-export function NarrowRoot({ children }: PropsWithChildren): React.JSX.Element {
+// A narrow root's page under ☰. The provider is what marks a root: a deep-linked page below it keeps its Back.
+export function NarrowRoot({
+  children,
+  root = true,
+}: PropsWithChildren<{ root?: boolean }>): React.JSX.Element {
+  const menu = useDrawerMenu();
+
   return (
-    <>
-      {children}
-      <RootMenu />
-    </>
+    <ScreenMenuContext value={root ? menu : null}>{children}</ScreenMenuContext>
   );
 }
 

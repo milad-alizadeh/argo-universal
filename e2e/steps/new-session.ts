@@ -55,7 +55,7 @@ export async function chooseLocalCheckout(page: Page): Promise<void> {
   await expect(checkout).toContainText('New worktree');
   await expect(checkout).not.toContainText('main');
   await checkout.click();
-  await page.getByRole('button', { name: 'Local' }).click();
+  await page.getByRole('radio', { name: 'Local' }).click();
   // Checkout selection changes the next Send; it opens no Session.
   await expect(
     page.getByRole('button', { name: 'Checkout', includeHidden: true }),

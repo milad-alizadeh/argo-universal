@@ -16,10 +16,7 @@ import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import {
-  optionChoice,
-  type OptionRowProps,
-} from './field-picker-inline-choice';
+import { optionChoice, type OptionRowProps } from './field-picker-kind';
 import type { FieldPickerOption, FieldPickerProps } from './field-picker-model';
 import { wholeRowPress } from './field-picker-screen-row.ios';
 

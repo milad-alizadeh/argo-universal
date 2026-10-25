@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { withStack } from '#story-stack';
 import { Screen } from './index';
+import { SettingsScreen } from './screen-stack-settings.mocks';
 import {
   DetailScreen,
   HeaderActionsScreen,
   PushScreen,
-  SettingsScreen,
 } from './screen-stack.mocks';
 
 /*

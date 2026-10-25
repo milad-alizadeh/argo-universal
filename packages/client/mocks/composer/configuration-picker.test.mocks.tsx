@@ -14,7 +14,6 @@ import {
   expectEffortFollowsModel,
   expectDangerousMode,
 } from './configuration-expectations.test.mocks';
-import { expectEffortControlsVisible } from './model-choice.test.mocks';
 import { pickerCatalogs } from './recorded-catalog.test.mocks';
 
 export function pickers(width: number, agentIndex: number): Story {
@@ -41,7 +40,6 @@ export function pickers(width: number, agentIndex: number): Story {
           await overlay.findByRole('slider', { name: 'Effort' }),
         ).toBeVisible(),
       );
-      await expectEffortControlsVisible();
       await expectHighEffort({ canvas, userEvent, width, catalog });
 
       for (const model of catalog.models)

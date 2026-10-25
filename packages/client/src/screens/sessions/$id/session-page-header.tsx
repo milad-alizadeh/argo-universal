@@ -1,29 +1,20 @@
+import { Action } from '@repo/kit/primitives/actions/action';
+import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import {
-  SessionHeaderMenu,
   type SessionHeaderProps,
   type SessionMenu,
-  SessionMenuToolbar,
+  sessionActions,
 } from '#features/sessions';
-import {
-  ScreenHeader,
-  type ScreenHeaderProps,
-} from '#lib/product/navigation/screen-header';
 import {
   type SessionDetailViewProps,
   sessionPageTitle,
 } from './session-detail-view';
 
 function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
-  if (props.state !== 'open') return undefined;
+  if (props.state !== 'open' || !props.header.menu) return undefined;
 
-  return withChanges(props.header);
-}
-
-function withChanges(header: SessionHeaderProps): SessionMenu | undefined {
-  if (!header.menu) return undefined;
-
-  return { ...header.menu, changes: menuChanges(header.changes) };
+  return { ...props.header.menu, changes: menuChanges(props.header.changes) };
 }
 
 function menuChanges(
@@ -37,28 +28,31 @@ function menuChanges(
   };
 }
 
-// The web's narrow header: the Session's title, and ⋯ as its trailing item. Native stack headers take only the title.
-export function sessionScreenHeader(
-  props: SessionDetailViewProps,
-): ScreenHeaderProps {
-  const menu = headerMenuOf(props);
+// The Session's ⋯: one header Action whose menu holds changed files, Rename and Archive, declared as a Plugin page declares its Screen's Actions.
+function moreAction(
+  menu: SessionMenu | undefined,
+): React.JSX.Element | undefined {
+  const actions = menu
+    ? sessionActions(menu, { changesIcon: 'changed-files' })
+    : [];
 
-  return {
-    title: sessionPageTitle(props),
-    right: menu ? [<SessionHeaderMenu key="menu" menu={menu} />] : [],
-  };
+  if (!actions.length) return undefined;
+
+  return (
+    <Action label="More" icon="more">
+      {actions}
+    </Action>
+  );
 }
 
-// A narrow window's header: the Session's title, and ⋯ with its menu; native stack headers take the toolbar's stock item.
+// A narrow window's header: the Session's title and its ⋯ menu. The page's body is the Session's own, so only the header is a Screen's.
 export function SessionPageHeader(
   props: SessionDetailViewProps,
 ): React.JSX.Element {
-  const menu = headerMenuOf(props);
-
   return (
-    <>
-      <ScreenHeader {...sessionScreenHeader(props)} />
-      {menu && <SessionMenuToolbar menu={menu} />}
-    </>
+    <ScreenStackHeader
+      title={sessionPageTitle(props)}
+      actions={moreAction(headerMenuOf(props))}
+    />
   );
 }

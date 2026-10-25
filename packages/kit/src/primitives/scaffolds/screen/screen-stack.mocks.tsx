@@ -2,11 +2,10 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { Action } from '#primitives/actions/action';
-import { FieldGroup } from '#primitives/fields/field-group';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { useStackPush } from '#story-stack';
-import { Screen } from './index';
+import { Screen, ScreenMenuContext } from './index';
 
 export const onAction = fn();
 
@@ -55,6 +54,39 @@ export function PushScreen(): React.JSX.Element {
   );
 }
 
+// The root as the App draws a narrow one: its provider gives it ☰; the page it pushes is outside the provider.
+export function MenuRootScreen(): React.JSX.Element {
+  return (
+    <ScreenMenuContext value={{ onOpen: onAction, badge: false }}>
+      <PushScreen />
+    </ScreenMenuContext>
+  );
+}
+
+export const onSearch = fn();
+
+const searched =
+  (setValue: (text: string) => void) =>
+  (text: string): void => {
+    setValue(text);
+    onSearch(text);
+  };
+
+export function SearchScreen(): React.JSX.Element {
+  const [value, setValue] = useState('');
+
+  return (
+    <Screen
+      title="Title"
+      search={{ label: 'Search Items' }}
+      value={value}
+      onChangeText={searched(setValue)}
+    >
+      <Rows />
+    </Screen>
+  );
+}
+
 function OpenDetail(): React.JSX.Element {
   const push = useStackPush();
 
@@ -69,93 +101,6 @@ export function DetailScreen(): React.JSX.Element {
   return (
     <Screen title="Detail" onBack={() => router.back()}>
       <Rows />
-    </Screen>
-  );
-}
-
-const themes = [
-  { value: 'system', label: 'System' },
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-];
-
-const projects = [
-  'Alder',
-  'Aspen',
-  'Beech',
-  'Birch',
-  'Cedar',
-  'Elm',
-  'Maple',
-  'Oak',
-].map((name) => ({ value: name.toLowerCase(), label: name }));
-
-function ProjectPicker(): React.JSX.Element {
-  const [value, setValue] = useState('alder');
-
-  return (
-    <FieldGroup.Picker
-      title="Project"
-      options={projects}
-      presentation="page"
-      searchable
-      value={value}
-      onValueChange={setValue}
-    />
-  );
-}
-
-function ThemePicker(): React.JSX.Element {
-  const [value, setValue] = useState('system');
-
-  return (
-    <FieldGroup.Picker
-      title="Appearance"
-      options={themes}
-      presentation="menu"
-      value={value}
-      onValueChange={setValue}
-    />
-  );
-}
-
-function NotifyToggle(): React.JSX.Element {
-  const [value, setValue] = useState(true);
-
-  return (
-    <FieldGroup.Toggle
-      title="Notifications"
-      value={value}
-      onValueChange={setValue}
-    />
-  );
-}
-
-function NameField(): React.JSX.Element {
-  const [value, setValue] = useState('Argo');
-
-  return (
-    <FieldGroup.TextField
-      title="Name"
-      placeholder="Name"
-      value={value}
-      onChangeText={setValue}
-    />
-  );
-}
-
-// A settings form in the stack, so a picker that presents as a page pushes onto it.
-export function SettingsScreen(): React.JSX.Element {
-  return (
-    <Screen title="Settings">
-      <FieldGroup>
-        <FieldGroup.Section title="General">
-          <ProjectPicker />
-          <ThemePicker />
-          <NotifyToggle />
-          <NameField />
-        </FieldGroup.Section>
-      </FieldGroup>
     </Screen>
   );
 }
