@@ -52,9 +52,12 @@ export const LeavesRouteAndUnpairOut: Story = {
 export const ShowsConnectingUntilServerAnswers: Story = {
   args: { server: { status: 'loading' } },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('Connecting to the Server…')).toBeVisible();
-    await expect(canvas.getByRole('progressbar')).toBeVisible();
-    await expect(canvas.queryByText('Version')).toBeNull();
+    await expect(await canvas.findByRole('status')).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    await expect(canvas.queryByRole('progressbar')).toBeNull();
+    await expect(canvas.queryByText('1.2.3')).toBeNull();
   },
 };
 
@@ -62,7 +65,7 @@ export const ShowsConnectingUntilServerAnswers: Story = {
 export const LeavesTheDownConnectionToTheBanner: Story = {
   args: { server: { status: 'down' } },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByText(/^Connecting to the Server/)).toBeNull();
+    await expect(canvas.queryByRole('status')).toBeNull();
     await expect(canvas.queryByRole('progressbar')).toBeNull();
   },
 };
@@ -71,8 +74,11 @@ export const ShowsSystemInfoErrorAsAToast: Story = {
   args: { server: { status: 'error', message: 'Server is down' } },
   play: async ({ canvas }) => {
     await expect(await findToast('Could not load the Server')).toBeVisible();
-    await expect(canvas.getByText(/^Connecting to the Server/)).toBeVisible();
-    await expect(canvas.queryByText('Version')).toBeNull();
+    await expect(await canvas.findByRole('status')).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    await expect(canvas.queryByText('1.2.3')).toBeNull();
   },
 };
 
