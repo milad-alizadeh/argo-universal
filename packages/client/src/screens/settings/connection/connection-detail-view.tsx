@@ -41,9 +41,7 @@ export function ConnectionDetailView({
 }
 
 function ServerForm({ server }: { server: ServerDetails }): React.JSX.Element {
-  useErrorToast(
-    errorToast("Could not load the Server's details", loadError(server)),
-  );
+  useErrorToast(errorToast('Could not load the Server', loadError(server)));
 
   return <ServerState server={server} />;
 }

@@ -70,9 +70,7 @@ export const LeavesTheDownConnectionToTheBanner: Story = {
 export const ShowsSystemInfoErrorAsAToast: Story = {
   args: { server: { status: 'error', message: 'Server is down' } },
   play: async ({ canvas }) => {
-    await expect(
-      await findToast("Could not load the Server's details"),
-    ).toBeVisible();
+    await expect(await findToast('Could not load the Server')).toBeVisible();
     await expect(canvas.getByText(/^Connecting to the Server/)).toBeVisible();
     await expect(canvas.queryByText('Version')).toBeNull();
   },
