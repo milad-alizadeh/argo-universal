@@ -1,0 +1,5 @@
+{
+  "extends": "@argo/plugin-kit/tsconfig.json",
+  // The Vitest config and the test helpers run in Node, so they are checked with the tests.
+  "exclude": ["**/*.test.ts", "**/node_modules", "vitest.config.ts", "testing"]
+}

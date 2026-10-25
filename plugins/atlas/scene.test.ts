@@ -82,13 +82,22 @@ describe('Captions', () => {
     expect(captions.sort()).toEqual(largest.sort());
   });
 
+  it('gives each caption its own key', () => {
+    const keys = fileCaptions(tiles).map(({ key }) => key);
+
+    expect(new Set(keys).size).toBe(maximumCaptions);
+  });
+
   it('anchors each caption inside its own file', () => {
-    const byPath = new Map(
-      tiles.map((tile): [string, Tile] => [tile.path, tile]),
+    const byName = new Map(
+      tiles.map((tile): [string, Tile] => [
+        tile.path.slice('src/'.length),
+        tile,
+      ]),
     );
 
     const outside = fileCaptions(tiles).filter((caption) => {
-      const tile = byPath.get(caption.file);
+      const tile = byName.get(caption.text);
 
       return !tile || !anchoredIn(caption, tile);
     });

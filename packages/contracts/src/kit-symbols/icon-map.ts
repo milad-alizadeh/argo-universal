@@ -45,7 +45,6 @@ export const iconSymbols = {
   clear: { sf: 'xmark.circle.fill', material: 'cancel' },
   close: { sf: 'xmark', material: 'close' },
   code: { sf: 'chevron.left.forwardslash.chevron.right', material: 'code' },
-  'code-map': { sf: 'cube', material: 'deployed_code' },
   collapse: {
     sf: 'arrow.down.right.and.arrow.up.left',
     sfFilled: 'arrow.down.right.and.arrow.up.left.circle.fill',

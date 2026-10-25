@@ -87,6 +87,15 @@ describe('Treemap', () => {
     expect(others.filter((tile) => overlaps(tile, folder))).toEqual([]);
   });
 
+  it('starts with the heaviest top-level folder, as every level does', () => {
+    const ordered = layout([file('light/a.ts', 10), file('heavy/b.ts', 500)]);
+
+    expect(ordered.map((tile) => tile.path)).toEqual([
+      'heavy/b.ts',
+      'light/a.ts',
+    ]);
+  });
+
   it('draws nothing for a Project with no files', () => {
     expect(layout([])).toEqual([]);
   });

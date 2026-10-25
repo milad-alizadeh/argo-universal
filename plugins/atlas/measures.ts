@@ -5,8 +5,8 @@ type Tone = PluginProps['Canvas.Rect']['tone'];
 
 export type BranchBand = 'high' | 'middle' | 'low';
 
-// The #834 prototype's bands for its lexical branch count.
-const bandFloors = { high: 20, middle: 9 };
+// The least branching lines a file needs for each band: about the top 4% and the top 19% of the files that branch at all in a large repository, so most files stay neutral and the few hot ones stand out.
+const bandFloors = { high: 15, middle: 6 };
 
 const bandTones: Record<BranchBand, Tone> = {
   high: 'danger',

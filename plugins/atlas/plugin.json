@@ -1,6 +1,6 @@
 {
-  "id": "code-map",
-  "name": "Code Map",
+  "id": "atlas",
+  "name": "Atlas",
   "version": "0.0.1",
   "engines": {
     "argo": ">=0.0.0 <1.0.0"
@@ -19,7 +19,7 @@
     {
       "kind": "process:exec",
       "command": "git",
-      "args": ["grep", "--no-color", "-I", "-z", "-c", "-e", "^"]
+      "args": ["grep", "--no-color", "-I", "-z", "-c", "-G", "-e", "^"]
     },
     {
       "kind": "process:exec",
@@ -43,9 +43,12 @@
         "--no-color",
         "-z",
         "-n",
-        "1000",
+        "200",
         "--format=",
-        "--name-only"
+        "--name-only",
+        "--relative",
+        "--",
+        "."
       ]
     }
   ]

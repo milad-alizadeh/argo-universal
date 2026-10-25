@@ -33,7 +33,6 @@ import material_contrast from '../assets/material-light/contrast.xml';
 import material_crop_square from '../assets/material-light/crop_square.xml';
 import material_data_object from '../assets/material-light/data_object.xml';
 import material_delete from '../assets/material-light/delete.xml';
-import material_deployed_code from '../assets/material-light/deployed_code.xml';
 import material_description from '../assets/material-light/description.xml';
 import material_desktop_mac from '../assets/material-light/desktop_mac.xml';
 import material_diamond from '../assets/material-light/diamond.xml';
@@ -330,7 +329,6 @@ export const materialImages = {
   crop_square: material_crop_square,
   data_object: material_data_object,
   delete: material_delete,
-  deployed_code: material_deployed_code,
   description: material_description,
   desktop_mac: material_desktop_mac,
   diamond: material_diamond,

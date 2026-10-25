@@ -12,7 +12,6 @@ export type FileRect = PluginProps['Canvas.Rect'] & {
 // A file's name drawn over its rectangle.
 export type FileCaption = PluginProps['Canvas.Text'] & {
   key: string;
-  file: string;
   x: number;
   y: number;
 };
@@ -88,7 +87,7 @@ export function fileRects(tiles: Tile[]): FileRect[] {
 }
 
 // Set a little inside the tile, so the App fits the caption to that tile.
-function caption(tile: Tile): FileCaption {
+function caption(tile: Tile, index: number): FileCaption {
   const inset = Math.min(
     captionInset,
     tile.w / insetShare,
@@ -96,8 +95,7 @@ function caption(tile: Tile): FileCaption {
   );
 
   return {
-    key: `caption:${tile.path}`,
-    file: tile.path,
+    key: `c${index}`,
     x: round(tile.x + inset),
     y: round(tile.y + inset),
     text: fileName(tile.path),

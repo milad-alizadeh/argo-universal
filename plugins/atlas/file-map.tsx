@@ -2,15 +2,16 @@ import {
   Canvas,
   Metadata,
   Stack,
-  Text,
   useMemo,
   useState,
   type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { layout, mapExtent } from './layout/treemap';
+import { MapNotes } from './map-notes';
 import type { CodeFile } from './model';
-import { historyCommits } from './project-files';
+import { count } from './notes';
+import type { FileAnswers } from './project-files';
 import {
   drawnFiles,
   fileCaptions,
@@ -19,10 +20,6 @@ import {
   type FileCaption,
   type FileRect,
 } from './scene';
-
-const count = (value: number): string => value.toLocaleString('en');
-
-const legend = `Area: lines · Colour: branching lines · Shade: changes in the last ${count(historyCommits)} commits`;
 
 // What a page draws of the Project's files.
 interface Scene {
@@ -41,8 +38,13 @@ function useScene(files: CodeFile[]): Scene {
   return { drawn, rects, captions };
 }
 
+interface FileMapProps {
+  files: CodeFile[];
+  answers: FileAnswers;
+}
+
 // The App owns pan, zoom and the selection outline; the Plugin keeps which file is selected.
-export function FileMap({ files }: { files: CodeFile[] }): JSX.Element {
+export function FileMap({ files, answers }: FileMapProps): JSX.Element {
   const [selected, setSelected] = useState<string | null>(null);
   const scene = useScene(files);
   const selectedKey = scene.rects.find(({ path }) => path === selected)?.key;
@@ -50,7 +52,7 @@ export function FileMap({ files }: { files: CodeFile[] }): JSX.Element {
   return (
     <Stack direction="column" gap={4}>
       <MapCanvas {...scene} selected={selectedKey} onSelect={setSelected} />
-      <MapNotes drawn={scene.drawn} total={files.length} />
+      <MapNotes drawn={scene.drawn} answers={answers} />
       <FileDetails file={files.find(({ path }) => path === selected)} />
     </Stack>
   );
@@ -66,7 +68,6 @@ const frame: Omit<PluginProps['Canvas'], 'selectedKey'> = {
   label: 'Code Map',
   width: mapExtent.w,
   height: mapExtent.h,
-  aspectRatio: mapExtent.w / mapExtent.h,
   camera: 'pan-zoom',
 };
 
@@ -77,28 +78,10 @@ function MapCanvas(props: MapCanvasProps): JSX.Element {
       {props.rects.map(({ key, path, ...rect }) => (
         <Canvas.Rect key={key} {...rect} onPress={() => props.onSelect(path)} />
       ))}
-      {props.captions.map(({ key, file: _file, ...caption }) => (
+      {props.captions.map(({ key, ...caption }) => (
         <Canvas.Text key={key} {...caption} />
       ))}
     </Canvas>
-  );
-}
-
-// What the map's area, colour and shade mean, and how many files it left out.
-function MapNotes(props: { drawn: DrawnFiles; total: number }): JSX.Element {
-  const hidden = `Showing the ${count(props.drawn.files.length)} largest of ${count(props.total)} files.`;
-
-  return (
-    <Stack direction="column" gap={1}>
-      <Text role="secondary" tone="muted">
-        {legend}
-      </Text>
-      {props.drawn.hidden > 0 ? (
-        <Text role="secondary" tone="muted">
-          {hidden}
-        </Text>
-      ) : null}
-    </Stack>
   );
 }
 

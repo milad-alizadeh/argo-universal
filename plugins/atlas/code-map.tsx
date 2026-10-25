@@ -2,7 +2,7 @@ import { EmptyState, Text, useData, useMemo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { FileMap } from './file-map';
 import { fileQueries, projectFiles } from './project-files';
-import { readFiles, type Answer, type Reading } from './reading';
+import { readFiles, type Answer, type Failure, type Reading } from './reading';
 
 // One Query's answer, kept the same object while it holds the same data.
 function useAnswer(
@@ -25,17 +25,24 @@ function useReading(): Reading {
   );
 }
 
+const failures: Record<Failure, { title: string; description: string }> = {
+  'not-repository': {
+    title: 'Could not read this Project’s files.',
+    description: 'The Code Map needs the Project to be a git repository.',
+  },
+  'no-answer': {
+    title: 'Git did not answer.',
+    description:
+      'Reading this Project’s files timed out or git could not be run. Try again later.',
+  },
+};
+
 // Waits for git's answers, then draws the Project's files as a treemap.
 export function CodeMap(): JSX.Element {
   const reading = useReading();
 
   if (reading.state === 'failed')
-    return (
-      <EmptyState
-        title="Could not read this Project’s files."
-        description="The Code Map needs the Project to be a git repository."
-      />
-    );
+    return <EmptyState {...failures[reading.failure]} />;
 
   if (reading.state === 'loading')
     return <Text tone="muted">Reading this Project’s files…</Text>;
@@ -56,5 +63,5 @@ function ProjectMap({ reading }: { reading: ReadyReading }): JSX.Element {
       />
     );
 
-  return <FileMap files={files} />;
+  return <FileMap files={files} answers={reading.answers} />;
 }

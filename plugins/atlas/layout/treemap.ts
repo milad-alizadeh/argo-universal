@@ -44,9 +44,7 @@ function single(node: Folder, bounds: Bounds, tiles: Tile[]): void {
     return;
   }
 
-  const children = [...node.children.values()].sort(
-    (a, b) => b.weight - a.weight,
-  );
+  const children = [...node.children.values()].sort(heaviestFirst);
 
   split(children, folderBounds(bounds), tiles);
 }
@@ -69,10 +67,12 @@ function split(nodes: Folder[], bounds: Bounds, tiles: Tile[]): void {
   splitParts(partition(nodes, bounds), tiles);
 }
 
+const heaviestFirst = (a: Folder, b: Folder): number => b.weight - a.weight;
+
 // A slice-and-dice treemap: each folder halves its space by weight along its longer side, so area follows lines.
 export function layout(files: CodeFile[]): Tile[] {
   const tiles: Tile[] = [];
-  split(folders(files), mapExtent, tiles);
+  split(folders(files).sort(heaviestFirst), mapExtent, tiles);
 
   return tiles;
 }

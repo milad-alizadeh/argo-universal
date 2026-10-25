@@ -4,8 +4,10 @@ import { defineProject } from 'vitest/config';
 export default defineProject({
   root: import.meta.dirname,
   test: {
-    name: 'code-map',
+    name: 'atlas',
     environment: 'node',
+    // The integration tests build real git repositories.
+    testTimeout: 60_000,
     restoreMocks: true,
     expect: { requireAssertions: true },
   },
