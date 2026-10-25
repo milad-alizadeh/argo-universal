@@ -19,6 +19,7 @@ const rulesSchema = z.object({
   sameSizeTolerance: z.number(),
   roundSlack: z.number(),
   minBarWidthPerHeight: z.number(),
+  singleLineMax: z.number(),
   atomic: z.object({
     web: z.object({
       tags: names,
@@ -27,7 +28,11 @@ const rulesSchema = z.object({
       glyphRoles: names,
       vectorTags: names,
     }),
-    ios: nativeLists,
+    ios: nativeLists.extend({
+      hostClasses: names,
+      glyphLayerClasses: names,
+      textLayerClasses: names,
+    }),
     android: nativeLists,
   }),
 });
@@ -82,9 +87,13 @@ enum SkeletonRules {
   static let sameSizeTolerance: CGFloat = ${rules.sameSizeTolerance}
   static let roundSlack: CGFloat = ${rules.roundSlack}
   static let minBarWidthPerHeight: CGFloat = ${rules.minBarWidthPerHeight}
+  static let singleLineMax: CGFloat = ${rules.singleLineMax}
   static let atomicClasses = [${quoted(rules.atomic.ios.classes)}]
   static let glyphClasses = [${quoted(rules.atomic.ios.glyphClasses)}]
   static let vectorClasses = [${quoted(rules.atomic.ios.vectorClasses)}]
+  static let hostClasses = [${quoted(rules.atomic.ios.hostClasses)}]
+  static let glyphLayerClasses = [${quoted(rules.atomic.ios.glyphLayerClasses)}]
+  static let textLayerClasses = [${quoted(rules.atomic.ios.textLayerClasses)}]
 }
 `;
 }

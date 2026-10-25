@@ -13,13 +13,20 @@ import UIKit
 public final class ArgoSkeletonView: ExpoView {
   private struct Hidden {
     weak var view: UIView?
+    weak var layer: CALayer?
     let alpha: CGFloat
+    let opacity: Float
+
+    func restore() {
+      view?.alpha = alpha
+      layer?.opacity = opacity
+    }
   }
 
   private static let fade: TimeInterval = 0.2
   private static let pulseKey = "pulse"
 
-  private let placeholderLayer = CAPlaceholderLayer()
+  private let placeholderLayer = CAShapeLayer()
   private var loading = false
   private var animation = "pulse"
   private var placeholderColor: UIColor?
@@ -164,15 +171,24 @@ public final class ArgoSkeletonView: ExpoView {
   // Hides what the walk found, and shows again what it no longer finds.
   private func hide(_ leaves: [SkeletonLeaf]) {
     var current = Set<ObjectIdentifier>()
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    defer { CATransaction.commit() }
     for leaf in leaves {
-      guard let view = leaf.view else { continue }
-      let id = ObjectIdentifier(view)
-      current.insert(id)
-      if concealed[id] == nil { concealed[id] = Hidden(view: view, alpha: view.alpha) }
-      view.alpha = 0
+      if let view = leaf.view {
+        let id = ObjectIdentifier(view)
+        current.insert(id)
+        if concealed[id] == nil { concealed[id] = Hidden(view: view, layer: nil, alpha: view.alpha, opacity: 1) }
+        view.alpha = 0
+      } else if let layer = leaf.layer {
+        let id = ObjectIdentifier(layer)
+        current.insert(id)
+        if concealed[id] == nil { concealed[id] = Hidden(view: nil, layer: layer, alpha: 1, opacity: layer.opacity) }
+        layer.opacity = 0
+      }
     }
     for (id, entry) in concealed where !current.contains(id) {
-      entry.view?.alpha = entry.alpha
+      entry.restore()
       concealed[id] = nil
     }
   }
@@ -180,7 +196,12 @@ public final class ArgoSkeletonView: ExpoView {
   private func restoreAll(animated: Bool) {
     let entries = concealed.values
     concealed = [:]
-    let restore = { for entry in entries { entry.view?.alpha = entry.alpha } }
+    let restore = {
+      CATransaction.begin()
+      CATransaction.setDisableActions(true)
+      for entry in entries { entry.restore() }
+      CATransaction.commit()
+    }
     if animated {
       UIView.animate(withDuration: Self.fade, animations: restore)
     } else {

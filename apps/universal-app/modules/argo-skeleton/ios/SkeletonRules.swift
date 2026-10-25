@@ -9,7 +9,11 @@ enum SkeletonRules {
   static let sameSizeTolerance: CGFloat = 2
   static let roundSlack: CGFloat = 1
   static let minBarWidthPerHeight: CGFloat = 1
+  static let singleLineMax: CGFloat = 1.5
   static let atomicClasses = ["RCTImageComponentView", "RNSVGSvgView", "RCTSwitchComponentView", "RCTTextInputComponentView", "RCTActivityIndicatorViewComponentView", "RCTSliderComponentView", "ExpoImage", "SymbolView"]
   static let glyphClasses = ["RCTImageComponentView", "RNSVGSvgView", "ExpoImage", "SymbolView"]
   static let vectorClasses = ["RNSVGSvgView"]
+  static let hostClasses = ["HostingView"]
+  static let glyphLayerClasses = ["ImageLayer"]
+  static let textLayerClasses = ["CGDrawingLayer"]
 }

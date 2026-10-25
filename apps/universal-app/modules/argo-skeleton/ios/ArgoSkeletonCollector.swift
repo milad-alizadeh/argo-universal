@@ -8,7 +8,18 @@ struct SkeletonPlaceholder: Equatable {
 // A drawn view the walk found, and the placeholders that stand in for it (a paragraph gives one per line).
 struct SkeletonLeaf {
   weak var view: UIView?
+  weak var layer: CALayer?
   var placeholders: [SkeletonPlaceholder]
+
+  init(view: UIView, placeholders: [SkeletonPlaceholder]) {
+    self.view = view
+    self.placeholders = placeholders
+  }
+
+  init(layer: CALayer, placeholders: [SkeletonPlaceholder]) {
+    self.layer = layer
+    self.placeholders = placeholders
+  }
 }
 
 // What one walk of a Skeleton found: the RN views that draw content, and the SwiftUI trees it cannot see into.
@@ -39,7 +50,12 @@ enum SkeletonCollector {
     }
     if view.isHidden || view is ArgoSkeletonView { return }
     if isHosting(view) {
-      found.hosts.append(view)
+      // A control-sized Host is one control (a Button): one placeholder, its fill hidden with the rest of it.
+      if fitsSmallControl(view.bounds.size), view.bounds.width > 0, view.bounds.height > 0 {
+        found.leaves.append(SkeletonLeaf(view: view, placeholders: [SkeletonPlaceholder(rect: view.convert(view.bounds, to: root), radius: radius(of: view))]))
+      } else {
+        found.hosts.append(view)
+      }
       return
     }
     if let placeholders = placeholders(of: view, root: root) {
@@ -49,8 +65,11 @@ enum SkeletonCollector {
     for child in view.subviews { walk(child, root: root, into: &found) }
   }
 
-  // The UIKit controls SwiftUI draws as real views (a Toggle is a UISwitch). The rest of a hosting view has no views:
-  // the Host redacts its text and icons, and a Button fill SwiftUI draws itself has no frame without accessibility.
+  /*
+   * What a large SwiftUI Host draws. A Toggle is a UISwitch, a real view. Text and icons are layers the hosting view
+   * paints itself: a text layer gives one bar per line and an icon layer a round placeholder, so each looks like the
+   * RN ones instead of SwiftUI's own redaction, which cannot be coloured or shaped.
+   */
   static func controls(in host: UIView, root: UIView) -> [SkeletonLeaf] {
     var found: [SkeletonLeaf] = []
     func visit(_ view: UIView) {
@@ -59,14 +78,39 @@ enum SkeletonCollector {
         found.append(SkeletonLeaf(view: view, placeholders: [SkeletonPlaceholder(rect: view.convert(view.bounds, to: root), radius: radius(of: view))]))
         return
       }
+      found += drawn(by: view.layer, root: root)
       for child in view.subviews { visit(child) }
     }
+    found += drawn(by: host.layer, root: root)
     for child in host.subviews { visit(child) }
     return found
   }
 
+  // The layers of a view that SwiftUI paints text or an icon into. Layers of subviews are their own walk.
+  private static func drawn(by layer: CALayer, root: UIView) -> [SkeletonLeaf] {
+    var found: [SkeletonLeaf] = []
+    for child in layer.sublayers ?? [] {
+      if child.isHidden || child.delegate is UIView { continue }
+      let name = String(reflecting: type(of: child))
+      let bounds = child.bounds
+      if bounds.width > 0, bounds.height > 0 {
+        if SkeletonRules.glyphLayerClasses.contains(where: { name.contains($0) }) {
+          let rect = root.layer.convert(bounds, from: child)
+          found.append(SkeletonLeaf(layer: child, placeholders: [SkeletonPlaceholder(rect: rect, radius: min(rect.width, rect.height) / 2)]))
+          continue
+        }
+        if SkeletonRules.textLayerClasses.contains(where: { name.contains($0) }) {
+          found.append(SkeletonLeaf(layer: child, placeholders: bars(in: bounds) { root.layer.convert($0, from: child) }))
+          continue
+        }
+      }
+      found += drawn(by: child, root: root)
+    }
+    return found
+  }
+
   static func isHosting(_ view: UIView) -> Bool {
-    className(view).contains("HostingView")
+    SkeletonRules.hostClasses.contains { className(view).contains($0) }
   }
 
   private static func className(_ view: UIView) -> String {
@@ -167,7 +211,7 @@ enum SkeletonCollector {
       radius = current.layer.cornerRadius
       parent = current.superview
     }
-    if view is UISwitch || className(view).contains("Switch") { radius = limit }
+    if view is UISwitch || className(view).contains("Switch") || isHosting(view) { radius = limit }
     if radius == 0, isGlyph(view), fitsSmallControl(size) { radius = limit }
     return min(radius, limit)
   }
@@ -199,22 +243,27 @@ enum SkeletonCollector {
     let range = layout.glyphRange(for: container)
     layout.enumerateLineFragments(forGlyphRange: range) { rect, used, _, _, _ in
       guard used.width > 0 else { return }
-      placeholders.append(barPlaceholder(CGRect(x: used.minX, y: rect.minY, width: used.width, height: rect.height), in: view, root: root))
+      placeholders.append(barPlaceholder(CGRect(x: used.minX, y: rect.minY, width: used.width, height: rect.height)) { view.convert($0, to: root) })
     }
     return placeholders
   }
 
   private static func fallbackLines(of view: UIView, root: UIView) -> [SkeletonPlaceholder] {
+    bars(in: view.bounds) { view.convert($0, to: root) }
+  }
+
+  // A box of text whose lines are not known (a view that cannot be read, a drawn layer): split by its height into body lines.
+  private static func bars(in box: CGRect, convert: (CGRect) -> CGRect) -> [SkeletonPlaceholder] {
     let body = UIFont.preferredFont(forTextStyle: .body).lineHeight
-    let count = max(1, Int((view.bounds.height / body).rounded()))
-    let height = view.bounds.height / CGFloat(count)
+    let count = box.height > body * SkeletonRules.singleLineMax ? max(1, Int((box.height / body).rounded())) : 1
+    let height = box.height / CGFloat(count)
     return (0..<count).map { line in
-      barPlaceholder(CGRect(x: 0, y: CGFloat(line) * height, width: view.bounds.width, height: height), in: view, root: root)
+      barPlaceholder(CGRect(x: box.minX, y: box.minY + CGFloat(line) * height, width: box.width, height: height), convert: convert)
     }
   }
 
   // A bar is part of its line box so lines do not touch, and at least as wide as a dot so one character is round.
-  private static func barPlaceholder(_ line: CGRect, in view: UIView, root: UIView) -> SkeletonPlaceholder {
+  private static func barPlaceholder(_ line: CGRect, convert: (CGRect) -> CGRect) -> SkeletonPlaceholder {
     let height = line.height * SkeletonRules.lineFill
     let width = max(line.width, height * SkeletonRules.minBarWidthPerHeight)
     let bar = CGRect(
@@ -223,7 +272,7 @@ enum SkeletonCollector {
       width: width,
       height: height
     )
-    return SkeletonPlaceholder(rect: view.convert(bar, to: root), radius: height / 2)
+    return SkeletonPlaceholder(rect: convert(bar), radius: height / 2)
   }
 }
 

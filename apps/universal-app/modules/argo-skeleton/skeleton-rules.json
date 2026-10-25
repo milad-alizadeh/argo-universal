@@ -6,6 +6,7 @@
   "sameSizeTolerance": 2,
   "roundSlack": 1,
   "minBarWidthPerHeight": 1,
+  "singleLineMax": 1.5,
   "atomic": {
     "web": {
       "tags": [
@@ -41,7 +42,10 @@
         "ExpoImage",
         "SymbolView"
       ],
-      "vectorClasses": ["RNSVGSvgView"]
+      "vectorClasses": ["RNSVGSvgView"],
+      "hostClasses": ["HostingView"],
+      "glyphLayerClasses": ["ImageLayer"],
+      "textLayerClasses": ["CGDrawingLayer"]
     },
     "android": {
       "classes": ["ImageView", "SvgView", "ReactSlider", "ReactSwitch"],
