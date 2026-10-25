@@ -16,10 +16,12 @@ import {
   type TurnEndingNotice,
 } from './turn-ending';
 
-// A Turn ending settles its Feed in one rule (ADR-0024), `settleFeedTurn`, whichever adapter runs it:
-// - live (`feed-turn-settlement.ts`): the Feed machine's context; its rows leave through a queued `FeedRowsJob`.
-// - stored (`stored-turn-settlement.ts`): a database transaction, for Engine restart and archive; its rows are written in that transaction and never queued as a job.
-// Only a `FeedRowsJob` reaches `committedTurnEndings`, so a restart or archive ending raises no notification.
+/*
+ * A Turn ending settles its Feed in one rule (ADR-0024), `settleFeedTurn`, whichever adapter runs it:
+ * - live (`feed-turn-settlement.ts`): the Feed machine's context; its rows leave through a queued `FeedRowsJob`.
+ * - stored (`stored-turn-settlement.ts`): a database transaction, for Engine restart and archive; its rows are written in that transaction and never queued as a job.
+ * Only a `FeedRowsJob` reaches `committedTurnEndings`, so a restart or archive ending raises no notification.
+ */
 
 // A durable Feed marker: #148 owns its drawing, separately from crash Notices.
 const turnEndChange = (turnId: string, end: TurnEnd): FeedChange => ({

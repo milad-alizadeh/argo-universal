@@ -58,9 +58,9 @@ export {
   type FeedTurnEnding,
 } from './turn-settlement';
 
+export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';
+
 export {
-  advanceRecoveredSession,
-  recoverStoredFeedRow,
   settleArchivedChild,
   settleStoredTurn,
 } from './stored-turn-settlement';

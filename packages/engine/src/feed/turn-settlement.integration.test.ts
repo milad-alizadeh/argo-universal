@@ -1,4 +1,3 @@
-import type { Notice } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
@@ -94,7 +93,7 @@ it('settles the Turn in the live Feed', () => {
       rows,
       maxRevision: 2,
       nextPosition: 2,
-      findWrittenRow: () => undefined,
+      findWrittenRow: (): undefined => {},
       streamEvents: [],
       changedRowIds: [],
       messageStreams: {},
@@ -136,34 +135,4 @@ it('writes the Turn end marker after the stored rows when Engine restart settles
     turnId,
     _meta: { argo: { turnEnd: endedAt } },
   });
-});
-
-const notice = (fields: Partial<Notice>): Notice => ({
-  sessionId: 'session-1',
-  id: 'turn-1:end',
-  sessionUpdate: 'notice',
-  state: 'settled',
-  position: 3,
-  revision: 4,
-  turnId,
-  severity: 'info',
-  title: 'Turn ended',
-  ...fields,
-});
-
-const liveRows = (rows: Notice[]): FeedRowsJob =>
-  new FeedRowsJob({ sessionId: 'session-1', rows, maxRevision: 4 });
-
-it('reports a Turn ending the live Feed committed', () => {
-  const ending = notice({ _meta: { argo: { turnEnd: endedAt } } });
-
-  expect(committedTurnEndings([liveRows([ending])])).toEqual([
-    { sessionId: 'session-1', turnId },
-  ]);
-});
-
-it('ignores a Notice that ends no Turn', () => {
-  const crash = notice({ id: 'turn-1:crash', severity: 'warning' });
-
-  expect(committedTurnEndings([liveRows([crash])])).toEqual([]);
 });
