@@ -2,6 +2,7 @@ import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
+import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 
@@ -61,7 +62,7 @@ function WideTitle({
   return (
     <>
       <Text {...wideTitleTextProps}>{title}</Text>
-      <Icon size="sm" name="chevron-up" className="text-muted-foreground" />
+      <Chevron direction="up" />
     </>
   );
 }

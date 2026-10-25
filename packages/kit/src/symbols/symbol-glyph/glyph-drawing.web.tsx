@@ -1,5 +1,6 @@
 import type { SFSymbol } from 'expo-symbols';
 import type * as React from 'react';
+import { chevronSymbols, desktopChevronScale } from '../chevron-scale';
 import { customSymbolPath, isCustomSymbol } from '../custom-symbols';
 import type { SystemDrawing } from '../drawn-symbol';
 import {
@@ -70,20 +71,8 @@ interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
  */
 const appleSymbolScale = 0.8;
 
-// SF's chevrons read large beside its other symbols, so a chevron draws at three quarters of its set size.
-const chevronScale = 0.75;
-
-const chevrons = new Set<SFSymbol>([
-  'chevron.up',
-  'chevron.down',
-  'chevron.left',
-  'chevron.right',
-  'chevron.forward',
-  'chevron.up.chevron.down',
-]);
-
 const symbolScale = (sf: SFSymbol): number =>
-  appleSymbolScale * (chevrons.has(sf) ? chevronScale : 1);
+  appleSymbolScale * (chevronSymbols.has(sf) ? desktopChevronScale : 1);
 
 // The system image is the mask and the text colour fills it, so the symbol follows colour like the other icons.
 function MaskedSymbol(props: MaskedSymbolProps): React.JSX.Element | null {

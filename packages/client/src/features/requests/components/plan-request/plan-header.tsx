@@ -1,11 +1,11 @@
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
-import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import {
   type SheetNavigation,
   useOptionalSheet,
 } from '@repo/kit/primitives/overlays/sheet';
+import { Chevron } from '@repo/kit/primitives/status/chevron';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { PlanDocument } from '#lib/product/plan-document';
@@ -96,7 +96,7 @@ function PhoneRow({ title }: Pick<PlanHeaderProps, 'title'>): ReactNode {
   return (
     <View className="min-h-11 flex-row items-center gap-1.5">
       <PlanTitle title={title} />
-      <Icon size="sm" name="chevron-up" tone="muted" />
+      <Chevron direction="up" />
     </View>
   );
 }

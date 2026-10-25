@@ -7,7 +7,7 @@ import {
   buttonWebClass,
   buttonWebStyle,
 } from '#primitives/actions/button';
-import { Icon } from '#primitives/content/icon';
+import { Chevron } from '#primitives/status/chevron';
 
 interface ChevronProps {
   primary: boolean;
@@ -63,7 +63,7 @@ export function SplitChevron(props: TriggerProps): ReactElement {
       className={chevronClass(props)}
       style={(state) => buttonWebStyle(lookOf(props), state)}
     >
-      <Icon name="chevron-down" size="sm" className={glyphClass(props)} />
+      <Chevron direction="down" className={glyphClass(props)} />
     </Pressable>
   );
 }

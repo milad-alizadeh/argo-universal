@@ -5,6 +5,7 @@ import { cn } from '#kit/utils';
 import { buttonInteractionProps } from '#primitives/actions/pressable';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { Chevron } from '#primitives/status/chevron';
 import type { MenuTriggerProps } from './menu-props';
 
 // What the overlay it opens passes in: its press, hover and ARIA handlers and its ref.
@@ -168,7 +169,7 @@ function TriggerLabel(
 function TriggerChevron(): ReactElement {
   return (
     <View className="-ml-0.5">
-      <Icon name="chevron-down" size="sm" tone="muted" />
+      <Chevron direction="down" />
     </View>
   );
 }
