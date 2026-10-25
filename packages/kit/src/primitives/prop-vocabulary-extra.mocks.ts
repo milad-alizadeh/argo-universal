@@ -53,6 +53,8 @@ export type AdditionalPrimitives = {
   SurfaceProps: SurfaceKit.SurfaceProps;
   ScrollViewProps: ScrollViewKit.ScrollViewProps;
   ScreenProps: ScreenKit.ScreenProps;
+  ScreenMenu: ScreenKit.ScreenMenu;
+  ScreenStackHeaderProps: ScreenKit.ScreenStackHeaderProps;
   DetailProps: DetailKit.DetailProps;
   ListDetailProps: ListDetailKit.ListDetailProps;
   ListDetailSidebar: ListDetailKit.ListDetailSidebar;
