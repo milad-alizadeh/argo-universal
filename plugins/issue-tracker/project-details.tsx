@@ -1,16 +1,8 @@
-import { Button, Stack, Label, Text } from '@argo/plugin-kit';
+import { List, ListItem } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { PublicTracker } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 import { useProjectTracker, type TrackerChoice } from './use-project-tracker';
-
-const headingRole = 'heading';
-
-type ChoiceProps = Pick<TrackerChoice, 'selection' | 'choose'>;
-
-type TrackerChoiceProps = TrackerChoice & { trackers: PublicTracker[] };
-
-type TrackerButtonProps = ChoiceProps & { tracker: PublicTracker };
 
 export type ProjectDetailsProps = {
   context: { projectId: string };
@@ -18,80 +10,41 @@ export type ProjectDetailsProps = {
   trackers: PublicTracker[];
 };
 
-export function ProjectDetails({
-  context,
-  storage,
-  trackers,
-}: ProjectDetailsProps): JSX.Element {
-  const props = useProjectTracker({ storage, projectId: context.projectId });
+type Option = { id: string | null; name: string };
+
+type RowsProps = TrackerChoice & { trackers: PublicTracker[] };
+
+// The Slot's frame is a titled List section, so the choices are its rows: a check marks the chosen one.
+export function ProjectDetails(props: ProjectDetailsProps): JSX.Element {
+  const choice = useProjectTracker({
+    storage: props.storage,
+    projectId: props.context.projectId,
+  });
+
+  return <TrackerRows {...choice} trackers={props.trackers} />;
+}
+
+function TrackerRows({ trackers, ...choice }: RowsProps): JSX.Element {
+  const options: Option[] = [{ id: null, name: 'None' }, ...trackers];
 
   return (
-    <Stack direction="column" gap={2}>
-      <TrackerChoices {...props} trackers={trackers} />
-    </Stack>
+    <List footer={choice.message || undefined}>
+      {options.map((option) => trackerRow(option, choice))}
+    </List>
   );
 }
 
-function TrackerChoices(props: TrackerChoiceProps): JSX.Element {
-  const { selection, message, choose, trackers } = props;
+type RowChoice = Pick<TrackerChoice, 'selection' | 'choose'>;
 
+// A keyed ListItem itself, as a List draws its children, not a component that returns one.
+function trackerRow(option: Option, choice: RowChoice): JSX.Element {
   return (
-    <>
-      <TrackerHeading />
-      <NoneButton selection={selection} choose={choose} />
-      <TrackerButtons
-        trackers={trackers}
-        selection={selection}
-        choose={choose}
-      />
-      {message && <Text>{message}</Text>}
-    </>
-  );
-}
-
-type TrackerButtonsProps = ChoiceProps & { trackers: PublicTracker[] };
-
-function TrackerButtons(props: TrackerButtonsProps): JSX.Element[] {
-  const { trackers, selection, choose } = props;
-
-  return trackers.map((tracker) => (
-    <TrackerButton
-      key={tracker.id}
-      tracker={tracker}
-      selection={selection}
-      choose={choose}
+    <ListItem
+      key={option.id ?? 'none'}
+      title={option.name}
+      selected={choice.selection === option.id}
+      disabled={choice.selection === undefined}
+      onPress={() => void choice.choose(option.id)}
     />
-  ));
-}
-
-function TrackerHeading(): JSX.Element {
-  return <Text role={headingRole}>Issue tracker</Text>;
-}
-
-function NoneButton({ selection, choose }: ChoiceProps): JSX.Element {
-  return (
-    <Button
-      label="None"
-      variant={selection === null ? 'default' : 'outline'}
-      disabled={selection === undefined}
-      onPress={() => choose(null)}
-    />
-  );
-}
-
-function TrackerButton(props: TrackerButtonProps): JSX.Element {
-  const { tracker, selection, choose } = props;
-  const selected = selection === tracker.id;
-
-  return (
-    <Stack direction="row" gap={2}>
-      <Label text={tracker.name} icon={tracker.icon} />
-      <Button
-        label={`${selected ? 'Selected' : 'Select'} ${tracker.name}`}
-        variant={selected ? 'default' : 'outline'}
-        disabled={selection === undefined}
-        onPress={() => choose(tracker.id)}
-      />
-    </Stack>
   );
 }
