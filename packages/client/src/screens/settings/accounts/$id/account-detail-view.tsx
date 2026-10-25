@@ -122,28 +122,39 @@ const accessSection = (props: LoadedProps): React.JSX.Element => (
   </FieldGroup.Section>
 );
 
-function accessRows({
-  account,
-  onRevoke,
-  onAllow,
-}: LoadedProps): React.JSX.Element | React.JSX.Element[] {
-  // By name, so a Plugin keeps its row when its switch flips.
-  const plugins = [
+interface PluginAccess {
+  plugin: AccountBorrower;
+  allowed: boolean;
+}
+
+// By name, so a Plugin keeps its row when its switch flips.
+const pluginAccess = (account: LoadedAccount): PluginAccess[] =>
+  [
     ...account.borrowers.map((plugin) => ({ plugin, allowed: true })),
     ...account.refused.map((plugin) => ({ plugin, allowed: false })),
   ].toSorted((a, b) => a.plugin.name.localeCompare(b.plugin.name));
 
+function accessRows(
+  props: LoadedProps,
+): React.JSX.Element | React.JSX.Element[] {
+  const plugins = pluginAccess(props.account);
+
   if (plugins.length === 0) return noOtherPlugins;
 
-  return plugins.map(({ plugin, allowed }) => (
-    <FieldGroup.Toggle
-      key={plugin.pluginId}
-      title={plugin.name}
-      value={allowed}
-      onValueChange={(on) => (on ? onAllow : onRevoke)(plugin.pluginId)}
-    />
-  ));
+  return plugins.map((access) => accessRow(access, props));
 }
+
+const accessRow = (
+  { plugin, allowed }: PluginAccess,
+  { onAllow, onRevoke }: LoadedProps,
+): React.JSX.Element => (
+  <FieldGroup.Toggle
+    key={plugin.pluginId}
+    title={plugin.name}
+    value={allowed}
+    onValueChange={(on) => (on ? onAllow : onRevoke)(plugin.pluginId)}
+  />
+);
 
 const noOtherPlugins = (
   <FieldGroup.Value title="No other Plugins use this Account." value="" />
