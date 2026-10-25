@@ -17,7 +17,13 @@ type WriteRule = {
 const gitNames = new Set(['.git', 'head']);
 
 // The Plugin's SQLite file and its journal siblings; `argo.storage` owns them, the Engine holds them open.
-const databaseNames = new Set(['plugin.db', 'plugin.db-wal', 'plugin.db-shm']);
+export const databaseFile = 'plugin.db';
+
+const databaseNames = new Set([
+  databaseFile,
+  `${databaseFile}-wal`,
+  `${databaseFile}-shm`,
+]);
 
 // In order: the first rule that applies is the reason given. Deny beats allow (ADR-0030).
 const writeRules: WriteRule[] = [

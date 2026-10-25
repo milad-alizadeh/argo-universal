@@ -11,7 +11,7 @@ This amends [ADR-0027](0027-plugins-act-through-one-api-hook-core-and-replace-na
   - For `argo.process`, the check runs on the argv that leaves ADR-0027's `process.spawn` hook chain, against the calling Plugin's Capabilities. A hook that rewrites a command can't widen it. Hooking `process.spawn` sees other Plugins' commands, so it is a Capability of its own.
 - **Files: read Projects, read and write only the Plugin's data folder.**
   - Any Plugin may read files inside any Project the Server has registered, with no Capability, as Zed's `Worktree` allows.
-  - Each Plugin may read and write its data folder, `~/.argo/plugin-data/<id>/` (#725), like Zed's per-extension work directory. A Plugin can never write to its own code folder.
+  - Each Plugin may read and write its data folder, `~/.argo/plugin-data/<id>/` (#725), like Zed's per-extension work directory. A Plugin can never write to its own code folder. Nor can it write its `argo.storage` database, `plugin.db` and its `-wal`/`-shm` files in the data folder, which the Engine holds open (#1170).
   - `argo.fs` never writes to a Project. Agents change code.
   - Every path is resolved first. `..` and symlinks that lead outside the allowed folders are refused (Tauri). The check is made on the file that was actually opened, so swapping a path after it was checked gains nothing.
 - **Programs: listed commands and arguments only.**
