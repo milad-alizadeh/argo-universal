@@ -9,7 +9,8 @@ import {
 } from '#primitives/actions/button';
 import { Icon } from '#primitives/content/icon';
 import type { IconButtonProps } from './icon-button';
-import { sizeOf, variantOf } from './icon-button-layout';
+import { sizeOf, variantOf } from './icon-button-defaults';
+import { webBoxOf, webGlyphOf } from './icon-button-web-size';
 
 type Variant = NonNullable<IconButtonProps['variant']>;
 
@@ -59,7 +60,7 @@ function pressableProps(
     disabled: props.disabled ?? false,
     onPress: props.onPress,
     testID: props.testID,
-    className: cn(webClass, sizeOf(props).webClass, ghostClass(props)),
+    className: cn(webClass, webBoxOf(sizeOf(props)), ghostClass(props)),
     style: (state) => webLook(props, state),
   };
 }
@@ -70,7 +71,7 @@ function WebGlyph(props: IconButtonProps): ReactElement {
   return (
     <Icon
       name={props.icon}
-      size={sizeOf(props).iconSize}
+      size={webGlyphOf(sizeOf(props))}
       filled={props.selected ?? false}
       className={glyph}
     />
