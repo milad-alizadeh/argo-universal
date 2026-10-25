@@ -54,7 +54,8 @@ export const RevokeEndsOnePluginsAccess: Story = {
   play: async ({ args, canvas, userEvent }) => {
     const [first] = canvas.getAllByRole('button', { name: revokeName });
 
-    await userEvent.click(first ?? canvas.getByText('missing'));
+    if (!first) throw new Error('Recorded Account needs a Plugin to revoke');
+    await userEvent.click(first);
     await expect(args.onRevoke).toHaveBeenCalledOnce();
     await expect(args.onRevoke).toHaveBeenCalledWith(issuesBorrower.pluginId);
     await expect(args.onSignOut).not.toHaveBeenCalled();

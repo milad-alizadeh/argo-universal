@@ -8,7 +8,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { type PluginEntry, usePluginEntries } from '../../plugins/use-plugins';
+import { usePluginNames } from '../../accounts/use-accounts';
 import type {
   ProjectAccountHost,
   ProjectAccountsProps,
@@ -84,25 +84,13 @@ const toHosts = (
       })),
   }));
 
-const pluginName = (
-  plugins: PluginEntry[] | undefined,
-  pluginId: string,
-): string => {
-  const entry = plugins?.find((plugin) => plugin.manifest.id === pluginId);
-
-  return entry ? entry.manifest.name : pluginId;
-};
-
 // The Server's Accounts grouped by host, each with the one this Project chose; undefined until the Server has answered.
 export function useProjectAccounts(
   projectId: string,
 ): ProjectAccountsProps | undefined {
   const loaded = useLoadedAccounts(projectId);
-  const { plugins } = usePluginEntries();
+  const providerName = usePluginNames();
   const onChooseAccount = useChooseAccount(projectId);
-
-  const providerName = (pluginId: string): string =>
-    pluginName(plugins, pluginId);
 
   return loaded && { hosts: toHosts(loaded, providerName), onChooseAccount };
 }
