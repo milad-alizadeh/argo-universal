@@ -2,12 +2,11 @@ import { type SessionConfigSelectOption } from '@repo/contracts';
 import { wideBreakpoint } from '@repo/kit/each-layout';
 import { within, expect, waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { chooseEffort, effortIndexOf } from '../choose-effort';
 import {
   type PickerCatalog,
   agentModelLabel,
 } from './composer-test-contract.test.mocks';
-import { type PickerStep, chooseModel } from './model-choice.test.mocks';
+import { type PickerStep, configure } from './configure.test.mocks';
 
 export async function expectHighEffort({
   canvas,
@@ -16,20 +15,18 @@ export async function expectHighEffort({
   catalog,
 }: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
+  const picker = configure({ canvas, userEvent }, width);
   const model = catalog.highEffortModel;
-  await chooseModel({ userEvent, width, name: model.name });
+  await picker.chooseModel(model.name);
   const slider = await overlay.findByRole('slider', { name: 'Effort' });
-  await chooseEffort(slider, catalog.highEffortLevels, catalog.highEffort);
+  await picker.chooseEffort(catalog.highEffortLevels, catalog.highEffort);
   await expect(slider).toHaveValue(
     String(catalog.highEffortLevels.indexOf(catalog.highEffort)),
   );
   await browserUserEvent.keyboard('{ArrowRight}');
-  await expect(
-    canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
-  ).toHaveTextContent(
-    width >= wideBreakpoint()
-      ? (catalog.highEffortLevels[effortIndexOf(slider)] ?? '')
-      : expectedModelLabel(model.name),
+  await picker.expectChip(
+    expectedModelLabel(model.name),
+    catalog.highEffortLevels[await picker.effort()],
   );
   await expect(slider).not.toHaveValue(
     String(catalog.highEffortLevels.indexOf(catalog.highEffort)),
@@ -43,7 +40,7 @@ export async function expectEffortFollowsModel({
   model,
 }: PickerStep & { model: SessionConfigSelectOption }): Promise<void> {
   const overlay = within(document.body);
-  await chooseModel({ userEvent, width, name: model.name });
+  await configure({ canvas, userEvent }, width).chooseModel(model.name);
 
   if (modelSupportsEffort(model))
     await expect(
