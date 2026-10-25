@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { Pie as PieChart, PolarChart } from 'victory-native';
 import { type NativeTheme, useNativeTheme } from '../../../native-theme';
 import { toneColor } from '../canvas/canvas-colors';
+import { chartPadding } from './chart-axes';
 import { CartesianDrawing, fill } from './chart-cartesian';
 import {
   type ChartProps,
@@ -33,6 +34,9 @@ interface PieDrawingProps {
 
 const side = { flexDirection: 'row' } as const;
 
+// The pie keeps the plot's top inset on every side, so it clears the tile's rounded corners.
+const pieBox = { flex: 1, padding: chartPadding.top } as const;
+
 type Colored = { [K in keyof PieSlice]: PieSlice[K] } & { color: string };
 
 const sliceColors = (slices: PieSlice[], theme: NativeTheme): Colored[] =>
@@ -50,7 +54,7 @@ function PieDrawing({ props, theme }: PieDrawingProps): React.JSX.Element {
 
   return (
     <View style={[fill, side]}>
-      <View style={fill}>
+      <View style={pieBox}>
         <Pie slices={slices} kind={props.kind} />
       </View>
       <ChartLegend rows={pieLegend(props.series)} colors={colors} />

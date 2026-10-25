@@ -11,7 +11,12 @@ const swatchSize = 8;
 
 const swatchRadius = 2;
 
-const legend = { justifyContent: 'center', paddingHorizontal: 8 } as const;
+// The legend shrinks before the pie does, and long names truncate rather than overflow the tile.
+const legend = {
+  flexShrink: 1,
+  justifyContent: 'center',
+  paddingHorizontal: 8,
+} as const;
 
 const row = { flexDirection: 'row', alignItems: 'center', gap: 6 } as const;
 
