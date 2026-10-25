@@ -63,12 +63,13 @@ export function accountsRow(props: SettingsListViewProps): SettingsRow {
   };
 }
 
+// A down Connection's status says what the row's value does: a phone's row joins only a distinct status to its value, so it stays one line.
 const connectionStatuses: Record<
   NonNullable<SettingsListViewProps['status']>,
   Omit<Extract<RowBadge, { kind: 'status' }>, 'kind'>
 > = {
-  disconnected: { tone: 'danger', label: 'server unavailable' },
-  loading: { tone: 'warning', label: 'connecting' },
+  disconnected: { tone: 'danger', label: 'Disconnected' },
+  loading: { tone: 'warning', label: 'Connecting…' },
   ready: { tone: 'success', label: 'available' },
 };
 

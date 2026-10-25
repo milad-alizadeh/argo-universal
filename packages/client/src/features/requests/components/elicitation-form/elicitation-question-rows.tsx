@@ -1,38 +1,33 @@
-import { ListSection } from '@repo/kit/primitives/lists/list';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
-import { choiceValue, selectedAnswers } from './elicitation-answers';
-import { CustomAnswer } from './elicitation-custom-answer';
-import { ElicitationList } from './elicitation-list';
-import { OptionRows } from './elicitation-option-rows';
-import { TextFields } from './elicitation-text-fields';
+import { customAnswer, customValue } from './elicitation-answers';
+import { chooseLabel } from './elicitation-choose-label';
+import { questionChoices } from './elicitation-question-choices';
 
 type ModelProps = { model: QuestionModel };
 
-// The options in one card, and the custom answer as a field under it.
+/*
+ * One FieldGroup section headed by the hint: the options as inline Picker rows, and the custom answer as the
+ * section's last row. Typing an answer chooses it, beside any options already chosen.
+ */
 export function QuestionRows({ model }: ModelProps): ReactElement {
   return (
-    <ElicitationList key={model.question.name}>
-      <ListSection>
-        <QuestionOptions model={model} />
-      </ListSection>
-      <TextFields>
-        <CustomAnswer model={model} />
-      </TextFields>
-    </ElicitationList>
+    <FieldGroup key={model.question.name} disabled={model.inactive}>
+      <FieldGroup.Section title={chooseLabel(model.question)}>
+        {questionChoices({ model })}
+        <CustomField model={model} />
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 
-function QuestionOptions({ model }: ModelProps): ReactElement {
-  return (
-    <OptionRows
-      options={model.question.options}
-      selected={selectedAnswers(model)}
-      multiple={model.question.multiple}
-      disabled={model.inactive}
-      onToggle={(choice, checked) =>
-        model.change(choiceValue(model, choice, checked))
-      }
-    />
-  );
-}
+const CustomField = ({ model }: ModelProps): ReactElement => (
+  <FieldGroup.TextField
+    title="Custom answer"
+    hideTitle
+    placeholder="Something else…"
+    value={customAnswer(model)}
+    onChangeText={(text) => model.change(customValue(model, text))}
+  />
+);

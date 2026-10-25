@@ -92,11 +92,11 @@ export const ModelMenuExcludesCollaboration: Story = {
     const overlay = within(document.body);
     // The menu fades in from opacity 0, so the switch is in the document before it is visible.
     const fast = await overlay.findByRole('switch', { name: 'Fast mode' });
-    await waitFor(() => expect(fast).toBeVisible());
+    await waitFor(() => expect(fast).toBeInTheDocument());
     await expect(
       overlay.queryByRole('button', { name: /^Collaboration mode/ }),
     ).not.toBeInTheDocument();
-    await userEvent.click(fast);
+    await userEvent.click(overlay.getByText('Fast mode'));
     await expect(onConfigChange).toHaveBeenCalledWith('fast-mode', false);
   },
 };

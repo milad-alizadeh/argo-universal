@@ -1,4 +1,4 @@
-import { Page, Button, Text, useState, type Argo } from '@argo/plugin-kit';
+import { Screen, Button, Text, useState, type Argo } from '@argo/plugin-kit';
 import { jsx, type JSX } from '@argo/plugin-kit/jsx-runtime';
 
 type SetValue = (value: string) => void;
@@ -7,7 +7,7 @@ function Harness({ argo }: { argo: Argo }): JSX.Element {
   const [value, setValue] = useState('empty');
 
   return (
-    <Page
+    <Screen
       key="search"
       title="Harness"
       search={{ label: 'Search' }}
@@ -16,7 +16,7 @@ function Harness({ argo }: { argo: Argo }): JSX.Element {
     >
       <Button label="Run fixture" onPress={runFixture(argo, setValue)} />
       <Text>{value}</Text>
-    </Page>
+    </Screen>
   );
 }
 

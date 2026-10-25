@@ -1,5 +1,7 @@
 # List items follow each platform's settings conventions
 
+[ADR-0042](0042-field-groups-and-lists-are-separate-kit-components.md) supersedes the text-field, destructive-row and footer rules here: settings rows are now `FieldGroup` rows, drawn as Expo's `FieldGroup` draws them.
+
 This amends [ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md) (Spec 0017 #959). ADR-0032 gives every platform the same `ListItem` slots and settings variants, and says the stock iOS and Material rows are the visual reference. Drawing the first `ListItem` master showed that three of its parts copy iOS and have no Android counterpart:
 
 - **Section footers.** SwiftUI `Section` and Expo UI `FieldGroup.Section` take a `footer`, and iOS Settings explains each group under it. Material 3 lists and Android's `PreferenceCategory` have a title but no footer. A Material row carries its own description as supporting text (`ListItem supportingContent`, `Preference summary`). Android Settings adds at most one page footer (SettingsLib `FooterPreference`): an info icon and text, last on the screen.

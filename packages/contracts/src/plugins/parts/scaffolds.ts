@@ -2,7 +2,12 @@ import { z } from 'zod';
 import { iconName } from '../../kit-symbols/icon-schema';
 import { listItemProps } from '../kit-props';
 import { openChange } from '../overlay-kit-props';
-import { handler, part, stringLabel } from '../plugin-part-schema-utils';
+import {
+  actionSlot,
+  handler,
+  part,
+  stringLabel,
+} from '../plugin-part-schema-utils';
 import { perSizeClass } from '../schema-size-class';
 import { wireParts } from '../wire-parts';
 
@@ -45,14 +50,14 @@ const settingsLayoutProps = z.object({
 });
 
 export const scaffoldsPartSchemas = {
-  Page: wireParts.Page,
+  Screen: wireParts.Screen,
   ListDetail: wireParts.ListDetail,
   Inspector: part(
     'Secondary detail about what is open: its own column on wide screens and a Sheet on compact ones.',
     inspectorProps,
     {
       children: true,
-      slots: { actions: ['ActionList'] },
+      slots: { actions: actionSlot },
       events: { onOpenChange: openChange(inspectorProps) },
     },
   ),

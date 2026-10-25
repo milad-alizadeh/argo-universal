@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Pill } from '#primitives/status/pill';
 import { Table } from './table';
 import type { TableColumn, TableSort } from './table-props';
@@ -95,9 +95,12 @@ interface RunRowProps {
 }
 
 const rerun = ({ run, onRerun }: RunRowProps): ReactElement => (
-  <ActionList>
-    <Action label="Re-run" icon="retry" onPress={() => onRerun?.(run[0])} />
-  </ActionList>
+  <Action
+    key="rerun"
+    label="Re-run"
+    icon="retry"
+    onPress={() => onRerun?.(run[0])}
+  />
 );
 
 export function runRow(props: RunRowProps): ReactElement {

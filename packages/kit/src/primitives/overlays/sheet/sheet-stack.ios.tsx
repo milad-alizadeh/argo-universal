@@ -13,35 +13,38 @@ import {
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { SheetContent } from './sheet-content.ios';
-import { SheetPageToolbar } from './sheet-page-toolbar.ios';
-import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
+import { SheetScreenToolbar } from './sheet-screen-toolbar.ios';
+import type { SheetScreenEntry, SheetStack } from './sheet-screens';
 import { sheetDetents } from './sheet-state';
 
 // A popover sizes to its pages, so they match their content at the popover's width.
-type PagesProps = SheetProps & { stack: SheetStack; popoverWidth?: number };
+type ScreensProps = SheetProps & { stack: SheetStack; popoverWidth?: number };
 
 // The sheet's pages: a NavigationStack that pushes with the system slide and titles each page inline.
-export function SheetPages(props: PagesProps): ReactElement {
+export function SheetScreens(props: ScreensProps): ReactElement {
   const [root, ...pushed] = props.stack.pages;
 
-  if (!root) return <SinglePage {...props} />;
+  if (!root) return <SingleScreen {...props} />;
 
   return (
     <NavigationStack path={props.stack.path} onPathChange={props.stack.setPath}>
-      <StackPage
+      <StackScreen
         {...props}
         page={root}
         onClose={props.stack.navigation.close}
       />
-      {pushed.map((page) => pushedPage(props, page))}
+      {pushed.map((page) => pushedScreen(props, page))}
     </NavigationStack>
   );
 }
 
-const pushedPage = (props: PagesProps, page: SheetPageEntry): ReactElement => (
+const pushedScreen = (
+  props: ScreensProps,
+  page: SheetScreenEntry,
+): ReactElement => (
   <NavigationDestination key={page.name} value={page.name}>
-    <StackPage {...props} page={page} />
+    <StackScreen {...props} page={page} />
   </NavigationDestination>
 );
 
@@ -50,7 +53,7 @@ const pushedPage = (props: PagesProps, page: SheetPageEntry): ReactElement => (
  * The detents read here are the ones the sheet is presented at, which a paged sheet is given without
  * naming them: a page sized to itself inside a shorter sheet is cut off at the sheet's edge.
  */
-function SinglePage(props: PagesProps): ReactElement {
+function SingleScreen(props: ScreensProps): ReactElement {
   const detents = sheetDetents({
     detents: props.detents,
     paged: props.stack.pages.length > 0,
@@ -67,23 +70,23 @@ function SinglePage(props: PagesProps): ReactElement {
   );
 }
 
-type PageProps = PagesProps & {
-  page: SheetPageEntry;
+type ScreenProps = ScreensProps & {
+  page: SheetScreenEntry;
   // Given to the root page alone, which has no page below it to go back to.
   onClose?: () => void;
 };
 
-function StackPage(props: PageProps): ReactElement {
+function StackScreen(props: ScreenProps): ReactElement {
   return (
-    <SheetPageToolbar page={props.page} onClose={props.onClose}>
-      <PageBody {...props} />
-    </SheetPageToolbar>
+    <SheetScreenToolbar page={props.page} onClose={props.onClose}>
+      <ScreenBody {...props} />
+    </SheetScreenToolbar>
   );
 }
 
-function PageBody(props: PageProps): ReactElement {
+function ScreenBody(props: ScreenProps): ReactElement {
   return (
-    <Group modifiers={usePageModifiers(props.page.title)}>
+    <Group modifiers={useScreenModifiers(props.page.title)}>
       <SheetContent
         {...props}
         contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
@@ -96,7 +99,7 @@ function PageBody(props: PageProps): ReactElement {
   );
 }
 
-function usePageModifiers(title: string | undefined): ModifierConfig[] {
+function useScreenModifiers(title: string | undefined): ModifierConfig[] {
   const { content } = useNativeTheme().colors;
 
   return [

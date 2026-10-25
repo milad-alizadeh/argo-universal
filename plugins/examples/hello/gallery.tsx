@@ -2,7 +2,7 @@ import {
   Image,
   List,
   ListItem,
-  Page,
+  Screen,
   Text,
   Svg,
   useState,
@@ -48,10 +48,10 @@ function HelloGallery({ assets }: { assets: Argo['assets'] }): JSX.Element {
   const [selected, select] = useState('');
 
   return (
-    <Page title="Gallery">
+    <Screen title="Gallery">
       <ThumbnailShelf picture={picture} />
       <MetricsWall selected={selected} select={select} />
-    </Page>
+    </Screen>
   );
 }
 

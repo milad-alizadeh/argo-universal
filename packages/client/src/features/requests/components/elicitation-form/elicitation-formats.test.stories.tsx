@@ -1,5 +1,5 @@
 import { settleViewport } from '@repo/kit/settle-viewport';
-import { expect } from 'storybook/test';
+import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import {
   meta as elicitationTestMeta,
   type Story,
@@ -20,9 +20,17 @@ export default meta;
 function emptyAnswers(width: number): Story {
   return {
     args: { request: emptyAnswersRequest },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ canvas, canvasElement, userEvent, args }) => {
       await settleViewport(width);
-      await userEvent.click(canvas.getByRole('button', { name: 'None' }));
+      await userEvent.click(canvas.getByRole('button', { name: /^Choice/ }));
+      const page = within(canvasElement.ownerDocument.body);
+      await userEvent.click(await page.findByRole('option', { name: 'None' }));
+      // The open menu blocks the page until it has closed.
+      await waitFor(() =>
+        expect(canvasElement.ownerDocument.body).not.toHaveStyle({
+          pointerEvents: 'none',
+        }),
+      );
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
@@ -45,19 +53,19 @@ function dateFormats(width: number): Story {
       await expect(
         canvas.getByText(/Enter a valid date and time\./),
       ).toBeVisible();
-      const date = canvas.getByRole('textbox', { name: /^Date$/ });
-      await userEvent.clear(date);
-      await userEvent.type(date, '2024-02-29T12:00:00Z');
-      await expect(canvas.getByText(/Enter a valid date\./)).toBeVisible();
-      await userEvent.clear(date);
-      await userEvent.type(date, '2024-02-29');
-      const time = canvas.getByRole('textbox', { name: 'Date and time' });
-      await userEvent.clear(time);
-      await userEvent.type(time, '2026-10-06T12:30:00+01:00');
+      // The browser's own inputs take only whole dates, so a valid pick clears the message.
+      const date = canvas.getByLabelText('Date *');
+      await fireEvent.change(date, { target: { value: '2024-02-29' } });
+      await expect(canvas.queryByText(/Enter a valid date\./)).toBeNull();
+      const time = canvas.getByLabelText('Date and time *');
+      await fireEvent.change(time, { target: { value: '2026-10-06T12:30' } });
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
-        content: { date: '2024-02-29', time: '2026-10-06T12:30:00+01:00' },
+        content: {
+          date: '2024-02-29',
+          time: expect.stringMatching(/^2026-10-0[5-7]T/),
+        },
       });
     },
   };

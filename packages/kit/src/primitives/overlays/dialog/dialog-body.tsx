@@ -24,7 +24,6 @@ function ContentClose(): React.JSX.Element {
   return (
     <Pressable {...closeButton} onPress={() => onOpenChange(false)}>
       <Icon
-        size="sm"
         name="close"
         className="text-foreground web:pointer-events-none shrink-0"
       />

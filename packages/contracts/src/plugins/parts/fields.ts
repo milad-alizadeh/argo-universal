@@ -1,46 +1,14 @@
-import { z } from 'zod';
-import {
-  part,
-  stringLabel,
-  optionalLabel,
-  handler,
-} from '../plugin-part-schema-utils';
-import { fieldProps } from '../simple-kit-props';
+import { wireParts } from '../wire-parts';
 
 export const fieldsPartSchemas = {
-  Field: part('A Field wrapper around its child control.', fieldProps, {
-    children: true,
-    slots: {},
-  }),
-  FieldLayout: part(
-    'A layout for a field label and its control.',
-    z.object({ label: optionalLabel }),
-    { children: true },
-  ),
-  FieldDescription: part(
-    'Hint text associated with a Field.',
-    z.object({ text: stringLabel }),
-  ),
-  FieldErrors: part(
-    'Validation messages associated with a Field.',
-    z.object({ errors: z.array(z.string()) }),
-  ),
-  Form: part(
-    'A stacked form with a submit action and App-held drafts.',
-    z.object({
-      submitLabel: stringLabel.describe('The submit Button label.'),
-      onSubmit: handler('onSubmit').describe('Submits every field value.'),
-    }),
-    {
-      children: [
-        'Field',
-        'TextInput',
-        'Textarea',
-        'Picker',
-        'DatePicker',
-        'Switch',
-      ],
-      events: { onSubmit: z.undefined().meta({ flush: true }) },
-    },
-  ),
+  FieldGroup: wireParts.FieldGroup,
+  'FieldGroup.Section': wireParts['FieldGroup.Section'],
+  'FieldGroup.Value': wireParts['FieldGroup.Value'],
+  'FieldGroup.Link': wireParts['FieldGroup.Link'],
+  'FieldGroup.Toggle': wireParts['FieldGroup.Toggle'],
+  'FieldGroup.Picker': wireParts['FieldGroup.Picker'],
+  'FieldGroup.DatePicker': wireParts['FieldGroup.DatePicker'],
+  'FieldGroup.Slider': wireParts['FieldGroup.Slider'],
+  'FieldGroup.TextField': wireParts['FieldGroup.TextField'],
+  'FieldGroup.SecretField': wireParts['FieldGroup.SecretField'],
 };

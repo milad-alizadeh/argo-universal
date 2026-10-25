@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Surface } from './surface';
 
@@ -43,9 +43,12 @@ export const EnterActivation = keyboardActivation('{Enter}');
 export const SpaceActivation = keyboardActivation(' ');
 
 const archive = (
-  <ActionList key="archive">
-    <Action icon="archive" label="Archive build" onPress={archived} />
-  </ActionList>
+  <Action
+    key="archive"
+    icon="archive"
+    label="Archive build"
+    onPress={archived}
+  />
 );
 
 export const ContextActions: Story = {

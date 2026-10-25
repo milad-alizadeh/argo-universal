@@ -1,15 +1,15 @@
 import { errorToast } from '@repo/kit/error-toast';
-import { List } from '@repo/kit/primitives/lists/list';
-import { ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
-import { Spinner } from '@repo/kit/primitives/status/spinner';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { formatServerClock, formatServerStart } from '#features/connection';
+import { SettingsLoading } from '../settings-loading';
 
 export type ServerDetails =
   | { status: 'loading' }
+  // The Connection is down: the banner over the page says so.
+  | { status: 'down' }
   | { status: 'error'; message: string }
   | {
       status: 'loaded';
@@ -31,35 +31,47 @@ export function ConnectionDetailView({
   server,
 }: ConnectionDetailViewProps): React.JSX.Element {
   return (
-    <Page title="Connection" caption="The Argo Server this App is talking to.">
-      <ServerList server={server} />
-    </Page>
+    <Screen
+      title="Connection"
+      caption="The Argo Server this App is talking to."
+    >
+      <ServerForm server={server} />
+    </Screen>
   );
 }
 
-function ServerList({ server }: { server: ServerDetails }): React.JSX.Element {
-  useErrorToast(
-    errorToast(
-      "Could not load the Server's details",
-      server.status === 'error' ? server.message : undefined,
-    ),
-  );
+function ServerForm({ server }: { server: ServerDetails }): React.JSX.Element {
+  useErrorToast(errorToast('Could not load the Server', loadError(server)));
 
-  return (
-    <List appearance="grouped">
-      <ListSection title="Server">{serverRows(server)}</ListSection>
-    </List>
-  );
+  return <ServerState server={server} />;
 }
 
-// A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
-function serverRows(server: ServerDetails): React.JSX.Element {
-  if (server.status !== 'loaded') {
-    return <ConnectingRow />;
-  }
+const loadError = (server: ServerDetails): string | undefined =>
+  server.status === 'error' ? server.message : undefined;
 
-  return loadedRows(server);
+function ServerState({
+  server,
+}: {
+  server: ServerDetails;
+}): React.JSX.Element | null {
+  if (server.status === 'down') return null;
+
+  // A failed load keeps the loading note: the toast says why, and the query retries when the Connection reopens.
+  if (server.status !== 'loaded')
+    return <SettingsLoading label="Connecting to the Server…" />;
+
+  return <ServerRows server={server} />;
 }
+
+const ServerRows = ({
+  server,
+}: {
+  server: LoadedServer;
+}): React.JSX.Element => (
+  <FieldGroup>
+    <FieldGroup.Section title="Server">{loadedRows(server)}</FieldGroup.Section>
+  </FieldGroup>
+);
 
 function loadedRows(server: LoadedServer): React.JSX.Element {
   return (
@@ -75,16 +87,7 @@ function loadedRows(server: LoadedServer): React.JSX.Element {
   );
 }
 
-// Paper's Connection page: a Server detail reads as content, in the title's colour.
+// A Server detail is a read-only value row.
 function DetailRow(props: { title: string; value: string }): React.JSX.Element {
-  return <ListItem {...props} valueTone="neutral" />;
-}
-
-function ConnectingRow(): React.JSX.Element {
-  return (
-    <ListItem
-      title="Connecting to the Server…"
-      leading={<Spinner accessibilityLabel="Loading" />}
-    />
-  );
+  return <FieldGroup.Value {...props} />;
 }

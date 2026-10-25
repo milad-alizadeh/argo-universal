@@ -1,14 +1,14 @@
 # Native Configure regression
 
-This manual Maestro flow exercises the actual Android Storybook preview. It needs a rebuilt development client because the Expo UI patch adds `clearSemantics`. No Server or Agent runs: the preview receives the recorded configuration props.
+This manual Maestro flow exercises the actual Android Storybook preview. No Server or Agent runs: the preview receives the recorded configuration props.
 
 1. Build and install the Android development client. Start Metro.
 2. Open the App's native Storybook. Select **Composer → ComposerConfiguration → Fast mode on**, then open Configure.
 3. Run `maestro --device <emulator-id> test e2e/native/configure-accessibility.yaml`.
 
-The flow requires exactly one Fast mode label and one Effort label, and checks the Switch state on the checkable parent of its label. [Compose exposes synthetic label children for merged controls](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/compose/ui/ui/src/androidMain/kotlin/androidx/compose/ui/platform/AndroidComposeViewAccessibilityDelegateCompat.android.kt). It rejects the duplicate decorative labels and values, then toggles the real Switch off and back on. The initial Medium value comes from the story's fixture. A passing run proves the Android accessibility tree and the native Switch callback, beyond the desktop keyboard coverage in `composer-configuration-options.test.stories.tsx` and `composer-configuration.test.stories.tsx`.
+The flow requires exactly one Fast mode label and one Effort label, and checks the Toggle state on the checkable parent of its label. [Compose exposes synthetic label children for merged controls](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/compose/ui/ui/src/androidMain/kotlin/androidx/compose/ui/platform/AndroidComposeViewAccessibilityDelegateCompat.android.kt). It rejects a duplicate Fast mode label, then toggles the real Toggle off and back on. A passing run proves the Android accessibility tree and the native Toggle callback, beyond the desktop keyboard coverage in `composer-configuration-options.test.stories.tsx` and `composer-configuration.test.stories.tsx`.
 
-This flow does not verify TalkBack speech or slider adjustment actions. Inspect those on a device when reviewing native evidence.
+The slider row still exposes its headline "Effort" and value "Medium" as nodes beside the merged "Effort, Medium"; Expo UI's `semantics` modifier takes only a content description, so no prop merges or hides them, and the flow does not assert on it. This flow does not verify TalkBack speech or slider adjustment actions. Inspect those on a device when reviewing native evidence.
 
 # User message Show more
 

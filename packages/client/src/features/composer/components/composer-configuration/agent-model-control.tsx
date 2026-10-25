@@ -117,9 +117,9 @@ function configurePage(
   configuration: ComposerConfigurationProps,
 ): React.JSX.Element {
   return (
-    <Sheet.Page name="configure" title="Agent and model">
+    <Sheet.Screen name="configure" title="Agent and model">
       <AgentModelMenu configuration={configuration} wide={false} />
-    </Sheet.Page>
+    </Sheet.Screen>
   );
 }
 
@@ -167,7 +167,7 @@ function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   if (props.configuration.agent)
     return <AgentIcon agent={props.configuration.agent} size="sm" />;
 
-  return <Icon name="agent" size="sm" />;
+  return <Icon name="agent" />;
 }
 
 // Unlike Configure's Agent row, the trigger shows no id for an Agent that is not installed.

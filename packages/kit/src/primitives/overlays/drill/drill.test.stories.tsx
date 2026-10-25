@@ -81,8 +81,8 @@ export const MenuClickClosesTheChoices: Story = {
   },
 };
 
-// After a kept-open pick, Escape closes the choices and their menu together and focus returns to the menu's trigger.
-export const KeepOpenEscapeClosesBoth: Story = {
+// After a kept-open pick, Escape closes the choices and returns to their menu, whose row takes focus back.
+export const KeepOpenEscapeReturnsToMenu: Story = {
   play: async ({ userEvent }) => {
     const { menu, choices } = await openChoices(userEvent, 'Fruit');
 
@@ -92,10 +92,27 @@ export const KeepOpenEscapeClosesBoth: Story = {
     await userEvent.keyboard('{Escape}');
 
     await waitFor(() => expect(choices).not.toBeInTheDocument());
-    await waitFor(() => expect(menu).not.toBeInTheDocument());
+    await expect(menu).toHaveAttribute(openState, 'open');
     await waitFor(() =>
-      expect(page.getByRole('button', { name: 'Configure' })).toHaveFocus(),
+      expect(
+        within(menu).getByRole('button', { name: /^Fruit,/ }),
+      ).toHaveFocus(),
     );
+  },
+};
+
+// Without a pick, Escape closes the choices and returns to the menu; a second Escape closes the menu.
+export const EscapeClosesChoicesThenMenu: Story = {
+  play: async ({ userEvent }) => {
+    const { menu, choices } = await openChoices(userEvent, 'Vegetable');
+
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => expect(choices).not.toBeInTheDocument());
+    await expect(menu).toHaveAttribute(openState, 'open');
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(menu).not.toBeInTheDocument());
   },
 };
 

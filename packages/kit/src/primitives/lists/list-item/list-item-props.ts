@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
+import type { ContextMenuMeta } from '#primitives/actions/action';
 import type { Tone } from '#primitives/content/text';
 import type { KitProps } from '../../kit-props';
 
@@ -10,6 +11,8 @@ export type RowBadge = Exclude<
 
 // Kit-only: native selection semantics, long press and test identity.
 export type ListItemProps = KitProps<'ListItem'> & {
+  // What the row's context menu shows around its `actions`: a title, a page previewed above it, a double-click.
+  contextMenu?: ContextMenuMeta;
   // A control under the title, such as a Slider, spanning the row's content width.
   control?: ReactNode;
   // The title and subtitle wrap rather than truncate, for a row whose words are its content, such as a plan step.

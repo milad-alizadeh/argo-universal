@@ -24,8 +24,6 @@ export const typedLines = (text: string): string =>
 
 export const readOnlyAttribute = 'aria-readonly';
 
-export const valueTextAttribute = 'aria-valuetext';
-
 export const chooseModelLabel = /^Model,/;
 
 export const pressedAttribute = 'aria-pressed';

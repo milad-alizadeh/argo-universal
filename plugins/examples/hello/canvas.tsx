@@ -1,7 +1,7 @@
 import {
   Action,
   Canvas,
-  Page,
+  Screen,
   Stack,
   Text,
   useState,
@@ -61,9 +61,9 @@ export function HelloCanvasPage(): JSX.Element {
   const props = { title: 'Canvas', primaryAction: changeAction(onPress) };
 
   return (
-    <Page {...props}>
+    <Screen {...props}>
       <CanvasExamples intensity={intensity} />
-    </Page>
+    </Screen>
   );
 }
 

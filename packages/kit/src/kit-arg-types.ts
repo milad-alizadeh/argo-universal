@@ -80,10 +80,9 @@ function argType(prop: KitPropDescriptor): ArgTypes[string] {
  * mapped type over those schemas, and no docgen expands one.
  */
 export function kitArgTypes(name: KitPartName): ArgTypes {
-  const entries = kitPropDescriptors(name).map((prop) => [
-    prop.name,
-    argType(prop),
-  ]);
+  return argTypes(kitPropDescriptors(name));
+}
 
-  return Object.fromEntries(entries);
+function argTypes(props: KitPropDescriptor[]): ArgTypes {
+  return Object.fromEntries(props.map((prop) => [prop.name, argType(prop)]));
 }

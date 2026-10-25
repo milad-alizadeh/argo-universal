@@ -8,7 +8,7 @@ import { SessionsHeader } from '../../src/features/sessions/components/sessions-
 import { useSessionsViewState } from '../../src/features/sessions/stores/sessions-view-state';
 import { SessionListView } from '../../src/screens/sessions/session-list-view';
 import { loadedSessionListView } from '../../src/screens/sessions/session-list-view.mocks';
-import { SessionsRootPage } from '../../src/screens/sessions/sessions-root-page';
+import { SessionsRootScreen } from '../../src/screens/sessions/sessions-root-screen';
 
 export const exampleProjectName = 'Example Project';
 
@@ -31,9 +31,9 @@ function ListWithHeader(args: ListViewArgs): React.JSX.Element {
 
   if (!wide)
     return (
-      <SessionsRootPage {...filter} onNewSession={args.onNewSession}>
+      <SessionsRootScreen {...filter} onNewSession={args.onNewSession}>
         <SessionListView {...args} />
-      </SessionsRootPage>
+      </SessionsRootScreen>
     );
 
   return (
@@ -49,7 +49,7 @@ export const meta = {
   component: SessionListView,
   parameters: { screenPreview: true },
   args: { ...loadedSessionListView, ...spies },
-  // Wide, New Session sits in the sidebar's header row above the list, and a phone's Sessions Page has it as its primary Action; the layout choice loads through its own query client.
+  // Wide, New Session sits in the sidebar's header row above the list, and a phone's Sessions Screen has it as its primary Action; the layout choice loads through its own query client.
   render: function WithHeader(args): React.JSX.Element {
     const [client] = useState(() => new QueryClient());
 

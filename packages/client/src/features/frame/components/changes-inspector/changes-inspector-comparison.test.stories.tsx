@@ -5,7 +5,7 @@ import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { ChangesInspectorSheet, manyFiles } from './changes-inspector.mocks';
 import {
   allChanges,
-  compareAgainst,
+  comparisonDialog,
   fileHeader,
   picker,
   testMeta,
@@ -17,9 +17,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const compareAgainstDialog = { name: compareAgainst };
+const comparisonPopover = { name: comparisonDialog };
 
-// One story per width, so each starts from a fresh spy and a closed menu.
+// One story per width, so each starts from a fresh spy and a closed picker.
 function picksUncommitted(width: number): Story {
   return {
     args: { onComparisonChange: fn() },
@@ -27,9 +27,7 @@ function picksUncommitted(width: number): Story {
       await settleViewport(width);
       await userEvent.click(await picker(allChanges));
       await userEvent.click(
-        await screen.findByRole('menuitemradio', {
-          name: 'Uncommitted Changes',
-        }),
+        await screen.findByRole('radio', { name: 'Uncommitted Changes' }),
       );
       await expect(args.onComparisonChange).toHaveBeenCalledWith({
         kind: 'uncommitted',
@@ -40,20 +38,17 @@ function picksUncommitted(width: number): Story {
 
 export const PicksUncommittedWide = picksUncommitted(layoutWidths.wide);
 
-// Wide, Compare Against opens its branches in a popover by the picker.
-export const CompareAgainstInAPopover: Story = {
+// Wide, the branches are listed under Compare Against in a popover by the picker, and a search narrows them.
+export const SearchesBranchesInAPopover: Story = {
   args: { onComparisonChange: fn() },
   play: async ({ args, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await userEvent.click(await picker(allChanges));
-    await userEvent.click(
-      await screen.findByRole('menuitemradio', compareAgainstDialog),
-    );
 
-    const popover = await screen.findByRole('dialog', compareAgainstDialog);
+    const popover = await screen.findByRole('dialog', comparisonPopover);
 
     await userEvent.type(
-      within(popover).getByRole('searchbox', { name: 'Search Branches' }),
+      within(popover).getByRole('searchbox', { name: 'Search Comparison' }),
       'fix',
     );
     await waitFor(() =>
@@ -67,7 +62,7 @@ export const CompareAgainstInAPopover: Story = {
       branch: 'fix/diff-scroll',
     });
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', compareAgainstDialog)).toBeNull(),
+      expect(screen.queryByRole('dialog', comparisonPopover)).toBeNull(),
     );
   },
 };
@@ -88,7 +83,7 @@ export const PhoneHasTheGitHeader: Story = {
       screen.queryByRole('button', { name: 'Close Inspector' }),
     ).toBeNull();
     await expect(
-      screen.queryByRole('button', { name: 'Comparison' }),
+      screen.queryByRole('button', { name: /^Comparison/ }),
     ).toBeNull();
     const last = fileHeader('/repo/src/module-60/index.ts');
     last.scrollIntoView();

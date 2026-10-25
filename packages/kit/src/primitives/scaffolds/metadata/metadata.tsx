@@ -31,7 +31,7 @@ function OwnList({ children }: { children: ReactNode }): ReactNode {
   return (
     <List
       {...listOptions}
-      appearance={Platform.OS === 'web' ? 'plain' : 'grouped'}
+      appearance={Platform.OS === 'web' ? 'plain' : 'cards'}
     >
       {children}
     </List>

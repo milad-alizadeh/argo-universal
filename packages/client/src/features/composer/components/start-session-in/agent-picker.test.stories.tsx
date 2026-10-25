@@ -47,10 +47,10 @@ function selectAgent(width: number): Story {
       );
       await waitFor(() =>
         expect(
-          overlay.getByRole('button', { name: first.name }),
-        ).toHaveAttribute('aria-pressed', 'true'),
+          overlay.getByRole('radio', { name: first.name }),
+        ).toHaveAttribute('aria-checked', 'true'),
       );
-      await userEvent.click(overlay.getByRole('button', { name: second.name }));
+      await userEvent.click(overlay.getByRole('radio', { name: second.name }));
       await waitFor(() =>
         expect(onAgentChange).toHaveBeenCalledWith(second.id),
       );

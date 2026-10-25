@@ -18,6 +18,9 @@
     },
     "./symbols/assets/*": "./src/symbols/assets/*",
     "./symbols/symbol-images": "./src/symbols/symbol-images.tsx",
+    "./pushed-screen/routes": "./src/pushed-screen/routes.tsx",
+    "./story-stack": "./src/story-stack/index.ts",
+    "./story-stack/routes": "./src/story-stack/routes.tsx",
     "./tinted-avatar": "./src/tinted-avatar.tsx",
     "./tone-mark": "./src/tone-mark.tsx",
     "./primitives/*": {
@@ -34,7 +37,9 @@
       "types": "./src/primitives/*/index.ts",
       "default": "./src/primitives/*/index.ts"
     },
-    "#kit/*": "./src/*.ts"
+    "#kit/*": "./src/*.ts",
+    "#pushed-screen": "./src/pushed-screen/index.ts",
+    "#story-stack": "./src/story-stack/index.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -64,7 +69,6 @@
     "@radix-ui/react-select": "catalog:",
     "@repo/contracts": "workspace:*",
     "@shopify/react-native-skia": "catalog:",
-    "@tanstack/react-form": "catalog:",
     "burnt": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",

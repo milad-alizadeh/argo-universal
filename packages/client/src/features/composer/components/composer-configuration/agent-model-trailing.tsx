@@ -34,9 +34,7 @@ function FastModeIndicator({
     (option) => isFastMode(option) && option.currentValue,
   );
 
-  return fastOn ? (
-    <Icon size="sm" name="fast-mode" filled testID="fast-mode-on" />
-  ) : null;
+  return fastOn ? <Icon name="fast-mode" filled testID="fast-mode-on" /> : null;
 }
 
 function EffortLabel({

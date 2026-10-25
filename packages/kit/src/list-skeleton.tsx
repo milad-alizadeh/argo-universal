@@ -19,6 +19,7 @@ interface SkeletonBarProps {
   textRole?: TextRole;
 }
 
+// Android's Text role colour outranks text-transparent, so there the words are hidden by opacity instead.
 function HiddenText({
   text,
   textRole = 'row',
@@ -28,7 +29,7 @@ function HiddenText({
       role={textRole}
       numberOfLines={1}
       aria-hidden
-      className="text-transparent"
+      className="text-transparent android:opacity-0"
     >
       {text}
     </Text>
@@ -70,4 +71,18 @@ export function SkeletonContent(props: {
       <DetailBar kind="meta" text={props.meta} />
     </View>
   );
+}
+
+export interface SkeletonRow {
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  meta?: ReactNode;
+  // Undefined leaves the leading lane out; any other value draws the icon's place.
+  leading?: ReactNode;
+}
+
+// A loading row's leading and content lanes, as its row frame takes them.
+export interface LoadingLanes {
+  leading?: ReactNode;
+  content: ReactNode;
 }

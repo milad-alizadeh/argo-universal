@@ -1,56 +1,59 @@
-import { ListSection } from '@repo/kit/primitives/lists/list';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { useStore } from '@tanstack/react-form';
 import type { ReactElement } from 'react';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
-import { FieldRows } from './elicitation-field-rows';
-import { ElicitationFormField } from './elicitation-form-body';
-import { ElicitationList } from './elicitation-list';
+import { FieldRow } from './elicitation-field-rows';
+import {
+  ElicitationFormField,
+  hasInitialValue,
+  type ElicitationEntry,
+} from './elicitation-form-body';
 import {
   fieldSections,
-  useSectionFooter,
+  sectionFooter,
+  type FieldMeta,
   type FieldSection,
 } from './elicitation-sections';
-import { TextFields } from './elicitation-text-fields';
 
 type ModelProps = { model: ElicitationModel };
 
-// The form's fields on one page: rows in grouped sections, and fields to type in apart from them.
+// The form's fields on one page: a FieldGroup, its rows grouped in sections that end at a field's description.
 export function ElicitationFields({ model }: ModelProps): ReactElement {
+  const meta = useStore(model.form.store, (state) => state.fieldMeta);
+
   return (
-    <ElicitationList>
-      {fieldSections(model.schema.fields).map((section) => (
-        <FieldsSection
-          key={section.entries[0]?.key}
-          model={model}
-          section={section}
-        />
-      ))}
-    </ElicitationList>
+    <FieldGroup disabled={model.inactive}>
+      {fieldSections(model.schema.fields).map((section) =>
+        fieldsSection({ model, section, meta }),
+      )}
+    </FieldGroup>
   );
 }
 
-function FieldsSection({
-  model,
-  section,
-}: ModelProps & { section: FieldSection }): ReactElement {
-  const footer = useSectionFooter({ model, entries: section.entries });
-  const rows = sectionRows({ model, section });
+type SectionProps = ModelProps & { section: FieldSection; meta: FieldMeta };
 
-  if (section.textFields) return <TextFields {...footer}>{rows}</TextFields>;
+// Called, not rendered: a FieldGroup reads its sections by element type.
+function fieldsSection({ model, section, meta }: SectionProps): ReactElement {
+  const footer = sectionFooter(
+    {
+      entries: section.entries,
+      initial: (entry) => hasInitialValue({ model, entry }),
+    },
+    meta,
+  );
 
   return (
-    <ListSection title={section.title} {...footer}>
-      {rows}
-    </ListSection>
+    <FieldGroup.Section key={section.entries[0]?.key} footer={footer}>
+      {section.entries.map((entry) => fieldRow(model, entry))}
+    </FieldGroup.Section>
   );
 }
 
-function sectionRows({
-  model,
-  section,
-}: ModelProps & { section: FieldSection }): ReactElement[] {
-  return section.entries.map((entry) => (
-    <ElicitationFormField key={entry.key} model={model} entry={entry}>
-      {(field) => <FieldRows {...field} />}
-    </ElicitationFormField>
-  ));
-}
+const fieldRow = (
+  model: ModelProps['model'],
+  entry: ElicitationEntry,
+): ReactElement => (
+  <ElicitationFormField key={entry.key} model={model} entry={entry}>
+    {(field) => <FieldRow {...field} />}
+  </ElicitationFormField>
+);

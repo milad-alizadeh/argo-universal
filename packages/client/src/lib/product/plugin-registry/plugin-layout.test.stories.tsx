@@ -33,7 +33,7 @@ const card: WireNode = {
   slots: {
     actions: [
       {
-        ...node('ActionList', 'share'),
+        ...node('Action.Section', 'share'),
         children: [
           node('Action', 'copy', {
             label: 'Copy link',
@@ -43,7 +43,7 @@ const card: WireNode = {
         ],
       },
       {
-        ...node('ActionList', 'actions'),
+        ...node('Action.Section', 'actions'),
         children: [
           node('Action', 'archive', {
             label: 'Archive build',
@@ -99,7 +99,7 @@ export const ActivatesSurface: Story = {
   },
 };
 
-// Two ActionLists in the actions Slot reach Surface the way the renderer sends a plural Slot.
+// Two Action.Sections in the actions Slot reach Surface the way the renderer sends a plural Slot.
 export const DispatchesContextAction: Story = {
   render: () => <PluginTree root={root} onEvent={onEvent} />,
   play: async ({ canvas, userEvent, canvasElement }) => {

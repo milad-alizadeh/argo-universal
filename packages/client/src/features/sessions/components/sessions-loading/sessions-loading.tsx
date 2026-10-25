@@ -1,3 +1,4 @@
+import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
@@ -45,7 +46,7 @@ function SkeletonRows({ layout }: SessionsLoadingProps): React.ReactNode {
 function SkeletonList({ layout }: SessionsLoadingProps): React.JSX.Element {
   return (
     <List
-      appearance={layout === 'compact' ? 'grouped' : 'cards'}
+      appearance={layout === 'compact' ? groupedOnPhones('plain') : 'cards'}
       fit
       padding={{ compact: 4, wide: 0 }}
       paddingTop={{ compact: 5, wide: 2 }}

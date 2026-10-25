@@ -101,14 +101,19 @@ export function markSettledMiddleOfView(
   }, settleWait);
 }
 
-// Where an element's top settles once it shows at its centre, unclipped, and holds still for two frames.
+// The pill that says earlier rows are loading floats centred over the first row, so a row is pointed at near its leading edge, clear of it.
+const leadingInset = 8;
+
+// Where an element's top settles once it shows at its leading edge, unclipped, and holds still for two frames.
 export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
   let lastTop: number | undefined;
 
   return waitFor(async () => {
     await afterTwoFrames();
     const box = findElement().getBoundingClientRect();
-    const settled = canPointAt(findElement()) && box.top === lastTop;
+    const point = { ...centreOf(box), x: box.left + leadingInset };
+    const settled = canPointAt(findElement(), point) && box.top === lastTop;
+
     lastTop = box.top;
 
     if (!settled) throw new Error('The element is still moving');
@@ -177,7 +182,7 @@ export async function readBackToSplitGroup(
 ): Promise<SplitGroupAtTop> {
   await settleViewport(layoutWidths.phone);
   const scroll = await canvas.findByTestId(feedScrollId);
-  await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+  await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
   await scrollToTop(scroll);
 
   const header = await canvas.findByRole(

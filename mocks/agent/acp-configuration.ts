@@ -23,8 +23,8 @@ export const acpConfiguration: SessionConfigOption[] = [
     type: 'select',
     currentValue: 'high',
     options: [
-      { value: 'high', name: 'High' },
       { value: 'low', name: 'Low' },
+      { value: 'high', name: 'High' },
     ],
   },
   {

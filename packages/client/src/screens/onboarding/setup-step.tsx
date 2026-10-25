@@ -25,7 +25,7 @@ function MarkContent(props: {
   number: number;
 }): React.JSX.Element {
   if (props.mark === 'done')
-    return <Icon name="check" size="sm" className="text-primary-foreground" />;
+    return <Icon name="check" className="text-primary-foreground" />;
 
   return (
     <Text role="badge" className={numberClasses[props.mark]}>

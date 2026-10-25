@@ -5,7 +5,7 @@ import type { WireNode } from '../wire';
 
 const updateMessage = 'Update Argo to see this';
 
-it('keeps a Table of rows, cells, Pills and row ActionLists', () => {
+it('keeps a Table of rows, cells, Pills and row Actions', () => {
   expect(prepareWireTree(runTableRoot)).toEqual(runTableRoot);
 });
 

@@ -1,6 +1,5 @@
 import { useContext, type ReactNode } from 'react';
-import { Platform, View } from 'react-native';
-import { CheckboxIndicator } from '#primitives/inputs/checkbox';
+import { View } from 'react-native';
 import { Spinner } from '#primitives/status/spinner';
 import { ListContext, type ListSelection } from '../../../list-context';
 import { ChoiceMark } from './list-item-choice-mark';
@@ -62,12 +61,7 @@ function choiceMark(
   props: ListItemProps,
   mode: ListSelection['selectionMode'],
 ): ReactNode {
-  if (mode === 'multiple' && Platform.OS === 'android')
-    return (
-      <CheckboxIndicator value={!!props.selected} disabled={props.disabled} />
-    );
-
-  return <ChoiceMark {...props} />;
+  return <ChoiceMark {...props} multiple={mode === 'multiple'} />;
 }
 
 // Paper's Combobox master: a menu row in a choice list keeps a leading slot for its check, so labels align.

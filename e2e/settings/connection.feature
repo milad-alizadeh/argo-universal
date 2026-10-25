@@ -6,10 +6,10 @@ Feature: Connection to the Server
     Then the Connection shows the Server version
     And the Connection follows the Server clock
 
-  Scenario Outline: The Connection explains a Server failure and recovers
+  Scenario Outline: The Connection leaves a Server failure to the banner and recovers
     Given a <size> Frame
     When I view the Connection
-    Then the Connection explains why details cannot load while the Server is unavailable
+    Then the Connection leaves an unavailable Server to the banner
     And the Connection shows the Server version
     And the Connection follows the Server clock
 

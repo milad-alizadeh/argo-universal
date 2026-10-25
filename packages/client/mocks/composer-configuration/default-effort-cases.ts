@@ -14,17 +14,29 @@ function defaultEffortCase(
   configuration: Configuration,
   agentIndex: number,
 ): DefaultEffortCase {
-  const recorded = newSessionOptions[agentIndex];
-  const options = recorded?.configOptions ?? [];
-  const model = options.find((entry) => entry.category === 'model');
-  const option = recordedEffortOption(options);
-  const offered = recordedOfferedEfforts(model, option);
+  const { option, offered } = recordedEfforts(agentIndex);
+  const selected = requiredEffortSelection(offered);
 
   return {
     configuration,
-    selected: requiredEffortSelection(offered),
+    selected,
+    position: offered.indexOf(selected),
     configId: option.configId,
   };
+}
+
+interface RecordedEfforts {
+  option: SessionConfigOption;
+  offered: SessionConfigSelectOption[];
+}
+
+// The recorded Agent's effort option and the levels its default model offers.
+function recordedEfforts(agentIndex: number): RecordedEfforts {
+  const options = newSessionOptions[agentIndex]?.configOptions ?? [];
+  const model = options.find((entry) => entry.category === 'model');
+  const option = recordedEffortOption(options);
+
+  return { option, offered: recordedOfferedEfforts(model, option) };
 }
 
 function recordedOfferedEfforts(
@@ -41,6 +53,8 @@ function recordedOfferedEfforts(
 export interface DefaultEffortCase {
   configuration: Configuration;
   selected: SessionConfigSelectOption;
+  // The default level's place among the offered levels: the slider's value.
+  position: number;
   configId: string;
 }
 

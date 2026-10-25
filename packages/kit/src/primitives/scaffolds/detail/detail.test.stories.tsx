@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
-import { Page } from '#primitives/scaffolds/page';
+import { Screen } from '#primitives/scaffolds/screen';
 import { EmptyState } from '#primitives/status/empty-state';
 import { Detail } from './detail';
 import type { DetailProps } from './detail-props';
@@ -14,9 +14,9 @@ const meta = {
   component: Detail,
   args: issue.detail,
   render: (args): React.JSX.Element => (
-    <Page title={issue.title}>
+    <Screen title={issue.title}>
       <Detail {...args} />
-    </Page>
+    </Screen>
   ),
 } satisfies Meta<typeof Detail>;
 
@@ -70,9 +70,9 @@ const inContainer = (
 ): Story => ({
   render: (args) => (
     <View className={size}>
-      <Page title={issue.title}>
+      <Screen title={issue.title}>
         <Detail {...args} />
-      </Page>
+      </Screen>
     </View>
   ),
   play: async ({ canvas }) => {
@@ -144,15 +144,17 @@ const closed = fn();
 
 const closeLabel = 'Close Issue';
 
-export const ActionsJoinThePageHeader: Story = {
-  args: {
-    ...issue.detail,
-    actions: (
-      <ActionList>
-        <Action label={closeLabel} icon="check" onPress={closed} />
-      </ActionList>
-    ),
-  },
+export const ScreenActionsLeadTheContent: Story = {
+  render: (args) => (
+    <Screen
+      title={issue.title}
+      actions={
+        <Action key="close" label={closeLabel} icon="check" onPress={closed} />
+      }
+    >
+      <Detail {...args} />
+    </Screen>
+  ),
   play: async ({ canvas, userEvent }) => {
     closed.mockClear();
     const button = canvas.getByRole('button', { name: closeLabel });

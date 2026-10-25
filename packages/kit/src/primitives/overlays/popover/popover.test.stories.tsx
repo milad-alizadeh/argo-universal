@@ -1,11 +1,12 @@
+import { Switch } from '@expo/ui';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { action } from 'storybook/actions';
 import { expect, fireEvent, within } from 'storybook/test';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
-import { Slider } from '#primitives/inputs/slider';
-import { TextInput } from '#primitives/inputs/text-input';
+import { Slider } from '#primitives/controls/slider';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { layoutWidths } from '../../../each-layout';
@@ -54,7 +55,29 @@ function EffortSlider(): React.JSX.Element {
 function FastToggle(): React.JSX.Element {
   const [fast, setFast] = useState(false);
 
-  return <ListItem.Toggle title="Fast" value={fast} onValueChange={setFast} />;
+  return (
+    <ListItem
+      title="Fast"
+      trailing={<Switch label="Fast" value={fast} onValueChange={setFast} />}
+    />
+  );
+}
+
+function SearchModels(): React.JSX.Element {
+  const [query, setQuery] = useState('');
+
+  return (
+    <FieldGroup>
+      <FieldGroup.Section>
+        <FieldGroup.TextField
+          title="Search models"
+          hideTitle
+          value={query}
+          onChangeText={setQuery}
+        />
+      </FieldGroup.Section>
+    </FieldGroup>
+  );
 }
 
 // A search field above a List of menu rows: one disabled, one with a Slider under its title, one a switch.
@@ -63,7 +86,7 @@ function MenuPopover(): React.JSX.Element {
     <Popover>
       <Trigger />
       <PopoverContent accessibilityLabel="Model" className="p-1">
-        <TextInput variant="bare" accessibilityLabel="Search models" />
+        <SearchModels />
         <List>
           <ListItem title="Small" onPress={action('small')} />
           <ListItem title="Medium" disabled onPress={action('medium')} />

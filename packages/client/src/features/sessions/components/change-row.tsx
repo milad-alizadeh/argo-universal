@@ -35,7 +35,7 @@ function ChangeAction({ change, onOpen }: ChangeRowProps): ReactElement {
       className="min-w-0 flex-1 flex-row items-start gap-2"
     >
       <View className="w-7 shrink-0 items-center pt-0.5">
-        <ChangeStageIcon {...change} size="sm" />
+        <ChangeStageIcon {...change} />
       </View>
       <ChangeText change={change} />
     </Pressable>
@@ -85,6 +85,6 @@ const menuTrigger = (label: string): ReactElement => (
     icon="more"
     accessibilityLabel={label}
     variant="ghost"
-    size="xs"
+    size="sm"
   />
 );

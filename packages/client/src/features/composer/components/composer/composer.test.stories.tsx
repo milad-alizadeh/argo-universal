@@ -93,15 +93,15 @@ export const ReturnSends: Story = {
   },
 };
 
-// A web popover's menu moves between its rows with the arrow keys, Home and End, as a Combobox does.
+// The inline Mode choices are radios: the arrow keys, Home and End move between them, one at a time.
 export const ArrowKeysMoveThroughModeWide: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
-    const menu = await within(document.body).findByRole('dialog');
-    const rows = await within(menu).findAllByRole('button');
-    const [first, second] = rows;
-    const last = rows.at(-1);
+    const overlay = within(document.body);
+    const radios = await overlay.findAllByRole('radio');
+    const [first, second] = radios;
+    const last = radios.at(-1);
     first?.focus();
     await userEvent.keyboard('{ArrowDown}');
     await expect(second).toHaveFocus();

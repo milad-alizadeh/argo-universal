@@ -70,9 +70,9 @@ export function ChangesInspectorSheet(
 ): React.JSX.Element {
   return (
     <Sheet {...inspectorSheet}>
-      <Sheet.Page name="inspector">
+      <Sheet.Screen name="inspector">
         <ChangesInspector {...props} inSheet />
-      </Sheet.Page>
+      </Sheet.Screen>
     </Sheet>
   );
 }

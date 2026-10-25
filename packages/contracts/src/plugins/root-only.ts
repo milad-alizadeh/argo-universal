@@ -1,13 +1,13 @@
 import { wirePart } from './kit';
 import type { WireNode } from './wire';
 
-// A root-only part, such as Page, owns its screen; below the root it would take over the host's header.
+// A root-only part, such as Screen, owns its screen; below the root it would take over the host's header.
 export const isRootOnly = (node: WireNode): boolean =>
   Boolean(wirePart(node.type)?.root);
 
 /*
  * The root-only parts a node's slot may hold: a root-only part's slots are the screen's own views, so ListDetail's
- * detail may be a Page. Children and every other slot hold none.
+ * detail may be a Screen. Children and every other slot hold none.
  */
 export const rootSlotParts = (
   owner: WireNode,

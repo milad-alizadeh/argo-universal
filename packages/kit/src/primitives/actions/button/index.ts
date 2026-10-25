@@ -11,3 +11,9 @@ export {
   looks as buttonLooks,
   pressedLooks as buttonPressedLooks,
 } from './button-looks';
+
+export {
+  joinedClasses as buttonJoinedClasses,
+  webClass as buttonWebClass,
+  webStyle as buttonWebStyle,
+} from './button-web';

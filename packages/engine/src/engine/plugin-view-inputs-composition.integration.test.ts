@@ -69,7 +69,7 @@ it(
       .toMatchObject({
         revision: 5,
         root: {
-          type: 'Page',
+          type: 'Screen',
           props: { title: 'Inputs', value: '' },
           slots: { primaryAction: [{ type: 'Action', key: 'add' }] },
           children: [

@@ -144,3 +144,9 @@ export const SlotMessage = z.discriminatedUnion('type', [
 ]);
 
 export type SlotMessage = z.infer<typeof SlotMessage>;
+
+export {
+  partEventHandler,
+  placedPartEvent,
+  WireProps,
+} from '#plugin-wire-part-events';

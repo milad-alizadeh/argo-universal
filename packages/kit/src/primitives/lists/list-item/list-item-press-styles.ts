@@ -1,5 +1,4 @@
 import { Platform } from 'react-native';
-import type { ListAppearance } from '../../../list-context';
 import { tintTransitionClassName } from '../../../motion';
 import type { RowDrawing } from '../../../row-drawing-context';
 import { cn } from '../../../utils';
@@ -10,15 +9,8 @@ import {
   type PressLayout,
 } from './list-item-layouts';
 import type { ListItemProps } from './list-item-props';
-import { contentCard } from './list-item-styles';
 
 const pressFocus = 'web:select-none web:rounded-inherit';
-
-// A row drawing its own tile keeps that tile's corners instead of inheriting its card's.
-const tileLayouts = new Set<PressLayout>(['card', 'content']);
-
-const focusOf = (layout: PressLayout): string =>
-  tileLayouts.has(layout) ? 'web:select-none' : pressFocus;
 
 // Pressed (4%) follows hover (2%) on the web, so a held row is darker than a hovered one.
 const pressTints = cn(
@@ -35,25 +27,11 @@ type PressDrawing = {
   rows: RowDrawing;
   interactive: boolean;
   control: boolean;
-  appearance: ListAppearance;
 } & Pick<ListItemProps, 'sidebar'>;
-
-/*
- * A grouped card draws a pressed row as a rounded tile inset in the card on the web only. Both
- * phones fill the row edge to edge, the shape a stock grouped row and Material's ripple take.
- */
-const tiledCard = (appearance: ListAppearance): boolean =>
-  Platform.OS === 'web' && appearance === 'grouped';
-
-function cardLayout(press: PressDrawing): PressLayout {
-  if (contentCard(press)) return 'content';
-
-  return tiledCard(press.appearance) ? 'card' : 'row';
-}
 
 // A sidebar List (Paper's SettingsList) draws its rows as tiles; others draw them by their card.
 function listLayout(press: PressDrawing): PressLayout {
-  return press.rows === 'sidebar' ? 'sidebar-tile' : cardLayout(press);
+  return press.rows === 'sidebar' ? 'sidebar-tile' : 'row';
 }
 
 // A row's own sidebar option (Paper "SessionsList") comes before its List's drawing.
@@ -74,7 +52,7 @@ function pressLayout(press: PressDrawing): string {
 export function itemPress(press: PressDrawing): string {
   return cn(
     pressLayout(press),
-    focusOf(layoutOf(press)),
+    pressFocus,
     press.interactive ? pressTints : readOnlyCursor,
   );
 }

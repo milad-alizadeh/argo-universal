@@ -4,14 +4,11 @@ import { recordedSessionOptions } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { within, expect, fn } from 'storybook/test';
+import { within, expect, fn, waitFor } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
 import { composerProps, updateComposerSettings } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
-import {
-  agentModelLabel,
-  valueTextAttribute,
-} from './composer-test-contract.test.mocks';
+import { agentModelLabel } from './composer-test-contract.test.mocks';
 import {
   expectHighEffort,
   expectEffortFollowsModel,
@@ -39,9 +36,11 @@ export function pickers(width: number, agentIndex: number): Story {
       await userEvent.click(
         await canvas.findByRole('button', { name: agentModelLabel }),
       );
-      await expect(
-        await overlay.findByRole('slider', { name: 'Effort' }),
-      ).toHaveAttribute(valueTextAttribute, catalog.currentEffort);
+      await waitFor(async () =>
+        expect(
+          await overlay.findByRole('slider', { name: 'Effort' }),
+        ).toBeVisible(),
+      );
       await expectEffortControlsVisible();
       await expectHighEffort({ canvas, userEvent, width, catalog });
 

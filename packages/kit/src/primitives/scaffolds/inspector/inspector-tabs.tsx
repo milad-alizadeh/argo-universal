@@ -47,7 +47,7 @@ function CloseTab({ tab, selected, focus }: TabProps): ReactElement | null {
   return (
     <IconButton
       variant="ghost"
-      size="xs"
+      size="sm"
       accessibilityLabel={`Close ${tab.label}`}
       onPress={() => focus.close(tab.key)}
       icon="close"
@@ -63,7 +63,7 @@ function TabLabel({
 
   return (
     <>
-      <Icon name={tab.icon} size="sm" tone={tone} />
+      <Icon name={tab.icon} tone={tone} />
       <Text role="body" tone={tone} numberOfLines={1} className="font-medium">
         {tab.label}
       </Text>

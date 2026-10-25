@@ -118,7 +118,7 @@ export const KeepsComparisonAboveScrollingFiles: Story = {
     );
 
     const comparison = page.getByRole('button', {
-      name: 'Comparison',
+      name: /^Comparison/,
     });
 
     const files = page.getByTestId(scrollTestID);

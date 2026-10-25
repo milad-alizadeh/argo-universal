@@ -4,11 +4,11 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react';
-import type { SheetPageEntry } from './sheet-pages';
 import type { SheetDestination } from './sheet-props';
-import { pushPage } from './sheet-state';
+import type { SheetScreenEntry } from './sheet-screens';
+import { pushScreen } from './sheet-state';
 
-type SetPages = Dispatch<SetStateAction<SheetPageEntry[]>>;
+type SetScreens = Dispatch<SetStateAction<SheetScreenEntry[]>>;
 
 type SetPath = Dispatch<SetStateAction<string[]>>;
 
@@ -17,10 +17,10 @@ type SetPath = Dispatch<SetStateAction<string[]>>;
  * sheet is open: a page the reader has already slid to would slide out from under them if a later page
  * took its place in the row.
  */
-function placedPage(
-  current: SheetPageEntry[],
+function placedScreen(
+  current: SheetScreenEntry[],
   page: SheetDestination,
-): SheetPageEntry[] {
+): SheetScreenEntry[] {
   const entry = { ...page, content: page.children };
 
   return current.some((held) => held.name === page.name)
@@ -30,12 +30,12 @@ function placedPage(
 
 // A choice page follows its owner's current props, including availability and loading changes.
 export function updateDestination(
-  setPages: SetPages,
+  setScreens: SetScreens,
   page: SheetDestination,
 ): void {
-  setPages((current) =>
+  setScreens((current) =>
     current.some((entry) => entry.name === page.name)
-      ? placedPage(current, page)
+      ? placedScreen(current, page)
       : current,
   );
 }
@@ -45,33 +45,33 @@ export function updateDestination(
  * push that follows slides over a page that is already drawn and has nothing left to mount.
  */
 export function registerDestination(
-  setPages: SetPages,
+  setScreens: SetScreens,
   page: SheetDestination,
 ): void {
-  setPages((current) => placedPage(current, page));
+  setScreens((current) => placedScreen(current, page));
 }
 
 // A field supplies its choices when opened; static Sheet.Link callers push a declared name.
 export function pushDestination(
-  setPages: SetPages,
+  setScreens: SetScreens,
   setPath: SetPath,
   page: string | SheetDestination,
 ): void {
   if (typeof page !== 'string')
-    setPages((current) => placedPage(current, page));
+    setScreens((current) => placedScreen(current, page));
 
   const name = typeof page === 'string' ? page : page.name;
 
-  setPath((current) => pushPage(current, name));
+  setPath((current) => pushScreen(current, name));
 }
 
 // Back, swipe-back and dismissal complete each visited field once.
-export function usePageExits(
+export function useScreenExits(
   open: boolean,
   path: string[],
-  pages: SheetPageEntry[],
+  pages: SheetScreenEntry[],
 ): void {
-  const previous = useRef<SheetPageEntry[]>([]);
+  const previous = useRef<SheetScreenEntry[]>([]);
 
   useLayoutEffect(() => {
     const active = open ? pages.filter((page) => path.includes(page.name)) : [];
@@ -82,8 +82,8 @@ export function usePageExits(
 }
 
 function reportExits(
-  previous: SheetPageEntry[],
-  active: SheetPageEntry[],
+  previous: SheetScreenEntry[],
+  active: SheetScreenEntry[],
 ): void {
   const names = new Set(active.map((page) => page.name));
 

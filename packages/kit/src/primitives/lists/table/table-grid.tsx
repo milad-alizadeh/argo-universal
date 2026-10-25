@@ -11,7 +11,7 @@ import { trayCardClassName, trayClassName } from '../../../tray-surface';
 import { GridRow, type GridProps } from './table-grid-row';
 import { TableHeader } from './table-header';
 
-// Regular widths: the column titles on a tint tray over a card of rows, each row with List's press, selection, separators and ActionList.
+// Regular widths: the column titles on a tint tray over a card of rows, each row with List's press, selection, separators and Actions.
 export function TableGrid(props: GridProps): ReactElement {
   return (
     <View

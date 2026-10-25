@@ -1,4 +1,4 @@
-import { overflowIcon } from '@repo/kit/primitives/actions/action-list';
+import { overflowIcon } from '@repo/kit/primitives/actions/action';
 import { type IconName, iconSymbols } from '@repo/kit/symbols/icon-names';
 import {
   type DrawnMaterialName,

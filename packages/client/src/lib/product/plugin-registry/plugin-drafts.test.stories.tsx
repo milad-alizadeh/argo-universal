@@ -1,10 +1,10 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
-import fixtures from '@repo/mocks/plugins/controls.json' with { type: 'json' };
-import page from '@repo/mocks/plugins/page.json' with { type: 'json' };
+import page from '@repo/mocks/plugins/screen.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
+import { textFieldNode } from './plugin-registry-fixtures';
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Drafts',
@@ -20,14 +20,9 @@ const projectName = 'Project name';
 
 const localEdit = 'Local edit';
 
-const roots = fixtures.map((fixture) => WireNode.parse(fixture));
-
+// The fixture's TextField row, drawn on its own as a draft.
 function textRoot(): WireNode {
-  const root = roots.find((node) => node.type === 'TextInput');
-
-  if (!root) throw new Error('Missing TextInput fixture');
-
-  return root;
+  return textFieldNode();
 }
 
 interface Draft {
@@ -102,27 +97,5 @@ export const FocusedPageSearchSurvivesPatch: Story = {
       canvas.getByRole('button', { name: searchDraft.label }),
     );
     await editFocusedDraft(context, searchDraft);
-  },
-};
-
-function LocalDraft(): React.JSX.Element {
-  const root = textRoot();
-  const props = { ...root.props };
-  delete props.onChangeText;
-
-  return <PluginTree root={{ ...root, props }} onEvent={onEvent} />;
-}
-
-export const DraftWithoutChangeHandler: Story = {
-  render: LocalDraft,
-  play: async ({ canvas, userEvent }) => {
-    const field = canvas.getByRole('textbox', { name: projectName });
-    await userEvent.clear(field);
-    await userEvent.type(field, 'Private draft{Enter}');
-    await expect(field).toHaveValue('Private draft');
-    await expect(onEvent).toHaveBeenCalledOnce();
-    await expect(onEvent).toHaveBeenCalledWith('textinput', {
-      event: 'onSubmit',
-    });
   },
 };

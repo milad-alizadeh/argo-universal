@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
-import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
 import { Button } from '#primitives/actions/button';
 import type { ButtonProps } from '#primitives/actions/button';
@@ -108,13 +107,13 @@ function DialogCancel(
   props: Omit<ButtonProps, 'onPress' | 'variant' | 'fullWidth'>,
 ): React.JSX.Element {
   const { onOpenChange } = useDialogState();
-  const wide = useWide();
+  const centred = useInCentredOverlay();
 
   return (
     <Button
       {...props}
       variant="secondary"
-      fullWidth={!wide}
+      fullWidth={!centred}
       onPress={() => onOpenChange(false)}
     />
   );

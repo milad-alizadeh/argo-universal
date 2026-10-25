@@ -264,6 +264,22 @@ _Avoid_: Notice, Feed entry
 Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
 _Avoid_: Design system (for the code), component library
 
+**FieldGroup**:
+A page's fixed rows of values and controls, such as Project details or Plugin settings, arranged in sections. Values save as they change, or a page that sends them puts one submit button below the FieldGroup.
+_Avoid_: Grouped list, settings list, Form
+
+**Field**:
+One row in a FieldGroup, of a fixed type such as a value, a link, a toggle, a text field or a choice.
+_Avoid_: Settings row, ListItem (for a Field)
+
+**Control**:
+A standalone input that sits on its own in a screen, such as a search field, a segmented control, a filter pill or a slider. A value that belongs to a page of fixed rows is a Field in a FieldGroup, not a Control.
+_Avoid_: Input (for the kit folder), Field (for a standalone control)
+
+**List**:
+Rows of data of any length, such as Sessions or Agents, optionally in List sections.
+_Avoid_: FieldGroup (for data rows)
+
 **List section**:
 A distinct group of items in a List, with an optional heading and footer.
 _Avoid_: Group (when naming a List section)
@@ -288,9 +304,13 @@ _Avoid_: Status indicator
 Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar.
 _Avoid_: Properties, key-value list
 
-**ActionList**:
-The Actions offered by one page, row or tile, shown as header controls or a context menu on each platform.
-_Avoid_: Action panel, action menu (for the declaration)
+**Screen**:
+One entry on a navigation stack: its header (title, search, primary Action, Actions) and its content, declared together. A route shows one Screen; a Sheet stacks Screens of its own.
+_Avoid_: Page, view (for a stack entry)
+
+**Actions**:
+The verbs a Screen, a row or a tile offers, in sections, declared once and drawn as each platform draws them: header controls for a Screen, a context menu for a row or tile. They hold verbs only; a choice is a Menu.
+_Avoid_: ActionList, action panel, action menu (for the declaration)
 
 **Frame**:
 The App's chrome around its pages: the rail, the section sidebar and the panes. It places them with a Scaffold.

@@ -23,7 +23,7 @@ const row = (key: string, title: string, selected: boolean): WireNode =>
   });
 
 const issuePage = node({
-  type: 'Page',
+  type: 'Screen',
   key: 'issue',
   props: { title: syncTitle },
   children: [

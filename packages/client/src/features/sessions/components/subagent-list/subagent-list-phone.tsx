@@ -1,7 +1,8 @@
 import type { Subagent } from '@repo/contracts';
-import { Icon } from '@repo/kit/primitives/content/icon';
+import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { Chevron } from '@repo/kit/primitives/status/chevron';
 import type { ComponentProps, JSX } from 'react';
 import { Platform } from 'react-native';
 import { subagentSupporting } from './subagent-format';
@@ -21,7 +22,7 @@ const rowPress = ({
 function disclosure(onSelect: RowProps['onSelect']): JSX.Element | undefined {
   if (!onSelect || Platform.OS !== 'android') return undefined;
 
-  return <Icon name="chevron-right" size="sm" tone="muted" />;
+  return <Chevron direction="right" />;
 }
 
 const rowTones = (finished: boolean) =>
@@ -68,7 +69,11 @@ function phoneRows(props: PhoneProps): JSX.Element[] {
 
 export function PhoneSubagentList(props: PhoneProps): JSX.Element {
   return (
-    <List appearance="grouped" fit={false} accessibilityLabel="Subagents">
+    <List
+      appearance={groupedOnPhones('cards')}
+      fit={false}
+      accessibilityLabel="Subagents"
+    >
       <List.Section>{phoneRows(props)}</List.Section>
     </List>
   );

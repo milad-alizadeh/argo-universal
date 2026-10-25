@@ -75,7 +75,18 @@
     // Off: it also rejects narrowing Argo's own unions, such as `typeof breakpoint === 'number'` on `number | string`.
     // Outside data is already parsed with Zod at its boundary (ADR-0015, argo/json-parse-cast), so `typeof` only ever meets owned types.
     "anti-slop/no-runtime-typeof": "off",
-    "anti-slop/no-shape-in-symbol-names": "error",
+    // SwiftUI and Compose name their own modifiers and shape namespaces this way; a file may use them but not coin a new one.
+    "anti-slop/no-shape-in-symbol-names": [
+      "error",
+      {
+        "allowedNames": [
+          "Shapes",
+          "contentShape",
+          "shapes",
+          "buttonBorderShape"
+        ]
+      }
+    ],
     "anti-slop/no-unknown-parameters": "error",
     "anti-slop/no-unknown-returns": "error",
     "anti-slop/no-unknown-type-aliases": "error",
@@ -145,16 +156,6 @@
       // Unknown ACP identities must be logged at warn (#717).
       "files": ["packages/engine/src/agents/acp/connection/connection.ts"],
       "rules": { "no-console": ["error", { "allow": ["error", "warn"] }] }
-    },
-    {
-      // `shape` is @expo/ui Compose's own prop name on Surface and Button; the rule allows member reads but not package prop keys.
-      "files": [
-        "packages/kit/src/primitives/actions/split-button/split-button-look.android.ts",
-        "packages/kit/src/primitives/inputs/picker/picker-dialog.android.tsx",
-        "packages/kit/src/primitives/inputs/picker/picker-row.android.tsx",
-        "packages/kit/src/primitives/lists/grouped-list-item/grouped-list-item.android.tsx"
-      ],
-      "rules": { "anti-slop/no-shape-in-symbol-names": "off" }
     },
     {
       // A Feed candidate is unparsed by design: a row assembled from a Feed patch, which acceptFeedCandidate parses with SessionUpdate before use.
@@ -230,7 +231,12 @@
       "rules": { "argo/icon-size": "error" }
     },
     {
-      "files": ["packages/kit/src/symbols/**"],
+      // The symbols folder turns roles into pixels; the iOS Link and page Picker rows' stock disclosure chevron is a font-sized SF Symbol (footnote, semibold), not a role-sized icon.
+      "files": [
+        "packages/kit/src/symbols/**",
+        "packages/kit/src/primitives/fields/field-link/field-link.ios.tsx",
+        "packages/kit/src/primitives/fields/field-picker/field-picker-screen-row.ios.tsx"
+      ],
       "rules": { "argo/icon-size": "off" }
     },
     {
@@ -251,11 +257,6 @@
     {
       // Only the vendor module names Registry vendors (ADR-0004, #717).
       "files": ["packages/engine/src/agents/vendor.ts"],
-      "rules": { "argo/vendor-name": "off" }
-    },
-    {
-      // #721 requires these four featured Registry ids for presentation only.
-      "files": ["packages/client/src/features/agents/utils/featured-ids.ts"],
       "rules": { "argo/vendor-name": "off" }
     },
     {
@@ -911,7 +912,7 @@
                 "message": "Import another primitive through its folder's index, #primitives/<group>/<name>."
               },
               {
-                "regex": "^\\.\\./[a-z]",
+                "regex": "^\\.\\./(?!field-row/field-row-list-item\\.android$)[a-z]",
                 "message": "Import another primitive through its folder's index, #primitives/<group>/<name>."
               },
               {
@@ -2155,9 +2156,9 @@
       // ADR-0023: Lexical stays in the RichTextarea web drawing: its view, the web/ folder (with the tests' headless editor) and their tests.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
-        "packages/kit/src/primitives/inputs/rich-textarea/rich-textarea.tsx",
-        "packages/kit/src/primitives/inputs/rich-textarea/web/**",
-        "packages/kit/src/primitives/inputs/rich-textarea/*.test.*"
+        "packages/kit/src/primitives/controls/rich-textarea/rich-textarea.tsx",
+        "packages/kit/src/primitives/controls/rich-textarea/web/**",
+        "packages/kit/src/primitives/controls/rich-textarea/*.test.*"
       ],
       "rules": { "argo/lexical-zone": "error" }
     },

@@ -4,7 +4,7 @@ import {
   List,
   ListDetail,
   ListItem,
-  Page,
+  Screen,
 } from '@argo/plugin-kit';
 
 const issues = [
@@ -34,9 +34,9 @@ const noIssue = (
 );
 
 const issueDetail = (issue) => (
-  <Page title={issue.title}>
+  <Screen title={issue.title}>
     <Detail markdown={`Fixture Issue ${issue.id}.`} />
-  </Page>
+  </Screen>
 );
 
 // The Issues beside the one the route names; the list moves to the Frame's sidebar on a wide window.

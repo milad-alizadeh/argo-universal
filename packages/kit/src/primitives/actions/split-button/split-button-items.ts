@@ -1,11 +1,11 @@
-import { declaredActions } from '#primitives/actions/action-list';
+import { declaredActions } from '#primitives/actions/action';
 import type { ButtonProps } from '#primitives/actions/button';
 import type { MenuAction } from '#primitives/overlays/menu';
 import type {
   LaidSplitProps,
   SplitButtonProps,
   SplitRows,
-} from './split-button-props';
+} from './split-button';
 
 type Choose<Value extends string> = (value: Value) => void;
 
@@ -19,7 +19,7 @@ export function menuRows<Value extends string>(
   return { options, value, onValueChange };
 }
 
-// A Plugin declares its menu entries as keyed Action children, as in ActionList.
+// A Plugin declares its menu entries as keyed Action children, as a Screen declares them.
 function menuActions(props: SplitButtonProps): readonly MenuAction[] {
   return props.actions ?? declaredActions(props.children);
 }

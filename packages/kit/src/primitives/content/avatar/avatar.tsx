@@ -157,7 +157,7 @@ function AvatarInitials({
   size,
 }: Pick<AvatarProps, 'initials' | 'size'>): React.JSX.Element {
   if (!initials)
-    return <Icon name={{ sf: 'person.fill', material: 'person' }} size="sm" />;
+    return <Icon name={{ sf: 'person.fill', material: 'person' }} />;
 
   return (
     <Text role={initialRole(size)} tone="neutral" selectable={false}>

@@ -109,7 +109,7 @@ function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
 
   return (
     <View className={cn('absolute', !shown && 'opacity-0')}>
-      <Icon name={icon} size="lg" filled={filled} className={tone} />
+      <Icon name={icon} filled={filled} className={tone} />
     </View>
   );
 }

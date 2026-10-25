@@ -1,9 +1,5 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Platform } from 'react-native';
-import {
-  FooterProvider,
-  type SectionFooter,
-} from '#primitives/fields/field-description';
 import type { ListSelection } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import type { ListSectionProps } from './list-props';
@@ -15,7 +11,6 @@ export interface SectionState {
   selection: ListSelection;
   header: ReactNode;
   footer: ReactNode;
-  description: SectionFooter | undefined;
 }
 
 // Both declarations prepared by List and sections reached through React use these rules.
@@ -29,7 +24,6 @@ export function prepareSection(
     selection: sectionSelection(props),
     header: hasSectionHeader(props) ? <SectionHeader {...props} /> : null,
     footer: sectionFooter(props, key),
-    description: sectionDescription(props, key),
   };
 }
 
@@ -49,25 +43,4 @@ function sectionFooter(props: ListSectionProps, key: string): ReactNode {
   return (
     <ListFooter id={`${key}:footer`} text={props.footer} tone={props.tone} />
   );
-}
-
-export function SectionContent({
-  section,
-  children,
-}: {
-  section: SectionState;
-  children: ReactNode;
-}): ReactElement {
-  return (
-    <FooterProvider value={section.description}>{children}</FooterProvider>
-  );
-}
-
-function sectionDescription(
-  props: ListSectionProps,
-  key: string,
-): SectionFooter | undefined {
-  return props.footer
-    ? { id: `${key}:footer`, failure: props.tone === 'danger' }
-    : undefined;
 }

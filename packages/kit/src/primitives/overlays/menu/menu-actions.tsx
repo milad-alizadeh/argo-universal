@@ -2,8 +2,9 @@ import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
-import { Icon, IconSlot } from '#primitives/content/icon';
+import { IconSlot } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
+import { Chevron } from '#primitives/status/chevron';
 import { SelectedCheck } from '#primitives/status/selected-check';
 import { MenuActionLabel } from './menu-action-label';
 import type { KeyboardFocus } from './menu-choices';
@@ -103,7 +104,7 @@ function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
       <View className={menuRowClass()}>
         <MenuActionLabel {...submenu} />
         <SubmenuCount count={submenu.count} />
-        <Icon name="chevron-right" size="sm" tone="muted" />
+        <Chevron direction="right" />
       </View>
     </RadixMenu.SubTrigger>
   );
@@ -154,7 +155,7 @@ function ChoiceCheck({
   if (selected === undefined) return null;
 
   return (
-    <IconSlot size="sm">
+    <IconSlot>
       {selected ? <SelectedCheck className="text-foreground" /> : null}
     </IconSlot>
   );

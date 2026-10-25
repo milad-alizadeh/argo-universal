@@ -1,7 +1,7 @@
 import { MediaUrlContext } from '@repo/kit/primitives/content/media-url';
 import { PortalProvider } from '@repo/kit/primitives/overlays/portal';
 import { dismissToasts, Toaster } from '@repo/kit/primitives/overlays/toast';
-import { PageNavigationEnabled } from '@repo/kit/primitives/scaffolds/page';
+import { ScreenNavigationEnabled } from '@repo/kit/primitives/scaffolds/screen';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { PropsWithChildren } from 'react';
@@ -48,9 +48,9 @@ function ArgoPreview(props: PreviewProps): React.JSX.Element {
     <PreviewProviders>
       {/* On a phone, Storybook's own UI nests a bottom sheet's portal provider, which has no root host. */}
       <PortalProvider>
-        <PageNavigationEnabled value={false}>
+        <ScreenNavigationEnabled value={false}>
           <PreviewLayout {...props} />
-        </PageNavigationEnabled>
+        </ScreenNavigationEnabled>
       </PortalProvider>
       {props.standalone && <Toaster key={props.storyId} />}
     </PreviewProviders>

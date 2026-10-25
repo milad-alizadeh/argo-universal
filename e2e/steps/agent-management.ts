@@ -88,7 +88,7 @@ async function checkPickerAndReturn(
   await openConfiguration(page);
   await page.getByRole('button', { name: /^Agent(?:,|$)/ }).click();
   await expect(
-    page.getByRole('button', { name: exampleName, exact: true }),
+    page.getByRole('radio', { name: exampleName, exact: true }),
   ).toBeVisible();
   await closeAgentMenus(page, agentModelLabel);
 

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Surface } from './surface';
 import {
@@ -67,8 +67,6 @@ function InteractiveSurface(): React.JSX.Element {
 
 function archiveActions(onArchive: () => void): React.JSX.Element {
   return (
-    <ActionList>
-      <Action icon="archive" label="Archive" onPress={onArchive} />
-    </ActionList>
+    <Action key="archive" icon="archive" label="Archive" onPress={onArchive} />
   );
 }

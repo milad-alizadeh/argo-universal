@@ -1,5 +1,5 @@
 import type { ToolCallUpdate } from '@repo/contracts';
-import { Page } from '@repo/kit/primitives/scaffolds/page';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -23,7 +23,7 @@ function EditFeed({ row }: { row: ToolCallUpdate }): React.JSX.Element {
 function WidePreview({ children }: { children: ReactNode }): React.JSX.Element {
   return (
     <ScaffoldMock attentionCount={0}>
-      <Page title="Recorded edits">{children}</Page>
+      <Screen title="Recorded edits">{children}</Screen>
     </ScaffoldMock>
   );
 }

@@ -5,21 +5,21 @@ import type { InspectorProps } from './inspector-props';
 interface InspectorSheetFrameProps {
   inspector: InspectorProps;
   // The sheet page's own header title, where the platform's sheet draws one.
-  pageTitle?: string;
+  screenTitle?: string;
   children: ReactNode;
 }
 
 // The Inspector's sheet, at its medium detent first, with one page for its content; a page there can push more.
 export function InspectorSheetFrame({
   inspector,
-  pageTitle,
+  screenTitle,
   children,
 }: InspectorSheetFrameProps): ReactElement {
   return (
     <Sheet {...sheetProps(inspector)}>
-      <Sheet.Page name="inspector" title={pageTitle}>
+      <Sheet.Screen name="inspector" title={screenTitle}>
         {children}
-      </Sheet.Page>
+      </Sheet.Screen>
     </Sheet>
   );
 }

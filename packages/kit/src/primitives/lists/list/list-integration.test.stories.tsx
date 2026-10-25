@@ -5,7 +5,7 @@ import { page } from 'vitest/browser';
 import { layoutWidths } from '#kit/each-layout';
 import { settleViewport } from '#kit/settle-viewport';
 import { ListItem } from '#primitives/lists/list-item';
-import { Page } from '#primitives/scaffolds/page';
+import { Screen } from '#primitives/scaffolds/screen';
 import { Svg } from '#primitives/visual';
 import { List } from './list';
 
@@ -26,15 +26,15 @@ const titles = ['One', 'Two', 'Three', 'Four', 'Five', 'Six'];
 const xml =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><path d="M0 85L160 10" stroke="currentColor" fill="none"/></svg>';
 
-export const PageGrid: Story = {
+export const ScreenGrid: Story = {
   render: () => (
-    <Page title="Gallery">
+    <Screen title="Gallery">
       <List testID="grid-audit" layout="grid" columns={6}>
         {titles.map((title) => (
           <ListItem key={title} title={title} onPress={() => {}} />
         ))}
       </List>
-    </Page>
+    </Screen>
   ),
   play: async ({ canvas }) => {
     const last = await canvas.findByRole('button', { name: 'Six' });
@@ -111,7 +111,7 @@ const shelves = Array.from({ length: 13 }, (_, index) => index + 1);
 
 export const OuterScrollReleasesBudget: Story = {
   render: () => (
-    <Page title="Shelves">
+    <Screen title="Shelves">
       <ScrollView testID="outer-audit" style={{ flex: 1 }}>
         {shelves.map((number) => (
           <List key={number} direction="horizontal" tileSize="sm">
@@ -126,7 +126,7 @@ export const OuterScrollReleasesBudget: Story = {
           </List>
         ))}
       </ScrollView>
-    </Page>
+    </Screen>
   ),
   play: async ({ canvas }) => {
     await expect(

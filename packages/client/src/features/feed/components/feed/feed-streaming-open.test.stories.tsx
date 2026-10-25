@@ -4,8 +4,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { Feed } from './feed';
 import {
-  expandedAttribute,
   feedScrollId,
+  markSettledMiddleOfView,
   scrolledToEnd,
   scrollToEnd,
   settleWait,
@@ -70,13 +70,30 @@ export const KeepsFollowingEndWhenRowOpensAsRowsStream: Story = {
     await settleViewport(layoutWidths.phone);
     const scroll = await canvas.findByTestId(feedScrollId);
     await scrollToEnd(scroll);
+    // Rows at the end are still measuring after the scroll: pick one once the view holds still.
+    await markSettledMiddleOfView(scroll);
+    await scrollToEnd(scroll);
     const row = lowestClosedRowInView(scroll);
+    const label = row.textContent;
     row.click();
     await streamRows();
-    await expect(row).toHaveAttribute(expandedAttribute, 'true');
+    // The row may have been drawn again while rows streamed in, so read it as it is now.
+    await waitFor(
+      () =>
+        expect(
+          within(scroll)
+            .getAllByRole('button', { expanded: true })
+            .some((open) => open.textContent === label),
+        ).toBe(true),
+      settleWait,
+    );
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
-    await expect(
-      canvas.queryByRole('button', { name: /Jump to latest/ }),
-    ).toBeNull();
+    await waitFor(
+      () =>
+        expect(
+          canvas.queryByRole('button', { name: /Jump to latest/ }),
+        ).toBeNull(),
+      settleWait,
+    );
   },
 };

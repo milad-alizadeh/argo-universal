@@ -29,7 +29,7 @@ function choice(width: number, mock: RequestMock = elicitationMock): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
-      await userEvent.click(canvas.getByRole('button', { name: /^Blue/ }));
+      await userEvent.click(canvas.getByRole('radio', { name: /^Blue/ }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
@@ -122,7 +122,7 @@ function conflict(width: number, mock?: RequestMock): Story {
       );
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       await expect(
-        canvas.getByRole('button', { name: /^Blue/ }),
+        canvas.getByRole('radio', { name: /^Blue/ }),
       ).toHaveAttribute('aria-disabled', 'true');
       await (width < wideBreakpoint()
         ? expect(

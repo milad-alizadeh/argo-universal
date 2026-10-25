@@ -1,3 +1,4 @@
+import { isPhoneGrouped, isWebGrouped } from '../../../list-grouped';
 import type { ListProps } from './list-props';
 
 type Insets = Pick<
@@ -7,37 +8,45 @@ type Insets = Pick<
 
 type Options = Insets & Pick<ListProps<never>, 'appearance' | 'fit'>;
 
-// Paper's Configure popover (menu-surface.ts): a grouped list in a popover holds its rows 4px in from every side.
+// Paper's Configure popover (menu-surface.ts): a list in a popover holds its rows 4px in from every side.
 const menuInset = { sides: 1, ends: 1 } as const;
 
 export function listInsets(props: Options, menu: boolean): Insets {
-  if (props.appearance !== 'grouped') return plainInsets(props, menu);
-
   if (menu) return menuInsets(props);
 
-  return { padding: horizontalInset(props), ...verticalInsets(props) };
+  return appearanceInsets(props);
 }
 
-// A plain list in a popover sits in its caller's inset, so it adds no scroll end gap below its last row.
-function plainInsets(props: Options, menu: boolean): Insets {
-  return menu ? { ...props, paddingBottom: props.paddingBottom ?? 0 } : props;
+function appearanceInsets(props: Options): Insets {
+  if (isPhoneGrouped(props.appearance)) return phoneInsets(props);
+
+  return isWebGrouped(props.appearance) ? groupedInsets(props) : props;
 }
 
-function horizontalInset(props: Options): Insets['padding'] {
-  return props.padding ?? { compact: 4, wide: props.fit ? 1 : 0 };
-}
-
-function verticalInsets(props: Options): Omit<Insets, 'padding'> {
+// A phone's grouped List of ListItems holds its cards 16 from the sides, as it did before FieldGroup.
+function phoneInsets(props: Options): Insets {
   return {
-    paddingTop: props.paddingTop ?? { compact: 4, wide: 0 },
-    paddingBottom: props.paddingBottom ?? { compact: 8, wide: 6 },
+    padding: orInset(props.padding, { compact: 4, wide: props.fit ? 1 : 0 }),
+    paddingTop: orInset(props.paddingTop, { compact: 4, wide: 0 }),
+    paddingBottom: orInset(props.paddingBottom, { compact: 8, wide: 6 }),
   };
 }
+
+// A web grouped list holds its cards 16 from the sides, as a FieldGroup does on a page, and its first heading 8 down.
+const groupedInset = { sides: 4, top: 2, bottom: 4 } as const;
 
 const orInset = (
   inset: Insets['padding'],
   fallback: NonNullable<Insets['padding']>,
 ): NonNullable<Insets['padding']> => inset ?? fallback;
+
+function groupedInsets(props: Options): Insets {
+  return {
+    padding: orInset(props.padding, groupedInset.sides),
+    paddingTop: orInset(props.paddingTop, groupedInset.top),
+    paddingBottom: orInset(props.paddingBottom, groupedInset.bottom),
+  };
+}
 
 function menuInsets(props: Options): Insets {
   return {

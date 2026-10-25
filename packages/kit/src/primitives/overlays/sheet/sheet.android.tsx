@@ -4,6 +4,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -11,16 +12,16 @@ import {
   type RefObject,
 } from 'react';
 import { View } from 'react-native';
-import { Host } from '#primitives/native/host';
+import { Host, InsideHostContext } from '#primitives/native/host';
+import type { SheetProps } from './sheet-props';
 import {
   SheetLink,
   SheetNavigationProvider,
-  SheetPage,
+  SheetScreen,
   useSheetStack,
   type SheetStack,
-} from './sheet-pages';
-import type { SheetProps } from './sheet-props';
-import { SheetPages } from './sheet-stack.android';
+} from './sheet-screens';
+import { SheetScreens } from './sheet-stack.android';
 import { SheetTrigger } from './sheet-trigger';
 
 type SheetRef = RefObject<ModalBottomSheetRef | null>;
@@ -30,19 +31,35 @@ type PresentationProps = SheetProps & { stack: SheetStack; sheetRef: SheetRef };
 // Material's modal bottom sheet; its pages slide across inside it.
 function SheetRoot(props: SheetProps): ReactElement {
   const stack = useSheetStack(props);
-  const sheetRef = useRef<ModalBottomSheetRef>(null);
-  const mounted = useSheetPresence(props.open, sheetRef, stack.reports.closed);
 
   return (
     <SheetNavigationProvider value={stack.navigation}>
-      <View style={props.style} className="min-w-0 shrink">
-        <SheetTrigger {...props} />
-        {mounted && (
-          <SheetPresentation {...props} stack={stack} sheetRef={sheetRef} />
-        )}
-      </View>
+      {useContext(InsideHostContext) ? (
+        <SheetPresence {...props} stack={stack} />
+      ) : (
+        <View style={props.style} className="min-w-0 shrink">
+          <SheetTrigger {...props} />
+          <SheetPresence {...props} stack={stack} />
+        </View>
+      )}
     </SheetNavigationProvider>
   );
+}
+
+function SheetPresence(
+  props: SheetProps & { stack: SheetStack },
+): ReactElement | null {
+  const sheetRef = useRef<ModalBottomSheetRef>(null);
+
+  const mounted = useSheetPresence(
+    props.open,
+    sheetRef,
+    props.stack.reports.closed,
+  );
+
+  if (!mounted) return null;
+
+  return <SheetPresentation {...props} sheetRef={sheetRef} />;
 }
 
 // A pushed page keeps the height the sheet is already at; only a drag takes it taller (owner, 2026-10-20).
@@ -53,7 +70,7 @@ function SheetPresentation({
   return (
     <Host style={{ position: 'absolute' }}>
       <ModalBottomSheet {...useModalProps(props)} ref={sheetRef}>
-        <SheetPages {...props} />
+        <SheetScreens {...props} />
       </ModalBottomSheet>
     </Host>
   );
@@ -156,6 +173,6 @@ function afterHide(
 }
 
 export const Sheet = Object.assign(SheetRoot, {
-  Page: SheetPage,
+  Screen: SheetScreen,
   Link: SheetLink,
 });

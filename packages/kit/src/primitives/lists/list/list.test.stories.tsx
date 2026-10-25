@@ -5,7 +5,7 @@ import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '../list-item';
 import { List } from './list';
-import presentationMeta, { Grouped } from './list.stories';
+import presentationMeta, { Grouped, Plain } from './list.stories';
 
 const meta = {
   ...presentationMeta,
@@ -45,7 +45,7 @@ function CollapsingSection(): React.JSX.Element {
   const [isExpanded, setExpanded] = useState(true);
 
   return (
-    <List appearance="grouped">
+    <List appearance="plain">
       <List.Section
         title="Runs"
         leading={
@@ -77,7 +77,7 @@ export const Section: Story = {
 };
 
 export const Contents: Story = {
-  ...Grouped,
+  ...Plain,
   play: async ({ canvas }) => {
     await expect(await canvas.findAllByText('Item')).toHaveLength(3);
     await expect(canvas.getByText('Section one')).toBeVisible();
@@ -144,5 +144,17 @@ export const LoadingSection: Story = {
     await expect(await canvas.findByText('Section')).toBeInTheDocument();
     await expect(canvas.queryByRole('button')).toBeNull();
     await expect(canvas.queryByRole('heading')).toBeNull();
+  },
+};
+
+export const GroupedSections: Story = {
+  ...Grouped,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Recent')).toBeVisible();
+    await expect(canvas.getByText('All branches')).toBeVisible();
+    await expect(canvas.getByText('The branches you used last.')).toBeVisible();
+    await expect(canvas.getByText('Current')).toBeVisible();
+    await expect(canvas.getByText('develop')).toBeVisible();
+    await expect(canvas.getByText('feature/branch-1')).toBeVisible();
   },
 };

@@ -1,5 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { ActionShortcutScope } from '@repo/kit/primitives/actions/action-list';
+import { ActionShortcutScope } from '@repo/kit/primitives/actions/action';
 import { List } from '@repo/kit/primitives/lists/list';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -7,34 +7,26 @@ import { PluginSlot } from './plugin-slot';
 
 function actions(label: string): WireNode {
   return {
-    type: 'ActionList',
-    key: 'actions',
-    props: { variant: 'context' },
+    type: 'ListItem',
+    key: 'row',
+    props: { title: label, onPress: { $event: 'onPress' } },
+    children: [],
     slots: {
-      trigger: [
+      actions: [
         {
-          type: 'ListItem',
-          key: 'row',
-          props: { title: label, onPress: { $event: 'onPress' } },
+          type: 'Action',
+          key: 'copy',
+          props: {
+            label: 'Copy link',
+            icon: 'copy',
+            shortcut: { modifiers: ['alt'], key: 'i' },
+            onPress: { $event: 'onPress' },
+          },
           children: [],
           slots: {},
         },
       ],
     },
-    children: [
-      {
-        type: 'Action',
-        key: 'copy',
-        props: {
-          label: 'Copy link',
-          icon: 'copy',
-          shortcut: { modifiers: ['alt'], key: 'i' },
-          onPress: { $event: 'onPress' },
-        },
-        children: [],
-        slots: {},
-      },
-    ],
   };
 }
 
@@ -68,7 +60,7 @@ type Story = StoryObj<typeof meta>;
 export const FirstContributionOwnsShortcut: Story = {
   render: () => (
     <ActionShortcutScope>
-      <List appearance="grouped">
+      <List appearance="plain">
         <PluginSlot contributions={contributions} />
       </List>
     </ActionShortcutScope>
@@ -93,7 +85,7 @@ export const FirstContributionOwnsShortcut: Story = {
     await userEvent.keyboard('{Escape}');
     await userEvent.click(canvas.getByText('First row'));
     await userEvent.keyboard('{Alt>}i{/Alt}');
-    await expect(first).toHaveBeenCalledWith('actions/copy', {
+    await expect(first).toHaveBeenCalledWith('row#actions/copy', {
       event: 'onPress',
     });
     await expect(later).not.toHaveBeenCalled();

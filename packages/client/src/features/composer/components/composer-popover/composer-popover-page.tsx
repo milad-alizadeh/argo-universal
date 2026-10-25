@@ -14,11 +14,11 @@ export type OverlayProps = ComposerPopoverProps &
 // A phone's sheet is its root page, titled by the kit's page header; a call, as Sheet reads pages from its direct children.
 export function rootPage(props: OverlayProps): React.JSX.Element {
   return (
-    <Sheet.Page name="root" title={props.label}>
+    <Sheet.Screen name="root" title={props.label}>
       <View className={compactClassName(props)}>
         {props.children(props.close)}
       </View>
-    </Sheet.Page>
+    </Sheet.Screen>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Detail, Metadata, Page, Pill } from '@argo/plugin-kit';
+import { Detail, Metadata, Screen, Pill } from '@argo/plugin-kit';
 
 const metadata = (
   <Metadata>
@@ -19,8 +19,8 @@ const metadata = (
 // An item page: Detail with every Metadata field kind.
 export function Item() {
   return (
-    <Page title="Fixture item">
+    <Screen title="Fixture item">
       <Detail markdown="Fixture item content." metadata={metadata} />
-    </Page>
+    </Screen>
   );
 }

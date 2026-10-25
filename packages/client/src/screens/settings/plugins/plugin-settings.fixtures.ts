@@ -2,18 +2,19 @@ import {
   PluginSettingsSchema,
   type PluginSettings,
 } from '@repo/contracts/plugins';
+import { pluginSymbol } from '../../plugins/plugin-symbol';
 import type { PluginRow } from './plugin-list-view';
 
 export const githubPlugin: PluginRow = {
   pluginId: 'github',
   name: 'GitHub',
-  icon: 'plug',
+  icon: pluginSymbol({}),
 };
 
 export const helloPlugin: PluginRow = {
   pluginId: 'hello',
   name: 'Hello',
-  icon: 'plug',
+  icon: pluginSymbol({}),
 };
 
 export const pluginRows: PluginRow[] = [githubPlugin, helloPlugin];

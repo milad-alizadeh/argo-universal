@@ -1,7 +1,7 @@
 import { layoutWidths } from '@repo/kit/each-layout';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import {
   savedSettings,
   savedSettingsWithToken,
@@ -18,6 +18,9 @@ const loaded = {
   fields: settingsSchema,
   settings: savedSettings,
 } as const;
+
+// Expo UI's TextInput has no label, so a field is found by its value.
+const savedHost = 'github.com';
 
 const meta = {
   title: 'Tests/Screens/Settings/Plugin',
@@ -53,17 +56,16 @@ export const ThePluginsSwitchComesFirst: Story = {
 
 export const TurningThePluginOffAsksTheServer: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('switch', { name: enabledLabel }));
+    // Expo UI's web switch hides its input under the drawn track, so a press lands on the label.
+    await userEvent.click(canvas.getByText(enabledLabel));
     await expect(args.onEnabledChange).toHaveBeenCalledWith(false);
   },
 };
 
 export const BuildsARowForEachField: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('textbox', { name: 'Host' })).toHaveValue(
-      'github.com',
-    );
-    await expect(canvas.getByLabelText('Token')).toHaveAttribute(
+    await expect(canvas.getByDisplayValue(savedHost)).toBeVisible();
+    await expect(canvas.getByPlaceholderText('Not set')).toHaveAttribute(
       'type',
       'password',
     );
@@ -85,7 +87,7 @@ export const DescriptionsAreFooters: Story = {
 
 export const TextSavesWhenTheFieldLosesFocus: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    const host = canvas.getByRole('textbox', { name: 'Host' });
+    const host = canvas.getByDisplayValue(savedHost);
 
     await userEvent.clear(host);
     await userEvent.type(host, 'github.example.com');
@@ -100,7 +102,7 @@ export const TextSavesWhenTheFieldLosesFocus: Story = {
 
 export const AnUnchangedFieldSavesNothing: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    const host = canvas.getByRole('textbox', { name: 'Host' });
+    const host = canvas.getByDisplayValue(savedHost);
 
     await userEvent.click(host);
     host.blur();
@@ -111,14 +113,14 @@ export const AnUnchangedFieldSavesNothing: Story = {
 export const ASecretIsNeverShown: Story = {
   args: { plugin: { ...loaded, settings: savedSettingsWithToken } },
   play: async ({ args, canvas, userEvent }) => {
-    const token = canvas.getByLabelText('Token');
+    const token = canvas.getByPlaceholderText('Saved in the Keychain');
 
     await expect(token).toHaveValue('');
-    await expect(token).toHaveAttribute('placeholder', 'Saved in the Keychain');
     await userEvent.type(token, 'ghp_new');
     token.blur();
     await expect(args.onSettingChange).toHaveBeenCalledWith('token', 'ghp_new');
-    await expect(token).toHaveValue('');
+    // Expo UI's TextInput holds its own text, which the cleared draft writes back after the render.
+    await waitFor(() => expect(token).toHaveValue(''));
   },
 };
 
@@ -132,9 +134,7 @@ export const ClearingASavedSecretSendsItEmpty: Story = {
 
 export const ToggleSavesAtOnce: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(
-      canvas.getByRole('switch', { name: 'Show closed pull requests' }),
-    );
+    await userEvent.click(canvas.getByText('Show closed pull requests'));
     await expect(args.onSettingChange).toHaveBeenCalledWith(
       'show-closed',
       true,
@@ -161,5 +161,24 @@ export const SaysWhenThePluginIsMissing: Story = {
   args: { title: 'old-plugin', plugin: { status: 'missing' } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/no Plugin named old-plugin/)).toBeVisible();
+  },
+};
+
+export const ShowsASpinnerWhileThePluginLoads: Story = {
+  args: { plugin: { status: 'loading' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Loading the Plugin…')).toBeVisible();
+    await expect(canvas.getByRole('progressbar')).toBeVisible();
+  },
+};
+
+export const EachFieldShowsItsDescription: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText('The GitHub host your repositories are on.'),
+    ).toBeVisible();
+    await expect(
+      canvas.getByText('Closed and merged pull requests stay in the list.'),
+    ).toBeVisible();
   },
 };

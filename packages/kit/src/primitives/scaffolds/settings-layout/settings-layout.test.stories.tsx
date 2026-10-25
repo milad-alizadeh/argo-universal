@@ -10,7 +10,7 @@ import {
   ExampleSettingsLayout,
   exampleSections,
   examplePinned,
-  noPages,
+  noScreens,
   pinnedGroup,
   serverGroup,
 } from './settings-layout.mocks';
@@ -41,7 +41,7 @@ const pageText = (title: string): string => `The ${title} page.`;
 const current = 'aria-current';
 
 // Wide: the groups beside the page shown, whose row is marked; a row swaps the page.
-export const WideShowsThePageBesideTheList = at(layoutWidths.wide, {
+export const WideShowsTheScreenBesideTheList = at(layoutWidths.wide, {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByText(pageText('Projects'))).toBeVisible();
     await expect(canvas.getByText(serverGroup)).toBeVisible();
@@ -64,7 +64,7 @@ export const WideShowsThePageBesideTheList = at(layoutWidths.wide, {
 });
 
 // A phone: the list alone, with the phone's own pages and no row marked; a row pushes its page in the list's place.
-export const PhonePushesEachPage = at(layoutWidths.phone, {
+export const PhonePushesEachScreen = at(layoutWidths.phone, {
   render: () => <ExampleSettingsLayout />,
   play: async ({ canvas, userEvent }) => {
     await expect(row(canvas, 'Appearance')).toBeVisible();
@@ -87,14 +87,27 @@ export const EmptyShowsTheEmptyState = at(layoutWidths.wide, {
     <ExampleSettingsLayout initial="projects" sections={[{ items: [] }]} />
   ),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText(noPages)).toBeVisible();
+    await expect(await canvas.findByText(noScreens)).toBeVisible();
     await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
     await expect(canvas.getByText(pageText('Projects'))).toBeVisible();
   },
 });
 
-const headings = (canvas: Canvas): (string | null)[] =>
-  canvas.getAllByRole('heading').map((heading) => heading.textContent);
+// Whether each title comes after the one before it on the page.
+function inPageOrder(canvas: Canvas, titles: string[]): boolean {
+  const nodes = titles.map((title) => canvas.getByText(title));
+
+  return nodes.slice(1).every((node, index) => {
+    const before = nodes[index];
+
+    return (
+      before !== undefined &&
+      Boolean(
+        before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING,
+      )
+    );
+  });
+}
 
 // A pinned group ends the list at every width: below the pages' groups, on a wide sidebar pinned under them.
 const pinnedEndsTheList = (width: number): Story =>
@@ -106,11 +119,9 @@ const pinnedEndsTheList = (width: number): Story =>
     ),
     play: async ({ canvas }) => {
       await expect(await canvas.findByText('Version')).toBeVisible();
-      await expect(headings(canvas)).toEqual([
-        serverGroup,
-        deviceGroup,
-        pinnedGroup,
-      ]);
+      await expect(
+        inPageOrder(canvas, [serverGroup, deviceGroup, pinnedGroup]),
+      ).toBe(true);
     },
   });
 
@@ -125,7 +136,7 @@ export const PinnedAloneIsNotEmpty = at(layoutWidths.wide, {
   ),
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Version')).toBeVisible();
-    await expect(canvas.queryByText(noPages)).not.toBeInTheDocument();
+    await expect(canvas.queryByText(noScreens)).not.toBeInTheDocument();
     await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
   },
 });

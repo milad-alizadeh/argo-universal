@@ -2,7 +2,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import {
   SearchField,
   type SearchFieldProps,
-} from '@repo/kit/primitives/inputs/search-field';
+} from '@repo/kit/primitives/controls/search-field';
 import type { HeaderOptions } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactElement, useState } from 'react';

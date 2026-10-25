@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
-import { Slider } from '#primitives/inputs/slider';
+import { Slider } from '#primitives/controls/slider';
 import { clockTime } from './audio-time';
 
 export type AudioPhase = 'loading' | 'paused' | 'playing' | 'error';
