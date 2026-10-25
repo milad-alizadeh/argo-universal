@@ -30,9 +30,9 @@ describe('Link preview of a web page', () => {
   it.each([
     'file:///etc/passwd',
     'mailto:hello@example.com',
-    'https://127.0.0.1',
-    'https://[::1]',
-    'https://169.254.169.254',
+    'http://127.0.0.1',
+    'http://[::1]',
+    'http://169.254.169.254',
     'https://user:secret@example.com',
     'https://example.com:9000',
   ])('refuses %s before making any request', async (href) => {

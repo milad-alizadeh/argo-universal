@@ -1,7 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { PreviewFixture, issueUrl, item, pullUrl } from './preview.mocks';
-
-afterEach(() => vi.restoreAllMocks());
 
 describe('Link preview of a GitHub link', () => {
   it('uses Server GitHub access for private issues without fetching their page', async () => {

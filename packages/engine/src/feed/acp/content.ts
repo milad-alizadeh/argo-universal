@@ -42,8 +42,8 @@ const parseInertReference = (uri: string): string | undefined => {
     const parsed = new URL(uri);
 
     return hasReferenceCredentials(parsed) ? undefined : uri;
-  } catch (error) {
-    rejections.report('unparseable resource URI', error);
+  } catch {
+    rejections.report('unparseable resource URI');
 
     return undefined;
   }

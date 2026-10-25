@@ -41,7 +41,6 @@ describe('the reference an unsupported ACP content block keeps', () => {
     expect(diagnostic).toHaveBeenCalledTimes(2);
     expect(diagnostic).toHaveBeenLastCalledWith(
       expect.stringMatching(/^ACP content: unparseable resource URI #\d+$/),
-      expect.any(TypeError),
     );
   });
 });

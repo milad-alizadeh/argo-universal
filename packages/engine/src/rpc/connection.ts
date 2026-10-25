@@ -56,8 +56,14 @@ const reportedSurface = (
 ): PluginSurface | undefined => (reported ? readSurface(reported) : undefined);
 
 function readSurface(text: string): PluginSurface | undefined {
+  const json = parseJson(text);
+
+  return json === undefined ? undefined : recognisedSurface(json);
+}
+
+function parseJson(text: string): Json | undefined {
   try {
-    return recognisedSurface(JSON.parse(text));
+    return JSON.parse(text);
   } catch (cause) {
     rejections.report('non-JSON surface', cause);
 
