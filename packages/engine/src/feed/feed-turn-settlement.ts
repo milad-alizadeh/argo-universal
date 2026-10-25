@@ -3,17 +3,32 @@ import type { FeedApplication } from './feed-application';
 import { rejectedFeedApplication } from './feed-application';
 import type { Feed, FeedStreamEvent } from './feed-change';
 import type { FeedContext, FeedEvent, FeedInternalEvent } from './feed-machine';
-import { settleFeedTurn, type FeedTurnEnding } from './turn-settlement';
+import {
+  settleFeedTurn,
+  type FeedTurnEnding,
+  type SettledFeed,
+} from './turn-settlement';
 
 type CompleteTurn = Extract<FeedEvent, { type: 'feed.completeTurn' }>;
 
-type SettledFeed = { feed: Feed; events: FeedStreamEvent[] };
+// The live adapter of Turn settlement (see `turn-settlement.ts`): the Feed machine's context; its changed rows leave through a queued `FeedRowsJob`.
+export type SettlementContext = Pick<
+  FeedContext,
+  | 'sessionId'
+  | 'rows'
+  | 'maxRevision'
+  | 'nextPosition'
+  | 'findWrittenRow'
+  | 'streamEvents'
+  | 'changedRowIds'
+  | 'messageStreams'
+>;
 
 const settledRowId = (change: FeedStreamEvent): string =>
   change.type === 'row.upsert' ? change.row.id : change.id;
 
 const settledFeedState = (
-  context: FeedContext,
+  context: SettlementContext,
   result: SettledFeed,
   turnId: string,
 ): Partial<FeedContext> => ({
@@ -29,7 +44,7 @@ const settledFeedState = (
 });
 
 const remainingMessageStreams = (
-  context: FeedContext,
+  context: SettlementContext,
   turnId: string,
 ): FeedContext['messageStreams'] =>
   Object.fromEntries(
@@ -56,7 +71,7 @@ const settlementEvents = (
 };
 
 const restorePermissionRow = (
-  context: FeedContext,
+  context: SettlementContext,
   rows: Feed['rows'],
   id: string,
 ): Feed['rows'] => {
@@ -66,7 +81,7 @@ const restorePermissionRow = (
 };
 
 const restoreWaitingRows = (
-  context: FeedContext,
+  context: SettlementContext,
   waiting: NonNullable<FeedTurnEnding['waitingPermissions']>,
 ): Feed['rows'] =>
   waiting.toolCallIds.reduce(
@@ -80,7 +95,7 @@ const restoreWaitingRows = (
   );
 
 const readSettlementFeed = (
-  context: FeedContext,
+  context: SettlementContext,
   ending?: FeedTurnEnding,
 ): Feed => {
   const waiting = ending?.waitingPermissions;
@@ -91,7 +106,7 @@ const readSettlementFeed = (
 };
 
 const applyTurnSettlement = (
-  context: FeedContext,
+  context: SettlementContext,
   event: CompleteTurn,
 ): SettledFeed | { rejection: string } => {
   try {
@@ -106,7 +121,7 @@ const applyTurnSettlement = (
 };
 
 export const prepareTurnSettlement = (
-  context: FeedContext,
+  context: SettlementContext,
   event: CompleteTurn,
 ): FeedApplication => {
   const result = applyTurnSettlement(context, event);

@@ -1,7 +1,7 @@
 import { SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
-import { and, eq, getTableColumns, sql } from 'drizzle-orm';
+import { and, eq, getTableColumns, max, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 export { outputBlobsOf, promptBlobIds } from './row-blobs';
@@ -16,6 +16,17 @@ export const storedFeedColumns = {
   payload: sql<unknown>`${feedRow.payload}`,
   sourceRef: sql<unknown>`${feedRow.sourceRef}`,
 };
+
+// The highest `position` a Session's stored rows hold, -1 when it has none.
+export const highestFeedPosition = (
+  database: Pick<Database, 'select'>,
+  sessionId: string,
+): number =>
+  database
+    .select({ highest: max(feedRow.position) })
+    .from(feedRow)
+    .where(eq(feedRow.sessionId, sessionId))
+    .get()?.highest ?? -1;
 
 // The shape version of `payload` in the rows this Server writes.
 export const payloadVersion = 1;
