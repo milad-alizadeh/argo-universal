@@ -8,6 +8,9 @@ import { requestHostAllowed } from '../../rpc/request-host';
 
 export const oauthPort = 51789;
 
+// Naming the port is how a person learns what to free; the Plugin shows this message.
+export const portTakenMessage = `Port ${oauthPort} is already in use. Free the port, then try again.`;
+
 export const redirectUri = `http://127.0.0.1:${oauthPort}/callback`;
 
 const forbidden = 403;
@@ -16,7 +19,34 @@ const notFound = 404;
 
 const invalidState = 400;
 
-const complete = 204;
+const complete = 200;
+
+// The one line Argo serves on the callback; it holds nothing the request supplied.
+const closeTabPage = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argo</title>
+<style>
+html, body { height: 100%; margin: 0; }
+body { display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; background: #fff; color: #0a0a0a; font: 14px/20px system-ui, -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; }
+</style>
+</head>
+<body>
+<p>You can close this tab and return to Argo.</p>
+</body>
+</html>
+`;
+
+const pageHeaders = {
+  'content-type': 'text/html; charset=utf-8',
+  'content-security-policy':
+    "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  'x-content-type-options': 'nosniff',
+  'referrer-policy': 'no-referrer',
+  'cache-control': 'no-store',
+};
 
 type Callback = (code: string | null) => void;
 
@@ -79,8 +109,7 @@ export class OAuthListener {
       return;
     }
 
-    // The designed close-tab document remains pending #1166.
-    response.writeHead(complete).end();
+    response.writeHead(complete, pageHeaders).end(closeTabPage);
     settle(query.has('error') ? null : query.get('code'));
   }
 }

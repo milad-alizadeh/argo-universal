@@ -4,6 +4,7 @@ export const listMediaParts = [
   'Avatar',
   'Icon',
   'Svg',
+  'Chart',
   'Stack',
   'Surface',
   'Text',

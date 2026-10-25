@@ -8,6 +8,7 @@ import {
   collapsedRail,
   expandedRail,
   manyPluginSectionsRail,
+  pluginBadgeRail,
 } from './frame-rail-fixtures';
 
 // The rail at a window's height on the glass's tint, which the Frame draws behind it.
@@ -31,6 +32,7 @@ const meta = {
     hasSidebar: { control: 'boolean' },
     selectedSection: { control: 'select', options: [...sectionOrder] },
     attentionCount: { control: 'number' },
+    pluginBadges: { control: false },
     sidebarShown: { control: 'boolean' },
     onSectionChange: { control: false },
     onSidebarShownChange: { control: false },
@@ -57,3 +59,6 @@ export const ManyPluginSections: Story = {
   args: manyPluginSectionsRail,
   decorators: [railColumn('h-64 flex-row bg-hover')],
 };
+
+// A Plugin's `argo.nav.badge` count rides its tile's corner, capped at 99+.
+export const PluginBadges: Story = { args: pluginBadgeRail };

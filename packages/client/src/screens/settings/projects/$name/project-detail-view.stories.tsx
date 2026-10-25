@@ -1,12 +1,14 @@
 import { slotCounterRoot } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
+import { fn } from 'storybook/test';
 import {
   localProject,
   otherDeviceName,
   worktreeProject,
 } from '../../../../features/settings/components/settings-pages.mocks';
 import { PluginSlot } from '../../../../lib/product/plugin-registry';
+import { chosenAccounts } from './project-detail-accounts-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -18,6 +20,7 @@ const meta = {
     otherDevice: { control: 'text' },
     project: { control: false },
     renderPluginSlot: { control: false },
+    accounts: { control: false },
   },
   parameters: { screenPreview: true },
   args: {
@@ -56,6 +59,11 @@ export const PluginSection: Story = {
       />
     ),
   },
+};
+
+// Each host's chosen Account, below Folder.
+export const Accounts: Story = {
+  args: { accounts: { hosts: chosenAccounts, onChooseAccount: fn() } },
 };
 
 export const OnAnotherDevice: Story = {

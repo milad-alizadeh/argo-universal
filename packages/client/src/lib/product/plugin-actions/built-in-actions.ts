@@ -4,6 +4,7 @@ import { setStringAsync } from 'expo-clipboard';
 import { router, type Href } from 'expo-router';
 import { Linking } from 'react-native';
 import { shareContent } from './share';
+import { mayRun } from './web-action';
 
 type External = Extract<Action, { action: 'openUrl' | 'copy' }>;
 
@@ -47,9 +48,13 @@ async function runDevice(action: DeviceAction): Promise<void> {
     : runExternal(action));
 }
 
-// The built-in Actions run here, in the App, with no round trip to the Server.
-export async function runAction(action: Action): Promise<void> {
+async function dispatch(action: Action): Promise<void> {
   if (action.action === 'toast' || action.action === 'navigate')
     runLocal(action);
   else await runDevice(action);
+}
+
+// The built-in Actions run here, in the App, with no round trip to the Server.
+export async function runAction(action: Action): Promise<void> {
+  if (mayRun(action)) await dispatch(action);
 }

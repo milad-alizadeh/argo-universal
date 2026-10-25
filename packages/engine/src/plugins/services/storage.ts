@@ -6,9 +6,8 @@ import {
   openPluginDatabase,
   openReadOnlyDatabase,
 } from '@repo/db/plugin-database';
+import { databaseFile } from '../access/plugin-write-rules';
 import type { StorageQuery, StorageResult } from '../protocol/runtime';
-
-const databaseFile = 'plugin.db';
 
 // Plugin ids come from validated manifests; the folder name must still never escape `plugin-data`.
 const idPattern = /^[A-Za-z0-9][\w.-]*$/;

@@ -12,7 +12,6 @@ import { CapabilityRefusal } from './capability-refusal';
 import {
   allowLinks,
   allowRead,
-  allowWrite,
   argsMatch,
   childEnvironment,
   realOrMissing,
@@ -21,6 +20,7 @@ import {
   type Subject,
 } from './plugin-access-rules';
 import { allowLiteral } from './plugin-addresses';
+import { allowWrite } from './plugin-write-rules';
 
 // What the Server holds for an activated Plugin: its Grants, and its code folder, which `argo.fs` never writes.
 export type ActivatedPlugin = {

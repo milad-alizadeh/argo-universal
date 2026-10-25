@@ -33,7 +33,7 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
-import { Canvas, Svg } from '@repo/kit/primitives/visual';
+import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
 import { PluginButton } from './plugin-button';
 
@@ -84,6 +84,7 @@ export const pluginEntries = {
   Surface,
   ScrollView,
   Svg,
+  Chart,
   Canvas,
   'Canvas.Rect': Canvas.Rect,
   'Canvas.Circle': Canvas.Circle,

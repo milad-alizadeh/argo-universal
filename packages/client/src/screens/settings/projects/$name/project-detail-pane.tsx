@@ -8,6 +8,7 @@ import {
   type ProjectLoad,
   ProjectDetailView,
 } from './project-detail-view';
+import { useProjectAccounts } from './use-project-accounts';
 
 function toProjectLoad(
   projects: ProjectInfo[] | undefined,
@@ -20,17 +21,26 @@ function toProjectLoad(
 }
 
 function useProjectDetail(name: string): ProjectDetailViewProps {
-  const navigate = useNavigate();
+  const project = toProjectLoad(useProjects().data, name);
 
   return {
     name,
     caption: useServerPageCaption(),
-    project: toProjectLoad(useProjects().data, name),
-    onBack: () => navigate('/settings/projects'),
-    renderPluginSlot: (project) => (
-      <ProjectDetailsSlot projectId={project.id} />
-    ),
+    project,
+    accounts: useProjectAccounts(loadedId(project)),
+    onBack: useBackToProjects(),
+    renderPluginSlot: (loaded) => <ProjectDetailsSlot projectId={loaded.id} />,
   };
+}
+
+// The Server answers an Account `get` with nothing for an empty id, so Accounts wait for the Project to load.
+const loadedId = (project: ProjectLoad): string =>
+  project.status === 'loaded' ? project.project.id : '';
+
+function useBackToProjects(): () => void {
+  const navigate = useNavigate();
+
+  return () => navigate('/settings/projects');
 }
 
 // One Project's page, beside the Projects list on a wide window.

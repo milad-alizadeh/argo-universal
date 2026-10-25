@@ -1,17 +1,17 @@
+import type { BadgeCount } from '@repo/kit/badge-count';
 import { CountBadge } from '@repo/kit/primitives/status/count-badge';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { attentionBadge } from '../../utils/attention-badge';
 
-// On a rail tile's corner, the count of Sessions that need input or are Unread; nothing when none do.
+// On a rail tile's corner, the section's count, such as the Sessions that need input or a Plugin's own; nothing when it is zero.
 export function AttentionBadge({
-  count,
+  badge,
 }: {
-  count: number;
+  badge: BadgeCount;
 }): React.JSX.Element {
   return (
     <View pointerEvents="none" className="absolute right-1.5 top-1">
-      <CountBadge badge={attentionBadge(count)} />
+      <CountBadge badge={badge} />
     </View>
   );
 }

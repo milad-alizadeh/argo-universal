@@ -32,6 +32,7 @@
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
     "electron": "catalog:",
+    "playwright": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

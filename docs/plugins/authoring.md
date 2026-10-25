@@ -226,6 +226,8 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 ## Accounts and OAuth
 
+`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, in-progress, signed-in, continue-on-the-Server-Device and port-in-use states, PKCE sign-in against GitHub, and the provider handler. Copy it for a new service.
+
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
 Register that page with `argo.pages.register` before registration completes.
 The host must be concrete and have an identical `fetch` Capability, including its port. A wildcard Capability does not satisfy this requirement.

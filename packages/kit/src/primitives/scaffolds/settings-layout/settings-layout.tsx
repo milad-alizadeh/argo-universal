@@ -7,7 +7,6 @@ import { FieldGroup } from '#primitives/fields/field-group';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { ListDetail } from '#primitives/scaffolds/list-detail';
-import { RowDrawingContext } from '../../../row-drawing-context';
 import { SectionEndContext } from '../../../section-end-context';
 import { SettingsFieldGroup } from './settings-field-group';
 import type {
@@ -67,14 +66,14 @@ type Placed = Omit<SettingsLayoutProps, 'sections'> & {
  */
 function PlacedScreens({ sections, ...props }: Placed): ReactElement {
   return (
-    <SidebarRows>
+    <>
       <SettingsGroups
         sections={sections}
         selected={props.selected}
         onSelect={props.onSelect}
       />
       {props.pinned && <PinnedBottom>{props.pinned}</PinnedBottom>}
-    </SidebarRows>
+    </>
   );
 }
 
@@ -100,13 +99,6 @@ function SettingsGroups({
 
   return <List appearance="plain">{groups}</List>;
 }
-
-// Paper's SettingsList: the sidebar holds its rows 8 from its left edge and 14 from its right.
-const SidebarRows = (props: { children: ReactNode }): ReactElement => (
-  <RowDrawingContext value="sidebar">
-    <View className="flex-1 pb-3 pl-2 pr-3.5">{props.children}</View>
-  </RowDrawingContext>
-);
 
 type RowSelection = Pick<SettingsLayoutProps, 'selected' | 'onSelect'>;
 

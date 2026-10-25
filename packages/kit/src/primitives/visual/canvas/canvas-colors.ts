@@ -38,6 +38,13 @@ function tokenColor(
   return semanticColors(theme)[props.tone ?? 'neutral'];
 }
 
+// A tone's colour as Skia parses it; Chart series use the same tokens as Canvas shapes.
+export function toneColor(tone: Tone, theme: NativeTheme): string | undefined {
+  const token = semanticColors(theme)[tone];
+
+  return token ? skiaColor(token) : undefined;
+}
+
 export function drawingColor(
   props: CanvasDrawing['props'],
   theme: NativeTheme,

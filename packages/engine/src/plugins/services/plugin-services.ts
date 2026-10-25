@@ -32,7 +32,7 @@ export class PluginServices {
   private readonly activated = new Map<string, ActivatedPlugin>();
 
   constructor(
-    private readonly storage: PluginStorage,
+    readonly storage: PluginStorage,
     private readonly keychain: Keychain,
     private readonly options: PluginServiceOptions,
   ) {

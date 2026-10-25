@@ -1,3 +1,5 @@
+import type { PluginBadge } from '@repo/contracts/plugins/runtime';
+import type { BadgeCount } from '@repo/kit/badge-count';
 import { Text } from '@repo/kit/primitives/content/text';
 import {
   DrawerItem,
@@ -10,16 +12,15 @@ import {
   type Section,
   type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
-import {
-  attentionBadge,
-  sectionAttentionCount,
-} from '../../utils/attention-badge';
+import { sectionBadge } from '../../utils/section-badge';
 
 interface DrawerNavigation {
   items: readonly NavigationSection[];
   selectedSection: Section;
   // The Sessions that need input or are Unread, for the Sessions row's badge.
   attentionCount: number;
+  // Each Plugin nav item's own count, for its row's badge.
+  pluginBadges?: readonly PluginBadge[];
   // A row was picked; the drawer closes, and a new section shows.
   onSectionChange: (section: Section) => void;
 }
@@ -36,17 +37,25 @@ function sectionItem(
   return { label: title, icon };
 }
 
+const rowBadge = (
+  section: NavigationSection,
+  navigation: DrawerNavigation,
+): BadgeCount =>
+  sectionBadge(
+    section.id,
+    navigation.attentionCount,
+    navigation.pluginBadges ?? [],
+  );
+
 function SectionButton({
   section,
   ...navigation
 }: DrawerNavigation & { section: NavigationSection }): React.JSX.Element {
-  const count = sectionAttentionCount(section.id, navigation.attentionCount);
-
   return (
     <DrawerItem
       {...sectionItem(section)}
       selected={navigation.selectedSection === section.id}
-      badge={attentionBadge(count)}
+      badge={rowBadge(section, navigation)}
       onPress={() => navigation.onSectionChange(section.id)}
     />
   );

@@ -1,9 +1,13 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PluginCapability } from '@repo/contracts/plugins';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { journeyMs } from '#mocks/journey-budget';
 import { fixtureNetwork, httpsServer, installed } from '#mocks/probe-plugin';
+
+// Plugin workers start a real process: budget this file's tests for startup.
+vi.setConfig({ testTimeout: journeyMs });
 
 const pollOptions = { timeout: 30_000 };
 

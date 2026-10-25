@@ -1,15 +1,17 @@
 import type * as React from 'react';
-import { PlaceholderDetailView } from '#features/settings';
+import { useServerPageCaption } from '#features/settings';
+import { useNavigate } from '#lib/product/navigation/navigation';
+import { AccountListView } from './account-list-view';
+import { useAccountsLoad } from './use-accounts';
 
-const title = 'Accounts';
-
-// The Server has no accounts yet, so the page shows where they will go.
 export function AccountListScreen(): React.JSX.Element {
+  const navigate = useNavigate();
+
   return (
-    <PlaceholderDetailView
-      title={title}
-      caption="What this App is talking to"
-      description="Accounts will appear here."
+    <AccountListView
+      caption={useServerPageCaption()}
+      accounts={useAccountsLoad()}
+      onOpenAccount={(accountId) => navigate(`/settings/accounts/${accountId}`)}
     />
   );
 }

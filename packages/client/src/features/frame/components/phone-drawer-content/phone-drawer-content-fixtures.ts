@@ -9,5 +9,6 @@ export const openPhoneDrawer = {
   items: pluginNavigationItems,
   selectedSection: 'sessions',
   attentionCount: 1,
+  pluginBadges: [{ pluginId: 'issue-tracker', id: 'issues', count: 12 }],
   open: true,
 } satisfies PhoneDrawerFixture;
