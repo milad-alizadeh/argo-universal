@@ -1,8 +1,8 @@
 import { useState, type ReactElement } from 'react';
 import { FieldGroup } from '#primitives/fields/field-group';
-import type { FieldPickerProps } from './field-picker-model';
+import { FieldPicker } from './field-picker';
+import { narrowed, type FieldPickerProps } from './field-picker-model';
 import { FieldPickerScreen } from './field-picker-screen';
-import { FieldPicker } from './field-picker-switch';
 
 // A story's picker keeps its own value, so a choice shows on the row, and passes each choice on to its spy.
 function useControlled(props: FieldPickerProps): FieldPickerProps {
@@ -43,7 +43,7 @@ export function ControlledSection(props: FieldPickerProps): ReactElement {
 export function ControlledScreen(props: FieldPickerProps): ReactElement {
   return (
     <FieldPickerScreen
-      {...useControlled(props)}
+      {...narrowed(useControlled(props))}
       query=""
       onQueryChange={ignoreQuery}
       searchInHeader

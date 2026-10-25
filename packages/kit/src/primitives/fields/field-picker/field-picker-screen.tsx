@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { useDrillBeside } from '#primitives/overlays/drill';
-import { matchingOptions, type FieldPickerProps } from './field-picker-model';
+import { matchingOptions, type PickerProps } from './field-picker-model';
 import { ScreenFrame } from './field-picker-screen-frame';
 import {
   ScreenFooter,
@@ -10,11 +10,11 @@ import {
 } from './field-picker-screen-parts';
 import { ScreenRows } from './field-picker-screen-rows';
 
-export type FieldPickerScreenProps = FieldPickerProps & {
+export type FieldPickerScreenProps = PickerProps & {
   // Called after a single choice, so the page it sits on can close.
   onClose?: () => void;
   // The options the search leaves, which the rows draw; a choice still counts every option, hidden ones included.
-  shown?: FieldPickerProps['options'];
+  shown?: PickerProps['options'];
 };
 
 type ScreenState = FieldPickerScreenProps & {

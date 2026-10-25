@@ -12,10 +12,7 @@ import {
   toggling,
   type RowListItemProps,
 } from '../field-row/field-row-list-item.android';
-import {
-  optionChoice,
-  type OptionRowProps,
-} from './field-picker-inline-choice';
+import { optionChoice, type OptionRowProps } from './field-picker-kind';
 
 /*
  * One option as a Material ListItem, as Compose Settings draws a choice: the title, the subtitle as its supporting
