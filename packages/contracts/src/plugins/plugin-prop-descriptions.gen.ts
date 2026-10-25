@@ -361,7 +361,7 @@ export type WireSchemaHints = {
     "title": PropValue<"FieldGroup.Link", "title">;
     /** Whether the row is disabled. */
     "disabled": PropValue<"FieldGroup.Link", "disabled">;
-    /** A leading SF Symbol and Material Symbol. */
+    /** A leading icon: one of Argo’s symbols, or an SF Symbol and Material Symbol pair of the page’s own. */
     "leading": PropValue<"FieldGroup.Link", "leading">;
     /** What the page it opens holds, such as a count: before the chevron on iOS and the web, under the title on Android. */
     "value": PropValue<"FieldGroup.Link", "value">;

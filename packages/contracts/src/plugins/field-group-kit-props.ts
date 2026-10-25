@@ -5,6 +5,7 @@ import {
 } from './field-group-choice-props';
 import {
   fieldGroupFieldProps,
+  fieldGroupLinkRowProps,
   fieldGroupRowProps,
 } from './field-group-row-props';
 import { rowPress } from './list-kit-props';
@@ -97,7 +98,7 @@ const fieldGroupValueProps = fieldGroupRowProps.extend({
     ),
 });
 
-const fieldGroupLinkProps = fieldGroupRowProps.extend({
+const fieldGroupLinkProps = fieldGroupLinkRowProps.extend({
   value: z
     .string()
     .optional()

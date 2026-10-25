@@ -1,20 +1,17 @@
-import { groupedOnPhones } from '@repo/kit/list-grouped';
-import { Icon } from '@repo/kit/primitives/content/icon';
+import type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
-import { Spinner } from '@repo/kit/primitives/status/spinner';
-import type { IconSymbol } from '@repo/kit/symbols/icon-symbol';
 import type * as React from 'react';
 
 export interface PluginRow {
   pluginId: string;
   name: string;
-  icon: IconSymbol;
+  icon: SystemSymbolSource;
 }
 
 export type PluginsLoad =
@@ -36,7 +33,7 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
 
   return (
     <Screen title={pluginsTitle} caption={props.caption}>
-      <List appearance={groupedOnPhones('cards')}>
+      <List appearance="grouped">
         <ListSection>{pluginRows(props)}</ListSection>
       </List>
     </Screen>
@@ -58,32 +55,30 @@ function pluginRows({
 }: PluginListViewProps): React.JSX.Element | React.JSX.Element[] {
   if (plugins.status !== 'loaded') return loadingPlugins;
 
-  if (plugins.plugins.length === 0) return <ListItem title="No Plugins yet." />;
+  if (plugins.plugins.length === 0)
+    return <FieldGroup.Value title="No Plugins yet." value="" />;
 
-  return plugins.plugins.map((plugin) => (
-    <PluginItem key={plugin.pluginId} plugin={plugin} onOpen={onOpenPlugin} />
-  ));
+  return plugins.plugins.map((plugin) =>
+    pluginItem({ plugin, onOpen: onOpenPlugin }),
+  );
 }
 
-const loadingPlugins = (
-  <ListItem
-    title="Loading Plugins…"
-    leading={<Spinner accessibilityLabel="Loading" />}
-  />
-);
+const loadingPlugins = <FieldGroup.Value title="Loading Plugins…" value="" />;
 
 type PluginItemProps = {
   plugin: PluginRow;
   onOpen: (pluginId: string) => void;
 };
 
-// Paper's Plugins page: each row pushes the Plugin's page, so it draws the disclosure chevron.
-function PluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
+/*
+ * A Settings row like every other: it pushes the Plugin's page, led by the Plugin's own symbol. It is the FieldGroup
+ * row itself, not a component around it, so a phone's grouped List sees a row it can draw natively.
+ */
+function pluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
   return (
-    <ListItem
-      disclosure
-      role="link"
-      leading={<Icon name={plugin.icon} size="md" />}
+    <FieldGroup.Link
+      key={plugin.pluginId}
+      leading={plugin.icon}
       title={plugin.name}
       onPress={() => onOpen(plugin.pluginId)}
     />

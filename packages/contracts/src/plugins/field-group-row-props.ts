@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { systemSymbolSource } from '../kit-symbols/icon-schema';
 import { stockIcon } from '../kit-symbols/stock-icon-schema';
 
 /*
@@ -15,4 +16,14 @@ export const fieldGroupRowProps = fieldGroupFieldProps.extend({
   leading: stockIcon
     .optional()
     .describe('A leading SF Symbol and Material Symbol.'),
+});
+
+// A page a row opens may have a symbol of its own, such as a Plugin's, as well as one of Argo's icons.
+export const fieldGroupLinkRowProps = fieldGroupFieldProps.extend({
+  leading: z
+    .union([stockIcon, systemSymbolSource])
+    .optional()
+    .describe(
+      'A leading icon: one of Argo’s symbols, or an SF Symbol and Material Symbol pair of the page’s own.',
+    ),
 });
