@@ -10,6 +10,7 @@ import { ButtonCard } from './field-group-button-card.android';
 import {
   caption,
   footerInsets,
+  rowSpacing,
   titleInsets,
 } from './field-group-caption-insets';
 import { Caption } from './field-group-caption.android';
@@ -22,8 +23,6 @@ import type { FieldGroupSectionProps } from './field-group-section';
  * own, as Expo's Section gives every child.
  */
 const headingSpacing = 4;
-
-const rowSpacing = 2;
 
 export function FieldGroupSection(props: FieldGroupSectionProps): ReactElement {
   return (

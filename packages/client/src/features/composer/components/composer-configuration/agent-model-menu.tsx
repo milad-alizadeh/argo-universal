@@ -7,15 +7,17 @@ import {
   loadingSections,
   useConfigurationRows,
 } from './configuration-skeleton';
+import { configurationPicker } from './configuration-picker';
 import { effortControl, switchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
   currentEffort,
   loadingConfiguration,
+  modelName,
+  otherSelections,
+  selection,
   switches,
 } from './configuration-values';
-import { modelPicker } from './model-picker';
-import { optionPickers } from './option-pickers';
 import { useAgentPick, type AgentPick } from './use-agent-pick';
 
 interface MenuProps {
@@ -109,10 +111,28 @@ function choicesSection(props: SectionProps): ReactElement {
   return (
     <FieldGroup.Section key="choices" footer={notice}>
       {agentRow(configuration, props.picking)}
-      {modelPicker({ configuration })}
-      {optionPickers({ configuration })}
+      {modelRow(configuration)}
+      {otherSelections(configuration).map((option) =>
+        configurationPicker({ configuration, option, title: option.name }),
+      )}
     </FieldGroup.Section>
   );
+}
+
+function modelRow(
+  configuration: ComposerConfigurationProps,
+): ReactElement | null {
+  const model = selection(configuration, 'model');
+
+  if (!model) return null;
+
+  return configurationPicker({
+    configuration,
+    option: model,
+    title: 'Model',
+    leading: 'thinking',
+    choiceLabel: modelName,
+  });
 }
 
 // Effort first and the Agent's switches after it, Fast mode last, on every platform (owner, 2026-10-24).

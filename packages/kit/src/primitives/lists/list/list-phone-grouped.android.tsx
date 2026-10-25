@@ -10,7 +10,10 @@ import { useCallback, type ReactElement, type ReactNode } from 'react';
 import {
   Caption,
   caption,
+  contentPadding,
   footerInsets,
+  rowSpacing,
+  sectionBreakHeight,
   titleInsets,
 } from '#primitives/fields/field-group';
 import { PositionContext } from '#primitives/fields/field-row';
@@ -26,16 +29,9 @@ import type { ListProps } from './list-props';
 export const phoneGrouped = true;
 
 /*
- * The FieldGroup's layout (field-group.android.tsx) as one lazy column: 16dp around, 2dp between rows, 24dp between
- * sections. Every item of the column is a lazy item, so a title, a footer and the gap each take the column's own
- * 2dp spacing off the space they add.
+ * The FieldGroup's layout (field-group-caption-insets.ts) as one lazy column. Every item of the column is a lazy
+ * item, so a title, a footer and the gap each take the column's own 2dp spacing off the space they add.
  */
-const rowSpacing = 2;
-
-const sectionSpacing = 24;
-
-const contentPadding = { start: 16, end: 16, top: 16, bottom: 16 };
-
 const listModifiers = [fillMaxSize(), imePadding()];
 
 /*
@@ -126,8 +122,6 @@ function SectionRows({ section }: { section: PhoneSection }): ReactElement {
   );
 }
 
-const gap = sectionSpacing - 2 * rowSpacing;
-
-const gapModifiers = [fillMaxWidth(), height(gap)];
+const gapModifiers = [fillMaxWidth(), height(sectionBreakHeight)];
 
 const Gap = (): ReactElement => <Column modifiers={gapModifiers} />;
