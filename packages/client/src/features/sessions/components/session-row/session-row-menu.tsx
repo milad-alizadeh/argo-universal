@@ -1,22 +1,20 @@
 import { Action } from '@repo/kit/primitives/actions/action';
 import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
-import type { ReactElement } from 'react';
 import { sessionHref } from '#lib/product/navigation/navigation';
-import { sessionMenuItems, type SessionMenuItem } from '../session-menu-items';
+import { sessionActions, type SessionMenu } from '../session-actions';
 import type { SessionRowProps } from './session-row-props';
 
 type SessionRowMenu = Pick<ListItemProps, 'actions' | 'contextMenu'>;
 
 // A right-click opens Rename and Archive at the pointer, and a double-click renames; an archived Session has neither. A phone's long press opens them under the Session's title; iOS previews the Session above them.
 export function sessionRowMenu(props: SessionRowProps): SessionRowMenu {
-  const groups = sessionMenuGroups(props);
+  const actions = sessionActions(sessionMenu(props), { shortcuts: true });
 
-  if (groups.length === 0) return {};
+  if (actions.length === 0) return {};
 
   return {
-    actions: (
-      <Action.Section>{groups.flat().map(sessionAction)}</Action.Section>
-    ),
+    // Rename, then Archive, in one Section: no separator between them, as in the header's menu.
+    actions: <Action.Section>{actions}</Action.Section>,
     contextMenu: {
       title: props.session.title,
       preview: sessionHref(props.session.sessionId),
@@ -25,31 +23,15 @@ export function sessionRowMenu(props: SessionRowProps): SessionRowMenu {
   };
 }
 
-function sessionAction(item: SessionMenuItem): ReactElement {
-  const shortcut =
-    item.label === 'Rename'
-      ? ({ modifiers: [], key: 'Enter' } as const)
-      : ({ modifiers: ['meta'], key: 'Backspace' } as const);
-
-  return <Action key={item.label} {...item} shortcut={shortcut} />;
-}
-
 const renameSession = (props: SessionRowProps): (() => void) | undefined =>
   props.onRename && ((): void => props.onRename?.(props.session.sessionId));
 
 const archiveSession = (props: SessionRowProps): (() => void) | undefined =>
   props.onArchive && ((): void => props.onArchive?.(props.session.sessionId));
 
-// Rename, then Archive, in one group: no separator between them, as in the header's menu.
-export function sessionMenuGroups(props: SessionRowProps): SessionMenuItem[][] {
-  const { session } = props;
-
-  const items = sessionMenuItems({
-    archived: session.archivedAt !== null,
-    status: session.status,
-    onRename: renameSession(props),
-    onArchive: archiveSession(props),
-  });
-
-  return items.length > 0 ? [items] : [];
-}
+const sessionMenu = (props: SessionRowProps): SessionMenu => ({
+  archived: props.session.archivedAt !== null,
+  status: props.session.status,
+  onRename: renameSession(props),
+  onArchive: archiveSession(props),
+});

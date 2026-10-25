@@ -4,7 +4,7 @@ import type * as React from 'react';
 import {
   type SessionHeaderProps,
   type SessionMenu,
-  sessionMenuItems,
+  sessionActions,
 } from '#features/sessions';
 import {
   type SessionDetailViewProps,
@@ -12,15 +12,9 @@ import {
 } from './session-detail-view';
 
 function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
-  if (props.state !== 'open') return undefined;
+  if (props.state !== 'open' || !props.header.menu) return undefined;
 
-  return withChanges(props.header);
-}
-
-function withChanges(header: SessionHeaderProps): SessionMenu | undefined {
-  if (!header.menu) return undefined;
-
-  return { ...header.menu, changes: menuChanges(header.changes) };
+  return { ...props.header.menu, changes: menuChanges(props.header.changes) };
 }
 
 function menuChanges(
@@ -34,32 +28,22 @@ function menuChanges(
   };
 }
 
-// The Session's ⋯: one header Action whose menu holds changed files, Rename and Archive. A Screen reads its Actions from the element it is given.
-function sessionActions(
+// The Session's ⋯: one header Action whose menu holds changed files, Rename and Archive, declared as a Plugin page declares its Screen's Actions.
+function moreAction(
   menu: SessionMenu | undefined,
 ): React.JSX.Element | undefined {
-  const items = menu ? sessionMenuItems(menu) : [];
+  const actions = menu
+    ? sessionActions(menu, { changesIcon: 'changed-files' })
+    : [];
 
-  if (!items.length) return undefined;
+  if (!actions.length) return undefined;
 
   return (
     <Action label="More" icon="more">
-      {items.map(menuAction)}
+      {actions}
     </Action>
   );
 }
-
-type SessionMenuItem = ReturnType<typeof sessionMenuItems>[number];
-
-const menuAction = (item: SessionMenuItem): React.JSX.Element => (
-  <Action
-    key={item.label}
-    label={item.label}
-    icon={item.icon === 'diff' ? 'changed-files' : item.icon}
-    disabled={item.disabled}
-    onPress={item.onPress}
-  />
-);
 
 // A narrow window's header: the Session's title and its ⋯ menu. The page's body is the Session's own, so only the header is a Screen's.
 export function SessionPageHeader(
@@ -68,7 +52,7 @@ export function SessionPageHeader(
   return (
     <ScreenStackHeader
       title={sessionPageTitle(props)}
-      actions={sessionActions(headerMenuOf(props))}
+      actions={moreAction(headerMenuOf(props))}
     />
   );
 }

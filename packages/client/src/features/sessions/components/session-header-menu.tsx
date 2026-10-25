@@ -1,7 +1,11 @@
+import {
+  headerMenuActions,
+  useDeclaredActions,
+} from '@repo/kit/primitives/actions/action';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Menu } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
-import { type SessionMenu, sessionMenuItems } from './session-menu-items';
+import { type SessionMenu, sessionActions } from './session-actions';
 
 // The header's icon buttons: ghost, extra small and tight-cornered, with 16px foreground icons.
 export const headerActionAppearance = {
@@ -32,11 +36,22 @@ export function SessionHeaderMenu({
   menu: SessionMenu;
   reserved?: boolean;
 }): React.JSX.Element | null {
-  const actions = sessionMenuItems(menu);
+  const actions = sessionActions(menu);
 
   if (actions.length === 0) return emptyMenu(reserved);
 
-  return <Menu {...sessionMenuParts} actions={actions} />;
+  return <SessionActionsMenu actions={actions} />;
+}
+
+// The window band's ⋯ draws the same declared Actions as a phone's header and a row's context menu.
+function SessionActionsMenu({
+  actions,
+}: {
+  actions: React.ReactElement[];
+}): React.JSX.Element {
+  const { groups } = useDeclaredActions(actions);
+
+  return <Menu {...sessionMenuParts} actions={headerMenuActions(groups)} />;
 }
 
 function EmptySessionMenu(): React.JSX.Element {

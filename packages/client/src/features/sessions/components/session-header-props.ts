@@ -1,6 +1,6 @@
 import type { ChangesSummary, SessionStatus } from '@repo/contracts';
 import type { SessionPanel } from '../stores/session-panels';
-import type { SessionMenu } from './session-menu-items';
+import type { SessionMenu } from './session-actions';
 import type { SessionPullRequest } from './session-pull-request';
 import type { SubagentListProps } from './subagent-list/subagent-list-types';
 
