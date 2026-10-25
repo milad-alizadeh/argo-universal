@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import type { ReactNode } from 'react';
 import { useWide } from '#kit/use-wide/use-wide';
-import { ScreenDrawerButton } from './screen-drawer-button';
+import { drawerLeading } from './screen-drawer-button';
 import { HeadingRow } from './screen-heading-row';
 import { useScreenMenu } from './screen-menu-context';
 import { useScreenNavigator } from './screen-navigation-context';
@@ -11,14 +11,11 @@ export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
   const navigator = useScreenNavigator();
   const wide = useWide();
   const headerTitle = useHeaderTitle(props);
-  const menu = useScreenMenu();
+  const leading = drawerLeading(useScreenMenu());
 
   if (!navigator) return null;
 
   const options = { ...headerLayout, title: props.title, headerTitle };
-  const leading = menu
-    ? { headerLeft: () => <ScreenDrawerButton menu={menu} /> }
-    : {};
 
   return (
     <Stack.Screen options={{ ...options, ...leading, headerShown: !wide }} />

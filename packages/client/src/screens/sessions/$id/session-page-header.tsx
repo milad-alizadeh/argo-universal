@@ -44,18 +44,22 @@ function sessionActions(
 
   return (
     <Action label="More" icon="more">
-      {items.map((item) => (
-        <Action
-          key={item.label}
-          label={item.label}
-          icon={item.icon === 'diff' ? 'changed-files' : item.icon}
-          disabled={item.disabled}
-          onPress={item.onPress}
-        />
-      ))}
+      {items.map(menuAction)}
     </Action>
   );
 }
+
+type SessionMenuItem = ReturnType<typeof sessionMenuItems>[number];
+
+const menuAction = (item: SessionMenuItem): React.JSX.Element => (
+  <Action
+    key={item.label}
+    label={item.label}
+    icon={item.icon === 'diff' ? 'changed-files' : item.icon}
+    disabled={item.disabled}
+    onPress={item.onPress}
+  />
+);
 
 // A narrow window's header: the Session's title and its ⋯ menu. The page's body is the Session's own, so only the header is a Screen's.
 export function SessionPageHeader(

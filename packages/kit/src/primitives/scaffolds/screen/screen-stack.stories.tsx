@@ -6,8 +6,8 @@ import {
   DetailScreen,
   HeaderActionsScreen,
   PushScreen,
-  SettingsScreen,
 } from './screen-stack.mocks';
+import { SettingsScreen } from './screen-stack-settings.mocks';
 
 /*
  * Each story draws a real navigation stack (`withStack`): a phone shows the stack's header with the Screen's title,

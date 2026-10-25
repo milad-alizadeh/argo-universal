@@ -8,11 +8,13 @@ import {
   MenuRootScreen,
   PushScreen,
   SearchScreen,
-  SettingsScreen,
   onAction,
   onSearch,
 } from './screen-stack.mocks';
+import { SettingsScreen } from './screen-stack-settings.mocks';
 import { atWidth, screenWidths as widths } from './screen-widths.mocks';
+
+const openDetail = { name: 'Open detail' };
 
 const meta = {
   title: 'Tests/Design System/Primitives/Scaffolds/Screen/Stack',
@@ -48,14 +50,14 @@ export const PushAndBackPhone = atWidth(widths.Phone, {
   render: () => <PushScreen />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Open detail' }),
+      await canvas.findByRole('button', openDetail),
     );
     await waitFor(() =>
       expect(canvas.getByRole('heading', { name: 'Detail' })).toBeVisible(),
     );
     await userEvent.click(canvas.getByRole('link', { name: /back/i }));
     await waitFor(() =>
-      expect(canvas.getByRole('button', { name: 'Open detail' })).toBeVisible(),
+      expect(canvas.getByRole('button', openDetail)).toBeVisible(),
     );
     await expect(canvas.queryByRole('heading', { name: 'Detail' })).toBeNull();
   },
@@ -72,7 +74,7 @@ export const MenuRootPushesBackPhone = atWidth(widths.Phone, {
     );
     await expect(onAction).toHaveBeenCalledOnce();
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Open detail' }),
+      await canvas.findByRole('button', openDetail),
     );
     await waitFor(() =>
       expect(canvas.getByRole('heading', { name: 'Detail' })).toBeVisible(),

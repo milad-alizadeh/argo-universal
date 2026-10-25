@@ -9,8 +9,6 @@ import { SessionNewView } from '../../src/screens/sessions/$id/session-new-view'
 import { readyNewSession } from '../../src/screens/sessions/$id/session-new-view.mocks';
 import type { Story } from './new-session-story.test.mocks';
 
-const pressedAttribute = 'aria-pressed';
-
 const newWorktreeLabel = 'New worktree';
 
 // The checkout follows the reader's choice, as the screen's state does.
@@ -52,7 +50,7 @@ export const narrowMainColumn: Story = {
     ).toHaveLength(1);
     await userEvent.click(checkout);
     await userEvent.click(
-      await within(document.body).findByRole('button', { name: 'Local' }),
+      await within(document.body).findByRole('radio', { name: 'Local' }),
     );
     await expect(checkout).toHaveTextContent('Local');
   },
@@ -67,26 +65,26 @@ export const checkoutChoice: Story = {
     await expect(trigger).toHaveTextContent(newWorktreeLabel);
     await userEvent.click(trigger);
     await expect(
-      await overlay.findByRole('button', { name: /^New worktree$/ }),
-    ).toHaveAttribute(pressedAttribute, 'true');
+      await overlay.findByRole('radio', { name: /^New worktree$/ }),
+    ).toBeChecked();
     await expect(overlay.queryByRole('switch')).not.toBeInTheDocument();
     await expect(
       overlay.queryByRole('textbox', { name: 'Search branches' }),
     ).not.toBeInTheDocument();
-    await userEvent.click(overlay.getByRole('button', { name: /^Local$/ }));
+    await userEvent.click(overlay.getByRole('radio', { name: /^Local$/ }));
     await waitFor(() =>
       expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
     );
     await expect(trigger).toHaveTextContent('Local');
     await userEvent.click(trigger);
     await expect(
-      await overlay.findByRole('button', { name: /^Local$/ }),
-    ).toHaveAttribute(pressedAttribute, 'true');
+      await overlay.findByRole('radio', { name: /^Local$/ }),
+    ).toBeChecked();
     await expect(
-      overlay.getByRole('button', { name: /^New worktree$/ }),
-    ).toHaveAttribute(pressedAttribute, 'false');
+      overlay.getByRole('radio', { name: /^New worktree$/ }),
+    ).not.toBeChecked();
     await userEvent.click(
-      overlay.getByRole('button', { name: /^New worktree$/ }),
+      overlay.getByRole('radio', { name: /^New worktree$/ }),
     );
     await waitFor(() =>
       expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
