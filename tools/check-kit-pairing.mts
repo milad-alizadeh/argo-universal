@@ -2,25 +2,15 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  pluginPartGroups,
-  pluginPartSchemas,
-} from '@repo/contracts/plugins/kit-prop-descriptors';
+import { pluginPartSchemas } from '@repo/contracts/plugins/kit-prop-descriptors';
 import { pairingProblems, type SchemaEntry } from './kit-pairing-rules.mts';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 const primitives = 'packages/kit/src/primitives/';
 
-const groupOf = new Map<string, string>(
-  Object.entries(pluginPartGroups).flatMap(
-    ([group, parts]): [string, string][] =>
-      Object.keys(parts).map((name): [string, string] => [name, group]),
-  ),
-);
-
-const schemas: SchemaEntry[] = Object.keys(pluginPartSchemas).map(
-  (name): SchemaEntry => ({ name, group: groupOf.get(name) }),
+const schemas: SchemaEntry[] = Object.entries(pluginPartSchemas).map(
+  ([name, { group }]): SchemaEntry => ({ name, group }),
 );
 
 // A drawing folder is `<group>/<folder>/` holding at least one tracked file.
