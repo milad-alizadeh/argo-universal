@@ -5,9 +5,6 @@ import { ruleTester } from './rule-tester.ts';
 import { staticImports } from './static-imports.ts';
 import { vendorName } from './vendor-name.ts';
 
-const rendererLoader =
-  '/repo/apps/codemap-834-prototype/src/code-map/renderer-loader.web.tsx';
-
 const canvasLoader =
   '/repo/packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx';
 
@@ -72,11 +69,6 @@ ruleTester.run('static-imports', staticImports, {
     "import type { Shape } from './module';",
     'const expression = "import(\'./module\')";',
     {
-      code: "await import('./three/three-map.web');",
-      filename: rendererLoader,
-    },
-    { code: "await import('./flat/flat-map.web');", filename: rendererLoader },
-    {
       code: canvasImport,
       filename: canvasLoader,
     },
@@ -99,31 +91,6 @@ ruleTester.run('static-imports', staticImports, {
     {
       code: canvasImport,
       filename: '/repo/another-loader.tsx',
-      errors: [{ messageId: 'staticImports' }],
-    },
-    {
-      code: "await import('./three/three-map.web');",
-      filename: '/repo/another-loader.tsx',
-      errors: [{ messageId: 'staticImports' }],
-    },
-    {
-      code: "await import('./flat/flat-map.web');",
-      filename: rendererLoader.replace('codemap-834-prototype', 'another-app'),
-      errors: [{ messageId: 'staticImports' }],
-    },
-    {
-      code: "await import('./another-module');",
-      filename: rendererLoader,
-      errors: [{ messageId: 'staticImports' }],
-    },
-    {
-      code: "const path = './flat/flat-map.web'; import(path);",
-      filename: rendererLoader,
-      errors: [{ messageId: 'staticImports' }],
-    },
-    {
-      code: "type Module = typeof import('./flat/flat-map.web');",
-      filename: rendererLoader,
       errors: [{ messageId: 'staticImports' }],
     },
     {

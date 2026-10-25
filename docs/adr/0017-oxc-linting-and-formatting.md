@@ -3,7 +3,7 @@
 The Prickles pack uses ESLint rules. oxlint runs them, mostly natively and the rest through the pack's own ESLint plugins, so oxlint does all linting and oxfmt all formatting (owner, 2026-10-07). This amends ADR-0001’s lint and format choice and ADR-0015’s adapter import enforcement: oxlint enforces the boundary.
 
 - `.oxlintrc.json` extends three files in `tooling/oxlint/`. `prickles.json` is the pack as `@oxlint/migrate@1.87.0 --type-aware` writes it, with the pack's comments. `argo.json` adds Argo's rules: oxlint's correctness category, the existing lint rules, the import boundaries D1 to D11, the zod and tRPC blocks, ADR-0016's test and machine caps, and the `argo` JS plugin, which ports eight GritQL plugins and has RuleTester tests. `unicorn/consistent-function-scoping` and `import/no-nodejs-modules` replace the other two. Argo is stricter than the pack on T2: no `!` and no `as` other than `as const`. `argo.json` also registers [anti-slop](https://github.com/dmmulroy/anti-slop), vendored in `tooling/oxlint/anti-slop/` with its source commit in `UPSTREAM.md`, with every generic rule on except `no-runtime-typeof` (owner, 2026-10-13). `not-yet-cleared.json` comes last.
-- `argo/static-imports` rejects runtime `import()` and inline TypeScript `import(...)` types in owned source. Dependencies use top-level static `import` or `import type` declarations (owner, 2026-10-10). Generated files retain their existing exclusions. The two CodeMap imports below are an owner-approved exception.
+- `argo/static-imports` rejects runtime `import()` and inline TypeScript `import(...)` types in owned source. Dependencies use top-level static `import` or `import type` declarations (owner, 2026-10-10). Generated files retain their existing exclusions. The Canvas and Orb deferred renderer imports below are owner-approved exceptions.
 - `not-yet-cleared.json` is how ADR-0016's folder-by-folder enforcement lands. Generated from a type-aware oxlint run, it turns off, for the files directly in a folder, only the rules that folder still breaks. Its historical waiver identities and rule sets only shrink; a cap never changes to fit the code. The approved ownership moves below preserve those identities through exact path relocations.
 - `pnpm quality` runs `oxfmt --check`, then `node tools/check-lint-waivers.mts`. Its one type-aware oxlint run without the waivers is the lint gate: any finding the waivers do not turn off fails it, warnings included. The same run feeds `tools/check-rule-allowlists.mts` and the not-yet-cleared check, which checks that historical waiver identities and rules only shrink against the merge base with `origin/main` and still have findings; type-aware rules run through oxlint-tsgolint. oxlint reports unused disable directives, and `tools/check-comments.mts` refuses a directive without exact rule names, or on a cap rule.
 - oxfmt uses the owner's style: two spaces, single quotes, 80 columns, imports in one sorted block. It formats JavaScript, TypeScript, JSON, JSONC, CSS and YAML, never Markdown, so the canon files stay verbatim.
@@ -126,12 +126,6 @@ Spec 421 moves each component, with behaviour unchanged, into its own folder ins
 | `lib/product/markdown/<component>/*` for code-block-title, feed-code-block | `lib/product/markdown/*` |
 
 Component folders whose files break no waived rule move without an entry.
-
-## Deferred CodeMap renderers
-
-The owner approved two runtime imports in `apps/codemap-834-prototype/src/code-map/renderer-loader.web.tsx` (2026-10-16, #834). `loadThree` may import `./three/three-map.web` when the 3D view is used. `loadFlat` may import `./flat/flat-map.web` after `WithSkiaWeb` initializes CanvasKit.
-
-This preserves [ADR-0028](0028-plugins-draw-svg-charts-and-canvases-on-every-app.md)'s deferred loading and Skia's initialization order. The `argo/static-imports` rule permits these two literal module paths only in this file. The rule remains enforced for every other expression, including those in the same file. This exception ends when the throwaway prototype is removed.
 
 ## Canvas deferred renderer
 
