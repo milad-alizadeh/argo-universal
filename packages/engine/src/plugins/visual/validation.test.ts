@@ -31,6 +31,18 @@ it.each([
     ...chart,
     series: [{ ...series, points: [{ x: 0, y: Infinity }] }],
   }),
+  node('Chart', {
+    ...chart,
+    series: [
+      {
+        ...series,
+        points: [
+          { x: 1, y: 1 },
+          { x: 1, y: 2 },
+        ],
+      },
+    ],
+  }),
   node('Canvas', canvas, [node('Canvas.Image')]),
   node('Canvas', canvas, [node(rect, { tone: 'accent', fill: rawColor })]),
   node(rect, { tone: 'accent' }),

@@ -5,7 +5,7 @@ export const visualPartSchemas = {
   Chart: part('A bounded data visualization.', visualDataProps.Chart, {
     group: 'visual',
     label:
-      'The required label names the chart; a hidden table lists every series.',
+      'The required label names the chart; a hidden table lists every series. A series may not repeat an x value.',
     accessibility: {
       keyboard:
         'Not focusable as an image; `onPress` enables button activation.',
