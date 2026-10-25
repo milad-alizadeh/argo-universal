@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
-import type { HookPort } from '../plugins';
+import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
@@ -13,8 +13,6 @@ import {
   connectWebSockets,
   listenOnLoopback,
 } from './http-connections';
-import type { PluginServerOptions } from './plugin-options';
-import { EnginePlugins } from './plugin-setup';
 import { createRequestGuard } from './request-guard';
 import {
   createRequestListener,
@@ -47,7 +45,7 @@ export interface HttpServer {
 }
 
 type HttpSetup = {
-  plugins: EnginePlugins;
+  plugins: Plugins;
   blobsFolder: string;
   commandAdmission: AbortController;
   notifications: Notifications;
@@ -112,7 +110,7 @@ function prepareHttpSetup(
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
-    plugins: new EnginePlugins(options),
+    plugins: new Plugins(options),
   };
 }
 
@@ -126,7 +124,8 @@ function createHttpRouter(
       blobsFolder: setup.blobsFolder,
       sessionCommandSignal: setup.commandAdmission.signal,
       notifications: setup.notifications,
-      ...setup.plugins.router,
+      hooks: setup.plugins.hooks,
+      plugins: setup.plugins.router,
     }),
   );
 }

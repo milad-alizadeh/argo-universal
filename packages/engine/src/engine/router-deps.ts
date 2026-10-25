@@ -4,7 +4,7 @@ import { type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import { type FeedDeps } from '../feed';
 import type { NotificationsDeps } from '../notifications';
-import type { PluginsDeps } from '../plugins';
+import type { PluginsRouterDeps } from '../plugins';
 import {
   createSessionConnections,
   createSessionReader,
@@ -26,8 +26,7 @@ export type AppRouterDeps = SessionRouterDeps &
   BlobUploadDeps &
   SystemDeps &
   FeedDeps &
-  NotificationsDeps &
-  PluginsDeps;
+  NotificationsDeps & { plugins: PluginsRouterDeps };
 
 // The Engine owns connection lifetimes and shared Feed sources.
 type EngineSupplied =

@@ -1,5 +1,5 @@
 import { writeLog } from '@repo/machine-log';
-import type { PluginService } from '../plugins';
+import type { PluginService } from './service';
 
 const backgroundStartLimitMs = 30000;
 

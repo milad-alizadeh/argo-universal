@@ -13,9 +13,9 @@ type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
 export type StartedPlugins = { running: string[]; stopped: string[] };
 
 export type PluginServiceDeps = PluginsDeps & {
-  pluginAccounts?: PluginAccounts;
-  pluginRuntime?: PluginRuntime;
-  pluginSettings?: PluginSettings;
+  pluginAccounts: PluginAccounts;
+  pluginRuntime: PluginRuntime;
+  pluginSettings: PluginSettings;
 };
 
 export function applyEnabled(
@@ -34,15 +34,15 @@ export function applyStatus(result: PluginList, runtime: PluginRuntime): void {
   if (error) result.errors.push({ directory: 'plugin-host', message: error });
 }
 
-// Each admitted Plugin with its folder and whether it's turned on.
-async function locatePlugins(
-  deps: PluginServiceDeps,
-): Promise<LocatedPlugin[]> {
+type Discovered = { result: PluginList; locations: Map<string, string> };
+
+async function discover(deps: PluginsDeps): Promise<Discovered> {
   const locations = new Map<string, string>();
-  const result = await discoverPlugins(deps, locations);
 
-  if (deps.pluginSettings) applyEnabled(result, deps.pluginSettings);
+  return { result: await discoverPlugins(deps, locations), locations };
+}
 
+function locatedIn({ result, locations }: Discovered): LocatedPlugin[] {
   return result.plugins.flatMap((plugin) => {
     const directory = locations.get(plugin.manifest.id);
 
@@ -50,17 +50,32 @@ async function locatePlugins(
   });
 }
 
+// Each admitted Plugin with its folder and whether it's turned on.
+async function locatePlugins(
+  deps: PluginServiceDeps,
+): Promise<LocatedPlugin[]> {
+  const discovered = await discover(deps);
+  applyEnabled(discovered.result, deps.pluginSettings);
+
+  return locatedIn(discovered);
+}
+
+function findLocated(
+  located: LocatedPlugin[],
+  pluginId: string,
+): LocatedPlugin {
+  const found = located.find(({ plugin }) => plugin.manifest.id === pluginId);
+
+  if (!found) throw new Error(`Unknown Plugin: ${pluginId}`);
+
+  return found;
+}
+
 export async function locatePlugin(
   deps: PluginServiceDeps,
   pluginId: string,
 ): Promise<LocatedPlugin> {
-  const located = (await locatePlugins(deps)).find(
-    ({ plugin }) => plugin.manifest.id === pluginId,
-  );
-
-  if (!located) throw new Error(`Unknown Plugin: ${pluginId}`);
-
-  return located;
+  return findLocated(await locatePlugins(deps), pluginId);
 }
 
 // The manifest of a Plugin the loader admits, for reading its settings schema.
@@ -68,24 +83,11 @@ export async function pluginManifest(
   deps: PluginsDeps,
   pluginId: string,
 ): Promise<PluginManifest> {
-  return (await locatePlugin(deps, pluginId)).plugin.manifest;
-}
-
-export function requireSettings(deps: PluginServiceDeps): PluginSettings {
-  if (!deps.pluginSettings)
-    throw new Error('Plugin settings are not available');
-
-  return deps.pluginSettings;
-}
-
-export function requireRuntime(deps: PluginServiceDeps): PluginRuntime {
-  if (!deps.pluginRuntime) throw new Error('Plugin runtime is not running');
-
-  return deps.pluginRuntime;
+  return findLocated(locatedIn(await discover(deps)), pluginId).plugin.manifest;
 }
 
 function refuseTurnedOff(deps: PluginServiceDeps, pluginId: string): void {
-  if (deps.pluginSettings?.enabled(pluginId) === false)
+  if (!deps.pluginSettings.enabled(pluginId))
     throw new Error(`Plugin ${pluginId} is turned off`);
 }
 
@@ -93,11 +95,10 @@ export function startPlugin(
   deps: PluginServiceDeps,
   { plugin, directory }: LocatedPlugin,
 ): Promise<PluginStatus> {
-  const runtime = requireRuntime(deps);
   const { manifest } = plugin;
   refuseTurnedOff(deps, manifest.id);
 
-  return runtime.activate(locationFor(manifest, directory));
+  return deps.pluginRuntime.activate(locationFor(manifest, directory));
 }
 
 function locationFor(

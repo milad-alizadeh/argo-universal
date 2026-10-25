@@ -15,7 +15,7 @@ export const createAppRouter = routerFactory((deps: AppRouterDeps) =>
   router({
     blob: createBlobRouter(deps),
     linkPreview: createServerLinkPreviewRouter(deps),
-    plugins: createPluginsRouter(deps),
+    plugins: createPluginsRouter(deps.plugins),
     agents: createAgentsRouter(deps),
     projects: createProjectsRouter(deps),
     system: createSystemRouter(deps),

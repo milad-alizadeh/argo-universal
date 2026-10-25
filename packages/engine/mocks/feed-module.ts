@@ -14,6 +14,7 @@ import {
   type FeedActorRef,
 } from '../src/feed';
 import { findMachineActor } from '../src/lib/machine-actor';
+import { Plugins } from '../src/plugins';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { waitForAcpSessionIdle } from './acp-feed';
 import { coreOnlyHooks } from './core-hooks';
@@ -103,7 +104,13 @@ const feedModuleRouterInput = (
 ): AppRouterInput => ({
   database: host.database,
   hooks: coreOnlyHooks,
-  home: host.home,
+  plugins: new Plugins({
+    home: host.home,
+    version: '1.2.3',
+    database: host.database,
+    databaseWriter: host.databaseWriter,
+    sessions: host.openSessions,
+  }).router,
   sessions: host.openSessions,
   databaseWriter: host.databaseWriter,
   notifications: host.notifications,
