@@ -28,7 +28,7 @@ function TrackerRows({ trackers, ...choice }: RowsProps): JSX.Element {
   const options: Option[] = [{ id: null, name: 'None' }, ...trackers];
 
   return (
-    <List appearance="plain" footer={choice.message || undefined}>
+    <List footer={choice.message || undefined}>
       {options.map((option) => trackerRow(option, choice))}
     </List>
   );

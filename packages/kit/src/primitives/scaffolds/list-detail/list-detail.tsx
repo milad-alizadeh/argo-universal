@@ -12,6 +12,7 @@ import {
   ListDetailSidebarContext,
   type ListDetailSidebar,
 } from './list-detail-sidebar';
+import { SidebarRows } from './sidebar-rows';
 
 /*
  * Foundations / ListDetail: on a wide window the list sits beside the selected item, in the App's sidebar at a
@@ -54,11 +55,12 @@ function WithDetail({
   sidebar,
   ...props
 }: WithDetailProps): ReactElement {
-  useClaim(sidebar, props.list);
+  const list = <SidebarRows>{props.list}</SidebarRows>;
+  useClaim(sidebar, list);
 
   return (
     <View testID={props.testID} className="flex-1 flex-row">
-      {wide && !sidebar && <ListPane list={props.list} />}
+      {wide && !sidebar && <ListPane list={list} />}
       <DetailPane {...props} />
     </View>
   );

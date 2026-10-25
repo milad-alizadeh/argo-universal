@@ -1,11 +1,4 @@
-import {
-  EmptyState,
-  Label,
-  List,
-  ListDetail,
-  ListItem,
-  Pill,
-} from '@argo/plugin-kit';
+import { EmptyState, List, ListDetail, ListItem, Pill } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
 import { githubError, githubRepositoryFromOrigin } from './github-tracker';
@@ -42,14 +35,13 @@ export function IssuePageView({ selected, ...props }: ListProps): JSX.Element {
   );
 }
 
+// The footer names the Project's repository, or the latest load message in its place.
 function IssueList(props: ListProps): JSX.Element {
-  const { issues, message } = props;
+  const { message } = props;
 
   return (
     <List
-      appearance="plain"
-      header={<RepositoryLabel {...props} />}
-      footer={issues.length > 0 ? message : undefined}
+      footer={message || repositoryFooter(props)}
       empty={<EmptyState title={message || 'No Issues.'} />}
     >
       {projectSection(props)}
@@ -58,16 +50,11 @@ function IssueList(props: ListProps): JSX.Element {
   );
 }
 
-function RepositoryLabel(props: ListProps): JSX.Element {
+function repositoryFooter(props: ListProps): string {
   const project = props.projects.find((row) => row.id === props.projectId);
   const repository = githubRepositoryFromOrigin(project?.originUrl);
 
-  return (
-    <Label
-      text={repositoryText(project?.name, repository)}
-      icon="git-issue-open"
-    />
-  );
+  return repositoryText(project?.name, repository);
 }
 
 function repositoryText(name = '', repository: string | null): string {
