@@ -96,13 +96,18 @@ it('leaves a Plugin out that is not running yet, answers late, or stops mid-call
     reason: itemsLeftOut.notRunning,
   });
 
-  const late = calls.items('counter', input);
-  clock.fire();
-  expect(await late).toEqual({ ok: false, reason: itemsLeftOut.late });
-
   const stopped = calls.items('counter', input);
+
   calls.release('counter');
   expect(await stopped).toEqual({ ok: false, reason: itemsLeftOut.notRunning });
+
+  calls.activate('counter', 2);
+  calls.running('counter', 2);
+
+  const late = calls.items('counter', input);
+
+  clock.fire();
+  expect(await late).toEqual({ ok: false, reason: itemsLeftOut.late });
 });
 
 it('drops what a Plugin answered before its change signal', async () => {
@@ -118,6 +123,25 @@ it('drops what a Plugin answered before its change signal', async () => {
   await asked;
   expect(calls.changes.version).toBeGreaterThan(before);
 
+  void calls.items('counter', input);
+  expect(sent).toHaveLength(2);
+});
+
+it('asks a failing Plugin again only after its change signal', async () => {
+  const { calls, sent } = workerCalls();
+  const caller = { pluginId: 'counter', generation: 1 };
+  const asked = calls.items('counter', input);
+
+  calls.receive(caller, { action: 'failed', id: 0, error: 'broken' });
+
+  expect(await asked).toEqual({ ok: false, reason: itemsLeftOut.threw });
+  expect(await calls.items('counter', input)).toEqual({
+    ok: false,
+    reason: itemsLeftOut.threw,
+  });
+  expect(sent).toHaveLength(1);
+
+  calls.receive(caller, { action: 'changed', slotId: sessionRowSlotId });
   void calls.items('counter', input);
   expect(sent).toHaveLength(2);
 });

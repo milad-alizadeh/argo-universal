@@ -21,12 +21,17 @@ export type ItemsAnswer = { ok: true; items: PluginItems } | LeftOut;
 
 type Kept = Map<string, readonly ItemsSlotItem[]>;
 
-// One worker generation: what it answered, by Slot id then context key, kept until it ends or says they changed.
-export type Worker = Caller & {
+/*
+ * One worker generation's items Slots: what it answered, by Slot id then context key, and why a Slot
+ * left it out; both kept until the worker ends or says that Slot's items changed.
+ */
+export type SlotWorker = Caller & {
   running: boolean;
   // Bumped on every change signal, so an answer asked for before it is never kept.
   epoch: number;
   kept: Map<string, Kept>;
+  // A Plugin that threw, ran late or answered off-schema is not asked again, nor waited on, until it changes.
+  failed: Map<string, LeftOut>;
 };
 
 type Ask = (input: SlotItemsInput) => Promise<Reply>;
@@ -37,19 +42,29 @@ export const contextKey = (
   context: ItemsContext,
 ): string => String(context[content.key]);
 
+type Asking = { worker: SlotWorker; entry: AnyItemsSlot; ask: Ask };
+
 // Answers a list from what the worker kept, asking it once for every context it has not answered.
-export async function keptAnswer(
-  worker: Worker,
+export function keptAnswer(
+  worker: SlotWorker,
   input: SlotItemsInput,
   ask: Ask,
 ): Promise<ItemsAnswer> {
   const entry = entryOf(input);
-  const kept = keptOf(worker, entry);
+  const failed = worker.failed.get(entry.id);
 
-  const asked = await askMissing(
-    { worker, entry, ask },
-    missingOf(entry, kept, input),
-  );
+  return failed
+    ? Promise.resolve(failed)
+    : knownAnswer({ worker, entry, ask }, input);
+}
+
+async function knownAnswer(
+  asking: Asking,
+  input: SlotItemsInput,
+): Promise<ItemsAnswer> {
+  const { worker, entry } = asking;
+  const kept = keptOf(worker, entry);
+  const asked = await askMissing(asking, missingOf(entry, kept, input));
 
   if (!asked.ok) return asked;
 
@@ -57,8 +72,6 @@ export async function keptAnswer(
 
   return { ok: true, items: itemsFor(entry, known, input) };
 }
-
-type Asking = { worker: Worker; entry: AnyItemsSlot; ask: Ask };
 
 async function askMissing(
   { worker, entry, ask }: Asking,
@@ -69,7 +82,7 @@ async function askMissing(
   const { epoch } = worker;
   const answer = checked(entry, await ask(input));
 
-  if (worker.epoch === epoch) keep(keptOf(worker, entry), answer);
+  if (worker.epoch === epoch) remember(worker, entry, answer);
 
   return answer;
 }
@@ -96,7 +109,7 @@ function entryOf({ slotId }: SlotItemsInput): AnyItemsSlot {
   return entry;
 }
 
-function keptOf(worker: Worker, entry: AnyItemsSlot): Kept {
+function keptOf(worker: SlotWorker, entry: AnyItemsSlot): Kept {
   const kept = worker.kept.get(entry.id) ?? new Map();
 
   worker.kept.set(entry.id, kept);
@@ -115,12 +128,18 @@ const missingOf = (
   ),
 });
 
-// A context the answer leaves out has no items, and is kept as such.
-function keep(kept: Kept, answer: ItemsAnswer): void {
-  if (!answer.ok) return;
+function remember(
+  worker: SlotWorker,
+  entry: AnyItemsSlot,
+  answer: ItemsAnswer,
+): void {
+  if (answer.ok) keep(keptOf(worker, entry), answer.items);
+  else worker.failed.set(entry.id, answer);
+}
 
-  for (const [key, answered] of Object.entries(answer.items))
-    kept.set(key, answered);
+// A context the answer leaves out has no items, and is kept as such.
+function keep(kept: Kept, items: PluginItems): void {
+  for (const [key, answered] of Object.entries(items)) kept.set(key, answered);
 }
 
 const itemsFor = (

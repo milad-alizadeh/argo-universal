@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { PluginProjectInfo, PluginSessionInfo, SessionGet } from './argo-calls';
+import {
+  PluginProjectInfo,
+  PluginSessionInfo,
+  SessionGet,
+} from './session-calls';
 
 // The Plugin API's reads of Argo's Projects and Sessions; `sessions.get` needs `sessions:read`.
 export const sessionApiCalls = {

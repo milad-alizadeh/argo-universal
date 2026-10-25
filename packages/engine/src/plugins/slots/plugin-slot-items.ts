@@ -1,6 +1,6 @@
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import type { SlotItemsInput } from '@repo/contracts/plugins/wire';
-import { keptAnswer, type ItemsAnswer, type Worker } from './kept-items';
+import { keptAnswer, type ItemsAnswer, type SlotWorker } from './kept-items';
 import {
   itemsLeftOut,
   leftOut,
@@ -17,7 +17,7 @@ import { SlotItemChanges } from './slot-item-changes';
  */
 export class PluginSlotItems {
   readonly changes = new SlotItemChanges();
-  private readonly workers = new Map<string, Worker>();
+  private readonly workers = new Map<string, SlotWorker>();
   private readonly calls;
 
   constructor(transport: SlotItemsTransport) {
@@ -32,6 +32,7 @@ export class PluginSlotItems {
       running: false,
       epoch: 0,
       kept: new Map(),
+      failed: new Map(),
     });
   }
 
@@ -72,10 +73,11 @@ export class PluginSlotItems {
     if (!worker) return;
     worker.epoch += 1;
     worker.kept.delete(slotId);
+    worker.failed.delete(slotId);
     this.changes.bump();
   }
 
-  private current(caller: Caller): Worker | undefined {
+  private current(caller: Caller): SlotWorker | undefined {
     const worker = this.workers.get(caller.pluginId);
 
     return worker?.generation === caller.generation ? worker : undefined;

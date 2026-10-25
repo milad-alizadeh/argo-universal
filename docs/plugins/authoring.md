@@ -200,12 +200,12 @@ export function register(argo: Argo): void {
 ```
 
 An item is `{ icon?, text, tone?, tooltip?, action? }`: `text` is at most 40 characters, `tone` is a kit tone, and `action.path` opens one of the Plugin's own pages. Anything else fails the Slot's schema.
-A Session id left out of the answer has no items. One Plugin sends at most 8 items for one row.
+A Session id left out of the answer has no items. One Plugin sends at most 8 items for one row; more fails the schema.
 The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session.
 
 Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.slots.changed('argo/session/row/v1')`, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
 Argo's own items come first, then each Plugin's in Slot order. A phone shows 1 item and a desktop or the web shows 3; the rest come with their Plugin id as overflow for "+N".
-A Plugin that throws, answers off-schema, or takes over two seconds is left out of that answer alone, and the Server logs it once per Plugin, Slot and reason.
+A Plugin that throws, answers off-schema, or takes over two seconds is left out alone, and the Server logs it once per Plugin, Slot and reason. Argo does not ask it again, nor wait for it, until it calls `argo.slots.changed` or restarts.
 
 ## Background pages and badges
 

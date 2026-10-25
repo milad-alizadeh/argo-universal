@@ -113,17 +113,23 @@ it('merges Session row items in Plugin order, limits them, leaves failing Plugin
   });
   controller.abort();
 
-  expect(await pluginLines(home)).toEqual([
-    expect.stringContaining(
-      'Plugin thrower: core fallback argo/session/row/v1: items provider threw',
-    ),
-    expect.stringContaining(
-      'Plugin off-schema: core fallback argo/session/row/v1: items failed the Slot schema',
-    ),
-    expect.stringContaining(
-      'Plugin late: core fallback argo/session/row/v1: items provider ran late',
-    ),
-  ]);
+  const lines = await pluginLines(home);
+
+  // Each failing Plugin is logged once, in whatever order their answers came.
+  expect(lines).toHaveLength(3);
+  expect(lines).toEqual(
+    expect.arrayContaining([
+      expect.stringContaining(
+        'Plugin thrower: core fallback argo/session/row/v1: items provider threw',
+      ),
+      expect.stringContaining(
+        'Plugin off-schema: core fallback argo/session/row/v1: items failed the Slot schema',
+      ),
+      expect.stringContaining(
+        'Plugin late: core fallback argo/session/row/v1: items provider ran late',
+      ),
+    ]),
+  );
 }, 30_000);
 
 it('answers no items and starts no Plugin when none declares the Slot', async () => {
