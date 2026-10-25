@@ -4,6 +4,7 @@ import {
   barSlots,
   cartesianData,
   chartTable,
+  pieLegend,
   pieSlices,
   yDomain,
 } from './chart-data';
@@ -161,5 +162,18 @@ describe('chartTable', () => {
         ['Tests', '5'],
       ],
     });
+  });
+});
+
+describe('pieLegend', () => {
+  it('names each slice with its tone and share of the whole', () => {
+    expect(pieLegend([files, tests])).toEqual([
+      { key: 's0', name: 'Files', tone: 'info', percent: '62%' },
+      { key: 's1', name: 'Tests', tone: 'success', percent: '38%' },
+    ]);
+  });
+
+  it('leaves out a series with nothing to show', () => {
+    expect(pieLegend([{ ...files, points: [] }, tests])).toHaveLength(1);
   });
 });

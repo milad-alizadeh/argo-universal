@@ -6,6 +6,7 @@ import { useSvgDrawing } from '../svg/svg-budget';
 import type { ChartProps } from './chart-data';
 import { ChartLoader } from './chart-loader';
 import { ChartTable } from './chart-table';
+import { useTableMounted } from './use-table-mounted';
 
 export type { ChartProps } from './chart-data';
 
@@ -60,12 +61,13 @@ function ChartImage({ props, draws }: DrawingProps): React.JSX.Element {
 export function Chart(props: ChartProps): React.JSX.Element {
   const tile = useContext(ListTileContext);
   const draws = useSvgDrawing();
+  const table = useTableMounted();
 
   // The table sits beside the labelled drawing: inside it, an image or button would hide the rows.
   return (
     <View style={tile ? tileFrame : inlineFrame}>
       <ChartImage props={props} draws={draws} />
-      <ChartTable props={props} />
+      {table ? <ChartTable props={props} /> : null}
     </View>
   );
 }

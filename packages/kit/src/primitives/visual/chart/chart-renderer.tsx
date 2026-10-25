@@ -1,9 +1,16 @@
 import { View } from 'react-native';
-import { Pie, PolarChart } from 'victory-native';
+import { Pie as PieChart, PolarChart } from 'victory-native';
 import { type NativeTheme, useNativeTheme } from '../../../native-theme';
 import { toneColor } from '../canvas/canvas-colors';
 import { CartesianDrawing, fill } from './chart-cartesian';
-import { type ChartProps, isPolar, pieSlices } from './chart-data';
+import {
+  type ChartProps,
+  type PieSlice,
+  isPolar,
+  pieLegend,
+  pieSlices,
+} from './chart-data';
+import { ChartLegend } from './chart-legend';
 
 const donutHole = '60%';
 
@@ -24,15 +31,43 @@ interface PieDrawingProps {
   theme: NativeTheme;
 }
 
-function PieDrawing({ props, theme }: PieDrawingProps): React.JSX.Element {
-  const slices = pieSlices(props.series).map((slice) => ({
+const side = { flexDirection: 'row' } as const;
+
+type Colored = { [K in keyof PieSlice]: PieSlice[K] } & { color: string };
+
+const sliceColors = (slices: PieSlice[], theme: NativeTheme): Colored[] =>
+  slices.map((slice) => ({
     ...slice,
     color: toneColor(slice.tone, theme) ?? '',
   }));
 
+function PieDrawing({ props, theme }: PieDrawingProps): React.JSX.Element {
+  const slices = sliceColors(pieSlices(props.series), theme);
+
+  const colors = Object.fromEntries(
+    slices.map(({ key, color }) => [key, color]),
+  );
+
+  return (
+    <View style={[fill, side]}>
+      <View style={fill}>
+        <Pie slices={slices} kind={props.kind} />
+      </View>
+      <ChartLegend rows={pieLegend(props.series)} colors={colors} />
+    </View>
+  );
+}
+
+function Pie({
+  slices,
+  kind,
+}: {
+  slices: Colored[];
+  kind: string;
+}): React.JSX.Element {
   return (
     <PolarChart data={slices} labelKey="name" valueKey="value" colorKey="color">
-      <Pie.Chart innerRadius={props.kind === 'donut' ? donutHole : 0} />
+      <PieChart.Chart innerRadius={kind === 'donut' ? donutHole : 0} />
     </PolarChart>
   );
 }

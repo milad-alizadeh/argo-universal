@@ -132,6 +132,28 @@ export function pieSlices(series: readonly ChartSeries[]): PieSlice[] {
   });
 }
 
+export interface PieLegendRow {
+  key: SeriesKey;
+  name: string;
+  tone: ChartSeries['tone'];
+  percent: string;
+}
+
+const share = new Intl.NumberFormat(undefined, { style: 'percent' });
+
+// One row per drawn slice, with its share of the whole as the sighted reader's value.
+export function pieLegend(series: readonly ChartSeries[]): PieLegendRow[] {
+  const slices = pieSlices(series);
+  const total = slices.reduce((sum, { value }) => sum + value, 0);
+
+  return slices.map(({ key, name, tone, value }) => ({
+    key,
+    name,
+    tone,
+    percent: share.format(value / total),
+  }));
+}
+
 export interface ChartTable {
   columns: string[];
   rows: string[][];
