@@ -20,9 +20,20 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
   const found = props.projects.filter((project) => matches(project, query));
 
   return (
+    <ProjectsColumn>
+      {projectRows({ ...props, found, searching: query !== '' })}
+    </ProjectsColumn>
+  );
+}
+
+// The Projects' card and its place on the page, shared by the loading rows so the loaded ones land where they stood.
+export function ProjectsColumn(props: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
     <View className="flex-1 pt-2 wide:pt-0">
       <List fit={false} appearance="grouped" padding={{ compact: 4, wide: 0 }}>
-        {projectRows({ ...props, found, searching: query !== '' })}
+        {props.children}
       </List>
     </View>
   );

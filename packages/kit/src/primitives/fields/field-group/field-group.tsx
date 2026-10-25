@@ -6,8 +6,11 @@ import {
   isValidElement,
   type ReactElement,
   type ReactNode,
+  use,
 } from 'react';
+import type { ViewStyle } from 'react-native';
 import { useInMenu } from '#kit/menu-rows-context';
+import { ScrollColumnContext } from '#kit/scroll-column';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupKitProps } from '../../kit-props';
 import { MenuFieldGroup } from './field-group-menu';
@@ -40,16 +43,46 @@ function PageFieldGroup(props: FieldGroupProps): ReactElement {
   return (
     <Host style={{ flex: 1 }}>
       <InsideHostContext.Provider value>
-        <ExpoFieldGroup
-          disabled={props.disabled}
-          style={transparent}
-          modifiers={[hiddenFormBackground]}
-        >
-          {sections(props.children)}
-        </ExpoFieldGroup>
+        <ColumnFieldGroup {...props} />
       </InsideHostContext.Provider>
     </Host>
   );
+}
+
+// The FieldGroup takes the pane's column and clears it, so nothing in its rows takes it again.
+function ColumnFieldGroup(props: FieldGroupProps): ReactElement {
+  const style = useColumnStyle();
+
+  return (
+    <ScrollColumnContext value={undefined}>
+      <ExpoFieldGroup
+        disabled={props.disabled}
+        style={style}
+        modifiers={[hiddenFormBackground]}
+      >
+        {sections(props.children)}
+      </ExpoFieldGroup>
+    </ScrollColumnContext>
+  );
+}
+
+/*
+ * A wide pane's column, as its header keeps to: the FieldGroup scrolls itself and takes no content style, so the
+ * scroll view is the column, and its own padding sets the cards in it as a List's are.
+ */
+function useColumnStyle(): ViewStyle {
+  const column = use(ScrollColumnContext);
+
+  if (!column) return transparent;
+
+  return {
+    ...transparent,
+    width: '100%',
+    maxWidth: column.maxWidth,
+    alignSelf: 'center',
+    paddingLeft: column.paddingLeft,
+    paddingRight: column.paddingRight,
+  };
 }
 
 /*
@@ -57,7 +90,7 @@ function PageFieldGroup(props: FieldGroupProps): ReactElement {
  * background behind its scroll content; Expo's plain modifier factory hides it without loading the ExpoUI native
  * module on the web, which ignores it.
  */
-const transparent = { backgroundColor: 'transparent' };
+const transparent: ViewStyle = { backgroundColor: 'transparent' };
 
 const hiddenFormBackground = createModifier('scrollContentBackground', {
   visible: 'hidden',

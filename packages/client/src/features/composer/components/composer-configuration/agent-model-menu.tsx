@@ -3,11 +3,11 @@ import { PopoverHoverGroup } from '@repo/kit/primitives/overlays/popover';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { agentRow } from './agent-row';
+import { configurationPicker } from './configuration-picker';
 import {
   loadingSections,
   useConfigurationRows,
 } from './configuration-skeleton';
-import { configurationPicker } from './configuration-picker';
 import { effortControl, switchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {

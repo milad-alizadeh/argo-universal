@@ -17,6 +17,7 @@ export function FieldList(props: FieldListProps): ReactElement {
     <List
       fit={false}
       appearance="cards"
+      padding={cardInset}
       testID={props.testID}
       header={props.header}
     >
@@ -36,3 +37,6 @@ function sectionView(section: FieldListSection, index: number): ReactElement {
     </List.Section>
   );
 }
+
+// The cards stand 16 from a phone's edges, as the Settings pages' cards do; a wide page's column insets them already.
+const cardInset = { compact: 4, wide: 0 } as const;

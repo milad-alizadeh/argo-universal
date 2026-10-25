@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup } from '#primitives/lists/list';
 import { ListContext, ListTileContext } from '../../../list-context';
-import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
+import { loadingLanes } from '../../../list-skeleton-lanes';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
@@ -91,13 +91,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
 
 // A loading row keeps the row's surface, lanes and line heights, with nothing to press or read.
 function LoadingItem(props: ListItemProps): ReactElement {
-  return (
-    <ListItemFrame
-      title={props.title}
-      leading={props.leading === undefined ? undefined : <SkeletonMark />}
-      content={<SkeletonContent {...props} />}
-    />
-  );
+  return <ListItemFrame title={props.title} {...loadingLanes(props)} />;
 }
 
 export function ListItem(props: ListItemProps): ReactElement {
