@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
+import { knownCategories } from './session-configuration';
 
 /*
  * ACP extension fields are kept; Argo's known fields are checked at this boundary. There is no `icon` among
@@ -45,20 +46,6 @@ export const SessionConfigSelectGroup = z.strictObject({
 });
 
 export type SessionConfigSelectGroup = z.infer<typeof SessionConfigSelectGroup>;
-
-/*
- * Every category Argo draws something for, which is the ACP spec's four plus the ones real Agents send beside
- * them: `collaboration_mode` is codex-acp's own, outside the spec but handled, so it is not a surprise. This is
- * not the Composer's `configuredCategories`, which is the shorter list of categories that already have a control
- * of their own there (owner, 2026-10-20).
- */
-const knownCategories = new Set([
-  'mode',
-  'model',
-  'model_config',
-  'thought_level',
-  'collaboration_mode',
-]);
 
 let unknownCategories = 0;
 

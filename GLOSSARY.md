@@ -152,6 +152,10 @@ _Avoid_: PR, pull request, diff, branch (for the work)
 Where the user writes the next prompt for a Session, with its Agent, model and mode controls.
 _Avoid_: Input, chat box, prompt bar
 
+**Starting choices**:
+The model, effort and mode a new Session starts with, sent in that order because the model decides which effort levels and modes remain. Effort is ACP's `thought_level`; whether the model has effort at all comes from its `supportsEffort`.
+_Avoid_: Preferences, defaults, config options (for the three alone)
+
 **Slash command**:
 A command or skill the Agent offers, named in a prompt as `/name` with optional arguments.
 _Avoid_: Command (alone), shortcut, action

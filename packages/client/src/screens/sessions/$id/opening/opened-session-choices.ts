@@ -1,4 +1,4 @@
-import type { SessionConfigOption } from '@repo/contracts';
+import { isModelOption, type SessionConfigOption } from '@repo/contracts';
 import { useMemo, useState } from 'react';
 import {
   type ConfigurationPicks,
@@ -72,5 +72,5 @@ export function useOptionChoices(opened: OpenedSession): Choices {
 
 const isModel = (options: SessionConfigOption[], configId: string): boolean =>
   options.some(
-    (option) => option.configId === configId && option.category === 'model',
+    (option) => option.configId === configId && isModelOption(option),
   );

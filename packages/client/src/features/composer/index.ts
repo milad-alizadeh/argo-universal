@@ -25,4 +25,4 @@ export {
 export {
   configurationChoices,
   configurationEffortChoices,
-} from '#lib/product/session-configuration';
+} from '@repo/contracts';
