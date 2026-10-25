@@ -10,6 +10,7 @@ it('accepts a series whose points have distinct x values', () => {
     { x: 0, y: 1 },
     { x: 1, y: 2 },
   ];
+
   expect(
     chartProps.safeParse({ ...chart, series: [{ ...series, points }] }).success,
   ).toBe(true);
@@ -20,10 +21,12 @@ it('refuses a series that repeats an x value', () => {
     { x: 1, y: 1 },
     { x: 1, y: 2 },
   ];
+
   const result = chartProps.safeParse({
     ...chart,
     series: [{ ...series, points }],
   });
+
   expect(result.success).toBe(false);
   expect(result.error?.issues[0]?.message).toBe(
     'each series must use distinct x values',
@@ -32,6 +35,7 @@ it('refuses a series that repeats an x value', () => {
 
 it('allows two series to share an x value', () => {
   const other = { ...series, name: 'Other', tone: 'success' };
+
   expect(
     chartProps.safeParse({ ...chart, series: [series, other] }).success,
   ).toBe(true);

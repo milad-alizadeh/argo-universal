@@ -46,7 +46,7 @@ interface LegendRowProps {
 // Names and shares beside the slices; the image label and the hidden table already speak, so this is for the eye.
 export function ChartLegend({ rows, colors }: Props): React.JSX.Element {
   return (
-    <View accessible={false} aria-hidden style={legend}>
+    <View aria-hidden style={legend}>
       {rows.map((entry) => (
         <LegendRow
           key={entry.key}

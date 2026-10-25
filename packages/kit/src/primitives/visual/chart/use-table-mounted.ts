@@ -4,7 +4,7 @@ import { AccessibilityInfo } from 'react-native';
 function follow(set: (on: boolean) => void): () => void {
   let live = true;
 
-  AccessibilityInfo.isScreenReaderEnabled().then((on) => live && set(on));
+  void AccessibilityInfo.isScreenReaderEnabled().then((on) => live && set(on));
 
   const sub = AccessibilityInfo.addEventListener('screenReaderChanged', set);
 

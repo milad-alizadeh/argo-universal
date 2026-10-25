@@ -60,7 +60,7 @@ function ChartImage({ props, draws }: DrawingProps): React.JSX.Element {
 // Data in, drawing out: Plugins never see Victory or Skia, so the renderer can change (ADR-0028).
 export function Chart(props: ChartProps): React.JSX.Element {
   const tile = useContext(ListTileContext);
-  const draws = useSvgDrawing();
+  const draws = useSvgDrawing('skia');
   const table = useTableMounted();
 
   // The table sits beside the labelled drawing: inside it, an image or button would hide the rows.
