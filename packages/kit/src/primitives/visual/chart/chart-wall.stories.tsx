@@ -11,7 +11,7 @@ import {
 } from './chart-fixtures';
 
 const meta = {
-  title: 'Design System/Primitives/Visual/Chart/Wall',
+  title: 'Design System/Primitives/Visual/ChartWall',
   parameters: { screenPreview: true },
 } satisfies Meta;
 
