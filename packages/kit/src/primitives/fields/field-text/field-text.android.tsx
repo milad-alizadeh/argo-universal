@@ -37,15 +37,29 @@ function rowOf(props: FieldTextProps): FieldTextProps {
 const shownText = (props: FieldTextProps): string =>
   props.value || props.placeholder || props.title;
 
-// The value under the title, masked for a secret; nothing while empty.
+/*
+ * The value under the title, masked for a secret; nothing while empty. A secret never comes back, so its field is
+ * always empty and its placeholder says whether one is saved.
+ */
 function summary(props: FieldTextProps): ReactElement | undefined {
-  if (!props.value) return undefined;
+  const text = summaryText(props);
+
+  if (!text) return undefined;
 
   return (
     <NativeText role="secondary" tone="muted" numberOfLines={1}>
-      {props.secure ? secretMask : props.value}
+      {text}
     </NativeText>
   );
 }
+
+function summaryText(props: FieldTextProps): string | undefined {
+  if (props.secure) return secretSummary(props);
+
+  return props.value === '' ? undefined : props.value;
+}
+
+const secretSummary = (props: FieldTextProps): string | undefined =>
+  props.value ? secretMask : props.placeholder;
 
 const secretMask = '••••••••';
