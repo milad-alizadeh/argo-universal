@@ -111,6 +111,12 @@ export class PluginAccess {
     };
   }
 
+  // `argo.sessions.get` reads Session details only under a `sessions:read` Grant.
+  checkSessionsRead(): void {
+    if (!this.scope.grants.some(({ kind }) => kind === 'sessions:read'))
+      throw new CapabilityRefusal('sessions:read is not a declared Capability');
+  }
+
   checkHost(url: URL): HostRule {
     if (url.protocol !== 'https:')
       throw new CapabilityRefusal(`${url.protocol} is not HTTPS`);

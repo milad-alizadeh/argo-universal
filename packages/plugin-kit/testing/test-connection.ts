@@ -29,3 +29,12 @@ export function testConnection(
 function surfaceOf(surface: ConnectionOptions['surface']): PluginSurface {
   return currentPluginSurface(surface?.platform ?? 'web');
 }
+
+// A list's connection: the platform decides how many items each row shows.
+export const itemsConnection = ({
+  signal,
+  platform = 'web',
+}: {
+  signal: AbortSignal;
+  platform?: PluginSurface['platform'];
+}): TestConnection => testConnection(signal, { surface: { platform } });

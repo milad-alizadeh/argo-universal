@@ -14,6 +14,7 @@ import {
   PluginDispatchInput,
   PluginSlotInput,
   PluginViewInput,
+  SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import { TRPCError } from '@trpc/server';
 import {
@@ -112,6 +113,17 @@ const createViewsRouter = routerFactory((plugins: PluginService) =>
   }),
 );
 
+// One batched call per list: each context's Plugin items, by its key (ADR-0035).
+const createSlotItemsRouter = routerFactory((plugins: PluginService) =>
+  router({
+    slotItems: publicProcedure
+      .input(SlotItemsInput)
+      .subscription((call) =>
+        plugins.slotItems(call.input, connectionOf(call)),
+      ),
+  }),
+);
+
 // What an App sends back about a view it draws.
 const createViewEventsRouter = routerFactory((plugins: PluginService) =>
   router({
@@ -144,6 +156,7 @@ export const createPluginsRouter = routerFactory(
       createLifecycleRouter(plugins),
       createSettingsRouter(plugins),
       createViewsRouter(plugins),
+      createSlotItemsRouter(plugins),
       createViewEventsRouter(plugins),
     ),
 );

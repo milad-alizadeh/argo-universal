@@ -7,7 +7,10 @@ import {
   type PluginCapability,
   type PluginSettingField,
 } from '@repo/contracts/plugins';
-import type { SlotId } from '@repo/contracts/plugins/wire';
+import type {
+  AddOnlySlotId,
+  ReplaceableSlotId,
+} from '@repo/contracts/plugins/wire';
 import { onTestFinished } from 'vitest';
 
 // Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
@@ -21,8 +24,10 @@ type FixturePlugin = {
   capabilities?: PluginCapability[];
   settings?: PluginSettingField[];
   hooks?: HookEventName[];
-  // The Slots the manifest declares.
-  slots?: SlotId[];
+  // The add-only Slots the manifest declares.
+  slots?: AddOnlySlotId[];
+  // The Replaceable Slots its `ui.render` Hook draws.
+  renders?: ReplaceableSlotId[];
   accounts?: PluginManifest['contributes']['accounts'];
   order?: number;
 };
@@ -66,12 +71,20 @@ async function writeManifest({
   capabilities,
   hooks,
   slots,
+  renders,
   settings,
   accounts,
   order,
 }: Pick<
   FixturePlugin,
-  'id' | 'capabilities' | 'hooks' | 'slots' | 'settings' | 'accounts' | 'order'
+  | 'id'
+  | 'capabilities'
+  | 'hooks'
+  | 'slots'
+  | 'renders'
+  | 'settings'
+  | 'accounts'
+  | 'order'
 > & {
   folder: string;
   main: string;
@@ -96,6 +109,7 @@ async function writeManifest({
         ...template.contributes,
         hooks,
         slots,
+        renders,
         settings,
         accounts,
         order,

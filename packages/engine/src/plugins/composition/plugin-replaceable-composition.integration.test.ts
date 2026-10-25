@@ -39,7 +39,7 @@ it.each([messageSlotFixture, toolCallSlotFixture])(
       {
         id: 'pass',
         hooks: ['ui.render'],
-        slots: [input.slotId],
+        renders: [input.slotId],
         source: `
     export async function register(argo) {
       await argo.on('ui.render', '${input.slotId}', (ctx, e, next) => {
@@ -77,7 +77,7 @@ it.each([
       {
         id: 'rewrite',
         hooks: ['ui.render'],
-        slots: [messageSlotId],
+        renders: [messageSlotId],
         source: `
     export async function register(argo) {
       await argo.on('ui.render', (ctx, e, next) => next({ ...e, props: ${JSON.stringify(props)} }));

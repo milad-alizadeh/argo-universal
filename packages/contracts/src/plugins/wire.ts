@@ -4,15 +4,25 @@ import { PluginViewId } from '#plugin-wire-events';
 
 export {
   AddOnlySlotId,
+  addOnlySlots,
+  itemsSlotEntry,
+  replaceableSlots,
+  slotSchemas,
   PluginSlotInput,
   ReplaceableSlotId,
+  SessionRowItem,
   SlotId,
+  SlotItems,
+  SlotItemsInput,
+  itemsSlot,
   projectDetailsSlotId,
   sessionRowSlotId,
-  slotContentRule,
   slotPath,
   slotRegistry,
-  type SlotContentRule,
+  type AnyItemsSlot,
+  type ItemsContext,
+  type ItemsSlotItem,
+  type SlotLimit,
 } from '#plugin-wire-slot';
 
 import { WireJson } from '#plugin-wire-json';

@@ -4,58 +4,20 @@ import { ReplaceableInput } from './replaceable-input';
 import {
   AddOnlySlotId,
   PluginSlotInput,
+  projectDetailsSlotId,
   ReplaceableSlotId,
+  SessionRowItem,
+  sessionRowSlotId,
   SlotId,
-  slotContentRule,
+  SlotItemsInput,
   slotRegistry,
 } from './wire';
+import { messageSlotId, toolCallSlotId } from './wire-slot';
 
-const contexts = {
-  'argo/project/details/v1': { projectId: 'argo' },
-  'argo/session/row/v1': {
-    sessionId: 'session',
-    projectId: 'argo',
-    branch: null,
-  },
-};
-
-it('keeps every Slot id', () => {
-  expect(slotRegistry.map(({ id, kind }) => [id, kind])).toEqual([
-    ['argo/project/details/v1', 'add-only'],
-    ['argo/session/row/v1', 'add-only'],
-    ['argo/feed/tool-call/v1', 'replaceable'],
-    ['argo/feed/message/v1', 'replaceable'],
-  ]);
-});
-
-it.each(Object.entries(contexts))(
-  'parses the context of add-only Slot %s',
-  (slotId, context) => {
-    expect(PluginSlotInput.parse({ slotId, context })).toEqual({
-      slotId,
-      context,
-    });
-    expect(AddOnlySlotId.safeParse(slotId).success).toBe(true);
-    expect(ReplaceableSlotId.safeParse(slotId).success).toBe(false);
-  },
-);
-
-it.each(['argo/feed/tool-call/v1', 'argo/feed/message/v1'])(
-  'takes no context for Replaceable Slot %s',
-  (slotId) => {
-    expect(
-      PluginSlotInput.safeParse({ slotId, context: { projectId: 'argo' } })
-        .success,
-    ).toBe(false);
-    expect(AddOnlySlotId.safeParse(slotId).success).toBe(false);
-    expect(SlotId.parse(slotId)).toBe(slotId);
-  },
-);
-
-it('lets a manifest declare add-only and Replaceable Slots', () => {
-  const slots = slotRegistry.map(({ id }) => id);
-
-  const manifest = PluginManifest.parse({
+const manifestWith = (
+  contributes: Readonly<Record<string, readonly string[] | number>>,
+): ReturnType<typeof PluginManifest.safeParse> =>
+  PluginManifest.safeParse({
     id: 'slots',
     name: 'Slots',
     version: '1.0.0',
@@ -63,10 +25,120 @@ it('lets a manifest declare add-only and Replaceable Slots', () => {
     main: 'index.js',
     icon: { material: 'extension' },
     capabilities: [],
-    contributes: { nav: [], slots },
+    contributes: { nav: [], ...contributes },
   });
 
-  expect(manifest.contributes.slots).toEqual(slots);
+const rowContext = { sessionId: 'session', projectId: 'argo' };
+
+it('keeps every Slot id with its kind', () => {
+  expect(slotRegistry.map(({ id, kind }) => [id, kind])).toEqual([
+    [projectDetailsSlotId, 'add-only'],
+    [sessionRowSlotId, 'add-only'],
+    [toolCallSlotId, 'replaceable'],
+    [messageSlotId, 'replaceable'],
+  ]);
+});
+
+it('opens Project details with its context', () => {
+  const input = {
+    slotId: projectDetailsSlotId,
+    context: { projectId: 'argo' },
+  };
+
+  expect(PluginSlotInput.parse(input)).toEqual(input);
+});
+
+it('asks the Session row for a whole list keyed by Session id', () => {
+  const input = {
+    slotId: sessionRowSlotId,
+    contexts: [rowContext, { sessionId: 'other', projectId: 'argo' }],
+  };
+
+  expect(SlotItemsInput.parse(input)).toEqual(input);
+});
+
+it.each([
+  ['a branch', { ...rowContext, branch: 'main' }],
+  ['no Project', { sessionId: 'session' }],
+])('refuses a Session row context with %s', (_name, context) => {
+  expect(
+    SlotItemsInput.safeParse({ slotId: sessionRowSlotId, contexts: [context] })
+      .success,
+  ).toBe(false);
+});
+
+it('refuses a Session row as a Plugin page', () => {
+  expect(
+    PluginSlotInput.safeParse({ slotId: sessionRowSlotId, context: rowContext })
+      .success,
+  ).toBe(false);
+});
+
+it('accepts a Session row item with every field', () => {
+  const item = {
+    icon: { sf: 'ticket', material: 'confirmation_number' },
+    text: 'Issue 412',
+    tone: 'accent',
+    tooltip: 'Issue 412: In review',
+    action: { path: '/issues/412' },
+  };
+
+  expect(SessionRowItem.parse(item)).toEqual(item);
+});
+
+it.each([
+  [
+    'a kit tree',
+    { type: 'Text', key: '0', props: {}, children: [], slots: {} },
+  ],
+  ['an unknown field', { text: 'Issue 412', badge: 'loud' }],
+  ['oversized text', { text: 'x'.repeat(41) }],
+  ['empty text', { text: ' ' }],
+  ['an unknown tone', { text: 'Issue 412', tone: 'shouting' }],
+  [
+    'an action outside the Plugin',
+    { text: 'Issue 412', action: { path: 'https://x' } },
+  ],
+])('refuses a Session row item with %s', (_name, item) => {
+  expect(SessionRowItem.safeParse(item).success).toBe(false);
+});
+
+it.each([toolCallSlotId, messageSlotId])(
+  'keeps Replaceable Slot %s out of the add-only ids',
+  (slotId) => {
+    expect(SlotId.parse(slotId)).toBe(slotId);
+    expect(ReplaceableSlotId.parse(slotId)).toBe(slotId);
+    expect(AddOnlySlotId.safeParse(slotId).success).toBe(false);
+  },
+);
+
+it('lets a manifest declare add-only Slots', () => {
+  const slots = [projectDetailsSlotId, sessionRowSlotId];
+
+  expect(manifestWith({ slots }).data?.contributes.slots).toEqual(slots);
+});
+
+it('refuses a Replaceable Slot among a manifest Slots', () => {
+  expect(manifestWith({ slots: [toolCallSlotId] }).success).toBe(false);
+});
+
+it('lets a ui.render Plugin declare the Replaceable Slots it draws', () => {
+  const contributes = {
+    hooks: ['ui.render'],
+    renders: [toolCallSlotId],
+    order: 3,
+  };
+
+  expect(manifestWith(contributes).data?.contributes).toMatchObject(
+    contributes,
+  );
+});
+
+it.each([
+  ['an add-only Slot', { hooks: ['ui.render'], renders: [sessionRowSlotId] }],
+  ['no ui.render Hook', { renders: [messageSlotId] }],
+])('refuses renders naming %s', (_name, contributes) => {
+  expect(manifestWith(contributes).success).toBe(false);
 });
 
 it('refuses the Composer tray as a Slot', () => {
@@ -79,25 +151,5 @@ it('refuses the Composer tray as a Slot', () => {
       props: { wide: true, inactive: false },
     }).success,
   ).toBe(false);
-  expect(
-    PluginManifest.safeParse({
-      id: 'tray',
-      name: 'Tray',
-      version: '1.0.0',
-      engines: { argo: '>=0.0.0' },
-      main: 'index.js',
-      icon: { material: 'extension' },
-      capabilities: [],
-      contributes: { nav: [], slots: [slotId] },
-    }).success,
-  ).toBe(false);
-});
-
-it('names the parts each Slot accepts', () => {
-  expect(slotContentRule('argo/project/details/v1')).toBe('tree');
-
-  expect(slotContentRule('argo/session/row/v1')).toEqual({
-    part: 'ListItem',
-    slot: 'meta',
-  });
+  expect(manifestWith({ slots: [slotId] }).success).toBe(false);
 });

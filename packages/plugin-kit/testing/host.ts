@@ -13,6 +13,7 @@ import {
   PluginStorage,
   type PluginRuntime,
 } from '@repo/engine/plugins';
+import { itemsConnection } from './test-connection';
 import { mountOpening, requireAccepted, testSession } from './test-mount';
 import { TestProjects } from './test-projects';
 import { configureTest, runtimeFor, type ConfiguredTest } from './test-runtime';
@@ -138,6 +139,9 @@ class HostedPlugin implements PluginTest {
   ): PluginTestView {
     return this.open({ path: slotPath(slot), slot }, pluginId);
   }
+
+  public readonly slotItems: PluginTest['slotItems'] = (input, options) =>
+    this.service.slotItems(input, itemsConnection(options));
 
   private open(
     opening: Opening,

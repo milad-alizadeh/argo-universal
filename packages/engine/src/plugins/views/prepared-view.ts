@@ -23,7 +23,6 @@ function outgoing(
 }
 
 interface Trees {
-  prepare: (root: WireNode) => WireNode;
   raw: WireNode | null;
   drawn: WireNode | null;
   limits: PreparedViewLimits;
@@ -56,11 +55,7 @@ function prepared(trees: Trees, message: ViewMessage): ViewMessage | null {
 
   if (!trees.raw) return null;
 
-  return boundedMessage(
-    trees,
-    trees.prepare(prepareWireTree(trees.raw)),
-    message,
-  );
+  return boundedMessage(trees, prepareWireTree(trees.raw), message);
 }
 
 const ignoreRefusal = (): void => {};
@@ -69,9 +64,8 @@ const ignoreRefusal = (): void => {};
 async function* preparedMessages(
   source: AsyncIterable<ViewMessage>,
   refuse: (reason: string) => void,
-  prepare: Trees['prepare'],
 ): AsyncGenerator<ViewMessage, void> {
-  const trees = initialTrees(prepare, refuse);
+  const trees = initialTrees(refuse);
 
   for await (const message of source) {
     const next = prepared(trees, message);
@@ -80,12 +74,8 @@ async function* preparedMessages(
   }
 }
 
-function initialTrees(
-  prepare: Trees['prepare'],
-  refuse: (reason: string) => void,
-): Trees {
+function initialTrees(refuse: (reason: string) => void): Trees {
   return {
-    prepare,
     raw: null,
     drawn: null,
     limits: new PreparedViewLimits(refuse, pluginPageFallback),
@@ -95,7 +85,6 @@ function initialTrees(
 export function preparedView(
   source: AsyncIterable<ViewMessage>,
   refuse: (reason: string) => void = ignoreRefusal,
-  prepare: Trees['prepare'] = (root) => root,
 ): AsyncGenerator<ViewMessage, void> {
-  return preparedMessages(source, refuse, prepare);
+  return preparedMessages(source, refuse);
 }

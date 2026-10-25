@@ -91,7 +91,7 @@ it('validate reports the declared order', async () => {
       contributes: {
         ...manifest.contributes,
         hooks: ['ui.render'],
-        slots: ['argo/feed/message/v1'],
+        renders: ['argo/feed/message/v1'],
         order: 5,
       },
     }),

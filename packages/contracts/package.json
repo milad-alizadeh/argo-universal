@@ -16,6 +16,12 @@
     "#plugin-query-normalisation": "./src/plugins/query-normalisation.ts",
     "#plugin-account-calls": "./src/plugins/account-calls.ts",
     "#plugin-capabilities": "./src/plugins/capabilities.ts",
+    "#plugin-manifest-fields": "./src/plugins/manifest-fields.ts",
+    "#plugin-sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
+    "#plugin-material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",
+    "#kit-tokens": "./src/kit-tokens.ts",
+    "#plugin-session-calls": "./src/plugins/session-calls.ts",
+    "#plugin-slot-calls": "./src/plugins/slot-calls.ts",
     "#contract-columns": "./src/columns.ts"
   },
   "exports": {

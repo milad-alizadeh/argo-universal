@@ -14,7 +14,7 @@ it('retains a downstream replacement when an outer Hook exhausts its budget on a
     {
       id: 'a-delay',
       hooks: ['ui.render'],
-      slots: [toolCallSlotFixture.slotId],
+      renders: [toolCallSlotFixture.slotId],
       capabilities: [{ kind: 'process:exec', command: 'sleep', args: ['31'] }],
       source: `export async function register(argo) {
         await argo.on('ui.render', async (ctx, e, next) => {
@@ -27,7 +27,7 @@ it('retains a downstream replacement when an outer Hook exhausts its budget on a
     {
       id: 'b-tree',
       hooks: ['ui.render'],
-      slots: [toolCallSlotFixture.slotId],
+      renders: [toolCallSlotFixture.slotId],
       source: `import { Text } from '@argo/plugin-kit';
         import { jsx } from '@argo/plugin-kit/jsx-runtime';
         export async function register(argo) {

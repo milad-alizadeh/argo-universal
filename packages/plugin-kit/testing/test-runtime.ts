@@ -26,13 +26,14 @@ function projectOptions(
   options: ConfiguredTest,
 ): Pick<
   Parameters<typeof createPluginRuntime>[1],
-  'projects' | 'projectPath' | 'projectInfo'
+  'projects' | 'projectPath' | 'projectInfo' | 'sessionInfo'
 > {
   return {
     projects: async (): Promise<string[]> =>
       Object.values(options.projectPaths),
     projectPath: async (projectId) => options.projectPaths[projectId],
     projectInfo: async (): Promise<PluginProjectInfo[]> => options.projects,
+    sessionInfo: async (sessionId) => options.sessions?.[sessionId] ?? null,
   };
 }
 

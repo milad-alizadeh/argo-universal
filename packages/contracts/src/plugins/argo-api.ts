@@ -10,7 +10,6 @@ import {
   FsWrite,
   PluginFileEntry,
   PluginFileInfo,
-  PluginProjectInfo,
   PluginNavBadge,
   ProcessCommand,
   ProcessResult,
@@ -22,7 +21,14 @@ import { PluginAssetRef, PluginAssetSource } from './assets';
 import type { Hook, HookArgs, HookEventName } from './hooks';
 import type { PluginRenderContext } from './kit';
 import { PluginSettingValue } from './plugin-settings';
-import type { AddOnlySlotId, PluginSlotInput } from './wire';
+import { sessionApiCalls } from './session-api';
+import type { SlotsApi } from './slot-api';
+
+export type {
+  SlotContent,
+  SlotItemsAnswer,
+  SlotItemsProvider,
+} from './slot-api';
 
 /*
  * The Plugin API's calls to the Server: each method's arguments come from the call schema it sends, and
@@ -109,14 +115,7 @@ export const PluginApiCalls = z
         }),
       })
       .readonly(),
-    projects: z
-      .object({
-        list: z.function({
-          input: [],
-          output: z.promise(z.array(PluginProjectInfo)),
-        }),
-      })
-      .readonly(),
+    ...sessionApiCalls,
     secrets: z
       .object({
         get: z.function({
@@ -142,10 +141,6 @@ type PluginApiCalls = z.infer<typeof PluginApiCalls>;
 
 export type Page = ComponentType<{ context: PluginRenderContext }>;
 
-export type SlotContent = ComponentType<{
-  context: PluginSlotInput['context'] & PluginRenderContext;
-}>;
-
 /*
  * The Plugin API: the frozen `argo` object a Plugin's `register(argo)` receives, its only way out of
  * its worker (ADR-0027). Its calls are inferred from `PluginApiCalls`; `on` registers a Hook on one
@@ -155,9 +150,7 @@ export type Argo = Omit<PluginApiCalls, 'accounts'> &
   Readonly<{
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
     pages: Readonly<{ register: (path: string, page: Page) => void }>;
-    slots: Readonly<{
-      register: (slotId: AddOnlySlotId, content: SlotContent) => void;
-    }>;
+    slots: SlotsApi;
     on: <Name extends HookEventName>(
       name: Name,
       ...args: HookArgs<Hook<Name>>

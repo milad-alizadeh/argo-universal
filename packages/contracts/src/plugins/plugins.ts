@@ -2,47 +2,39 @@ import { z } from 'zod';
 import { validateAccountCapabilities } from './account-manifest';
 import { AccountHost, PluginCapability } from './capabilities';
 import { HookEventName } from './hooks';
-import { materialSymbolNames } from './material-symbol-names.gen';
+import { PluginIcon, PluginPath } from './manifest-fields';
 import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
-import { sfSymbolNames } from './sf-symbol-names.gen';
-import { SlotId } from './wire';
+import { AddOnlySlotId, ReplaceableSlotId } from './wire';
 
 export { PluginProjectInfo } from './argo-calls';
 
-// Zod's default enum error would print every name in the list.
-const notIn =
-  (catalogue: string) =>
-  ({ input }: { input: unknown }): string =>
-    `${String(input)} is not in ${catalogue}`;
+export { PluginIcon } from './manifest-fields';
 
-const sfSymbol = z.enum(sfSymbolNames, { error: notIn('SF Symbols 6.0') });
+function uniqueIds<Id extends z.ZodType<string>>(
+  id: Id,
+  message: string,
+): z.ZodArray<Id> {
+  return z.array(id).refine((ids) => new Set(ids).size === ids.length, message);
+}
 
-const materialSymbol = z.enum(materialSymbolNames, {
-  error: notIn('Material Symbols'),
-});
+type Contributions = Partial<{
+  order: number | undefined;
+  slots: readonly string[] | undefined;
+  renders: readonly string[] | undefined;
+  hooks: readonly string[] | undefined;
+}>;
 
-// A Plugin targets iOS and macOS, Android and the web, or both, so either name may be missing (ADR-0025).
-export const PluginIcon = z
-  .strictObject({
-    sf: sfSymbol.optional(),
-    sfFilled: sfSymbol.optional(),
-    material: materialSymbol.optional(),
-  })
-  .refine(
-    (icon) => icon.sf !== undefined || icon.material !== undefined,
-    'icon needs an sf or a material name',
-  )
-  .refine(
-    (icon) => icon.sfFilled === undefined || icon.sf !== undefined,
-    'icon.sfFilled needs an sf name',
-  );
+const declares = (ids: readonly string[] | undefined): boolean =>
+  (ids ?? []).length > 0;
 
-export type PluginIcon = z.infer<typeof PluginIcon>;
+// `order` places the Plugin among a Slot's contributors, so it needs a Slot to place it in.
+const orderHasSlot = ({ order, slots, renders }: Contributions): boolean =>
+  order === undefined || declares(slots) || declares(renders);
 
-const PluginPath = z
-  .string()
-  .regex(/^\/(?:[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*)?$/);
+// Core runs a Replaceable Slot's chain through the `ui.render` Hook, so `renders` needs it.
+const rendersHasHook = ({ renders, hooks }: Contributions): boolean =>
+  !declares(renders) || (hooks ?? []).includes('ui.render');
 
 export const PluginManifest = z
   .strictObject({
@@ -92,31 +84,29 @@ export const PluginManifest = z
             interval: z.number().finite().nonnegative(),
           })
           .optional(),
-        // The Slots the Plugin fills; core asks only these Plugins for a Slot's content.
-        slots: z
-          .array(SlotId)
-          .refine(
-            (slots) => new Set(slots).size === slots.length,
-            'Slot ids must be unique',
-          )
-          .optional(),
+        // The add-only Slots the Plugin fills; core asks only these Plugins for a Slot's content.
+        slots: uniqueIds(AddOnlySlotId, 'Slot ids must be unique').optional(),
+        // The Replaceable Slots the Plugin's `ui.render` Hook draws; core runs its chain only for these (ADR-0035).
+        renders: uniqueIds(
+          ReplaceableSlotId,
+          'Replaceable Slot ids must be unique',
+        ).optional(),
         // The core events the Plugin hooks; its worker starts when one fires (ADR-0027).
-        hooks: z
-          .array(HookEventName)
-          .refine(
-            (events) => new Set(events).size === events.length,
-            'Hook events must be unique',
-          )
-          .optional(),
+        hooks: uniqueIds(
+          HookEventName,
+          'Hook events must be unique',
+        ).optional(),
         // Where the Plugin sits among a Slot's contributors and in a Replaceable Slot's `ui.render` chain: lower comes first, 0 when left out (ADR-0035).
         order: z.int().optional(),
       })
-      .refine(
-        (contributes) =>
-          contributes.order === undefined ||
-          (contributes.slots ?? []).length > 0,
-        { message: 'order needs a Slot', path: ['order'] },
-      ),
+      .refine(orderHasSlot, {
+        message: 'order needs a Slot',
+        path: ['order'],
+      })
+      .refine(rendersHasHook, {
+        message: 'renders needs the ui.render Hook',
+        path: ['renders'],
+      }),
     capabilities: z.array(PluginCapability).optional(),
   })
   .superRefine(validateAccountCapabilities);
