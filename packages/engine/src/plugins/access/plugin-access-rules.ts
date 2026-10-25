@@ -20,54 +20,14 @@ export function inside(target: string, root: string): boolean {
   return !isAbsolute(path) && path.split(sep).at(0) !== '..';
 }
 
-const inProject = (target: string, roots: Roots): boolean =>
-  roots.projects.some((project) => inside(target, project));
-
-// A write refusal: when it applies, and the reason the Plugin is told about the path it asked for.
-type WriteRule = {
-  refuses: (target: string, roots: Roots) => boolean;
-  reason: (shown: string) => string;
-};
-
-// Names git reads as a repository: a `.git` entry, or a `HEAD` file, which makes its folder a bare repository.
-const gitNames = new Set(['.git', 'head']);
-
-// In order: the first rule that applies is the reason given. Deny beats allow (ADR-0030).
-const writeRules: WriteRule[] = [
-  {
-    refuses: inProject,
-    reason: (shown) =>
-      `${shown} is in a Project; argo.fs never writes to a Project`,
-  },
-  {
-    refuses: (target, { code }) => code !== null && inside(target, code),
-    reason: (shown) => `${shown} is in the Plugin's code folder`,
-  },
-  {
-    refuses: (target, { data }) => !inside(target, data),
-    reason: (shown) => `${shown} is outside the Plugin's data folder`,
-  },
-  {
-    // A repository would hand `git`, or `gh` calling it, run with the data folder as its working directory, a config that runs programs.
-    refuses: (target, { data }) =>
-      relative(data, target)
-        .split(sep)
-        .some((part) => gitNames.has(part.toLowerCase())),
-    reason: (shown) => `${shown} would make a git repository`,
-  },
-];
-
 /*
  * What a check is about: the resolved target, and the path to name in its reason, the one the
  * Plugin asked for, so a refusal never tells it where a symlink leads.
  */
 export type Subject = { target: string; shown: string };
 
-export function allowWrite({ target, shown }: Subject, roots: Roots): void {
-  const refused = writeRules.find(({ refuses }) => refuses(target, roots));
-
-  if (refused) throw new CapabilityRefusal(refused.reason(shown));
-}
+export const inProject = (target: string, roots: Roots): boolean =>
+  roots.projects.some((project) => inside(target, project));
 
 // Any Plugin reads its data folder and every registered Project.
 export function allowRead({ target, shown }: Subject, roots: Roots): void {
