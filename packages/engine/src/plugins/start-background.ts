@@ -1,3 +1,4 @@
+import { setTimeout as delay } from 'node:timers/promises';
 import { writeLog } from '@repo/machine-log';
 import type { PluginService } from './service';
 
@@ -31,13 +32,9 @@ function reportBackground(home: string, line: string): void {
 }
 
 function limit(): Promise<string> {
-  return new Promise((resolve) => {
-    setTimeout(
-      () =>
-        resolve(
-          `Background Plugins still starting after ${backgroundStartLimitMs} ms`,
-        ),
-      backgroundStartLimitMs,
-    ).unref();
-  });
+  return delay(
+    backgroundStartLimitMs,
+    `Background Plugins still starting after ${backgroundStartLimitMs} ms`,
+    { ref: false },
+  );
 }
