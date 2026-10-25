@@ -16,6 +16,10 @@ const meta = {
       description:
         'The Sessions that need input or are Unread, for the Sessions row’s badge.',
     },
+    pluginBadges: {
+      control: false,
+      description: 'Each Plugin nav item’s own count, for its row’s badge.',
+    },
     open: {
       control: 'boolean',
       description:

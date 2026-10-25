@@ -1,0 +1,42 @@
+{
+  "id": "github-sign-in",
+  "name": "GitHub sign-in",
+  "version": "0.0.1",
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
+  "main": "index.tsx",
+  "icon": {
+    "sf": "person.badge.key",
+    "material": "passkey"
+  },
+  "contributes": {
+    "nav": [],
+    "accounts": [
+      {
+        "host": "api.github.com",
+        "page": "/sign-in"
+      }
+    ],
+    "settings": [
+      {
+        "key": "client-id",
+        "type": "secret",
+        "label": "OAuth client ID",
+        "description": "From your GitHub OAuth app, whose callback URL is http://127.0.0.1:51789/callback."
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "api.github.com",
+      "reason": "Reads the signed-in user and is the host of the Account this Plugin provides."
+    },
+    {
+      "kind": "fetch",
+      "host": "github.com",
+      "reason": "Exchanges the OAuth authorization code for a token."
+    }
+  ]
+}

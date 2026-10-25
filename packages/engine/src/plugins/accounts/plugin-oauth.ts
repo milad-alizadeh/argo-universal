@@ -8,7 +8,7 @@ import {
   type OAuthExchange,
   type ExchangeResult,
 } from './oauth-exchange.machine';
-import { OAuthListener, redirectUri } from './oauth-listener';
+import { OAuthListener, portTakenMessage, redirectUri } from './oauth-listener';
 import { openAuthorizeUrl } from './platform-opener';
 
 type Exchange = SpawnCaller & {
@@ -39,7 +39,7 @@ export class PluginOAuth {
     if (!(await this.listener.listen())) {
       this.finish(exchange.state, null);
 
-      return null;
+      throw new Error(portTakenMessage);
     }
 
     return this.exchanges.has(exchange.state) ? startValue(exchange) : null;

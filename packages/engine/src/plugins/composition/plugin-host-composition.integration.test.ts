@@ -1,10 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { processWait } from '#mocks/data-fixture';
 import { startEngineTestHost } from '#mocks/engine';
+import { journeyMs } from '#mocks/journey-budget';
 import { killPluginHost, pluginHostPids } from '#mocks/plugin-host-log';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
+
+// Plugin workers start a real process: budget this file's tests for startup.
+vi.setConfig({ testTimeout: journeyMs });
 
 it('restarts the real Plugin host three times, logs the running Plugins and then reports budget exhaustion', async () => {
   const home = await createRuntimePlugins([

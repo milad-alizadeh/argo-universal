@@ -91,3 +91,26 @@ export const PluginPageHasNoSidebarToggle: Story = {
     ).toBeNull();
   },
 };
+
+// A Plugin nav item's count shows on its own tile, capped at 99+; a zero or other tile shows none.
+export const PluginBadgeShowsOnItsTile: Story = {
+  args: {
+    pluginBadges: [
+      { pluginId: 'issue-tracker', id: 'issues', count: 12 },
+      { pluginId: 'hello', id: 'hello', count: 100 },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText('12')).toHaveTextContent('12');
+    await expect(canvas.getByLabelText('99+')).toHaveTextContent('99+');
+  },
+};
+
+export const ZeroPluginBadgeShowsNothing: Story = {
+  args: {
+    pluginBadges: [{ pluginId: 'issue-tracker', id: 'issues', count: 0 }],
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByLabelText('0')).toBeNull();
+  },
+};

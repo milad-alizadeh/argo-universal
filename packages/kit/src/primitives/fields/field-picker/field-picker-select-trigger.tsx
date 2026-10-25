@@ -38,7 +38,10 @@ function Label(props: TriggerProps): React.JSX.Element {
   const chosen = props.options.find((option) => option.value === props.value);
 
   return (
-    <RadixSelect.Value placeholder={chosen?.label} className={valueClass} />
+    <RadixSelect.Value
+      placeholder={chosen?.label ?? props.summary}
+      className={valueClass}
+    />
   );
 }
 
