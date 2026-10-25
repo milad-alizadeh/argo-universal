@@ -1,4 +1,4 @@
-import type { SessionConfigOption } from '@repo/contracts';
+import { isModelOption, type SessionConfigOption } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { createAcpResponseReaders, type AcpSessionLease } from '../agents';
 import { readAcpConfiguration } from './acp/acp-configuration';
@@ -60,7 +60,7 @@ function orderedChoices(
     ...picks,
   };
 
-  const model = initial.find((option) => option.category === 'model')?.configId;
+  const model = initial.find(isModelOption)?.configId;
 
   return Object.entries(choices).sort(
     ([left], [right]) => Number(right === model) - Number(left === model),

@@ -1,6 +1,10 @@
-import type { InitialConfigOption, SessionConfigOption } from '@repo/contracts';
 import {
   configurationChoices,
+  startingRank,
+  type InitialConfigOption,
+  type SessionConfigOption,
+} from '@repo/contracts';
+import {
   draftConfiguration,
   isRememberedConfiguration,
   type SavedChoices,
@@ -87,14 +91,6 @@ export function chosenOptions(
   return options.map((option) => withValue(option, value(option)));
 }
 
-const order = ['model', 'thought_level', 'mode'];
-
-const rank = (option: SessionConfigOption): number => {
-  const index = order.indexOf(option.category ?? '');
-
-  return index < 0 ? order.length : index;
-};
-
 // The choices a Session is opened with, model before effort before mode.
 export const initialConfigOptions = (
   chosen: SessionConfigOption[],
@@ -102,7 +98,7 @@ export const initialConfigOptions = (
 ): InitialConfigOption[] =>
   // Hermes on phones lacks toSorted.
   [...chosen]
-    .sort((a, b) => rank(a) - rank(b))
+    .sort((a, b) => startingRank(a) - startingRank(b))
     .map(({ configId, currentValue }) => ({
       configId,
       value: currentValue,

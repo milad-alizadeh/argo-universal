@@ -1,12 +1,13 @@
-import type {
-  SessionConfigOption,
-  SessionConfigSelectOption,
+import {
+  configurationChoices,
+  configurationEffortChoices,
+  isModelOption,
+  startingCategories,
+  startingCategory,
+  type SessionConfigOption,
+  type SessionConfigSelectOption,
+  type StartingCategory as Category,
 } from '@repo/contracts';
-import { configurationChoices, configurationEffortChoices } from './choices';
-
-export const categories = ['model', 'thought_level', 'mode'] as const;
-
-type Category = (typeof categories)[number];
 
 export type SavedChoices = Partial<Record<Category, string>>;
 
@@ -17,10 +18,7 @@ export type RememberedOption = SelectOption & { category: Category };
 export function isRememberedConfiguration(
   option: SessionConfigOption,
 ): option is RememberedOption {
-  return (
-    option.type === 'select' &&
-    categories.some((category) => category === option.category)
-  );
+  return option.type === 'select' && startingCategory(option) !== undefined;
 }
 
 export function orderedOptions(
@@ -28,7 +26,7 @@ export function orderedOptions(
 ): RememberedOption[] {
   const eligible = options.filter(isRememberedConfiguration);
 
-  return categories.flatMap((category) =>
+  return startingCategories.flatMap((category) =>
     eligible.filter((option) => option.category === category),
   );
 }
@@ -53,7 +51,7 @@ export function draftConfiguration(
   saved: SavedChoices,
 ): RememberedOption[] {
   const defaults = orderedOptions(options);
-  const defaultModel = defaults.find((option) => option.category === 'model');
+  const defaultModel = defaults.find(isModelOption);
   const model = savedModel(defaultModel, saved);
 
   return defaults.flatMap(
@@ -77,7 +75,7 @@ function offeredChoices(
   option: RememberedOption,
   model: RememberedOption | undefined,
 ): SessionConfigSelectOption[] {
-  return option.category === 'thought_level'
+  return startingCategory(option) === 'thought_level'
     ? configurationEffortChoices(model, option)
     : configurationChoices(option);
 }

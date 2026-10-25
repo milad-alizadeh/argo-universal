@@ -1,13 +1,12 @@
-import type {
-  AgentServer,
-  SessionConfigOption,
-  SessionConfigSelectOption,
-} from '@repo/contracts';
 import {
-  configurationChoices,
   currentConfigurationChoice,
-  configurationEffortChoices,
-} from '#lib/product/session-configuration';
+  effortSelection,
+  hasOwnControl,
+  type AgentServer,
+  type EffortSelection,
+  type SessionConfigOption,
+  type SessionConfigSelectOption,
+} from '@repo/contracts';
 import type { ComposerConfigurationProps } from './configuration-types';
 
 export type SelectConfiguration = Extract<
@@ -37,87 +36,17 @@ export function selection(
   );
 }
 
-/*
- * The categories Configure already draws a control of its own for; every other select option gets a plain row.
- * Shorter than the Contract's `knownCategories` on purpose: `model_config` is understood but has no control of
- * its own, so listing it here would drop such a select rather than give it a row (owner, 2026-10-20).
- */
-const configuredCategories = new Set([
-  'mode',
-  'model',
-  'thought_level',
-  'collaboration_mode',
-]);
-
-/*
- * Options Configure leaves out. Claude Code sends `agent`, its own main-thread persona picker, whenever a
- * folder holds a custom Agent; it has no category, so it would land among the plain rows under the name
- * "Agent" and read as Argo's Agent, which it is not. Custom Agents are their own piece of work, and the
- * option comes back when we do them (owner, 2026-10-20).
- */
-const hiddenOptions = new Set(['agent']);
-
-const drawnElsewhere = (option: SelectConfiguration): boolean =>
-  hiddenOptions.has(option.configId) ||
-  configuredCategories.has(option.category ?? '');
-
 export function otherSelections(
   configuration: ConfigurationValues,
 ): SelectConfiguration[] {
   return configuration.configOptions
     .filter((option): option is SelectConfiguration => option.type === 'select')
-    .filter((option) => !drawnElsewhere(option));
+    .filter((option) => !hasOwnControl(option));
 }
 
-export interface EffortSelection {
-  option: ReturnType<typeof selection>;
-  choices: SessionConfigSelectOption[];
-  selected: SessionConfigSelectOption | undefined;
-  fallback: boolean;
-}
-
-export function currentEffort(
+export const currentEffort = (
   configuration: ConfigurationValues,
-): EffortSelection {
-  const model = selection(configuration, 'model');
-  const option = selection(configuration, 'thought_level');
-  const choices = configurationEffortChoices(model, option);
-
-  return resolveEffort(option, choices);
-}
-
-function resolveEffort(
-  option: ReturnType<typeof selection>,
-  choices: SessionConfigSelectOption[],
-): EffortSelection {
-  const current = currentConfigurationChoice(option, choices);
-
-  return {
-    option,
-    choices,
-    selected:
-      current ?? fallbackEffort(configurationChoices(option), choices, option),
-    fallback: !current && choices.length > 0,
-  };
-}
-
-// Effort always has a level: the highest offered level at or below the Agent's value, else the middle one.
-function fallbackEffort(
-  all: SessionConfigSelectOption[],
-  offered: SessionConfigSelectOption[],
-  option: ReturnType<typeof selection>,
-): SessionConfigSelectOption | undefined {
-  const rank = all.findIndex((choice) => choice.value === option?.currentValue);
-
-  const below =
-    rank < 0
-      ? []
-      : offered.filter(
-          (choice) => all.findIndex((c) => c.value === choice.value) < rank,
-        );
-
-  return below.at(-1) ?? offered[Math.floor(offered.length / 2)];
-}
+): EffortSelection => effortSelection(configuration.configOptions);
 
 /*
  * Whether the Agent's settings are still on their way: a chosen Agent that has sent nothing. The picker draws
