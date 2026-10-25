@@ -55,9 +55,9 @@ export const exemptFolders = {
   'status/count-badge': 'App-only badge on rail and drawer items.',
   'status/disclosure-chevron': 'The chevron a collapsible row draws.',
   'status/orb': 'App-only for now; a Plugin sends a Spinner.',
-  'status/skeleton':
-    'App-only for now: it works its shapes out from what its children draw, so it has no props for a Plugin to send.',
   'status/selected-check': 'The check a selected row draws.',
+  'status/skeleton':
+    'App-only for now (ADR-0020, ADR-0040): it works its placeholders out from what its children draw, so it has no props for a Plugin to send.',
 } satisfies Record<string, string>;
 
 // A schema name that has no drawing folder of its own, with the reason it is exempt.

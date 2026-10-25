@@ -4,9 +4,7 @@ import type {
   SkeletonMeasure,
   SkeletonPlaceholder,
 } from './skeleton-placeholder';
-
-// A bar is this much of its line box, so lines do not touch.
-const lineFill = 0.75;
+import { skeletonRules as rules } from './skeleton-rules.gen';
 
 interface Scene {
   origin: DOMRect;
@@ -33,12 +31,15 @@ function boxPlaceholder(
   };
 }
 
+// A bar is part of its line box so lines do not touch, and at least as wide as a dot so a single character is round.
 function linePlaceholder(rect: DOMRect, origin: DOMRect): SkeletonPlaceholder {
-  const height = rect.height * lineFill;
+  const height = rect.height * rules.lineFill;
   const inset = (rect.height - height) / 2;
+  const width = Math.max(rect.width, height * rules.minBarWidthPerHeight);
+  const left = rect.left - (width - rect.width) / 2;
 
   return boxPlaceholder(
-    new DOMRect(rect.left, rect.top + inset, rect.width, height),
+    new DOMRect(left, rect.top + inset, width, height),
     origin,
     height / 2,
   );

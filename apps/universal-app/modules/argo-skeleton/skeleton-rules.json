@@ -1,0 +1,52 @@
+{
+  "lineFill": 0.75,
+  "hairline": 2,
+  "smallControlHeight": 40,
+  "smallControlWidth": 240,
+  "sameSizeTolerance": 2,
+  "roundSlack": 1,
+  "minBarWidthPerHeight": 1,
+  "atomic": {
+    "web": {
+      "tags": [
+        "IMG",
+        "SVG",
+        "CANVAS",
+        "VIDEO",
+        "INPUT",
+        "TEXTAREA",
+        "SELECT",
+        "PROGRESS",
+        "METER"
+      ],
+      "roles": ["switch", "checkbox", "radio", "slider", "progressbar", "img"],
+      "glyphTags": ["IMG", "SVG", "CANVAS"],
+      "glyphRoles": ["img"],
+      "vectorTags": ["SVG"]
+    },
+    "ios": {
+      "classes": [
+        "RCTImageComponentView",
+        "RNSVGSvgView",
+        "RCTSwitchComponentView",
+        "RCTTextInputComponentView",
+        "RCTActivityIndicatorViewComponentView",
+        "RCTSliderComponentView",
+        "ExpoImage",
+        "SymbolView"
+      ],
+      "glyphClasses": [
+        "RCTImageComponentView",
+        "RNSVGSvgView",
+        "ExpoImage",
+        "SymbolView"
+      ],
+      "vectorClasses": ["RNSVGSvgView"]
+    },
+    "android": {
+      "classes": ["ImageView", "SvgView", "ReactSlider", "ReactSwitch"],
+      "glyphClasses": ["ImageView", "SvgView"],
+      "vectorClasses": ["SvgView"]
+    }
+  }
+}

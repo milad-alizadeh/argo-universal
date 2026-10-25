@@ -57,42 +57,57 @@ function ServerState({
   // A failed load keeps the loading look: the toast says why, and the query retries when the Connection reopens.
   return (
     <Skeleton loading={server.status !== 'loaded'}>
-      <ServerRows values={valuesOf(server)} />
+      <ServerRows server={server} />
     </Skeleton>
   );
 }
 
-interface ServerValues {
-  version: string;
-  started: string;
-  pid: string;
-  clock: string;
-}
-
-// Until the Server answers its rows have their titles and no values, which the Skeleton turns into shapes.
-const awaiting: ServerValues = { version: '', started: '', pid: '', clock: '' };
-
-const valuesOf = (server: ServerDetails): ServerValues =>
-  server.status === 'loaded'
-    ? {
-        version: server.version,
-        started: formatServerStart(server.startedAt, server.clock),
-        pid: String(server.pid),
-        clock: formatServerClock(server.clock),
-      }
-    : awaiting;
-
 const ServerRows = ({
-  values,
+  server,
 }: {
-  values: ServerValues;
+  server: ServerDetails;
 }): React.JSX.Element => (
   <FieldGroup>
     <FieldGroup.Section title="Server">
-      <FieldGroup.Value title="Version" value={values.version} />
-      <FieldGroup.Value title="Started" value={values.started} />
-      <FieldGroup.Value title="PID" value={values.pid} />
-      <FieldGroup.Value title="Clock" value={values.clock} />
+      <DetailRows values={rowValues(server)} />
     </FieldGroup.Section>
   </FieldGroup>
 );
+
+interface RowValues {
+  version?: string;
+  started?: string;
+  pid?: string;
+  clock?: string;
+}
+
+// The rows are the page's own; one whose value has not arrived has none, which the Skeleton leaves as its title alone.
+function rowValues(server: ServerDetails): RowValues {
+  if (server.status !== 'loaded') return {};
+
+  return {
+    version: server.version,
+    started: formatServerStart(server.startedAt, server.clock),
+    pid: String(server.pid),
+    clock: formatServerClock(server.clock),
+  };
+}
+
+function DetailRows({ values }: { values: RowValues }): React.JSX.Element {
+  return (
+    <>
+      <DetailRow title="Version" value={values.version} />
+      <DetailRow title="Started" value={values.started} />
+      <DetailRow title="PID" value={values.pid} />
+      <DetailRow title="Clock" value={values.clock} />
+    </>
+  );
+}
+
+// A Server detail is a read-only value row.
+function DetailRow(props: {
+  title: string;
+  value: string | undefined;
+}): React.JSX.Element {
+  return <FieldGroup.Value title={props.title} value={props.value ?? ''} />;
+}

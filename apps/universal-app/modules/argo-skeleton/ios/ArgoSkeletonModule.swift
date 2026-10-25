@@ -14,7 +14,7 @@ public final class ArgoSkeletonModule: Module {
       }
 
       Prop("color") { (view: ArgoSkeletonView, color: UIColor?) in
-        view.setShapeColor(color)
+        view.setPlaceholderColor(color)
       }
     }
 

@@ -10,11 +10,13 @@ export const ignoreAttribute = 'data-skeleton-ignore';
 // The drawn placeholders' own container: a Skeleton's walk never reads it.
 export const overlayAttribute = 'data-skeleton-overlay';
 
-export const ariaHiddenAttribute = 'data-skeleton-aria';
+// A loading Skeleton's wrapper. An outer Skeleton leaves it to draw its own placeholders.
+export const rootAttribute = 'data-skeleton-root';
 
 export const isSkipped = (element: Element): boolean =>
   element.hasAttribute(ignoreAttribute) ||
-  element.hasAttribute(overlayAttribute);
+  element.hasAttribute(overlayAttribute) ||
+  element.hasAttribute(rootAttribute);
 
 const mark = (elements: Element[], attribute: string): void => {
   for (const element of elements) element.setAttribute(attribute, '');
@@ -26,39 +28,8 @@ export function markSkeleton(found: SkeletonMeasure): void {
   mark(found.hidden, hiddenAttribute);
 }
 
-function removeMark(root: Element, attribute: string): void {
-  for (const element of root.querySelectorAll(`[${attribute}]`))
-    element.removeAttribute(attribute);
-}
-
 export function clearSkeletonMarks(root: Element): void {
-  removeMark(root, inkAttribute);
-  removeMark(root, hiddenAttribute);
-
-  for (const element of root.querySelectorAll(`[${ariaHiddenAttribute}]`)) {
-    element.removeAttribute(ariaHiddenAttribute);
-    element.removeAttribute('aria-hidden');
-  }
-}
-
-const containsIgnore = (element: Element): boolean =>
-  element.hasAttribute(ignoreAttribute) ||
-  element.querySelector(`[${ignoreAttribute}]`) !== null;
-
-function hideChild(child: Element): void {
-  if (isSkipped(child)) return;
-
-  if (containsIgnore(child)) hideFromAssistiveTechnology(child);
-  else {
-    child.setAttribute('aria-hidden', 'true');
-    child.setAttribute(ariaHiddenAttribute, '');
-  }
-}
-
-/*
- * aria-hidden cannot be undone further down, so it goes on the highest elements that hold no ignore subtree.
- * An element that holds one stays exposed and its other children are hidden one by one.
- */
-export function hideFromAssistiveTechnology(root: Element): void {
-  for (const child of root.children) hideChild(child);
+  for (const attribute of [inkAttribute, hiddenAttribute])
+    for (const element of root.querySelectorAll(`[${attribute}]`))
+      element.removeAttribute(attribute);
 }

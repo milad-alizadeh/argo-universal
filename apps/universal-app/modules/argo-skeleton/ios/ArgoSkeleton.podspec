@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
   s.name           = 'ArgoSkeleton'
   s.version        = '1.0.0'
-  s.summary        = 'Argo skeleton loader: shapes worked out from the views under it'
-  s.description    = 'A native view that, while loading, hides what its descendants draw and paints one rounded shape per text line, image and control.'
+  s.summary        = 'Argo skeleton loader: placeholders worked out from the views under it'
+  s.description    = 'A native view that, while loading, hides what its descendants draw and paints one rounded placeholder per text line, image and control.'
   s.license        = 'MIT'
   s.author         = 'Argo'
   s.homepage       = 'https://github.com/milad-alizadeh/argo-universal'
