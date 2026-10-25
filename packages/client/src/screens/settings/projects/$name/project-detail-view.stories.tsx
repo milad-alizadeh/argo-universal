@@ -8,10 +8,7 @@ import {
   worktreeProject,
 } from '../../../../features/settings/components/settings-pages.mocks';
 import { PluginSlot } from '../../../../lib/product/plugin-registry';
-import {
-  chosenAccounts,
-  unchosenAccounts,
-} from './project-detail-accounts-fixtures';
+import { chosenAccounts } from './project-detail-accounts-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -65,13 +62,8 @@ export const PluginSection: Story = {
 };
 
 // Each host's chosen Account, below Folder.
-export const ChosenAccounts: Story = {
+export const Accounts: Story = {
   args: { accounts: { hosts: chosenAccounts, onChooseAccount: fn() } },
-};
-
-// A host the Project has not chosen an Account for.
-export const UnchosenAccount: Story = {
-  args: { accounts: { hosts: unchosenAccounts, onChooseAccount: fn() } },
 };
 
 export const OnAnotherDevice: Story = {

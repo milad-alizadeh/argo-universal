@@ -86,7 +86,7 @@ function SettingsSearch({
   );
 }
 
-const settingsFirstPage: FirstPage = { page: 'accounts' };
+const settingsFirstPage: FirstPage = { page: 'accounts/index' };
 
 // `/settings`: the Settings pages the search narrows, which Settings' SettingsLayout draws; with the list beside the pages, the root opens Accounts.
 function settingsList({ query, onQueryChange }: SettingsQuery): SectionList {
