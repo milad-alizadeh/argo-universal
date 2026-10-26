@@ -19,11 +19,7 @@ import {
 import { useTRPC } from '#features/connection';
 import { comparisonInput } from './changes-comparison-input';
 import { filesFromPages } from './changes-files-data';
-import type {
-  ChangesScope,
-  Query,
-  QueryFailure,
-} from './changes-query-types';
+import type { ChangesScope, Query, QueryFailure } from './changes-query-types';
 import { useChangesDiffs } from './use-changes-diffs';
 
 type ChangesInput = ChangesScope<ChangesComparison>;

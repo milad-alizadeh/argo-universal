@@ -74,7 +74,9 @@ export const ExpandSelectedPanel: Story = {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Inspector' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Expand Inspector' }),
+    );
     await expect(
       await canvas.findByRole('button', { name: 'Restore Inspector' }),
     ).toBeVisible();
@@ -113,7 +115,9 @@ export const CloseInspector: Story = {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
-    await userEvent.click(canvas.getByRole('button', { name: 'Hide Inspector' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Hide Inspector' }),
+    );
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', subagentsEntry));
     await expect(canvas.getAllByRole('tab')).toHaveLength(1);
