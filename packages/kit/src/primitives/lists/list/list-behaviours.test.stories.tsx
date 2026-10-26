@@ -196,3 +196,18 @@ export const JumpAfterAppendingWithinSection: Story = {
   ...JumpToLatestAfterScrollingAway,
   render: () => <SectionLogExample />,
 };
+
+// A caller's own scroll props win over the anchor's: with the end not followed, the list stays on its first rows.
+export const CallerScrollPropsWinOverTheAnchor: Story = {
+  render: () => (
+    <LogExample
+      {...logList}
+      initialScrollAtEnd={false}
+      maintainScrollAtEnd={false}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Item 1')).toBeVisible();
+    await expect(canvas.queryByText('Item 120')).toBeNull();
+  },
+};

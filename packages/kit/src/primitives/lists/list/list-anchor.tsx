@@ -9,7 +9,6 @@ import {
 import { View } from 'react-native';
 import { useReducedMotionNow } from '#kit/use-reduced-motion-now';
 import { flattenedChildren } from '../../../flattened-children';
-import { itemIdentity } from './list-item-identity';
 import {
   JumpToLatestButton,
   useNewestKeyWhenLeftEnd,
@@ -36,19 +35,32 @@ interface AnchorRef {
   ref: (value: LegendListRef | null) => void;
 }
 
-const anchorOptions = {
-  initialScrollAtEnd: true,
-  alignItemsAtEnd: true,
-  maintainVisibleContentPosition: true,
-  maintainScrollAtEnd: {
-    on: {
-      dataChange: true,
-      layout: true,
-      itemLayout: true,
-      footerLayout: true,
-    },
+const followEnd = {
+  on: {
+    dataChange: true,
+    layout: true,
+    itemLayout: true,
+    footerLayout: true,
   },
 } as const;
+
+let warnedAboutKeys = false;
+
+function warnObjectItemsNeedKeys(): void {
+  if (!__DEV__ || warnedAboutKeys) return;
+  warnedAboutKeys = true;
+  console.error(
+    'List anchor="end" needs keyExtractor for object items: without one, new rows are told apart by position.',
+  );
+}
+
+// An item with no keyExtractor is its own key when it is a string or number; an object has none, so its place stands in.
+function unkeyedKey<Item>(item: Item, index: number): string {
+  if (typeof item !== 'object' || item === null) return String(item);
+  warnObjectItemsNeedKeys();
+
+  return String(index);
+}
 
 function dataNewestKey<Item>(
   props: ListProps<Item>,
@@ -59,9 +71,9 @@ function dataNewestKey<Item>(
 
   if (item === undefined) return '';
 
-  if (!props.keyExtractor) return itemIdentity(item);
-
-  return props.keyExtractor(item, index);
+  return props.keyExtractor
+    ? props.keyExtractor(item, index)
+    : unkeyedKey(item, index);
 }
 
 function newestKey<Item>(props: ListProps<Item>): string {
@@ -70,25 +82,24 @@ function newestKey<Item>(props: ListProps<Item>): string {
   return childNewestKey(props.children);
 }
 
+const textKey = (content: ReactNode): string => String(content ?? '');
+
 function childNewestKey(content: ReactNode): string {
   const last = flattenedChildren(content).at(-1);
 
   if (!isValidElement<{ children?: ReactNode; id?: string }>(last))
-    return itemIdentity(last);
+    return textKey(last);
 
   if (last.type === ListSection) return childNewestKey(last.props.children);
 
-  return childIdentity(last);
+  return lastChildKey(last);
 }
 
-function childIdentity(
+// Flattened children always carry a key, from Children.toArray.
+function lastChildKey(
   last: React.ReactElement<{ id?: string; children?: ReactNode }>,
 ): string {
-  if (last.props.id !== undefined) return last.props.id;
-
-  return last.key === null
-    ? itemIdentity(last.props.children)
-    : String(last.key);
+  return last.props.id ?? String(last.key);
 }
 
 function useAnchorRef(forwarded: ListProps<never>['ref']): AnchorRef {
@@ -105,13 +116,43 @@ function useAnchorRef(forwarded: ListProps<never>['ref']): AnchorRef {
   return { list, ref };
 }
 
+// A caller's own scroll props win over the anchor's: it pins and follows the end only where the caller left those props unset.
+function anchoredPlacement<Item>(
+  props: ListProps<Item>,
+): Pick<ListProps<Item>, 'initialScrollAtEnd' | 'alignItemsAtEnd'> {
+  return {
+    initialScrollAtEnd: props.initialScrollAtEnd ?? true,
+    alignItemsAtEnd: props.alignItemsAtEnd ?? true,
+  };
+}
+
+function anchoredFollowing<Item>(
+  props: ListProps<Item>,
+): Pick<
+  ListProps<Item>,
+  'maintainVisibleContentPosition' | 'maintainScrollAtEnd'
+> {
+  return {
+    maintainVisibleContentPosition:
+      props.maintainVisibleContentPosition ?? true,
+    maintainScrollAtEnd: props.maintainScrollAtEnd ?? followEnd,
+  };
+}
+
 export function useListAnchor<Item>(
   props: ListProps<Item>,
 ): AnchoredList<Item> {
   const { list, ref } = useAnchorRef(props.ref);
 
   const anchored =
-    props.anchor === 'end' ? { ...props, ...anchorOptions, ref } : props;
+    props.anchor === 'end'
+      ? {
+          ...props,
+          ...anchoredPlacement(props),
+          ...anchoredFollowing(props),
+          ref,
+        }
+      : props;
 
   return { props: anchored, list, newest: newestKey(props) };
 }

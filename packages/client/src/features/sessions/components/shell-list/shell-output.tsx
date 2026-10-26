@@ -1,13 +1,8 @@
-import type { LegendListRef } from '@legendapp/list/react-native';
 import { Text } from '@repo/kit/primitives/content/text';
 import { List } from '@repo/kit/primitives/lists/list';
 import { useClock } from '@repo/kit/use-clock';
-import { type JSX, type RefObject, useMemo, useRef } from 'react';
+import { type JSX, useMemo } from 'react';
 import { View } from 'react-native';
-import {
-  JumpToLatestButton,
-  useNewestKeyWhenLeftEnd,
-} from '#lib/product/jump-to-latest';
 import type { ShellEntry, ShellOutputText } from './shell-list-types';
 import { type ShellSpan, shellOutputLines } from './shell-output-lines';
 import { CommandLine, DroppedLines, ExitLine } from './shell-output-parts';
@@ -18,8 +13,6 @@ export interface ShellOutputProps {
   // Fixed time for stories and tests; a running Shell's time otherwise ticks.
   now?: number;
 }
-
-type ListRef = RefObject<LegendListRef | null>;
 
 type KeyedSpan = ShellSpan & { key: string };
 
@@ -64,52 +57,24 @@ function OutputRow({ line }: { line: OutputLine }): JSX.Element {
 
 const renderLine = (line: OutputLine): JSX.Element => <OutputRow line={line} />;
 
-type JumpProps = { list: ListRef; newestKey: string };
+type LinesProps = ShellOutputProps & { lines: OutputLine[] };
 
-// Shown while the reader is away from the end; the dot marks output that arrived since.
-function JumpToLatest({ list, newestKey }: JumpProps): JSX.Element | null {
-  const leftEndAt = useNewestKeyWhenLeftEnd(list, newestKey);
-
-  if (leftEndAt === null) return null;
-
-  return (
-    <View className="pointer-events-box-none absolute inset-x-0 bottom-7 items-center">
-      <JumpToLatestButton
-        hasNewRows={leftEndAt !== newestKey}
-        onPress={() => void list.current?.scrollToEnd({ animated: true })}
-      />
-    </View>
-  );
-}
-
-type LinesProps = ShellOutputProps & { list: ListRef; lines: OutputLine[] };
-
-// Output lines draw as a plain list that follows its end while the reader stays there.
+// Output lines draw as a plain list that follows its end while the reader stays there: the List's end anchor owns that and Jump to latest. Short output stays at the top, as a terminal shows it.
 const outputListProps = {
   testID: 'shell-output',
-  // Opens on the newest output, as a terminal shows it.
-  initialScrollAtEnd: true,
+  anchor: 'end',
+  alignItemsAtEnd: false,
   fit: false,
   renderItem: renderLine,
   keyExtractor: lineKey,
   padding: 4,
-  // New lines, a resized sheet, a line that wraps on measuring and the exit line all keep a reader at the end there (LegendList `MaintainScrollAtEndOnOptions`).
-  maintainScrollAtEnd: {
-    on: {
-      dataChange: true,
-      layout: true,
-      itemLayout: true,
-      footerLayout: true,
-    },
-  },
 } as const;
 
-function OutputLines({ list, lines, ...props }: LinesProps): JSX.Element {
+function OutputLines({ lines, ...props }: LinesProps): JSX.Element {
   const now = useClock(props.shell.status === 'running', props.now);
 
   return (
     <List
-      ref={list}
       {...outputListProps}
       accessibilityLabel={`${props.shell.command} output`}
       items={lines}
@@ -121,14 +86,12 @@ function OutputLines({ list, lines, ...props }: LinesProps): JSX.Element {
 
 // A Shell's output as its terminal coloured it, following the end while the reader stays there.
 export function ShellOutput(props: ShellOutputProps): JSX.Element {
-  const list = useRef<LegendListRef>(null);
   const lines = useOutputLines(ownOutput(props)?.text);
 
   return (
     <View className="flex-1">
       <CommandLine shell={props.shell} />
-      <OutputLines {...props} list={list} lines={lines} />
-      <JumpToLatest list={list} newestKey={String(lines.length)} />
+      <OutputLines {...props} lines={lines} />
     </View>
   );
 }

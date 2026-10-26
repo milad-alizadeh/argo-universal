@@ -1,13 +1,13 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { motionDuration } from '@repo/kit/motion';
+import {
+  JumpToLatestButton,
+  type JumpToLatestButtonProps,
+} from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import type { RefObject } from 'react';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
-import {
-  JumpToLatestButton,
-  type JumpToLatestButtonProps,
-} from '#lib/product/jump-to-latest';
 import { SessionColumn } from '#lib/product/session-column';
 
 // How far Jump to latest sits above the Composer's top, on every device.
