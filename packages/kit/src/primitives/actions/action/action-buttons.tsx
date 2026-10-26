@@ -2,13 +2,15 @@ import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { useDeclaredActions } from './declared-actions';
 import { headerSlots } from './header-actions';
-import { HeaderActions } from './header-buttons';
+import { HeaderActions, type HeaderButtonLook } from './header-buttons';
 
 export interface ActionButtonsProps {
   // An `actions` Slot's Actions and Sections.
   actions: ReactNode;
   // The overflow menu's spoken name.
   label?: string;
+  // A section header's buttons are small and speak its title; a header's keep the IconButton default.
+  look?: HeaderButtonLook;
 }
 
 // An `actions` Slot drawn where it is: buttons and an overflow menu, as an Argo-drawn header draws them, with the Actions' shortcuts.
@@ -23,6 +25,7 @@ export function ActionButtons(props: ActionButtonsProps): ReactElement | null {
         groups={declared.groups}
         label={props.label ?? 'More actions'}
         slots={headerSlots}
+        look={props.look}
       />
     </View>
   );

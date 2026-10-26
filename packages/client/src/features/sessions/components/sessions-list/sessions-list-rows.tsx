@@ -102,7 +102,6 @@ export const ProjectListHeading = memo(function ProjectListHeading(
       <ProjectHeading
         name={props.name}
         collapsed={props.collapsed}
-        addLabel={`New Session in ${props.name}`}
         {...actions}
       />
     </View>

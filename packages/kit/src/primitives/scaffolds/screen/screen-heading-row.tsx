@@ -117,13 +117,13 @@ export function HeadingActions(
   },
 ): ReactElement {
   const { groups, label, primary } = props.header;
-  const { size } = props;
+  const look = { size: props.size };
 
   return (
     <>
       <SelectEntry mode={props.selectionMode} />
-      <DeclaredActions groups={groups} label={label} size={size} />
-      <DeclaredActions groups={primary} label={label} size={size} />
+      <DeclaredActions groups={groups} label={label} look={look} />
+      <DeclaredActions groups={primary} label={label} look={look} />
     </>
   );
 }

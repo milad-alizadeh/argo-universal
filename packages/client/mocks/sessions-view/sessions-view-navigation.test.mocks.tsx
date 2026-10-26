@@ -37,14 +37,14 @@ export const navigationCallbacks: Story = {
     await userEvent.hover(heading);
     await userEvent.click(
       canvas.getByRole('button', {
-        name: `New Session in ${exampleProjectName}`,
+        name: `New Session, ${exampleProjectName}`,
       }),
     );
     await expect(args.onNewSessionInProject).toHaveBeenCalledWith(project.id);
     await userEvent.hover(heading);
     await userEvent.click(
       canvas.getByRole('button', {
-        name: `Project settings for ${exampleProjectName}`,
+        name: `Project settings, ${exampleProjectName}`,
       }),
     );
     await expect(args.onProjectSettings).toHaveBeenCalledWith(project.name);

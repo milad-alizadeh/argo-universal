@@ -19,60 +19,75 @@ import { ActionMenu, overflowIcon } from './header-menu';
 import { HeaderTrigger } from './header-trigger';
 import { submenuLabel } from './submenu-badge';
 
+// How a header draws its buttons: their size, and what each one's spoken name says it acts on.
+export interface HeaderButtonLook {
+  // A list column's heading and a section's header draw smaller buttons than a page's.
+  size?: IconButtonSize;
+  /*
+   * The name of what the Actions act on, such as a section's title, spoken after each button's label so repeated
+   * headers keep distinct names; the visible label and the menus keep the label alone.
+   */
+  subject?: string;
+}
+
 export interface HeaderActionsProps {
   // Ordered by `orderedGroups`.
   groups: ActionGroup[];
   label: string;
   // How many controls the header has room for, the overflow button included.
   slots: number;
-  // The kit's button size; a list column's heading draws smaller buttons than a page's.
-  size?: IconButtonSize;
+  look?: HeaderButtonLook;
 }
 
-interface SizedProps {
-  size?: IconButtonSize;
+interface LookProps {
+  look: HeaderButtonLook;
 }
 
 // A header's Actions as Argo-drawn buttons and menus where Argo draws the heading; a phone's native header uses stock items.
 export function HeaderActions(props: HeaderActionsProps): ReactElement {
   const { direct, overflow } = splitHeaderActions(props.groups, props.slots);
-  const { size } = props;
+  const look = props.look ?? {};
 
   return (
     <View className="flex-row items-center gap-1">
-      {direct.map((entry) => headerEntry(entry, size))}
-      <HeaderOverflow groups={overflow} label={props.label} size={size} />
+      {direct.map((entry) => headerEntry(entry, look))}
+      <HeaderOverflow groups={overflow} label={props.label} look={look} />
     </View>
   );
 }
 
-function headerEntry(entry: HeaderEntry, size?: IconButtonSize): ReactElement {
+function headerEntry(entry: HeaderEntry, look: HeaderButtonLook): ReactElement {
   if (isSubmenu(entry))
-    return <HeaderSubmenu key={entry.id} submenu={entry} size={size} />;
+    return <HeaderSubmenu key={entry.id} submenu={entry} look={look} />;
 
-  return <HeaderAction key={entry.id} action={entry} size={size} />;
+  return <HeaderAction key={entry.id} action={entry} look={look} />;
 }
 
+// A button's spoken name: its label, then its subject when it has one.
+const spokenLabel = (label: string, { subject }: HeaderButtonLook): string =>
+  subject ? `${label}, ${subject}` : label;
+
 function HeaderOverflow(
-  props: SizedProps & { groups: ActionGroup[]; label: string },
+  props: LookProps & { groups: ActionGroup[]; label: string },
 ): ReactElement | null {
   if (!props.groups.length) return null;
 
-  const { label, size } = props;
-  const icon = overflowIcon;
+  const { label, look } = props;
 
-  return (
-    <ActionMenu
-      groups={props.groups}
-      label={label}
-      trigger={<HeaderTrigger icon={icon} label={label} size={size} />}
+  const trigger = (
+    <HeaderTrigger
+      icon={overflowIcon}
+      label={spokenLabel(label, look)}
+      size={look.size}
     />
   );
+
+  return <ActionMenu groups={props.groups} label={label} trigger={trigger} />;
 }
 
 // A submenu opens its own Sections from its icon, its badge at the icon's corner.
 function HeaderSubmenu(
-  props: SizedProps & { submenu: DeclaredSubmenu },
+  props: LookProps & { submenu: DeclaredSubmenu },
 ): ReactElement {
   const { submenu } = props;
 
@@ -86,28 +101,31 @@ function HeaderSubmenu(
 }
 
 function submenuTrigger(
-  props: SizedProps & { submenu: DeclaredSubmenu },
+  props: LookProps & { submenu: DeclaredSubmenu },
 ): ReactElement {
   const { icon, badge } = props.submenu;
-  const label = submenuLabel(props.submenu);
+  const label = spokenLabel(submenuLabel(props.submenu), props.look);
 
   return (
-    <HeaderTrigger icon={icon} badge={badge} label={label} size={props.size} />
+    <HeaderTrigger
+      icon={icon}
+      badge={badge}
+      label={label}
+      size={props.look.size}
+    />
   );
 }
 
-function HeaderAction(
-  props: SizedProps & { action: IconAction },
-): ReactElement {
-  const { action } = props;
+function HeaderAction(props: LookProps & { action: IconAction }): ReactElement {
+  const { action, look } = props;
 
   return (
     <IconButton
       icon={action.icon}
-      accessibilityLabel={action.label}
+      accessibilityLabel={spokenLabel(action.label, look)}
       disabled={action.disabled}
       onPress={action.onPress}
-      size={props.size}
+      size={look.size}
       variant="ghost"
     />
   );

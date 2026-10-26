@@ -1,6 +1,7 @@
 export {
   Action,
   ActionSection,
+  actionGroups,
   declaredActions,
   submenuGroups,
   type DeclaredAction,
