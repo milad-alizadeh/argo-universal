@@ -3,7 +3,9 @@ import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
 import {
   projectDetailsSlotId,
   type PluginSlotInput,
+  type WireNode,
 } from '@repo/contracts/plugins/wire';
+import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { expect, it, onTestFinished } from 'vitest';
 
 const project = {
@@ -14,9 +16,18 @@ const project = {
 
 const issueTitle = 'Fixture issue from GitHub';
 
+// The fixture gh refuses every status change to this Issue.
+const refusedTitle = 'Fixture issue gh cannot change';
+
 const trackerName = 'GitHub Issues';
 
 type SlotView = ReturnType<PluginTest['slot']>;
+
+type PageView = Awaited<ReturnType<PluginTest['mount']>>;
+
+const wait = { timeout: 10_000 };
+
+const closeIssue = 'Close Issue';
 
 // A check marks the chosen row; its press is held until the stored choice arrives.
 const chosen = (view: SlotView): boolean =>
@@ -92,4 +103,77 @@ it('lists Issues from the selected Tracker and opens an Issue description', asyn
       timeout: 10_000,
     })
     .toBeDefined();
+}, 20_000);
+
+async function openIssue(title: string): Promise<PageView> {
+  const test = await tracker();
+  await chooseGithub(test.slot(slot));
+  const page = await test.mount({ page: '/', surface: { platform: 'web' } });
+  await expect.poll(() => page.findText(title), wait).toBeDefined();
+  await page.press(title);
+  await expect.poll(() => page.findText('Start Session'), wait).toBeDefined();
+
+  return page;
+}
+
+const isStatus = (node: WireNode): boolean =>
+  node.type === 'Metadata.StatusDot';
+
+// The Status the open Issue's Properties show.
+function shownStatus(tree: WireNode | null): string {
+  const entry = tree && findWireNodeEntry(tree, isStatus);
+
+  return entry ? textOf(entry.node) : '';
+}
+
+function textOf(node: WireNode): string {
+  const { text } = node.props;
+
+  return typeof text === 'string' ? text : '';
+}
+
+// Whether the list's Closed section holds the Issue.
+const listedClosed = (page: PageView, title: string): boolean => {
+  const section =
+    page.tree &&
+    findWireNodeEntry(page.tree, (node) => node.props.title === 'Closed');
+
+  return JSON.stringify(section ?? null).includes(title);
+};
+
+it('closes and reopens an Issue at once', async () => {
+  const page = await openIssue(issueTitle);
+
+  await page.press(closeIssue);
+  await expect.poll(() => shownStatus(page.tree), wait).toBe('Closed');
+  expect(listedClosed(page, issueTitle)).toBe(true);
+
+  await page.press('Reopen Issue');
+  await expect.poll(() => shownStatus(page.tree), wait).toBe('Open');
+  expect(listedClosed(page, issueTitle)).toBe(false);
+}, 20_000);
+
+it('rolls a status change gh refuses back and fails the press with its error', async () => {
+  const page = await openIssue(refusedTitle);
+  const before = page.trees.length;
+
+  // The App shows a failed press as an error toast.
+  await expect(page.press(closeIssue)).rejects.toThrow(
+    'GraphQL: Could not close the issue.',
+  );
+  await expect.poll(() => shownStatus(page.tree), wait).toBe('Open');
+  expect(page.trees.slice(before).map(shownStatus)).toContain('Closed');
+  expect(listedClosed(page, refusedTitle)).toBe(false);
+  expect(page.findText(closeIssue)).toBeDefined();
+}, 20_000);
+
+it("starts a Session with the Issue's reference, title and link in the Composer", async () => {
+  const page = await openIssue(issueTitle);
+
+  expect(page.findText('Start Session')?.node.props.onPress).toEqual({
+    action: 'newSession',
+    projectId: project.id,
+    draft:
+      '#42 Fixture issue from GitHub\nhttps://github.com/owner/repository/issues/42',
+  });
 }, 20_000);

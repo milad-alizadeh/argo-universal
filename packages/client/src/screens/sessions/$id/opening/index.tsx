@@ -7,15 +7,17 @@ import { useOpeningWiring } from './use-opening-wiring';
 
 interface EmptySessionOpeningProps {
   projectId?: string;
+  draft?: string;
   children: (props: SessionNewViewProps) => React.ReactNode;
 }
 
 // The connected screen sees only view props and callbacks; opening and hand-off stay here.
 export function EmptySessionOpening({
   projectId,
+  draft,
   children,
 }: EmptySessionOpeningProps): React.JSX.Element {
-  const wiring = useOpeningWiring(projectId);
+  const wiring = useOpeningWiring(projectId, draft);
   const options = useOpenedConfiguration(openedSession(wiring));
   const callout = useNewSessionCallout({ ...wiring, ...options });
   const view = toSessionNewViewProps({ ...wiring, ...options, callout });

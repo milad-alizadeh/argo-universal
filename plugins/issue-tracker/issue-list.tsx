@@ -1,8 +1,9 @@
 import { EmptyState, List, ListDetail, ListItem, Pill } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { githubError } from './github-errors';
 import type { Issue } from './github-issues';
-import { githubError, githubRepositoryFromOrigin } from './github-tracker';
-import { loadIssue } from './issue-data';
+import { githubRepositoryFromOrigin } from './github-tracker';
+import { loadIssue } from './issue-client';
 import { IssueDetail } from './issue-detail';
 import type { IssueSelection, PageProps } from './use-issues';
 

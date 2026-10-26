@@ -21,8 +21,9 @@ export function useEmptySessionPorts(
 
   return {
     open: (input) => client.session.new.mutate(input),
-    // The shown New Session becomes the Session by its params alone: the same screen, no new page, and its Project left behind.
-    handOff: (id) => router.setParams({ id, projectId: undefined }),
+    // The shown New Session becomes the Session by its params alone: the same screen, no new page, and its Project and draft left behind.
+    handOff: (id) =>
+      router.setParams({ id, projectId: undefined, draft: undefined }),
     clearDraft: useCurrentDraftClear(clearDraft),
     connectionState: useConnection().state,
   };

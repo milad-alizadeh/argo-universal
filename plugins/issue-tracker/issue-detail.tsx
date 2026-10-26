@@ -1,36 +1,90 @@
 import { Action, Detail, Metadata, Pill, Screen } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Issue } from './github-issues';
+import type { Issue, IssueStatus } from './github-issues';
 import type { PageProps } from './use-issues';
 
 type IssueDetailProps = PageProps & { issue: Issue };
 
-const closed = 'closed';
+type StatusView = {
+  text: string;
+  tone: string;
+  change: { label: string; icon: string; to: IssueStatus };
+};
+
+// How each status reads, and the press that moves the Issue to the other one.
+const statuses = {
+  open: {
+    text: 'Open',
+    tone: 'success',
+    change: { label: 'Close Issue', icon: 'check', to: 'closed' },
+  },
+  closed: {
+    text: 'Closed',
+    tone: 'done',
+    change: { label: 'Reopen Issue', icon: 'issue-open', to: 'open' },
+  },
+} as const satisfies Record<IssueStatus, StatusView>;
 
 export function IssueDetail(props: IssueDetailProps): JSX.Element {
-  const { issue } = props;
-
   return (
     <Screen
-      title={issue.title}
-      caption={`#${issue.number}`}
-      actions={<IssueActions issue={issue} onBack={props.onBack} />}
+      title={props.issue.title}
+      caption={`#${props.issue.number}`}
+      primaryAction={<StartSessionAction {...props} />}
+      actions={<IssueActions {...props} />}
     >
       <Detail
-        markdown={issue.body || 'No description.'}
-        metadata={<IssueMetadata issue={issue} />}
+        markdown={props.issue.body || 'No description.'}
+        metadata={<IssueMetadata issue={props.issue} />}
       />
     </Screen>
   );
 }
 
-type IssueActionsProps = Pick<IssueDetailProps, 'issue' | 'onBack'>;
+type IssueActionsProps = Pick<
+  IssueDetailProps,
+  'issue' | 'onBack' | 'onStatus'
+>;
 
-function IssueActions({ issue, onBack }: IssueActionsProps): JSX.Element[] {
+function IssueActions({
+  issue,
+  onBack,
+  onStatus,
+}: IssueActionsProps): JSX.Element[] {
   return [
     <BackAction key="back" onBack={onBack} />,
+    <StatusAction key="status" issue={issue} onStatus={onStatus} />,
     <OpenAction key="open" url={issue.url} />,
   ];
+}
+
+// The Issue's reference, title and link, as the prompt that starts work on it.
+const issueDraft = (issue: Issue): string =>
+  `#${issue.number} ${issue.title}\n${issue.url}`;
+
+type StartSessionProps = Pick<IssueDetailProps, 'issue' | 'projectId'>;
+
+function StartSessionAction({
+  issue,
+  projectId,
+}: StartSessionProps): JSX.Element | null {
+  if (projectId === null) return null;
+
+  return (
+    <Action
+      label="Start Session"
+      icon="new-session"
+      onPress={{ action: 'newSession', projectId, draft: issueDraft(issue) }}
+    />
+  );
+}
+
+type StatusActionProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
+
+function StatusAction({ issue, onStatus }: StatusActionProps): JSX.Element {
+  const { label, icon, to } = statuses[issue.status].change;
+
+  return <Action label={label} icon={icon} onPress={() => onStatus(to)} />;
 }
 
 function BackAction({ onBack }: { onBack: () => void }): JSX.Element {
@@ -52,8 +106,8 @@ function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
     <Metadata>
       <Metadata.StatusDot
         title="Status"
-        text={issue.status === closed ? 'Closed' : 'Open'}
-        tone={issue.status === closed ? 'done' : 'success'}
+        text={statuses[issue.status].text}
+        tone={statuses[issue.status].tone}
       />
       <IssueLabels labels={issue.labels} />
       <Assignees assignees={issue.assignees} />

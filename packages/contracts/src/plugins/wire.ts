@@ -67,6 +67,12 @@ export const Action = z.discriminatedUnion('action', [
     title: z.string().optional(),
   }),
   z.strictObject({ action: z.literal('pop') }),
+  // Opens New Session for the Project with `draft` in the Composer; nothing is stored until the person sends it.
+  z.strictObject({
+    action: z.literal('newSession'),
+    projectId: z.string().min(1),
+    draft: z.string().min(1),
+  }),
 ]);
 
 export type Action = z.infer<typeof Action>;
