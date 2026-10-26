@@ -4,7 +4,7 @@ import {
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
 import { livePreview } from './session-row-preview';
-import type { SlotSettings } from './slot-settings';
+import type { SlotDetail } from './slot-detail';
 
 export const argoActivity = 'Editing login.ts';
 
@@ -34,7 +34,7 @@ export const previewSession: SessionInfo = {
   updatedAt: startedAt + workingFor,
 };
 
-export const sessionRowSlot: SlotSettings = {
+export const sessionRowSlot: SlotDetail = {
   slotId: sessionRowSlotId,
   title: 'Session rows',
   showTitle: 'Show on Session rows',

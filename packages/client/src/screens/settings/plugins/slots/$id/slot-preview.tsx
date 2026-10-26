@@ -3,11 +3,11 @@ import { Surface } from '@repo/kit/primitives/layout/surface';
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { SlotVisibility } from '#features/settings';
+import type { SlotDetail } from './slot-detail';
 import { previewCaptionOf } from './slot-preview-caption';
-import type { SlotSettings } from './slot-settings';
 
 type SlotPreviewCardProps = {
-  settings: SlotSettings;
+  settings: SlotDetail;
   visibility: SlotVisibility;
 };
 

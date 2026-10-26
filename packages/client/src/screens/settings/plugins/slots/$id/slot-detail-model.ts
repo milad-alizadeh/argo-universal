@@ -1,5 +1,5 @@
 import { type SlotVisibility, slotVisibility } from '#features/settings';
-import type { OwnerSlot } from './slot-settings';
+import type { OwnerSlot } from './slot-detail';
 
 // A Plugin that fills a Slot or asks for its Single-owner Slot, with this Device's switch for it.
 export interface SlotPlugin {

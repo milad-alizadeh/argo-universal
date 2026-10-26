@@ -1,7 +1,7 @@
 import type { AddOnlySlotId } from '@repo/contracts/plugins/wire';
-import type { PluginEntry } from '../use-plugins';
-import type { SlotSettings } from './slot-settings';
-import type { SlotPlugin } from './slot-settings-model';
+import type { PluginEntry } from '../../use-plugins';
+import type { SlotDetail } from './slot-detail';
+import type { SlotPlugin } from './slot-detail-model';
 
 // A Plugin that is on and declares the Slot: the Server asks it for the Slot's content.
 const declares = (
@@ -16,25 +16,25 @@ const lists = (
 
 // The Plugins that fill the Slot or ask for its owner Slot, each with its switch from what this Device shows.
 export function toSlotPlugins(
-  settings: Pick<SlotSettings, 'slotId' | 'ownerSlot'>,
+  settings: Pick<SlotDetail, 'slotId' | 'ownerSlot'>,
   entries: readonly PluginEntry[],
   shows: (pluginId: string) => boolean,
 ): SlotPlugin[] {
   return entries.flatMap((entry) =>
-    takesPart(entry, settings) ? [toPlugin(entry, shows, settings)] : [],
+    belongsOnPage(entry, settings) ? [toPlugin(entry, shows, settings)] : [],
   );
 }
 
 // A Plugin is on the page when it fills the Slot or asks for its owner Slot.
-const takesPart = (
+const belongsOnPage = (
   entry: PluginEntry,
-  { slotId, ownerSlot }: Pick<SlotSettings, 'slotId' | 'ownerSlot'>,
+  { slotId, ownerSlot }: Pick<SlotDetail, 'slotId' | 'ownerSlot'>,
 ): boolean => declares(entry, slotId) || declares(entry, ownerSlot?.slotId);
 
 const toPlugin = (
   entry: PluginEntry,
   shows: (pluginId: string) => boolean,
-  { slotId, ownerSlot }: Pick<SlotSettings, 'slotId' | 'ownerSlot'>,
+  { slotId, ownerSlot }: Pick<SlotDetail, 'slotId' | 'ownerSlot'>,
 ): SlotPlugin => ({
   pluginId: entry.manifest.id,
   name: entry.manifest.name,

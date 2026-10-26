@@ -6,21 +6,18 @@ import {
   useSlotChoosers,
 } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
+import type { SlotDetail } from './slot-detail';
+import { findSlotDetail } from './slot-detail-registry';
+import { SlotDetailView, type SlotDetailViewProps } from './slot-detail-view';
 import { useSlotPlugins } from './slot-plugins';
-import type { SlotSettings } from './slot-settings';
-import { findSlotSettings } from './slot-settings-registry';
-import {
-  SlotSettingsView,
-  type SlotSettingsViewProps,
-} from './slot-settings-view';
 
 // The page of the Slot declared for `slotId`; an old link to a Slot without one says so.
-export function SlotSettingsScreen({
+export function SlotDetailScreen({
   slotId,
 }: {
   slotId: string;
 }): React.JSX.Element {
-  const settings = findSlotSettings(slotId);
+  const settings = findSlotDetail(slotId);
 
   if (!settings)
     return (
@@ -32,11 +29,11 @@ export function SlotSettingsScreen({
 
 // The Slot's Plugins and both of this Device's choices; the Slot's own component reads them where it is drawn.
 type SlotState = Pick<
-  SlotSettingsViewProps,
+  SlotDetailViewProps,
   'plugins' | 'owner' | 'onShownChange' | 'onOwnerChange'
 >;
 
-const useSlotState = (settings: SlotSettings): SlotState => ({
+const useSlotState = (settings: SlotDetail): SlotState => ({
   plugins: useSlotPlugins(settings),
   owner: useSlotChoices(settings.slotId).owner,
   ...useSlotChoosers(settings.slotId),
@@ -45,12 +42,12 @@ const useSlotState = (settings: SlotSettings): SlotState => ({
 function DeclaredSlot({
   settings,
 }: {
-  settings: SlotSettings;
+  settings: SlotDetail;
 }): React.JSX.Element {
   const navigate = useNavigate();
 
   return (
-    <SlotSettingsView
+    <SlotDetailView
       settings={settings}
       caption={useServerPageCaption()}
       {...useSlotState(settings)}

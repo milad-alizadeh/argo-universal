@@ -1,6 +1,6 @@
 import type { SessionRowPreviewData } from './session-row-preview';
 import { previewSession } from './session-row-slot';
-import type { SlotPlugin } from './slot-settings-model';
+import type { SlotPlugin } from './slot-detail-model';
 
 export const issueRef = (number: number): string => `#${number}`;
 
