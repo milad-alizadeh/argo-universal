@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { RowTitle } from '#primitives/fields/field-row';
 import { FieldTextInput } from './field-text-input';
 import type { FieldTextProps } from './field-text-props';
+import { fieldTextTone } from './field-text-tone';
 
 export type { FieldTextProps } from './field-text-props';
 
@@ -21,12 +22,20 @@ const titleColumn = 'w-25 shrink-0';
 export function FieldText(props: FieldTextProps): ReactElement {
   return (
     <Row alignment="center" spacing={titleGap}>
-      {props.hideTitle ? null : (
-        <View className={titleColumn}>
-          <RowTitle {...props} numberOfLines={1} />
-        </View>
-      )}
+      {props.hideTitle ? null : <FieldTitle {...props} />}
       <FieldTextInput {...props} />
     </Row>
+  );
+}
+
+function FieldTitle(props: FieldTextProps): ReactElement {
+  return (
+    <View className={titleColumn}>
+      <RowTitle
+        {...props}
+        tone={fieldTextTone(props.error)}
+        numberOfLines={1}
+      />
+    </View>
   );
 }

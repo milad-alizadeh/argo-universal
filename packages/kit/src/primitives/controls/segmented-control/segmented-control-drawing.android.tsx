@@ -7,21 +7,14 @@ import {
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
-import { ControlHost } from '#primitives/native/native-control';
 import type {
   SegmentedControlProps,
   SegmentOption,
 } from './segmented-control-props';
 
-export function SegmentedControl(props: SegmentedControlProps): ReactElement {
-  return (
-    <ControlHost matchContents={{ vertical: true }}>
-      <Segments {...props} />
-    </ControlHost>
-  );
-}
-
-function Segments(props: SegmentedControlProps): ReactElement {
+export function SegmentedControlDrawing(
+  props: SegmentedControlProps,
+): ReactElement {
   const colors = useColors();
   const modifiers = [semantics({ contentDescription: props.label })];
 
@@ -54,9 +47,10 @@ const segmentProps = ({
   value,
   onValueChange,
   colors,
+  disabled,
 }: SegmentProps): React.ComponentProps<typeof SegmentedButton> => ({
   selected: option.value === value,
-  enabled: !option.disabled,
+  enabled: !disabled && !option.disabled,
   onClick: () => onValueChange(option.value),
   colors,
 });

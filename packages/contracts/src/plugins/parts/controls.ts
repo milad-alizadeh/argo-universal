@@ -5,6 +5,7 @@ import { searchFieldProps } from '../presentation-kit-props';
 import { filterPillProps } from '../presentation-kit-props';
 import { textChangeEvents } from '../text-field-kit-props';
 import { sliderProps } from './input-control-props';
+import { segmentedControlPart } from './segmented-control';
 
 // A draft Slider may leave its handler off the wire: the App holds the draft.
 const sliderDraft = sliderProps.extend({
@@ -12,6 +13,7 @@ const sliderDraft = sliderProps.extend({
 });
 
 export const controlsPartSchemas = {
+  SegmentedControl: segmentedControlPart,
   SearchField: part(
     'Search input for Screen headers and Lists.',
     searchFieldProps,

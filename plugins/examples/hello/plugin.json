@@ -56,6 +56,11 @@
         "id": "hello-canvas",
         "title": "Canvas",
         "path": "/canvas"
+      },
+      {
+        "id": "hello-views",
+        "title": "Issue views",
+        "path": "/views"
       }
     ],
     "settings": [

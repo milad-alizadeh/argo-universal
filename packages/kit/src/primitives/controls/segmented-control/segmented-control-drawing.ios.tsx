@@ -7,21 +7,20 @@ import {
   tag,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
-import { ControlHost } from '#primitives/native/native-control';
 import type {
   SegmentedControlProps,
   SegmentOption,
 } from './segmented-control-props';
 
-export function SegmentedControl(props: SegmentedControlProps): ReactElement {
+export function SegmentedControlDrawing(
+  props: SegmentedControlProps,
+): ReactElement {
   return (
-    <ControlHost matchContents={{ vertical: true }}>
-      <Picker {...pickerProps(props)}>
-        {props.options.map((option) => (
-          <Option key={option.value} {...option} />
-        ))}
-      </Picker>
-    </ControlHost>
+    <Picker {...pickerProps(props)}>
+      {props.options.map((option) => (
+        <Option key={option.value} {...option} />
+      ))}
+    </Picker>
   );
 }
 
@@ -31,7 +30,11 @@ const pickerProps = (
   label: props.label,
   selection: props.value,
   onSelectionChange: props.onValueChange,
-  modifiers: [pickerStyle('segmented'), accessibilityLabel(props.label)],
+  modifiers: [
+    pickerStyle('segmented'),
+    accessibilityLabel(props.label),
+    disabled(props.disabled === true),
+  ],
 });
 
 function Option(props: SegmentOption): ReactElement {

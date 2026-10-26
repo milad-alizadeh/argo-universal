@@ -22,6 +22,7 @@ import { registerBuilds } from './list-detail';
 import { HelloListPage } from './lists';
 import { helloMedia } from './media';
 import { HelloRunsPage } from './runs';
+import { HelloViews } from './views';
 
 const headingRole = 'heading';
 
@@ -130,6 +131,7 @@ export function register(argo: Argo): void {
 }
 
 function registerMediaPages(argo: Argo): void {
+  argo.pages.register('/views', HelloViews);
   argo.pages.register('/media', helloMedia(argo.assets));
   argo.pages.register('/gallery', helloGallery(argo.assets));
 }

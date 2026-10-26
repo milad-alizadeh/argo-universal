@@ -34,3 +34,10 @@ expectTypeOf<ActionSplit['onValueChange']>().toEqualTypeOf<
 expectTypeOf<PluginProps['Canvas.Group']['translate']>().toEqualTypeOf<
   readonly [number, number] | undefined
 >();
+
+expectTypeOf<
+  Extract<
+    PluginProps['SegmentedControl']['onValueChange'],
+    (payload: never) => void | Promise<void>
+  >
+>().toEqualTypeOf<(value: string) => void | Promise<void>>();
