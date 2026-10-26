@@ -2,11 +2,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
-import {
-  changesTotals,
-  filesSummary,
-  type ChangesTotals,
-} from '../../view/changes-totals';
+import { changesTotals, filesSummary } from '../../view/changes-totals';
 import type {
   ChangesSummary,
   ChangesViewProps,
@@ -14,25 +10,16 @@ import type {
 import { ComparisonPicker } from '../comparison-picker/comparison-picker';
 
 /*
- * Paper (Flow / Changes comparison): under the Inspector's header, the comparison in force, then how many files
- * and how many are viewed, with the line totals at the end. Until files load, only the comparison shows.
+ * Paper (Flow / Changes comparison): under the Inspector's header, one row with the comparison in force, how many
+ * files and how many are viewed, and the line totals at the end. Until files load, only the comparison shows.
  */
 export function ChangesToolbar(props: ChangesViewProps): React.JSX.Element {
   return (
     <SizeClass
       compact={<Summary {...props} />}
-      medium={<DesktopToolbar {...props} />}
-      wide={<DesktopToolbar {...props} />}
+      medium={<ComparisonRow {...props} />}
+      wide={<ComparisonRow {...props} />}
     />
-  );
-}
-
-function DesktopToolbar(props: ChangesViewProps): React.JSX.Element {
-  return (
-    <View>
-      <ComparisonRow {...props} />
-      <Summary {...props} />
-    </View>
   );
 }
 
@@ -43,33 +30,34 @@ function ComparisonRow(props: ChangesViewProps): React.JSX.Element {
       <View className="min-w-0 max-w-3/4 shrink">
         <ComparisonPicker {...props} />
       </View>
-      <View className="flex-1" />
+      <View className="min-w-0 flex-1">
+        <FileCounts {...props} />
+      </View>
       {props.summary?.files ? <LineTotals {...props.summary} /> : null}
     </View>
   );
 }
 
-function Summary(
-  props: Pick<ChangesViewProps, 'files' | 'summary' | 'viewed'>,
-): React.JSX.Element | null {
+// The phone's sheet has no comparison pill, so its counts take their own line.
+function Summary(props: CountsProps): React.JSX.Element | null {
   if (!props.summary?.files) return null;
 
-  const totals = changesTotals(props.summary, props.files, props.viewed);
-
   return (
-    <View className="flex-row items-center gap-2 px-4 wide:px-5 pt-4 pb-2 medium:h-6 medium:bg-content medium:py-0">
-      <FileCounts {...totals} />
+    <View className="px-4 pt-4 pb-2">
+      <FileCounts {...props} />
     </View>
   );
 }
 
-function FileCounts(totals: ChangesTotals): React.JSX.Element {
+type CountsProps = Pick<ChangesViewProps, 'files' | 'summary' | 'viewed'>;
+
+function FileCounts(props: CountsProps): React.JSX.Element | null {
+  if (!props.summary?.files) return null;
+
   return (
-    <View className="min-w-0 flex-1">
-      <Text role="secondary" tone="muted" numberOfLines={1}>
-        {filesSummary(totals)}
-      </Text>
-    </View>
+    <Text role="secondary" tone="muted" numberOfLines={1}>
+      {filesSummary(changesTotals(props.summary, props.files, props.viewed))}
+    </Text>
   );
 }
 
