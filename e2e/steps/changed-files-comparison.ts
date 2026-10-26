@@ -18,7 +18,7 @@ async function reviewDesktopComparison(page: Page): Promise<void> {
     .click();
 }
 
-// Paper's phone Git sheet contains the panels, without a separate title or comparison bar.
+// The phone sheet's page carries the one title; the pane under it draws no header of its own or comparison bar.
 async function inspectPhoneSheet(page: Page): Promise<void> {
   await openChangedFiles(page);
   await expect(
@@ -33,7 +33,7 @@ async function inspectPhoneSheet(page: Page): Promise<void> {
 async function expectNoExtraHeader(page: Page): Promise<void> {
   await expect(
     page.getByRole('heading', { name: 'Changes', exact: true }),
-  ).toHaveCount(0);
+  ).toHaveCount(1);
   await expect(
     page.getByRole('button', { name: 'Close Inspector', exact: true }),
   ).toHaveCount(0);
