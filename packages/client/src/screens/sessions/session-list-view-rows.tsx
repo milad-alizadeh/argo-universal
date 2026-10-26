@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { View } from 'react-native';
 import {
   type SessionsLayout,
   SessionsList,
@@ -52,13 +51,9 @@ function listActions(props: SessionListViewProps): ListActions {
 }
 
 // The list insets it below a transparent header, as it does the rows.
-function insetLoading(layout: SessionsLayout): React.JSX.Element {
-  return (
-    <View className="-mx-4 wide:mx-0">
-      <SessionsLoading layout={layout} />
-    </View>
-  );
-}
+const insetLoading = (layout: SessionsLayout): React.JSX.Element => (
+  <SessionsLoading layout={layout} inList />
+);
 
 interface SessionsListContentProps extends SessionListViewProps {
   loading: boolean;

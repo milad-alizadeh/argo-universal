@@ -162,8 +162,8 @@ export function ScrollFadeList<T>({
   const list = useRef<LegendListRef>(null);
   const listRef = useBothRefs(list, ref);
   const fading = useFadingList(props);
-  // A list that fills its Screen's content keeps to the Screen's column itself; one held to a height sits inside it.
-  useClaimsColumn(!props.horizontal && maxHeight === undefined);
+  // A list keeps to the Screen's column itself, its own inset inside it; only a vertical one not held to a height fills it.
+  useClaimsColumn(true, !props.horizontal && maxHeight === undefined);
 
   return (
     <ScrollFadeFrame {...fading.frame} {...useFrameSize(list, maxHeight)}>

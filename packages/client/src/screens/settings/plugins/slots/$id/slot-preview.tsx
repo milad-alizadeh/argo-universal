@@ -1,7 +1,7 @@
 import { Text } from '@repo/kit/primitives/content/text';
+import { Stack } from '@repo/kit/primitives/layout/stack';
 import { Surface } from '@repo/kit/primitives/layout/surface';
 import type * as React from 'react';
-import { View } from 'react-native';
 import type { SlotVisibility } from '#features/settings';
 import type { SlotDetail } from './slot-detail';
 import { previewCaptionOf } from './slot-preview-caption';
@@ -17,11 +17,11 @@ export const SlotPreview = ({
   visibility,
 }: SlotPreviewCardProps): React.JSX.Element => (
   <Surface kind="card" padding={4}>
-    <View className="gap-2">
+    <Stack direction="column" gap={2}>
       <Text role="secondary" tone="muted">
         {previewCaptionOf(previewCaption)}
       </Text>
       <Preview visibility={visibility} />
-    </View>
+    </Stack>
   </Surface>
 );

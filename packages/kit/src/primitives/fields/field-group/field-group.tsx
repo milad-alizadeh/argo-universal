@@ -9,11 +9,7 @@ import {
   use,
 } from 'react';
 import type { ViewStyle } from 'react-native';
-import {
-  groupedRowInset,
-  HeadingInsetContext,
-  useGroupedContent,
-} from '#kit/heading-inset';
+import { HeadingInsetContext, useGroupedContent } from '#kit/heading-inset';
 import { useInMenu } from '#kit/menu-rows-context';
 import { ScrollColumnContext } from '#kit/scroll-column';
 import { Host, InsideHostContext } from '#primitives/native/host';
@@ -77,8 +73,8 @@ function ColumnFieldGroup(props: FieldGroupProps): ReactElement {
 
 /*
  * A wide pane's column, as its header keeps to: the FieldGroup scrolls itself and takes no content style, so the
- * scroll view is the column. The cards stand out of it by their rows' 16 inset, so the section titles and row titles
- * start on the page title's line; Expo's web FieldGroup pads its content 16 on its own, so the column gives up both.
+ * scroll view is the column. The cards' edges start on the page title's line, as every desktop page's content does;
+ * Expo's web FieldGroup pads its content 16 on its own, so the column gives that up.
  */
 function useColumnStyle(): ViewStyle {
   const column = use(ScrollColumnContext);
@@ -95,10 +91,8 @@ function useColumnStyle(): ViewStyle {
   };
 }
 
-// Expo's own content padding, and the rows' inset the cards stand out by.
-const expoContentPadding = 16;
-
-const columnGivenUp = expoContentPadding + groupedRowInset;
+// Expo's own content padding.
+const columnGivenUp = 16;
 
 /*
  * No background of its own, so the page's shows between the section cards. SwiftUI's Form draws its grouped

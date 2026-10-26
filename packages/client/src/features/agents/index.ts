@@ -29,6 +29,11 @@ export {
   type AgentsFilter,
 } from './utils/agents-filter';
 
+export {
+  AgentsFilterPills,
+  type AgentsFilterProps,
+} from './components/agents-filter-pills/agents-filter-pills';
+
 export { AgentLoginTerminal } from './components/agent-login-terminal/agent-login-terminal';
 
 export { type LoginTerminalProps } from './components/agent-login-terminal/terminal-props';

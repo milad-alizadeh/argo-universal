@@ -32,8 +32,15 @@ function phoneInsets(props: Options): Insets {
   };
 }
 
-// A web grouped list holds its cards 16 from the sides, as a FieldGroup does on a page, and its first heading 8 down.
-const groupedInset = { sides: 4, top: 2, bottom: 4 } as const;
+/*
+ * A web grouped list holds its cards 16 from a narrow window's sides, and on a wide page its cards' edges start on the
+ * title's line, as a FieldGroup's do; its first heading sits 8 down.
+ */
+const groupedInset = {
+  sides: { compact: 4, wide: 0 },
+  top: 2,
+  bottom: 4,
+} as const;
 
 const orInset = (
   inset: Insets['padding'],

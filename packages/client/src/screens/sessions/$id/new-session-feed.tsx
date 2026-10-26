@@ -1,4 +1,5 @@
 import { Text } from '@repo/kit/primitives/content/text';
+import { Stack } from '@repo/kit/primitives/layout/stack';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Feed } from '#features/feed';
@@ -8,21 +9,27 @@ import { SessionColumn } from '#lib/product/session-column';
 
 const noOlderRows = (): void => {};
 
+type HeadingProps = { context?: React.ReactNode };
+
 // Wide, the question sits centred in the space a Session's Feed fills.
-function NewSessionHeading({
-  context,
-}: {
-  context?: React.ReactNode;
-}): React.JSX.Element | null {
+function NewSessionHeading(props: HeadingProps): React.JSX.Element | null {
   if (!useContentWide()) return null;
 
   return (
     <View className="flex-1 justify-center">
-      <SessionColumn className="items-center gap-6 px-4">
-        <NewSessionTitle />
-        {context}
+      <SessionColumn>
+        <HeadingStack {...props} />
       </SessionColumn>
     </View>
+  );
+}
+
+function HeadingStack({ context }: HeadingProps): React.JSX.Element {
+  return (
+    <Stack direction="column" gap={6} align="center">
+      <NewSessionTitle />
+      {context}
+    </Stack>
   );
 }
 

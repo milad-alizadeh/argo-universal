@@ -2,7 +2,6 @@ import type { ProjectInfo } from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
-import { View } from 'react-native';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -26,16 +25,14 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
   );
 }
 
-// The Projects' card and its place on the page, shared by the loading rows so the loaded ones land where they stood.
+// The Projects' card, its place on the page the List's own, shared by the loading rows so the loaded ones land where they stood.
 export function ProjectsColumn(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <View className="flex-1 pt-2 wide:pt-0">
-      <List appearance="grouped" fit={false} padding={{ compact: 4, wide: 0 }}>
-        {props.children}
-      </List>
-    </View>
+    <List appearance="grouped" fit={false}>
+      {props.children}
+    </List>
   );
 }
 

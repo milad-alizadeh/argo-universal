@@ -18,6 +18,8 @@ import {
 export interface SessionsLoadingProps {
   // Regular rows carry their Agent line and age; Compact rows are one line each.
   layout?: SessionsLayout;
+  // Drawn in the Sessions list's own empty slot, whose sides already hold the list's inset.
+  inList?: boolean;
 }
 
 const ignoreSelect = (): void => {};
@@ -48,12 +50,15 @@ function PlaceholderSection({
   );
 }
 
-function PlaceholderList({ layout }: SessionsLoadingProps): React.JSX.Element {
+function PlaceholderList({
+  layout,
+  inList,
+}: SessionsLoadingProps): React.JSX.Element {
   return (
     <List
       appearance={sessionListAppearance(layout ?? 'regular')}
       fit
-      padding={sessionListPadding}
+      padding={inList ? 0 : sessionListPadding}
       paddingTop={standardTopPadding}
     >
       <PlaceholderSection layout={layout} />
@@ -64,12 +69,13 @@ function PlaceholderList({ layout }: SessionsLoadingProps): React.JSX.Element {
 // The Sessions list's own rows under a Project's section, drawn by the real Session row; the Skeleton swaps each line for a bar, so nothing shifts when the Sessions load.
 export function SessionsLoading({
   layout = 'regular',
+  inList,
 }: SessionsLoadingProps): React.JSX.Element {
   return (
     <View role="status" accessibilityLabel="Loading Sessions">
       <Skeleton loading>
         <View pointerEvents="none">
-          <PlaceholderList layout={layout} />
+          <PlaceholderList layout={layout} inList={inList} />
         </View>
       </Skeleton>
     </View>
