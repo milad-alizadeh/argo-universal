@@ -7,6 +7,7 @@ import { InMenu } from '#kit/menu-rows-context';
 import { menuSurfaceClassName } from '#kit/menu-surface';
 import { cn } from '#kit/utils';
 import { TextClassContext } from '#primitives/content/text';
+import { InsideHostContext } from '#primitives/native/host';
 import { useOpenState } from '#primitives/overlays/open-state';
 import { PopoverContext, usePopoverState } from './popover-context';
 import { HoverProvider, PopoverHover } from './popover-hover';
@@ -156,12 +157,18 @@ function PopoverSurface(
   );
 }
 
-// A popover opened from a Screen's column is a surface of its own, so its lists take none of the column's padding, nor claim it from the Screen.
+/*
+ * A popover opened from a Screen's column is a surface of its own, so its lists take none of the column's padding, nor
+ * claim it from the Screen. It sits in a portal, outside any FieldGroup's tree it was opened from, so its Hosts draw
+ * their own.
+ */
 function PopoverRows(props: { children: React.ReactNode }): React.JSX.Element {
   return (
-    <OutsideColumn>
-      <InMenu value>{props.children}</InMenu>
-    </OutsideColumn>
+    <InsideHostContext.Provider value={false}>
+      <OutsideColumn>
+        <InMenu value>{props.children}</InMenu>
+      </OutsideColumn>
+    </InsideHostContext.Provider>
   );
 }
 
