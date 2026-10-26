@@ -34,3 +34,13 @@ expectTypeOf<ActionSplit['onValueChange']>().toEqualTypeOf<
 expectTypeOf<PluginProps['Canvas.Group']['translate']>().toEqualTypeOf<
   readonly [number, number] | undefined
 >();
+
+expectTypeOf<
+  NonNullable<PluginProps['List']['selection']>['onChange']
+>().toExtend<
+  Action | ((ids: readonly string[]) => void | Promise<void>) | undefined
+>();
+
+expectTypeOf<
+  NonNullable<PluginProps['List']['pagination']>['onLoadMore']
+>().toExtend<Action | Handler>();

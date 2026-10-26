@@ -62,7 +62,7 @@ function readEdges(list: LegendListRef): Edges {
   return { atStart: state.isAtStart, atEnd: state.isAtEnd };
 }
 
-function assignListRef(
+export function assignListRef(
   ref: Ref<LegendListRef> | undefined,
   value: LegendListRef | null,
 ): void {

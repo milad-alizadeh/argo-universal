@@ -114,7 +114,7 @@ export function LiveSessionList(
   const listView = useSessionsViewProps(props);
   const rename = useRenameSession(listView.sessions);
   const archive = useArchiveSession();
-  const actions = { onRename: rename.onRename, onArchive: archive.onArchive };
+  const actions = listActions(rename, archive);
 
   return (
     <>
@@ -123,4 +123,15 @@ export function LiveSessionList(
       <ArchiveSessionAlert {...archive.alert} />
     </>
   );
+}
+
+function listActions(
+  rename: ReturnType<typeof useRenameSession>,
+  archive: ReturnType<typeof useArchiveSession>,
+): Pick<SessionListViewProps, 'onRename' | 'onArchive' | 'onArchiveMany'> {
+  return {
+    onRename: rename.onRename,
+    onArchive: archive.onArchive,
+    onArchiveMany: archive.onArchiveMany,
+  };
 }

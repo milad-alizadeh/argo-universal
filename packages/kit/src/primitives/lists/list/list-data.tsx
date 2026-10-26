@@ -5,9 +5,11 @@ import { useSpacingStep } from '#primitives/layout/spacing';
 import { Spinner } from '#primitives/status/spinner';
 import { useInMenu } from '../../../menu-rows-context';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
+import { ContentRowId } from './list-content-selection';
 import { DataListRow } from './list-grouping';
 import { listInsets } from './list-insets';
 import type { ListProps } from './list-props';
+import { selectionId } from './list-row-identity';
 
 export function ListEmpty({
   isLoading,
@@ -34,7 +36,15 @@ const isPart = <Item,>({ row, props }: RowProps<Item>): boolean =>
 function Row<Item>(rowProps: RowProps<Item>): ReactElement {
   return (
     <DataListRow index={rowProps.row.index} part={isPart(rowProps)}>
-      <PaddedRow row={rowProps.row} props={rowProps.props} />
+      <ContentRowId
+        value={selectionId(
+          rowProps.props,
+          rowProps.row.item,
+          rowProps.row.index,
+        )}
+      >
+        <PaddedRow row={rowProps.row} props={rowProps.props} />
+      </ContentRowId>
     </DataListRow>
   );
 }

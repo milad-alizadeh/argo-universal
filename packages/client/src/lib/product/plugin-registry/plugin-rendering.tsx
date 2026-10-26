@@ -13,7 +13,7 @@ export interface RenderContext {
   controls: PluginControls;
 }
 
-type Callback = (value?: WireJson) => void;
+export type Callback = (value?: WireJson) => void | Promise<void>;
 
 // A prop object may hold a callback, as a Picker's `footerAction` holds `onPress`.
 type PluginProp = ReactNode | WireJson | Callback | NestedProps;

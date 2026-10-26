@@ -11,6 +11,10 @@ import { listsFlat, searchesAsOneList } from './sessions-list-entries-state';
 import { type ListRows, useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
 import { useScrolling } from './sessions-list-scrolling';
+import {
+  useSessionsSelection,
+  selectionOptions,
+} from './use-sessions-selection';
 
 export type { SessionsListProps } from './sessions-list-props';
 
@@ -90,6 +94,8 @@ function listChrome(props: SessionsListProps): ListChrome {
 interface SessionsLegendListProps extends SessionsListProps {
   rows: ListRows;
   onScroll: () => void;
+  selection?: React.ComponentProps<typeof List<SessionsListEntry>>['selection'];
+  actions?: ReactNode;
 }
 
 const standardTopPadding = { compact: 5, wide: 1 } as const;
@@ -139,7 +145,7 @@ function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
       {...listBehaviour}
       {...sessionsFade}
       {...sessionListOptions(props)}
-      onEndReached={props.onEndReached}
+      {...selectionOptions(props)}
       onScroll={props.onScroll}
       {...listRows(props.rows)}
       {...listChrome(props)}
@@ -158,12 +164,14 @@ function listRows({
 export function SessionsList(props: SessionsListProps): React.JSX.Element {
   const scrolling = useScrolling();
   const rows = useListRows(props);
+  const selection = useSessionsSelection(props);
 
   return (
     <SessionsListSurface glide={rows.animating && !scrolling.scrolling}>
       <SessionsLegendList
         {...props}
         rows={rows}
+        {...selection}
         onScroll={scrolling.onScroll}
       />
     </SessionsListSurface>

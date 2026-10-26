@@ -13,6 +13,7 @@ function scrollEvents<Item>(
 ): Partial<ScrollFadeListProps<Item>> {
   return {
     onScroll: props.onScroll,
+    refreshControl: props.refreshControl,
     onEndReached: props.onEndReached,
     onEndReachedThreshold: props.onEndReachedThreshold,
     contentInsetAdjustmentBehavior:

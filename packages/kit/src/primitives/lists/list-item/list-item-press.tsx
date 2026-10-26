@@ -3,6 +3,7 @@ import { Platform, Pressable, type KeyDownEvent } from 'react-native';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
+import { useContentItemPress } from '../list/list-item-content-selection';
 import { linkPress } from './list-item-link-press';
 import { interactive, usePressClass } from './list-item-press-class';
 import type { ListItemProps } from './list-item-props';
@@ -73,6 +74,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
   return {
     ...accessibilityProps(props),
     ...pressHandlers(props),
+    ...useContentItemPress(props),
     onKeyDown: rowKeyDown(props),
     android_ripple: usePressRipple(),
     testID: props.testID,

@@ -33,7 +33,7 @@ export {
 
 type Events<Name extends WirePart> = (typeof wireParts)[Name]['events'];
 
-// Plugin JSX: a handler goes beside the value it replaces, only in top-level props; a nested handler is a built-in Action.
+// Plugin JSX: declared events accept callbacks at their declared place; other nested handlers are built-in Actions.
 interface PluginDrawing<Item> extends KitDrawing {
   node: ReactNode;
   choice: string;

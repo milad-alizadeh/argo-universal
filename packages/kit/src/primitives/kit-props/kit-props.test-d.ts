@@ -1,4 +1,5 @@
 import { expectTypeOf } from 'vitest';
+import type { ListProps } from '../lists/list';
 import type { KitProps } from './index';
 
 /*
@@ -23,3 +24,10 @@ expectTypeOf<KitProps<'Callout', string, DrawnNode>['actions']>().toEqualTypeOf<
 expectTypeOf<KitProps<'Canvas.Group'>['translate']>().toEqualTypeOf<
   [number, number] | undefined
 >();
+
+// The List registry entry's mapped schema fits the public kit part.
+expectTypeOf<KitProps<'List'>>().toExtend<ListProps<unknown>>();
+
+expectTypeOf<
+  NonNullable<KitProps<'List'>['selection']>['onChange']
+>().toEqualTypeOf<((ids: readonly string[]) => void) | undefined>();

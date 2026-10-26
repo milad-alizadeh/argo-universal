@@ -11,6 +11,45 @@ export {
 } from './status-kit-props';
 
 export const contentListProps = z.object({
+  accessibilityLabel: z
+    .string()
+    .optional()
+    .describe('The spoken name of the list.'),
+  pagination: z
+    .object({
+      hasMore: z.boolean().describe('Whether another page is available.'),
+      onLoadMore: handler('onLoadMore'),
+    })
+    .optional()
+    .describe('Loads automatically near the end, or the top with anchor=end.'),
+  onRefresh: handler('onRefresh')
+    .optional()
+    .describe(
+      'Stock pull to refresh on phones; waits for the handler to settle.',
+    ),
+  selection: z
+    .object({
+      mode: z.literal('multiple'),
+      selected: z.array(z.string()).readonly(),
+      onChange: handler('onChange').optional(),
+    })
+    .optional()
+    .describe(
+      'Content selection; desktop modifiers, iOS edit mode, Android long press.',
+    ),
+  anchor: z
+    .literal('end')
+    .optional()
+    .describe(
+      'Starts at the newest row and follows it until the reader scrolls away.',
+    ),
+  searchMode: z
+    .enum(['app', 'plugin'])
+    .optional()
+    .describe(
+      'App filters loaded rows; plugin receives throttled search text.',
+    ),
+  onSearchTextChange: handler('onSearchTextChange').optional(),
   layout: z.enum(['list', 'grid']).optional().describe('Rows or media tiles.'),
   direction: z
     .enum(['vertical', 'horizontal'])

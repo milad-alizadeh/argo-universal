@@ -140,6 +140,20 @@ export type WireSchemaHints = {
     "src": PropValue<"Metadata.Avatar", "src">;
   };
   "List": {
+    /** The spoken name of the list. */
+    "accessibilityLabel": PropValue<"List", "accessibilityLabel">;
+    /** Loads automatically near the end, or the top with anchor=end. */
+    "pagination": PropValue<"List", "pagination">;
+    /** Stock pull to refresh on phones; waits for the handler to settle. */
+    "onRefresh": PropValue<"List", "onRefresh">;
+    /** Content selection; desktop modifiers, iOS edit mode, Android long press. */
+    "selection": PropValue<"List", "selection">;
+    /** Starts at the newest row and follows it until the reader scrolls away. */
+    "anchor": PropValue<"List", "anchor">;
+    /** App filters loaded rows; plugin receives throttled search text. */
+    "searchMode": PropValue<"List", "searchMode">;
+    /** on Search Text Change for this part. */
+    "onSearchTextChange": PropValue<"List", "onSearchTextChange">;
     /** Rows or media tiles. */
     "layout": PropValue<"List", "layout">;
     /** Vertical content or a horizontal shelf. */

@@ -9,6 +9,7 @@ import type { KitProps } from '../../kit-props';
 export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
   Pick<
     ScrollFadeListProps<Item>,
+    | 'refreshControl'
     | 'keyExtractor'
     | 'getItemType'
     | 'extraData'
@@ -44,6 +45,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     fit?: boolean;
     padding?: SizeClassValue<SpacingStep>;
     paddingTop?: SizeClassValue<SpacingStep>;
+    getSelectionId?: (item: Item) => string | undefined;
     getSectionKey?: (item: Item) => string | undefined;
   };
 

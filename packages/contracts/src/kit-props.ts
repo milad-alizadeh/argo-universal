@@ -1,3 +1,4 @@
+import type { KitCallbackReturn } from './kit-callback-return';
 import type { z } from 'zod';
 import type { WithPropHints } from './kit-prop-hints';
 import type { KitListItem, KitNode } from './plugins/list-expansion';
@@ -64,7 +65,7 @@ type KitValuePayload<Payload, Props> = Props extends {
 /*
  * How one side draws schema values. The App gets its own nodes, choices and items, receives handlers alone
  * (inside nested data too) and slot props as nodes. A Plugin writes JSX: a handler goes beside the value it
- * replaces, only in top-level props, and every list is readonly.
+ * replaces, at the top level or in its declared nested event, and every list is readonly.
  */
 export interface KitDrawing {
   node: unknown;
@@ -84,15 +85,26 @@ type Payload<Schema, Props> = KitValuePayload<
 type Callback<Schema, Props, Drawing extends KitDrawing> = [
   Payload<Schema, Props>,
 ] extends [undefined]
-  ? () => Drawing['returns']
+  ? () => KitCallbackReturn<Schema, Drawing['returns']>
   : (
       payload: KitValue<Payload<Schema, Props>, Record<never, never>, Drawing>,
-    ) => Drawing['returns'];
+    ) => KitCallbackReturn<Schema, Drawing['returns']>;
 
 type NestedEvents<
   Events,
   Drawing extends KitDrawing,
-> = Drawing['plugin'] extends true ? Record<never, never> : Events;
+  Value,
+> = Drawing['plugin'] extends true
+  ? {
+      [
+        Key in keyof Events as Key extends keyof Value
+          ? Extract<Value[Key], WireEvent> extends never
+            ? never
+            : Key
+          : never
+      ]: Events[Key];
+    }
+  : Events;
 
 type KitList<
   Values extends readonly unknown[],
@@ -129,7 +141,7 @@ type KitValue<
               : Value extends object
                 ? KitMappedProps<
                     Value,
-                    NestedEvents<Events, Drawing>,
+                    NestedEvents<Events, Drawing, Value>,
                     never,
                     Drawing
                   >

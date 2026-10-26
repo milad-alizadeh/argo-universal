@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { acknowledgedEvent } from './kit-event-props';
 import {
   contentListProps,
   listSectionProps,
@@ -23,6 +25,16 @@ export const listWireParts = {
         slots: {
           empty: ['Text', 'Stack', 'EmptyState'],
           header: ['Text', 'Label'],
+          actions: actionSlot,
+        },
+        events: {
+          onLoadMore: acknowledgedEvent('pagination'),
+          onRefresh: acknowledgedEvent(),
+          onChange: z
+            .array(z.string())
+            .readonly()
+            .meta({ within: 'selection', value: 'selected', blocks: false }),
+          onSearchTextChange: z.string().meta({ blocks: false }),
         },
       },
     ),

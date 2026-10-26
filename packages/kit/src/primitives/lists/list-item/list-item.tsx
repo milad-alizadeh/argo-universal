@@ -7,6 +7,11 @@ import { loadingLanes } from '../../../list-skeleton-lanes';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
+import {
+  useContentItemDrawing,
+  useContentItemActions,
+  useSelectedSeparator,
+} from '../list/list-item-content-selection';
 import { drawingContent } from './list-item-drawing-content';
 import { hasLeading, LinkAccessory, separatorClass } from './list-item-parts';
 import { ItemPress, type DrawingProps } from './list-item-press';
@@ -34,10 +39,14 @@ function useItemDrawing(): ItemDrawing {
 
 function ItemSeparator(props: ListItemProps): ReactNode {
   const { index } = useContext(ListContext);
-  const covered = useSeparatorCovered(index);
+  const highlighted = useSeparatorCovered(index);
+  const selected = useSelectedSeparator(props.id);
+  const covered = [highlighted, selected].some(Boolean);
   const separator = itemSeparator(useItemDrawing(), hasLeading(props));
 
-  return separator && !covered ? (
+  if (covered) return null;
+
+  return separator ? (
     <View
       className={separatorClass(separator, props.leadingSize)}
       style={hairline}
@@ -53,9 +62,10 @@ function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
   const { context, footer } = useListItemGroup(props.description);
+  const actions = useContentItemActions(props);
 
   return (
-    <ContextActions actions={props.actions} menu={props.contextMenu}>
+    <ContextActions actions={actions} menu={props.contextMenu}>
       <>
         <ListContext value={context}>
           <ItemSurface {...props} />
@@ -105,15 +115,14 @@ function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
   const menu = useInMenu();
 
-  return (
-    <ListItemFrame
-      {...selected}
-      choice={menu ? <ChoiceSlot {...selected} /> : undefined}
-      accessory={
-        useTrailingChoice(menu, selected) ?? disclosureAccessory(disclosure)
-      }
-    />
-  );
+  const drawing = useContentItemDrawing({
+    ...selected,
+    choice: menu ? <ChoiceSlot {...selected} /> : undefined,
+    accessory:
+      useTrailingChoice(menu, selected) ?? disclosureAccessory(disclosure),
+  });
+
+  return <ListItemFrame {...drawing} />;
 }
 
 // A row that pushes a page outside a choosing List shows the disclosure chevron.
