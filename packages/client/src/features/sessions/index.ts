@@ -108,6 +108,8 @@ export {
 
 export { useSessionOptions } from './hooks/use-session-options';
 
+export { useSessionShells } from './hooks/use-session-shells';
+
 export {
   chooseProject,
   type SessionChoices,

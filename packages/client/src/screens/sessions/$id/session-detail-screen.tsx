@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useInstalledAgents } from '#features/agents';
 import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
-import { useConnectionDropped } from '#features/sessions';
+import { useConnectionDropped, useSessionShells } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
@@ -86,7 +86,8 @@ type SessionSurroundings =
   | 'connected'
   | 'elicitation'
   | 'permission'
-  | 'onAtEndChange';
+  | 'onAtEndChange'
+  | 'shells';
 
 function useSessionSurroundings(
   { sessionId, preview }: SessionPage,
@@ -94,6 +95,7 @@ function useSessionSurroundings(
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     ...useFeedRequests(sessionId, feed),
+    shells: useSessionShells(sessionId, feed.snapshot?.shells ?? []),
     agents: useInstalledAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),

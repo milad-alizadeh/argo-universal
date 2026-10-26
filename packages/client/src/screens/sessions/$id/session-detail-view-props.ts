@@ -4,6 +4,7 @@ import {
   openFailureText,
   type SessionHeaderProps,
   type SessionHeaderStatus,
+  type ShellPanelProps,
 } from '#features/sessions';
 import type { SessionCallouts } from '#features/sessions';
 import {
@@ -24,12 +25,13 @@ export type SessionDetailViewSources = Omit<
   'snapshot' | 'view'
 > & {
   callouts: SessionCallouts;
+  shells: ShellPanelProps;
   // The Connection dropped the Feed's open: the page keeps opening, and a toast says why.
   feedDropped: boolean;
 };
 
 type OpenSessionSources = OpenSession &
-  Pick<SessionDetailViewSources, 'callouts'>;
+  Pick<SessionDetailViewSources, 'callouts' | 'shells'>;
 
 type FeedFailure = Pick<SessionDetailViewSources, 'feed' | 'feedDropped'>;
 
@@ -96,6 +98,7 @@ const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   subagents: {
     subagents: open.snapshot.subagents,
   },
+  shells: open.shells,
   onDropFiles: (dropped) => void open.commands.attachDroppedFiles(dropped),
   archived: open.snapshot.archivedAt !== null,
 });
