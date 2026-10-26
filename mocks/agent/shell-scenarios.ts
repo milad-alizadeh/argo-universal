@@ -42,7 +42,7 @@ export const shellScenarios = {
       {
         ...runningShellStep,
         request: {
-          command: 'node',
+          command: process.execPath,
           args: [
             '-e',
             "const fs = require('fs'); console.log('Shell ready'); let printed = false; setInterval(() => { if (printed || !fs.existsSync('shell-output.release')) return; printed = true; console.log('Shell updated'); }, 25)",
