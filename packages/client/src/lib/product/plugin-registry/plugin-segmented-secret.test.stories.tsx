@@ -32,9 +32,14 @@ type Story = StoryObj<typeof meta>;
 
 export const SwitchView: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('radio', { name: 'Closed' }));
-    await expect(canvas.getByRole('radio', { name: 'Closed' })).toBeChecked();
-    await expect(canvas.getByRole('radio', { name: 'Open' })).not.toBeChecked();
+    await userEvent.click(canvas.getByRole('button', { name: 'Closed' }));
+    await expect(
+      canvas.getByRole('button', { name: 'Closed' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(canvas.getByRole('button', { name: 'Open' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
     await expect(onEvent).toHaveBeenCalledWith('views', {
       event: 'onValueChange',
       payload: 'closed',
@@ -45,13 +50,16 @@ export const SwitchView: Story = {
 export const RefusedViewKeepsSelection: Story = {
   play: async ({ canvas, userEvent }) => {
     onEvent.mockRejectedValueOnce(new Error('Refused'));
-    await userEvent.click(canvas.getByRole('radio', { name: 'Closed' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Closed' }));
     await waitFor(() =>
-      expect(canvas.getByRole('radio', { name: 'Open' })).toBeChecked(),
+      expect(canvas.getByRole('button', { name: 'Open' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      ),
     );
     await expect(
-      canvas.getByRole('radio', { name: 'Closed' }),
-    ).not.toBeChecked();
+      canvas.getByRole('button', { name: 'Closed' }),
+    ).toHaveAttribute('aria-pressed', 'false');
   },
 };
 

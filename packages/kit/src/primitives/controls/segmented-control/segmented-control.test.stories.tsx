@@ -24,34 +24,44 @@ type Story = StoryObj<typeof meta>;
 export const ChooseWithKeyboard: Story = {
   play: async ({ canvas, userEvent, args }) => {
     await userEvent.tab();
-    await expect(canvas.getByRole('radio', { name: 'First' })).toHaveFocus();
+    await expect(canvas.getByRole('button', { name: 'First' })).toHaveFocus();
     await userEvent.keyboard('{ArrowRight}');
-    const third = canvas.getByRole('radio', { name: 'Third' });
-    await expect(third).toBeChecked();
+    const third = canvas.getByRole('button', { name: 'Third' });
+    await expect(third).toHaveAttribute('aria-pressed', 'true');
     await expect(third).toHaveFocus();
     await expect(args.onValueChange).toHaveBeenCalledWith('third');
     await userEvent.keyboard('{ArrowRight}');
-    await expect(canvas.getByRole('radio', { name: 'First' })).toBeChecked();
+    await expect(canvas.getByRole('button', { name: 'First' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await userEvent.keyboard('{End}{Home}');
-    await expect(canvas.getByRole('radio', { name: 'First' })).toBeChecked();
+    await expect(canvas.getByRole('button', { name: 'First' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   },
 };
 
 export const ChooseWithPointer: Story = {
   play: async ({ canvas, userEvent, args }) => {
-    await userEvent.click(canvas.getByRole('radio', { name: 'Third' }));
-    await expect(canvas.getByRole('radio', { name: 'Third' })).toBeChecked();
+    await userEvent.click(canvas.getByRole('button', { name: 'Third' }));
+    await expect(canvas.getByRole('button', { name: 'Third' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await expect(args.onValueChange).toHaveBeenCalledWith('third');
-    await expect(
-      canvas.getByRole('radio', { name: 'First' }),
-    ).not.toBeChecked();
+    await expect(canvas.getByRole('button', { name: 'First' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   },
 };
 
 export const Unavailable: Story = {
   args: { disabled: true },
   play: async ({ canvas, userEvent, args }) => {
-    const first = canvas.getByRole('radio', { name: 'First' });
+    const first = canvas.getByRole('button', { name: 'First' });
     await expect(first).toBeDisabled();
     await userEvent.click(first);
     await expect(args.onValueChange).not.toHaveBeenCalled();

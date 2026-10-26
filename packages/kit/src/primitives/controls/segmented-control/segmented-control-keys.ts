@@ -32,7 +32,7 @@ export function moveSegment(event: KeyboardEvent<HTMLButtonElement>): void {
 }
 
 function enabledSegments(button: HTMLButtonElement): HTMLButtonElement[] {
-  const group = button.closest('[role="radiogroup"]');
+  const group = button.closest('[role="group"]');
 
   return [
     ...(group?.querySelectorAll<HTMLButtonElement>('button:enabled') ?? []),

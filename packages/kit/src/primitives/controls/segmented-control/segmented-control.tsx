@@ -11,7 +11,7 @@ import type {
 export function SegmentedControl(props: SegmentedControlProps): ReactElement {
   return (
     <div
-      role="radiogroup"
+      role="group"
       aria-label={props.label}
       className={trackClass(props.disabled)}
     >
@@ -38,8 +38,8 @@ const segmentProps = (
   props: SegmentProps,
 ): React.ButtonHTMLAttributes<HTMLButtonElement> => ({
   type: 'button',
-  role: 'radio',
-  'aria-checked': props.option.value === props.value,
+  role: 'button',
+  'aria-pressed': props.option.value === props.value,
   disabled: props.disabled || props.option.disabled,
   tabIndex: tabStop(props) ? 0 : -1,
   onClick: () => props.onValueChange(props.option.value),
@@ -64,7 +64,7 @@ const trackClass = (disabled?: boolean): string =>
 
 const segmentClass = (selected: boolean): string =>
   cn(
-    'min-w-0 flex-1 cursor-pointer rounded-md border-0 px-3 py-1 outline-none disabled:cursor-default disabled:opacity-50',
+    'min-w-0 flex-1 cursor-pointer rounded-md border-0 px-3 py-1 outline-none disabled:cursor-default',
     selected
       ? 'bg-card segment-selected'
       : 'bg-transparent enabled:hover:bg-hover enabled:active:bg-pressed',
