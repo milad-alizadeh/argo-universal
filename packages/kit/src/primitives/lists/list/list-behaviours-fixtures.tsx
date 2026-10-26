@@ -34,3 +34,15 @@ export const logList = {
   renderItem: (line: string): React.JSX.Element => <Text>{line}</Text>,
   accessibilityLabel: 'Log lines',
 } satisfies ListProps<string>;
+
+// Already holds every row the example's pagination will load, so `hasMore` is false.
+export const completeList = {
+  ...pagedList,
+  items: Array.from({ length: 60 }, (_, index) => `Item ${index + 1}`),
+} satisfies ListProps<string>;
+
+export const refreshableList = {
+  ...pagedList,
+  items: items.slice(0, 4),
+  onRefresh: (): void => {},
+} satisfies ListProps<string>;

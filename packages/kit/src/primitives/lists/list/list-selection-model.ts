@@ -52,7 +52,7 @@ export class SelectionRange {
   private anchor: string | undefined;
 
   public choose(input: SelectionInput, id: string, keys: Modifiers): void {
-    if (this.canExtend(keys)) {
+    if (this.canExtend(input, keys)) {
       this.extend(input, id);
 
       return;
@@ -64,8 +64,16 @@ export class SelectionRange {
     else input.change([id]);
   }
 
-  private canExtend(keys: Modifiers): boolean {
-    return keys.range && this.anchor !== undefined;
+  // Selection ended or the List lost the anchor's row: the next click starts afresh.
+  public reset(id?: string): void {
+    this.anchor = id;
+  }
+
+  // A Shift-click whose anchor row is gone selects the clicked row and anchors there.
+  private canExtend(input: SelectionInput, keys: Modifiers): boolean {
+    return (
+      keys.range && this.anchor !== undefined && input.ids.includes(this.anchor)
+    );
   }
 
   private extend(input: SelectionInput, id: string): void {
@@ -97,6 +105,7 @@ export function selectWebRow(
   const keys = modifiers(press.event);
 
   if (activates(keys, press)) {
+    range.reset(press.id);
     activateRow(input, press);
 
     return;

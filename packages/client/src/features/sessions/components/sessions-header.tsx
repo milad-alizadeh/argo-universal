@@ -1,3 +1,4 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { SearchField } from '@repo/kit/primitives/controls/search-field';
 import { useSelectionModeHost } from '@repo/kit/selection-mode';
@@ -13,7 +14,8 @@ export interface SessionsHeaderProps extends SessionsViewState {
   onNewSession: () => void;
 }
 
-const newSessionAppearance = {
+const newSessionButton = {
+  accessibilityLabel: 'New Session',
   variant: 'ghost',
   size: 'sm',
   className: 'size-7 sm:size-7',
@@ -21,18 +23,24 @@ const newSessionAppearance = {
   iconClassName: 'text-muted-foreground',
 } as const;
 
+// iOS starts selection from a Select entry, which the sidebar's own header draws as a Screen's would.
+function SelectEntry(): React.ReactNode {
+  const begin = useSelectionModeHost()?.begin;
+
+  return begin ? (
+    <Button label="Select" variant="text" onPress={begin} />
+  ) : null;
+}
+
 function SessionsHeaderActions({
   onNewSession,
   ...viewState
 }: SessionsHeaderProps): React.JSX.Element {
   return (
     <>
+      <SelectEntry />
       <SessionsViewMenu {...viewState} />
-      <IconButton
-        {...newSessionAppearance}
-        accessibilityLabel="New Session"
-        onPress={onNewSession}
-      />
+      <IconButton {...newSessionButton} onPress={onNewSession} />
     </>
   );
 }

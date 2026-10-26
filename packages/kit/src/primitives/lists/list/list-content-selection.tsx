@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -12,17 +13,17 @@ import { closingActions } from './list-selection-actions';
 import { SelectionRange, type RowPress } from './list-selection-model';
 import {
   selectionValue,
-  type EditMode,
+  type SelectingState,
   type SelectionParts,
 } from './list-selection-value';
 
 export interface ContentSelection {
   selected: readonly string[];
   active: boolean;
-  editing: boolean;
-  setEditing: (editing: boolean) => void;
+  selecting: boolean;
+  setSelecting: (selecting: boolean) => void;
   change: (ids: readonly string[]) => void;
-  // Clears the selection and leaves edit mode (iOS edit mode, Android contextual mode); on web it only clears.
+  // Clears the selection and ends Selection mode (iOS edit mode, Android contextual mode); on web it only clears.
   close: () => void;
   press: (press: RowPress) => void;
   longPress: (id: string) => void;
@@ -46,10 +47,10 @@ export const ContentSelectionContext = createContext<ContentSelection | null>(
 
 export const ContentRowId = createContext<string | undefined>(undefined);
 
-function useEditMode(): EditMode {
-  const [editing, setEditing] = useState(false);
+function useSelectingState(): SelectingState {
+  const [selecting, setSelecting] = useState(false);
 
-  return useMemo(() => ({ editing, setEditing }), [editing]);
+  return useMemo(() => ({ selecting, setSelecting }), [selecting]);
 }
 
 function useParts(): SelectionParts {
@@ -63,35 +64,85 @@ function useParts(): SelectionParts {
 
 type Change = ((ids: readonly string[]) => void) | undefined;
 
-function useClose(onChange: Change, edit: EditMode): () => void {
-  const { setEditing } = edit;
+interface Chosen {
+  ids: readonly string[];
+  selected: readonly string[] | undefined;
+  onChange: Change;
+}
+
+function useClose(
+  onChange: Change,
+  mode: SelectingState,
+  parts: SelectionParts,
+): () => void {
+  const { setSelecting } = mode;
 
   return useCallback((): void => {
     onChange?.([]);
-    setEditing(false);
-  }, [onChange, setEditing]);
+    setSelecting(false);
+    parts.range.reset();
+  }, [onChange, setSelecting, parts]);
+}
+
+function pruned(
+  ids: readonly string[],
+  selected: readonly string[],
+): readonly string[] {
+  const shown = new Set(ids);
+
+  return selected.every((id) => shown.has(id))
+    ? selected
+    : selected.filter((id) => shown.has(id));
+}
+
+const changeTo = (onChange: Change, ids: readonly string[] | undefined): void =>
+  onChange?.(ids ?? []);
+
+// Rows that left the List (filtered out, collapsed, archived elsewhere) leave the selection too, so the count and the Actions cover only rows the reader can see.
+function usePresentSelection(
+  ids: readonly string[],
+  selected: readonly string[] | undefined,
+  onChange: Change,
+): readonly string[] | undefined {
+  const present = useMemo(
+    () => selected && pruned(ids, selected),
+    [ids, selected],
+  );
+
+  useEffect(() => {
+    if (present !== selected) changeTo(onChange, present);
+  }, [present, selected, onChange]);
+
+  return present;
+}
+
+function useChosen<Item>(props: ListProps<Item>): Chosen {
+  const ids = useSelectionIds(props);
+  const { onChange } = props.selection ?? {};
+  const shown = usePresentSelection(ids, props.selection?.selected, onChange);
+
+  return { ids, selected: shown, onChange };
 }
 
 // Memoised on what it reads, not on the whole `props`, which is a new object on every render.
 function useSelectionBase<Item>(
   props: ListProps<Item>,
-  edit: EditMode,
+  mode: SelectingState,
 ): ContentSelection | null {
-  const ids = useSelectionIds(props);
+  const { ids, selected, onChange } = useChosen(props);
   const parts = useParts();
-  const { selected, onChange } = props.selection ?? {};
-  const close = useClose(onChange, edit);
+  const close = useClose(onChange, mode, parts);
 
   return useMemo(
-    () => selectionValue({ ids, selected, onChange, edit, close, parts }),
-    [ids, selected, onChange, edit, close, parts],
+    () => selectionValue({ ids, selected, onChange, mode, close, parts }),
+    [ids, selected, onChange, mode, close, parts],
   );
 }
 
 export function useContentSelection<Item>(
   props: ListProps<Item>,
 ): ContentSelection | null {
-  const base = useSelectionBase(props, useEditMode());
+  const base = useSelectionBase(props, useSelectingState());
   const { actions } = props;
 
   return useMemo(

@@ -1,12 +1,19 @@
-import { findToast } from '@repo/kit/mocks/find-toast';
+import { allToasts, findToast } from '@repo/kit/mocks/find-toast';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
+import { dismissToasts } from '#primitives/overlays/toast';
 import { ListItem } from '../list-item';
 import { List } from './list';
-import { logList, pagedList, searchedList } from './list-behaviours-fixtures';
+import {
+  completeList,
+  logList,
+  pagedList,
+  refreshableList,
+  searchedList,
+} from './list-behaviours-fixtures';
 import {
   LogExample,
   PagedExample,
@@ -14,6 +21,8 @@ import {
 } from './list-behaviours.mocks';
 
 const loadingLabel = 'Loading more';
+
+const pagedLabel = 'Paged items';
 
 const selectedAttribute = 'aria-pressed';
 
@@ -69,7 +78,7 @@ export const ModifierSelection: Story = {
 export const LoadsAnotherPageAutomatically: Story = {
   render: () => <PagedExample {...pagedList} />,
   play: async ({ canvas }) => {
-    const scroll = await canvas.findByLabelText('Paged items');
+    const scroll = await canvas.findByLabelText(pagedLabel);
     await waitFor(async () => {
       scroll.scrollTop = scroll.scrollHeight;
       scroll.dispatchEvent(new Event('scroll'));
@@ -162,7 +171,7 @@ export const JumpToLatestAfterScrollingAway: Story = {
 export const FailedPageShowsOneToast: Story = {
   render: () => <PagedExample {...pagedList} fail />,
   play: async ({ canvas }) => {
-    const scroll = await canvas.findByLabelText('Paged items');
+    const scroll = await canvas.findByLabelText(pagedLabel);
     await waitFor(async () => {
       scroll.scrollTop = scroll.scrollHeight;
       scroll.dispatchEvent(new Event('scroll'));
@@ -283,5 +292,133 @@ export const CallerScrollPropsWinOverTheAnchor: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Item 1')).toBeVisible();
     await expect(canvas.queryByText('Item 120')).toBeNull();
+  },
+};
+
+const loadFailed = "Couldn't load more";
+
+type Scroller = HTMLElement;
+
+const scrollToEnd = (scroll: Scroller): void => {
+  scroll.scrollTop = scroll.scrollHeight;
+  scroll.dispatchEvent(new Event('scroll'));
+};
+
+const scrollToStart = (scroll: Scroller): void => {
+  scroll.dispatchEvent(
+    new WheelEvent('wheel', { deltaY: -scroll.clientHeight }),
+  );
+  scroll.scrollTop = 0;
+  scroll.dispatchEvent(new Event('scroll'));
+};
+
+const precedes = (first: Node, second: Node): boolean =>
+  Boolean(
+    first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+
+export const SpinnerSitsAtTheEnd: Story = {
+  render: () => <PagedExample {...pagedList} />,
+  play: async ({ canvas }) => {
+    const scroll = await canvas.findByLabelText(pagedLabel);
+
+    const spinner = await waitFor(async () => {
+      scrollToEnd(scroll);
+
+      return canvas.getByLabelText(loadingLabel);
+    });
+
+    const rows = canvas.getAllByText(/^Item \d+$/);
+    const last = rows.at(-1);
+
+    if (!last) throw new Error('Expected rows');
+    await expect(precedes(last, spinner)).toBe(true);
+  },
+};
+
+export const SpinnerSitsAtTheTopWhenAnchoredToTheEnd: Story = {
+  render: () => <PagedExample {...pagedList} anchor="end" />,
+  play: async ({ canvas }) => {
+    const scroll = await canvas.findByLabelText(pagedLabel);
+    // An anchored List first settles on its newest row; only then can it reach the top.
+    await waitFor(() => expect(canvas.getByText('Item 40')).toBeVisible());
+
+    const spinner = await waitFor(async () => {
+      scrollToStart(scroll);
+
+      return canvas.getByLabelText(loadingLabel);
+    });
+
+    const first = canvas.getAllByText(/^Item \d+$/)[0];
+
+    if (!first) throw new Error('Expected rows');
+    await expect(precedes(spinner, first)).toBe(true);
+  },
+};
+
+export const FailedPageRetriesAtTheEnd: Story = {
+  render: () => <RetryingList />,
+  play: async ({ canvas }) => {
+    dismissToasts();
+    const scroll = await canvas.findByLabelText(pagedLabel);
+    await waitFor(async () => {
+      scrollToEnd(scroll);
+      await expect(await allToasts(loadFailed)).toHaveLength(1);
+    });
+    await waitFor(() =>
+      expect(canvas.queryByLabelText(loadingLabel)).toBeNull(),
+    );
+    await expect(retried).toHaveBeenCalledTimes(1);
+    scrollToStart(scroll);
+    await expect(await canvas.findByText('Item 1')).toBeVisible();
+    await waitFor(async () => {
+      scrollToEnd(scroll);
+      await expect(retried).toHaveBeenCalledTimes(2);
+    });
+    await waitFor(() =>
+      expect(canvas.queryByLabelText(loadingLabel)).toBeNull(),
+    );
+    scrollToEnd(scroll);
+    await expect(await canvas.findByText('Item 60')).toBeVisible();
+    await expect(await allToasts(loadFailed)).toHaveLength(1);
+  },
+};
+
+const retried = fn();
+
+function RetryingList(): React.JSX.Element {
+  retried.mockClear();
+
+  return <PagedExample {...pagedList} failOnce onLoad={retried} />;
+}
+
+export const NothingLoadsAfterTheLastPage: Story = {
+  render: () => <CompleteList />,
+  play: async ({ canvas }) => {
+    const scroll = await canvas.findByLabelText(pagedLabel);
+    await waitFor(async () => {
+      scrollToEnd(scroll);
+      await expect(await canvas.findByText('Item 60')).toBeVisible();
+    });
+    scrollToEnd(scroll);
+    await expect(ended).not.toHaveBeenCalled();
+    await expect(canvas.queryByLabelText(loadingLabel)).toBeNull();
+  },
+};
+
+const ended = fn();
+
+function CompleteList(): React.JSX.Element {
+  ended.mockClear();
+
+  return <PagedExample {...completeList} onLoad={ended} />;
+}
+
+export const WebDrawsNothingForRefresh: Story = {
+  render: () => <List {...refreshableList} />,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Item 1')).toBeVisible();
+    await expect(canvas.queryByRole('progressbar')).toBeNull();
+    await expect(canvas.queryByRole('button', { name: /refresh/i })).toBeNull();
   },
 };

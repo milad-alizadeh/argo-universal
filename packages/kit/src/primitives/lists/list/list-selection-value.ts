@@ -8,9 +8,9 @@ import {
   type SelectionRange,
 } from './list-selection-model';
 
-export interface EditMode {
-  editing: boolean;
-  setEditing: (editing: boolean) => void;
+export interface SelectingState {
+  selecting: boolean;
+  setSelecting: (selecting: boolean) => void;
 }
 
 // What the List holds for its whole life: the Shift-click anchor and the ids of rows that said they are disabled.
@@ -23,7 +23,7 @@ export interface SelectionSetup {
   ids: readonly string[];
   selected: readonly string[] | undefined;
   onChange?: (ids: readonly string[]) => void;
-  edit: EditMode;
+  mode: SelectingState;
   close: () => void;
   parts: SelectionParts;
 }
@@ -65,10 +65,10 @@ function lockRow(locked: Set<string>, id: string | undefined): () => void {
 
 function beginSelection(
   input: SelectionInput,
-  edit: EditMode,
+  mode: SelectingState,
   id: string,
 ): void {
-  edit.setEditing(true);
+  mode.setSelecting(true);
   input.change([...new Set([...input.selected, id])]);
 }
 
@@ -104,11 +104,11 @@ function rowControls(
   input: SelectionInput,
   found: Lookup,
 ): Pick<ContentSelection, 'press' | 'longPress' | 'all' | 'coversSeparator'> {
-  const { parts, edit } = setup;
+  const { parts, mode } = setup;
 
   return {
     press: (press) => selectRow(input, parts.range, press),
-    longPress: (id) => beginSelection(input, edit, id),
+    longPress: (id) => beginSelection(input, mode, id),
     all: () => input.change(input.ids),
     coversSeparator: (id) => coversNext(found, id),
   };
@@ -134,12 +134,12 @@ function valueOf(setup: Chosen): ContentSelection {
   const found = lookup(setup.ids, setup.selected);
 
   return {
-    ...setup.edit,
+    ...setup.mode,
     selected: setup.selected,
     allSelected: allSelected(setup, found),
     change: input.change,
     close: setup.close,
-    active: Platform.OS === 'web' || setup.edit.editing,
+    active: Platform.OS === 'web' || setup.mode.selecting,
     isSelected: (id) => found.chosen.has(id),
     lock: (id) => lockRow(setup.parts.locked, id),
     ...rowControls(setup, input, found),

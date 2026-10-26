@@ -13,7 +13,7 @@ import type { SessionsListProps } from './sessions-list-props';
 import { useScrolling } from './sessions-list-scrolling';
 import {
   useSessionsSelection,
-  selectionOptions,
+  sessionsListBehaviours,
 } from './use-sessions-selection';
 
 export type { SessionsListProps } from './sessions-list-props';
@@ -145,7 +145,7 @@ function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
       {...listBehaviour}
       {...sessionsFade}
       {...sessionListOptions(props)}
-      {...selectionOptions(props)}
+      {...sessionsListBehaviours(props)}
       onScroll={props.onScroll}
       {...listRows(props.rows)}
       {...listChrome(props)}

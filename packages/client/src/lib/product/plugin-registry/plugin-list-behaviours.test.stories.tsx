@@ -109,3 +109,66 @@ export const PaginationWaitsForThePlugin: Story = {
     );
   },
 };
+
+const logLines: WireNode = {
+  type: 'List',
+  key: 'log',
+  slots: {},
+  props: { accessibilityLabel: 'Log lines', anchor: 'end' },
+  children: Array.from({ length: 120 }, (_, index) => ({
+    type: 'ListItem',
+    key: String(index),
+    props: { title: `Item ${index + 1}` },
+    children: [],
+    slots: {},
+  })),
+};
+
+export const AnchoredListOffersJumpToLatest: Story = {
+  render: () => <PluginTree root={logLines} onEvent={onEvent} />,
+  play: async ({ canvas }) => {
+    const scroll = await canvas.findByLabelText('Log lines');
+    await waitFor(() => expect(canvas.getByText('Item 120')).toBeVisible());
+    await expect(
+      canvas.queryByRole('button', { name: 'Jump to latest' }),
+    ).toBeNull();
+    await waitFor(async () => {
+      scroll.dispatchEvent(
+        new WheelEvent('wheel', { deltaY: -scroll.clientHeight }),
+      );
+      scroll.scrollTop = 0;
+      scroll.dispatchEvent(new Event('scroll'));
+      await expect(
+        canvas.getByRole('button', { name: 'Jump to latest' }),
+      ).toBeVisible();
+    });
+  },
+};
+
+const refreshable: WireNode = {
+  type: 'List',
+  key: 'refreshable',
+  slots: {},
+  props: {
+    accessibilityLabel: 'Refreshable list',
+    onRefresh: { $event: 'onRefresh' },
+  },
+  children: [
+    {
+      type: 'ListItem',
+      key: 'web',
+      props: { title: 'Web' },
+      children: [],
+      slots: {},
+    },
+  ],
+};
+
+export const RefreshDrawsNothingOnWeb: Story = {
+  render: () => <PluginTree root={refreshable} onEvent={onEvent} />,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Web')).toBeVisible();
+    await expect(canvas.queryByRole('progressbar')).toBeNull();
+    await expect(canvas.queryByRole('button', { name: /refresh/i })).toBeNull();
+  },
+};

@@ -16,11 +16,16 @@ function selectsAll(event: KeyDownEvent): boolean {
   return (keys.metaKey || keys.ctrlKey) && keys.key.toLowerCase() === 'a';
 }
 
+// Escape is left to an outer handler when there is no selection to clear.
+function clears(selection: ContentSelection, event: KeyDownEvent): boolean {
+  return event.nativeEvent.key === 'Escape' && selection.selected.length > 0;
+}
+
 function handleKey(selection: ContentSelection, event: KeyDownEvent): void {
   if (selectsAll(event)) {
     event.preventDefault();
     selection.all();
-  } else if (event.nativeEvent.key === 'Escape') {
+  } else if (clears(selection, event)) {
     event.preventDefault();
     selection.close();
   }

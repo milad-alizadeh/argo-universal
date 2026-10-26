@@ -18,7 +18,12 @@ function childIds(children: ReactNode): string[] {
 
 export type IdentityProps<Item> = Pick<
   ListProps<Item>,
-  'items' | 'children' | 'renderItem' | 'getSelectionId' | 'keyExtractor'
+  | 'items'
+  | 'children'
+  | 'renderItem'
+  | 'getSelectionId'
+  | 'keyExtractor'
+  | 'getItemType'
 >;
 
 // A row's id, in one order for the List's own ids and for the row itself: the `id` its ListItem carries, else the one the List derives (`getSelectionId`, then `keyExtractor`).
@@ -47,18 +52,18 @@ export function selectionIds<Item>(props: IdentityProps<Item>): string[] {
   );
 }
 
-function dataRowIds<Item>({
-  props,
-  item,
-  index,
-}: {
+interface DataRow<Item> {
   props: IdentityProps<Item>;
   item: Item;
   index: number;
-}): string[] {
+}
+
+function dataRowIds<Item>(data: DataRow<Item>): string[] {
+  const { props, item, index } = data;
   const row = renderRow(props, item, index);
 
-  if (disabledRow(row)) return [];
+  if (unselectable(data, row)) return [];
+
   const id = rowId(renderedId(row), selectionId(props, item, index));
 
   return id === undefined ? [] : [id];
@@ -67,6 +72,18 @@ function dataRowIds<Item>({
 function disabledRow(row: ReactNode): boolean {
   return isValidElement<Row>(row) && row.props.disabled === true;
 }
+
+// A header, footer or gap the caller renders as an item is never a row to select, whatever props it carries.
+export const sectionPart = <Item>(
+  props: Pick<ListProps<Item>, 'getItemType'>,
+  item: Item,
+  index: number,
+): boolean => props.getItemType?.(item, index) === 'section';
+
+const unselectable = <Item>(
+  { props, item, index }: DataRow<Item>,
+  row: ReactNode,
+): boolean => sectionPart(props, item, index) || disabledRow(row);
 
 export function renderedId(row: ReactNode): string | undefined {
   return isValidElement<Row>(row) ? row.props.id : undefined;
@@ -86,10 +103,18 @@ function rowChildIds(props: Row): string[] {
 
 function useIdentity<Item>(props: IdentityProps<Item>): IdentityProps<Item> {
   const { items, children, renderItem, getSelectionId, keyExtractor } = props;
+  const { getItemType } = props;
 
   return useMemo(
-    () => ({ items, children, renderItem, getSelectionId, keyExtractor }),
-    [items, children, renderItem, getSelectionId, keyExtractor],
+    () => ({
+      items,
+      children,
+      renderItem,
+      getSelectionId,
+      keyExtractor,
+      getItemType,
+    }),
+    [items, children, renderItem, getSelectionId, keyExtractor, getItemType],
   );
 }
 

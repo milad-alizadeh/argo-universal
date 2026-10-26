@@ -9,7 +9,12 @@ import { ContentRowId } from './list-content-selection';
 import { DataListRow } from './list-grouping';
 import { listInsets } from './list-insets';
 import type { ListProps } from './list-props';
-import { renderedId, rowId, selectionId } from './list-row-identity';
+import {
+  renderedId,
+  rowId,
+  sectionPart,
+  selectionId,
+} from './list-row-identity';
 
 export function ListEmpty({
   isLoading,
@@ -31,16 +36,24 @@ interface RowProps<Item> {
 
 // A header, footer or gap the caller renders as an item says so with the item type 'section', as a List's own children do.
 const isPart = <Item,>({ row, props }: RowProps<Item>): boolean =>
-  props.getItemType?.(row.item, row.index) === 'section';
+  sectionPart(props, row.item, row.index);
+
+const partOrRowId = <Item,>(
+  rowProps: RowProps<Item>,
+  content: ReactNode,
+): string | undefined =>
+  isPart(rowProps)
+    ? undefined
+    : rowId(
+        renderedId(content),
+        selectionId(rowProps.props, rowProps.row.item, rowProps.row.index),
+      );
 
 function Row<Item>(rowProps: RowProps<Item>): ReactElement {
   const { row, props } = rowProps;
   const content = props.renderItem?.(row.item, row.index);
 
-  const id = rowId(
-    renderedId(content),
-    selectionId(props, row.item, row.index),
-  );
+  const id = partOrRowId(rowProps, content);
 
   return (
     <DataListRow index={row.index} part={isPart(rowProps)}>

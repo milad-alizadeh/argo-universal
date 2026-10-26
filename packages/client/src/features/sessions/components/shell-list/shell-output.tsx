@@ -59,11 +59,12 @@ const renderLine = (line: OutputLine): JSX.Element => <OutputRow line={line} />;
 
 type LinesProps = ShellOutputProps & { lines: OutputLine[] };
 
-// Output lines draw as a plain list that follows its end while the reader stays there: the List's end anchor owns that and Jump to latest. Short output stays at the top, as a terminal shows it.
+// Output lines draw as a plain list that follows its end while the reader stays there: the List's end anchor owns that and Jump to latest. Short output stays at the top, as a terminal shows it, and rows never load above, so nothing holds the scroll position as lines are measured.
 const outputListProps = {
   testID: 'shell-output',
   anchor: 'end',
   alignItemsAtEnd: false,
+  maintainVisibleContentPosition: false,
   fit: false,
   renderItem: renderLine,
   keyExtractor: lineKey,

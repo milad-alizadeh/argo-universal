@@ -9,34 +9,7 @@ import type { ControlInput, PluginProps } from './plugin-rendering';
 
 type Value = { sequence: number; value: WireJson | undefined };
 
-type Request = { value: WireJson | undefined; blocks: boolean };
-
-export type Field = {
-  value: Value;
-  // The Server's latest value, and whether the field has yet to show it.
-  source?: WireJson;
-  stale: boolean;
-  type: string;
-  rules: Partial<PartEventRules>;
-  focused: boolean;
-  pending: Map<number, Request>;
-};
-
-export function matchingField(
-  field: Field | undefined,
-  input: ControlInput,
-): Field {
-  if (field?.type === input.node.type) return field;
-
-  return {
-    type: input.node.type,
-    value: { sequence: 0, value: undefined },
-    stale: false,
-    rules: echoRules(input.part),
-    focused: false,
-    pending: new Map(),
-  };
-}
+type PendingEdit = { value: WireJson | undefined; blocks: boolean };
 
 // The Part event whose metadata names a prop the App echoes at once.
 const echoRules = (part: WirePartDefinition): Partial<PartEventRules> =>
@@ -44,88 +17,132 @@ const echoRules = (part: WirePartDefinition): Partial<PartEventRules> =>
     .map(partEventRules)
     .find((rules) => rules.value !== undefined) ?? {};
 
-// The Server's value shows once the field has no focus and no edit pending.
-export function syncField(field: Field, source?: WireJson): void {
-  if (!Object.is(field.source, source))
-    Object.assign(field, { source, stale: true });
-
-  if (showsServer(field))
-    Object.assign(field, {
-      value: { ...field.value, value: source },
-      stale: false,
-    });
-}
-
-const showsServer = (field: Field): boolean =>
-  field.stale && !field.focused && field.pending.size === 0;
-
-export function blurWithin(fields: Map<string, Field>, key: string): void {
-  for (const [child, field] of fields)
-    if (isDescendant(child, key)) field.focused = false;
-}
-
 const isDescendant = (child: string, key: string): boolean =>
   child.startsWith(`${key}/`) || child.startsWith(`${key}#`);
 
-export const blocked = (field: Field): boolean =>
-  [...field.pending.values()].some((request) => request.blocks);
+export class ControlField {
+  private accepted: Value = { sequence: 0, value: undefined };
+  // The Server's latest value, and whether the field has yet to show it.
+  private source?: WireJson;
+  private stale = false;
+  private focused = false;
+  private readonly pending = new Map<number, PendingEdit>();
 
-// A blocking event waits for the one before it; an echo of the shown value changes nothing.
-export function changeFor(field: Field, update: () => void): Change {
-  return (edit) => {
-    if (waiting(field, edit) || echoed(field, edit)) return;
-    request(field, edit, update);
-  };
+  private constructor(
+    public readonly type: string,
+    public readonly rules: Partial<PartEventRules>,
+  ) {}
+
+  public static matching(
+    field: ControlField | undefined,
+    input: ControlInput,
+  ): ControlField {
+    return field?.type === input.node.type
+      ? field
+      : new ControlField(input.node.type, echoRules(input.part));
+  }
+
+  // A pending blocking edit waits for its Server answer.
+  public get blocked(): boolean {
+    return [...this.pending.values()].some((edit) => edit.blocks);
+  }
+
+  // The newest pending edit shows until an edit after it is accepted.
+  public get current(): WireJson | undefined {
+    const last = [...this.pending].at(-1);
+
+    return last && last[0] > this.accepted.sequence
+      ? last[1].value
+      : this.accepted.value;
+  }
+
+  // The Server's value shows once the field has no focus and no edit pending.
+  public sync(source?: WireJson): void {
+    if (!Object.is(this.source, source)) {
+      this.source = source;
+      this.stale = true;
+    }
+
+    if (this.showsServer()) {
+      this.accepted = { ...this.accepted, value: source };
+      this.stale = false;
+    }
+  }
+
+  public blur(): void {
+    this.focused = false;
+  }
+
+  // A blocking event waits for the one before it; an echo of the shown value changes nothing.
+  public changeFor(update: () => void): Change {
+    return (edit) => {
+      if (this.waiting(edit) || this.echoed(edit)) return;
+      this.request(edit, update);
+    };
+  }
+
+  // A coalesced field keeps what the user types while it has focus.
+  public focusProps(update: () => void): PluginProps {
+    if (!this.rules.throttleMs) return {};
+
+    return {
+      onFocus: (): void => {
+        this.focused = true;
+      },
+      onBlur: (): void => {
+        this.focused = false;
+        update();
+      },
+    };
+  }
+
+  private showsServer(): boolean {
+    return this.stale && !this.focused && this.pending.size === 0;
+  }
+
+  private waiting(edit: Edit): boolean {
+    return edit.rules.blocks && this.blocked;
+  }
+
+  private echoed(edit: Edit): boolean {
+    return (
+      edit.rules.value !== undefined && Object.is(edit.value, this.current)
+    );
+  }
+
+  private request(edit: Edit, update: () => void): void {
+    const sequence =
+      Math.max(this.accepted.sequence, ...this.pending.keys()) + 1;
+
+    const value = edit.rules.value ? edit.value : this.current;
+
+    this.pending.set(sequence, { value, blocks: edit.rules.blocks });
+    update();
+
+    this.deliver(edit, { sequence, value }, update);
+  }
+
+  private deliver(edit: Edit, sent: Value, update: () => void): void {
+    void edit
+      .deliver()
+      .then(() => this.accept(sent))
+      // A refused edit leaves the last accepted value showing.
+      .catch(() => {})
+      .finally(() => {
+        this.pending.delete(sent.sequence);
+        update();
+      });
+  }
+
+  private accept(value: Value): void {
+    if (value.sequence > this.accepted.sequence) this.accepted = value;
+  }
 }
 
-const waiting = (field: Field, edit: Edit): boolean =>
-  edit.rules.blocks && blocked(field);
-
-const echoed = (field: Field, edit: Edit): boolean =>
-  edit.rules.value !== undefined && Object.is(edit.value, currentValue(field));
-
-function request(field: Field, edit: Edit, update: () => void): void {
-  const sequence = Math.max(field.value.sequence, ...field.pending.keys()) + 1;
-  const value = edit.rules.value ? edit.value : currentValue(field);
-  field.pending.set(sequence, { value, blocks: edit.rules.blocks });
-  update();
-  void edit
-    .deliver()
-    .then(() => accept(field, { sequence, value }))
-    // A refused edit leaves the last accepted value showing.
-    .catch(() => {})
-    .finally(() => settled(field, sequence, update));
-}
-
-function accept(field: Field, value: Value): void {
-  if (value.sequence > field.value.sequence) field.value = value;
-}
-
-function settled(field: Field, sequence: number, update: () => void): void {
-  field.pending.delete(sequence);
-  update();
-}
-
-// The newest pending edit shows until an edit after it is accepted.
-export function currentValue(field: Field): WireJson | undefined {
-  const last = [...field.pending].at(-1);
-
-  return last && last[0] > field.value.sequence
-    ? last[1].value
-    : field.value.value;
-}
-
-// A coalesced field keeps what the user types while it has focus.
-export function focusOf(field: Field, update: () => void): PluginProps {
-  if (!field.rules.throttleMs) return {};
-
-  return {
-    onFocus: (): void => {
-      field.focused = true;
-    },
-    onBlur: (): void => {
-      field.focused = false;
-      update();
-    },
-  };
+export function blurWithin(
+  fields: Map<string, ControlField>,
+  key: string,
+): void {
+  for (const [child, field] of fields)
+    if (isDescendant(child, key)) field.blur();
 }

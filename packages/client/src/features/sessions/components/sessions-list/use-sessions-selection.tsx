@@ -32,7 +32,7 @@ export function useSessionsSelection(props: SessionsListProps): Selection {
   };
 }
 
-export function selectionOptions(
+export function sessionsListBehaviours(
   props: SessionsListProps & Selection,
 ): Pick<
   ListProps<SessionsListEntry>,
@@ -47,6 +47,11 @@ export function selectionOptions(
   };
 }
 
+// Only an active Session can be archived, so an archived row is never selected.
 function sessionSelectionId(entry: SessionsListEntry): string | undefined {
-  return entry.kind === 'session' ? entry.session.sessionId : undefined;
+  if (entry.kind !== 'session') return undefined;
+
+  return entry.session.archivedAt === null
+    ? entry.session.sessionId
+    : undefined;
 }

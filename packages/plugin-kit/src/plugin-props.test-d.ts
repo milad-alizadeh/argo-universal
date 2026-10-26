@@ -36,16 +36,6 @@ expectTypeOf<PluginProps['Canvas.Group']['translate']>().toEqualTypeOf<
 >();
 
 expectTypeOf<
-  NonNullable<PluginProps['List']['selection']>['onChange']
->().toExtend<
-  Action | ((ids: readonly string[]) => void | Promise<void>) | undefined
->();
-
-expectTypeOf<
-  NonNullable<PluginProps['List']['pagination']>['onLoadMore']
->().toExtend<Action | Handler>();
-
-expectTypeOf<
   Extract<
     PluginProps['SegmentedControl']['onValueChange'],
     (payload: never) => void | Promise<void>

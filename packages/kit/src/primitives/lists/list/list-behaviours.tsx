@@ -65,7 +65,7 @@ function drawJump<Item>(
   anchor: ReturnType<typeof useListAnchor<Item>>,
 ): ReactNode {
   return list.anchor === 'end' ? (
-    <ListJump list={anchor.list} newest={anchor.newest} />
+    <ListJump key={anchor.mounts} list={anchor.list} newest={anchor.newest} />
   ) : null;
 }
 

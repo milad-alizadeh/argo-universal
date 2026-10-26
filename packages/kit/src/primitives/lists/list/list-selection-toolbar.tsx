@@ -52,7 +52,7 @@ function EditingToolbar(props: EditingToolbar): ReactElement {
 
 function BottomToolbar({ groups }: EditingToolbar): ReactElement {
   return (
-    <View className="flex-row justify-end border-t border-border px-4 py-2">
+    <View className="flex-row justify-end px-4 py-2">
       <HeaderActions groups={groups} label="Selection Actions" slots={3} />
     </View>
   );
@@ -64,21 +64,21 @@ function SelectionEntry({ selection }: EditingToolbar): ReactElement {
       <Button
         label="Select"
         variant="text"
-        onPress={() => selection.setEditing(true)}
+        onPress={() => selection.setSelecting(true)}
       />
     </View>
   );
 }
 
 function showsEntry(selection: ContentSelection): boolean {
-  return Platform.OS === 'ios' && !selection.editing;
+  return Platform.OS === 'ios' && !selection.selecting;
 }
 
 function selectionTop(props: EditingToolbar): ReactElement | null {
   const visible =
     Platform.OS === 'web'
       ? props.selection.selected.length > 0
-      : props.selection.editing;
+      : props.selection.selecting;
 
   return visible ? <EditingToolbar {...props} /> : null;
 }
@@ -92,19 +92,19 @@ function topToolbar(props: EditingToolbar): ReactElement | null {
 }
 
 function bottomToolbar(props: EditingToolbar): ReactElement | null {
-  const visible = Platform.OS === 'ios' && props.selection.editing;
+  const visible = Platform.OS === 'ios' && props.selection.selecting;
 
   return visible ? <BottomToolbar {...props} /> : null;
 }
 
 export function SelectionToolbar(props: ToolbarProps): ReactElement | null {
   if (!props.selection) return null;
-  const editing = { selection: props.selection, groups: props.groups };
+  const selecting = { selection: props.selection, groups: props.groups };
 
   return props.bottom ? (
-    bottomToolbar(editing)
+    bottomToolbar(selecting)
   ) : (
-    <SelectionHeader {...editing} />
+    <SelectionHeader {...selecting} />
   );
 }
 
@@ -127,7 +127,7 @@ function selectionMode(props: EditingToolbar): SelectionMode {
 
   return {
     header: selectionTop(props),
-    begin: showsEntry(selection) ? () => selection.setEditing(true) : null,
+    begin: showsEntry(selection) ? () => selection.setSelecting(true) : null,
   };
 }
 

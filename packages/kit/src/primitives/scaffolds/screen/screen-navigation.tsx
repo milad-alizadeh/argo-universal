@@ -20,8 +20,7 @@ export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
 
   const headerOptions = {
     ...options,
-    ...leading,
-    ...selectionOptions(props.selectionMode),
+    ...selectionOptions(props.selectionMode, leading),
     headerShown: !wide,
   };
 

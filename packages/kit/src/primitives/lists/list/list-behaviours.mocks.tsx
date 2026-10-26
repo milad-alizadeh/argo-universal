@@ -1,4 +1,4 @@
-import { useState, type ReactElement, type ReactNode } from 'react';
+import { useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Action } from '#primitives/actions/action';
 import { Screen } from '#primitives/scaffolds/screen';
 import { ListItem } from '../list-item';
@@ -39,28 +39,55 @@ function appended(items: readonly string[]): string[] {
   ];
 }
 
-async function loadPage(setItems: SetItems, fail?: boolean): Promise<void> {
+interface PagedBehaviour {
+  // Every page refuses.
+  fail?: boolean;
+  // Only the first page refuses; the next one loads.
+  failOnce?: boolean;
+  // Called each time the List asks for a page.
+  onLoad?: () => void;
+}
+
+async function loadPage(setItems: SetItems, fail: boolean): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 600));
 
   if (fail) throw new Error('Page refused');
   setItems(appended);
 }
 
+// `failOnce` refuses only the first request.
+const refuses = (props: PagedBehaviour, request: number): boolean =>
+  Boolean(props.fail) || (Boolean(props.failOnce) && request === 1);
+
+function usePagination(
+  props: PagedBehaviour,
+  items: readonly string[],
+  setItems: SetItems,
+): NonNullable<ExampleProps['pagination']> {
+  const requests = useRef(0);
+
+  return {
+    hasMore: items.length < 60,
+    onLoadMore: (): Promise<void> => {
+      requests.current += 1;
+      props.onLoad?.();
+
+      return loadPage(setItems, refuses(props, requests.current));
+    },
+  };
+}
+
 function usePagedExample(
-  props: ExampleProps & { fail?: boolean },
+  props: ExampleProps & PagedBehaviour,
 ): Pick<ExampleProps, 'items' | 'pagination' | 'renderItem'> {
   const [items, setItems] = useState(initialItems(props));
-
-  const pagination = {
-    hasMore: items.length < 60,
-    onLoadMore: (): Promise<void> => loadPage(setItems, props.fail),
-  };
+  const pagination = usePagination(props, items, setItems);
 
   return { items, pagination, renderItem: renderItem(props) };
 }
 
 export function PagedExample(
-  props: ExampleProps & { fail?: boolean },
+  props: ExampleProps & PagedBehaviour,
 ): ReactElement {
   const drawing = usePagedExample(props);
 

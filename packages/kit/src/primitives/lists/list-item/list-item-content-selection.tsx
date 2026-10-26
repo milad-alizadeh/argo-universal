@@ -1,15 +1,12 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
-import { ChoiceMark } from '../list-item/list-item-choice-mark';
-import type {
-  DrawingProps,
-  RowPressProps,
-} from '../list-item/list-item-press-props';
 import {
   useContentRowSelection,
   type ContentSelection,
-} from './list-content-selection';
-import { ContentSelectionMark } from './list-selection-mark';
+} from '../list/list-content-selection';
+import { ContentSelectionMark } from '../list/list-selection-mark';
+import { ChoiceMark } from './list-item-choice-mark';
+import type { DrawingProps, RowPressProps } from './list-item-press-props';
 
 function contentMark(props: DrawingProps): Partial<DrawingProps> {
   if (Platform.OS === 'ios')
@@ -61,14 +58,15 @@ function selectedDrawing(
   return { ...selected, ...contentMark(selected) };
 }
 
+// A selected row acts on the whole selection; any other row keeps its own Actions, as Finder's menu on an unselected row does.
 export function useContentItemActions(
   props: DrawingProps,
 ): DrawingProps['actions'] {
-  const { selection } = useContentRowSelection(props.id);
+  const { selection, id } = useContentRowSelection(props.id);
 
   if (!selection) return props.actions;
 
-  return hasSelectedRows(selection)
+  return actsOnSelection(selection, id)
     ? selection.actions
     : fallbackActions(props);
 }
@@ -106,8 +104,11 @@ export function useSelectedSeparator(id?: string): boolean {
   );
 }
 
-function hasSelectedRows(selection: ContentSelection): boolean {
-  return selection.active && selection.selected.length > 0;
+function actsOnSelection(
+  selection: ContentSelection,
+  id: string | undefined,
+): boolean {
+  return selection.active && id !== undefined && selection.isSelected(id);
 }
 
 function fallbackActions(props: DrawingProps): DrawingProps['actions'] {

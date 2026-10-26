@@ -1,20 +1,19 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import {
-  isValidElement,
   useCallback,
   useRef,
+  useState,
   type ReactNode,
   type RefObject,
 } from 'react';
 import { View } from 'react-native';
 import { useReducedMotionNow } from '#kit/use-reduced-motion-now';
-import { flattenedChildren } from '../../../flattened-children';
 import {
   JumpToLatestButton,
   useNewestKeyWhenLeftEnd,
 } from './list-jump-to-latest';
+import { newestKey } from './list-newest-key';
 import type { ListProps } from './list-props';
-import { ListSection } from './list-section';
 import { assignListRef } from './list-shelf-controls';
 
 type ListRef = RefObject<LegendListRef | null>;
@@ -23,6 +22,7 @@ interface AnchoredList<Item> {
   props: ListProps<Item>;
   list: ListRef;
   newest: string;
+  mounts: number;
 }
 
 interface JumpProps {
@@ -33,6 +33,7 @@ interface JumpProps {
 interface AnchorRef {
   list: ListRef;
   ref: (value: LegendListRef | null) => void;
+  mounts: number;
 }
 
 const followEnd = {
@@ -44,77 +45,22 @@ const followEnd = {
   },
 } as const;
 
-let warnedAboutKeys = false;
-
-function warnObjectItemsNeedKeys(): void {
-  if (!__DEV__ || warnedAboutKeys) return;
-  warnedAboutKeys = true;
-  console.error(
-    'List anchor="end" needs keyExtractor for object items: without one, new rows are told apart by position.',
-  );
-}
-
-// An item with no keyExtractor is its own key when it is a string or number; an object has none, so its place stands in.
-function unkeyedKey<Item>(item: Item, index: number): string {
-  if (typeof item !== 'object' || item === null) return String(item);
-  warnObjectItemsNeedKeys();
-
-  return String(index);
-}
-
-function dataNewestKey<Item>(
-  props: ListProps<Item>,
-  items: readonly Item[],
-): string {
-  const index = items.length - 1;
-  const item = items[index];
-
-  if (item === undefined) return '';
-
-  return props.keyExtractor
-    ? props.keyExtractor(item, index)
-    : unkeyedKey(item, index);
-}
-
-function newestKey<Item>(props: ListProps<Item>): string {
-  if (props.items !== undefined) return dataNewestKey(props, props.items);
-
-  return childNewestKey(props.children);
-}
-
-const textKey = (content: ReactNode): string =>
-  typeof content === 'object' ? '' : String(content);
-
-function childNewestKey(content: ReactNode): string {
-  const last = flattenedChildren(content).at(-1);
-
-  if (!isValidElement<{ children?: ReactNode; id?: string }>(last))
-    return textKey(last);
-
-  if (last.type === ListSection) return childNewestKey(last.props.children);
-
-  return lastChildKey(last);
-}
-
-// Flattened children always carry a key, from Children.toArray.
-function lastChildKey(
-  last: React.ReactElement<{ id?: string; children?: ReactNode }>,
-): string {
-  return last.props.id ?? String(last.key);
-}
-
+// Counts each Legend List it is handed: a List with no rows draws none, so Jump to latest listens again once one mounts.
 function useAnchorRef(forwarded: ListProps<never>['ref']): AnchorRef {
   const list = useRef<LegendListRef>(null);
+  const [mounts, setMounts] = useState(0);
 
   const ref = useCallback(
     (value: LegendListRef | null) => {
       list.current = value;
       assignListRef(forwarded, value);
+
+      if (value) setMounts((count) => count + 1);
     },
     [forwarded],
   );
 
-  return { list, ref };
+  return { list, ref, mounts };
 }
 
 // A caller's own scroll props win over the anchor's: it pins and follows the end only where the caller left those props unset.
@@ -143,7 +89,7 @@ function anchoredFollowing<Item>(
 export function useListAnchor<Item>(
   props: ListProps<Item>,
 ): AnchoredList<Item> {
-  const { list, ref } = useAnchorRef(props.ref);
+  const { list, ref, mounts } = useAnchorRef(props.ref);
 
   const anchored =
     props.anchor === 'end'
@@ -155,7 +101,7 @@ export function useListAnchor<Item>(
         }
       : props;
 
-  return { props: anchored, list, newest: newestKey(props) };
+  return { props: anchored, list, newest: newestKey(props), mounts };
 }
 
 function JumpButton(

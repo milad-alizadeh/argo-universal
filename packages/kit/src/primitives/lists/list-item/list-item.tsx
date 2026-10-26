@@ -11,7 +11,7 @@ import {
   useContentItemDrawing,
   useContentItemActions,
   useSelectedSeparator,
-} from '../list/list-item-content-selection';
+} from './list-item-content-selection';
 import { drawingContent } from './list-item-drawing-content';
 import { hasLeading, LinkAccessory, separatorClass } from './list-item-parts';
 import { ItemPress, type DrawingProps } from './list-item-press';
