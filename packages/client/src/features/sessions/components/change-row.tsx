@@ -15,7 +15,7 @@ import type { SessionPullRequest } from './session-pull-request';
 
 export interface ChangeRowProps {
   change: SessionPullRequest;
-  // Open the Change in the Stage.
+  // Open the Change in the Inspector.
   onOpen: () => void;
 }
 
@@ -45,7 +45,7 @@ function ChangeText({ change, onOpen }: ChangeRowProps): ReactElement {
   );
 }
 
-// Only these parts press: the files open the Change in the Stage, the checks list each check.
+// Only these parts press: the files open the Change in the Inspector, the checks list each check.
 function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">
@@ -81,7 +81,7 @@ function ChangeMenu({ change, onOpen }: ChangeRowProps): ReactElement {
       <Menu
         accessibilityLabel={label}
         trigger={menuTrigger(label)}
-        actions={[{ label: 'Open Changes in Stage', onPress: onOpen }]}
+        actions={[{ label: 'Open Changes in Inspector', onPress: onOpen }]}
       />
     </View>
   );

@@ -106,7 +106,7 @@ function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   );
 }
 
-// Paper / FileDiff: one phone row, with counts beside the path and a circular Viewed mark.
+// The phone draws one row: counts beside the path and a circular Viewed mark.
 function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-2 bg-card py-2.5">

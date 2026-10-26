@@ -1,13 +1,10 @@
-import { useState } from 'react';
 import type { ChangesComparison } from '../../view/changes-comparison';
+import { useComparisonState } from '../../view/use-comparison-state';
 
 export interface OpenFiles {
   open: ReadonlySet<string>;
   setOpen: (path: string, open: boolean) => void;
 }
-
-const comparisonKey = (comparison: ChangesComparison): string =>
-  JSON.stringify(comparison);
 
 const none: ReadonlySet<string> = new Set();
 
@@ -26,13 +23,10 @@ function toggled(
 
 // Which files show their diff. Files start folded, so a long list opens fast; a new comparison folds them all again.
 export function useOpenFiles(comparison: ChangesComparison): OpenFiles {
-  const key = comparisonKey(comparison);
-  const [state, setState] = useState({ key, open: none });
-  const open = state.key === key ? state.open : none;
+  const [open, update] = useComparisonState(comparison, none);
 
   return {
     open,
-    setOpen: (path, opened) =>
-      setState({ key, open: toggled(open, path, opened) }),
+    setOpen: (path, opened) => update((last) => toggled(last, path, opened)),
   };
 }

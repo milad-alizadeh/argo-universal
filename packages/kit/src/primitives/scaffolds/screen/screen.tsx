@@ -1,10 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import {
-  HeadingInsetContext,
-  useClaimsColumn,
-  useHeadingInsetScope,
-} from '#kit/heading-inset';
+import { useClaimsColumn } from '#kit/column-claims';
+import { HeadingInsetContext, useHeadingInsetScope } from '#kit/heading-inset';
 import { SelectionModeScope, useSelectionModeHost } from '#kit/selection-mode';
 import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';

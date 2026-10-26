@@ -103,6 +103,6 @@ function mockBand(
         <Text>2 files</Text>
       </Card>
     ),
-    onStageToggle: () => onInspectorStateChange('open'),
+    onInspectorToggle: () => onInspectorStateChange('open'),
   };
 }

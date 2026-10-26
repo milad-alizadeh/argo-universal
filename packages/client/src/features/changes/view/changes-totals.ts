@@ -4,7 +4,10 @@ export interface ChangesTotals extends ChangesSummary {
   viewed: number;
 }
 
-// The comparison's counts, and how many of the listed paths are marked Viewed, each counted once.
+/*
+ * The comparison's counts, and how many of the listed paths are marked Viewed, each counted once. A file is marked
+ * from its row, and loaded pages stay loaded, so only a file that has left the comparison drops out of the count.
+ */
 export function changesTotals(
   summary: ChangesSummary,
   files: readonly ChangedFile[] = [],

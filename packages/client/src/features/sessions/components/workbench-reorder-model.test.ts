@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   clampOffset,
   dropIndex,
-  heldOffset,
   makeRoom,
   moveCard,
   orderCards,
@@ -33,18 +32,21 @@ describe('orderCards', () => {
     ]);
   });
 
-  it('drops a stored card that is gone and appends a new one', () => {
-    expect(orderCards(['a', 'b', 'd'], ['c', 'b', 'a'])).toEqual([
-      'b',
-      'a',
-      'd',
-    ]);
+  it('drops a stored card that is gone', () => {
+    expect(orderCards(['a', 'b'], ['c', 'b', 'a'])).toEqual(['b', 'a']);
+  });
+
+  it('appends a card the order has not met yet', () => {
+    expect(orderCards(['a', 'b', 'd'], ['b', 'a'])).toEqual(['b', 'a', 'd']);
   });
 });
 
 describe('moveCard', () => {
-  it('moves a card down and up', () => {
+  it('moves a card down', () => {
     expect(moveCard(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('moves a card up', () => {
     expect(moveCard(['a', 'b', 'c'], 2, 0)).toEqual(['c', 'a', 'b']);
   });
 
@@ -54,32 +56,44 @@ describe('moveCard', () => {
 });
 
 describe('dropIndex', () => {
-  it('stays put until the held card passes a neighbour', () => {
-    expect(dropIndex(drag(0, 0))).toBe(0);
-    expect(dropIndex(drag(0, 40))).toBe(0);
-  });
+  it.each([
+    [0, 0],
+    [0, 40],
+  ])(
+    'stays put until the held card passes a neighbour (%i, %i)',
+    (from, offset) => {
+      expect(dropIndex(drag(from, offset))).toBe(0);
+    },
+  );
 
-  it('counts each card whose middle the held card has passed', () => {
-    expect(dropIndex(drag(0, 100))).toBe(1);
-    expect(dropIndex(drag(0, 200))).toBe(2);
-    expect(dropIndex(drag(2, -170))).toBe(0);
-  });
-});
+  it.each([
+    [0, 100, 1],
+    [0, 200, 2],
+    [2, -170, 0],
+  ])(
+    'counts each card whose middle the held card has passed (%i, %i)',
+    (from, offset, expected) => {
+      expect(dropIndex(drag(from, offset))).toBe(expected);
+    },
+  );
 
-describe('a pointer that travels further than the column', () => {
-  it('still drops a tall card last, though the card is drawn inside the column', () => {
+  it('still drops a tall card last when the pointer travels further than the column', () => {
     expect(dropIndex(drag(0, 400))).toBe(2);
-    expect(heldOffset(drag(0, 400))).toBe(156);
   });
 });
 
 describe('makeRoom', () => {
-  it('opens the held card height plus the gap above or below', () => {
-    expect(makeRoom(drag(0, 100), 1)).toBe(-108);
-    expect(makeRoom(drag(0, 100), 2)).toBe(0);
-    expect(makeRoom(drag(2, -150), 0)).toBe(0);
-    expect(makeRoom(drag(2, -150), 1)).toBe(88);
-  });
+  it.each([
+    { from: 0, offset: 100, index: 1, expected: -108 },
+    { from: 0, offset: 100, index: 2, expected: 0 },
+    { from: 2, offset: -150, index: 0, expected: 0 },
+    { from: 2, offset: -150, index: 1, expected: 88 },
+  ])(
+    'opens the held card height plus the gap above or below ($from, $offset, $index)',
+    ({ from, offset, index, expected }) => {
+      expect(makeRoom(drag(from, offset), index)).toBe(expected);
+    },
+  );
 
   it('never moves the held card', () => {
     expect(makeRoom(drag(1, 80), 1)).toBe(0);
@@ -87,9 +101,15 @@ describe('makeRoom', () => {
 });
 
 describe('clampOffset', () => {
-  it('keeps the held card inside the column', () => {
-    expect(clampOffset(slots, 1, -500)).toBe(-108);
-    expect(clampOffset(slots, 1, 500)).toBe(88);
-    expect(clampOffset(slots, 1, 20)).toBe(20);
+  it.each([
+    [-500, -108],
+    [500, 88],
+    [20, 20],
+  ])('keeps the held card inside the column (%i)', (offset, expected) => {
+    expect(clampOffset(slots, 1, offset)).toBe(expected);
+  });
+
+  it('draws a tall card at the column end however far the pointer travels', () => {
+    expect(clampOffset(slots, 0, 400)).toBe(156);
   });
 });

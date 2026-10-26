@@ -5,10 +5,13 @@ import {
   SessionChangesOutput,
   SessionDiffInput,
   SessionDiffOutput,
+  sessionChangesPageFiles,
+  sessionDiffPageLines,
   type SessionComparison,
 } from '@repo/contracts';
 import {
   listComparisonBranches,
+  pageItems,
   pagePatch,
   readCheckoutChanges,
   readCheckoutDiff,
@@ -18,23 +21,6 @@ import { TRPCError } from '@trpc/server';
 import { readProjectPath } from '../projects';
 import { publicProcedure, router, routerFactory } from '../rpc';
 import type { SessionRouterDeps } from './router-deps';
-
-// A page holds this many files, or this many diff lines, unless the caller asks for fewer or more.
-const pageLimits = { files: 50, lines: 400 };
-
-type Page = { cursor?: number; limit?: number };
-
-type Paged<T> = { items: T[]; nextCursor: number | null };
-
-function pageOf<T>(items: readonly T[], page: Page, limit: number): Paged<T> {
-  const start = page.cursor ?? 0;
-  const end = start + (page.limit ?? limit);
-
-  return {
-    items: items.slice(start, end),
-    nextCursor: end < items.length ? end : null,
-  };
-}
 
 const gitComparison = (
   comparison: SessionComparison | undefined,
@@ -71,7 +57,11 @@ export const createChangesRouter = routerFactory((deps: SessionRouterDeps) =>
           gitComparison(input.comparison),
         );
 
-        const page = pageOf(result.files, input, pageLimits.files);
+        const page = pageItems(
+          result.files,
+          input.cursor ?? 0,
+          input.limit ?? sessionChangesPageFiles,
+        );
 
         return {
           mainBranch: result.mainBranch,
@@ -102,7 +92,7 @@ export const createChangesRouter = routerFactory((deps: SessionRouterDeps) =>
         const page = pagePatch(
           result.patch,
           input.cursor ?? 0,
-          input.limit ?? pageLimits.lines,
+          input.limit ?? sessionDiffPageLines,
         );
 
         return {

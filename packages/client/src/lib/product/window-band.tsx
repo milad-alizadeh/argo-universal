@@ -1,36 +1,31 @@
+import { useClaim, useClaimed } from '@repo/kit/claim-store';
 import {
-  type ClaimStore,
-  createClaimStore,
-  useClaim,
-  useClaimed,
-} from '@repo/kit/claim-store';
-import {
+  type BandHost,
+  createBandHost,
+  createBandHostContext,
   createScreenBandHost,
   type ScreenBand,
   ScreenBandHostContext,
   type ScreenBandHost,
 } from '@repo/kit/primitives/scaffolds/screen';
 import { useWide } from '@repo/kit/use-wide/use-wide';
-import { createContext, use, type ReactNode } from 'react';
+import { use, type ReactNode } from 'react';
 import { useScreenFocused } from './navigation/navigation';
 
-// The focused page supplies its overview and how its Stage opens; the window owns their placement and pane controls. Its title and menu are its Screen's header, which the kit claims for the band.
+// The focused page supplies its overview and how its Inspector opens; the window owns their placement and pane controls. Its title and menu are its Screen's header, which the kit claims for the band.
 export interface WindowBandContent {
   workbench?: ReactNode;
-  onStageToggle?: () => void;
+  onInspectorToggle?: () => void;
 }
 
 // What the band draws: the focused Screen's title and menu, and the focused page's overview.
 export type WindowBandView = WindowBandContent & Partial<ScreenBand>;
 
-export type WindowBandHost = ClaimStore<WindowBandContent | null>;
+export type WindowBandHost = BandHost<WindowBandContent>;
 
-export const createWindowBandHost = (): WindowBandHost =>
-  createClaimStore<WindowBandContent | null>(null);
+export const createWindowBandHost = createBandHost<WindowBandContent>;
 
-export const WindowBandHostContext = createContext<WindowBandHost | undefined>(
-  undefined,
-);
+export const WindowBandHostContext = createBandHostContext<WindowBandContent>();
 
 // Both claims into the band: the page's overview, and the kit's Screen header.
 export interface WindowBandHosts {

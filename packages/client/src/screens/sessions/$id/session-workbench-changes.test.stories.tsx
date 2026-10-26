@@ -28,7 +28,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The Stage's own glyph label for the same Change.
+// The Inspector's own glyph label for the same Change.
 const stageLabel = 'Open Change #45';
 
 const firstChange = { name: 'Open files of Change #45' };
@@ -99,7 +99,9 @@ export const MenuOpensStage: Story = {
     );
     await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
     await userEvent.click(
-      await screen.findByRole('menuitem', { name: 'Open Changes in Stage' }),
+      await screen.findByRole('menuitem', {
+        name: 'Open Changes in Inspector',
+      }),
     );
     await expectPrDetails({ canvas });
   },

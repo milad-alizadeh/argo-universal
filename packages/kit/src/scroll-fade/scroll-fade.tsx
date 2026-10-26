@@ -4,7 +4,7 @@ import {
   type ScrollViewInstance,
   type ScrollViewProps,
 } from 'react-native';
-import { useClaimsColumn } from '#kit/heading-inset';
+import { useClaimsColumn } from '#kit/column-claims';
 import { cn } from '#kit/utils';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import type { ScrollFadeOptions } from './scroll-fade-options';

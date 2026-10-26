@@ -2,7 +2,7 @@ import { DiffScroll } from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type * as React from 'react';
-import { useEffect } from 'react';
+import { createElement, useEffect } from 'react';
 import { View } from 'react-native';
 import { DiffFileHeader } from '#features/feed';
 import type { ChangesItem } from '../../view/changes-items';
@@ -19,32 +19,42 @@ export type RowContext = Pick<
 > &
   OpenFiles;
 
-interface RowProps<Kind extends ChangesItem['kind']> {
-  item: Extract<ChangesItem, { kind: Kind }>;
+type RowKind = ChangesItem['kind'];
+
+type ItemByKind = { [Kind in RowKind]: Extract<ChangesItem, { kind: Kind }> };
+
+interface RowProps<Kind extends RowKind> {
+  item: ItemByKind[Kind];
   context: RowContext;
 }
 
 export const loadingDiffLabel = (path: string): string =>
   `Loading the diff for ${path}`;
 
-type AnyRowProps = { item: ChangesItem; context: RowContext };
+// One row per item kind; a new kind does not compile until it has its row.
+type RowComponents = {
+  [Kind in RowKind]: (props: RowProps<Kind>) => React.JSX.Element;
+};
 
-export function ChangesRow({ item, context }: AnyRowProps): React.JSX.Element {
-  if (item.kind === 'header')
-    return <HeaderRow item={item} context={context} />;
+const rowOf: RowComponents = {
+  separator: SeparatorRow,
+  header: HeaderRow,
+  page: PageRow,
+  status: StatusRow,
+};
 
-  if (item.kind === 'separator') return <SeparatorRow />;
-
-  return <DiffRow item={item} context={context} />;
+function KindRow<Kind extends RowKind>(
+  kind: Kind,
+  props: RowProps<Kind>,
+): React.JSX.Element {
+  return createElement(rowOf[kind], props);
 }
 
-function DiffRow({
+export function ChangesRow({
   item,
   context,
-}: RowProps<'page' | 'status'>): React.JSX.Element {
-  if (item.kind === 'page') return <PageRow item={item} context={context} />;
-
-  return <StatusRow item={item} context={context} />;
+}: RowProps<RowKind>): React.JSX.Element {
+  return KindRow(item.kind, { item, context });
 }
 
 function SeparatorRow(): React.JSX.Element {
@@ -119,6 +129,10 @@ type Status =
   | { kind: 'empty' }
   | { kind: 'loading' };
 
+type StatusByKind = {
+  [Kind in Status['kind']]: Extract<Status, { kind: Kind }>;
+};
+
 const settledStatus = (diff: FileDiffPages): Status =>
   idle(diff) && !diff.more ? { kind: 'empty' } : { kind: 'loading' };
 
@@ -131,17 +145,33 @@ function statusOf(diff: FileDiffPages | undefined): Status {
   return settledStatus(diff);
 }
 
+// What each status draws; a new status does not compile until it has its drawing.
+type StatusDrawings = {
+  [Kind in Status['kind']]: (
+    status: StatusByKind[Kind],
+    path: string,
+  ) => React.JSX.Element;
+};
+
+const statusContent: StatusDrawings = {
+  failed: (status) => <Text tone="danger">{status.message}</Text>,
+  empty: () => <Text tone="muted">No lines to show</Text>,
+  loading: (_, path) => <Spinner accessibilityLabel={loadingDiffLabel(path)} />,
+};
+
+function drawStatus<Kind extends Status['kind']>(
+  kind: Kind,
+  status: StatusByKind[Kind],
+  path: string,
+): React.JSX.Element {
+  return statusContent[kind](status, path);
+}
+
 function StatusContent(props: {
   file: ChangedFile;
   diff?: FileDiffPages;
 }): React.JSX.Element {
   const status = statusOf(props.diff);
 
-  if (status.kind === 'failed')
-    return <Text tone="danger">{status.message}</Text>;
-
-  if (status.kind === 'empty')
-    return <Text tone="muted">No lines to show</Text>;
-
-  return <Spinner accessibilityLabel={loadingDiffLabel(props.file.path)} />;
+  return drawStatus(status.kind, status, props.file.path);
 }

@@ -15,3 +15,5 @@ export type {
 } from './view/changes-view-props';
 
 export { uniqueChangedFiles } from './view/changes-files';
+
+export { useComparisonState } from './view/use-comparison-state';

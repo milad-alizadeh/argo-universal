@@ -1,6 +1,7 @@
 import { cardDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { cn } from '#kit/utils';
 import { Text } from '#primitives/content/text';
 import type { CardProps } from './card-props';
 
@@ -29,10 +30,30 @@ export function CardHeading({ title }: Pick<CardProps, 'title'>): ReactElement {
   );
 }
 
-export function ActionLane({ children }: { children?: ReactNode }): ReactNode {
-  return children ? (
-    <View className="h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end">
-      {children}
+// A side lane is one title line tall, so what it holds sits on the title line; it draws nothing when it holds nothing.
+function TitleLine(props: {
+  children?: ReactNode;
+  className: string;
+}): ReactNode {
+  return props.children ? (
+    <View className={cn('h-6 wide-type:h-5 shrink-0', props.className)}>
+      {props.children}
     </View>
   ) : null;
 }
+
+export const ActionLane = ({
+  children,
+}: {
+  children?: ReactNode;
+}): ReactNode => (
+  <TitleLine className="flex-row items-center justify-end">
+    {children}
+  </TitleLine>
+);
+
+export const IconLane = ({ children }: { children?: ReactNode }): ReactNode => (
+  <TitleLine className="min-w-6 wide-type:min-w-5 items-center justify-center">
+    {children}
+  </TitleLine>
+);

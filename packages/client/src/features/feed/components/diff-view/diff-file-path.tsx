@@ -1,7 +1,7 @@
 import { Text, TextClassContext } from '@repo/kit/primitives/content/text';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import { use, useRef } from 'react';
+import { use, useEffectEvent, useLayoutEffect, useRef } from 'react';
 import { Platform, View, type ViewInstance } from 'react-native';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 
@@ -71,17 +71,28 @@ interface CutShortWatch {
   onLayout: () => void;
 }
 
-// Reports, on web, whether the path is cut short each time its row changes width.
-function useCutShort(onCutShortChange?: (cut: boolean) => void): CutShortWatch {
+// Reports, on web, whether the path is cut short each time its row changes width or draws another path.
+function useCutShort(
+  path: string,
+  onCutShortChange?: (cut: boolean) => void,
+): CutShortWatch {
   const row = useRef<ViewInstance>(null);
+  const onLayout = (): void => report(row.current, onCutShortChange);
+  const measure = useEffectEvent(onLayout);
 
-  const onLayout = (): void => {
-    const node = domNode(row.current);
-
-    if (node) onCutShortChange?.(cutShort(node));
-  };
+  // A recycled row keeps its width, so a new path is measured on its own.
+  useLayoutEffect(() => measure(), [path]);
 
   return { ref: row, onLayout };
+}
+
+function report(
+  view: ViewInstance | null,
+  onCutShortChange?: (cut: boolean) => void,
+): void {
+  const node = domNode(view);
+
+  if (node) onCutShortChange?.(cutShort(node));
 }
 
 interface FilePathProps {
@@ -96,7 +107,7 @@ export function FilePath(props: FilePathProps): React.JSX.Element {
 
   return (
     <View
-      {...useCutShort(props.onCutShortChange)}
+      {...useCutShort(props.path, props.onCutShortChange)}
       className="min-w-0 flex-1 flex-row items-center"
     >
       <FolderName folder={folder} />

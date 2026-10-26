@@ -29,7 +29,7 @@ function WorkbenchToggle(parts: ScaffoldPartProps): ReactElement {
   return <IconButton {...workbenchProps(parts)} />;
 }
 
-function StageExpand({ scaffold, layout }: ScaffoldPartProps): ReactElement {
+function ExpandPane({ scaffold, layout }: ScaffoldPartProps): ReactElement {
   const expanded = layout.inspectorExpanded;
 
   return (
@@ -45,7 +45,7 @@ function StageExpand({ scaffold, layout }: ScaffoldPartProps): ReactElement {
   );
 }
 
-function StageToggle({ scaffold, layout }: ScaffoldPartProps): ReactElement {
+function PaneToggle({ scaffold, layout }: ScaffoldPartProps): ReactElement {
   const open = layout.inspectorOpen;
   const label = open ? 'Hide Stage' : 'Show Stage';
 
@@ -54,28 +54,28 @@ function StageToggle({ scaffold, layout }: ScaffoldPartProps): ReactElement {
       {...bandToggleAppearance(open)}
       icon="stage"
       accessibilityLabel={label}
-      disabled={!open && !stageAvailable(scaffold)}
-      onPress={() => toggleStage(scaffold, open)}
+      disabled={!open && !inspectorOffered(scaffold)}
+      onPress={() => toggleInspector(scaffold, open)}
     />
   );
 }
 
-function stageAvailable(scaffold: ScaffoldPartProps['scaffold']): boolean {
+function inspectorOffered(scaffold: ScaffoldPartProps['scaffold']): boolean {
   return (
-    scaffold.inspectorAvailable !== false || !!scaffold.band?.onStageToggle
+    scaffold.inspectorAvailable !== false || !!scaffold.band?.onInspectorToggle
   );
 }
 
-function toggleStage(
+function toggleInspector(
   scaffold: ScaffoldPartProps['scaffold'],
   open: boolean,
 ): void {
   if (open) scaffold.onInspectorStateChange('closed');
-  else openStage(scaffold);
+  else openInspector(scaffold);
 }
 
-function openStage(scaffold: ScaffoldPartProps['scaffold']): void {
-  if (scaffold.band?.onStageToggle) scaffold.band.onStageToggle();
+function openInspector(scaffold: ScaffoldPartProps['scaffold']): void {
+  if (scaffold.band?.onInspectorToggle) scaffold.band.onInspectorToggle();
   else scaffold.onInspectorStateChange('open');
 }
 
@@ -102,8 +102,8 @@ export function BandTrailing(parts: ScaffoldPartProps): ReactElement {
     >
       <BandMenu {...parts} />
       <WorkbenchToggle {...parts} />
-      <StageExpand {...parts} />
-      <StageToggle {...parts} />
+      <ExpandPane {...parts} />
+      <PaneToggle {...parts} />
     </View>
   );
 }

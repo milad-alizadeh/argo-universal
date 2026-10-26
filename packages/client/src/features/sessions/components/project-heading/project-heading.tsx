@@ -1,6 +1,7 @@
 import { Action } from '@repo/kit/primitives/actions/action';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { ListSectionHeader } from '@repo/kit/primitives/lists/list';
+import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
 import { memo } from 'react';
 import { Platform } from 'react-native';
@@ -17,39 +18,26 @@ function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {
   return <Icon name={collapsed ? 'folder' : 'folder-open'} />;
 }
 
-// Desktop and web draw the heading as Paper's sidebar section (Paper "SessionsList").
+// Desktop and web draw the heading as a sidebar section.
 const sidebarHeading = Platform.OS === 'web';
 
-function newSession(onAdd?: () => void): React.ReactNode {
+// An Action the list offers only when it has something to run.
+function offered(
+  label: string,
+  icon: IconName,
+  onPress?: () => void,
+): React.ReactNode {
   return (
-    onAdd && (
-      <Action
-        key="new-session"
-        label="New Session"
-        icon="new-session"
-        onPress={onAdd}
-      />
-    )
-  );
-}
-
-function projectSettings(onProjectSettings?: () => void): React.ReactNode {
-  return (
-    onProjectSettings && (
-      <Action
-        key="project-settings"
-        label="Project settings"
-        icon="settings"
-        onPress={onProjectSettings}
-      />
+    onPress && (
+      <Action key={label} label={label} icon={icon} onPress={onPress} />
     )
   );
 }
 
 // New Session, then Project settings, each only when the list offers it.
 const projectActions = (props: ProjectHeadingProps): React.ReactNode => [
-  newSession(props.onAdd),
-  projectSettings(props.onProjectSettings),
+  offered('New Session', 'new-session', props.onAdd),
+  offered('Project settings', 'settings', props.onProjectSettings),
 ];
 
 // The Project's Sessions group: an open or closed folder for its state, its name, then its Actions, buttons on a wide window and a long press below it.

@@ -10,7 +10,7 @@ const title = 'api-gateway';
 
 export const titleOnlyCard = { title } satisfies CardProps;
 
-// The unrelated example from the Paper master: a deploy status card.
+// An unrelated example: a deploy status card.
 export const anatomyCard = {
   title,
   subtitle: 'Production',

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import { CentredOverlayScope } from '#primitives/overlays/centred-overlay';
 import { DialogBody } from './dialog-body';
-import { hasSections, useFieldsLayout } from './dialog-fields';
+import { hasSections, fieldsLayout } from './dialog-fields';
 import { DialogOverlay } from './dialog-overlay';
 import { DialogPortal, DialogTrigger } from './dialog-parts';
 import { useDialogPresentation } from './dialog-presentation';
@@ -19,6 +19,9 @@ function Dialog(props: DialogProps): React.JSX.Element {
   return <DialogRoot {...props} />;
 }
 
+// What a sheet-presented dialog draws: the caller's content and how the sheet is presented.
+type NarrowProps = ContentProps & { presentation: DialogPresentation };
+
 // The web centres the dialog from the medium size class up; a compact web window, and a phone or tablet at any width, raises the same content as a sheet.
 function DialogContent(props: ContentProps): React.JSX.Element {
   const presentation = useDialogPresentation();
@@ -32,9 +35,7 @@ function DialogContent(props: ContentProps): React.JSX.Element {
  * Content that holds FieldGroup sections is a form: its sections are one FieldGroup under the heading, which scrolls
  * and insets them, and its actions are pinned in the sheet's footer. Any other content is a plain body as tall as it is.
  */
-function NarrowDialog(
-  props: ContentProps & { presentation: DialogPresentation },
-): React.JSX.Element {
+function NarrowDialog(props: NarrowProps): React.JSX.Element {
   if (hasSections(props.children)) return <FieldsDialog {...props} />;
 
   return <PlainDialog {...props} />;
@@ -43,8 +44,8 @@ function NarrowDialog(
 function FieldsDialog({
   presentation,
   ...props
-}: ContentProps & { presentation: DialogPresentation }): React.JSX.Element {
-  const layout = useFieldsLayout(props);
+}: NarrowProps): React.JSX.Element {
+  const layout = fieldsLayout(props);
 
   return (
     <DialogSheet
@@ -59,7 +60,7 @@ function FieldsDialog({
 function PlainDialog({
   presentation,
   ...props
-}: ContentProps & { presentation: DialogPresentation }): React.JSX.Element {
+}: NarrowProps): React.JSX.Element {
   return (
     <DialogSheet
       open={presentation.sheetOpen}
@@ -71,7 +72,7 @@ function PlainDialog({
   );
 }
 
-// Paper's iOS sheet pads its content on every side; Android's drag handle zone sets the top, and its sheet ends at the gesture bar, so only the foot needs a pad.
+// The iOS sheet pads its content on every side; Android's drag handle zone sets the top, and its sheet ends at the gesture bar, so only the foot needs a pad.
 function NarrowDialogBody(
   props: Pick<ContentProps, 'className' | 'children'>,
 ): React.JSX.Element {

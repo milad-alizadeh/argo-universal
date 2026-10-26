@@ -9,7 +9,12 @@ import {
 
 export type { CheckoutFile } from './changes-parse';
 
-export { pagePatch, type PatchPage } from './patch-page';
+export {
+  type ItemsPage,
+  pageItems,
+  pagePatch,
+  type PatchPage,
+} from './patch-page';
 
 const execute = promisify(execFile);
 
@@ -62,6 +67,23 @@ async function mainBranch(projectCheckout: string): Promise<string | null> {
   );
 }
 
+// Every changed path against the base, renames paired, as `git diff --name-status -z` prints them.
+const nameStatus = (base: string): string[] => [
+  'diff',
+  '--name-status',
+  '-z',
+  '-M',
+  base,
+];
+
+// The working tree's state, untracked files listed one by one.
+const worktreeStatus = [
+  'status',
+  '--porcelain=v1',
+  '-z',
+  '--untracked-files=all',
+];
+
 async function baseCommit(
   checkout: string,
   comparison: ChangeComparison,
@@ -85,6 +107,18 @@ async function baseCommit(
   if (!local.includes(ref)) throw new Error(`No branch ${branch}`);
 
   return (await git(checkout, ['merge-base', ref, 'HEAD'])).trim();
+}
+
+type ComparisonBase = { main: string | null; base: string };
+
+async function comparisonBase(
+  checkout: string,
+  projectCheckout: string,
+  comparison: ChangeComparison,
+): Promise<ComparisonBase> {
+  const main = await mainBranch(projectCheckout);
+
+  return { main, base: await baseCommit(checkout, comparison, main) };
 }
 
 export async function listComparisonBranches(
@@ -133,16 +167,19 @@ export async function readCheckoutChanges(
   projectCheckout: string,
   comparison: ChangeComparison,
 ): Promise<CheckoutChanges> {
-  const main = await mainBranch(projectCheckout);
-  const base = await baseCommit(checkout, comparison, main);
+  const { main, base } = await comparisonBase(
+    checkout,
+    projectCheckout,
+    comparison,
+  );
 
-  const [status, numstat, worktreeStatus] = await Promise.all([
-    git(checkout, ['diff', '--name-status', '-z', '-M', base]),
+  const [status, numstat, worktree] = await Promise.all([
+    git(checkout, nameStatus(base)),
     git(checkout, ['diff', '--numstat', '-z', '-M', base]),
-    git(checkout, ['status', '--porcelain=v1', '-z', '--untracked-files=all']),
+    git(checkout, worktreeStatus),
   ]);
 
-  const untracked = untrackedPaths(worktreeStatus);
+  const untracked = untrackedPaths(worktree);
   const untrackedSet = new Set(untracked);
 
   // An index deletion can leave the same path as an untracked working file.
@@ -177,15 +214,7 @@ const leavesCheckout = (path: string): boolean =>
   path.startsWith('/') || path.split('/').includes('..');
 
 async function isUntracked(checkout: string, path: string): Promise<boolean> {
-  const status = await git(checkout, [
-    literal,
-    'status',
-    '--porcelain=v1',
-    '-z',
-    '--untracked-files=all',
-    '--',
-    path,
-  ]);
+  const status = await git(checkout, [literal, ...worktreeStatus, '--', path]);
 
   return untrackedPaths(status).includes(path);
 }
@@ -208,13 +237,7 @@ async function trackedDiff(
   base: string,
   path: string,
 ): Promise<CheckoutDiff | null> {
-  const status = await git(checkout, [
-    'diff',
-    '--name-status',
-    '-z',
-    '-M',
-    base,
-  ]);
+  const status = await git(checkout, nameStatus(base));
 
   const entry = trackedFiles(status, '').find((item) => item.path === path);
 
@@ -241,8 +264,7 @@ export async function readCheckoutDiff(
 ): Promise<CheckoutDiff | null> {
   if (leavesCheckout(path)) return null;
 
-  const main = await mainBranch(projectCheckout);
-  const base = await baseCommit(checkout, comparison, main);
+  const { base } = await comparisonBase(checkout, projectCheckout, comparison);
 
   if (await isUntracked(checkout, path)) return untrackedDiff(checkout, path);
 

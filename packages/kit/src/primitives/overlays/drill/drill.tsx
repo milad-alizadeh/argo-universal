@@ -12,7 +12,7 @@ export function useDrillBeside(): boolean {
   return useWide() && Platform.OS === 'web';
 }
 
-// Paper: desktop rows open beside their group; phones push within their owning Sheet.
+// Desktop rows open beside their group; phones push within their owning Sheet.
 export function Drill(props: DrillProps): ReactElement {
   const desktop = useDrillBeside();
   const trigger = useDrillTrigger(props);
@@ -30,7 +30,7 @@ export function Drill(props: DrillProps): ReactElement {
 
 const noPress = (): void => {};
 
-// Paper: the row is a FieldGroup link, so a Drill sits in a FieldGroup section; its press is the Drill's own.
+// The row is a FieldGroup link, so a Drill sits in a FieldGroup section; its press is the Drill's own.
 function useDrillTrigger(
   props: DrillProps,
 ): NonNullable<DrillProps['trigger']> {

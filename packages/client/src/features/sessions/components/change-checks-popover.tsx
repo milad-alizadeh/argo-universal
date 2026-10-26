@@ -31,7 +31,7 @@ const stateLabel = {
 
 interface ChangeChecksProps {
   checks: PullRequestChecksProps;
-  // Opens the Change in the Stage, where a phone has no popover to open.
+  // Opens the Change in the Inspector, where a phone has no popover to open.
   onOpen: () => void;
 }
 

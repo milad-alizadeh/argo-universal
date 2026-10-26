@@ -92,10 +92,11 @@ test('cancelling a build offers to rerun it', async ({ mount }) => {
   assert.equal((await page.find('Rerun')).type, 'Action');
 });
 
-test('the hello page lists each demo and opens it by its App path', async ({
-  mount,
-}) => {
-  const page = await mount({ page: '/', surface: { platform: 'web' } });
+const mountHello = (mount: PluginTest['mount']): Promise<PluginTestView> =>
+  mount({ page: '/', surface: { platform: 'web' } });
+
+test('the hello page lists each demo', async ({ mount }) => {
+  const page = await mountHello(mount);
 
   for (const title of [
     'Lists',
@@ -109,6 +110,10 @@ test('the hello page lists each demo and opens it by its App path', async ({
     'Issue views',
   ])
     assert.equal((await page.find(title)).type, 'Card');
+});
+
+test('a demo opens by its App path', async ({ mount }) => {
+  const page = await mountHello(mount);
 
   const builds = await page.find('Builds');
   assert.equal(

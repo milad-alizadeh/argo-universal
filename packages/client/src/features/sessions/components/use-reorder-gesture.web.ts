@@ -1,5 +1,6 @@
 import { useRef, useState, type RefObject } from 'react';
 import {
+  clamp,
   dropIndex,
   moveCard,
   type Grab,
@@ -26,9 +27,6 @@ interface Context extends GestureArgs {
   pointerStart: RefObject<number>;
 }
 
-const clamp = (index: number, last: number): number =>
-  Math.min(last, Math.max(0, index));
-
 function end(context: Context): void {
   const { drag, shown } = context;
 
@@ -39,7 +37,7 @@ function end(context: Context): void {
 function nudge({ shown, reorder }: GestureArgs, id: string, by: -1 | 1): void {
   const from = shown.indexOf(id);
 
-  reorder(moveCard(shown, from, clamp(from + by, shown.length - 1)));
+  reorder(moveCard(shown, from, clamp(from + by, 0, shown.length - 1)));
 }
 
 // The slots are measured by the handle as it is taken, so a card that grew or shrank since is as it is now.

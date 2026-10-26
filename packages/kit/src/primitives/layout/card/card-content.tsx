@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { CollapsibleCardContent } from './card-collapsible';
-import { ActionLane, CardHeading, cardSpace } from './card-parts';
+import { ActionLane, CardHeading, cardSpace, IconLane } from './card-parts';
 import type { CardProps } from './card-props';
 
 // The press layer's name: the header's own words unless the author gives one.
@@ -44,7 +44,7 @@ export function CardContent(props: CardProps): ReactElement {
 function CardHeader(props: CardProps): ReactElement {
   return (
     <View className="flex-row items-start gap-4">
-      <HeaderLane>{props.icon}</HeaderLane>
+      <IconLane>{props.icon}</IconLane>
       <CardTitle title={props.title} subtitle={props.subtitle} />
       <ActionLane>{props.actions}</ActionLane>
     </View>
@@ -63,12 +63,4 @@ function CardTitle(props: Pick<CardProps, 'title' | 'subtitle'>): ReactElement {
       )}
     </View>
   );
-}
-
-function HeaderLane({ children }: { children?: ReactNode }): ReactNode {
-  return children ? (
-    <View className="h-6 min-w-6 wide-type:h-5 wide-type:min-w-5 shrink-0 items-center justify-center">
-      {children}
-    </View>
-  ) : null;
 }

@@ -38,7 +38,7 @@ const copy = {
 export function RenameSessionDialog(
   props: RenameSessionDialogProps,
 ): ReactElement {
-  const openings = useOpenings(props.open);
+  const openings = useOpeningCount(props.open);
 
   return (
     <Dialog open={props.open} onOpenChange={(open) => !open && props.onClose()}>
@@ -48,7 +48,7 @@ export function RenameSessionDialog(
 }
 
 // Each opening is a new form, so it starts from the Session's title, not from what an earlier opening left in the field.
-function useOpenings(open: boolean): number {
+function useOpeningCount(open: boolean): number {
   const [openings, setOpenings] = useState({ open, count: 0 });
 
   if (open !== openings.open)

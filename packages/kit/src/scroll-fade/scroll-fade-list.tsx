@@ -12,7 +12,7 @@ import {
   useState,
 } from 'react';
 import { Platform } from 'react-native';
-import { useClaimsColumn } from '#kit/heading-inset';
+import { useClaimsColumn } from '#kit/column-claims';
 import { useSizeClassValue } from '../use-size-class/use-size-class-value';
 import { assignRef, useLegendScrollRef } from './legend-scroll-ref';
 import { MeasuredLegendList } from './remeasure-after-entrance';

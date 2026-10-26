@@ -114,7 +114,7 @@ export const EscapeClosesChoicesThenMenu: Story = {
   },
 };
 
-// Paper's drilled row: the choices open beside the menu with no title of their own.
+// A drilled row: the choices open beside the menu with no title of their own.
 export const RowChoicesHaveNoTitle: Story = {
   play: async ({ userEvent }) => {
     const { choices } = await openChoices(userEvent, 'Fruit');

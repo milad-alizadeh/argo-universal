@@ -33,11 +33,14 @@ it('returns whole hunks with their own headers while they fit', () => {
   });
 });
 
-it('numbers a hunk cut by the page boundary from where the cut falls', () => {
+it('numbers the start of a hunk cut by the page boundary', () => {
   expect(pagePatch(patch, 0, 2)).toEqual({
     patch: page('@@ -1,2 +1,1 @@ first', ' one', '-two'),
     nextCursor: 2,
   });
+});
+
+it('numbers the rest of a cut hunk from where the cut falls', () => {
   expect(pagePatch(patch, 2, 3)).toEqual({
     patch: page(
       '@@ -3,1 +2,2 @@ first',

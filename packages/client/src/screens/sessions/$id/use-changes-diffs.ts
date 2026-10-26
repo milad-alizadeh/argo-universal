@@ -1,16 +1,18 @@
-import type {
-  SessionComparison,
-  SessionDiffInput,
-  SessionDiffOutput,
+import {
+  type SessionComparison,
+  type SessionDiffInput,
+  type SessionDiffOutput,
+  sessionDiffPageLines,
 } from '@repo/contracts';
 import { useQueries, type UseQueryResult } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
-import type { ChangesViewProps, FileDiffPages } from '#features/changes';
+import { useCallback } from 'react';
+import {
+  type ChangesViewProps,
+  type FileDiffPages,
+  useComparisonState,
+} from '#features/changes';
 import { useTRPC, type ClientError } from '#features/connection';
 import { type FileDiff, toFileDiffs } from '#features/feed';
-
-// Lines of one file's diff in a page; a long new file arrives a page at a time.
-export const diffPageLines = 400;
 
 type DiffsInput = {
   sessionId: string;
@@ -22,69 +24,63 @@ type DiffPage = { hunks: FileDiff['hunks']; nextCursor: number | null };
 
 type PageResult = UseQueryResult<DiffPage, Pick<ClientError, 'message'>>;
 
-type Wanted = { key: string; pages: Readonly<Record<string, number>> };
+// How many pages of each opened file's diff the list has asked for, by path.
+type Wanted = Readonly<Record<string, number>>;
 
 type FileDiffs = Pick<ChangesViewProps, 'diffs' | 'onLoadDiff'>;
 
-function diffPage(data: SessionDiffOutput): DiffPage {
-  const { operation, path, oldPath } = data.file;
+function toDiffPage(output: SessionDiffOutput): DiffPage {
+  const { operation, path, oldPath } = output.file;
 
   const [file] = toFileDiffs({
     type: 'diff',
     changes: [{ operation, path, oldPath }],
-    patch: data.patch,
+    patch: output.patch,
   });
 
-  return { hunks: file?.hunks ?? [], nextCursor: data.nextCursor };
+  return { hunks: file?.hunks ?? [], nextCursor: output.nextCursor };
 }
 
-const pageNumbers = (count: number): number[] =>
-  Array.from({ length: count }, (_, page) => page);
+const pageIndexes = (count: number): number[] =>
+  Array.from({ length: count }, (_, index) => index);
 
-type PageKey = { path: string; page: number };
+// One page of one file's diff, by its place among the file's pages.
+type PageKey = { path: string; index: number };
 
-const wantedPages = (wanted: Wanted['pages']): PageKey[] =>
+const wantedPages = (wanted: Wanted): PageKey[] =>
   Object.entries(wanted).flatMap(([path, count]) =>
-    pageNumbers(count).map((page) => ({ path, page })),
+    pageIndexes(count).map((index) => ({ path, index })),
   );
 
-function useWanted(key: string): [Wanted['pages'], FileDiffs['onLoadDiff']] {
-  const [wanted, setWanted] = useState<Wanted>({ key, pages: {} });
-  const pages = keyedPages(wanted, key);
+const noPages: Wanted = {};
+
+function useWanted(
+  comparison: SessionComparison,
+): [Wanted, FileDiffs['onLoadDiff']] {
+  const [wanted, update] = useComparisonState(comparison, noPages);
 
   const onLoadDiff = useCallback(
     (path: string, count: number) =>
-      setWanted((last) => wantMore(last, key, { path, page: count })),
-    [key],
+      update((last) => wantMore(last, path, count)),
+    [update],
   );
 
-  return [pages, onLoadDiff];
+  return [wanted, onLoadDiff];
 }
 
 // Asking again for as many pages, or fewer, keeps the state, so a status row can ask on every draw.
-function wantMore(last: Wanted, key: string, want: PageKey): Wanted {
-  const pages = keyedPages(last, key);
-
-  if (pageCount(pages, want.path) >= want.page) return last;
-
-  return { key, pages: { ...pages, [want.path]: want.page } };
-}
-
-const keyedPages = (wanted: Wanted, key: string): Wanted['pages'] =>
-  wanted.key === key ? wanted.pages : {};
-
-const pageCount = (pages: Wanted['pages'], path: string): number =>
-  pages[path] ?? 0;
+const wantMore = (last: Wanted, path: string, count: number): Wanted =>
+  (last[path] ?? 0) >= count ? last : { ...last, [path]: count };
 
 const pageInput = (
   input: DiffsInput,
-  { path, page }: PageKey,
+  { path, index }: PageKey,
 ): SessionDiffInput => ({
   sessionId: input.sessionId,
   comparison: input.comparison,
   path,
-  cursor: page * diffPageLines,
-  limit: diffPageLines,
+  cursor: index * sessionDiffPageLines,
+  limit: sessionDiffPageLines,
 });
 
 function usePageQueries(input: DiffsInput, keys: PageKey[]): PageResult[] {
@@ -94,7 +90,7 @@ function usePageQueries(input: DiffsInput, keys: PageKey[]): PageResult[] {
     queries: keys.map((key) =>
       trpc.session.diff.queryOptions(pageInput(input, key), {
         enabled: input.open,
-        select: diffPage,
+        select: toDiffPage,
       }),
     ),
   });
@@ -147,7 +143,7 @@ function byFile(
  * loaded comes into view. A new comparison starts every file over.
  */
 export function useChangesDiffs(input: DiffsInput): FileDiffs {
-  const [wanted, onLoadDiff] = useWanted(JSON.stringify(input.comparison));
+  const [wanted, onLoadDiff] = useWanted(input.comparison);
   const keys = wantedPages(wanted);
   const results = usePageQueries(input, keys);
 

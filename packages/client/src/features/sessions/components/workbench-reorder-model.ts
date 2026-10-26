@@ -42,6 +42,10 @@ export function moveCard(
   return moved;
 }
 
+// The value held between low and high.
+export const clamp = (value: number, low: number, high: number): number =>
+  Math.min(high, Math.max(low, value));
+
 const none: CardSlot = { top: 0, height: 0 };
 
 const slotAt = (slots: readonly CardSlot[], index: number): CardSlot =>
@@ -49,7 +53,7 @@ const slotAt = (slots: readonly CardSlot[], index: number): CardSlot =>
 
 const middle = ({ top, height }: CardSlot): number => top + height / 2;
 
-// The held card stays inside the column, between the first card's top and the last card's bottom.
+// How far the held card is drawn from its place: the pointer may travel further, but the card stays inside the column, between the first card's top and the last card's bottom.
 export function clampOffset(
   slots: readonly CardSlot[],
   from: number,
@@ -62,12 +66,8 @@ export function clampOffset(
   const lowest = first.top - held.top;
   const highest = last.top + last.height - (held.top + held.height);
 
-  return Math.min(highest, Math.max(lowest, offset));
+  return clamp(offset, lowest, highest);
 }
-
-// How far the held card is drawn from its place; the pointer may travel further, but the card stays in the column.
-export const heldOffset = (drag: Drag): number =>
-  clampOffset(drag.slots, drag.from, drag.offset);
 
 // The place the held card takes if let go now: after every other card whose middle it has passed.
 export function dropIndex(drag: Drag): number {

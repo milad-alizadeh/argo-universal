@@ -78,7 +78,7 @@ function splitParts(children: ReactNode): Parts {
  * the grouped insets. Everything else, a failure's message and the actions, is pinned under it in the sheet's
  * footer, in view at any height (ADR-0042: a form's buttons stay outside its FieldGroup).
  */
-export function useFieldsLayout(props: DialogContentProps): FieldsLayout {
+export function fieldsLayout(props: DialogContentProps): FieldsLayout {
   const parts = splitParts(props.children);
 
   return {
@@ -95,7 +95,7 @@ const body = (parts: Parts): ReactElement => (
   </>
 );
 
-// The heading as a plain dialog draws it: Paper's iOS sheet pads every side, Android's drag handle zone sets the top.
+// The heading as a plain dialog draws it: the iOS sheet pads every side, Android's drag handle zone sets the top.
 const headingBox = (header: ReactNode): ReactNode =>
   header && <View className="px-4 pb-4 ios:pt-4">{header}</View>;
 

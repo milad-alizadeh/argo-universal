@@ -5,7 +5,7 @@ import { fn } from 'storybook/test';
 import { SessionWorkbench } from './session-workbench';
 import { allSections } from './session-workbench-fixtures';
 
-// Paper 24JC-0: Components / WorkbenchColumn at its product width.
+// The Workbench column at its product width.
 const meta = {
   title: 'Sessions/SessionWorkbench',
   component: SessionWorkbench,

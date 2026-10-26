@@ -10,8 +10,8 @@ import type {
 import { ComparisonPicker } from '../comparison-picker/comparison-picker';
 
 /*
- * Paper (Flow / Changes comparison): under the Inspector's header, one row with the comparison in force, then at its
- * end how many files are viewed and the line totals. Until files load, only the comparison shows.
+ * Under the Inspector's header, one row with the comparison in force, then at its end how many files are viewed and
+ * the line totals. Until files load, only the comparison shows.
  */
 export function ChangesToolbar(props: ChangesViewProps): React.JSX.Element {
   return (
@@ -23,38 +23,56 @@ export function ChangesToolbar(props: ChangesViewProps): React.JSX.Element {
   );
 }
 
-// A long comparison name truncates at the pill's cap, a share of the row: whole in a wide Stage, the totals always shown.
+// A long comparison name gives way to the counts only when the row runs out of room.
 function ComparisonRow(props: ChangesViewProps): React.JSX.Element {
+  const counted = countedOf(props);
+
   return (
     <View className="h-11 flex-row items-center gap-2 px-2 wide:px-3">
-      <View className="min-w-0 max-w-3/4 shrink">
+      <View className="min-w-0 shrink">
         <ComparisonPicker {...props} />
       </View>
       <View className="flex-1" />
+      {counted ? <RowCounts {...counted} /> : null}
+    </View>
+  );
+}
+
+function RowCounts(props: Counted): React.JSX.Element {
+  return (
+    <>
       <View className="min-w-0 shrink">
         <FileCounts {...props} />
       </View>
-      {props.summary?.files ? <LineTotals {...props.summary} /> : null}
-    </View>
+      <LineTotals {...props.summary} />
+    </>
   );
 }
 
 // The phone's sheet has no comparison pill, so its counts take their own line.
-function Summary(props: CountsProps): React.JSX.Element | null {
-  if (!props.summary?.files) return null;
+function Summary(props: ChangesViewProps): React.JSX.Element | null {
+  const counted = countedOf(props);
+
+  if (!counted) return null;
 
   return (
     <View className="px-4 pt-4 pb-2">
-      <FileCounts {...props} />
+      <FileCounts {...counted} />
     </View>
   );
 }
 
-type CountsProps = Pick<ChangesViewProps, 'files' | 'summary' | 'viewed'>;
+type Counted = Pick<ChangesViewProps, 'files' | 'viewed'> & {
+  summary: ChangesSummary;
+};
 
-function FileCounts(props: CountsProps): React.JSX.Element | null {
-  if (!props.summary?.files) return null;
+// The counts show once the comparison has files to count.
+const countedOf = (props: ChangesViewProps): Counted | undefined =>
+  props.summary?.files
+    ? { files: props.files, viewed: props.viewed, summary: props.summary }
+    : undefined;
 
+function FileCounts(props: Counted): React.JSX.Element {
   return (
     <Text role="secondary" tone="muted" numberOfLines={1}>
       {filesSummary(changesTotals(props.summary, props.files, props.viewed))}

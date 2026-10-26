@@ -14,7 +14,9 @@ function headerWorkbench({
   return panels ? <SessionWorkbench panels={panels} /> : undefined;
 }
 
-function stageToggle({ panels }: SessionHeaderProps): (() => void) | undefined {
+function inspectorToggle({
+  panels,
+}: SessionHeaderProps): (() => void) | undefined {
   if (!panels) return undefined;
 
   return () => (panels.onSelect ?? panels.onToggle)('changes');
@@ -25,7 +27,7 @@ export function SessionHeader(props: SessionHeaderProps): ReactElement {
   return (
     <WindowBand
       workbench={headerWorkbench(props)}
-      onStageToggle={stageToggle(props)}
+      onInspectorToggle={inspectorToggle(props)}
     />
   );
 }

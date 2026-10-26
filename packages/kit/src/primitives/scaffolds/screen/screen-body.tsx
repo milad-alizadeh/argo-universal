@@ -1,13 +1,9 @@
 import { isValidElement, use, type ReactElement, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColumnClaimed, useColumnFilled } from '#kit/column-claims';
 import { flattenedChildren } from '#kit/flattened-children';
-import {
-  HeadingInsetContext,
-  useBodyPartScope,
-  useColumnClaimed,
-  useColumnFilled,
-} from '#kit/heading-inset';
+import { HeadingInsetContext, useBodyPartScope } from '#kit/heading-inset';
 import { ScrollColumnContext } from '#kit/scroll-column';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';

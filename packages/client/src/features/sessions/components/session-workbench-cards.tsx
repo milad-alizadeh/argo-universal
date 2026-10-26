@@ -14,123 +14,142 @@ import {
   hasSection,
   itemCount,
   openSection,
+  type Section,
   workbenchPanels,
 } from './session-workbench-sections';
 import type { WorkbenchColumnCard } from './workbench-column';
 import { WorkbenchCountSummary } from './workbench-count-summary';
 
-type SectionProps = { panel: SessionPanel; panels: SessionHeaderPanels };
-
 const sectionTitle = (panel: SessionPanel): string =>
-  panel === 'subagents' ? 'Agents' : sessionPanelLabels[panel].label;
+  sessionPanelLabels[panel].label;
 
 // The cards the Session has something for, in the Workbench's default order.
 export function workbenchCards(
   panels: SessionHeaderPanels,
 ): WorkbenchColumnCard[] {
   return workbenchPanels
-    .filter(
-      (panel) => panels.offered.includes(panel) && hasSection(panel, panels),
-    )
-    .map((panel) => ({
-      id: panel,
-      label: sectionTitle(panel),
-      render: (handle) => (
-        <SectionCard panel={panel} panels={panels} handle={handle} />
-      ),
+    .map((panel): Section => ({ panel, panels }))
+    .filter((section) => panels.offered.includes(section.panel))
+    .filter(hasSection)
+    .map((section) => ({
+      id: section.panel,
+      label: sectionTitle(section.panel),
+      render: (handle) => <SectionCard {...section} handle={handle} />,
     }));
 }
 
+// What each section draws: its summary, and the footer under it where it has one.
+const sectionViews: Record<
+  SessionPanel,
+  {
+    Summary: (section: Section) => ReactElement;
+    Footer?: (section: Section) => ReactElement;
+  }
+> = {
+  changes: { Summary: ChangesSummary, Footer: ChangesFooter },
+  subagents: { Summary: AgentsSummary },
+  shells: { Summary: ShellsSummary },
+};
+
 type CardProps = ComponentProps<typeof Card>;
 
-// Paper / WorkbenchGlass: each section owns its glass plate; the generic collapsible card draws it. Rows carry 4 of their own beside their hover tile, so the body and footer pull 4 out to line the rows' text up with the title.
-const sectionCardProps = (
-  props: SectionProps & { handle: ReactNode },
-): CardProps => ({
+// Each section owns its glass plate; the generic collapsible card draws it. Rows carry 4 of their own beside their hover tile, so the body and footer pull 4 out to line the rows' text up with the title.
+const sectionCardProps = (section: Section, handle: ReactNode): CardProps => ({
   kind: 'glass',
   density: 'compact',
   collapsible: true,
   defaultOpen: true,
-  title: sectionTitle(props.panel),
-  actions: props.handle,
-  footer: <SectionFooter {...props} />,
+  title: sectionTitle(section.panel),
+  actions: handle,
+  footer: <SectionFooter {...section} />,
 });
 
-function SectionCard(
-  props: SectionProps & { handle: ReactNode },
-): ReactElement {
+function SectionCard({
+  handle,
+  ...section
+}: Section & { handle: ReactNode }): ReactElement {
   return (
-    <View testID={`workbench-${props.panel}`}>
-      <Card {...sectionCardProps(props)}>
+    <View testID={`workbench-${section.panel}`}>
+      <Card {...sectionCardProps(section, handle)}>
         <View className="-mx-1">
-          <SectionBody {...props} />
+          <SectionBody {...section} />
         </View>
       </Card>
     </View>
   );
 }
 
-function SectionFooter({ panel, panels }: SectionProps): ReactElement | null {
-  if (panel !== 'changes') return null;
+function SectionFooter(section: Section): ReactElement | null {
+  const { Footer } = sectionViews[section.panel];
+
+  if (!Footer) return null;
 
   return (
     <View className="-mx-1">
-      <WorkbenchChangesFooter
-        panels={panels}
-        onOpen={() => openSection('changes', panels)}
-      />
+      <Footer {...section} />
     </View>
   );
 }
 
 // Changes with a preview carry their own presses on rows; every other body is one press that opens its section.
-function SectionBody(props: SectionProps): ReactElement {
-  const content = <SectionSummary {...props} />;
+function SectionBody(section: Section): ReactElement {
+  const { Summary } = sectionViews[section.panel];
 
-  if (props.panel === 'changes' && hasPreview(props.panels)) return content;
+  if (section.panel === 'changes' && hasPreview(section))
+    return <Summary {...section} />;
 
   return (
     <Pressable
       role="button"
-      accessibilityLabel={`Open ${sectionTitle(props.panel)} overview`}
-      onPress={() => openSection(props.panel, props.panels)}
+      accessibilityLabel={`Open ${sectionTitle(section.panel)} overview`}
+      onPress={() => openSection(section)}
     >
-      {content}
+      <Summary {...section} />
     </Pressable>
   );
 }
 
-function SectionSummary(props: SectionProps): ReactElement {
-  if (props.panel === 'changes') return <ChangesSummary {...props} />;
-
-  if (props.panel === 'subagents') return <AgentsSummary {...props} />;
-
-  return <CountSummary {...props} />;
-}
-
-function AgentsSummary(props: SectionProps): ReactElement {
-  return props.panels.agents ? (
-    <WorkbenchAgents {...props.panels.agents} />
-  ) : (
-    <CountSummary {...props} />
-  );
-}
-
-function ChangesSummary({ panels }: SectionProps): ReactElement {
+function ChangesFooter(section: Section): ReactElement {
   return (
-    <WorkbenchChangesSection
-      panels={panels}
-      onOpen={() => openSection('changes', panels)}
+    <WorkbenchChangesFooter
+      panels={section.panels}
+      onOpen={() => openSection(section)}
     />
   );
 }
 
-function CountSummary({ panel, panels }: SectionProps): ReactElement {
+function ChangesSummary(section: Section): ReactElement {
+  return (
+    <WorkbenchChangesSection
+      panels={section.panels}
+      onOpen={() => openSection(section)}
+    />
+  );
+}
+
+function AgentsSummary(section: Section): ReactElement {
+  const { agents } = section.panels;
+
+  return agents ? (
+    <WorkbenchAgents {...agents} />
+  ) : (
+    <CountSummary {...section} noun="agent" />
+  );
+}
+
+function ShellsSummary(section: Section): ReactElement {
+  return <CountSummary {...section} noun="shell" />;
+}
+
+function CountSummary({
+  noun,
+  ...section
+}: Section & { noun: 'agent' | 'shell' }): ReactElement {
   return (
     <WorkbenchCountSummary
-      count={itemCount(panel, panels)}
-      icon={sessionPanelLabels[panel].icon}
-      noun={panel === 'subagents' ? 'agent' : 'shell'}
+      count={itemCount(section)}
+      icon={sessionPanelLabels[section.panel].icon}
+      noun={noun}
     />
   );
 }

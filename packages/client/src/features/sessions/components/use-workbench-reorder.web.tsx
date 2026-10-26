@@ -3,9 +3,10 @@ import { useState, type ReactNode } from 'react';
 import type { ViewStyle } from 'react-native';
 import { useReorderGesture, type Gesture } from './use-reorder-gesture.web';
 import type { WorkbenchReorder, WorkbenchSlot } from './use-workbench-reorder';
+import type { WorkbenchColumnCard } from './workbench-column';
 import { ReorderHandle, slotTestID } from './workbench-reorder-handle.web';
 import {
-  heldOffset,
+  clampOffset,
   makeRoom,
   orderCards,
   type Drag,
@@ -20,7 +21,12 @@ function slotStyle(
   if (!drag) return undefined;
 
   if (drag.id === id)
-    return { transform: [{ translateY: heldOffset(drag) }], zIndex: 1 };
+    return {
+      transform: [
+        { translateY: clampOffset(drag.slots, drag.from, drag.offset) },
+      ],
+      zIndex: 1,
+    };
 
   return { transform: [{ translateY: makeRoom(drag, index) }] };
 }
@@ -54,15 +60,13 @@ function handleFor(id: string, label: string, gesture: Gesture): ReactNode {
 }
 
 // The cards by id, and the ids in the order drawn: the one the user chose, with any new card after it.
-interface Order<Card> {
-  byId: Map<string, Card>;
+interface Order {
+  byId: Map<string, WorkbenchColumnCard>;
   shown: string[];
   setOrder: (order: string[]) => void;
 }
 
-function useOrder<Card extends { id: string }>(
-  cards: readonly Card[],
-): Order<Card> {
+function useOrder(cards: readonly WorkbenchColumnCard[]): Order {
   const [order, setOrder] = useState<string[]>([]);
   const byId = new Map(cards.map((card) => [card.id, card]));
 
@@ -73,9 +77,9 @@ function useOrder<Card extends { id: string }>(
  * Desktop and web: a card is moved by its handle, with a pointer or the arrow keys. The order is kept here, in the
  * column, for as long as it is drawn; nothing is stored, so a Workbench opens in its default order.
  */
-export function useWorkbenchReorder<Card extends { id: string }>(
-  cards: readonly Card[],
-): WorkbenchReorder<Card> {
+export function useWorkbenchReorder(
+  cards: readonly WorkbenchColumnCard[],
+): WorkbenchReorder {
   const { byId, shown, setOrder } = useOrder(cards);
   const gesture = useReorderGesture({ shown, reorder: setOrder });
 

@@ -26,13 +26,13 @@ const summaryOf = (page: Page): ChangesSummary => ({
 const loadedFiles = (pages: readonly Page[]): ChangedFile[] =>
   uniqueChangedFiles(pages.flatMap((page) => page.files.map(changedFile)));
 
-type FilesData = Pick<ChangesViewProps, 'files' | 'summary' | 'mainBranch'>;
+type FilesProps = Pick<ChangesViewProps, 'files' | 'summary' | 'mainBranch'>;
 
 // Until the first page arrives there are no files, and the main branch is not known yet.
-const noFiles: FilesData = { mainBranch: '…' };
+const noFiles: FilesProps = { mainBranch: '…' };
 
 // The pages of changed files loaded so far, as the list draws them; the first page carries the whole comparison's totals.
-export function filesData(pages: readonly Page[] = []): FilesData {
+export function filesFromPages(pages: readonly Page[] = []): FilesProps {
   const [first] = pages;
 
   if (!first) return noFiles;

@@ -200,19 +200,30 @@ it('returns changed files on the main Checkout', async () => {
   });
 });
 
+async function twoFileSession(): Promise<{ host: Host; sessionId: string }> {
+  const session = await mainCheckoutSession();
+
+  writeFileSync(join(session.checkout, secondFileName), 'second\n');
+
+  return session;
+}
+
 it('pages the changed files and keeps the whole comparison in the summary', async () => {
-  const { host, sessionId, checkout } = await mainCheckoutSession();
+  const { host, sessionId } = await twoFileSession();
 
-  writeFileSync(join(checkout, secondFileName), 'second\n');
-
-  const first = await host.caller.session.changes({ sessionId, limit: 1 });
-
-  expect(first).toMatchObject({
+  expect(
+    await host.caller.session.changes({ sessionId, limit: 1 }),
+  ).toMatchObject({
     summary: { files: 2, additions: 2, deletions: 0 },
     files: [{ path: 'first.txt' }],
     nextCursor: 1,
   });
-  // The next page is asked for as the client's infinite query asks, with its direction.
+});
+
+// The next page is asked for as the client's infinite query asks, with its direction.
+it('returns the next page of changed files from its cursor', async () => {
+  const { host, sessionId } = await twoFileSession();
+
   expect(
     await host.caller.session.changes({
       sessionId,
@@ -223,20 +234,28 @@ it('pages the changed files and keeps the whole comparison in the summary', asyn
   ).toMatchObject({ files: [{ path: secondFileName }], nextCursor: null });
 });
 
+async function threeLineSession(): Promise<{ host: Host; sessionId: string }> {
+  const session = await mainCheckoutSession();
+
+  writeFileSync(join(session.checkout, 'first.txt'), 'one\ntwo\nthree\n');
+
+  return session;
+}
+
 it('pages one file diff by its lines', async () => {
-  const { host, sessionId, checkout } = await mainCheckoutSession();
+  const { host, sessionId } = await threeLineSession();
 
-  writeFileSync(join(checkout, 'first.txt'), 'one\ntwo\nthree\n');
-
-  const first = await host.caller.session.diff({
-    sessionId,
-    path: 'first.txt',
-    limit: 2,
+  expect(
+    await host.caller.session.diff({ sessionId, path: 'first.txt', limit: 2 }),
+  ).toMatchObject({
+    nextCursor: 2,
+    patch: { text: expect.not.stringContaining('+three') },
   });
+});
 
-  expect(first.nextCursor).toBe(2);
-  expect(first.patch.text).toContain('+two');
-  expect(first.patch.text).not.toContain('+three');
+it('numbers the next diff page from where the last one stopped', async () => {
+  const { host, sessionId } = await threeLineSession();
+
   expect(
     await host.caller.session.diff({
       sessionId,

@@ -1,3 +1,19 @@
+// One page of a list: up to `limit` items from `cursor`, and where the next page starts, if one does.
+export type ItemsPage<Item> = { items: Item[]; nextCursor: number | null };
+
+export function pageItems<Item>(
+  items: readonly Item[],
+  cursor: number,
+  limit: number,
+): ItemsPage<Item> {
+  const end = cursor + limit;
+
+  return {
+    items: items.slice(cursor, end),
+    nextCursor: end < items.length ? end : null,
+  };
+}
+
 // One page of a file's unified diff: its header lines, then up to `limit` of its changed and context lines.
 export type PatchPage = { patch: string; nextCursor: number | null };
 
@@ -105,12 +121,8 @@ export function pagePatch(
   limit: number,
 ): PatchPage {
   const parsed = parsePatch(patch);
-  const end = cursor + limit;
-  const entries = parsed.entries.slice(cursor, end);
-  const lines = [...parsed.preamble, ...pageLines(entries)];
+  const page = pageItems(parsed.entries, cursor, limit);
+  const lines = [...parsed.preamble, ...pageLines(page.items)];
 
-  return {
-    patch: `${lines.join('\n')}\n`,
-    nextCursor: end < parsed.entries.length ? end : null,
-  };
+  return { patch: `${lines.join('\n')}\n`, nextCursor: page.nextCursor };
 }

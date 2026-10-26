@@ -19,7 +19,7 @@ import {
 } from '#features/changes';
 import { useTRPC, type ClientError } from '#features/connection';
 import { comparisonInput } from './changes-comparison-input';
-import { filesData } from './changes-files-data';
+import { filesFromPages } from './changes-files-data';
 import { useChangesDiffs } from './use-changes-diffs';
 
 type ChangesInput = {
@@ -41,9 +41,6 @@ type FilesQuery = UseInfiniteQueryResult<
   Pick<ClientError, 'message'>
 >;
 
-// A page of changed files; the list asks for the next as its end comes into view.
-export const filesPageSize = 50;
-
 function useFilesQuery(
   input: ChangesInput,
   comparison: SessionComparison,
@@ -52,7 +49,8 @@ function useFilesQuery(
 
   return useInfiniteQuery(
     trpc.session.changes.infiniteQueryOptions(
-      { sessionId: input.sessionId, comparison, limit: filesPageSize },
+      // A page holds the Server's page of files; the list asks for the next as its end comes into view.
+      { sessionId: input.sessionId, comparison },
       {
         enabled: input.open,
         getNextPageParam: (page) => page.nextCursor ?? undefined,
@@ -104,7 +102,7 @@ export function useChangesData(input: ChangesInput): ChangesData {
   const diffs = useChangesDiffs({ ...input, comparison });
 
   return {
-    ...filesData(files.data?.pages),
+    ...filesFromPages(files.data?.pages),
     loadError: files.error?.message,
     ...morePages(files),
     ...diffs,
