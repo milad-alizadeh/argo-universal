@@ -6,6 +6,10 @@ import { iconNames } from '../../../symbols/icon-names';
 import type { IconName } from '../../../symbols/icon-names';
 import type { EmptyStateProps } from './empty-state-props';
 
+/*
+ * Centred as a column. The action sits in a box of its own size that the column centres: Expo's web Host, which
+ * holds a Button, pins itself to the start of whatever holds it.
+ */
 export function EmptyState(props: EmptyStateProps): React.JSX.Element {
   return (
     <View
@@ -14,7 +18,7 @@ export function EmptyState(props: EmptyStateProps): React.JSX.Element {
     >
       {props.icon && <EmptyStateIcon icon={props.icon} />}
       <EmptyStateText {...props} />
-      {props.action}
+      {props.action && <View className="self-center">{props.action}</View>}
     </View>
   );
 }

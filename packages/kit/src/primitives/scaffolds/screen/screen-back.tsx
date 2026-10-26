@@ -30,11 +30,11 @@ function useBackShown(): boolean {
   return wide && !besideList;
 }
 
-// Its chevron follows the page title beside it.
+// A back glyph, not a chevron: a disclosure chevron draws smaller, and this is the page's one Back.
 function BackButton({ onBack }: { onBack: () => void }): ReactElement {
   return (
     <IconButton
-      icon="chevron-left"
+      icon="back"
       size="sm"
       variant="ghost"
       accessibilityLabel="Back"

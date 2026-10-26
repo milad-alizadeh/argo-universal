@@ -94,7 +94,7 @@ function CartesianPlot({ drawing, handlers }: PlotInput): React.JSX.Element {
     <CartesianChart
       {...rowsConfig(drawing.data)}
       {...layoutConfig(drawing)}
-      {...axisConfig(drawing.theme, drawing.data.rows.length)}
+      {...axisConfig(drawing.props, drawing.theme, drawing.data.rows.length)}
       {...handlers}
     >
       {(arg) => drawSeries(arg, drawing)}

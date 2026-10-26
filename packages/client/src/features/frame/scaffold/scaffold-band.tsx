@@ -26,9 +26,7 @@ function SidebarBandToggle({ layout }: ScaffoldPartProps): ReactElement {
 }
 
 const sidebarControl = (parts: ScaffoldPartProps): ReactElement | null =>
-  parts.scaffold.list || parts.scaffold.listHeader ? (
-    <SidebarBandToggle {...parts} />
-  ) : null;
+  parts.scaffold.list ? <SidebarBandToggle {...parts} /> : null;
 
 type BandLeadingProps = ScaffoldPartProps & {
   platform: keyof typeof leadingWidths;

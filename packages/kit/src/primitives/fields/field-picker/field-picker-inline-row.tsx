@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import { SelectedCheck } from '#primitives/status/selected-check';
 import { Spinner } from '#primitives/status/spinner';
@@ -68,24 +67,14 @@ const focusProps = (
 
 function Text({ option }: OptionRowProps): ReactElement {
   return (
-    <View className="min-w-0 flex-1 gap-0.5">
+    <View className="min-w-0 flex-1">
       <RowTitle
         title={option.label}
+        subtitle={option.subtitle}
         leading={option.icon}
         logo={option.logo}
         tone={option.tone}
       />
-      <Subtitle text={option.subtitle} />
     </View>
-  );
-}
-
-function Subtitle(props: { text?: string }): ReactElement | null {
-  if (!props.text) return null;
-
-  return (
-    <NativeText role="secondary" tone="muted">
-      {props.text}
-    </NativeText>
   );
 }

@@ -1,3 +1,4 @@
+import { splitButtonDefaults } from '@repo/contracts/kit-tokens';
 import { declaredActions } from '#primitives/actions/action';
 import type { ButtonProps } from '#primitives/actions/button';
 import type { MenuAction } from '#primitives/overlays/menu';
@@ -41,7 +42,7 @@ function buttonLook<Value extends string>(
   props: LaidSplitProps<Value>,
 ): Omit<ButtonProps, 'label'> {
   return {
-    size: props.size === 'xs' ? 'sm' : 'md',
+    size: props.size ?? splitButtonDefaults.size,
     fullWidth: props.narrow,
     disabled: props.disabled,
   };

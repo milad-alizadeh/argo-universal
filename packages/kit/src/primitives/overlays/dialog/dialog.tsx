@@ -1,27 +1,16 @@
 import type * as React from 'react';
-import { View, type ViewProps } from 'react-native';
+import { View } from 'react-native';
 import { cn } from '#kit/utils';
-import { Button } from '#primitives/actions/button';
-import type { ButtonProps } from '#primitives/actions/button';
-import {
-  CentredOverlayScope,
-  useInCentredOverlay,
-} from '#primitives/overlays/centred-overlay';
+import { CentredOverlayScope } from '#primitives/overlays/centred-overlay';
 import { DialogBody } from './dialog-body';
-import { useDialogState } from './dialog-context';
+import { hasSections, useFieldsLayout } from './dialog-fields';
 import { DialogOverlay } from './dialog-overlay';
-import {
-  DialogDescriptionText,
-  DialogPortal,
-  DialogTitleText,
-  DialogTrigger,
-} from './dialog-parts';
+import { DialogPortal, DialogTrigger } from './dialog-parts';
 import { useDialogPresentation } from './dialog-presentation';
 import type {
   DialogContentProps as ContentProps,
   DialogProps,
   DialogPresentation,
-  DialogTextProps,
 } from './dialog-props';
 import { DialogRoot } from './dialog-root';
 import { DialogSheet } from './dialog-sheet';
@@ -39,7 +28,35 @@ function DialogContent(props: ContentProps): React.JSX.Element {
   return <NarrowDialog {...props} presentation={presentation} />;
 }
 
-function NarrowDialog({
+/*
+ * Content that holds FieldGroup sections is a form: its sections are one FieldGroup under the heading, which scrolls
+ * and insets them, and its actions are pinned in the sheet's footer. Any other content is a plain body as tall as it is.
+ */
+function NarrowDialog(
+  props: ContentProps & { presentation: DialogPresentation },
+): React.JSX.Element {
+  if (hasSections(props.children)) return <FieldsDialog {...props} />;
+
+  return <PlainDialog {...props} />;
+}
+
+function FieldsDialog({
+  presentation,
+  ...props
+}: ContentProps & { presentation: DialogPresentation }): React.JSX.Element {
+  const layout = useFieldsLayout(props);
+
+  return (
+    <DialogSheet
+      open={presentation.sheetOpen}
+      dismissible={props.dismissible}
+      fields
+      {...layout}
+    />
+  );
+}
+
+function PlainDialog({
   presentation,
   ...props
 }: ContentProps & { presentation: DialogPresentation }): React.JSX.Element {
@@ -54,12 +71,12 @@ function NarrowDialog({
   );
 }
 
-// Paper's iOS sheet pads its content on every side; Android's drag handle zone sets the top.
+// Paper's iOS sheet pads its content on every side; Android's drag handle zone sets the top, and its sheet ends at the gesture bar, so only the foot needs a pad.
 function NarrowDialogBody(
   props: Pick<ContentProps, 'className' | 'children'>,
 ): React.JSX.Element {
   return (
-    <View className={cn('gap-6 px-4 ios:py-4', props.className)}>
+    <View className={cn('gap-6 px-4 pb-4 ios:pt-4', props.className)}>
       {props.children}
     </View>
   );
@@ -77,71 +94,8 @@ function CentredDialog(props: ContentProps): React.JSX.Element {
   );
 }
 
-function DialogHeader({ className, ...props }: ViewProps): React.JSX.Element {
-  return (
-    <View
-      className={cn('flex flex-col gap-2 text-center sm:text-left', className)}
-      {...props}
-    />
-  );
-}
+export { DialogCancel, DialogFooter } from './dialog-actions';
 
-// A centred dialog lines its actions up at the trailing edge; a sheet stacks them, the main action on top.
-function DialogFooter({ className, ...props }: ViewProps): React.JSX.Element {
-  const centred = useInCentredOverlay();
+export { DialogDescription, DialogHeader, DialogTitle } from './dialog-text';
 
-  return (
-    <View
-      className={cn(
-        'flex gap-2',
-        centred ? 'flex-row justify-end' : 'flex-col-reverse',
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-// The dialog's own dismiss action, drawn as the same Button as its other actions so they share shape and height.
-function DialogCancel(
-  props: Omit<ButtonProps, 'onPress' | 'variant' | 'fullWidth'>,
-): React.JSX.Element {
-  const { onOpenChange } = useDialogState();
-  const centred = useInCentredOverlay();
-
-  return (
-    <Button
-      {...props}
-      variant="secondary"
-      fullWidth={!centred}
-      onPress={() => onOpenChange(false)}
-    />
-  );
-}
-
-function DialogTitle(props: DialogTextProps): React.JSX.Element {
-  return (
-    <DialogTitleText className={cn('type-heading', props.className)}>
-      {props.children}
-    </DialogTitleText>
-  );
-}
-
-function DialogDescription(props: DialogTextProps): React.JSX.Element {
-  return (
-    <DialogDescriptionText className={cn('type-secondary', props.className)}>
-      {props.children}
-    </DialogDescriptionText>
-  );
-}
-
-export {
-  Dialog,
-  DialogCancel,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-};
+export { Dialog, DialogContent, DialogTrigger };

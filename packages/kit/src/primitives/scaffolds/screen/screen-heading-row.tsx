@@ -7,20 +7,18 @@ import {
   headerSlots,
   type HeaderActionsProps,
 } from '#primitives/actions/action';
+import type { IconButtonSize } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
-import {
-  SearchField,
-  type SearchFieldProps,
-} from '#primitives/controls/search-field';
 import { ScreenBack } from './screen-back';
 import { ScreenColumn } from './screen-column';
+import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 
 // A wide Screen's heading, or any Screen's when no navigator draws its header.
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
   return (
     <View className="py-6">
-      <ScreenColumn>
+      <ScreenColumn width={props.width}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />
           <ScreenCaption caption={props.caption} />
@@ -51,26 +49,48 @@ function ScreenCaption({ caption }: Pick<ScreenProps, 'caption'>): ReactNode {
 
 type HeadingContent = { title: ReactNode; actions: ReactNode };
 
-export function HeadingRow(props: ScreenHeaderInput): ReactElement {
+/*
+ * A page's heading sits in its own column; a list column's is denser, its title one level down, its buttons small and
+ * its search the sidebar's, since it sits above a list beside its page.
+ */
+export type HeadingPlacement = 'page' | 'list';
+
+type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
+
+export function HeadingRow(props: HeadingRowProps): ReactElement {
+  const { placement = 'page' } = props;
+
   const content = {
-    title: <ScreenTitle title={props.title} />,
-    actions: <HeadingActions {...props} />,
+    title: <ScreenTitle title={props.title} level={titleLevels[placement]} />,
+    actions: <HeadingActions {...props} size={buttonSizes[placement]} />,
   };
 
   return (
     <View>
       <ScreenBack onBack={props.onBack} />
-      <Heading content={content} page={props} />
+      <Heading content={content} page={props} placement={placement} />
     </View>
   );
 }
 
+const buttonSizes: Record<HeadingPlacement, IconButtonSize | undefined> = {
+  page: undefined,
+  list: 'sm',
+};
+
 function Heading(props: {
   content: HeadingContent;
   page: ScreenProps;
+  placement: HeadingPlacement;
 }): ReactElement {
   if (props.page.search)
-    return <SearchHeading {...props.content} page={props.page} />;
+    return (
+      <SearchHeading
+        content={props.content}
+        page={props.page}
+        sidebar={props.placement === 'list'}
+      />
+    );
 
   return <PlainHeading {...props.content} />;
 }
@@ -85,15 +105,16 @@ function PlainHeading(props: HeadingContent): ReactElement {
 }
 
 // The Screen's own Actions, split as one header with one overflow menu, then its primary Action.
-function HeadingActions(
-  props: Pick<ScreenHeaderInput, 'header'>,
+export function HeadingActions(
+  props: Pick<ScreenHeaderInput, 'header'> & { size?: IconButtonSize },
 ): ReactElement {
   const { groups, label, primary } = props.header;
+  const { size } = props;
 
   return (
     <>
-      <DeclaredActions groups={groups} label={label} />
-      <DeclaredActions groups={primary} label={label} />
+      <DeclaredActions groups={groups} label={label} size={size} />
+      <DeclaredActions groups={primary} label={label} size={size} />
     </>
   );
 }
@@ -106,54 +127,24 @@ function DeclaredActions(
   return <HeaderActions {...props} slots={headerSlots} />;
 }
 
-function ScreenTitle({ title }: Pick<ScreenProps, 'title'>): ReactElement {
+// A page's title is its heading; a list column's sits a level below it, under the window's own page title.
+const titleLevels = { page: 1, list: 2 } as const;
+
+const titleProps = {
+  role: 'title',
+  accessibilityRole: 'heading',
+  numberOfLines: 1,
+} as const;
+
+function ScreenTitle(props: {
+  title?: string;
+  level: number;
+}): ReactElement | null {
+  if (!props.title) return null;
+
   return (
-    <Text
-      role="title"
-      accessibilityRole="heading"
-      aria-level={1}
-      numberOfLines={1}
-    >
-      {title}
+    <Text {...titleProps} aria-level={props.level}>
+      {props.title}
     </Text>
   );
-}
-
-function SearchHeading(
-  props: HeadingContent & { page: ScreenProps },
-): ReactElement {
-  return (
-    <View className="h-10 flex-row items-center">
-      <SearchField
-        {...searchQuery(props.page)}
-        title={props.title}
-        actions={props.actions}
-      />
-    </View>
-  );
-}
-
-function searchQuery(
-  page: ScreenProps,
-): Pick<
-  SearchFieldProps,
-  'label' | 'value' | 'onChangeText' | 'onFocus' | 'onBlur'
-> {
-  return {
-    label: searchLabel(page),
-    value: searchValue(page),
-    onChangeText: page.onChangeText ?? ignoreSearch,
-    onFocus: page.onFocus,
-    onBlur: page.onBlur,
-  };
-}
-
-function ignoreSearch(): void {}
-
-function searchLabel(page: ScreenProps): string {
-  return page.search?.label ?? 'Search';
-}
-
-function searchValue(page: ScreenProps): string {
-  return page.value ?? '';
 }

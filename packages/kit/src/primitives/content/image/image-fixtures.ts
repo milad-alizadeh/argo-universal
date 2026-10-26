@@ -23,6 +23,7 @@ export const containImage = {
 
 export const loadingImage = {
   aspect: 16 / 9,
+  radius: 'container',
   accessibilityLabel: 'Loading screenshot',
 } satisfies ImageProps;
 

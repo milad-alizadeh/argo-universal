@@ -14,11 +14,13 @@ interface CodeBlockHeaderProps {
   resource?: HeaderResource;
 }
 
+// The bar above the code, and the footer bar below it, which matches it.
+export const codeBlockBarClassName = 'h-8 shrink-0 flex-row items-center px-3';
+
 function headerClassName(isResource: boolean): string {
-  return cn(
-    'shrink-0 flex-row px-3',
-    isResource ? 'items-start gap-2 py-2' : 'h-8 items-center justify-between',
-  );
+  return isResource
+    ? 'shrink-0 flex-row items-start gap-2 px-3 py-2'
+    : cn(codeBlockBarClassName, 'justify-between');
 }
 
 function HeaderTitle({

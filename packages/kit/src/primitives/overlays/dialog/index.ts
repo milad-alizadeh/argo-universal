@@ -4,6 +4,7 @@ export {
   DialogContent,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from './dialog';
 

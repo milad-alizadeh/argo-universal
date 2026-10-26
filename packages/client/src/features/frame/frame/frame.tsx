@@ -3,8 +3,8 @@ import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import {
-  WindowBandHostContext,
-  type WindowBandHost,
+  WindowBandHostsProvider,
+  type WindowBandHosts,
 } from '#lib/product/window-band';
 import {
   isCoreSection,
@@ -55,7 +55,7 @@ export interface FrameOptions {
 
 // What the Frame and its sidebar and pages are drawn from, which the navigator holds and hands to each.
 export interface FrameParts {
-  bandHost: WindowBandHost;
+  bandHost: WindowBandHosts;
   scaffold: ScaffoldParts;
   // The column the shown page's Inspector draws in on a wide window.
   inspectorHost: InspectorHost;
@@ -111,9 +111,9 @@ export function Frame({ frame, children }: FrameProps): React.JSX.Element {
     <SectionListsContext value={frame.lists}>
       <FrameInspectorHost value={frame.inspectorHost}>
         <FrameListDetailSidebar value={frame.listDetail.sidebar}>
-          <WindowBandHostContext value={frame.bandHost}>
+          <WindowBandHostsProvider hosts={frame.bandHost}>
             <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
-          </WindowBandHostContext>
+          </WindowBandHostsProvider>
         </FrameListDetailSidebar>
       </FrameInspectorHost>
     </SectionListsContext>

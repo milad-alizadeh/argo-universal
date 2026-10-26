@@ -1,7 +1,5 @@
-import { useWide } from '@repo/kit/use-wide/use-wide';
 import { type ComponentProps, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import { SessionsHeader } from '../src/features/sessions/components/sessions-header';
 import type { SessionsStatus } from '../src/features/sessions/stores/sessions-view';
 import { showsUnderStatus } from '../src/features/sessions/utils/sessions-list-input';
 import {
@@ -10,7 +8,7 @@ import {
 } from '../src/screens/sessions/session-list-view';
 import { SessionsRootScreen } from '../src/screens/sessions/sessions-root-screen';
 
-// A wide window's sidebar list under its header row; a phone's root Screen around the list.
+// The Sessions root Screen around the list, which draws its header at every width.
 export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
   const props = usePreviewSessions(args);
   const { view, query, sessions } = props;
@@ -28,19 +26,11 @@ function PreviewChrome({
   children,
   ...props
 }: PreviewProps & { children: ReactElement }): ReactElement {
-  if (!useWide())
-    return <SessionsRootScreen {...props}>{children}</SessionsRootScreen>;
-
-  return (
-    <>
-      <PreviewHeader {...props} />
-      {children}
-    </>
-  );
+  return <SessionsRootScreen {...props}>{children}</SessionsRootScreen>;
 }
 
 type PreviewProps = SessionListViewProps &
-  Pick<ComponentProps<typeof SessionsHeader>, 'view' | 'onViewChange'>;
+  Pick<ComponentProps<typeof SessionsRootScreen>, 'view' | 'onViewChange'>;
 
 function usePreviewView(
   args: SessionListViewProps,
@@ -62,16 +52,6 @@ function usePreviewSessions(args: SessionListViewProps): PreviewProps {
     sessions,
     onQueryChange: setQuery,
   };
-}
-
-function PreviewHeader(
-  props: ComponentProps<typeof SessionsHeader>,
-): ReactElement {
-  return (
-    <View className="min-h-11 web:h-11 wide:min-h-14 web:wide:h-14 flex-row items-center gap-0.5 px-2">
-      <SessionsHeader {...props} />
-    </View>
-  );
 }
 
 function matchingSessions(

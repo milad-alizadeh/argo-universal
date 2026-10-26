@@ -38,7 +38,7 @@ function DesktopToolbar(props: ChangesViewProps): React.JSX.Element {
 
 function ComparisonRow(props: ChangesViewProps): React.JSX.Element {
   return (
-    <View className="h-11 flex-row items-center gap-2 px-3">
+    <View className="h-11 flex-row items-center gap-2 px-2 wide:px-3">
       <View className="min-w-0 flex-1">
         <ComparisonPicker {...props} />
       </View>
@@ -57,7 +57,7 @@ function Summary(
   const totals = changesTotals(props.files, props.viewed);
 
   return (
-    <View className="flex-row items-center gap-2 px-4 pt-4 pb-2 medium:h-6 medium:bg-content medium:px-2 medium:py-0">
+    <View className="flex-row items-center gap-2 px-4 wide:px-5 pt-4 pb-2 medium:h-6 medium:bg-content medium:py-0">
       <FileCounts {...totals} />
     </View>
   );
@@ -66,11 +66,7 @@ function Summary(
 function FileCounts(totals: ChangesTotals): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
-      <Text
-        role={{ compact: 'heading', medium: 'secondary', wide: 'secondary' }}
-        tone="muted"
-        numberOfLines={1}
-      >
+      <Text role="secondary" tone="muted" numberOfLines={1}>
         {filesSummary(totals)}
       </Text>
     </View>
@@ -81,24 +77,40 @@ const lines = (count: number): string => count.toLocaleString('en-US');
 
 function LineTotals(totals: ChangesTotals): React.JSX.Element {
   return (
-    <View className="flex-row gap-2">
+    <View className="flex-row gap-2 pr-2">
       <Text role="badge" tone="success">{`+${lines(totals.added)}`}</Text>
       <Text role="badge" tone="danger">{`−${lines(totals.removed)}`}</Text>
     </View>
   );
 }
 
+// Back and the file's name: Back's glyph shares its centre line with the file rows' icons and chevrons below it.
 function BackRow(props: ChangesViewProps): React.JSX.Element {
   return (
-    <View className="h-11 flex-row items-center gap-2 px-3">
+    <View className="h-11 flex-row items-center gap-4 wide:gap-3 px-4 wide:px-5">
       <IconButton
-        icon="chevron-left"
+        icon="back"
+        size="sm"
         variant="ghost"
+        muted
         accessibilityLabel="Back"
         onPress={() => props.onFileSelect?.()}
       />
-      <Text role="secondary" numberOfLines={1}>
-        {props.selectedFile}
+      <FileTitle path={props.selectedFile} />
+    </View>
+  );
+}
+
+function FileTitle({ path = '' }: { path?: string }): React.JSX.Element {
+  return (
+    <View className="min-w-0 flex-1">
+      <Text
+        role="heading"
+        accessibilityRole="heading"
+        aria-level={3}
+        numberOfLines={1}
+      >
+        {path.slice(path.lastIndexOf('/') + 1)}
       </Text>
     </View>
   );

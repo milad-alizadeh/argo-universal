@@ -1,5 +1,5 @@
-import { Label } from '@expo/ui/swift-ui';
-import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import { Label, VStack } from '@expo/ui/swift-ui';
+import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { NativeText } from '#primitives/content/native-text';
@@ -10,29 +10,51 @@ import { NativeSymbol } from '../../../symbols/native-symbol';
 import { RowLogo } from './field-row-logo';
 import type { RowTextProps } from './field-row-text';
 
-type RowTitleProps = RowTextProps & { title: string };
+type RowTitleProps = RowTextProps & { title: string; subtitle?: string };
 
 /*
  * The title as SwiftUI draws it in a stock row: a plain Text, or a Label with its icon. A row is one line; its
- * explanation goes in its Section's footer, as iOS Settings does.
+ * explanation goes in its Section's footer, as iOS Settings does. A picker option's subtitle goes in the Label's title
+ * view, under the title.
  */
 export function RowTitle(props: RowTitleProps): ReactElement {
-  const icon = labelIcon(props);
+  const icon = rowIcon(props);
   const tint = useDangerStyle(props.tone);
+  const title = <TitleLines {...props} />;
 
-  // A logo is the Label's icon too, so its title starts where the other rows' titles do.
-  if (props.logo)
-    return (
-      <Label
-        title={props.title}
-        icon={<RowLogo logo={props.logo} title={props.title} />}
-        modifiers={tint}
-      />
-    );
+  if (!icon) return title;
 
-  if (icon) return <Label title={props.title} {...icon} modifiers={tint} />;
+  return (
+    <Label {...icon} modifiers={tint}>
+      {title}
+    </Label>
+  );
+}
 
-  return <NativeText tone={props.tone}>{props.title}</NativeText>;
+// A logo is the Label's icon too, so its title starts where the other rows' titles do.
+const rowIcon = (props: RowTitleProps): LabelIcon | undefined =>
+  props.logo
+    ? { icon: <RowLogo logo={props.logo} title={props.title} /> }
+    : labelIcon(props);
+
+// A subtitle as a stock row draws it: the secondary shade, one text style down.
+const subtitleModifiers = [
+  font({ textStyle: 'subheadline' }),
+  foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
+];
+
+// The Label's title view: the title and any subtitle under it, so the subtitle starts where the title does.
+function TitleLines(props: RowTitleProps): ReactElement {
+  const title = <NativeText tone={props.tone}>{props.title}</NativeText>;
+
+  if (!props.subtitle) return title;
+
+  return (
+    <VStack alignment="leading">
+      {title}
+      <NativeText modifiers={subtitleModifiers}>{props.subtitle}</NativeText>
+    </VStack>
+  );
 }
 
 // A Label's title is a plain string, so the destructive tone colours the whole label.

@@ -2,6 +2,7 @@ import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Card } from '@repo/kit/primitives/layout/card';
 import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { useState, type ReactElement } from 'react';
 import { View, TextInput } from 'react-native';
 import { Scaffold, type ScaffoldProps, type InspectorState } from './scaffold';
@@ -52,7 +53,7 @@ function useMockState(stageOpen: boolean): MockState {
 
 type MockPanes = Pick<
   ScaffoldProps,
-  'sidebar' | 'listHeader' | 'list' | 'page' | 'inspector' | 'band'
+  'sidebar' | 'list' | 'page' | 'inspector' | 'band'
 >;
 
 type SetInspectorState = (state: InspectorState) => void;
@@ -66,8 +67,11 @@ const mockPage = (
 function mockPanes(onInspectorStateChange: SetInspectorState): MockPanes {
   return {
     sidebar: <View className="w-frame-rail" />,
-    listHeader: <Text>Sessions</Text>,
-    list: <Text>Sessions list</Text>,
+    list: (
+      <Screen title="Sessions">
+        <Text>Sessions list</Text>
+      </Screen>
+    ),
     page: mockPage,
     inspector: () => mockInspector(onInspectorStateChange),
     band: mockBand(onInspectorStateChange),

@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
-import type { WindowBandContent } from '#lib/product/window-band';
+import type { WindowBandView } from '#lib/product/window-band';
 import { type FrameMotion, frameTiming } from '../utils/frame-timing';
 import {
   type InspectorState,
@@ -16,15 +16,14 @@ import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
 
 // What the Scaffold places: its Slots, and the sidebar's and the Inspector's state, which the caller holds.
 export interface ScaffoldProps {
-  band?: WindowBandContent | null;
+  band?: WindowBandView | null;
   inspectorAvailable?: boolean;
   workbenchShown?: boolean;
   onWorkbenchShownChange?: (shown: boolean) => void;
   sizeClass: SizeClass;
   // The section picker beside the list on a wide window, such as the rail.
   sidebar: ReactNode;
-  // The list's own part of the sidebar's header row.
-  listHeader: ReactNode;
+  // Under the window's band, drawn under its own Screen's heading.
   list: ReactNode;
   // The page beside the list, which draws its own header; a compact or medium window shows it over the list.
   page?: ReactNode;

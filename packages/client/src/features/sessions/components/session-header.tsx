@@ -1,40 +1,17 @@
-import { Text } from '@repo/kit/primitives/content/text';
-import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { ReactElement } from 'react';
 import { WindowBand } from '../../../lib/product/window-band';
-import { SessionHeaderBar } from './session-header-bar';
-import { SessionHeaderMenu } from './session-header-menu';
 import type { SessionHeaderProps } from './session-header-props';
-import { WorkbenchColumn } from './workbench-column';
+import { SessionWorkbench } from './session-workbench';
 
 export type {
   SessionHeaderProps,
   SessionHeaderStatus,
 } from './session-header-props';
 
-function HeaderTitle({
-  title,
-}: Pick<SessionHeaderProps, 'title'>): ReactElement {
-  return (
-    <Text
-      role="heading"
-      accessibilityRole="heading"
-      aria-level={2}
-      numberOfLines={1}
-    >
-      {title}
-    </Text>
-  );
-}
-
-function headerMenu({ menu }: SessionHeaderProps): ReactElement | undefined {
-  return menu ? <SessionHeaderMenu menu={menu} reserved /> : undefined;
-}
-
 function headerWorkbench({
   panels,
 }: SessionHeaderProps): ReactElement | undefined {
-  return panels ? <WorkbenchColumn panels={panels} /> : undefined;
+  return panels ? <SessionWorkbench panels={panels} /> : undefined;
 }
 
 function stageToggle({ panels }: SessionHeaderProps): (() => void) | undefined {
@@ -43,27 +20,12 @@ function stageToggle({ panels }: SessionHeaderProps): (() => void) | undefined {
   return () => (panels.onSelect ?? panels.onToggle)('changes');
 }
 
-// In a framed Session, the window owns the title, menu and overview; the Feed has no local header.
-function WideSessionHeader(props: SessionHeaderProps): ReactElement {
-  const title = <HeaderTitle title={props.title} />;
-  const menu = headerMenu(props);
-
-  return (
-    <WindowBand
-      title={title}
-      menu={menu}
-      workbench={headerWorkbench(props)}
-      onStageToggle={stageToggle(props)}
-    >
-      <SessionHeaderBar title={title} actions={menu} />
-    </WindowBand>
-  );
-}
-
+// On a wide window the Session's overview claims the band; its title and menu are its Screen's header, which the kit draws there.
 export function SessionHeader(props: SessionHeaderProps): ReactElement {
   return (
-    <SizeClass only="wide">
-      <WideSessionHeader {...props} />
-    </SizeClass>
+    <WindowBand
+      workbench={headerWorkbench(props)}
+      onStageToggle={stageToggle(props)}
+    />
   );
 }

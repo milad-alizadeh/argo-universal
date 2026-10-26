@@ -1,7 +1,7 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { TextClassContext } from '@repo/kit/primitives/content/text';
-import { DisclosureChevron } from '@repo/kit/primitives/status/disclosure-chevron';
+import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -21,13 +21,15 @@ export interface FileHeaderProps {
 const toggleClassName = contentActionClass({
   variant: 'link',
   className:
-    'h-5 min-w-0 flex-1 basis-7 justify-start gap-3 rounded-none p-0 sm:h-5 medium:basis-0 medium:gap-2',
+    'h-6 min-w-0 flex-1 justify-start gap-4 wide:gap-3 rounded-none p-0 sm:h-6',
 });
 
 function ToggleLabel(props: FileHeaderProps): React.JSX.Element {
   return (
     <TextClassContext.Provider value="select-none no-underline">
-      <DisclosureChevron open={props.open} />
+      <View className="size-6 items-center justify-center">
+        <Chevron direction="right" open={props.open} />
+      </View>
       <FilePath path={props.file.path} />
     </TextClassContext.Provider>
   );
@@ -62,7 +64,7 @@ export function FileHeader(props: FileHeaderProps): React.JSX.Element {
 
 function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
-    <View className="h-10.5 flex-row items-center gap-2 pr-3 pl-2">
+    <View className="h-10.5 flex-row items-center gap-2 px-4 wide:px-5">
       <FileHeaderToggle {...props} />
       <ChangeCounts file={props.file} />
       <ViewedMark {...props} />
@@ -76,7 +78,7 @@ function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
     <View className="bg-card">
       <View className="flex-row items-center gap-3 px-4 py-2.5">
         <FileHeaderToggle {...props} />
-        <View className="min-w-0 flex-1 flex-row gap-1">
+        <View className="flex-row gap-1">
           <ChangeCounts file={props.file} />
         </View>
         <ViewedMark {...props} compact />

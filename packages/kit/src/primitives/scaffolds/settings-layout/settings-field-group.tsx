@@ -9,13 +9,13 @@ import type {
   SettingsLayoutSections,
 } from './settings-layout-props';
 
-type Props = Pick<SettingsLayoutProps, 'onSelect' | 'pinned'> & {
+type Props = Pick<SettingsLayoutProps, 'onSelect' | 'lastSection'> & {
   sections: SettingsLayoutSections;
 };
 
 /*
  * Settings' pages as a phone's Settings draws them: one FieldGroup, a section per group and a Link per page, with the
- * pinned section last (owner, 2026-10-25).
+ * last section after them (owner, 2026-10-25).
  */
 export function SettingsFieldGroup(props: Props): ReactElement {
   return (
@@ -25,7 +25,7 @@ export function SettingsFieldGroup(props: Props): ReactElement {
           {section.items.map((item) => pageLink(item, props.onSelect))}
         </FieldGroup.Section>
       ))}
-      {props.pinned}
+      {props.lastSection}
     </FieldGroup>
   );
 }

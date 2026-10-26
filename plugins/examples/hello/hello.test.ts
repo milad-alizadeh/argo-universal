@@ -91,3 +91,28 @@ test('cancelling a build offers to rerun it', async ({ mount }) => {
   await page.press('Cancel');
   assert.equal((await page.find('Rerun')).type, 'Action');
 });
+
+test('the hello page lists each demo and opens it by its App path', async ({
+  mount,
+}) => {
+  const page = await mount({ page: '/', surface: { platform: 'web' } });
+
+  for (const title of [
+    'Lists',
+    'Dashboard',
+    'Form',
+    'Builds',
+    'Gallery',
+    'Media',
+    'Runs',
+    'Canvas',
+    'Issue views',
+  ])
+    assert.equal((await page.find(title)).type, 'Card');
+
+  const builds = await page.find('Builds');
+  assert.equal(
+    JSON.stringify(builds.props.onPress),
+    JSON.stringify({ action: 'navigate', path: '/plugins/hello/hello/builds' }),
+  );
+});

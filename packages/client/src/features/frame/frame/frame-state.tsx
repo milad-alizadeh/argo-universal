@@ -1,4 +1,3 @@
-import { useClaimed } from '@repo/kit/claim-store';
 import {
   createInspectorHost,
   type InspectorHost,
@@ -9,14 +8,15 @@ import {
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import {
-  createWindowBandHost,
-  type WindowBandHost,
-  type WindowBandContent,
+  createWindowBandHosts,
+  type WindowBandHosts,
+  type WindowBandView,
+  useWindowBandView,
 } from '#lib/product/window-band';
 import type { InspectorState } from '../scaffold/scaffold';
 
 interface FrameScaffoldState {
-  band?: WindowBandContent | null;
+  band?: WindowBandView | null;
   workbenchShown?: boolean;
   onWorkbenchShownChange: (shown: boolean) => void;
   sidebarShown: boolean;
@@ -91,7 +91,7 @@ function useInspectorColumn(hosted: InspectorProps | null): InspectorColumn {
 }
 
 export interface FrameState {
-  bandHost: WindowBandHost;
+  bandHost: WindowBandHosts;
   scaffold: FrameScaffoldState;
   // The column the shown page's Inspector draws in.
   inspectorHost: InspectorHost;
@@ -118,13 +118,13 @@ export function useFrameState(): FrameState {
 function useBandState(): Pick<
   FrameScaffoldState,
   'band' | 'workbenchShown' | 'onWorkbenchShownChange'
-> & { bandHost: WindowBandHost } {
-  const [bandHost] = useState(createWindowBandHost);
+> & { bandHost: WindowBandHosts } {
+  const [bandHost] = useState(createWindowBandHosts);
   const [workbenchShown, onWorkbenchShownChange] = useState<boolean>();
 
   return {
     bandHost,
-    band: useClaimed(bandHost),
+    band: useWindowBandView(bandHost),
     workbenchShown,
     onWorkbenchShownChange,
   };

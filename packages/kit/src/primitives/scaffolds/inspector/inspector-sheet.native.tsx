@@ -5,15 +5,12 @@ import type { InspectorProps } from './inspector-props';
 import { InspectorSheetFrame } from './inspector-sheet-frame';
 
 /*
- * The stock sheet at its medium detent (a form sheet on iPad), titled like every phone sheet and with no close
- * button: a swipe down or Back closes it. Its Actions sit above the content.
+ * The stock sheet at its medium detent (a form sheet on iPad), titled like every phone sheet, with the close on its
+ * root page as the others have. Its own header, such as a switcher, sits under the title; its Actions above the content.
  */
 export function InspectorSheet(props: InspectorProps): ReactElement {
   return (
-    <InspectorSheetFrame
-      inspector={props}
-      screenTitle={props.sheetHeader ? undefined : props.title}
-    >
+    <InspectorSheetFrame inspector={props} screenTitle={props.title}>
       <SheetContent {...props} />
     </InspectorSheetFrame>
   );

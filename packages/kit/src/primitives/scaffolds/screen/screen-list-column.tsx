@@ -1,0 +1,93 @@
+import {
+  createContext,
+  use,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import { View } from 'react-native';
+import {
+  type ClaimStore,
+  createClaimStore,
+  useClaimed,
+} from '#kit/claim-store';
+import { ScreenNavigationEnabled } from './screen-navigation-context';
+
+/*
+ * The heading a Screen in a list column hands up to the column's top row, drawn there instead of in the Screen's own
+ * place: a list column is a Screen's content with its heading above it, as a page's is.
+ */
+export type ListColumnHeading = ClaimStore<ReactNode>;
+
+const ListColumnHeadingContext = createContext<ListColumnHeading | undefined>(
+  undefined,
+);
+
+// The column the Screen is the content of, if any; what a Screen inside that Screen's own content sees is a page's.
+export const useListColumnHeading = (): ListColumnHeading | undefined =>
+  use(ListColumnHeadingContext);
+
+// What a Screen's content sees, so a Screen nested in a list Screen's content is a page and draws its own heading.
+export function ScreenInPage(props: { children: ReactNode }): ReactElement {
+  return (
+    <ListColumnHeadingContext value={undefined}>
+      {props.children}
+    </ListColumnHeadingContext>
+  );
+}
+
+export interface ScreenListColumnProps {
+  /*
+   * The column starts under the window's band, as the Frame's sidebar does, so its heading row is always there, empty
+   * for a list that has no Screen, and a tablet's drops by the status bar's inset.
+   */
+  underBand?: boolean;
+  children: ReactNode;
+}
+
+/*
+ * Kit-only. A list beside its page, such as the Frame's sidebar or a ListDetail's own pane. The Screen around the list
+ * declares its header as any Screen does, and is drawn here in the column's top row in the list's looks, its title a
+ * level down, its buttons small and its search the sidebar's; a column has no Screen header of its own to draw.
+ */
+export function ScreenListColumn(props: ScreenListColumnProps): ReactElement {
+  const [heading] = useState(() => createClaimStore<ReactNode>(null));
+
+  return (
+    <ListColumnHeadingContext value={heading}>
+      <ScreenNavigationEnabled value={false}>
+        <View className="min-h-0 flex-1">
+          <ColumnHeadingRow heading={heading} underBand={props.underBand} />
+          {props.children}
+        </View>
+      </ScreenNavigationEnabled>
+    </ListColumnHeadingContext>
+  );
+}
+
+// A heading starts on the rows' text line: 8 in from the column's edge and 16 in the row, and ends 14 from the scrollbar.
+const rowClassName = 'h-frame-control flex-row items-center pl-6 pr-3.5';
+
+const bandRowClassName = `${rowClassName} native:mt-4 native:pt-1`;
+
+const rowClass = (underBand?: boolean): string =>
+  underBand ? bandRowClassName : rowClassName;
+
+// The row is there for a heading, or always under the band, where the list starts below it.
+const rowShown = (claimed: ReactNode, underBand?: boolean): boolean =>
+  Boolean(claimed) || Boolean(underBand);
+
+function ColumnHeadingRow(props: {
+  heading: ListColumnHeading;
+  underBand?: boolean;
+}): ReactElement | null {
+  const claimed = useClaimed(props.heading);
+
+  if (!rowShown(claimed, props.underBand)) return null;
+
+  return (
+    <View testID="list-column-heading" className={rowClass(props.underBand)}>
+      <View className="min-w-0 flex-1">{claimed}</View>
+    </View>
+  );
+}

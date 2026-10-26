@@ -5,15 +5,22 @@ import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 
-// A PR's CI checks: how many passed, failed and still run, out of all of them.
+export type ChecksState = 'failing' | 'running' | 'passed';
+
+// One CI check of a PR: its name and how it stands.
+export interface CheckDetail {
+  name: string;
+  state: ChecksState;
+}
+
+// A PR's CI checks: how many passed, failed and still run, out of all of them, and each one by name.
 export interface PullRequestChecksProps {
   passed: number;
   failing: number;
   running: number;
   total: number;
+  details?: readonly CheckDetail[];
 }
-
-type ChecksState = 'failing' | 'running' | 'passed';
 
 const ringRadius = 5.5;
 
@@ -43,7 +50,7 @@ const ThemedCircle = withUniwind(Circle, {
   },
 });
 
-function checksState({
+export function checksState({
   failing,
   running,
 }: PullRequestChecksProps): ChecksState {
@@ -52,7 +59,10 @@ function checksState({
   return running > 0 ? 'running' : 'passed';
 }
 
-function stateText(checks: PullRequestChecksProps, state: ChecksState): string {
+export function stateText(
+  checks: PullRequestChecksProps,
+  state: ChecksState,
+): string {
   if (state === 'failing') return `${checks.failing} failing`;
 
   return state === 'running' ? `${checks.running} running` : 'passed';

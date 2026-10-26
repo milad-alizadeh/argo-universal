@@ -16,9 +16,10 @@ export type SheetProps = KitProps<'Sheet'> & {
   bottomEdge?: boolean;
   // A detached phone sheet, inset from the screen edges, as the Session's Git sheet.
   floating?: boolean;
+  // The pages scroll themselves, as a FieldGroup does, so the sheet gives them its height and wraps them in no scroller of its own; a page may say otherwise.
   contentScrolls?: boolean;
   footer?: ReactNode;
-  // Pads composed content, such as a form or a Plugin's, with the standard sheet inset; lists and pages that draw their own margins leave it off.
+  // Pads composed content, such as a form or a Plugin's, with the standard sheet inset; lists and pages that draw their own margins, a FieldGroup among them, leave it off.
   inset?: boolean;
 };
 

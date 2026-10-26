@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { screenDefaults, screenWidths } from '../kit-tokens';
 import { echoes } from './plugin-part-props';
 import { actionSlot, part, stringLabel } from './plugin-part-schema-utils';
 import { WireEvent } from './wire';
@@ -23,6 +24,13 @@ const screenProps = z.object({
   onChangeText: WireEvent.extend({ $event: z.literal('onChangeText') })
     .optional()
     .describe('Receive the search query when it changes.'),
+  width: z
+    .enum(screenWidths)
+    .optional()
+    .meta({ default: screenDefaults.width })
+    .describe(
+      'How wide the content runs on a window wider than the reading column: `content` keeps it to that centred column, `full` fills the screen, as a table, board or canvas wants. Both keep the screen’s side margins.',
+    ),
 });
 
 const screenReader =

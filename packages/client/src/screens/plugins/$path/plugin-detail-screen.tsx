@@ -33,7 +33,7 @@ export function PluginDetailScreen({
 function PluginLoading(): React.JSX.Element {
   return (
     <>
-      <ScreenStackHeader title="" />
+      <ScreenStackHeader />
       <View className="flex-1 bg-content" />
     </>
   );

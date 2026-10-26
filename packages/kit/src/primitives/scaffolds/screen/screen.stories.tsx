@@ -5,14 +5,20 @@ import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { withStack } from '#story-stack';
 import { Screen, type ScreenProps } from './index';
 import { exampleSubmenu } from './screen-submenu-example.mocks';
+import { WidthExample } from './screen-width.mocks';
 
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Screen',
   component: Screen,
   args: { title: 'Title' },
   argTypes: kitArgTypes('Screen'),
+  // A Screen fills its window; in the preview's centred layout the stack around it has no width of its own.
+  parameters: { screenPreview: true },
+  // A phone's Screen fills the header of the stack it sits in, so each state draws inside one (see screen-stack.stories.tsx).
+  decorators: [withStack()],
 } satisfies Meta<typeof Screen>;
 
 export default meta;
@@ -46,6 +52,18 @@ export const DrillIn: Story = {
       },
     },
   },
+};
+
+// Content keeps to the title's column: on a wide window as wide as the reading width, centred.
+export const ReadingColumn: Story = {
+  args: { width: 'content' },
+  render: (args) => <WidthExample width={args.width} />,
+};
+
+// A table, board or canvas fills the window, inside the same side margins.
+export const FullWidth: Story = {
+  args: { width: 'full' },
+  render: (args) => <WidthExample width={args.width} />,
 };
 
 type Example = {

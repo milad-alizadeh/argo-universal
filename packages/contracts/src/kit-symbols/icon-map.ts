@@ -28,6 +28,7 @@ export const iconSymbols = {
   'arrow-left': { sf: 'arrow.left', material: 'arrow_back' },
   'arrow-right': { sf: 'arrow.right', material: 'arrow_forward' },
   'arrow-up': { sf: 'arrow.up', material: 'arrow_upward' },
+  back: { sf: 'chevron.backward', material: 'arrow_back_ios_new' },
   atlas: {
     sf: 'point.3.connected.trianglepath.dotted',
     sfFilled: 'point.3.filled.connected.trianglepath.dotted',

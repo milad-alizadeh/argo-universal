@@ -1,7 +1,6 @@
 import { useState, type ComponentProps, type ReactElement } from 'react';
 import { fn } from 'storybook/test';
-import { List } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import {
   Popover,
@@ -9,6 +8,7 @@ import {
   PopoverTrigger,
 } from '#primitives/overlays/popover';
 import { Drill } from './drill';
+import { Choices } from './drill-choices.mocks';
 
 export const picked = fn<(value: string) => void>();
 
@@ -32,21 +32,16 @@ export function Menu(): ReactElement {
 
 function MenuRows(): ReactElement {
   return (
-    <List appearance="plain" fit>
-      <List.Section>
+    <FieldGroup>
+      <FieldGroup.Section>
         <Choice label="Fruit" choices={fruits} keepOpen />
         <Choice label="Vegetable" choices={vegetables} />
-      </List.Section>
-    </List>
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 
 type ChoiceProps = { label: string; choices: string[]; keepOpen?: boolean };
-
-type ChoicesProps = ChoiceProps & {
-  value: string;
-  pick: (next: string) => void;
-};
 
 // The row's value, and a pick that records itself.
 function usePicked(choices: string[]): [string, (next: string) => void] {
@@ -66,7 +61,14 @@ function Choice(props: ChoiceProps): ReactElement {
 
   return (
     <Drill {...drillProps(props, value)}>
-      {(close) => <Choices {...props} value={value} pick={both(pick, close)} />}
+      {(close) => (
+        <Choices
+          title={props.label}
+          choices={props.choices}
+          value={value}
+          onPick={both(pick, close)}
+        />
+      )}
     </Drill>
   );
 }
@@ -88,20 +90,4 @@ function drillProps(
     title: `Select ${props.label}`,
     keepOpen: props.keepOpen,
   };
-}
-
-function Choices(props: ChoicesProps): ReactElement {
-  return (
-    <List appearance="plain" fit>
-      <List.Section
-        selectionMode="single"
-        selection={[props.value]}
-        onSelectionChange={([next = props.value]) => props.pick(next)}
-      >
-        {props.choices.map((choice) => (
-          <ListItem key={choice} id={choice} title={choice} />
-        ))}
-      </List.Section>
-    </List>
-  );
 }

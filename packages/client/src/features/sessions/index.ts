@@ -23,8 +23,6 @@ export { ShellSheet } from './components/shell-list/shell-sheet';
 
 export { shellsRunning } from './components/shell-list/shell-format';
 
-export { SessionHeaderBar } from './components/session-header-bar';
-
 export { sessionPanelLabels } from './components/session-panel-triggers';
 
 export {
@@ -33,13 +31,6 @@ export {
   type SessionPanels,
   useSessionPanels,
 } from './stores/session-panels';
-
-export {
-  SessionsHeader,
-  searchSessionsLabel,
-} from './components/sessions-header';
-
-export { SessionsViewMenu } from './components/sessions-view-menu/sessions-view-menu';
 
 export {
   type SessionsViewGroup,
@@ -130,8 +121,6 @@ export {
   type SessionHeaderProps,
   type SessionHeaderStatus,
 } from './components/session-header';
-
-export { SessionHeaderMenu } from './components/session-header-menu';
 
 export { sessionActions, type SessionMenu } from './components/session-actions';
 

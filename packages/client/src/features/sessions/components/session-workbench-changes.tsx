@@ -15,20 +15,39 @@ interface Props {
 
 const previewLimit = 3;
 
-export function WorkbenchChanges({ changes, onOpen }: Props): ReactElement {
+// The open Changes the card previews, and the rest, which its footer groups by stage.
+interface ChangeSplit {
+  preview: SessionPullRequest[];
+  rest: SessionPullRequest[];
+}
+
+function splitChanges(changes: readonly SessionPullRequest[]): ChangeSplit {
   const preview = changes
     .filter((change) => change.stage === 'open')
     .slice(0, previewLimit);
 
   const shown = new Set(preview.map((change) => change.number));
-  const rest = changes.filter((change) => !shown.has(change.number));
 
-  return (
-    <View>
-      {previewRows(preview, onOpen)}
-      {rest.length > 0 && <MoreChanges changes={rest} onOpen={onOpen} />}
-    </View>
-  );
+  return {
+    preview,
+    rest: changes.filter((change) => !shown.has(change.number)),
+  };
+}
+
+export function WorkbenchChangeRows({ changes, onOpen }: Props): ReactElement {
+  return <View>{previewRows(splitChanges(changes).preview, onOpen)}</View>;
+}
+
+// The footer of the Changes card: absent when every Change is already previewed.
+export function WorkbenchMoreChanges({
+  changes,
+  onOpen,
+}: Props): ReactElement | null {
+  const { rest } = splitChanges(changes);
+
+  return rest.length > 0 ? (
+    <MoreChanges changes={rest} onOpen={onOpen} />
+  ) : null;
 }
 
 const previewRows = (

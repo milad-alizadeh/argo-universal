@@ -1,11 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { Sheet } from '#primitives/overlays/sheet';
 import { configureSheet } from '../sheet/sheet-fixtures';
 import { Drill } from './drill';
+import { Choices } from './drill-choices.mocks';
 import { fruitDrill } from './drill-fixtures';
 import type { DrillProps } from './drill-props';
 
@@ -26,7 +25,7 @@ const meta = {
   argTypes: {
     label: { control: 'text' },
     value: { control: false },
-    valueLeading: { control: false },
+    leading: { control: false },
     disabled: { control: 'boolean' },
     title: { control: 'text' },
     trigger: { control: false },
@@ -46,10 +45,7 @@ type Story = StoryObj<typeof meta>;
 // The row and the page it pushes, inside the sheet that holds them.
 export const Default: Story = { render: (): ReactElement => <Configure /> };
 
-const options = ['Apple', 'Banana', 'Cherry'].map((label) => ({
-  value: label,
-  label,
-}));
+const fruits = ['Apple', 'Banana', 'Cherry'];
 
 function Configure(): ReactElement {
   const [open, setOpen] = useState(false);
@@ -67,11 +63,11 @@ function FruitField(): ReactElement {
   const [value, setValue] = useState('Apple');
 
   return (
-    <List appearance="plain" fit>
-      <ListSection>
+    <FieldGroup>
+      <FieldGroup.Section>
         <FruitDrill value={value} onValueChange={setValue} />
-      </ListSection>
-    </List>
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 
@@ -89,19 +85,14 @@ function FruitChoices(
   props: FruitProps & { onClose: () => void },
 ): ReactElement {
   return (
-    <List appearance="plain" fit>
-      <ListSection
-        selectionMode="single"
-        selection={[props.value]}
-        onSelectionChange={([next = props.value]) => {
-          props.onValueChange(next);
-          props.onClose();
-        }}
-      >
-        {options.map((option) => (
-          <ListItem key={option.value} id={option.value} title={option.label} />
-        ))}
-      </ListSection>
-    </List>
+    <Choices
+      title="Fruit"
+      choices={fruits}
+      value={props.value}
+      onPick={(next) => {
+        props.onValueChange(next);
+        props.onClose();
+      }}
+    />
   );
 }

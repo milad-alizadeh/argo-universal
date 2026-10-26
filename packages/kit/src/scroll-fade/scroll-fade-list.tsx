@@ -12,6 +12,7 @@ import {
   useState,
 } from 'react';
 import { Platform } from 'react-native';
+import { useClaimsColumn } from '#kit/heading-inset';
 import { useSizeClassValue } from '../use-size-class/use-size-class-value';
 import { assignRef, useLegendScrollRef } from './legend-scroll-ref';
 import { MeasuredLegendList } from './remeasure-after-entrance';
@@ -161,6 +162,8 @@ export function ScrollFadeList<T>({
   const list = useRef<LegendListRef>(null);
   const listRef = useBothRefs(list, ref);
   const fading = useFadingList(props);
+  // A list that fills its Screen's content keeps to the Screen's column itself; one held to a height sits inside it.
+  useClaimsColumn(!props.horizontal && maxHeight === undefined);
 
   return (
     <ScrollFadeFrame {...fading.frame} {...useFrameSize(list, maxHeight)}>

@@ -64,13 +64,13 @@ const inspectorSheet: Omit<SheetProps, 'children'> = {
   contentScrolls: true,
 };
 
-// The web's Inspector sheet under wide, whose root page Compare Against pushes its branches over.
+// The web's Inspector sheet under wide, titled as the Inspector's own sheet is; Compare Against pushes its branches over the root page.
 export function ChangesInspectorSheet(
   props: ChangesInspectorProps,
 ): React.JSX.Element {
   return (
     <Sheet {...inspectorSheet}>
-      <Sheet.Screen name="inspector">
+      <Sheet.Screen name="inspector" title="Changes">
         <ChangesInspector {...props} inSheet />
       </Sheet.Screen>
     </Sheet>

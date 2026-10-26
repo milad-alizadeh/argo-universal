@@ -81,7 +81,7 @@ function openStage(scaffold: ScaffoldPartProps['scaffold']): void {
 
 function BandMenu({ scaffold }: ScaffoldPartProps): ReactElement {
   return (
-    <View className="size-7 shrink-0">
+    <View className="shrink-0 flex-row items-center gap-1">
       {scaffold.band?.menu ?? (
         <IconButton
           {...bandControlAppearance}

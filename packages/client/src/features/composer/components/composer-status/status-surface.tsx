@@ -27,11 +27,6 @@ export const unselectableTextClassName = 'select-none';
 export const chipClassName =
   'h-full sm:h-full py-0 px-2.5 gap-1.5 rounded-full';
 
-interface ChipSurfaceProps {
-  glass?: boolean;
-  children: ReactNode;
-}
-
 const chipSurfaceProps = {
   corners: 'pill',
   interactive: true,
@@ -39,13 +34,11 @@ const chipSurfaceProps = {
   fallbackClassName: 'rounded-full border border-border bg-card shadow-card',
 } as const;
 
+// Every status chip is the same pill: glass on iOS, a bordered card elsewhere.
 export function ChipSurface({
-  glass,
   children,
-}: ChipSurfaceProps): JSX.Element {
-  return (
-    <LiquidGlass {...chipSurfaceProps} glass={glass}>
-      {children}
-    </LiquidGlass>
-  );
+}: {
+  children: ReactNode;
+}): JSX.Element {
+  return <LiquidGlass {...chipSurfaceProps}>{children}</LiquidGlass>;
 }

@@ -55,7 +55,7 @@ export const feedReflowsAfterThePaneCollapses: Story = {
   render: ({ view }): React.JSX.Element => <SessionInPane view={view} />,
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
-    await canvas.findByRole('heading', { name: /^Without using any tools/ });
+    await canvas.findByTestId(feedScrollTestId);
     const before = rowWidths(canvas);
     await expect(Math.min(...before)).toBeGreaterThan(0);
     await userEvent.click(

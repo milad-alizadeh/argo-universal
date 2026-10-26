@@ -26,6 +26,7 @@ export function SettingsLayout(props: SettingsLayoutProps): ReactElement {
   return (
     <ListDetail
       testID={props.testID}
+      screen={props.screen}
       list={<SettingsScreens {...props} />}
       detail={props.children}
     />
@@ -37,17 +38,17 @@ const hasScreens = (sections: SettingsLayoutSections): boolean =>
 
 const isEmpty = (
   sections: SettingsLayoutSections,
-  pinned: ReactNode,
-): boolean => !hasScreens(sections) && !pinned;
+  lastSection: ReactNode,
+): boolean => !hasScreens(sections) && !lastSection;
 
 const sidebarShown = (wide: boolean): boolean => wide && Platform.OS === 'web';
 
-// The grouped pages at this Size class and any pinned section, or the caller's empty state when there is neither, as when a search matches none.
+// The grouped pages at this Size class and any last section, or the caller's empty state when there is neither, as when a search matches none.
 function SettingsScreens(props: SettingsLayoutProps): ReactNode {
   const sections = useSizeClassValue(props.sections);
   const wide = useWide();
 
-  if (isEmpty(sections, props.pinned)) return props.empty;
+  if (isEmpty(sections, props.lastSection)) return props.empty;
 
   return sidebarShown(wide) ? (
     <PlacedScreens {...props} sections={sections} />
@@ -61,43 +62,55 @@ type Placed = Omit<SettingsLayoutProps, 'sections'> & {
 };
 
 /*
- * The wide web sidebar pins the pinned section to its bottom, below the pages' scroll. The sidebar's groups fill the
- * space above it and scroll there, rather than grow past it.
+ * The wide web sidebar draws its groups as rows and the last section after them, in the same scroll, as a phone's
+ * FieldGroup does. A List with no rows draws no end, so a search that leaves only the last section draws it alone.
  */
 function PlacedScreens({ sections, ...props }: Placed): ReactElement {
+  if (!hasScreens(sections))
+    return <LastSection>{props.lastSection}</LastSection>;
+
   return (
-    <>
-      <SettingsGroups
-        sections={sections}
-        selected={props.selected}
-        onSelect={props.onSelect}
-      />
-      {props.pinned && <PinnedBottom>{props.pinned}</PinnedBottom>}
-    </>
+    <SettingsGroups
+      sections={sections}
+      selected={props.selected}
+      onSelect={props.onSelect}
+      endContent={
+        props.lastSection && <LastSection>{props.lastSection}</LastSection>
+      }
+    />
   );
 }
 
-// A FieldGroup fills its page, so the pinned section's FieldGroup is given the height of a titled section of one row.
-const pinnedHeight = 'h-32';
+// A FieldGroup fills its page, so the last section's FieldGroup is given the height of a titled section of one row.
+const lastSectionHeight = 'h-32';
 
-// Paper's SettingsList: the pinned section ends the sidebar, 12 above its bottom edge, with no section gap after it.
-const PinnedBottom = (props: { children: ReactNode }): ReactElement => (
+const LastSection = (props: { children: ReactNode }): ReactElement => (
   <SectionEndContext value>
-    <View className={pinnedHeight}>
+    <View className={lastSectionHeight}>
       <FieldGroup>{props.children}</FieldGroup>
     </View>
   </SectionEndContext>
 );
 
+type GroupsProps = RowSelection & {
+  sections: SettingsLayoutSections;
+  endContent?: ReactNode;
+};
+
 function SettingsGroups({
   sections,
+  endContent,
   ...rows
-}: RowSelection & { sections: SettingsLayoutSections }): ReactElement {
+}: GroupsProps): ReactElement {
   const groups = sections.map((section, index) => (
     <SettingsGroup key={section.title ?? index} section={section} {...rows} />
   ));
 
-  return <List appearance="plain">{groups}</List>;
+  return (
+    <List appearance="plain" endContent={endContent}>
+      {groups}
+    </List>
+  );
 }
 
 type RowSelection = Pick<SettingsLayoutProps, 'selected' | 'onSelect'>;

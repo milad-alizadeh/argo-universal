@@ -1,3 +1,4 @@
+import { splitButtonDefaults } from '@repo/contracts/kit-tokens';
 import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#kit/utils';
@@ -77,7 +78,7 @@ const chevron = <Value extends string>(
 ): ReactElement => (
   <SplitChevron
     primary={props.primary === true}
-    size={props.size === 'xs' ? 'sm' : 'md'}
+    size={props.size ?? splitButtonDefaults.size}
     accessibilityLabel={props.menuLabel}
     disabled={props.disabled}
   />

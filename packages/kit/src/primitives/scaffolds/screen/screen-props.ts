@@ -1,8 +1,12 @@
 import type { KitProps } from '../../kit-props';
 import type { ScreenHeader } from './use-screen-header';
 
-// Kit-only, as `testID`. `onBack` draws a wide drill-in page's Back; a phone's stack header draws its own.
-export type ScreenProps = KitProps<'Screen'> & {
+/*
+ * Kit-only, as `testID`. `title` is optional here, where a page's header is empty until it has a name, as New Session's
+ * is; a Plugin always names its screen. `onBack` draws a wide drill-in page's Back; a phone's stack header draws its own.
+ */
+export type ScreenProps = Omit<KitProps<'Screen'>, 'title'> & {
+  title?: string;
   testID?: string;
   onFocus?: () => void;
   onBlur?: () => void;

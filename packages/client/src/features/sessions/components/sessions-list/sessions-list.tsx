@@ -5,6 +5,7 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { Platform, View } from 'react-native';
+import type { SessionsLayout } from '../../stores/sessions-view';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
 import { listsFlat, searchesAsOneList } from './sessions-list-entries-state';
@@ -92,21 +93,21 @@ interface SessionsLegendListProps extends SessionsListProps {
   onScroll: () => void;
 }
 
-const standardTopPadding = { compact: 5, wide: 1 } as const;
+export const standardTopPadding = { compact: 5, wide: 1 } as const;
 
 const searchTopPadding = { compact: 0, wide: 2 } as const;
 
 // Web draws Session rows flat on the sidebar, with no card, edge or separator (Paper "Screen / 1 Porcelain · Ring · Regular"); phones keep their cards and grouped lists.
-function sessionListAppearance(
-  props: SessionsListProps,
+export function sessionListAppearance(
+  layout: SessionsLayout,
 ): 'plain' | 'grouped' | 'cards' {
   if (Platform.OS === 'web') return 'plain';
 
-  return props.view.layout === 'compact' ? 'grouped' : 'cards';
+  return layout === 'compact' ? 'grouped' : 'cards';
 }
 
 // Paper "SessionsList": web rows sit 8 in from the sidebar's left, and each row's own margin takes the right to 14.
-const sessionListPadding = {
+export const sessionListPadding = {
   compact: 4,
   wide: Platform.OS === 'web' ? 2 : 0,
 } as const;
@@ -124,7 +125,7 @@ function sessionListOptions(
   'appearance' | 'getSectionKey' | 'padding' | 'paddingTop'
 > {
   return {
-    appearance: sessionListAppearance(props),
+    appearance: sessionListAppearance(props.view.layout),
     getSectionKey: sessionListSection(props),
     padding: sessionListPadding,
     paddingTop: searchesAsOneList(props)

@@ -6,11 +6,9 @@ import {
   useListDetailSidebarList,
 } from '@repo/kit/primitives/scaffolds/list-detail';
 import { createContext, use, useState, type ReactNode } from 'react';
-import { ListTitle } from '#lib/product/list-title';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import {
   isCoreSection,
-  type NavigationSection,
   type Section,
 } from '../../../lib/product/navigation/sections';
 import type { ScaffoldProps } from '../scaffold/scaffold';
@@ -44,7 +42,7 @@ function ClaimedList(props: { sidebar: ListDetailSidebar }): React.JSX.Element {
   return <>{useListDetailSidebarList(props.sidebar)}</>;
 }
 
-type SectionScaffold = Pick<ScaffoldProps, 'listHeader' | 'list'> &
+type SectionScaffold = Pick<ScaffoldProps, 'list'> &
   Partial<Pick<ScaffoldProps, 'sidebarShown' | 'inspectorState'>>;
 
 export interface FrameListDetail {
@@ -63,18 +61,13 @@ export function useFrameListDetail(): FrameListDetail {
 interface ShownSection {
   section: Section;
   lists: SectionLists;
-  items: readonly NavigationSection[];
 }
 
 const noList: SectionScaffold = {
-  listHeader: null,
   list: null,
   sidebarShown: false,
   inspectorState: 'closed',
 };
-
-const sectionTitle = ({ section, items }: ShownSection): string =>
-  items.find((item) => item.id === section)?.title ?? '';
 
 // A core section's own list, or the one its pages' ListDetail holds the sidebar with; a Plugin section's only while its page's ListDetail holds it.
 export function sectionScaffold(
@@ -83,27 +76,20 @@ export function sectionScaffold(
 ): SectionScaffold {
   const { section, lists } = shown;
 
-  if (!isCoreSection(section)) return pluginSectionScaffold(shown, listDetail);
+  if (!isCoreSection(section)) return pluginSectionScaffold(listDetail);
 
-  return {
-    listHeader: lists[section].header,
-    list: lists[section].list ?? claimedList(listDetail),
-  };
+  return { list: lists[section].list ?? claimedList(listDetail) };
 }
 
 const claimedList = ({ sidebar, held }: FrameListDetail): ReactNode =>
   held && <ClaimedList sidebar={sidebar} />;
 
-// Under the section's title, as a core section's list is.
-function pluginSectionScaffold(
-  shown: ShownSection,
-  { sidebar, held }: FrameListDetail,
-): SectionScaffold {
+// The list's own Screen, claimed with it, draws its heading, as a core section's list does.
+function pluginSectionScaffold({
+  sidebar,
+  held,
+}: FrameListDetail): SectionScaffold {
   if (!held) return noList;
 
-  return {
-    listHeader: <ListTitle>{sectionTitle(shown)}</ListTitle>,
-    list: <ClaimedList sidebar={sidebar} />,
-    inspectorState: 'closed',
-  };
+  return { list: <ClaimedList sidebar={sidebar} />, inspectorState: 'closed' };
 }

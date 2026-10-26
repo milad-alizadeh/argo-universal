@@ -67,7 +67,7 @@ export const SearchesBranchesInAPopover: Story = {
   },
 };
 
-// The phone sheet owns its segmented header instead of the generic Inspector title and desktop comparison controls.
+// The phone sheet titles itself Changes and owns its segmented header instead of the desktop comparison controls.
 export const PhoneHasTheGitHeader: Story = {
   args: { files: manyFiles },
   render: (args) => <ChangesInspectorSheet {...args} />,
@@ -78,7 +78,9 @@ export const PhoneHasTheGitHeader: Story = {
       screen.getByRole('button', { name: 'Files', pressed: true }),
     ).toBeVisible();
     await expect(screen.getByRole('button', { name: 'Change' })).toBeDisabled();
-    await expect(screen.queryByRole('heading', { name: 'Changes' })).toBeNull();
+    await expect(
+      screen.getByRole('heading', { name: 'Changes' }),
+    ).toBeVisible();
     await expect(
       screen.queryByRole('button', { name: 'Close Inspector' }),
     ).toBeNull();

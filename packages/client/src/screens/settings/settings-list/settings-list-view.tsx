@@ -30,7 +30,8 @@ export function SettingsListView(
   return (
     <SettingsLayout
       {...settingsLayoutProps(props)}
-      pinned={shownTheme(props)}
+      screen={props.screen}
+      lastSection={shownTheme(props)}
       empty={<NoMatchingSettings query={props.query} />}
     >
       {props.children}

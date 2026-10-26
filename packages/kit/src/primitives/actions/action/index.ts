@@ -31,12 +31,9 @@ export {
 
 export type { ActionShortcut } from './action-shortcuts';
 
-export {
-  HeaderActions,
-  headerMenuActions,
-  overflowIcon,
-  type HeaderActionsProps,
-} from './header-buttons';
+export { HeaderActions, type HeaderActionsProps } from './header-buttons';
+
+export { headerMenuActions, overflowIcon } from './header-menu';
 
 export {
   submenuBadgeText,

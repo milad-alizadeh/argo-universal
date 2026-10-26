@@ -6,7 +6,6 @@ import {
 import type * as React from 'react';
 import {
   isDefaultSessionsView,
-  searchSessionsLabel,
   type SessionsViewGroup,
   type SessionsViewState,
   sessionsViewGroups,
@@ -19,12 +18,15 @@ export interface SessionsRootScreenProps extends SessionsViewState {
   children: React.ReactNode;
 }
 
+const searchSessionsLabel = 'Search Sessions';
+
 // The App E2E steps find the filter by this name.
 const filterLabel = 'Filter Sessions';
 
 /*
- * A narrow window's Sessions root: a Screen whose primary Action is New Session (iOS top right, Android's FAB) and whose
+ * The Sessions root, once for every width: a Screen whose primary Action is New Session (iOS top right, Android's FAB) and whose
  * one header Action is the view filter, a submenu of checked choices per Section with a dot while the view is not the default.
+ * A wide window draws it as the heading of the sidebar's list, which the list sits under.
  */
 export function SessionsRootScreen({
   onNewSession,

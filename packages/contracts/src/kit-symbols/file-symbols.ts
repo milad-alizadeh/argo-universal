@@ -5,7 +5,7 @@ export const fileSymbols = {
   file: { sf: 'doc', material: 'draft' },
   'file-code': { sf: 'curlybraces', material: 'data_object' },
   'file-image': { sf: 'photo', material: 'image' },
-  'file-pdf': { sf: 'doc.richtext', material: 'feed' },
+  'file-pdf': { sf: 'doc.richtext', material: 'docs' },
   'file-slides': { sf: 'play.rectangle', material: 'slideshow' },
   'file-table': { sf: 'tablecells', material: 'table' },
   'file-text': { sf: 'doc.text', material: 'description' },

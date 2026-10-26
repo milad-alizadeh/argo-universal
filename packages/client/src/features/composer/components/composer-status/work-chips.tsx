@@ -45,7 +45,7 @@ function WorkChip(props: WorkChipProps): JSX.Element | null {
   const pressableProps = workPressableProps({ label, work, disabled });
 
   return (
-    <ChipSurface glass={label === 'Subagents'}>
+    <ChipSurface>
       <Pressable {...pressableProps} role="button">
         <Icon name={icon} className={mutedTextClassName} />
         <WorkCount label={label} work={work} />

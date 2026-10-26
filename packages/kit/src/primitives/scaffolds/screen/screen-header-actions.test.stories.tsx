@@ -42,6 +42,36 @@ export const HeaderSubmenuPhone = atWidth(screenWidths.Phone, headerSubmenu);
 
 export const HeaderSubmenuWide = atWidth(screenWidths.Wide, headerSubmenu);
 
+// A wide header's submenu button wears its badge at the icon: a count's number, or a status dot named by its label.
+export const HeaderSubmenuCountBadge = atWidth(screenWidths.Wide, {
+  args: { actions: exampleSubmenu(sorted) },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('2')).toBeVisible();
+  },
+});
+
+export const HeaderSubmenuDotBadge = atWidth(screenWidths.Wide, {
+  args: {
+    actions: exampleSubmenu(sorted, {
+      kind: 'status',
+      tone: 'accent',
+      label: 'Changed',
+    }),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText('Changed')).toBeVisible();
+  },
+});
+
+// A count of zero draws no badge.
+export const HeaderSubmenuZeroCountNoBadge = atWidth(screenWidths.Wide, {
+  args: { actions: exampleSubmenu(sorted, { kind: 'count', count: 0 }) },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: 'Sort' })).toBeVisible();
+    await expect(canvas.queryByText('0')).toBeNull();
+  },
+});
+
 const picked = fn();
 
 // A submenu of choices checks the chosen one and runs the Action picked.

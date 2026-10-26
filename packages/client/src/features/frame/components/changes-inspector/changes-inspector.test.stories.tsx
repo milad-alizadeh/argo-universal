@@ -37,6 +37,7 @@ async function expectLineTotals(
   }
 }
 
+// A phone folds each file's diff under its header; a desktop lists the files and opens one at a time.
 async function expectInitialFiles(
   canvas: ReturnType<typeof within>,
   width: number,
@@ -44,9 +45,14 @@ async function expectInitialFiles(
   if (width === layoutWidths.phone) {
     await expect(canvas.getByText(lastAddedLine)).toBeVisible();
     await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'true');
+    await expect(fileHeader('/repo/src/feed.ts')).toHaveAttribute(
+      expanded,
+      'false',
+    );
   } else {
     await expect(canvas.queryByText(lastAddedLine)).toBeNull();
-    await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
+    await expect(fileHeader(largeFile)).toBeVisible();
+    await expect(fileHeader('/repo/src/feed.ts')).not.toHaveAttribute(expanded);
   }
 }
 
@@ -61,10 +67,6 @@ export const ShowsFilesAndTotals: Story = {
       await expect(canvas.getByText(fewSummary)).toBeVisible();
       await expectLineTotals(canvas, width);
       await expectInitialFiles(canvas, width);
-      await expect(fileHeader('/repo/src/feed.ts')).toHaveAttribute(
-        expanded,
-        'false',
-      );
     }
   },
 };
@@ -90,6 +92,17 @@ const checks = { role: 'checkbox', state: 'aria-checked' } as const;
 
 const toggles = { role: 'button', state: 'aria-pressed' } as const;
 
+// Marking a file viewed neither opens it from the desktop's list nor leaves it open on a phone.
+async function expectStillFolded(
+  canvas: ReturnType<typeof within>,
+  width: number,
+): Promise<void> {
+  if (width === layoutWidths.phone)
+    return expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
+
+  await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
+}
+
 // Marking a file viewed folds it and tells the owner; one story per width, each with a fresh spy.
 function marksViewed(
   width: number,
@@ -106,7 +119,7 @@ function marksViewed(
       await expect(feed).toHaveAttribute(mark.state, 'true');
       await userEvent.click(large);
       await expect(args.onViewedChange).toHaveBeenCalledWith(largeFile, true);
-      await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
+      await expectStillFolded(canvas, width);
     },
   };
 }

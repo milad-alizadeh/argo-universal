@@ -42,6 +42,10 @@ export type DialogSheetProps = {
   open?: boolean;
   label?: string;
   dismissible?: boolean;
+  // The sheet's whole content is one FieldGroup, which scrolls itself.
+  fields?: boolean;
+  // Pinned under the page, in view at any height.
+  footer?: ReactNode;
   children: ReactNode;
 };
 

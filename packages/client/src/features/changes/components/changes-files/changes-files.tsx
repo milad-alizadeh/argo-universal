@@ -7,10 +7,11 @@ import { Spinner } from '@repo/kit/primitives/status/spinner';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import * as React from 'react';
 import { View } from 'react-native';
-import { DiffFileHeader, DiffView, type FileDiff } from '#features/feed';
+import { DiffView, type FileDiff } from '#features/feed';
 import { noChangesDescription } from '../../view/changes-comparison';
 import { uniqueChangedFiles } from '../../view/changes-files';
 import type { ChangesViewProps } from '../../view/changes-view-props';
+import { BranchFiles } from './changes-branch-files';
 
 export const loadingChangesLabel = 'Loading changes';
 
@@ -106,8 +107,6 @@ function FileDiffRow(props: FileDiffRowProps): React.JSX.Element {
 }
 
 // The branch list opens one file directly; the comparison is still the branch's comparison.
-type BranchFilesProps = ChangesViewProps & { files: readonly FileDiff[] };
-
 function StageFiles(
   props: ChangesViewProps & { files: readonly FileDiff[] },
 ): React.JSX.Element {
@@ -116,47 +115,4 @@ function StageFiles(
   if (selected) return <FileDiffRow {...props} file={selected} initialOpen />;
 
   return <BranchFiles {...props} />;
-}
-
-function BranchFiles(props: BranchFilesProps): React.JSX.Element {
-  return (
-    <View className="bg-content">
-      {props.files.map((file, index) => (
-        <StageFileBoundary
-          key={file.path}
-          {...props}
-          file={file}
-          separated={index > 0}
-        />
-      ))}
-    </View>
-  );
-}
-
-function StageFile(
-  props: ChangesViewProps & { file: FileDiff },
-): React.JSX.Element {
-  const { file } = props;
-
-  return (
-    <DiffFileHeader
-      file={file}
-      open={false}
-      onOpenChange={() => props.onFileSelect?.(file.path)}
-      viewed={props.viewed.includes(file.path)}
-      onViewedChange={(viewed) => props.onViewedChange(file.path, viewed)}
-    />
-  );
-}
-
-// Separators belong to file boundaries, so neither edge of the list draws an extra line.
-function StageFileBoundary(
-  props: ChangesViewProps & { file: FileDiff; separated: boolean },
-): React.JSX.Element {
-  return (
-    <>
-      {props.separated && <View className="h-px bg-border" />}
-      <StageFile {...props} />
-    </>
-  );
 }

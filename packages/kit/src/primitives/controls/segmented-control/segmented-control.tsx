@@ -7,7 +7,10 @@ import type {
   SegmentOption,
 } from './segmented-control-props';
 
-// The web track groups one tab stop; native files keep stock segmented controls.
+/*
+ * The web track groups one tab stop; native files keep stock segmented controls. Each label stays on one line: a
+ * segment is never narrower than its label, so a narrow track grows rather than wraps.
+ */
 export function SegmentedControl(props: SegmentedControlProps): ReactElement {
   return (
     <div
@@ -27,7 +30,7 @@ type SegmentProps = SegmentedControlProps & { option: SegmentOption };
 function Segment(props: SegmentProps): ReactElement {
   return (
     <button {...segmentProps(props)}>
-      <Text role="control" selectable={false}>
+      <Text role="control" selectable={false} numberOfLines={1}>
         {props.option.label}
       </Text>
     </button>
@@ -64,7 +67,7 @@ const trackClass = (disabled?: boolean): string =>
 
 const segmentClass = (selected: boolean): string =>
   cn(
-    'min-w-0 flex-1 cursor-pointer rounded-md border-0 px-3 py-1 outline-none disabled:cursor-default',
+    'flex-1 cursor-pointer rounded-md border-0 px-3 py-1 outline-none disabled:cursor-default',
     selected
       ? 'bg-card segment-selected'
       : 'bg-transparent enabled:hover:bg-hover enabled:active:bg-pressed',

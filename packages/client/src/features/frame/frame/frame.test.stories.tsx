@@ -1,4 +1,5 @@
 import { Inspector } from '@repo/kit/primitives/scaffolds/inspector';
+import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -6,8 +7,7 @@ import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { SessionHeader, useSessionPanels } from '#features/sessions';
-import { ListTitle } from '#lib/product/list-title';
-import { WindowBandHostContext } from '#lib/product/window-band';
+import { WindowBandHostsProvider } from '#lib/product/window-band';
 import { LayoutListMock } from '../components/layout-list.mocks';
 import { Scaffold } from '../scaffold/scaffold';
 import { useFrameState } from './frame';
@@ -30,16 +30,15 @@ function FrameStatePage({
   return (
     <View className="flex-1">
       <FrameInspectorHost value={inspectorHost}>
-        <WindowBandHostContext value={bandHost}>
+        <WindowBandHostsProvider hosts={bandHost}>
           <Scaffold
             {...scaffold}
             sizeClass="wide"
             sidebar={null}
-            listHeader={<ListTitle>Sessions</ListTitle>}
             list={<LayoutListMock name="Sessions" />}
             page={<ScreenInspector>{content}</ScreenInspector>}
           />
-        </WindowBandHostContext>
+        </WindowBandHostsProvider>
       </FrameInspectorHost>
     </View>
   );
@@ -54,6 +53,7 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
 
   return (
     <>
+      <ScreenStackHeader title={title} />
       <SessionHeader
         title={title}
         status="idle"

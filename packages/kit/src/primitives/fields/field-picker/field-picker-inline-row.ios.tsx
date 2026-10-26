@@ -1,19 +1,10 @@
-import {
-  Button,
-  HStack,
-  ProgressView,
-  Spacer,
-  VStack,
-} from '@expo/ui/swift-ui';
+import { Button, HStack, ProgressView, Spacer } from '@expo/ui/swift-ui';
 import {
   accessibilityAddTraits,
   buttonStyle,
   disabled,
-  font,
-  foregroundStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
-import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { optionChoice, type OptionRowProps } from './field-picker-kind';
@@ -24,33 +15,19 @@ const offModifiers = (
   props: Pick<FieldPickerProps, 'disabled'>,
 ): ReturnType<typeof disabled>[] => [disabled(props.disabled ?? false)];
 
-// A subtitle as a stock row draws it: the secondary shade, one text style down.
-const subtitleModifiers = [
-  font({ textStyle: 'subheadline' }),
-  foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
-];
-
-// An option's title (and icon) and its subtitle under it.
+// An option's title (and icon) and its subtitle under the title.
 function OptionLabel(props: { option: FieldPickerOption }): ReactElement {
   const { option } = props;
 
   return (
-    <>
-      <RowTitle
-        title={option.label}
-        leading={option.icon}
-        logo={option.logo}
-        tone={option.tone}
-      />
-      <Subtitle text={option.subtitle} />
-    </>
+    <RowTitle
+      title={option.label}
+      subtitle={option.subtitle}
+      leading={option.icon}
+      logo={option.logo}
+      tone={option.tone}
+    />
   );
-}
-
-function Subtitle(props: { text?: string }): ReactElement | null {
-  if (!props.text) return null;
-
-  return <NativeText modifiers={subtitleModifiers}>{props.text}</NativeText>;
 }
 
 const selectedTrait = accessibilityAddTraits(['isSelected']);
@@ -84,9 +61,7 @@ export function OptionRow(props: OptionRowProps): ReactElement {
   return (
     <Button onPress={toggle} modifiers={pressModifiers(props, selected)}>
       <HStack modifiers={[wholeRowPress]}>
-        <VStack alignment="leading">
-          <OptionLabel option={props.option} />
-        </VStack>
+        <OptionLabel option={props.option} />
         <Spacer />
         {mark(props.option, selected)}
       </HStack>

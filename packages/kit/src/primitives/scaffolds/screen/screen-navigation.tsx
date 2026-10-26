@@ -15,7 +15,7 @@ export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
 
   if (!navigator) return null;
 
-  const options = { ...headerLayout, title: props.title, headerTitle };
+  const options = { ...headerLayout, title: props.title ?? '', headerTitle };
 
   return (
     <Stack.Screen options={{ ...options, ...leading, headerShown: !wide }} />

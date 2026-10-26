@@ -70,16 +70,17 @@ function useSettingsList(query?: string): SettingsListViewProps {
 export function SettingsSection(props: {
   children: ReactNode;
 }): React.JSX.Element {
-  const pages = useSettingsList(useSectionList('settings').query);
+  const { screen } = useSectionList('settings');
+  const pages = useSettingsList(screen?.value);
 
   return (
     <SectionListDetail>
-      <SettingsListView {...pages}>{props.children}</SettingsListView>
+      <SettingsListView {...pages} screen={screen}>
+        {props.children}
+      </SettingsListView>
     </SectionListDetail>
   );
 }
-
-export const searchSettings = 'Search Settings';
 
 interface SettingsRootScreenProps {
   query: string;
@@ -88,19 +89,24 @@ interface SettingsRootScreenProps {
 
 // Native Settings has no search, at any size; the web searches.
 const settingsSearch =
-  Platform.OS === 'web' ? { label: searchSettings } : undefined;
+  Platform.OS === 'web' ? { label: 'Search Settings' } : undefined;
 
-// A narrow window's Settings root: a Screen with a title, and the web's search, around the pages.
+// Settings' Screen, declared once: its title, and the web's search holding what narrows the pages.
+export const settingsScreen = (
+  props: SettingsRootScreenProps,
+): NonNullable<SettingsListViewProps['screen']> => ({
+  title: sections.settings.title,
+  search: settingsSearch,
+  value: props.query,
+  onChangeText: props.onQueryChange,
+});
+
+// A narrow window's Settings root: the pages under Settings' Screen.
 export function SettingsRootScreen(
   props: SettingsRootScreenProps,
 ): React.JSX.Element {
   return (
-    <Screen
-      title={sections.settings.title}
-      search={settingsSearch}
-      value={props.query}
-      onChangeText={props.onQueryChange}
-    >
+    <Screen {...settingsScreen(props)}>
       <SettingsListView {...useSettingsList(props.query)} />
     </Screen>
   );

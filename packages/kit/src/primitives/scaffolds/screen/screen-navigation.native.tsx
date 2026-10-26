@@ -16,7 +16,7 @@ function StackHeader(props: ScreenHeaderInput): ReactElement {
 
   return (
     <>
-      <Stack.Screen options={titleOptions(props.title, wide)} />
+      <Stack.Screen options={titleOptions(props.title ?? '', wide)} />
       {wide ? null : <ScreenHeaderItems {...props} />}
     </>
   );

@@ -1,4 +1,5 @@
 import type { RowBadge } from '@repo/kit/primitives/lists/list-item';
+import type { SettingsLayoutProps } from '@repo/kit/primitives/scaffolds/settings-layout';
 import type { IconName } from '@repo/kit/symbols/icon-names';
 import type { Href } from 'expo-router';
 import type { ThemeChoice } from '#features/settings';
@@ -26,6 +27,8 @@ export interface SettingsListViewProps {
   status?: 'ready' | 'loading' | 'disconnected';
   // The sidebar's search: only pages whose title matches show.
   query?: string;
+  // The Screen the list sits under beside the pages, which draws its heading and holds the search.
+  screen?: SettingsLayoutProps['screen'];
 }
 
 export interface SettingsRow {

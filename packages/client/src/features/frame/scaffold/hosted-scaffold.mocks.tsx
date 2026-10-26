@@ -3,8 +3,7 @@ import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { JSX, PropsWithChildren } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { ListTitle } from '#lib/product/list-title';
-import { WindowBandHostContext } from '#lib/product/window-band';
+import { WindowBandHostsProvider } from '#lib/product/window-band';
 import { coreNavigationSections } from '../../../lib/product/navigation/sections';
 import { FrameRail } from '../components/frame-rail/frame-rail';
 import { LayoutListMock } from '../components/layout-list.mocks';
@@ -35,7 +34,6 @@ function HostedScaffold(props: SizedFrame): JSX.Element {
       {...props.scaffold}
       sizeClass={props.sizeClass}
       sidebar={<Rail {...props} />}
-      listHeader={<ListTitle>Sessions</ListTitle>}
       list={<LayoutListMock name="Sessions" />}
       page={props.children}
     />
@@ -51,9 +49,9 @@ export function HostedScaffoldMock({
   return (
     <View className="flex-1">
       <InspectorHostContext value={state.inspectorHost}>
-        <WindowBandHostContext value={state.bandHost}>
+        <WindowBandHostsProvider hosts={state.bandHost}>
           <AdaptiveScaffold {...state}>{children}</AdaptiveScaffold>
-        </WindowBandHostContext>
+        </WindowBandHostsProvider>
       </InspectorHostContext>
     </View>
   );

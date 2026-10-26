@@ -1,4 +1,11 @@
-import { createContext, use, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  use,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { Platform } from 'react-native';
 import { useWide } from '#kit/use-wide/use-wide';
 
@@ -11,18 +18,31 @@ export const groupedRowInset = 16;
 interface HeadingInset {
   grouped: boolean;
   register: (grouped: boolean) => void;
+  // Content that keeps to the Screen's column itself: a scroll view, which takes it as ScrollColumnContext, or a nested Screen.
+  columnClaimed: boolean;
+  claimColumn: () => () => void;
 }
 
-// Set by a Screen around its heading and content; a FieldGroup clears it for what it holds, so a nested one never tells the Screen again.
+// Set by a Screen around its heading and content; a FieldGroup or a sheet clears it for what it holds, so nothing nested in one tells the Screen again.
 export const HeadingInsetContext = createContext<HeadingInset | undefined>(
   undefined,
 );
 
-// A Screen's: it learns whether its content is grouped cards.
+// A Screen's: it learns whether its content is grouped cards, and whether it keeps to the column itself.
 export function useHeadingInsetScope(): HeadingInset {
   const [grouped, register] = useState(false);
+  const [claims, setClaims] = useState(0);
 
-  return useMemo(() => ({ grouped, register }), [grouped]);
+  const claimColumn = useCallback(() => {
+    setClaims((count) => count + 1);
+
+    return (): void => setClaims((count) => count - 1);
+  }, []);
+
+  return useMemo(
+    () => ({ grouped, register, columnClaimed: claims > 0, claimColumn }),
+    [grouped, claims, claimColumn],
+  );
 }
 
 // Web only, as native headers are the platform's, and a wide window's heading follows the FieldGroup's column.
@@ -47,3 +67,22 @@ export function useGroupedContent(): void {
     return (): void => register?.(false);
   }, [register]);
 }
+
+// Content that keeps to the column itself tells its Screen while it is drawn, before the first paint, so the Screen never pads it twice.
+export function useClaimsColumn(claims: boolean): void {
+  const claimColumn = use(HeadingInsetContext)?.claimColumn;
+
+  useLayoutEffect(
+    () => (claims ? claimColumn?.() : undefined),
+    [claims, claimColumn],
+  );
+}
+
+// Whether the Screen's content keeps to its column itself: grouped cards and scroll views do; anything else, the Screen keeps there.
+export function useColumnClaimed(): boolean {
+  const scope = use(HeadingInsetContext) ?? unscoped;
+
+  return scope.grouped || scope.columnClaimed;
+}
+
+const unscoped = { grouped: false, columnClaimed: false };

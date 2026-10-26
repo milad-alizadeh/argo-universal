@@ -1,14 +1,16 @@
+import type { ChangesSummary } from '@repo/contracts';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Menu } from '@repo/kit/primitives/overlays/menu';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { ChangeChecks } from './change-checks-popover';
 import { ChangeDiffTotal } from './change-diff-total';
+import { ChangePart } from './change-part';
 import {
   ChangeStageIcon,
   ChangeStageModifier,
 } from './change-stage/change-stage';
-import { PullRequestChecks } from './pull-request-checks';
 import type { SessionPullRequest } from './session-pull-request';
 
 export interface ChangeRowProps {
@@ -19,30 +21,17 @@ export interface ChangeRowProps {
 
 export function ChangeRow(props: ChangeRowProps): ReactElement {
   return (
-    <View className="flex-row items-start gap-2 rounded-xl px-1 py-2 web:hover:bg-hover web:has-focus-visible:bg-hover">
-      <ChangeAction {...props} />
+    <View className="flex-row items-start gap-2 rounded-xl px-1 py-2">
+      <View className="w-7 shrink-0 items-center pt-0.5">
+        <ChangeStageIcon {...props.change} />
+      </View>
+      <ChangeText {...props} />
       <ChangeMenu {...props} />
     </View>
   );
 }
 
-function ChangeAction({ change, onOpen }: ChangeRowProps): ReactElement {
-  return (
-    <Pressable
-      role="button"
-      accessibilityLabel={`Open Change #${change.number}`}
-      onPress={onOpen}
-      className="min-w-0 flex-1 flex-row items-start gap-2"
-    >
-      <View className="w-7 shrink-0 items-center pt-0.5">
-        <ChangeStageIcon {...change} />
-      </View>
-      <ChangeText change={change} />
-    </Pressable>
-  );
-}
-
-function ChangeText({ change }: Pick<ChangeRowProps, 'change'>): ReactElement {
+function ChangeText({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
       <View className="flex-row items-center gap-1.5">
@@ -51,18 +40,36 @@ function ChangeText({ change }: Pick<ChangeRowProps, 'change'>): ReactElement {
           <Text numberOfLines={1}>{change.title}</Text>
         </View>
       </View>
-      <ChangeMeta change={change} />
+      <ChangeMeta change={change} onOpen={onOpen} />
     </View>
   );
 }
 
-function ChangeMeta({ change }: Pick<ChangeRowProps, 'change'>): ReactElement {
+// Only these parts press: the files open the Change in the Stage, the checks list each check.
+function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">
-      {change.summary && <ChangeDiffTotal {...change.summary} icon />}
-      {change.checks && <PullRequestChecks {...change.checks} compact />}
+      {change.summary && (
+        <ChangeFiles {...change.summary} change={change} onOpen={onOpen} />
+      )}
+      {change.checks && <ChangeChecks checks={change.checks} onOpen={onOpen} />}
       <ChangeStageModifier {...change} />
     </View>
+  );
+}
+
+function ChangeFiles({
+  change,
+  onOpen,
+  ...summary
+}: ChangesSummary & ChangeRowProps): ReactElement {
+  return (
+    <ChangePart
+      accessibilityLabel={`Open files of Change #${change.number}`}
+      onPress={onOpen}
+    >
+      <ChangeDiffTotal {...summary} icon />
+    </ChangePart>
   );
 }
 

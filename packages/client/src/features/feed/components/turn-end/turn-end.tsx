@@ -1,6 +1,7 @@
 import type { StopReason, TurnEnd, TurnError } from '@repo/contracts';
 import { formatElapsed } from '@repo/kit/format-elapsed';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import type { FeedViewItem } from '../../view/feed-view';
 import {
   NoticeMessage,
@@ -76,8 +77,21 @@ export interface TurnEndRowProps {
   end: TurnEnd;
 }
 
+const ruleClassName = 'h-px flex-1 bg-border';
+
+// The notice sits between two rules that mark where the Turn stopped.
 export function TurnEndRow({ end }: TurnEndRowProps): ReactElement | null {
   const notice = turnEndNotice(end);
 
-  return notice && <NoticeMessage {...notice} />;
+  return (
+    notice && (
+      <View className="w-full flex-row items-center gap-3">
+        <View className={ruleClassName} />
+        <View className="min-w-0 shrink">
+          <NoticeMessage {...notice} />
+        </View>
+        <View className={ruleClassName} />
+      </View>
+    )
+  );
 }

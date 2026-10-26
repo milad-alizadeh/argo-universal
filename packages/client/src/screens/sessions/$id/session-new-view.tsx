@@ -13,7 +13,6 @@ import {
 } from '#features/composer';
 import {
   type SessionCalloutProps,
-  SessionHeaderBar,
   type StartingFeed,
   TerminalSignIn,
   type TerminalSignInProps,
@@ -75,16 +74,13 @@ const loadFailed: ErrorToast = {
   message: serverSilentMessage,
 };
 
-// The header stays empty until the first prompt starts the Session and gives it a title.
-const newSessionHeader = <SessionHeaderBar title={null} />;
-
 // The Composer of a Session not yet opened: its first prompt opens it with the chosen Agent, model and effort.
 export function SessionNewView(props: SessionNewViewProps): React.JSX.Element {
   // A failed load stays blank: the toast says why, and the page retries when the Connection reopens.
   useErrorToast(props.state === 'load-failed' ? loadFailed : undefined);
 
   if (props.state !== 'ready')
-    return <Screen edges={['bottom']}>{newSessionHeader}</Screen>;
+    return <Screen edges={['bottom']}>{null}</Screen>;
 
   return <ReadySessionNewView {...props} />;
 }
@@ -120,7 +116,7 @@ function ReadySessionNewView(
 ): React.JSX.Element {
   return (
     <SessionLayout
-      header={newSessionHeader}
+      header={null}
       feed={<NewSessionContent {...props} />}
       composer={<NewSessionComposer {...props} />}
       onDropFiles={props.onDropFiles}

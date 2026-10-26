@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { tones } from '../kit-tokens';
+import { chartDefaults, tones } from '../kit-tokens';
 import { svgProps } from './kit-props';
 import { svgCharacterLimit } from './wire-limits';
 
@@ -28,6 +28,11 @@ export const chartProps = z.strictObject({
   kind: z.enum(['line', 'bar', 'area', 'scatter', 'pie', 'donut']),
   label,
   stacked: z.boolean().optional(),
+  grid: z
+    .boolean()
+    .optional()
+    .meta({ default: chartDefaults.grid })
+    .describe('Gridlines behind the plot at each axis tick.'),
   onPress: svgProps.shape.onPress,
   series: z
     .array(series)

@@ -36,7 +36,7 @@ const listPath = '/builds';
 
 // A Plugin opens its pages by their full App path: the Plugin id, the nav id, then its own path.
 const buildHref = (build: Build): string =>
-  `/plugins/hello/hello-builds${listPath}/${build.id}`;
+  `/plugins/hello/hello${listPath}/${build.id}`;
 
 const buildMetadata = (
   <Metadata>

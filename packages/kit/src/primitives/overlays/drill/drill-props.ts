@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { SheetScreenAction } from '#primitives/overlays/sheet';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
+import type { FieldGroupKitProps } from '../../kit-props';
 
 export interface DrillSearch {
   label: string;
@@ -11,7 +12,8 @@ export interface DrillSearch {
 export interface DrillProps {
   label: string;
   value?: SizeClassValue<string | undefined>;
-  valueLeading?: ReactElement;
+  // The row's leading icon, as FieldGroup.Link takes it.
+  leading?: FieldGroupKitProps<'FieldGroup.Link'>['leading'];
   disabled?: boolean;
   title: string;
   trigger?: ReactElement<{ disabled?: boolean; onPress?: () => void }>;

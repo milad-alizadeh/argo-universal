@@ -40,7 +40,6 @@ export const RunningTurn: Story = {
       if (wide) {
         // Spec 0020 deletes the repeated header meta; the Live header still states the Turn.
         await expect(canvas.queryByText('Running')).toBeNull();
-        await expect(canvas.queryByTestId('session-header-bar')).toBeNull();
         await expect(
           canvas.getByRole('button', { name: 'More' }),
         ).toBeVisible();
@@ -101,7 +100,6 @@ export const BandOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
     });
 
     await expect(canvas.getByTestId('window-band')).toContainElement(title);
-    await expect(layout.queryByTestId('session-header-bar')).toBeNull();
     await expect(layout.getByTestId(feedScrollTestId)).toBeVisible();
     await expect(
       layout.getByRole('textbox', { name: 'Message' }),

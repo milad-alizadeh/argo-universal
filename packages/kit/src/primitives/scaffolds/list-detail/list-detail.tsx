@@ -5,7 +5,7 @@ import { useWide } from '#kit/use-wide/use-wide';
 import {
   Screen,
   ScreenBesideList,
-  ScreenNavigationEnabled,
+  ScreenListColumn,
 } from '#primitives/scaffolds/screen';
 import type { ListDetailProps } from './list-detail-props';
 import {
@@ -30,15 +30,18 @@ export function ListDetail(props: ListDetailProps): ReactElement {
   return <WithDetail {...props} wide={false} />;
 }
 
-// A titled list is the screen's own: its Screen replaces the header an item's Screen left in the navigator.
-function ListOnly(props: ListDetailProps): ReactElement {
-  const { title, list } = props;
+// A list with a Screen is the screen's own: its Screen replaces the header an item's Screen left in the navigator, and on a wide window is the heading above the list.
+function withScreen(list: ReactNode, props: ListDetailProps): ReactNode {
+  const screen = listScreen(props);
 
-  return (
-    <Pane testID={props.testID}>
-      {title ? <Screen title={title}>{list}</Screen> : list}
-    </Pane>
-  );
+  return screen ? <Screen {...screen}>{list}</Screen> : list;
+}
+
+const listScreen = (props: ListDetailProps): ListDetailProps['screen'] =>
+  props.screen ?? (props.title ? { title: props.title } : undefined);
+
+function ListOnly(props: ListDetailProps): ReactElement {
+  return <Pane testID={props.testID}>{withScreen(props.list, props)}</Pane>;
 }
 
 /*
@@ -55,7 +58,7 @@ function WithDetail({
   sidebar,
   ...props
 }: WithDetailProps): ReactElement {
-  const list = <SidebarRows>{props.list}</SidebarRows>;
+  const list = withScreen(<SidebarRows>{props.list}</SidebarRows>, props);
   useClaim(sidebar, list);
 
   return (
@@ -66,11 +69,11 @@ function WithDetail({
   );
 }
 
-function ListPane({ list }: Pick<ListDetailProps, 'list'>): ReactElement {
+function ListPane({ list }: { list: ReactNode }): ReactElement {
   return (
     <Pane className="w-frame-list shrink-0">
       {/* The detail's Screen names the screen; a list's Screen only draws its heading. */}
-      <ScreenNavigationEnabled value={false}>{list}</ScreenNavigationEnabled>
+      <ScreenListColumn>{list}</ScreenListColumn>
     </Pane>
   );
 }

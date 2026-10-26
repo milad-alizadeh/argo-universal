@@ -64,7 +64,7 @@ function OutcomeText({
 
 function CommandFooter(props: CommandFooterState): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-1.5 px-3 pb-2">
+    <View className="flex-row items-center gap-1.5">
       {props.settled && <OutcomeIcon failed={props.failed} />}
       <OutcomeText {...props} />
     </View>

@@ -1,4 +1,4 @@
-import { Row } from '@expo/ui';
+import { Column, Row } from '@expo/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { AgentLogo } from '#primitives/content/agent-logo';
@@ -25,24 +25,47 @@ const iconGap = 12;
  * The web draws Expo UI's universal components, which have no place for a leading icon, so it sits beside the
  * title, centred on its line as Expo's ListItem lays them out. The title takes the kit's body role.
  */
-export function RowTitle(
-  props: RowTextProps & { title: string; numberOfLines?: number },
-): ReactNode {
-  const title = <Title {...props} />;
+type RowTitleProps = RowTextProps & {
+  title: string;
+  numberOfLines?: number;
+  // A line under the title, such as a picker option's description, starting where the title starts.
+  subtitle?: string;
+};
+
+export function RowTitle(props: RowTitleProps): ReactNode {
+  const title = <TitleLines {...props} />;
 
   if (!props.leading && !props.logo) return title;
 
   return (
-    <Row alignment="center" spacing={iconGap}>
+    <Row alignment={iconAlignment(props)} spacing={iconGap}>
       <Mark {...props} />
       {title}
     </Row>
   );
 }
 
-function Title(
-  props: RowTextProps & { title: string; numberOfLines?: number },
-): ReactElement {
+// With a subtitle the icon keeps to the title's line, so the subtitle sits under the title, not the icon.
+const iconAlignment = (props: RowTitleProps): 'start' | 'center' =>
+  props.subtitle ? 'start' : 'center';
+
+// The gap between a title and its subtitle, as a ListItem keeps it.
+const subtitleGap = 2;
+
+function TitleLines(props: RowTitleProps): ReactElement {
+  if (!props.subtitle) return <Title {...props} />;
+
+  return (
+    <Column spacing={subtitleGap}>
+      <Title {...props} />
+      <NativeText role="secondary" tone="muted">
+        {props.subtitle}
+      </NativeText>
+    </Column>
+  );
+}
+
+function Title(props: RowTitleProps): ReactElement {
   return (
     <NativeText numberOfLines={props.numberOfLines} tone={props.tone}>
       {props.title}

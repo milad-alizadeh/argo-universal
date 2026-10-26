@@ -1,3 +1,4 @@
+import { ScreenListColumn } from '@repo/kit/primitives/scaffolds/screen';
 import { ScrollColumnContext } from '@repo/kit/scroll-column';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -10,7 +11,6 @@ import {
   GlassSurface,
   type GlassSurfaceProps,
 } from '../components/glass-surface/glass-surface';
-import { SidebarBar } from '../components/sidebar-bar/sidebar-bar';
 import type { FrameMotion } from '../utils/frame-timing';
 import type { ScaffoldPartProps, ScaffoldProps } from './use-scaffold-layout';
 
@@ -31,32 +31,14 @@ function SidebarGlass(parts: ScaffoldPartProps): React.JSX.Element {
   return <GlassSurface {...glassGeometry(parts)} {...parts.layout.motion} />;
 }
 
-// The shared top bar across the rail and the list: the window controls over the rail, then the list's title and actions.
-function SidebarTopBar({
-  scaffold,
-  layout,
-}: ScaffoldPartProps): React.JSX.Element {
-  return (
-    <SidebarBar
-      left={layout.measures.railWidth}
-      width={layout.visibleListWidth}
-      sidebarShown={!layout.frame.listFolded}
-      {...layout.motion}
-    >
-      {scaffold.listHeader}
-    </SidebarBar>
-  );
-}
-
-// The list starts under the top bar, which draws the list's header apart, so the header fades in place while the list slides.
+// The list's Screen draws its heading in the column's row under the window's band, so the heading slides with the list.
 function SidebarListContent({ list }: ScaffoldProps): React.JSX.Element {
   return (
-    <>
-      <View className="h-frame-control native:mt-4" />
+    <ScreenListColumn underBand>
       <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
         <ScrollColumnContext value={listColumn}>{list}</ScrollColumnContext>
       </View>
-    </>
+    </ScreenListColumn>
   );
 }
 
@@ -94,7 +76,6 @@ export function ScaffoldSidebarColumn({
         <SidebarGlass {...parts} />
         {sidebar}
         <SidebarList {...parts} />
-        <SidebarTopBar {...parts} />
       </View>
     </View>
   );
