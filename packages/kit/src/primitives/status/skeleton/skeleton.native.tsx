@@ -1,6 +1,6 @@
 import { requireNativeView } from 'expo';
 import type { ReactElement } from 'react';
-import { StyleSheet, type ViewProps } from 'react-native';
+import { StyleSheet, View, type ViewProps } from 'react-native';
 import { HostRedactionContext } from '#primitives/native/host';
 import { usePrimitiveColor } from '#primitives/native/primitive-color';
 import type { SkeletonProps } from './skeleton-props';
@@ -15,25 +15,25 @@ interface NativeSkeletonProps extends ViewProps {
 const NativeSkeleton = requireNativeView<NativeSkeletonProps>('ArgoSkeleton');
 
 /*
- * The native view sizes to its children, so content that fills its parent (a FieldGroup or a List is a flex:1 Host)
- * would find a parent of no height and draw nothing. Growing into the room its parent has left, and shrinking
- * with it, hands that content a height and costs content that sizes itself nothing: it is as tall as it was.
+ * The Skeleton is a box that sizes to its children, as the web one does, so in a row it takes its content's width
+ * and no more. Content that fills its parent (a FieldGroup or a List is a flex:1 Host) finds a box of no height and
+ * draws nothing, so the caller says so with `fill`: whether the parent is a row or a column is
+ * known only to the caller. The box is a View that takes the room when `fill` is set, and the native view fills it.
  */
 const styles = StyleSheet.create({ fill: { flexGrow: 1, flexShrink: 1 } });
 
 function NativeSkeletonView({
   animation = 'pulse',
+  fill,
   ...rest
 }: SkeletonProps): ReactElement {
   const color = usePrimitiveColor('text-foreground/15');
+  const native = { style: styles.fill, animation, color };
 
   return (
-    <NativeSkeleton
-      {...rest}
-      style={styles.fill}
-      animation={animation}
-      color={color}
-    />
+    <View className={fill ? 'flex-1' : undefined}>
+      <NativeSkeleton {...rest} {...native} />
+    </View>
   );
 }
 

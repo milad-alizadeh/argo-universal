@@ -56,7 +56,7 @@ function ServerState({
 
   // A failed load keeps the loading look: the toast says why, and the query retries when the Connection reopens.
   return (
-    <Skeleton loading={server.status !== 'loaded'}>
+    <Skeleton loading={server.status !== 'loaded'} fill>
       <ServerRows server={server} />
     </Skeleton>
   );
