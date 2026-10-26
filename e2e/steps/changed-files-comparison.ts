@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { openChangedFiles } from './changed-files';
+import { greetingHeader, openChangedFiles } from './changed-files';
 import { When } from './fixtures';
 import { onPhone } from './frame';
 
@@ -13,9 +13,7 @@ When("I review the Frame's file comparison", async ({ page }) => {
 async function reviewDesktopComparison(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await compareAgainstRemote(page);
-  await page
-    .getByRole('button', { name: 'Diff for greeting.txt', exact: true })
-    .click();
+  await greetingHeader(page).click();
 }
 
 // The phone sheet's page carries the one title; the pane under it draws no header of its own or comparison bar.

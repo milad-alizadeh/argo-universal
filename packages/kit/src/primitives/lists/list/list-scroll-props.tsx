@@ -53,7 +53,6 @@ function streamProps<Item>(
     onStartReached: props.onStartReached,
     onStartReachedThreshold: props.onStartReachedThreshold,
     drawDistance: props.drawDistance,
-    stickyHeaderIndices: props.stickyHeaderIndices,
   };
 }
 
@@ -65,6 +64,7 @@ function listContents<Item>(
     depth: props.depth,
     keyboardDismissMode: props.keyboardDismissMode,
     keyboardShouldPersistTaps: props.keyboardShouldPersistTaps,
+    stickyHeaderIndices: props.stickyHeaderIndices,
     ListHeaderComponent: listStart(props),
     ListFooterComponent: <ListEnd {...props} />,
   };

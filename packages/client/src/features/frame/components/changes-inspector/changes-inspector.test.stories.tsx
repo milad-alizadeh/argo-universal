@@ -105,23 +105,22 @@ export const MarksViewedPhone = marksViewed(layoutWidths.phone);
 
 export const MarksViewedWide = marksViewed(layoutWidths.wide);
 
-// Expanded, the Inspector keeps the comparison, totals and files, and offers Restore in place of Expand.
+/*
+ * Expanded, the Inspector keeps the comparison, totals and files, and offers Restore in place of Expand. Only a desktop
+ * expands: a phone's Changes is the sheet's page.
+ */
 export const ExpandedKeepsTheChanges: Story = {
   args: { expanded: true },
   play: async ({ canvas }) => {
-    if (process.env.NODE_ENV !== 'test') return;
-
-    for (const width of widths) {
-      await settleViewport(width);
-      await expectComparison(allChanges, width);
-      await expect(canvas.getByText(fewSummary)).toBeVisible();
-      await expect(fileHeader(largeFile)).toBeVisible();
-      await expect(
-        canvas.getByRole('button', { name: 'Restore Inspector' }),
-      ).toBeVisible();
-      await expect(
-        canvas.queryByRole('button', { name: 'Expand Inspector' }),
-      ).toBeNull();
-    }
+    await settleViewport(layoutWidths.wide);
+    await expectComparison(allChanges, layoutWidths.wide);
+    await expect(canvas.getByText(fewSummary)).toBeVisible();
+    await expect(fileHeader(largeFile)).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'Restore Inspector' }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: 'Expand Inspector' }),
+    ).toBeNull();
   },
 };
