@@ -54,6 +54,8 @@ export const Action: PluginComponents['Action'] & {
 
 export const SplitButton: PluginComponents['SplitButton'];
 
+export const SegmentedControl: PluginComponents['SegmentedControl'];
+
 export const Slider: PluginComponents['Slider'];
 
 export const FieldGroup: PluginComponents['FieldGroup'] & {

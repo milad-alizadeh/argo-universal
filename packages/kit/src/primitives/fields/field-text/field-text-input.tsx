@@ -30,7 +30,10 @@ const valueProps = (
   'aria-invalid': props.error !== undefined,
   placeholder: props.placeholder,
   editable: !props.disabled,
+  accessibilityState: { disabled: props.disabled },
   secureTextEntry: props.secure,
+  autoCorrect: props.secure ? false : undefined,
+  autoCapitalize: props.secure ? 'none' : undefined,
   keyboardType: props.keyboardType,
   multiline: props.multiline,
 });

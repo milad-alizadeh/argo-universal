@@ -12,6 +12,7 @@ import { Link } from '@repo/kit/primitives/content/link';
 import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
+import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { Slider } from '@repo/kit/primitives/controls/slider';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { KitProps } from '@repo/kit/primitives/kit-props';
@@ -54,6 +55,7 @@ export const pluginEntries = {
   'Action.Section': Action.Section,
   EmptyState,
   Slider,
+  SegmentedControl,
   FieldGroup,
   'FieldGroup.Section': FieldGroup.Section,
   'FieldGroup.Value': FieldGroup.Value,

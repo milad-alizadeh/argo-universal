@@ -1,10 +1,15 @@
 import type { SegmentedControlProps } from './segmented-control-props';
 
 export const defaultSegmentedControl = {
-  label: 'Git',
+  label: 'Label',
   options: [
-    { value: 'pr', label: 'PR' },
-    { value: 'files', label: 'File changes' },
+    { value: 'first', label: 'First' },
+    { value: 'second', label: 'Second' },
   ],
-  value: 'files',
+  value: 'second',
 } satisfies Omit<SegmentedControlProps, 'onValueChange'>;
+
+export const disabledSegmentedControl = {
+  ...defaultSegmentedControl,
+  disabled: true,
+};

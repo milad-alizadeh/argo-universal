@@ -31,7 +31,11 @@ const pickerProps = (
   label: props.label,
   selection: props.value,
   onSelectionChange: props.onValueChange,
-  modifiers: [pickerStyle('segmented'), accessibilityLabel(props.label)],
+  modifiers: [
+    pickerStyle('segmented'),
+    accessibilityLabel(props.label),
+    disabled(props.disabled === true),
+  ],
 });
 
 function Option(props: SegmentOption): ReactElement {

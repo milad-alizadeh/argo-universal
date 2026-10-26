@@ -125,7 +125,10 @@ const draftEntry = (props: DraftFieldProps): TextFieldProps => ({
   singleLine: !props.multiline,
   isError: props.error !== undefined,
   visualTransformation: props.secure ? 'password' : 'none',
-  keyboardOptions: { keyboardType: composeKeyboard(props) },
+  keyboardOptions: {
+    keyboardType: composeKeyboard(props),
+    autoCorrectEnabled: props.secure ? false : undefined,
+  },
   keyboardActions: { onDone: props.onDone },
 });
 

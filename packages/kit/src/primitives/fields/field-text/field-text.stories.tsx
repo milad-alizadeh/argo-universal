@@ -54,3 +54,9 @@ export const Multiline: Story = {
       'A longer answer that wraps over several lines so the field grows with its text instead of scrolling inside one line.',
   },
 };
+
+export const SecretDisabled: Story = { args: { secure: true, disabled: true } };
+
+export const SecretInvalid: Story = {
+  args: { secure: true, error: 'Enter a valid value.' },
+};

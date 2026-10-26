@@ -54,9 +54,10 @@ const segmentProps = ({
   value,
   onValueChange,
   colors,
+  disabled,
 }: SegmentProps): React.ComponentProps<typeof SegmentedButton> => ({
   selected: option.value === value,
-  enabled: !option.disabled,
+  enabled: !disabled && !option.disabled,
   onClick: () => onValueChange(option.value),
   colors,
 });

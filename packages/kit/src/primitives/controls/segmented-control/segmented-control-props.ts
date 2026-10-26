@@ -1,12 +1,5 @@
-export interface SegmentOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
+import type { KitProps } from '../../kit-props';
 
-export interface SegmentedControlProps {
-  label: string;
-  options: readonly SegmentOption[];
-  value: string;
-  onValueChange: (value: string) => void;
-}
+export type SegmentedControlProps = KitProps<'SegmentedControl'>;
+
+export type SegmentOption = SegmentedControlProps['options'][number];

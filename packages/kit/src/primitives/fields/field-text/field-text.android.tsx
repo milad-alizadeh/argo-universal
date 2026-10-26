@@ -6,6 +6,7 @@ import {
 } from '../field-row/field-row-list-item.android';
 import { FieldTextDialog } from './field-text-dialog.android';
 import type { FieldTextProps } from './field-text-props';
+import { fieldTextTone } from './field-text-tone';
 
 /*
  * Android Settings' text row, as its EditTextPreference draws it: a ListItem with the title and, once there is one,
@@ -18,7 +19,7 @@ export function FieldText(props: FieldTextProps): ReactElement {
   return (
     <>
       <RowListItem
-        {...rowListItemProps(rowOf(props))}
+        {...textRowProps(props)}
         supporting={props.hideTitle ? undefined : summary(props)}
         onPress={() => setOpen(true)}
       />
@@ -35,7 +36,7 @@ function rowOf(props: FieldTextProps): FieldTextProps {
 }
 
 const shownText = (props: FieldTextProps): string =>
-  props.value || props.placeholder || props.title;
+  summaryText(props) || props.placeholder || props.title;
 
 /*
  * The value under the title, masked for a secret; nothing while empty. A secret never comes back, so its field is
@@ -63,3 +64,10 @@ const secretSummary = (props: FieldTextProps): string | undefined =>
   props.value ? secretMask : props.placeholder;
 
 const secretMask = '••••••••';
+
+const textRowProps = (
+  props: FieldTextProps,
+): React.ComponentProps<typeof RowListItem> => ({
+  ...rowListItemProps(rowOf(props)),
+  tone: fieldTextTone(props.error),
+});

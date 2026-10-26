@@ -334,6 +334,18 @@ export type WireSchemaHints = {
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"SplitButton", "onValueChange">;
   };
+  "SegmentedControl": {
+    /** The visible and accessible label. */
+    "label": PropValue<"SegmentedControl", "label">;
+    /** The mutually exclusive views, all visible at once. */
+    "options": PropValue<"SegmentedControl", "options">;
+    /** The selected view. */
+    "value": PropValue<"SegmentedControl", "value">;
+    /** Action or Plugin event invoked by onValueChange. */
+    "onValueChange": PropValue<"SegmentedControl", "onValueChange">;
+    /** Whether the whole control is unavailable. */
+    "disabled": PropValue<"SegmentedControl", "disabled">;
+  };
   "SearchField": {
     /** Search name and placeholder. */
     "label": PropValue<"SearchField", "label">;

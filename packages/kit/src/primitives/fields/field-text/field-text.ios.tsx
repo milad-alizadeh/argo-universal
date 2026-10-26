@@ -8,6 +8,10 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   disabled,
+  accessibilityLabel,
+  accessibilityHint,
+  autocorrectionDisabled,
+  textInputAutocapitalization,
   frame,
   keyboardType,
   lineLimit,
@@ -17,11 +21,8 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { type ReactElement, type RefObject, useEffect, useRef } from 'react';
 import { RowTitle } from '#primitives/fields/field-row';
-import type { FieldGroupKitProps } from '../../kit-props';
-
-type FieldTextProps = FieldGroupKitProps<'FieldGroup.TextField'> & {
-  secure?: boolean;
-};
+import type { FieldTextProps } from './field-text-props';
+import { fieldTextTone } from './field-text-tone';
 
 type SwiftKeyboard = Parameters<typeof keyboardType>[0];
 
@@ -37,7 +38,7 @@ export function FieldText(props: FieldTextProps): ReactElement {
     <HStack spacing={8}>
       {props.hideTitle ? null : (
         <HStack modifiers={titleColumn}>
-          <RowTitle {...props} />
+          <RowTitle {...props} tone={fieldTextTone(props.error)} />
         </HStack>
       )}
       {props.secure ? <SecureField {...field} /> : <TextField {...field} />}
@@ -83,13 +84,16 @@ function selectAll(
   props: FieldTextProps,
   ref: RefObject<TextFieldRef | null>,
 ): void {
-  if (props.selectTextOnFocus)
+  if (selectsOnFocus(props))
     void ref.current?.setSelection(0, props.value.length);
 }
 
 function modifiers(props: FieldTextProps): TextFieldProps['modifiers'] {
   return [
     multilineTextAlignment('leading'),
+    accessibilityLabel(props.title),
+    ...errorHint(props.error),
+    ...secureModifiers(props.secure),
     keyboardType(swiftKeyboard(props.keyboardType)),
     disabled(props.disabled ?? false),
     ...(props.onSubmit ? [onSubmit(() => props.onSubmit?.())] : []),
@@ -114,3 +118,18 @@ function useSwiftFieldText(
 
   return text;
 }
+
+const secretModifiers = [
+  autocorrectionDisabled(),
+  textInputAutocapitalization('never'),
+];
+
+const selectsOnFocus = (props: FieldTextProps): boolean =>
+  props.selectTextOnFocus === true && !props.secure;
+
+const errorHint = (error?: string): NonNullable<TextFieldProps['modifiers']> =>
+  error ? [accessibilityHint(error)] : [];
+
+const secureModifiers = (
+  secure?: boolean,
+): NonNullable<TextFieldProps['modifiers']> => (secure ? secretModifiers : []);

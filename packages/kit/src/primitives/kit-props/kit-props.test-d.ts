@@ -1,4 +1,8 @@
+import type { KitSchemaProps } from '@repo/contracts/kit-props';
+import type { ComponentProps } from 'react';
 import { expectTypeOf } from 'vitest';
+import type { SegmentedControlProps } from '../controls/segmented-control';
+import type { FieldGroup } from '../fields/field-group';
 import type { KitProps } from './index';
 
 /*
@@ -22,4 +26,24 @@ expectTypeOf<KitProps<'Callout', string, DrawnNode>['actions']>().toEqualTypeOf<
 
 expectTypeOf<KitProps<'Canvas.Group'>['translate']>().toEqualTypeOf<
   [number, number] | undefined
+>();
+
+expectTypeOf<
+  Omit<KitSchemaProps['SegmentedControl'], 'onValueChange'>
+>().toExtend<Omit<SegmentedControlProps, 'onValueChange'>>();
+
+expectTypeOf<SegmentedControlProps['onValueChange']>().toEqualTypeOf<
+  (value: string) => void
+>();
+
+expectTypeOf<
+  Omit<
+    KitSchemaProps['FieldGroup.SecretField'],
+    'onChangeText' | 'onFocus' | 'onBlur' | 'onSubmit'
+  >
+>().toExtend<
+  Omit<
+    ComponentProps<typeof FieldGroup.SecretField>,
+    'onChangeText' | 'onFocus' | 'onBlur' | 'onSubmit'
+  >
 >();
