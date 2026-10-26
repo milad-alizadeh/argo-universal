@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import type { ArchiveSessionAlertProps } from '#features/sessions';
 import { archiveAsksFirst } from './archive-asks-first';
-import type { Archive } from './archive-session-mutations';
-import { useArchiveOperations } from './archive-session-operations';
+import { archiveSessions } from './archive-session-mutations';
+import { useArchivePort } from './use-archive-port';
 
 export interface ArchiveSession {
   // Archive in a row's or header's menu; it keeps one identity, so the rows it reaches stay memoised.
@@ -12,43 +12,52 @@ export interface ArchiveSession {
   alert: ArchiveSessionAlertProps;
 }
 
-type Ask = (ids: readonly string[]) => void;
+type Archive = (ids: readonly string[]) => void;
 
-function requestOne(id: string, archive: Archive, ask: Ask): void {
-  if (archiveAsksFirst) ask([id]);
-  else archive({ sessionId: id });
+type Ask = (ids: readonly string[] | undefined) => void;
+
+// Phones ask first and offer no Undo; desktop and the web archive at once and do.
+function useArchive(onArchived?: () => void): Archive {
+  const port = useArchivePort();
+
+  return useCallback(
+    (ids) =>
+      archiveSessions(port, ids, { offerUndo: !archiveAsksFirst, onArchived }),
+    [port, onArchived],
+  );
 }
 
-function requestMany(ids: readonly string[], archive: Ask, ask: Ask): void {
-  if (ids.length === 0) return;
+function useRequest(archive: Archive, ask: Ask): Archive {
+  return useCallback(
+    (ids) => {
+      if (ids.length === 0) return;
 
-  if (archiveAsksFirst) ask([...ids]);
-  else archive(ids);
+      if (archiveAsksFirst) ask([...ids]);
+      else archive(ids);
+    },
+    [archive, ask],
+  );
 }
 
 export function useArchiveSession(onArchived?: () => void): ArchiveSession {
   const [asking, setAsking] = useState<readonly string[]>();
-  const { one, many } = useArchiveOperations(onArchived);
+  const archive = useArchive(onArchived);
+  const onArchiveMany = useRequest(archive, setAsking);
 
   const onArchive = useCallback(
-    (id: string) => requestOne(id, one, setAsking),
-    [one],
+    (id: string) => onArchiveMany([id]),
+    [onArchiveMany],
   );
 
-  const onArchiveMany = useCallback(
-    (ids: readonly string[]) => requestMany(ids, many, setAsking),
-    [many],
-  );
-
-  const alert = alertProps(asking, many, setAsking);
+  const alert = alertProps(asking, archive, setAsking);
 
   return { onArchive, onArchiveMany, alert };
 }
 
 function alertProps(
   asking: readonly string[] | undefined,
-  archive: (ids: readonly string[]) => void,
-  setAsking: (ids: readonly string[] | undefined) => void,
+  archive: Archive,
+  setAsking: Ask,
 ): ArchiveSessionAlertProps {
   return {
     open: asking !== undefined,

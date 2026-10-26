@@ -1,108 +1,91 @@
-import type { SessionArchiveInput, SessionListOutput } from '@repo/contracts';
-import { errorToast } from '@repo/kit/error-toast';
-import { showToast } from '@repo/kit/primitives/overlays/toast';
-import {
-  type InfiniteData,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { useCallback, useMemo } from 'react';
-import { useTRPC } from '#features/connection';
-
-const archiveFailedTitle = 'Couldn’t archive the Session';
-
-const undoFailedTitle = 'Couldn’t restore the Session';
-
-export type Archive = (input: SessionArchiveInput) => void;
-
-// A failure says so in an error toast, under the Server's own words.
-function showFailure(title: string, cause: unknown): void {
-  const toast = errorToast(title, cause);
-
-  if (toast) showToast({ ...toast, tone: 'danger' });
+// What archiving needs from the screen: the list's cache, the Server's `session.archive` and `session.unarchive`, and the toasts.
+export interface ArchivePort {
+  // The rows leave every cached list at once, before the Server answers.
+  dropRows: (ids: readonly string[]) => void;
+  archive: (sessionId: string) => Promise<void>;
+  unarchive: (sessionId: string) => Promise<void>;
+  // Once the Server has answered, the list reloads without the rows, or with them again.
+  refresh: () => Promise<void>;
+  // The archived toast with Undo: desktop and the web only.
+  announce: (title: string, undo: () => void) => void;
+  // A failure says so in an error toast, under the Server's own words.
+  fail: (title: string, cause: unknown) => void;
 }
 
-// Once the Server has the change, the list reloads without the row, or with it again.
-function useRefreshList(): () => Promise<void> {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  return () => queryClient.invalidateQueries(trpc.session.list.pathFilter());
+export interface ArchiveOptions {
+  // Phones ask first and offer no Undo; desktop and the web archive at once and do.
+  offerUndo: boolean;
+  onArchived?: () => void;
 }
 
-// `session.unarchive`: Undo while the archived toast shows.
-function useUndo(): Archive {
-  const trpc = useTRPC();
-  const refresh = useRefreshList();
+const sessions = (count: number): string =>
+  count < 2 ? 'the Session' : `${count} Sessions`;
 
-  return useMutation({
-    ...trpc.session.unarchive.mutationOptions(),
-    onSuccess: refresh,
-    onError: (error) => showFailure(undoFailedTitle, error),
-  }).mutate;
+// One id says "Session archived", even from a bulk Archive, so it never reads "1 Sessions archived".
+const archivedTitle = (count: number): string =>
+  count < 2 ? 'Session archived' : `${count} Sessions archived`;
+
+const failedTitle = (action: 'archive' | 'restore', count: number): string =>
+  `Couldn’t ${action} ${sessions(count)}`;
+
+// One call per id, so a refused Session leaves the others alone. Returns the ids that went through; the rest share one failure toast.
+async function sendEach(
+  port: ArchivePort,
+  action: 'archive' | 'restore',
+  ids: readonly string[],
+): Promise<string[]> {
+  const send = action === 'archive' ? port.archive : port.unarchive;
+  const results = await Promise.allSettled(ids.map((id) => send(id)));
+  const failed = results.filter((result) => result.status === 'rejected');
+  const [first] = failed;
+
+  if (first) port.fail(failedTitle(action, failed.length), first.reason);
+
+  return ids.filter((_, index) => results[index]?.status === 'fulfilled');
 }
 
-type SessionListData = SessionListOutput | InfiniteData<SessionListOutput>;
+// Undo while the archived toast shows: only the Sessions that archived come back.
+async function restore(
+  port: ArchivePort,
+  archived: Promise<string[]>,
+): Promise<void> {
+  const ids = await archived;
 
-// One list page, or every page of a scrolled list, without the archived Session.
-function withoutSession(
-  data: SessionListData | undefined,
-  sessionId: string,
-): SessionListData | undefined {
-  const keep = (page: SessionListOutput): SessionListOutput => ({
-    ...page,
-    sessions: page.sessions.filter(
-      (session) => session.sessionId !== sessionId,
-    ),
-  });
+  if (ids.length === 0) return;
 
-  if (!data) return data;
-
-  return 'pages' in data
-    ? { ...data, pages: data.pages.map(keep) }
-    : keep(data);
+  await sendEach(port, 'restore', ids);
+  await port.refresh();
 }
 
-// The row leaves every cached list at once, before the Server answers.
-function useDropRow(): Archive {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+// The archived toast on desktop and the web, and the caller told once the Sessions are sent.
+function announceArchived(
+  port: ArchivePort,
+  sent: { count: number; archived: Promise<string[]> },
+  { offerUndo, onArchived }: ArchiveOptions,
+): void {
+  if (offerUndo) {
+    const undo = (): void => void restore(port, sent.archived);
 
-  return useCallback(
-    ({ sessionId }) => {
-      const lists = trpc.session.list.pathFilter();
+    port.announce(archivedTitle(sent.count), undo);
+  }
 
-      void queryClient.cancelQueries(lists);
-      queryClient.setQueriesData<SessionListData>(lists, (data) =>
-        withoutSession(data, sessionId),
-      );
-    },
-    [trpc, queryClient],
-  );
+  onArchived?.();
 }
 
-// `session.archive`; whatever the Server says, the list then reloads from it.
-function useArchiveMutation(): Archive {
-  const trpc = useTRPC();
-  const refresh = useRefreshList();
+/*
+ * Archive the Sessions: the rows leave the list, `session.archive` goes out once per id, and whatever the Server says the list reloads once from it.
+ */
+export function archiveSessions(
+  port: ArchivePort,
+  ids: readonly string[],
+  options: ArchiveOptions,
+): void {
+  if (ids.length === 0) return;
 
-  return useMutation({
-    ...trpc.session.archive.mutationOptions(),
-    onError: (error) => showFailure(archiveFailedTitle, error),
-    onSettled: refresh,
-  }).mutate;
-}
+  port.dropRows(ids);
 
-export interface ArchiveEffects {
-  dropRow: Archive;
-  archive: Archive;
-  undo: Archive;
-}
+  const archived = sendEach(port, 'archive', ids);
 
-export function useArchiveEffects(): ArchiveEffects {
-  const dropRow = useDropRow();
-  const archive = useArchiveMutation();
-  const undo = useUndo();
-
-  return useMemo(() => ({ dropRow, archive, undo }), [dropRow, archive, undo]);
+  void archived.then(port.refresh);
+  announceArchived(port, { count: ids.length, archived }, options);
 }
