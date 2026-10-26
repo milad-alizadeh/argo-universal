@@ -1,8 +1,7 @@
 import { FieldGroup as ExpoFieldGroup } from '@expo/ui';
 import { createModifier } from '@expo/ui/jetpack-compose/modifiers';
 import {
-  Children,
-  Fragment,
+  cloneElement,
   isValidElement,
   type ReactElement,
   type ReactNode,
@@ -13,6 +12,7 @@ import {
   OutsideColumn,
   useClaimColumn,
 } from '#kit/content-column/content-column';
+import { flattenedChildren } from '#kit/flattened-children';
 import { useInMenu } from '#kit/menu-rows-context';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupKitProps } from '../../kit-props';
@@ -103,22 +103,15 @@ const hiddenFormBackground = createModifier('scrollContentBackground', {
   visible: 'hidden',
 });
 
-function sections(children: ReactNode): ReactNode {
-  return Children.map(children, (child) => section(child));
-}
+// A Fragment of sections opens in place, its sections keyed apart from the FieldGroup's own.
+const sections = (children: ReactNode): ReactNode[] =>
+  flattenedChildren(children).map(section);
 
 function section(child: ReactNode): ReactNode {
-  if (!isValidElement<{ children?: ReactNode }>(child)) return child;
+  if (!isValidElement(child) || !isFieldGroupSection(child)) return child;
 
-  return child.type === Fragment ? (
-    <Fragment>{sections(child.props.children)}</Fragment>
-  ) : (
-    fieldGroupSection(child)
-  );
+  return cloneElement(sectionElement(child.props), { key: child.key });
 }
-
-const fieldGroupSection = (child: ReactElement): ReactNode =>
-  isFieldGroupSection(child) ? sectionElement(child.props) : child;
 
 const isFieldGroupSection = (
   child: ReactElement,
