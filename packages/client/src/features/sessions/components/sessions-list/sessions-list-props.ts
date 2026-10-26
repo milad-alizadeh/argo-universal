@@ -20,6 +20,8 @@ export interface SessionsListProps {
   onRename?: (id: string) => void;
   onArchive?: (id: string) => void;
   onEndReached: () => void;
+  onRefresh?: () => Promise<void>;
+  onArchiveMany?: (sessionIds: readonly string[]) => void;
   onNewSession?: (projectId: string) => void;
   onProjectSettings?: (projectName: string) => void;
   // Shown instead of the rows while Sessions load or fail to load.

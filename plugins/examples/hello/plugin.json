@@ -58,6 +58,16 @@
         "path": "/canvas"
       },
       {
+        "id": "hello-posts",
+        "title": "Remote posts",
+        "path": "/posts"
+      },
+      {
+        "id": "hello-log",
+        "title": "Hello log",
+        "path": "/log"
+      },
+      {
         "id": "hello-views",
         "title": "Issue views",
         "path": "/views"
@@ -73,5 +83,12 @@
       }
     ],
     "slots": ["argo/project/details/v1"]
-  }
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "jsonplaceholder.typicode.com",
+      "reason": "Show a paged remote list in the Hello example."
+    }
+  ]
 }

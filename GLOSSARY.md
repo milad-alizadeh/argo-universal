@@ -288,6 +288,10 @@ _Avoid_: Input (for the kit folder), Field (for a standalone control)
 Rows of data of any length, such as Sessions or Agents, optionally in List sections.
 _Avoid_: FieldGroup (for data rows)
 
+**Selection mode**:
+The state of a List while its rows are being chosen. Its own header (the count, Select All and Done or Close, and the selected Actions) replaces the Screen's header until selection ends. A Screen on iOS draws the Select entry that starts it.
+_Avoid_: Edit mode (except for iOS's own), multi-select
+
 **List section**:
 A distinct group of items in a List, with an optional heading and footer.
 _Avoid_: Group (when naming a List section)

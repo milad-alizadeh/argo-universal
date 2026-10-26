@@ -1,3 +1,4 @@
+import type { SelectionMode } from '#kit/selection-mode';
 import type { KitProps } from '../../kit-props';
 import type { ScreenHeader } from './use-screen-header';
 
@@ -10,4 +11,7 @@ export type ScreenProps = KitProps<'Screen'> & {
 };
 
 // What a Screen's header pieces draw from: its props and the Actions they declare, read once.
-export type ScreenHeaderInput = ScreenProps & { header: ScreenHeader };
+export type ScreenHeaderInput = ScreenProps & {
+  header: ScreenHeader;
+  selectionMode?: SelectionMode | null;
+};

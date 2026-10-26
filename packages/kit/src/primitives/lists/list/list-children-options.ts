@@ -5,6 +5,7 @@ export type ChildrenOptions = Omit<
   ListProps<ListChild>,
   | 'items'
   | 'renderItem'
+  | 'getSelectionId'
   | 'getSectionKey'
   | 'keyExtractor'
   | 'getItemType'
@@ -15,6 +16,7 @@ export function childrenOptions<Item>({
   items: _items,
   renderItem: _render,
   getSectionKey: _section,
+  getSelectionId: _selection,
   keyExtractor: _key,
   getItemType: _type,
   maintainVisibleContentPosition: _position,

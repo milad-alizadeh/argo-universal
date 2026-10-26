@@ -1,4 +1,5 @@
 import { ScrollColumnContext } from '@repo/kit/scroll-column';
+import { SelectionModeScope } from '@repo/kit/selection-mode';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
@@ -85,6 +86,17 @@ export interface ScaffoldSidebarColumnProps extends ScaffoldPartProps {
 
 // The glass panel: the sidebar Slot and the list beside it.
 export function ScaffoldSidebarColumn({
+  sidebar,
+  ...parts
+}: ScaffoldSidebarColumnProps): React.JSX.Element {
+  return (
+    <SelectionModeScope>
+      <SidebarColumnDrawing sidebar={sidebar} {...parts} />
+    </SelectionModeScope>
+  );
+}
+
+function SidebarColumnDrawing({
   sidebar,
   ...parts
 }: ScaffoldSidebarColumnProps): React.JSX.Element {

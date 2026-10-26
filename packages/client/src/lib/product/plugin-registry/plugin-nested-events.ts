@@ -3,7 +3,6 @@ import type { z } from 'zod';
 import type { ControlInput, PluginProps } from './plugin-rendering';
 
 function nested(
-  input: ControlInput,
   props: PluginProps,
   [name, schema]: [string, z.ZodType],
 ): PluginProps {
@@ -12,13 +11,7 @@ function nested(
 
   if (within === undefined || typeof callback !== 'function') return props;
 
-  const rest = Object.fromEntries(
-    Object.entries(props).filter(([key]) => key !== name),
-  );
-
-  const holder = WireProps.safeParse(input.node.props[within]).data;
-
-  return { ...rest, [within]: { ...holder, [name]: callback } };
+  return placedCallback(props, within, { name, callback });
 }
 
 // A callback of an event the part keeps inside a prop object goes back there, as the kit component takes it.
@@ -27,6 +20,20 @@ export const withNestedEvents = (
   props: PluginProps,
 ): PluginProps =>
   Object.entries(input.part.events).reduce(
-    (placed, entry) => nested(input, placed, entry),
+    (placed, entry) => nested(placed, entry),
     props,
   );
+
+function placedCallback(
+  props: PluginProps,
+  within: string,
+  event: { name: string; callback: PluginProps[string] },
+): PluginProps {
+  const rest = Object.fromEntries(
+    Object.entries(props).filter(([key]) => key !== event.name),
+  );
+
+  const holder = WireProps.safeParse(props[within]).data;
+
+  return { ...rest, [within]: { ...holder, [event.name]: event.callback } };
+}

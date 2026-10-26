@@ -20,7 +20,9 @@ import { HelloForm } from './form';
 import { helloGallery } from './gallery';
 import { registerBuilds } from './list-detail';
 import { HelloListPage } from './lists';
+import { HelloLog } from './log';
 import { helloMedia } from './media';
+import { helloPosts } from './paged-posts';
 import { HelloRunsPage } from './runs';
 import { HelloViews } from './views';
 
@@ -126,7 +128,7 @@ export function register(argo: Argo): void {
   registerBuilds(argo.pages);
   registerMediaPages(argo);
   argo.pages.register('/runs', HelloRunsPage);
-  argo.pages.register('/canvas', HelloCanvasPage);
+  registerListPages(argo);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }
 
@@ -134,4 +136,10 @@ function registerMediaPages(argo: Argo): void {
   argo.pages.register('/views', HelloViews);
   argo.pages.register('/media', helloMedia(argo.assets));
   argo.pages.register('/gallery', helloGallery(argo.assets));
+}
+
+function registerListPages(argo: Argo): void {
+  argo.pages.register('/canvas', HelloCanvasPage);
+  argo.pages.register('/posts', helloPosts(argo.fetch));
+  argo.pages.register('/log', HelloLog);
 }

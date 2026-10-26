@@ -2,6 +2,7 @@ import { use, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { HeadingInsetContext, useHeadingInsetScope } from '#kit/heading-inset';
 import { ScrollColumnContext } from '#kit/scroll-column';
+import { SelectionModeScope, useSelectionModeHost } from '#kit/selection-mode';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
 import { ActionShortcutScope } from '#primitives/actions/action';
@@ -11,7 +12,8 @@ import { useScreenColumn } from './screen-column';
 import { ScreenHeading } from './screen-heading';
 import { ScreenNavigation } from './screen-navigation';
 import { screenPrimaryAction } from './screen-primary-action';
-import type { ScreenProps } from './screen-props';
+import type { ScreenHeaderInput, ScreenProps } from './screen-props';
+import { selectionScreen } from './screen-selection-mode';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
 import { useScreenHeader } from './use-screen-header';
 
@@ -37,19 +39,35 @@ function HeadingInsetScope(props: { children: ReactNode }): ReactElement {
   );
 }
 
-// The Screen declares its header from its props; its content adds none.
+// A List below may select, and then its header replaces this Screen's (ADR-0043).
 function ScreenSurface(props: ScreenProps): ReactElement {
-  const header = useScreenHeader(props);
+  return (
+    <SelectionModeScope>
+      <ScreenHeaderSource {...props} />
+    </SelectionModeScope>
+  );
+}
 
-  // Web: the window paints the content colour, so the sidebar's shadow falls on it uncovered.
+function ScreenHeaderSource(props: ScreenProps): ReactElement {
+  const selectionMode = useSelectionModeHost();
+
+  const drawing = selectionScreen(props, selectionMode);
+  const header = useScreenHeader(drawing);
+
+  return (
+    <ScreenDrawing {...drawing} header={header} selectionMode={selectionMode} />
+  );
+}
+
+function ScreenDrawing(props: ScreenHeaderInput): ReactElement {
   return (
     <View
       testID={props.testID}
       className="min-h-0 flex-1 bg-content wide:mt-frame-inset web:bg-transparent"
     >
-      <ShortcutAnchors header={header} />
-      <ScreenNavigation {...props} header={header} />
-      <ScreenHeading {...props} header={header} />
+      <ShortcutAnchors header={props.header} />
+      <ScreenNavigation {...props} />
+      <ScreenHeading {...props} />
       <ScreenBody {...props} />
       <ScreenAccessory {...props} />
     </View>

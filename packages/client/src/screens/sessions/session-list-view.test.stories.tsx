@@ -179,3 +179,57 @@ export const PhonePageFiltersTheView: Story = {
     ).toHaveAttribute('aria-checked', 'true');
   },
 };
+
+const archiveSelected = fn();
+
+export const ArchiveSeveralSelectedSessions: Story = {
+  args: {
+    onArchiveMany: archiveSelected,
+    sessions: activeSessions.sessions.slice(0, 2),
+  },
+  beforeEach: async () => {
+    archiveSelected.mockClear();
+    await settleViewport(layoutWidths.wide);
+  },
+  play: async ({ canvas, userEvent }) => {
+    const first = activeSessions.sessions[0];
+    const second = activeSessions.sessions[1];
+
+    if (!first || !second) throw new Error('Expected two recorded Sessions');
+    await userEvent.keyboard('{Meta>}');
+    await userEvent.click(
+      await canvas.findByRole('button', {
+        name: (name) => name.startsWith(first.title),
+      }),
+    );
+    await userEvent.click(
+      await canvas.findByRole('button', {
+        name: (name) => name.startsWith(second.title),
+      }),
+    );
+    await userEvent.keyboard('{/Meta}');
+    await expect(
+      await canvas.findByRole('heading', { name: '2 selected' }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole('heading', { name: 'Sessions' }),
+    ).toBeNull();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Selection Actions' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: 'Archive' }),
+    );
+    await expect(archiveSelected).toHaveBeenCalledWith([
+      first.sessionId,
+      second.sessionId,
+    ]);
+    // The Action ends selection, so the header is the Screen's again.
+    await expect(
+      await canvas.findByRole('heading', { name: 'Sessions' }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole('heading', { name: '2 selected' }),
+    ).toBeNull();
+  },
+};

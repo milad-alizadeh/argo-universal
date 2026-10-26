@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
+import { List } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { withStack } from '#story-stack';
 import { Screen, ScreenMenuContext } from './index';
 import { atWidth, screenWidths as widths } from './screen-widths.mocks';
@@ -202,3 +204,40 @@ export const MenuWide = atWidth(widths.Wide, {
     ).toBeNull();
   },
 });
+
+function SelectableList(props: { items: string[] }): React.JSX.Element {
+  const [selected, onChange] = useState<readonly string[]>([]);
+
+  return (
+    <List
+      items={props.items}
+      keyExtractor={(item) => item}
+      selection={{ mode: 'multiple', selected, onChange }}
+      renderItem={(item) => <ListItem id={item} title={item} />}
+    />
+  );
+}
+
+// The first List to select owns the Screen's header; a second selecting List draws its own toolbar in its column.
+export const TwoSelectingListsShareOneHeader: Story = {
+  render: () => (
+    <Screen title="Title">
+      <SelectableList items={['A1', 'A2']} />
+      <SelectableList items={['B1', 'B2']} />
+    </Screen>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const selected = { level: 1, name: '1 selected' };
+
+    await userEvent.keyboard('{Meta>}');
+    await userEvent.click(await canvas.findByRole('button', { name: 'A1' }));
+    await expect(await canvas.findByRole('heading', selected)).toBeVisible();
+    await expect(canvas.queryByRole('heading', { name: 'Title' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'B1' }));
+    await userEvent.keyboard('{/Meta}');
+    await expect(await canvas.findAllByRole('heading', selected)).toHaveLength(
+      2,
+    );
+    await expect(canvas.queryByRole('heading', { name: 'Title' })).toBeNull();
+  },
+};

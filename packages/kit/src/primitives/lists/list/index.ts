@@ -11,3 +11,9 @@ export { ListSectionHeader } from './list-section-parts';
 export type { ListProps, ListSectionProps } from './list-props';
 
 export type { ListAppearance } from '../../../list-context';
+
+export {
+  JumpToLatestButton,
+  useNewestKeyWhenLeftEnd,
+  type JumpToLatestButtonProps,
+} from './list-jump-to-latest';

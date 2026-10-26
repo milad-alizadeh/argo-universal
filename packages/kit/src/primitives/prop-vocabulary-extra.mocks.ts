@@ -14,6 +14,7 @@ import type * as GridKit from '#primitives/layout/grid';
 import type * as ScrollViewKit from '#primitives/layout/scroll-view';
 import type * as SpacerKit from '#primitives/layout/spacer';
 import type * as SurfaceKit from '#primitives/layout/surface';
+import type * as ListKit from '#primitives/lists/list';
 import type * as ListItemKit from '#primitives/lists/list-item';
 import type * as TableKit from '#primitives/lists/table';
 import type * as DateDialogsKit from '#primitives/native/date-dialogs';
@@ -31,6 +32,7 @@ import type * as StatusDotKit from '#primitives/status/status-dot';
 import type * as SvgKit from '#primitives/visual';
 
 export type AdditionalPrimitives = {
+  JumpToLatestButtonProps: ListKit.JumpToLatestButtonProps;
   RegistryIconProps: AgentLogoKit.RegistryIconProps;
   LinkPreviewCardData: LinkPreviewKit.LinkPreviewCardData;
   LinkPreviewSource: LinkPreviewKit.LinkPreviewSource;

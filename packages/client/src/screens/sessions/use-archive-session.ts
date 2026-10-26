@@ -1,158 +1,69 @@
-import type { SessionArchiveInput, SessionListOutput } from '@repo/contracts';
-import { errorToast } from '@repo/kit/error-toast';
-import { showToast } from '@repo/kit/primitives/overlays/toast';
-import {
-  type InfiniteData,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
-import { useTRPC } from '#features/connection';
-import {
-  type ArchiveSessionAlertProps,
-  archivedToast,
-} from '#features/sessions';
+import type { ArchiveSessionAlertProps } from '#features/sessions';
 import { archiveAsksFirst } from './archive-asks-first';
-
-const archiveFailedTitle = 'Couldn’t archive the Session';
-
-const undoFailedTitle = 'Couldn’t restore the Session';
+import { archiveSessions } from './archive-session-mutations';
+import { useArchivePort } from './use-archive-port';
 
 export interface ArchiveSession {
   // Archive in a row's or header's menu; it keeps one identity, so the rows it reaches stay memoised.
   onArchive: (sessionId: string) => void;
+  onArchiveMany: (sessionIds: readonly string[]) => void;
   // The phones' alert; desktop and the web never open it.
   alert: ArchiveSessionAlertProps;
 }
 
-type Archive = (input: SessionArchiveInput) => void;
+type Archive = (ids: readonly string[]) => void;
 
-// A failure says so in an error toast, under the Server's own words.
-function showFailure(title: string, cause: unknown): void {
-  const toast = errorToast(title, cause);
+type Ask = (ids: readonly string[] | undefined) => void;
 
-  if (toast) showToast({ ...toast, tone: 'danger' });
-}
-
-// Once the Server has the change, the list reloads without the row, or with it again.
-function useRefreshList(): () => Promise<void> {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  return () => queryClient.invalidateQueries(trpc.session.list.pathFilter());
-}
-
-// `session.unarchive`: Undo while the archived toast shows.
-function useUndo(): Archive {
-  const trpc = useTRPC();
-  const refresh = useRefreshList();
-
-  return useMutation({
-    ...trpc.session.unarchive.mutationOptions(),
-    onSuccess: refresh,
-    onError: (error) => showFailure(undoFailedTitle, error),
-  }).mutate;
-}
-
-type SessionListData = SessionListOutput | InfiniteData<SessionListOutput>;
-
-// One list page, or every page of a scrolled list, without the archived Session.
-function withoutSession(
-  data: SessionListData | undefined,
-  sessionId: string,
-): SessionListData | undefined {
-  const keep = (page: SessionListOutput): SessionListOutput => ({
-    ...page,
-    sessions: page.sessions.filter(
-      (session) => session.sessionId !== sessionId,
-    ),
-  });
-
-  if (!data) return data;
-
-  return 'pages' in data
-    ? { ...data, pages: data.pages.map(keep) }
-    : keep(data);
-}
-
-// The row leaves every cached list at once, before the Server answers.
-function useDropRow(): Archive {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  return useCallback(
-    ({ sessionId }) => {
-      const lists = trpc.session.list.pathFilter();
-
-      void queryClient.cancelQueries(lists);
-      queryClient.setQueriesData<SessionListData>(lists, (data) =>
-        withoutSession(data, sessionId),
-      );
-    },
-    [trpc, queryClient],
-  );
-}
-
-/*
- * `session.archive`. The row leaves at once; desktop and the web show the archived toast at once too,
- * whose Undo restores the Session. A refusal brings the row back with the list's next load.
- */
+// Phones ask first and offer no Undo; desktop and the web archive at once and do.
 function useArchive(onArchived?: () => void): Archive {
-  const dropRow = useDropRow();
-  const undo = useUndo();
-  const archive = useArchiveMutation();
+  const port = useArchivePort();
 
   return useCallback(
-    (input) => {
-      dropRow(input);
-      archive(input);
-
-      if (!archiveAsksFirst) showToast(archivedToast(() => undo(input)));
-      onArchived?.();
-    },
-    [dropRow, archive, undo, onArchived],
+    (ids) =>
+      archiveSessions(port, ids, { offerUndo: !archiveAsksFirst, onArchived }),
+    [port, onArchived],
   );
 }
 
-// `session.archive`; whatever the Server says, the list then reloads from it.
-function useArchiveMutation(): Archive {
-  const trpc = useTRPC();
-  const refresh = useRefreshList();
+function useRequest(archive: Archive, ask: Ask): Archive {
+  return useCallback(
+    (ids) => {
+      if (ids.length === 0) return;
 
-  return useMutation({
-    ...trpc.session.archive.mutationOptions(),
-    onError: (error) => showFailure(archiveFailedTitle, error),
-    onSettled: refresh,
-  }).mutate;
+      if (archiveAsksFirst) ask([...ids]);
+      else archive(ids);
+    },
+    [archive, ask],
+  );
 }
 
-/*
- * Archive from a row's menu or a Session's header. Desktop and the web archive at once and show the archived toast
- * with Undo; iOS and Android ask first with the alert, and offer no Undo. `onArchived` runs once the archive is sent,
- * such as the header's leaving the Session; it keeps one identity.
- */
 export function useArchiveSession(onArchived?: () => void): ArchiveSession {
-  const [asking, setAsking] = useState<string>();
+  const [asking, setAsking] = useState<readonly string[]>();
   const archive = useArchive(onArchived);
+  const onArchiveMany = useRequest(archive, setAsking);
 
   const onArchive = useCallback(
-    (sessionId: string) =>
-      archiveAsksFirst ? setAsking(sessionId) : archive({ sessionId }),
-    [archive],
+    (id: string) => onArchiveMany([id]),
+    [onArchiveMany],
   );
 
-  return { onArchive, alert: alertProps(asking, archive, setAsking) };
+  const alert = alertProps(asking, archive, setAsking);
+
+  return { onArchive, onArchiveMany, alert };
 }
 
 function alertProps(
-  asking: string | undefined,
+  asking: readonly string[] | undefined,
   archive: Archive,
-  setAsking: (sessionId: string | undefined) => void,
+  setAsking: Ask,
 ): ArchiveSessionAlertProps {
   return {
     open: asking !== undefined,
+    count: asking?.length,
     onArchive: () => {
-      if (asking) archive({ sessionId: asking });
+      if (asking) archive(asking);
     },
     onClose: () => setAsking(undefined),
   };

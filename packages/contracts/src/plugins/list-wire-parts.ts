@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { acknowledgedEvent } from './kit-event-props';
 import {
   contentListProps,
   listSectionProps,
@@ -12,6 +14,8 @@ import { listMediaParts } from './list-media-parts';
 import { echoes } from './plugin-part-props';
 import { actionSlot, part } from './plugin-part-schema-utils';
 
+const searchThrottleMs = 250;
+
 export const listWireParts = {
   List: {
     ...part(
@@ -23,6 +27,18 @@ export const listWireParts = {
         slots: {
           empty: ['Text', 'Stack', 'EmptyState'],
           header: ['Text', 'Label'],
+          actions: actionSlot,
+        },
+        events: {
+          onLoadMore: acknowledgedEvent('pagination'),
+          onRefresh: acknowledgedEvent(),
+          onChange: z
+            .array(z.string())
+            .readonly()
+            .meta({ within: 'selection', value: 'selected', blocks: false }),
+          onSearchTextChange: z
+            .string()
+            .meta({ blocks: false, throttleMs: searchThrottleMs }),
         },
       },
     ),

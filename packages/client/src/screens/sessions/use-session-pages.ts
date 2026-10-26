@@ -5,6 +5,7 @@ import {
 } from '@repo/kit/primitives/overlays/toast';
 import {
   type InfiniteData,
+  isCancelledError,
   keepPreviousData,
   type UseInfiniteQueryResult,
   useInfiniteQuery,
@@ -27,7 +28,11 @@ type SessionsSearch = Pick<SessionListViewProps, 'view' | 'query'>;
 
 type SessionPages = Pick<
   SessionListViewProps,
-  'sessions' | 'loadMoreFailed' | 'isFetchingNextPage' | 'onLoadMore'
+  | 'sessions'
+  | 'loadMoreFailed'
+  | 'isFetchingNextPage'
+  | 'onLoadMore'
+  | 'onRefresh'
 > & { progress: QueryProgress };
 
 type SessionListQuery = UseInfiniteQueryResult<
@@ -127,9 +132,21 @@ export function useSessionPages(search: SessionsSearch): SessionPages {
     loadMoreFailed: sessions.isFetchNextPageError,
     isFetchingNextPage: sessions.isFetchingNextPage,
     onLoadMore: useLoadMore(sessions),
+    onRefresh: refreshPages(sessions),
     progress: {
       failed: sessions.isLoadingError && !fallingBack,
       pending: sessions.isPending || fallingBack,
     },
+  };
+}
+
+// An Archive cancels the list's fetch to drop its rows, then refetches: a refresh it cancels did not fail.
+function refreshPages(sessions: SessionListQuery): () => Promise<void> {
+  return async () => {
+    try {
+      await sessions.refetch({ throwOnError: true });
+    } catch (error) {
+      if (!isCancelledError(error)) throw error;
+    }
   };
 }

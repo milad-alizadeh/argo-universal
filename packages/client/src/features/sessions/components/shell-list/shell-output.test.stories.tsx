@@ -1,6 +1,8 @@
 import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
+import { useState, type JSX } from 'react';
 import { expect, waitFor } from 'storybook/test';
 import {
   failedShell,
@@ -8,6 +10,7 @@ import {
   noCodeShell,
   stoppedShell,
 } from './shell-list.mocks';
+import { ShellOutput, type ShellOutputProps } from './shell-output';
 import {
   failedOutput,
   longRunningOutput,
@@ -23,6 +26,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+
 const awayWait = { timeout: 15000, interval: 100 };
 
 // The wheel turning up stops the list following its end, which setting scrollTop alone does not.
@@ -34,21 +39,25 @@ function scrollUp(scroll: HTMLElement): void {
   scroll.dispatchEvent(new Event('scroll'));
 }
 
-// Scrolling up offers Jump to latest, which goes back to the end and hides itself.
+const jumpName = 'Jump to latest';
+
+// Scrolling up offers Jump to latest.
+async function scrollAway(canvas: Canvas): Promise<void> {
+  const scroll = await canvas.findByTestId('shell-output');
+
+  await waitFor(async () => {
+    scrollUp(scroll);
+    await expect(canvas.getByRole('button', { name: jumpName })).toBeVisible();
+  }, awayWait);
+}
+
+// Jump to latest goes back to the end and hides itself.
 const jumpsBackToTheEnd = (width: number): Story => ({
   args: { output: longRunningOutput },
   play: async ({ canvas, userEvent }) => {
     await settleViewport(width);
-    const scroll = await canvas.findByTestId('shell-output');
-    await waitFor(async () => {
-      scrollUp(scroll);
-      await expect(
-        canvas.getByRole('button', { name: 'Jump to latest' }),
-      ).toBeVisible();
-    }, awayWait);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Jump to latest' }),
-    );
+    await scrollAway(canvas);
+    await userEvent.click(canvas.getByRole('button', { name: jumpName }));
     await waitFor(() =>
       expect(
         canvas.queryByRole('button', { name: /Jump to latest/ }),
@@ -56,6 +65,37 @@ const jumpsBackToTheEnd = (width: number): Story => ({
     );
   },
 });
+
+// Output that arrives while the reader is away from the end.
+function GrowingOutput(props: ShellOutputProps): JSX.Element {
+  const [arrived, setArrived] = useState(0);
+
+  const output = props.output && {
+    ...props.output,
+    text: `${props.output.text}${'later line\n'.repeat(arrived)}`,
+  };
+
+  return (
+    <>
+      <ShellOutput {...props} output={output} />
+      <Button label="Output more" onPress={() => setArrived((n) => n + 1)} />
+    </>
+  );
+}
+
+// New output while scrolled up marks Jump to latest with the new-rows dot.
+export const JumpsToNewOutputWhileAway: Story = {
+  args: { output: longRunningOutput },
+  render: (args) => <GrowingOutput {...args} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.phone);
+    await scrollAway(canvas);
+    await userEvent.click(canvas.getByRole('button', { name: 'Output more' }));
+    await expect(
+      await canvas.findByRole('button', { name: `${jumpName}, new rows` }),
+    ).toBeVisible();
+  },
+};
 
 export const JumpsBackToTheEndOnAPhone = jumpsBackToTheEnd(layoutWidths.phone);
 
