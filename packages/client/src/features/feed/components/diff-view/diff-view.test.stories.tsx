@@ -68,6 +68,8 @@ function inlinePreview(width: number): Story {
         await settleViewport(width);
         const title = canvas.getByTestId('code-block-title');
         await expect(title.textContent).toContain('large.txt');
+        // Only the folder is isolated for display; the whole path is the label assistive tech reads.
+        await expect(title).toHaveAttribute('aria-label', '/repo/large.txt');
         const header = title.parentElement;
 
         if (!header) throw new Error('Missing diff header');

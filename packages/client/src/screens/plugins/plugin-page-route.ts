@@ -11,9 +11,27 @@ export interface PluginPageOrigin {
 export const segmentsOf = (path: string): string[] =>
   path.split('/').filter(Boolean);
 
-// A Plugin page's route is `<Plugin id>/<nav id>/<the page's own path>`; the own path is what the Plugin registers.
+// A Plugin page's route is `<Plugin id>/<nav id>/<the page's own path>`; the own path is what the Plugin registers. This is the one place the shape is built and read.
+export interface PluginRoute {
+  pluginId: string;
+  navId: string;
+  page: readonly string[];
+}
+
+export const pluginRoute = ({
+  pluginId,
+  navId,
+  page,
+}: PluginRoute): string[] => [pluginId, navId, ...page];
+
+export function parsePluginRoute(route: readonly string[]): PluginRoute {
+  const [pluginId = '', navId = '', ...page] = route;
+
+  return { pluginId, navId, page };
+}
+
 export const pluginPagePath = (route: readonly string[]): string =>
-  `/${route.slice(2).join('/')}`;
+  `/${parsePluginRoute(route).page.join('/')}`;
 
 const sits = (section: PluginSection, page: readonly string[]): boolean =>
   section.navPath.every((segment, at) => page[at] === segment);
@@ -30,7 +48,10 @@ export function pluginPageRoute(
   const page = segmentsOf(path);
   const holder = holderOf(sections, origin, page);
 
-  return holder && [holder.pluginId, holder.navId, ...page];
+  return (
+    holder &&
+    pluginRoute({ pluginId: holder.pluginId, navId: holder.navId, page })
+  );
 }
 
 function holderOf(

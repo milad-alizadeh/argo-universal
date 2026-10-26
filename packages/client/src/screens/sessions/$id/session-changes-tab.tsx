@@ -4,6 +4,7 @@ import {
   ChangesFiles,
   ChangesInspectorToolbar,
   type ChangesViewProps,
+  type InspectorSegment,
 } from '#features/changes';
 import {
   SessionChangeDetail,
@@ -16,7 +17,10 @@ type Props = {
   header?: SessionHeaderProps;
 };
 
-type Page = Props & { segment: string; onSelect: (segment: string) => void };
+type Page = Props & {
+  segment: InspectorSegment;
+  onSelect: (segment: InspectorSegment) => void;
+};
 
 const hasChange = (props: Props): boolean =>
   !!props.header?.pullRequests?.length;
@@ -61,7 +65,7 @@ export function SessionChangesTab(props: Props): ReactElement {
 }
 
 function ChangesTabPage(props: Props): ReactElement {
-  const [selected, onSelect] = useState(
+  const [selected, onSelect] = useState<InspectorSegment>(
     props.changesRequest ? 'change' : 'files',
   );
 

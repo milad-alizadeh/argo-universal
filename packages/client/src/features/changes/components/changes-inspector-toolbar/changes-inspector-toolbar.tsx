@@ -6,16 +6,25 @@ import { ChangesToolbar } from '../changes-toolbar/changes-toolbar';
 
 export type InspectorSegment = 'change' | 'files';
 
-const segments = [
+const segments: { value: InspectorSegment; label: string }[] = [
   { value: 'change', label: 'Change' },
   { value: 'files', label: 'Files' },
 ];
 
+// The control reports a segment's value as a string; only a value the toolbar offers is passed on.
+const selecting =
+  (onSelect: (segment: InspectorSegment) => void) =>
+  (value: string): void => {
+    const picked = segments.find((segment) => segment.value === value);
+
+    if (picked) onSelect(picked.value);
+  };
+
 export interface ChangesInspectorToolbarProps {
   // Only a Session with a pull request has a Change to switch to.
   hasChange: boolean;
-  segment: string;
-  onSelect: (segment: string) => void;
+  segment: InspectorSegment;
+  onSelect: (segment: InspectorSegment) => void;
   changes?: ChangesViewProps;
 }
 
@@ -37,7 +46,7 @@ function Segments(
       label="Change detail"
       options={segments}
       value={props.segment}
-      onValueChange={props.onSelect}
+      onValueChange={selecting(props.onSelect)}
     />
   );
 }

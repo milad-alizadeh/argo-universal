@@ -44,7 +44,7 @@ type Drawn = {
   viewId: PluginViewId | null;
 };
 
-type Helpers = {
+type PluginSlotWiring = {
   nameOf: NameOf;
   send: PluginDispatch;
   opener: PluginOpener;
@@ -52,7 +52,7 @@ type Helpers = {
 
 const contribution = (
   { pluginId, path, root, revision, viewId }: Drawn,
-  { nameOf, send, opener }: Helpers,
+  { nameOf, send, opener }: PluginSlotWiring,
 ): PluginSlotContribution => ({
   pluginId,
   name: nameOf(pluginId),
@@ -65,17 +65,17 @@ const contribution = (
 // Only a contribution with a tree is drawn.
 const drawn = (
   state: PluginSlotState,
-  helpers: Helpers,
+  wiring: PluginSlotWiring,
 ): PluginSlotContribution[] =>
   state.flatMap(({ pluginId, path, view }) => {
     if (!view.root || !path) return [];
 
     const shown = { ...view, pluginId, path, root: view.root };
 
-    return [contribution(shown, helpers)];
+    return [contribution(shown, wiring)];
   });
 
-const useHelpers = (): Helpers => ({
+const usePluginSlotWiring = (): PluginSlotWiring => ({
   nameOf: useNames(),
   send: usePluginDispatch(),
   opener: usePluginOpener(),
@@ -97,5 +97,5 @@ export function usePluginSlot(slot: PluginSlotInput): PluginSlotContribution[] {
 
   useResubscribeOnReconnect(subscription);
 
-  return drawn(state, useHelpers());
+  return drawn(state, usePluginSlotWiring());
 }

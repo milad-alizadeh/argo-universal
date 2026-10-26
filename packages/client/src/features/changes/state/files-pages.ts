@@ -3,7 +3,11 @@ import type {
   SessionChangesOutput,
   SessionComparison,
 } from '@repo/contracts';
-import type { Loaded } from '../source/changes-source';
+import type {
+  ChangesQuery,
+  ChangesScope,
+  Loaded,
+} from '../source/changes-source';
 import type { ChangesComparison } from '../view/changes-comparison';
 import { uniqueChangedFiles } from '../view/changes-files';
 import type {
@@ -53,6 +57,21 @@ export function comparisonInput(
   if (comparison.kind !== 'branch') return comparison.kind;
 
   return { branch: branchRef(comparison.branch, data) };
+}
+
+// What the files and diffs are read against. A picked branch is read only once the branches have named its ref, so what was read under its bare name is never read again under the ref.
+export function changesQuery(
+  scope: ChangesScope,
+  comparison: ChangesComparison,
+  data?: SessionBranchesOutput,
+): ChangesQuery {
+  const resolved = comparison.kind !== 'branch' || data !== undefined;
+
+  return {
+    sessionId: scope.sessionId,
+    open: scope.open && resolved,
+    comparison: comparisonInput(comparison, data),
+  };
 }
 
 export const branchesOf = (

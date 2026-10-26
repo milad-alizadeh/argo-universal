@@ -5,12 +5,15 @@ import type {
 } from '@repo/contracts';
 import type { FileDiff } from '#features/feed';
 
+// A token that is a new object whenever the Checkout may have changed; only its identity is read.
+export type ChangesRevision = object;
+
 // The Session whose Changes are read, and whether they are on screen: closed, nothing loads.
 export interface ChangesScope {
   sessionId: string;
   open: boolean;
   // Changes, by identity, whenever the Checkout may have; each new value reloads the open Changes.
-  revision: unknown;
+  revision: ChangesRevision;
 }
 
 // What the files and diffs are read against.

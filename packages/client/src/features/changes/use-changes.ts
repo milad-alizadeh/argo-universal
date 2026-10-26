@@ -13,11 +13,7 @@ import {
   wantedMore,
 } from './state/changes-state';
 import { diffsByFile, wantedPageKeys } from './state/diff-pages';
-import {
-  branchesOf,
-  comparisonInput,
-  filesFromPages,
-} from './state/files-pages';
+import { branchesOf, changesQuery, filesFromPages } from './state/files-pages';
 import type { ChangesViewProps } from './view/changes-view-props';
 
 type Actions = Pick<
@@ -70,8 +66,7 @@ function useLoaded(
   state: ChangesState,
 ): LoadedProps {
   const branches = source.useBranches(scope);
-  const comparison = comparisonInput(state.comparison, branches.data);
-  const query = { sessionId: scope.sessionId, open: scope.open, comparison };
+  const query = changesQuery(scope, state.comparison, branches.data);
   const keys = wantedPageKeys(state.wanted);
   const files = filesOf(source.useFiles(query));
   const diffs = diffsByFile(keys, source.useDiffPages(query, keys));

@@ -104,12 +104,14 @@ function projectRow(
   choice: RootProjects,
   project: Project,
 ): JSX.Element {
+  const path = deps.pages.projectPagePath(project);
+
   return (
     <ListItem
       key={project.id}
       title={project.name}
       selected={project.id === choice.project?.id}
-      onPress={{ action: 'navigate', path: deps.pages.projectHref(project) }}
+      onPress={{ action: 'navigate', path }}
     />
   );
 }
@@ -144,7 +146,7 @@ const countText = (
 
 // A keyed ListItem itself, as a List draws its children, not a component that returns one.
 function filterRow(view: RootView, filter: IssueFilter): JSX.Element {
-  const path = view.deps.pages.filterHref(view.project, filter);
+  const path = view.deps.pages.filterPagePath(view.project, filter);
 
   return (
     <ListItem

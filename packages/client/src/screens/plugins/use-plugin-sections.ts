@@ -7,7 +7,7 @@ import {
   pluginSectionId,
   sectionOf,
 } from '../../lib/product/navigation/sections';
-import { segmentsOf } from './plugin-page-route';
+import { pluginRoute, segmentsOf } from './plugin-page-route';
 import { pluginSymbol } from './plugin-symbol';
 
 export interface PluginSection extends NavigationSection {
@@ -94,6 +94,8 @@ function pluginSection(manifest: Manifest, nav: NavItem): PluginSection {
     icon: pluginSymbol(manifest.icon),
     navId: nav.id,
     navPath,
-    rootPath: pluginPath([manifest.id, nav.id, ...navPath]),
+    rootPath: pluginPath(
+      pluginRoute({ pluginId: manifest.id, navId: nav.id, page: navPath }),
+    ),
   };
 }

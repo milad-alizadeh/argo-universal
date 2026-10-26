@@ -1,20 +1,25 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import { useMemo } from 'react';
-import { type ChangesViewProps, useChanges } from '#features/changes';
+import {
+  type ChangesRevision,
+  type ChangesViewProps,
+  useChanges,
+} from '#features/changes';
 import type { SessionHeaderProps, SessionPanels } from '#features/sessions';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { useInspectorPanels } from './use-inspector-panels';
 
 type ChangesHeader = NonNullable<SessionHeaderProps['changes']>;
 
-type SessionChangesSource = {
+// What tells the Changes the Checkout may have moved: the Feed's snapshot and revision.
+type CheckoutSignals = {
   snapshot: SessionSnapshot | null;
   revision: number;
 };
 
 const changesHeader = (
   panels: SessionPanels,
-  source: SessionChangesSource,
+  source: CheckoutSignals,
 ): ChangesHeader => ({
   open: panels.state.shown === 'changes',
   onOpenChange: (shown) =>
@@ -26,7 +31,7 @@ const changesHeader = (
 const useCheckoutRevision = ({
   snapshot,
   revision,
-}: SessionChangesSource): object =>
+}: CheckoutSignals): ChangesRevision =>
   useMemo(() => ({ snapshot, revision }), [snapshot, revision]);
 
 interface OpenChanges {
@@ -37,7 +42,7 @@ interface OpenChanges {
 function useOpenChanges(
   sessionId: string,
   panels: SessionPanels,
-  feed: SessionChangesSource,
+  feed: CheckoutSignals,
 ): OpenChanges {
   const header = changesHeader(panels, feed);
   const revision = useCheckoutRevision(feed);
@@ -52,7 +57,7 @@ function useOpenChanges(
 export function useChangedSession(
   sessionId: string,
   props: SessionDetailViewProps,
-  feed: SessionChangesSource,
+  feed: CheckoutSignals,
 ): SessionDetailViewProps {
   const panels = useInspectorPanels(props.state === 'open' ? props : {});
   const { header, changes } = useOpenChanges(sessionId, panels, feed);

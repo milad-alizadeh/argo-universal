@@ -1,8 +1,14 @@
 import type { SessionChangesOutput } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import type { DiffPage, Loaded } from '../source/changes-source';
+import type { ChangesComparison } from '../view/changes-comparison';
 import { diffsByFile, wantedPageKeys } from './diff-pages';
-import { branchesOf, comparisonInput, filesFromPages } from './files-pages';
+import {
+  branchesOf,
+  changesQuery,
+  comparisonInput,
+  filesFromPages,
+} from './files-pages';
 
 const hunk = (header: string): DiffPage['hunks'][number] => ({
   header,
@@ -104,17 +110,34 @@ describe('file pages', () => {
 });
 
 describe('comparisons and branches', () => {
-  const branches = { branches: [{ name: 'fix', ref: 'refs/heads/fix' }] };
+  const fixRef = 'refs/heads/fix';
+  const branches = { branches: [{ name: 'fix', ref: fixRef }] };
 
   it('compares against a branch by its ref once the branches name it', () => {
     expect(
       comparisonInput({ kind: 'branch', branch: 'fix' }, branches),
-    ).toEqual({ branch: 'refs/heads/fix' });
+    ).toEqual({ branch: fixRef });
     expect(comparisonInput({ kind: 'branch', branch: 'fix' })).toEqual({
       branch: 'fix',
     });
     expect(comparisonInput({ kind: 'uncommitted' }, branches)).toBe(
       'uncommitted',
+    );
+  });
+
+  it('reads a picked branch only once its ref is known, so the same pages are not read twice', () => {
+    const scope = { sessionId: 's', open: true, revision: {} };
+    const picked: ChangesComparison = { kind: 'branch', branch: 'fix' };
+
+    expect(changesQuery(scope, picked).open).toBe(false);
+    expect(changesQuery(scope, picked, branches)).toEqual({
+      sessionId: 's',
+      open: true,
+      comparison: { branch: fixRef },
+    });
+    expect(changesQuery(scope, { kind: 'main' }).open).toBe(true);
+    expect(changesQuery({ ...scope, open: false }, picked, branches).open).toBe(
+      false,
     );
   });
 
