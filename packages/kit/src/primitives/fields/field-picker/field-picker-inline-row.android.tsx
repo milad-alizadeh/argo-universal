@@ -20,7 +20,8 @@ import { optionChoice, type OptionRowProps } from './field-picker-kind';
  */
 export function OptionRow(props: OptionRowProps): ReactElement {
   const choice = optionChoice(props);
-  const { option, disabled } = props;
+  const { option } = props;
+  const disabled = isOff(props);
 
   return (
     <RowListItem
@@ -50,7 +51,7 @@ const toggles = (
     {
       value: choice.selected,
       onValueChange: choice.toggle,
-      disabled: props.disabled,
+      disabled: isOff(props),
     },
     role(props),
   );
@@ -58,8 +59,12 @@ const toggles = (
 const role = (props: OptionRowProps): 'checkbox' | 'radioButton' =>
   props.multiple ? 'checkbox' : 'radioButton';
 
+// The whole picker is disabled, or just this option.
+const isOff = (props: OptionRowProps): boolean =>
+  Boolean(props.disabled || props.option.disabled);
+
 function Mark(props: OptionRowProps & { selected: boolean }): ReactElement {
-  const enabled = !props.disabled;
+  const enabled = !isOff(props);
 
   if (props.option.pending) return <Applying />;
 

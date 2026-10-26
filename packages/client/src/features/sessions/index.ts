@@ -214,3 +214,10 @@ export {
 export { archivedToast } from './components/archive-session/archived-toast';
 
 export { SessionChangeDetail } from './components/session-change-detail';
+
+export {
+  type HiddenSessionRowPlugins,
+  isShownOnSessionRows,
+  useHiddenSessionRowPlugins,
+  useSessionRowPluginShown,
+} from './stores/session-row-plugins';

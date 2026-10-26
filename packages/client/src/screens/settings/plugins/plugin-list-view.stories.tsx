@@ -23,6 +23,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const SessionRowsEntry: Story = {
+  args: { sessionRowPluginCount: 3 },
+};
+
 export const NoPlugins: Story = {
   args: { plugins: { status: 'loaded', plugins: [] } },
 };

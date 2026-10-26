@@ -22,8 +22,13 @@ export type PluginsLoad =
 export interface PluginListViewProps {
   caption?: string;
   plugins: PluginsLoad;
+  // How many Plugins add to Session rows: the entry row's value. The row is left out until a Plugin can add to them.
+  sessionRowPluginCount?: number;
   onOpenPlugin: (pluginId: string) => void;
+  onOpenSessionRows?: () => void;
 }
+
+export const sessionRowsEntryTitle = 'Session rows';
 
 export const pluginsTitle = 'Plugins';
 
@@ -35,8 +40,29 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
     <Screen title={pluginsTitle} caption={props.caption}>
       <List appearance="grouped">
         <ListSection>{pluginRows(props)}</ListSection>
+        {sessionRowsSection(props)}
       </List>
     </Screen>
+  );
+}
+
+/*
+ * Its own card below the Plugins: the Session rows setting is the Server's Plugins taken together, not one Plugin's.
+ * Called, not rendered, so the List sees its section.
+ */
+function sessionRowsSection(
+  props: PluginListViewProps,
+): React.JSX.Element | null {
+  if (props.sessionRowPluginCount === undefined) return null;
+
+  return (
+    <ListSection>
+      <FieldGroup.Link
+        title={sessionRowsEntryTitle}
+        value={`${props.sessionRowPluginCount} on`}
+        onPress={() => props.onOpenSessionRows?.()}
+      />
+    </ListSection>
   );
 }
 

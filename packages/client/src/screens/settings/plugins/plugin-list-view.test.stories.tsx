@@ -49,6 +49,21 @@ export const ARowOpensItsPlugin: Story = {
   },
 };
 
+export const SessionRowsEntryOpensItsSubpage: Story = {
+  args: { sessionRowPluginCount: 3, onOpenSessionRows: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.getByText('3 on')).toBeVisible();
+    await userEvent.click(canvas.getByText('Session rows'));
+    await expect(args.onOpenSessionRows).toHaveBeenCalledOnce();
+  },
+};
+
+export const LeavesTheEntryOutUntilAPluginCanAddToRows: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText('Session rows')).toBeNull();
+  },
+};
+
 export const SaysWhenThereAreNoPlugins: Story = {
   args: { plugins: { status: 'loaded', plugins: [] } },
   play: async ({ canvas }) => {

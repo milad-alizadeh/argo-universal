@@ -22,7 +22,10 @@ import { wholeRowPress } from './field-picker-screen-row.ios';
 
 const offModifiers = (
   props: Pick<FieldPickerProps, 'disabled'>,
-): ReturnType<typeof disabled>[] => [disabled(props.disabled ?? false)];
+  option?: FieldPickerOption,
+): ReturnType<typeof disabled>[] => [
+  disabled(Boolean(props.disabled || option?.disabled)),
+];
 
 // A subtitle as a stock row draws it: the secondary shade, one text style down.
 const subtitleModifiers = [
@@ -60,7 +63,7 @@ const pressModifiers = (
   selected: boolean,
 ): ReturnType<typeof disabled>[] => [
   buttonStyle('plain'),
-  ...offModifiers(props),
+  ...offModifiers(props, props.option),
   ...(selected ? [selectedTrait] : []),
 ];
 

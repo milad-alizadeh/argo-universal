@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
+import { cn } from '#kit/utils';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import { SelectedCheck } from '#primitives/status/selected-check';
@@ -41,6 +42,10 @@ const tabStop = (props: OptionRowProps, selected: boolean): boolean =>
 const noneChosen = (props: OptionRowProps): boolean =>
   !props.options.some((option) => props.held.includes(option.value));
 
+// The whole picker is disabled, or just this option.
+const off = (props: OptionRowProps): boolean =>
+  Boolean(props.disabled || props.option.disabled);
+
 const pressProps = (
   props: OptionRowProps,
   selected: boolean,
@@ -48,11 +53,11 @@ const pressProps = (
 ): React.ComponentProps<typeof Pressable> => ({
   role: props.multiple ? 'checkbox' : 'radio',
   'aria-checked': selected,
-  'aria-disabled': props.disabled,
-  disabled: props.disabled,
+  'aria-disabled': off(props),
+  disabled: off(props),
   onPress,
   ...focusProps(props, selected),
-  className: 'flex-row items-center gap-3',
+  className: cn('flex-row items-center gap-3', off(props) && 'opacity-50'),
 });
 
 const focusProps = (
