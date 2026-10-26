@@ -24,24 +24,11 @@ const profileFields: Field[] = [
   { id: 'username-1', label: 'Username', defaultValue: '@peduarte' },
 ];
 
-const moreFields: Field[] = [
-  { id: 'email-1', label: 'Email', defaultValue: 'pedro@example.com' },
-  { id: 'website-1', label: 'Website', defaultValue: 'example.com' },
-  { id: 'company-1', label: 'Company', defaultValue: 'Acme' },
-  { id: 'role-1', label: 'Role', defaultValue: 'Designer' },
-  { id: 'city-1', label: 'City', defaultValue: 'Lisbon' },
-  { id: 'country-1', label: 'Country', defaultValue: 'Portugal' },
-  { id: 'timezone-1', label: 'Time zone', defaultValue: 'Europe/Lisbon' },
-  { id: 'language-1', label: 'Language', defaultValue: 'English' },
-  { id: 'pronouns-1', label: 'Pronouns', defaultValue: 'he/him' },
-  { id: 'phone-1', label: 'Phone', defaultValue: '+351 912 345 678' },
-];
-
 /*
  * The heading, sections and actions are the dialog's own children: on a phone its sections are one FieldGroup under
- * the heading, which scrolls, and its actions are pinned in the sheet's footer.
+ * the heading, which scrolls when they outgrow the sheet, and its actions are pinned in the sheet's footer.
  */
-function ProfileDialog(props: { fields: Field[] }): React.JSX.Element {
+function ProfileDialog(): React.JSX.Element {
   const narrow = !useCentresOverlays();
 
   return (
@@ -62,7 +49,7 @@ function ProfileDialog(props: { fields: Field[] }): React.JSX.Element {
           </DialogDescription>
         </DialogHeader>
         <FieldGroup.Section>
-          {props.fields.map((field) => (
+          {profileFields.map((field) => (
             <ProfileField key={field.id} {...field} />
           ))}
         </FieldGroup.Section>
@@ -88,14 +75,7 @@ type Story = StoryObj<typeof meta>;
 
 // A dialog is a composition — trigger, header, fields, footer — so it keeps its own render.
 export const Default: Story = {
-  render: (): React.JSX.Element => <ProfileDialog fields={profileFields} />,
-};
-
-// More rows than a phone's sheet holds: the FieldGroup scrolls them while the heading and the actions stay put.
-export const LongForm: Story = {
-  render: (): React.JSX.Element => (
-    <ProfileDialog fields={[...profileFields, ...moreFields]} />
-  ),
+  render: (): React.JSX.Element => <ProfileDialog />,
 };
 
 function ProfileField({ label, defaultValue }: Field): React.JSX.Element {
