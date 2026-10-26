@@ -61,12 +61,15 @@ export const ShowsConnectingUntilServerAnswers: Story = {
   },
 };
 
-// The banner over the page already says the Connection is down, so the page says nothing more.
-export const LeavesTheDownConnectionToTheBanner: Story = {
+// The page is never blank: a down Connection keeps the loading look until the Server answers.
+export const KeepsLoadingWhileTheConnectionIsDown: Story = {
   args: { server: { status: 'down' } },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByRole('status')).toBeNull();
-    await expect(canvas.queryByRole('progressbar')).toBeNull();
+    await expect(await canvas.findByRole('status')).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    await expect(canvas.queryByText('1.2.3')).toBeNull();
   },
 };
 

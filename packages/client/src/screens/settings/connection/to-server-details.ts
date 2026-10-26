@@ -8,7 +8,7 @@ interface InfoQuery {
   data?: { version: string; startedAt: string; pid: number };
 }
 
-// While the Connection is down the Frame's banner says so, and the page adds nothing of its own.
+// While the Connection is down the page keeps its loading look and has no details of its own.
 const unavailableDetails = (connection?: ConnectionState): ServerDetails =>
   connection === 'reconnecting' || connection === 'offline'
     ? { status: 'down' }

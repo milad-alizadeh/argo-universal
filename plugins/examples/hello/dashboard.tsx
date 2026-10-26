@@ -1,10 +1,10 @@
 import {
   Card,
   Grid,
+  Screen,
   ScrollView,
   Spacer,
   Stack,
-  Surface,
   Text,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
@@ -22,14 +22,14 @@ const metrics = [
 
 export function HelloDashboard(): JSX.Element {
   return (
-    <ScrollView>
-      <Surface kind="background" padding={4}>
+    <Screen title="Dashboard">
+      <ScrollView>
         <Stack direction="column" gap={4}>
           <DashboardHeading />
           <DashboardMetrics />
         </Stack>
-      </Surface>
-    </ScrollView>
+      </ScrollView>
+    </Screen>
   );
 }
 

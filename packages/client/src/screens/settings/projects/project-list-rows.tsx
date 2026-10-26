@@ -3,6 +3,7 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { SettingsGroupedList } from '../settings-grouped-list';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -32,9 +33,9 @@ export function ProjectsColumn(props: {
 }): React.JSX.Element {
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <List fit={false} appearance="grouped" padding={{ compact: 4, wide: 0 }}>
+      <SettingsGroupedList fit={false} padding={{ compact: 4, wide: 0 }}>
         {props.children}
-      </List>
+      </SettingsGroupedList>
     </View>
   );
 }

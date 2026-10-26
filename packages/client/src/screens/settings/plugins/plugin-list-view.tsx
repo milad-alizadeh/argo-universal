@@ -1,12 +1,13 @@
 import type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { List, ListSection } from '@repo/kit/primitives/lists/list';
+import { ListSection } from '@repo/kit/primitives/lists/list';
 import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { SettingsGroupedList } from '../settings-grouped-list';
 
 export interface PluginRow {
   pluginId: string;
@@ -43,10 +44,10 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
 
   return (
     <Screen title={pluginsTitle} caption={props.caption}>
-      <List appearance="grouped">
+      <SettingsGroupedList>
         <ListSection>{pluginRows(props)}</ListSection>
         {slotsSection(props)}
-      </List>
+      </SettingsGroupedList>
     </Screen>
   );
 }
