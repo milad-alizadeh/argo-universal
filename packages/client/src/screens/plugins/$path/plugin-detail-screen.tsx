@@ -4,12 +4,12 @@ import { Redirect } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { pluginPagePath } from '../plugin-page-route';
+import { usePluginOpener } from '../use-plugin-opener';
 import {
   pluginPath,
   usePluginAt,
   type PluginSection,
 } from '../use-plugin-sections';
-import { usePluginOpener } from '../use-plugin-opener';
 import { usePluginView } from '../use-plugin-view';
 import { PluginDetailView } from './plugin-detail-view';
 
@@ -51,7 +51,12 @@ function PluginPage({
   const view = usePluginView(section.pluginId, pluginPagePath(path));
   const onOpenPage = usePluginOpener()(section.pluginId);
 
-  return <PluginDetailView {...pluginPageProps(section, view)} onOpenPage={onOpenPage} />;
+  return (
+    <PluginDetailView
+      {...pluginPageProps(section, view)}
+      onOpenPage={onOpenPage}
+    />
+  );
 }
 
 function PluginUnavailable(): React.JSX.Element {
