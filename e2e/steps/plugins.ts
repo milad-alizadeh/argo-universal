@@ -89,7 +89,7 @@ Then(
 );
 
 When('I open the Server Project', async ({ page }): Promise<void> => {
-  await page.getByRole('link', { name: /^project,/ }).click();
+  await page.getByRole('link', { name: 'project', exact: true }).click();
 });
 
 Then(
