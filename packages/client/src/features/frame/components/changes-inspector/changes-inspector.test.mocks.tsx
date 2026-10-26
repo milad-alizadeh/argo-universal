@@ -12,7 +12,7 @@ export const allChanges = 'All Changes (vs main)';
 
 export const largeFile = '/repo/large.txt';
 
-export const fewSummary = '4 files · 1 viewed';
+export const fewSummary = '1/4 viewed';
 
 export const noChanges = 'No changes';
 

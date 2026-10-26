@@ -36,7 +36,7 @@ const diffLines = (): HTMLElement[] => screen.queryAllByTestId('diff-line');
 export const FilesArriveInPages: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
-    await expect(canvas.getByText('64 files · 1 viewed')).toBeVisible();
+    await expect(canvas.getByText('1/64 viewed')).toBeVisible();
     await expect(
       canvas.queryByRole('button', { name: `Diff for ${lastFile}` }),
     ).toBeNull();

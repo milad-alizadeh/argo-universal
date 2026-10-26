@@ -132,9 +132,7 @@ async function openStageFile(page: Page): Promise<void> {
     .getByTestId('session-workbench')
     .getByRole('button', { name: 'Open Changes overview' })
     .click();
-  await expect(
-    page.getByText('1 file · 0 viewed', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('0/1 viewed', { exact: true })).toBeVisible();
   await page
     .getByRole('button', { name: 'Diff for greeting.txt', exact: true })
     .click();

@@ -73,7 +73,7 @@ export const ManyFilesScroll: Story = {
 
     for (const width of widths) {
       await settleViewport(width);
-      await expect(canvas.getByText('60 files · 0 viewed')).toBeVisible();
+      await expect(canvas.getByText('0/60 viewed')).toBeVisible();
       const last = await scrollToFile('/repo/src/module-60/index.ts');
       await waitFor(() => expect(last).toBeVisible());
     }

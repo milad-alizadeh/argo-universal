@@ -18,8 +18,8 @@ export function changesTotals(
   };
 }
 
-const count = (value: number, one: string, many: string): string =>
-  `${value.toLocaleString('en-US')} ${value === 1 ? one : many}`;
+const count = (value: number): string => value.toLocaleString('en-US');
 
+// How many of the comparison's files are viewed, out of all of them.
 export const filesSummary = (totals: ChangesTotals): string =>
-  `${count(totals.files, 'file', 'files')} · ${totals.viewed.toLocaleString('en-US')} viewed`;
+  `${count(totals.viewed)}/${count(totals.files)} viewed`;

@@ -10,8 +10,8 @@ import type {
 import { ComparisonPicker } from '../comparison-picker/comparison-picker';
 
 /*
- * Paper (Flow / Changes comparison): under the Inspector's header, one row with the comparison in force, how many
- * files and how many are viewed, and the line totals at the end. Until files load, only the comparison shows.
+ * Paper (Flow / Changes comparison): under the Inspector's header, one row with the comparison in force, then at its
+ * end how many files are viewed and the line totals. Until files load, only the comparison shows.
  */
 export function ChangesToolbar(props: ChangesViewProps): React.JSX.Element {
   return (
@@ -30,7 +30,8 @@ function ComparisonRow(props: ChangesViewProps): React.JSX.Element {
       <View className="min-w-0 max-w-3/4 shrink">
         <ComparisonPicker {...props} />
       </View>
-      <View className="min-w-0 flex-1">
+      <View className="flex-1" />
+      <View className="min-w-0 shrink">
         <FileCounts {...props} />
       </View>
       {props.summary?.files ? <LineTotals {...props.summary} /> : null}
