@@ -19,7 +19,7 @@ export interface OwnerSlot {
  * One Slot's page under Settings › Plugins, declared once: the page draws the Slot's own component as the preview,
  * a switch per Plugin that fills the Slot, and a choice of writer for its Single-owner Slot when it has one.
  */
-export interface SlotSettings {
+export interface SlotDetail {
   slotId: AddOnlySlotId;
   title: string;
   showTitle: string;

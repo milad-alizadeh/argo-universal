@@ -83,7 +83,7 @@ describe('the Plugins hidden in a Slot on this Device', () => {
     await expect(loadHidden()).resolves.toEqual(['coverage']);
   });
 
-  it('keeps the replaceable part owner beside the switches', async () => {
+  it('keeps the Single-owner Slot owner beside the switches', async () => {
     useMemoryStorage();
     const client = new QueryClient();
     await chooseSlotPluginShown(client, slotId, {

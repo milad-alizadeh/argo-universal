@@ -5,7 +5,7 @@ import {
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
 import { sessionRowSlot } from './session-row-slot';
-import type { SlotSettings } from './slot-settings';
+import type { SlotDetail } from './slot-detail';
 
 /*
  * Every Slot in the registry, with its page under Settings › Plugins or null for none: a new Slot does not compile
@@ -17,11 +17,11 @@ const declared = {
   [sessionRowSlotId]: sessionRowSlot,
   // Chosen on the Session rows page, as its Activity line.
   [sessionActivitySlotId]: null,
-} satisfies Record<AddOnlySlotId, SlotSettings | null>;
+} satisfies Record<AddOnlySlotId, SlotDetail | null>;
 
-export const slotSettings: readonly SlotSettings[] = Object.values(
+export const slotDetails: readonly SlotDetail[] = Object.values(
   declared,
 ).flatMap((settings) => (settings ? [settings] : []));
 
-export const findSlotSettings = (slotId: string): SlotSettings | undefined =>
-  slotSettings.find((settings) => settings.slotId === slotId);
+export const findSlotDetail = (slotId: string): SlotDetail | undefined =>
+  slotDetails.find((settings) => settings.slotId === slotId);

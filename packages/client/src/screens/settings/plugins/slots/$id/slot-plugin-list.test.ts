@@ -3,9 +3,9 @@ import {
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
 import { describe, expect, it } from 'vitest';
-import type { PluginEntry } from '../use-plugins';
+import type { PluginEntry } from '../../use-plugins';
+import type { SlotDetail } from './slot-detail';
 import { toSlotPlugins } from './slot-plugin-list';
-import type { SlotSettings } from './slot-settings';
 
 const entry = (
   id: string,
@@ -27,7 +27,7 @@ const entry = (
   error: null,
 });
 
-const settings: Pick<SlotSettings, 'slotId' | 'ownerSlot'> = {
+const settings: Pick<SlotDetail, 'slotId' | 'ownerSlot'> = {
   slotId: sessionRowSlotId,
   ownerSlot: {
     slotId: sessionActivitySlotId,

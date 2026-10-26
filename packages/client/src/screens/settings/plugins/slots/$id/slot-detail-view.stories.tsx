@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { fixtureSessionRowSlot } from './slot-fixture-settings';
+import { SlotDetailView } from './slot-detail-view';
+import { fixtureSessionRowSlot } from './slot-fixture-detail';
 import { deploysOff, issueTracker, slotPlugins } from './slot-fixtures';
-import { SlotSettingsView } from './slot-settings-view';
 
 const meta = {
   title: 'Screens/Settings/Plugins/Session rows',
-  component: SlotSettingsView,
+  component: SlotDetailView,
   argTypes: {
     caption: { control: 'text' },
     plugins: { control: false },
@@ -22,7 +22,7 @@ const meta = {
     onOwnerChange: action('Activity line owner'),
     onBack: action('back'),
   },
-} satisfies Meta<typeof SlotSettingsView>;
+} satisfies Meta<typeof SlotDetailView>;
 
 export default meta;
 

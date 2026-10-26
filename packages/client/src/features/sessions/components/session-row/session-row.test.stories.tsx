@@ -1,7 +1,7 @@
 import { layoutWidths } from '@repo/kit/each-layout';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import { sessionRows } from '@repo/mocks/app';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import {
   dark,
@@ -29,6 +29,20 @@ export const Archived: Story = {
       await page.viewport(width, 844);
       await expect(canvas.getByText('Archived', { exact: true })).toBeVisible();
     }
+  },
+};
+
+export const PluginItemTooltipWide: Story = {
+  args: {
+    session: sessionRows.idle,
+    items: [{ text: 'Issue 412', tooltip: 'Issue 412: In review' }],
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.hover(canvas.getByText('Issue 412'));
+    await expect(
+      await within(document.body).findByRole('tooltip'),
+    ).toHaveTextContent('Issue 412: In review');
   },
 };
 
