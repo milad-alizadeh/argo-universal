@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import type { KitProps } from '../../kit-props';
-import type { ListDetailProps } from '../list-detail';
 
 export type SettingsLayoutProps = KitProps<'SettingsLayout'> & {
   // Kit-only: opens a page by its route, as the App's router does; without it a row follows its link.
@@ -10,10 +9,14 @@ export type SettingsLayoutProps = KitProps<'SettingsLayout'> & {
    * pages' groups at every width.
    */
   lastSection?: ReactNode;
-  // Kit-only: the pages' own Screen, which names the list and carries its search, as ListDetail's `screen` does.
-  screen?: ListDetailProps['screen'];
   testID?: string;
 };
+
+// The list alone, which the caller places: every prop but the page shown beside it.
+export type SettingsPagesProps = Omit<
+  SettingsLayoutProps,
+  'children' | 'testID'
+>;
 
 // The groups at one Size class.
 export type SettingsLayoutSections = Extract<

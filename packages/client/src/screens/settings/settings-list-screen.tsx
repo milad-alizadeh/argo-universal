@@ -1,15 +1,14 @@
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { usePathname } from 'expo-router';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
 import { Platform } from 'react-native';
 import { useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
-import { SectionListDetail, useSectionList } from '#features/frame';
 import { useProjects, useThemeChoice } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { sections } from '../../lib/product/navigation/sections';
 import { usePluginEntries } from './plugins/use-plugins';
+import { connectionStatus } from './settings-connection-status';
 import {
   SettingsListView,
   type SettingsListViewProps,
@@ -39,14 +38,6 @@ function useAgentCount(): number | undefined {
   return agents.status === 'loaded' ? agents.agents.length : undefined;
 }
 
-function connectionStatus(
-  connection: ReturnType<typeof useConnectionState>,
-): SettingsListViewProps['status'] {
-  if (connection === 'open') return 'ready';
-
-  return connection === 'connecting' ? 'loading' : 'disconnected';
-}
-
 // The Settings pages as the Server and this device know them, narrowed by the search; a row opens its page.
 function useSettingsList(query?: string): SettingsListViewProps {
   const navigate = useNavigate();
@@ -63,26 +54,7 @@ function useSettingsList(query?: string): SettingsListViewProps {
   };
 }
 
-/*
- * Settings' stack in SettingsLayout: on a wide window the pages' list takes the Frame's sidebar while Settings is
- * shown, beside the page; under wide the stack is the screen and its root lists the pages.
- */
-export function SettingsSection(props: {
-  children: ReactNode;
-}): React.JSX.Element {
-  const { screen } = useSectionList('settings');
-  const pages = useSettingsList(screen?.value);
-
-  return (
-    <SectionListDetail>
-      <SettingsListView {...pages} screen={screen}>
-        {props.children}
-      </SettingsListView>
-    </SectionListDetail>
-  );
-}
-
-interface SettingsRootScreenProps {
+export interface SettingsListScreenProps {
   query: string;
   onQueryChange: (query: string) => void;
 }
@@ -91,22 +63,21 @@ interface SettingsRootScreenProps {
 const settingsSearch =
   Platform.OS === 'web' ? { label: 'Search Settings' } : undefined;
 
-// Settings' Screen, declared once: its title, and the web's search holding what narrows the pages.
-export const settingsScreen = (
-  props: SettingsRootScreenProps,
-): NonNullable<SettingsListViewProps['screen']> => ({
-  title: sections.settings.title,
-  search: settingsSearch,
-  value: props.query,
-  onChangeText: props.onQueryChange,
-});
-
-// A narrow window's Settings root: the pages under Settings' Screen.
-export function SettingsRootScreen(
-  props: SettingsRootScreenProps,
+/*
+ * Settings' list under its own Screen, which declares its title and, on the web, the search holding what narrows the
+ * pages. The Frame places it, as it places the Sessions list: in the sidebar beside the pages on a wide window, as the
+ * root of the stack under wide.
+ */
+export function SettingsListScreen(
+  props: SettingsListScreenProps,
 ): React.JSX.Element {
   return (
-    <Screen {...settingsScreen(props)}>
+    <Screen
+      title={sections.settings.title}
+      search={settingsSearch}
+      value={props.query}
+      onChangeText={props.onQueryChange}
+    >
       <SettingsListView {...useSettingsList(props.query)} />
     </Screen>
   );

@@ -15,9 +15,9 @@ import { newSessionId } from '../lib/product/navigation/new-session';
 import { LiveSessionList } from './sessions/live-session-list';
 import { SessionsRootScreen } from './sessions/sessions-root-screen';
 import {
-  settingsScreen,
-  SettingsRootScreen,
-} from './settings/settings-section';
+  SettingsListScreen,
+  type SettingsListScreenProps,
+} from './settings/settings-list-screen';
 
 // The Session a path shows, which the sidebar marks; New Session is none.
 function shownSessionId(path: string): string | undefined {
@@ -38,7 +38,7 @@ function sessionsList(
     </SessionsRootScreen>
   );
 
-  return { list, rootPage: list, emptyPage: noSessionShown };
+  return { list, emptyPage: noSessionShown };
 }
 
 const sessionsListBody = (
@@ -53,26 +53,19 @@ const noSessionShown = {
   description: 'Choose a Session from the list.',
 };
 
-interface SettingsQuery {
-  query: string;
-  onQueryChange: (query: string) => void;
-}
-
 const settingsFirstPage: FirstPage = { page: 'accounts/index' };
 
-// `/settings`: the Settings pages the search narrows, which Settings' SettingsLayout draws; with the list beside the pages, the root opens Accounts.
-function settingsList(query: SettingsQuery): SectionList {
+// `/settings`: the Settings pages the search narrows; with the list beside the pages, the root opens Accounts.
+function settingsList(search: SettingsListScreenProps): SectionList {
   return {
-    list: null,
-    screen: settingsScreen(query),
-    rootPage: <SettingsRootScreen {...query} />,
+    list: <SettingsListScreen {...search} />,
     useFirstPage: () => settingsFirstPage,
   };
 }
 
 /*
- * Each section's list under its Screen, which declares the header, and its root page, with the Sessions view and the
- * Settings search held once for the Frame: the sidebar's list and a root page's list share them, so a width change keeps them.
+ * Each section's list under its Screen, which declares the header, with the Sessions view and the Settings search held
+ * once for the Frame: the sidebar's list and a narrow root's list are the same element, so a width change keeps them.
  */
 export function useSectionLists(): SectionLists {
   const path = usePathname();

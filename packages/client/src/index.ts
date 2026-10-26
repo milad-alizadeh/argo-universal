@@ -21,8 +21,6 @@ export {
 
 export { useSectionLists } from './screens/section-lists';
 
-export { SettingsSection } from './screens/settings/settings-section';
-
 export {
   OnboardingLayout,
   useOnboardingShown,

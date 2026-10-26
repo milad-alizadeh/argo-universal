@@ -22,7 +22,7 @@ export interface SectionListDetailProps {
   children: ReactNode;
 }
 
-// Offers the Frame's sidebar to a page's ListDetail, as a Plugin page's or Settings' is; the kit holds it only while the page is shown.
+// Offers the Frame's sidebar to a page's ListDetail, as a Plugin page's is; the kit holds it only while the page is shown.
 export function SectionListDetail({
   children,
 }: SectionListDetailProps): React.JSX.Element {
@@ -65,7 +65,7 @@ const noList: SectionScaffold = {
   inspectorState: 'closed',
 };
 
-// A core section's own list, or the one its pages' ListDetail holds the sidebar with; a Plugin section's only while its page's ListDetail holds it.
+// A core section's own list; a Plugin section's only while its page's ListDetail holds the sidebar with its own.
 export function sectionScaffold(
   shown: ShownSection,
   listDetail: FrameListDetail,
@@ -74,11 +74,8 @@ export function sectionScaffold(
 
   if (!isCoreSection(section)) return pluginSectionScaffold(listDetail);
 
-  return { list: lists[section].list ?? claimedList(listDetail) };
+  return { list: lists[section].list };
 }
-
-const claimedList = ({ sidebar, held }: FrameListDetail): ReactNode =>
-  held && <ClaimedList sidebar={sidebar} />;
 
 // The list's own Screen, claimed with it, draws its heading, as a core section's list does.
 function pluginSectionScaffold({

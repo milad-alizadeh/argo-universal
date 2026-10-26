@@ -1,4 +1,3 @@
-import type { ScreenProps } from '@repo/kit/primitives/scaffolds/screen';
 import type { EmptyStateProps } from '@repo/kit/primitives/status/empty-state';
 import type { ReactNode } from 'react';
 import { createContext, use } from 'react';
@@ -7,12 +6,8 @@ import type { CoreSection } from '../../../lib/product/navigation/sections';
 
 // What a section hands the Frame: its list, and what goes with it.
 export interface SectionList {
-  // The list under its own Screen, which declares its header: drawn above the list in the sidebar on a wide window, and in the stack's header under wide. Null where the section's pages hold the sidebar with their own ListDetail, as Settings' SettingsLayout does.
+  // The list under its own Screen, which declares its header: drawn above the list in the sidebar on a wide window, and as the root page of the section's stack under wide.
   list: ReactNode;
-  // Where the section's pages hold the sidebar, the Screen their ListDetail draws around the list, which holds the search the pages narrow it by.
-  screen?: Omit<ScreenProps, 'children'>;
-  // A narrow window's root page: the list under its Screen, which declares the root's header itself.
-  rootPage: ReactNode;
   /*
    * The page a window with the list beside it opens at the section's root, or undefined while
    * it is still being chosen; without one, the root keeps its own page. Called as a hook.
