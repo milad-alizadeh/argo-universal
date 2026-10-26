@@ -46,11 +46,9 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     accessibilityRole?: 'list' | 'radiogroup';
     accessibilityLabel?: string;
     fit?: boolean;
-    // A List of ListItems is grouped cards on the phones (owner, 2026-10-24); the web and desktop keep `appearance`.
-    groupedOnPhones?: boolean;
     // Kit-only: what the phones draw in place of `appearance` and `padding`, so a caller never asks the platform.
     onPhones?: PhoneOverrides;
-    // The header scrolls sideways and runs to the List's edges; it takes its gutter from `useListGutter`.
+    // The header scrolls sideways and runs to the List's edges; it is drawn as a `ListHeaderRow`, which takes the gutter.
     headerBleeds?: boolean;
     padding?: SizeClassValue<SpacingStep>;
     paddingTop?: SizeClassValue<SpacingStep>;

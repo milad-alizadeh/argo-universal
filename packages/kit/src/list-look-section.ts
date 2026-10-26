@@ -18,7 +18,7 @@ const muted = 'text-muted-foreground';
 // Inset as the rows' content.
 const rowInset = { inset: 'px-4 wide:px-5', gap: 'pb-2', below: 'h-4' };
 
-// Paper's SettingsList: a sidebar's groups head their flat rows with a muted heading, inset as the rows' content.
+// A sidebar's groups head their flat rows with a muted heading, inset as the rows' content.
 const sidebar = {
   heading: muted,
   title: muted,

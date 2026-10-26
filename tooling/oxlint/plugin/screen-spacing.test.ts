@@ -35,5 +35,14 @@ ruleTester.run('screen-spacing', screenSpacing, {
     { code: '<FieldList gap="sm" />;', errors: spaced },
     { code: '<List paddingTop={3} />;', errors: spaced },
     { code: '<Grid columnGap={2} />;', errors: spaced },
+    {
+      code: '<View className="mb-4" />;',
+      errors: [
+        {
+          message:
+            'A screen sets no padding, margin or gap, by class or by prop; Screen, List and FieldGroup own its spacing. Add a scaffold prop in @repo/kit.',
+        },
+      ],
+    },
   ],
 });

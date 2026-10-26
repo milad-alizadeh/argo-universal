@@ -13,14 +13,14 @@ import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { ListBehaviours } from './list-behaviours';
 import { childIdentity } from './list-child-identity';
-import { childRenderer, usePreparedChildren } from './list-children';
+import { usePreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
-import { ListGrouping } from './list-grouping';
+import { childRenderer, ListGrouping } from './list-grouping';
 import { ListKeyboard } from './list-keyboard';
 import { ListMenuRows } from './list-menu-rows';
 import { NativeGroupedList } from './list-native-grouped';
-import { holdsNativeRows } from './list-native-rows';
+import { asksNothingNativeLacks, holdsNativeRows } from './list-native-rows';
 import type { ListProps } from './list-props';
 import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
@@ -115,9 +115,11 @@ function childMaxHeight(
   return props.maxHeight ?? height;
 }
 
-// iOS and Android draw a grouped List of FieldGroup rows as their own grouped list, at every width (ADR-0042).
+// iOS and Android draw a grouped List of FieldGroup rows as their own grouped list, at every width (ADR-0042), unless it sets a prop that list cannot draw.
 const drawsNatively = (look: ListLook, props: ListProps<never>): boolean =>
-  look.phone !== undefined && holdsNativeRows(props.children);
+  look.phone !== undefined &&
+  asksNothingNativeLacks(props) &&
+  holdsNativeRows(props.children);
 
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   const look = useListLook();

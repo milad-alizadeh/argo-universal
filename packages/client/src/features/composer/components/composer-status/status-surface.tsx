@@ -1,5 +1,5 @@
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
-import { List } from '@repo/kit/primitives/lists/list';
+import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
 import type { ReactNode, JSX } from 'react';
 import { Platform } from 'react-native';
 
@@ -13,7 +13,7 @@ export function StatusSheetList({
   children: ReactNode;
 }): JSX.Element {
   return (
-    <List appearance="cards" groupedOnPhones fit={false}>
+    <List appearance="cards" onPhones={phonesGrouped} fit={false}>
       {children}
     </List>
   );

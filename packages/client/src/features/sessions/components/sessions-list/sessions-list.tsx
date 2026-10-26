@@ -9,9 +9,10 @@ import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
 import { listsFlat, searchesAsOneList } from './sessions-list-entries-state';
 import { type ListRows, useListRows } from './sessions-list-entry-rows';
-import { sessionsListLook, standardTopPadding } from './sessions-list-look';
+import { sessionsListLook } from './sessions-list-look';
 import type { SessionsListProps } from './sessions-list-props';
 import { useScrolling } from './sessions-list-scrolling';
+import { standardTopPadding } from './sessions-list-top-padding';
 import {
   useSessionsSelection,
   sessionsListBehaviours,

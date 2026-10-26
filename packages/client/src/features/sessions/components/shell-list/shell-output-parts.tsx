@@ -34,7 +34,7 @@ export function CommandLine({ shell }: ShellProps): JSX.Element {
   );
 }
 
-// The Server keeps only the newest lines of a long output. List rows hold their own gutters, so the header and end lines take the same.
+// The Server keeps only the newest lines of a long output. The List's header takes the rows' gutter, so this line holds none.
 export function DroppedLines({
   count,
 }: {
@@ -43,7 +43,7 @@ export function DroppedLines({
   if (!count) return null;
 
   return (
-    <View className="px-4 pt-2.5 pb-1">
+    <View className="pt-2.5 pb-1">
       <Text role="secondary" tone="muted">
         {`${count} earlier lines not kept`}
       </Text>

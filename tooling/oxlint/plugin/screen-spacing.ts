@@ -98,7 +98,7 @@ export const screenSpacing = defineRule({
     type: 'problem',
     messages: {
       screenSpacing:
-        'A screen sets no padding, margin or gap, by class or by prop; Screen, List and FieldGroup own its spacing. Add a scaffold prop in @repo/kit, or let a feature component own it.',
+        'A screen sets no padding, margin or gap, by class or by prop; Screen, List and FieldGroup own its spacing. Add a scaffold prop in @repo/kit.',
     },
   },
   create: spacingVisitor,

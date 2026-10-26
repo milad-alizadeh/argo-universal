@@ -4,11 +4,9 @@ import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { SessionsLayout } from '../../stores/sessions-view';
-import {
-  sessionsListLook,
-  standardTopPadding,
-} from '../sessions-list/sessions-list-look';
+import { sessionsListLook } from '../sessions-list/sessions-list-look';
 import { SessionListRow } from '../sessions-list/sessions-list-rows';
+import { standardTopPadding } from '../sessions-list/sessions-list-top-padding';
 import {
   placeholderProjectName,
   placeholderRows,

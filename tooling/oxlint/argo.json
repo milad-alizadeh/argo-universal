@@ -245,7 +245,7 @@
       "rules": { "argo/kit-styling": "error" }
     },
     {
-      // A screen leaves its spacing to Screen, List and FieldGroup, as a Plugin's page must; a missing gap becomes a scaffold prop in @repo/kit, or a feature component that owns its own.
+      // A screen leaves its spacing to Screen, List and FieldGroup, as a Plugin's page must; a missing gap becomes a scaffold prop in @repo/kit.
       // Onboarding is the one page not drawn on a Screen: a desktop window centred on its own.
       "files": [
         "packages/client/src/screens/*.tsx",

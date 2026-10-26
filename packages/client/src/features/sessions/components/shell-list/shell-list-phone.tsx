@@ -1,4 +1,4 @@
-import { List } from '@repo/kit/primitives/lists/list';
+import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
 import {
   ListItem,
   type ListItemProps,
@@ -51,7 +51,7 @@ function ShellRow(props: RowProps): JSX.Element {
 
 const listProps = {
   appearance: 'cards',
-  groupedOnPhones: true,
+  onPhones: phonesGrouped,
   fit: false,
   accessibilityLabel: 'Shells',
 } as const;

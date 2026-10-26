@@ -22,12 +22,13 @@ export interface PhoneOverrides {
   padding?: Inset;
 }
 
+// A List of ListItems the phones draw as grouped cards (owner, 2026-10-24) while the web keeps its own appearance.
+export const phonesGrouped: PhoneOverrides = { appearance: 'grouped' };
+
 export interface ListLookInput {
   platform: PlatformOSType;
   // The List's own, with the default filled in.
   appearance: ListAppearance;
-  // Kit-only: the phones draw the List as grouped cards, and the web keeps `appearance`.
-  groupedOnPhones?: boolean;
   onPhones?: PhoneOverrides;
   fit?: boolean;
   // Inside a web popover, whose rows are menu rows.
@@ -61,7 +62,7 @@ export interface ListLook extends SectionDrawings {
 export const groupedRowInset = 16;
 
 // Cards stand 16 from a compact window's sides; a wide page's column insets them already.
-const cardSides = { compact: 4, wide: 0 } as const;
+export const cardSides = { compact: 4, wide: 0 } as const;
 
 const menuInsets = { padding: 1, paddingTop: 1, paddingBottom: 1 } as const;
 
@@ -82,19 +83,7 @@ const webEdges = { heading: 'wide:px-4 pb-1', footer: 'wide:px-4' };
 
 const noEdges = { heading: '', footer: '' };
 
-const groupedAppearance = (input: ListLookInput): ListAppearance | undefined =>
-  input.groupedOnPhones ? 'grouped' : undefined;
-
-const declaredOnPhones = (input: ListLookInput): ListAppearance | undefined =>
-  input.onPhones?.appearance ?? groupedAppearance(input);
-
-const phoneAppearance = (input: ListLookInput): ListAppearance | undefined =>
-  input.platform === 'web' ? undefined : declaredOnPhones(input);
-
-const lookAppearance = (input: ListLookInput): ListAppearance =>
-  phoneAppearance(input) ?? input.appearance;
-
-// Only the web draws a grouped section as a card of its own; every other platform's phones draw corners.
+// What each platform draws a grouped section as: only the web draws it as a card of its own, the rest as corners.
 const phoneDrawings = {
   web: undefined,
   ios: 'ios',
@@ -104,32 +93,42 @@ const phoneDrawings = {
   native: 'ios',
 } satisfies Record<PlatformOSType, PhoneDrawing | undefined>;
 
-const phoneGrouped = (
-  platform: PlatformOSType,
-  appearance: ListAppearance,
-): PhoneDrawing | undefined =>
-  appearance === 'grouped' ? phoneDrawings[platform] : undefined;
+type Drawing = PhoneDrawing | undefined;
+
+const phoneAppearance = ({
+  onPhones,
+  appearance,
+}: ListLookInput): ListAppearance => onPhones?.appearance ?? appearance;
+
+const lookAppearance = (
+  drawing: Drawing,
+  input: ListLookInput,
+): ListAppearance => (drawing ? phoneAppearance(input) : input.appearance);
+
+const phoneGrouped = (drawing: Drawing, appearance: ListAppearance): Drawing =>
+  appearance === 'grouped' ? drawing : undefined;
 
 function groupedLook(
-  platform: PlatformOSType,
+  drawing: Drawing,
   appearance: ListAppearance,
 ): Pick<ListLook, 'appearance' | 'phone' | 'webGrouped' | 'edges'> {
-  const webGrouped = platform === 'web' && appearance === 'grouped';
+  const webGrouped = drawing === undefined && appearance === 'grouped';
 
   return {
     appearance,
-    phone: phoneGrouped(platform, appearance),
+    phone: phoneGrouped(drawing, appearance),
     webGrouped,
     edges: webGrouped ? webEdges : noEdges,
   };
 }
 
+// Only iOS separates rows and closes a group with a row description.
 const rowLook = (
-  platform: PlatformOSType,
+  drawing: Drawing,
   appearance: ListAppearance,
 ): Pick<ListLook, 'separated' | 'footerEndsGroup'> => ({
-  separated: platform === 'ios' && appearance !== 'cards',
-  footerEndsGroup: platform === 'ios',
+  separated: drawing === 'ios' && appearance !== 'cards',
+  footerEndsGroup: drawing === 'ios',
 });
 
 function insetsOf(
@@ -141,16 +140,21 @@ function insetsOf(
   return phone ? phoneInsets(input.fit) : insetsByAppearance[appearance];
 }
 
+const phonePaddingOf = (
+  drawing: Drawing,
+  { onPhones }: ListLookInput,
+): Inset | undefined => (drawing ? onPhones?.padding : undefined);
+
 export function resolveListLook(input: ListLookInput): ListLook {
-  const appearance = lookAppearance(input);
-  const grouped = groupedLook(input.platform, appearance);
+  const drawing = phoneDrawings[input.platform];
+  const appearance = lookAppearance(drawing, input);
+  const grouped = groupedLook(drawing, appearance);
 
   return {
     ...grouped,
-    ...rowLook(input.platform, appearance),
+    ...rowLook(drawing, appearance),
     insets: insetsOf(input, grouped),
-    phonePadding:
-      input.platform === 'web' ? undefined : input.onPhones?.padding,
+    phonePadding: phonePaddingOf(drawing, input),
     ...sectionDrawings({ ...input, phone: grouped.phone !== undefined }),
   };
 }

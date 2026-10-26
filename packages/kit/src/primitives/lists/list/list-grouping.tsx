@@ -13,7 +13,6 @@ import {
   type ListSelection,
   type ListPosition,
 } from '../../../list-context';
-import { childRenderers } from './list-child-renderers';
 import type { ListChild } from './list-children';
 import { ListGroupEnds, ListGroupEndsContext } from './list-group-ends';
 import { GroupedCells } from './list-grouped-cell';
@@ -54,7 +53,7 @@ function rowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
   if (!list) return emptyLayout;
 
   return {
-    cell: !childRenderers.has(list.renderItem ?? {}),
+    cell: list.renderItem !== childRenderer,
     positionAt: (index) => dataRowPosition(list, index),
   };
 }
@@ -127,6 +126,11 @@ export function FixedListRow(props: FixedRowProps): ReactElement {
     </ListContext>
   );
 }
+
+// The renderer List hands its data list for fixed children, which draw their own cells.
+export const childRenderer = (item: ListChild): ReactElement => (
+  <FixedListRow item={item} />
+);
 
 export function SectionListRow(props: SectionRowProps): ReactElement {
   const { section, index, count, children } = props;

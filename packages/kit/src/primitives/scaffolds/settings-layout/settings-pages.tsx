@@ -18,7 +18,7 @@ import type {
 
 /*
  * Settings' pages as a list alone, with no page beside it: a wide web window draws the groups as sidebar rows, flat on
- * the glass, marking the page shown (Paper's SettingsList); everywhere else they are a FieldGroup, as a phone's
+ * the glass, marking the page shown; everywhere else they are a FieldGroup, as a phone's
  * Settings is (owner, 2026-10-25). Where the list sits, under which Screen, and what shows beside it are the caller's.
  */
 export function SettingsPages(props: SettingsPagesProps): ReactNode {
