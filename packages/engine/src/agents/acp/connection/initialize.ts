@@ -11,6 +11,8 @@ const clientCapabilities: ClientCapabilities = {
   auth: { terminal: true },
   session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
   elicitation: { form: {} },
+  // Agents send `subagent_update` only to a client that advertises this (claude-acp and codex-acp otherwise draw plain tool calls).
+  subagents: {},
 };
 
 const negotiate = async (

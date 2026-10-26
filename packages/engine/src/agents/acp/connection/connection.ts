@@ -27,6 +27,7 @@ import type {
 } from '../resources/resource-types';
 import { routeTerminalRequests } from '../shell-commands/terminal-requests';
 import { createAgentClient, awaitAcpOpening } from './client';
+import { standardSubagentUpdates } from './draft-subagent-updates';
 import { negotiateAcpInitialize } from './initialize';
 import { sessionCapabilities, openProtocolSession } from './open-session';
 import { cancelledElicitation, cancelledPermission } from './refusals';
@@ -320,7 +321,9 @@ export class AcpConnection {
       new TransformStream({
         transform: async (message, controller) => {
           const registered = this.registerResponse(message);
-          controller.enqueue(message);
+
+          for (const update of standardSubagentUpdates(message))
+            controller.enqueue(update);
           await registered;
         },
       }),
