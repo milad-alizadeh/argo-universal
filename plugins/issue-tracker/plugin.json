@@ -37,7 +37,9 @@
         "--repo",
         "*",
         "--state",
-        "open",
+        "all",
+        "--search",
+        "*",
         "--limit",
         "*",
         "--json",
@@ -49,17 +51,21 @@
       "kind": "process:exec",
       "command": "gh",
       "args": [
-        "issue",
-        "list",
-        "--repo",
+        "api",
+        "-X",
+        "GET",
+        "search/issues",
+        "-f",
         "*",
-        "--state",
-        "closed",
-        "--limit",
-        "*",
-        "--json",
-        "*"
+        "-f",
+        "per_page=1"
       ],
+      "env": ["GH_HOST", "GH_TOKEN"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["label", "list", "--repo", "*", "--limit", "*", "--json", "*"],
       "env": ["GH_HOST", "GH_TOKEN"]
     },
     {

@@ -1,21 +1,34 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { IssuePageView } from './issue-list';
+import { createIssueChanges } from './issue-changes';
+import type { IssueDeps } from './issue-deps';
+import { createIssuePages } from './issue-pages';
+import { IssuesRoot } from './issue-root';
 import { ProjectDetails, type ProjectDetailsProps } from './project-details';
 import { createTrackerRegistry } from './tracker-registry';
 import { createTrackerStorage } from './tracker-storage';
-import { useIssuePage } from './use-issues';
 
 type SlotProps = Pick<ProjectDetailsProps, 'context'>;
 
-export function register(api: Argo): void {
+function createDeps(api: Argo): IssueDeps {
   const trackers = createTrackerRegistry(api);
-  const storage = createTrackerStorage(api, trackers.has);
+
+  const shared = {
+    listProjects: api.projects.list,
+    storage: createTrackerStorage(api, trackers.has),
+    trackers,
+    changes: createIssueChanges(),
+  };
+
+  return { ...shared, pages: createIssuePages(api, shared) };
+}
+
+export function register(api: Argo): void {
+  const deps = createDeps(api);
+  const { storage, trackers } = deps;
 
   function IssuesPage(): JSX.Element {
-    const { selected, ...props } = useIssuePage(api, storage, trackers);
-
-    return <IssuePageView {...props} selected={selected?.issue} />;
+    return <IssuesRoot deps={deps} />;
   }
 
   function ProjectDetailsSlot(props: SlotProps): JSX.Element {

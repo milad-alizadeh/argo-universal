@@ -1,55 +1,51 @@
-import type { Issue, IssueStatus } from './github-issues';
-import type { TrackerClient } from './github-tracker';
-import { clientFor, type Project, unavailableMessage } from './issue-data';
+import type { Argo } from '@argo/plugin-kit';
+import {
+  githubRepositoryFromOrigin,
+  type TrackerClient,
+} from './github-tracker';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 
-// One Issue of a Project, read and changed through the Project's Tracker.
-export type IssueRequest = {
+export type Project = Awaited<ReturnType<Argo['projects']['list']>>[number];
+
+export type ClientSource = {
   project: Project;
-  issue: Issue;
   storage: TrackerStorage;
   trackers: TrackerRegistry;
 };
 
-export async function loadIssue(request: IssueRequest): Promise<Issue> {
-  const client = await issueClient(request);
+const chooseTrackerMessage = 'Choose a Tracker in Project details.';
 
-  return client.getIssue(request.issue.number);
+const noRemoteMessage = 'This Project has no GitHub remote.';
+
+// The Project's chosen Tracker, open on its repository; its failure says what to set up.
+export async function openClient(source: ClientSource): Promise<TrackerClient> {
+  const tracker = await chosenTracker(source);
+  const client = tracker.openClient(source.project.originUrl);
+
+  if (!client) throw new Error(noRemoteMessage);
+
+  return client;
 }
 
-// Sets the Issue's status in its Tracker, then in the cached list.
-export async function setIssueStatus(
-  request: IssueRequest,
-  status: IssueStatus,
-): Promise<void> {
-  const { project, issue, storage } = request;
-  const client = await issueClient(request);
-
-  await client.setStatus(issue.number, status);
-  await storage
-    .updateCache(project.id, { ...issue, status })
-    .catch(refreshLater);
-}
-
-async function issueClient({
+async function chosenTracker({
   project,
   storage,
   trackers,
-}: Omit<IssueRequest, 'issue'>): Promise<TrackerClient> {
+}: ClientSource): Promise<NonNullable<ReturnType<TrackerRegistry['get']>>> {
   const trackerId = await storage.selectedTracker(project.id);
+  const tracker = trackerId === null ? null : trackers.get(trackerId);
 
-  const client = clientFor({
-    projects: [project],
-    projectId: project.id,
-    trackerId,
-    trackers,
-  });
+  if (!tracker) throw new Error(chooseTrackerMessage);
 
-  if (client) return client;
-
-  throw new Error(unavailableMessage(trackerId));
+  return tracker;
 }
 
-// The background refresh rewrites the cache, so a failed write only delays the new status there.
-function refreshLater(): void {}
+// A page's footer: the Project and the repository its Issues come from.
+export function repositoryText(project: Project): string {
+  const repository = githubRepositoryFromOrigin(project.originUrl);
+
+  return [project.name, repository ?? 'No GitHub remote']
+    .filter(Boolean)
+    .join(' · ');
+}

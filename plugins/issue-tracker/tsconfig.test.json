@@ -1,1 +1,4 @@
-{ "extends": "@argo/plugin-kit/tsconfig.test.json" }
+{
+  "extends": "@argo/plugin-kit/tsconfig.test.json",
+  "include": ["**/*.test.ts", "journey-fixture.ts"]
+}

@@ -1,7 +1,7 @@
 #!/bin/sh
-# Issue 42 changes status; gh refuses to change issue 43's.
+# Issue 42 changes status; gh refuses to change issue 43's. Closed searches find nothing.
 issue() {
-  printf '{"number":%s,"title":"%s","state":"OPEN","body":"This Issue came from the fixture gh executable.","labels":[{"name":"fixture"}],"assignees":[{"login":"octocat"}],"url":"https://github.com/owner/repository/issues/%s"}' "$1" "$2" "$1"
+  printf '{"number":%s,"title":"%s","state":"OPEN","body":"This Issue came from the fixture gh executable.","labels":[{"name":"fixture","color":"d73a4a"}],"assignees":[{"login":"octocat"}],"url":"https://github.com/owner/repository/issues/%s"}' "$1" "$2" "$1"
 }
 issue_42() { issue 42 'Fixture issue from GitHub'; }
 issue_43() { issue 43 'Fixture issue gh cannot change'; }
@@ -9,11 +9,21 @@ if [ "$1" = "auth" ] && [ "$2" = "status" ]; then
   exit 0
 fi
 if [ "$1" = "issue" ] && [ "$2" = "list" ]; then
-  if [ "$6" = "closed" ]; then
-    printf '%s\n' '[]'
-    exit 0
-  fi
-  printf '[%s,%s]\n' "$(issue_42)" "$(issue_43)"
+  case "$8" in
+    *is:closed*) printf '%s\n' '[]' ;;
+    *) printf '[%s,%s]\n' "$(issue_42)" "$(issue_43)" ;;
+  esac
+  exit 0
+fi
+if [ "$1" = "api" ] && [ "$4" = "search/issues" ]; then
+  case "$6" in
+    *is:closed*) printf '%s\n' '{"total_count":0,"items":[]}' ;;
+    *) printf '%s\n' '{"total_count":2,"items":[]}' ;;
+  esac
+  exit 0
+fi
+if [ "$1" = "label" ] && [ "$2" = "list" ]; then
+  printf '%s\n' '[{"name":"fixture"},{"name":"good first issue"}]'
   exit 0
 fi
 if [ "$1" = "issue" ] && [ "$2" = "view" ]; then
