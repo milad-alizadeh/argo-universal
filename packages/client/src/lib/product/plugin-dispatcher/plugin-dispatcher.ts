@@ -13,11 +13,21 @@ type Queued = {
   reply: PromiseWithResolvers<void>;
 };
 
+// A rejected delivery, as the Plugin's Server answered it.
+export type DeliveryFailure = Error;
+
+export type ReportFailure = (failure: DeliveryFailure) => void;
+
+const ignoreFailure: ReportFailure = (): void => {};
+
 export class PluginDispatcher {
   private readonly queued = new Map<string, Queued>();
   // Throttled edits on their way to the Plugin; they settle, never reject.
   private readonly edits = new Set<Promise<void>>();
-  constructor(private deliver: PluginOnEvent) {}
+  constructor(
+    private deliver: PluginOnEvent,
+    private readonly report: ReportFailure = ignoreFailure,
+  ) {}
 
   public setDelivery(deliver: PluginOnEvent): void {
     this.deliver = deliver;
@@ -25,14 +35,19 @@ export class PluginDispatcher {
 
   public send(key: string, input: PartEventInput): void | Promise<void> {
     const event = checkedPartEvent(input);
-    const { flush, throttleMs } = partEventRules(input.schema);
-    const deliver = this.deliver;
+    const { awaits, flush, throttleMs } = partEventRules(input.schema);
+    const deliver = this.deliveryFor(awaits);
 
     if (throttleMs) return this.queue({ key, event, deliver }, throttleMs);
     // Queued edits reach the Plugin, in order, before a Submit or press that flushes.
     const edits = flush ? this.releaseAll() : [];
 
     return after(edits, () => deliver(key, event));
+  }
+
+  // An awaited event's part reports its own failure; any other is reported here.
+  private deliveryFor(awaits?: boolean): PluginOnEvent {
+    return awaits ? this.deliver : reporting(this.deliver, this.report);
   }
 
   private queue(
@@ -73,6 +88,19 @@ export class PluginDispatcher {
   public close(): void {
     void this.releaseAll();
   }
+}
+
+// A failed delivery is reported once, as it fails; the caller still sees the rejection.
+function reporting(
+  deliver: PluginOnEvent,
+  report: ReportFailure,
+): PluginOnEvent {
+  return (key, event) => {
+    const delivery = deliver(key, event);
+    void delivery?.catch(report);
+
+    return delivery;
+  };
 }
 
 function after(

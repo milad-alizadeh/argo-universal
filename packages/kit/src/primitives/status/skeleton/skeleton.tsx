@@ -9,8 +9,12 @@ const markOverlay = (node: ComponentRef<typeof View> | null): void => {
   if (node instanceof Element) node.setAttribute(overlayAttribute, '');
 };
 
+const fillClass = (props: SkeletonProps): string | undefined =>
+  props.fill ? 'flex-1' : undefined;
+
 // React Native Web's View is already the positioning context the overlay needs, so the wrapper adds no style.
 const rootProps = (props: SkeletonProps): ViewProps => ({
+  className: fillClass(props),
   testID: props.testID,
   role: props.loading ? 'status' : undefined,
   'aria-busy': props.loading ? true : undefined,

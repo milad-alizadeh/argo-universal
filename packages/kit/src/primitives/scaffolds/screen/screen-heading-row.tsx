@@ -13,6 +13,7 @@ import { ScreenBack } from './screen-back';
 import { ScreenColumn } from './screen-column';
 import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
+import { SelectEntry } from './screen-selection-mode';
 
 // A wide Screen's heading, or any Screen's when no navigator draws its header.
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
@@ -51,14 +52,17 @@ type HeadingContent = { title: ReactNode; actions: ReactNode };
 
 /*
  * A page's heading sits in its own column; a list column's is denser, its title one level down, its buttons small and
- * its search the sidebar's, since it sits above a list beside its page.
+ * its search the sidebar's, since it sits above a list beside its page. A List that is selecting replaces it with its
+ * own header (ADR-0043).
  */
 export type HeadingPlacement = 'page' | 'list';
 
 type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
 
-export function HeadingRow(props: HeadingRowProps): ReactElement {
+export function HeadingRow(props: HeadingRowProps): ReactNode {
   const { placement = 'page' } = props;
+
+  if (props.selectionMode?.header) return props.selectionMode.header;
 
   const content = {
     title: <ScreenTitle title={props.title} level={titleLevels[placement]} />,
@@ -106,13 +110,16 @@ function PlainHeading(props: HeadingContent): ReactElement {
 
 // The Screen's own Actions, split as one header with one overflow menu, then its primary Action.
 export function HeadingActions(
-  props: Pick<ScreenHeaderInput, 'header'> & { size?: IconButtonSize },
+  props: Pick<ScreenHeaderInput, 'header' | 'selectionMode'> & {
+    size?: IconButtonSize;
+  },
 ): ReactElement {
   const { groups, label, primary } = props.header;
   const { size } = props;
 
   return (
     <>
+      <SelectEntry mode={props.selectionMode} />
       <DeclaredActions groups={groups} label={label} size={size} />
       <DeclaredActions groups={primary} label={label} size={size} />
     </>

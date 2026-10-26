@@ -3,11 +3,12 @@ import { View } from 'react-native';
 import { useClaim } from '#kit/claim-store';
 import { HeadingRow } from './screen-heading-row';
 import { ScreenInPage, type ListColumnHeading } from './screen-list-column';
-import type { ScreenProps } from './screen-props';
+import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
 import { useScreenHeader } from './use-screen-header';
 
-type ListColumnScreenProps = ScreenProps & { heading: ListColumnHeading };
+type ListColumnScreenProps = ScreenProps &
+  Pick<ScreenHeaderInput, 'selectionMode'> & { heading: ListColumnHeading };
 
 /*
  * A Screen that is the content of a list column: its heading goes up to the column's top row, and the list below

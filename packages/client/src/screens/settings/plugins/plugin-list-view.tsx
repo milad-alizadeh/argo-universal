@@ -19,10 +19,20 @@ export type PluginsLoad =
   | { status: 'error' }
   | { status: 'loaded'; plugins: PluginRow[] };
 
+// A Slot's page, entered from its own row; `count` is how many Plugins are on in it.
+export interface SlotLink {
+  slotId: string;
+  title: string;
+  count: number;
+}
+
 export interface PluginListViewProps {
   caption?: string;
   plugins: PluginsLoad;
+  // The Slots some Plugin fills; a Slot no Plugin fills has no row.
+  slots: readonly SlotLink[];
   onOpenPlugin: (pluginId: string) => void;
+  onOpenSlot: (slotId: string) => void;
 }
 
 export const pluginsTitle = 'Plugins';
@@ -35,10 +45,38 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
     <Screen title={pluginsTitle} caption={props.caption}>
       <List appearance="grouped">
         <ListSection>{pluginRows(props)}</ListSection>
+        {slotsSection(props)}
       </List>
     </Screen>
   );
 }
+
+/*
+ * Their own card below the Plugins: a Slot's page is the Server's Plugins taken together, not one Plugin's.
+ * Called, not rendered, so the List sees its section.
+ */
+function slotsSection({
+  slots,
+  onOpenSlot,
+}: PluginListViewProps): React.JSX.Element | null {
+  if (slots.length === 0) return null;
+
+  return (
+    <ListSection>{slots.map((slot) => slotRow(slot, onOpenSlot))}</ListSection>
+  );
+}
+
+const slotRow = (
+  slot: SlotLink,
+  onOpen: (slotId: string) => void,
+): React.JSX.Element => (
+  <FieldGroup.Link
+    key={slot.slotId}
+    title={slot.title}
+    value={`${slot.count} on`}
+    onPress={() => onOpen(slot.slotId)}
+  />
+);
 
 const loadFailed: ErrorToast = {
   title: 'Could not load Plugins',

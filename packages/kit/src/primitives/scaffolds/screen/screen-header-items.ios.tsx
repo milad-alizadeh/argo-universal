@@ -9,7 +9,7 @@ import {
 } from '#primitives/actions/action';
 import { useScreenMenu } from './screen-menu-context';
 import { screenPrimaryAction } from './screen-primary-action';
-import type { ScreenHeaderInput, ScreenProps } from './screen-props';
+import type { ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';
 import {
   overflowMenu,
@@ -53,16 +53,16 @@ function MenuItem(): ReactElement | null {
   );
 }
 
-type HeaderProps = ScreenProps & { declared: ActionGroup[]; label: string };
+type HeaderProps = ScreenHeaderInput & {
+  declared: ActionGroup[];
+  label: string;
+};
 
 // The primary Action sits top right on every iPhone and iPad, wherever the search bar is.
 function HeaderItems(props: HeaderProps): ReactElement {
   const primary = screenPrimaryAction(props);
 
-  const { direct, overflow } = splitHeaderActions(
-    props.declared,
-    primary ? 1 : 2,
-  );
+  const { direct, overflow } = headerEntries(props, Boolean(primary));
 
   const entry = toolbarEntry(useNativeTheme().colors.primary);
 
@@ -70,7 +70,24 @@ function HeaderItems(props: HeaderProps): ReactElement {
     <Stack.Toolbar placement="right">
       {direct.map(entry)}
       {overflowMenu(overflow, props.label)}
+      {selectItem(props)}
       {primary ? toolbarButton({ ...primary, id: 'primary' }) : null}
     </Stack.Toolbar>
   );
+}
+
+// Select is a stock bar button of its own: the stack sizes it, and it ends the bar's items before the primary Action.
+function selectItem(props: ScreenHeaderInput): ReactElement | null {
+  const begin = props.selectionMode?.begin;
+
+  if (!begin) return null;
+
+  return toolbarButton({ id: 'select', label: 'Select', onPress: begin });
+}
+
+function headerEntries(
+  props: HeaderProps,
+  primary: boolean,
+): ReturnType<typeof splitHeaderActions> {
+  return splitHeaderActions(props.declared, primary ? 1 : 2);
 }

@@ -203,3 +203,8 @@ export {
 export { archivedToast } from './components/archive-session/archived-toast';
 
 export { SessionChangeDetail } from './components/session-change-detail';
+
+export {
+  SessionRow,
+  type SessionRowProps,
+} from './components/session-row/session-row';

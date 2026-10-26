@@ -10,13 +10,19 @@ import {
   pluginRows,
 } from './plugin-settings.fixtures';
 
+const sessionRowsSlotId = 'argo/session/row/v1';
+
+const sessionRowsTitle = 'Session rows';
+
 const meta = {
   title: 'Tests/Screens/Settings/Plugins',
   component: PluginListView,
   parameters: { screenPreview: true },
   args: {
     plugins: { status: 'loaded', plugins: pluginRows },
+    slots: [],
     onOpenPlugin: fn(),
+    onOpenSlot: fn(),
   },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof PluginListView>;
@@ -46,6 +52,23 @@ export const ARowOpensItsPlugin: Story = {
     await expect(args.onOpenPlugin).toHaveBeenLastCalledWith(
       githubPlugin.pluginId,
     );
+  },
+};
+
+export const ASlotRowOpensItsPage: Story = {
+  args: {
+    slots: [{ slotId: sessionRowsSlotId, title: sessionRowsTitle, count: 3 }],
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.getByText('3 on')).toBeVisible();
+    await userEvent.click(canvas.getByText(sessionRowsTitle));
+    await expect(args.onOpenSlot).toHaveBeenCalledWith(sessionRowsSlotId);
+  },
+};
+
+export const LeavesSlotsOutUntilAPluginFillsOne: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText(sessionRowsTitle)).toBeNull();
   },
 };
 

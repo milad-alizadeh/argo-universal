@@ -4,6 +4,7 @@ import { useInMenu } from '../../../menu-rows-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
+import { ListBehaviours } from './list-behaviours';
 import { childIdentity } from './list-child-identity';
 import { childRenderer, usePreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
@@ -77,6 +78,7 @@ function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
       {...props}
       {...prepared}
       maxHeight={childMaxHeight(props, height)}
+      maintainVisibleContentPosition={childAnchor(props.anchor)}
     />
   );
 }
@@ -118,9 +120,14 @@ function ListRows<Item>(props: ListProps<Item>): ReactElement {
 
 export function List<Item>(props: ListProps<Item>): ReactElement {
   return (
-    <ListMenuRows>
-      <ListRows {...props} />
-    </ListMenuRows>
+    <ListBehaviours
+      list={props}
+      render={(prepared) => (
+        <ListMenuRows>
+          <ListRows {...prepared} />
+        </ListMenuRows>
+      )}
+    />
   );
 }
 
@@ -133,4 +140,8 @@ function childDrawing(
   'keyExtractor' | 'fullSpan' | 'getItemType' | 'renderItem'
 > {
   return { ...childIdentity, renderItem: childRenderer(appearance) };
+}
+
+function childAnchor(anchor: ListProps<never>['anchor']): true | undefined {
+  return anchor === 'end' ? true : undefined;
 }

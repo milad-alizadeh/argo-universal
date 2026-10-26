@@ -7,7 +7,11 @@ import {
 } from '@repo/contracts/plugins/wire';
 import type { z } from 'zod';
 import { runAction } from '../plugin-actions';
-import type { ControlInput as Input, PluginProps } from './plugin-rendering';
+import type {
+  ControlInput as Input,
+  PluginProps,
+  Callback,
+} from './plugin-rendering';
 
 type Event = {
   name: string;
@@ -39,17 +43,30 @@ function callback(
   input: Input,
   event: Event,
   change: Change,
-): ((value?: WireJson) => void) | undefined {
+): Callback | undefined {
   const rules = partEventRules(event.schema);
 
-  if (!event.handler && !rules.value) return undefined;
+  if (!event.handler && !ownsEcho(input, rules)) return undefined;
+
+  return eventCallback(input, event, change);
+}
+
+function ownsEcho(input: Input, rules: PartEventRules): boolean {
+  if (!rules.value) return false;
+
+  return rules.within === undefined
+    ? true
+    : input.node.props[rules.within] !== undefined;
+}
+
+function eventCallback(input: Input, event: Event, change: Change): Callback {
+  const rules = partEventRules(event.schema);
+
+  // List owns its loading state and reports a rejected page or refresh once.
+  if (rules.awaits) return (value) => deliver(input, event, value);
 
   return (value) =>
-    change({
-      rules,
-      value,
-      deliver: () => deliver(input, event, value),
-    });
+    change({ rules, value, deliver: () => deliver(input, event, value) });
 }
 
 async function deliver(

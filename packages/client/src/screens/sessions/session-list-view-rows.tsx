@@ -32,6 +32,8 @@ type ListActions = Pick<
   | 'onSelect'
   | 'onRename'
   | 'onArchive'
+  | 'onArchiveMany'
+  | 'onRefresh'
   | 'onEndReached'
 >;
 
@@ -43,6 +45,8 @@ function listActions(props: SessionListViewProps): ListActions {
     onSelect: props.onSelect,
     onRename: props.onRename,
     onArchive: props.onArchive,
+    onArchiveMany: props.onArchiveMany,
+    onRefresh: props.onRefresh,
     onEndReached: props.onLoadMore,
   };
 }

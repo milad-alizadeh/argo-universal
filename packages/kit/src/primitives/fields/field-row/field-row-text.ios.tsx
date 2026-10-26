@@ -2,7 +2,7 @@ import { Label, VStack } from '@expo/ui/swift-ui';
 import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
-import { NativeText } from '#primitives/content/native-text';
+import { NativeText, useTextColor } from '#primitives/content/native-text';
 import { drawnSymbol } from '../../../symbols/drawn-symbol';
 import { type IconSymbol, resolveIcon } from '../../../symbols/icon-symbol';
 import { nativeIconName } from '../../../symbols/native-icon-name';
@@ -10,7 +10,11 @@ import { NativeSymbol } from '../../../symbols/native-symbol';
 import { RowLogo } from './field-row-logo';
 import type { RowTextProps } from './field-row-text';
 
-type RowTitleProps = RowTextProps & { title: string; subtitle?: string };
+type RowTitleProps = RowTextProps & {
+  title: string;
+  subtitle?: string;
+  subtitleTone?: 'warning';
+};
 
 /*
  * The title as SwiftUI draws it in a stock row: a plain Text, or a Label with its icon. A row is one line; its
@@ -37,14 +41,17 @@ const rowIcon = (props: RowTitleProps): LabelIcon | undefined =>
     ? { icon: <RowLogo logo={props.logo} title={props.title} /> }
     : labelIcon(props);
 
-// A subtitle as a stock row draws it: the secondary shade, one text style down.
-const subtitleModifiers = [
+// A subtitle as a stock row draws it: the secondary shade, one text style down, or the warning colour it asks for.
+const subtitleModifiers = (
+  warning: string | undefined,
+): ReturnType<typeof font>[] => [
   font({ textStyle: 'subheadline' }),
-  foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
+  foregroundStyle(warning ?? { type: 'hierarchical', style: 'secondary' }),
 ];
 
 // The Label's title view: the title and any subtitle under it, so the subtitle starts where the title does.
 function TitleLines(props: RowTitleProps): ReactElement {
+  const warning = useTextColor(props.subtitleTone);
   const title = <NativeText tone={props.tone}>{props.title}</NativeText>;
 
   if (!props.subtitle) return title;
@@ -52,7 +59,9 @@ function TitleLines(props: RowTitleProps): ReactElement {
   return (
     <VStack alignment="leading">
       {title}
-      <NativeText modifiers={subtitleModifiers}>{props.subtitle}</NativeText>
+      <NativeText modifiers={subtitleModifiers(warning)}>
+        {props.subtitle}
+      </NativeText>
     </VStack>
   );
 }

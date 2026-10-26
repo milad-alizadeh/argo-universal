@@ -1,4 +1,5 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
+import { useNewestKeyWhenLeftEnd } from '@repo/kit/primitives/lists/list';
 import {
   type RefObject,
   useEffect,
@@ -6,7 +7,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useNewestKeyWhenLeftEnd } from '#lib/product/jump-to-latest';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { type FeedEntry, entryKey } from './feed-entry';
 

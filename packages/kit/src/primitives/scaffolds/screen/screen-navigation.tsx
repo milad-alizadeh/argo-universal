@@ -6,6 +6,7 @@ import { HeadingRow } from './screen-heading-row';
 import { useScreenMenu } from './screen-menu-context';
 import { useScreenNavigator } from './screen-navigation-context';
 import type { ScreenHeaderInput } from './screen-props';
+import { selectionOptions } from './screen-selection-options';
 
 export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
   const navigator = useScreenNavigator();
@@ -17,9 +18,13 @@ export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
 
   const options = { ...headerLayout, title: props.title ?? '', headerTitle };
 
-  return (
-    <Stack.Screen options={{ ...options, ...leading, headerShown: !wide }} />
-  );
+  const headerOptions = {
+    ...options,
+    ...selectionOptions(props.selectionMode, leading),
+    headerShown: !wide,
+  };
+
+  return <Stack.Screen options={headerOptions} />;
 }
 
 // The navigator draws the header outside the Screen's tree, so it draws the Actions the Screen declared.

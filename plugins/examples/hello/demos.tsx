@@ -16,6 +16,8 @@ export const demos = [
   { path: 'runs', title: 'Runs', subtitle: 'A table of runs' },
   { path: 'canvas', title: 'Canvas', subtitle: 'Drawing on a Canvas' },
   { path: 'views', title: 'Issue views', subtitle: 'A segmented switcher' },
+  { path: 'posts', title: 'Remote posts', subtitle: 'A paged list from fetch' },
+  { path: 'log', title: 'Log', subtitle: 'A list anchored to its end' },
 ];
 
 type Demo = (typeof demos)[number];

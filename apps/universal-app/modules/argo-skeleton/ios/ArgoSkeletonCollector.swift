@@ -83,7 +83,28 @@ enum SkeletonCollector {
     }
     found += drawn(by: host.layer, root: root)
     for child in host.subviews { visit(child) }
-    return found
+    return withoutCoveredBars(found)
+  }
+
+  /*
+   * A control's own placeholder stands for what is inside it. SwiftUI paints a button's label beside its fill rather
+   * than into it, so the label's bar would draw over the capsule as a darker mark: a leaf whose placeholders all lie
+   * inside a larger leaf's single placeholder keeps its layer hidden and draws none.
+   */
+  private static func withoutCoveredBars(_ found: [SkeletonLeaf]) -> [SkeletonLeaf] {
+    let controls = found.compactMap { $0.placeholders.count == 1 ? $0.placeholders[0].rect : nil }
+    return found.map { leaf in
+      let inside = !leaf.placeholders.isEmpty && leaf.placeholders.allSatisfy { bar in
+        controls.contains { control in
+          control.insetBy(dx: -SkeletonRules.roundSlack, dy: -SkeletonRules.roundSlack).contains(bar.rect)
+            && control.width * control.height > bar.rect.width * bar.rect.height
+        }
+      }
+      if !inside { return leaf }
+      var emptied = leaf
+      emptied.placeholders = []
+      return emptied
+    }
   }
 
   // The layers of a view that SwiftUI paints text or an icon into. Layers of subviews are their own walk.
@@ -94,6 +115,12 @@ enum SkeletonCollector {
       let name = String(reflecting: type(of: child))
       let bounds = child.bounds
       if bounds.width > 0, bounds.height > 0 {
+        // A small filled, rounded layer is a control's fill (a Button's capsule): one placeholder of its own shape.
+        if isControlFill(child) {
+          let rect = root.layer.convert(bounds, from: child)
+          found.append(SkeletonLeaf(layer: child, placeholders: [SkeletonPlaceholder(rect: rect, radius: min(child.cornerRadius, min(rect.width, rect.height) / 2))]))
+          continue
+        }
         if SkeletonRules.glyphLayerClasses.contains(where: { name.contains($0) }) {
           let rect = root.layer.convert(bounds, from: child)
           found.append(SkeletonLeaf(layer: child, placeholders: [SkeletonPlaceholder(rect: rect, radius: min(rect.width, rect.height) / 2)]))
@@ -107,6 +134,11 @@ enum SkeletonCollector {
       found += drawn(by: child, root: root)
     }
     return found
+  }
+
+  private static func isControlFill(_ layer: CALayer) -> Bool {
+    guard let colour = layer.backgroundColor, colour.alpha > 0, layer.cornerRadius > 0 else { return false }
+    return fitsSmallControl(layer.bounds.size)
   }
 
   static func isHosting(_ view: UIView) -> Bool {

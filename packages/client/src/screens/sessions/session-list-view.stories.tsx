@@ -17,6 +17,7 @@ const meta = {
     onSelect: action('select Session'),
     onRename: action('rename Session'),
     onArchive: action('archive Session'),
+    onArchiveMany: action('archive selected Sessions'),
     onNewSession: action('new Session'),
     onNewSessionInProject: action('new Session in Project'),
     onProjectSettings: action('Project settings'),

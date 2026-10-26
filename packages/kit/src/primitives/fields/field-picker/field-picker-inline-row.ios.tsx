@@ -5,30 +5,15 @@ import {
   disabled,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
-import { RowTitle } from '#primitives/fields/field-row';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { optionChoice, type OptionRowProps } from './field-picker-kind';
-import type { FieldPickerOption, FieldPickerProps } from './field-picker-model';
+import {
+  isOptionOff,
+  optionChoice,
+  type OptionRowProps,
+} from './field-picker-kind';
+import type { FieldPickerOption } from './field-picker-model';
+import { OptionTitle } from './field-picker-option-title';
 import { wholeRowPress } from './field-picker-screen-row.ios';
-
-const offModifiers = (
-  props: Pick<FieldPickerProps, 'disabled'>,
-): ReturnType<typeof disabled>[] => [disabled(props.disabled ?? false)];
-
-// An option's title (and icon) and its subtitle under the title.
-function OptionLabel(props: { option: FieldPickerOption }): ReactElement {
-  const { option } = props;
-
-  return (
-    <RowTitle
-      title={option.label}
-      subtitle={option.subtitle}
-      leading={option.icon}
-      logo={option.logo}
-      tone={option.tone}
-    />
-  );
-}
 
 const selectedTrait = accessibilityAddTraits(['isSelected']);
 
@@ -37,7 +22,7 @@ const pressModifiers = (
   selected: boolean,
 ): ReturnType<typeof disabled>[] => [
   buttonStyle('plain'),
-  ...offModifiers(props),
+  disabled(isOptionOff(props)),
   ...(selected ? [selectedTrait] : []),
 ];
 
@@ -61,7 +46,7 @@ export function OptionRow(props: OptionRowProps): ReactElement {
   return (
     <Button onPress={toggle} modifiers={pressModifiers(props, selected)}>
       <HStack modifiers={[wholeRowPress]}>
-        <OptionLabel option={props.option} />
+        <OptionTitle option={props.option} />
         <Spacer />
         {mark(props.option, selected)}
       </HStack>

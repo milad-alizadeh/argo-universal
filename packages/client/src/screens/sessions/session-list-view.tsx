@@ -41,6 +41,8 @@ export interface SessionListViewProps {
   onNewSessionInProject: (projectId: string) => void;
   onProjectSettings: (projectName: string) => void;
   onLoadMore: () => void;
+  onRefresh?: () => Promise<void>;
+  onArchiveMany?: (sessionIds: readonly string[]) => void;
 }
 
 const loadFailed: ErrorToast = {

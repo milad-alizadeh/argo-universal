@@ -30,6 +30,7 @@ type RowTitleProps = RowTextProps & {
   numberOfLines?: number;
   // A line under the title, such as a picker option's description, starting where the title starts.
   subtitle?: string;
+  subtitleTone?: 'warning';
 };
 
 export function RowTitle(props: RowTitleProps): ReactNode {
@@ -58,7 +59,7 @@ function TitleLines(props: RowTitleProps): ReactElement {
   return (
     <Column spacing={subtitleGap}>
       <Title {...props} />
-      <NativeText role="secondary" tone="muted">
+      <NativeText role="secondary" tone={props.subtitleTone ?? 'muted'}>
         {props.subtitle}
       </NativeText>
     </Column>
