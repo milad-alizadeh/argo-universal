@@ -1,8 +1,10 @@
+import type { ListAppearance } from '@repo/kit/list-context';
 import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import type { SessionsLayout } from '../../stores/sessions-view';
 
 // Placeholder text never shows: each skeleton bar takes the width its line would.
@@ -42,19 +44,43 @@ function SkeletonRows({ layout }: SessionsLoadingProps): React.ReactNode {
   ));
 }
 
+const skeletonInsets = {
+  fit: true,
+  padding: { compact: 4, wide: 0 },
+  paddingTop: { compact: 5, wide: 2 },
+} as const;
+
 // The Sessions list's own shape, a Project's section header over its rows, so nothing shifts when Sessions load.
-function SkeletonList({ layout }: SessionsLoadingProps): React.JSX.Element {
+function SkeletonList({
+  layout,
+  appearance,
+}: SessionsLoadingProps & { appearance: ListAppearance }): React.JSX.Element {
   return (
-    <List
-      appearance={layout === 'compact' ? groupedOnPhones('plain') : 'cards'}
-      fit
-      padding={{ compact: 4, wide: 0 }}
-      paddingTop={{ compact: 5, wide: 2 }}
-    >
+    <List appearance={appearance} {...skeletonInsets}>
       <List.Section isLoading title="Example Project">
         <SkeletonRows layout={layout} />
       </List.Section>
     </List>
+  );
+}
+
+const sidebarAppearance = (appearance: ListAppearance): ListAppearance =>
+  Platform.OS === 'web' ? 'plain' : appearance;
+
+// A wide web sidebar keeps loading rows as flat as the Sessions they will replace.
+function LoadingList({ layout }: SessionsLoadingProps): React.JSX.Element {
+  const appearance = layout === 'compact' ? groupedOnPhones('plain') : 'cards';
+
+  return (
+    <SizeClass
+      compact={<SkeletonList layout={layout} appearance={appearance} />}
+      wide={
+        <SkeletonList
+          layout={layout}
+          appearance={sidebarAppearance(appearance)}
+        />
+      }
+    />
   );
 }
 
@@ -68,7 +94,7 @@ export function SessionsLoading({
       accessibilityLabel="Loading Sessions"
       className="wide:pl-2 wide:pr-3.5"
     >
-      <SkeletonList layout={layout} />
+      <LoadingList layout={layout} />
     </View>
   );
 }
