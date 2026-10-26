@@ -59,6 +59,7 @@ export type AdditionalPrimitives = {
   ScreenStackHeaderProps: ScreenKit.ScreenStackHeaderProps;
   ScreenBand: ScreenKit.ScreenBand;
   ScreenBandHost: ScreenKit.ScreenBandHost;
+  BandHost: ScreenKit.BandHost<unknown>;
   ScreenListColumnProps: ScreenKit.ScreenListColumnProps;
   DetailProps: DetailKit.DetailProps;
   ListDetailProps: ListDetailKit.ListDetailProps;

@@ -10,8 +10,8 @@ When("I review the Frame's file comparison", async ({ page }) => {
     : reviewDesktopComparison(page));
 });
 
+// Diffs open in place in the Inspector; a new comparison folds its files again, so the greeting's header reopens it.
 async function reviewDesktopComparison(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
   await compareAgainstRemote(page);
   await greetingHeader(page).click();
 }
