@@ -1,3 +1,4 @@
+import type { Argo } from '@repo/contracts/plugins/argo-api';
 import {
   pluginKitExports,
   type PluginKitExport,
@@ -12,6 +13,11 @@ import {
   type ViewSender,
   type DispatchSender,
 } from './pages';
+import {
+  slotProviders,
+  type SlotProviders,
+  type SlotSend,
+} from './slot-providers';
 import { dataClient } from './use-data';
 import { viewEffects } from './view-scope';
 
@@ -61,7 +67,8 @@ export interface Kit {
   exports: typeof exportsOf & Pick<ReturnType<typeof dataClient>, 'useData'>;
   jsxRuntime: typeof jsxRuntime;
   registerPage: Pages['register'];
-  registerSlot: Pages['registerSlot'];
+  // The worker's `argo.slots`; it also answers the batched items calls the inbox hands it.
+  slots: Argo['slots'];
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
   requirePage: Pages['requirePage'];
@@ -75,18 +82,20 @@ export interface Kit {
 export function createKit(
   send: ViewSender,
   settle: DispatchSender,
-  call: Parameters<typeof dataClient>[0],
+  calls: { data: Parameters<typeof dataClient>[0]; slots: SlotSend },
 ): Kit {
-  const data = dataClient(call);
+  const data = dataClient(calls.data);
 
   const pages = mountPages(send, settle, (viewId, background) =>
     data.ready(viewId, background),
   );
 
-  return pageKit(data, pages);
+  return pageKit(data, pages, slotProviders(calls.slots, pages));
 }
 
-function pageKit(data: ReturnType<typeof dataClient>, pages: Pages): Kit {
+type DataClient = ReturnType<typeof dataClient>;
+
+function pageKit(data: DataClient, pages: Pages, slots: SlotProviders): Kit {
   return {
     isElement: React.isValidElement,
     requirePage: pages.requirePage,
@@ -94,19 +103,21 @@ function pageKit(data: ReturnType<typeof dataClient>, pages: Pages): Kit {
     exports: { ...exportsOf, useData: data.useData },
     jsxRuntime,
     registerPage: pages.register,
-    registerSlot: pages.registerSlot,
-    inbox: inbox(data, pages),
+    slots,
+    inbox: inbox(data, pages, slots),
   };
 }
 
 function inbox(
   data: ReturnType<typeof dataClient>,
   pages: Pages,
+  providers: SlotProviders,
 ): Kit['inbox'] {
   return (json): void => {
     const event = PluginEvent.parse(JSON.parse(json));
 
     if (event.type === 'data') data.receive(event);
+    else if (event.type === 'slotItems') providers.answer(event);
     else pages.receive(event);
   };
 }

@@ -123,7 +123,8 @@ export class RuntimePlugins {
     hanging,
     error,
   }: Extract<HostMessage, { type: 'status' }>): void {
-    if (state === 'running') this.input.resources.views.reopen(pluginId);
+    if (state === 'running') this.input.resources.running(pluginId, generation);
+
     this.plugins.get(pluginId)?.update({ state, hanging, error }, generation);
   }
 

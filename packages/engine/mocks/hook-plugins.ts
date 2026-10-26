@@ -1,7 +1,10 @@
 import { readFile, realpath, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { HookEventName, PluginCapability } from '@repo/contracts/plugins';
-import type { SlotId } from '@repo/contracts/plugins/wire';
+import type {
+  AddOnlySlotId,
+  ReplaceableSlotId,
+} from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 import { shippedFolder, writePlugin } from './runtime-plugins';
 
@@ -10,7 +13,8 @@ export type HookPlugin = {
   // The entry's source; `$DATA` stands for the Plugin's data folder.
   source: string;
   hooks?: HookEventName[];
-  slots?: SlotId[];
+  slots?: AddOnlySlotId[];
+  renders?: ReplaceableSlotId[];
   capabilities?: PluginCapability[];
   order?: number;
 };

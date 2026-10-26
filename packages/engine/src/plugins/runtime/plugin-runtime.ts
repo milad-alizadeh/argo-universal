@@ -74,6 +74,9 @@ export class PluginRuntime {
   get data(): RuntimeResources['data'] {
     return this.resources.data;
   }
+  get items(): RuntimeResources['items'] {
+    return this.resources.items;
+  }
   get background(): RuntimeResources['background'] {
     return this.resources.background;
   }
@@ -113,6 +116,7 @@ export class PluginRuntime {
         services: this.services,
         views: this.views,
         data: this.data,
+        items: this.items,
       },
       message,
     );

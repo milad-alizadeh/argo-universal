@@ -1,4 +1,5 @@
 import { ProjectsBranchesInput } from '@repo/contracts';
+import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { Database } from '@repo/db';
 import {
   readPluginProjects,
@@ -6,6 +7,7 @@ import {
   readProjectPaths,
   watchProjectChanges,
 } from '../projects';
+import { readSessionRow } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import type { createPluginRuntime } from './runtime/create-runtime';
 
@@ -15,7 +17,7 @@ export function projectPorts(
   options: ProjectSources,
 ): Pick<
   Parameters<typeof createPluginRuntime>[1],
-  'watchProjects' | 'projects' | 'projectInfo' | 'projectPath'
+  'watchProjects' | 'projects' | 'projectInfo' | 'projectPath' | 'sessionInfo'
 > {
   return {
     watchProjects: (changed) =>
@@ -23,7 +25,21 @@ export function projectPorts(
     projects: async () => readProjectPaths(options.database),
     projectInfo: async () => readPluginProjects(options.database),
     projectPath: async (projectId) => pluginProjectPath(options, projectId),
+    sessionInfo: async (sessionId) => pluginSession(options, sessionId),
   };
+}
+
+// Only a Session's Project and branch reach a Plugin; null when there is no such Session.
+function pluginSession(
+  options: ProjectSources,
+  sessionId: string,
+): PluginSessionInfo | null {
+  const row = readSessionRow(
+    { database: options.database, writer: options.databaseWriter },
+    sessionId,
+  );
+
+  return row ? { projectId: row.projectId, branch: row.checkoutBranch } : null;
 }
 
 function pluginProjectPath(options: ProjectSources, projectId: string): string {

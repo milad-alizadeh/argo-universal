@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 /*
  * What a Plugin's manifest declares it needs from the machine (ADR-0030). The Server checks every
- * `argo.fs`, `argo.process` and `argo.fetch` call: `argo.fs` reaches only the registered Projects,
- * read-only, and the Plugin's own data folder, which need no Capability; `argo.process` and
- * `argo.fetch` reach only what these declare.
+ * `argo.fs`, `argo.process`, `argo.fetch` and `argo.sessions` call: `argo.fs` reaches only the
+ * registered Projects, read-only, and the Plugin's own data folder, which need no Capability;
+ * `argo.process`, `argo.fetch` and `argo.sessions` reach only what these declare.
  */
 
 // Variables that load code or name a program bypass any command allowlist, so no Plugin may set them (ADR-0030).
@@ -151,10 +151,14 @@ const HookCapability = z.strictObject({
   event: z.literal('process.spawn'),
 });
 
+// `argo.sessions.get` tells a Plugin which branch the user works on in each Session, so it is declared too.
+const SessionsCapability = z.strictObject({ kind: z.literal('sessions:read') });
+
 export const PluginCapability = z.discriminatedUnion('kind', [
   ProcessCapability,
   FetchCapability,
   HookCapability,
+  SessionsCapability,
 ]);
 
 export type PluginCapability = z.infer<typeof PluginCapability>;

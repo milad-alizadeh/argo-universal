@@ -74,8 +74,14 @@ function writeReport(
 type ValidatedManifest = Awaited<ReturnType<typeof validatePlugin>>['manifest'];
 
 function writeOrder(manifest: ValidatedManifest, write: Write): void {
-  if (manifest?.contributes.slots) writeDeclaredOrder(manifest, write);
+  if (manifest && ordersSlots(manifest)) writeDeclaredOrder(manifest, write);
 }
+
+// `order` places a Plugin among Slot contributors and in `ui.render` chains, so it shows for either.
+const ordersSlots = ({
+  contributes,
+}: NonNullable<ValidatedManifest>): boolean =>
+  [contributes.slots, contributes.renders].some((ids) => Boolean(ids?.length));
 
 function writeDeclaredOrder(
   { contributes }: NonNullable<ValidatedManifest>,

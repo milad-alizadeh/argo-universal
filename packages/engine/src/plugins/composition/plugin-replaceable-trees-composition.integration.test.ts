@@ -72,7 +72,7 @@ it.each([
       {
         id: 'tree',
         hooks: ['ui.render'],
-        slots: [toolCallSlotId],
+        renders: [toolCallSlotId],
         source: `
     import { Text, Stack } from '@argo/plugin-kit';
     import { jsx } from '@argo/plugin-kit/jsx-runtime';

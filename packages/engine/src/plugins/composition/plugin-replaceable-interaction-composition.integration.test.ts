@@ -27,7 +27,7 @@ async function counterHome(): Promise<string> {
     {
       id: 'counter',
       hooks: ['ui.render'],
-      slots: [toolCallSlotId],
+      renders: [toolCallSlotId],
       source,
     },
   ]);

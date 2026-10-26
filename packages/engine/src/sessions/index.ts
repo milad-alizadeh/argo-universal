@@ -18,7 +18,7 @@ export { createSessionSnapshotWatcher } from './snapshot';
 
 export { watchTurnActivity } from './turn-activity';
 
-export { createSessionReader } from './session-record';
+export { createSessionReader, readSessionRow } from './session-record';
 
 export { readDefaultChangesSummary } from './changes-summary';
 

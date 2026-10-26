@@ -65,7 +65,11 @@ it.each([
     },
     PluginManifest.parse({
       ...manifest,
-      contributes: { nav: [], slots: ['argo/feed/tool-call/v1'] },
+      contributes: {
+        nav: [],
+        hooks: ['ui.render'],
+        renders: ['argo/feed/tool-call/v1'],
+      },
     }),
   );
 
