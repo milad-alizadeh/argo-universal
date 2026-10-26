@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { showToast, type ErrorToast } from '#primitives/overlays/toast';
 
 export type ListLoad = () => void | Promise<void>;
@@ -20,18 +20,33 @@ async function loadOrReport(
   }
 }
 
+interface RequestState {
+  active: { current: boolean };
+  setLoading: (loading: boolean) => void;
+}
+
+async function runOnce(
+  state: RequestState,
+  load: ListLoad,
+  failure: ErrorToast,
+): Promise<void> {
+  if (state.active.current) return;
+  state.active.current = true;
+  state.setLoading(true);
+  await loadOrReport(load, failure);
+  state.active.current = false;
+  state.setLoading(false);
+}
+
 export function useListRequest(failure: ErrorToast): ListRequest {
   const active = useRef(false);
   const [loading, setLoading] = useState(false);
 
-  const run = async (load: ListLoad): Promise<void> => {
-    if (active.current) return;
-    active.current = true;
-    setLoading(true);
-    await loadOrReport(load, failure);
-    active.current = false;
-    setLoading(false);
-  };
+  // Stable, so a declaration built on it registers once.
+  const run = useCallback(
+    (load: ListLoad) => runOnce({ active, setLoading }, load, failure),
+    [failure],
+  );
 
   return { loading, run };
 }

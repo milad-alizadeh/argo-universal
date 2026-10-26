@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { Action } from '#primitives/actions/action';
+import { primaryModifier } from '#primitives/content/kbd';
 import { Text } from '#primitives/content/text';
 import { dismissToasts } from '#primitives/overlays/toast';
 import { ListItem } from '../list-item';
@@ -420,5 +421,57 @@ export const WebDrawsNothingForRefresh: Story = {
     await expect(await canvas.findByText('Item 1')).toBeVisible();
     await expect(canvas.queryByRole('progressbar')).toBeNull();
     await expect(canvas.queryByRole('button', { name: /refresh/i })).toBeNull();
+  },
+};
+
+const pressableRow = (title: string): React.JSX.Element => (
+  <ListItem id={title} title={title} onPress={() => {}} />
+);
+
+// The primary key is ⌘ on Apple keyboards and Ctrl elsewhere.
+const pressRefresh = (): string => {
+  const key = primaryModifier() === 'meta' ? 'Meta' : 'Control';
+
+  return `{${key}>}r{/${key}}`;
+};
+
+const refreshed = fn();
+
+export const PrimaryRRefreshesOnWeb: Story = {
+  render: () => (
+    <List
+      {...refreshableList}
+      renderItem={pressableRow}
+      onRefresh={refreshed}
+    />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    refreshed.mockClear();
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Item 1' }),
+    );
+    await userEvent.keyboard(pressRefresh());
+    await expect(refreshed).toHaveBeenCalledOnce();
+  },
+};
+
+const refreshFailed = "Couldn't refresh";
+
+export const FailedRefreshShowsOneToast: Story = {
+  render: () => (
+    <List
+      {...refreshableList}
+      renderItem={pressableRow}
+      onRefresh={() => Promise.reject(new Error('Refused'))}
+    />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    dismissToasts();
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Item 1' }),
+    );
+    await userEvent.keyboard(pressRefresh());
+    await expect(await findToast(refreshFailed)).toBeVisible();
+    await expect(await allToasts(refreshFailed)).toHaveLength(1);
   },
 };

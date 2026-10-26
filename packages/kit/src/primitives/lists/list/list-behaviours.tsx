@@ -9,6 +9,7 @@ import {
 } from './list-content-selection';
 import { useListLoading } from './list-loading';
 import type { ListProps } from './list-props';
+import { ListRefreshShortcut } from './list-refresh';
 import { useListSearch } from './list-search';
 import { useSelectionActions } from './list-selection-actions';
 import { useSelectionBack } from './list-selection-back';
@@ -91,7 +92,9 @@ export function ListBehaviours<Item>({
   const rows = frameRows(frame, render(anchor.props));
 
   return (
-    <ContentSelectionContext value={selection}>{rows}</ContentSelectionContext>
+    <ContentSelectionContext value={selection}>
+      <ListRefreshShortcut refresh={list.onRefresh}>{rows}</ListRefreshShortcut>
+    </ContentSelectionContext>
   );
 }
 
