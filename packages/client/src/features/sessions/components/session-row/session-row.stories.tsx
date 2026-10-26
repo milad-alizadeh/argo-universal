@@ -88,12 +88,6 @@ const hover: Story['play'] = async ({ canvas, userEvent }) => {
 
 export const Hovered: Story = { args: runningSession, play: hover };
 
-export const CompactHovered: Story = {
-  name: 'Compact hovered',
-  args: compactSession,
-  play: hover,
-};
-
 // A checkpoint every 1.5 seconds: the fill springs from 1 to 2 to 3 of 4 done, then starts over.
 const checkpointMilliseconds = 1500;
 
