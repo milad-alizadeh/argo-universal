@@ -14,11 +14,14 @@ export const pathSegment = (text: string): string =>
     (character) => `_${(character.codePointAt(0) ?? 0).toString(hex)}_`,
   );
 
+export const projectPath = (projectId: string): string =>
+  `/projects/${pathSegment(projectId)}`;
+
 export const filterPath = (projectId: string, filter: IssueFilter): string =>
-  `/projects/${pathSegment(projectId)}/filters/${filter.id}`;
+  `${projectPath(projectId)}/filters/${filter.id}`;
 
 export const issuePath = (projectId: string, number: number): string =>
-  `/projects/${pathSegment(projectId)}/issues/${number}`;
+  `${projectPath(projectId)}/issues/${number}`;
 
 // A `navigate` Action names the page by its full App path.
 export const appPath = (path: string): string => `${appRoot}${path}`;

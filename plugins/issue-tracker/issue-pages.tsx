@@ -5,7 +5,8 @@ import type { IssueDeps, IssuePages } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
 import { FilterPage } from './issue-filter-page';
 import { builtInFilters, type IssueFilter } from './issue-filters';
-import { appPath, filterPath, issuePath } from './issue-paths';
+import { appPath, filterPath, issuePath, projectPath } from './issue-paths';
+import { IssuesRoot } from './issue-root';
 
 type Page = Parameters<Argo['pages']['register']>[1];
 
@@ -29,6 +30,8 @@ export function createIssuePages(
 type Register = (path: string, page: Page) => string;
 
 const hrefs = (register: Register, deps: () => IssueDeps): IssuePages => ({
+  projectHref: (project) =>
+    register(projectPath(project.id), projectPage(project, deps())),
   filterHref: (project, filter) =>
     register(
       filterPath(project.id, filter),
@@ -56,21 +59,29 @@ function registrar(argo: Argo): Register {
 async function registerBuiltIns(deps: IssueDeps): Promise<void> {
   const projects = await deps.listProjects().catch(() => []);
 
-  for (const project of projects)
+  for (const project of projects) {
+    deps.pages.projectHref(project);
+
     for (const filter of builtInFilters())
       deps.pages.filterHref(project, filter);
+  }
 }
+
+const projectPage = (project: Project, deps: IssueDeps): Page =>
+  function IssueProjectPage(): JSX.Element {
+    return <IssuesRoot deps={deps} project={project} />;
+  };
 
 type FilterInput = { project: Project; filter: IssueFilter; deps: IssueDeps };
 
 const filterPage = (source: FilterInput): Page =>
   function IssueFilterPage(): JSX.Element {
-    return <FilterPage {...source} />;
+    return <IssuesRoot {...source} detail={<FilterPage {...source} />} />;
   };
 
 type IssueInput = { project: Project; number: number; deps: IssueDeps };
 
 const issuePage = (source: IssueInput): Page =>
   function IssuePage(): JSX.Element {
-    return <IssueDetailPage {...source} />;
+    return <IssuesRoot {...source} detail={<IssueDetailPage {...source} />} />;
   };

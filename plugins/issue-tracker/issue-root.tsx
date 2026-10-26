@@ -1,11 +1,4 @@
-import {
-  EmptyState,
-  Icon,
-  List,
-  ListItem,
-  Screen,
-  useState,
-} from '@argo/plugin-kit';
+import { EmptyState, Icon, List, ListDetail, ListItem } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { repositoryText, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -15,46 +8,73 @@ import {
   type FilterGroup,
   type IssueFilter,
 } from './issue-filters';
-import { useOverview, type Overview } from './use-overview';
-import { useProjects } from './use-projects';
-
-type RootProjects = {
-  projects: Project[];
-  project: Project | undefined;
-  message: string;
-  choose: (id: string) => void;
-};
+import { useOverview, type Overview, type OverviewState } from './use-overview';
+import { useRootProjects, type RootProjects } from './use-root-projects';
 
 type RootView = {
   deps: IssueDeps;
   project: Project;
   overview: Overview | null;
+  selected?: string;
+};
+
+type RootProps = {
+  deps: IssueDeps;
+  project?: Project;
+  filter?: IssueFilter;
+  detail?: JSX.Element;
 };
 
 /*
  * The Issues section's landing page: GitHub's own ways to group a repository's Issues, by status, by
  * you and by label. Each row opens that filter's list.
  */
-export function IssuesRoot({ deps }: { deps: IssueDeps }): JSX.Element {
+export function IssuesRoot({ detail, ...props }: RootProps): JSX.Element {
   return (
-    <Screen title="Issues">
-      <RootList deps={deps} />
-    </Screen>
+    <ListDetail
+      title="Issues"
+      list={<RootList {...props} reload={detail === undefined} />}
+      detail={detail}
+      empty={
+        <EmptyState
+          title="Select a filter"
+          description="Choose a group from the sidebar."
+        />
+      }
+    />
   );
 }
 
-function RootList({ deps }: { deps: IssueDeps }): JSX.Element {
-  const choice = useRootProjects(deps);
-  const { overview, message, refresh } = useOverview(deps, choice.project);
+type RootListProps = Omit<RootProps, 'detail'> & { reload: boolean };
+
+type RootRowsProps = {
+  deps: IssueDeps;
+  choice: RootProjects;
+  state: OverviewState;
+  selected?: string;
+};
+
+function RootList(props: RootListProps): JSX.Element {
+  const { deps, project, filter, reload } = props;
+  const choice = useRootProjects(deps, project);
+  const state = useOverview(deps, choice.project, reload);
+
+  return (
+    <RootRows deps={deps} choice={choice} state={state} selected={filter?.id} />
+  );
+}
+
+function RootRows(props: RootRowsProps): JSX.Element {
+  const { deps, choice, state } = props;
 
   return (
     <List
-      footer={rootFooter(choice, message)}
+      footer={rootFooter(choice, state.message)}
       empty={<EmptyState title={choice.message} />}
-      onRefresh={refresh}
+      onRefresh={state.refresh}
     >
-      {projectSection(choice)}
-      {filterSections(deps, choice.project, overview)}
+      {projectSection(deps, choice)}
+      {filterSections(props)}
     </List>
   );
 }
@@ -65,53 +85,44 @@ const rootFooter = (
   loaded: string,
 ): string => (project ? loaded || repositoryText(project) : message);
 
-function useRootProjects(deps: IssueDeps): RootProjects {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [message, setMessage] = useState('Loading Projects…');
-
-  useProjects(deps.listProjects, { setProjects, setProjectId, setMessage });
-
-  return {
-    projects,
-    project: projects.find((row) => row.id === projectId),
-    message,
-    choose: setProjectId,
-  };
-}
-
 // A Project to group Issues of, only when there is a choice.
-function projectSection(choice: RootProjects): JSX.Element | null {
+function projectSection(
+  deps: IssueDeps,
+  choice: RootProjects,
+): JSX.Element | null {
   if (choice.projects.length < 2) return null;
 
   return (
     <List.Section key="projects" title="Project">
-      {choice.projects.map((project) => projectRow(choice, project))}
+      {choice.projects.map((project) => projectRow(deps, choice, project))}
     </List.Section>
   );
 }
 
-function projectRow(choice: RootProjects, project: Project): JSX.Element {
+function projectRow(
+  deps: IssueDeps,
+  choice: RootProjects,
+  project: Project,
+): JSX.Element {
   return (
     <ListItem
       key={project.id}
       title={project.name}
       selected={project.id === choice.project?.id}
-      onPress={() => choice.choose(project.id)}
+      onPress={{ action: 'navigate', path: deps.pages.projectHref(project) }}
     />
   );
 }
 
-function filterSections(
-  deps: IssueDeps,
-  project: Project | undefined,
-  overview: Overview | null,
-): JSX.Element[] {
+function filterSections(props: RootRowsProps): JSX.Element[] {
+  const { deps, choice, state, selected } = props;
+  const project = choice.project;
+
   if (!project) return [];
 
-  const view = { deps, project, overview };
+  const view = { deps, project, overview: state.overview, selected };
 
-  return groupsOf(overview).map((group) => (
+  return groupsOf(state.overview).map((group) => (
     <List.Section key={group.title} title={group.title}>
       {group.filters.map((filter) => filterRow(view, filter))}
     </List.Section>
@@ -139,6 +150,7 @@ function filterRow(view: RootView, filter: IssueFilter): JSX.Element {
     <ListItem
       key={filter.id}
       title={filter.title}
+      selected={filter.id === view.selected}
       value={countText(view.overview, filter)}
       leading={<Icon name={filter.icon} size="md" />}
       onPress={{ action: 'navigate', path }}

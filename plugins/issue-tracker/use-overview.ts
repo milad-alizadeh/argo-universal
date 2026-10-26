@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from '@argo/plugin-kit';
 import { githubError } from './github-errors';
-import type { TrackerClient } from './github-tracker';
-import { openClient, type Project } from './issue-client';
+import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
-import { builtInFilters } from './issue-filters';
+import {
+  readOverview,
+  requestOverview,
+  type Overview,
+} from './overview-requests';
 
-// The repository's labels and each counted filter's Issue count, by filter id.
-export type Overview = { labels: string[]; counts: Record<string, number> };
+export type { Overview } from './overview-requests';
 
 type Shown = { projectId: string; overview: Overview | null; message: string };
 
@@ -16,36 +18,47 @@ export type OverviewState = Omit<Shown, 'projectId'> & {
 
 type Show = (change: Partial<Omit<Shown, 'projectId'>>) => void;
 
+type SetShown = (update: (shown: Shown) => Shown) => void;
+
 type OverviewSource = { deps: IssueDeps; project: Project; show: Show };
 
 const nothing: Shown = { projectId: '', overview: null, message: '' };
-
-type CacheKey = Parameters<IssueDeps['storage']['readCache']>[0];
-
-const cacheKey = (project: Project): CacheKey => ({
-  projectId: project.id,
-  view: 'overview',
-});
 
 // A Project's filters to navigate by: the cached overview at once, then GitHub's, kept apart by Project.
 export function useOverview(
   deps: IssueDeps,
   project: Project | undefined,
+  reload: boolean,
 ): OverviewState {
   const [shown, setShown] = useState(nothing);
 
-  const source = useMemo(
-    () => project && { deps, project, show: shower(setShown, project.id) },
-    [deps, project],
-  );
-
+  const source = useOverviewSource(deps, project, setShown);
   const refresh = useRefresh(deps, source);
 
   useEffect(() => {
-    if (source) void openOverview(source);
-  }, [source]);
+    if (source) void openOverview(source, reload);
+  }, [source, reload]);
 
-  return { ...(shown.projectId === project?.id ? shown : nothing), refresh };
+  return currentOverview(shown, project?.id, refresh);
+}
+
+function useOverviewSource(
+  deps: IssueDeps,
+  project: Project | undefined,
+  setShown: SetShown,
+): OverviewSource | undefined {
+  return useMemo(
+    () => project && { deps, project, show: shower(setShown, project.id) },
+    [deps, project, setShown],
+  );
+}
+
+function currentOverview(
+  shown: Shown,
+  projectId: string | undefined,
+  refresh: OverviewState['refresh'],
+): OverviewState {
+  return { ...(shown.projectId === projectId ? shown : nothing), refresh };
 }
 
 // Loads again on a pull, and when an Issue's status changes on another page.
@@ -54,7 +67,7 @@ function useRefresh(
   source: OverviewSource | undefined,
 ): () => Promise<void> {
   const refresh = useCallback(async () => {
-    if (source) await loadOverview(source);
+    if (source) await loadOverview(source, true);
   }, [source]);
 
   useEffect(
@@ -67,68 +80,55 @@ function useRefresh(
 
 // A change for one Project starts from nothing when another Project's overview is shown.
 const shower =
-  (
-    setShown: (update: (shown: Shown) => Shown) => void,
-    projectId: string,
-  ): Show =>
+  (setShown: SetShown, projectId: string): Show =>
   (change) =>
-    setShown((shown) => ({
-      ...(shown.projectId === projectId ? shown : { ...nothing, projectId }),
-      ...change,
-    }));
+    setShown((shown) => updatedOverview(shown, projectId, change));
 
-async function openOverview(source: OverviewSource): Promise<void> {
-  const cached = await source.deps.storage.readCache<Overview>(
-    cacheKey(source.project),
-  );
+function updatedOverview(
+  shown: Shown,
+  projectId: string,
+  change: Parameters<Show>[0],
+): Shown {
+  const next = {
+    ...(shown.projectId === projectId ? shown : { ...nothing, projectId }),
+    ...change,
+  };
 
-  if (cached) source.show({ overview: cached });
-
-  await loadOverview(source);
+  return sameOverview(shown, next) ? shown : next;
 }
 
-async function loadOverview({
-  deps,
-  project,
-  show,
-}: OverviewSource): Promise<void> {
+// Identical counts must not publish a new view revision during an Issue action.
+function sameOverview(previous: Shown, next: Shown): boolean {
+  return (
+    next.projectId === previous.projectId &&
+    next.message === previous.message &&
+    JSON.stringify(next.overview) === JSON.stringify(previous.overview)
+  );
+}
+
+async function openOverview(
+  source: OverviewSource,
+  reload: boolean,
+): Promise<void> {
+  const cached = await readOverview(source.deps, source.project);
+
+  if (cached) {
+    source.show({ overview: cached });
+
+    if (!reload) return;
+  }
+
+  await loadOverview(source, reload);
+}
+
+async function loadOverview(
+  { deps, project, show }: OverviewSource,
+  reload: boolean,
+): Promise<void> {
   try {
-    const client = await openClient({ project, ...deps });
-
-    await client.authStatus();
-
-    const overview = await fetchOverview(client);
-
+    const overview = await requestOverview(deps, project, reload);
     show({ overview, message: '' });
-    await deps.storage.writeCache(cacheKey(project), overview);
   } catch (error) {
     show({ message: githubError(error) });
   }
-}
-
-async function fetchOverview(client: TrackerClient): Promise<Overview> {
-  const [labels, counts] = await Promise.all([
-    client.listLabels(),
-    countFilters(client),
-  ]);
-
-  return { labels, counts };
-}
-
-// A count GitHub refuses, such as past its search rate limit, only leaves its row without one.
-async function countFilters(
-  client: TrackerClient,
-): Promise<Overview['counts']> {
-  const counted = builtInFilters().filter((filter) => filter.counted);
-
-  const entries = await Promise.all(
-    counted.map((filter) =>
-      client.countIssues(filter.search).then(
-        (count): [string, number][] => [[filter.id, count]],
-        () => [],
-      ),
-    ),
-  );
-
-  return Object.fromEntries(entries.flat());
 }

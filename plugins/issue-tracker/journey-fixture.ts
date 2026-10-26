@@ -45,12 +45,12 @@ export async function chooseGithub(view: SlotView): Promise<void> {
   await expect.poll(() => chosen(view), wait).toBe(true);
 }
 
-export async function tracker(): Promise<PluginTest> {
+export async function tracker(projects = [project]): Promise<PluginTest> {
   const test = await startPluginTest({
     directory: fileURLToPath(new URL('.', import.meta.url)),
     pluginId: 'issue-tracker',
     version: '0.0.0',
-    projects: [project],
+    projects,
     path: [fileURLToPath(new URL('./mocks', import.meta.url))],
   });
 
@@ -103,6 +103,9 @@ export async function openIssue(title: string): Promise<PageView> {
   const page = await follow(test, list, title);
 
   await expect.poll(() => page.findText('Start Session'), wait).toBeDefined();
+  await expect
+    .poll(() => page.findText('good first issue'), wait)
+    .toBeDefined();
 
   return page;
 }

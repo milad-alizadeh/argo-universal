@@ -7,6 +7,7 @@ import type { TrackerStorage } from './tracker-storage';
 
 // The App paths a row navigates to; each one's page is registered as its row is drawn.
 export type IssuePages = {
+  projectHref: (project: Project) => string;
   filterHref: (project: Project, filter: IssueFilter) => string;
   issueHref: (project: Project, number: number) => string;
 };
