@@ -9,11 +9,8 @@ import { useCentresOverlays } from '#primitives/overlays/centred-overlay';
 import {
   Dialog,
   DialogCancel,
-  DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  DialogForm,
   DialogTrigger,
 } from './dialog';
 
@@ -25,8 +22,8 @@ const profileFields: Field[] = [
 ];
 
 /*
- * The heading, sections and actions are the dialog's own children: on a phone its sections are one FieldGroup under
- * the heading, which scrolls when they outgrow the sheet, and its actions are pinned in the sheet's footer.
+ * The heading, sections and footer are the form's named parts: on a phone its sections are one FieldGroup under
+ * the heading, which scrolls when they outgrow the sheet, and its footer is pinned in the sheet.
  */
 function ProfileDialog(): React.JSX.Element {
   const narrow = !useCentresOverlays();
@@ -41,23 +38,23 @@ function ProfileDialog(): React.JSX.Element {
           <Text>{'Open Dialog'}</Text>
         </Pressable>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-106">
-        <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
-          <DialogDescription>
-            Make changes to your profile here. Click save when you&apos;re done.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogForm
+        title="Edit profile"
+        description="Make changes to your profile here. Click save when you're done."
+        className="sm:max-w-106"
+        footer={
+          <DialogFooter>
+            <DialogCancel label="Cancel" />
+            <Button label="Save changes" fullWidth={narrow} />
+          </DialogFooter>
+        }
+      >
         <FieldGroup.Section>
           {profileFields.map((field) => (
             <ProfileField key={field.id} {...field} />
           ))}
         </FieldGroup.Section>
-        <DialogFooter>
-          <DialogCancel label="Cancel" />
-          <Button label="Save changes" fullWidth={narrow} />
-        </DialogFooter>
-      </DialogContent>
+      </DialogForm>
     </Dialog>
   );
 }

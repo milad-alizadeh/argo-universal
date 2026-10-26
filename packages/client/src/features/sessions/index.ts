@@ -23,15 +23,21 @@ export { ShellSheet } from './components/shell-list/shell-sheet';
 
 export { shellsRunning } from './components/shell-list/shell-format';
 
-export { sessionPanelLabels } from './components/session-panel-triggers';
-
 export {
-  type SessionPanel,
-  sessionPanelOrder,
-  offeredWorkPanels,
-  type SessionPanels,
-  useSessionPanels,
-} from './stores/session-panels';
+  type SessionWorkbench,
+  SessionWorkbenchColumn,
+  type WorkbenchSection,
+} from './components/session-workbench';
+
+export { WorkbenchAgents } from './components/session-workbench-agents';
+
+export { WorkbenchChangesSummary } from './components/session-workbench-change-section';
+
+export { WorkbenchMoreChanges } from './components/session-workbench-changes';
+
+export { WorkbenchCountSummary } from './components/workbench-count-summary';
+
+export { type SessionPanels, useSessionPanels } from './stores/session-panels';
 
 export {
   type SessionsViewGroup,

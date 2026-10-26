@@ -5,11 +5,8 @@ import { useCentresOverlays } from '@repo/kit/primitives/overlays/centred-overla
 import {
   Dialog,
   DialogCancel,
-  DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  DialogForm,
 } from '@repo/kit/primitives/overlays/dialog';
 import { type ReactElement, useRef, useState } from 'react';
 import { renamedTitle } from './renamed-title';
@@ -57,31 +54,37 @@ function useOpeningCount(open: boolean): number {
   return openings.count;
 }
 
-const heading = (
-  <DialogHeader>
-    <DialogTitle>{copy.title}</DialogTitle>
-    <DialogDescription>{copy.description}</DialogDescription>
-  </DialogHeader>
-);
-
 /*
- * The dialog's own children, not a component of theirs: on a phone it reads the heading, the section and the actions
- * by element type, scrolls the section in a FieldGroup under the heading and pins the failure and the actions below.
+ * A form: the dialog takes the heading, the section and the footer as named parts, and a phone pins the footer,
+ * the failure and the actions, below the section it scrolls in a FieldGroup.
  */
 function RenameForm(props: RenameSessionDialogProps): ReactElement {
   const draft = useDraft(props.title);
   const save = (): void => saveDraft(draft.latest.current, props);
-  const narrow = !useCentresOverlays();
 
   return (
-    <DialogContent accessibilityLabel={copy.title} size="sm">
-      {heading}
+    <DialogForm
+      title={copy.title}
+      description={copy.description}
+      size="sm"
+      footer={footer(props, useCentresOverlays(), save)}
+    >
       {titleSection(props, draft, save)}
-      {failure(props.error)}
-      {actions(narrow, save)}
-    </DialogContent>
+    </DialogForm>
   );
 }
+
+// The failure, then the actions: on a phone they are pinned together under the section.
+const footer = (
+  props: RenameSessionDialogProps,
+  centred: boolean,
+  save: () => void,
+): ReactElement => (
+  <>
+    {failure(props.error)}
+    {actions(!centred, save)}
+  </>
+);
 
 const titleSection = (
   props: RenameSessionDialogProps,

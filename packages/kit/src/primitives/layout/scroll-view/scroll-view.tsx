@@ -6,7 +6,7 @@ export type ScrollViewProps = KitProps<'ScrollView'>;
 /*
  * A phone's vertical content keeps a 16 gutter either side and a small gap under the header, as a Screen's other
  * content does, and takes iOS's header inset so its first items rest below a translucent header. A wide window's
- * Screen supplies its column's own padding as ScrollColumnContext, which takes over.
+ * Screen offers its column, whose padding takes over.
  */
 const verticalContent = 'px-4 pt-2 wide:px-0 wide:pt-0';
 

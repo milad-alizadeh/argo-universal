@@ -1,6 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { HeadingInsetContext } from '#kit/heading-inset';
-import { ScrollColumnContext } from '#kit/scroll-column';
+import { OutsideColumn } from '#kit/content-column/content-column';
 import { InsideHostContext } from '#primitives/native/host';
 
 /*
@@ -13,11 +12,7 @@ import { InsideHostContext } from '#primitives/native/host';
 export function ReactContent(props: { children: ReactNode }): ReactElement {
   return (
     <InsideHostContext.Provider value={false}>
-      <ScrollColumnContext value={undefined}>
-        <HeadingInsetContext value={undefined}>
-          {props.children}
-        </HeadingInsetContext>
-      </ScrollColumnContext>
+      <OutsideColumn>{props.children}</OutsideColumn>
     </InsideHostContext.Provider>
   );
 }

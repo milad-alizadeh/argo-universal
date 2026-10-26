@@ -4,7 +4,7 @@ import {
   type ScrollViewInstance,
   type ScrollViewProps,
 } from 'react-native';
-import { useClaimsColumn } from '#kit/column-claims';
+import { useClaimColumn } from '#kit/content-column/content-column';
 import { cn } from '#kit/utils';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import type { ScrollFadeOptions } from './scroll-fade-options';
@@ -53,7 +53,7 @@ const sizing = ({ fitContent, horizontal, className }: SizingProps): Sizing =>
 
 // One that fills its Screen's content keeps to the Screen's column itself; one sized by its content sits inside it.
 function useSizing(props: SizingProps): Sizing {
-  useClaimsColumn(!props.horizontal && !props.fitContent);
+  useClaimColumn(props.horizontal || props.fitContent ? undefined : 'fill');
 
   return sizing(props);
 }

@@ -1,16 +1,15 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#kit/utils';
-import { CentredOverlayScope } from '#primitives/overlays/centred-overlay';
+import {
+  CentredModalTrigger,
+  useCentresOverlays,
+} from '#primitives/overlays/centred-overlay';
 import { DialogBody } from './dialog-body';
-import { hasSections, fieldsLayout } from './dialog-fields';
-import { DialogOverlay } from './dialog-overlay';
-import { DialogPortal, DialogTrigger } from './dialog-parts';
-import { useDialogPresentation } from './dialog-presentation';
 import type {
   DialogContentProps as ContentProps,
   DialogProps,
-  DialogPresentation,
+  DialogTriggerProps,
 } from './dialog-props';
 import { DialogRoot } from './dialog-root';
 import { DialogSheet } from './dialog-sheet';
@@ -19,51 +18,20 @@ function Dialog(props: DialogProps): React.JSX.Element {
   return <DialogRoot {...props} />;
 }
 
-// What a sheet-presented dialog draws: the caller's content and how the sheet is presented.
-type NarrowProps = ContentProps & { presentation: DialogPresentation };
+function DialogTrigger(props: DialogTriggerProps): React.JSX.Element {
+  return <CentredModalTrigger>{props.children}</CentredModalTrigger>;
+}
 
-// The web centres the dialog from the medium size class up; a compact web window, and a phone or tablet at any width, raises the same content as a sheet.
+// The web centres the dialog from the medium size class up; a compact web window, and a phone or tablet at any width, raises the same content as a sheet as tall as it is.
 function DialogContent(props: ContentProps): React.JSX.Element {
-  const presentation = useDialogPresentation();
+  const centred = useCentresOverlays();
 
-  if (presentation.centred) return <CentredDialog {...props} />;
-
-  return <NarrowDialog {...props} presentation={presentation} />;
+  return centred ? <DialogBody {...props} /> : <PlainDialog {...props} />;
 }
 
-/*
- * Content that holds FieldGroup sections is a form: its sections are one FieldGroup under the heading, which scrolls
- * and insets them, and its actions are pinned in the sheet's footer. Any other content is a plain body as tall as it is.
- */
-function NarrowDialog(props: NarrowProps): React.JSX.Element {
-  if (hasSections(props.children)) return <FieldsDialog {...props} />;
-
-  return <PlainDialog {...props} />;
-}
-
-function FieldsDialog({
-  presentation,
-  ...props
-}: NarrowProps): React.JSX.Element {
-  const layout = fieldsLayout(props);
-
+function PlainDialog(props: ContentProps): React.JSX.Element {
   return (
     <DialogSheet
-      open={presentation.sheetOpen}
-      dismissible={props.dismissible}
-      fields
-      {...layout}
-    />
-  );
-}
-
-function PlainDialog({
-  presentation,
-  ...props
-}: NarrowProps): React.JSX.Element {
-  return (
-    <DialogSheet
-      open={presentation.sheetOpen}
       label={props.accessibilityLabel}
       dismissible={props.dismissible}
     >
@@ -83,19 +51,9 @@ function NarrowDialogBody(
   );
 }
 
-function CentredDialog(props: ContentProps): React.JSX.Element {
-  return (
-    <DialogPortal>
-      <DialogOverlay dismissible={props.dismissible}>
-        <DialogBody {...props}>
-          <CentredOverlayScope>{props.children}</CentredOverlayScope>
-        </DialogBody>
-      </DialogOverlay>
-    </DialogPortal>
-  );
-}
-
 export { DialogCancel, DialogFooter } from './dialog-actions';
+
+export { DialogForm } from './dialog-form';
 
 export { DialogDescription, DialogHeader, DialogTitle } from './dialog-text';
 

@@ -1,8 +1,7 @@
 import type { ChangesSummary, SessionStatus } from '@repo/contracts';
-import type { SessionPanel } from '../stores/session-panels';
 import type { SessionMenu } from './session-actions';
 import type { SessionPullRequest } from './session-pull-request';
-import type { SubagentListProps } from './subagent-list/subagent-list-types';
+import type { SessionWorkbench } from './session-workbench';
 
 export type SessionHeaderStatus = Extract<
   SessionStatus,
@@ -15,20 +14,6 @@ export interface SessionChanges {
   onOpenChange: (open: boolean) => void;
 }
 
-// The Inspector panels the header's triggers open: those the Session has, the one shown, and pressing a trigger.
-export interface SessionHeaderPanels {
-  pullRequests?: readonly SessionPullRequest[];
-  onOpenChanges?: () => void;
-  agents?: SubagentListProps;
-  checks?: NonNullable<SessionPullRequest['checks']>;
-  counts?: Partial<Record<SessionPanel, number>>;
-  onSelect?: (panel: SessionPanel) => void;
-  offered: readonly SessionPanel[];
-  shown?: SessionPanel;
-  onToggle: (panel: SessionPanel) => void;
-  changesSummary?: ChangesSummary;
-}
-
 export interface SessionHeaderProps {
   title: string;
   status: SessionHeaderStatus;
@@ -38,8 +23,8 @@ export interface SessionHeaderProps {
   pullRequests?: SessionPullRequest[];
   // Rename and Archive under ⋯, as the Session's row offers them; absent where the page offers neither.
   menu?: SessionMenu;
-  // Subagents, Shells and Changes in the Inspector, which the header's triggers open; absent where the page has none.
-  panels?: SessionHeaderPanels;
+  // The Session's Sections as Workbench cards; absent where the page has none.
+  workbench?: SessionWorkbench;
   changes?: SessionChanges;
   // Fixes the clock, for stories and tests.
   now?: number;

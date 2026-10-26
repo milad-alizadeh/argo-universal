@@ -1,16 +1,16 @@
 import type * as React from 'react';
 import { Platform } from 'react-native';
+import { useCentredModalState } from '#primitives/overlays/centred-overlay';
 import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
-import { useDialogState } from './dialog-context';
 import type { DialogSheetProps } from './dialog-props';
 
 // A narrow window, phone or web, presents the dialog as a sheet as tall as its content, opened and closed by the dialog's root; a FieldGroup fills its page, so a sheet of fields rests at the medium and large heights instead.
 export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
-  const { open, onOpenChange } = useDialogState();
+  const { open, onOpenChange } = useCentredModalState();
 
   return (
     <Sheet
-      open={props.open ?? open}
+      open={open}
       onOpenChange={onOpenChange}
       label={props.label}
       dismissible={props.dismissible}

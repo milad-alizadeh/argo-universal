@@ -1,31 +1,18 @@
-import type { SessionSnapshot } from '@repo/contracts';
 import { type Dispatch, type SetStateAction, useState } from 'react';
 
-// What a Session's Inspector shows, each in its own tab, in the header's trigger order.
-export const sessionPanelOrder = ['subagents', 'shells', 'changes'] as const;
-
-export type SessionPanel = (typeof sessionPanelOrder)[number];
-
-export const offeredWorkPanels = (
-  work: Partial<Pick<SessionSnapshot, 'subagents' | 'shells'>>,
-): SessionPanel[] =>
-  sessionPanelOrder.filter(
-    (panel) => panel === 'changes' || Boolean(work[panel]?.length),
-  );
-
-// The open tabs, in the order they opened, and the one shown; no tabs means the Inspector is closed.
+// The open tabs, each a section's key, in the order they opened, and the one shown; no tabs means the Inspector is closed.
 export interface SessionPanelsState {
-  tabs: readonly SessionPanel[];
-  shown?: SessionPanel;
-  // A preview row asks the Changes tab to show PR details, even after Files was selected.
-  changesRequest?: number;
+  tabs: readonly string[];
+  shown?: string;
+  // How often a card asked each tab to start over at its first page, as a Change row asks Changes for its detail after Files was picked.
+  requests?: Readonly<Record<string, number>>;
 }
 
 export const noPanels: SessionPanelsState = { tabs: [] };
 
 export function selectPanel(
   state: SessionPanelsState,
-  panel: SessionPanel,
+  panel: string,
 ): SessionPanelsState {
   if (state.tabs.includes(panel)) return { ...state, shown: panel };
 
@@ -35,7 +22,7 @@ export function selectPanel(
 // Closing the shown tab shows the last one left.
 export function closePanel(
   state: SessionPanelsState,
-  panel: SessionPanel,
+  panel: string,
 ): SessionPanelsState {
   const tabs = state.tabs.filter((tab) => tab !== panel);
 
@@ -48,20 +35,33 @@ export function closePanel(
   };
 }
 
-// A header trigger: shows its panel, opening its tab; pressed again while it shows, closes that tab.
+// Shows its panel, opening its tab; pressed again while it shows, closes that tab.
 export function togglePanel(
   state: SessionPanelsState,
-  panel: SessionPanel,
+  panel: string,
 ): SessionPanelsState {
   if (state.shown === panel) return closePanel(state, panel);
 
   return selectPanel(state, panel);
 }
 
-// A tab exists only while its panel has something to show.
+export function requestPanel(
+  state: SessionPanelsState,
+  panel: string,
+): SessionPanelsState {
+  return {
+    ...selectPanel(state, panel),
+    requests: {
+      ...state.requests,
+      [panel]: (state.requests?.[panel] ?? 0) + 1,
+    },
+  };
+}
+
+// A tab exists only while its section is offered.
 export function offeredPanels(
   state: SessionPanelsState,
-  offered: readonly SessionPanel[],
+  offered: readonly string[],
 ): SessionPanelsState {
   const gone = state.tabs.filter((tab) => !offered.includes(tab));
 
@@ -70,11 +70,11 @@ export function offeredPanels(
 
 export interface SessionPanels {
   state: SessionPanelsState;
-  toggle: (panel: SessionPanel) => void;
-  select: (panel: SessionPanel) => void;
-  close: (panel: SessionPanel) => void;
+  toggle: (panel: string) => void;
+  select: (panel: string) => void;
+  close: (panel: string) => void;
+  request: (panel: string) => void;
   closeAll: () => void;
-  openChanges: () => void;
 }
 
 type PanelChange = typeof togglePanel;
@@ -82,13 +82,11 @@ type PanelChange = typeof togglePanel;
 const changeWith =
   (setState: Dispatch<SetStateAction<SessionPanelsState>>) =>
   (change: PanelChange) =>
-  (panel: SessionPanel): void =>
+  (panel: string): void =>
     setState((current) => change(current, panel));
 
-// The Inspector's tabs for one open Session, limited to the panels it offers.
-export function useSessionPanels(
-  offered: readonly SessionPanel[],
-): SessionPanels {
+// The Inspector's tabs for one open Session, limited to the sections it offers.
+export function useSessionPanels(offered: readonly string[]): SessionPanels {
   const [state, setState] = useState(noPanels);
   const available = offeredPanels(state, offered);
 
@@ -108,12 +106,7 @@ function panelActions(
     toggle: on(togglePanel),
     select: on(selectPanel),
     close: on(closePanel),
+    request: on(requestPanel),
     closeAll: () => setState(noPanels),
-    openChanges: () => setState(requestChanges),
   };
 }
-
-const requestChanges = (state: SessionPanelsState): SessionPanelsState => ({
-  ...selectPanel(state, 'changes'),
-  changesRequest: (state.changesRequest ?? 0) + 1,
-});

@@ -320,6 +320,14 @@ _Avoid_: Properties, key-value list
 One entry on a navigation stack: its header (title, search, primary Action, Actions) and its content, declared together. A route shows one Screen; a Sheet stacks Screens of its own.
 _Avoid_: Page, view (for a stack entry)
 
+**Content column**:
+The column a Screen's heading and content keep to: on a wide window the reading width centred in the pane, inside the Screen's side margins. Each part of a Screen offers it to what it holds; a scroll view or grouped cards claim it and keep to it themselves, and the part pads anything else. A popover, a sheet's page or a FieldGroup's rows are outside it.
+_Avoid_: Scroll column, heading inset
+
+**Centred modal**:
+The one overlay a Dialog and a web Sheet both open in: a card centred over a dimmed backdrop that keeps focus inside, closes on Escape, a backdrop press or the back button unless its content holds unsaved input, and hands focus back to what opened it.
+_Avoid_: Dialog overlay, modal sheet (for the shared overlay)
+
 **Actions**:
 The verbs a Screen, a row or a tile offers, in sections, declared once and drawn as each platform draws them: header controls for a Screen, a context menu for a row or tile. They hold verbs only; a choice is a Menu.
 _Avoid_: ActionList, action panel, action menu (for the declaration)
@@ -339,6 +347,10 @@ _Avoid_: Inspector, right panel, second sidebar
 **Inspector**:
 The surface that shows a Workbench card's section in full, with a tab for its list and item details. Details include a Change's diff, an Agent's Feed or a Shell's output; the Workbench stays open beside it.
 _Avoid_: Stage, detail pane, viewer
+
+**Section**:
+One kind of a Session's work, such as Changes, Agents, Shells or a Plugin's. Each has a Workbench card that summarises it and an Inspector tab that shows it in full. Changes is always offered; Agents and Shells are offered once the Session has some.
+_Avoid_: Panel, pane, Workbench card (for the whole kind)
 
 **Surface**:
 A named background a kit component draws on: `background`, `card`, `muted` or `glass`, with its fill, radius and depth. There is no overlay kind; overlays draw their own.

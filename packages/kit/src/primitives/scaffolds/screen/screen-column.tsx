@@ -2,23 +2,17 @@ import { type ScreenWidth, screenDefaults } from '@repo/contracts/kit-tokens';
 import { type ReactElement, type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import type { ContentColumn } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
-
-interface ScreenColumnStyle {
-  // Unset for a `full` Screen, which fills its region, and below wide.
-  maxWidth?: number;
-  paddingLeft: number;
-  paddingRight: number;
-}
 
 /*
  * The one column a Screen's heading and content keep to: on a wide window the reading width (`--container-column`)
- * centred in the region, or the whole region for `full`, inside the Screen's side margins either way. Below wide the
- * phone shell's header runs from the window's edge, so the content does too.
+ * centred in the region, or the whole region for `full` (no max width), inside the Screen's side margins either way.
+ * Below wide the phone shell's header runs from the window's edge, so the content does too.
  */
 export function useScreenColumn(
   width: ScreenWidth = screenDefaults.width,
-): ScreenColumnStyle {
+): ContentColumn {
   const capped = useWide() && width === 'content';
   const [column, inset] = useColumnTokens();
 
@@ -41,7 +35,7 @@ const columnStyle = (
   capped: boolean,
   column: number,
   inset: number,
-): ScreenColumnStyle => ({
+): ContentColumn => ({
   maxWidth: capped ? column + inset * 2 : undefined,
   paddingLeft: inset,
   paddingRight: inset,

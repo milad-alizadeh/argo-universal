@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { useScrollColumnStyle } from '#kit/scroll-column';
+import { inColumn, useClaimColumn } from '#kit/content-column/content-column';
 import { useSpacing } from '#kit/use-spacing';
 import type { ScrollFadeFrameProps } from './scroll-fade-frame-view';
 import {
@@ -104,9 +104,11 @@ interface AxisProps {
   horizontal?: boolean | null;
 }
 
-// The content's class and style: a vertical scroll view's gains the end gap and the column's width, which a horizontal one's never takes.
+// The content's class and style: a vertical scroll view's gains the end gap and the column it was offered, which a horizontal one's never takes.
 function useContentProps(own: ScrollableProps & AxisProps): ScrollableProps {
-  const vertical = useScrollColumnStyle(useEndGap(own));
+  const column = useClaimColumn();
+  const ended = useEndGap(own);
+  const vertical = useMemo(() => inColumn(column, ended), [column, ended]);
 
   return {
     ...classNameProp(own.contentContainerClassName),

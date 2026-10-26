@@ -2,13 +2,11 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Button, type ButtonProps } from '#primitives/actions/button';
 import {
-  Dialog,
-  DialogDescriptionText,
-  DialogFrame,
-  DialogOverlay,
-  DialogPortal,
-  DialogTitleText,
-} from '#primitives/overlays/dialog';
+  CentredModal,
+  CentredModalDescription,
+  CentredModalTitle,
+} from '#primitives/overlays/centred-overlay';
+import { Dialog } from '#primitives/overlays/dialog';
 import {
   alertActionPress,
   ignoreCloseWhileBusy,
@@ -30,21 +28,17 @@ export function Alert(input: AlertProps): React.JSX.Element {
 
   return (
     <Dialog open={props.open} onOpenChange={ignoreCloseWhileBusy(props)}>
-      <DialogPortal>
-        <DialogOverlay>
-          <AlertCard {...props} />
-        </DialogOverlay>
-      </DialogPortal>
+      <AlertCard {...props} />
     </Dialog>
   );
 }
 
 function AlertCard(props: AnsweredAlertProps): React.JSX.Element {
   return (
-    <DialogFrame className={contentClassName}>
+    <CentredModal className={contentClassName}>
       <AlertHeading title={props.title} message={props.message} />
       <AlertButtons {...props} />
-    </DialogFrame>
+    </CentredModal>
   );
 }
 
@@ -53,13 +47,13 @@ type AlertHeadingProps = Pick<AnsweredAlertProps, 'title' | 'message'>;
 function AlertHeading(props: AlertHeadingProps): React.JSX.Element {
   return (
     <View className="gap-2">
-      <DialogTitleText className="type-heading text-foreground">
+      <CentredModalTitle className="type-heading text-foreground">
         {props.title}
-      </DialogTitleText>
+      </CentredModalTitle>
       {props.message ? (
-        <DialogDescriptionText className="type-secondary">
+        <CentredModalDescription className="type-secondary">
           {props.message}
-        </DialogDescriptionText>
+        </CentredModalDescription>
       ) : null}
     </View>
   );

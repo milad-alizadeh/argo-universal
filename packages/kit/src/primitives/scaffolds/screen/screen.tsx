@@ -1,7 +1,6 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { useClaimsColumn } from '#kit/column-claims';
-import { HeadingInsetContext, useHeadingInsetScope } from '#kit/heading-inset';
+import { ColumnScope } from '#kit/content-column/content-column';
 import { SelectionModeScope, useSelectionModeHost } from '#kit/selection-mode';
 import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';
@@ -18,26 +17,14 @@ import { useScreenHeader } from './use-screen-header';
 
 // Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Screen(props: ScreenProps): ReactElement {
-  // A Screen inside another's content keeps its own column, so the outer one leaves it unpadded.
-  useClaimsColumn(true);
-
   return (
     <SvgBudget>
       <ActionShortcutScope>
-        <HeadingInsetScope>
+        <ColumnScope>
           <ScreenSurface {...props} />
-        </HeadingInsetScope>
+        </ColumnScope>
       </ActionShortcutScope>
     </SvgBudget>
-  );
-}
-
-// The Screen's heading learns from its content whether that is grouped cards.
-function HeadingInsetScope(props: { children: ReactNode }): ReactElement {
-  return (
-    <HeadingInsetContext value={useHeadingInsetScope()}>
-      {props.children}
-    </HeadingInsetContext>
   );
 }
 

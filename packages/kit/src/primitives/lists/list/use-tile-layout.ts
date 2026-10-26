@@ -1,7 +1,10 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import type { LayoutChangeEvent, ViewStyle } from 'react-native';
+import {
+  type ContentColumn,
+  useClaimColumn,
+} from '#kit/content-column/content-column';
 import { useSpacingStep } from '#primitives/layout/spacing';
-import { ScrollColumnContext } from '../../../scroll-column';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClass } from '../../../use-size-class/size-class';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
@@ -44,7 +47,7 @@ type TileScrollOptions = Pick<
 >;
 
 export interface TileMetrics {
-  column: React.ContextType<typeof ScrollColumnContext>;
+  column: ContentColumn | undefined;
   viewport: number;
   sizeClass: SizeClass;
   gap: number;
@@ -61,7 +64,7 @@ function useTileMetrics<Item>(props: ListProps<Item>): TileMetrics {
 
   return {
     viewport,
-    column: useContext(ScrollColumnContext),
+    column: useClaimColumn(),
     sizeClass: useSizeClass(),
     gap: useSpacingStep(tileGapStep),
     padding,

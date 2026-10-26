@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { useHeadingInset } from '#kit/heading-inset';
+import { useHeadingInset } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
 import {
   HeaderActions,

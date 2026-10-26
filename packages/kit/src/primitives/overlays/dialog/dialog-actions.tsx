@@ -4,8 +4,10 @@ import { View, type ViewProps } from 'react-native';
 import { cn } from '#kit/utils';
 import { Button } from '#primitives/actions/button';
 import type { ButtonProps } from '#primitives/actions/button';
-import { useInCentredOverlay } from '#primitives/overlays/centred-overlay';
-import { useDialogState } from './dialog-context';
+import {
+  useCentredModalState,
+  useInCentredOverlay,
+} from '#primitives/overlays/centred-overlay';
 
 // A centred dialog lines its actions up at the trailing edge; a sheet stacks them, the main action on top.
 export function DialogFooter({
@@ -36,7 +38,7 @@ export const PinnedActions = (props: {
 export function DialogCancel(
   props: Omit<ButtonProps, 'onPress' | 'variant' | 'fullWidth'>,
 ): React.JSX.Element {
-  const { onOpenChange } = useDialogState();
+  const { onOpenChange } = useCentredModalState();
   const centred = useInCentredOverlay();
   const pinned = use(PinnedContext);
 

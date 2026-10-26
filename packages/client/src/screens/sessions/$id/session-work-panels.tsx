@@ -1,11 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import type { ComposerProps } from '#features/composer';
 import type { FeedProps } from '#features/feed';
-import type {
-  SessionPanel,
-  SessionPanels,
-  SubagentListProps,
-} from '#features/sessions';
+import type { SessionPanels, SubagentListProps } from '#features/sessions';
 import type { SessionInspectorContent } from './session-inspector';
 import {
   type OpenSubagent,
@@ -49,7 +45,7 @@ const feedWithSubagents = (
 
 // A phone sheet and its Inspector tab are one panel: opening either shows the work at that width.
 const panelOpening =
-  (panels: SessionPanels, panel: SessionPanel) =>
+  (panels: SessionPanels, panel: string) =>
   (open: boolean): void =>
     open ? panels.select(panel) : panels.close(panel);
 
@@ -57,7 +53,7 @@ const panelOpening =
 const workHome = (
   composer: ComposerProps,
   panels: SessionPanels,
-  panel: SessionPanel,
+  panel: string,
 ): WorkHome => ({
   composer,
   sheet: {

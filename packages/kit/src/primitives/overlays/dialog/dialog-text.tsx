@@ -1,7 +1,10 @@
 import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#kit/utils';
-import { DialogDescriptionText, DialogTitleText } from './dialog-parts';
+import {
+  CentredModalDescription,
+  CentredModalTitle,
+} from '#primitives/overlays/centred-overlay';
 import type { DialogTextProps } from './dialog-props';
 
 export function DialogHeader({
@@ -18,16 +21,16 @@ export function DialogHeader({
 
 export function DialogTitle(props: DialogTextProps): React.JSX.Element {
   return (
-    <DialogTitleText className={cn('type-heading', props.className)}>
+    <CentredModalTitle className={cn('type-heading', props.className)}>
       {props.children}
-    </DialogTitleText>
+    </CentredModalTitle>
   );
 }
 
 export function DialogDescription(props: DialogTextProps): React.JSX.Element {
   return (
-    <DialogDescriptionText className={cn('type-secondary', props.className)}>
+    <CentredModalDescription className={cn('type-secondary', props.className)}>
       {props.children}
-    </DialogDescriptionText>
+    </CentredModalDescription>
   );
 }

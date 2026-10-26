@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { useGroupedContent } from '#kit/heading-inset';
+import { useClaimColumn } from '#kit/content-column/content-column';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import { ListEmpty } from './list-data';
 import type { NativeGroupedProps } from './list-native-props';
@@ -9,10 +9,10 @@ const fill = { flex: 1 };
 
 /*
  * The one Host of a native grouped List; its rows are FieldGroup rows, which draw into it. Its cards keep the
- * platform's own inset, so it tells the Screen it is grouped content, and the Screen adds no gutter of its own.
+ * platform's own inset, so it claims the Screen's column as grouped cards, and the Screen adds no gutter of its own.
  */
 function NativeHost(props: { children: ReactNode }): ReactElement {
-  useGroupedContent();
+  useClaimColumn('grouped');
 
   return (
     <Host style={fill}>

@@ -1,18 +1,18 @@
 import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { useId } from 'react';
-import { Portal } from '#primitives/overlays/portal';
 import {
-  DialogDescriptionText,
-  DialogFrame,
-  DialogTitleText,
-} from './dialog-parts';
+  CentredModalDescription,
+  CentredModalFrame,
+  CentredModalTitle,
+} from '#primitives/overlays/centred-overlay';
+import { Portal } from '#primitives/overlays/portal';
 import type { DialogRegionProps as RegionProps } from './dialog-props';
 import { DialogRoot } from './dialog-root';
 
 const regionInset = 24;
 
 const regionClass =
-  'absolute inset-6 z-50 [&>[role=dialog]]:flex [&>[role=dialog]]:flex-1 [&>[role=dialog]]:min-h-0 [&>[role=dialog]]:outline-none';
+  'absolute inset-6 z-50 [&>[role=dialog]]:flex [&>[role=dialog]]:flex-1 [&>[role=dialog]]:min-h-0';
 
 export function DialogRegion(props: RegionProps): ReactElement {
   return (
@@ -24,15 +24,16 @@ export function DialogRegion(props: RegionProps): ReactElement {
   );
 }
 
+// A region's content owns its place, so Escape never closes it.
 function regionContent(props: RegionProps): ReactElement {
   return (
-    <DialogFrame {...regionContentProps}>
-      <DialogTitleText className="sr-only">{props.label}</DialogTitleText>
-      <DialogDescriptionText className="sr-only">
+    <CentredModalFrame className="flex-1 min-h-0" dismissible={false}>
+      <CentredModalTitle className="sr-only">{props.label}</CentredModalTitle>
+      <CentredModalDescription className="sr-only">
         {props.description}
-      </DialogDescriptionText>
+      </CentredModalDescription>
       {props.children}
-    </DialogFrame>
+    </CentredModalFrame>
   );
 }
 
@@ -51,11 +52,5 @@ function regionRootProps(props: RegionProps): RootProps {
         : { bottom: props.bottomInset + regionInset },
   };
 }
-
-const regionContentProps = {
-  className: 'flex-1 min-h-0',
-  onEscapeKeyDown: (event: { preventDefault: () => void }): void =>
-    event.preventDefault(),
-};
 
 DialogRegion satisfies ComponentType<RegionProps>;

@@ -1,10 +1,12 @@
-import { isValidElement, use, type ReactElement, type ReactNode } from 'react';
+import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useColumnClaimed, useColumnFilled } from '#kit/column-claims';
+import {
+  ColumnPart,
+  type ContentColumn,
+  type PartLayout,
+} from '#kit/content-column/content-column';
 import { flattenedChildren } from '#kit/flattened-children';
-import { HeadingInsetContext, useBodyPartScope } from '#kit/heading-inset';
-import { ScrollColumnContext } from '#kit/scroll-column';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
 import { screenContentEnds, useScreenColumn } from './screen-column';
@@ -25,13 +27,13 @@ export function ScreenBody(props: ScreenProps): ReactElement {
 
 const screenParts = (props: ScreenProps, parts: ReactNode[]): ReactElement[] =>
   parts.map((part, index) => (
-    <ScreenPart
+    <BodyPart
       key={partKey(part, index)}
       {...props}
       last={index === parts.length - 1}
     >
       {part}
-    </ScreenPart>
+    </BodyPart>
   ));
 
 const partKey = (part: ReactNode, index: number): string =>
@@ -39,43 +41,32 @@ const partKey = (part: ReactNode, index: number): string =>
 
 type PartProps = ScreenProps & { last?: boolean };
 
-function ScreenPart(props: PartProps): ReactElement {
+/*
+ * The content keeps to the heading's column. A scroll view that fills the body claims the column and keeps to it
+ * itself, so its scrollbar and fades stay at the pane's edges, and grouped cards stand out of it by their rows' inset:
+ * the body is then the whole pane. Anything else the body holds in the column itself.
+ */
+function BodyPart(props: PartProps): ReactElement {
+  const column = useScreenColumn(props.width);
+
   return (
-    <HeadingInsetContext value={useBodyPartScope()}>
-      <BodyPart {...props} />
-    </HeadingInsetContext>
+    <ColumnPart column={column}>
+      {(layout) => <PartView {...props} column={column} layout={layout} />}
+    </ColumnPart>
   );
 }
 
-function BodyPart(props: PartProps): ReactElement {
-  const { column, className, style } = useScreenBody(props);
+type PartViewProps = PartProps & { column: ContentColumn; layout: PartLayout };
+
+function PartView(props: PartViewProps): ReactElement {
+  const end = useLastPartEnd(props.last);
+  const style = props.layout.claimed ? undefined : { ...props.column, ...end };
 
   return (
-    <View className={className} style={style}>
-      <ScrollColumnContext value={column}>{props.children}</ScrollColumnContext>
+    <View className={bodyClass(props, useWide())} style={style}>
+      {props.children}
     </View>
   );
-}
-
-/*
- * The content keeps to the heading's column. A scroll view that fills the body takes the column as
- * ScrollColumnContext, so its scrollbar and fades stay at the pane's edges, and grouped cards stand out of it by their
- * rows' inset: those claim it, and the body is the whole pane. Anything else the body holds in the column itself. A
- * phone's scroll views and grouped cards keep their platform's insets; only what does not scroll takes its margins.
- */
-function useScreenBody(props: PartProps): ScreenBodyStyle {
-  const wide = useWide();
-  const inherited = use(ScrollColumnContext);
-  const column = useScreenColumn(props.width);
-  const claimed = useColumnClaimed();
-  const filled = useColumnFilled();
-  const end = useLastPartEnd(props.last);
-
-  return {
-    column: wide ? claimedColumn(column, claimed) : inherited,
-    className: bodyClass(props, wide, { claimed, filled }),
-    style: claimed ? undefined : { ...column, ...end },
-  };
 }
 
 // The last of several parts ends this far above the home indicator or Android's navigation bar.
@@ -87,23 +78,11 @@ function useLastPartEnd(last: boolean | undefined): ViewStyle | undefined {
   return last ? { paddingBottom: bottom + partEnd } : undefined;
 }
 
-// Only content that claims the column takes it; once the body holds it, nothing inside takes it again.
-const claimedColumn = (
-  column: ScreenBodyStyle['column'],
-  claimed: boolean,
-): ScreenBodyStyle['column'] => (claimed ? column : undefined);
+function bodyClass(props: PartViewProps, wide: boolean): string {
+  const { claimed, filled } = props.layout;
 
-interface ScreenBodyStyle {
-  column: React.ContextType<typeof ScrollColumnContext>;
-  className: string;
-  style?: ViewStyle;
-}
-
-type BodyFill = { claimed: boolean; filled: boolean };
-
-function bodyClass(props: PartProps, wide: boolean, fill: BodyFill): string {
   return cn(
-    fill.claimed ? claimedClass(props, fill.filled) : unclaimedClass(props),
+    claimed ? claimedClass(props, filled) : unclaimedClass(props),
     props.last !== false && fabClearance(props, wide),
   );
 }

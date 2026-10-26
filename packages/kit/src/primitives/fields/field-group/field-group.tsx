@@ -6,12 +6,14 @@ import {
   isValidElement,
   type ReactElement,
   type ReactNode,
-  use,
 } from 'react';
 import type { ViewStyle } from 'react-native';
-import { HeadingInsetContext, useGroupedContent } from '#kit/heading-inset';
+import {
+  type ContentColumn,
+  OutsideColumn,
+  useClaimColumn,
+} from '#kit/content-column/content-column';
 import { useInMenu } from '#kit/menu-rows-context';
-import { ScrollColumnContext } from '#kit/scroll-column';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupKitProps } from '../../kit-props';
 import { MenuFieldGroup } from './field-group-menu';
@@ -40,34 +42,32 @@ function FieldGroupRoot(props: FieldGroupProps): ReactElement {
   );
 }
 
+// Grouped cards claim the Screen's column and keep to it themselves; their rows are outside it.
 function PageFieldGroup(props: FieldGroupProps): ReactElement {
-  useGroupedContent();
+  const style = columnStyle(useClaimColumn('grouped'));
 
   return (
     <Host style={{ flex: 1 }}>
       <InsideHostContext.Provider value>
-        <HeadingInsetContext value={undefined}>
-          <ColumnFieldGroup {...props} />
-        </HeadingInsetContext>
+        <OutsideColumn>
+          <ColumnFieldGroup {...props} style={style} />
+        </OutsideColumn>
       </InsideHostContext.Provider>
     </Host>
   );
 }
 
-// The FieldGroup takes the pane's column and clears it, so nothing in its rows takes it again.
-function ColumnFieldGroup(props: FieldGroupProps): ReactElement {
-  const style = useColumnStyle();
-
+function ColumnFieldGroup(
+  props: FieldGroupProps & { style: ViewStyle },
+): ReactElement {
   return (
-    <ScrollColumnContext value={undefined}>
-      <ExpoFieldGroup
-        disabled={props.disabled}
-        style={style}
-        modifiers={[hiddenFormBackground]}
-      >
-        {sections(props.children)}
-      </ExpoFieldGroup>
-    </ScrollColumnContext>
+    <ExpoFieldGroup
+      disabled={props.disabled}
+      style={props.style}
+      modifiers={[hiddenFormBackground]}
+    >
+      {sections(props.children)}
+    </ExpoFieldGroup>
   );
 }
 
@@ -76,9 +76,7 @@ function ColumnFieldGroup(props: FieldGroupProps): ReactElement {
  * scroll view is the column. The cards' edges start on the page title's line, as every desktop page's content does;
  * Expo's web FieldGroup pads its content 16 on its own, so the column gives that up.
  */
-function useColumnStyle(): ViewStyle {
-  const column = use(ScrollColumnContext);
-
+function columnStyle(column: ContentColumn | undefined): ViewStyle {
   if (!column) return transparent;
 
   return {

@@ -2,8 +2,10 @@ import * as React from 'react';
 import { Pressable, Text } from 'react-native';
 import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
-import { useDialogState } from './dialog-context';
-import { DialogFrame } from './dialog-parts';
+import {
+  CentredModal,
+  useCentredModalState,
+} from '#primitives/overlays/centred-overlay';
 import type { DialogContentProps as ContentProps } from './dialog-props';
 
 const contentClassName =
@@ -19,7 +21,7 @@ const closeButton = {
 } as const;
 
 function ContentClose(): React.JSX.Element {
-  const { onOpenChange } = useDialogState();
+  const { onOpenChange } = useCentredModalState();
 
   return (
     <Pressable {...closeButton} onPress={() => onOpenChange(false)}>
@@ -32,37 +34,27 @@ function ContentClose(): React.JSX.Element {
   );
 }
 
+// The centred card of a dialog, with its close button.
 export function DialogBody(props: ContentProps): React.JSX.Element {
   return (
-    <DialogFrame {...frameProps(props)}>
+    <CentredModal {...modalProps(props)}>
       {props.children}
       {props.showClose === false ? null : <ContentClose />}
-    </DialogFrame>
+    </CentredModal>
   );
 }
 
-type FrameProps = Omit<React.ComponentProps<typeof DialogFrame>, 'children'>;
+type ModalProps = Omit<React.ComponentProps<typeof CentredModal>, 'children'>;
 
-function frameProps({
-  className,
-  size,
-  dismissible,
-  accessibilityLabel,
-  onCloseAutoFocus,
-}: Omit<ContentProps, 'children'>): FrameProps {
+function modalProps(props: ContentProps): ModalProps {
   return {
-    accessibilityLabel,
-    onCloseAutoFocus,
-    className: cn(contentClassName, size === 'sm' && 'sm:max-w-100', className),
-    onEscapeKeyDown: keepOpen(dismissible),
-  };
-}
-
-// Radix closes a dialog on Escape unless the event is cancelled.
-function keepOpen(
-  dismissible: boolean | undefined,
-): (event: KeyboardEvent) => void {
-  return (event) => {
-    if (dismissible === false) event.preventDefault();
+    accessibilityLabel: props.accessibilityLabel,
+    dismissible: props.dismissible,
+    onCloseAutoFocus: props.onCloseAutoFocus,
+    className: cn(
+      contentClassName,
+      props.size === 'sm' && 'sm:max-w-100',
+      props.className,
+    ),
   };
 }

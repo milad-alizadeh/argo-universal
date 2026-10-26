@@ -4,131 +4,133 @@ import {
   type InspectorTab,
 } from '@repo/kit/primitives/scaffolds/inspector';
 import { SizeClass } from '@repo/kit/size-class/size-class';
-import type { ReactNode } from 'react';
 import { createElement, type JSX } from 'react';
-import { ChangesSheetHeader, ChangesFiles } from '#features/changes';
+import type { SessionPanels } from '#features/sessions';
 import {
-  type SessionPanel,
-  sessionPanelLabels,
-  sessionPanelOrder,
-  offeredWorkPanels,
-  type SessionPanels,
-} from '#features/sessions';
+  itemsOf,
+  type SectionPhonePage,
+  type SectionTab,
+  type SessionSection,
+} from './sections/session-section';
 import {
-  panelContent,
-  type SessionInspectorContent,
-} from './session-inspector-content';
+  offeredSections,
+  sectionOf,
+  sectionTab,
+  sessionSections,
+} from './sections/session-sections';
+import type { SessionInspectorContent } from './session-inspector-content';
 import { RetainedInspectorPages } from './session-inspector-pages';
 
 export type { SessionInspectorContent } from './session-inspector-content';
 
 export const offeredSessionPanels = (
   content: SessionInspectorContent,
-): SessionPanel[] =>
-  offeredWorkPanels({
-    shells: content.shells?.shells,
-    subagents: content.subagents?.subagents,
-  });
-
-const tabOf = (
-  panel: SessionPanel,
-  content: SessionInspectorContent,
-): InspectorTab => {
-  const { count, countTone } = panelContent[panel](content) ?? {};
-
-  return { key: panel, ...sessionPanelLabels[panel], count, countTone };
-};
+): string[] => offeredSections(itemsOf(content));
 
 type SessionInspectorProps = SessionInspectorContent & {
   panels: SessionPanels;
 };
 
-function onPanel(run: (panel: SessionPanel) => void): (key: string) => void {
-  return (key) => {
-    const panel = sessionPanelOrder.find((one) => one === key);
-
-    if (panel) run(panel);
-  };
-}
-
-function inspectorTabs({
-  panels,
-  ...content
-}: SessionInspectorProps): InspectorProps['tabs'] {
-  return {
-    items: panels.state.tabs.map((panel) => tabOf(panel, content)),
-    selected: panels.state.shown ?? '',
-    onSelect: onPanel(panels.select),
-    onClose: onPanel(panels.close),
-  };
-}
-
-function inspectorProps(props: SessionInspectorProps): InspectorProps {
-  const { tabs, shown } = props.panels.state;
-
-  return {
-    title: panelTitle(shown),
-    open: tabs.length > 0,
-    onOpenChange: (open) => !open && props.panels.closeAll(),
-    tabs: inspectorTabs(props),
-    sheetHeader: changesSheetHeader(props),
-  };
-}
-
-const panelTitle = (shown: SessionPanel | undefined): string =>
-  shown ? sessionPanelLabels[shown].label : '';
-
-function changesSheetHeader(props: SessionInspectorProps): ReactNode {
-  if (hasChange(props)) return undefined;
-
-  return props.panels.state.shown === 'changes'
-    ? createElement(ChangesSheetHeader)
-    : undefined;
-}
-
-// Subagents and Shells have their own phone sheets, so their tabs are the wide window's alone.
-const phonePanels = new Set<SessionPanel | undefined>(['subagents', 'shells']);
-
-// The Session's Inspector: a tab for each panel opened from the header, showing one at a time.
-export function SessionInspector(
+const tabOf = (
   props: SessionInspectorProps,
-): JSX.Element | null {
-  const inspector = renderInspector(props);
+  section: SessionSection,
+): SectionTab => section.tab(props, sectionTab(props.panels, section.key));
 
+function tabItem(props: SessionInspectorProps, key: string): InspectorTab[] {
+  const section = sectionOf(key);
+
+  if (!section) return [];
+
+  const { count, countTone } = tabOf(props, section);
+
+  return [{ key, label: section.title, icon: section.icon, count, countTone }];
+}
+
+function inspectorTabs(props: SessionInspectorProps): InspectorProps['tabs'] {
+  const { panels } = props;
+
+  return {
+    items: panels.state.tabs.flatMap((key) => tabItem(props, key)),
+    selected: panels.state.shown ?? '',
+    onSelect: panels.select,
+    onClose: panels.close,
+  };
+}
+
+const shownSection = (
+  props: SessionInspectorProps,
+): SessionSection | undefined =>
+  props.panels.state.shown === undefined
+    ? undefined
+    : sectionOf(props.panels.state.shown);
+
+// The shown Section names the Inspector and leads its sheet.
+function shownHeading(
+  props: SessionInspectorProps,
+): Pick<InspectorProps, 'title' | 'sheetHeader'> {
+  const shown = shownSection(props);
+
+  if (!shown) return { title: '' };
+
+  return { title: shown.title, sheetHeader: tabOf(props, shown).sheetHeader };
+}
+
+const inspectorProps = (props: SessionInspectorProps): InspectorProps => ({
+  ...shownHeading(props),
+  open: props.panels.state.tabs.length > 0,
+  onOpenChange: (open) => !open && props.panels.closeAll(),
+  tabs: inspectorTabs(props),
+});
+
+// The Session's Inspector: a tab for each Section opened, showing one at a time.
+export function SessionInspector(props: SessionInspectorProps): JSX.Element {
   return (
-    <SizeClass
-      compact={
-        phonePanels.has(props.panels.state.shown) ? null : phoneInspector(props)
-      }
-      wide={inspector}
-    />
+    <SizeClass compact={phoneInspector(props)} wide={wideInspector(props)} />
   );
 }
 
-function phoneInspector(props: SessionInspectorProps): JSX.Element {
+/*
+ * A phone's Inspector is the sheet of a Section that has one; a Section that draws its own phone sheet shows none here.
+ * While closed it keeps the first such Section's page, so the sheet slides away with its content.
+ */
+const phoneSection = (
+  props: SessionInspectorProps,
+): SessionSection | undefined =>
+  props.panels.state.shown === undefined
+    ? sessionSections.find((section) => section.phone)
+    : shownSection(props);
+
+const phonePage = (
+  props: SessionInspectorProps,
+): SectionPhonePage | undefined => {
+  const section = phoneSection(props);
+
+  return section?.phone?.(props, sectionTab(props.panels, section.key));
+};
+
+function phoneInspector(props: SessionInspectorProps): JSX.Element | null {
+  const page = phonePage(props);
+
+  if (!page) return null;
+
   return createElement(
     Inspector,
     {
       ...inspectorProps(props),
-      sheetHeader: createElement(ChangesSheetHeader),
+      sheetHeader: page.sheetHeader,
       contentScrolls: true,
     },
-    props.changes && createElement(ChangesFiles, props.changes),
+    page.body,
   );
 }
 
 // Open tabs retain their actual content trees, including virtualised detail scroll and local selection.
-function renderInspector(content: SessionInspectorProps): JSX.Element {
+function wideInspector(props: SessionInspectorProps): JSX.Element {
+  const inspector = inspectorProps(props);
+
   return createElement(
     Inspector,
-    { ...inspectorProps(content), toolbar: undefined, contentScrolls: true },
-    <RetainedInspectorPages
-      {...content}
-      changesRequest={content.panels.state.changesRequest}
-      inspector={inspectorProps(content)}
-    />,
+    { ...inspector, toolbar: undefined, contentScrolls: true },
+    <RetainedInspectorPages {...props} inspector={inspector} />,
   );
 }
-
-const hasChange = (props: SessionInspectorContent): boolean =>
-  !!props.header?.pullRequests?.length;

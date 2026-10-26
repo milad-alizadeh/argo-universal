@@ -1,5 +1,5 @@
+import { OfferColumn } from '@repo/kit/content-column/content-column';
 import { ScreenListColumn } from '@repo/kit/primitives/scaffolds/screen';
-import { ScrollColumnContext } from '@repo/kit/scroll-column';
 import { SelectionModeScope } from '@repo/kit/selection-mode';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -37,7 +37,7 @@ function SidebarListContent({ list }: ScaffoldProps): React.JSX.Element {
   return (
     <ScreenListColumn underBand>
       <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
-        <ScrollColumnContext value={listColumn}>{list}</ScrollColumnContext>
+        <OfferColumn column={listColumn}>{list}</OfferColumn>
       </View>
     </ScreenListColumn>
   );

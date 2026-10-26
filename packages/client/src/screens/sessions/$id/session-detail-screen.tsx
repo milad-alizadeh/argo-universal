@@ -9,6 +9,7 @@ import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
 import { renderConnectedReplaceableSlot } from '../../plugins/connected-replaceable-slot';
 import { renderSubagentFeed } from './connected-subagent-feed';
+import { offeredSections } from './sections/session-sections';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
@@ -96,7 +97,7 @@ function useSessionSurroundings(
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     ...useFeedRequests(sessionId, feed),
-    ...useSessionWork(sessionId, feed.snapshot),
+    ...useSessionWork(sessionId, feed.snapshot, offeredSections),
     agents: useInstalledAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
@@ -104,16 +105,6 @@ function useSessionSurroundings(
     onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
   };
 }
-
-const useFeedCommands = (
-  sessionId: string,
-  feed: SessionFeed,
-): SessionCommands =>
-  useSessionCommands({
-    sessionId,
-    resumeAfterCommand: feed.resumeAfterCommand,
-    agent: feed.snapshot?.agent,
-  });
 
 interface ConnectedFeed {
   feed: SessionFeed;
@@ -128,7 +119,11 @@ function useConnectedFeed(sessionId: string): ConnectedFeed {
   return {
     feed,
     feedDropped: useConnectionDropped(feed.openError),
-    commands: useFeedCommands(sessionId, feed),
+    commands: useSessionCommands({
+      sessionId,
+      resumeAfterCommand: feed.resumeAfterCommand,
+      agent: feed.snapshot?.agent,
+    }),
   };
 }
 

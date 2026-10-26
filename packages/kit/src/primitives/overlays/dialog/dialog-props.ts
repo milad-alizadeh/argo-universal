@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { PressableProps, StyleProp, ViewStyle } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import type { TriggerElement } from '#primitives/overlays/open-state';
 import type { KitProps } from '../../kit-props';
 
@@ -39,7 +39,6 @@ export interface DialogRegionProps {
 }
 
 export type DialogSheetProps = {
-  open?: boolean;
   label?: string;
   dismissible?: boolean;
   // The sheet's whole content is one FieldGroup, which scrolls itself.
@@ -49,25 +48,16 @@ export type DialogSheetProps = {
   children: ReactNode;
 };
 
-// The parts each platform draws a dialog from: Radix on the web, React Native views on phones.
+// A form: a heading over FieldGroup sections, its actions outside the group (ADR-0042).
+export type DialogFormProps = Omit<DialogContentProps, 'accessibilityLabel'> & {
+  // Names the dialog and heads the form.
+  title: string;
+  description?: string;
+  // The actions, and a failure's message above them: under the sections on a centred dialog, pinned below them on a sheet.
+  footer?: ReactNode;
+};
+
 export type DialogRootProps = DialogProps & {
   className?: string;
   style?: StyleProp<ViewStyle>;
 };
-
-export type DialogFrameProps = Omit<
-  DialogContentProps,
-  'dismissible' | 'showClose'
-> & {
-  onEscapeKeyDown?: (event: KeyboardEvent) => void;
-};
-
-export type DialogBackdropProps = Pick<PressableProps, 'onPress'> & {
-  className: string;
-  children: ReactNode;
-};
-
-export interface DialogPresentation {
-  centred: boolean;
-  sheetOpen: boolean;
-}

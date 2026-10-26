@@ -27,7 +27,7 @@ import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
-import { headerPanels } from './session-header-panels';
+import { sessionWorkbench } from './sections/session-sections';
 import {
   SessionInspector,
   type SessionInspectorContent,
@@ -84,7 +84,7 @@ export function SessionDetailView(
   return <Screen edges={['bottom']}>{null}</Screen>;
 }
 
-// The header's triggers open Subagents, Shells and Changes as tabs in the Inspector beside the Session.
+// The Workbench's cards open the Session's Sections as tabs in the Inspector beside it.
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
   const panels = useInspectorPanels(props);
   const work = useWorkPanels(props, panels);
@@ -113,7 +113,10 @@ const sessionParts = (
   panels: SessionPanels,
 ): React.ComponentProps<typeof SessionLayout> => ({
   header: (
-    <SessionBandClaim {...props.header} panels={headerPanels(props, panels)} />
+    <SessionBandClaim
+      {...props.header}
+      workbench={sessionWorkbench(props, panels)}
+    />
   ),
   feed: <Feed {...props.feed} />,
   composer: sessionBottom(props),

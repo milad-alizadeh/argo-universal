@@ -6,7 +6,11 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { SessionBandClaim, useSessionPanels } from '#features/sessions';
+import {
+  SessionBandClaim,
+  useSessionPanels,
+  WorkbenchChangesSummary,
+} from '#features/sessions';
 import { WindowBandHostsProvider } from '#lib/product/window-band';
 import { LayoutListMock } from '../components/layout-list.mocks';
 import { Scaffold } from '../scaffold/scaffold';
@@ -44,12 +48,13 @@ function FrameStatePage({
   );
 }
 
-const changesOnly = ['changes'] as const;
+const changesOnly = ['changes'];
 
 // A Session's Workbench card opens its Changes Stage.
 function SessionPage({ title }: { title: string }): React.JSX.Element {
   const panels = useSessionPanels(changesOnly);
   const open = panels.state.tabs.length > 0;
+  const toggleChanges = (): void => panels.toggle('changes');
 
   return (
     <>
@@ -58,11 +63,16 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
         title={title}
         status="idle"
         startedAt={null}
-        panels={{
-          ...panels.state,
-          offered: changesOnly,
-          counts: { changes: 1 },
-          onToggle: panels.toggle,
+        workbench={{
+          sections: [
+            {
+              key: 'changes',
+              title: 'Changes',
+              summary: <WorkbenchChangesSummary onOpen={toggleChanges} />,
+              onOpen: toggleChanges,
+            },
+          ],
+          onOpenInspector: toggleChanges,
         }}
       />
       <Inspector
