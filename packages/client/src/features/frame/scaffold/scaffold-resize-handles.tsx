@@ -10,17 +10,23 @@ import {
   resizeOutcome,
 } from './frame-layout';
 import { moveInspector } from './inspector-column';
-import type {
-  ScaffoldLayout,
-  ScaffoldPartProps,
-  ScaffoldProps,
-} from './use-scaffold-layout';
+import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
+
+type ListHandleReads = PartReads<
+  'sidebarShown' | 'onSidebarShownChange',
+  'handles' | 'setPreferredListWidth' | 'setResizing'
+>;
+
+type InspectorHandleReads = PartReads<
+  'inspectorState' | 'onInspectorStateChange' | 'band',
+  'handles' | 'setPreferredInspectorWidth' | 'setResizing'
+>;
 
 // The list never expands, so any outcome other than a width closes it.
 function resizeList(
   outcome: ResizeOutcome,
-  { sidebarShown, onSidebarShownChange }: ScaffoldProps,
-  { setPreferredListWidth }: ScaffoldLayout,
+  { sidebarShown, onSidebarShownChange }: ListHandleReads['scaffold'],
+  { setPreferredListWidth }: ListHandleReads['layout'],
 ): void {
   if (typeof outcome !== 'number') {
     onSidebarShownChange(false);
@@ -35,8 +41,8 @@ function resizeList(
 
 function resizeInspector(
   outcome: ResizeOutcome,
-  scaffold: ScaffoldProps,
-  { setPreferredInspectorWidth }: ScaffoldLayout,
+  scaffold: InspectorHandleReads['scaffold'],
+  { setPreferredInspectorWidth }: InspectorHandleReads['layout'],
 ): void {
   if (typeof outcome === 'number') setPreferredInspectorWidth(outcome);
 
@@ -45,7 +51,7 @@ function resizeInspector(
 
 function handleProps(
   handle: ResizeHandle,
-  { setResizing }: ScaffoldLayout,
+  { setResizing }: Pick<ScaffoldLayout, 'setResizing'>,
 ): Pick<
   PanelResizeHandleProps,
   'value' | 'minimum' | 'maximum' | 'onDragStateChange'
@@ -60,7 +66,7 @@ function handleProps(
 
 function listHandleProps(
   handle: ResizeHandle,
-  { scaffold, layout }: ScaffoldPartProps,
+  { scaffold, layout }: ListHandleReads,
 ): PanelResizeHandleProps {
   return {
     ...handleProps(handle, layout),
@@ -74,7 +80,7 @@ function listHandleProps(
 function inspectorHandleProps({
   scaffold,
   layout,
-}: ScaffoldPartProps): PanelResizeHandleProps {
+}: InspectorHandleReads): PanelResizeHandleProps {
   const handle = layout.handles.inspector;
 
   return {
@@ -87,11 +93,10 @@ function inspectorHandleProps({
   };
 }
 
-function ListResizeHandle(parts: ScaffoldPartProps): React.JSX.Element | null {
+function ListResizeHandle(parts: ListHandleReads): React.JSX.Element | null {
   const handle = parts.layout.handles.list;
 
-  // Only a wide window frames the page, so only it resizes its panes.
-  if (parts.scaffold.sizeClass !== 'wide' || !handle) return null;
+  if (!handle) return null;
 
   return (
     <View
@@ -103,12 +108,7 @@ function ListResizeHandle(parts: ScaffoldPartProps): React.JSX.Element | null {
   );
 }
 
-function InspectorResizeHandle(
-  parts: ScaffoldPartProps,
-): React.JSX.Element | null {
-  // Only a wide window has the Inspector's column.
-  if (parts.scaffold.sizeClass !== 'wide') return null;
-
+function InspectorResizeHandle(parts: InspectorHandleReads): React.JSX.Element {
   return (
     <View
       className="absolute top-0 bottom-0 z-30"
@@ -119,8 +119,11 @@ function InspectorResizeHandle(
   );
 }
 
+type ResizeHandlesReads = ListHandleReads & InspectorHandleReads;
+
+// Drawn among a framed window's overlays only, so it never checks the Size class: only a wide window resizes its panes.
 export function ScaffoldResizeHandles(
-  parts: ScaffoldPartProps,
+  parts: ResizeHandlesReads,
 ): React.JSX.Element {
   return (
     <>

@@ -3,15 +3,17 @@ import { frameLayout } from './frame-layout';
 import { input } from './frame-layout.mocks';
 
 describe('frameLayout band', () => {
-  it('reserves the measured band before every pane', () => {
-    expect(frameLayout(input).panesTop).toBe(44);
-    expect(
-      frameLayout({
+  it.each([44, 52])(
+    'reserves the measured band of %i before every pane',
+    (bandHeight) => {
+      const layout = frameLayout({
         ...input,
-        measures: { ...input.measures, bandHeight: 52 },
-      }).panesTop,
-    ).toBe(52);
-  });
+        measures: { ...input.measures, bandHeight },
+      });
+
+      expect(layout.panesTop).toBe(bandHeight);
+    },
+  );
 
   it.each([
     { width: 1440, sidebarShown: true, bandLeading: 124, leading: 284 },
@@ -80,10 +82,16 @@ describe('frameLayout regions', () => {
     expect(layout.workbench.state).toBe('docked');
     expect(layout.content).toEqual({ offset: 148, width: 848 });
   });
+});
 
-  it('changes the transition identity only when a pane folds, docks, opens or closes', () => {
-    expect(keyAt(1456)).toBe('true:open:true:docked');
-    expect(keyAt(1455)).toBe('true:open:true:auto-hidden');
-    expect(keyAt(1454)).toBe(keyAt(1455));
+describe('frameLayout transition identity', () => {
+  const autoHiddenKey = keyAt(1455);
+
+  it('changes when the Workbench docks', () => {
+    expect(keyAt(1456)).not.toBe(autoHiddenKey);
+  });
+
+  it('holds while a resize leaves every pane as it was', () => {
+    expect(keyAt(1454)).toBe(autoHiddenKey);
   });
 });

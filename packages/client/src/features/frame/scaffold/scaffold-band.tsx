@@ -4,9 +4,17 @@ import { View } from 'react-native';
 import { bandToggleAppearance } from './band-control-appearance';
 import { BandTrailing } from './scaffold-band-controls';
 import { BandTitle } from './scaffold-band-title';
-import type { ScaffoldPartProps } from './use-scaffold-layout';
+import type {
+  PartReads,
+  ScaffoldLayout,
+  ScaffoldPartProps,
+} from './use-scaffold-layout';
 
-function SidebarBandToggle({ layout }: ScaffoldPartProps): ReactElement {
+interface SidebarToggleProps {
+  layout: Pick<ScaffoldLayout, 'list' | 'requestSidebar'>;
+}
+
+function SidebarBandToggle({ layout }: SidebarToggleProps): ReactElement {
   const shown = !layout.list.folded;
 
   return (
@@ -20,10 +28,18 @@ function SidebarBandToggle({ layout }: ScaffoldPartProps): ReactElement {
   );
 }
 
-const sidebarControl = (parts: ScaffoldPartProps): ReactElement | null =>
-  parts.scaffold.list ? <SidebarBandToggle {...parts} /> : null;
+type BandLeadingReads = PartReads<
+  'list',
+  'bandLeading' | 'list' | 'requestSidebar'
+>;
 
-function BandLeading(parts: ScaffoldPartProps): ReactElement {
+const sidebarControl = ({
+  scaffold,
+  layout,
+}: BandLeadingReads): ReactElement | null =>
+  scaffold.list ? <SidebarBandToggle layout={layout} /> : null;
+
+function BandLeading(parts: BandLeadingReads): ReactElement {
   const { width, inset } = parts.layout.bandLeading;
   const style = { width, paddingLeft: inset };
 

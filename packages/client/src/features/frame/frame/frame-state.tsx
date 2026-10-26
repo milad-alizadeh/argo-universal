@@ -16,12 +16,13 @@ import {
   hostedInspectorState,
   moveInspector,
 } from '../scaffold/inspector-column';
-import type { InspectorState } from '../scaffold/scaffold';
+import type { InspectorState, WorkbenchIntent } from '../scaffold/scaffold';
 
-interface FrameScaffoldState {
+// The Scaffold's props that the Frame holds, as state: the rest come from the shown section.
+interface HeldScaffoldProps {
   band?: WindowBandView | null;
-  workbenchShown?: boolean;
-  onWorkbenchShownChange: (shown: boolean) => void;
+  workbenchIntent: WorkbenchIntent;
+  onWorkbenchIntentChange: (intent: WorkbenchIntent) => void;
   sidebarShown: boolean;
   onSidebarShownChange: (shown: boolean) => void;
   inspectorAvailable: boolean;
@@ -44,13 +45,12 @@ function useExpanded(open: boolean): [boolean, (expanded: boolean) => void] {
   return [expanded, setExpanded];
 }
 
-type InspectorColumn = Omit<
-  FrameScaffoldState,
-  | 'sidebarShown'
-  | 'onSidebarShownChange'
-  | 'band'
-  | 'workbenchShown'
-  | 'onWorkbenchShownChange'
+type ShownInspector = Pick<
+  HeldScaffoldProps,
+  | 'inspectorAvailable'
+  | 'inspectorState'
+  | 'onInspectorStateChange'
+  | 'inspector'
 >;
 
 // The hosted Inspector's pane, whose expand moves the Frame's column between open and expanded.
@@ -66,7 +66,7 @@ const hostedPane =
     );
 
 type HostedColumn = Pick<
-  FrameScaffoldState,
+  HeldScaffoldProps,
   'inspectorState' | 'onInspectorStateChange'
 >;
 
@@ -87,7 +87,7 @@ function useHostedColumn(hosted: InspectorProps | null): HostedColumn {
 }
 
 // The shown page's Inspector in the Frame's column.
-function useInspectorColumn(hosted: InspectorProps | null): InspectorColumn {
+function useShownInspector(hosted: InspectorProps | null): ShownInspector {
   const column = useHostedColumn(hosted);
 
   return {
@@ -99,7 +99,7 @@ function useInspectorColumn(hosted: InspectorProps | null): InspectorColumn {
 
 export interface FrameState {
   bandPlaces: WindowBandPlaces;
-  scaffold: FrameScaffoldState;
+  scaffold: HeldScaffoldProps;
   // The column the shown page's Inspector draws in.
   inspectorPlace: Place<InspectorProps>;
 }
@@ -116,23 +116,25 @@ export function useFrameState(): FrameState {
       ...band,
       sidebarShown,
       onSidebarShownChange,
-      ...useInspectorColumn(useClaimed(inspectorPlace) ?? null),
+      ...useShownInspector(useClaimed(inspectorPlace) ?? null),
     },
     inspectorPlace,
   };
 }
 
 function useBandState(): Pick<
-  FrameScaffoldState,
-  'band' | 'workbenchShown' | 'onWorkbenchShownChange'
+  HeldScaffoldProps,
+  'band' | 'workbenchIntent' | 'onWorkbenchIntentChange'
 > & { bandPlaces: WindowBandPlaces } {
   const [bandPlaces] = useState(createWindowBandPlaces);
-  const [workbenchShown, onWorkbenchShownChange] = useState<boolean>();
+
+  const [workbenchIntent, onWorkbenchIntentChange] =
+    useState<WorkbenchIntent>('auto');
 
   return {
     bandPlaces,
     band: useWindowBandView(bandPlaces),
-    workbenchShown,
-    onWorkbenchShownChange,
+    workbenchIntent,
+    onWorkbenchIntentChange,
   };
 }

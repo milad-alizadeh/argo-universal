@@ -1,18 +1,26 @@
 import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type { InspectorState, ResizeOutcome } from './frame-layout';
+import { isFramed } from './is-framed';
 
 /*
  * The Inspector column's open state and every move between its states. The band's buttons, the dividers and the
  * hosted page only name a move; this module decides where it lands and who is told.
  */
 
-// What a move reads and tells: the Frame's state of the column, and how the shown page opens its own Inspector.
-export interface InspectorColumn {
+// The Frame's state of the column: what a move reads, and who it tells.
+export interface InspectorColumnState {
   inspectorState: InspectorState;
   onInspectorStateChange: (state: InspectorState) => void;
-  // Whether the shown page has an Inspector to open; the page's opener counts too.
-  inspectorAvailable?: boolean;
+}
+
+// How the shown page opens its own Inspector.
+export interface InspectorOpener {
   band?: { onInspectorToggle?: () => void } | null;
+}
+
+export interface InspectorOffer extends InspectorOpener {
+  // Whether the shown page has an Inspector to open; the page's opener counts too.
+  inspectorAvailable: boolean;
 }
 
 export type InspectorMove =
@@ -27,7 +35,7 @@ export type InspectorMove =
 export const shownInspectorState = (
   sizeClass: SizeClass,
   state: InspectorState,
-): InspectorState => (sizeClass === 'wide' ? state : 'closed');
+): InspectorState => (isFramed(sizeClass) ? state : 'closed');
 
 const expandedState = (expanded: boolean): InspectorState =>
   expanded ? 'expanded' : 'open';
@@ -49,22 +57,24 @@ export function nextInspectorState(
     : dragState(move.dragged);
 }
 
-const pageOpener = (column: InspectorColumn): (() => void) | undefined =>
-  column.band?.onInspectorToggle;
+const pageOpener = (page: InspectorOpener): (() => void) | undefined =>
+  page.band?.onInspectorToggle;
 
-export const inspectorOffered = (column: InspectorColumn): boolean =>
-  column.inspectorAvailable !== false || Boolean(pageOpener(column));
+export const inspectorOffered = (offer: InspectorOffer): boolean =>
+  offer.inspectorAvailable || Boolean(pageOpener(offer));
 
 // A closed column's toggle goes through the page, which opens its own Inspector and so holds it open.
-const opensOnPage = (column: InspectorColumn, move: InspectorMove): boolean =>
-  move === 'toggle' && column.inspectorState === 'closed';
+const opensOnPage = (
+  column: InspectorColumnState,
+  move: InspectorMove,
+): boolean => move === 'toggle' && column.inspectorState === 'closed';
 
-function settle(column: InspectorColumn, next: InspectorState): void {
+function settle(column: InspectorColumnState, next: InspectorState): void {
   if (next !== column.inspectorState) column.onInspectorStateChange(next);
 }
 
 export function moveInspector(
-  column: InspectorColumn,
+  column: InspectorColumnState & InspectorOpener,
   move: InspectorMove,
 ): void {
   const opener = pageOpener(column);

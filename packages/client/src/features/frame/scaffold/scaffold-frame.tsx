@@ -1,20 +1,21 @@
 import { InspectorControlsContext } from '@repo/kit/primitives/scaffolds/inspector';
-import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
-import { View, type ViewStyle } from 'react-native';
+import { View, type ViewProps, type ViewStyle } from 'react-native';
 import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
 import { shownInspectorState } from './inspector-column';
+import { isFramed } from './is-framed';
 import { ScaffoldBand } from './scaffold-band';
 import { PaneBanner } from './scaffold-chrome';
+import type { ScaffoldProps } from './scaffold-props';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
 import { ScaffoldWorkbench } from './scaffold-workbench';
 import {
+  type PartReads,
   type ScaffoldPartProps,
-  type ScaffoldProps,
   useScaffoldLayout,
 } from './use-scaffold-layout';
 
@@ -22,9 +23,6 @@ export interface ScaffoldParts extends ScaffoldPartProps {
   // A wide window: the sidebar and the list sit beside the page.
   framed: boolean;
 }
-
-// ADR-0026, amended 2026-10-18: only a wide window frames the page; compact and medium take the phone shell.
-export const isFramed = (sizeClass: SizeClass): boolean => sizeClass === 'wide';
 
 const shownInspector = (props: ScaffoldProps): ScaffoldProps => ({
   ...props,
@@ -42,20 +40,21 @@ export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
   };
 }
 
-// The width of the sidebar and the list, for the permanent drawer that holds them.
-export const scaffoldSidebarWidth = ({ layout }: ScaffoldParts): number =>
-  layout.sidebarWidth;
-
 export type PanePlacement = Omit<FramePaneProps, 'testID' | 'children'>;
 
-const inspectorPlacement = ({ layout }: ScaffoldPartProps): PanePlacement => ({
+type InspectorReads = PartReads<
+  'inspector',
+  'inspector' | 'motion' | 'measures'
+>;
+
+const inspectorPlacement = ({ layout }: InspectorReads): PanePlacement => ({
   offset: layout.inspector.offset,
   width: layout.inspector.width,
   hidden: !layout.inspector.open,
   ...layout.motion,
 });
 
-function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
+function FramedInspector(parts: InspectorReads): React.JSX.Element {
   return (
     <View className="absolute top-0 flex-row" style={inspectorPosition(parts)}>
       <FramePane
@@ -71,14 +70,14 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
   );
 }
 
-function inspectorPosition({ layout }: ScaffoldPartProps): ViewStyle {
+function inspectorPosition({ layout }: InspectorReads): ViewStyle {
   return { left: layout.inspector.offset, bottom: layout.measures.inset };
 }
 
 function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
-      <InspectorColumn {...parts} />
+      <FramedInspector {...parts} />
       <ScaffoldWorkbench {...parts} />
       <ScaffoldResizeHandles {...parts} />
       <PaneBanner left={parts.layout.sidebarWidth}>
@@ -124,23 +123,13 @@ function frameTop(parts: ScaffoldParts): ViewStyle {
   };
 }
 
-function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
-  const { before, after } = frameEdges(parts);
-
-  return (
-    <View
-      // Named for the Size class it lays out, such as `wide-frame`.
-      testID={`${parts.scaffold.sizeClass}-frame`}
-      className="flex-1 flex-row overflow-hidden bg-content"
-      style={frameTop(parts)}
-      onLayout={parts.layout.onLayout}
-    >
-      {before}
-      <View className="min-w-0 flex-1">{children}</View>
-      {after}
-    </View>
-  );
-}
+const frameViewProps = (parts: ScaffoldParts): ViewProps => ({
+  // Named for the Size class it lays out, such as `wide-frame`.
+  testID: `${parts.scaffold.sizeClass}-frame`,
+  className: 'flex-1 flex-row overflow-hidden bg-content',
+  style: frameTop(parts),
+  onLayout: parts.layout.onLayout,
+});
 
 /*
  * The Scaffold's frame without its sidebar and page, for a navigator that draws them itself:
@@ -148,6 +137,17 @@ function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
  * same parts. The navigator, the children, keeps the same place in the tree at every Size class,
  * so its pages never remount.
  */
-export function ScaffoldFrame(props: ScaffoldFrameProps): React.JSX.Element {
-  return <FrameRow {...props} />;
+export function ScaffoldFrame({
+  parts,
+  children,
+}: ScaffoldFrameProps): React.JSX.Element {
+  const { before, after } = frameEdges(parts);
+
+  return (
+    <View {...frameViewProps(parts)}>
+      {before}
+      <View className="min-w-0 flex-1">{children}</View>
+      {after}
+    </View>
+  );
 }

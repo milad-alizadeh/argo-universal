@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ScaffoldProps } from './use-scaffold-layout';
+import type { ScaffoldProps } from './scaffold-props';
 
 export interface SidebarIntent {
   sidebarRequested: boolean;

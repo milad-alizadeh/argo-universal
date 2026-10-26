@@ -7,18 +7,23 @@ import {
 import type {
   FrameLayoutInput,
   InspectorRegion,
+  WorkbenchIntent,
   WorkbenchRegion,
   WorkbenchState,
 } from './frame-layout-types';
 
+// Docked and floating show the Workbench; hidden and auto-hidden wait at the window's edge.
+export const workbenchDrawn = (state: WorkbenchState): boolean =>
+  state === 'docked' || state === 'floating';
+
 const unavailable = (input: FrameLayoutInput): boolean =>
-  input.workbenchAvailable === false || input.inspectorState === 'expanded';
+  !input.workbenchAvailable || input.inspectorState === 'expanded';
 
-const dockedState = (shown: boolean | undefined): WorkbenchState =>
-  shown === false ? 'hidden' : 'docked';
+const dockedState = (intent: WorkbenchIntent): WorkbenchState =>
+  intent === 'hidden' ? 'hidden' : 'docked';
 
-const floatingState = (shown: boolean | undefined): WorkbenchState =>
-  shown === true ? 'floating' : 'auto-hidden';
+const floatingState = (intent: WorkbenchIntent): WorkbenchState =>
+  intent === 'shown' ? 'floating' : 'auto-hidden';
 
 export function workbenchState(
   input: FrameLayoutInput,
@@ -27,15 +32,15 @@ export function workbenchState(
   if (unavailable(input)) return 'hidden';
 
   return input.width >= undock
-    ? dockedState(input.workbenchShown)
-    : floatingState(input.workbenchShown);
+    ? dockedState(input.workbenchIntent)
+    : floatingState(input.workbenchIntent);
 }
 
 // The Workbench's room beside the content whenever the page has one, which the thresholds budget for.
 export const reservedWorkbench = (input: FrameLayoutInput): number =>
-  input.workbenchAvailable === false
-    ? 0
-    : input.measures.workbenchWidth + input.measures.paneGap;
+  input.workbenchAvailable
+    ? input.measures.workbenchWidth + input.measures.paneGap
+    : 0;
 
 export const dockedWorkbench = (
   input: FrameLayoutInput,
@@ -50,7 +55,7 @@ function drawnWorkbenchWidth(
   { width, measures }: FrameLayoutInput,
   state: WorkbenchState,
 ): number {
-  if (state === 'hidden' || state === 'auto-hidden') return 0;
+  if (!workbenchDrawn(state)) return 0;
 
   return Math.min(
     measures.workbenchWidth,

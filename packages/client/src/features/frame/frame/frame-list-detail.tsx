@@ -6,12 +6,9 @@ import {
 } from '@repo/kit/place';
 import { ListDetailSidebarPlace } from '@repo/kit/primitives/scaffolds/list-detail';
 import { createContext, use, type ReactNode, useState } from 'react';
-import {
-  isCoreSection,
-  type Section,
-} from '../../../lib/product/navigation/sections';
+import { isCoreSection } from '../../../lib/product/navigation/sections';
 import type { ScaffoldProps } from '../scaffold/scaffold';
-import type { SectionLists } from './section-lists';
+import type { FrameSections } from './section-lists';
 
 // The Frame's sidebar, which a Plugin page's ListDetail may hold on a wide window.
 export const FrameListDetailSidebar = createContext<
@@ -54,11 +51,6 @@ export function useFrameListDetail(): FrameListDetail {
   return { sidebar, held: usePlaceHeld(sidebar) };
 }
 
-interface ShownSection {
-  section: Section;
-  lists: SectionLists;
-}
-
 const noList: SectionScaffold = {
   list: null,
   sidebarShown: false,
@@ -67,7 +59,7 @@ const noList: SectionScaffold = {
 
 // A core section's own list; a Plugin section's only while its page's ListDetail holds the sidebar with its own.
 export function sectionScaffold(
-  shown: ShownSection,
+  shown: Pick<FrameSections, 'section' | 'lists'>,
   listDetail: FrameListDetail,
 ): SectionScaffold {
   const { section, lists } = shown;

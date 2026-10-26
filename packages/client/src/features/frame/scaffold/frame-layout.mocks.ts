@@ -19,4 +19,6 @@ export const input: FrameLayoutInput = {
   preferredInspectorWidth: 352,
   sidebarShown: true,
   inspectorState: 'closed',
+  workbenchAvailable: true,
+  workbenchIntent: 'auto',
 };

@@ -6,6 +6,9 @@ export type InspectorState = 'closed' | 'open' | 'expanded';
 // One band toggle drives the Workbench; below the undock width it floats when pressed and auto-hides otherwise.
 export type WorkbenchState = 'docked' | 'auto-hidden' | 'floating' | 'hidden';
 
+// What the person asked of the Workbench's one toggle: nothing yet, so it docks when the window has room, or to show it or hide it.
+export type WorkbenchIntent = 'auto' | 'shown' | 'hidden';
+
 // The Frame's sizes, read from its tokens and the platform.
 export interface FrameMeasures {
   listWidth: number;
@@ -29,8 +32,8 @@ export interface FrameIntent {
   sidebarRequested?: boolean;
   inspectorState: InspectorState;
   // The page has Workbench cards to show.
-  workbenchAvailable?: boolean;
-  workbenchShown?: boolean;
+  workbenchAvailable: boolean;
+  workbenchIntent: WorkbenchIntent;
 }
 
 export interface FrameLayoutInput extends FrameIntent {
@@ -54,6 +57,17 @@ export interface ResizeHandle {
 }
 
 export type ResizeOutcome = 'closed' | 'expanded' | number;
+
+/*
+ * What a pane opening, closing, folding or docking changes, and so what the Frame animates on: a type
+ * alias, so `transitionKeyOf` takes it as the plain record it serialises.
+ */
+export type FrameArrangement = {
+  sidebarShown: boolean;
+  inspectorState: InspectorState;
+  listFolded: boolean;
+  workbench: WorkbenchState;
+};
 
 export interface ListRegion extends PaneSpan {
   folded: boolean;

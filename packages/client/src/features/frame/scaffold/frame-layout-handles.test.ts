@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { frameLayout, resizeOutcome } from './frame-layout';
+import {
+  frameLayout,
+  type FrameLayoutInput,
+  resizeOutcome,
+} from './frame-layout';
 import { input } from './frame-layout.mocks';
 
 describe('resize handles', () => {
@@ -27,34 +31,44 @@ describe('resize handles', () => {
 });
 
 describe('the Inspector handle agrees with the layout', () => {
-  it.each([
+  const cases = [
     { width: 1440, sidebarShown: true },
     { width: 1920, sidebarShown: true },
     { width: 1180, sidebarShown: false },
-  ])(
-    'a drag past its limit at $width leaves the Inspector where the layout draws it',
-    ({ width, sidebarShown }) => {
-      const open = {
-        ...input,
-        width,
-        sidebarShown,
-        inspectorState: 'open' as const,
-      };
+  ];
 
-      const { handles } = frameLayout(open);
+  const openAt = ({
+    width,
+    sidebarShown,
+  }: (typeof cases)[number]): FrameLayoutInput => ({
+    ...input,
+    width,
+    sidebarShown,
+    inspectorState: 'open',
+  });
 
-      const outcome = resizeOutcome(
-        handles.inspector,
-        handles.inspector.maximum + 100,
-      );
+  it.each(cases)(
+    'a drag past its limit at $width stops at the handle maximum',
+    (state) => {
+      const { handles } = frameLayout(openAt(state));
+
+      expect(
+        resizeOutcome(handles.inspector, handles.inspector.maximum + 100),
+      ).toBe(handles.inspector.maximum);
+    },
+  );
+
+  it.each(cases)(
+    'the layout draws the Inspector at its handle maximum at $width',
+    (state) => {
+      const { handles } = frameLayout(openAt(state));
 
       const resized = frameLayout({
-        ...open,
-        preferredInspectorWidth: Number(outcome),
+        ...openAt(state),
+        preferredInspectorWidth: handles.inspector.maximum,
       });
 
-      expect(outcome).toBe(handles.inspector.maximum);
-      expect(resized.inspector.width).toBe(outcome);
+      expect(resized.inspector.width).toBe(handles.inspector.maximum);
       expect(resized.page.width).toBeGreaterThanOrEqual(688);
     },
   );

@@ -1,4 +1,5 @@
 import { contentSpan } from '../../../lib/product/content-rule';
+import { transitionKeyOf } from '../utils/frame-timing';
 import type { PaneSpan } from '../utils/pane-shift';
 import { resizeHandles } from './frame-layout-handles';
 import {
@@ -21,6 +22,7 @@ import {
   workbenchState,
 } from './frame-layout-trailing';
 import type {
+  FrameArrangement,
   FrameLayout,
   FrameLayoutInput,
   InspectorRegion,
@@ -29,6 +31,8 @@ import type {
 } from './frame-layout-types';
 
 export { resizeOutcome } from './frame-layout-handles';
+
+export { workbenchDrawn } from './frame-layout-trailing';
 
 export type * from './frame-layout-types';
 
@@ -136,9 +140,15 @@ function placeRegions(
   };
 }
 
-function transitionKey(input: FrameLayoutInput, placed: Placed): string {
-  return `${input.sidebarShown}:${input.inspectorState}:${placed.list.folded}:${placed.workbench.state}`;
-}
+const arrangement = (
+  input: FrameLayoutInput,
+  placed: Placed,
+): FrameArrangement => ({
+  sidebarShown: input.sidebarShown,
+  inspectorState: input.inspectorState,
+  listFolded: placed.list.folded,
+  workbench: placed.workbench.state,
+});
 
 /*
  * A wide window's Frame: the window's width, the Frame's measures, the preferred pane widths and what the
@@ -158,6 +168,6 @@ export function frameLayout(input: FrameLayoutInput): FrameLayout {
     content,
     handles: resizeHandles(input, placed),
     bandTitleLeading: bandTitleLeading(input, content),
-    transitionKey: transitionKey(input, placed),
+    transitionKey: transitionKeyOf(arrangement(input, placed)),
   };
 }

@@ -5,14 +5,20 @@ import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { useState, type ReactElement } from 'react';
 import { View, TextInput } from 'react-native';
-import { Scaffold, type ScaffoldProps, type InspectorState } from './scaffold';
+import {
+  Scaffold,
+  type ScaffoldProps,
+  type InspectorState,
+  type WorkbenchIntent,
+} from './scaffold';
 
 type MockState = Pick<
   ScaffoldProps,
   | 'sidebarShown'
   | 'onSidebarShownChange'
-  | 'workbenchShown'
-  | 'onWorkbenchShownChange'
+  | 'inspectorAvailable'
+  | 'workbenchIntent'
+  | 'onWorkbenchIntentChange'
   | 'inspectorState'
   | 'onInspectorStateChange'
 >;
@@ -33,9 +39,20 @@ export function WorkbenchScaffold({
   );
 }
 
+type WorkbenchState = Pick<
+  MockState,
+  'inspectorAvailable' | 'workbenchIntent' | 'onWorkbenchIntentChange'
+>;
+
+function useWorkbenchState(): WorkbenchState {
+  const [workbenchIntent, onWorkbenchIntentChange] =
+    useState<WorkbenchIntent>('auto');
+
+  return { inspectorAvailable: true, workbenchIntent, onWorkbenchIntentChange };
+}
+
 function useMockState(inspectorOpen: boolean): MockState {
   const [sidebarShown, onSidebarShownChange] = useState(true);
-  const [workbenchShown, onWorkbenchShownChange] = useState<boolean>();
 
   const [inspectorState, onInspectorStateChange] = useState<InspectorState>(
     inspectorOpen ? 'open' : 'closed',
@@ -44,10 +61,9 @@ function useMockState(inspectorOpen: boolean): MockState {
   return {
     sidebarShown,
     onSidebarShownChange,
-    workbenchShown,
-    onWorkbenchShownChange,
     inspectorState,
     onInspectorStateChange,
+    ...useWorkbenchState(),
   };
 }
 

@@ -13,14 +13,18 @@ import {
   type GlassSurfaceProps,
 } from '../components/glass-surface/glass-surface';
 import type { FrameMotion } from '../utils/frame-timing';
-import type { ScaffoldPartProps, ScaffoldProps } from './use-scaffold-layout';
+import type { ScaffoldLayout } from './use-scaffold-layout';
 
 // The list scrolls across the whole pane, so its scrollbar sits at the pane's edge; its rows keep 8 from the rail and 14 from the pane's edge.
 const listColumn = { paddingLeft: 8, paddingRight: 14 };
 
+interface SidebarLayout {
+  layout: Pick<ScaffoldLayout, 'measures' | 'list' | 'motion'>;
+}
+
 const glassGeometry = ({
   layout,
-}: ScaffoldPartProps): Omit<GlassSurfaceProps, keyof FrameMotion> => ({
+}: SidebarLayout): Omit<GlassSurfaceProps, keyof FrameMotion> => ({
   width: layout.measures.railWidth + layout.list.width,
   expandedWidth: layout.measures.railWidth + layout.list.openWidth,
   railWidth: layout.measures.railWidth,
@@ -28,12 +32,12 @@ const glassGeometry = ({
   sidebarShown: !layout.list.folded,
 });
 
-function SidebarGlass(parts: ScaffoldPartProps): React.JSX.Element {
+function SidebarGlass(parts: SidebarLayout): React.JSX.Element {
   return <GlassSurface {...glassGeometry(parts)} {...parts.layout.motion} />;
 }
 
 // The list's Screen draws its heading in the column's row under the window's band, so the heading slides with the list.
-function SidebarListContent({ list }: ScaffoldProps): React.JSX.Element {
+function SidebarListContent({ list }: { list: ReactNode }): React.JSX.Element {
   return (
     <ScreenListColumn underBand>
       <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
@@ -45,7 +49,7 @@ function SidebarListContent({ list }: ScaffoldProps): React.JSX.Element {
 
 type ListPlacement = Omit<FramePaneProps, 'testID' | 'children'>;
 
-const listPlacement = ({ layout }: ScaffoldPartProps): ListPlacement => ({
+const listPlacement = ({ layout }: SidebarLayout): ListPlacement => ({
   width: layout.list.width,
   offset: 0,
   contentWidth: layout.list.openWidth,
@@ -53,42 +57,46 @@ const listPlacement = ({ layout }: ScaffoldPartProps): ListPlacement => ({
   ...layout.motion,
 });
 
-function SidebarList(parts: ScaffoldPartProps): React.JSX.Element {
+function SidebarList({
+  list,
+  layout,
+}: SidebarLayout & { list: ReactNode }): React.JSX.Element {
   return (
-    <FramePane testID="desktop-list" {...listPlacement(parts)}>
-      <SidebarListContent {...parts.scaffold} />
+    <FramePane testID="desktop-list" {...listPlacement({ layout })}>
+      <SidebarListContent list={list} />
     </FramePane>
   );
 }
 
-export interface ScaffoldSidebarColumnProps extends ScaffoldPartProps {
+export interface ScaffoldSidebarColumnProps extends SidebarLayout {
   // The sidebar Slot, which the caller may draw apart from the Scaffold's props.
   sidebar: ReactNode;
-}
-
-// The glass panel: the sidebar Slot and the list beside it.
-export function ScaffoldSidebarColumn({
-  sidebar,
-  ...parts
-}: ScaffoldSidebarColumnProps): React.JSX.Element {
-  return (
-    <SelectionModeScope>
-      <SidebarColumnDrawing sidebar={sidebar} {...parts} />
-    </SelectionModeScope>
-  );
+  list: ReactNode;
 }
 
 function SidebarColumnDrawing({
   sidebar,
-  ...parts
+  list,
+  layout,
 }: ScaffoldSidebarColumnProps): React.JSX.Element {
   return (
     <View className="px-frame-inset pb-frame-inset">
       <View className="flex-1 flex-row">
-        <SidebarGlass {...parts} />
+        <SidebarGlass layout={layout} />
         {sidebar}
-        <SidebarList {...parts} />
+        <SidebarList list={list} layout={layout} />
       </View>
     </View>
+  );
+}
+
+// The glass panel of the sidebar Slot and the list beside it, sized by its content.
+export function ScaffoldSidebarColumn(
+  props: ScaffoldSidebarColumnProps,
+): React.JSX.Element {
+  return (
+    <SelectionModeScope>
+      <SidebarColumnDrawing {...props} />
+    </SelectionModeScope>
   );
 }

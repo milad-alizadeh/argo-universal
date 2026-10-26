@@ -4,24 +4,22 @@ import { View } from 'react-native';
 import { contentFill, ContentWidthProvider } from '#lib/product/content-layout';
 import { FramePane } from '../components/frame-pane/frame-pane';
 import {
-  isFramed,
   type PanePlacement,
   ScaffoldFrame,
   type ScaffoldParts,
   useScaffoldParts,
 } from './scaffold-frame';
+import type { ScaffoldProps } from './scaffold-props';
 import { ScaffoldSidebarColumn } from './scaffold-sidebar';
 import { usePageContentWide } from './use-page-content-wide';
-import type { ScaffoldProps } from './use-scaffold-layout';
 
-export type { InspectorState } from './frame-layout';
+export type { InspectorState, WorkbenchIntent } from './frame-layout';
 
-export type { ScaffoldProps } from './use-scaffold-layout';
+export type { ScaffoldProps } from './scaffold-props';
 
 export {
   ScaffoldFrame,
   type ScaffoldParts,
-  scaffoldSidebarWidth,
   useScaffoldParts,
 } from './scaffold-frame';
 
@@ -36,27 +34,18 @@ export interface ScaffoldSidebarProps {
   sidebar: ReactNode;
 }
 
-// The glass panel of the sidebar Slot and the list, sized by its content.
-function SidebarColumn({
+// The same panel, filling the drawer that holds it: the drawer stacks its content in a column.
+export function ScaffoldSidebar({
   parts,
   sidebar,
 }: ScaffoldSidebarProps): React.JSX.Element {
   return (
-    <ScaffoldSidebarColumn
-      sidebar={sidebar}
-      scaffold={parts.scaffold}
-      layout={parts.layout}
-    />
-  );
-}
-
-// The same panel, filling the drawer that holds it: the drawer stacks its content in a column.
-export function ScaffoldSidebar(
-  props: ScaffoldSidebarProps,
-): React.JSX.Element {
-  return (
     <View className="flex-1 flex-row">
-      <SidebarColumn {...props} />
+      <ScaffoldSidebarColumn
+        sidebar={sidebar}
+        list={parts.scaffold.list}
+        layout={parts.layout}
+      />
     </View>
   );
 }
@@ -87,6 +76,15 @@ const shownPage = (
   { page, list }: ScaffoldProps,
 ): ReactNode => (framed ? page : (page ?? list));
 
+// The sidebar's glass beside the page, on a framed window only.
+const sidebarColumn = (
+  { framed, layout }: ScaffoldParts,
+  { sidebar, list }: ScaffoldProps,
+): ReactNode =>
+  framed ? (
+    <ScaffoldSidebarColumn sidebar={sidebar} list={list} layout={layout} />
+  ) : null;
+
 /*
  * Places a screen's panes for its Size class, from props only: on a compact or medium window the
  * page drills in over the list, with the Inspector as a sheet; on a wide one the sidebar and the
@@ -94,15 +92,14 @@ const shownPage = (
  */
 export function Scaffold(props: ScaffoldProps): React.JSX.Element {
   const parts = useScaffoldParts(props);
-  const framed = isFramed(props.sizeClass);
 
   return (
     <ScaffoldFrame parts={parts}>
       <View className="flex-1 flex-row">
-        {framed ? (
-          <SidebarColumn parts={parts} sidebar={props.sidebar} />
-        ) : null}
-        <ScaffoldPage parts={parts}>{shownPage(framed, props)}</ScaffoldPage>
+        {sidebarColumn(parts, props)}
+        <ScaffoldPage parts={parts}>
+          {shownPage(parts.framed, props)}
+        </ScaffoldPage>
       </View>
     </ScaffoldFrame>
   );

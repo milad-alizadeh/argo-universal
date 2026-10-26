@@ -2,7 +2,11 @@ import type { EmptyStateProps } from '@repo/kit/primitives/status/empty-state';
 import type { ReactNode } from 'react';
 import { createContext, use } from 'react';
 import type { FirstPage } from '#lib/product/navigation/navigation';
-import type { CoreSection } from '../../../lib/product/navigation/sections';
+import type {
+  CoreSection,
+  NavigationSection,
+  Section,
+} from '../../../lib/product/navigation/sections';
 
 // What a section hands the Frame: its list, and what goes with it.
 export interface SectionList {
@@ -18,6 +22,13 @@ export interface SectionList {
 }
 
 export type SectionLists = Record<CoreSection, SectionList>;
+
+// The sections the navigator shows: the open one, every core section's list, and the rail's items.
+export interface FrameSections {
+  section: Section;
+  lists: SectionLists;
+  items: readonly NavigationSection[];
+}
 
 export const SectionListsContext = createContext<SectionLists | null>(null);
 

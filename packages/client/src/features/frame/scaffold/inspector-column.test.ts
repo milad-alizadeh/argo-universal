@@ -4,7 +4,8 @@ import {
   hostedChange,
   hostedInspectorState,
   inspectorOffered,
-  type InspectorColumn,
+  type InspectorColumnState,
+  type InspectorOpener,
   moveInspector,
   nextInspectorState,
   shownInspectorState,
@@ -14,20 +15,23 @@ type ChangeInspector = (state: InspectorState) => void;
 
 function column(
   inspectorState: InspectorState,
-  rest: Partial<Pick<InspectorColumn, 'inspectorAvailable' | 'band'>> = {},
-): InspectorColumn & { onInspectorStateChange: Mock<ChangeInspector> } {
+  opener: InspectorOpener = {},
+): InspectorColumnState &
+  InspectorOpener & { onInspectorStateChange: Mock<ChangeInspector> } {
   return {
     inspectorState,
     onInspectorStateChange: vi.fn<ChangeInspector>(),
-    ...rest,
+    ...opener,
   };
 }
 
 describe('the band toggle', () => {
-  it('opens a closed column and closes an open or expanded one', () => {
-    expect(nextInspectorState('closed', 'toggle')).toBe('open');
-    expect(nextInspectorState('open', 'toggle')).toBe('closed');
-    expect(nextInspectorState('expanded', 'toggle')).toBe('closed');
+  it.each([
+    { from: 'closed', next: 'open' },
+    { from: 'open', next: 'closed' },
+    { from: 'expanded', next: 'closed' },
+  ] as const)('moves a $from column to $next', ({ from, next }) => {
+    expect(nextInspectorState(from, 'toggle')).toBe(next);
   });
 
   it('opens through the page when it offers an opener', () => {
@@ -54,15 +58,17 @@ describe('the band toggle', () => {
 });
 
 describe('expanding', () => {
-  it('expands an open column and restores an expanded one', () => {
-    const open = column('open');
-    moveInspector(open, { expanded: true });
-    expect(open.onInspectorStateChange).toHaveBeenCalledWith('expanded');
-
-    const expanded = column('expanded');
-    moveInspector(expanded, { expanded: false });
-    expect(expanded.onInspectorStateChange).toHaveBeenCalledWith('open');
-  });
+  it.each([
+    { from: 'open', expanded: true, next: 'expanded' },
+    { from: 'expanded', expanded: false, next: 'open' },
+  ] as const)(
+    'tells the Frame $next when a $from column is asked to expand: $expanded',
+    ({ from, expanded, next }) => {
+      const asked = column(from);
+      moveInspector(asked, { expanded });
+      expect(asked.onInspectorStateChange).toHaveBeenCalledWith(next);
+    },
+  );
 
   it('tells nobody when the column already agrees', () => {
     const expanded = column('expanded');
@@ -72,17 +78,17 @@ describe('expanding', () => {
 });
 
 describe('a divider drag', () => {
-  it('closes or expands the column from its outcome', () => {
-    expect(nextInspectorState('open', { dragged: 'closed' })).toBe('closed');
-    expect(nextInspectorState('open', { dragged: 'expanded' })).toBe(
-      'expanded',
-    );
-  });
-
-  it('reopens a closed or expanded column beside the page at a width', () => {
-    expect(nextInspectorState('closed', { dragged: 400 })).toBe('open');
-    expect(nextInspectorState('expanded', { dragged: 400 })).toBe('open');
-  });
+  it.each([
+    { from: 'open', dragged: 'closed', next: 'closed' },
+    { from: 'open', dragged: 'expanded', next: 'expanded' },
+    { from: 'closed', dragged: 400, next: 'open' },
+    { from: 'expanded', dragged: 400, next: 'open' },
+  ] as const)(
+    'moves a $from column to $next when the drag ends at $dragged',
+    ({ from, dragged, next }) => {
+      expect(nextInspectorState(from, { dragged })).toBe(next);
+    },
+  );
 
   it('leaves an open column alone while it is resized', () => {
     const open = column('open');
@@ -100,58 +106,57 @@ describe('a divider drag', () => {
 });
 
 describe('off a wide window', () => {
-  it('keeps the column closed whatever was asked', () => {
-    expect(shownInspectorState('compact', 'open')).toBe('closed');
-    expect(shownInspectorState('medium', 'expanded')).toBe('closed');
-  });
-
-  it('shows the asked state on a wide window', () => {
-    expect(shownInspectorState('wide', 'expanded')).toBe('expanded');
-  });
+  it.each([
+    { sizeClass: 'compact', asked: 'open', shown: 'closed' },
+    { sizeClass: 'medium', asked: 'expanded', shown: 'closed' },
+    { sizeClass: 'wide', asked: 'expanded', shown: 'expanded' },
+  ] as const)(
+    'shows $asked as $shown on a $sizeClass window',
+    ({ sizeClass, asked, shown }) => {
+      expect(shownInspectorState(sizeClass, asked)).toBe(shown);
+    },
+  );
 });
 
 describe('what the band offers', () => {
-  it('offers the column when the page has an Inspector or an opener', () => {
-    expect(inspectorOffered(column('closed'))).toBe(true);
+  it('offers the column when the page has an Inspector', () => {
+    expect(inspectorOffered({ inspectorAvailable: true })).toBe(true);
+  });
 
-    expect(
-      inspectorOffered(
-        column('closed', {
-          inspectorAvailable: false,
-          band: { onInspectorToggle: vi.fn<() => void>() },
-        }),
-      ),
-    ).toBe(true);
+  it('offers the column when the page only has an opener', () => {
+    const offer = {
+      inspectorAvailable: false,
+      band: { onInspectorToggle: vi.fn<() => void>() },
+    };
+
+    expect(inspectorOffered(offer)).toBe(true);
   });
 
   it('offers nothing when the page has neither', () => {
-    expect(
-      inspectorOffered(column('closed', { inspectorAvailable: false })),
-    ).toBe(false);
+    expect(inspectorOffered({ inspectorAvailable: false })).toBe(false);
   });
 });
 
 describe('the hosted page', () => {
-  it('is open beside the page unless the Frame expanded it', () => {
-    expect(hostedInspectorState(true, false)).toBe('open');
-    expect(hostedInspectorState(true, true)).toBe('expanded');
-    expect(hostedInspectorState(false, true)).toBe('closed');
-  });
+  it.each([
+    { open: true, expanded: false, state: 'open' },
+    { open: true, expanded: true, state: 'expanded' },
+    { open: false, expanded: true, state: 'closed' },
+  ] as const)(
+    'is $state when open is $open and the Frame expanded it: $expanded',
+    ({ open, expanded, state }) => {
+      expect(hostedInspectorState(open, expanded)).toBe(state);
+    },
+  );
 
-  it('is told only when its open state differs from the move', () => {
-    expect(hostedChange(true, 'expanded')).toEqual({
-      expanded: true,
-      open: null,
-    });
-
-    expect(hostedChange(true, 'closed')).toEqual({
-      expanded: false,
-      open: false,
-    });
-
-    expect(hostedChange(false, 'open')).toEqual({
-      expanded: false,
-      open: true,
-    });
-  });
+  it.each([
+    { open: true, next: 'expanded', change: { expanded: true, open: null } },
+    { open: true, next: 'closed', change: { expanded: false, open: false } },
+    { open: false, next: 'open', change: { expanded: false, open: true } },
+  ] as const)(
+    'is told $change.open when it is open: $open and the move is $next',
+    ({ open, next, change }) => {
+      expect(hostedChange(open, next)).toEqual(change);
+    },
+  );
 });

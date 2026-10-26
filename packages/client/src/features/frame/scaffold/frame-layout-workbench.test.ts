@@ -6,29 +6,37 @@ const autoHidden = 'auto-hidden';
 
 describe('Workbench states from one toggle', () => {
   it.each([
-    { width: 1440, shown: undefined, state: 'docked' },
-    { width: 900, shown: undefined, state: autoHidden },
-    { width: 900, shown: true, state: 'floating' },
-    { width: 900, shown: false, state: autoHidden },
-    { width: 1440, shown: false, state: 'hidden' },
-    { width: 1440, shown: true, state: 'docked' },
-  ])('at $width with toggle $shown is $state', ({ width, shown, state }) => {
-    expect(
-      frameLayout({ ...input, width, workbenchShown: shown }).workbench.state,
-    ).toBe(state);
-  });
+    { width: 1440, workbenchIntent: 'auto', state: 'docked' },
+    { width: 900, workbenchIntent: 'auto', state: autoHidden },
+    { width: 900, workbenchIntent: 'shown', state: 'floating' },
+    { width: 900, workbenchIntent: 'hidden', state: autoHidden },
+    { width: 1440, workbenchIntent: 'hidden', state: 'hidden' },
+    { width: 1440, workbenchIntent: 'shown', state: 'docked' },
+  ] as const)(
+    'at $width with the intent $workbenchIntent is $state',
+    ({ width, workbenchIntent, state }) => {
+      expect(
+        frameLayout({ ...input, width, workbenchIntent }).workbench.state,
+      ).toBe(state);
+    },
+  );
 
-  it('floats over the same content bounds as the auto-hidden state', () => {
-    const hidden = frameLayout({ ...input, width: 900 });
+  describe('floating at 900', () => {
+    const autoHiddenAt900 = frameLayout({ ...input, width: 900 });
 
     const floating = frameLayout({
       ...input,
       width: 900,
-      workbenchShown: true,
+      workbenchIntent: 'shown',
     });
 
-    expect(floating.content).toEqual(hidden.content);
-    expect(floating.workbench.width).toBeGreaterThan(0);
+    it('floats over the same content bounds as the auto-hidden state', () => {
+      expect(floating.content).toEqual(autoHiddenAt900.content);
+    });
+
+    it('draws the Workbench', () => {
+      expect(floating.workbench.width).toBeGreaterThan(0);
+    });
   });
 
   it('auto-hides beside an open Inspector at 1440', () => {
@@ -46,15 +54,20 @@ describe('Workbench states from one toggle', () => {
     expect(layout.list.width).toBe(312);
   });
 
-  it('waits at the trailing inset while it is not drawn, and docks beside the Inspector', () => {
-    expect(frameLayout({ ...input, workbenchShown: false }).workbench).toEqual({
-      state: 'hidden',
-      offset: 1432,
-      width: 0,
+  it('waits at the trailing inset while it is not drawn', () => {
+    const { workbench } = frameLayout({ ...input, workbenchIntent: 'hidden' });
+
+    expect(workbench).toEqual({ state: 'hidden', offset: 1432, width: 0 });
+  });
+
+  it('docks beside the Inspector', () => {
+    const { workbench } = frameLayout({
+      ...input,
+      width: 1920,
+      inspectorState: 'open',
     });
-    expect(
-      frameLayout({ ...input, width: 1920, inspectorState: 'open' }).workbench,
-    ).toEqual({ state: 'docked', offset: 1232, width: 312 });
+
+    expect(workbench).toEqual({ state: 'docked', offset: 1232, width: 312 });
   });
 });
 
@@ -63,7 +76,7 @@ describe('panes placed around the Workbench', () => {
     {
       width: 1456,
       inspectorState: 'open',
-      workbenchShown: undefined,
+      workbenchIntent: 'auto',
       list: 0,
       page: 688,
       handle: 1096,
@@ -72,7 +85,7 @@ describe('panes placed around the Workbench', () => {
     {
       width: 1455,
       inspectorState: 'open',
-      workbenchShown: undefined,
+      workbenchIntent: 'auto',
       list: 0,
       page: 1015,
       handle: 1095,
@@ -81,7 +94,7 @@ describe('panes placed around the Workbench', () => {
     {
       width: 1440,
       inspectorState: 'closed',
-      workbenchShown: false,
+      workbenchIntent: 'hidden',
       list: 312,
       page: 1056,
       handle: 1432,
@@ -90,7 +103,7 @@ describe('panes placed around the Workbench', () => {
     {
       width: 1440,
       inspectorState: 'closed',
-      workbenchShown: true,
+      workbenchIntent: 'shown',
       list: 312,
       page: 728,
       handle: 1432,
@@ -99,20 +112,20 @@ describe('panes placed around the Workbench', () => {
     {
       width: 1440,
       inspectorState: 'expanded',
-      workbenchShown: undefined,
+      workbenchIntent: 'auto',
       list: 0,
       page: 0,
       handle: 80,
       inspector: 1360,
     },
   ] as const)(
-    'places panes at $width with the Inspector $inspectorState and toggle $workbenchShown',
-    ({ width, inspectorState, workbenchShown, ...expected }) => {
+    'places panes at $width with the Inspector $inspectorState and the Workbench intent $workbenchIntent',
+    ({ width, inspectorState, workbenchIntent, ...expected }) => {
       const layout = frameLayout({
         ...input,
         width,
         inspectorState,
-        workbenchShown,
+        workbenchIntent,
       });
 
       expect(layout.list.width).toBe(expected.list);

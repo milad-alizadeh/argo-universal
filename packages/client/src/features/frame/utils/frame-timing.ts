@@ -18,6 +18,11 @@ export interface FrameMotion {
   timing: FrameTiming;
 }
 
+// The arrangement a Frame motion compares, serialised so that each change of it is one new key.
+export const transitionKeyOf = (
+  arrangement: Record<string, boolean | string>,
+): string => JSON.stringify(arrangement);
+
 // Every Frame change, the sidebar and the Inspector alike, runs this one motion, so the content squeezes at the pace the panes push it.
 export const frameTiming: FrameTiming = {
   duration: motionDuration.frame,

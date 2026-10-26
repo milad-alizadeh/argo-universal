@@ -12,6 +12,9 @@ const bandLeadings = {
   other: { width: 44, inset: 8 },
 } as const satisfies Record<string, BandLeading>;
 
+// The desktop app hands over a symbol renderer on macOS only, so having one is how the page knows it runs there.
+const useIsMacOS = (): boolean => useSymbolImageRenderer() !== null;
+
 export function useBandLeading(): BandLeading {
-  return useSymbolImageRenderer() ? bandLeadings.mac : bandLeadings.other;
+  return useIsMacOS() ? bandLeadings.mac : bandLeadings.other;
 }

@@ -1,44 +1,23 @@
-import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
-import type { WindowBandView } from '#lib/product/window-band';
 import type { ContentRule } from '../../../lib/product/content-rule';
 import { useContentRule } from '../../../lib/product/use-content-rule';
-import { type FrameMotion, frameTiming } from '../utils/frame-timing';
+import {
+  type FrameMotion,
+  frameTiming,
+  transitionKeyOf,
+} from '../utils/frame-timing';
 import { type BandLeading, useBandLeading } from './band-leading';
 import {
   type FrameLayout,
   type FrameMeasures,
   frameLayout,
-  type InspectorState,
 } from './frame-layout';
+import { isFramed } from './is-framed';
+import type { ScaffoldProps } from './scaffold-props';
 import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
-
-// What the Scaffold places: its Slots, and the sidebar's and the Inspector's state, which the caller holds.
-export interface ScaffoldProps {
-  band?: WindowBandView | null;
-  inspectorAvailable?: boolean;
-  workbenchShown?: boolean;
-  onWorkbenchShownChange?: (shown: boolean) => void;
-  sizeClass: SizeClass;
-  // The section picker beside the list on a wide window, such as the rail.
-  sidebar: ReactNode;
-  // Under the window's band, drawn under its own Screen's heading.
-  list: ReactNode;
-  // The page beside the list, which draws its own header; a compact or medium window shows it over the list.
-  page?: ReactNode;
-  // The Inspector's page, told whether it fills the page's area, which the Scaffold decides from the window's width.
-  inspector: (expanded: boolean) => ReactNode;
-  // Floats over the top of the page, so the page under it never moves.
-  banner?: ReactNode;
-  sidebarShown: boolean;
-  onSidebarShownChange: (shown: boolean) => void;
-  inspectorState: InspectorState;
-  onInspectorStateChange: (state: InspectorState) => void;
-}
 
 interface PreferredWidths {
   preferredListWidth: number;
@@ -67,6 +46,15 @@ export interface ScaffoldLayout extends FrameLayout, WindowWidth {
 export interface ScaffoldPartProps {
   scaffold: ScaffoldProps;
   layout: ScaffoldLayout;
+}
+
+// What a part reads of the props and the layout, by field, so it takes no more than it uses.
+export interface PartReads<
+  Scaffold extends keyof ScaffoldProps,
+  Layout extends keyof ScaffoldLayout,
+> {
+  scaffold: Pick<ScaffoldProps, Scaffold>;
+  layout: Pick<ScaffoldLayout, Layout>;
 }
 
 function useCSSPixels(name: string): number {
@@ -142,9 +130,9 @@ function useScaffoldSizing(scaffold: ScaffoldProps): ScaffoldSizing {
 
 // The phone shell draws no Frame, so only a change of the sidebar's state moves its page.
 const transitionKey = (scaffold: ScaffoldProps, layout: FrameLayout): string =>
-  scaffold.sizeClass === 'wide'
+  isFramed(scaffold.sizeClass)
     ? layout.transitionKey
-    : `${scaffold.sidebarShown}`;
+    : transitionKeyOf({ sidebarShown: scaffold.sidebarShown });
 
 const layoutOf = (
   scaffold: ScaffoldProps,

@@ -9,7 +9,6 @@ import {
 import {
   isCoreSection,
   type Section,
-  type NavigationSection,
 } from '../../../lib/product/navigation/sections';
 import { FrameRail } from '../components/frame-rail/frame-rail';
 import {
@@ -23,7 +22,6 @@ import {
   type ScaffoldParts,
   type ScaffoldProps,
   ScaffoldSidebar,
-  scaffoldSidebarWidth,
   useScaffoldParts,
 } from '../scaffold/scaffold';
 import { LiveConnectionBanner } from './connection-banner';
@@ -33,8 +31,8 @@ import {
   sectionScaffold,
   useFrameListDetail,
 } from './frame-list-detail';
-import { useFrameState } from './frame-state';
-import { SectionListsContext, type SectionLists } from './section-lists';
+import { type FrameState, useFrameState } from './frame-state';
+import { type FrameSections, SectionListsContext } from './section-lists';
 
 export { useFrameState } from './frame-state';
 
@@ -44,32 +42,23 @@ export {
   type SectionLists,
 } from './section-lists';
 
-export interface FrameOptions {
+export interface FrameOptions extends FrameSections {
   sizeClass: SizeClass;
-  // The section the navigator shows.
-  section: Section;
-  lists: SectionLists;
-  items: readonly NavigationSection[];
 }
 
 // What the Frame and its sidebar and pages are drawn from, which the navigator holds and hands to each.
-export interface FrameParts {
+export interface FrameParts extends FrameSections {
   bandPlaces: WindowBandPlaces;
   scaffold: ScaffoldParts;
   // The column the shown page's Inspector draws in on a wide window.
-  inspectorPlace: ReturnType<typeof useFrameState>['inspectorPlace'];
-  section: Section;
-  lists: SectionLists;
-  items: readonly NavigationSection[];
+  inspectorPlace: FrameState['inspectorPlace'];
   // The sidebar a Plugin page's ListDetail holds for its list.
   listDetail: FrameListDetail;
 }
 
-type FrameScaffoldState = ReturnType<typeof useFrameState>['scaffold'];
-
 // The Scaffold's props: the Frame's sidebar and Inspector state around the shown section's list, with the live Connection banner.
 function frameScaffold(
-  state: FrameScaffoldState,
+  state: FrameState['scaffold'],
   options: FrameOptions,
   listDetail: FrameListDetail,
 ): ScaffoldProps {
@@ -82,6 +71,16 @@ function frameScaffold(
   };
 }
 
+const sectionsOf = ({
+  section,
+  lists,
+  items,
+}: FrameSections): FrameSections => ({
+  section,
+  lists,
+  items,
+});
+
 // What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
 export function useFrame(options: FrameOptions): FrameParts {
   const { scaffold, inspectorPlace, bandPlaces } = useFrameState();
@@ -91,9 +90,7 @@ export function useFrame(options: FrameOptions): FrameParts {
     bandPlaces,
     scaffold: useScaffoldParts(frameScaffold(scaffold, options, listDetail)),
     inspectorPlace,
-    section: options.section,
-    lists: options.lists,
-    items: options.items,
+    ...sectionsOf(options),
     listDetail,
   };
 }
@@ -157,7 +154,7 @@ export interface FramePageProps {
   children: ReactNode;
 }
 
-// A section's page in the Frame's page pane, which on a narrow window fills it.
+// A section's page in the Frame's page pane, which on a narrow window fills it. The navigator gets this and the sidebar's width, so `FrameParts` keeps the Scaffold's parts to itself.
 export function FramePage({
   frame,
   children,
@@ -167,7 +164,7 @@ export function FramePage({
 
 // The width of the rail and the list, for the permanent drawer that holds them.
 export const frameSidebarWidth = (frame: FrameParts): number =>
-  scaffoldSidebarWidth(frame.scaffold);
+  frame.scaffold.layout.sidebarWidth;
 
 export type SectionDrawerProps = Omit<
   PhoneDrawerContentProps,

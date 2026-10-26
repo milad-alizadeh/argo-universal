@@ -64,6 +64,15 @@ const mockState = (props: ScaffoldMockProps): ScaffoldState => ({
   ...mockInspectorState(props),
 });
 
+const mockWorkbench: Pick<
+  ScaffoldProps,
+  'inspectorAvailable' | 'workbenchIntent' | 'onWorkbenchIntentChange'
+> = {
+  inspectorAvailable: true,
+  workbenchIntent: 'auto',
+  onWorkbenchIntentChange: ignore,
+};
+
 function MockRail(
   props: ScaffoldMockProps & ScaffoldState & { section: Section },
 ): React.JSX.Element {
@@ -136,7 +145,12 @@ export function ScaffoldMock(props: ScaffoldMockProps): React.JSX.Element {
 
   return (
     <View className="flex-1">
-      <Scaffold {...state} {...mockPanes(props, state)} band={props.band} />
+      <Scaffold
+        {...state}
+        {...mockWorkbench}
+        {...mockPanes(props, state)}
+        band={props.band}
+      />
     </View>
   );
 }
