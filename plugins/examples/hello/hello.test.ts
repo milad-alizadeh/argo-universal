@@ -103,14 +103,17 @@ test('the hello page lists each demo', async ({ mount }) => {
     assert.equal((await page.find(title)).type, 'Card');
 });
 
-test('a demo opens by its App path', async ({ mount }) => {
-  const page = await mountHello(mount);
+test('a demo opens the page registered at its own path', async ({ mount }) => {
+  const { props } = await (await mountHello(mount)).find('Builds');
 
-  const builds = await page.find('Builds');
   assert.equal(
-    JSON.stringify(builds.props.onPress),
-    JSON.stringify({ action: 'navigate', path: '/plugins/hello/hello/builds' }),
+    JSON.stringify(props.onPress),
+    JSON.stringify({ action: 'navigate', path: '/builds' }),
   );
+
+  const builds = await mount({ page: '/builds', surface: { platform: 'web' } });
+
+  assert.equal((await builds.find('Select a build')).type, 'EmptyState');
 });
 
 // The manifest declares the host the page fetches; without it the Server refuses the call and the list shows the refusal.

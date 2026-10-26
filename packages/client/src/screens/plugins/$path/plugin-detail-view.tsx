@@ -3,6 +3,7 @@ import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
   PluginTree,
   type PluginOnEvent,
@@ -14,6 +15,7 @@ export interface PluginDetailViewProps {
   title?: string;
   viewId?: PluginViewId | null;
   onEvent: PluginOnEvent;
+  onOpenPage?: OpenPluginPage;
 }
 
 // A Plugin's page, drawn by the App's registry; one that is not a Screen of its own scrolls in the kit's Detail, in the Screen's column.
@@ -38,6 +40,11 @@ function ownsPage(root: WireNode | null): boolean {
 
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   return props.root ? (
-    <PluginTree key={props.viewId} root={props.root} onEvent={props.onEvent} />
+    <PluginTree
+      key={props.viewId}
+      root={props.root}
+      onEvent={props.onEvent}
+      onOpenPage={props.onOpenPage}
+    />
   ) : null;
 }

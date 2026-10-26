@@ -2,8 +2,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
+import { PathText } from '#primitives/content/path-text';
 import { fileTypeIcon } from '../../../symbols/file-type-icon';
-import { CodeBlockTitle } from './code-block-title/code-block-title';
 import { CopyButton } from './copy-button';
 import { type HeaderResource, ResourceHeading } from './resource-heading';
 
@@ -51,7 +51,7 @@ function LanguageTitle({
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-1.5 pr-2">
       <Icon name={languageIcon(title)} tone="muted" />
-      <CodeBlockTitle title={title} />
+      <PathText path={title} quiet testID="code-block-title" />
     </View>
   );
 }

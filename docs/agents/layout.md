@@ -119,4 +119,4 @@ Subagent is not a word in Argo any more (owner, 2026-10-21). An Agent a Session 
 
 ## The name in code
 
-Inspector is the name in code, docs and Paper. `InspectorPane`, `ChangesInspector` and `SessionInspector` draw this surface; `--spacing-frame-inspector` and `w-frame-inspector` supply its default width. The owner retained Inspector on 2026-10-21, replacing the proposed Stage rename. Workbench names the separate summary column. No Inspector-to-Stage code rename is required.
+Inspector is the name in code, docs and Paper. `InspectorPane` and `SessionInspector` draw this surface; `--spacing-frame-inspector` and `w-frame-inspector` supply its default width. The owner retained Inspector on 2026-10-21, replacing the proposed Stage rename. Workbench names the separate summary column. No Inspector-to-Stage code rename is required.

@@ -17,7 +17,10 @@ import {
   bindPluginDispatch,
   type PluginDispatch,
 } from './use-plugin-dispatch';
+import { usePluginOpener } from './use-plugin-opener';
 import { usePluginStreamState } from './use-plugin-stream-state';
+
+type PluginOpener = ReturnType<typeof usePluginOpener>;
 
 type NameOf = (pluginId: string) => string;
 
@@ -41,31 +44,42 @@ type Drawn = {
   viewId: PluginViewId | null;
 };
 
+type Helpers = {
+  nameOf: NameOf;
+  send: PluginDispatch;
+  opener: PluginOpener;
+};
+
 const contribution = (
   { pluginId, path, root, revision, viewId }: Drawn,
-  nameOf: NameOf,
-  send: PluginDispatch,
+  { nameOf, send, opener }: Helpers,
 ): PluginSlotContribution => ({
   pluginId,
   name: nameOf(pluginId),
   root,
   viewId,
   onEvent: bindPluginDispatch(send, { pluginId, path, revision, viewId }),
+  onOpenPage: opener(pluginId),
 });
 
 // Only a contribution with a tree is drawn.
 const drawn = (
   state: PluginSlotState,
-  nameOf: NameOf,
-  send: PluginDispatch,
+  helpers: Helpers,
 ): PluginSlotContribution[] =>
   state.flatMap(({ pluginId, path, view }) => {
     if (!view.root || !path) return [];
 
     const shown = { ...view, pluginId, path, root: view.root };
 
-    return [contribution(shown, nameOf, send)];
+    return [contribution(shown, helpers)];
   });
+
+const useHelpers = (): Helpers => ({
+  nameOf: useNames(),
+  send: usePluginDispatch(),
+  opener: usePluginOpener(),
+});
 
 // Watches a core page's Slot on the connected Server: each declaring Plugin's contribution, drawn once it has a tree.
 export function usePluginSlot(slot: PluginSlotInput): PluginSlotContribution[] {
@@ -83,5 +97,5 @@ export function usePluginSlot(slot: PluginSlotInput): PluginSlotContribution[] {
 
   useResubscribeOnReconnect(subscription);
 
-  return drawn(state, useNames(), usePluginDispatch());
+  return drawn(state, useHelpers());
 }

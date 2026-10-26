@@ -1,8 +1,4 @@
-import {
-  ScreenBesideList,
-  PhoneConnectionBanner,
-  ScreenInspector,
-} from '@repo/client';
+import { ScreenBesideList, PhoneConnectionBanner } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
 import type { Stack } from 'expo-router';
 import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
@@ -36,12 +32,10 @@ function NarrowBanner(props: BannerProps): React.JSX.Element | null {
 const nestedScreen = (route: { name: string }): boolean =>
   route.name.includes('/') && !route.name.endsWith('/index');
 
-// The screen keeps its place in the tree at every width; while shown, its Inspector draws in the Frame's column.
+// The screen keeps its place in the tree at every width.
 export const screenLayout: ScreenLayout = ({ children, options, route }) => (
   <View className="flex-1">
-    <ScreenBesideList value={!nestedScreen(route)}>
-      <ScreenInspector>{children}</ScreenInspector>
-    </ScreenBesideList>
+    <ScreenBesideList value={!nestedScreen(route)}>{children}</ScreenBesideList>
     <NarrowBanner overHeader={options.headerTransparent === true} />
   </View>
 );

@@ -58,17 +58,13 @@ export type AdditionalPrimitives = {
   ScreenMenu: ScreenKit.ScreenMenu;
   ScreenStackHeaderProps: ScreenKit.ScreenStackHeaderProps;
   ScreenBand: ScreenKit.ScreenBand;
-  ScreenBandHost: ScreenKit.ScreenBandHost;
-  BandHost: ScreenKit.BandHost<unknown>;
   ScreenListColumnProps: ScreenKit.ScreenListColumnProps;
   DetailProps: DetailKit.DetailProps;
   ListDetailProps: ListDetailKit.ListDetailProps;
-  ListDetailSidebar: ListDetailKit.ListDetailSidebar;
   InspectorProps: InspectorKit.InspectorProps;
   InspectorTab: InspectorKit.InspectorTab;
   InspectorTabsProps: InspectorKit.InspectorTabsProps;
   InspectorPaneProps: InspectorKit.InspectorPaneProps;
-  InspectorHost: InspectorKit.InspectorHost;
   SettingsLayoutProps: SettingsLayoutKit.SettingsLayoutProps;
   SettingsLayoutItem: SettingsLayoutKit.SettingsLayoutItem;
   SettingsLayoutSections: SettingsLayoutKit.SettingsLayoutSections;

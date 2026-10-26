@@ -21,11 +21,11 @@ const listColumn = { paddingLeft: 8, paddingRight: 14 };
 const glassGeometry = ({
   layout,
 }: ScaffoldPartProps): Omit<GlassSurfaceProps, keyof FrameMotion> => ({
-  width: layout.measures.railWidth + layout.shownListWidth,
-  expandedWidth: layout.measures.railWidth + layout.visibleListWidth,
+  width: layout.measures.railWidth + layout.list.width,
+  expandedWidth: layout.measures.railWidth + layout.list.openWidth,
   railWidth: layout.measures.railWidth,
   barHeight: 0,
-  sidebarShown: !layout.frame.listFolded,
+  sidebarShown: !layout.list.folded,
 });
 
 function SidebarGlass(parts: ScaffoldPartProps): React.JSX.Element {
@@ -46,10 +46,10 @@ function SidebarListContent({ list }: ScaffoldProps): React.JSX.Element {
 type ListPlacement = Omit<FramePaneProps, 'testID' | 'children'>;
 
 const listPlacement = ({ layout }: ScaffoldPartProps): ListPlacement => ({
-  width: layout.shownListWidth,
+  width: layout.list.width,
   offset: 0,
-  contentWidth: layout.visibleListWidth,
-  hidden: layout.frame.listFolded,
+  contentWidth: layout.list.openWidth,
+  hidden: layout.list.folded,
   ...layout.motion,
 });
 

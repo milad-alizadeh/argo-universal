@@ -1,8 +1,5 @@
 import type { IssueFilter } from './issue-filters';
 
-// Where the Plugin's nav item mounts its pages in the App: the Plugin id, then the nav id.
-const appRoot = '/plugins/issue-tracker/issues';
-
 const unsafe = /[^A-Za-z0-9-]/gu;
 
 const hex = 16;
@@ -22,6 +19,3 @@ export const filterPath = (projectId: string, filter: IssueFilter): string =>
 
 export const issuePath = (projectId: string, number: number): string =>
   `${projectPath(projectId)}/issues/${number}`;
-
-// A `navigate` Action names the page by its full App path.
-export const appPath = (path: string): string => `${appRoot}${path}`;

@@ -4,12 +4,12 @@ import { List } from '@repo/kit/primitives/lists/list';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { Platform, View } from 'react-native';
-import type { SessionsLayout } from '../../stores/sessions-view';
+import { View } from 'react-native';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
 import { listsFlat, searchesAsOneList } from './sessions-list-entries-state';
 import { type ListRows, useListRows } from './sessions-list-entry-rows';
+import { sessionsListLook, standardTopPadding } from './sessions-list-look';
 import type { SessionsListProps } from './sessions-list-props';
 import { useScrolling } from './sessions-list-scrolling';
 import {
@@ -99,24 +99,7 @@ interface SessionsLegendListProps extends SessionsListProps {
   actions?: ReactNode;
 }
 
-export const standardTopPadding = { compact: 5, wide: 1 } as const;
-
 const searchTopPadding = { compact: 0, wide: 2 } as const;
-
-// Web draws Session rows flat on the sidebar, with no card, edge or separator (Paper "Screen / 1 Porcelain · Ring · Regular"); phones keep their cards and grouped lists.
-export function sessionListAppearance(
-  layout: SessionsLayout,
-): 'plain' | 'grouped' | 'cards' {
-  if (Platform.OS === 'web') return 'plain';
-
-  return layout === 'compact' ? 'grouped' : 'cards';
-}
-
-// Paper "SessionsList": web rows sit 8 in from the sidebar's left, and each row's own margin takes the right to 14.
-export const sessionListPadding = {
-  compact: 4,
-  wide: Platform.OS === 'web' ? 2 : 0,
-} as const;
 
 function sessionListSection(
   props: SessionsListProps,
@@ -128,12 +111,11 @@ function sessionListOptions(
   props: SessionsListProps,
 ): Pick<
   React.ComponentProps<typeof List<SessionsListEntry>>,
-  'appearance' | 'getSectionKey' | 'padding' | 'paddingTop'
+  'appearance' | 'getSectionKey' | 'onPhones' | 'padding' | 'paddingTop'
 > {
   return {
-    appearance: sessionListAppearance(props.view.layout),
+    ...sessionsListLook(props.view.layout),
     getSectionKey: sessionListSection(props),
-    padding: sessionListPadding,
     paddingTop: searchesAsOneList(props)
       ? searchTopPadding
       : standardTopPadding,

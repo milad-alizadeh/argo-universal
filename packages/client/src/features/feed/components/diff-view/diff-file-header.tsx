@@ -1,15 +1,13 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { PathText } from '@repo/kit/primitives/content/path-text';
 import { TextClassContext } from '@repo/kit/primitives/content/text';
-import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
-import { useState } from 'react';
 import { View } from 'react-native';
 import type { FileDiff } from '../../view/file-diff';
 import { ChangeCounts } from './diff-change-counts';
-import { FilePath, ScrollingFilePath } from './diff-file-path';
 import { ViewedMark } from './diff-viewed-mark';
 
 export interface FileHeaderProps {
@@ -65,21 +63,19 @@ const toggleOf = (props: FileHeaderProps): Omit<ToggleProps, 'children'> => ({
   onPress: () => props.onOpenChange(!props.open),
 });
 
-// Desktop: a path the row cuts short shows whole in a tooltip.
-function TruncatingToggle(props: FileHeaderProps): React.JSX.Element {
-  const [cutShort, setCutShort] = useState(false);
+function PathToggle(
+  props: FileHeaderProps & { scroll?: boolean },
+): React.JSX.Element {
+  const toggle = toggleOf(props);
 
-  const toggle = (
-    <FileHeaderToggle {...toggleOf(props)}>
-      <FilePath path={props.file.path} onCutShortChange={setCutShort} />
-    </FileHeaderToggle>
-  );
-
-  // A column, so the tooltip's own wrapper takes the row's width rather than the path's.
   return (
-    <View className="min-w-0 flex-1">
-      {cutShort ? <Tooltip label={props.file.path}>{toggle}</Tooltip> : toggle}
-    </View>
+    <FileHeaderToggle {...toggle}>
+      <PathText
+        path={props.file.path}
+        scroll={props.scroll}
+        onPress={toggle.onPress}
+      />
+    </FileHeaderToggle>
   );
 }
 
@@ -99,7 +95,7 @@ export function FileHeader(props: FileHeaderProps): React.JSX.Element {
 function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
     <View className="h-10.5 flex-row items-center gap-2 bg-content">
-      <TruncatingToggle {...props} />
+      <PathToggle {...props} />
       <ChangeCounts file={props.file} />
       <ViewedMark {...props} />
     </View>
@@ -110,9 +106,7 @@ function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
 function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-2 bg-card py-2.5">
-      <FileHeaderToggle {...toggleOf(props)}>
-        <ScrollingFilePath path={props.file.path} />
-      </FileHeaderToggle>
+      <PathToggle {...props} scroll />
       <View className="flex-row gap-1">
         <ChangeCounts file={props.file} />
       </View>

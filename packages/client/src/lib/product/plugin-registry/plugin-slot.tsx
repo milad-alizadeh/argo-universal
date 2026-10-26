@@ -1,6 +1,7 @@
 import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import { List } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
+import type { OpenPluginPage } from '../plugin-actions';
 import { PluginTree, type PluginOnEvent } from './plugin-registry';
 
 export interface PluginSlotContribution {
@@ -10,6 +11,7 @@ export interface PluginSlotContribution {
   root: WireNode;
   viewId?: PluginViewId | null;
   onEvent: PluginOnEvent;
+  onOpenPage?: OpenPluginPage;
 }
 
 export interface PluginSlotProps {
@@ -21,9 +23,9 @@ export interface PluginSlotProps {
 export function PluginSlot({
   contributions,
 }: PluginSlotProps): React.ReactNode {
-  return contributions.map(({ pluginId, name, root, onEvent, viewId }) => (
+  return contributions.map(({ pluginId, name, viewId, ...tree }) => (
     <List.Section key={pluginId} title={name}>
-      <PluginTree key={viewId} root={root} onEvent={onEvent} />
+      <PluginTree key={viewId} {...tree} />
     </List.Section>
   ));
 }

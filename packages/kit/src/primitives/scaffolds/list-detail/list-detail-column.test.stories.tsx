@@ -1,18 +1,14 @@
 import type { Meta } from '@storybook/react-native-web-vite';
-import { useState, type ReactElement } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
+import { createPlace, useClaimed, type Place } from '#kit/place';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { ScreenListColumn } from '#primitives/scaffolds/screen';
 import { ListDetail } from './list-detail';
-import {
-  createListDetailSidebar,
-  ListDetailSidebarContext,
-  useListDetailSidebarList,
-  type ListDetailSidebar,
-} from './list-detail-sidebar';
+import { ListDetailSidebarPlace } from './list-detail-sidebar';
 import { at } from './list-detail-test.mocks';
 
 const meta = {
@@ -36,9 +32,9 @@ const screen = {
 function SidebarColumn({
   sidebar,
 }: {
-  sidebar: ListDetailSidebar;
+  sidebar: Place<ReactNode>;
 }): ReactElement {
-  const list = useListDetailSidebarList(sidebar);
+  const list = useClaimed(sidebar);
 
   return (
     <ScreenListColumn>
@@ -49,7 +45,7 @@ function SidebarColumn({
 
 // The host draws the sidebar's column, whose heading row the list's own Screen fills.
 function WithColumn(): ReactElement {
-  const [sidebar] = useState(createListDetailSidebar);
+  const [sidebar] = useState(() => createPlace<ReactNode>());
 
   return (
     <View className="flex-1 flex-row">
@@ -57,13 +53,13 @@ function WithColumn(): ReactElement {
         <SidebarColumn sidebar={sidebar} />
       </View>
       <View testID="host-page" className="flex-1">
-        <ListDetailSidebarContext value={sidebar}>
+        <ListDetailSidebarPlace value={sidebar}>
           <ListDetail
             screen={screen}
             list={<Text>Issue rows</Text>}
             detail={<Text>Issue detail</Text>}
           />
-        </ListDetailSidebarContext>
+        </ListDetailSidebarPlace>
       </View>
     </View>
   );

@@ -6,8 +6,8 @@ import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { comparisonKey } from '../../state/changes-state';
 import { noChangesDescription } from '../../view/changes-comparison';
-import { uniqueChangedFiles } from '../../view/changes-files';
 import type { ChangesViewProps } from '../../view/changes-view-props';
 import { FileList } from './changes-file-list';
 
@@ -28,9 +28,14 @@ export function ChangesFiles(
 
   if (!props.files.length) return <NoChanges {...props} />;
 
-  const files = uniqueChangedFiles(props.files);
-
-  return <FileList {...props} files={files} />;
+  // Each comparison gets its own list, so its files start folded.
+  return (
+    <FileList
+      key={comparisonKey(props.comparison)}
+      {...props}
+      files={props.files}
+    />
+  );
 }
 
 const loadErrorToast = (message: string | undefined): ErrorToast | undefined =>

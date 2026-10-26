@@ -1,10 +1,10 @@
-import type { InspectorHost } from '@repo/kit/primitives/scaffolds/inspector';
+import { InspectorPlace } from '@repo/kit/primitives/scaffolds/inspector';
 import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import {
-  WindowBandHostsProvider,
-  type WindowBandHosts,
+  WindowBandProvider,
+  type WindowBandPlaces,
 } from '#lib/product/window-band';
 import {
   isCoreSection,
@@ -27,7 +27,6 @@ import {
   useScaffoldParts,
 } from '../scaffold/scaffold';
 import { LiveConnectionBanner } from './connection-banner';
-import { FrameInspectorHost } from './frame-inspector';
 import {
   type FrameListDetail,
   FrameListDetailSidebar,
@@ -55,10 +54,10 @@ export interface FrameOptions {
 
 // What the Frame and its sidebar and pages are drawn from, which the navigator holds and hands to each.
 export interface FrameParts {
-  bandHost: WindowBandHosts;
+  bandPlaces: WindowBandPlaces;
   scaffold: ScaffoldParts;
   // The column the shown page's Inspector draws in on a wide window.
-  inspectorHost: InspectorHost;
+  inspectorPlace: ReturnType<typeof useFrameState>['inspectorPlace'];
   section: Section;
   lists: SectionLists;
   items: readonly NavigationSection[];
@@ -85,13 +84,13 @@ function frameScaffold(
 
 // What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
 export function useFrame(options: FrameOptions): FrameParts {
-  const { scaffold, inspectorHost, bandHost } = useFrameState();
+  const { scaffold, inspectorPlace, bandPlaces } = useFrameState();
   const listDetail = useFrameListDetail();
 
   return {
-    bandHost,
+    bandPlaces,
     scaffold: useScaffoldParts(frameScaffold(scaffold, options, listDetail)),
-    inspectorHost,
+    inspectorPlace,
     section: options.section,
     lists: options.lists,
     items: options.items,
@@ -109,13 +108,13 @@ export interface FrameProps {
 export function Frame({ frame, children }: FrameProps): React.JSX.Element {
   return (
     <SectionListsContext value={frame.lists}>
-      <FrameInspectorHost value={frame.inspectorHost}>
+      <InspectorPlace value={frame.inspectorPlace}>
         <FrameListDetailSidebar value={frame.listDetail.sidebar}>
-          <WindowBandHostsProvider hosts={frame.bandHost}>
+          <WindowBandProvider places={frame.bandPlaces}>
             <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
-          </WindowBandHostsProvider>
+          </WindowBandProvider>
         </FrameListDetailSidebar>
-      </FrameInspectorHost>
+      </InspectorPlace>
     </SectionListsContext>
   );
 }

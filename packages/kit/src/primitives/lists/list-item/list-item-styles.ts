@@ -1,6 +1,5 @@
-import { Platform } from 'react-native';
-import type { ListAppearance, ListPosition } from '../../../list-context';
-import { isNativeGrouped } from '../../../list-grouped';
+import type { ListPosition } from '../../../list-context';
+import type { ListLook } from '../../../list-look';
 import type { RowDrawing } from '../../../row-drawing-context';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
@@ -25,18 +24,11 @@ const phoneCorners = {
   },
 } satisfies Record<string, Record<ListPosition, string>>;
 
-const sectionCorners =
-  Platform.OS === 'android' ? phoneCorners.android : phoneCorners.ios;
-
-const appearanceClasses = {
-  plain: '',
-  grouped: Platform.OS === 'web' ? '' : 'bg-card',
-  cards:
-    'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:shadow-hairline',
-};
+const cardClasses =
+  'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:shadow-hairline';
 
 export interface ItemDrawing {
-  appearance: ListAppearance;
+  look: ListLook;
   position: ListPosition;
   menu: boolean;
   rows: RowDrawing;
@@ -69,14 +61,20 @@ export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
 
 // A muted row, such as an empty section's placeholder, has no surface, so it takes no corners either.
 function corners(
-  drawing: ItemDrawing,
+  { look, position }: ItemDrawing,
   tone: ListItemProps['tone'],
 ): string | undefined {
-  if (tone === 'muted' || !isNativeGrouped(drawing.appearance))
-    return undefined;
+  if (tone === 'muted' || !look.phone) return undefined;
 
-  return sectionCorners[drawing.position];
+  return phoneCorners[look.phone][position];
 }
+
+// A phone's grouped card is a plate under its rows; the web draws its own cell frame.
+const surfaceClasses = (look: ListLook): string => {
+  if (look.appearance === 'cards') return cardClasses;
+
+  return look.phone ? 'bg-card' : '';
+};
 
 function rowSurface(
   drawing: ItemDrawing,
@@ -84,15 +82,10 @@ function rowSurface(
 ): string {
   return cn(
     'relative overflow-hidden',
-    tone !== 'muted' && appearanceClasses[drawing.appearance],
+    tone !== 'muted' && surfaceClasses(drawing.look),
     corners(drawing, tone),
     selected && 'web:wide:shadow-none',
   );
-}
-
-// iOS separates a plain list's rows; the web and Android leave rows apart.
-function separatesRows(appearance: ListAppearance): boolean {
-  return Platform.OS === 'ios' && appearance !== 'cards';
 }
 
 const separatedPositions = new Set<ListPosition>(['first', 'middle']);
@@ -104,10 +97,7 @@ const tiled = (drawing: ItemDrawing): boolean =>
 function hasSeparator(drawing: ItemDrawing): boolean {
   if (tiled(drawing)) return false;
 
-  return (
-    separatesRows(drawing.appearance) &&
-    separatedPositions.has(drawing.position)
-  );
+  return drawing.look.separated && separatedPositions.has(drawing.position);
 }
 
 const separatorDrawing = {

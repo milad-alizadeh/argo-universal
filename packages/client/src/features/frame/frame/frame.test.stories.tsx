@@ -1,4 +1,7 @@
-import { Inspector } from '@repo/kit/primitives/scaffolds/inspector';
+import {
+  Inspector,
+  InspectorPlace,
+} from '@repo/kit/primitives/scaffolds/inspector';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
@@ -11,11 +14,10 @@ import {
   useSessionPanels,
   WorkbenchChangesSummary,
 } from '#features/sessions';
-import { WindowBandHostsProvider } from '#lib/product/window-band';
+import { WindowBandProvider } from '#lib/product/window-band';
 import { LayoutListMock } from '../components/layout-list.mocks';
 import { Scaffold } from '../scaffold/scaffold';
 import { useFrameState } from './frame';
-import { FrameInspectorHost, ScreenInspector } from './frame-inspector';
 
 const showInspectorLabel = 'Show Inspector';
 
@@ -29,21 +31,21 @@ function FrameStatePage({
 }: {
   content: ReactNode;
 }): React.JSX.Element {
-  const { scaffold, inspectorHost, bandHost } = useFrameState();
+  const { scaffold, inspectorPlace, bandPlaces } = useFrameState();
 
   return (
     <View className="flex-1">
-      <FrameInspectorHost value={inspectorHost}>
-        <WindowBandHostsProvider hosts={bandHost}>
+      <InspectorPlace value={inspectorPlace}>
+        <WindowBandProvider places={bandPlaces}>
           <Scaffold
             {...scaffold}
             sizeClass="wide"
             sidebar={null}
             list={<LayoutListMock name="Sessions" />}
-            page={<ScreenInspector>{content}</ScreenInspector>}
+            page={content}
           />
-        </WindowBandHostsProvider>
-      </FrameInspectorHost>
+        </WindowBandProvider>
+      </InspectorPlace>
     </View>
   );
 }

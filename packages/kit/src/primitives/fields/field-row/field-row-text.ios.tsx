@@ -3,9 +3,8 @@ import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { NativeText, useTextColor } from '#primitives/content/native-text';
-import { drawnSymbol } from '../../../symbols/drawn-symbol';
-import { type IconSymbol, resolveIcon } from '../../../symbols/icon-symbol';
-import { nativeIconName } from '../../../symbols/native-icon-name';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
+import { iosImage } from '../../../symbols/ios-image';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { RowLogo } from './field-row-logo';
 import type { RowTextProps } from './field-row-text';
@@ -90,23 +89,19 @@ type LabelIcon = Pick<LabelProps, 'systemImage' | 'icon'>;
 /*
  * A row's leading icon as the Label takes it: a system SF Symbol by name, Argo's own symbol (`custom.robot`, an
  * asset-catalog image) as the Label's icon view, at the size nearest the Label's body font so it matches a system
- * symbol. An SVG icon has no symbol, so the row draws none.
+ * symbol. An SVG icon has no image, so the row draws none.
  */
 function labelIcon(props: RowTextProps): LabelIcon | undefined {
-  if (!props.leading) return undefined;
-
-  const name = nativeIconName(props.leading);
-
-  return typeof name === 'string'
-    ? { systemImage: name }
-    : customIcon(props.leading);
+  return props.leading ? iconView(props.leading) : undefined;
 }
 
-function customIcon(leading: IconSymbol): LabelIcon | undefined {
-  const drawn = drawnSymbol(resolveIcon(leading).symbol);
+function iconView(leading: IconSymbol): LabelIcon | undefined {
+  const image = iosImage(leading);
 
-  return drawn.kind === 'svg'
-    ? undefined
+  if (!image) return undefined;
+
+  return image.kind === 'system'
+    ? { systemImage: image.name }
     : { icon: <NativeSymbol name={leading} /> };
 }
 

@@ -7,12 +7,12 @@ import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
+import { shownInspectorState } from './inspector-column';
 import { ScaffoldBand } from './scaffold-band';
 import { PaneBanner } from './scaffold-chrome';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
 import { ScaffoldWorkbench } from './scaffold-workbench';
 import {
-  type ScaffoldLayout,
   type ScaffoldPartProps,
   type ScaffoldProps,
   useScaffoldLayout,
@@ -26,9 +26,10 @@ export interface ScaffoldParts extends ScaffoldPartProps {
 // ADR-0026, amended 2026-10-18: only a wide window frames the page; compact and medium take the phone shell.
 export const isFramed = (sizeClass: SizeClass): boolean => sizeClass === 'wide';
 
-// Only a wide window has the Inspector's own column; elsewhere the page's Inspector is its own sheet, so it takes no room beside the page.
-const shownInspector = (props: ScaffoldProps): ScaffoldProps =>
-  props.sizeClass === 'wide' ? props : { ...props, inspectorState: 'closed' };
+const shownInspector = (props: ScaffoldProps): ScaffoldProps => ({
+  ...props,
+  inspectorState: shownInspectorState(props.sizeClass, props.inspectorState),
+});
 
 // The Scaffold's props as it applies them, with its layout: what its frame, sidebar and page are drawn from.
 export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
@@ -41,19 +42,16 @@ export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
   };
 }
 
-const sidebarWidth = ({ measures, shownListWidth }: ScaffoldLayout): number =>
-  measures.inset * 2 + measures.railWidth + shownListWidth;
-
 // The width of the sidebar and the list, for the permanent drawer that holds them.
 export const scaffoldSidebarWidth = ({ layout }: ScaffoldParts): number =>
-  sidebarWidth(layout);
+  layout.sidebarWidth;
 
 export type PanePlacement = Omit<FramePaneProps, 'testID' | 'children'>;
 
 const inspectorPlacement = ({ layout }: ScaffoldPartProps): PanePlacement => ({
-  offset: layout.detailRight,
-  width: layout.inspectorTargetWidth,
-  hidden: !layout.inspectorOpen,
+  offset: layout.inspector.offset,
+  width: layout.inspector.width,
+  hidden: !layout.inspector.open,
   ...layout.motion,
 });
 
@@ -66,7 +64,7 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
         {...inspectorPlacement(parts)}
       >
         <InspectorControlsContext value={true}>
-          {parts.scaffold.inspector(parts.layout.inspectorExpanded)}
+          {parts.scaffold.inspector(parts.layout.inspector.expanded)}
         </InspectorControlsContext>
       </FramePane>
     </View>
@@ -74,7 +72,7 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
 }
 
 function inspectorPosition({ layout }: ScaffoldPartProps): ViewStyle {
-  return { left: layout.frame.stage.offset, bottom: layout.measures.inset };
+  return { left: layout.inspector.offset, bottom: layout.measures.inset };
 }
 
 function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
@@ -83,7 +81,7 @@ function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
       <InspectorColumn {...parts} />
       <ScaffoldWorkbench {...parts} />
       <ScaffoldResizeHandles {...parts} />
-      <PaneBanner left={sidebarWidth(parts.layout)}>
+      <PaneBanner left={parts.layout.sidebarWidth}>
         {parts.scaffold.banner}
       </PaneBanner>
     </>
@@ -96,7 +94,7 @@ function Overlays(parts: ScaffoldParts): React.JSX.Element {
     <View
       pointerEvents="box-none"
       className="absolute inset-x-0 bottom-0"
-      style={{ top: parts.layout.safeTop + parts.layout.frame.panesTop }}
+      style={{ top: parts.layout.safeTop + parts.layout.panesTop }}
     >
       <OverlayContents {...parts} />
     </View>
@@ -122,9 +120,7 @@ export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 // A framed tablet's panes start under the status bar; the window surface still runs behind it. The phone shell's pages keep their own header insets, and a desktop window has none.
 function frameTop(parts: ScaffoldParts): ViewStyle {
   return {
-    paddingTop: parts.framed
-      ? parts.layout.safeTop + parts.layout.frame.panesTop
-      : 0,
+    paddingTop: parts.framed ? parts.layout.safeTop + parts.layout.panesTop : 0,
   };
 }
 

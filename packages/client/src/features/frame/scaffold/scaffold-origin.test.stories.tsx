@@ -18,7 +18,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const NoInspectorDisablesStage: Story = {
+export const NoInspectorDisablesTheInspectorToggle: Story = {
   beforeEach: (): Promise<void> => settleViewport(1440),
   render: (): JSX.Element => (
     <HostedScaffoldMock>
@@ -34,7 +34,7 @@ export const NoInspectorDisablesStage: Story = {
 
 export const SafeAreaKeepsBandAndPanesClear: Story = {
   beforeEach: (): Promise<void> => settleViewport(1920),
-  args: { stageOpen: true },
+  args: { inspectorOpen: true },
   decorators: [
     (Story): JSX.Element => (
       <SafeAreaInsetsContext value={{ top: 24, bottom: 0, left: 0, right: 0 }}>
@@ -45,9 +45,9 @@ export const SafeAreaKeepsBandAndPanesClear: Story = {
   play: async ({ canvas }) => {
     const band = await canvas.findByTestId('window-band');
     const sidebar = canvas.getByTestId('desktop-list');
-    const stage = canvas.getByTestId('desktop-inspector');
+    const inspector = canvas.getByTestId('desktop-inspector');
     await expect(band.getBoundingClientRect().top).toBeGreaterThanOrEqual(24);
-    await expect(stage.getBoundingClientRect().top).toBe(
+    await expect(inspector.getBoundingClientRect().top).toBe(
       sidebar.getBoundingClientRect().top,
     );
     await expect(

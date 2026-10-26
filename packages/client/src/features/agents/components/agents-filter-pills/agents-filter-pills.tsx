@@ -1,4 +1,5 @@
 import { FilterPill } from '@repo/kit/primitives/controls/filter-pill';
+import { useListGutter } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
@@ -26,16 +27,17 @@ function AgentsFilterChoices(props: AgentsFilterProps): React.JSX.Element[] {
   ));
 }
 
-const pillsLeadCardEdge = 'px-4 wide:px-0';
-
 // One row that heads the Agents catalog; it scrolls sideways, fading the edge the pills pass under, when they run past a narrow screen's edge.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
+  const gutter = useListGutter();
+
   return (
     <View className="pb-3">
       <ScrollFadeView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerClassName={`items-center gap-1 ${pillsLeadCardEdge}`}
+        contentContainerClassName="items-center gap-1"
+        contentContainerStyle={{ paddingHorizontal: gutter }}
       >
         <AgentsFilterChoices {...props} />
       </ScrollFadeView>

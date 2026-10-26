@@ -78,6 +78,6 @@ async function deliver(
 
   if (!handler) return;
 
-  if (!('$event' in handler)) return runAction(handler);
+  if (!('$event' in handler)) return runAction(handler, context.openPage);
   await context.send(context.key, { event: name, payload, schema });
 }

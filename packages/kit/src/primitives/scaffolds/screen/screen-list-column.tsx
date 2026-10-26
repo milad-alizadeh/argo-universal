@@ -6,25 +6,20 @@ import {
   type ReactNode,
 } from 'react';
 import { View } from 'react-native';
-import {
-  type ClaimStore,
-  createClaimStore,
-  useClaimed,
-} from '#kit/claim-store';
+import { createPlace, useClaimed, type Place } from '#kit/place';
 import { ScreenNavigationEnabled } from './screen-navigation-context';
 
 /*
  * The heading a Screen in a list column hands up to the column's top row, drawn there instead of in the Screen's own
- * place: a list column is a Screen's content with its heading above it, as a page's is.
+ * place: a list column is a Screen's content with its heading above it, as a page's is. The column is part of the
+ * Screen's own page, so it is not offered through `placeOffer`: the heading is claimed whenever the column is drawn.
  */
-export type ListColumnHeading = ClaimStore<ReactNode>;
-
-const ListColumnHeadingContext = createContext<ListColumnHeading | undefined>(
+const ListColumnHeadingContext = createContext<Place<ReactNode> | undefined>(
   undefined,
 );
 
 // The column the Screen is the content of, if any; what a Screen inside that Screen's own content sees is a page's.
-export const useListColumnHeading = (): ListColumnHeading | undefined =>
+export const useListColumnHeading = (): Place<ReactNode> | undefined =>
   use(ListColumnHeadingContext);
 
 // What a Screen's content sees, so a Screen nested in a list Screen's content is a page and draws its own heading.
@@ -51,7 +46,7 @@ export interface ScreenListColumnProps {
  * level down, its buttons small and its search the sidebar's; a column has no Screen header of its own to draw.
  */
 export function ScreenListColumn(props: ScreenListColumnProps): ReactElement {
-  const [heading] = useState(() => createClaimStore<ReactNode>(null));
+  const [heading] = useState(() => createPlace<ReactNode>());
 
   return (
     <ListColumnHeadingContext value={heading}>
@@ -81,7 +76,7 @@ const rowShown = (claimed: ReactNode, underBand?: boolean): boolean =>
   Boolean(claimed) || Boolean(underBand);
 
 function ColumnHeadingRow(props: {
-  heading: ListColumnHeading;
+  heading: Place<ReactNode>;
   underBand?: boolean;
 }): ReactElement | null {
   const claimed = useClaimed(props.heading);

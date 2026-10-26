@@ -6,14 +6,13 @@ import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';
 import { ScreenAccessory } from './screen-accessory';
 import { ScreenBody } from './screen-body';
-import { ScreenHeading } from './screen-heading';
-import { useListColumnHeading } from './screen-list-column';
+import { ScreenHeadingBody } from './screen-heading-row';
 import { ListColumnScreen } from './screen-list-column-screen';
 import { ScreenNavigation } from './screen-navigation';
-import type { ScreenHeaderInput, ScreenProps } from './screen-props';
-import { selectionScreen } from './screen-selection-mode';
+import type { ScreenHeaderPlanned, ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
-import { useScreenHeader } from './use-screen-header';
+import { useHeaderDeclaration } from './use-header-declaration';
+import { useHeaderPlan } from './use-header-plan';
 
 // Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Screen(props: ScreenProps): ReactElement {
@@ -37,36 +36,27 @@ function ScreenSurface(props: ScreenProps): ReactElement {
   );
 }
 
-type Selecting = ScreenProps & Pick<ScreenHeaderInput, 'selectionMode'>;
-
-// A Screen in a list column hands its heading up to the column; any other draws its own.
+// The header draws where its plan says (header-site.ts); each site's adapter only draws.
 function ScreenHeaderSource(props: ScreenProps): ReactElement {
-  const selectionMode = useSelectionModeHost();
-  const heading = useListColumnHeading();
-  const drawing = { ...selectionScreen(props, selectionMode), selectionMode };
+  const declaration = useHeaderDeclaration(props, useSelectionModeHost());
+  const plan = useHeaderPlan('screen');
+  const drawing = { ...props, declaration, plan };
 
-  if (heading) return <ListColumnScreen {...drawing} heading={heading} />;
+  if (plan.site === 'list column') return <ListColumnScreen {...drawing} />;
 
-  return <PageSurface {...drawing} />;
-}
-
-// The Screen declares its header from its props; its content adds none.
-function PageSurface(props: Selecting): ReactElement {
-  const header = useScreenHeader(props);
-
-  return <ScreenDrawing {...props} header={header} />;
+  return <ScreenDrawing {...drawing} />;
 }
 
 // Web: the window paints the content colour, so the sidebar's shadow falls on it uncovered.
-function ScreenDrawing(props: ScreenHeaderInput): ReactElement {
+function ScreenDrawing(props: ScreenHeaderPlanned): ReactElement {
   return (
     <View
       testID={props.testID}
       className="min-h-0 flex-1 bg-content wide:mt-frame-inset web:bg-transparent"
     >
-      <ShortcutAnchors header={props.header} />
+      <ShortcutAnchors anchors={props.declaration.anchors} />
       <ScreenNavigation {...props} />
-      <ScreenHeading {...props} />
+      {props.plan.site === 'heading' ? <ScreenHeadingBody {...props} /> : null}
       <ScreenBody {...props} />
       <ScreenAccessory {...props} />
     </View>

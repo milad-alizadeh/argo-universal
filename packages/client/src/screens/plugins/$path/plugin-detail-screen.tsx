@@ -3,11 +3,13 @@ import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { Redirect } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { pluginPagePath } from '../plugin-page-route';
 import {
   pluginPath,
   usePluginAt,
   type PluginSection,
 } from '../use-plugin-sections';
+import { usePluginOpener } from '../use-plugin-opener';
 import { usePluginView } from '../use-plugin-view';
 import { PluginDetailView } from './plugin-detail-view';
 
@@ -39,16 +41,17 @@ function PluginLoading(): React.JSX.Element {
   );
 }
 
-// The Plugin's own page path is the route's, after the Plugin id and nav id, so a navigate Action opens a page below the nav item's root.
+// The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
 function PluginPage({
   section,
   path,
 }: PluginDetailScreenProps & {
   section: PluginSection;
 }): React.JSX.Element {
-  const view = usePluginView(section.pluginId, `/${path.slice(2).join('/')}`);
+  const view = usePluginView(section.pluginId, pluginPagePath(path));
+  const onOpenPage = usePluginOpener()(section.pluginId);
 
-  return <PluginDetailView {...pluginPageProps(section, view)} />;
+  return <PluginDetailView {...pluginPageProps(section, view)} onOpenPage={onOpenPage} />;
 }
 
 function PluginUnavailable(): React.JSX.Element {

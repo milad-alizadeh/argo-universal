@@ -4,7 +4,6 @@ import { useInMenu } from '../../../menu-rows-context';
 import { childRenderers } from './list-child-renderers';
 import type { ChildrenOptions } from './list-children-options';
 import { FixedListRow } from './list-grouping';
-import type { ListProps } from './list-props';
 import { sectionEntries, menuEntries } from './list-section-entries';
 import { prepareChildren, type ListBlock } from './list-section-model';
 
@@ -15,17 +14,12 @@ export interface ListChild extends ListSelection {
   position: ListPosition;
 }
 
-export function childRenderer(
-  appearance: ListProps<never>['appearance'],
-): (item: ListChild) => ReactElement {
-  const render = (item: ListChild): ReactElement => (
-    <FixedListRow item={item} appearance={appearance} />
-  );
+// The renderer List hands its data list for fixed children, which draw their own cells.
+export const childRenderer = (item: ListChild): ReactElement => (
+  <FixedListRow item={item} />
+);
 
-  childRenderers.add(render);
-
-  return render;
-}
+childRenderers.add(childRenderer);
 
 interface PreparedChildren {
   blocks: ListBlock[];

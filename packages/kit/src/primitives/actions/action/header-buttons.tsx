@@ -12,6 +12,7 @@ import {
 } from './action-declarations';
 import {
   splitHeaderActions,
+  type HeaderActionSplit,
   type HeaderEntry,
   type IconAction,
 } from './header-actions';
@@ -45,13 +46,22 @@ interface LookProps {
 
 // A header's Actions as Argo-drawn buttons and menus where Argo draws the heading; a phone's native header uses stock items.
 export function HeaderActions(props: HeaderActionsProps): ReactElement {
-  const { direct, overflow } = splitHeaderActions(props.groups, props.slots);
+  const split = splitHeaderActions(props.groups, props.slots);
+
+  return <HeaderButtons {...split} label={props.label} look={props.look} />;
+}
+
+type HeaderButtonsProps = HeaderActionSplit &
+  Pick<HeaderActionsProps, 'label' | 'look'>;
+
+// Actions already split for the header's room, as a Screen's header holds them.
+export function HeaderButtons(props: HeaderButtonsProps): ReactElement {
   const look = props.look ?? {};
 
   return (
     <View className="flex-row items-center gap-1">
-      {direct.map((entry) => headerEntry(entry, look))}
-      <HeaderOverflow groups={overflow} label={props.label} look={look} />
+      {props.direct.map((entry) => headerEntry(entry, look))}
+      <HeaderOverflow groups={props.overflow} label={props.label} look={look} />
     </View>
   );
 }

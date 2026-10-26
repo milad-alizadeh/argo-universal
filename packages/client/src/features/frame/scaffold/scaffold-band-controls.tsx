@@ -8,13 +8,14 @@ import {
   bandControlAppearance,
   bandToggleAppearance,
 } from './band-control-appearance';
+import { inspectorOffered, moveInspector } from './inspector-column';
 import type { ScaffoldPartProps } from './use-scaffold-layout';
 
 function workbenchProps({
   scaffold,
   layout,
 }: ScaffoldPartProps): IconButtonProps {
-  const visible = ['docked', 'floating'].includes(layout.frame.workbenchState);
+  const visible = ['docked', 'floating'].includes(layout.workbench.state);
 
   return {
     ...bandToggleAppearance(visible),
@@ -30,15 +31,14 @@ function WorkbenchToggle(parts: ScaffoldPartProps): ReactElement {
 }
 
 function expandProps({ scaffold, layout }: ScaffoldPartProps): IconButtonProps {
-  const expanded = layout.inspectorExpanded;
+  const expanded = layout.inspector.expanded;
 
   return {
     ...bandToggleAppearance(expanded),
     icon: expanded ? 'collapse' : 'expand',
     accessibilityLabel: expanded ? 'Restore Inspector' : 'Expand Inspector',
-    disabled: !layout.inspectorOpen,
-    onPress: () =>
-      scaffold.onInspectorStateChange(expanded ? 'open' : 'expanded'),
+    disabled: !layout.inspector.open,
+    onPress: () => moveInspector(scaffold, { expanded: !expanded }),
   };
 }
 
@@ -50,38 +50,19 @@ function inspectorToggleProps({
   scaffold,
   layout,
 }: ScaffoldPartProps): IconButtonProps {
-  const open = layout.inspectorOpen;
+  const open = layout.inspector.open;
 
   return {
     ...bandToggleAppearance(open),
     icon: 'stage',
     accessibilityLabel: open ? 'Hide Inspector' : 'Show Inspector',
     disabled: !open && !inspectorOffered(scaffold),
-    onPress: () => toggleInspector(scaffold, open),
+    onPress: () => moveInspector(scaffold, 'toggle'),
   };
 }
 
 function InspectorToggle(parts: ScaffoldPartProps): ReactElement {
   return <IconButton {...inspectorToggleProps(parts)} />;
-}
-
-function inspectorOffered(scaffold: ScaffoldPartProps['scaffold']): boolean {
-  return (
-    scaffold.inspectorAvailable !== false || !!scaffold.band?.onInspectorToggle
-  );
-}
-
-function toggleInspector(
-  scaffold: ScaffoldPartProps['scaffold'],
-  open: boolean,
-): void {
-  if (open) scaffold.onInspectorStateChange('closed');
-  else openInspector(scaffold);
-}
-
-function openInspector(scaffold: ScaffoldPartProps['scaffold']): void {
-  if (scaffold.band?.onInspectorToggle) scaffold.band.onInspectorToggle();
-  else scaffold.onInspectorStateChange('open');
 }
 
 function BandMenu({ scaffold }: ScaffoldPartProps): ReactElement {

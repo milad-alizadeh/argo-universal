@@ -86,6 +86,10 @@ _Avoid_: Override, component override
 The one version of the Plugin wire that an App reports when it connects. The Server sends Plugin trees only to an App at or above the minimum; an older App sees "Update Argo" in place of Plugin pages and Slots, and core's own component in Replaceable Slots. See ADR-0034.
 _Avoid_: Part version, kit version, protocol version
 
+**Page path**:
+The path a Plugin registers one of its pages at with `argo.pages.register`, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
+_Avoid_: App path, route (for what a Plugin writes)
+
 **Part event**:
 A named handler prop on a kit part, such as `onPress`; the App sends it to the Plugin by node key and event name, checked against the part's schema.
 _Avoid_: Interaction, action (Action is a kit part), handler
@@ -296,9 +300,17 @@ _Avoid_: Edit mode (except for iOS's own), multi-select
 A distinct group of items in a List, with an optional heading and footer.
 _Avoid_: Group (when naming a List section)
 
+**List look**:
+How one List draws, resolved once from the platform, its appearance and where it sits (a popover, a sidebar): its insets, its headings and footers, whether rows are separated, and whether the web draws its grouped sections as cards or a phone draws them as corners. Every part of the List reads it; none asks the platform itself.
+_Avoid_: Theme, style
+
 **Pill**:
 A short, static label that shows an Argo status or a label from a Plugin.
 _Avoid_: Badge, chip
+
+**Path text**:
+A file path drawn on one line with its folder muted and its name strong. A narrow box cuts the folder's start, never the name, and the whole path shows in a tooltip only while it is cut; compact widths scroll it sideways instead.
+_Avoid_: Breadcrumb, file label
 
 **Row badge**:
 A status dot or count drawn at the top-end corner of a row's leading icon or image.
@@ -320,9 +332,21 @@ _Avoid_: Properties, key-value list
 One entry on a navigation stack: its header (title, search, primary Action, Actions) and its content, declared together. A route shows one Screen; a Sheet stacks Screens of its own.
 _Avoid_: Page, view (for a stack entry)
 
+**Screen header**:
+What a Screen's header holds once it is known where it is drawn: Argo's own heading, the iOS toolbar, or Android's top app bar and FAB. Each has its own room, so the header decides which Actions are buttons and which go to the overflow menu, the one primary Action, and the Select entry; a selecting List's header replaces all of them. The platforms only draw it.
+_Avoid_: Header items, toolbar model
+
+**Header site**:
+Where a Screen's header draws, decided once from the facts around it: its own heading, the navigator's stack header, a list column's top row, or the window's band. One function picks it; each site's drawing only draws.
+_Avoid_: Header placement, header mode
+
 **Content column**:
 The column a Screen's heading and content keep to: on a wide window the reading width centred in the pane, inside the Screen's side margins. Each part of a Screen offers it to what it holds; a scroll view or grouped cards claim it and keep to it themselves, and the part pads anything else. A popover, a sheet's page or a FieldGroup's rows are outside it.
 _Avoid_: Scroll column, heading inset
+
+**Content wide**:
+Whether a content column is at least the threshold (`--container-content-wide`) that draws the desktop Composer and cards. Under a Frame the page takes it from the column the Frame layout placed; a host with no Frame, such as Storybook, measures it; with neither, it follows the window. The threshold, the column's maximum and its gutters are one content rule.
+_Avoid_: Container query, second measurement
 
 **Centred modal**:
 The one overlay a Dialog and a web Sheet both open in: a card centred over a dimmed backdrop that keeps focus inside, closes on Escape, a backdrop press or the back button unless its content holds unsaved input, and hands focus back to what opened it.
@@ -336,6 +360,10 @@ _Avoid_: ActionList, action panel, action menu (for the declaration)
 The App's chrome around its pages: the rail, the section sidebar and the panes. It places them with a Scaffold.
 _Avoid_: Shell, app shell, chrome
 
+**Frame layout**:
+Where every region of a wide window's Frame sits: the rail, the list, the page and its content column, the Workbench and the Inspector, with the dividers between them and how far each drags. It is worked out once from the window's width, the preferred pane widths and what the person asked of the sidebar, the Workbench and the Inspector; the content keeps its floor first, then the Workbench undocks, then the list folds.
+_Avoid_: Geometry, legacy layout
+
 **Scaffold**:
 A kit component that arranges a screen's panes for its Size class, such as list and detail side by side on wide windows and drill-in on phones. Content is written once; the Scaffold places it.
 _Avoid_: Layout (for a whole screen), template
@@ -343,6 +371,10 @@ _Avoid_: Layout (for a whole screen), template
 **Workbench**:
 The column beside a Session's Feed with summary cards for its sections, including Plugin cards. Cards show counts, totals and bounded previews; their bodies or items open full Inspector tabs, also reachable on phones.
 _Avoid_: Inspector, right panel, second sidebar
+
+**Place**:
+Somewhere in the Frame that a page fills while it is shown: the window band, the sidebar or the Inspector column. The Frame offers it and a page claims it with what to draw; only the shown page holds it, and only on a wide window. The newest claim shows, and an older one is not restored when it ends. Selection mode is the one Place where the first claim holds it, unless a selecting List claims it.
+_Avoid_: Host, slot (a Slot is a Plugin's)
 
 **Inspector**:
 The surface that shows a Workbench card's section in full, with a tab for its list and item details. Details include a Change's diff, an Agent's Feed or a Shell's output; the Workbench stays open beside it.

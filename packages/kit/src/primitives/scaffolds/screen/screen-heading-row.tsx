@@ -2,27 +2,27 @@ import type { ReactElement, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useHeadingInset } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
-import {
-  HeaderActions,
-  headerSlots,
-  type HeaderActionsProps,
-} from '#primitives/actions/action';
+import { screenHeader, type ScreenHeader } from '#primitives/actions/action';
 import type { IconButtonSize } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { ScreenBack } from './screen-back';
 import { ScreenColumn } from './screen-column';
+import { HeadingActions } from './screen-heading-actions';
 import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
-import { SelectEntry } from './screen-selection-mode';
 
-// A wide Screen's heading, or any Screen's when no navigator draws its header.
+// The Screen's own heading, drawn where its plan puts the header there.
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
+  const header = screenHeader(props.declaration, 'heading');
+
   return (
     <View className="py-6">
       <ScreenColumn width={props.width}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />
-          <ScreenCaption caption={props.caption} />
+          <ScreenCaption
+            caption={header.selecting ? undefined : props.caption}
+          />
         </View>
       </ScreenColumn>
     </View>
@@ -60,16 +60,20 @@ export type HeadingPlacement = 'page' | 'list';
 type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
 
 export function HeadingRow(props: HeadingRowProps): ReactNode {
-  return props.selectionMode?.header ?? <DeclaredHeading {...props} />;
+  const header = screenHeader(props.declaration, 'heading');
+
+  return header.selecting ?? <DeclaredHeading {...props} header={header} />;
 }
 
-function DeclaredHeading(props: HeadingRowProps): ReactElement {
+type DeclaredHeadingProps = HeadingRowProps & { header: ScreenHeader };
+
+function DeclaredHeading(props: DeclaredHeadingProps): ReactElement {
   const { placement = 'page' } = props;
   const look = placements[placement];
 
   const content = {
     title: <ScreenTitle title={props.title} level={look.titleLevel} />,
-    actions: <HeadingActions {...props} size={look.buttonSize} />,
+    actions: <HeadingActions header={props.header} size={look.buttonSize} />,
   };
 
   return (
@@ -113,32 +117,6 @@ function PlainHeading(props: HeadingContent): ReactElement {
       {props.actions}
     </View>
   );
-}
-
-// The Screen's own Actions, split as one header with one overflow menu, then its primary Action.
-export function HeadingActions(
-  props: Pick<ScreenHeaderInput, 'header' | 'selectionMode'> & {
-    size?: IconButtonSize;
-  },
-): ReactElement {
-  const { groups, label, primary } = props.header;
-  const look = { size: props.size };
-
-  return (
-    <>
-      <SelectEntry mode={props.selectionMode} />
-      <DeclaredActions groups={groups} label={label} look={look} />
-      <DeclaredActions groups={primary} label={label} look={look} />
-    </>
-  );
-}
-
-function DeclaredActions(
-  props: Omit<HeaderActionsProps, 'slots'>,
-): ReactElement | null {
-  if (!props.groups.length) return null;
-
-  return <HeaderActions {...props} slots={headerSlots} />;
 }
 
 const titleProps = {

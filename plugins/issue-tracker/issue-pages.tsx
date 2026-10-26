@@ -5,7 +5,7 @@ import type { IssueDeps, IssuePages } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
 import { FilterPage } from './issue-filter-page';
 import { builtInFilters, type IssueFilter } from './issue-filters';
-import { appPath, filterPath, issuePath, projectPath } from './issue-paths';
+import { filterPath, issuePath, projectPath } from './issue-paths';
 import { IssuesRoot } from './issue-root';
 
 type Page = Parameters<Argo['pages']['register']>[1];
@@ -44,7 +44,7 @@ const hrefs = (register: Register, deps: () => IssueDeps): IssuePages => ({
     ),
 });
 
-// Registers a path's page once, and answers its App path.
+// Registers a path's page once; the same path opens it.
 function registrar(argo: Argo): Register {
   const registered = new Set<string>();
 
@@ -52,7 +52,7 @@ function registrar(argo: Argo): Register {
     if (!registered.has(path)) argo.pages.register(path, page);
     registered.add(path);
 
-    return appPath(path);
+    return path;
   };
 }
 

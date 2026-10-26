@@ -7,15 +7,18 @@ import {
   pluginSectionId,
   sectionOf,
 } from '../../lib/product/navigation/sections';
+import { segmentsOf } from './plugin-page-route';
 import { pluginSymbol } from './plugin-symbol';
 
 export interface PluginSection extends NavigationSection {
   id: PluginSectionId;
   pluginId: string;
   name: string;
-  // The nav item's root page, as `/plugins/<Plugin id>/<nav id>/<manifest path>`.
+  navId: string;
+  // The manifest's nav path, as segments: the Plugin's own path to this nav item's root page.
+  navPath: string[];
+  // The nav item's root page in the App, as `/plugins/<Plugin id>/<nav id>/<nav path>`.
   rootPath: PluginPath;
-  segments: string[];
 }
 
 // The Plugin section a path is in, and whether the path is its root page. A path whose Plugin is unknown, still loading or gone, counts as a root so the narrow header keeps ☰ to leave it.
@@ -81,7 +84,7 @@ const pluginSections = (manifest: Manifest): PluginSection[] =>
   manifest.contributes.nav.map((nav) => pluginSection(manifest, nav));
 
 function pluginSection(manifest: Manifest, nav: NavItem): PluginSection {
-  const segments = navSegments(manifest, nav);
+  const navPath = segmentsOf(nav.path);
 
   return {
     id: pluginSectionId(manifest.id, nav.id),
@@ -89,13 +92,8 @@ function pluginSection(manifest: Manifest, nav: NavItem): PluginSection {
     name: manifest.name,
     title: nav.title,
     icon: pluginSymbol(manifest.icon),
-    rootPath: pluginPath(segments),
-    segments,
+    navId: nav.id,
+    navPath,
+    rootPath: pluginPath([manifest.id, nav.id, ...navPath]),
   };
 }
-
-const navSegments = (manifest: Manifest, nav: NavItem): string[] => [
-  manifest.id,
-  nav.id,
-  ...nav.path.split('/').filter(Boolean),
-];

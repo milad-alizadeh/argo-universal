@@ -4,7 +4,7 @@ import {
   type ContextType,
   type ReactNode,
 } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import {
   ListContext,
   ListTileContext,
@@ -12,13 +12,12 @@ import {
   type ListPosition,
 } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
+import { useListLook } from '../../../list-look-context';
 import {
   ListGroupEndsContext,
   useOpensGroup,
   type ListGroupEnds,
 } from './list-group-ends';
-
-const footerEndsGroup = Platform.OS === 'ios';
 
 const opensAt = new Set<ListPosition>(['first', 'only']);
 
@@ -33,7 +32,7 @@ export function useListItemGroup(description?: string): ListItemGroup {
   const list = useContext(ListContext);
   const rowDescription = useRowDescription(description);
   const ends = useContext(ListGroupEndsContext);
-  const closes = endsGroup(rowDescription);
+  const closes = useClosesGroup(rowDescription);
   useMarkGroupEnd(ends, list.index, closes);
   const opens = useOpensGroup(ends, list.index);
 
@@ -45,12 +44,15 @@ export function useListItemGroup(description?: string): ListItemGroup {
   return drawing(list, position, rowDescription);
 }
 
+function useClosesGroup(description?: string): boolean {
+  const { footerEndsGroup } = useListLook();
+
+  return footerEndsGroup && !!description;
+}
+
 function useRowDescription(description?: string): string | undefined {
   return useContext(ListTileContext) ? undefined : description;
 }
-
-const endsGroup = (description?: string): boolean =>
-  footerEndsGroup && !!description;
 
 const footerGap = (position: ListPosition): string | undefined =>
   endsAt.has(position) ? undefined : 'mb-4';
@@ -86,6 +88,8 @@ function RowFooter({
   description?: string;
   position: ListPosition;
 }): ReactNode {
+  const { footerEndsGroup } = useListLook();
+
   if (!description || !footerEndsGroup) return null;
 
   return (

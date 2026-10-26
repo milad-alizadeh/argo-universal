@@ -1,8 +1,8 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { RowFrame } from '#primitives/fields/field-row';
-import type { ListAppearance, ListPosition } from '../../../list-context';
-import { isWebGrouped } from '../../../list-grouped';
+import type { ListPosition } from '../../../list-context';
+import { useListLook } from '../../../list-look-context';
 import { cn } from '../../../utils';
 
 /*
@@ -37,13 +37,15 @@ function GroupedCell(props: {
   );
 }
 
-// A web grouped List draws each row as a piece of its section's card; the phones draw it later.
+// A web grouped List draws each row as a piece of its section's card; the phones draw it later. A heading, footer or gap is no piece.
 export function GroupedCells(props: {
-  appearance: ListAppearance;
+  cell: boolean;
   position: ListPosition;
   children: ReactNode;
 }): ReactNode {
-  if (!isWebGrouped(props.appearance)) return props.children;
+  const { webGrouped } = useListLook();
+
+  if (!webGrouped || !props.cell) return props.children;
 
   return <GroupedCell position={props.position}>{props.children}</GroupedCell>;
 }

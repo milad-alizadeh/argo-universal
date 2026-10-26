@@ -3,11 +3,6 @@ import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { SubagentFeed, useSessionPanels } from '#features/sessions';
 import {
-  changesArgs,
-  loadedChanges,
-  manyFiles,
-} from '../../../features/frame/components/changes-inspector/changes-inspector.mocks';
-import {
   sessionShells,
   runningShell,
   shellNow,
@@ -18,6 +13,7 @@ import {
   runningSubagent,
   subagentNow,
 } from '../../../features/sessions/components/subagent-list/subagent-list.mocks';
+import { manyChanges, useMemoryChanges } from './session-changes.test.mocks';
 import { SessionInspector } from './session-inspector';
 
 // Long real entry shapes with distinct identities exercise each section's scroll independently.
@@ -42,6 +38,7 @@ const stageShells = [
 export function Stage(): JSX.Element {
   const panels = useSessionPanels(['changes', 'shells', 'subagents']);
   const [opened, setOpened] = useState(false);
+  const changes = useMemoryChanges(manyChanges);
 
   if (!opened) {
     panels.select('subagents');
@@ -58,7 +55,7 @@ export function Stage(): JSX.Element {
         renderSubagentFeed={(props) => (
           <SubagentFeed {...props} feed={runningFeed} now={subagentNow} />
         )}
-        changes={{ ...changesArgs, ...loadedChanges(manyFiles) }}
+        changes={changes}
         shells={{
           shells: stageShells,
           output: longRunningOutput,

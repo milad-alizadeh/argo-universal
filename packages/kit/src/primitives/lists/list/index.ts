@@ -17,3 +17,5 @@ export {
   useNewestKeyWhenLeftEnd,
   type JumpToLatestButtonProps,
 } from './list-jump-to-latest';
+
+export { useListGutter } from './list-header';

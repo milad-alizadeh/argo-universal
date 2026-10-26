@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { View } from 'react-native';
-import { ContentLayout } from '#lib/product/content-layout';
+import { contentFill, ContentWidthProvider } from '#lib/product/content-layout';
 import { FramePane } from '../components/frame-pane/frame-pane';
 import {
   isFramed,
@@ -11,9 +11,10 @@ import {
   useScaffoldParts,
 } from './scaffold-frame';
 import { ScaffoldSidebarColumn } from './scaffold-sidebar';
+import { usePageContentWide } from './use-page-content-wide';
 import type { ScaffoldProps } from './use-scaffold-layout';
 
-export type { InspectorState } from './scaffold-geometry';
+export type { InspectorState } from './frame-layout';
 
 export type { ScaffoldProps } from './use-scaffold-layout';
 
@@ -26,12 +27,7 @@ export {
 
 const pagePlacement = ({ layout, framed }: ScaffoldParts): PanePlacement =>
   framed
-    ? {
-        offset: layout.frame.page.offset,
-        width: layout.detailWidth,
-        hidden: layout.inspectorExpanded,
-        ...layout.motion,
-      }
+    ? { ...layout.page, ...layout.motion }
     : { ...layout.motion, offset: 0, width: layout.width, hidden: false };
 
 export interface ScaffoldSidebarProps {
@@ -67,17 +63,19 @@ export function ScaffoldSidebar(
 
 export type ScaffoldPageProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
-// A page: beside the list on a wide window, the whole window on a compact or medium one; the tree is the same at each, so the page never remounts.
+// A page: beside the list on a wide window, the whole window on a compact or medium one; the tree is the same at each, so the page never remounts. Its content draws wide from the column the Frame placed.
 export function ScaffoldPage({
   parts,
   children,
 }: ScaffoldPageProps): React.JSX.Element {
+  const contentWide = usePageContentWide(parts);
+
   return (
     <View className="flex-1 flex-row">
       <FramePane testID="desktop-detail" {...pagePlacement(parts)}>
-        <ContentLayout className="overflow-hidden" measured={parts.framed}>
-          {children}
-        </ContentLayout>
+        <ContentWidthProvider wide={contentWide}>
+          <View className={`${contentFill} overflow-hidden`}>{children}</View>
+        </ContentWidthProvider>
       </FramePane>
     </View>
   );

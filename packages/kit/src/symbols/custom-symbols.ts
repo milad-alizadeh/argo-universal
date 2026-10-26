@@ -7,7 +7,7 @@ import type { SymbolPath } from './symbol-path';
  * template, relative to its baseline and centred on its advance. The Expo plugin `with-custom-symbols` writes them
  * into the iOS asset catalog, and the desktop app on macOS draws them from here; elsewhere they draw Material names.
  */
-type CustomSymbol = keyof typeof customSymbols;
+export type CustomSymbol = keyof typeof customSymbols;
 
 export type AppleSymbol = SFSymbol | CustomSymbol;
 

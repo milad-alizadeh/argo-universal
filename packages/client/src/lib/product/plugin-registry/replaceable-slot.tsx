@@ -2,6 +2,7 @@ import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
 import { replacementTreeReason } from '@repo/contracts/plugins/replacement-tree';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import type { OpenPluginPage } from '../plugin-actions';
 import { PluginDrawingBoundary } from './plugin-drawing-boundary';
 import { PluginTree, type PluginOnEvent } from './plugin-registry';
 import type { ReplaceableState } from './replaceable-state';
@@ -24,6 +25,7 @@ export function ReplaceableSlot(props: ReplaceableSlotProps): ReactNode {
 export interface ReplaceableSlotViewProps extends ReplaceableSlotProps {
   state: ReplaceableState;
   onEvent: PluginOnEvent;
+  onOpenPage?: OpenPluginPage;
   onFallback: (reason: string) => void;
 }
 
@@ -79,7 +81,13 @@ function slotDrawing(
 
   if (!root || refused) return props.renderCore(coreInput(props, refused));
 
-  return <PluginTree root={root} onEvent={props.onEvent} />;
+  return (
+    <PluginTree
+      root={root}
+      onEvent={props.onEvent}
+      onOpenPage={props.onOpenPage}
+    />
+  );
 }
 
 function replacementRoot(state: ReplaceableState): WireNode | null | undefined {

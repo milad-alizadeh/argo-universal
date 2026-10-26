@@ -1,12 +1,11 @@
 import {
-  createListDetailSidebar,
-  type ListDetailSidebar,
-  ListDetailSidebarContext,
-  useListDetailSidebarHeld,
-  useListDetailSidebarList,
-} from '@repo/kit/primitives/scaffolds/list-detail';
-import { createContext, use, useState, type ReactNode } from 'react';
-import { useScreenFocused } from '#lib/product/navigation/navigation';
+  createPlace,
+  useClaimed,
+  usePlaceHeld,
+  type Place,
+} from '@repo/kit/place';
+import { ListDetailSidebarPlace } from '@repo/kit/primitives/scaffolds/list-detail';
+import { createContext, use, type ReactNode, useState } from 'react';
 import {
   isCoreSection,
   type Section,
@@ -16,46 +15,43 @@ import type { SectionLists } from './section-lists';
 
 // The Frame's sidebar, which a Plugin page's ListDetail may hold on a wide window.
 export const FrameListDetailSidebar = createContext<
-  ListDetailSidebar | undefined
+  Place<ReactNode> | undefined
 >(undefined);
 
 export interface SectionListDetailProps {
   children: ReactNode;
 }
 
-// Offers the Frame's sidebar to a page's ListDetail while the page is shown, as a Plugin page's or Settings' is.
+// Offers the Frame's sidebar to a page's ListDetail, as a Plugin page's or Settings' is; the kit holds it only while the page is shown.
 export function SectionListDetail({
   children,
 }: SectionListDetailProps): React.JSX.Element {
-  const sidebar = use(FrameListDetailSidebar);
-  const focused = useScreenFocused();
-
   return (
-    <ListDetailSidebarContext value={focused ? sidebar : undefined}>
+    <ListDetailSidebarPlace value={use(FrameListDetailSidebar)}>
       {children}
-    </ListDetailSidebarContext>
+    </ListDetailSidebarPlace>
   );
 }
 
 // The list a Plugin page's ListDetail holds the Frame's sidebar with.
-function ClaimedList(props: { sidebar: ListDetailSidebar }): React.JSX.Element {
-  return <>{useListDetailSidebarList(props.sidebar)}</>;
+function ClaimedList(props: { sidebar: Place<ReactNode> }): React.JSX.Element {
+  return <>{useClaimed(props.sidebar)}</>;
 }
 
 type SectionScaffold = Pick<ScaffoldProps, 'list'> &
   Partial<Pick<ScaffoldProps, 'sidebarShown' | 'inspectorState'>>;
 
 export interface FrameListDetail {
-  sidebar: ListDetailSidebar;
+  sidebar: Place<ReactNode>;
   // Whether the shown page's ListDetail holds the sidebar.
   held: boolean;
 }
 
 // The Frame's one sidebar store, made once, and whether a ListDetail holds it now.
 export function useFrameListDetail(): FrameListDetail {
-  const [sidebar] = useState(createListDetailSidebar);
+  const [sidebar] = useState(() => createPlace<ReactNode>());
 
-  return { sidebar, held: useListDetailSidebarHeld(sidebar) };
+  return { sidebar, held: usePlaceHeld(sidebar) };
 }
 
 interface ShownSection {

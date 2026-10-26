@@ -3,11 +3,11 @@ import { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useSpacingStep } from '#primitives/layout/spacing';
 import { Spinner } from '#primitives/status/spinner';
-import { useInMenu } from '../../../menu-rows-context';
+import type { ListInsets } from '../../../list-look';
+import { useListLook } from '../../../list-look-context';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import { ContentRowId } from './list-content-selection';
 import { DataListRow } from './list-grouping';
-import { listInsets } from './list-insets';
 import type { ListProps } from './list-props';
 import {
   renderedId,
@@ -72,7 +72,7 @@ function PaddedRow<Item>({
   content: ReactNode;
   props: ListProps<Item>;
 }): ReactNode {
-  const paddingHorizontal = usePadding(listInsets(props, useInMenu()).padding);
+  const paddingHorizontal = useRowGutter(props);
   const style = useMemo(() => ({ paddingHorizontal }), [paddingHorizontal]);
 
   return paddingHorizontal === 0 ? (
@@ -92,11 +92,33 @@ function usePadding(value: ListProps<never>['padding']): number {
   return useSpacingStep(useSizeClassValue(value ?? 0));
 }
 
+const insetOr = <Key extends keyof ListInsets>(
+  key: Key,
+  props: ListInsets,
+  held: ListInsets,
+): ListInsets[Key] => props[key] ?? held[key];
+
+// What the caller sets over what the List's look holds.
+function useListInsets<Item>(props: ListProps<Item>): ListInsets {
+  const { insets, phonePadding } = useListLook();
+
+  return {
+    padding: phonePadding ?? insetOr('padding', props, insets),
+    paddingTop: insetOr('paddingTop', props, insets),
+    paddingBottom: insetOr('paddingBottom', props, insets),
+  };
+}
+
+// The side space every row holds, which the header holds too.
+export function useRowGutter<Item>(props: ListProps<Item>): number {
+  return usePadding(useListInsets(props).padding);
+}
+
 export function useListPadding<Item>(props: ListProps<Item>): {
   paddingTop: number;
   paddingBottom?: number;
 } {
-  const insets = listInsets(props, useInMenu());
+  const insets = useListInsets(props);
   const paddingTop = usePadding(insets.paddingTop);
   const bottom = usePadding(insets.paddingBottom);
   const paddingBottom = insets.paddingBottom === undefined ? undefined : bottom;

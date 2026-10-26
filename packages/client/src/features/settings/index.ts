@@ -30,5 +30,3 @@ export {
 } from './stores/slot-visibility';
 
 export { SettingsLoading } from './components/settings-loading/settings-loading';
-
-export { SlotPreviewCard } from './components/slot-preview-card/slot-preview-card';

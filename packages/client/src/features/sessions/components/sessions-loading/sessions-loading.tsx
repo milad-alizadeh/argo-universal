@@ -5,10 +5,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import type { SessionsLayout } from '../../stores/sessions-view';
 import {
-  sessionListAppearance,
-  sessionListPadding,
+  sessionsListLook,
   standardTopPadding,
-} from '../sessions-list/sessions-list';
+} from '../sessions-list/sessions-list-look';
 import { SessionListRow } from '../sessions-list/sessions-list-rows';
 import {
   placeholderProjectName,
@@ -56,9 +55,8 @@ function PlaceholderList({
 }: SessionsLoadingProps): React.JSX.Element {
   return (
     <List
-      appearance={sessionListAppearance(layout ?? 'regular')}
+      {...sessionsListLook(layout ?? 'regular', inList ? 'inset' : 'padded')}
       fit
-      padding={inList ? 0 : sessionListPadding}
       paddingTop={standardTopPadding}
     >
       <PlaceholderSection layout={layout} />

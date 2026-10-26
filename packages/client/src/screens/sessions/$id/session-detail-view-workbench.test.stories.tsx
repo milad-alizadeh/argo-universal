@@ -2,7 +2,7 @@ import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, within } from 'storybook/test';
-import { changesArgs } from '../../../features/frame/components/changes-inspector/changes-inspector.mocks';
+import { fewChanges, useMemoryChanges } from './session-changes.test.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
@@ -59,14 +59,25 @@ export const SeveralPullRequestsInStage: Story = {
   },
 };
 
+// The Session page with its changed files read from an in-memory Server.
+function WithChangedFiles(view: SessionDetailViewProps): JSX.Element {
+  const changes = useMemoryChanges(fewChanges);
+
+  return (
+    <FramedSessionPreview
+      {...(view.state === 'open' ? { ...view, changes } : view)}
+    />
+  );
+}
+
 export const SwitchesChangeAndFiles: Story = {
   args: {
     view: {
       state: 'open',
       ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
-      changes: changesArgs,
     },
   },
+  render: ({ view }): JSX.Element => <WithChangedFiles {...view} />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: firstChangeLabel }),

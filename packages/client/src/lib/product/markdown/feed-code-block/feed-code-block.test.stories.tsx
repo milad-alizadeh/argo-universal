@@ -44,19 +44,6 @@ export const CodeBlockScrollsInsideTheBox: Story = {
   },
 };
 
-// Where `part` of the element's text is drawn.
-function textBounds(element: HTMLElement, part: string): DOMRect {
-  const node = element.firstChild;
-
-  if (!(node instanceof globalThis.Text)) throw new Error('Missing title text');
-  const start = node.data.indexOf(part);
-  const range = document.createRange();
-  range.setStart(node, start);
-  range.setEnd(node, start + part.length);
-
-  return range.getBoundingClientRect();
-}
-
 export const LongTitleKeepsFilenameVisible: Story = {
   args: { language: longCodeBlockTitle },
   render: (args) => (
@@ -70,9 +57,8 @@ export const LongTitleKeepsFilenameVisible: Story = {
     for (const width of [390, 1440]) {
       await settleViewport(width);
       const title = canvas.getByTestId('code-block-title');
-      await expect(title.textContent).toContain(longCodeBlockTitle);
-      await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
-      const filename = textBounds(title, 'useWide.ts');
+      await expect(title.textContent).toContain('useWide.ts');
+      const filename = canvas.getByText('useWide.ts').getBoundingClientRect();
       const bounds = title.getBoundingClientRect();
       await expect(filename.left).toBeGreaterThanOrEqual(bounds.left - 1);
       await expect(filename.right).toBeLessThanOrEqual(bounds.right + 1);

@@ -1,0 +1,88 @@
+import type * as React from 'react';
+import { View } from 'react-native';
+import { Pressable } from '#primitives/actions/pressable';
+import { Tooltip } from '#primitives/overlays/tooltip';
+import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
+import { useCutShort } from './path-cut';
+import { splitPath } from './path-parts';
+import { Folder, Name, WholePath } from './path-text-segments';
+
+export interface PathTextProps {
+  path: string;
+  // The whole path muted, for a title.
+  quiet?: boolean;
+  // Compact: the whole path stays on its line and scrolls sideways.
+  scroll?: boolean;
+  testID?: string;
+  // Pressing the path, which a tooltip around it would otherwise take.
+  onPress?: React.ComponentProps<typeof Pressable>['onPress'];
+}
+
+const unfocusable = {
+  accessible: false,
+  focusable: false,
+  tabIndex: -1,
+} as const;
+
+type LineProps = PathTextProps &
+  Pick<ReturnType<typeof useCutShort>, 'ref'> &
+  Pick<ReturnType<typeof useCutShort>, 'onLayout'>;
+
+function Line({ ref, onLayout, ...props }: LineProps): React.JSX.Element {
+  const { folder, name } = splitPath(props.path);
+
+  return (
+    <View
+      ref={ref}
+      onLayout={onLayout}
+      testID={props.testID}
+      accessibilityLabel={props.path}
+      className="min-w-0 flex-row items-center"
+    >
+      {!!folder && <Folder folder={folder} />}
+      <Name name={name} quiet={props.quiet} />
+    </View>
+  );
+}
+
+function Hinted(
+  props: PathTextProps & { children: React.ReactElement },
+): React.JSX.Element {
+  return (
+    <Tooltip label={props.path}>
+      <Pressable {...unfocusable} onPress={props.onPress} className="min-w-0">
+        {props.children}
+      </Pressable>
+    </Tooltip>
+  );
+}
+
+// A long folder gives up its start, never the name.
+function CutLine(props: PathTextProps): React.JSX.Element {
+  const { cut, ...watch } = useCutShort(props.path);
+  const line = <Line {...props} {...watch} />;
+
+  // A column, so the tooltip's own wrapper takes the row's width rather than the path's.
+  return (
+    <View className="min-w-0 flex-1">
+      {cut ? <Hinted {...props}>{line}</Hinted> : line}
+    </View>
+  );
+}
+
+function ScrollingLine({ path }: PathTextProps): React.JSX.Element {
+  return (
+    <ScrollFadeView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="flex-1"
+    >
+      <WholePath {...splitPath(path)} />
+    </ScrollFadeView>
+  );
+}
+
+// A path with its folder muted and its name strong. The folder gives up its start to a narrow box; the whole path shows in a tooltip, on web, only while it is cut.
+export function PathText(props: PathTextProps): React.JSX.Element {
+  return props.scroll ? <ScrollingLine {...props} /> : <CutLine {...props} />;
+}

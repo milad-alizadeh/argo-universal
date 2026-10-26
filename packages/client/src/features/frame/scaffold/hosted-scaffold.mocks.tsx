@@ -1,9 +1,9 @@
-import { InspectorHostContext } from '@repo/kit/primitives/scaffolds/inspector';
+import { InspectorPlace } from '@repo/kit/primitives/scaffolds/inspector';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { JSX, PropsWithChildren } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { WindowBandHostsProvider } from '#lib/product/window-band';
+import { WindowBandProvider } from '#lib/product/window-band';
 import { coreNavigationSections } from '../../../lib/product/navigation/sections';
 import { FrameRail } from '../components/frame-rail/frame-rail';
 import { LayoutListMock } from '../components/layout-list.mocks';
@@ -48,11 +48,11 @@ export function HostedScaffoldMock({
 
   return (
     <View className="flex-1">
-      <InspectorHostContext value={state.inspectorHost}>
-        <WindowBandHostsProvider hosts={state.bandHost}>
+      <InspectorPlace value={state.inspectorPlace}>
+        <WindowBandProvider places={state.bandPlaces}>
           <AdaptiveScaffold {...state}>{children}</AdaptiveScaffold>
-        </WindowBandHostsProvider>
-      </InspectorHostContext>
+        </WindowBandProvider>
+      </InspectorPlace>
     </View>
   );
 }

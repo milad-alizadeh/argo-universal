@@ -30,6 +30,8 @@ export const exemptFolders = {
   'content/media-url':
     'Resolves the src of Image, Video and Audio; no props of its own.',
   'content/native-text': 'The platform fork of Text.',
+  'content/path-text':
+    'The file path a code block, a resource or a diff heads with; a Plugin sends the CodeBlock or Resource.',
   'fields/field-date-picker': fieldRow,
   'fields/field-link': fieldRow,
   'fields/field-picker': fieldRow,

@@ -1,6 +1,12 @@
+import { listDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { isNativeGrouped } from '../../../list-grouped';
+import type { ListLook } from '../../../list-look';
+import {
+  ListLookContext,
+  useDeclaredListLook,
+  useListLook,
+} from '../../../list-look-context';
 import { useInMenu } from '../../../menu-rows-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
@@ -94,12 +100,10 @@ function ChildDataList({
   blocks: ListBlock[];
   shelves: boolean;
 }): ReactElement {
-  const drawing = childDrawing(props.appearance);
-
   if (shelves)
-    return <SectionShelves {...props} {...drawing} blocks={blocks} />;
+    return <SectionShelves {...props} {...childDrawing} blocks={blocks} />;
 
-  return <DataList {...props} {...drawing} />;
+  return <DataList {...props} {...childDrawing} />;
 }
 
 function childMaxHeight(
@@ -112,13 +116,15 @@ function childMaxHeight(
 }
 
 // iOS and Android draw a grouped List of FieldGroup rows as their own grouped list, at every width (ADR-0042).
-const drawsNatively = (props: ListProps<never>): boolean =>
-  isNativeGrouped(props.appearance) && holdsNativeRows(props.children);
+const drawsNatively = (look: ListLook, props: ListProps<never>): boolean =>
+  look.phone !== undefined && holdsNativeRows(props.children);
 
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
+  const look = useListLook();
+
   if (props.items !== undefined) return <DataList {...props} />;
 
-  if (drawsNatively(props))
+  if (drawsNatively(look, props))
     return (
       <NativeGroupedList empty={props.empty}>
         {props.children}
@@ -132,29 +138,32 @@ function ListRows<Item>(props: ListProps<Item>): ReactElement {
   );
 }
 
+const useLook = <Item,>(props: ListProps<Item>): ListLook =>
+  useDeclaredListLook({
+    ...props,
+    appearance: props.appearance ?? listDefaults.appearance,
+  });
+
+const renderRows = <Item,>(prepared: ListProps<Item>): ReactElement => (
+  <ListMenuRows>
+    <ListRows {...prepared} />
+  </ListMenuRows>
+);
+
 export function List<Item>(props: ListProps<Item>): ReactElement {
   return (
-    <ListBehaviours
-      list={props}
-      render={(prepared) => (
-        <ListMenuRows>
-          <ListRows {...prepared} />
-        </ListMenuRows>
-      )}
-    />
+    <ListLookContext value={useLook(props)}>
+      <ListBehaviours list={props} render={renderRows} />
+    </ListLookContext>
   );
 }
 
 List.Section = ListSection;
 
-function childDrawing(
-  appearance: ListProps<never>['appearance'],
-): Pick<
+const childDrawing: Pick<
   ChildDataProps,
   'keyExtractor' | 'fullSpan' | 'getItemType' | 'renderItem'
-> {
-  return { ...childIdentity, renderItem: childRenderer(appearance) };
-}
+> = { ...childIdentity, renderItem: childRenderer };
 
 function childAnchor(anchor: ListProps<never>['anchor']): true | undefined {
   return anchor === 'end' ? true : undefined;

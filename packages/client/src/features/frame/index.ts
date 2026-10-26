@@ -16,8 +16,6 @@ export {
 
 export { SectionListDetail } from './frame/frame-list-detail';
 
-export { ScreenInspector } from './frame/frame-inspector';
-
 export { OnboardingFrame } from './components/onboarding-frame/onboarding-frame';
 
 export {

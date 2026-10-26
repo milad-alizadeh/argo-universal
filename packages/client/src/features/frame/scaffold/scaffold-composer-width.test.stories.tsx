@@ -27,7 +27,7 @@ export default meta;
 
 const agentIconId = 'composer-agent-icon';
 
-export const ComposerKeepsDesktopControlsAtTheStageResizeLimit: ScaffoldStory =
+export const ComposerKeepsDesktopControlsAtTheInspectorResizeLimit: ScaffoldStory =
   {
     args: {
       children: (
@@ -71,7 +71,7 @@ export const ComposerKeepsDesktopControlsAtTheStageResizeLimit: ScaffoldStory =
         .getByTestId('responsive-composer')
         .getBoundingClientRect();
 
-      // The Stage stops at the column floor; all desktop controls stay inside the Composer.
+      // The Inspector stops at the column floor; all desktop controls stay inside the Composer.
       for (const name of ['Mode', 'Context window', 'Send']) {
         const control = canvas
           .getByRole('button', { name })

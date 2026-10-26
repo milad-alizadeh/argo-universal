@@ -43,7 +43,7 @@ const identity = {
  * diff arrive a page at a time, as the end of each comes into view.
  */
 export function FileList(props: FileListProps): React.JSX.Element {
-  const { open, setOpen } = useOpenFiles(props.comparison);
+  const { open, setOpen } = useOpenFiles();
   const lists = useListItems(props, open);
   const context: RowContext = { ...props, open, setOpen };
 

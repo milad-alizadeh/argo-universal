@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { flattenedChildren } from '../../../flattened-children';
-import { useSectionDrawing } from '../../../list-section-drawing';
+import { useSectionDrawing } from '../../../list-look-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { SectionEndContext } from '../../../section-end-context';
 import { ListGrouping, SectionListRow } from './list-grouping';

@@ -17,7 +17,6 @@ export {
   useNeedsAttention,
   usePhoneDrawerWidth,
   useSectionList,
-  ScreenInspector,
 } from '#features/frame';
 
 export { useSectionLists } from './screens/section-lists';

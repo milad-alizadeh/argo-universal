@@ -1,5 +1,4 @@
-import type { ChangesComparison } from '../../view/changes-comparison';
-import { useComparisonState } from '../../view/use-comparison-state';
+import { useState } from 'react';
 
 export interface OpenFiles {
   open: ReadonlySet<string>;
@@ -21,9 +20,9 @@ function toggled(
   return next;
 }
 
-// Which files show their diff. Files start folded, so a long list opens fast; a new comparison folds them all again.
-export function useOpenFiles(comparison: ChangesComparison): OpenFiles {
-  const [open, update] = useComparisonState(comparison, none);
+// Which files show their diff. Files start folded, so a long list opens fast.
+export function useOpenFiles(): OpenFiles {
+  const [open, update] = useState(none);
 
   return {
     open,

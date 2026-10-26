@@ -13,14 +13,13 @@ export interface ListSelection {
 
 export const ListContext = createContext<
   ListSelection & {
-    appearance: ListAppearance;
     position: ListPosition;
     // Set inside a List's own rows, so a part that would draw its own List draws a section instead.
     inList?: boolean;
     // The row's place among its List's rows, for the separators a pressed neighbour covers.
     index?: number;
   }
->({ appearance: 'plain', position: 'only' });
+>({ position: 'only' });
 
 const positions = {
   'true-true': 'only',

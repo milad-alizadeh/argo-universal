@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup } from '#primitives/lists/list';
 import { ListContext, ListTileContext } from '../../../list-context';
+import { useListLook } from '../../../list-look-context';
 import { loadingLanes } from '../../../list-skeleton-lanes';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
@@ -32,9 +33,14 @@ import {
 const hairline = { height: StyleSheet.hairlineWidth };
 
 function useItemDrawing(): ItemDrawing {
-  const { appearance, position } = useContext(ListContext);
+  const { position } = useContext(ListContext);
 
-  return { appearance, position, menu: useInMenu(), rows: useRowDrawing() };
+  return {
+    look: useListLook(),
+    position,
+    menu: useInMenu(),
+    rows: useRowDrawing(),
+  };
 }
 
 function ItemSeparator(props: ListItemProps): ReactNode {

@@ -86,7 +86,7 @@ export const MainContentUsesAvailableWidth: ScaffoldStory = {
     await waitForAllow(canvas);
     await expectSessionLabel(canvas);
     await controlled.render({ inspectorState: 'open' });
-    // The list folds first, and the Stage resize limit then protects the column floor.
+    // The list folds first, and the Inspector resize limit then protects the column floor.
     await waitUntilWide(content);
     await expectSessionLabel(canvas);
     await expect(canvas.getByTestId('desktop-list')).toHaveAttribute(

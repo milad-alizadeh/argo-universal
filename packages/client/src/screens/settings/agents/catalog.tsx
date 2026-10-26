@@ -29,6 +29,7 @@ export function AgentCatalog(props: CatalogProps): React.JSX.Element {
       testID={agentsCatalogTestId}
       sections={catalogSections(props)}
       header={<AgentsFilterPills {...props} />}
+      headerBleeds
     />
   );
 }

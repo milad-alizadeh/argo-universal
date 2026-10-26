@@ -1,6 +1,7 @@
 import type { SpacingStep } from '@repo/contracts/kit-tokens';
 import type { ReactNode } from 'react';
 import type { ListSelection } from '../../../list-context';
+import type { PhoneOverrides } from '../../../list-look';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
@@ -45,6 +46,12 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     accessibilityRole?: 'list' | 'radiogroup';
     accessibilityLabel?: string;
     fit?: boolean;
+    // A List of ListItems is grouped cards on the phones (owner, 2026-10-24); the web and desktop keep `appearance`.
+    groupedOnPhones?: boolean;
+    // Kit-only: what the phones draw in place of `appearance` and `padding`, so a caller never asks the platform.
+    onPhones?: PhoneOverrides;
+    // The header scrolls sideways and runs to the List's edges; it takes its gutter from `useListGutter`.
+    headerBleeds?: boolean;
     padding?: SizeClassValue<SpacingStep>;
     paddingTop?: SizeClassValue<SpacingStep>;
     getSelectionId?: (item: Item) => string | undefined;

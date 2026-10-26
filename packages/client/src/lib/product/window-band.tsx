@@ -1,16 +1,16 @@
-import { useClaim, useClaimed } from '@repo/kit/claim-store';
 import {
-  type BandHost,
-  createBandHost,
-  createBandHostContext,
-  createScreenBandHost,
+  createPlace,
+  placeOffer,
+  useClaim,
+  useClaimed,
+  useOfferedPlace,
+  type Place,
+} from '@repo/kit/place';
+import {
+  ScreenBandPlace,
   type ScreenBand,
-  ScreenBandHostContext,
-  type ScreenBandHost,
 } from '@repo/kit/primitives/scaffolds/screen';
-import { useWide } from '@repo/kit/use-wide/use-wide';
-import { use, type ReactNode } from 'react';
-import { useScreenFocused } from './navigation/navigation';
+import type { ReactNode } from 'react';
 
 // The focused page supplies its overview and how its Inspector opens; the window owns their placement and pane controls. Its title and menu are its Screen's header, which the kit claims for the band.
 export interface WindowBandContent {
@@ -21,60 +21,45 @@ export interface WindowBandContent {
 // What the band draws: the focused Screen's title and menu, and the focused page's overview.
 export type WindowBandView = WindowBandContent & Partial<ScreenBand>;
 
-export type WindowBandHost = BandHost<WindowBandContent>;
-
-export const createWindowBandHost = createBandHost<WindowBandContent>;
-
-export const WindowBandHostContext = createBandHostContext<WindowBandContent>();
+const WindowBandPlace = placeOffer<WindowBandContent>();
 
 // Both claims into the band: the page's overview, and the kit's Screen header.
-export interface WindowBandHosts {
-  content: WindowBandHost;
-  screen: ScreenBandHost;
+export interface WindowBandPlaces {
+  content: Place<WindowBandContent>;
+  screen: Place<ScreenBand>;
 }
 
-export const createWindowBandHosts = (): WindowBandHosts => ({
-  content: createWindowBandHost(),
-  screen: createScreenBandHost(),
+export const createWindowBandPlaces = (): WindowBandPlaces => ({
+  content: createPlace(),
+  screen: createPlace(),
 });
 
-export function WindowBandHostsProvider({
-  hosts,
+export function WindowBandProvider({
+  places,
   children,
 }: {
-  hosts: WindowBandHosts;
+  places: WindowBandPlaces;
   children: ReactNode;
 }): ReactNode {
   return (
-    <WindowBandHostContext value={hosts.content}>
-      <ScreenBandHostContext value={hosts.screen}>
-        {children}
-      </ScreenBandHostContext>
-    </WindowBandHostContext>
+    <WindowBandPlace value={places.content}>
+      <ScreenBandPlace value={places.screen}>{children}</ScreenBandPlace>
+    </WindowBandPlace>
   );
 }
 
 export function useWindowBandView(
-  hosts: WindowBandHosts,
+  places: WindowBandPlaces,
 ): WindowBandView | null {
-  const content = useClaimed(hosts.content);
-  const screen = useClaimed(hosts.screen);
+  const content = useClaimed(places.content);
+  const screen = useClaimed(places.screen);
 
   return content || screen ? { ...screen, ...content } : null;
 }
 
-// A retained page gives up the band's claim while another page is focused. Under wide the page keeps its own native header.
+// Under wide the page keeps its own native header, and a retained page gives up the band while another is focused.
 export function WindowBand(content: WindowBandContent): null {
-  const host = use(WindowBandHostContext);
-  useBandClaim(useWide() ? host : undefined, content);
+  useClaim(useOfferedPlace(WindowBandPlace), content);
 
   return null;
-}
-
-function useBandClaim(
-  host: WindowBandHost | undefined,
-  content: WindowBandContent,
-): void {
-  const focused = useScreenFocused();
-  useClaim(focused ? host : undefined, content);
 }

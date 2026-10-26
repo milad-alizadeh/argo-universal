@@ -18,11 +18,11 @@ type MockState = Pick<
 >;
 
 export function WorkbenchScaffold({
-  stageOpen = false,
+  inspectorOpen = false,
 }: {
-  stageOpen?: boolean;
+  inspectorOpen?: boolean;
 }): ReactElement {
-  const state = useMockState(stageOpen);
+  const state = useMockState(inspectorOpen);
 
   return (
     <Scaffold
@@ -33,12 +33,12 @@ export function WorkbenchScaffold({
   );
 }
 
-function useMockState(stageOpen: boolean): MockState {
+function useMockState(inspectorOpen: boolean): MockState {
   const [sidebarShown, onSidebarShownChange] = useState(true);
   const [workbenchShown, onWorkbenchShownChange] = useState<boolean>();
 
   const [inspectorState, onInspectorStateChange] = useState<InspectorState>(
-    stageOpen ? 'open' : 'closed',
+    inspectorOpen ? 'open' : 'closed',
   );
 
   return {

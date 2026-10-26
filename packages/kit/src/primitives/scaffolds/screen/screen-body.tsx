@@ -9,15 +9,15 @@ import {
 import { flattenedChildren } from '#kit/flattened-children';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
+import { screenHeader } from '#primitives/actions/action';
 import { screenContentEnds, useScreenColumn } from './screen-column';
-import { screenPrimaryAction } from './screen-primary-action';
-import type { ScreenProps } from './screen-props';
+import type { ScreenHeaderInput } from './screen-props';
 
 /*
  * One child fills the body. Several are parts of it, each keeping or claiming the column on its own, so a form's
  * FieldGroup fills the page while the Button below it keeps the page's gutter.
  */
-export function ScreenBody(props: ScreenProps): ReactElement {
+export function ScreenBody(props: ScreenHeaderInput): ReactElement {
   const parts = flattenedChildren(props.children);
 
   if (parts.length < 2) return <BodyPart {...props} />;
@@ -25,7 +25,10 @@ export function ScreenBody(props: ScreenProps): ReactElement {
   return <View className="min-h-0 flex-1">{screenParts(props, parts)}</View>;
 }
 
-const screenParts = (props: ScreenProps, parts: ReactNode[]): ReactElement[] =>
+const screenParts = (
+  props: ScreenHeaderInput,
+  parts: ReactNode[],
+): ReactElement[] =>
   parts.map((part, index) => (
     <BodyPart
       key={partKey(part, index)}
@@ -39,7 +42,7 @@ const screenParts = (props: ScreenProps, parts: ReactNode[]): ReactElement[] =>
 const partKey = (part: ReactNode, index: number): string =>
   isValidElement(part) && part.key !== null ? part.key : String(index);
 
-type PartProps = ScreenProps & { last?: boolean };
+type PartProps = ScreenHeaderInput & { last?: boolean };
 
 /*
  * The content keeps to the heading's column. A scroll view that fills the body claims the column and keeps to it
@@ -102,12 +105,9 @@ function unclaimedClass(props: PartProps): string {
   return 'w-full self-center pt-2 wide:pt-0';
 }
 
-const fabClearance = (props: ScreenProps, wide: boolean): string | false =>
+const fabClearance = (props: PartProps, wide: boolean): string | false =>
   !wide && hasFab(props) && 'android:pb-safe-offset-22';
 
-// Android's FAB, which the body's end clears; an unavailable primary Action shows none.
-function hasFab(props: ScreenProps): boolean {
-  const action = screenPrimaryAction(props);
-
-  return Boolean(action && !action.disabled);
-}
+// Android's FAB, which the body's end clears.
+const hasFab = (props: PartProps): boolean =>
+  screenHeader(props.declaration, 'android').primary !== undefined;

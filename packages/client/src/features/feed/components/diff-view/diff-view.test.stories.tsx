@@ -67,7 +67,7 @@ function inlinePreview(width: number): Story {
       try {
         await settleViewport(width);
         const title = canvas.getByTestId('code-block-title');
-        await expect(title.textContent).toContain('/repo/large.txt');
+        await expect(title.textContent).toContain('large.txt');
         const header = title.parentElement;
 
         if (!header) throw new Error('Missing diff header');

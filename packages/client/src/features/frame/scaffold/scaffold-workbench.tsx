@@ -31,7 +31,7 @@ function WorkbenchPanel({
 
   return (
     <Animated.View {...placement}>
-      <WorkbenchSurface floating={layout.frame.workbenchState === 'floating'}>
+      <WorkbenchSurface floating={layout.workbench.state === 'floating'}>
         {children}
       </WorkbenchSurface>
     </Animated.View>
@@ -64,18 +64,17 @@ type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'> & {
   motion: { offset: number; visible: boolean };
 };
 
+// The panel keeps its full width while it slides out, so its cards never reflow.
 function workbenchPlacement({
-  frame,
+  workbench,
   measures,
-  width,
 }: ScaffoldPartProps['layout']): WorkbenchPlacement {
-  const visible = frame.workbench.width > 0;
-  const offset = visible ? frame.workbench.offset : width - measures.inset;
+  const { offset } = workbench;
 
   return {
     className: 'absolute bottom-frame-inset',
     style: { left: offset, width: measures.workbenchWidth, top: 0 },
-    motion: { offset, visible },
+    motion: { offset, visible: workbench.width > 0 },
   };
 }
 

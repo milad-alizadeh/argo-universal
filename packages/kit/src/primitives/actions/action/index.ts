@@ -32,7 +32,11 @@ export {
 
 export type { ActionShortcut } from './action-shortcuts';
 
-export { HeaderActions, type HeaderActionsProps } from './header-buttons';
+export {
+  HeaderActions,
+  HeaderButtons,
+  type HeaderActionsProps,
+} from './header-buttons';
 
 export { headerMenuActions, overflowIcon } from './header-menu';
 
@@ -42,10 +46,10 @@ export {
   submenuLabel,
 } from './submenu-badge';
 
+export { type HeaderEntry, type IconAction } from './header-actions';
+
 export {
-  headerSlots,
-  isIconAction,
-  splitHeaderActions,
-  type HeaderEntry,
-  type IconAction,
-} from './header-actions';
+  screenHeader,
+  type HeaderDeclaration,
+  type ScreenHeader,
+} from './screen-header';

@@ -1,6 +1,6 @@
-import { use, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { useClaim } from '#kit/claim-store';
+import { useClaim, useOfferedPlace, type Place } from '#kit/place';
 import { useWide } from '#kit/use-wide/use-wide';
 import {
   Screen,
@@ -8,10 +8,7 @@ import {
   ScreenListColumn,
 } from '#primitives/scaffolds/screen';
 import type { ListDetailProps } from './list-detail-props';
-import {
-  ListDetailSidebarContext,
-  type ListDetailSidebar,
-} from './list-detail-sidebar';
+import { ListDetailSidebarPlace } from './list-detail-sidebar';
 import { SidebarRows } from './sidebar-rows';
 
 /*
@@ -21,7 +18,7 @@ import { SidebarRows } from './sidebar-rows';
  */
 export function ListDetail(props: ListDetailProps): ReactElement {
   const wide = useWide();
-  const sidebar = use(ListDetailSidebarContext);
+  const sidebar = useOfferedPlace(ListDetailSidebarPlace);
 
   if (wide) return <WithDetail {...props} wide sidebar={sidebar} />;
 
@@ -50,7 +47,7 @@ function ListOnly(props: ListDetailProps): ReactElement {
  */
 type WithDetailProps = ListDetailProps & {
   wide: boolean;
-  sidebar?: ListDetailSidebar;
+  sidebar?: Place<ReactNode>;
 };
 
 function WithDetail({
@@ -95,9 +92,9 @@ function Pane(props: {
 }): ReactElement {
   return (
     <View testID={props.testID} className={props.className ?? 'flex-1'}>
-      <ListDetailSidebarContext value={undefined}>
+      <ListDetailSidebarPlace value={undefined}>
         {props.children}
-      </ListDetailSidebarContext>
+      </ListDetailSidebarPlace>
     </View>
   );
 }

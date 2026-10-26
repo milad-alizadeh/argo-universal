@@ -8,7 +8,7 @@ const meta = {
   title: 'Tests/Frame/Scaffold/WorkbenchMotion',
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
-  args: { stageOpen: true },
+  args: { inspectorOpen: true },
   beforeEach: (): Promise<void> => settleViewport(1920),
 } satisfies Meta<typeof WorkbenchScaffold>;
 
@@ -48,11 +48,13 @@ function closesAt(width: number): Story {
   };
 }
 
-export const DockedWorkbenchSlidesWhenStageCloses: Story = closesAt(1920);
+export const DockedWorkbenchSlidesWhenTheInspectorCloses: Story =
+  closesAt(1920);
 
-export const AutoHiddenWorkbenchSlidesWhenStageCloses: Story = closesAt(1440);
+export const AutoHiddenWorkbenchSlidesWhenTheInspectorCloses: Story =
+  closesAt(1440);
 
-export const WorkbenchSlidesWhenExpandedStageRestores: Story = {
+export const WorkbenchSlidesWhenTheExpandedInspectorRestores: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       canvas.getByRole('button', { name: 'Expand Inspector' }),

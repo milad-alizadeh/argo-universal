@@ -1,3 +1,5 @@
+import { groupedRowInset } from '../list-look';
+
 // The column a Screen part offers what it holds: its widest, its padding included, centred in a wider pane.
 export interface ContentColumn {
   maxWidth?: number;
@@ -75,9 +77,6 @@ function offeredColumn(
 
   return state.claimed ? offer.column : undefined;
 }
-
-// A grouped row's own inset: its text starts this far inside its card.
-const groupedRowInset = 16;
 
 // Only a narrow web heading moves: native headers are the platform's, and a wide one already keeps to the cards' column.
 export const headingInset = (grouped: boolean, narrowWeb: boolean): number =>

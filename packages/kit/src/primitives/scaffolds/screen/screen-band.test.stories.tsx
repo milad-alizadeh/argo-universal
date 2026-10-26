@@ -2,13 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
-import { useClaimed } from '#kit/claim-store';
+import { createPlace, useClaimed, type Place } from '#kit/place';
 import { Action } from '#primitives/actions/action';
-import {
-  createScreenBandHost,
-  ScreenBandHostContext,
-  type ScreenBandHost,
-} from './screen-band';
+import { ScreenBandPlace, type ScreenBand } from './screen-band';
 import { ScreenStackHeader } from './screen-stack-header';
 import { atWidth, screenWidths } from './screen-widths.mocks';
 
@@ -23,9 +19,9 @@ type Story = StoryObj<typeof meta>;
 
 const onRename = fn();
 
-// The host's band, drawing what the claiming header declared.
-function Band({ host }: { host: ScreenBandHost }): ReactElement {
-  const band = useClaimed(host);
+// The place's band, drawing what the claiming header declared.
+function Band({ place }: { place: Place<ScreenBand> }): ReactElement {
+  const band = useClaimed(place);
 
   return (
     <View testID="band" className="flex-row items-center">
@@ -36,11 +32,11 @@ function Band({ host }: { host: ScreenBandHost }): ReactElement {
 }
 
 function Host(): ReactElement {
-  const [host] = useState(createScreenBandHost);
+  const [place] = useState(() => createPlace<ScreenBand>());
 
   return (
-    <ScreenBandHostContext value={host}>
-      <Band host={host} />
+    <ScreenBandPlace value={place}>
+      <Band place={place} />
       <ScreenStackHeader
         title="Build the band"
         actions={
@@ -49,7 +45,7 @@ function Host(): ReactElement {
           </Action>
         }
       />
-    </ScreenBandHostContext>
+    </ScreenBandPlace>
   );
 }
 
