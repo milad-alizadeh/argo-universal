@@ -1,6 +1,7 @@
 // iOS draws the Screen's Actions as UIKit bar items and its search as the stock search bar.
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
 import { iconSymbols } from '#kit/symbols/icon-names';
 import {
@@ -9,7 +10,7 @@ import {
 } from '#primitives/actions/action';
 import { useScreenMenu } from './screen-menu-context';
 import { screenPrimaryAction } from './screen-primary-action';
-import type { ScreenHeaderInput, ScreenProps } from './screen-props';
+import type { ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';
 import {
   overflowMenu,
@@ -53,16 +54,16 @@ function MenuItem(): ReactElement | null {
   );
 }
 
-type HeaderProps = ScreenProps & { declared: ActionGroup[]; label: string };
+type HeaderProps = ScreenHeaderInput & {
+  declared: ActionGroup[];
+  label: string;
+};
 
 // The primary Action sits top right on every iPhone and iPad, wherever the search bar is.
 function HeaderItems(props: HeaderProps): ReactElement {
   const primary = screenPrimaryAction(props);
 
-  const { direct, overflow } = splitHeaderActions(
-    props.declared,
-    primary ? 1 : 2,
-  );
+  const { direct, overflow } = headerEntries(props, Boolean(primary));
 
   const entry = toolbarEntry(useNativeTheme().colors.primary);
 
@@ -70,7 +71,27 @@ function HeaderItems(props: HeaderProps): ReactElement {
     <Stack.Toolbar placement="right">
       {direct.map(entry)}
       {overflowMenu(overflow, props.label)}
+      {trailingItem(props)}
       {primary ? toolbarButton({ ...primary, id: 'primary' }) : null}
     </Stack.Toolbar>
   );
+}
+
+function trailingItem(props: ScreenHeaderInput): ReactElement | null {
+  const trailing = props.contentHeader?.trailing;
+
+  if (!trailing) return null;
+
+  return (
+    <Stack.Toolbar.View>
+      <View style={{ width: 80, height: 44 }}>{trailing}</View>
+    </Stack.Toolbar.View>
+  );
+}
+
+function headerEntries(
+  props: HeaderProps,
+  primary: boolean,
+): ReturnType<typeof splitHeaderActions> {
+  return splitHeaderActions(props.declared, primary ? 1 : 2);
 }

@@ -19,7 +19,6 @@ async function loadOrReport(
   }
 }
 
-// Each gesture or edge starts at most one request, including before React paints.
 export function useListRequest(failure: ErrorToast): ListRequest {
   const active = useRef(false);
   const [loading, setLoading] = useState(false);

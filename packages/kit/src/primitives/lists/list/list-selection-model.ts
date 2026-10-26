@@ -48,7 +48,6 @@ function selectedRange(
   return ids.slice(Math.min(start, end), Math.max(start, end) + 1);
 }
 
-// The range anchor survives re-renders; its order always comes from the current list.
 export class SelectionRange {
   private anchor: string | undefined;
 
@@ -75,14 +74,19 @@ export class SelectionRange {
   }
 }
 
-function activates(keys: Modifiers, activate?: () => void): boolean {
-  return Boolean(activate) && !keys.range && !keys.toggle;
+function activates(keys: Modifiers, press: RowPress): boolean {
+  return hasActivation(press) && !keys.range && !keys.toggle;
 }
 
-interface RowPress {
+function hasActivation(press: RowPress): boolean {
+  return Boolean(press.activate || press.href);
+}
+
+export interface RowPress {
   id: string;
   event?: GestureResponderEvent;
   activate?: () => void;
+  href?: string;
 }
 
 function selectWebRow(
@@ -92,13 +96,13 @@ function selectWebRow(
 ): void {
   const keys = modifiers(press.event);
 
-  if (activates(keys, press.activate)) {
-    input.change([]);
-    press.activate?.();
+  if (activates(keys, press)) {
+    activateRow(input, press);
 
     return;
   }
 
+  press.event?.preventDefault();
   range.choose(input, press.id, keys);
 }
 
@@ -109,4 +113,12 @@ export function selectRow(
 ): void {
   if (Platform.OS === 'web') selectWebRow(input, range, press);
   else toggleSelected(input, press.id);
+}
+
+function activateRow(input: SelectionInput, press: RowPress): void {
+  input.change([]);
+
+  if (!press.activate) return;
+  press.event?.preventDefault();
+  press.activate();
 }

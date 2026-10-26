@@ -1,3 +1,4 @@
+import { ContentHeaderScope } from '@repo/kit/content-header';
 import { ScrollColumnContext } from '@repo/kit/scroll-column';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -85,6 +86,17 @@ export interface ScaffoldSidebarColumnProps extends ScaffoldPartProps {
 
 // The glass panel: the sidebar Slot and the list beside it.
 export function ScaffoldSidebarColumn({
+  sidebar,
+  ...parts
+}: ScaffoldSidebarColumnProps): React.JSX.Element {
+  return (
+    <ContentHeaderScope>
+      <SidebarColumnDrawing sidebar={sidebar} {...parts} />
+    </ContentHeaderScope>
+  );
+}
+
+function SidebarColumnDrawing({
   sidebar,
   ...parts
 }: ScaffoldSidebarColumnProps): React.JSX.Element {

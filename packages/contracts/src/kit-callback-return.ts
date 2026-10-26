@@ -3,4 +3,3 @@ export type KitCallbackReturn<Schema, Returns> = Schema extends {
 }
   ? void | Promise<void>
   : Returns;
-

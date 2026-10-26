@@ -66,7 +66,7 @@ function contentHandlers(
 ): RowPressProps {
   return {
     onPress: selection.active
-      ? (event) => selection.press(id, event, props.onPress)
+      ? rowSelectionPress(selection, id, props)
       : props.onPress,
     onLongPress:
       Platform.OS === 'android'
@@ -104,7 +104,21 @@ function keepsPrimarySelection(selection: ContentSelection): boolean {
   return Platform.OS === 'web' && selection.selected.length === 0;
 }
 
-function selectedContent(props: DrawingProps, selection: ContentSelection, id: string): boolean {
+function selectedContent(
+  props: DrawingProps,
+  selection: ContentSelection,
+  id: string,
+): boolean {
   if (keepsPrimarySelection(selection)) return props.selected ?? false;
+
   return selection.selected.includes(id);
+}
+
+function rowSelectionPress(
+  selection: ContentSelection,
+  id: string,
+  props: DrawingProps,
+): RowPressProps['onPress'] {
+  return (event) =>
+    selection.press({ id, event, activate: props.onPress, href: props.href });
 }

@@ -9,6 +9,7 @@ import { useRenderedRows, ListEmpty } from './list-data';
 import { ListGrouping } from './list-grouping';
 import { scrollProps } from './list-scroll-props';
 import { ShelfHeader, useShelf } from './list-shelf';
+import { tileStart } from './list-tile-header';
 import type { TileListProps } from './list-tile-props';
 import { TileCell } from './tile-cell';
 import { TileViewportVisibility } from './tile-viewport-visibility';
@@ -76,17 +77,6 @@ function cellProps<Item>(
   };
 }
 
-function gridHeader<Item>(
-  props: TileListProps<Item>,
-  geometry: Geometry,
-): ReactElement | undefined {
-  if (geometry.horizontal || !props.header) return undefined;
-
-  return (
-    <View style={{ paddingHorizontal: geometry.gap / 2 }}>{props.header}</View>
-  );
-}
-
 interface FrameProps {
   geometry: Geometry;
   shelf: Shelf;
@@ -135,7 +125,7 @@ function tileScrollProps<Item>(
     ref: shelf.ref,
     onScroll: shelf.onScroll,
     data: props.items ?? [],
-    ListHeaderComponent: gridHeader(props, geometry),
+    ListHeaderComponent: tileStart(props, geometry),
     ListEmptyComponent: <ListEmpty {...props} />,
     overrideItemLayout: tileSpan(props, geometry.columns),
   };

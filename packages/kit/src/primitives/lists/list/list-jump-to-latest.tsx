@@ -50,14 +50,20 @@ export function JumpToLatestButton(
   props: JumpToLatestButtonProps,
 ): React.JSX.Element {
   return (
-    <Pressable
-      role="button"
-      accessibilityLabel={jumpToLatestLabel(props.hasNewRows)}
-      onPress={props.onPress}
-      className={jumpToLatestClassName}
-    >
+    <Pressable {...jumpButtonProps(props)} className={jumpToLatestClassName}>
       <Icon name="arrow-down" tone="neutral" />
       {props.hasNewRows && newRowsDot}
     </Pressable>
   );
+}
+
+function jumpButtonProps(
+  props: JumpToLatestButtonProps,
+): React.ComponentProps<typeof Pressable> {
+  return {
+    role: 'button',
+    hitSlop: 6,
+    accessibilityLabel: jumpToLatestLabel(props.hasNewRows),
+    onPress: props.onPress,
+  };
 }

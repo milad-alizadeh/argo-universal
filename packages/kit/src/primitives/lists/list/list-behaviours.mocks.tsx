@@ -1,6 +1,7 @@
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { Action } from '#primitives/actions/action';
 import { Screen } from '#primitives/scaffolds/screen';
+import { ListItem } from '../list-item';
 import { List } from './list';
 import type { ListProps } from './list-props';
 
@@ -106,7 +107,11 @@ function useExampleSelection(props: ExampleProps): ExampleSelection {
 export function SelectionExample(props: ExampleProps): ReactElement {
   const selected = useExampleSelection(props);
 
-  return <List {...props} {...selected} renderItem={renderItem(props)} />;
+  return (
+    <Screen title="Items">
+      <List {...props} {...selected} renderItem={renderItem(props)} />
+    </Screen>
+  );
 }
 
 function appendAction(items: readonly string[], set: SetItems): ReactElement {
@@ -125,6 +130,25 @@ export function LogExample(props: ExampleProps): ReactElement {
   return (
     <Screen title="Log" actions={appendAction(items, setItems)}>
       <List {...props} items={items} renderItem={renderItem(props)} />
+    </Screen>
+  );
+}
+
+const logRows = (items: readonly string[]): ReactNode =>
+  items.map((item) => <ListItem key={item} id={item} title={item} />);
+
+export function SectionLogExample(): ReactElement {
+  const [items, setItems] = useState<readonly string[]>(
+    Array.from({ length: 120 }, (_, index) => `Item ${index + 1}`),
+  );
+
+  return (
+    <Screen title="Log" actions={appendAction(items, setItems)}>
+      <List anchor="end" accessibilityLabel="Log lines">
+        <List.Section key="logs" title="Log">
+          {logRows(items)}
+        </List.Section>
+      </List>
     </Screen>
   );
 }

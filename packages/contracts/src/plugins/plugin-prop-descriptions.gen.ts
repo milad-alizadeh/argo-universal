@@ -190,7 +190,7 @@ export type WireSchemaHints = {
     "footer": PropValue<"List.Section", "footer">;
   };
   "ListItem": {
-    /** The row identity within a choice section. */
+    /** The row identity within its List or choice section. */
     "id": PropValue<"ListItem", "id">;
     /** Footer on iOS and desktop; supporting text on Android. */
     "description": PropValue<"ListItem", "description">;

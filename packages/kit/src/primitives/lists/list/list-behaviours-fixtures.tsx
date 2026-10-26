@@ -13,7 +13,7 @@ export const pagedList = {
   renderItem: row,
   keyExtractor: (item: string): string => item,
   fit: false,
-  testID: 'paged-list',
+  accessibilityLabel: 'Paged items',
 } satisfies ListProps<string>;
 
 export const selectedList = {
@@ -32,5 +32,5 @@ export const logList = {
   anchor: 'end',
   items: Array.from({ length: 120 }, (_, index) => `Item ${index + 1}`),
   renderItem: (line: string): React.JSX.Element => <Text>{line}</Text>,
-  testID: 'log-list',
+  accessibilityLabel: 'Log lines',
 } satisfies ListProps<string>;

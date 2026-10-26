@@ -64,7 +64,7 @@ function listContents<Item>(
     depth: props.depth,
     keyboardDismissMode: props.keyboardDismissMode,
     keyboardShouldPersistTaps: props.keyboardShouldPersistTaps,
-    ListHeaderComponent: listContent(props.header),
+    ListHeaderComponent: listStart(props),
     ListFooterComponent: <ListEnd {...props} />,
   };
 }
@@ -144,3 +144,14 @@ const nativeEdges =
   Platform.OS === 'ios'
     ? ({ top: 'never', bottom: 'never' } as const)
     : undefined;
+
+function listStart<Item>(props: ListProps<Item>): ReactElement | undefined {
+  return props.startContent ? (
+    <>
+      {props.startContent}
+      {listContent(props.header)}
+    </>
+  ) : (
+    listContent(props.header)
+  );
+}

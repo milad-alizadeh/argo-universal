@@ -9,11 +9,13 @@ import {
 import { View } from 'react-native';
 import { useReducedMotionNow } from '#kit/use-reduced-motion-now';
 import { flattenedChildren } from '../../../flattened-children';
+import { itemIdentity } from './list-item-identity';
 import {
   JumpToLatestButton,
   useNewestKeyWhenLeftEnd,
 } from './list-jump-to-latest';
 import type { ListProps } from './list-props';
+import { ListSection } from './list-section';
 import { assignListRef } from './list-shelf-controls';
 
 type ListRef = RefObject<LegendListRef | null>;
@@ -57,7 +59,7 @@ function dataNewestKey<Item>(
 
   if (item === undefined) return '';
 
-  if (!props.keyExtractor) return String(index);
+  if (!props.keyExtractor) return itemIdentity(item);
 
   return props.keyExtractor(item, index);
 }
@@ -69,12 +71,24 @@ function newestKey<Item>(props: ListProps<Item>): string {
 }
 
 function childNewestKey(content: ReactNode): string {
-  const children = flattenedChildren(content);
-  const last = children.at(-1);
+  const last = flattenedChildren(content).at(-1);
 
-  if (isValidElement(last)) return String(last.key ?? children.length);
+  if (!isValidElement<{ children?: ReactNode; id?: string }>(last))
+    return itemIdentity(last);
 
-  return String(children.length);
+  if (last.type === ListSection) return childNewestKey(last.props.children);
+
+  return childIdentity(last);
+}
+
+function childIdentity(
+  last: React.ReactElement<{ id?: string; children?: ReactNode }>,
+): string {
+  if (last.props.id !== undefined) return last.props.id;
+
+  return last.key === null
+    ? itemIdentity(last.props.children)
+    : String(last.key);
 }
 
 function useAnchorRef(forwarded: ListProps<never>['ref']): AnchorRef {

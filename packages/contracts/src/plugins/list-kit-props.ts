@@ -104,7 +104,7 @@ export const listItemProps = z.object({
   id: z
     .string()
     .optional()
-    .describe('The row identity within a choice section.'),
+    .describe('The row identity within its List or choice section.'),
   description: z
     .string()
     .optional()

@@ -17,9 +17,14 @@ export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
 
   const options = { ...headerLayout, title: props.title, headerTitle };
 
-  return (
-    <Stack.Screen options={{ ...options, ...leading, headerShown: !wide }} />
-  );
+  const headerOptions = {
+    ...options,
+    ...leading,
+    ...selectionNavigation(props),
+    headerShown: !wide,
+  };
+
+  return <Stack.Screen options={headerOptions} />;
 }
 
 // The navigator draws the header outside the Screen's tree, so it draws the Actions the Screen declared.
@@ -31,3 +36,9 @@ const headerLayout = {
   headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1 },
   headerRightContainerStyle: { flexGrow: 0 },
 };
+
+function selectionNavigation(props: ScreenHeaderInput): object {
+  return props.contentHeader?.replacement
+    ? { headerBackVisible: false, headerLeft: () => null }
+    : {};
+}

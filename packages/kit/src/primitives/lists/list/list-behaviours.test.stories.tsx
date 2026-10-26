@@ -5,7 +5,11 @@ import { expect, waitFor } from 'storybook/test';
 import { ListItem } from '../list-item';
 import { List } from './list';
 import { logList, pagedList, searchedList } from './list-behaviours-fixtures';
-import { LogExample, PagedExample } from './list-behaviours.mocks';
+import {
+  LogExample,
+  PagedExample,
+  SectionLogExample,
+} from './list-behaviours.mocks';
 
 const loadingLabel = 'Loading more';
 
@@ -31,7 +35,12 @@ function Selectable(): React.JSX.Element {
       keyExtractor={(item) => item}
       selection={{ mode: 'multiple', selected, onChange }}
       renderItem={(item) => (
-        <ListItem id={item} title={item} onPress={() => {}} />
+        <ListItem
+          id={item}
+          title={item}
+          href="/selection-test"
+          onPress={() => {}}
+        />
       )}
     />
   );
@@ -58,7 +67,7 @@ export const ModifierSelection: Story = {
 export const LoadsAnotherPageAutomatically: Story = {
   render: () => <PagedExample {...pagedList} />,
   play: async ({ canvas }) => {
-    const scroll = await canvas.findByTestId('paged-list');
+    const scroll = await canvas.findByLabelText('Paged items');
     await waitFor(async () => {
       scroll.scrollTop = scroll.scrollHeight;
       scroll.dispatchEvent(new Event('scroll'));
@@ -120,7 +129,7 @@ function FixedSelection(): React.JSX.Element {
 export const JumpToLatestAfterScrollingAway: Story = {
   render: () => <LogExample {...logList} />,
   play: async ({ canvas, userEvent }) => {
-    const scroll = await canvas.findByTestId('log-list');
+    const scroll = await canvas.findByLabelText('Log lines');
     await waitFor(() => expect(canvas.getByText('Item 120')).toBeVisible());
     await waitFor(async () => {
       scroll.dispatchEvent(
@@ -151,7 +160,7 @@ export const JumpToLatestAfterScrollingAway: Story = {
 export const FailedPageShowsOneToast: Story = {
   render: () => <PagedExample {...pagedList} fail />,
   play: async ({ canvas }) => {
-    const scroll = await canvas.findByTestId('paged-list');
+    const scroll = await canvas.findByLabelText('Paged items');
     await waitFor(async () => {
       scroll.scrollTop = scroll.scrollHeight;
       scroll.dispatchEvent(new Event('scroll'));
@@ -161,4 +170,29 @@ export const FailedPageShowsOneToast: Story = {
     await expect(canvas.queryByRole('button', { name: 'Retry' })).toBeNull();
     await expect(canvas.queryByLabelText(loadingLabel)).toBeNull();
   },
+};
+
+export const DataSelectionSkipsDisabledRows: Story = {
+  ...SelectAllSkipsDisabledRows,
+  render: () => <FixedDataSelection />,
+};
+
+function FixedDataSelection(): React.JSX.Element {
+  const [selected, onChange] = useState<readonly string[]>([]);
+
+  return (
+    <List
+      items={['One', 'Two', 'Locked']}
+      keyExtractor={(item) => item}
+      selection={{ mode: 'multiple', selected, onChange }}
+      renderItem={(item) => (
+        <ListItem id={item} title={item} disabled={item === 'Locked'} />
+      )}
+    />
+  );
+}
+
+export const JumpAfterAppendingWithinSection: Story = {
+  ...JumpToLatestAfterScrollingAway,
+  render: () => <SectionLogExample />,
 };

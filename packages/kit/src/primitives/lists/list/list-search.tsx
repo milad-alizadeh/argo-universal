@@ -17,7 +17,6 @@ interface SearchedList<Item> {
   search: ReactElement | null;
 }
 
-// Keep the deadline during a burst and send its newest text. Unmount cancels it.
 function usePluginSearch(
   text: string,
   props: Pick<ListProps<never>, 'searchMode' | 'onSearchTextChange'>,

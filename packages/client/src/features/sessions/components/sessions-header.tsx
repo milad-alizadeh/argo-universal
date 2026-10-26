@@ -1,5 +1,7 @@
+import { ContentHeaderValue } from '@repo/kit/content-header';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { SearchField } from '@repo/kit/primitives/controls/search-field';
+import { use } from 'react';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { ListTitle } from '#lib/product/list-title';
@@ -37,7 +39,11 @@ function SessionsHeaderActions({
 }
 
 // The wide window's Sessions list header row (Paper "SessionsList"): the title, Search, the view menu, then New Session.
-export function SessionsHeader(props: SessionsHeaderProps): React.JSX.Element {
+export function SessionsHeader(props: SessionsHeaderProps): React.ReactNode {
+  const header = use(ContentHeaderValue);
+
+  if (header?.replacement) return header.replacement;
+
   return (
     <SearchField
       sidebar={Platform.OS === 'web'}

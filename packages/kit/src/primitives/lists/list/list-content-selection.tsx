@@ -1,11 +1,18 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { Platform, type GestureResponderEvent } from 'react-native';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import { Platform } from 'react-native';
 import type { ListProps } from './list-props';
 import { selectionIds } from './list-row-identity';
 import {
   SelectionRange,
   selectRow,
   type SelectionInput,
+  type RowPress,
 } from './list-selection-model';
 
 export interface ContentSelection {
@@ -14,11 +21,7 @@ export interface ContentSelection {
   editing: boolean;
   setEditing: (editing: boolean) => void;
   change: (ids: readonly string[]) => void;
-  press: (
-    id: string,
-    event?: GestureResponderEvent,
-    activate?: () => void,
-  ) => void;
+  press: (press: RowPress) => void;
   longPress: (id: string) => void;
   all: () => void;
   allSelected: boolean;
@@ -48,8 +51,7 @@ function selectionControls(
   edit: EditMode,
 ): Pick<ContentSelection, 'press' | 'longPress' | 'all' | 'coversSeparator'> {
   return {
-    press: (id, event, activate) =>
-      selectRow(input, range, { id, event, activate }),
+    press: (press) => selectRow(input, range, press),
     longPress: (id) => beginSelection(input, edit, id),
     all: () => input.change(input.ids),
     coversSeparator: (id) => selectedNeighbours(input, id),
@@ -89,7 +91,10 @@ export function useContentSelection<Item>(
   const [editing, setEditing] = useState(false);
   const [range] = useState(() => new SelectionRange());
 
-  return contentSelection(props, range, { editing, setEditing });
+  return useMemo(
+    () => contentSelection(props, range, { editing, setEditing }),
+    [props, range, editing],
+  );
 }
 
 export function useContentRowSelection(id?: string): ContentRowSelection {

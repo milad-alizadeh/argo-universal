@@ -51,7 +51,9 @@ function ScreenCaption({ caption }: Pick<ScreenProps, 'caption'>): ReactNode {
 
 type HeadingContent = { title: ReactNode; actions: ReactNode };
 
-export function HeadingRow(props: ScreenHeaderInput): ReactElement {
+export function HeadingRow(props: ScreenHeaderInput): ReactNode {
+  if (props.contentHeader?.replacement) return props.contentHeader.replacement;
+
   const content = {
     title: <ScreenTitle title={props.title} />,
     actions: <HeadingActions {...props} />,
@@ -86,12 +88,13 @@ function PlainHeading(props: HeadingContent): ReactElement {
 
 // The Screen's own Actions, split as one header with one overflow menu, then its primary Action.
 function HeadingActions(
-  props: Pick<ScreenHeaderInput, 'header'>,
+  props: Pick<ScreenHeaderInput, 'header' | 'contentHeader'>,
 ): ReactElement {
   const { groups, label, primary } = props.header;
 
   return (
     <>
+      {props.contentHeader?.trailing}
       <DeclaredActions groups={groups} label={label} />
       <DeclaredActions groups={primary} label={label} />
     </>

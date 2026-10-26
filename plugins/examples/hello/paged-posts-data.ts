@@ -85,6 +85,7 @@ export class RemotePosts {
 
   public async more(page: number, query: string): Promise<Post[] | undefined> {
     if (this.refreshing) return;
+
     return this.read(page, query);
   }
 

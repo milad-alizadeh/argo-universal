@@ -1,9 +1,11 @@
-import type { ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
+import { useContentHeader, type ContentHeader } from '#kit/content-header';
 import { HeaderActions, type ActionGroup } from '#primitives/actions/action';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import type { ContentSelection } from './list-content-selection';
+import { CloseSelection, SelectAll } from './list-selection-controls';
 
 interface ToolbarProps {
   selection: ContentSelection | null;
@@ -14,39 +16,6 @@ interface ToolbarProps {
 interface EditingToolbar {
   selection: ContentSelection;
   groups: ActionGroup[];
-}
-
-function close(selection: ContentSelection): void {
-  selection.change([]);
-  selection.setEditing(false);
-}
-
-function CloseSelection({ selection }: EditingToolbar): ReactElement | null {
-  if (Platform.OS === 'web') return null;
-
-  return (
-    <Button
-      label={Platform.OS === 'ios' ? 'Done' : 'Close selection'}
-      variant="text"
-      onPress={() => close(selection)}
-    />
-  );
-}
-
-function SelectAll({
-  selection,
-}: {
-  selection: ContentSelection;
-}): ReactElement {
-  const deselect = selection.allSelected;
-
-  return (
-    <Button
-      label={deselect ? 'Deselect All' : 'Select All'}
-      variant="text"
-      onPress={deselect ? () => selection.change([]) : selection.all}
-    />
-  );
 }
 
 function SelectionActions(props: EditingToolbar): ReactElement {
@@ -60,7 +29,7 @@ function SelectionActions(props: EditingToolbar): ReactElement {
 function SelectionTitle({ selection }: EditingToolbar): ReactElement {
   return (
     <View className="flex-1">
-      <Text role="heading" aria-level={2}>
+      <Text role="title" accessibilityRole="heading" aria-level={1}>
         {selectionTitle(selection)}
       </Text>
     </View>
@@ -68,11 +37,15 @@ function SelectionTitle({ selection }: EditingToolbar): ReactElement {
 }
 
 function EditingToolbar(props: EditingToolbar): ReactElement {
+  const ios = Platform.OS === 'ios';
+  const close = <CloseSelection {...props} />;
+  const actions = <SelectionActions {...props} />;
+
   return (
-    <View className="flex-row items-center gap-2 px-4 py-2">
-      <CloseSelection {...props} />
+    <View className="w-full flex-row items-center gap-2 px-4 py-2">
+      {ios ? actions : close}
       <SelectionTitle {...props} />
-      <SelectionActions {...props} />
+      {ios ? close : actions}
     </View>
   );
 }
@@ -128,9 +101,32 @@ export function SelectionToolbar(props: ToolbarProps): ReactElement | null {
   if (!props.selection) return null;
   const editing = { selection: props.selection, groups: props.groups };
 
-  if (!props.bottom) return topToolbar(editing);
+  return props.bottom ? (
+    bottomToolbar(editing)
+  ) : (
+    <SelectionHeader {...editing} />
+  );
+}
 
-  return bottomToolbar(editing);
+function SelectionHeader(props: EditingToolbar): ReactElement | null {
+  const { selection, groups } = props;
+
+  const header = useMemo(
+    () => contentHeader({ selection, groups }),
+    [selection, groups],
+  );
+
+  const hosted = useContentHeader(header);
+
+  return hosted ? null : topToolbar(props);
+}
+
+function contentHeader(props: EditingToolbar): ContentHeader | null {
+  if (showsEntry(props.selection))
+    return { trailing: <SelectionEntry {...props} /> };
+  const replacement = selectionTop(props);
+
+  return replacement ? { replacement } : null;
 }
 
 function selectionTitle(selection: ContentSelection): string {

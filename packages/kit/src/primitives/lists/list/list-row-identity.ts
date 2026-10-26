@@ -29,11 +29,46 @@ export function selectionId<Item>(
 export function selectionIds<Item>(props: ListProps<Item>): string[] {
   if (props.items === undefined) return childIds(props.children);
 
-  return props.items.flatMap((item, index) => {
-    const id = selectionId(props, item, index);
+  return props.items.flatMap((item, index) =>
+    dataRowIds({ props, item, index }),
+  );
+}
 
-    return id === undefined ? [] : [id];
-  });
+function dataRowIds<Item>({
+  props,
+  item,
+  index,
+}: {
+  props: ListProps<Item>;
+  item: Item;
+  index: number;
+}): string[] {
+  const row = renderRow(props, item, index);
+
+  if (disabledRow(row)) return [];
+  const id = rowIdentity(row, selectionId(props, item, index));
+
+  return id === undefined ? [] : [id];
+}
+
+function disabledRow(row: ReactNode): boolean {
+  return isValidElement<Row>(row) && row.props.disabled === true;
+}
+
+function renderedId(row: ReactNode): string | undefined {
+  return isValidElement<Row>(row) ? row.props.id : undefined;
+}
+
+function renderRow<Item>(
+  props: ListProps<Item>,
+  item: Item,
+  index: number,
+): ReactNode {
+  return props.renderItem?.(item, index);
+}
+
+function rowIdentity(row: ReactNode, fallback?: string): string | undefined {
+  return renderedId(row) ?? fallback;
 }
 
 function rowChildIds(props: Row): string[] {

@@ -198,15 +198,28 @@ export const ArchiveSeveralSelectedSessions: Story = {
     if (!first || !second) throw new Error('Expected two recorded Sessions');
     await userEvent.keyboard('{Meta>}');
     await userEvent.click(
-      await canvas.findByRole('button', { name: (name) => name.startsWith(first.title) }),
+      await canvas.findByRole('button', {
+        name: (name) => name.startsWith(first.title),
+      }),
     );
     await userEvent.click(
-      await canvas.findByRole('button', { name: (name) => name.startsWith(second.title) }),
+      await canvas.findByRole('button', {
+        name: (name) => name.startsWith(second.title),
+      }),
     );
     await userEvent.keyboard('{/Meta}');
-    await expect(await canvas.findByText('2 selected')).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Selection Actions' }));
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }));
+    await expect(
+      await canvas.findByRole('heading', { name: '2 selected' }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole('heading', { name: 'Sessions' }),
+    ).toBeNull();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Selection Actions' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: 'Archive' }),
+    );
     await expect(archiveSelected).toHaveBeenCalledWith([
       first.sessionId,
       second.sessionId,

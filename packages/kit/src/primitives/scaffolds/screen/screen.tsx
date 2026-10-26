@@ -1,5 +1,6 @@
-import { use, type ReactElement, type ReactNode } from 'react';
+import { use, useState, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
+import { ScreenContentHeader, type ContentHeader } from '#kit/content-header';
 import { HeadingInsetContext, useHeadingInsetScope } from '#kit/heading-inset';
 import { ScrollColumnContext } from '#kit/scroll-column';
 import { useWide } from '#kit/use-wide/use-wide';
@@ -11,7 +12,7 @@ import { useScreenColumn } from './screen-column';
 import { ScreenHeading } from './screen-heading';
 import { ScreenNavigation } from './screen-navigation';
 import { screenPrimaryAction } from './screen-primary-action';
-import type { ScreenProps } from './screen-props';
+import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
 import { useScreenHeader } from './use-screen-header';
 
@@ -37,19 +38,31 @@ function HeadingInsetScope(props: { children: ReactNode }): ReactElement {
   );
 }
 
-// The Screen declares its header from its props; its content adds none.
 function ScreenSurface(props: ScreenProps): ReactElement {
-  const header = useScreenHeader(props);
+  const [contentHeader, setContentHeader] = useState<ContentHeader | null>(
+    null,
+  );
 
-  // Web: the window paints the content colour, so the sidebar's shadow falls on it uncovered.
+  const drawing = selectionScreen(props, contentHeader);
+  const header = useScreenHeader(drawing);
+  const heading = { ...drawing, header, contentHeader };
+
+  return (
+    <ScreenContentHeader value={setContentHeader}>
+      <ScreenDrawing {...heading} />
+    </ScreenContentHeader>
+  );
+}
+
+function ScreenDrawing(props: ScreenHeaderInput): ReactElement {
   return (
     <View
       testID={props.testID}
       className="min-h-0 flex-1 bg-content wide:mt-frame-inset web:bg-transparent"
     >
-      <ShortcutAnchors header={header} />
-      <ScreenNavigation {...props} header={header} />
-      <ScreenHeading {...props} header={header} />
+      <ShortcutAnchors header={props.header} />
+      <ScreenNavigation {...props} />
+      <ScreenHeading {...props} />
       <ScreenBody {...props} />
       <ScreenAccessory {...props} />
     </View>
@@ -94,4 +107,18 @@ function hasFab(props: ScreenProps): boolean {
   const action = screenPrimaryAction(props);
 
   return Boolean(action && !action.disabled);
+}
+
+function selectionScreen(
+  props: ScreenProps,
+  header: ContentHeader | null,
+): ScreenProps {
+  return header?.replacement
+    ? {
+        ...props,
+        actions: undefined,
+        primaryAction: undefined,
+        caption: undefined,
+      }
+    : props;
 }

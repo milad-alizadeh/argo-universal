@@ -39,6 +39,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
   > & {
     header?: ReactNode;
     endContent?: ReactNode;
+    startContent?: ReactNode;
     paddingBottom?: SizeClassValue<SpacingStep>;
     accessibilityRole?: 'list' | 'radiogroup';
     accessibilityLabel?: string;

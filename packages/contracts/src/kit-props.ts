@@ -1,5 +1,5 @@
-import type { KitCallbackReturn } from './kit-callback-return';
 import type { z } from 'zod';
+import type { KitCallbackReturn } from './kit-callback-return';
 import type { WithPropHints } from './kit-prop-hints';
 import type { KitListItem, KitNode } from './plugins/list-expansion';
 import type { pluginPartSchemas } from './plugins/plugin-part-schemas';

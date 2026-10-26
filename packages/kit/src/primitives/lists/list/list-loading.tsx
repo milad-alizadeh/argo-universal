@@ -21,16 +21,20 @@ function LoadingPage(): ReactElement {
 function loadingContent<Item>(
   props: ListProps<Item>,
   loading: boolean,
-): Pick<ListProps<Item>, 'header' | 'endContent'> {
-  if (!loading) return { header: props.header, endContent: props.endContent };
+): Pick<ListProps<Item>, 'startContent' | 'endContent'> {
+  if (!loading)
+    return { startContent: props.startContent, endContent: props.endContent };
 
   return loadingAtEdge(props);
 }
 
 function loadingAtEdge<Item>(
   props: ListProps<Item>,
-): Pick<ListProps<Item>, 'header' | 'endContent'> {
-  return { header: loadingHeader(props), endContent: loadingFooter(props) };
+): Pick<ListProps<Item>, 'startContent' | 'endContent'> {
+  return {
+    startContent: loadingHeader(props),
+    endContent: loadingFooter(props),
+  };
 }
 
 function loadMore<Item>(props: ListProps<Item>, request: ListRequest): void {
@@ -84,7 +88,7 @@ export function useListLoading<Item>(props: ListProps<Item>): ListProps<Item> {
 
   return {
     ...props,
-    refreshControl,
+    refreshControl: refreshControl ?? props.refreshControl,
     ...loadingContent(props, page.loading),
     ...paginationEvents(props, page),
   };
@@ -110,9 +114,9 @@ function AfterSpinner({ children }: { children: ReactNode }): ReactElement {
 
 function loadingHeader<Item>(props: ListProps<Item>): ReactNode {
   return props.anchor === 'end' ? (
-    <BeforeSpinner>{props.header}</BeforeSpinner>
+    <BeforeSpinner>{props.startContent}</BeforeSpinner>
   ) : (
-    props.header
+    props.startContent
   );
 }
 
