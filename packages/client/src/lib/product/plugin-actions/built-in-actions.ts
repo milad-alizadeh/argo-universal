@@ -7,14 +7,6 @@ import { newSessionHref } from '../navigation/navigation';
 import { shareContent } from './share';
 import { mayRun } from './web-action';
 
-type External = Extract<Action, { action: 'openUrl' | 'copy' }>;
-
-async function runExternal(action: External): Promise<void> {
-  await (action.action === 'openUrl'
-    ? Linking.openURL(action.url)
-    : setStringAsync(action.text));
-}
-
 // A Plugin opens its own pages: `/plugins/<Plugin id>/<nav id>/<page>`.
 function pluginHref(path: string): Href | null {
   const [root, ...page] = path.split('/').filter(Boolean);
@@ -31,39 +23,38 @@ function openPage(path: string): void {
   else showToast({ title: 'That page is not available', tone: 'danger' });
 }
 
-const localActions = new Set(['toast', 'navigate', 'newSession']);
+type Actions = { [Each in Action as Each['action']]: Each };
 
-type LocalAction = Extract<
-  Action,
-  { action: 'toast' | 'navigate' | 'newSession' }
->;
+type Name = keyof Actions;
 
-type DeviceAction = Exclude<Action, LocalAction>;
+type Runners = {
+  [Each in Name]: (action: Actions[Each]) => Promise<void> | void;
+};
 
-const isLocal = (action: Action): action is LocalAction =>
-  localActions.has(action.action);
+// One runner per Action, so a new Action fails to compile until the App runs it.
+const runners: Runners = {
+  toast: ({ message }) => showToast({ title: message, tone: 'success' }),
+  navigate: ({ path }) => openPage(path),
+  newSession: ({ projectId, draft }) =>
+    router.navigate(newSessionHref(projectId, draft)),
+  openUrl: async ({ url }) => {
+    await Linking.openURL(url);
+  },
+  copy: async ({ text }) => {
+    await setStringAsync(text);
+  },
+  share: shareContent,
+  pop: () => router.back(),
+};
 
-function runLocal(action: LocalAction): void {
-  if (action.action === 'toast')
-    showToast({ title: action.message, tone: 'success' });
-  else if (action.action === 'navigate') openPage(action.path);
-  else router.navigate(newSessionHref(action.projectId, action.draft));
-}
-
-async function runDevice(action: DeviceAction): Promise<void> {
-  if (action.action === 'pop') return router.back();
-
-  await (action.action === 'share'
-    ? shareContent(action)
-    : runExternal(action));
-}
-
-async function dispatch(action: Action): Promise<void> {
-  if (isLocal(action)) runLocal(action);
-  else await runDevice(action);
+async function dispatch<Each extends Name>(
+  name: Each,
+  action: Actions[Each],
+): Promise<void> {
+  await runners[name](action);
 }
 
 // The built-in Actions run here, in the App, with no round trip to the Server.
 export async function runAction(action: Action): Promise<void> {
-  if (mayRun(action)) await dispatch(action);
+  if (mayRun(action)) await dispatch(action.action, action);
 }

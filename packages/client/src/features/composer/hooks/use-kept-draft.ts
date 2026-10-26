@@ -10,17 +10,24 @@ export function useKeptDraft(
   seed?: string,
 ): void {
   useEffect(() => {
-    if (!key) return;
-    dispatch({ type: 'ownerChanged', key });
-
-    if (seed !== undefined) {
-      dispatch({ type: 'restored', key, text: seed });
-
-      return;
-    }
-
-    void keptDrafts.load(key).then((text) => {
-      dispatch({ type: 'restored', key, text });
-    });
+    if (key) restoreDraft(key, dispatch, seed);
   }, [key, dispatch, seed]);
+}
+
+function restoreDraft(
+  key: DraftKey,
+  dispatch: Dispatch<AttachmentDraftEvent>,
+  seed: string | undefined,
+): void {
+  dispatch({ type: 'ownerChanged', key });
+
+  if (seed !== undefined) {
+    dispatch({ type: 'restored', key, text: seed });
+
+    return;
+  }
+
+  void keptDrafts.load(key).then((text) => {
+    dispatch({ type: 'restored', key, text });
+  });
 }

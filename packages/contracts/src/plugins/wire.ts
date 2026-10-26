@@ -71,7 +71,7 @@ export const Action = z.discriminatedUnion('action', [
   z.strictObject({
     action: z.literal('newSession'),
     projectId: z.string().min(1),
-    draft: z.string(),
+    draft: z.string().min(1),
   }),
 ]);
 

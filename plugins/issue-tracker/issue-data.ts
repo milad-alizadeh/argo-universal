@@ -1,6 +1,7 @@
 import type { Argo } from '@argo/plugin-kit';
-import type { Issue, IssueStatus } from './github-issues';
-import { githubError, type TrackerClient } from './github-tracker';
+import { githubError } from './github-errors';
+import type { Issue } from './github-issues';
+import type { TrackerClient } from './github-tracker';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 
@@ -72,7 +73,7 @@ async function projectClient(
   return unavailableClient(input, trackerId);
 }
 
-function clientFor({
+export function clientFor({
   projects,
   projectId,
   trackerId,
@@ -118,7 +119,7 @@ function unavailableClient(
   return null;
 }
 
-function unavailableMessage(trackerId: string | null): string {
+export function unavailableMessage(trackerId: string | null): string {
   return trackerId === null ? chooseTrackerMessage : noRemoteMessage;
 }
 
@@ -163,51 +164,4 @@ async function refreshIssues(input: RefreshInput): Promise<void> {
 
 function report(view: ProjectView, message: string): void {
   if (view.active()) view.setMessage(message);
-}
-
-export type IssueRequest = {
-  project: Project;
-  issue: Issue;
-  storage: TrackerStorage;
-  trackers: TrackerRegistry;
-};
-
-export async function loadIssue(request: IssueRequest): Promise<Issue> {
-  const client = await issueClient(request);
-
-  return client.getIssue(request.issue.number);
-}
-
-// Sets the Issue's status in its Tracker, then in the cached list.
-export async function setIssueStatus(
-  request: IssueRequest,
-  status: IssueStatus,
-): Promise<void> {
-  const { project, issue, storage } = request;
-  const client = await issueClient(request);
-
-  await client.setStatus(issue.number, status);
-  // The background refresh rewrites the cache, so a failed write only delays it.
-  await storage
-    .updateCache(project.id, { ...issue, status })
-    .catch(() => undefined);
-}
-
-async function issueClient({
-  project,
-  storage,
-  trackers,
-}: Omit<IssueRequest, 'issue'>): Promise<TrackerClient> {
-  const trackerId = await storage.selectedTracker(project.id);
-
-  const client = clientFor({
-    projects: [project],
-    projectId: project.id,
-    trackerId,
-    trackers,
-  });
-
-  if (client) return client;
-
-  throw new Error(unavailableMessage(trackerId));
 }

@@ -1,25 +1,41 @@
 import { Action, Detail, Metadata, Pill, Screen } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Issue } from './github-issues';
+import type { Issue, IssueStatus } from './github-issues';
 import type { PageProps } from './use-issues';
 
 type IssueDetailProps = PageProps & { issue: Issue };
 
-const closed = 'closed';
+type StatusView = {
+  text: string;
+  tone: string;
+  change: { label: string; icon: string; to: IssueStatus };
+};
+
+// How each status reads, and the press that moves the Issue to the other one.
+const statuses = {
+  open: {
+    text: 'Open',
+    tone: 'success',
+    change: { label: 'Close Issue', icon: 'check', to: 'closed' },
+  },
+  closed: {
+    text: 'Closed',
+    tone: 'done',
+    change: { label: 'Reopen Issue', icon: 'issue-open', to: 'open' },
+  },
+} as const satisfies Record<IssueStatus, StatusView>;
 
 export function IssueDetail(props: IssueDetailProps): JSX.Element {
-  const { issue } = props;
-
   return (
     <Screen
-      title={issue.title}
-      caption={`#${issue.number}`}
+      title={props.issue.title}
+      caption={`#${props.issue.number}`}
       primaryAction={<StartSessionAction {...props} />}
       actions={<IssueActions {...props} />}
     >
       <Detail
-        markdown={issue.body || 'No description.'}
-        metadata={<IssueMetadata issue={issue} />}
+        markdown={props.issue.body || 'No description.'}
+        metadata={<IssueMetadata issue={props.issue} />}
       />
     </Screen>
   );
@@ -66,18 +82,9 @@ function StartSessionAction({
 type StatusActionProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
 
 function StatusAction({ issue, onStatus }: StatusActionProps): JSX.Element {
-  if (issue.status === closed)
-    return (
-      <Action
-        label="Reopen Issue"
-        icon="issue-open"
-        onPress={() => onStatus('open')}
-      />
-    );
+  const { label, icon, to } = statuses[issue.status].change;
 
-  return (
-    <Action label="Close Issue" icon="check" onPress={() => onStatus(closed)} />
-  );
+  return <Action label={label} icon={icon} onPress={() => onStatus(to)} />;
 }
 
 function BackAction({ onBack }: { onBack: () => void }): JSX.Element {
@@ -99,8 +106,8 @@ function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
     <Metadata>
       <Metadata.StatusDot
         title="Status"
-        text={issue.status === closed ? 'Closed' : 'Open'}
-        tone={issue.status === closed ? 'done' : 'success'}
+        text={statuses[issue.status].text}
+        tone={statuses[issue.status].tone}
       />
       <IssueLabels labels={issue.labels} />
       <Assignees assignees={issue.assignees} />

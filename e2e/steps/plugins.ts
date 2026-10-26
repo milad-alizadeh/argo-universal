@@ -175,10 +175,7 @@ Then(
   },
 );
 
-Then(
-  'New Session opens with this draft:',
-  async ({ page }, draft: string): Promise<void> => {
-    await expect(page).toHaveURL(/\/sessions\/new\?/);
-    await expectMessage(page, draft);
-  },
-);
+Then('New Session opens with this draft:', async ({ page }, draft: string) => {
+  await expect(page).toHaveURL(/\/sessions\/new\?/);
+  await expectMessage(page, draft);
+});

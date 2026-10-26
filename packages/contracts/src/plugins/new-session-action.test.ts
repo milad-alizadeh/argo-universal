@@ -15,3 +15,13 @@ it('refuses New Session without a Project', () => {
     Action.safeParse({ action: 'newSession', projectId: '', draft }).success,
   ).toBe(false);
 });
+
+it('refuses New Session with an empty draft', () => {
+  expect(
+    Action.safeParse({
+      action: 'newSession',
+      projectId: 'project-1',
+      draft: '',
+    }).success,
+  ).toBe(false);
+});

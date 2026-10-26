@@ -27,6 +27,8 @@ type PageView = Awaited<ReturnType<PluginTest['mount']>>;
 
 const wait = { timeout: 10_000 };
 
+const closeIssue = 'Close Issue';
+
 // A check marks the chosen row; its press is held until the stored choice arrives.
 const chosen = (view: SlotView): boolean =>
   view.findText(trackerName)?.node.props.selected === true;
@@ -114,11 +116,21 @@ async function openIssue(title: string): Promise<PageView> {
   return page;
 }
 
+const isStatus = (node: WireNode): boolean =>
+  node.type === 'Metadata.StatusDot';
+
 // The Status the open Issue's Properties show.
-const shownStatus = (tree: WireNode | null): unknown =>
-  tree &&
-  findWireNodeEntry(tree, (node) => node.type === 'Metadata.StatusDot')?.node
-    .props.text;
+function shownStatus(tree: WireNode | null): string {
+  const entry = tree && findWireNodeEntry(tree, isStatus);
+
+  return entry ? textOf(entry.node) : '';
+}
+
+function textOf(node: WireNode): string {
+  const { text } = node.props;
+
+  return typeof text === 'string' ? text : '';
+}
 
 // Whether the list's Closed section holds the Issue.
 const listedClosed = (page: PageView, title: string): boolean => {
@@ -132,7 +144,7 @@ const listedClosed = (page: PageView, title: string): boolean => {
 it('closes and reopens an Issue at once', async () => {
   const page = await openIssue(issueTitle);
 
-  await page.press('Close Issue');
+  await page.press(closeIssue);
   await expect.poll(() => shownStatus(page.tree), wait).toBe('Closed');
   expect(listedClosed(page, issueTitle)).toBe(true);
 
@@ -146,13 +158,13 @@ it('rolls a status change gh refuses back and fails the press with its error', a
   const before = page.trees.length;
 
   // The App shows a failed press as an error toast.
-  await expect(page.press('Close Issue')).rejects.toThrow(
+  await expect(page.press(closeIssue)).rejects.toThrow(
     'GraphQL: Could not close the issue.',
   );
   await expect.poll(() => shownStatus(page.tree), wait).toBe('Open');
   expect(page.trees.slice(before).map(shownStatus)).toContain('Closed');
   expect(listedClosed(page, refusedTitle)).toBe(false);
-  expect(page.findText('Close Issue')).toBeDefined();
+  expect(page.findText(closeIssue)).toBeDefined();
 }, 20_000);
 
 it("starts a Session with the Issue's reference, title and link in the Composer", async () => {

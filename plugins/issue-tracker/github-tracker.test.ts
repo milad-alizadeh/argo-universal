@@ -1,9 +1,9 @@
 import type { Argo, ProcessResult } from '@argo/plugin-kit';
 import { expect, it } from 'vitest';
+import { githubError } from './github-errors';
 import type { GitHubIssue, Issue } from './github-issues';
 import {
   createGitHubTracker,
-  githubError,
   githubRepositoryFromOrigin,
   type TrackerClient,
 } from './github-tracker';

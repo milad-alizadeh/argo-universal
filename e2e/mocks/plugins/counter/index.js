@@ -1,7 +1,7 @@
 import { Button, Stack, Text, useEffect, useState } from '@argo/plugin-kit';
 import { Item } from './item.js';
 
-const sessionDraft = '#7 Fixture Issue\nhttps://example.com/fixture/7';
+const sessionDraft = '#7 Keep %2F in paths\nhttps://example.com/fixture/7';
 
 // Opens New Session in the first Project with a draft in the Composer.
 function StartSession({ argo }) {
@@ -36,10 +36,18 @@ function Counter({ argo }) {
       <Text>Counter fixture</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <Button label="Tap me" onPress={() => setTaps(taps + 1)} />
-      <Button label="Open details" onPress={() => setView('details')} />
-      <Button label="Open item" onPress={() => setView('item')} />
+      <Views setView={setView} />
       <StartSession argo={argo} />
     </Stack>
+  );
+}
+
+function Views({ setView }) {
+  return (
+    <>
+      <Button label="Open details" onPress={() => setView('details')} />
+      <Button label="Open item" onPress={() => setView('item')} />
+    </>
   );
 }
 

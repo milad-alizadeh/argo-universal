@@ -37,7 +37,7 @@ Feature: Plugin navigation
     And I press "Start Session" on the Plugin page
     Then New Session opens with this draft:
       """
-      #7 Fixture Issue
+      #7 Keep %2F in paths
       https://example.com/fixture/7
       """
     When I reload the App and open New Session
