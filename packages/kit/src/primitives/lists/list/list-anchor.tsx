@@ -82,7 +82,8 @@ function newestKey<Item>(props: ListProps<Item>): string {
   return childNewestKey(props.children);
 }
 
-const textKey = (content: ReactNode): string => String(content ?? '');
+const textKey = (content: ReactNode): string =>
+  typeof content === 'object' ? '' : String(content);
 
 function childNewestKey(content: ReactNode): string {
   const last = flattenedChildren(content).at(-1);

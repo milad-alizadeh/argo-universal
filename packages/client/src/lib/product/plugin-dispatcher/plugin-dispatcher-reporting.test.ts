@@ -54,7 +54,7 @@ it('leaves a failed awaited event to the part that awaits it', async () => {
 it('reports a failed delivery once for every edit it coalesced', async () => {
   const { events, report } = dispatcher(true);
 
-  const edits = ['a', 'ar', 'arg'].map((text) =>
+  const edits = ['a', 'ar', 'arg'].map(async (text) =>
     events.send('search', typed(text)),
   );
 
