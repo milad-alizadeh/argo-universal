@@ -97,14 +97,26 @@ object ComposeSemantics {
   private fun control(node: SemanticsNode, density: Float): SkeletonPlaceholder? {
     val config = node.config
     val role = if (config.contains(SemanticsProperties.Role)) config[SemanticsProperties.Role] else null
+    if (role == Role.Button && fitsButton(node, density)) return capsule(node)
     val round = role == Role.Switch || role == Role.RadioButton ||
       config.contains(SemanticsProperties.ProgressBarRangeInfo)
     val small = role == Role.Checkbox || role == Role.Image ||
       (config.contains(SemanticsProperties.ContentDescription) && node.children.isEmpty())
     if (!round && !small) return null
+    return capsule(node)
+  }
+
+  // A Material button is taller than a small control (48dp against 40) and is still one capsule, whatever it holds.
+  private fun fitsButton(node: SemanticsNode, density: Float): Boolean {
+    val bounds = node.boundsInRoot
+    return bounds.height <= BUTTON_MAX_HEIGHT * density && bounds.width <= SkeletonRules.SMALL_CONTROL_WIDTH * density
+  }
+
+  private fun capsule(node: SemanticsNode): SkeletonPlaceholder {
     val bounds = node.boundsInRoot
     val rect = RectF(bounds.left, bounds.top, bounds.right, bounds.bottom)
-    val radius = minOf(rect.width(), rect.height()) / 2
-    return SkeletonPlaceholder(rect, radius)
+    return SkeletonPlaceholder(rect, minOf(rect.width(), rect.height()) / 2)
   }
+
+  private const val BUTTON_MAX_HEIGHT = 56f
 }

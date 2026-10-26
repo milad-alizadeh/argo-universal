@@ -40,7 +40,30 @@ class ViewWalk(private val root: ViewGroup) {
 
   fun collect(): Collected {
     for (index in 0 until root.childCount) walk(root.getChildAt(index))
-    return Collected(leaves, compose, ignored)
+    return Collected(withoutCoveredBars(leaves), compose, ignored)
+  }
+
+  /*
+   * A control's own placeholder stands for what is inside it. React Native can lay a pill's text out beside its fill
+   * rather than inside it, so the text's bar would draw over the pill's capsule as a darker mark: a leaf whose
+   * placeholders all lie inside a larger leaf's single placeholder keeps its view hidden and draws none.
+   */
+  private fun withoutCoveredBars(found: List<SkeletonLeaf>): List<SkeletonLeaf> {
+    val controls = found.mapNotNull { it.placeholders.singleOrNull()?.rect }
+    return found.map { leaf ->
+      val inside = leaf.placeholders.isNotEmpty() && leaf.placeholders.all { bar ->
+        controls.any { control -> contains(control, bar.rect) && area(control) > area(bar.rect) }
+      }
+      if (inside) SkeletonLeaf(leaf.view, emptyList()) else leaf
+    }
+  }
+
+  private fun area(rect: RectF): Float = rect.width() * rect.height()
+
+  private fun contains(outer: RectF, inner: RectF): Boolean {
+    val slack = SkeletonRules.ROUND_SLACK * density
+    return inner.left >= outer.left - slack && inner.right <= outer.right + slack &&
+      inner.top >= outer.top - slack && inner.bottom <= outer.bottom + slack
   }
 
   private fun walk(view: View) {
@@ -66,7 +89,19 @@ class ViewWalk(private val root: ViewGroup) {
     val view = rootForTest.view
     val origin = rectInRoot(view)
     val read = ComposeSemantics.read(rootForTest, density)
+    val whole = read.singleOrNull()?.takeIf { fillsRoot(it, view) }
+    if (whole != null) {
+      // A Compose tree that is one control (a Button) is drawn by its own fill: hide the tree itself, not pixels in it.
+      leaves += SkeletonLeaf(view, listOf(whole.translated(origin.left, origin.top)))
+      return
+    }
     compose += ComposeContent(rootForTest, read.ifEmpty { glyphOnly(view) }, origin)
+  }
+
+  private fun fillsRoot(placeholder: SkeletonPlaceholder, view: View): Boolean {
+    val slack = SkeletonRules.SAME_SIZE_TOLERANCE * density
+    return kotlin.math.abs(placeholder.rect.width() - view.width) <= slack &&
+      kotlin.math.abs(placeholder.rect.height() - view.height) <= slack
   }
 
   // A small Compose tree with no semantics at all is a glyph (an icon draws none): one placeholder of its own size.
