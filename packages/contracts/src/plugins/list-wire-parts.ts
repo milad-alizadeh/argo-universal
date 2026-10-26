@@ -14,6 +14,8 @@ import { listMediaParts } from './list-media-parts';
 import { echoes } from './plugin-part-props';
 import { actionSlot, part } from './plugin-part-schema-utils';
 
+const searchThrottleMs = 250;
+
 export const listWireParts = {
   List: {
     ...part(
@@ -34,7 +36,9 @@ export const listWireParts = {
             .array(z.string())
             .readonly()
             .meta({ within: 'selection', value: 'selected', blocks: false }),
-          onSearchTextChange: z.string().meta({ blocks: false }),
+          onSearchTextChange: z
+            .string()
+            .meta({ blocks: false, throttleMs: searchThrottleMs }),
         },
       },
     ),

@@ -8,6 +8,7 @@ export interface ListRequest {
   run: (load: ListLoad) => Promise<void>;
 }
 
+// The List is the one reporter of a rejected load: an awaited Plugin event does not toast on its own.
 async function loadOrReport(
   load: ListLoad,
   failure: ErrorToast,
