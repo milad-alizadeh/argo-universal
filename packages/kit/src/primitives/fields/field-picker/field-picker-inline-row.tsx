@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn } from '#kit/utils';
 import { NativeText } from '#primitives/content/native-text';
-import { RowTitle } from '#primitives/fields/field-row';
 import { SelectedCheck } from '#primitives/status/selected-check';
 import { Spinner } from '#primitives/status/spinner';
 import { moveThroughRadios } from './field-picker-inline-keys';
@@ -11,6 +10,7 @@ import {
   optionChoice,
   type OptionRowProps,
 } from './field-picker-kind';
+import { OptionTitle } from './field-picker-option-title';
 
 /*
  * One option as a row of its own: the title (and icon or logo), the subtitle under it, and the check at the end once
@@ -77,12 +77,7 @@ const focusProps = (
 function Text({ option }: OptionRowProps): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
-      <RowTitle
-        title={option.label}
-        leading={option.icon}
-        logo={option.logo}
-        tone={option.tone}
-      />
+      <OptionTitle option={option} />
       <Subtitle text={option.subtitle} tone={option.subtitleTone} />
     </View>
   );

@@ -14,7 +14,6 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText, useTextColor } from '#primitives/content/native-text';
-import { RowTitle } from '#primitives/fields/field-row';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import {
   isOptionOff,
@@ -22,6 +21,7 @@ import {
   type OptionRowProps,
 } from './field-picker-kind';
 import type { FieldPickerOption } from './field-picker-model';
+import { OptionTitle } from './field-picker-option-title';
 import { wholeRowPress } from './field-picker-screen-row.ios';
 
 // A subtitle as a stock row draws it: the secondary shade, one text style down, or the warning colour it asks for.
@@ -38,12 +38,7 @@ function OptionLabel(props: { option: FieldPickerOption }): ReactElement {
 
   return (
     <>
-      <RowTitle
-        title={option.label}
-        leading={option.icon}
-        logo={option.logo}
-        tone={option.tone}
-      />
+      <OptionTitle option={option} />
       <Subtitle text={option.subtitle} tone={option.subtitleTone} />
     </>
   );
