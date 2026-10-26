@@ -29,12 +29,13 @@ export const listWireParts = {
     expansion: listExpansion,
   },
   'List.Section': part(
-    'A titled List section with optional subtitle and footer.',
+    'A titled List section with optional subtitle, footer and header Actions.',
     listSectionProps,
     {
       group: 'lists',
       children: true,
       slots: {
+        actions: actionSlot,
         leading: ['Text', 'Label'],
         trailing: ['Text', 'Label', 'Pill'],
       },

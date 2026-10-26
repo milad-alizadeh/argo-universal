@@ -4,14 +4,16 @@ import { expect, waitFor, within } from 'storybook/test';
 import { sessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
 import {
   exampleProjectName,
+  newSessionLabel,
   onNewSession,
   onProjectSettings,
+  projectSettingsLabel,
   type Story,
 } from './sessions-list-story-context.test.mocks';
 
 const body = within(document.body);
 
-// A phone's heading draws no ⋯ or +: a long press opens New Session and Project settings, titled with the Project. The web's long touch, like a right-click, opens the context menu.
+// A phone's heading draws no buttons: a long press opens New Session and Project settings, titled with the Project. The web's long touch, like a right-click, opens the context menu.
 export const phoneProjectMenu: Story = {
   beforeEach: () => settleViewport(layoutWidths.phone),
   play: async ({ canvas, userEvent }) => {
@@ -20,17 +22,19 @@ export const phoneProjectMenu: Story = {
     });
 
     await expect(
-      canvas.queryByRole('button', { name: /^Project settings for / }),
+      canvas.queryByRole('button', { name: projectSettingsLabel }),
     ).toBeNull();
     await expect(
-      canvas.queryByRole('button', { name: /^New Session in / }),
+      canvas.queryByRole('button', { name: newSessionLabel }),
     ).toBeNull();
     await userEvent.pointer({ keys: '[MouseRight]', target: heading });
     const menu = within(await body.findByRole('menu'));
     const [first, second] = menu.getAllByRole('menuitem');
-    await expect(first).toHaveAccessibleName('New Session');
-    await expect(second).toHaveAccessibleName('Project settings');
-    await userEvent.click(menu.getByRole('menuitem', { name: 'New Session' }));
+    await expect(first).toHaveAccessibleName(newSessionLabel);
+    await expect(second).toHaveAccessibleName(projectSettingsLabel);
+    await userEvent.click(
+      menu.getByRole('menuitem', { name: newSessionLabel }),
+    );
     await expect(onNewSession).toHaveBeenCalledWith(
       sessionsListProps.projects[0]?.id,
     );
@@ -38,7 +42,7 @@ export const phoneProjectMenu: Story = {
     await userEvent.pointer({ keys: '[MouseRight]', target: heading });
     await userEvent.click(
       within(await body.findByRole('menu')).getByRole('menuitem', {
-        name: 'Project settings',
+        name: projectSettingsLabel,
       }),
     );
     await expect(onProjectSettings).toHaveBeenCalledWith(exampleProjectName);

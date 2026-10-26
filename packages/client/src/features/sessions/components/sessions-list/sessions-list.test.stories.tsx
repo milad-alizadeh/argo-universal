@@ -1,7 +1,7 @@
 import { layoutWidths } from '@repo/kit/each-layout';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import { View } from 'react-native';
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
@@ -14,8 +14,10 @@ import { phoneProjectMenu } from '../../../../../mocks/sessions-list/phone-proje
 import {
   exampleProjectName,
   meta as sessionsListMeta,
+  newSessionLabel,
   onNewSession,
   onProjectSettings,
+  projectSettingsLabel,
   sessionsScrollId,
   type Story,
 } from '../../../../../mocks/sessions-list/sessions-list-story-context.test.mocks';
@@ -33,7 +35,7 @@ export const MemoizedRows: Story = {
   name: 'Controlled selection and activity',
 };
 
-// A wide window's heading keeps ⋯ and +, shown on hover or focus.
+// A wide window's heading draws its Actions as buttons, always shown in the sidebar.
 export const ProjectActions: Story = {
   beforeEach: () => settleViewport(layoutWidths.wide),
   play: async ({ canvas, userEvent }) => {
@@ -42,21 +44,22 @@ export const ProjectActions: Story = {
     });
 
     await waitFor(() => expect(heading).toBeVisible());
-    // The test browser has no real pointer, so keyboard focus stands in for hover: each button shows itself when focused.
-    await userEvent.keyboard('{Shift}');
 
-    const settings = canvas.getByRole('button', {
-      name: 'Project settings for Example Project',
+    // Every Project heading has its own buttons; these are Example Project's, beside its name.
+    const row = heading.parentElement;
+
+    if (!row) throw new Error('The heading has no header row');
+
+    const actions = within(row);
+
+    const settings = actions.getByRole('button', {
+      name: projectSettingsLabel,
     });
 
-    const newSession = canvas.getByRole('button', {
-      name: 'New Session in Example Project',
-    });
+    const newSession = actions.getByRole('button', { name: newSessionLabel });
 
-    settings.focus();
-    await waitFor(() => expect(settings).toBeVisible());
-    newSession.focus();
-    await waitFor(() => expect(newSession).toBeVisible());
+    await expect(settings).toBeVisible();
+    await expect(newSession).toBeVisible();
     await userEvent.click(settings);
     await expect(onProjectSettings).toHaveBeenCalledWith(exampleProjectName);
     await userEvent.click(newSession);
@@ -89,7 +92,7 @@ export const FlatSearchResults: Story = {
       canvas.queryByRole('button', { name: exampleProjectName }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas.queryByRole('button', { name: /^New Session in / }),
+      canvas.queryByRole('button', { name: newSessionLabel }),
     ).not.toBeInTheDocument();
     await expect(
       canvas.getAllByText(/^(now|\d+[mhdw])$/).length,

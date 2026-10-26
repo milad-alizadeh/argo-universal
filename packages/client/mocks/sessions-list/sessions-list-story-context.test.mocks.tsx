@@ -7,6 +7,11 @@ import { sessionsListProps } from '../../src/features/sessions/components/sessio
 
 export const exampleProjectName = 'Example Project';
 
+// A Project heading's Actions, as ProjectHeading declares them.
+export const newSessionLabel = 'New Session';
+
+export const projectSettingsLabel = 'Project settings';
+
 export const sessionsScrollId = 'sessions-scroll';
 
 export const onNewSession = fn();

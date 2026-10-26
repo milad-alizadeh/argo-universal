@@ -12,7 +12,6 @@ const meta = {
   argTypes: {
     name: { control: 'text' },
     collapsed: { control: 'boolean' },
-    addLabel: { control: 'text' },
     onToggle: { control: false },
     onAdd: { control: false },
     onProjectSettings: { control: false },
@@ -46,7 +45,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// An open folder over the Project's Sessions; a wide window draws + and ⋯ beside the name.
+// An open folder over the Project's Sessions; a wide window draws New Session and Project settings beside the name.
 export const Expanded: Story = { args: expandedProject };
 
 // Closed: the folder shuts and the Project's Sessions are hidden.
