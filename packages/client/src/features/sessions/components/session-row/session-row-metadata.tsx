@@ -1,9 +1,10 @@
-import type { SessionRowItem } from '@repo/contracts/plugins/wire';
+import type { SessionRowItem as Item } from '@repo/contracts/plugins/wire';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ChangeStage } from '../change-stage/change-stage';
+import { SessionRowItem } from './session-row-item';
 import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
 import { sidebarRows } from './session-row-sidebar';
@@ -35,19 +36,15 @@ function ageContent({ age }: SessionRowMetadataProps): React.ReactNode {
   );
 }
 
-// Each Plugin item as Argo draws it: its text in its tone. Two Plugins may send the same text, so each repeat is counted into its key.
+// Two Plugins may send the same text, so each repeat is counted into its key.
 const pluginItems = ({
   items = [],
 }: SessionRowMetadataProps): React.ReactNode =>
   withKeys(items).map(({ key, item }) => (
-    <Text key={key} role="secondary" tone={item.tone ?? 'muted'}>
-      {item.text}
-    </Text>
+    <SessionRowItem key={key} item={item} />
   ));
 
-function withKeys(
-  items: readonly SessionRowItem[],
-): { key: string; item: SessionRowItem }[] {
+function withKeys(items: readonly Item[]): { key: string; item: Item }[] {
   const seen = new Map<string, number>();
 
   return items.map((item) => {

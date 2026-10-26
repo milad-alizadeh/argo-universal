@@ -12,10 +12,8 @@ import {
 import type * as React from 'react';
 import { use } from 'react';
 import { type StyleProp, View, type ViewStyle } from 'react-native';
-import { SettingsLoading } from '../../settings-loading';
-import type { SlotPluginsLoad } from './slot-plugins';
-import { SlotPreview } from './slot-preview';
-import type { OwnerSlot, SlotSettings } from './slot-settings';
+import { SettingsLoading } from '../../../settings-loading';
+import type { OwnerSlot, SlotDetail } from './slot-detail';
 import {
   effectiveOwner,
   fillingPlugins,
@@ -25,10 +23,12 @@ import {
   type SlotOwner,
   type SlotPlugin,
   visibilityOf,
-} from './slot-settings-model';
+} from './slot-detail-model';
+import type { SlotPluginsLoad } from './slot-plugins';
+import { SlotPreview } from './slot-preview';
 
-export interface SlotSettingsViewProps {
-  settings: SlotSettings;
+export interface SlotDetailViewProps {
+  settings: SlotDetail;
   caption?: string;
   plugins: SlotPluginsLoad;
   // The Plugin that writes the Slot's Single-owner Slot, or null while it is Argo's.
@@ -47,9 +47,7 @@ const loadFailed: ErrorToast = {
  * Any Slot's page, drawn from its declaration: which Plugins fill it, and who writes its Single-owner Slot. The
  * preview is the Slot's own component, pinned above the rows that change it, and redraws as each one changes.
  */
-export function SlotSettingsView(
-  props: SlotSettingsViewProps,
-): React.JSX.Element {
+export function SlotDetailView(props: SlotDetailViewProps): React.JSX.Element {
   useErrorToast(props.plugins.status === 'error' ? loadFailed : undefined);
 
   return (
@@ -63,14 +61,14 @@ export function SlotSettingsView(
   );
 }
 
-function Body(props: SlotSettingsViewProps): React.JSX.Element {
+function Body(props: SlotDetailViewProps): React.JSX.Element {
   if (props.plugins.status !== 'loaded')
     return <SettingsLoading label="Loading Plugins…" />;
 
   return <Loaded {...props} plugins={props.plugins.plugins} />;
 }
 
-type LoadedProps = Omit<SlotSettingsViewProps, 'plugins'> & {
+type LoadedProps = Omit<SlotDetailViewProps, 'plugins'> & {
   plugins: SlotPlugin[];
 };
 

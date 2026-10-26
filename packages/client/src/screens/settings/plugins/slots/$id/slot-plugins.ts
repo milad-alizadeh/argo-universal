@@ -1,8 +1,8 @@
 import { slotVisibility, useSlotChoices } from '#features/settings';
-import { usePluginEntries } from '../use-plugins';
+import { usePluginEntries } from '../../use-plugins';
+import type { SlotDetail } from './slot-detail';
+import type { SlotPlugin } from './slot-detail-model';
 import { toSlotPlugins } from './slot-plugin-list';
-import type { SlotSettings } from './slot-settings';
-import type { SlotPlugin } from './slot-settings-model';
 
 export type SlotPluginsLoad =
   | { status: 'loading' }
@@ -10,7 +10,7 @@ export type SlotPluginsLoad =
   | { status: 'loaded'; plugins: SlotPlugin[] };
 
 // The Server's Plugins that fill the Slot, each with this Device's switch, once the Server has answered.
-export function useSlotPlugins(settings: SlotSettings): SlotPluginsLoad {
+export function useSlotPlugins(settings: SlotDetail): SlotPluginsLoad {
   const { plugins, isError } = usePluginEntries();
   const choices = useSlotChoices(settings.slotId);
 

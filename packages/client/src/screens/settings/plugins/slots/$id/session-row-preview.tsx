@@ -20,7 +20,7 @@ import {
   type SlotVisibility,
   visibleItems,
 } from '#features/settings';
-import type { SlotPreviewProps } from './slot-settings';
+import type { SlotPreviewProps } from './slot-detail';
 import { useSlotItems } from './use-slot-items';
 
 // A Server that sent no answer for the Session, or something else, gives none.

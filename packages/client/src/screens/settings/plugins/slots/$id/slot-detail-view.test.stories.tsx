@@ -4,7 +4,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
 import { argoActivity } from './session-row-slot';
-import { fixtureSessionRowSlot } from './slot-fixture-settings';
+import type { SlotOwner, SlotPlugin } from './slot-detail-model';
+import { SlotDetailView } from './slot-detail-view';
+import { fixtureSessionRowSlot } from './slot-fixture-detail';
 import {
   deploysLine,
   issueRef,
@@ -12,8 +14,6 @@ import {
   previewReady,
   slotPlugins,
 } from './slot-fixtures';
-import type { SlotOwner, SlotPlugin } from './slot-settings-model';
-import { SlotSettingsView } from './slot-settings-view';
 
 const deploysName = 'Deploys';
 
@@ -21,7 +21,7 @@ const issueTrackerName = 'Issue tracker';
 
 const meta = {
   title: 'Tests/Screens/Settings/Plugins/Session rows',
-  component: SlotSettingsView,
+  component: SlotDetailView,
   parameters: { screenPreview: true },
   args: {
     settings: fixtureSessionRowSlot,
@@ -31,7 +31,7 @@ const meta = {
     onOwnerChange: fn(),
   },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
-} satisfies Meta<typeof SlotSettingsView>;
+} satisfies Meta<typeof SlotDetailView>;
 
 export default meta;
 
@@ -43,7 +43,7 @@ function Live(props: { plugins: SlotPlugin[] }): React.JSX.Element {
   const [owner, setOwner] = useState<SlotOwner>(null);
 
   return (
-    <SlotSettingsView
+    <SlotDetailView
       settings={fixtureSessionRowSlot}
       plugins={{ status: 'loaded', plugins }}
       owner={owner}

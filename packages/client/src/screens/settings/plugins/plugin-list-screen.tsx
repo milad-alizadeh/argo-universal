@@ -6,14 +6,14 @@ import {
   useServerPageCaption,
 } from '#features/settings';
 import {
-  slotSettingsHref,
+  slotDetailHref,
   useNavigate,
 } from '#lib/product/navigation/navigation';
 import { PluginListView, type SlotLink } from './plugin-list-view';
-import { toSlotPlugins } from './slots/slot-plugin-list';
-import type { SlotSettings } from './slots/slot-settings';
-import { fillingPlugins, shownCount } from './slots/slot-settings-model';
-import { slotSettings } from './slots/slot-settings-registry';
+import type { SlotDetail } from './slots/$id/slot-detail';
+import { fillingPlugins, shownCount } from './slots/$id/slot-detail-model';
+import { slotDetails } from './slots/$id/slot-detail-registry';
+import { toSlotPlugins } from './slots/$id/slot-plugin-list';
 import {
   type PluginEntry,
   usePluginEntries,
@@ -22,7 +22,7 @@ import {
 
 // A declared Slot's row, while some Plugin fills it, with how many are on in it.
 function slotLink(
-  settings: SlotSettings,
+  settings: SlotDetail,
   plugins: readonly PluginEntry[],
   hidden: readonly string[] = [],
 ): SlotLink[] {
@@ -34,7 +34,7 @@ function slotLink(
   return [{ ...pick(settings), count: shownCount(filling) }];
 }
 
-const pick = ({ slotId, title }: SlotSettings): Omit<SlotLink, 'count'> => ({
+const pick = ({ slotId, title }: SlotDetail): Omit<SlotLink, 'count'> => ({
   slotId,
   title,
 });
@@ -44,10 +44,10 @@ function useSlotLinks(): SlotLink[] {
   const { plugins = [] } = usePluginEntries();
 
   const choices = useQueries({
-    queries: slotSettings.map(({ slotId }) => slotChoicesQuery(slotId)),
+    queries: slotDetails.map(({ slotId }) => slotChoicesQuery(slotId)),
   });
 
-  return slotSettings.flatMap((settings, index) =>
+  return slotDetails.flatMap((settings, index) =>
     slotLink(settings, plugins, choices[index]?.data?.hidden),
   );
 }
@@ -61,7 +61,7 @@ export function PluginListScreen(): React.JSX.Element {
       plugins={usePluginsLoad()}
       slots={useSlotLinks()}
       onOpenPlugin={(pluginId) => navigate(`/settings/plugins/${pluginId}`)}
-      onOpenSlot={(slotId) => navigate(slotSettingsHref(slotId))}
+      onOpenSlot={(slotId) => navigate(slotDetailHref(slotId))}
     />
   );
 }
