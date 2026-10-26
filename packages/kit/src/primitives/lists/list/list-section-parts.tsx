@@ -135,6 +135,7 @@ function HeaderRow(props: HeaderProps & { wide: boolean }): ReactElement {
         trailing={props.trailing}
         actions={props.wide ? props.actions : undefined}
         sidebar={props.sidebar}
+        title={props.title}
       />
     </View>
   );

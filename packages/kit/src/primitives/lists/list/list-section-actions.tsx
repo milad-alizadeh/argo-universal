@@ -13,8 +13,11 @@ const actionsClassName =
 // A sidebar's actions sit in their own 24 boxes, always shown.
 const sidebarActionsClassName = 'h-6 shrink-0 flex-row items-center gap-1';
 
-const actionButtons = (actions: ReactNode): ReactNode =>
-  hasActions(actions) ? <ActionButtons actions={actions} size="sm" /> : null;
+// Small buttons, each spoken with the section's title so every section's buttons keep their own names.
+const actionButtons = (actions: ReactNode, title?: string): ReactNode =>
+  hasActions(actions) ? (
+    <ActionButtons actions={actions} look={{ size: 'sm', subject: title }} />
+  ) : null;
 
 const trailingClassName = (sidebar?: boolean): string =>
   sidebar ? sidebarActionsClassName : actionsClassName;
@@ -24,8 +27,9 @@ export function HeaderActions({
   trailing,
   actions,
   sidebar,
-}: Pick<HeaderProps, 'trailing' | 'actions' | 'sidebar'>): ReactNode {
-  const buttons = actionButtons(actions);
+  title,
+}: Pick<HeaderProps, 'trailing' | 'actions' | 'sidebar' | 'title'>): ReactNode {
+  const buttons = actionButtons(actions, title);
 
   if (!trailing && !buttons) return null;
 

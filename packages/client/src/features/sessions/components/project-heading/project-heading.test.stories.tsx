@@ -13,6 +13,11 @@ const newSession = { name: 'New Session' };
 
 const projectSettings = { name: 'Project settings' };
 
+// A wide heading's buttons speak the Project after the Action, so every Project's buttons keep their own names.
+function button({ name }: typeof newSession): typeof newSession {
+  return { name: `${name}, ${expandedProject.name}` };
+}
+
 const heading = { name: expandedProject.name };
 
 const meta = {
@@ -40,9 +45,11 @@ async function openMenu(target: HTMLElement): Promise<void> {
 export const Buttons: Story = {
   beforeEach: () => settleViewport(layoutWidths.wide),
   play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByRole('button', newSession));
+    await userEvent.click(
+      await canvas.findByRole('button', button(newSession)),
+    );
     await expect(onAdd).toHaveBeenCalledOnce();
-    await userEvent.click(canvas.getByRole('button', projectSettings));
+    await userEvent.click(canvas.getByRole('button', button(projectSettings)));
     await expect(onProjectSettings).toHaveBeenCalledOnce();
   },
 };
@@ -54,7 +61,7 @@ export const ContextMenu: Story = {
     const target = await canvas.findByRole('button', heading);
 
     await waitFor(() =>
-      expect(canvas.queryByRole('button', newSession)).toBeNull(),
+      expect(canvas.queryByRole('button', button(newSession))).toBeNull(),
     );
     await openMenu(target);
 
@@ -80,7 +87,9 @@ export const WithoutHandlers: Story = {
   play: async ({ canvas }) => {
     const target = await canvas.findByRole('button', heading);
 
-    await expect(canvas.queryByRole('button', projectSettings)).toBeNull();
+    await expect(
+      canvas.queryByRole('button', button(projectSettings)),
+    ).toBeNull();
     await settleViewport(layoutWidths.phone);
     await openMenu(target);
     await expect(body.queryByRole('menu')).toBeNull();

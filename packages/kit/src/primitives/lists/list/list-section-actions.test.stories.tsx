@@ -40,12 +40,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A wide header draws its Actions as buttons and runs their shortcuts while it is shown.
+// A wide header draws its Actions as buttons, each spoken with the section's title, and runs their shortcuts while it is shown.
 export const WideButtons: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Add build' }),
+      await canvas.findByRole('button', { name: 'Add build, Builds' }),
     );
     await expect(added).toHaveBeenCalledOnce();
     await userEvent.keyboard('{Alt>}b{/Alt}');
@@ -60,7 +60,7 @@ export const CompactContextMenu: Story = {
     const title = await canvas.findByRole('heading', { name: 'Builds' });
 
     await waitFor(() =>
-      expect(canvas.queryByRole('button', { name: 'Add build' })).toBeNull(),
+      expect(canvas.queryByRole('button', { name: /^Add build/ })).toBeNull(),
     );
     await userEvent.pointer({ keys: '[MouseRight]', target: title });
     const page = within(canvasElement.ownerDocument.body);

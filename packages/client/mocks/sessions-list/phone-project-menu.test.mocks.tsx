@@ -7,6 +7,7 @@ import {
   newSessionLabel,
   onNewSession,
   onProjectSettings,
+  projectButtonName,
   projectSettingsLabel,
   type Story,
 } from './sessions-list-story-context.test.mocks';
@@ -22,10 +23,14 @@ export const phoneProjectMenu: Story = {
     });
 
     await expect(
-      canvas.queryByRole('button', { name: projectSettingsLabel }),
+      canvas.queryByRole('button', {
+        name: projectButtonName(projectSettingsLabel),
+      }),
     ).toBeNull();
     await expect(
-      canvas.queryByRole('button', { name: newSessionLabel }),
+      canvas.queryByRole('button', {
+        name: projectButtonName(newSessionLabel),
+      }),
     ).toBeNull();
     await userEvent.pointer({ keys: '[MouseRight]', target: heading });
     const menu = within(await body.findByRole('menu'));

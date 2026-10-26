@@ -1,7 +1,7 @@
 import { layoutWidths } from '@repo/kit/each-layout';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import { View } from 'react-native';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
@@ -17,6 +17,7 @@ import {
   newSessionLabel,
   onNewSession,
   onProjectSettings,
+  projectButtonName,
   projectSettingsLabel,
   sessionsScrollId,
   type Story,
@@ -45,18 +46,13 @@ export const ProjectActions: Story = {
 
     await waitFor(() => expect(heading).toBeVisible());
 
-    // Every Project heading has its own buttons; these are Example Project's, beside its name.
-    const row = heading.parentElement;
-
-    if (!row) throw new Error('The heading has no header row');
-
-    const actions = within(row);
-
-    const settings = actions.getByRole('button', {
-      name: projectSettingsLabel,
+    const settings = canvas.getByRole('button', {
+      name: projectButtonName(projectSettingsLabel),
     });
 
-    const newSession = actions.getByRole('button', { name: newSessionLabel });
+    const newSession = canvas.getByRole('button', {
+      name: projectButtonName(newSessionLabel),
+    });
 
     await expect(settings).toBeVisible();
     await expect(newSession).toBeVisible();
@@ -92,7 +88,9 @@ export const FlatSearchResults: Story = {
       canvas.queryByRole('button', { name: exampleProjectName }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas.queryByRole('button', { name: newSessionLabel }),
+      canvas.queryByRole('button', {
+        name: projectButtonName(newSessionLabel),
+      }),
     ).not.toBeInTheDocument();
     await expect(
       canvas.getAllByText(/^(now|\d+[mhdw])$/).length,

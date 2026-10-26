@@ -37,6 +37,7 @@ export {
   headerMenuActions,
   overflowIcon,
   type HeaderActionsProps,
+  type HeaderButtonLook,
 } from './header-buttons';
 
 export {
