@@ -41,8 +41,6 @@ export const exemptFolders = {
     'The drawing every FieldGroup row shares; it draws no schema of its own.',
   'controls/rich-textarea':
     'The desktop editor behind the Composer; not on the wire.',
-  'controls/segmented-control':
-    'The App draws it for its own screens; a Plugin sends a FieldGroup.Picker.',
   'layout/spacing': 'The spacing scale the layout components read.',
   'lists/drawer-item': 'The drawer shell draws it; a Plugin has no drawer.',
   'lists/virtual-list-item': 'The virtualised row List draws for ListItem.',

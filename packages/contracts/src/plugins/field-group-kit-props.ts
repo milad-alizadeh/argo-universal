@@ -32,7 +32,10 @@ const fieldGroupTextFieldProps = fieldGroupRowProps.extend({
   value: z.string().describe('The current text.'),
   onChangeText: handler('onChangeText'),
   placeholder: z.string().optional().describe('Example shown while empty.'),
-  error: z.string().optional().describe('Why the value is not accepted.'),
+  error: z
+    .string()
+    .optional()
+    .describe('Rejection reason; also set Section.footer to show it.'),
   keyboardType: z
     .enum([
       'default',

@@ -8,7 +8,7 @@ const meta = {
   args: { onChangeText: fn(), disabled: false, error: undefined },
   render: (args): React.JSX.Element => (
     <FieldGroup>
-      <FieldGroup.Section>
+      <FieldGroup.Section footer={args.error}>
         <FieldGroup.SecretField
           title="Token"
           value="private-token"
@@ -54,6 +54,7 @@ export const Disabled: Story = {
 export const Invalid: Story = {
   args: { error: 'Invalid token' },
   play: async ({ canvas }) => {
+    await expect(canvas.getByText('Invalid token')).toBeVisible();
     await expect(canvas.getByLabelText('Token')).toHaveAttribute(
       'aria-invalid',
       'true',

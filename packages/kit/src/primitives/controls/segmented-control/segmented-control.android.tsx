@@ -15,7 +15,7 @@ import type {
 
 export function SegmentedControl(props: SegmentedControlProps): ReactElement {
   return (
-    <ControlHost matchContents={{ vertical: true }}>
+    <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <Segments {...props} />
     </ControlHost>
   );

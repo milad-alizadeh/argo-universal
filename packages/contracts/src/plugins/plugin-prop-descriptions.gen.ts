@@ -501,7 +501,7 @@ export type WireSchemaHints = {
     "onChangeText": PropValue<"FieldGroup.TextField", "onChangeText">;
     /** Example shown while empty. */
     "placeholder": PropValue<"FieldGroup.TextField", "placeholder">;
-    /** Why the value is not accepted. */
+    /** Rejection reason; also set Section.footer to show it. */
     "error": PropValue<"FieldGroup.TextField", "error">;
     /** The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad. */
     "keyboardType": PropValue<"FieldGroup.TextField", "keyboardType">;
@@ -533,7 +533,7 @@ export type WireSchemaHints = {
     "onChangeText": PropValue<"FieldGroup.SecretField", "onChangeText">;
     /** Example shown while empty. */
     "placeholder": PropValue<"FieldGroup.SecretField", "placeholder">;
-    /** Why the value is not accepted. */
+    /** Rejection reason; also set Section.footer to show it. */
     "error": PropValue<"FieldGroup.SecretField", "error">;
     /** The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad. */
     "keyboardType": PropValue<"FieldGroup.SecretField", "keyboardType">;

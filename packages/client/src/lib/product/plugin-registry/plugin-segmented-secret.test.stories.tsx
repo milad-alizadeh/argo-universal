@@ -59,6 +59,8 @@ export const EditSecret: Story = {
   play: async ({ canvas, userEvent }) => {
     const field = canvas.getByLabelText('Token');
     await expect(field).toHaveAttribute('type', password);
+    await expect(field).toHaveAttribute('aria-invalid', 'true');
+    await expect(canvas.getByText('Invalid token')).toBeVisible();
     await userEvent.type(field, tokenValue);
     await waitFor(() =>
       expect(onEvent).toHaveBeenCalledWith('settings/section/token', {
