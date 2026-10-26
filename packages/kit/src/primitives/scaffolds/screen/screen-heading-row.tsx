@@ -60,9 +60,11 @@ export type HeadingPlacement = 'page' | 'list';
 type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
 
 export function HeadingRow(props: HeadingRowProps): ReactNode {
-  const { placement = 'page' } = props;
+  return props.selectionMode?.header ?? <DeclaredHeading {...props} />;
+}
 
-  if (props.selectionMode?.header) return props.selectionMode.header;
+function DeclaredHeading(props: HeadingRowProps): ReactElement {
+  const { placement = 'page' } = props;
 
   const content = {
     title: <ScreenTitle title={props.title} level={titleLevels[placement]} />,
