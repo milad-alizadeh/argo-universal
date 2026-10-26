@@ -22,8 +22,7 @@ function handleKey(selection: ContentSelection, event: KeyDownEvent): void {
     selection.all();
   } else if (event.nativeEvent.key === 'Escape') {
     event.preventDefault();
-    selection.change([]);
-    selection.setEditing(false);
+    selection.close();
   }
 }
 

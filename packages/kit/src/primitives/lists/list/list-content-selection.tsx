@@ -1,19 +1,20 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-import { Platform } from 'react-native';
 import type { ListProps } from './list-props';
-import { selectionIds } from './list-row-identity';
+import { rowId, useSelectionIds } from './list-row-identity';
+import { closingActions } from './list-selection-actions';
+import { SelectionRange, type RowPress } from './list-selection-model';
 import {
-  SelectionRange,
-  selectRow,
-  type SelectionInput,
-  type RowPress,
-} from './list-selection-model';
+  selectionValue,
+  type EditMode,
+  type SelectionParts,
+} from './list-selection-value';
 
 export interface ContentSelection {
   selected: readonly string[];
@@ -21,17 +22,17 @@ export interface ContentSelection {
   editing: boolean;
   setEditing: (editing: boolean) => void;
   change: (ids: readonly string[]) => void;
+  // Clears the selection and leaves edit mode (iOS edit mode, Android contextual mode); on web it only clears.
+  close: () => void;
   press: (press: RowPress) => void;
   longPress: (id: string) => void;
   all: () => void;
   allSelected: boolean;
+  isSelected: (id: string) => boolean;
   coversSeparator: (id: string) => boolean;
+  // A rendered row that is disabled says so, so Select All and a range skip it even when the element `renderItem` returned does not carry `disabled`. Returns the undo.
+  lock: (id: string | undefined) => () => void;
   actions?: ReactNode;
-}
-
-interface EditMode {
-  editing: boolean;
-  setEditing: (editing: boolean) => void;
 }
 
 interface ContentRowSelection {
@@ -45,97 +46,63 @@ export const ContentSelectionContext = createContext<ContentSelection | null>(
 
 export const ContentRowId = createContext<string | undefined>(undefined);
 
-function selectionControls(
-  input: SelectionInput,
-  range: SelectionRange,
-  edit: EditMode,
-): Pick<ContentSelection, 'press' | 'longPress' | 'all' | 'coversSeparator'> {
-  return {
-    press: (press) => selectRow(input, range, press),
-    longPress: (id) => beginSelection(input, edit, id),
-    all: () => input.change(input.ids),
-    coversSeparator: (id) => selectedNeighbours(input, id),
-  };
+function useEditMode(): EditMode {
+  const [editing, setEditing] = useState(false);
+
+  return useMemo(() => ({ editing, setEditing }), [editing]);
 }
 
-function selectedNeighbours(input: SelectionInput, id: string): boolean {
-  const next = input.ids[input.ids.indexOf(id) + 1];
+function useParts(): SelectionParts {
+  const [parts] = useState(() => ({
+    range: new SelectionRange(),
+    locked: new Set<string>(),
+  }));
 
-  return (
-    next !== undefined &&
-    input.selected.includes(id) &&
-    input.selected.includes(next)
-  );
+  return parts;
 }
 
-function contentSelection<Item>(
+type Change = ((ids: readonly string[]) => void) | undefined;
+
+function useClose(onChange: Change, edit: EditMode): () => void {
+  const { setEditing } = edit;
+
+  return useCallback((): void => {
+    onChange?.([]);
+    setEditing(false);
+  }, [onChange, setEditing]);
+}
+
+// Memoised on what it reads, not on the whole `props`, which is a new object on every render.
+function useSelectionBase<Item>(
   props: ListProps<Item>,
-  range: SelectionRange,
   edit: EditMode,
 ): ContentSelection | null {
-  if (!props.selection) return null;
-  const { selected, onChange } = props.selection;
+  const ids = useSelectionIds(props);
+  const parts = useParts();
+  const { selected, onChange } = props.selection ?? {};
+  const close = useClose(onChange, edit);
 
-  const input: SelectionInput = {
-    ids: selectionIds(props),
-    selected,
-    change: (ids) => onChange?.(ids),
-  };
-
-  return makeSelection(input, { range, edit, actions: props.actions });
+  return useMemo(
+    () => selectionValue({ ids, selected, onChange, edit, close, parts }),
+    [ids, selected, onChange, edit, close, parts],
+  );
 }
 
 export function useContentSelection<Item>(
   props: ListProps<Item>,
 ): ContentSelection | null {
-  const [editing, setEditing] = useState(false);
-  const [range] = useState(() => new SelectionRange());
+  const base = useSelectionBase(props, useEditMode());
+  const { actions } = props;
 
   return useMemo(
-    () => contentSelection(props, range, { editing, setEditing }),
-    [props, range, editing],
+    () => base && { ...base, actions: closingActions(actions, base.close) },
+    [base, actions],
   );
 }
 
 export function useContentRowSelection(id?: string): ContentRowSelection {
   const selection = useContext(ContentSelectionContext);
-  const rowId = useContext(ContentRowId);
+  const derived = useContext(ContentRowId);
 
-  return { selection, id: id ?? rowId };
-}
-
-interface SelectionSetup {
-  range: SelectionRange;
-  edit: EditMode;
-  actions?: ReactNode;
-}
-
-function makeSelection(
-  input: SelectionInput,
-  setup: SelectionSetup,
-): ContentSelection {
-  return {
-    ...setup.edit,
-    selected: input.selected,
-    allSelected: selectedAll(input),
-    change: input.change,
-    active: Platform.OS === 'web' || setup.edit.editing,
-    actions: setup.actions,
-    ...selectionControls(input, setup.range, setup.edit),
-  };
-}
-
-function beginSelection(
-  input: SelectionInput,
-  edit: EditMode,
-  id: string,
-): void {
-  edit.setEditing(true);
-  input.change([...new Set([...input.selected, id])]);
-}
-
-function selectedAll(input: SelectionInput): boolean {
-  return (
-    input.ids.length > 0 && input.ids.every((id) => input.selected.includes(id))
-  );
+  return { selection, id: rowId(id, derived) };
 }

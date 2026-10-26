@@ -1,4 +1,4 @@
-import { Platform, type GestureResponderEvent } from 'react-native';
+import type { GestureResponderEvent } from 'react-native';
 import { z } from 'zod';
 
 export interface SelectionInput {
@@ -89,7 +89,7 @@ export interface RowPress {
   href?: string;
 }
 
-function selectWebRow(
+export function selectWebRow(
   input: SelectionInput,
   range: SelectionRange,
   press: RowPress,
@@ -104,15 +104,6 @@ function selectWebRow(
 
   press.event?.preventDefault();
   range.choose(input, press.id, keys);
-}
-
-export function selectRow(
-  input: SelectionInput,
-  range: SelectionRange,
-  press: RowPress,
-): void {
-  if (Platform.OS === 'web') selectWebRow(input, range, press);
-  else toggleSelected(input, press.id);
 }
 
 function activateRow(input: SelectionInput, press: RowPress): void {

@@ -6,23 +6,17 @@ import type { SessionsListProps } from './sessions-list-props';
 
 type Selection = Pick<ListProps<SessionsListEntry>, 'selection' | 'actions'>;
 
-interface ArchiveSelectionProps {
-  selected: readonly string[];
-  onArchive: (ids: readonly string[]) => void;
-  clear: () => void;
-}
-
-function archiveSelection(props: ArchiveSelectionProps): ReactElement {
+// The List disables an Action while nothing is selected and closes selection once it has run.
+function archiveSelection(
+  selected: readonly string[],
+  onArchive: (ids: readonly string[]) => void,
+): ReactElement {
   return (
     <Action
       label="Archive"
       icon="archive"
       tone="danger"
-      disabled={props.selected.length === 0}
-      onPress={() => {
-        props.onArchive(props.selected);
-        props.clear();
-      }}
+      onPress={() => onArchive(selected)}
     />
   );
 }
@@ -34,11 +28,7 @@ export function useSessionsSelection(props: SessionsListProps): Selection {
 
   return {
     selection: { mode: 'multiple', selected, onChange },
-    actions: archiveSelection({
-      selected,
-      onArchive: props.onArchiveMany,
-      clear: () => onChange([]),
-    }),
+    actions: archiveSelection(selected, props.onArchiveMany),
   };
 }
 

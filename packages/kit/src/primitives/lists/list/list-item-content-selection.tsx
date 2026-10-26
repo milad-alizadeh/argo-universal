@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { ChoiceMark } from '../list-item/list-item-choice-mark';
 import type {
@@ -23,8 +24,21 @@ function contentMark(props: DrawingProps): Partial<DrawingProps> {
   return {};
 }
 
+// A disabled row is not selectable, whatever element the List's `renderItem` returned around it.
+function useLockedRow(
+  selection: ContentSelection | null,
+  id: string | undefined,
+  disabled: boolean | undefined,
+): void {
+  const lock = selection?.lock;
+  const locked = disabled ? id : undefined;
+
+  useEffect(() => lock?.(locked), [lock, locked]);
+}
+
 export function useContentItemDrawing(props: DrawingProps): DrawingProps {
   const { selection, id } = useContentRowSelection(props.id);
+  useLockedRow(selection, id, props.disabled);
 
   if (!selection) return props;
 
@@ -111,7 +125,7 @@ function selectedContent(
 ): boolean {
   if (keepsPrimarySelection(selection)) return props.selected ?? false;
 
-  return selection.selected.includes(id);
+  return selection.isSelected(id);
 }
 
 function rowSelectionPress(

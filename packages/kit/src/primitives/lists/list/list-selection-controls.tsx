@@ -3,11 +3,6 @@ import { Platform } from 'react-native';
 import { Button } from '#primitives/actions/button';
 import type { ContentSelection } from './list-content-selection';
 
-function close(selection: ContentSelection): void {
-  selection.change([]);
-  selection.setEditing(false);
-}
-
 export function CloseSelection({
   selection,
 }: {
@@ -19,7 +14,7 @@ export function CloseSelection({
     <Button
       label={Platform.OS === 'ios' ? 'Done' : 'Close selection'}
       variant="text"
-      onPress={() => close(selection)}
+      onPress={selection.close}
     />
   );
 }

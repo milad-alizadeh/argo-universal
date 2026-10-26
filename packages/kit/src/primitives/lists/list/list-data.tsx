@@ -9,7 +9,7 @@ import { ContentRowId } from './list-content-selection';
 import { DataListRow } from './list-grouping';
 import { listInsets } from './list-insets';
 import type { ListProps } from './list-props';
-import { selectionId } from './list-row-identity';
+import { renderedId, rowId, selectionId } from './list-row-identity';
 
 export function ListEmpty({
   isLoading,
@@ -34,26 +34,33 @@ const isPart = <Item,>({ row, props }: RowProps<Item>): boolean =>
   props.getItemType?.(row.item, row.index) === 'section';
 
 function Row<Item>(rowProps: RowProps<Item>): ReactElement {
+  const { row, props } = rowProps;
+  const content = props.renderItem?.(row.item, row.index);
+
+  const id = rowId(
+    renderedId(content),
+    selectionId(props, row.item, row.index),
+  );
+
   return (
-    <DataListRow index={rowProps.row.index} part={isPart(rowProps)}>
-      <ContentRowId
-        value={selectionId(
-          rowProps.props,
-          rowProps.row.item,
-          rowProps.row.index,
-        )}
-      >
-        <PaddedRow row={rowProps.row} props={rowProps.props} />
+    <DataListRow index={row.index} part={isPart(rowProps)}>
+      <ContentRowId value={id}>
+        <PaddedRow content={content} props={props} />
       </ContentRowId>
     </DataListRow>
   );
 }
 
 // Legend List's web cells ignore horizontal content padding, so each row holds its gutters.
-function PaddedRow<Item>({ row, props }: RowProps<Item>): ReactNode {
+function PaddedRow<Item>({
+  content,
+  props,
+}: {
+  content: ReactNode;
+  props: ListProps<Item>;
+}): ReactNode {
   const paddingHorizontal = usePadding(listInsets(props, useInMenu()).padding);
   const style = useMemo(() => ({ paddingHorizontal }), [paddingHorizontal]);
-  const content = props.renderItem?.(row.item, row.index);
 
   return paddingHorizontal === 0 ? (
     content

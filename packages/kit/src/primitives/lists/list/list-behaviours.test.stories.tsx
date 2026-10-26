@@ -2,6 +2,8 @@ import { findToast } from '@repo/kit/mocks/find-toast';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
+import { Action } from '#primitives/actions/action';
+import { Text } from '#primitives/content/text';
 import { ListItem } from '../list-item';
 import { List } from './list';
 import { logList, pagedList, searchedList } from './list-behaviours-fixtures';
@@ -191,6 +193,78 @@ function FixedDataSelection(): React.JSX.Element {
     />
   );
 }
+
+// A row's ListItem sits inside a component, so the element `renderItem` returns carries neither its `id` nor its `disabled`.
+function WrappedRow({ item }: { item: string }): React.JSX.Element {
+  return <ListItem id={item} title={item} disabled={item === 'Locked'} />;
+}
+
+export const WrappedRowsSkipDisabledRows: Story = {
+  ...SelectAllSkipsDisabledRows,
+  render: () => <WrappedSelection />,
+};
+
+function WrappedSelection(): React.JSX.Element {
+  const [selected, onChange] = useState<readonly string[]>([]);
+
+  return (
+    <List
+      items={['One', 'Two', 'Locked']}
+      keyExtractor={(item) => item}
+      selection={{ mode: 'multiple', selected, onChange }}
+      renderItem={(item) => <WrappedRow item={item} />}
+    />
+  );
+}
+
+// The Action only reports what it was given; ending the selection is the List's.
+function ArchivingList(): React.JSX.Element {
+  const [selected, onChange] = useState<readonly string[]>([]);
+  const [archived, setArchived] = useState<readonly string[]>([]);
+
+  return (
+    <>
+      <Text>{`Archived ${archived.join(' ') || 'nothing'}`}</Text>
+      <List
+        items={items}
+        keyExtractor={(item) => item}
+        selection={{ mode: 'multiple', selected, onChange }}
+        actions={
+          <Action
+            key="archive"
+            label="Archive"
+            icon="archive"
+            onPress={() => setArchived(selected)}
+          />
+        }
+        renderItem={(item) => <ListItem id={item} title={item} />}
+      />
+    </>
+  );
+}
+
+export const SelectionActionEndsSelection: Story = {
+  render: () => <ArchivingList />,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByRole('button', { name: 'One' }));
+    await userEvent.keyboard('{Meta>}');
+    await userEvent.click(canvas.getByRole('button', { name: 'Two' }));
+    await userEvent.keyboard('{/Meta}');
+    await userEvent.click(
+      await canvas.findByRole('button', { name: /^Archive/ }),
+    );
+    await expect(await canvas.findByText('Archived One Two')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'One' })).toHaveAttribute(
+      selectedAttribute,
+      'false',
+    );
+    await expect(canvas.getByRole('button', { name: 'Two' })).toHaveAttribute(
+      selectedAttribute,
+      'false',
+    );
+    await expect(canvas.queryByRole('button', { name: /^Archive/ })).toBeNull();
+  },
+};
 
 export const JumpAfterAppendingWithinSection: Story = {
   ...JumpToLatestAfterScrollingAway,
