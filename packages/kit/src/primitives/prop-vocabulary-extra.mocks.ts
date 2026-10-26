@@ -6,6 +6,7 @@ import type * as KbdKit from '#primitives/content/kbd';
 import type { LinkProps } from '#primitives/content/link';
 import type { MarkdownProps } from '#primitives/content/markdown';
 import type * as MediaUrlKit from '#primitives/content/media-url';
+import type * as PathTextKit from '#primitives/content/path-text';
 import type * as VideoKit from '#primitives/content/video';
 import type * as FieldGroupKit from '#primitives/fields/field-group';
 import type * as FieldRowKit from '#primitives/fields/field-row';
@@ -68,6 +69,7 @@ export type AdditionalPrimitives = {
   SettingsLayoutProps: SettingsLayoutKit.SettingsLayoutProps;
   SettingsLayoutItem: SettingsLayoutKit.SettingsLayoutItem;
   SettingsLayoutSections: SettingsLayoutKit.SettingsLayoutSections;
+  SettingsPagesProps: SettingsLayoutKit.SettingsPagesProps;
   ActionGroup: ActionKit.ActionGroup;
   DeclaredAction: ActionKit.DeclaredAction;
   DeclaredEntry: ActionKit.DeclaredEntry;
@@ -83,6 +85,9 @@ export type AdditionalPrimitives = {
   HeaderActionsProps: ActionKit.HeaderActionsProps;
   HeaderEntry: ActionKit.HeaderEntry;
   IconAction: ActionKit.IconAction;
+  HeaderDeclaration: ActionKit.HeaderDeclaration;
+  ScreenHeader: ActionKit.ScreenHeader;
+  PathTextProps: PathTextKit.PathTextProps;
   EmptyStateProps: EmptyStateKit.EmptyStateProps;
   StatusDotProps: StatusDotKit.StatusDotProps;
   SvgProps: SvgKit.SvgProps;
