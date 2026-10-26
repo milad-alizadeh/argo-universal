@@ -22,4 +22,5 @@ export interface ShellViewProps extends ShellListProps {
   // The open Shell's output; the caller loads it when `onSelect` names the Shell.
   output?: ShellOutputText;
   onStop: (shell: ShellEntry) => void;
+  onDeselect?: () => void;
 }

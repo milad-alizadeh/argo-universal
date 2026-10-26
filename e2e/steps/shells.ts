@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Locator, Page } from '@playwright/test';
-import { expect } from '../fixtures';
+import { expect, test } from '../fixtures';
 import { releaseAgent } from './agent-requests';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
@@ -23,6 +23,12 @@ function shellEntry(page: Page): Locator {
 
 const shellOutput = (page: Page): Locator =>
   page.getByLabel(/Shell ready.* output$/);
+
+async function captureShell(page: Page, name: string): Promise<void> {
+  const path = test.info().outputPath(`${name}.png`);
+  await page.screenshot({ path });
+  await test.info().attach(name, { path, contentType: 'image/png' });
+}
 
 Then('the Session offers no Shells', async ({ page }) => {
   await expect(
@@ -68,7 +74,7 @@ Given('a running Shell with its output open', async ({ page, app }) => {
   ).toHaveCount(0);
 });
 
-async function openRunningShell(page: Page): Promise<void> {
+export async function openRunningShell(page: Page): Promise<void> {
   await expect(
     page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeVisible();
@@ -83,6 +89,7 @@ Then('the Shell output shows {string}', async ({ page }, text: string) => {
   await expect(
     shellOutput(page).getByText(text, { exact: true }),
   ).toBeVisible();
+  await captureShell(page, text.replaceAll(' ', '-').toLowerCase());
 });
 
 When('the Shell prints more output', async ({ app }) => {
@@ -103,4 +110,5 @@ Then('the Shell output shows its stopped outcome', async ({ page }) => {
   await expect(
     shellOutput(page).getByText('Shell ready', { exact: true }),
   ).toBeVisible();
+  await captureShell(page, 'shell-stopped');
 });
