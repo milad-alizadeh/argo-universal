@@ -15,6 +15,7 @@ import {
 import { ScreenBack } from './screen-back';
 import { ScreenColumn } from './screen-column';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
+import { SelectEntry } from './screen-selection-mode';
 
 // A wide Screen's heading, or any Screen's when no navigator draws its header.
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
@@ -52,7 +53,7 @@ function ScreenCaption({ caption }: Pick<ScreenProps, 'caption'>): ReactNode {
 type HeadingContent = { title: ReactNode; actions: ReactNode };
 
 export function HeadingRow(props: ScreenHeaderInput): ReactNode {
-  if (props.contentHeader?.replacement) return props.contentHeader.replacement;
+  if (props.selectionMode?.header) return props.selectionMode.header;
 
   const content = {
     title: <ScreenTitle title={props.title} />,
@@ -88,13 +89,13 @@ function PlainHeading(props: HeadingContent): ReactElement {
 
 // The Screen's own Actions, split as one header with one overflow menu, then its primary Action.
 function HeadingActions(
-  props: Pick<ScreenHeaderInput, 'header' | 'contentHeader'>,
+  props: Pick<ScreenHeaderInput, 'header' | 'selectionMode'>,
 ): ReactElement {
   const { groups, label, primary } = props.header;
 
   return (
     <>
-      {props.contentHeader?.trailing}
+      <SelectEntry mode={props.selectionMode} />
       <DeclaredActions groups={groups} label={label} />
       <DeclaredActions groups={primary} label={label} />
     </>

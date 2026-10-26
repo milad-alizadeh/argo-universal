@@ -224,5 +224,12 @@ export const ArchiveSeveralSelectedSessions: Story = {
       first.sessionId,
       second.sessionId,
     ]);
+    // The Action ends selection, so the header is the Screen's again.
+    await expect(
+      await canvas.findByRole('heading', { name: 'Sessions' }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole('heading', { name: '2 selected' }),
+    ).toBeNull();
   },
 };

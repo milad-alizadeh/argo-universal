@@ -1,8 +1,8 @@
-import { use, useState, type ReactElement, type ReactNode } from 'react';
+import { use, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { ScreenContentHeader, type ContentHeader } from '#kit/content-header';
 import { HeadingInsetContext, useHeadingInsetScope } from '#kit/heading-inset';
 import { ScrollColumnContext } from '#kit/scroll-column';
+import { SelectionModeScope, useSelectionModeHost } from '#kit/selection-mode';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
 import { ActionShortcutScope } from '#primitives/actions/action';
@@ -13,6 +13,7 @@ import { ScreenHeading } from './screen-heading';
 import { ScreenNavigation } from './screen-navigation';
 import { screenPrimaryAction } from './screen-primary-action';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
+import { selectionScreen } from './screen-selection-mode';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
 import { useScreenHeader } from './use-screen-header';
 
@@ -38,19 +39,23 @@ function HeadingInsetScope(props: { children: ReactNode }): ReactElement {
   );
 }
 
+// A List below may select, and then its header replaces this Screen's (ADR-0043).
 function ScreenSurface(props: ScreenProps): ReactElement {
-  const [contentHeader, setContentHeader] = useState<ContentHeader | null>(
-    null,
+  return (
+    <SelectionModeScope>
+      <ScreenHeaderSource {...props} />
+    </SelectionModeScope>
   );
+}
 
-  const drawing = selectionScreen(props, contentHeader);
+function ScreenHeaderSource(props: ScreenProps): ReactElement {
+  const selectionMode = useSelectionModeHost();
+
+  const drawing = selectionScreen(props, selectionMode);
   const header = useScreenHeader(drawing);
-  const heading = { ...drawing, header, contentHeader };
 
   return (
-    <ScreenContentHeader value={setContentHeader}>
-      <ScreenDrawing {...heading} />
-    </ScreenContentHeader>
+    <ScreenDrawing {...drawing} header={header} selectionMode={selectionMode} />
   );
 }
 
@@ -107,18 +112,4 @@ function hasFab(props: ScreenProps): boolean {
   const action = screenPrimaryAction(props);
 
   return Boolean(action && !action.disabled);
-}
-
-function selectionScreen(
-  props: ScreenProps,
-  header: ContentHeader | null,
-): ScreenProps {
-  return header?.replacement
-    ? {
-        ...props,
-        actions: undefined,
-        primaryAction: undefined,
-        caption: undefined,
-      }
-    : props;
 }

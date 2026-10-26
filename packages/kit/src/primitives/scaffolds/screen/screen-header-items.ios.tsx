@@ -1,7 +1,6 @@
 // iOS draws the Screen's Actions as UIKit bar items and its search as the stock search bar.
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
 import { iconSymbols } from '#kit/symbols/icon-names';
 import {
@@ -71,22 +70,19 @@ function HeaderItems(props: HeaderProps): ReactElement {
     <Stack.Toolbar placement="right">
       {direct.map(entry)}
       {overflowMenu(overflow, props.label)}
-      {trailingItem(props)}
+      {selectItem(props)}
       {primary ? toolbarButton({ ...primary, id: 'primary' }) : null}
     </Stack.Toolbar>
   );
 }
 
-function trailingItem(props: ScreenHeaderInput): ReactElement | null {
-  const trailing = props.contentHeader?.trailing;
+// Select is a stock bar button of its own: the stack sizes it, and it ends the bar's items before the primary Action.
+function selectItem(props: ScreenHeaderInput): ReactElement | null {
+  const begin = props.selectionMode?.begin;
 
-  if (!trailing) return null;
+  if (!begin) return null;
 
-  return (
-    <Stack.Toolbar.View>
-      <View style={{ width: 80, height: 44 }}>{trailing}</View>
-    </Stack.Toolbar.View>
-  );
+  return toolbarButton({ id: 'select', label: 'Select', onPress: begin });
 }
 
 function headerEntries(

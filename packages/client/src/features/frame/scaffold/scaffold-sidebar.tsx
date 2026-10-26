@@ -1,5 +1,5 @@
-import { ContentHeaderScope } from '@repo/kit/content-header';
 import { ScrollColumnContext } from '@repo/kit/scroll-column';
+import { SelectionModeScope } from '@repo/kit/selection-mode';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
@@ -90,9 +90,9 @@ export function ScaffoldSidebarColumn({
   ...parts
 }: ScaffoldSidebarColumnProps): React.JSX.Element {
   return (
-    <ContentHeaderScope>
+    <SelectionModeScope>
       <SidebarColumnDrawing sidebar={sidebar} {...parts} />
-    </ContentHeaderScope>
+    </SelectionModeScope>
   );
 }
 

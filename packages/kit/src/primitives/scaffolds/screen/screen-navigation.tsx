@@ -6,6 +6,7 @@ import { HeadingRow } from './screen-heading-row';
 import { useScreenMenu } from './screen-menu-context';
 import { useScreenNavigator } from './screen-navigation-context';
 import type { ScreenHeaderInput } from './screen-props';
+import { selectionOptions } from './screen-selection-options';
 
 export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
   const navigator = useScreenNavigator();
@@ -20,7 +21,7 @@ export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
   const headerOptions = {
     ...options,
     ...leading,
-    ...selectionNavigation(props),
+    ...selectionOptions(props.selectionMode),
     headerShown: !wide,
   };
 
@@ -36,9 +37,3 @@ const headerLayout = {
   headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1 },
   headerRightContainerStyle: { flexGrow: 0 },
 };
-
-function selectionNavigation(props: ScreenHeaderInput): object {
-  return props.contentHeader?.replacement
-    ? { headerBackVisible: false, headerLeft: () => null }
-    : {};
-}

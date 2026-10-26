@@ -1,6 +1,6 @@
 import { useMemo, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
-import { useContentHeader, type ContentHeader } from '#kit/content-header';
+import { useSelectionMode, type SelectionMode } from '#kit/selection-mode';
 import { HeaderActions, type ActionGroup } from '#primitives/actions/action';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
@@ -108,25 +108,27 @@ export function SelectionToolbar(props: ToolbarProps): ReactElement | null {
   );
 }
 
+// The List offers its selection mode to the host that owns its Screen's header; with no host, or another List holding it, it draws the toolbar in its own column.
 function SelectionHeader(props: EditingToolbar): ReactElement | null {
   const { selection, groups } = props;
 
-  const header = useMemo(
-    () => contentHeader({ selection, groups }),
+  const mode = useMemo(
+    () => selectionMode({ selection, groups }),
     [selection, groups],
   );
 
-  const hosted = useContentHeader(header);
+  const hosted = useSelectionMode(mode);
 
   return hosted ? null : topToolbar(props);
 }
 
-function contentHeader(props: EditingToolbar): ContentHeader | null {
-  if (showsEntry(props.selection))
-    return { trailing: <SelectionEntry {...props} /> };
-  const replacement = selectionTop(props);
+function selectionMode(props: EditingToolbar): SelectionMode {
+  const { selection } = props;
 
-  return replacement ? { replacement } : null;
+  return {
+    header: selectionTop(props),
+    begin: showsEntry(selection) ? () => selection.setEditing(true) : null,
+  };
 }
 
 function selectionTitle(selection: ContentSelection): string {

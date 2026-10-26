@@ -1,4 +1,4 @@
-import { ContentHeaderScope } from '@repo/kit/content-header';
+import { SelectionModeScope } from '@repo/kit/selection-mode';
 import { useWide } from '@repo/kit/use-wide/use-wide';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -38,10 +38,10 @@ function ListWithHeader(args: ListViewArgs): React.JSX.Element {
     );
 
   return (
-    <ContentHeaderScope>
+    <SelectionModeScope>
       <SessionsHeader {...filter} onNewSession={args.onNewSession} />
       <SessionListView {...args} />
-    </ContentHeaderScope>
+    </SelectionModeScope>
   );
 }
 

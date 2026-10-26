@@ -1,4 +1,4 @@
-import { ContentHeaderScope } from '@repo/kit/content-header';
+import { SelectionModeScope } from '@repo/kit/selection-mode';
 import { useWide } from '@repo/kit/use-wide/use-wide';
 import { type ComponentProps, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
@@ -33,10 +33,10 @@ function PreviewChrome({
     return <SessionsRootScreen {...props}>{children}</SessionsRootScreen>;
 
   return (
-    <ContentHeaderScope>
+    <SelectionModeScope>
       <PreviewHeader {...props} />
       {children}
-    </ContentHeaderScope>
+    </SelectionModeScope>
   );
 }
 

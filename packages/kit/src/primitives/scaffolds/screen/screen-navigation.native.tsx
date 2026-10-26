@@ -1,10 +1,10 @@
 import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type { ReactElement, ReactNode } from 'react';
-import { View } from 'react-native';
 import { useWide } from '#kit/use-wide/use-wide';
 import { ScreenHeaderItems, screenTitleOptions } from './screen-header-items';
 import { useScreenNavigator } from './screen-navigation-context';
 import type { ScreenHeaderInput } from './screen-props';
+import { selectionOptions } from './screen-selection-options';
 
 export function ScreenNavigation(props: ScreenHeaderInput): ReactNode {
   if (!useScreenNavigator()) return null;
@@ -17,7 +17,7 @@ function StackHeader(props: ScreenHeaderInput): ReactElement {
 
   const options = {
     ...titleOptions(props.title, wide),
-    ...contentOptions(props),
+    ...selectionOptions(props.selectionMode),
   };
 
   return (
@@ -42,20 +42,6 @@ function titleOptions(
   return { ...screenTitleOptions, title, headerShown: !wide };
 }
 
-function contentOptions(
-  props: ScreenHeaderInput,
-): NativeStackNavigationOptions {
-  const replacement = props.contentHeader?.replacement;
-
-  return {
-    header: replacement
-      ? () => <View className="bg-content pt-safe">{replacement}</View>
-      : undefined,
-  };
-}
-
 function narrowItems(props: ScreenHeaderInput): ReactNode {
-  return props.contentHeader?.replacement ? null : (
-    <ScreenHeaderItems {...props} />
-  );
+  return props.selectionMode?.header ? null : <ScreenHeaderItems {...props} />;
 }
