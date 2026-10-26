@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react';
+import { StyleSheet } from 'react-native';
 import type { CartesianChart } from 'victory-native';
 import type { NativeTheme } from '../../../native-theme';
 import { skiaColor } from '../canvas/canvas-srgb';
@@ -47,15 +48,28 @@ export const layoutConfig = ({
   domainPadding: props.kind === 'scatter' ? scatterPadding : undefined,
 });
 
+// Gridlines are opt-in; the frame keeps its hairline either way.
+interface LineWidths {
+  grid: number;
+  frame: number;
+}
+
+const lineWidths = (grid: boolean): LineWidths => ({
+  grid: grid ? StyleSheet.hairlineWidth : 0,
+  frame: StyleSheet.hairlineWidth,
+});
+
 export function axisConfig(
   theme: NativeTheme,
   columns: number,
+  grid: boolean,
 ): Pick<Plot, 'axisOptions'> {
   const line = theme.colors.border;
 
   return {
     axisOptions: {
       lineColor: line ? skiaColor(line) : undefined,
+      lineWidth: lineWidths(grid),
       tickCount: { x: xTickCount(columns), y: yTickCount },
     },
   };

@@ -47,6 +47,8 @@ export { NotificationsDetailScreen } from './screens/settings/notifications/noti
 
 export { PluginListScreen } from './screens/settings/plugins/plugin-list-screen';
 
+export { SlotSettingsScreen } from './screens/settings/plugins/slots/slot-settings-screen';
+
 export { PluginSettingsDetailScreen } from './screens/settings/plugins/$id/plugin-settings-detail-screen';
 
 export { ProjectListScreen } from './screens/settings/projects/project-list-screen';

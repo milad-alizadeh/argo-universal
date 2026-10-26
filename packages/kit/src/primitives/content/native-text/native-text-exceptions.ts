@@ -3,8 +3,6 @@ import { font } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
 import type { Tone } from '#primitives/content/text';
-import { toneClass } from '#primitives/content/text';
-import { usePrimitiveColor } from '#primitives/native/primitive-color';
 
 type CodeFace = Pick<TextInputProps, 'textStyle'> & {
   modifiers: NonNullable<TextInputProps['modifiers']>;
@@ -24,11 +22,4 @@ export function useDangerColor(tone: Tone | undefined): string | undefined {
   const color = useNativeTheme().colors.danger;
 
   return tone === 'danger' ? color : undefined;
-}
-
-// Explicit text tones use public Compose colour props; untoned text inherits its native container.
-export function useTextColor(tone: Tone | undefined): string | undefined {
-  const color = usePrimitiveColor(toneClass(tone) ?? 'text-foreground');
-
-  return tone === undefined ? undefined : color;
 }

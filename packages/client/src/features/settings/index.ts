@@ -12,3 +12,19 @@ export {
 } from './hooks/use-theme-choice';
 
 export { type ThemeChoice, themeChoices } from './stores/theme-choice';
+
+export {
+  slotChoicesQuery,
+  type SlotChoices,
+  type SlotChoosers,
+  useSlotChoices,
+  useSlotChoosers,
+} from './stores/slot-choices';
+
+export {
+  ownerItem,
+  slotVisibility,
+  type SlotVisibility,
+  useSlotVisibility,
+  visibleItems,
+} from './stores/slot-visibility';

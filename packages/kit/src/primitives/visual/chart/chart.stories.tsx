@@ -35,6 +35,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Line: Story = { args: lineChart };
 
+export const LineWithGrid: Story = { args: { ...lineChart, grid: true } };
+
 export const Bar: Story = { args: barChart };
 
 export const GroupedBar: Story = { args: groupedBarChart };

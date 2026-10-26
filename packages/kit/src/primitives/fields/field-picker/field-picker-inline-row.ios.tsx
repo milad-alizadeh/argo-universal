@@ -13,21 +13,23 @@ import {
   foregroundStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
-import { NativeText } from '#primitives/content/native-text';
-import { RowTitle } from '#primitives/fields/field-row';
+import { NativeText, useTextColor } from '#primitives/content/native-text';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { optionChoice, type OptionRowProps } from './field-picker-kind';
-import type { FieldPickerOption, FieldPickerProps } from './field-picker-model';
+import {
+  isOptionOff,
+  optionChoice,
+  type OptionRowProps,
+} from './field-picker-kind';
+import type { FieldPickerOption } from './field-picker-model';
+import { OptionTitle } from './field-picker-option-title';
 import { wholeRowPress } from './field-picker-screen-row.ios';
 
-const offModifiers = (
-  props: Pick<FieldPickerProps, 'disabled'>,
-): ReturnType<typeof disabled>[] => [disabled(props.disabled ?? false)];
-
-// A subtitle as a stock row draws it: the secondary shade, one text style down.
-const subtitleModifiers = [
+// A subtitle as a stock row draws it: the secondary shade, one text style down, or the warning colour it asks for.
+const subtitleModifiers = (
+  warning: string | undefined,
+): ReturnType<typeof font>[] => [
   font({ textStyle: 'subheadline' }),
-  foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
+  foregroundStyle(warning ?? { type: 'hierarchical', style: 'secondary' }),
 ];
 
 // An option's title (and icon) and its subtitle under it.
@@ -36,21 +38,23 @@ function OptionLabel(props: { option: FieldPickerOption }): ReactElement {
 
   return (
     <>
-      <RowTitle
-        title={option.label}
-        leading={option.icon}
-        logo={option.logo}
-        tone={option.tone}
-      />
-      <Subtitle text={option.subtitle} />
+      <OptionTitle option={option} />
+      <Subtitle text={option.subtitle} tone={option.subtitleTone} />
     </>
   );
 }
 
-function Subtitle(props: { text?: string }): ReactElement | null {
+function Subtitle(props: {
+  text?: string;
+  tone?: 'warning';
+}): ReactElement | null {
+  const warning = useTextColor(props.tone);
+
   if (!props.text) return null;
 
-  return <NativeText modifiers={subtitleModifiers}>{props.text}</NativeText>;
+  return (
+    <NativeText modifiers={subtitleModifiers(warning)}>{props.text}</NativeText>
+  );
 }
 
 const selectedTrait = accessibilityAddTraits(['isSelected']);
@@ -60,7 +64,7 @@ const pressModifiers = (
   selected: boolean,
 ): ReturnType<typeof disabled>[] => [
   buttonStyle('plain'),
-  ...offModifiers(props),
+  disabled(isOptionOff(props)),
   ...(selected ? [selectedTrait] : []),
 ];
 

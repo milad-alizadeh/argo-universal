@@ -60,6 +60,11 @@ export type PickerDrawing = {
   menuHoldsMultiple: boolean;
 };
 
+// The whole picker is disabled, or just this option.
+export const isOptionOff = (
+  props: Pick<PickerProps, 'disabled'> & { option: FieldPickerOption },
+): boolean => Boolean(props.disabled || props.option.disabled);
+
 type OptionChoice = { selected: boolean; toggle: () => void };
 
 // Whether an option is chosen, and what pressing its row does.

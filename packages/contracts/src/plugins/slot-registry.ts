@@ -7,6 +7,8 @@ export const projectDetailsSlotId = 'argo/project/details/v1';
 
 export const sessionRowSlotId = 'argo/session/row/v1';
 
+export const sessionActivitySlotId = 'argo/session/activity/v1';
+
 export const toolCallSlotId = 'argo/feed/tool-call/v1';
 
 export const messageSlotId = 'argo/feed/message/v1';
@@ -29,6 +31,11 @@ export type ItemsContent<Key extends string, Item extends z.ZodObject> = {
   key: Key;
   item: Item;
   limit: SlotLimit;
+  /*
+   * 'one' makes a Single-owner Slot: every declaring Plugin answers, and the App shows only the answer of the Plugin
+   * the user chose, or Argo's own while none is chosen (ADR-0035).
+   */
+  owners?: 'one';
 };
 
 // The cap on how many contexts one batched call names: a list longer than this asks again.
@@ -121,7 +128,10 @@ const itemsInput = <Id extends string, Context extends z.ZodObject>(
     contexts: z.array(context).min(1).max(slotItemsListLimit),
   });
 
-function mergedItems<Item extends z.ZodObject>(item: Item): MergedItems<Item> {
+// One context's answer from an items Slot, as the App reads it back.
+export function mergedItems<Item extends z.ZodObject>(
+  item: Item,
+): MergedItems<Item> {
   const attributed = z.strictObject({ pluginId: z.string(), item });
 
   return z.strictObject({
@@ -152,25 +162,37 @@ export const SessionRowItem = z.strictObject({
 
 export type SessionRowItem = z.infer<typeof SessionRowItem>;
 
+// A Session row's Activity line as one Plugin writes it: one short line of text in place of Argo's.
+export const SessionActivityItem = z.strictObject({
+  text: z.string().trim().min(1).max(sessionRowTextLimit),
+});
+
+export type SessionActivityItem = z.infer<typeof SessionActivityItem>;
+
+// A Session row's context: ids only (ADR-0030); a Plugin reads a Session's branch through `argo.sessions.get`.
+const SessionRowContext = z.strictObject({
+  sessionId: z.string().min(1),
+  projectId: z.string().min(1),
+});
+
 // Every Slot is one entry: adding an entry is the whole job of adding a Slot.
 export const addOnlySlots = [
   treeSlotEntry(
     projectDetailsSlotId,
     z.strictObject({ projectId: z.string().min(1) }),
   ),
-  // The context carries only ids (ADR-0030); a Plugin reads a Session's branch through `argo.sessions.get`.
-  itemsSlotEntry(
-    sessionRowSlotId,
-    z.strictObject({
-      sessionId: z.string().min(1),
-      projectId: z.string().min(1),
-    }),
-    {
-      key: 'sessionId',
-      item: SessionRowItem,
-      limit: { phone: 1, desktop: 3, perPlugin: 8 },
-    },
-  ),
+  itemsSlotEntry(sessionRowSlotId, SessionRowContext, {
+    key: 'sessionId',
+    item: SessionRowItem,
+    limit: { phone: 1, desktop: 3, perPlugin: 8 },
+  }),
+  // Single-owner: each Plugin that asks answers one line per row; the App shows the chosen Plugin's.
+  itemsSlotEntry(sessionActivitySlotId, SessionRowContext, {
+    key: 'sessionId',
+    item: SessionActivityItem,
+    limit: { phone: 1, desktop: 1, perPlugin: 1 },
+    owners: 'one',
+  }),
 ] as const;
 
 // Replaceable Slots carry props, not a context; Plugins reach them through `ui.render` (ADR-0027).

@@ -12,7 +12,11 @@ import {
   toggling,
   type RowListItemProps,
 } from '../field-row/field-row-list-item.android';
-import { optionChoice, type OptionRowProps } from './field-picker-kind';
+import {
+  isOptionOff,
+  optionChoice,
+  type OptionRowProps,
+} from './field-picker-kind';
 
 /*
  * One option as a Material ListItem, as Compose Settings draws a choice: the title, the subtitle as its supporting
@@ -20,13 +24,14 @@ import { optionChoice, type OptionRowProps } from './field-picker-kind';
  */
 export function OptionRow(props: OptionRowProps): ReactElement {
   const choice = optionChoice(props);
-  const { option, disabled } = props;
+  const { option } = props;
+  const disabled = isOptionOff(props);
 
   return (
     <RowListItem
       {...look(option)}
       disabled={disabled}
-      supporting={supporting(option.subtitle)}
+      supporting={supporting(option)}
       trailing={<Mark {...props} selected={choice.selected} />}
       modifiers={toggles(props, choice)}
     />
@@ -50,7 +55,7 @@ const toggles = (
     {
       value: choice.selected,
       onValueChange: choice.toggle,
-      disabled: props.disabled,
+      disabled: isOptionOff(props),
     },
     role(props),
   );
@@ -59,7 +64,7 @@ const role = (props: OptionRowProps): 'checkbox' | 'radioButton' =>
   props.multiple ? 'checkbox' : 'radioButton';
 
 function Mark(props: OptionRowProps & { selected: boolean }): ReactElement {
-  const enabled = !props.disabled;
+  const enabled = !isOptionOff(props);
 
   if (props.option.pending) return <Applying />;
 
@@ -70,12 +75,14 @@ function Mark(props: OptionRowProps & { selected: boolean }): ReactElement {
   );
 }
 
-function supporting(subtitle: string | undefined): ReactElement | undefined {
-  if (!subtitle) return undefined;
+function supporting(
+  option: OptionRowProps['option'],
+): ReactElement | undefined {
+  if (!option.subtitle) return undefined;
 
   return (
-    <NativeText role="secondary" tone="muted">
-      {subtitle}
+    <NativeText role="secondary" tone={option.subtitleTone ?? 'muted'}>
+      {option.subtitle}
     </NativeText>
   );
 }

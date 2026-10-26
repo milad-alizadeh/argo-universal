@@ -89,12 +89,14 @@ interface PlotInput {
   handlers: Handlers;
 }
 
+const hasGrid = ({ props }: Drawing): boolean => props.grid === true;
+
 function CartesianPlot({ drawing, handlers }: PlotInput): React.JSX.Element {
   return (
     <CartesianChart
       {...rowsConfig(drawing.data)}
       {...layoutConfig(drawing)}
-      {...axisConfig(drawing.theme, drawing.data.rows.length)}
+      {...axisConfig(drawing.theme, drawing.data.rows.length, hasGrid(drawing))}
       {...handlers}
     >
       {(arg) => drawSeries(arg, drawing)}

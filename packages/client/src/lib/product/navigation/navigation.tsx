@@ -43,6 +43,12 @@ export const projectHref = (name: string): Href => ({
   params: { name },
 });
 
+// A Slot's page in Settings › Plugins; a Slot id has slashes, so it travels as one param.
+export const slotSettingsHref = (id: string): Href => ({
+  pathname: '/settings/plugins/slots/[id]',
+  params: { id },
+});
+
 interface NavigateOptions {
   // Swaps out the current page, so Back skips it.
   replace?: boolean;

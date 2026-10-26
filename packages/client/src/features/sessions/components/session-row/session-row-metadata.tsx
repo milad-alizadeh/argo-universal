@@ -1,3 +1,4 @@
+import type { SessionRowItem } from '@repo/contracts/plugins/wire';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
@@ -34,13 +35,39 @@ function ageContent({ age }: SessionRowMetadataProps): React.ReactNode {
   );
 }
 
+// Each Plugin item as Argo draws it: its text in its tone. Two Plugins may send the same text, so each repeat is counted into its key.
+const pluginItems = ({
+  items = [],
+}: SessionRowMetadataProps): React.ReactNode =>
+  withKeys(items).map(({ key, item }) => (
+    <Text key={key} role="secondary" tone={item.tone ?? 'muted'}>
+      {item.text}
+    </Text>
+  ));
+
+function withKeys(
+  items: readonly SessionRowItem[],
+): { key: string; item: SessionRowItem }[] {
+  const seen = new Map<string, number>();
+
+  return items.map((item) => {
+    const repeat = seen.get(item.text) ?? 0;
+
+    seen.set(item.text, repeat + 1);
+
+    return { key: `${item.text}:${repeat}`, item };
+  });
+}
+
 function hasMetadata({
   session,
   pullRequest,
   age,
+  items = [],
 }: SessionRowMetadataProps): boolean {
   return [
     age !== undefined,
+    items.length > 0,
     session.subagents.total > 0,
     sidebarRows && session.shells.total > 0,
     session.archivedAt !== null,
@@ -48,7 +75,7 @@ function hasMetadata({
   ].some(Boolean);
 }
 
-// The time, the Change, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList").
+// The time, the Change, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList"), then the Plugins' items.
 export function sessionMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {
@@ -61,6 +88,7 @@ export function sessionMetadata(
       <ShellsCount {...props} />
       <SubagentsCount {...props} />
       {archivedContent(props)}
+      {pluginItems(props)}
     </View>
   );
 }

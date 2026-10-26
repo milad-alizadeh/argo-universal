@@ -20,6 +20,12 @@ const fieldGroupPickerOption = z.object({
   value: z.string(),
   label: z.string(),
   subtitle: z.string().optional().describe('A second line under the label.'),
+  subtitleTone: z
+    .literal('warning')
+    .optional()
+    .describe(
+      '`warning` draws the subtitle in the warning tone, such as a choice that replaces another.',
+    ),
   icon: iconName.optional().describe('A leading icon.'),
   logo: z
     .string()
@@ -39,6 +45,10 @@ const fieldGroupPickerOption = z.object({
     .describe(
       'The choice is being applied: a spinner stands where the check will be.',
     ),
+  disabled: z
+    .boolean()
+    .optional()
+    .describe('The option is drawn dimmed and cannot be chosen.'),
   section: z
     .string()
     .optional()
