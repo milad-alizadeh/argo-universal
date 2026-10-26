@@ -1,10 +1,8 @@
-import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
-import { Stack } from '@repo/kit/primitives/layout/stack';
 import { InspectorBody } from '@repo/kit/primitives/scaffolds/inspector';
 import { useState, type ComponentProps, type ReactElement } from 'react';
 import {
   ChangesFiles,
-  ChangesToolbar,
+  ChangesStageToolbar,
   type ChangesViewProps,
 } from '#features/changes';
 import {
@@ -19,11 +17,6 @@ type Props = {
 };
 
 type Page = Props & { segment: string; onSelect: (segment: string) => void };
-
-const segments = [
-  { value: 'change', label: 'Change' },
-  { value: 'files', label: 'Files' },
-];
 
 const hasChange = (props: Props): boolean =>
   !!props.header?.pullRequests?.length;
@@ -41,27 +34,14 @@ function StageContent(props: Page): ReactElement | null {
   return <Files {...props} />;
 }
 
-function FilesToolbar(props: Page): ReactElement | null {
-  if (props.segment !== 'files') return null;
-
-  return props.changes ? <ChangesToolbar {...props.changes} /> : null;
-}
-
-function StageToolbar(props: Page): ReactElement {
-  return (
-    <Stack direction="column" gap={2}>
-      {hasChange(props) && (
-        <SegmentedControl
-          label="Change detail"
-          options={segments}
-          value={props.segment}
-          onValueChange={props.onSelect}
-        />
-      )}
-      <FilesToolbar {...props} />
-    </Stack>
-  );
-}
+const stageToolbar = (props: Page): ReactElement => (
+  <ChangesStageToolbar
+    hasChange={hasChange(props)}
+    segment={props.segment}
+    onSelect={props.onSelect}
+    changes={props.changes}
+  />
+);
 
 function stageFrame(props: Page): ComponentProps<typeof InspectorBody> {
   return {
@@ -69,7 +49,7 @@ function stageFrame(props: Page): ComponentProps<typeof InspectorBody> {
     open: true,
     onOpenChange: ignore,
     surface: 'bg-transparent',
-    toolbar: <StageToolbar {...props} />,
+    toolbar: stageToolbar(props),
     // The files are their own virtualised list; the change detail scrolls in the Inspector's.
     contentScrolls: props.segment === 'files',
   };

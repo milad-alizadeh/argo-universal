@@ -1,8 +1,8 @@
+import type { ChangesSummary } from '@repo/contracts';
 import { Sheet, type SheetProps } from '@repo/kit/primitives/overlays/sheet';
 import type * as React from 'react';
 import {
   type ChangedFile,
-  type ChangesSummary,
   type ChangesViewProps,
   uniqueChangedFiles,
 } from '#features/changes';
@@ -60,8 +60,8 @@ function summaryOf(files: readonly FileDiff[]): ChangesSummary {
 
   return {
     files: unique.length,
-    added: unique.reduce((sum, file) => sum + file.added, 0),
-    removed: unique.reduce((sum, file) => sum + file.removed, 0),
+    additions: unique.reduce((sum, file) => sum + file.added, 0),
+    deletions: unique.reduce((sum, file) => sum + file.removed, 0),
   };
 }
 

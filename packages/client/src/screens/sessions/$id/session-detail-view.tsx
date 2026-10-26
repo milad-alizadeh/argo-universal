@@ -14,10 +14,10 @@ import {
 import {
   ArchivedBanner,
   serverSilentMessage,
+  SessionBandClaim,
   SessionCallout,
   type SessionCalloutProps,
   sessionOpenFailedTitle,
-  SessionHeader,
   type SessionHeaderProps,
   type SessionPanels,
   TerminalSignIn,
@@ -113,7 +113,7 @@ const sessionParts = (
   panels: SessionPanels,
 ): React.ComponentProps<typeof SessionLayout> => ({
   header: (
-    <SessionHeader {...props.header} panels={headerPanels(props, panels)} />
+    <SessionBandClaim {...props.header} panels={headerPanels(props, panels)} />
   ),
   feed: <Feed {...props.feed} />,
   composer: sessionBottom(props),

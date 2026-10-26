@@ -34,7 +34,7 @@ const chipSurfaceProps = {
   fallbackClassName: 'rounded-full border border-border bg-card shadow-card',
 } as const;
 
-// Every status chip is the same pill: glass on iOS, a bordered card elsewhere.
+// Every status control draws the same Pill surface: glass on iOS, a bordered card elsewhere.
 export function ChipSurface({
   children,
 }: {

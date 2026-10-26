@@ -55,17 +55,17 @@ export type WireSchemaHints = {
   "Card": {
     /** The card title on its header line. */
     "title": PropValue<"Card", "title">;
-    /** A second line below the title. */
-    "subtitle": PropValue<"Card", "subtitle">;
     /** The card's spoken name; defaults to title and subtitle. */
     "accessibilityLabel": PropValue<"Card", "accessibilityLabel">;
-    /** Action run when the card is pressed. */
-    "onPress": PropValue<"Card", "onPress">;
     /** The Surface the card is drawn on. */
     "kind": PropValue<"Card", "kind">;
     /** compact draws tighter padding and a smaller gap under the title, for cards stacked in a narrow column. */
     "density": PropValue<"Card", "density">;
-    /** The title, with a disclosure chevron after it, toggles the body; the icon, subtitle and onPress are not used. */
+    /** A second line below the title. */
+    "subtitle": PropValue<"Card", "subtitle">;
+    /** Action run when the card is pressed. */
+    "onPress": PropValue<"Card", "onPress">;
+    /** The title, with a disclosure chevron after it, toggles the body. */
     "collapsible": PropValue<"Card", "collapsible">;
     /** Controlled open state of a collapsible card. */
     "open": PropValue<"Card", "open">;
@@ -351,7 +351,7 @@ export type WireSchemaHints = {
     "primary": PropValue<"SplitButton", "primary">;
     /** Disable activation. */
     "disabled": PropValue<"SplitButton", "disabled">;
-    /** Both segments' Button size. */
+    /** Both segments' Button size; xs draws as sm. */
     "size": PropValue<"SplitButton", "size">;
     /** Fill the row always, or only when narrow. */
     "fullWidth": PropValue<"SplitButton", "fullWidth">;

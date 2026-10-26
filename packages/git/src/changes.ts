@@ -9,12 +9,7 @@ import {
 
 export type { CheckoutFile } from './changes-parse';
 
-export {
-  type ItemsPage,
-  pageItems,
-  pagePatch,
-  type PatchPage,
-} from './patch-page';
+export { pagePatch, type PatchPage } from './patch-page';
 
 const execute = promisify(execFile);
 
@@ -147,6 +142,8 @@ export async function listComparisonBranches(
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
+const untrackedBatchSize = 8;
+
 async function untrackedChange(
   checkout: string,
   path: string,
@@ -160,6 +157,25 @@ async function untrackedChange(
   ]);
 
   return untrackedFile(path, stat);
+}
+
+// Each untracked file costs one git process, so they run in small batches.
+async function untrackedChanges(
+  checkout: string,
+  paths: string[],
+): Promise<CheckoutFile[]> {
+  const files: CheckoutFile[] = [];
+
+  for (let start = 0; start < paths.length; start += untrackedBatchSize)
+    files.push(
+      ...(await Promise.all(
+        paths
+          .slice(start, start + untrackedBatchSize)
+          .map((path) => untrackedChange(checkout, path)),
+      )),
+    );
+
+  return files;
 }
 
 export async function readCheckoutChanges(
@@ -187,11 +203,7 @@ export async function readCheckoutChanges(
     (file) => !untrackedSet.has(file.path),
   );
 
-  files.push(
-    ...(await Promise.all(
-      untracked.map((path) => untrackedChange(checkout, path)),
-    )),
-  );
+  files.push(...(await untrackedChanges(checkout, untracked)));
   files.sort((a, b) => a.path.localeCompare(b.path));
 
   return {
@@ -207,14 +219,20 @@ export async function readCheckoutChanges(
 
 type CheckoutDiff = { file: CheckoutFile; patch: string };
 
-// A pathspec is read literally, and a path that leaves the Checkout names no changed file.
-const literal = '--literal-pathspecs';
+// A path is a name, never a glob or a pathspec magic.
+const literalPathspecs = '--literal-pathspecs';
 
+// A path that leaves the Checkout names no changed file.
 const leavesCheckout = (path: string): boolean =>
   path.startsWith('/') || path.split('/').includes('..');
 
 async function isUntracked(checkout: string, path: string): Promise<boolean> {
-  const status = await git(checkout, [literal, ...worktreeStatus, '--', path]);
+  const status = await git(checkout, [
+    literalPathspecs,
+    ...worktreeStatus,
+    '--',
+    path,
+  ]);
 
   return untrackedPaths(status).includes(path);
 }
@@ -231,6 +249,9 @@ async function untrackedDiff(
   return { file, patch };
 }
 
+// The names are enough to find the file; its counts are read for its own paths afterwards.
+const noNumstat = '';
+
 // Renames are found across the whole comparison; the counts and the patch are read for this file's paths alone.
 async function trackedDiff(
   checkout: string,
@@ -239,15 +260,25 @@ async function trackedDiff(
 ): Promise<CheckoutDiff | null> {
   const status = await git(checkout, nameStatus(base));
 
-  const entry = trackedFiles(status, '').find((item) => item.path === path);
+  const entry = trackedFiles(status, noNumstat).find(
+    (item) => item.path === path,
+  );
 
   if (!entry) return null;
 
   const paths = ['--', ...new Set([entry.oldPath ?? path, path])];
 
   const [numstat, patch] = await Promise.all([
-    git(checkout, [literal, 'diff', '--numstat', '-z', '-M', base, ...paths]),
-    git(checkout, [literal, 'diff', '-M', base, ...paths]),
+    git(checkout, [
+      literalPathspecs,
+      'diff',
+      '--numstat',
+      '-z',
+      '-M',
+      base,
+      ...paths,
+    ]),
+    git(checkout, [literalPathspecs, 'diff', '-M', base, ...paths]),
   ]);
 
   const file = trackedFiles(status, numstat).find((item) => item.path === path);

@@ -1,4 +1,4 @@
-export { SessionHeader } from './components/session-header';
+export { SessionBandClaim } from './components/session-band-claim';
 
 export { SubagentList } from './components/subagent-list/subagent-list';
 
@@ -123,7 +123,7 @@ export { useSessionPlanActions } from './hooks/use-session-plan-actions';
 export {
   type SessionHeaderProps,
   type SessionHeaderStatus,
-} from './components/session-header';
+} from './components/session-header-props';
 
 export { sessionActions, type SessionMenu } from './components/session-actions';
 
@@ -211,3 +211,5 @@ export {
   SessionRow,
   type SessionRowProps,
 } from './components/session-row/session-row';
+
+export { NewSessionQuestion } from './components/new-session-question/new-session-question';

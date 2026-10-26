@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { SessionHeader } from '#features/sessions';
+import { SessionBandClaim } from '#features/sessions';
 import { HostedScaffoldMock } from './hosted-scaffold.mocks';
 
 const meta = {
@@ -30,7 +30,7 @@ export const SessionIdentityMovesIntoTheBand: Story = {
           </Action>
         }
       />
-      <SessionHeader
+      <SessionBandClaim
         title="Build the window band"
         status="running"
         startedAt={null}

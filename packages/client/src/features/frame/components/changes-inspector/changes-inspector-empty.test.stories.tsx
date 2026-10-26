@@ -22,7 +22,10 @@ type Story = StoryObj<typeof meta>;
 const loadError = "Git couldn't find main.";
 
 // The Server's answer when the comparison holds no changed files.
-const noFiles = { files: [], summary: { files: 0, added: 0, removed: 0 } };
+const noFiles = {
+  files: [],
+  summary: { files: 0, additions: 0, deletions: 0 },
+};
 
 export const NoChangesSinceMain: Story = {
   args: noFiles,

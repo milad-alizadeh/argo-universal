@@ -65,8 +65,11 @@ export function ScreenListColumn(props: ScreenListColumnProps): ReactElement {
   );
 }
 
-// A heading starts on the rows' text line: 8 in from the column's edge and 16 in the row, and ends 14 from the scrollbar.
-const rowClassName = 'h-frame-control flex-row items-center pl-6 pr-3.5';
+const startsOnRowText = 'pl-6';
+
+const endsClearOfScrollbar = 'pr-3.5';
+
+const rowClassName = `h-frame-control flex-row items-center ${startsOnRowText} ${endsClearOfScrollbar}`;
 
 const bandRowClassName = `${rowClassName} native:mt-4 native:pt-1`;
 

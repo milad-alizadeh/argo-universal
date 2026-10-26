@@ -22,7 +22,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
+type Canvas = PlayContext['canvas'];
 
 const pressLeft = '[MouseLeft>]';
 
@@ -59,23 +61,43 @@ export const DraggingAHandlePlacesTheCard: Story = {
   },
 };
 
-export const ArrowKeysMoveAFocusedHandle: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const handle = canvas.getByRole('button', { name: 'Reorder Third' });
+async function pressOnHandle(
+  { canvas, userEvent }: PlayContext,
+  name: string,
+  key: string,
+): Promise<void> {
+  canvas.getByRole('button', { name: `Reorder ${name}` }).focus();
+  await userEvent.keyboard(key);
+}
 
-    handle.focus();
-    await userEvent.keyboard('{ArrowUp}');
+export const ArrowUpMovesAFocusedCardUp: Story = {
+  play: async (context) => {
+    const { canvas } = context;
+
+    await pressOnHandle(context, 'Third', '{ArrowUp}');
     await waitFor(() =>
       expect(titles(canvas)).toEqual(['First', 'Third', 'Second']),
     );
-    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+  },
+};
+
+export const ArrowDownMovesAFocusedCardDown: Story = {
+  play: async (context) => {
+    const { canvas } = context;
+
+    await pressOnHandle(context, 'First', '{ArrowDown}');
     await waitFor(() =>
-      expect(titles(canvas)).toEqual(['Third', 'First', 'Second']),
+      expect(titles(canvas)).toEqual(['Second', 'First', 'Third']),
     );
-    await userEvent.keyboard('{ArrowDown}');
-    await waitFor(() =>
-      expect(titles(canvas)).toEqual(['First', 'Third', 'Second']),
-    );
+  },
+};
+
+export const ArrowUpOnTheFirstCardKeepsItThere: Story = {
+  play: async (context) => {
+    const { canvas } = context;
+
+    await pressOnHandle(context, 'First', '{ArrowUp}');
+    await expect(titles(canvas)).toEqual(['First', 'Second', 'Third']);
   },
 };
 

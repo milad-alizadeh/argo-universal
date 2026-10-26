@@ -1,16 +1,13 @@
-// Where a card sits in the column, from the column's own top.
 export interface CardSlot {
   top: number;
   height: number;
 }
 
-// What is known when a handle is taken: where the pointer is, and where every card sits.
 export interface Grab {
   pointerY: number;
   slots: readonly CardSlot[];
 }
 
-// One card held by its handle: where every card sat, which one moves and how far the pointer has taken it.
 export interface Drag {
   id: string;
   from: number;
@@ -42,7 +39,6 @@ export function moveCard(
   return moved;
 }
 
-// The value held between low and high.
 export const clamp = (value: number, low: number, high: number): number =>
   Math.min(high, Math.max(low, value));
 
@@ -69,7 +65,6 @@ export function clampOffset(
   return clamp(offset, lowest, highest);
 }
 
-// The place the held card takes if let go now: after every other card whose middle it has passed.
 export function dropIndex(drag: Drag): number {
   const centre = middle(slotAt(drag.slots, drag.from)) + drag.offset;
 
@@ -87,14 +82,12 @@ function gapBetween(slots: readonly CardSlot[]): number {
 const within = (index: number, low: number, high: number): boolean =>
   index >= low && index <= high;
 
-// Up (-1) for the cards the held one passes on its way down, down (1) for those it passes on its way up.
 function stepDirection(from: number, target: number, index: number): number {
   if (within(index, from + 1, target)) return -1;
 
   return within(index, target, from - 1) ? 1 : 0;
 }
 
-// How far a card that is not held steps aside, up or down, to open the place the held card is heading for.
 export function makeRoom(drag: Drag, index: number): number {
   const step = slotAt(drag.slots, drag.from).height + gapBetween(drag.slots);
 

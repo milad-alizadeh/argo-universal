@@ -26,3 +26,5 @@ export {
   configurationChoices,
   configurationEffortChoices,
 } from '@repo/contracts';
+
+export { ComposerStack } from './components/composer-stack/composer-stack';

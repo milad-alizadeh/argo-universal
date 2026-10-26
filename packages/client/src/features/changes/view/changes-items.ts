@@ -1,5 +1,6 @@
 import type { FileDiff } from '#features/feed';
 import type { ChangedFile, FileDiffPages } from './changes-view-props';
+import { settled } from './diff-pages-state';
 
 /*
  * The Changes list as one flat list, so each file's header can stick to the top while its own diff scrolls under it:
@@ -11,6 +12,12 @@ export type ChangesItem =
   | { kind: 'header'; key: string; file: ChangedFile }
   | { kind: 'page'; key: string; file: ChangedFile; hunks: FileDiff['hunks'] }
   | { kind: 'status'; key: string; file: ChangedFile; diff?: FileDiffPages };
+
+export type DiffItem = Extract<ChangesItem, { kind: 'page' | 'status' }>;
+
+// The items under a file's header; the rest are the list's own parts.
+export const isDiffItem = (item: ChangesItem): item is DiffItem =>
+  item.kind === 'page' || item.kind === 'status';
 
 export interface ChangesItems {
   items: ChangesItem[];
@@ -24,9 +31,6 @@ type Lists = { open: ReadonlySet<string>; diffs: Diffs };
 
 const hasLines = (diff: FileDiffPages): boolean =>
   diff.pages.some((hunks) => hunks.length > 0);
-
-const settled = (diff: FileDiffPages): boolean =>
-  !diff.loading && !diff.more && diff.loadError === undefined;
 
 // A file's diff still has something to say below its pages.
 const needsStatus = (diff: FileDiffPages | undefined): boolean =>

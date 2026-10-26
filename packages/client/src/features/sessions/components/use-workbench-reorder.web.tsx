@@ -1,12 +1,20 @@
 import { cn } from '@repo/kit/utils';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import { useReorderGesture, type Gesture } from './use-reorder-gesture.web';
-import type { WorkbenchReorder, WorkbenchSlot } from './use-workbench-reorder';
+import type {
+  ColumnRef,
+  WorkbenchReorder,
+  WorkbenchSlot,
+} from './use-workbench-reorder';
 import type { WorkbenchColumnCard } from './workbench-column';
-import { ReorderHandle, slotTestID } from './workbench-reorder-handle.web';
+import {
+  ReorderHandle,
+  type ReorderHandleProps,
+} from './workbench-reorder-handle.web';
 import {
   clampOffset,
+  type Grab,
   makeRoom,
   orderCards,
   type Drag,
@@ -40,38 +48,51 @@ function slotFor(
   gesture: Gesture,
 ): WorkbenchSlot {
   return {
-    testID: slotTestID(id),
     className: cn(glide(id, gesture.drag)),
     style: slotStyle(id, shown.indexOf(id), gesture.drag),
   };
 }
 
-function handleFor(id: string, label: string, gesture: Gesture): ReactNode {
-  return (
-    <ReorderHandle
-      label={label}
-      onGrab={(grab) => gesture.begin(id, grab)}
-      onMove={gesture.move}
-      onRelease={gesture.end}
-      onCancel={gesture.cancel}
-      onNudge={(by) => gesture.nudge(id, by)}
-    />
-  );
-}
+const gestureProps = (
+  id: string,
+  gesture: Gesture,
+): Omit<ReorderHandleProps, 'label' | 'column'> => ({
+  onGrab: (grab: Grab) => gesture.begin(id, grab),
+  onMove: gesture.move,
+  onRelease: gesture.end,
+  onCancel: gesture.cancel,
+  onNudge: (by: -1 | 1) => gesture.nudge(id, by),
+});
 
 // The cards by id, and the ids in the order drawn: the one the user chose, with any new card after it.
-interface Order {
+interface OrderedCards {
   byId: Map<string, WorkbenchColumnCard>;
   shown: string[];
   setOrder: (order: string[]) => void;
 }
 
-function useOrder(cards: readonly WorkbenchColumnCard[]): Order {
+function useOrder(cards: readonly WorkbenchColumnCard[]): OrderedCards {
   const [order, setOrder] = useState<string[]>([]);
   const byId = new Map(cards.map((card) => [card.id, card]));
 
   return { byId, shown: orderCards([...byId.keys()], order), setOrder };
 }
+
+// A lone card has nothing to move past, so it shows no handle.
+const handleFor =
+  (
+    count: number,
+    column: ColumnRef,
+    gesture: Gesture,
+  ): WorkbenchReorder['handle'] =>
+  (id, label) =>
+    count > 1 ? (
+      <ReorderHandle
+        label={label}
+        column={column}
+        {...gestureProps(id, gesture)}
+      />
+    ) : null;
 
 /*
  * Desktop and web: a card is moved by its handle, with a pointer or the arrow keys. The order is kept here, in the
@@ -79,6 +100,7 @@ function useOrder(cards: readonly WorkbenchColumnCard[]): Order {
  */
 export function useWorkbenchReorder(
   cards: readonly WorkbenchColumnCard[],
+  column: ColumnRef,
 ): WorkbenchReorder {
   const { byId, shown, setOrder } = useOrder(cards);
   const gesture = useReorderGesture({ shown, reorder: setOrder });
@@ -86,7 +108,6 @@ export function useWorkbenchReorder(
   return {
     cards: shown.flatMap((id) => byId.get(id) ?? []),
     slot: (id) => slotFor(id, shown, gesture),
-    handle: (id, label) =>
-      shown.length > 1 ? handleFor(id, label, gesture) : null,
+    handle: handleFor(shown.length, column, gesture),
   };
 }

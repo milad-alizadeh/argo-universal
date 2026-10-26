@@ -11,13 +11,13 @@ import {
 } from '@repo/contracts';
 import {
   listComparisonBranches,
-  pageItems,
   pagePatch,
   readCheckoutChanges,
   readCheckoutDiff,
   type ChangeComparison,
 } from '@repo/git';
 import { TRPCError } from '@trpc/server';
+import { pageItems, pageWindow } from '../lib/page-items';
 import { readProjectPath } from '../projects';
 import { publicProcedure, router, routerFactory } from '../rpc';
 import type { SessionRouterDeps } from './router-deps';
@@ -59,8 +59,7 @@ export const createChangesRouter = routerFactory((deps: SessionRouterDeps) =>
 
         const page = pageItems(
           result.files,
-          input.cursor ?? 0,
-          input.limit ?? sessionChangesPageFiles,
+          pageWindow(input, sessionChangesPageFiles),
         );
 
         return {
@@ -89,11 +88,8 @@ export const createChangesRouter = routerFactory((deps: SessionRouterDeps) =>
             message: `No changed file ${input.path}`,
           });
 
-        const page = pagePatch(
-          result.patch,
-          input.cursor ?? 0,
-          input.limit ?? sessionDiffPageLines,
-        );
+        const window = pageWindow(input, sessionDiffPageLines);
+        const page = pagePatch(result.patch, window.cursor, window.limit);
 
         return {
           file: result.file,

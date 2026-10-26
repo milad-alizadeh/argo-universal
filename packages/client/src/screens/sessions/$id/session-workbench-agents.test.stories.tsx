@@ -58,7 +58,7 @@ export const DisclosureKeepsStageClosed: Story = {
     await waitFor(() => expect(canvas.queryByText(activeTitle)).toBeNull());
     await expect(canvas.queryByText('2 done')).toBeNull();
     await expect(
-      canvas.getByRole('button', { name: 'Show Stage' }),
+      canvas.getByRole('button', { name: 'Show Inspector' }),
     ).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(
       canvas.getByRole('button', { name: 'Expand Agents' }),

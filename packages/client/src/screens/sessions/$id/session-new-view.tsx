@@ -1,5 +1,4 @@
 import type { AgentServer, ProjectInfo } from '@repo/contracts';
-import { Stack } from '@repo/kit/primitives/layout/stack';
 import {
   type ErrorToast,
   useErrorToast,
@@ -10,6 +9,7 @@ import {
   Composer,
   type ComposerConfigurationProps,
   type ComposerDraft,
+  ComposerStack,
   StartSessionIn,
 } from '#features/composer';
 import {
@@ -105,11 +105,12 @@ function NewSessionComposer(
 
   return (
     <View className="w-full self-center">
-      <Stack direction="column" gap={2}>
-        {/* A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off. */}
-        {!wide && !props.starting && <NewSessionStartIn {...props} />}
+      <ComposerStack
+        // A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off.
+        above={!wide && !props.starting && <NewSessionStartIn {...props} />}
+      >
         <PromptComposer {...props} />
-      </Stack>
+      </ComposerStack>
     </View>
   );
 }

@@ -2,7 +2,13 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { CollapsibleCardContent } from './card-collapsible';
-import { ActionLane, CardHeading, cardSpace, IconLane } from './card-parts';
+import {
+  ActionLane,
+  CardBody,
+  CardHeading,
+  cardSpace,
+  IconLane,
+} from './card-parts';
 import type { CardProps } from './card-props';
 
 // The press layer's name: the header's own words unless the author gives one.
@@ -35,7 +41,7 @@ export function CardContent(props: CardProps): ReactElement {
   return (
     <View className={`${space.gap} ${space.padding}`}>
       <CardHeader {...props} />
-      {props.children}
+      <CardBody density={props.density}>{props.children}</CardBody>
     </View>
   );
 }

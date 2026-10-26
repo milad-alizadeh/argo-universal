@@ -35,14 +35,12 @@ const cardOpenProps = {
   onOpenChange: openStateProps.shape.onOpenChange,
 };
 
-const cardProps = z.object({
+const cardBase = z.object({
   title: z.string().describe('The card title on its header line.'),
-  subtitle: z.string().optional().describe('A second line below the title.'),
   accessibilityLabel: z
     .string()
     .optional()
     .describe("The card's spoken name; defaults to title and subtitle."),
-  onPress: onPress.optional().describe('Action run when the card is pressed.'),
   kind: z
     .enum(['card', 'glass'])
     .optional()
@@ -55,14 +53,30 @@ const cardProps = z.object({
     .describe(
       'compact draws tighter padding and a smaller gap under the title, for cards stacked in a narrow column.',
     ),
+});
+
+const staticCard = cardBase.extend({
+  subtitle: z.string().optional().describe('A second line below the title.'),
+  onPress: onPress.optional().describe('Action run when the card is pressed.'),
+  collapsible: z.literal(false).optional(),
+  open: z.never().optional(),
+  defaultOpen: z.never().optional(),
+  onOpenChange: z.never().optional(),
+});
+
+// The title, not the card, is what presses: it has no subtitle line and no action of its own.
+const collapsibleCard = cardBase.extend({
   collapsible: z
-    .boolean()
-    .optional()
+    .literal(true)
     .describe(
-      'The title, with a disclosure chevron after it, toggles the body; the icon, subtitle and onPress are not used.',
+      'The title, with a disclosure chevron after it, toggles the body.',
     ),
+  subtitle: z.never().optional(),
+  onPress: z.never().optional(),
   ...cardOpenProps,
 });
+
+const cardProps = z.union([staticCard, collapsibleCard]);
 
 const scrollViewProps = z.object({
   accessibilityLabel: z
@@ -114,7 +128,7 @@ export const layoutWireParts = {
         actions: ['Button', 'IconButton'],
         footer: ['Text', 'Stack', 'Button', 'Pill'],
       },
-      events: { onOpenChange: openChange(cardProps) },
+      events: { onOpenChange: openChange(collapsibleCard) },
       accessibility: {
         keyboard:
           "A Card with onPress is one focus stop that activates with Enter or Space; its action stays a focus stop of its own. A collapsible Card's title is a button that toggles the body with Enter or Space.",

@@ -1,9 +1,7 @@
-import { Text } from '@repo/kit/primitives/content/text';
-import { Stack } from '@repo/kit/primitives/layout/stack';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Feed } from '#features/feed';
-import { type StartingFeed } from '#features/sessions';
+import { NewSessionQuestion, type StartingFeed } from '#features/sessions';
 import { useContentWide } from '#lib/product/content-layout';
 import { SessionColumn } from '#lib/product/session-column';
 
@@ -18,18 +16,9 @@ function NewSessionHeading(props: HeadingProps): React.JSX.Element | null {
   return (
     <View className="flex-1 justify-center">
       <SessionColumn>
-        <HeadingStack {...props} />
+        <NewSessionQuestion>{props.context}</NewSessionQuestion>
       </SessionColumn>
     </View>
-  );
-}
-
-function HeadingStack({ context }: HeadingProps): React.JSX.Element {
-  return (
-    <Stack direction="column" gap={6} align="center">
-      <NewSessionTitle />
-      {context}
-    </Stack>
   );
 }
 
@@ -53,13 +42,5 @@ export function NewSessionFeed({
       loadingOlder={false}
       onStartReached={noOlderRows}
     />
-  );
-}
-
-function NewSessionTitle(): React.JSX.Element {
-  return (
-    <Text role="title" accessibilityRole="heading" aria-level={1}>
-      What should we work on?
-    </Text>
   );
 }

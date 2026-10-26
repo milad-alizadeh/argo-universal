@@ -7,7 +7,6 @@ export type { FieldListSection } from './field-list-entries';
 export interface FieldListProps {
   sections: readonly FieldListSection[];
   testID?: string;
-  gap?: 'sm';
   // Drawn above the sections and scrolled with them.
   header?: ReactNode;
 }

@@ -53,7 +53,7 @@ const sectionViews: Record<
 
 type CardProps = ComponentProps<typeof Card>;
 
-// Each section owns its glass plate; the generic collapsible card draws it. Rows carry 4 of their own beside their hover tile, so the body and footer pull 4 out to line the rows' text up with the title.
+// Each section owns its glass plate; the generic collapsible card draws it.
 const sectionCardProps = (section: Section, handle: ReactNode): CardProps => ({
   kind: 'glass',
   density: 'compact',
@@ -71,9 +71,7 @@ function SectionCard({
   return (
     <View testID={`workbench-${section.panel}`}>
       <Card {...sectionCardProps(section, handle)}>
-        <View className="-mx-1">
-          <SectionBody {...section} />
-        </View>
+        <SectionBody {...section} />
       </Card>
     </View>
   );
@@ -84,11 +82,7 @@ function SectionFooter(section: Section): ReactElement | null {
 
   if (!Footer) return null;
 
-  return (
-    <View className="-mx-1">
-      <Footer {...section} />
-    </View>
-  );
+  return <Footer {...section} />;
 }
 
 // Changes with a preview carry their own presses on rows; every other body is one press that opens its section.

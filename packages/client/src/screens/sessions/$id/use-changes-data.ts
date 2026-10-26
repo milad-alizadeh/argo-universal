@@ -10,35 +10,32 @@ import {
   useQuery,
   useQueryClient,
   type UseInfiniteQueryResult,
-  type UseQueryResult,
 } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import {
   type ChangesComparison,
   type ChangesViewProps,
 } from '#features/changes';
-import { useTRPC, type ClientError } from '#features/connection';
+import { useTRPC } from '#features/connection';
 import { comparisonInput } from './changes-comparison-input';
 import { filesFromPages } from './changes-files-data';
+import type {
+  ChangesScope,
+  Query,
+  QueryFailure,
+} from './changes-query-types';
 import { useChangesDiffs } from './use-changes-diffs';
 
-type ChangesInput = {
-  sessionId: string;
-  open: boolean;
-  comparison: ChangesComparison;
-  branches?: SessionBranchesOutput;
-};
+type ChangesInput = ChangesScope<ChangesComparison>;
 
 type ChangesData = Omit<
   ChangesViewProps,
   'comparison' | 'onComparisonChange' | 'viewed' | 'onViewedChange'
 >;
 
-type Query<T> = UseQueryResult<T, Pick<ClientError, 'message'>>;
-
 type FilesQuery = UseInfiniteQueryResult<
   InfiniteData<SessionChangesOutput>,
-  Pick<ClientError, 'message'>
+  QueryFailure
 >;
 
 function useFilesQuery(

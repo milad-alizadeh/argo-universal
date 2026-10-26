@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
-import { splitButtonDefaults } from '../kit-tokens';
+import { buttonDefaults } from '../kit-tokens';
 import { handler } from './plugin-part-props';
 import { selectionValue } from './selection-value';
 
@@ -75,10 +75,10 @@ const splitBase = z.object({
   primary: z.boolean().optional().describe('Filled treatment.'),
   disabled: z.boolean().optional().describe(disabledDescription),
   size: z
-    .enum(['sm', 'md'])
+    .enum(['xs', 'sm', 'md'])
     .optional()
-    .meta({ default: splitButtonDefaults.size })
-    .describe("Both segments' Button size."),
+    .meta({ default: buttonDefaults.size })
+    .describe("Both segments' Button size; xs draws as sm."),
   fullWidth: z
     .union([z.boolean(), z.literal('narrow')])
     .optional()

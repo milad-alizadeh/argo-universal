@@ -62,8 +62,6 @@ export const buttonDefaults = { variant: 'default', size: 'md' } as const;
 
 export const cardDefaults = { kind: 'card', density: 'regular' } as const;
 
-export const splitButtonDefaults = { size: 'sm' } as const;
-
 export const iconButtonSizes = ['sm', 'md', 'lg'] as const;
 
 export type IconButtonSize = (typeof iconButtonSizes)[number];

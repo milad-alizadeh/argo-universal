@@ -1,4 +1,5 @@
-import type { ChangedFile, ChangesSummary } from './changes-view-props';
+import type { ChangesSummary } from '@repo/contracts';
+import type { ChangedFile } from './changes-view-props';
 
 export interface ChangesTotals extends ChangesSummary {
   viewed: number;
@@ -23,6 +24,5 @@ export function changesTotals(
 
 const count = (value: number): string => value.toLocaleString('en-US');
 
-// How many of the comparison's files are viewed, out of all of them.
 export const filesSummary = (totals: ChangesTotals): string =>
   `${count(totals.viewed)}/${count(totals.files)} viewed`;

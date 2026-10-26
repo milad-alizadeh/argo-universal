@@ -39,8 +39,8 @@ function trailingControls(width: number): ScaffoldStory {
       await expect(controls).toHaveLength(4);
       await expect(controls[0]).toHaveAccessibleName('More');
       await expect(controls[1]).toHaveAccessibleName('Toggle Workbench');
-      await expect(controls[2]).toHaveAccessibleName('Expand Stage');
-      await expect(controls[3]).toHaveAccessibleName('Show Stage');
+      await expect(controls[2]).toHaveAccessibleName('Expand Inspector');
+      await expect(controls[3]).toHaveAccessibleName('Show Inspector');
 
       for (const sidebarShown of [false, true]) {
         for (const inspectorState of ['closed', 'open', 'expanded'] as const) {

@@ -27,7 +27,7 @@ export const NoInspectorDisablesStage: Story = {
   ),
   play: async ({ canvas }) => {
     await expect(
-      await canvas.findByRole('button', { name: 'Show Stage' }),
+      await canvas.findByRole('button', { name: 'Show Inspector' }),
     ).toBeDisabled();
   },
 };

@@ -5,7 +5,7 @@ import {
 } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
-import { SettingsLoading } from '../../../settings-loading';
+import { SettingsLoading } from '#features/settings';
 import type { OwnerSlot, SlotDetail } from './slot-detail';
 import {
   effectiveOwner,

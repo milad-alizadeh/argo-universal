@@ -1,4 +1,4 @@
-import { splitButtonDefaults } from '@repo/contracts/kit-tokens';
+import { buttonDefaults } from '@repo/contracts/kit-tokens';
 import { declaredActions } from '#primitives/actions/action';
 import type { ButtonProps } from '#primitives/actions/button';
 import type { MenuAction } from '#primitives/overlays/menu';
@@ -38,11 +38,18 @@ export function actingButton<Value extends string>(
   };
 }
 
+// `xs` was the small split before the sizes were the Button's own.
+export function splitButtonSize(size: SplitButtonProps['size']): 'sm' | 'md' {
+  if (size === 'xs') return 'sm';
+
+  return size ?? buttonDefaults.size;
+}
+
 function buttonLook<Value extends string>(
   props: LaidSplitProps<Value>,
 ): Omit<ButtonProps, 'label'> {
   return {
-    size: props.size ?? splitButtonDefaults.size,
+    size: splitButtonSize(props.size),
     fullWidth: props.narrow,
     disabled: props.disabled,
   };

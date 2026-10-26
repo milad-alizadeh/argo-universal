@@ -15,7 +15,7 @@ export const resizeInspectorLabel = 'Resize Inspector';
 
 export const showSidebarLabel = 'Show sidebar';
 
-export const closeInspectorLabel = 'Hide Stage';
+export const closeInspectorLabel = 'Hide Inspector';
 
 export const sessionListId = 'desktop-list';
 
@@ -31,11 +31,11 @@ export const inspectorId = 'desktop-inspector';
 
 export const inspectorContentId = 'inspector-content';
 
-export const expandInspectorLabel = 'Expand Stage';
+export const expandInspectorLabel = 'Expand Inspector';
 
 export const detailId = 'desktop-detail';
 
-export const restoreInspectorLabel = 'Restore Stage';
+export const restoreInspectorLabel = 'Restore Inspector';
 
 export const resizeSidebarLabel = 'Resize sidebar';
 

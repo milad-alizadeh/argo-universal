@@ -13,6 +13,14 @@ type Literal = Extract<Expression, { type: 'Literal' }>;
 const spacingClass =
   /(?:^|[\s:])-?(?:[mp][belrstxy]?|gap(?:-[xy])?|space-[xy])-[\w.]+/u;
 
+// A kit spacing prop: `gap`, `padding`, `paddingTop`, `marginX`, `rowGap`.
+const spacingProp =
+  /^(?:(?:gap|padding|margin)(?:[XY]|Top|Bottom|Left|Right|Start|End|Horizontal|Vertical)?|(?:row|column)Gap)$/u;
+
+const isSpacingProp = (attribute: ESTree.JSXAttribute): boolean =>
+  attribute.name.type === 'JSXIdentifier' &&
+  spacingProp.test(attribute.name.name);
+
 // `className`, and any slot class such as `contentClassName`.
 const isClassProp = (attribute: ESTree.JSXAttribute): boolean =>
   attribute.name.type === 'JSXIdentifier' &&
@@ -74,12 +82,14 @@ function valueTexts(
 const attributeTexts = (value: ESTree.JSXAttribute['value']): string[] =>
   value ? valueTexts(value) : [];
 
+const setsSpacing = (node: ESTree.JSXAttribute): boolean =>
+  isSpacingProp(node) ||
+  (isClassProp(node) &&
+    attributeTexts(node.value).some((text) => spacingClass.test(text)));
+
 const spacingVisitor = (context: Context): SpacingVisitor => ({
   JSXAttribute: (node): void => {
-    if (!isClassProp(node)) return;
-
-    if (attributeTexts(node.value).some((text) => spacingClass.test(text)))
-      context.report({ node, messageId: 'screenSpacing' });
+    if (setsSpacing(node)) context.report({ node, messageId: 'screenSpacing' });
   },
 });
 
@@ -88,7 +98,7 @@ export const screenSpacing = defineRule({
     type: 'problem',
     messages: {
       screenSpacing:
-        'A screen sets no padding, margin or gap; Screen, List and FieldGroup own its spacing. Add a scaffold prop in @repo/kit, or let a feature component own it.',
+        'A screen sets no padding, margin or gap, by class or by prop; Screen, List and FieldGroup own its spacing. Add a scaffold prop in @repo/kit, or let a feature component own it.',
     },
   },
   create: spacingVisitor,

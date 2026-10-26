@@ -16,7 +16,7 @@ import {
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
 import type { AgentListViewProps } from './agent-list-view';
-import type { AgentsSearchProps } from './agents-toolbar';
+import type { AgentsSearchProps } from './agents-header';
 import { RegistryState } from './catalog-states';
 
 type CatalogProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
@@ -26,7 +26,6 @@ export const agentsCatalogTestId = 'agents-catalog';
 export function AgentCatalog(props: CatalogProps): React.JSX.Element {
   return (
     <FieldList
-      gap="sm"
       testID={agentsCatalogTestId}
       sections={catalogSections(props)}
       header={<AgentsFilterPills {...props} />}

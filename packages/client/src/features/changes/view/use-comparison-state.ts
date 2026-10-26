@@ -19,12 +19,23 @@ function updated<Value>(last: Keyed<Value>, next: Keyed<Value>): Keyed<Value> {
     : next;
 }
 
+type Comparison = ChangesComparison | SessionComparison;
+
+// One string per distinct comparison; a branch's name cannot be mistaken for a kind.
+function comparisonKey(comparison: Comparison): string {
+  if (typeof comparison === 'string') return comparison;
+
+  if ('branch' in comparison) return `branch:${comparison.branch}`;
+
+  return comparison.kind;
+}
+
 // State that starts over from `initial`, which keeps its identity, whenever the comparison changes.
 export function useComparisonState<Value>(
-  comparison: ChangesComparison | SessionComparison,
+  comparison: Comparison,
   initial: Value,
 ): [Value, Update<Value>] {
-  const key = JSON.stringify(comparison);
+  const key = comparisonKey(comparison);
   const [state, setState] = useState<Keyed<Value>>({ key, value: initial });
 
   const update = useCallback<Update<Value>>(

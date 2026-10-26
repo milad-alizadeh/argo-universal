@@ -6,16 +6,16 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { SessionHeader, useSessionPanels } from '#features/sessions';
+import { SessionBandClaim, useSessionPanels } from '#features/sessions';
 import { WindowBandHostsProvider } from '#lib/product/window-band';
 import { LayoutListMock } from '../components/layout-list.mocks';
 import { Scaffold } from '../scaffold/scaffold';
 import { useFrameState } from './frame';
 import { FrameInspectorHost, ScreenInspector } from './frame-inspector';
 
-const showStageLabel = 'Show Stage';
+const showInspectorLabel = 'Show Inspector';
 
-const hideStageLabel = 'Hide Stage';
+const hideInspectorLabel = 'Hide Inspector';
 
 const expanded = 'aria-pressed';
 
@@ -54,7 +54,7 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
   return (
     <>
       <ScreenStackHeader title={title} />
-      <SessionHeader
+      <SessionBandClaim
         title={title}
         status="idle"
         startedAt={null}
@@ -101,18 +101,20 @@ export const ChangesOpensInspector: Story = {
     });
 
     await expect(
-      canvas.getByRole('button', { name: showStageLabel }),
+      canvas.getByRole('button', { name: showInspectorLabel }),
     ).toHaveAttribute(expanded, 'false');
     await userEvent.click(changes);
     await expect(
-      canvas.getByRole('button', { name: hideStageLabel }),
+      canvas.getByRole('button', { name: hideInspectorLabel }),
     ).toHaveAttribute(expanded, 'true');
     await expect(
       await canvas.findByRole('heading', { name: 'Changes' }),
     ).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: hideStageLabel }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: hideInspectorLabel }),
+    );
     await expect(
-      canvas.getByRole('button', { name: showStageLabel }),
+      canvas.getByRole('button', { name: showInspectorLabel }),
     ).toHaveAttribute(expanded, 'false');
   },
 };
@@ -133,10 +135,10 @@ export const LongSessionTitle: Story = {
     for (const open of [false, true]) {
       if (open) {
         await userEvent.click(
-          canvas.getByRole('button', { name: showStageLabel }),
+          canvas.getByRole('button', { name: showInspectorLabel }),
         );
         await expect(
-          canvas.getByRole('button', { name: hideStageLabel }),
+          canvas.getByRole('button', { name: hideInspectorLabel }),
         ).toHaveAttribute(expanded, 'true');
       }
 

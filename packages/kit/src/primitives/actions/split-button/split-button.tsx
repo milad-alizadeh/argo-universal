@@ -1,4 +1,3 @@
-import { splitButtonDefaults } from '@repo/contracts/kit-tokens';
 import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#kit/utils';
@@ -6,7 +5,12 @@ import { Button } from '#primitives/actions/button';
 import { Menu, type MenuAction } from '#primitives/overlays/menu';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { KitProps } from '../../kit-props';
-import { actingButton, menuRows, stackedButtons } from './split-button-items';
+import {
+  actingButton,
+  menuRows,
+  splitButtonSize,
+  stackedButtons,
+} from './split-button-items';
 import { SplitChevron } from './split-chevron';
 
 type Derived<Value extends string> = KitProps<'SplitButton', Value>;
@@ -78,7 +82,7 @@ const chevron = <Value extends string>(
 ): ReactElement => (
   <SplitChevron
     primary={props.primary === true}
-    size={props.size ?? splitButtonDefaults.size}
+    size={splitButtonSize(props.size)}
     accessibilityLabel={props.menuLabel}
     disabled={props.disabled}
   />

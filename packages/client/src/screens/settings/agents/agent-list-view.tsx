@@ -13,7 +13,7 @@ import {
   type AgentsSearchProps,
   agentsTitle,
   searchLabel,
-} from './agents-toolbar';
+} from './agents-header';
 import { AgentCatalog } from './catalog';
 
 export type AgentListViewProps = {

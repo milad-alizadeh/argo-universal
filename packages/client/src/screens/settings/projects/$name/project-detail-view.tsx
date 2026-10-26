@@ -2,8 +2,7 @@ import type { ProjectInfo } from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
-import { homePath } from '#features/settings';
-import { SettingsLoading } from '../../settings-loading';
+import { homePath, SettingsLoading } from '#features/settings';
 import {
   accountsSection,
   type ProjectAccountsProps,

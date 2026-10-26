@@ -65,10 +65,11 @@ export function HeadingRow(props: HeadingRowProps): ReactNode {
 
 function DeclaredHeading(props: HeadingRowProps): ReactElement {
   const { placement = 'page' } = props;
+  const look = placements[placement];
 
   const content = {
-    title: <ScreenTitle title={props.title} level={titleLevels[placement]} />,
-    actions: <HeadingActions {...props} size={buttonSizes[placement]} />,
+    title: <ScreenTitle title={props.title} level={look.titleLevel} />,
+    actions: <HeadingActions {...props} size={look.buttonSize} />,
   };
 
   return (
@@ -79,9 +80,13 @@ function DeclaredHeading(props: HeadingRowProps): ReactElement {
   );
 }
 
-const buttonSizes: Record<HeadingPlacement, IconButtonSize | undefined> = {
-  page: undefined,
-  list: 'sm',
+// A page's title is its heading; a list column's sits a level below it, under the window's own page title.
+const placements: Record<
+  HeadingPlacement,
+  { titleLevel: number; buttonSize?: IconButtonSize; sidebar: boolean }
+> = {
+  page: { titleLevel: 1, sidebar: false },
+  list: { titleLevel: 2, buttonSize: 'sm', sidebar: true },
 };
 
 function Heading(props: {
@@ -94,7 +99,7 @@ function Heading(props: {
       <SearchHeading
         content={props.content}
         page={props.page}
-        sidebar={props.placement === 'list'}
+        sidebar={placements[props.placement].sidebar}
       />
     );
 
@@ -135,9 +140,6 @@ function DeclaredActions(
 
   return <HeaderActions {...props} slots={headerSlots} />;
 }
-
-// A page's title is its heading; a list column's sits a level below it, under the window's own page title.
-const titleLevels = { page: 1, list: 2 } as const;
 
 const titleProps = {
   role: 'title',

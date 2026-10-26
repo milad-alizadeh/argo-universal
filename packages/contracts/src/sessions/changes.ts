@@ -34,7 +34,6 @@ export const SessionComparison = z.union([
 
 export type SessionComparison = z.infer<typeof SessionComparison>;
 
-// A page of a list: where it starts and how much it holds. The next page starts at the returned `nextCursor`.
 const largestPage = 500;
 
 // The changed files in a page, unless the caller asks for another count.
@@ -43,6 +42,7 @@ export const sessionChangesPageFiles = 50;
 // The diff lines in a page of one file's diff; a long new file arrives a page at a time.
 export const sessionDiffPageLines = 400;
 
+// Where a page starts and how much it holds; the next page starts at the returned `nextCursor`.
 const pageInput = {
   cursor: z.int().min(0).optional(),
   limit: z.int().min(1).max(largestPage).optional(),
@@ -52,7 +52,6 @@ export const SessionChangesInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   comparison: SessionComparison.optional(),
   ...pageInput,
-  // tRPC's infinite query sends the direction it pages in; the files only page forward.
   direction: z.literal('forward').optional(),
 });
 

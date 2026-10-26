@@ -44,7 +44,8 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+// CardProps is a union (static or collapsible), so stories type against the component.
+type Story = StoryObj<typeof Card>;
 
 export const TitleOnly: Story = { args: titleOnlyCard };
 

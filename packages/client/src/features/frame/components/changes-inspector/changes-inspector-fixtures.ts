@@ -35,7 +35,7 @@ export const manyChanges = {
 export const noChanges = {
   ...aFewChanges,
   ...nothingLoaded,
-  summary: { files: 0, added: 0, removed: 0 },
+  summary: { files: 0, additions: 0, deletions: 0 },
   viewed: [],
 } satisfies ChangesInspectorFixture;
 

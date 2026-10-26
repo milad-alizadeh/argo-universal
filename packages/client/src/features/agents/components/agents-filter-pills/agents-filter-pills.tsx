@@ -26,18 +26,16 @@ function AgentsFilterChoices(props: AgentsFilterProps): React.JSX.Element[] {
   ));
 }
 
-/*
- * One row that heads the Agents catalog: it scrolls sideways when the pills run past a narrow screen's edge, fading
- * the edge they pass under, and its pills start where the cards below start, 16 in on a phone and on the column's
- * edge on a wide page.
- */
+const pillsLeadCardEdge = 'px-4 wide:px-0';
+
+// One row that heads the Agents catalog; it scrolls sideways, fading the edge the pills pass under, when they run past a narrow screen's edge.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
   return (
     <View className="pb-3">
       <ScrollFadeView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerClassName="items-center gap-1 px-4 wide:px-0"
+        contentContainerClassName={`items-center gap-1 ${pillsLeadCardEdge}`}
       >
         <AgentsFilterChoices {...props} />
       </ScrollFadeView>

@@ -4,25 +4,22 @@ import {
   type SessionDiffOutput,
   sessionDiffPageLines,
 } from '@repo/contracts';
-import { useQueries, type UseQueryResult } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import {
   type ChangesViewProps,
   type FileDiffPages,
   useComparisonState,
 } from '#features/changes';
-import { useTRPC, type ClientError } from '#features/connection';
+import { useTRPC } from '#features/connection';
 import { type FileDiff, toFileDiffs } from '#features/feed';
+import type { ChangesScope, Query } from './changes-query-types';
 
-type DiffsInput = {
-  sessionId: string;
-  open: boolean;
-  comparison: SessionComparison;
-};
+type DiffsInput = ChangesScope<SessionComparison>;
 
 type DiffPage = { hunks: FileDiff['hunks']; nextCursor: number | null };
 
-type PageResult = UseQueryResult<DiffPage, Pick<ClientError, 'message'>>;
+type PageResult = Query<DiffPage>;
 
 // How many pages of each opened file's diff the list has asked for, by path.
 type Wanted = Readonly<Record<string, number>>;

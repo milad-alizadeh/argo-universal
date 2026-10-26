@@ -9,7 +9,6 @@ export type { ChangesComparison } from './view/changes-comparison';
 export type {
   ChangedFile,
   ChangesBranches,
-  ChangesSummary,
   ChangesViewProps,
   FileDiffPages,
 } from './view/changes-view-props';
@@ -17,3 +16,5 @@ export type {
 export { uniqueChangedFiles } from './view/changes-files';
 
 export { useComparisonState } from './view/use-comparison-state';
+
+export { ChangesStageToolbar } from './components/changes-stage-toolbar/changes-stage-toolbar';

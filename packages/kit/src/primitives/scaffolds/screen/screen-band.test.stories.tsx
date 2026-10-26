@@ -53,24 +53,39 @@ function Host(): ReactElement {
   );
 }
 
-// A page whose body is no Screen declares its header once; a wide window's band draws its title and Actions, and they work there.
-export const HeaderOnlyScreenFillsTheBand: Story = atWidth(screenWidths.Wide, {
-  render: () => <Host />,
-  play: async ({ canvas, canvasElement, userEvent }) => {
-    const band = await canvas.findByTestId('band');
+// A page whose body is no Screen declares its header once; a wide window's band draws its title.
+export const HeaderOnlyScreenDrawsItsTitleInTheBand: Story = atWidth(
+  screenWidths.Wide,
+  {
+    render: () => <Host />,
+    play: async ({ canvas }) => {
+      const band = await canvas.findByTestId('band');
 
-    await expect(band).toContainElement(
-      await canvas.findByRole('heading', { name: 'Build the band' }),
-    );
-    await userEvent.click(canvas.getByRole('button', { name: 'More' }));
-    await userEvent.click(
-      await within(canvasElement.ownerDocument.body).findByRole('menuitem', {
-        name: 'Rename',
-      }),
-    );
-    await expect(onRename).toHaveBeenCalledTimes(1);
+      await expect(band).toContainElement(
+        await canvas.findByRole('heading', { name: 'Build the band' }),
+      );
+    },
   },
-});
+);
+
+// The Actions the header declared work from the band.
+export const HeaderOnlyScreenActionsWorkInTheBand: Story = atWidth(
+  screenWidths.Wide,
+  {
+    render: () => <Host />,
+    play: async ({ canvas, canvasElement, userEvent }) => {
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'More' }),
+      );
+      await userEvent.click(
+        await within(canvasElement.ownerDocument.body).findByRole('menuitem', {
+          name: 'Rename',
+        }),
+      );
+      await expect(onRename).toHaveBeenCalledTimes(1);
+    },
+  },
+);
 
 // Below wide there is no band: the stack's header holds the title, so nothing is claimed.
 export const NoBandBelowWide: Story = atWidth(screenWidths.Phone, {

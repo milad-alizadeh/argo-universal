@@ -28,5 +28,12 @@
       }
     ],
     "slots": ["argo/project/details/v1"]
-  }
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "jsonplaceholder.typicode.com",
+      "reason": "Show a paged remote list in the Hello example."
+    }
+  ]
 }

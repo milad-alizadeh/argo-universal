@@ -1,12 +1,10 @@
+import type { ChangesSummary } from '@repo/contracts';
 import { Text } from '@repo/kit/primitives/content/text';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { changesTotals, filesSummary } from '../../view/changes-totals';
-import type {
-  ChangesSummary,
-  ChangesViewProps,
-} from '../../view/changes-view-props';
+import type { ChangesViewProps } from '../../view/changes-view-props';
 import { ComparisonPicker } from '../comparison-picker/comparison-picker';
 
 /*
@@ -85,8 +83,8 @@ const lines = (count: number): string => count.toLocaleString('en-US');
 function LineTotals(totals: ChangesSummary): React.JSX.Element {
   return (
     <View className="shrink-0 flex-row gap-2 pr-2">
-      <Text role="badge" tone="success">{`+${lines(totals.added)}`}</Text>
-      <Text role="badge" tone="danger">{`−${lines(totals.removed)}`}</Text>
+      <Text role="badge" tone="success">{`+${lines(totals.additions)}`}</Text>
+      <Text role="badge" tone="danger">{`−${lines(totals.deletions)}`}</Text>
     </View>
   );
 }

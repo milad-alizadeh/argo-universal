@@ -17,7 +17,6 @@ export interface ColumnClaims {
   claimColumn: (fills: boolean) => () => void;
 }
 
-// How many parts claim the column, and how many of them fill its height too.
 interface Claims {
   claims: number;
   fills: number;
@@ -45,7 +44,6 @@ function useClaimCounter(
   );
 }
 
-// A Screen's: it counts the parts that claim its column.
 export function useColumnClaims(): ColumnClaims {
   const [claims, setClaims] = useState(noClaims);
   const claimColumn = useClaimCounter(setClaims);
@@ -69,16 +67,14 @@ export function useClaimsColumn(claims: boolean, fills = true): void {
   );
 }
 
-// Whether the Screen's content keeps to its column itself: grouped cards and scroll views do; anything else, the Screen keeps there.
-export function useColumnClaimed(): boolean {
+const useClaimedBy = (key: 'columnClaimed' | 'columnFilled'): boolean => {
   const scope = use(HeadingInsetContext) ?? unscoped;
 
-  return scope.grouped || scope.columnClaimed;
-}
+  return scope.grouped || scope[key];
+};
+
+// Whether the Screen's content keeps to its column itself: grouped cards and scroll views do; anything else, the Screen keeps there.
+export const useColumnClaimed = (): boolean => useClaimedBy('columnClaimed');
 
 // Whether the content fills the Screen's height too: grouped cards and vertical scroll views do.
-export function useColumnFilled(): boolean {
-  const scope = use(HeadingInsetContext) ?? unscoped;
-
-  return scope.grouped || scope.columnFilled;
-}
+export const useColumnFilled = (): boolean => useClaimedBy('columnFilled');

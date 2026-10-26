@@ -7,6 +7,7 @@ import {
   type ChangesItem,
   type ChangesItems,
   changesItems,
+  isDiffItem,
 } from '../../view/changes-items';
 import type {
   ChangedFile,
@@ -14,6 +15,8 @@ import type {
 } from '../../view/changes-view-props';
 import { ChangesRow, type RowContext } from './changes-file-rows';
 import { useOpenFiles } from './use-open-files';
+
+export const changedFilesLabel = 'Changed files';
 
 export const loadingMoreFilesLabel = 'Loading more files';
 
@@ -23,11 +26,13 @@ const itemKey = (item: ChangesItem): string => item.key;
 
 // Headers and separators are the list's parts, not rows: they take no row highlight.
 const itemType = (item: ChangesItem): string =>
-  item.kind === 'page' || item.kind === 'status' ? item.kind : 'section';
+  isDiffItem(item) ? item.kind : 'section';
 
 // The top edge holds the stuck file header, which a fade would wash out.
 const identity = {
   testID: 'changes-files',
+  accessibilityRole: 'list',
+  accessibilityLabel: changedFilesLabel,
   keyExtractor: itemKey,
   getItemType: itemType,
   edges: { top: 'never' },

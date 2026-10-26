@@ -5,10 +5,12 @@ import type {
   PointerEvent,
   ReactElement,
 } from 'react';
+import type { ColumnRef } from './use-workbench-reorder';
 import type { CardSlot, Grab } from './workbench-reorder-model';
 
 export interface ReorderHandleProps {
   label: string;
+  column: ColumnRef;
   onGrab: (grab: Grab) => void;
   onMove: (pointerY: number) => void;
   onRelease: () => void;
@@ -23,31 +25,23 @@ const nudges = new Map<string, -1 | 1>([
   ['ArrowDown', 1],
 ]);
 
-const slotPrefix = 'workbench-slot-';
-
-export const slotTestID = (id: string): string => `${slotPrefix}${id}`;
-
-const childrenOf = (parent: Element | null | undefined): Element[] =>
-  parent ? [...parent.children] : [];
-
-// The column the handle's own card is stacked in.
-const columnOf = (handle: HTMLElement): Element[] =>
-  childrenOf(handle.closest(`[data-testid^="${slotPrefix}"]`)?.parentElement);
-
 // Every card's place in the page, read as the handle is taken.
-const measureSlots = (handle: HTMLElement): CardSlot[] =>
-  columnOf(handle).map((slot) => {
+function measureSlots({ current }: ColumnRef): CardSlot[] {
+  const slots = current instanceof HTMLElement ? [...current.children] : [];
+
+  return slots.map((slot) => {
     const { top, height } = slot.getBoundingClientRect();
 
     return { top, height };
   });
+}
 
 function grab(props: ReorderHandleProps, event: HandleEvent): void {
   event.currentTarget.setPointerCapture(event.pointerId);
   event.preventDefault();
   props.onGrab({
     pointerY: event.clientY,
-    slots: measureSlots(event.currentTarget),
+    slots: measureSlots(props.column),
   });
 }
 

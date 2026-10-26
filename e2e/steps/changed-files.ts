@@ -177,7 +177,6 @@ async function reopenDiff(page: Page): Promise<void> {
   );
 }
 
-// The Changes list holds the one changed file, its header and its diff lines.
 function greetingDiff(page: Page): Locator {
-  return page.getByTestId('changes-files');
+  return page.getByRole('list', { name: 'Changed files', exact: true });
 }

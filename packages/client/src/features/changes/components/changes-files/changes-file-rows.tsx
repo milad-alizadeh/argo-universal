@@ -2,15 +2,16 @@ import { DiffScroll } from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type * as React from 'react';
-import { createElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { DiffFileHeader } from '#features/feed';
-import type { ChangesItem } from '../../view/changes-items';
+import { type ChangesItem, isDiffItem } from '../../view/changes-items';
 import type {
   ChangedFile,
   ChangesViewProps,
   FileDiffPages,
 } from '../../view/changes-view-props';
+import { idle, settled } from '../../view/diff-pages-state';
 import type { OpenFiles } from './use-open-files';
 
 export type RowContext = Pick<
@@ -19,42 +20,61 @@ export type RowContext = Pick<
 > &
   OpenFiles;
 
-type RowKind = ChangesItem['kind'];
+type ItemOf<Kind extends ChangesItem['kind']> = Extract<
+  ChangesItem,
+  { kind: Kind }
+>;
 
-type ItemByKind = { [Kind in RowKind]: Extract<ChangesItem, { kind: Kind }> };
-
-interface RowProps<Kind extends RowKind> {
-  item: ItemByKind[Kind];
+interface RowProps<Kind extends ChangesItem['kind']> {
+  item: ItemOf<Kind>;
   context: RowContext;
 }
 
 export const loadingDiffLabel = (path: string): string =>
   `Loading the diff for ${path}`;
 
-// One row per item kind; a new kind does not compile until it has its row.
-type RowComponents = {
-  [Kind in RowKind]: (props: RowProps<Kind>) => React.JSX.Element;
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled Changes row: ${JSON.stringify(value)}`);
 };
 
-const rowOf: RowComponents = {
-  separator: SeparatorRow,
-  header: HeaderRow,
-  page: PageRow,
-  status: StatusRow,
-};
-
-function KindRow<Kind extends RowKind>(
-  kind: Kind,
-  props: RowProps<Kind>,
+export function ChangesRow(
+  props: RowProps<ChangesItem['kind']>,
 ): React.JSX.Element {
-  return createElement(rowOf[kind], props);
+  const { item, context } = props;
+
+  return isDiffItem(item) ? (
+    <DiffRow item={item} context={context} />
+  ) : (
+    <FileRow item={item} context={context} />
+  );
 }
 
-export function ChangesRow({
+function FileRow({
   item,
   context,
-}: RowProps<RowKind>): React.JSX.Element {
-  return KindRow(item.kind, { item, context });
+}: RowProps<'separator' | 'header'>): React.JSX.Element {
+  switch (item.kind) {
+    case 'separator':
+      return <SeparatorRow />;
+    case 'header':
+      return <HeaderRow item={item} context={context} />;
+    default:
+      return assertNever(item);
+  }
+}
+
+function DiffRow({
+  item,
+  context,
+}: RowProps<'page' | 'status'>): React.JSX.Element {
+  switch (item.kind) {
+    case 'page':
+      return <PageRow item={item} />;
+    case 'status':
+      return <StatusRow item={item} context={context} />;
+    default:
+      return assertNever(item);
+  }
 }
 
 function SeparatorRow(): React.JSX.Element {
@@ -79,16 +99,13 @@ function HeaderRow({ item, context }: RowProps<'header'>): React.JSX.Element {
   );
 }
 
-function PageRow({ item }: RowProps<'page'>): React.JSX.Element {
+function PageRow({ item }: Pick<RowProps<'page'>, 'item'>): React.JSX.Element {
   return (
     <View className="bg-card medium:bg-content">
       <DiffScroll hunks={item.hunks} inline={false} path={item.file.path} />
     </View>
   );
 }
-
-const idle = (diff: FileDiffPages): boolean =>
-  !diff.loading && diff.loadError === undefined;
 
 const morePages = (diff: FileDiffPages): number | undefined =>
   idle(diff) && diff.more ? diff.pages.length + 1 : undefined;
@@ -124,54 +141,22 @@ function StatusRow({ item, context }: RowProps<'status'>): React.JSX.Element {
   );
 }
 
-type Status =
-  | { kind: 'failed'; message: string }
-  | { kind: 'empty' }
-  | { kind: 'loading' };
+const loadErrorOf = (diff: FileDiffPages | undefined): string | undefined =>
+  diff?.loadError;
 
-type StatusByKind = {
-  [Kind in Status['kind']]: Extract<Status, { kind: Kind }>;
-};
-
-const settledStatus = (diff: FileDiffPages): Status =>
-  idle(diff) && !diff.more ? { kind: 'empty' } : { kind: 'loading' };
-
-function statusOf(diff: FileDiffPages | undefined): Status {
-  if (!diff) return { kind: 'loading' };
-
-  if (diff.loadError !== undefined)
-    return { kind: 'failed', message: diff.loadError };
-
-  return settledStatus(diff);
-}
-
-// What each status draws; a new status does not compile until it has its drawing.
-type StatusDrawings = {
-  [Kind in Status['kind']]: (
-    status: StatusByKind[Kind],
-    path: string,
-  ) => React.JSX.Element;
-};
-
-const statusContent: StatusDrawings = {
-  failed: (status) => <Text tone="danger">{status.message}</Text>,
-  empty: () => <Text tone="muted">No lines to show</Text>,
-  loading: (_, path) => <Spinner accessibilityLabel={loadingDiffLabel(path)} />,
-};
-
-function drawStatus<Kind extends Status['kind']>(
-  kind: Kind,
-  status: StatusByKind[Kind],
-  path: string,
-): React.JSX.Element {
-  return statusContent[kind](status, path);
-}
+const hasNothingToShow = (diff: FileDiffPages | undefined): boolean =>
+  diff !== undefined && settled(diff);
 
 function StatusContent(props: {
   file: ChangedFile;
   diff?: FileDiffPages;
 }): React.JSX.Element {
-  const status = statusOf(props.diff);
+  const loadError = loadErrorOf(props.diff);
 
-  return drawStatus(status.kind, status, props.file.path);
+  if (loadError !== undefined) return <Text tone="danger">{loadError}</Text>;
+
+  if (hasNothingToShow(props.diff))
+    return <Text tone="muted">No lines to show</Text>;
+
+  return <Spinner accessibilityLabel={loadingDiffLabel(props.file.path)} />;
 }

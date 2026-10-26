@@ -4,7 +4,6 @@ import type { SessionHeaderPanels } from './session-header-props';
 // The sections the Workbench can draw, in the order they stack by default.
 export const workbenchPanels = ['changes', 'subagents', 'shells'] as const;
 
-// One section of the Workbench: the Inspector panel it opens, and what the Session has for it.
 export interface Section {
   panel: SessionPanel;
   panels: SessionHeaderPanels;
@@ -44,6 +43,5 @@ const sectionRules: Record<
 export const hasSection = (section: Section): boolean =>
   sectionRules[section.panel].count(section) > 0;
 
-// Pressing a card's body opens its section in full, in the Inspector.
 export const openSection = (section: Section): void =>
   sectionRules[section.panel].open(section);
