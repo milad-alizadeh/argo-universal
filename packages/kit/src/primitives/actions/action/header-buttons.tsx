@@ -1,7 +1,11 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { IconSymbol } from '#kit/symbols/icon-symbol';
-import { IconButton } from '#primitives/actions/icon-button';
+import {
+  IconButton,
+  type IconButtonProps,
+  type IconButtonSize,
+} from '#primitives/actions/icon-button';
 import { Menu, type MenuEntry } from '#primitives/overlays/menu';
 import {
   submenuGroups,
@@ -17,35 +21,49 @@ import {
 } from './header-actions';
 import { submenuCountText, submenuLabel } from './submenu-badge';
 
+// How a header draws its buttons: their size, and what each one's spoken name says it acts on.
+export interface HeaderButtonLook {
+  size?: IconButtonSize;
+  /*
+   * The name of what the Actions act on, such as a section's title, spoken after each button's label so repeated
+   * headers keep distinct names; the visible label and the menus keep the label alone.
+   */
+  subject?: string;
+}
+
 export interface HeaderActionsProps {
   // Ordered by `orderedGroups`.
   groups: ActionGroup[];
   label: string;
   // How many controls the header has room for, the overflow button included.
   slots: number;
+  look?: HeaderButtonLook;
 }
 
 interface HeaderOverflowProps {
   groups: ActionGroup[];
   label: string;
+  look: HeaderButtonLook;
 }
 
 // A header's Actions as Argo-drawn buttons and menus where Argo draws the heading; a phone's native header uses stock items.
 export function HeaderActions(props: HeaderActionsProps): ReactElement {
   const { direct, overflow } = splitHeaderActions(props.groups, props.slots);
+  const look = props.look ?? {};
 
   return (
     <View className="flex-row items-center gap-1">
-      {direct.map(headerEntry)}
-      <HeaderOverflow groups={overflow} label={props.label} />
+      {direct.map((entry) => headerEntry(entry, look))}
+      <HeaderOverflow groups={overflow} label={props.label} look={look} />
     </View>
   );
 }
 
-function headerEntry(entry: HeaderEntry): ReactElement {
-  if (isSubmenu(entry)) return <HeaderSubmenu key={entry.id} submenu={entry} />;
+function headerEntry(entry: HeaderEntry, look: HeaderButtonLook): ReactElement {
+  if (isSubmenu(entry))
+    return <HeaderSubmenu key={entry.id} submenu={entry} look={look} />;
 
-  return <HeaderAction key={entry.id} action={entry} />;
+  return <HeaderAction key={entry.id} action={entry} look={look} />;
 }
 
 /*
@@ -75,7 +93,9 @@ function menuEntry(entry: DeclaredEntry): MenuEntry {
   };
 }
 
-interface ActionMenuProps extends HeaderOverflowProps {
+interface ActionMenuProps {
+  groups: ActionGroup[];
+  label: string;
   trigger: ReactElement;
 }
 
@@ -99,43 +119,63 @@ export const overflowIcon = {
 function HeaderOverflow({
   groups,
   label,
+  look,
 }: HeaderOverflowProps): ReactElement | null {
   if (!groups.length) return null;
 
-  const trigger = headerButton(overflowIcon, label);
+  const trigger = headerButton(overflowIcon, label, look);
 
   return <ActionMenu groups={groups} label={label} trigger={trigger} />;
 }
 
 // A submenu opens its own Sections from its icon, its badge on the icon.
-function HeaderSubmenu({
-  submenu,
-}: {
+interface SubmenuProps {
   submenu: DeclaredSubmenu;
-}): ReactElement {
+  look: HeaderButtonLook;
+}
+
+function HeaderSubmenu({ submenu, look }: SubmenuProps): ReactElement {
   const label = submenuLabel(submenu);
 
   return (
     <ActionMenu
       groups={submenuGroups(submenu)}
       label={label}
-      trigger={headerButton(submenu.icon, label)}
+      trigger={headerButton(submenu.icon, label, look)}
     />
   );
 }
 
-function HeaderAction({ action }: { action: IconAction }): ReactElement {
+interface ActionProps {
+  action: IconAction;
+  look: HeaderButtonLook;
+}
+
+function HeaderAction({ action, look }: ActionProps): ReactElement {
   return (
     <IconButton
       icon={action.icon}
-      accessibilityLabel={action.label}
       disabled={action.disabled}
       onPress={action.onPress}
-      variant="ghost"
+      {...buttonProps(action.label, look)}
     />
   );
 }
 
-function headerButton(icon: IconSymbol, label: string): ReactElement {
-  return <IconButton icon={icon} accessibilityLabel={label} variant="ghost" />;
+// Every header control is a ghost IconButton, at the size its header asks for, named for its subject when it has one.
+const buttonProps = (
+  label: string,
+  { size, subject }: HeaderButtonLook,
+): Pick<IconButtonProps, 'variant' | 'size' | 'accessibilityLabel'> => ({
+  variant: 'ghost',
+  size,
+  accessibilityLabel: subject ? `${label}, ${subject}` : label,
+});
+
+function headerButton(
+  icon: IconSymbol,
+  label: string,
+  look: HeaderButtonLook,
+): ReactElement {
+  return <IconButton icon={icon} {...buttonProps(label, look)} />;
 }

@@ -1,5 +1,6 @@
 import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
+import { ContextActions } from '#primitives/actions/action';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { groupedHeading, useWebGrouped } from '../../../list-grouped';
 import {
@@ -7,9 +8,10 @@ import {
   useSectionDrawing,
 } from '../../../list-section-drawing';
 import { SkeletonBar } from '../../../list-skeleton';
+import { SizeClass } from '../../../size-class/size-class';
 import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
-import { HeaderActions } from './list-section-actions';
+import { HeaderActions, hasActions } from './list-section-actions';
 import { HeaderLeading } from './list-section-leading';
 import { HeaderTitleLine } from './list-section-title-line';
 
@@ -102,7 +104,6 @@ function HeaderButton(props: DrawnHeaderProps): ReactElement {
       accessibilityLabel={props.title}
       {...expandedState(isExpanded)}
       onPress={() => props.onExpandedChange?.(!isExpanded)}
-      onLongPress={props.onLongPress}
       className={cn(labelClassName(props), 'web:select-none')}
     >
       <HeaderLabel {...props} />
@@ -123,20 +124,39 @@ const headerClassName = (
         grouped && groupedHeading,
       );
 
-export function SectionHeader(props: HeaderProps): ReactElement {
+function HeaderRow(props: HeaderProps & { wide: boolean }): ReactElement {
   const drawing = useSectionDrawing();
   const className = headerClassName(props, drawing, useWebGrouped());
 
   return (
     <View className={className}>
       <HeaderToggle {...props} drawing={drawing} />
-      <HeaderActions trailing={props.trailing} sidebar={props.sidebar} />
+      <HeaderActions
+        trailing={props.trailing}
+        actions={props.wide ? props.actions : undefined}
+        sidebar={props.sidebar}
+        title={props.title}
+      />
     </View>
   );
 }
 
+// A wide header draws its Actions as buttons; below it, a long press or a right-click opens them, under the section's title.
+export function SectionHeader(props: HeaderProps): ReactNode {
+  return (
+    <SizeClass
+      wide={<HeaderRow {...props} wide />}
+      compact={
+        <ContextActions actions={props.actions} menu={{ title: props.title }}>
+          <HeaderRow {...props} wide={false} />
+        </ContextActions>
+      }
+    />
+  );
+}
+
 // A data List's section header, from its `getSectionKey` sections: 16 below the previous section, as a List.Section's; a sidebar's caller spaces its own.
-export function ListSectionHeader(props: HeaderProps): ReactElement {
+export function ListSectionHeader(props: HeaderProps): ReactNode {
   if (props.sidebar) return <SectionHeader {...props} />;
 
   return (
@@ -151,6 +171,7 @@ export function hasSectionHeader(props: ListSectionProps): boolean {
     props.title,
     props.leading,
     props.trailing,
+    hasActions(props.actions),
     props.onExpandedChange,
     props.isLoading,
   ].some(Boolean);

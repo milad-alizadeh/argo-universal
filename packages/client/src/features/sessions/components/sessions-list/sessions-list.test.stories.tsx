@@ -14,8 +14,11 @@ import { phoneProjectMenu } from '../../../../../mocks/sessions-list/phone-proje
 import {
   exampleProjectName,
   meta as sessionsListMeta,
+  newSessionLabel,
   onNewSession,
   onProjectSettings,
+  projectButtonName,
+  projectSettingsLabel,
   sessionsScrollId,
   type Story,
 } from '../../../../../mocks/sessions-list/sessions-list-story-context.test.mocks';
@@ -33,7 +36,7 @@ export const MemoizedRows: Story = {
   name: 'Controlled selection and activity',
 };
 
-// A wide window's heading keeps ⋯ and +, shown on hover or focus.
+// A wide window's heading draws its Actions as buttons, always shown in the sidebar.
 export const ProjectActions: Story = {
   beforeEach: () => settleViewport(layoutWidths.wide),
   play: async ({ canvas, userEvent }) => {
@@ -42,21 +45,17 @@ export const ProjectActions: Story = {
     });
 
     await waitFor(() => expect(heading).toBeVisible());
-    // The test browser has no real pointer, so keyboard focus stands in for hover: each button shows itself when focused.
-    await userEvent.keyboard('{Shift}');
 
     const settings = canvas.getByRole('button', {
-      name: 'Project settings for Example Project',
+      name: projectButtonName(projectSettingsLabel),
     });
 
     const newSession = canvas.getByRole('button', {
-      name: 'New Session in Example Project',
+      name: projectButtonName(newSessionLabel),
     });
 
-    settings.focus();
-    await waitFor(() => expect(settings).toBeVisible());
-    newSession.focus();
-    await waitFor(() => expect(newSession).toBeVisible());
+    await expect(settings).toBeVisible();
+    await expect(newSession).toBeVisible();
     await userEvent.click(settings);
     await expect(onProjectSettings).toHaveBeenCalledWith(exampleProjectName);
     await userEvent.click(newSession);
@@ -89,7 +88,9 @@ export const FlatSearchResults: Story = {
       canvas.queryByRole('button', { name: exampleProjectName }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas.queryByRole('button', { name: /^New Session in / }),
+      canvas.queryByRole('button', {
+        name: projectButtonName(newSessionLabel),
+      }),
     ).not.toBeInTheDocument();
     await expect(
       canvas.getAllByText(/^(now|\d+[mhdw])$/).length,

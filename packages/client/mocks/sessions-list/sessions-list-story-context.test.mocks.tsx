@@ -7,6 +7,14 @@ import { sessionsListProps } from '../../src/features/sessions/components/sessio
 
 export const exampleProjectName = 'Example Project';
 
+// A Project heading's Actions, as ProjectHeading declares them; a wide heading's buttons also speak the Project.
+export const newSessionLabel = 'New Session';
+
+export const projectSettingsLabel = 'Project settings';
+
+export const projectButtonName = (label: string): string =>
+  `${label}, ${exampleProjectName}`;
+
 export const sessionsScrollId = 'sessions-scroll';
 
 export const onNewSession = fn();
