@@ -7,6 +7,7 @@ export const issueRef = (number: number): string => `#${number}`;
 export const issueTracker: SlotPlugin = {
   pluginId: 'issue-tracker',
   name: 'Issue tracker',
+  fills: true,
   shown: true,
   asks: true,
 };
@@ -14,6 +15,7 @@ export const issueTracker: SlotPlugin = {
 export const deploys: SlotPlugin = {
   pluginId: 'deploys',
   name: 'Deploys',
+  fills: true,
   shown: true,
   asks: true,
 };
@@ -22,6 +24,7 @@ export const deploys: SlotPlugin = {
 export const coverage: SlotPlugin = {
   pluginId: 'coverage',
   name: 'Coverage',
+  fills: true,
   shown: true,
   asks: false,
 };

@@ -4,6 +4,7 @@ import {
   SessionActivityItem,
   SessionRowItem,
   type SlotItems,
+  type SlotItemsInput,
   sessionActivitySlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
@@ -73,14 +74,29 @@ const answerOf = <Answer,>(
   key: string,
 ): Answer => schema.parse(answers[key]);
 
-// The latest Session with what the Server's Plugins answer for it, so the preview is a real row.
-function usePreviewData(session: SessionInfo): SessionRowPreviewData {
-  const contexts = [
-    { sessionId: session.sessionId, projectId: session.projectId },
-  ];
+// The Slot's list for one real Session; the stand-in Session is never sent to a Plugin.
+const contextsOf = (
+  session: SessionInfo | undefined,
+): SlotItemsInput['contexts'] | undefined =>
+  session && [{ sessionId: session.sessionId, projectId: session.projectId }];
 
-  const items = useSlotItems({ slotId: sessionRowSlotId, contexts });
-  const lines = useSlotItems({ slotId: sessionActivitySlotId, contexts });
+const inputOf = (
+  slotId: SlotItemsInput['slotId'],
+  contexts: SlotItemsInput['contexts'] | undefined,
+): SlotItemsInput | undefined => contexts && { slotId, contexts };
+
+/*
+ * The latest Session with what the Server's Plugins answer for it, so the preview is a real row; `fallback` stands in,
+ * with no Plugin answers, while there is no Session.
+ */
+function usePreviewData(
+  latest: SessionInfo | undefined,
+  fallback: SessionInfo,
+): SessionRowPreviewData {
+  const contexts = contextsOf(latest);
+  const items = useSlotItems(inputOf(sessionRowSlotId, contexts));
+  const lines = useSlotItems(inputOf(sessionActivitySlotId, contexts));
+  const session = latest ?? fallback;
 
   return {
     session,
@@ -105,7 +121,7 @@ export const livePreview =
   (fallback: SessionInfo) =>
   ({ visibility }: SlotPreviewProps): React.JSX.Element => (
     <SessionRowPreview
-      data={usePreviewData(useLatestSession() ?? fallback)}
+      data={usePreviewData(useLatestSession(), fallback)}
       visibility={visibility}
     />
   );

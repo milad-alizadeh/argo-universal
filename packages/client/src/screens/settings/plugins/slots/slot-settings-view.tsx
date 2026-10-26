@@ -18,6 +18,7 @@ import { SlotPreview } from './slot-preview';
 import type { OwnerSlot, SlotSettings } from './slot-settings';
 import {
   effectiveOwner,
+  fillingPlugins,
   optionValueOf,
   ownerOfOption,
   ownerOptions,
@@ -113,7 +114,7 @@ const showSection = ({
   onShownChange,
 }: LoadedProps): React.JSX.Element => (
   <FieldGroup.Section title={settings.showTitle}>
-    {plugins.map((plugin) => switchRow(plugin, onShownChange))}
+    {fillingPlugins(plugins).map((plugin) => switchRow(plugin, onShownChange))}
   </FieldGroup.Section>
 );
 

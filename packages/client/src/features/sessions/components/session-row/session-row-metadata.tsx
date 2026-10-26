@@ -1,3 +1,4 @@
+import type { SessionRowItem } from '@repo/contracts/plugins/wire';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
@@ -34,15 +35,29 @@ function ageContent({ age }: SessionRowMetadataProps): React.ReactNode {
   );
 }
 
-// Each Plugin item as Argo draws it: its text in its tone.
+// Each Plugin item as Argo draws it: its text in its tone. Two Plugins may send the same text, so each repeat is counted into its key.
 const pluginItems = ({
   items = [],
 }: SessionRowMetadataProps): React.ReactNode =>
-  items.map((item) => (
-    <Text key={item.text} role="secondary" tone={item.tone ?? 'muted'}>
+  withKeys(items).map(({ key, item }) => (
+    <Text key={key} role="secondary" tone={item.tone ?? 'muted'}>
       {item.text}
     </Text>
   ));
+
+function withKeys(
+  items: readonly SessionRowItem[],
+): { key: string; item: SessionRowItem }[] {
+  const seen = new Map<string, number>();
+
+  return items.map((item) => {
+    const repeat = seen.get(item.text) ?? 0;
+
+    seen.set(item.text, repeat + 1);
+
+    return { key: `${item.text}:${repeat}`, item };
+  });
+}
 
 function hasMetadata({
   session,

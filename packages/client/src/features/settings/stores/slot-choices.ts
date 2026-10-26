@@ -10,8 +10,8 @@ import {
 import { z } from 'zod';
 
 /*
- * What this Device chose for one Slot: the Plugins it turned off, by Plugin id, and the Plugin that writes the Slot's
- * one replaceable part, or null while it is Argo's. A Plugin is on until it is listed, so a Plugin installed later
+ * What this Device chose for one Slot: the Plugins it turned off, by Plugin id, and the Plugin that writes its
+ * Single-owner Slot, or null while it is Argo's. A Plugin is on until it is listed, so a Plugin installed later
  * shows in the Slot without a visit to Settings.
  */
 export interface SlotChoices {
@@ -120,7 +120,7 @@ export const chooseSlotPluginShown = (
   { pluginId, shown }: { pluginId: string; shown: boolean },
 ): Promise<void> => choose(client, slotId, withShown(pluginId, shown));
 
-// Hands the Slot's replaceable part to one Plugin, or back to Argo with null.
+// Hands the Slot's Single-owner Slot to one Plugin, or back to Argo with null.
 export const chooseSlotOwner = (
   client: QueryClient,
   slotId: string,
@@ -130,7 +130,7 @@ export const chooseSlotOwner = (
 
 /*
  * This Device's choices for one Slot: Argo's own until the kept ones load. A Slot reads this to leave out a hidden
- * Plugin, and to find who writes its replaceable part.
+ * Plugin, and to find who writes its Single-owner Slot.
  */
 export function useSlotChoices(slotId: string): SlotChoices {
   const { data = argoChoices } = useQuery(slotChoicesQuery(slotId));

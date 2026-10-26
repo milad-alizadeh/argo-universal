@@ -1,10 +1,12 @@
 import { type SlotVisibility, slotVisibility } from '#features/settings';
 import type { OwnerSlot } from './slot-settings';
 
-// A Plugin that fills a Slot, with this Device's switch for it.
+// A Plugin that fills a Slot or asks for its Single-owner Slot, with this Device's switch for it.
 export interface SlotPlugin {
   pluginId: string;
   name: string;
+  // Whether it declares the Slot itself, so it has a switch; one that only asks for the line has none.
+  fills: boolean;
   shown: boolean;
   // Whether it also declares the Slot's Single-owner Slot, so it can be chosen to write it.
   asks: boolean;
@@ -51,8 +53,12 @@ export const effectiveOwner = (
   return askingPlugins(plugins).find((plugin) => plugin.pluginId === chosen);
 };
 
+// The Plugins that declare the Slot, each with its switch.
+export const fillingPlugins = (plugins: readonly SlotPlugin[]): SlotPlugin[] =>
+  plugins.filter((plugin) => plugin.fills);
+
 export const shownCount = (plugins: readonly SlotPlugin[]): number =>
-  plugins.filter((plugin) => plugin.shown).length;
+  fillingPlugins(plugins).filter((plugin) => plugin.shown).length;
 
 export interface OwnerOption {
   value: string;

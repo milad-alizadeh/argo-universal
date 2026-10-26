@@ -1,11 +1,18 @@
 import { useQueries } from '@tanstack/react-query';
 import type * as React from 'react';
-import { slotChoicesQuery, useServerPageCaption } from '#features/settings';
-import { useNavigate } from '#lib/product/navigation/navigation';
+import {
+  slotChoicesQuery,
+  slotVisibility,
+  useServerPageCaption,
+} from '#features/settings';
+import {
+  slotSettingsHref,
+  useNavigate,
+} from '#lib/product/navigation/navigation';
 import { PluginListView, type SlotLink } from './plugin-list-view';
-import { toSlotPlugins } from './slots/slot-plugins';
+import { toSlotPlugins } from './slots/slot-plugin-list';
 import type { SlotSettings } from './slots/slot-settings';
-import { shownCount } from './slots/slot-settings-model';
+import { fillingPlugins, shownCount } from './slots/slot-settings-model';
 import { slotSettings } from './slots/slot-settings-registry';
 import {
   type PluginEntry,
@@ -19,12 +26,10 @@ function slotLink(
   plugins: readonly PluginEntry[],
   hidden: readonly string[] = [],
 ): SlotLink[] {
-  const filling = toSlotPlugins(settings, plugins, {
-    hidden,
-    owner: null,
-  });
+  const { shows } = slotVisibility({ hidden, owner: null });
+  const filling = toSlotPlugins(settings, plugins, shows);
 
-  if (filling.length === 0) return [];
+  if (fillingPlugins(filling).length === 0) return [];
 
   return [{ ...pick(settings), count: shownCount(filling) }];
 }
@@ -56,9 +61,7 @@ export function PluginListScreen(): React.JSX.Element {
       plugins={usePluginsLoad()}
       slots={useSlotLinks()}
       onOpenPlugin={(pluginId) => navigate(`/settings/plugins/${pluginId}`)}
-      onOpenSlot={(slotId) =>
-        navigate(`/settings/plugins/slots/${encodeURIComponent(slotId)}`)
-      }
+      onOpenSlot={(slotId) => navigate(slotSettingsHref(slotId))}
     />
   );
 }
