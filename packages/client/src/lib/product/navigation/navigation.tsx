@@ -12,13 +12,14 @@ import { createContext, type ReactNode, use } from 'react';
 import { newSessionId } from './new-session';
 import { isPage, sectionOf } from './sections';
 
-// New Session, in the Project it was opened from when there is one: one route draws it and the Session it becomes.
-export const newSessionHref = (projectId?: string): Href => ({
+// New Session, in the Project it was opened from when there is one, with a draft a Plugin hands it: one route draws it and the Session it becomes.
+export const newSessionHref = (projectId?: string, draft?: string): Href => ({
   pathname: '/sessions/[id]',
-  params:
-    projectId === undefined
-      ? { id: newSessionId }
-      : { id: newSessionId, projectId },
+  params: {
+    id: newSessionId,
+    ...(projectId === undefined ? {} : { projectId }),
+    ...(draft === undefined ? {} : { draft }),
+  },
 });
 
 // A Session's page.

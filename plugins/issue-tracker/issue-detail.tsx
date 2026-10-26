@@ -14,7 +14,8 @@ export function IssueDetail(props: IssueDetailProps): JSX.Element {
     <Screen
       title={issue.title}
       caption={`#${issue.number}`}
-      actions={<IssueActions issue={issue} onBack={props.onBack} />}
+      primaryAction={<StartSessionAction {...props} />}
+      actions={<IssueActions {...props} />}
     >
       <Detail
         markdown={issue.body || 'No description.'}
@@ -24,13 +25,59 @@ export function IssueDetail(props: IssueDetailProps): JSX.Element {
   );
 }
 
-type IssueActionsProps = Pick<IssueDetailProps, 'issue' | 'onBack'>;
+type IssueActionsProps = Pick<
+  IssueDetailProps,
+  'issue' | 'onBack' | 'onStatus'
+>;
 
-function IssueActions({ issue, onBack }: IssueActionsProps): JSX.Element[] {
+function IssueActions({
+  issue,
+  onBack,
+  onStatus,
+}: IssueActionsProps): JSX.Element[] {
   return [
     <BackAction key="back" onBack={onBack} />,
+    <StatusAction key="status" issue={issue} onStatus={onStatus} />,
     <OpenAction key="open" url={issue.url} />,
   ];
+}
+
+// The Issue's reference, title and link, as the prompt that starts work on it.
+const issueDraft = (issue: Issue): string =>
+  `#${issue.number} ${issue.title}\n${issue.url}`;
+
+type StartSessionProps = Pick<IssueDetailProps, 'issue' | 'projectId'>;
+
+function StartSessionAction({
+  issue,
+  projectId,
+}: StartSessionProps): JSX.Element | null {
+  if (projectId === null) return null;
+
+  return (
+    <Action
+      label="Start Session"
+      icon="new-session"
+      onPress={{ action: 'newSession', projectId, draft: issueDraft(issue) }}
+    />
+  );
+}
+
+type StatusActionProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
+
+function StatusAction({ issue, onStatus }: StatusActionProps): JSX.Element {
+  if (issue.status === closed)
+    return (
+      <Action
+        label="Reopen Issue"
+        icon="issue-open"
+        onPress={() => onStatus('open')}
+      />
+    );
+
+  return (
+    <Action label="Close Issue" icon="check" onPress={() => onStatus(closed)} />
+  );
 }
 
 function BackAction({ onBack }: { onBack: () => void }): JSX.Element {

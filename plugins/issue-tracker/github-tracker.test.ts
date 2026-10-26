@@ -22,10 +22,10 @@ const issue = (state: string, body = ''): GitHubIssue => ({
   assignees: [{ login: 'dev' }],
 });
 
-const mappedIssue = (state: string, body = ''): Issue => ({
+const mappedIssue = (state: 'OPEN' | 'CLOSED', body = ''): Issue => ({
   number: 8,
   title: 'Keep the Plugin boundary',
-  status: state.toLowerCase(),
+  status: state === 'OPEN' ? 'open' : 'closed',
   body,
   url: `https://github.com/${repository}/issues/8`,
   labels: ['security'],
@@ -69,6 +69,35 @@ it('maps the Issue returned by GitHub', async () => {
 
   expect(await tracker.getIssue(8)).toEqual(
     mappedIssue('CLOSED', 'Use the Server API.'),
+  );
+});
+
+it.each([
+  ['closed', 'close'],
+  ['open', 'reopen'],
+] as const)('sets an Issue %s with gh issue %s', async (status, command) => {
+  const calls: string[][] = [];
+
+  const tracker = trackerFor(async (argv) => {
+    calls.push(argv);
+
+    return success();
+  });
+
+  await tracker.setStatus(8, status);
+
+  expect(calls).toEqual([['gh', 'issue', command, '8', '--repo', repository]]);
+});
+
+it('rejects a status change gh refuses', async () => {
+  const tracker = trackerFor(async () => ({
+    ...success(),
+    exitCode: 1,
+    stderr: 'GraphQL: Could not close the issue.',
+  }));
+
+  await expect(tracker.setStatus(8, 'closed')).rejects.toThrow(
+    'Could not close the issue.',
   );
 });
 

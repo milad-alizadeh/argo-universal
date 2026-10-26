@@ -31,6 +31,18 @@ Feature: Plugin navigation
       | wide  |
       | phone |
 
+  Scenario: A Plugin opens New Session with its draft, which is not kept
+    Given a wide Frame
+    When I open the Counter Plugin
+    And I press "Start Session" on the Plugin page
+    Then New Session opens with this draft:
+      """
+      #7 Fixture Issue
+      https://example.com/fixture/7
+      """
+    When I reload the App and open New Session
+    Then the Message box is empty
+
   Scenario Outline: The phone drawer opens Plugins and returns to core sections
     Given a phone Frame
     When I open the <first> Plugin

@@ -1,11 +1,12 @@
 import { useEffect, useState, type Argo } from '@argo/plugin-kit';
-import type { Issue } from './github-issues';
-import type { Project } from './issue-data';
+import type { Issue, IssueStatus } from './github-issues';
+import { githubError } from './github-tracker';
+import { setIssueStatus, type Project } from './issue-data';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 import { useProjectIssues } from './use-project-issues';
 
-type Setter<Value> = (value: Value) => void;
+type Setter<Value> = (value: Value | ((current: Value) => Value)) => void;
 
 export type IssueSelection = { type: 'issue'; issue: Issue };
 
@@ -25,6 +26,8 @@ export type IssuePage = {
   setMessage: Setter<string>;
   onIssue: (event: IssueEvent) => void;
   onBack: () => void;
+  // Shows the open Issue's new status at once, and the old one again when the Tracker refuses it.
+  onStatus: (status: IssueStatus) => Promise<void>;
 };
 
 // The Issue list and an open Issue draw the page apart from its selection.
@@ -56,7 +59,13 @@ export function useIssuePage(
 
   useIssueData(argo, state, { storage, trackers });
 
-  return { ...pageState(state), storage, trackers, ...pageActions(state) };
+  return {
+    ...pageState(state),
+    storage,
+    trackers,
+    ...pageActions(state),
+    onStatus: (status) => changeStatus({ state, storage, trackers }, status),
+  };
 }
 
 function useIssueData(
@@ -140,7 +149,10 @@ function reportProjectError(active: boolean, setMessage: Setter<string>): void {
   if (active) setMessage('Could not load Projects.');
 }
 
-type PageState = Omit<IssuePage, 'storage' | 'trackers' | keyof PageActions>;
+type PageState = Omit<
+  IssuePage,
+  'storage' | 'trackers' | 'onStatus' | keyof PageActions
+>;
 
 type PageActions = Pick<IssuePage, 'setMessage' | 'onIssue' | 'onBack'>;
 
@@ -181,4 +193,39 @@ function selectProject(id: string, state: IssueState): void {
   state.message[1]('Loading Issues…');
   state.projectId[1](id);
   state.selected[1](null);
+}
+
+type StatusInput = Pick<IssuePage, 'storage' | 'trackers'> & {
+  state: IssueState;
+};
+
+async function changeStatus(
+  { state, storage, trackers }: StatusInput,
+  status: IssueStatus,
+): Promise<void> {
+  const issue = state.selected[0]?.issue;
+  const project = pageState(state).project;
+
+  if (!issue || !project) return;
+
+  showStatus(state, issue.url, status);
+
+  try {
+    await setIssueStatus({ project, issue, storage, trackers }, status);
+  } catch (error) {
+    showStatus(state, issue.url, issue.status);
+    throw new Error(githubError(error));
+  }
+}
+
+// An Issue's URL names it across Projects, so a change lands on that Issue alone.
+function showStatus(state: IssueState, url: string, status: IssueStatus): void {
+  const withStatus = (issue: Issue): Issue =>
+    issue.url === url ? { ...issue, status } : issue;
+
+  state.issues[1]((issues) => issues.map(withStatus));
+  state.selected[1](
+    (selected) =>
+      selected && { ...selected, issue: withStatus(selected.issue) },
+  );
 }

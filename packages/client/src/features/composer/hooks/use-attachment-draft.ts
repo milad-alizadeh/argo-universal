@@ -66,8 +66,10 @@ function selectionFailureKey(): string {
   return `attachment-selection:${selectionFailures}`;
 }
 
+// `seed` stands in for the text kept for the owner, and is kept only once the person edits it.
 export function useAttachmentDraft(
   owner: DraftOwner | undefined,
+  seed?: string,
 ): AttachmentDraft {
   const [state, dispatch] = useReducer(
     attachmentDraftReducer,
@@ -76,7 +78,7 @@ export function useAttachmentDraft(
 
   const upload = useAttachmentUpload();
   const key = owner && draftKey(owner);
-  useKeptDraft(key, dispatch);
+  useKeptDraft(key, dispatch, seed);
 
   return attachmentDraftActions({ state, dispatch, upload, key });
 }

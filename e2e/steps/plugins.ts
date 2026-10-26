@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
 import { onPhone, phone, wide } from './frame';
+import { expectMessage } from './new-session';
 
 const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists', 'Issues'];
 
@@ -171,5 +172,13 @@ Then(
   'the Plugin row {string} is hidden',
   async ({ page }, name: string): Promise<void> => {
     await expect(page.getByText(name, { exact: true })).toBeHidden();
+  },
+);
+
+Then(
+  'New Session opens with this draft:',
+  async ({ page }, draft: string): Promise<void> => {
+    await expect(page).toHaveURL(/\/sessions\/new\?/);
+    await expectMessage(page, draft);
   },
 );

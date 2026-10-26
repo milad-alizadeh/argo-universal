@@ -4,6 +4,7 @@ import {
   parseJson,
   type GitHubJson,
   type Issue,
+  type IssueStatus,
 } from './github-issues';
 
 const listFields = 'number,title,state,labels,assignees,url';
@@ -22,6 +23,7 @@ export type TrackerClient = {
   authStatus: () => Promise<string>;
   listIssues: () => Promise<Issue[]>;
   getIssue: (number: number) => Promise<Issue>;
+  setStatus: (number: number, status: IssueStatus) => Promise<void>;
 };
 
 type GitHub = { process: Pick<Argo['process'], 'run'> };
@@ -49,6 +51,9 @@ export function createGitHubTracker(
     authStatus: () => run(argo, ['gh', 'auth', 'status']),
     listIssues: () => listIssues(argo, repository),
     getIssue: (number) => getIssue(argo, repository, number),
+    setStatus: async (number, status) => {
+      await run(argo, statusCommand(repository, number, status));
+    },
   };
 }
 
@@ -105,6 +110,21 @@ const viewCommand = (repository: string, number: number): string[] => [
   repository,
   '--json',
   issueFields,
+];
+
+const statusCommands = { open: 'reopen', closed: 'close' } as const;
+
+const statusCommand = (
+  repository: string,
+  number: number,
+  status: IssueStatus,
+): string[] => [
+  'gh',
+  'issue',
+  statusCommands[status],
+  issueNumber(number),
+  '--repo',
+  repository,
 ];
 
 async function run(argo: GitHub, argv: string[]): Promise<string> {

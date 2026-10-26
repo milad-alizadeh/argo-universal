@@ -34,6 +34,8 @@ export interface SessionDetailScreenProps {
   id: string;
   // New Session's Project, when it was opened from one.
   projectId?: string;
+  // New Session's Composer text, when a Plugin opened it with one.
+  draft?: string;
 }
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
@@ -42,11 +44,12 @@ type SessionFeed = ReturnType<typeof useSessionFeed>;
 export function SessionDetailScreen({
   id,
   projectId,
+  draft,
 }: SessionDetailScreenProps): React.JSX.Element {
   return (
     <ReplaceableSlotRenderer value={renderConnectedReplaceableSlot}>
       {id === newSessionId ? (
-        <SessionNewScreen projectId={projectId} />
+        <SessionNewScreen projectId={projectId} draft={draft} />
       ) : (
         <ConnectedSession key={id} sessionId={id} />
       )}

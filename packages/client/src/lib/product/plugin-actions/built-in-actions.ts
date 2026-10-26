@@ -3,6 +3,7 @@ import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { setStringAsync } from 'expo-clipboard';
 import { router, type Href } from 'expo-router';
 import { Linking } from 'react-native';
+import { newSessionHref } from '../navigation/navigation';
 import { shareContent } from './share';
 import { mayRun } from './web-action';
 
@@ -30,14 +31,23 @@ function openPage(path: string): void {
   else showToast({ title: 'That page is not available', tone: 'danger' });
 }
 
-type LocalAction = Extract<Action, { action: 'toast' | 'navigate' }>;
+const localActions = new Set(['toast', 'navigate', 'newSession']);
+
+type LocalAction = Extract<
+  Action,
+  { action: 'toast' | 'navigate' | 'newSession' }
+>;
 
 type DeviceAction = Exclude<Action, LocalAction>;
+
+const isLocal = (action: Action): action is LocalAction =>
+  localActions.has(action.action);
 
 function runLocal(action: LocalAction): void {
   if (action.action === 'toast')
     showToast({ title: action.message, tone: 'success' });
-  else openPage(action.path);
+  else if (action.action === 'navigate') openPage(action.path);
+  else router.navigate(newSessionHref(action.projectId, action.draft));
 }
 
 async function runDevice(action: DeviceAction): Promise<void> {
@@ -49,8 +59,7 @@ async function runDevice(action: DeviceAction): Promise<void> {
 }
 
 async function dispatch(action: Action): Promise<void> {
-  if (action.action === 'toast' || action.action === 'navigate')
-    runLocal(action);
+  if (isLocal(action)) runLocal(action);
   else await runDevice(action);
 }
 

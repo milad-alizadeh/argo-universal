@@ -1,5 +1,5 @@
 import type { Argo } from '@argo/plugin-kit';
-import type { Issue } from './github-issues';
+import type { Issue, IssueStatus } from './github-issues';
 import { githubError, type TrackerClient } from './github-tracker';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
@@ -173,7 +173,31 @@ export type IssueRequest = {
 };
 
 export async function loadIssue(request: IssueRequest): Promise<Issue> {
-  const { project, issue, storage, trackers } = request;
+  const client = await issueClient(request);
+
+  return client.getIssue(request.issue.number);
+}
+
+// Sets the Issue's status in its Tracker, then in the cached list.
+export async function setIssueStatus(
+  request: IssueRequest,
+  status: IssueStatus,
+): Promise<void> {
+  const { project, issue, storage } = request;
+  const client = await issueClient(request);
+
+  await client.setStatus(issue.number, status);
+  // The background refresh rewrites the cache, so a failed write only delays it.
+  await storage
+    .updateCache(project.id, { ...issue, status })
+    .catch(() => undefined);
+}
+
+async function issueClient({
+  project,
+  storage,
+  trackers,
+}: Omit<IssueRequest, 'issue'>): Promise<TrackerClient> {
   const trackerId = await storage.selectedTracker(project.id);
 
   const client = clientFor({
@@ -183,7 +207,7 @@ export async function loadIssue(request: IssueRequest): Promise<Issue> {
     trackers,
   });
 
-  if (client) return client.getIssue(issue.number);
+  if (client) return client;
 
   throw new Error(unavailableMessage(trackerId));
 }
