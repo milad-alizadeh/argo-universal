@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { listDefaults } from '../kit-tokens';
 import { pressHandler } from './kit-event-props';
 import { handler } from './plugin-part-props';
 import { progressBarProps, rowBadgeProps } from './status-kit-props';
@@ -74,6 +75,7 @@ export const contentListProps = z.object({
   appearance: z
     .enum(['plain', 'cards', 'grouped'])
     .optional()
+    .meta({ default: listDefaults.appearance })
     .describe(
       'The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists).',
     ),

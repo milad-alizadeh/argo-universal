@@ -28,6 +28,7 @@ function IssueList({ source, issues }: IssueListProps): JSX.Element {
 
   return (
     <List
+      appearance="cards"
       footer={message || repositoryText(source.project)}
       empty={<EmptyState title={message || 'No Issues.'} />}
       pagination={{ hasMore: issues.hasMore, onLoadMore: issues.loadMore }}

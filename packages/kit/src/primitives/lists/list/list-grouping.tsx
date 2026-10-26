@@ -1,3 +1,4 @@
+import { listDefaults } from '@repo/contracts/kit-tokens';
 import {
   createContext,
   useContext,
@@ -9,6 +10,7 @@ import {
 } from 'react';
 import {
   ListContext,
+  listSelection,
   type ListSelection,
   type ListAppearance,
   type ListPosition,
@@ -61,7 +63,7 @@ const dataCellAppearance = <Item,>(
 function rowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
   if (!list) return emptyLayout;
 
-  const appearance = list.appearance ?? 'plain';
+  const appearance = list.appearance ?? listDefaults.appearance;
 
   return {
     appearance,
@@ -134,15 +136,15 @@ const fixedValue = (
   { item, appearance }: FixedRowProps,
 ): ContextType<typeof ListContext> => ({
   ...parent,
-  appearance: appearance ?? 'plain',
+  appearance: appearance ?? listDefaults.appearance,
   position: item.position,
   inList: true,
-  ...selectionOf(item),
+  ...listSelection(item),
 });
 
 // A section's header, footer and gap are not rows of its card.
 const cellAppearance = ({ item, appearance }: FixedRowProps): ListAppearance =>
-  item.fullSpan ? 'plain' : (appearance ?? 'plain');
+  item.fullSpan ? 'plain' : (appearance ?? listDefaults.appearance);
 
 export function FixedListRow(props: FixedRowProps): ReactElement {
   const value = fixedValue(useContext(ListContext), props);
@@ -162,7 +164,7 @@ export function FixedListRow(props: FixedRowProps): ReactElement {
 export function SectionListRow(props: SectionRowProps): ReactElement {
   const { section, index, count, children } = props;
   const parent = useContext(ListContext);
-  const selection = section.selectionMode ? selectionOf(section) : parent;
+  const selection = section.selectionMode ? listSelection(section) : parent;
 
   const value = {
     ...parent,
@@ -173,10 +175,3 @@ export function SectionListRow(props: SectionRowProps): ReactElement {
 
   return <ListContext value={value}>{children}</ListContext>;
 }
-
-// Copying undefined selection fields deliberately clears inherited selection for a fixed child.
-const selectionOf = (selection: ListSelection): ListSelection => ({
-  selectionMode: selection.selectionMode,
-  selection: selection.selection,
-  onSelectionChange: selection.onSelectionChange,
-});
