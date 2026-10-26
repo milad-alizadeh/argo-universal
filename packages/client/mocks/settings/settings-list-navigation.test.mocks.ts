@@ -37,7 +37,7 @@ const groups = ['Workspace', 'Account', 'Connection'];
 
 /*
  * Every width lists its pages under the groups' titles, Theme last; Appearance chooses in place, so it is no link. A
- * wide sidebar's titles are headings; a phone's FieldGroup draws them as its sections' captions, as Theme's always is.
+ * wide sidebar's titles are headings, Theme's too; a phone's FieldGroup draws them as its sections' captions.
  */
 async function expectGroupedPages(
   canvas: PlayContext['canvas'],
@@ -56,7 +56,7 @@ async function expectGroupedPages(
       ).toBe(true)
     : expect(
         canvas.getAllByRole('heading').map((heading) => heading.textContent),
-      ).toEqual(groups));
+      ).toEqual([...groups, 'Theme']));
   await expect(canvas.getByText('Theme')).toBeVisible();
   await expect(appearanceRow(canvas)).toBeVisible();
 }

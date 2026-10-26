@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
+import { InMenu } from '#kit/menu-rows-context';
 import { useSizeClassValue } from '#kit/use-size-class/use-size-class-value';
 import { useWide } from '#kit/use-wide/use-wide';
 import { Icon } from '#primitives/content/icon';
@@ -15,6 +16,7 @@ import type {
   SettingsLayoutSections,
   SettingsPagesProps,
 } from './settings-layout-props';
+import { sidebarChoices } from './settings-sidebar-choices';
 
 /*
  * Settings' pages as a list alone, with no page beside it: a wide web window draws the groups as sidebar rows, flat on
@@ -61,55 +63,53 @@ type Placed = Omit<SettingsPagesProps, 'sections'> & {
 
 /*
  * The wide web sidebar draws its groups as rows and the last section after them, in the same scroll, as a phone's
- * FieldGroup does. A List with no rows draws no end, so a search that leaves only the last section draws it alone.
+ * FieldGroup does: a section of choices as one more group of rows, any other after the List's end. A List with no rows
+ * draws no end, so a search that leaves only such a section draws it alone.
  */
-function PlacedScreens({ sections, ...props }: Placed): ReactElement {
-  if (!hasScreens(sections))
-    return <LastSection>{props.lastSection}</LastSection>;
-
-  return (
-    <SettingsGroups
-      sections={sections}
-      selected={props.selected}
-      onSelect={props.onSelect}
-      endContent={
-        props.lastSection && <LastSection>{props.lastSection}</LastSection>
-      }
-    />
-  );
-}
-
-// A FieldGroup fills its page, so the last section's FieldGroup is given the height of a titled section of one row.
-const lastSectionHeight = 'h-32';
-
-const LastSection = (props: { children: ReactNode }): ReactElement => (
-  <SectionEndContext value>
-    <View className={lastSectionHeight}>
-      <FieldGroup>{props.children}</FieldGroup>
-    </View>
-  </SectionEndContext>
-);
-
-type GroupsProps = RowSelection & {
-  sections: SettingsLayoutSections;
-  endContent?: ReactNode;
-};
-
-function SettingsGroups({
+function PlacedScreens({
   sections,
-  endContent,
-  ...rows
-}: GroupsProps): ReactElement {
-  const groups = sections.map((section, index) => (
-    <SettingsGroup key={section.title ?? index} section={section} {...rows} />
-  ));
+  lastSection,
+  ...props
+}: Placed): ReactElement {
+  const choices = sidebarChoices(lastSection);
+
+  if (!choices && !hasScreens(sections))
+    return <LastSection>{lastSection}</LastSection>;
 
   return (
-    <List appearance="plain" endContent={endContent}>
-      {groups}
+    <List appearance="plain" endContent={afterGroups(choices, lastSection)}>
+      {settingsGroups(sections, props)}
+      {choices}
     </List>
   );
 }
+
+const afterGroups = (choices: ReactNode, lastSection: ReactNode): ReactNode =>
+  choices || !lastSection ? undefined : (
+    <LastSection>{lastSection}</LastSection>
+  );
+
+// The last section's rows are tiles flat on the glass, as the groups' rows above it are, with no card of their own.
+const LastSection = (props: { children: ReactNode }): ReactElement => (
+  <SectionEndContext value>
+    <InMenu value>
+      <FieldGroup>{props.children}</FieldGroup>
+    </InMenu>
+  </SectionEndContext>
+);
+
+const settingsGroups = (
+  sections: SettingsLayoutSections,
+  rows: RowSelection,
+): ReactElement[] =>
+  sections.map((section, index) => (
+    <SettingsGroup
+      key={section.title ?? index}
+      section={section}
+      selected={rows.selected}
+      onSelect={rows.onSelect}
+    />
+  ));
 
 type RowSelection = Pick<SettingsPagesProps, 'selected' | 'onSelect'>;
 

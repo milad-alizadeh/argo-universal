@@ -9,6 +9,7 @@ import type * as MediaUrlKit from '#primitives/content/media-url';
 import type * as PathTextKit from '#primitives/content/path-text';
 import type * as VideoKit from '#primitives/content/video';
 import type * as FieldGroupKit from '#primitives/fields/field-group';
+import type * as FieldPickerKit from '#primitives/fields/field-picker';
 import type * as FieldRowKit from '#primitives/fields/field-row';
 import type * as CardKit from '#primitives/layout/card';
 import type * as GridKit from '#primitives/layout/grid';
@@ -98,6 +99,8 @@ export type AdditionalPrimitives = {
   HeaderIconButtonProps: HeaderIconButtonKit.HeaderIconButtonProps;
   FieldGroupProps: FieldGroupKit.FieldGroupProps;
   FieldGroupSectionProps: FieldGroupKit.FieldGroupSectionProps;
+  FieldPickerCallerProps: FieldPickerKit.FieldPickerCallerProps;
+  FieldPickerSingle: FieldPickerKit.FieldPickerSingle;
   RowTextProps: FieldRowKit.RowTextProps;
   VideoProps: VideoKit.VideoProps;
   AudioProps: AudioKit.AudioProps;
