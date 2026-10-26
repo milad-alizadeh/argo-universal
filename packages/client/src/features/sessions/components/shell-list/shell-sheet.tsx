@@ -60,8 +60,13 @@ function OutputPage(
 function outputHeading(
   shell: ShellEntry | undefined,
   onStop: ShellSheetProps['onStop'],
-): Pick<SheetScreenProps, 'title' | 'action'> {
-  return { title: shell?.command, action: shell && stopAction(shell, onStop) };
+  onExit: () => void,
+): Pick<SheetScreenProps, 'title' | 'action' | 'onExit'> {
+  return {
+    title: shell?.command,
+    action: shell && stopAction(shell, onStop),
+    onExit,
+  };
 }
 
 const sheetFrame = (
@@ -75,14 +80,15 @@ const sheetFrame = (
 
 // The Composer's Shells pill opens the Session's background Shells; a Shell's output is the sheet's second page.
 export function ShellSheet(props: ShellSheetProps): JSX.Element {
-  const [shell, openShell] = useOpenShell(props);
+  const [shell, openShell, closeShell] = useOpenShell(props);
+  const heading = outputHeading(shell, props.onStop, closeShell);
 
   return (
     <Sheet {...sheetFrame(props)}>
       <Sheet.Screen name="shells" title="Shells">
         <ShellRows shells={props.shells} now={props.now} onOpen={openShell} />
       </Sheet.Screen>
-      <Sheet.Screen name="shell" {...outputHeading(shell, props.onStop)}>
+      <Sheet.Screen name="shell" {...heading}>
         <OutputPage shell={shell} output={props.output} now={props.now} />
       </Sheet.Screen>
     </Sheet>

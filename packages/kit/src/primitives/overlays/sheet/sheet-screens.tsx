@@ -57,6 +57,7 @@ function sheetScreens(children: ReactNode): SheetScreenEntry[] {
       title: page.props.title,
       action: page.props.action,
       placeholder: page.props.placeholder,
+      onExit: page.props.onExit,
       content: page.props.children,
     }));
 }

@@ -226,7 +226,7 @@ jobs:
 
       # Builds or restores the Expo web export through turbo, then replays from cache when nothing @repo/e2e depends on changed.
       - name: End-to-end tests (web)
-        run: pnpm test:e2e
+        run: pnpm test:e2e --log-order=stream
         env:
           ARGO_E2E_SHARD: ${{ matrix.shard }}/6
 

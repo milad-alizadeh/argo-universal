@@ -1,9 +1,17 @@
+import type { SessionSnapshot } from '@repo/contracts';
 import { type Dispatch, type SetStateAction, useState } from 'react';
 
 // What a Session's Inspector shows, each in its own tab, in the header's trigger order.
 export const sessionPanelOrder = ['subagents', 'shells', 'changes'] as const;
 
 export type SessionPanel = (typeof sessionPanelOrder)[number];
+
+export const offeredWorkPanels = (
+  work: Partial<Pick<SessionSnapshot, 'subagents' | 'shells'>>,
+): SessionPanel[] =>
+  sessionPanelOrder.filter(
+    (panel) => panel === 'changes' || Boolean(work[panel]?.length),
+  );
 
 // The open tabs, in the order they opened, and the one shown; no tabs means the Inspector is closed.
 export interface SessionPanelsState {

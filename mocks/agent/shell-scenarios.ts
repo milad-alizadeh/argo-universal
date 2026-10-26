@@ -35,6 +35,22 @@ export const shellScenarios = {
   'shell-running': shellScenario(runningShellStep),
   'shell-exited': shellScenario(exitedShellStep),
   'shell-stopped': shellScenario(stoppedShellStep),
+  'shell-live': {
+    configOptions: acpConfiguration,
+    steps: [
+      { type: 'wait-for-release' },
+      {
+        ...runningShellStep,
+        request: {
+          command: process.execPath,
+          args: [
+            '-e',
+            "const fs = require('fs'); console.log('Shell ready'); let printed = false; setInterval(() => { if (printed || !fs.existsSync('shell-output.release')) return; printed = true; console.log('Shell updated'); }, 25)",
+          ],
+        },
+      },
+    ],
+  },
 } satisfies Record<string, ScriptedScenario>;
 
 export const streamingShellStep = {
