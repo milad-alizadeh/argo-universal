@@ -32,4 +32,11 @@ const positions = {
 export const listPosition = (first: boolean, last: boolean): ListPosition =>
   positions[`${first}-${last}`];
 
+// Undefined fields deliberately clear inherited selection for a fixed child.
+export const listSelection = (selection: ListSelection): ListSelection => ({
+  selectionMode: selection.selectionMode,
+  selection: selection.selection,
+  onSelectionChange: selection.onSelectionChange,
+});
+
 export const ListTileContext = createContext<{ aspect: number } | null>(null);

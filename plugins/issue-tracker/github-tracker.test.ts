@@ -18,7 +18,7 @@ const issue = (state: string, body = ''): GitHubIssue => ({
   state,
   body,
   url: `https://github.com/${repository}/issues/8`,
-  labels: [{ name: 'security' }],
+  labels: [{ name: 'security', color: 'd73a4a' }, { name: 'docs' }],
   assignees: [{ login: 'dev' }],
 });
 
@@ -28,7 +28,7 @@ const mappedIssue = (state: 'OPEN' | 'CLOSED', body = ''): Issue => ({
   status: state === 'OPEN' ? 'open' : 'closed',
   body,
   url: `https://github.com/${repository}/issues/8`,
-  labels: ['security'],
+  labels: [{ name: 'security', color: '#d73a4a' }, { name: 'docs' }],
   assignees: ['dev'],
 });
 
@@ -43,23 +43,36 @@ const success = (stdout = ''): ProcessResult => ({
 const trackerFor = (run: Run): TrackerClient =>
   createGitHubTracker({ process: { run } }, repository);
 
-it('maps open and closed Issue list responses independently', async () => {
+it('lists one GitHub search across both states, as many as asked', async () => {
   const calls: string[][] = [];
 
   const tracker = trackerFor(async (argv) => {
     calls.push(argv);
 
-    return success(JSON.stringify([issue(String(argv[6]).toUpperCase())]));
+    return success(JSON.stringify([issue('OPEN'), issue('CLOSED')]));
   });
 
-  expect(await tracker.listIssues()).toEqual([
+  expect(await tracker.listIssues('is:open label:"bug"', 60)).toEqual([
     mappedIssue('OPEN'),
     mappedIssue('CLOSED'),
   ]);
-  expect(calls.map((argv) => argv[6])).toEqual(['open', 'closed']);
-  expect(
-    calls.every((argv) => argv[argv.indexOf('--limit') + 1] === '50'),
-  ).toBe(true);
+  expect(calls).toEqual([
+    [
+      'gh',
+      'issue',
+      'list',
+      '--repo',
+      repository,
+      '--state',
+      'all',
+      '--search',
+      'is:open label:"bug"',
+      '--limit',
+      '60',
+      '--json',
+      'number,title,state,labels,assignees,url',
+    ],
+  ]);
 });
 
 it('maps the Issue returned by GitHub', async () => {
@@ -133,7 +146,7 @@ it('rejects timed out GitHub CLI output', async () => {
     timedOut: true,
   }));
 
-  await expect(tracker.listIssues()).rejects.toThrow('timed out');
+  await expect(tracker.listIssues('is:open', 30)).rejects.toThrow('timed out');
 });
 
 it('rejects truncated GitHub CLI output', async () => {
@@ -142,7 +155,9 @@ it('rejects truncated GitHub CLI output', async () => {
     truncated: true,
   }));
 
-  await expect(tracker.listIssues()).rejects.toThrow('exceeded the output cap');
+  await expect(tracker.listIssues('is:open', 30)).rejects.toThrow(
+    'exceeded the output cap',
+  );
 });
 
 it.each([

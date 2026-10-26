@@ -1,9 +1,24 @@
-import { Action, Detail, Metadata, Pill, Screen } from '@argo/plugin-kit';
+import {
+  Action,
+  Detail,
+  EmptyState,
+  Metadata,
+  Pill,
+  Screen,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Issue, IssueStatus } from './github-issues';
-import type { PageProps } from './use-issues';
+import type { Issue, IssueLabel, IssueStatus } from './github-issues';
+import { labelPills } from './label-pills';
+import {
+  useIssueDetail,
+  type DetailSource,
+  type IssueDetailState,
+} from './use-issue-detail';
 
-type IssueDetailProps = PageProps & { issue: Issue };
+type IssueDetailProps = Pick<IssueDetailState, 'onStatus'> & {
+  issue: Issue;
+  projectId: string;
+};
 
 type StatusView = {
   text: string;
@@ -25,7 +40,24 @@ const statuses = {
   },
 } as const satisfies Record<IssueStatus, StatusView>;
 
-export function IssueDetail(props: IssueDetailProps): JSX.Element {
+// One Issue's own page: its description, status and labels, and the presses that act on it.
+export function IssueDetailPage(source: DetailSource): JSX.Element {
+  const { issue, message, onStatus } = useIssueDetail(source);
+  const projectId = source.project.id;
+
+  if (!issue)
+    return (
+      <Screen title={`#${source.number}`}>
+        <EmptyState title={message} />
+      </Screen>
+    );
+
+  return (
+    <IssueDetail issue={issue} projectId={projectId} onStatus={onStatus} />
+  );
+}
+
+function IssueDetail(props: IssueDetailProps): JSX.Element {
   return (
     <Screen
       title={props.issue.title}
@@ -41,18 +73,10 @@ export function IssueDetail(props: IssueDetailProps): JSX.Element {
   );
 }
 
-type IssueActionsProps = Pick<
-  IssueDetailProps,
-  'issue' | 'onBack' | 'onStatus'
->;
+type IssueActionsProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
 
-function IssueActions({
-  issue,
-  onBack,
-  onStatus,
-}: IssueActionsProps): JSX.Element[] {
+function IssueActions({ issue, onStatus }: IssueActionsProps): JSX.Element[] {
   return [
-    <BackAction key="back" onBack={onBack} />,
     <StatusAction key="status" issue={issue} onStatus={onStatus} />,
     <OpenAction key="open" url={issue.url} />,
   ];
@@ -67,9 +91,7 @@ type StartSessionProps = Pick<IssueDetailProps, 'issue' | 'projectId'>;
 function StartSessionAction({
   issue,
   projectId,
-}: StartSessionProps): JSX.Element | null {
-  if (projectId === null) return null;
-
+}: StartSessionProps): JSX.Element {
   return (
     <Action
       label="Start Session"
@@ -85,10 +107,6 @@ function StatusAction({ issue, onStatus }: StatusActionProps): JSX.Element {
   const { label, icon, to } = statuses[issue.status].change;
 
   return <Action label={label} icon={icon} onPress={() => onStatus(to)} />;
-}
-
-function BackAction({ onBack }: { onBack: () => void }): JSX.Element {
-  return <Action label="Back to Issues" icon="arrow-left" onPress={onBack} />;
 }
 
 function OpenAction({ url }: { url: string }): JSX.Element {
@@ -116,13 +134,13 @@ function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
   );
 }
 
-function IssueLabels({ labels }: { labels: string[] }): JSX.Element {
+function IssueLabels({ labels }: { labels: IssueLabel[] }): JSX.Element {
   return (
     <Metadata.Pills title="Labels">
       {labels.length === 0 ? (
         <Pill text="None" tone="muted" />
       ) : (
-        labels.map((label) => <Pill key={label} text={label} />)
+        labelPills(labels)
       )}
     </Metadata.Pills>
   );

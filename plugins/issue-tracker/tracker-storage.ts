@@ -1,12 +1,14 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
-import type { Issue } from './github-issues';
+
+// A page's last loaded data in a Project, by the page's own name: shown at once while it loads again.
+type CacheKey = { projectId: string; view: string };
 
 export type TrackerStorage = {
   selectedTracker: (projectId: string) => Promise<string | null>;
   chooseTracker: (projectId: string, id: string | null) => Promise<void>;
-  readCache: (projectId: string) => Promise<Issue[] | null>;
-  writeCache: (projectId: string, issues: Issue[]) => Promise<void>;
-  updateCache: (projectId: string, issue: Issue) => Promise<void>;
+  // Only this Plugin writes the cache, so a read trusts what it stored.
+  readCache: <Value>(key: CacheKey) => Promise<Value | null>;
+  writeCache: <Value>(key: CacheKey, value: Value) => Promise<void>;
 };
 
 type Store = {
@@ -24,15 +26,15 @@ export function createTrackerStorage(
   return {
     selectedTracker: (projectId) => selectedTracker(store, projectId),
     chooseTracker: (projectId, id) => chooseTracker(store, projectId, id),
-    readCache: (projectId) => readCache(store, projectId),
-    writeCache: (projectId, issues) => writeCache(store, projectId, issues),
-    updateCache: (projectId, issue) => updateCache(store, projectId, issue),
+    readCache: (key) => readCache(store, key),
+    writeCache: (key, value) => writeCache(store, key, value),
   };
 }
 
 const tableStatements = [
   'CREATE TABLE IF NOT EXISTS tracker_preferences (project_id TEXT PRIMARY KEY, tracker_id TEXT NOT NULL)',
-  'CREATE TABLE IF NOT EXISTS issue_cache (project_id TEXT PRIMARY KEY, issues TEXT NOT NULL)',
+  'DROP TABLE IF EXISTS issue_cache',
+  'CREATE TABLE IF NOT EXISTS view_cache (project_id TEXT NOT NULL, view TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (project_id, view))',
 ];
 
 function createTables(argo: Argo): Store['ensureTables'] {
@@ -106,47 +108,33 @@ async function persistSelection(
   });
 }
 
-async function readCache(
+async function readCache<Value>(
   store: Store,
-  projectId: string,
-): Promise<Issue[] | null> {
+  { projectId, view }: CacheKey,
+): Promise<Value | null> {
   await store.ensureTables();
 
   const result = await store.argo.storage.execute({
-    sql: 'SELECT issues FROM issue_cache WHERE project_id = ?',
-    params: [projectId],
+    sql: 'SELECT value FROM view_cache WHERE project_id = ? AND view = ?',
+    params: [projectId, view],
     method: 'get',
   });
 
-  return decodeIssues(result);
+  return decodeValue(result);
 }
 
-async function writeCache(
+async function writeCache<Value>(
   store: Store,
-  projectId: string,
-  issues: Issue[],
+  { projectId, view }: CacheKey,
+  value: Value,
 ): Promise<void> {
   await store.ensureTables();
 
   await store.argo.storage.execute({
-    sql: 'INSERT INTO issue_cache (project_id, issues) VALUES (?, ?) ON CONFLICT(project_id) DO UPDATE SET issues = excluded.issues',
-    params: [projectId, JSON.stringify(issues)],
+    sql: 'INSERT INTO view_cache (project_id, view, value) VALUES (?, ?, ?) ON CONFLICT(project_id, view) DO UPDATE SET value = excluded.value',
+    params: [projectId, view, JSON.stringify(value)],
     method: 'run',
   });
-}
-
-async function updateCache(
-  store: Store,
-  projectId: string,
-  issue: Issue,
-): Promise<void> {
-  const cached = (await readCache(store, projectId)) ?? [];
-
-  const updated = cached.map((entry) =>
-    entry.number === issue.number ? issue : entry,
-  );
-
-  await writeCache(store, projectId, updated);
 }
 
 async function removeSelection(argo: Argo, projectId: string): Promise<void> {
@@ -157,7 +145,9 @@ async function removeSelection(argo: Argo, projectId: string): Promise<void> {
   });
 }
 
-function decodeIssues({ rows: [serialized] }: StorageResult): Issue[] | null {
+function decodeValue<Value>({
+  rows: [serialized],
+}: StorageResult): Value | null {
   if (typeof serialized !== 'string') return null;
 
   try {
