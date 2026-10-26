@@ -1,1 +1,5 @@
-export { runAction } from './built-in-actions';
+export {
+  pageUnavailable,
+  runAction,
+  type OpenPluginPage,
+} from './built-in-actions';

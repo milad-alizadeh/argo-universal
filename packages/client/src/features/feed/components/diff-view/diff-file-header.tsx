@@ -1,17 +1,18 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { PathText } from '@repo/kit/primitives/content/path-text';
 import { TextClassContext } from '@repo/kit/primitives/content/text';
-import { DisclosureChevron } from '@repo/kit/primitives/status/disclosure-chevron';
+import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { FileDiff } from '../../view/file-diff';
 import { ChangeCounts } from './diff-change-counts';
-import { FilePath } from './diff-file-path';
 import { ViewedMark } from './diff-viewed-mark';
 
 export interface FileHeaderProps {
-  file: FileDiff;
+  // The header needs the file's path and counts, not its hunks, which may not have loaded.
+  file: Omit<FileDiff, 'hunks'>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   viewed?: boolean;
@@ -20,34 +21,65 @@ export interface FileHeaderProps {
 
 const toggleClassName = contentActionClass({
   variant: 'link',
-  className:
-    'h-5 min-w-0 flex-1 basis-7 justify-start gap-3 rounded-none p-0 sm:h-5 medium:basis-0 medium:gap-2',
+  className: 'h-6 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-6',
 });
 
-function ToggleLabel(props: FileHeaderProps): React.JSX.Element {
+// A tooltip around the toggle hands it the press and hover handlers it opens and closes by.
+type ToggleProps = React.ComponentProps<typeof Pressable> & {
+  open: boolean;
+  children: React.ReactNode;
+};
+
+// The chevron's glyph is a narrow mark in a wider box, so it takes only the mark's width beside the path.
+function ToggleLabel(
+  props: Pick<ToggleProps, 'open' | 'children'>,
+): React.JSX.Element {
   return (
     <TextClassContext.Provider value="select-none no-underline">
-      <DisclosureChevron open={props.open} />
-      <FilePath path={props.file.path} />
+      <View className="h-6 w-3 items-center justify-center">
+        <Chevron direction="right" open={props.open} />
+      </View>
+      {props.children}
     </TextClassContext.Provider>
   );
 }
 
-function FileHeaderToggle(props: FileHeaderProps): React.JSX.Element {
+function FileHeaderToggle({
+  open,
+  children,
+  ...press
+}: ToggleProps): React.JSX.Element {
   return (
-    <Pressable
-      aria-label={`Diff for ${props.file.path}`}
-      aria-expanded={props.open}
-      onPress={() => props.onOpenChange(!props.open)}
-      role="button"
-      className={toggleClassName}
-    >
-      <ToggleLabel {...props} />
+    <Pressable {...press} role="button" className={toggleClassName}>
+      <ToggleLabel open={open}>{children}</ToggleLabel>
     </Pressable>
   );
 }
 
-// The Inspector's file header: folder muted, file name strong, then the change counts and the Viewed mark.
+const toggleOf = (props: FileHeaderProps): Omit<ToggleProps, 'children'> => ({
+  open: props.open,
+  'aria-label': `Diff for ${props.file.path}`,
+  'aria-expanded': props.open,
+  onPress: () => props.onOpenChange(!props.open),
+});
+
+function PathToggle(
+  props: FileHeaderProps & { scroll?: boolean },
+): React.JSX.Element {
+  const toggle = toggleOf(props);
+
+  return (
+    <FileHeaderToggle {...toggle}>
+      <PathText
+        path={props.file.path}
+        scroll={props.scroll}
+        onPress={toggle.onPress}
+      />
+    </FileHeaderToggle>
+  );
+}
+
+// The Inspector's file header, one line: the path with its folder muted and its name strong, the counts, the Viewed mark.
 export function FileHeader(props: FileHeaderProps): React.JSX.Element {
   const full = <FullFileHeader {...props} />;
 
@@ -62,26 +94,23 @@ export function FileHeader(props: FileHeaderProps): React.JSX.Element {
 
 function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
-    <View className="h-10.5 flex-row items-center gap-2 pr-3 pl-2">
-      <FileHeaderToggle {...props} />
+    <View className="h-10.5 flex-row items-center gap-2 bg-content">
+      <PathToggle {...props} />
       <ChangeCounts file={props.file} />
       <ViewedMark {...props} />
     </View>
   );
 }
 
-// Paper / FileDiff: one phone row, with counts beside the path and a circular Viewed mark.
+// The phone draws one row: counts beside the path and a circular Viewed mark.
 function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
-    <View className="bg-card">
-      <View className="flex-row items-center gap-3 px-4 py-2.5">
-        <FileHeaderToggle {...props} />
-        <View className="min-w-0 flex-1 flex-row gap-1">
-          <ChangeCounts file={props.file} />
-        </View>
-        <ViewedMark {...props} compact />
+    <View className="flex-row items-center gap-2 bg-card py-2.5">
+      <PathToggle {...props} scroll />
+      <View className="flex-row gap-1">
+        <ChangeCounts file={props.file} />
       </View>
-      <View className="h-px bg-border" />
+      <ViewedMark {...props} compact />
     </View>
   );
 }

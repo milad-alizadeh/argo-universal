@@ -49,7 +49,7 @@ function issueRow({ project, deps }: FilterSource, issue: Issue): JSX.Element {
       subtitle={`#${issue.number}`}
       onPress={{
         action: 'navigate',
-        path: deps.pages.issueHref(project, issue.number),
+        path: deps.pages.issuePagePath(project, issue.number),
       }}
       meta={labelPills(issue.labels)}
     />

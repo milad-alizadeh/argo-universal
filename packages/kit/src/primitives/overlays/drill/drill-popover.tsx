@@ -54,7 +54,7 @@ function useOpenState(
   return [open, setOpen];
 }
 
-// Paper: a row's choices open beside the menu with no title; the title names the popover for assistive tech.
+// A row's choices open beside the menu with no title; the title names the popover for assistive tech.
 function DrillContent(props: ContentProps): ReactElement {
   return createElement(
     PopoverContent,
@@ -68,14 +68,14 @@ const fieldOffset = 4;
 // A row ends 4px inside its menu, the list's side inset in a popover (menu-surface.ts).
 const menuInset = 4;
 
-// Paper's Drilled cell: the choices overlap the menu's edge by 16px, their top 1px above the row's.
+// The choices overlap the menu's edge by 16px, their top 1px above the row's.
 const menuOverlap = 16;
 
 const choicesLift = 1;
 
 const drillOffset = menuInset - menuOverlap;
 
-// A field's choices match the field's width; a row's are Paper's 284px panel.
+// A field's choices match the field's width; a row's are a fixed-width panel.
 const placements = {
   row: {
     side: 'right',

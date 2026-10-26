@@ -67,7 +67,9 @@ function inlinePreview(width: number): Story {
       try {
         await settleViewport(width);
         const title = canvas.getByTestId('code-block-title');
-        await expect(title.textContent).toContain('/repo/large.txt');
+        await expect(title.textContent).toContain('large.txt');
+        // Only the folder is isolated for display; the whole path is the label assistive tech reads.
+        await expect(title).toHaveAttribute('aria-label', '/repo/large.txt');
         const header = title.parentElement;
 
         if (!header) throw new Error('Missing diff header');
@@ -124,8 +126,8 @@ export const ViewedMarkFromOwnerFolds: Story = {
   render: (args) => <LateViewedMark {...args} />,
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('button', { name: 'Viewed' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+      canvas.getByRole('checkbox', { name: 'Viewed' }),
+    ).toHaveAttribute('aria-checked', 'true');
     await waitFor(() =>
       expect(canvas.getByRole('button', largeHeader)).toHaveAttribute(
         expanded,
@@ -142,7 +144,7 @@ export const ClearingViewedOpens: Story = {
     const header = canvas.getByRole('button', largeHeader);
 
     await expect(header).toHaveAttribute(expanded, 'false');
-    await userEvent.click(canvas.getByRole('button', { name: 'Viewed' }));
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Viewed' }));
     await expect(args.onViewedChange).toHaveBeenCalledWith(false);
     await expect(header).toHaveAttribute(expanded, 'true');
   },
@@ -167,6 +169,5 @@ export const FeedDiffHasNoViewedMark: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId('code-block-title')).toBeVisible();
     await expect(canvas.queryByRole('checkbox')).toBeNull();
-    await expect(canvas.queryByRole('button', { name: 'Viewed' })).toBeNull();
   },
 };

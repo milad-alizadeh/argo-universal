@@ -1,9 +1,9 @@
-import { use, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { useClaim } from '#kit/claim-store';
+import { useClaim, useOfferedPlace, type Place } from '#kit/place';
 import { useWide } from '#kit/use-wide/use-wide';
-import { type InspectorHost, InspectorHostContext } from './inspector-host';
 import { InspectorPane } from './inspector-pane';
+import { InspectorPlaceOffer } from './inspector-place';
 import type { InspectorProps } from './inspector-props';
 import { InspectorSheet } from './inspector-sheet';
 
@@ -13,21 +13,21 @@ import { InspectorSheet } from './inspector-sheet';
  * children open in a Sheet. A page's own header action opens it; there is no generic toggle.
  */
 export function Inspector(props: InspectorProps): ReactElement | null {
-  const host = use(InspectorHostContext);
+  const place = useOfferedPlace(InspectorPlaceOffer);
 
   if (!useWide()) return <InspectorSheet {...props} />;
 
-  if (host) return <HostedInspector {...props} host={host} />;
+  if (place) return <HostedInspector {...props} place={place} />;
 
   return <InspectorColumn {...props} />;
 }
 
 // The Frame draws it, with its expand and its width; the page draws nothing here.
 function HostedInspector({
-  host,
+  place,
   ...props
-}: InspectorProps & { host: InspectorHost }): null {
-  useClaim(host, props);
+}: InspectorProps & { place: Place<InspectorProps> }): null {
+  useClaim(place, props);
 
   return null;
 }

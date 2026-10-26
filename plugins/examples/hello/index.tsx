@@ -5,6 +5,7 @@ import {
   Link,
   Action,
   Screen,
+  ScrollView,
   ListItem,
   Stack,
   Text,
@@ -16,6 +17,7 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { HelloCanvasPage } from './canvas';
 import { HelloDashboard } from './dashboard';
+import { HelloDemos } from './demos';
 import { HelloForm } from './form';
 import { helloGallery } from './gallery';
 import { registerBuilds } from './list-detail';
@@ -66,7 +68,7 @@ function HelloContent({ greeting, taps }: ContentProps): JSX.Element {
       <Text role={headingRole}>{greeting}</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <ExampleBadges />
-      <Markdown text="## Hello kit\n\nShared **Markdown** content." />
+      <Markdown text={'## Hello kit\n\nShared **Markdown** content.'} />
       <Code code="const greeting = 'Hello';" language="ts" />
       <Link label="Example website" href="https://example.com" />
     </Stack>
@@ -79,7 +81,12 @@ function HelloPage(): JSX.Element {
 
   return (
     <Screen title="Hello" actions={buttons(() => setTaps(taps + 1))}>
-      <HelloContent greeting={greeting} taps={taps} />
+      <ScrollView>
+        <Stack direction="column" gap={4}>
+          <HelloContent greeting={greeting} taps={taps} />
+          <HelloDemos />
+        </Stack>
+      </ScrollView>
     </Screen>
   );
 }

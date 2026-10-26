@@ -5,7 +5,7 @@ import type { IssueDeps, IssuePages } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
 import { FilterPage } from './issue-filter-page';
 import { builtInFilters, type IssueFilter } from './issue-filters';
-import { appPath, filterPath, issuePath, projectPath } from './issue-paths';
+import { filterPath, issuePath, projectPath } from './issue-paths';
 import { IssuesRoot } from './issue-root';
 
 type Page = Parameters<Argo['pages']['register']>[1];
@@ -19,7 +19,7 @@ export function createIssuePages(
   argo: Argo,
   shared: Omit<IssueDeps, 'pages'>,
 ): IssuePages {
-  const pages = hrefs(registrar(argo), () => deps);
+  const pages = pagePaths(registrar(argo), () => deps);
   const deps: IssueDeps = { ...shared, pages };
 
   void registerBuiltIns(deps);
@@ -29,22 +29,22 @@ export function createIssuePages(
 
 type Register = (path: string, page: Page) => string;
 
-const hrefs = (register: Register, deps: () => IssueDeps): IssuePages => ({
-  projectHref: (project) =>
+const pagePaths = (register: Register, deps: () => IssueDeps): IssuePages => ({
+  projectPagePath: (project) =>
     register(projectPath(project.id), projectPage(project, deps())),
-  filterHref: (project, filter) =>
+  filterPagePath: (project, filter) =>
     register(
       filterPath(project.id, filter),
       filterPage({ project, filter, deps: deps() }),
     ),
-  issueHref: (project, number) =>
+  issuePagePath: (project, number) =>
     register(
       issuePath(project.id, number),
       issuePage({ project, number, deps: deps() }),
     ),
 });
 
-// Registers a path's page once, and answers its App path.
+// Registers a path's page once; the same path opens it.
 function registrar(argo: Argo): Register {
   const registered = new Set<string>();
 
@@ -52,7 +52,7 @@ function registrar(argo: Argo): Register {
     if (!registered.has(path)) argo.pages.register(path, page);
     registered.add(path);
 
-    return appPath(path);
+    return path;
   };
 }
 
@@ -60,10 +60,10 @@ async function registerBuiltIns(deps: IssueDeps): Promise<void> {
   const projects = await deps.listProjects().catch(() => []);
 
   for (const project of projects) {
-    deps.pages.projectHref(project);
+    deps.pages.projectPagePath(project);
 
     for (const filter of builtInFilters())
-      deps.pages.filterHref(project, filter);
+      deps.pages.filterPagePath(project, filter);
   }
 }
 

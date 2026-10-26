@@ -78,11 +78,11 @@ function ExampleScreen({ id }: { id: string }): ReactElement {
 
 const empty = <EmptyState icon="search" title={noScreens} />;
 
-export const pinnedGroup = 'Pinned';
+export const lastGroup = 'Last';
 
 // A group whose row opens no page, as Settings' Theme with its inline Picker.
-export const examplePinned = (
-  <FieldGroup.Section title={pinnedGroup}>
+export const exampleLastSection = (
+  <FieldGroup.Section title={lastGroup}>
     <FieldGroup.Value title="Version" value="1.0" />
   </FieldGroup.Section>
 );
@@ -90,7 +90,7 @@ export const examplePinned = (
 interface ExampleProps {
   initial?: string;
   sections?: SettingsLayoutProps['sections'];
-  pinned?: ReactNode;
+  lastSection?: ReactNode;
 }
 
 // Settings holding the page it shows; a row opens its page, as the App's router does.
@@ -101,7 +101,7 @@ export function ExampleSettingsLayout(props: ExampleProps): ReactElement {
   return (
     <SettingsLayout
       {...{ sections, empty }}
-      pinned={props.pinned}
+      lastSection={props.lastSection}
       selected={shown}
       onSelect={(href) => setShown(href.split('/').at(-1))}
     >

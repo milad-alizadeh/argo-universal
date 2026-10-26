@@ -1,41 +1,33 @@
-import { use, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { HeadingInsetContext, useHeadingInsetScope } from '#kit/heading-inset';
-import { ScrollColumnContext } from '#kit/scroll-column';
-import { SelectionModeScope, useSelectionModeHost } from '#kit/selection-mode';
-import { useWide } from '#kit/use-wide/use-wide';
-import { cn } from '#kit/utils';
+import { ColumnScope } from '#kit/content-column/content-column';
+import {
+  SelectionModeScope,
+  useClaimedSelectionMode,
+} from '#kit/selection-mode';
 import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';
 import { ScreenAccessory } from './screen-accessory';
-import { useScreenColumn } from './screen-column';
-import { ScreenHeading } from './screen-heading';
+import { ScreenBody } from './screen-body';
+import { screenHeadersOf } from './screen-headers';
+import { ScreenHeadingBody } from './screen-heading-row';
+import { ListColumnScreen } from './screen-list-column-screen';
 import { ScreenNavigation } from './screen-navigation';
-import { screenPrimaryAction } from './screen-primary-action';
-import type { ScreenHeaderInput, ScreenProps } from './screen-props';
-import { selectionScreen } from './screen-selection-mode';
+import type { ScreenHeaderPlanned, ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
-import { useScreenHeader } from './use-screen-header';
+import { useHeaderDeclaration } from './use-header-declaration';
+import { useHeaderPlan } from './use-header-plan';
 
 // Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Screen(props: ScreenProps): ReactElement {
   return (
     <SvgBudget>
       <ActionShortcutScope>
-        <HeadingInsetScope>
+        <ColumnScope>
           <ScreenSurface {...props} />
-        </HeadingInsetScope>
+        </ColumnScope>
       </ActionShortcutScope>
     </SvgBudget>
-  );
-}
-
-// The Screen's heading learns from its content whether that is grouped cards.
-function HeadingInsetScope(props: { children: ReactNode }): ReactElement {
-  return (
-    <HeadingInsetContext value={useHeadingInsetScope()}>
-      {props.children}
-    </HeadingInsetContext>
   );
 }
 
@@ -48,68 +40,35 @@ function ScreenSurface(props: ScreenProps): ReactElement {
   );
 }
 
+// The header draws where its plan says (header-site.ts); each site's adapter only draws.
 function ScreenHeaderSource(props: ScreenProps): ReactElement {
-  const selectionMode = useSelectionModeHost();
+  const declaration = useHeaderDeclaration(props, useClaimedSelectionMode());
+  const plan = useHeaderPlan('screen');
 
-  const drawing = selectionScreen(props, selectionMode);
-  const header = useScreenHeader(drawing);
+  const drawing = {
+    ...props,
+    declaration,
+    headers: screenHeadersOf(declaration),
+    plan,
+  };
 
-  return (
-    <ScreenDrawing {...drawing} header={header} selectionMode={selectionMode} />
-  );
+  if (plan.site === 'list column') return <ListColumnScreen {...drawing} />;
+
+  return <ScreenDrawing {...drawing} />;
 }
 
-function ScreenDrawing(props: ScreenHeaderInput): ReactElement {
+// Web: the window paints the content colour, so the sidebar's shadow falls on it uncovered.
+function ScreenDrawing(props: ScreenHeaderPlanned): ReactElement {
   return (
     <View
       testID={props.testID}
       className="min-h-0 flex-1 bg-content wide:mt-frame-inset web:bg-transparent"
     >
-      <ShortcutAnchors header={props.header} />
+      <ShortcutAnchors anchors={props.declaration.anchors} />
       <ScreenNavigation {...props} />
-      <ScreenHeading {...props} />
+      {props.plan.site === 'heading' ? <ScreenHeadingBody {...props} /> : null}
       <ScreenBody {...props} />
       <ScreenAccessory {...props} />
     </View>
   );
-}
-
-function ScreenBody(props: ScreenProps): ReactElement {
-  const { column, className } = useScreenBody(props);
-
-  return (
-    <View className={className}>
-      <ScrollColumnContext value={column}>{props.children}</ScrollColumnContext>
-    </View>
-  );
-}
-
-function useScreenBody(props: ScreenProps): ScreenBodyStyle {
-  const wide = useWide();
-  const inherited = use(ScrollColumnContext);
-  const column = useScreenColumn();
-
-  return {
-    column: wide ? column : inherited,
-    className: bodyClass(props, wide),
-  };
-}
-
-interface ScreenBodyStyle {
-  column: React.ContextType<typeof ScrollColumnContext>;
-  className: string;
-}
-
-function bodyClass(props: ScreenProps, wide: boolean): string {
-  return cn(
-    'min-h-0 flex-1',
-    !wide && hasFab(props) && 'android:pb-safe-offset-22',
-  );
-}
-
-// Android's FAB, which the body's end clears; an unavailable primary Action shows none.
-function hasFab(props: ScreenProps): boolean {
-  const action = screenPrimaryAction(props);
-
-  return Boolean(action && !action.disabled);
 }

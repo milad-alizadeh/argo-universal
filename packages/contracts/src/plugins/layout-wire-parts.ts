@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { spacingSteps } from '../kit-tokens';
+import { cardDefaults, spacingSteps } from '../kit-tokens';
+import { openChange, openStateProps } from './overlay-kit-props';
 import { onPress } from './plugin-part-props';
 import { actionSlot, part } from './plugin-part-schema-utils';
 import { perSizeClass } from './schema-size-class';
@@ -24,15 +25,58 @@ const surfaceProps = z.object({
   onPress: onPress.optional().describe('Action run on activation.'),
 });
 
-const cardProps = z.object({
+const cardOpenProps = {
+  open: openStateProps.shape.open.describe(
+    'Controlled open state of a collapsible card.',
+  ),
+  defaultOpen: openStateProps.shape.defaultOpen.describe(
+    'Initial uncontrolled open state of a collapsible card.',
+  ),
+  onOpenChange: openStateProps.shape.onOpenChange,
+};
+
+const cardBase = z.object({
   title: z.string().describe('The card title on its header line.'),
-  subtitle: z.string().optional().describe('A second line below the title.'),
   accessibilityLabel: z
     .string()
     .optional()
     .describe("The card's spoken name; defaults to title and subtitle."),
-  onPress: onPress.optional().describe('Action run when the card is pressed.'),
+  kind: z
+    .enum(['card', 'glass'])
+    .optional()
+    .meta({ default: cardDefaults.kind })
+    .describe('The Surface the card is drawn on.'),
+  density: z
+    .enum(['regular', 'compact'])
+    .optional()
+    .meta({ default: cardDefaults.density })
+    .describe(
+      'compact draws tighter padding and a smaller gap under the title, for cards stacked in a narrow column.',
+    ),
 });
+
+const staticCard = cardBase.extend({
+  subtitle: z.string().optional().describe('A second line below the title.'),
+  onPress: onPress.optional().describe('Action run when the card is pressed.'),
+  collapsible: z.literal(false).optional(),
+  open: z.never().optional(),
+  defaultOpen: z.never().optional(),
+  onOpenChange: z.never().optional(),
+});
+
+// The title, not the card, is what presses: it has no subtitle line and no action of its own.
+const collapsibleCard = cardBase.extend({
+  collapsible: z
+    .literal(true)
+    .describe(
+      'The title, with a disclosure chevron after it, toggles the body.',
+    ),
+  subtitle: z.never().optional(),
+  onPress: z.never().optional(),
+  ...cardOpenProps,
+});
+
+const cardProps = z.union([staticCard, collapsibleCard]);
 
 const scrollViewProps = z.object({
   accessibilityLabel: z
@@ -73,7 +117,7 @@ export const layoutWireParts = {
       'background is flat content; card is flat card; muted is recessed tray; glass is sidebar material, with a plain fill below iOS 26 and on Android.',
   }),
   Card: part(
-    'A card on the card Surface: media, an icon, title and subtitle, one action and a body.',
+    'A card on the card or glass Surface: media, an icon, title and subtitle, one action, a body and an optional footer; collapsible, its title toggles the body.',
     cardProps,
     {
       group: 'layout',
@@ -82,17 +126,19 @@ export const layoutWireParts = {
         media: ['Image', 'Video', 'Svg'],
         icon: ['Icon', 'Avatar', 'Image', 'Svg'],
         actions: ['Button', 'IconButton'],
+        footer: ['Text', 'Stack', 'Button', 'Pill'],
       },
+      events: { onOpenChange: openChange(collapsibleCard) },
       accessibility: {
         keyboard:
-          'A Card with onPress is one focus stop that activates with Enter or Space; its action stays a focus stop of its own.',
+          "A Card with onPress is one focus stop that activates with Enter or Space; its action stays a focus stop of its own. A collapsible Card's title is a button that toggles the body with Enter or Space.",
         voiceOver:
           'A pressable Card is a button named by accessibilityLabel, or its title and subtitle; a static Card is a group of the same name that reads its media, title, subtitle, action and body in order.',
         talkBack:
           'A pressable Card is a button named by accessibilityLabel, or its title and subtitle; a static Card is a group of the same name that reads its media, title, subtitle, action and body in order.',
       },
       appearance:
-        'Desktop, web and iOS draw the card Surface; Android draws the stock Material 3 filled Card. media runs full bleed across the top; one Button or IconButton sits top right on the title line.',
+        'Desktop, web and iOS draw the card Surface; Android draws the stock Material 3 filled Card. media runs full bleed across the top; one Button or IconButton sits top right on the title line. A collapsible Card puts its chevron after the title and animates the body open and shut; footer sits under the body inside the same fold.',
     },
   ),
   ScrollView: part(

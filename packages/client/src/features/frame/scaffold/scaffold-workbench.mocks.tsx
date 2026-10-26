@@ -2,26 +2,33 @@ import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Card } from '@repo/kit/primitives/layout/card';
 import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { useState, type ReactElement } from 'react';
 import { View, TextInput } from 'react-native';
-import { Scaffold, type ScaffoldProps, type InspectorState } from './scaffold';
+import {
+  Scaffold,
+  type ScaffoldProps,
+  type InspectorState,
+  type WorkbenchIntent,
+} from './scaffold';
 
 type MockState = Pick<
   ScaffoldProps,
   | 'sidebarShown'
   | 'onSidebarShownChange'
-  | 'workbenchShown'
-  | 'onWorkbenchShownChange'
+  | 'inspectorAvailable'
+  | 'workbenchIntent'
+  | 'onWorkbenchIntentChange'
   | 'inspectorState'
   | 'onInspectorStateChange'
 >;
 
 export function WorkbenchScaffold({
-  stageOpen = false,
+  inspectorOpen = false,
 }: {
-  stageOpen?: boolean;
+  inspectorOpen?: boolean;
 }): ReactElement {
-  const state = useMockState(stageOpen);
+  const state = useMockState(inspectorOpen);
 
   return (
     <Scaffold
@@ -32,27 +39,37 @@ export function WorkbenchScaffold({
   );
 }
 
-function useMockState(stageOpen: boolean): MockState {
+type WorkbenchState = Pick<
+  MockState,
+  'inspectorAvailable' | 'workbenchIntent' | 'onWorkbenchIntentChange'
+>;
+
+function useWorkbenchState(): WorkbenchState {
+  const [workbenchIntent, onWorkbenchIntentChange] =
+    useState<WorkbenchIntent>('auto');
+
+  return { inspectorAvailable: true, workbenchIntent, onWorkbenchIntentChange };
+}
+
+function useMockState(inspectorOpen: boolean): MockState {
   const [sidebarShown, onSidebarShownChange] = useState(true);
-  const [workbenchShown, onWorkbenchShownChange] = useState<boolean>();
 
   const [inspectorState, onInspectorStateChange] = useState<InspectorState>(
-    stageOpen ? 'open' : 'closed',
+    inspectorOpen ? 'open' : 'closed',
   );
 
   return {
     sidebarShown,
     onSidebarShownChange,
-    workbenchShown,
-    onWorkbenchShownChange,
     inspectorState,
     onInspectorStateChange,
+    ...useWorkbenchState(),
   };
 }
 
 type MockPanes = Pick<
   ScaffoldProps,
-  'sidebar' | 'listHeader' | 'list' | 'page' | 'inspector' | 'band'
+  'sidebar' | 'list' | 'page' | 'inspector' | 'band'
 >;
 
 type SetInspectorState = (state: InspectorState) => void;
@@ -66,8 +83,11 @@ const mockPage = (
 function mockPanes(onInspectorStateChange: SetInspectorState): MockPanes {
   return {
     sidebar: <View className="w-frame-rail" />,
-    listHeader: <Text>Sessions</Text>,
-    list: <Text>Sessions list</Text>,
+    list: (
+      <Screen title="Sessions">
+        <Text>Sessions list</Text>
+      </Screen>
+    ),
     page: mockPage,
     inspector: () => mockInspector(onInspectorStateChange),
     band: mockBand(onInspectorStateChange),
@@ -99,6 +119,6 @@ function mockBand(
         <Text>2 files</Text>
       </Card>
     ),
-    onStageToggle: () => onInspectorStateChange('open'),
+    onInspectorToggle: () => onInspectorStateChange('open'),
   };
 }

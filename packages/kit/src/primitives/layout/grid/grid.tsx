@@ -21,7 +21,7 @@ export function Grid({ gap = 0, ...props }: GridProps): React.JSX.Element {
   return (
     <View
       onLayout={grid.onLayout}
-      className={cn('flex-row flex-wrap items-stretch', gapClass[gap])}
+      className={cn('w-full flex-row flex-wrap items-stretch', gapClass[gap])}
     >
       {Children.map(props.children, (child) => (
         <View style={grid.cell}>{child}</View>

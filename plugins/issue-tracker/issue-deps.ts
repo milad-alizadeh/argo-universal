@@ -5,11 +5,11 @@ import type { IssueFilter } from './issue-filters';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 
-// The App paths a row navigates to; each one's page is registered as its row is drawn.
+// The page paths a row navigates to; each one's page is registered as its row is drawn.
 export type IssuePages = {
-  projectHref: (project: Project) => string;
-  filterHref: (project: Project, filter: IssueFilter) => string;
-  issueHref: (project: Project, number: number) => string;
+  projectPagePath: (project: Project) => string;
+  filterPagePath: (project: Project, filter: IssueFilter) => string;
+  issuePagePath: (project: Project, number: number) => string;
 };
 
 // What every Issues page shares: one Plugin's storage, Trackers, open pages and status changes.

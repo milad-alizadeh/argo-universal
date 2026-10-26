@@ -3,13 +3,18 @@ import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { Redirect } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { pluginPagePath } from '../plugin-page-route';
+import { usePluginOpener } from '../use-plugin-opener';
 import {
   pluginPath,
   usePluginAt,
   type PluginSection,
 } from '../use-plugin-sections';
 import { usePluginView } from '../use-plugin-view';
-import { PluginDetailView } from './plugin-detail-view';
+import {
+  PluginDetailView,
+  type PluginPageCallbacks,
+} from './plugin-detail-view';
 
 interface PluginDetailScreenProps {
   // The catch-all route's segments: Plugin id, nav id, then the page's own path.
@@ -33,22 +38,23 @@ export function PluginDetailScreen({
 function PluginLoading(): React.JSX.Element {
   return (
     <>
-      <ScreenStackHeader title="" />
+      <ScreenStackHeader />
       <View className="flex-1 bg-content" />
     </>
   );
 }
 
-// The Plugin's own page path is the route's, after the Plugin id and nav id, so a navigate Action opens a page below the nav item's root.
+// The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
 function PluginPage({
   section,
   path,
 }: PluginDetailScreenProps & {
   section: PluginSection;
 }): React.JSX.Element {
-  const view = usePluginView(section.pluginId, `/${path.slice(2).join('/')}`);
+  const view = usePluginView(section.pluginId, pluginPagePath(path));
+  const onOpenPage = usePluginOpener()(section.pluginId);
 
-  return <PluginDetailView {...pluginPageProps(section, view)} />;
+  return <PluginDetailView {...pluginPageProps(section, view, onOpenPage)} />;
 }
 
 function PluginUnavailable(): React.JSX.Element {
@@ -60,11 +66,12 @@ function PluginUnavailable(): React.JSX.Element {
 function pluginPageProps(
   section: PluginSection,
   view: ReturnType<typeof usePluginView>,
+  onOpenPage: PluginPageCallbacks['onOpenPage'],
 ): React.ComponentProps<typeof PluginDetailView> {
   return {
     title: section.title,
     viewId: view.viewId,
     root: view.root,
-    onEvent: view.dispatch,
+    callbacks: { onEvent: view.dispatch, onOpenPage },
   };
 }

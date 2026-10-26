@@ -16,61 +16,6 @@
         "id": "hello",
         "title": "Hello",
         "path": "/"
-      },
-      {
-        "id": "hello-lists",
-        "title": "Hello lists",
-        "path": "/lists"
-      },
-      {
-        "id": "hello-dashboard",
-        "title": "Hello dashboard",
-        "path": "/dashboard"
-      },
-      {
-        "id": "hello-form",
-        "title": "Hello form",
-        "path": "/form"
-      },
-      {
-        "id": "hello-builds",
-        "title": "Hello builds",
-        "path": "/builds"
-      },
-      {
-        "id": "hello-gallery",
-        "title": "Gallery",
-        "path": "/gallery"
-      },
-      {
-        "id": "hello-media",
-        "title": "Hello media",
-        "path": "/media"
-      },
-      {
-        "id": "hello-runs",
-        "title": "Hello runs",
-        "path": "/runs"
-      },
-      {
-        "id": "hello-canvas",
-        "title": "Canvas",
-        "path": "/canvas"
-      },
-      {
-        "id": "hello-posts",
-        "title": "Remote posts",
-        "path": "/posts"
-      },
-      {
-        "id": "hello-log",
-        "title": "Hello log",
-        "path": "/log"
-      },
-      {
-        "id": "hello-views",
-        "title": "Issue views",
-        "path": "/views"
       }
     ],
     "settings": [

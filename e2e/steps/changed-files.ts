@@ -118,26 +118,32 @@ When('the Agent edits the greeting', async ({ app }) => {
 
 When('I open the changed files', async ({ page }) => openChangedFiles(page));
 
+// Files start folded, so the greeting's header opens its diff.
 export async function openChangedFiles(page: Page): Promise<void> {
-  if (onPhone(page)) {
-    await page.getByRole('button', { name: 'More', exact: true }).click();
-    await page
-      .getByRole('menuitem', { name: 'Changed files · 1', exact: true })
-      .click();
-  } else await openStageFile(page);
+  await (onPhone(page) ? openPhoneSheet(page) : openInspector(page));
+  await greetingHeader(page).click();
 }
 
-async function openStageFile(page: Page): Promise<void> {
+async function openPhoneSheet(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'More', exact: true }).click();
+  await page
+    .getByRole('menuitem', { name: 'Changed files · 1', exact: true })
+    .click();
+}
+
+async function openInspector(page: Page): Promise<void> {
   await page
     .getByTestId('session-workbench')
     .getByRole('button', { name: 'Open Changes overview' })
     .click();
-  await expect(
-    page.getByText('1 file · 0 viewed', { exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole('button', { name: 'Diff for greeting.txt', exact: true })
-    .click();
+  await expect(page.getByText('0/1 viewed', { exact: true })).toBeVisible();
+}
+
+export function greetingHeader(page: Page): Locator {
+  return page.getByRole('button', {
+    name: 'Diff for greeting.txt',
+    exact: true,
+  });
 }
 
 Then(
@@ -150,7 +156,7 @@ Then(
       diff.getByText(updatedGreeting, { exact: true }),
     ).toBeVisible();
 
-    await reopenDiff(diff);
+    await reopenDiff(page);
     await capture(page, 'changed-files-open-diff');
 
     if (onPhone(page)) await page.keyboard.press('Escape');
@@ -159,8 +165,10 @@ Then(
   },
 );
 
-async function reopenDiff(diff: Locator): Promise<void> {
-  const file = diff.getByRole('button', { name: /greeting.txt/ });
+async function reopenDiff(page: Page): Promise<void> {
+  const diff = greetingDiff(page);
+  const file = greetingHeader(page);
+
   await file.click();
   await expect(diff.getByText(updatedGreeting, { exact: true })).toBeHidden();
   await file.click();
@@ -170,7 +178,5 @@ async function reopenDiff(diff: Locator): Promise<void> {
 }
 
 function greetingDiff(page: Page): Locator {
-  return page
-    .getByTestId('diff-view')
-    .filter({ has: page.getByRole('button', { name: /greeting.txt/ }) });
+  return page.getByRole('list', { name: 'Changed files', exact: true });
 }

@@ -42,6 +42,8 @@ export function register(argo: Argo): void {
 }
 ```
 
+A page is opened by the path it registers at. A `navigate` Action carries that same path, as `onPress={{ action: 'navigate', path: '/builds/web' }}`, and the App finds the route; a Plugin never writes the App's `/plugins/<Plugin id>/<nav id>` prefix. The page opens under the nav item the App is showing when its path sits below that item's `path`, and otherwise under the Plugin's nav item whose `path` holds it. A path no nav item holds is not available.
+
 Run the commands from the Plugin folder:
 
 ```sh

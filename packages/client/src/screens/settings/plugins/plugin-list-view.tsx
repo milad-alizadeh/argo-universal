@@ -110,7 +110,7 @@ type PluginItemProps = {
 
 /*
  * A Settings row like every other: it pushes the Plugin's page, led by the Plugin's own symbol. It is the FieldGroup
- * row itself, not a component around it, so a phone's grouped List sees a row it can draw natively.
+ * row itself, not a component around it, so a grouped List on iOS or Android sees a row it can draw natively.
  */
 function pluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
   return (

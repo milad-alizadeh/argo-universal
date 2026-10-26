@@ -1,17 +1,14 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { useInCentredOverlay } from '@repo/kit/primitives/overlays/centred-overlay';
+import { useCentresOverlays } from '@repo/kit/primitives/overlays/centred-overlay';
 import {
   Dialog,
   DialogCancel,
-  DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogTitle,
+  DialogForm,
 } from '@repo/kit/primitives/overlays/dialog';
 import { type ReactElement, useRef, useState } from 'react';
-import { View } from 'react-native';
 import { renamedTitle } from './renamed-title';
 
 export type RenameSessionDialogProps = {
@@ -38,32 +35,87 @@ const copy = {
 export function RenameSessionDialog(
   props: RenameSessionDialogProps,
 ): ReactElement {
+  const openings = useOpeningCount(props.open);
+
   return (
     <Dialog open={props.open} onOpenChange={(open) => !open && props.onClose()}>
-      <DialogContent accessibilityLabel={copy.title} size="sm">
-        <RenameForm {...props} />
-      </DialogContent>
+      <RenameForm key={openings} {...props} />
     </Dialog>
   );
 }
 
-// Mounted with the dialog's content, so each opening starts from the Session's title.
+// Each opening is a new form, so it starts from the Session's title, not from what an earlier opening left in the field.
+function useOpeningCount(open: boolean): number {
+  const [openings, setOpenings] = useState({ open, count: 0 });
+
+  if (open !== openings.open)
+    setOpenings({ open, count: openings.count + (open ? 1 : 0) });
+
+  return openings.count;
+}
+
+/*
+ * A form: the dialog takes the heading, the section and the footer as named parts, and a phone pins the footer,
+ * the failure and the actions, below the section it scrolls in a FieldGroup.
+ */
 function RenameForm(props: RenameSessionDialogProps): ReactElement {
   const draft = useDraft(props.title);
   const save = (): void => saveDraft(draft.latest.current, props);
 
   return (
-    <>
-      <RenameHeading />
-      <RenameField
-        invalid={props.error !== undefined}
-        {...{ value: draft.text, onChangeText: draft.change, onSubmit: save }}
-      />
-      <RenameError error={props.error} />
-      <RenameActions onSave={save} />
-    </>
+    <DialogForm
+      title={copy.title}
+      description={copy.description}
+      size="sm"
+      footer={footer(props, useCentresOverlays(), save)}
+    >
+      {titleSection(props, draft, save)}
+    </DialogForm>
   );
 }
+
+// The failure, then the actions: on a phone they are pinned together under the section.
+const footer = (
+  props: RenameSessionDialogProps,
+  centred: boolean,
+  save: () => void,
+): ReactElement => (
+  <>
+    {failure(props.error)}
+    {actions(!centred, save)}
+  </>
+);
+
+const titleSection = (
+  props: RenameSessionDialogProps,
+  draft: Draft,
+  save: () => void,
+): ReactElement => (
+  <FieldGroup.Section>
+    {titleRow({
+      value: draft.text,
+      onChangeText: draft.change,
+      onSubmit: save,
+      invalid: props.error !== undefined,
+    })}
+  </FieldGroup.Section>
+);
+
+// A failed rename says why under the field, as an alert.
+const failure = (error?: string): ReactElement | null =>
+  error ? (
+    <Text accessibilityRole="alert" role="secondary" tone="danger">
+      {error}
+    </Text>
+  ) : null;
+
+// A centred dialog lines Cancel and Save up; a sheet stacks them, Save filling the width.
+const actions = (narrow: boolean, save: () => void): ReactElement => (
+  <DialogFooter>
+    <DialogCancel label={copy.cancel} />
+    <Button fullWidth={narrow} label={copy.save} onPress={save} />
+  </DialogFooter>
+);
 
 type Draft = {
   text: string;
@@ -102,22 +154,6 @@ type RenameFieldProps = {
   invalid: boolean;
 };
 
-/*
- * A FieldGroup fills its page and insets its section card: the box is the height of a section of one row, and the
- * inset is pulled back so the card lines up with the heading and the buttons.
- */
-const sectionBox = 'h-20 -mx-4 -mb-3';
-
-function RenameField(props: RenameFieldProps): ReactElement {
-  return (
-    <View className={sectionBox}>
-      <FieldGroup>
-        <FieldGroup.Section>{titleRow(props)}</FieldGroup.Section>
-      </FieldGroup>
-    </View>
-  );
-}
-
 const titleRow = (props: RenameFieldProps): ReactElement => (
   <FieldGroup.TextField
     title={copy.field}
@@ -132,34 +168,3 @@ const titleRow = (props: RenameFieldProps): ReactElement => (
     onSubmit={props.onSubmit}
   />
 );
-
-function RenameError({ error }: { error?: string }): ReactElement | null {
-  if (!error) return null;
-
-  return (
-    <Text accessibilityRole="alert" role="secondary" tone="danger">
-      {error}
-    </Text>
-  );
-}
-
-function RenameHeading(): ReactElement {
-  return (
-    <View className="gap-2">
-      <DialogTitle>{copy.title}</DialogTitle>
-      <DialogDescription>{copy.description}</DialogDescription>
-    </View>
-  );
-}
-
-// A centred dialog lines Cancel and Save up; a sheet stacks them, Save filling the width.
-function RenameActions(props: { onSave: () => void }): ReactElement {
-  const centred = useInCentredOverlay();
-
-  return (
-    <DialogFooter>
-      <DialogCancel label={copy.cancel} />
-      <Button fullWidth={!centred} label={copy.save} onPress={props.onSave} />
-    </DialogFooter>
-  );
-}

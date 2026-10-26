@@ -11,28 +11,46 @@ import {
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { FieldGroupKitProps } from '../../kit-props';
 
-type FieldLinkProps = FieldGroupKitProps<'FieldGroup.Link'>;
+// Radix's Trigger hands its child the anchor ref and popup state, as a Drill's popover opens beside the row.
+type Anchor = Pick<
+  React.ComponentProps<typeof Pressable>,
+  'ref' | 'aria-expanded'
+> & {
+  'aria-haspopup'?: 'dialog';
+  'aria-controls'?: string;
+};
+
+type FieldLinkProps = FieldGroupKitProps<'FieldGroup.Link'> & Anchor;
 
 /*
  * A row that opens a page ends in what the page holds, muted, then the kit's disclosure chevron, which the web draws
  * itself (ADR-0041). Expo's web Row presses without a role, so the whole row is a link named by its title and value.
+ * A popover's Trigger may anchor on it, so the web row passes the anchor ref and popup state on to its Pressable.
  */
 export function FieldLink(props: FieldLinkProps): ReactElement {
   useRowPressable(!props.disabled);
 
   return (
-    <Pressable
-      role="link"
-      aria-label={spokenLabel(props)}
-      disabled={props.disabled}
-      onPress={props.onPress}
-      onKeyDown={(event) => followOnEnter(event, props)}
-      className={rowPressTargetClassName}
-    >
+    <Pressable {...linkProps(props)}>
       <LinkRow {...props} />
     </Pressable>
   );
 }
+
+type Attributes = React.ComponentProps<typeof Pressable> & Anchor;
+
+const linkProps = (props: FieldLinkProps): Attributes => ({
+  ref: props.ref,
+  'aria-haspopup': props['aria-haspopup'],
+  'aria-expanded': props['aria-expanded'],
+  'aria-controls': props['aria-controls'],
+  role: 'link',
+  'aria-label': spokenLabel(props),
+  disabled: props.disabled,
+  onPress: props.onPress,
+  onKeyDown: (event) => followOnEnter(event, props),
+  className: rowPressTargetClassName,
+});
 
 const LinkRow = (props: FieldLinkProps): ReactElement => (
   <Row alignment="center">

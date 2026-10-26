@@ -1,26 +1,22 @@
-import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Feed } from '#features/feed';
-import { type StartingFeed } from '#features/sessions';
+import { NewSessionQuestion, type StartingFeed } from '#features/sessions';
 import { useContentWide } from '#lib/product/content-layout';
 import { SessionColumn } from '#lib/product/session-column';
 
 const noOlderRows = (): void => {};
 
+type HeadingProps = { context?: React.ReactNode };
+
 // Wide, the question sits centred in the space a Session's Feed fills.
-function NewSessionHeading({
-  context,
-}: {
-  context?: React.ReactNode;
-}): React.JSX.Element | null {
+function NewSessionHeading(props: HeadingProps): React.JSX.Element | null {
   if (!useContentWide()) return null;
 
   return (
     <View className="flex-1 justify-center">
-      <SessionColumn className="items-center gap-6 px-4">
-        <NewSessionTitle />
-        {context}
+      <SessionColumn>
+        <NewSessionQuestion>{props.context}</NewSessionQuestion>
       </SessionColumn>
     </View>
   );
@@ -46,13 +42,5 @@ export function NewSessionFeed({
       loadingOlder={false}
       onStartReached={noOlderRows}
     />
-  );
-}
-
-function NewSessionTitle(): React.JSX.Element {
-  return (
-    <Text role="title" accessibilityRole="heading" aria-level={1}>
-      What should we work on?
-    </Text>
   );
 }

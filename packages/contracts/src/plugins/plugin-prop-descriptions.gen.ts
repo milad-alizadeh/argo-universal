@@ -55,12 +55,24 @@ export type WireSchemaHints = {
   "Card": {
     /** The card title on its header line. */
     "title": PropValue<"Card", "title">;
-    /** A second line below the title. */
-    "subtitle": PropValue<"Card", "subtitle">;
     /** The card's spoken name; defaults to title and subtitle. */
     "accessibilityLabel": PropValue<"Card", "accessibilityLabel">;
+    /** The Surface the card is drawn on. */
+    "kind": PropValue<"Card", "kind">;
+    /** compact draws tighter padding and a smaller gap under the title, for cards stacked in a narrow column. */
+    "density": PropValue<"Card", "density">;
+    /** A second line below the title. */
+    "subtitle": PropValue<"Card", "subtitle">;
     /** Action run when the card is pressed. */
     "onPress": PropValue<"Card", "onPress">;
+    /** The title, with a disclosure chevron after it, toggles the body. */
+    "collapsible": PropValue<"Card", "collapsible">;
+    /** Controlled open state of a collapsible card. */
+    "open": PropValue<"Card", "open">;
+    /** Initial uncontrolled open state of a collapsible card. */
+    "defaultOpen": PropValue<"Card", "defaultOpen">;
+    /** Reports changes to the open state. */
+    "onOpenChange": PropValue<"Card", "onOpenChange">;
   };
   "ScrollView": {
     /** Spoken name of the scroll region. */
@@ -79,9 +91,11 @@ export type WireSchemaHints = {
     "value": PropValue<"Screen", "value">;
     /** Receive the search query when it changes. */
     "onChangeText": PropValue<"Screen", "onChangeText">;
+    /** How wide the content runs on a window wider than the reading column: `content` keeps it to that centred column, `full` fills the screen, as a table, board or canvas wants. Both keep the screen’s side margins. */
+    "width": PropValue<"Screen", "width">;
   };
   "ListDetail": {
-    /** The list screen’s title on compact windows, where the list is the screen; the header returns to it when the item closes. */
+    /** The list’s title: the list screen’s header on compact windows, where the list is the screen and the header returns to it when the item closes, and the heading above the list on wide windows. */
     "title": PropValue<"ListDetail", "title">;
   };
   "Detail": {
@@ -337,7 +351,7 @@ export type WireSchemaHints = {
     "primary": PropValue<"SplitButton", "primary">;
     /** Disable activation. */
     "disabled": PropValue<"SplitButton", "disabled">;
-    /** Split size. */
+    /** Both segments' Button size; xs draws as sm. */
     "size": PropValue<"SplitButton", "size">;
     /** Fill the row always, or only when narrow. */
     "fullWidth": PropValue<"SplitButton", "fullWidth">;
@@ -965,7 +979,7 @@ export type WireSchemaHints = {
     "label": PropValue<"Chart", "label">;
     /** stacked for this part. */
     "stacked": PropValue<"Chart", "stacked">;
-    /** Draw gridlines behind a line, bar, area or scatter chart; off by default. */
+    /** Gridlines behind the plot at each axis tick. */
     "grid": PropValue<"Chart", "grid">;
     /** The action run when the artwork is pressed. */
     "onPress": PropValue<"Chart", "onPress">;

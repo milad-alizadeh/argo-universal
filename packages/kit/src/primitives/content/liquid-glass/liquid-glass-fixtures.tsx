@@ -10,6 +10,15 @@ function GlassText({ text }: { text: string }): React.JSX.Element {
   );
 }
 
+// A 24pt pill holds a badge line with no padding above or below, as the Composer's chips do.
+function PillText({ text }: { text: string }): React.JSX.Element {
+  return (
+    <Text role="badge" className="px-2.5">
+      {text}
+    </Text>
+  );
+}
+
 export const sheetLiquidGlass = {
   children: <GlassText text="Message" />,
   corners: 'sheet',
@@ -18,7 +27,7 @@ export const sheetLiquidGlass = {
 } satisfies LiquidGlassProps;
 
 export const pillLiquidGlass = {
-  children: <GlassText text="Label" />,
+  children: <PillText text="Label" />,
   corners: 'pill',
   interactive: true,
   className: 'h-6 justify-center self-start',

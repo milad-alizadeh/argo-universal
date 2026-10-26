@@ -1,7 +1,7 @@
 import {
-  SettingsLayout,
-  type SettingsLayoutProps,
+  SettingsPages,
   type SettingsLayoutSections,
+  type SettingsPagesProps,
 } from '@repo/kit/primitives/scaffolds/settings-layout';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type { ReactNode } from 'react';
@@ -22,19 +22,18 @@ export type { SettingsListViewProps } from './settings-list-props';
 
 /*
  * Settings: the pages in Workspace, Account and Connection groups, then Theme, whose Appearance row chooses in place;
- * narrowed by the search, beside the page shown on a wide window. A phone leaves out Devices and Notifications.
+ * narrowed by the search. The Frame places the list, beside the page shown on a wide window. A phone leaves out
+ * Devices and Notifications.
  */
 export function SettingsListView(
-  props: SettingsListViewProps & { children?: ReactNode },
+  props: SettingsListViewProps,
 ): React.JSX.Element {
   return (
-    <SettingsLayout
-      {...settingsLayoutProps(props)}
-      pinned={shownTheme(props)}
+    <SettingsPages
+      {...settingsPagesProps(props)}
+      lastSection={shownTheme(props)}
       empty={<NoMatchingSettings query={props.query} />}
-    >
-      {props.children}
-    </SettingsLayout>
+    />
   );
 }
 
@@ -49,9 +48,9 @@ const sectionsOf = (groups: SettingsGroup[]): SettingsLayoutSections =>
   }));
 
 // Each row's id is its path, which onSelect opens; a wide window lists every page, so its rows answer selection.
-function settingsLayoutProps(
+function settingsPagesProps(
   props: SettingsListViewProps,
-): Pick<SettingsLayoutProps, 'sections' | 'selected' | 'onSelect'> {
+): Pick<SettingsPagesProps, 'sections' | 'selected' | 'onSelect'> {
   return {
     sections: {
       compact: sectionsOf(settingsGroups(props, false)),

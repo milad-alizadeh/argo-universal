@@ -101,7 +101,7 @@ function inspectorTakesTheDetailAreaAndRestoresIt(
 export const InspectorTakesTheDetailAreaAndRestoresItTablet =
   inspectorTakesTheDetailAreaAndRestoresIt(wideBreakpoint);
 
-// Below wide the page owns its Sheet; no desktop Stage or band is drawn by the Scaffold.
+// Below wide the page owns its Sheet; no desktop Inspector or band is drawn by the Scaffold.
 export const CompactLeavesInspectorToThePageSheet: ScaffoldStory = {
   play: controlledPlay(async ({ canvas }, controlled) => {
     await settleViewport(layoutWidths.phone);

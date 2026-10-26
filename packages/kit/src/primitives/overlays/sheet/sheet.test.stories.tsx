@@ -28,7 +28,7 @@ function screensAt(width: number): Story {
     beforeEach: (): Promise<void> => settleViewport(width),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));
-      await userEvent.click(await body.findByRole('button', { name: /Fruit/ }));
+      await userEvent.click(await body.findByRole('link', { name: /Fruit/ }));
       // A wide window's popover is still fading in from transparent when the page is pushed.
       await waitFor(() =>
         expect(body.getByRole('heading', fruitScreen)).toBeVisible(),
@@ -39,12 +39,10 @@ function screensAt(width: number): Story {
       await waitFor(() =>
         expect(body.queryByRole('heading', fruitScreen)).toBeNull(),
       );
-      await userEvent.click(body.getByRole('button', { name: /Fruit/ }));
-      await userEvent.click(
-        await body.findByRole('button', { name: 'Cherry' }),
-      );
+      await userEvent.click(body.getByRole('link', { name: /Fruit/ }));
+      await userEvent.click(await body.findByRole('radio', { name: 'Cherry' }));
       await expect(
-        await body.findByRole('button', { name: /Fruit.*Cherry/ }),
+        await body.findByRole('link', { name: /Fruit.*Cherry/ }),
       ).toBeVisible();
     },
   };

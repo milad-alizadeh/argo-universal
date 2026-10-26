@@ -4,9 +4,8 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import {
   isSubmenu,
-  splitHeaderActions,
-  type HeaderActionsProps,
   type HeaderEntry,
+  type ScreenHeader,
 } from '#primitives/actions/action';
 import { ScreenActionButton } from './screen-action-button.android';
 import { drawerLeading } from './screen-drawer-button';
@@ -20,38 +19,34 @@ import { ScreenSearchBar } from './screen-search-bar.android';
 
 export const screenTitleOptions = { headerTitleAlign: 'left' } as const;
 
-// The toolbar draws its items outside the Screen's tree, so it draws the groups the Screen declared.
-export function ScreenHeaderItems(props: ScreenHeaderInput): ReactElement {
-  const { groups, label } = props.header;
-  // The search icon takes one of the toolbar's two places.
-  const options = headerOptions({ groups, label, slots: props.search ? 1 : 2 });
+/*
+ * The toolbar draws its items outside the Screen's tree, so it draws the header the Screen declared. A selecting List's
+ * header replaces the whole stack header, so none of these items are drawn meanwhile.
+ */
+export function ScreenHeaderItems(
+  props: ScreenHeaderInput,
+): ReactElement | null {
+  const header = props.headers.native;
   const leading = drawerLeading(useScreenMenu());
+
+  if (header.selecting) return null;
+
+  const headerRight = (): ReactElement => <ToolbarActions header={header} />;
 
   return (
     <>
-      <Stack.Screen options={{ ...options, ...leading }} />
+      <Stack.Screen options={{ headerRight, ...leading }} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );
 }
 
-// A native stack's header and a drawer's both take the Actions as `headerRight`.
-export interface HeaderRightOptions {
-  headerRight: () => ReactElement;
-}
-
-export function headerOptions(header: HeaderActionsProps): HeaderRightOptions {
-  return { headerRight: () => <ToolbarActions {...header} /> };
-}
-
 // Direct Actions, submenus and the overflow menu are all stock Compose icon buttons, the menus stock DropdownMenus.
-function ToolbarActions(props: HeaderActionsProps): ReactElement {
-  const { direct, overflow } = splitHeaderActions(props.groups, props.slots);
-
+function ToolbarActions({ header }: { header: ScreenHeader }): ReactElement {
   return (
     <View className="flex-row items-center">
-      {direct.map(toolbarEntry)}
-      <ScreenOverflowButton groups={overflow} label={props.label} />
+      {header.direct.map(toolbarEntry)}
+      <ScreenOverflowButton groups={header.overflow} label={header.label} />
     </View>
   );
 }

@@ -1,109 +1,80 @@
 import {
-  createListDetailSidebar,
-  type ListDetailSidebar,
-  ListDetailSidebarContext,
-  useListDetailSidebarHeld,
-  useListDetailSidebarList,
-} from '@repo/kit/primitives/scaffolds/list-detail';
-import { createContext, use, useState, type ReactNode } from 'react';
-import { ListTitle } from '#lib/product/list-title';
-import { useScreenFocused } from '#lib/product/navigation/navigation';
-import {
-  isCoreSection,
-  type NavigationSection,
-  type Section,
-} from '../../../lib/product/navigation/sections';
+  createPlace,
+  useClaimed,
+  usePlaceHeld,
+  type Place,
+} from '@repo/kit/place';
+import { ListDetailSidebarPlaceOffer } from '@repo/kit/primitives/scaffolds/list-detail';
+import { createContext, use, type ReactNode, useState } from 'react';
+import { isCoreSection } from '../../../lib/product/navigation/sections';
 import type { ScaffoldProps } from '../scaffold/scaffold';
-import type { SectionLists } from './section-lists';
+import type { FrameSections } from './section-lists';
 
 // The Frame's sidebar, which a Plugin page's ListDetail may hold on a wide window.
 export const FrameListDetailSidebar = createContext<
-  ListDetailSidebar | undefined
+  Place<ReactNode> | undefined
 >(undefined);
 
 export interface SectionListDetailProps {
   children: ReactNode;
 }
 
-// Offers the Frame's sidebar to a page's ListDetail while the page is shown, as a Plugin page's or Settings' is.
+// Offers the Frame's sidebar to a page's ListDetail, as a Plugin page's is; the kit holds it only while the page is shown.
 export function SectionListDetail({
   children,
 }: SectionListDetailProps): React.JSX.Element {
-  const sidebar = use(FrameListDetailSidebar);
-  const focused = useScreenFocused();
-
   return (
-    <ListDetailSidebarContext value={focused ? sidebar : undefined}>
+    <ListDetailSidebarPlaceOffer value={use(FrameListDetailSidebar)}>
       {children}
-    </ListDetailSidebarContext>
+    </ListDetailSidebarPlaceOffer>
   );
 }
 
 // The list a Plugin page's ListDetail holds the Frame's sidebar with.
-function ClaimedList(props: { sidebar: ListDetailSidebar }): React.JSX.Element {
-  return <>{useListDetailSidebarList(props.sidebar)}</>;
+function ClaimedList(props: { sidebar: Place<ReactNode> }): React.JSX.Element {
+  return <>{useClaimed(props.sidebar)}</>;
 }
 
-type SectionScaffold = Pick<ScaffoldProps, 'listHeader' | 'list'> &
+type SectionScaffold = Pick<ScaffoldProps, 'list'> &
   Partial<Pick<ScaffoldProps, 'sidebarShown' | 'inspectorState'>>;
 
 export interface FrameListDetail {
-  sidebar: ListDetailSidebar;
+  sidebar: Place<ReactNode>;
   // Whether the shown page's ListDetail holds the sidebar.
   held: boolean;
 }
 
 // The Frame's one sidebar store, made once, and whether a ListDetail holds it now.
 export function useFrameListDetail(): FrameListDetail {
-  const [sidebar] = useState(createListDetailSidebar);
+  const [sidebar] = useState(() => createPlace<ReactNode>());
 
-  return { sidebar, held: useListDetailSidebarHeld(sidebar) };
-}
-
-interface ShownSection {
-  section: Section;
-  lists: SectionLists;
-  items: readonly NavigationSection[];
+  return { sidebar, held: usePlaceHeld(sidebar) };
 }
 
 const noList: SectionScaffold = {
-  listHeader: null,
   list: null,
   sidebarShown: false,
   inspectorState: 'closed',
 };
 
-const sectionTitle = ({ section, items }: ShownSection): string =>
-  items.find((item) => item.id === section)?.title ?? '';
-
-// A core section's own list, or the one its pages' ListDetail holds the sidebar with; a Plugin section's only while its page's ListDetail holds it.
+// A core section's own list; a Plugin section's only while its page's ListDetail holds the sidebar with its own.
 export function sectionScaffold(
-  shown: ShownSection,
+  shown: Pick<FrameSections, 'section' | 'lists'>,
   listDetail: FrameListDetail,
 ): SectionScaffold {
   const { section, lists } = shown;
 
-  if (!isCoreSection(section)) return pluginSectionScaffold(shown, listDetail);
+  if (!isCoreSection(section)) return pluginSectionScaffold(listDetail);
 
-  return {
-    listHeader: lists[section].header,
-    list: lists[section].list ?? claimedList(listDetail),
-  };
+  return { list: lists[section].list };
 }
 
-const claimedList = ({ sidebar, held }: FrameListDetail): ReactNode =>
-  held && <ClaimedList sidebar={sidebar} />;
-
-// Under the section's title, as a core section's list is.
-function pluginSectionScaffold(
-  shown: ShownSection,
-  { sidebar, held }: FrameListDetail,
-): SectionScaffold {
+// The list's own Screen, claimed with it, draws its heading, as a core section's list does.
+function pluginSectionScaffold({
+  sidebar,
+  held,
+}: FrameListDetail): SectionScaffold {
   if (!held) return noList;
 
-  return {
-    listHeader: <ListTitle>{sectionTitle(shown)}</ListTitle>,
-    list: <ClaimedList sidebar={sidebar} />,
-    inspectorState: 'closed',
-  };
+  return { list: <ClaimedList sidebar={sidebar} />, inspectorState: 'closed' };
 }

@@ -76,9 +76,6 @@ const isChoice = <Field extends ViewField>(
 
 const storageKey = 'sessions-view';
 
-// Before the whole view was kept, this Device kept only its layout, as a bare value.
-const layoutStorageKey = 'sessions-layout';
-
 // A kept field that is none of its choices, or missing, falls back to that field's default.
 const keptField = <Field extends ViewField>(
   field: Field,
@@ -87,10 +84,7 @@ const keptField = <Field extends ViewField>(
     .custom<SessionsView[Field]>((value) => isChoice(field, value))
     .catch(defaultSessionsView[field]);
 
-/*
- * A kept view that is not an object at all falls back to the default view.
- * Unknown fields are dropped, such as the `order` a Device kept while the list could also order by creation.
- */
+// A kept view that is not an object at all falls back to the default view; unknown fields are dropped.
 const KeptView = z
   .object({
     group: keptField('group'),
@@ -116,11 +110,7 @@ async function load(): Promise<SessionsView> {
 
   const saved = await AsyncStorage.getItem(storageKey);
 
-  if (saved !== null) return keptView(saved);
-
-  return KeptView.parse({
-    layout: await AsyncStorage.getItem(layoutStorageKey),
-  });
+  return saved === null ? defaultSessionsView : keptView(saved);
 }
 
 function loadFailed(cause: unknown): SessionsView {
@@ -157,13 +147,9 @@ export function chooseSessionsView(
   const { queryKey } = sessionsViewQuery();
   void client.cancelQueries({ queryKey, exact: true });
   client.setQueryData(queryKey, view);
-  writes = writes.then(() => keepView(view)).catch(keepFailed);
-}
-
-// The whole view replaces the layout kept on its own before.
-async function keepView(view: SessionsView): Promise<void> {
-  await AsyncStorage.setItem(storageKey, JSON.stringify(view));
-  await AsyncStorage.removeItem(layoutStorageKey);
+  writes = writes
+    .then(() => AsyncStorage.setItem(storageKey, JSON.stringify(view)))
+    .catch(keepFailed);
 }
 
 function keepFailed(cause: unknown): void {

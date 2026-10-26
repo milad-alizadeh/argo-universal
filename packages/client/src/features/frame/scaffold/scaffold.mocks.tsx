@@ -1,8 +1,8 @@
 import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { ListTitle } from '../../../lib/product/list-title';
 import {
   type Section,
   coreNavigationSections,
@@ -64,6 +64,15 @@ const mockState = (props: ScaffoldMockProps): ScaffoldState => ({
   ...mockInspectorState(props),
 });
 
+const mockWorkbench: Pick<
+  ScaffoldProps,
+  'inspectorAvailable' | 'workbenchIntent' | 'onWorkbenchIntentChange'
+> = {
+  inspectorAvailable: true,
+  workbenchIntent: 'auto',
+  onWorkbenchIntentChange: ignore,
+};
+
 function MockRail(
   props: ScaffoldMockProps & ScaffoldState & { section: Section },
 ): React.JSX.Element {
@@ -107,10 +116,13 @@ function MockInspector(props: MockInspectorProps): React.JSX.Element {
   );
 }
 
-type MockPanes = Pick<
-  ScaffoldProps,
-  'sidebar' | 'listHeader' | 'list' | 'page' | 'inspector'
->;
+type MockPanes = Pick<ScaffoldProps, 'sidebar' | 'list' | 'page' | 'inspector'>;
+
+const mockList = (title: string): React.JSX.Element => (
+  <Screen title={title}>
+    <MockText testID="list-content" text={`${title} list`} />
+  </Screen>
+);
 
 // A stand-in rail, list, page and Inspector for the open section.
 function mockPanes(props: ScaffoldMockProps, state: ScaffoldState): MockPanes {
@@ -119,8 +131,7 @@ function mockPanes(props: ScaffoldMockProps, state: ScaffoldState): MockPanes {
 
   return {
     sidebar: <MockRail {...props} {...state} section={section} />,
-    listHeader: <ListTitle>{title}</ListTitle>,
-    list: <MockText testID="list-content" text={`${title} list`} />,
+    list: mockList(title),
     page: props.children ?? <MockPage title={title} />,
     inspector: (expanded) => (
       <MockInspector {...props} {...state} {...{ title, expanded }} />
@@ -134,7 +145,12 @@ export function ScaffoldMock(props: ScaffoldMockProps): React.JSX.Element {
 
   return (
     <View className="flex-1">
-      <Scaffold {...state} {...mockPanes(props, state)} band={props.band} />
+      <Scaffold
+        {...state}
+        {...mockWorkbench}
+        {...mockPanes(props, state)}
+        band={props.band}
+      />
     </View>
   );
 }

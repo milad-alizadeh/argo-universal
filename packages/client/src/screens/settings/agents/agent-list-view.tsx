@@ -4,13 +4,16 @@ import {
 } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
-import { type AgentRows, type AgentsFilter } from '#features/agents';
 import {
+  type AgentRows,
+  type AgentsFilter,
   type AgentsFilterProps,
+} from '#features/agents';
+import {
   type AgentsSearchProps,
   agentsTitle,
   searchLabel,
-} from './agents-toolbar';
+} from './agents-header';
 import { AgentCatalog } from './catalog';
 
 export type AgentListViewProps = {

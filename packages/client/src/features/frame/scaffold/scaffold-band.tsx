@@ -1,44 +1,47 @@
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
-import { useSymbolImageRenderer } from '@repo/kit/symbols/symbol-images';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { bandToggleAppearance } from './band-control-appearance';
 import { BandTrailing } from './scaffold-band-controls';
 import { BandTitle } from './scaffold-band-title';
-import type { ScaffoldPartProps } from './use-scaffold-layout';
+import type {
+  PartReads,
+  ScaffoldLayout,
+  ScaffoldPartProps,
+} from './use-scaffold-layout';
 
-const leadingWidths = { mac: 124, other: 44 };
+interface SidebarToggleProps {
+  layout: Pick<ScaffoldLayout, 'list' | 'requestSidebar'>;
+}
 
-const leadingInsets = { mac: 88, other: 8 };
-
-function SidebarBandToggle({ layout }: ScaffoldPartProps): ReactElement {
-  const shown = !layout.frame.listFolded;
+function SidebarBandToggle({ layout }: SidebarToggleProps): ReactElement {
+  const shown = !layout.list.folded;
 
   return (
     <IconButton
       {...bandToggleAppearance(shown)}
       icon="sidebar"
       accessibilityLabel={shown ? 'Hide sidebar' : 'Show sidebar'}
-      disabled={!shown && !layout.frame.sidebarAvailable}
+      disabled={!shown && !layout.list.available}
       onPress={() => layout.requestSidebar(!shown)}
     />
   );
 }
 
-const sidebarControl = (parts: ScaffoldPartProps): ReactElement | null =>
-  parts.scaffold.list || parts.scaffold.listHeader ? (
-    <SidebarBandToggle {...parts} />
-  ) : null;
+type BandLeadingReads = PartReads<
+  'list',
+  'bandLeading' | 'list' | 'requestSidebar'
+>;
 
-type BandLeadingProps = ScaffoldPartProps & {
-  platform: keyof typeof leadingWidths;
-};
+const sidebarControl = ({
+  scaffold,
+  layout,
+}: BandLeadingReads): ReactElement | null =>
+  scaffold.list ? <SidebarBandToggle layout={layout} /> : null;
 
-function BandLeading({ platform, ...parts }: BandLeadingProps): ReactElement {
-  const style = {
-    width: leadingWidths[platform],
-    paddingLeft: leadingInsets[platform],
-  };
+function BandLeading(parts: BandLeadingReads): ReactElement {
+  const { width, inset } = parts.layout.bandLeading;
+  const style = { width, paddingLeft: inset };
 
   return (
     <View
@@ -51,16 +54,14 @@ function BandLeading({ platform, ...parts }: BandLeadingProps): ReactElement {
 }
 
 export function ScaffoldBand(parts: ScaffoldPartProps): ReactElement {
-  const platform = useSymbolImageRenderer() ? 'mac' : 'other';
-
   return (
     <View
       testID="window-band"
       className="absolute inset-x-0 top-0 z-50 flex-row items-center web:[app-region:drag]"
-      style={{ top: parts.layout.safeTop, height: parts.layout.frame.panesTop }}
+      style={{ top: parts.layout.safeTop, height: parts.layout.panesTop }}
     >
-      <BandLeading {...parts} platform={platform} />
-      <BandTitle {...parts} leadingWidth={leadingWidths[platform]} />
+      <BandLeading {...parts} />
+      <BandTitle {...parts} />
       <BandTrailing {...parts} />
     </View>
   );

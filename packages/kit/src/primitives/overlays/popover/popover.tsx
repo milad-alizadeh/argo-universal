@@ -2,9 +2,9 @@ import { useDismissableLayerSurface } from '@radix-ui/react-dismissable-layer';
 import * as WebPopover from '@radix-ui/react-popover';
 import * as React from 'react';
 import { View } from 'react-native';
+import { OutsideColumn } from '#kit/content-column/content-column';
 import { InMenu } from '#kit/menu-rows-context';
 import { menuSurfaceClassName } from '#kit/menu-surface';
-import { ScrollColumnContext } from '#kit/scroll-column';
 import { cn } from '#kit/utils';
 import { TextClassContext } from '#primitives/content/text';
 import { useOpenState } from '#primitives/overlays/open-state';
@@ -156,12 +156,12 @@ function PopoverSurface(
   );
 }
 
-// A popover opened from a Screen's column is a surface of its own, so its lists take none of the column's padding.
+// A popover opened from a Screen's column is a surface of its own, so its lists take none of the column's padding, nor claim it from the Screen.
 function PopoverRows(props: { children: React.ReactNode }): React.JSX.Element {
   return (
-    <ScrollColumnContext value={undefined}>
+    <OutsideColumn>
       <InMenu value>{props.children}</InMenu>
-    </ScrollColumnContext>
+    </OutsideColumn>
   );
 }
 

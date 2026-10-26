@@ -53,10 +53,6 @@ function eventNotes(name: string, part: WirePartDefinition): string {
     : 'This part defines no events.';
 }
 
-function deprecation(part: WirePartDefinition): string {
-  return part.reference.deprecated ?? 'None.';
-}
-
 const code = (type: string): string => `\`${type}\``;
 
 function childrenNote(part: WirePartDefinition): string {
@@ -98,7 +94,6 @@ function partSections(name: string, part: WirePartDefinition): string[] {
     `## Accessibility\n\n${accessibilitySection(name, part)}`,
     `## Appearance\n\n${appearanceSection(name, part)}`,
     `## Events\n\n${eventNotes(name, part)}`,
-    `## Deprecation\n\n${deprecation(part)}`,
   ];
 }
 
@@ -119,7 +114,7 @@ export function renderIndex(names: string[]): string {
 
 # Plugin part reference
 
-Generated from the part prop schemas and metadata in Contracts. Each page documents serialized props, accepted Slots, accessibility behavior, appearance, events, and deprecation.
+Generated from the part prop schemas and metadata in Contracts. Each page documents serialized props, accepted Slots, accessibility behavior, appearance, and events.
 
 The reference catalog includes shipped wire parts and Plugin-tier contracts recorded in the kit catalog. Pages are generated from Contracts schemas and metadata; they do not imply that a part is already available in every App version.
 

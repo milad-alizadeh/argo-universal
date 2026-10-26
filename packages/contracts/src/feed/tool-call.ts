@@ -134,14 +134,14 @@ export const PermissionOptionKind = z.enum([
 
 export type PermissionOptionKind = z.infer<typeof PermissionOptionKind>;
 
-// ACP `RequestPermissionOutcome`: how the user answered a Permission request, with the chosen option's name and kind so the Feed can show it. Rows written before the name and kind were kept lack them.
+// ACP `RequestPermissionOutcome`: how the user answered a Permission request, with the chosen option's name and kind so the Feed can show it.
 export const PermissionOutcome = z.discriminatedUnion('outcome', [
   z.strictObject({ outcome: z.literal('cancelled') }),
   z.strictObject({
     outcome: z.literal('selected'),
     optionId: z.string(),
-    name: z.string().optional(),
-    kind: PermissionOptionKind.optional(),
+    name: z.string(),
+    kind: PermissionOptionKind,
   }),
 ]);
 

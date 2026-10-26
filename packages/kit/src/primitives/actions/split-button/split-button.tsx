@@ -5,7 +5,12 @@ import { Button } from '#primitives/actions/button';
 import { Menu, type MenuAction } from '#primitives/overlays/menu';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { KitProps } from '../../kit-props';
-import { actingButton, menuRows, stackedButtons } from './split-button-items';
+import {
+  actingButton,
+  menuRows,
+  splitButtonSize,
+  stackedButtons,
+} from './split-button-items';
 import { SplitChevron } from './split-chevron';
 
 type Derived<Value extends string> = KitProps<'SplitButton', Value>;
@@ -77,7 +82,7 @@ const chevron = <Value extends string>(
 ): ReactElement => (
   <SplitChevron
     primary={props.primary === true}
-    size={props.size === 'xs' ? 'sm' : 'md'}
+    size={splitButtonSize(props.size)}
     accessibilityLabel={props.menuLabel}
     disabled={props.disabled}
   />

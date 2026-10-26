@@ -79,11 +79,11 @@ function CloseButton(props: InspectorPaneProps): ReactElement {
 function InspectorTitle(props: { title: string }): ReactElement {
   return (
     <Text
-      role="body"
+      role="heading"
       accessibilityRole="heading"
       aria-level={2}
       numberOfLines={1}
-      className="min-w-0 flex-1 font-medium"
+      className="min-w-0 flex-1"
     >
       {props.title}
     </Text>
@@ -102,7 +102,7 @@ function InspectorHeader(props: InspectorPaneProps): ReactElement {
     <View
       className={cn(
         'h-frame-bar flex-row items-center gap-2 pr-1',
-        props.tabs ? 'pl-3' : 'pl-4',
+        props.tabs ? 'pl-3' : 'pl-4 wide:pl-5',
       )}
     >
       <InspectorHeading {...props} />

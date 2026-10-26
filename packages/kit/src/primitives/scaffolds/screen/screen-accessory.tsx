@@ -1,5 +1,5 @@
-import type { ScreenProps } from './screen-props';
+import type { ScreenHeaderInput } from './screen-props';
 
-export function ScreenAccessory(_props: ScreenProps): null {
+export function ScreenAccessory(_props: ScreenHeaderInput): null {
   return null;
 }

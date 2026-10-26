@@ -4,11 +4,15 @@ import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useFrameOffset } from '../hooks/use-frame-offset';
-import type { ScaffoldPartProps } from './use-scaffold-layout';
+import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
+
+type WorkbenchLayout = 'workbench' | 'motion' | 'measures';
+
+type WorkbenchLayoutReads = Pick<ScaffoldLayout, WorkbenchLayout>;
 
 // A floating Workbench overlays the content; its geometry contributes no width to the page.
 export function ScaffoldWorkbench(
-  parts: ScaffoldPartProps,
+  parts: PartReads<'band', WorkbenchLayout>,
 ): ReactElement | null {
   const { scaffold, layout } = parts;
   const workbench = scaffold.band?.workbench;
@@ -19,7 +23,7 @@ export function ScaffoldWorkbench(
 }
 
 type WorkbenchPanelProps = {
-  layout: ScaffoldPartProps['layout'];
+  layout: WorkbenchLayoutReads;
   children: ReactNode;
 };
 
@@ -31,7 +35,7 @@ function WorkbenchPanel({
 
   return (
     <Animated.View {...placement}>
-      <WorkbenchSurface floating={layout.frame.workbenchState === 'floating'}>
+      <WorkbenchSurface floating={layout.workbench.state === 'floating'}>
         {children}
       </WorkbenchSurface>
     </Animated.View>
@@ -39,7 +43,7 @@ function WorkbenchPanel({
 }
 
 function useWorkbenchPlacement(
-  layout: ScaffoldPartProps['layout'],
+  layout: WorkbenchLayoutReads,
 ): ComponentProps<typeof Animated.View> & { inert: boolean } {
   const placement = workbenchPlacement(layout);
   const motion = useFrameOffset({ ...layout.motion, ...placement.motion });
@@ -64,18 +68,17 @@ type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'> & {
   motion: { offset: number; visible: boolean };
 };
 
+// The panel keeps its full width while it slides out, so its cards never reflow.
 function workbenchPlacement({
-  frame,
+  workbench,
   measures,
-  width,
-}: ScaffoldPartProps['layout']): WorkbenchPlacement {
-  const visible = frame.workbench.width > 0;
-  const offset = visible ? frame.workbench.offset : width - measures.inset;
+}: WorkbenchLayoutReads): WorkbenchPlacement {
+  const { offset } = workbench;
 
   return {
     className: 'absolute bottom-frame-inset',
     style: { left: offset, width: measures.workbenchWidth, top: 0 },
-    motion: { offset, visible },
+    motion: { offset, visible: workbench.width > 0 },
   };
 }
 

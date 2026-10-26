@@ -245,6 +245,20 @@
       "rules": { "argo/kit-styling": "error" }
     },
     {
+      // A screen leaves its spacing to Screen, List and FieldGroup, as a Plugin's page must; a missing gap becomes a scaffold prop in @repo/kit.
+      // Onboarding is the one page not drawn on a Screen: a desktop window centred on its own.
+      "files": [
+        "packages/client/src/screens/*.tsx",
+        "packages/client/src/screens/{plugins,sessions,settings}/**"
+      ],
+      "rules": { "argo/screen-spacing": "error" }
+    },
+    {
+      // A story frames a screen for Storybook; its frame is not the screen.
+      "files": ["packages/client/src/screens/**/*.stories.*"],
+      "rules": { "argo/screen-spacing": "off" }
+    },
+    {
       // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values, no raw colours (native colour props included) and no Tailwind palette colour classes.
       "files": ["packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
       "rules": { "argo/style-tokens": "error" }

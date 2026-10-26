@@ -1,4 +1,11 @@
-import { Button, FieldGroup, Stack, Text, useState } from '@argo/plugin-kit';
+import {
+  Button,
+  FieldGroup,
+  Screen,
+  Stack,
+  Text,
+  useState,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 
 const labels = [
@@ -27,15 +34,29 @@ export function HelloForm(): JSX.Element {
   const change: Change = (field) => (value) =>
     setDraft({ ...draft, [field]: value });
 
+  const onSubmit = (): void => setSaved(draft.title);
+
   return (
-    <Stack direction="column" gap={4}>
+    <Screen title="New Issue">
       <IssueFields draft={draft} change={change} />
-      <Button label="Create Issue" onPress={() => setSaved(draft.title)} />
-      {saved ? <Text>{`Created ${saved}`}</Text> : null}
+      <SubmitIssue saved={saved} onSubmit={onSubmit} />
+    </Screen>
+  );
+}
+
+function SubmitIssue(props: {
+  saved: string;
+  onSubmit: () => void;
+}): JSX.Element {
+  return (
+    <Stack direction="column" gap={2}>
+      <Button label="Create Issue" onPress={props.onSubmit} />
+      {props.saved ? <Text>{`Created ${props.saved}`}</Text> : null}
     </Stack>
   );
 }
 
+// A FieldGroup fills and scrolls the page itself, so it is the Screen's content; the submit Button sits below it, outside any section (ADR-0042).
 function IssueFields(props: { draft: Draft; change: Change }): JSX.Element {
   return (
     <FieldGroup>

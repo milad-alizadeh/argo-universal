@@ -20,8 +20,6 @@ export const refusedTitle = 'Fixture issue gh cannot change';
 
 const trackerName = 'GitHub Issues';
 
-const appRoot = '/plugins/issue-tracker/issues';
-
 export type SlotView = ReturnType<PluginTest['slot']>;
 
 export type PageView = Awaited<ReturnType<PluginTest['mount']>>;
@@ -72,17 +70,14 @@ export async function issuesRoot(): Promise<{
   return { test, root };
 }
 
-const navigatePath = (action: Action): string =>
-  action.action === 'navigate' ? action.path : '';
-
-// A row's `navigate` Action names the App path; the test opens its page as the App would.
+// A row's `navigate` Action names the page's own path; the test mounts it as the App would.
 export function linkedPage(view: PageView, text: string): string {
-  const onPress = view.findText(text)?.node.props.onPress;
-  const path = navigatePath(Action.parse(onPress));
+  const action = Action.parse(view.findText(text)?.node.props.onPress);
 
-  expect(path.startsWith(appRoot)).toBe(true);
+  if (action.action !== 'navigate')
+    throw new Error(`${text} does not navigate`);
 
-  return path.slice(appRoot.length);
+  return action.path;
 }
 
 export async function follow(

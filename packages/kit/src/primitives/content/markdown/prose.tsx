@@ -28,7 +28,7 @@ function useProseProps(headingLevel?: number): TextProps {
     tone: useContext(MarkdownTone),
     accessibilityRole: headingLevel ? ('heading' as const) : undefined,
     'aria-level': headingLevel,
-    className: 'font-sans min-w-0 max-w-full',
+    className: 'min-w-0 max-w-full',
   };
 }
 

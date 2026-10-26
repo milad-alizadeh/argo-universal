@@ -10,6 +10,8 @@ type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
 const committedFileName = 'committed.txt';
 
+const secondFileName = 'second.txt';
+
 async function projectPath(host: Host): Promise<string> {
   const project = (await host.caller.projects.list()).find(
     ({ id }) => id === 'project-1',
@@ -115,7 +117,7 @@ it('refreshes default Checkout totals when a Turn ends', async () => {
     turn.sessionId,
     (snapshot) => snapshot.changes.files === 1,
   );
-  writeFileSync(join(turn.checkout, 'second.txt'), 'second\n');
+  writeFileSync(join(turn.checkout, secondFileName), 'second\n');
   turn.releaseTurn();
 
   expect(
@@ -190,9 +192,80 @@ it('returns changed files on the main Checkout', async () => {
 
   expect(await host.caller.session.changes({ sessionId })).toEqual({
     mainBranch: 'main',
+    summary: { files: 1, additions: 1, deletions: 0 },
     files: [
       { operation: 'add', path: 'first.txt', additions: 1, deletions: 0 },
     ],
+    nextCursor: null,
+  });
+});
+
+async function twoFileSession(): Promise<{ host: Host; sessionId: string }> {
+  const session = await mainCheckoutSession();
+
+  writeFileSync(join(session.checkout, secondFileName), 'second\n');
+
+  return session;
+}
+
+it('pages the changed files and keeps the whole comparison in the summary', async () => {
+  const { host, sessionId } = await twoFileSession();
+
+  expect(
+    await host.caller.session.changes({ sessionId, limit: 1 }),
+  ).toMatchObject({
+    summary: { files: 2, additions: 2, deletions: 0 },
+    files: [{ path: 'first.txt' }],
+    nextCursor: 1,
+  });
+});
+
+// The next page is asked for as the client's infinite query asks, with its direction.
+it('returns the next page of changed files from its cursor', async () => {
+  const { host, sessionId } = await twoFileSession();
+
+  expect(
+    await host.caller.session.changes({
+      sessionId,
+      limit: 1,
+      cursor: 1,
+      direction: 'forward',
+    }),
+  ).toMatchObject({ files: [{ path: secondFileName }], nextCursor: null });
+});
+
+async function threeLineSession(): Promise<{ host: Host; sessionId: string }> {
+  const session = await mainCheckoutSession();
+
+  writeFileSync(join(session.checkout, 'first.txt'), 'one\ntwo\nthree\n');
+
+  return session;
+}
+
+it('pages one file diff by its lines', async () => {
+  const { host, sessionId } = await threeLineSession();
+
+  expect(
+    await host.caller.session.diff({ sessionId, path: 'first.txt', limit: 2 }),
+  ).toMatchObject({
+    nextCursor: 2,
+    patch: { text: expect.not.stringContaining('+three') },
+  });
+});
+
+it('numbers the next diff page from where the last one stopped', async () => {
+  const { host, sessionId } = await threeLineSession();
+
+  expect(
+    await host.caller.session.diff({
+      sessionId,
+      path: 'first.txt',
+      limit: 2,
+      cursor: 2,
+    }),
+  ).toMatchObject({
+    nextCursor: null,
+    patch: { text: expect.stringContaining('@@ -0,0 +3,1 @@') },
   });
 });
 
@@ -317,9 +390,10 @@ it.each([
 
     expect(
       await host.caller.session.changes({ sessionId, comparison }),
-    ).toEqual({
+    ).toMatchObject({
       mainBranch: 'trunk',
       files,
+      nextCursor: null,
     });
   },
 );
@@ -357,6 +431,8 @@ it('uses a linked Project Checkout branch for a Session comparison', async () =>
 
   expect(await host.caller.session.changes(created)).toEqual({
     mainBranch: 'linked',
+    summary: { files: 0, additions: 0, deletions: 0 },
     files: [],
+    nextCursor: null,
   });
 });

@@ -134,6 +134,7 @@ function failedAt(layout: Layout): Story {
     play: async () => {
       const dialog = await openDialog();
       await waitFor(() => expect(dialog.getByText(failure)).toBeVisible());
+      await expect(dialog.getByRole('alert')).toHaveTextContent(failure);
       await expect(dialog.getByLabelText('Title')).toHaveAttribute(
         'aria-invalid',
         'true',

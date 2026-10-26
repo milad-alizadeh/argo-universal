@@ -8,14 +8,13 @@ import type { IconAction } from '#primitives/actions/action';
 import { Icon } from '#primitives/content/icon';
 import { ButtonIcon } from '#primitives/native/button-icon';
 import { Host } from '#primitives/native/host';
-import { screenPrimaryAction } from './screen-primary-action';
-import type { ScreenProps } from './screen-props';
+import type { ScreenHeaderInput } from './screen-props';
 
 type FabProps = { action: IconAction };
 
-// Android's primary Action is the Material FAB. Material has no disabled FAB, so an unavailable Action shows none.
-export function ScreenAccessory(props: ScreenProps): ReactElement | null {
-  const action = useWide() ? undefined : available(screenPrimaryAction(props));
+// Android's primary Action is the Material FAB, below a wide window, where the heading draws it as a button.
+export function ScreenAccessory(props: ScreenHeaderInput): ReactElement | null {
+  const action = useWide() ? undefined : props.headers.native.primary;
 
   if (!action) return null;
 
@@ -26,10 +25,6 @@ export function ScreenAccessory(props: ScreenProps): ReactElement | null {
       </Host>
     </View>
   );
-}
-
-function available(action: IconAction | undefined): IconAction | undefined {
-  return action?.disabled ? undefined : action;
 }
 
 function FabButton({ action }: FabProps): ReactElement {

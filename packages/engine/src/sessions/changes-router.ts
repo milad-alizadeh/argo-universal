@@ -5,15 +5,19 @@ import {
   SessionChangesOutput,
   SessionDiffInput,
   SessionDiffOutput,
+  sessionChangesPageFiles,
+  sessionDiffPageLines,
   type SessionComparison,
 } from '@repo/contracts';
 import {
   listComparisonBranches,
+  pagePatch,
   readCheckoutChanges,
   readCheckoutDiff,
   type ChangeComparison,
 } from '@repo/git';
 import { TRPCError } from '@trpc/server';
+import { pageItems, pageWindow } from '../lib/page-items';
 import { readProjectPath } from '../projects';
 import { publicProcedure, router, routerFactory } from '../rpc';
 import type { SessionRouterDeps } from './router-deps';
@@ -53,7 +57,17 @@ export const createChangesRouter = routerFactory((deps: SessionRouterDeps) =>
           gitComparison(input.comparison),
         );
 
-        return { mainBranch: result.mainBranch, files: result.files };
+        const page = pageItems(
+          result.files,
+          pageWindow(input, sessionChangesPageFiles),
+        );
+
+        return {
+          mainBranch: result.mainBranch,
+          summary: result.summary,
+          files: page.items,
+          nextCursor: page.nextCursor,
+        };
       }),
     diff: publicProcedure
       .input(SessionDiffInput)
@@ -74,9 +88,13 @@ export const createChangesRouter = routerFactory((deps: SessionRouterDeps) =>
             message: `No changed file ${input.path}`,
           });
 
+        const window = pageWindow(input, sessionDiffPageLines);
+        const page = pagePatch(result.patch, window.cursor, window.limit);
+
         return {
           file: result.file,
-          patch: { format: 'git_patch' as const, text: result.patch },
+          patch: { format: 'git_patch' as const, text: page.patch },
+          nextCursor: page.nextCursor,
         };
       }),
   }),

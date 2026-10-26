@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { ScrollColumnContext } from '#kit/scroll-column';
+import { OfferColumn } from '#kit/content-column/content-column';
 import { cn } from '#kit/utils';
 import type { ScrollFadeFrameProps } from './scroll-fade-frame-view';
 import {
@@ -83,7 +83,7 @@ function FadeLayer({
 
   return (
     <div className={className} style={fadeLengths(options)}>
-      <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
+      <OfferColumn>{children}</OfferColumn>
     </div>
   );
 }

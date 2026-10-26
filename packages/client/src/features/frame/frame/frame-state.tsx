@@ -1,24 +1,28 @@
-import { useClaimed } from '@repo/kit/claim-store';
+import { createPlace, useClaimed, type Place } from '@repo/kit/place';
 import {
-  createInspectorHost,
-  type InspectorHost,
   InspectorPane,
   type InspectorProps,
-  useHostedInspector,
 } from '@repo/kit/primitives/scaffolds/inspector';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import {
-  createWindowBandHost,
-  type WindowBandHost,
-  type WindowBandContent,
+  createWindowBandPlaces,
+  type WindowBandPlaces,
+  type WindowBandView,
+  useWindowBandView,
 } from '#lib/product/window-band';
-import type { InspectorState } from '../scaffold/scaffold';
+import {
+  hostedChange,
+  hostedInspectorState,
+  moveInspector,
+} from '../scaffold/inspector-column';
+import type { InspectorState, WorkbenchIntent } from '../scaffold/scaffold';
 
-interface FrameScaffoldState {
-  band?: WindowBandContent | null;
-  workbenchShown?: boolean;
-  onWorkbenchShownChange: (shown: boolean) => void;
+// The Scaffold's props that the Frame holds, as state: the rest come from the shown section.
+interface HeldScaffoldProps {
+  band?: WindowBandView | null;
+  workbenchIntent: WorkbenchIntent;
+  onWorkbenchIntentChange: (intent: WorkbenchIntent) => void;
   sidebarShown: boolean;
   onSidebarShownChange: (shown: boolean) => void;
   inspectorAvailable: boolean;
@@ -41,91 +45,96 @@ function useExpanded(open: boolean): [boolean, (expanded: boolean) => void] {
   return [expanded, setExpanded];
 }
 
-const inspectorStateOf = (open: boolean, expanded: boolean): InspectorState => {
-  if (!open) return 'closed';
-
-  return expanded ? 'expanded' : 'open';
-};
-
-type InspectorColumn = Omit<
-  FrameScaffoldState,
-  | 'sidebarShown'
-  | 'onSidebarShownChange'
-  | 'band'
-  | 'workbenchShown'
-  | 'onWorkbenchShownChange'
+type ShownInspector = Pick<
+  HeldScaffoldProps,
+  | 'inspectorAvailable'
+  | 'inspectorState'
+  | 'onInspectorStateChange'
+  | 'inspector'
 >;
 
 // The hosted Inspector's pane, whose expand moves the Frame's column between open and expanded.
 const hostedPane =
-  (
-    hosted: InspectorProps | null,
-    onStateChange: (state: InspectorState) => void,
-  ) =>
+  (hosted: InspectorProps | null, column: HostedColumn) =>
   (fills: boolean): ReactNode =>
     hosted && (
       <InspectorPane
         {...hosted}
         expanded={fills}
-        onExpandedChange={(next) => onStateChange(next ? 'expanded' : 'open')}
+        onExpandedChange={(expanded) => moveInspector(column, { expanded })}
       />
     );
 
-// The shown page's Inspector in the Frame's column: the page holds it open; the Frame holds its expansion and width.
-function useInspectorColumn(hosted: InspectorProps | null): InspectorColumn {
+type HostedColumn = Pick<
+  HeldScaffoldProps,
+  'inspectorState' | 'onInspectorStateChange'
+>;
+
+// The page holds its Inspector open; the Frame holds its expansion.
+function useHostedColumn(hosted: InspectorProps | null): HostedColumn {
   const open = hosted?.open === true;
   const [expanded, setExpanded] = useExpanded(open);
 
-  const onInspectorStateChange = (state: InspectorState): void => {
-    setExpanded(state === 'expanded');
+  return {
+    inspectorState: hostedInspectorState(open, expanded),
+    onInspectorStateChange: (state) => {
+      const change = hostedChange(open, state);
+      setExpanded(change.expanded);
 
-    if ((state !== 'closed') !== open) hosted?.onOpenChange(state !== 'closed');
+      if (change.open !== null) hosted?.onOpenChange(change.open);
+    },
   };
+}
+
+// The shown page's Inspector in the Frame's column.
+function useShownInspector(hosted: InspectorProps | null): ShownInspector {
+  const column = useHostedColumn(hosted);
 
   return {
+    ...column,
     inspectorAvailable: hosted !== null,
-    inspectorState: inspectorStateOf(open, expanded),
-    onInspectorStateChange,
-    inspector: hostedPane(hosted, onInspectorStateChange),
+    inspector: hostedPane(hosted, column),
   };
 }
 
 export interface FrameState {
-  bandHost: WindowBandHost;
-  scaffold: FrameScaffoldState;
+  bandPlaces: WindowBandPlaces;
+  scaffold: HeldScaffoldProps;
   // The column the shown page's Inspector draws in.
-  inspectorHost: InspectorHost;
+  inspectorPlace: Place<InspectorProps>;
 }
 
 // The sidebar's state, and the Inspector the shown page holds.
 export function useFrameState(): FrameState {
   const [sidebarShown, onSidebarShownChange] = useState(true);
-  const [inspectorHost] = useState(createInspectorHost);
-  const { bandHost, ...band } = useBandState();
+  const [inspectorPlace] = useState(() => createPlace<InspectorProps>());
+  const { bandPlaces, ...band } = useBandState();
 
   return {
-    bandHost,
+    bandPlaces,
     scaffold: {
       ...band,
       sidebarShown,
       onSidebarShownChange,
-      ...useInspectorColumn(useHostedInspector(inspectorHost)),
+      ...useShownInspector(useClaimed(inspectorPlace) ?? null),
     },
-    inspectorHost,
+    inspectorPlace,
   };
 }
 
 function useBandState(): Pick<
-  FrameScaffoldState,
-  'band' | 'workbenchShown' | 'onWorkbenchShownChange'
-> & { bandHost: WindowBandHost } {
-  const [bandHost] = useState(createWindowBandHost);
-  const [workbenchShown, onWorkbenchShownChange] = useState<boolean>();
+  HeldScaffoldProps,
+  'band' | 'workbenchIntent' | 'onWorkbenchIntentChange'
+> & { bandPlaces: WindowBandPlaces } {
+  const [bandPlaces] = useState(createWindowBandPlaces);
+
+  const [workbenchIntent, onWorkbenchIntentChange] =
+    useState<WorkbenchIntent>('auto');
 
   return {
-    bandHost,
-    band: useClaimed(bandHost),
-    workbenchShown,
-    onWorkbenchShownChange,
+    bandPlaces,
+    band: useWindowBandView(bandPlaces),
+    workbenchIntent,
+    onWorkbenchIntentChange,
   };
 }

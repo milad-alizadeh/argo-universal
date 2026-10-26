@@ -26,7 +26,7 @@ import {
 } from './session-fill';
 
 export interface SessionLayoutProps {
-  // Wide, the Session's SessionHeaderBar; a phone sets its native header from here.
+  // Draws nothing itself: the Session's Screen header is the band's on a wide window and the stack's on a phone, and what this holds only claims the band's Workbench.
   header: ReactNode;
   // Full pane width, so it scrolls from anywhere in the pane; its rows sit in SessionColumns.
   feed: ReactNode;

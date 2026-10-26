@@ -1,14 +1,18 @@
 export { ChangesFiles } from './components/changes-files/changes-files';
 
-export { ChangesToolbar } from './components/changes-toolbar/changes-toolbar';
-
 export { ChangesSheetHeader } from './components/changes-sheet-header/changes-sheet-header';
 
-export type { ChangesComparison } from './view/changes-comparison';
+export {
+  ChangesInspectorToolbar,
+  type InspectorSegment,
+} from './components/changes-inspector-toolbar/changes-inspector-toolbar';
+
+export { useChanges } from './use-changes';
 
 export type {
-  ChangesBranches,
-  ChangesViewProps,
-} from './view/changes-view-props';
+  ChangesRevision,
+  ChangesScope,
+  ChangesSource,
+} from './source/changes-source';
 
-export { useChangesStage } from './view/use-changes-stage';
+export type { ChangesViewProps } from './view/changes-view-props';

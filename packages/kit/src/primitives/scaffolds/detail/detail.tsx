@@ -1,15 +1,20 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { cn } from '#kit/utils';
 import { Markdown } from '#primitives/content/markdown';
 import { Spinner } from '#primitives/status/spinner';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
+import { screenContentEnds } from '../screen/screen-column';
 import { DetailColumns } from './detail-columns';
 import type { DetailProps } from './detail-props';
 
-// Under iOS 26's transparent header, the page starts below it and scrolls on under the glass.
+/*
+ * Under iOS 26's transparent header, the page starts below it and scrolls on under the glass. A phone's scroll view
+ * keeps its own margins; a wide window's Screen column pads it.
+ */
 const scroll = {
   surfaceClassName: 'bg-content',
-  contentContainerClassName: 'px-4 pt-2 pb-6 wide:px-0 wide:pt-0',
+  contentContainerClassName: cn('px-4 wide:px-0', screenContentEnds),
   contentInsetAdjustmentBehavior: 'automatic',
 } as const;
 

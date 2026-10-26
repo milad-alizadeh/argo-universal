@@ -1,12 +1,10 @@
-import { Text } from '@repo/kit/primitives/content/text';
-import { Surface } from '@repo/kit/primitives/layout/surface';
+import { Card } from '@repo/kit/primitives/layout/card';
 import type * as React from 'react';
-import { View } from 'react-native';
 import type { SlotVisibility } from '#features/settings';
 import type { SlotDetail } from './slot-detail';
 import { previewCaptionOf } from './slot-preview-caption';
 
-type SlotPreviewCardProps = {
+type SlotPreviewProps = {
   settings: SlotDetail;
   visibility: SlotVisibility;
 };
@@ -15,13 +13,8 @@ type SlotPreviewCardProps = {
 export const SlotPreview = ({
   settings: { Preview, previewCaption },
   visibility,
-}: SlotPreviewCardProps): React.JSX.Element => (
-  <Surface kind="card" padding={4}>
-    <View className="gap-2">
-      <Text role="secondary" tone="muted">
-        {previewCaptionOf(previewCaption)}
-      </Text>
-      <Preview visibility={visibility} />
-    </View>
-  </Surface>
+}: SlotPreviewProps): React.JSX.Element => (
+  <Card title={previewCaptionOf(previewCaption)}>
+    <Preview visibility={visibility} />
+  </Card>
 );

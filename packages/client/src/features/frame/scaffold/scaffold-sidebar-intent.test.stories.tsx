@@ -40,7 +40,7 @@ export const FoldedSidebarCanBeShown: Story = {
 
 export const WideningSidebarDoesNotHideIt: Story = {
   beforeEach: (): Promise<void> => settleViewport(1440),
-  args: { stageOpen: false },
+  args: { inspectorOpen: false },
   play: async ({ canvas, userEvent }) => {
     await expect(
       await canvas.findByRole('button', { name: hideSidebar }),
@@ -57,8 +57,8 @@ export const WideningSidebarDoesNotHideIt: Story = {
   },
 };
 
-export const UnavailableSidebarWaitsForSpaceBesideStage: Story = {
-  args: { stageOpen: true },
+export const UnavailableSidebarWaitsForSpaceBesideTheInspector: Story = {
+  args: { inspectorOpen: true },
   play: async ({ canvas, userEvent }) => {
     await expect(
       await canvas.findByRole('button', { name: showSidebar }),

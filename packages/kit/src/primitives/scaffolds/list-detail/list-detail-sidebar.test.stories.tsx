@@ -1,17 +1,13 @@
 import type { Meta } from '@storybook/react-native-web-vite';
-import { useState, type ReactElement } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '#kit/each-layout';
+import { createPlace, useClaimed, type Place } from '#kit/place';
 import { Text } from '#primitives/content/text';
 import { Screen } from '#primitives/scaffolds/screen';
 import { ListDetail } from './list-detail';
-import {
-  createListDetailSidebar,
-  ListDetailSidebarContext,
-  useListDetailSidebarList,
-  type ListDetailSidebar,
-} from './list-detail-sidebar';
+import { ListDetailSidebarPlaceOffer } from './list-detail-sidebar';
 import { at, heading } from './list-detail-test.mocks';
 import { ExampleListDetail, issues, syncIssue } from './list-detail.mocks';
 
@@ -27,7 +23,7 @@ const sectionList = 'Section list';
 
 // A section's root ListDetail hands its list to the host's sidebar and keeps the detail.
 function WithSidebar(props: { nested?: boolean }): ReactElement {
-  const [sidebar] = useState(createListDetailSidebar);
+  const [sidebar] = useState(() => createPlace<ReactNode>());
 
   return (
     <View className="flex-1 flex-row">
@@ -35,9 +31,9 @@ function WithSidebar(props: { nested?: boolean }): ReactElement {
         <HostSidebar sidebar={sidebar} />
       </View>
       <View testID="host-page" className="flex-1">
-        <ListDetailSidebarContext value={sidebar}>
+        <ListDetailSidebarPlaceOffer value={sidebar}>
           <HostScreen nested={props.nested} />
-        </ListDetailSidebarContext>
+        </ListDetailSidebarPlaceOffer>
       </View>
     </View>
   );
@@ -51,12 +47,8 @@ function HostScreen(props: { nested?: boolean }): ReactElement {
   return <ListDetail list={<Screen title="Settings" />} detail={example} />;
 }
 
-function HostSidebar({
-  sidebar,
-}: {
-  sidebar: ListDetailSidebar;
-}): ReactElement {
-  const list = useListDetailSidebarList(sidebar);
+function HostSidebar({ sidebar }: { sidebar: Place<ReactNode> }): ReactElement {
+  const list = useClaimed(sidebar);
 
   return <View className="flex-1">{list ?? <Text>{sectionList}</Text>}</View>;
 }

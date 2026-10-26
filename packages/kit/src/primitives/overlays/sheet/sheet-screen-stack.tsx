@@ -167,5 +167,6 @@ function hideHeader(props: ScreenProps): boolean {
   );
 }
 
+// As on iOS and Android: a page says whether it scrolls itself, else the sheet does for every page.
 const screenScrolls = (props: ScreenProps): boolean | undefined =>
-  props.page.contentScrolls ?? (props.index === 0 && props.contentScrolls);
+  props.page.contentScrolls ?? props.contentScrolls;

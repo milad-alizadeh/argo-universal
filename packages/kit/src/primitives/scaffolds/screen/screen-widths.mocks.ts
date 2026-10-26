@@ -5,9 +5,10 @@ import type { Screen } from './screen';
 
 type ScreenStory = StoryObj<typeof Screen>;
 
-// Screen draws its own heading at both widths in a story, which has no navigator; each claim runs at both.
+// Screen draws its own heading at every width in a story, which has no navigator; each claim runs at the widths it names.
 export const screenWidths = {
   Phone: layoutWidths.phone,
+  Tablet: layoutWidths.tablet,
   Wide: layoutWidths.wide,
 } as const;
 

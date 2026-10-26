@@ -6,6 +6,7 @@ import material_adjust from '../assets/material-light/adjust.xml';
 import material_all_inbox from '../assets/material-light/all_inbox.xml';
 import material_archive from '../assets/material-light/archive.xml';
 import material_arrow_back from '../assets/material-light/arrow_back.xml';
+import material_arrow_back_ios_new from '../assets/material-light/arrow_back_ios_new.xml';
 import material_arrow_downward from '../assets/material-light/arrow_downward.xml';
 import material_arrow_forward from '../assets/material-light/arrow_forward.xml';
 import material_arrow_upward from '../assets/material-light/arrow_upward.xml';
@@ -38,6 +39,7 @@ import material_description from '../assets/material-light/description.xml';
 import material_desktop_mac from '../assets/material-light/desktop_mac.xml';
 import material_diamond from '../assets/material-light/diamond.xml';
 import material_dns from '../assets/material-light/dns.xml';
+import material_docs from '../assets/material-light/docs.xml';
 import material_draft from '../assets/material-light/draft.xml';
 import material_drag_indicator from '../assets/material-light/drag_indicator.xml';
 import material_edit from '../assets/material-light/edit.xml';
@@ -303,6 +305,7 @@ export const materialImages = {
   all_inbox: material_all_inbox,
   archive: material_archive,
   arrow_back: material_arrow_back,
+  arrow_back_ios_new: material_arrow_back_ios_new,
   arrow_downward: material_arrow_downward,
   arrow_forward: material_arrow_forward,
   arrow_upward: material_arrow_upward,
@@ -335,6 +338,7 @@ export const materialImages = {
   desktop_mac: material_desktop_mac,
   diamond: material_diamond,
   dns: material_dns,
+  docs: material_docs,
   draft: material_draft,
   drag_indicator: material_drag_indicator,
   edit: material_edit,
@@ -598,4 +602,4 @@ export const materialFilledImages = {
 } as const;
 
 // Material names with no drawing; their icons stay drawn by Argo's Icon.
-export const undrawnMaterialNames = ["auto_awesome","expand_less","feed","smartphone"] as const;
+export const undrawnMaterialNames = ["auto_awesome","expand_less","smartphone"] as const;

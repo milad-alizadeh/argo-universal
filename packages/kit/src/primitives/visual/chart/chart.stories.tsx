@@ -7,6 +7,7 @@ import {
   areaChart,
   barChart,
   donutChart,
+  gridlinesLineChart,
   groupedBarChart,
   lineChart,
   pieChart,
@@ -35,7 +36,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Line: Story = { args: lineChart };
 
-export const LineWithGrid: Story = { args: { ...lineChart, grid: true } };
+export const Gridlines: Story = { args: gridlinesLineChart };
 
 export const Bar: Story = { args: barChart };
 

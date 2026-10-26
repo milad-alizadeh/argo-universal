@@ -1,7 +1,6 @@
 import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { sessionPanelLabels } from '../session-panel-triggers';
 import { subagentStates } from '../subagent-list/subagent-list.mocks';
 import { SubagentSheet } from '../subagent-list/subagent-sheet';
 import { SubagentFeed } from './subagent-feed';
@@ -11,10 +10,11 @@ const ignore = (): void => {};
 
 const tabs = {
   items: [
-    { key: 'changes', ...sessionPanelLabels.changes },
+    { key: 'changes', label: 'Changes', icon: 'diff' as const },
     {
       key: 'subagents',
-      ...sessionPanelLabels.subagents,
+      label: 'Agents',
+      icon: 'agent' as const,
       count: subagentStates.severalMixed.length,
       countTone: 'success' as const,
     },
@@ -25,7 +25,7 @@ const tabs = {
 };
 
 const paneProps = {
-  title: sessionPanelLabels.subagents.label,
+  title: 'Agents',
   open: true,
   onOpenChange: ignore,
   tabs,

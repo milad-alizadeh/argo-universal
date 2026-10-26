@@ -18,7 +18,7 @@ const workbenchId = 'desktop-workbench';
 const toggleLabel = 'Toggle Workbench';
 
 export const FloatingKeepsTheFeedInPlace: Story = {
-  args: { stageOpen: true },
+  args: { inspectorOpen: true },
   play: async ({ canvas, userEvent }) => {
     await settleViewport(1440);
     const feed = await canvas.findByTestId('workbench-feed');
@@ -50,7 +50,7 @@ export const FloatingKeepsTheFeedInPlace: Story = {
 };
 
 export const NarrowingAutoHidesTheDockedWorkbench: Story = {
-  args: { stageOpen: true },
+  args: { inspectorOpen: true },
   play: async ({ canvas, userEvent }) => {
     await settleViewport(1768);
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
@@ -66,7 +66,7 @@ export const NarrowingAutoHidesTheDockedWorkbench: Story = {
   },
 };
 
-export const CardOpensTheStageWithoutClosingTheOverview: Story = {
+export const CardOpensTheInspectorWithoutClosingTheOverview: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(1920);
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());

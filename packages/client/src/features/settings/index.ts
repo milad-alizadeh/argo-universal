@@ -28,3 +28,5 @@ export {
   useSlotVisibility,
   visibleItems,
 } from './stores/slot-visibility';
+
+export { SettingsLoading } from './components/settings-loading/settings-loading';

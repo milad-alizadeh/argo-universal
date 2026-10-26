@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 // The Plugin wire this App and Server speak; bump it, and the minimum, for a change an older App can't draw (ADR-0034).
-export const pluginWireVersion = 3;
+export const pluginWireVersion = 4;
 
 // The oldest App wire version the Server still sends Plugin trees to.
-export const minimumPluginWireVersion = 3;
+export const minimumPluginWireVersion = 4;
 
 export const PluginSurface = z.object({
   platform: z.enum(['ios', 'android', 'web', 'desktop']),
@@ -22,7 +22,7 @@ export const currentPluginSurface = (
 export const drawsPluginWire = (surface: PluginSurface | undefined): boolean =>
   (surface?.wireVersion ?? 0) >= minimumPluginWireVersion;
 
-// Render context belongs to one App; legacy Connections did not report a surface.
+// Render context belongs to one App; a Connection that reports no surface draws no Plugin wire.
 export type PluginRenderContext = Readonly<{
   serverDevice: boolean;
   projectId?: string;

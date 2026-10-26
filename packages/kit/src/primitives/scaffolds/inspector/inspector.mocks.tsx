@@ -1,18 +1,18 @@
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
+import { createPlace, useClaimed, type Place } from '#kit/place';
 import { Action } from '#primitives/actions/action';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { useOptionalSheet } from '#primitives/overlays/sheet';
 import { Inspector } from './inspector';
-import {
-  createInspectorHost,
-  type InspectorHost,
-  InspectorHostContext,
-  useHostedInspector,
-} from './inspector-host';
 import { InspectorPane, type InspectorPaneProps } from './inspector-pane';
-import type { InspectorTab, InspectorTabsProps } from './inspector-props';
+import { InspectorPlaceOffer } from './inspector-place';
+import type {
+  InspectorProps,
+  InspectorTab,
+  InspectorTabsProps,
+} from './inspector-props';
 
 const ignore = (): void => {};
 
@@ -89,22 +89,26 @@ function ExampleScreen(props: { onToggle: () => void }): ReactElement {
 
 // A host such as the App Frame: the page's Inspector draws in its column, and the host holds its expansion.
 export function HostedExampleInspector(): ReactElement {
-  const [host] = useState(createInspectorHost);
+  const [place] = useState(() => createPlace<InspectorProps>());
 
   return (
     <View className="flex-1 flex-row">
       <View className="flex-1">
-        <InspectorHostContext value={host}>
+        <InspectorPlaceOffer value={place}>
           <ExampleInspector />
-        </InspectorHostContext>
+        </InspectorPlaceOffer>
       </View>
-      <HostColumn host={host} />
+      <HostColumn place={place} />
     </View>
   );
 }
 
-function HostColumn({ host }: { host: InspectorHost }): ReactElement | null {
-  const hosted = useHostedInspector(host);
+function HostColumn({
+  place,
+}: {
+  place: Place<InspectorProps>;
+}): ReactElement | null {
+  const hosted = useClaimed(place);
   const [expanded, onExpandedChange] = useState(false);
 
   if (!hosted?.open) return null;

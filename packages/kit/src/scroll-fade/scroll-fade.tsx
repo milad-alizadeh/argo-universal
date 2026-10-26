@@ -4,6 +4,7 @@ import {
   type ScrollViewInstance,
   type ScrollViewProps,
 } from 'react-native';
+import { useClaimColumn } from '#kit/content-column/content-column';
 import { cn } from '#kit/utils';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import type { ScrollFadeOptions } from './scroll-fade-options';
@@ -50,6 +51,13 @@ const sizing = ({ fitContent, horizontal, className }: SizingProps): Sizing =>
     ? horizontalSizing(className)
     : verticalSizing(fitContent, className);
 
+// One that fills its Screen's content keeps to the Screen's column itself; one sized by its content sits inside it.
+function useSizing(props: SizingProps): Sizing {
+  useClaimColumn(props.horizontal || props.fitContent ? undefined : 'fill');
+
+  return sizing(props);
+}
+
 // A scroll view whose content fades under each edge that hides more of it: top and bottom, or leading and trailing when `horizontal`.
 export function ScrollFadeView({
   className,
@@ -58,7 +66,7 @@ export function ScrollFadeView({
   ...props
 }: ScrollFadeViewProps): JSX.Element {
   const { frame, scroll, attachScrollView } = useScrollFade(props);
-  const classNames = sizing({ ...props, fitContent, className });
+  const classNames = useSizing({ ...props, fitContent, className });
 
   const attach = useScrollRef(attachScrollView, ref);
 

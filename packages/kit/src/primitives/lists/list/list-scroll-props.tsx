@@ -6,6 +6,7 @@ import { Icon } from '#primitives/content/icon';
 import { ListFooter } from '../../../list-footer';
 import { listTestIdProps } from '../../../list-test-id';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
+import { ListHeader } from './list-header';
 import type { ListProps } from './list-props';
 
 function scrollEvents<Item>(
@@ -64,6 +65,7 @@ function listContents<Item>(
     depth: props.depth,
     keyboardDismissMode: props.keyboardDismissMode,
     keyboardShouldPersistTaps: props.keyboardShouldPersistTaps,
+    stickyHeaderIndices: props.stickyHeaderIndices,
     ListHeaderComponent: listStart(props),
     ListFooterComponent: <ListEnd {...props} />,
   };
@@ -83,14 +85,6 @@ export function scrollProps<Item>(
     ...testProps(props.testID),
     ...scrollBounds(props),
   };
-}
-
-function Content({ children }: { children: ReactNode }): ReactNode {
-  return children;
-}
-
-function listContent(content: ReactNode): ReactElement | undefined {
-  return content == null ? undefined : <Content>{content}</Content>;
 }
 
 function accessibilityProps<Item>(
@@ -146,13 +140,16 @@ const nativeEdges =
     ? ({ top: 'never', bottom: 'never' } as const)
     : undefined;
 
+const listHeader = <Item,>(props: ListProps<Item>): ReactElement | undefined =>
+  props.header == null ? undefined : <ListHeader list={props} />;
+
 function listStart<Item>(props: ListProps<Item>): ReactElement | undefined {
   return props.startContent ? (
     <>
       {props.startContent}
-      {listContent(props.header)}
+      {listHeader(props)}
     </>
   ) : (
-    listContent(props.header)
+    listHeader(props)
   );
 }

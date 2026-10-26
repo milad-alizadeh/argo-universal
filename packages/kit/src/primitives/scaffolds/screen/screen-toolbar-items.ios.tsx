@@ -2,8 +2,7 @@ import { Stack } from 'expo-router';
 import type { ComponentProps, ReactElement } from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
-import { isCustomSymbol } from '#kit/symbols/custom-symbols';
-import { resolveIcon } from '#kit/symbols/icon-symbol';
+import { iosImage } from '#kit/symbols/ios-image';
 import {
   isSubmenu,
   submenuBadgeText,
@@ -33,14 +32,12 @@ function toolbarIcon(
 function symbolSource(
   icon: NonNullable<ActionProps['icon']>,
 ): SFSymbol | ImageSourcePropType | undefined {
-  const source = resolveIcon(icon).symbol;
+  const image = iosImage(icon);
 
   // An SVG symbol has no image the system toolbar can draw, so its button shows only its label.
-  if ('svg' in source) return undefined;
+  if (!image) return undefined;
 
-  if (isCustomSymbol(source.sf)) return { uri: source.sf };
-
-  return source.sf;
+  return image.kind === 'asset' ? { uri: image.name } : image.name;
 }
 
 function toolbarAction(action: DeclaredAction): ToolbarButton {

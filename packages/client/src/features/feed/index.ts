@@ -2,8 +2,6 @@ export { Feed, type FeedProps } from './components/feed/feed';
 
 export { FeedItem } from './components/feed-item';
 
-export { PermissionOutcome } from './components/permission-outcome';
-
 export { useSessionFeed } from './hooks/use-session-feed';
 
 export { toFeedView } from './view/to-feed-view';
@@ -18,4 +16,7 @@ export { findLiveToolCall } from './view/live-tool-call';
 
 export type { FeedViewItem } from './view/feed-view';
 
-export { FileHeader as DiffFileHeader } from './components/diff-view/diff-file-header';
+export {
+  FileHeader as DiffFileHeader,
+  type FileHeaderProps as DiffFileHeaderProps,
+} from './components/diff-view/diff-file-header';

@@ -1,20 +1,28 @@
 import type { ReactElement } from 'react';
 import { ActionShortcutScope } from '#primitives/actions/action';
+import { ScreenBandClaim } from './screen-band-claim';
+import { screenHeadersOf } from './screen-headers';
 import { ScreenNavigation } from './screen-navigation';
 import type { ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
-import { useScreenHeader } from './use-screen-header';
+import { useHeaderDeclaration } from './use-header-declaration';
+import { useHeaderPlan } from './use-header-plan';
 
 export type ScreenStackHeaderProps = Omit<ScreenProps, 'children'>;
 
-// Kit-only. A Screen's header without its heading or body, for a page whose body is not a Screen, such as a Session's.
+// Kit-only. A Screen's header without its heading or body, for a page whose body is not a Screen, such as a Session's; a wide window draws it in the band.
 export function ScreenStackHeader(props: ScreenStackHeaderProps): ReactElement {
-  const header = useScreenHeader(props);
+  // A header-only Screen has no List below it to select.
+  const declaration = useHeaderDeclaration(props, null);
+  const plan = useHeaderPlan('header only');
+  const headers = screenHeadersOf(declaration);
+  const drawing = { ...props, declaration, headers, plan };
 
   return (
     <ActionShortcutScope>
-      <ShortcutAnchors header={header} />
-      <ScreenNavigation {...props} header={header} />
+      <ShortcutAnchors anchors={declaration.anchors} />
+      <ScreenNavigation {...drawing} />
+      {plan.site === 'band' ? <ScreenBandClaim {...drawing} /> : null}
     </ActionShortcutScope>
   );
 }

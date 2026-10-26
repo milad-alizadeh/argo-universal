@@ -11,7 +11,7 @@ import {
   interpolate,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { ScrollColumnContext } from '#kit/scroll-column';
+import { OfferColumn } from '#kit/content-column/content-column';
 import { cn } from '#kit/utils';
 import {
   ScrollFadeGradient,
@@ -129,7 +129,7 @@ export function ScrollFadeFrame(
 
   return (
     <View className={frameClassName} style={style} onLayout={onLayout}>
-      <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
+      <OfferColumn>{children}</OfferColumn>
       <EdgeFades metrics={tracking.metrics} options={options} />
     </View>
   );

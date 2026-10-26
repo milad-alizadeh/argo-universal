@@ -34,13 +34,11 @@ const moreActions = (
   </Action>
 );
 
-// A stand-in page that names its section, with a header menu.
+// A stand-in page that names its section, with a header menu; its Screen keeps the text on the heading's edge.
 export function MockPage({ title }: { title: string }): React.JSX.Element {
   return (
     <Screen title={`${title} page`} actions={moreActions}>
-      <View className="flex-1 p-4">
-        <Text testID="detail-content">{title} detail</Text>
-      </View>
+      <Text testID="detail-content">{title} detail</Text>
     </Screen>
   );
 }

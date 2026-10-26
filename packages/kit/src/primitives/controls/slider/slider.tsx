@@ -8,14 +8,17 @@ const progressProperty = '--slider-progress';
 
 /*
  * Expo's universal web Slider hard-codes its palette, so web keeps this range input for the thumb and the full-width hit area.
- * The input's own track is hidden: a range input runs its track under the thumb at each end, so Argo draws the track from the minimum's thumb centre to the maximum's.
+ * The input's own track is hidden: a range input runs its track under the thumb at each end, so Argo draws the track across the content's width and widens the input by the thumb's radius at each end.
  * The thumb and the drawn track's fill live in react-native-web.css (.slider-range, .slider-track): Tailwind has no variant for a range input's thumb.
  */
 const rangeClass =
   'slider-range relative block m-0 h-5.5 w-full appearance-none bg-transparent cursor-pointer disabled:cursor-default focus-visible:outline-none';
 
-// Inset by the thumb's radius, so each end of the track is where the thumb's centre stops.
-const trackClass = 'slider-track absolute inset-x-2 top-2.25 h-1 rounded-full';
+// The track spans the content's full width, so its ends line up with the row around it.
+const trackClass = 'slider-track absolute inset-x-0 top-2.25 h-1 rounded-full';
+
+// A range input keeps its thumb inside its own box, so its centre stops a radius short of each end. The input overhangs the content by that radius, so the centre reaches the track's ends and the thumb overhangs instead.
+const rangeBoxClass = 'relative -mx-2';
 
 type SliderPosition = Pick<
   SliderProps,
@@ -26,7 +29,9 @@ export function Slider(props: SliderProps): React.JSX.Element {
   return (
     <div className={cn('relative h-5.5', props.disabled && 'opacity-50')}>
       <SliderTrack {...props} />
-      <input {...rangeAttributes(props)} {...rangeInteraction(props)} />
+      <div className={rangeBoxClass}>
+        <input {...rangeAttributes(props)} {...rangeInteraction(props)} />
+      </div>
     </div>
   );
 }

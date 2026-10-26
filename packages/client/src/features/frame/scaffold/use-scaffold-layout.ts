@@ -1,42 +1,23 @@
-import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
-import type { WindowBandContent } from '#lib/product/window-band';
-import { type FrameMotion, frameTiming } from '../utils/frame-timing';
+import type { ContentRule } from '../../../lib/product/content-rule';
+import { useContentRule } from '../../../lib/product/use-content-rule';
 import {
-  type InspectorState,
-  type ScaffoldGeometry,
-  type ScaffoldMeasures,
-  scaffoldGeometry,
-} from './scaffold-geometry';
+  type FrameMotion,
+  frameTiming,
+  transitionKeyOf,
+} from '../utils/frame-timing';
+import { type BandLeading, useBandLeading } from './band-leading';
+import {
+  type FrameLayout,
+  type FrameMeasures,
+  frameLayout,
+} from './frame-layout';
+import { isFramed } from './is-framed';
+import type { ScaffoldProps } from './scaffold-props';
 import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
-
-// What the Scaffold places: its Slots, and the sidebar's and the Inspector's state, which the caller holds.
-export interface ScaffoldProps {
-  band?: WindowBandContent | null;
-  inspectorAvailable?: boolean;
-  workbenchShown?: boolean;
-  onWorkbenchShownChange?: (shown: boolean) => void;
-  sizeClass: SizeClass;
-  // The section picker beside the list on a wide window, such as the rail.
-  sidebar: ReactNode;
-  // The list's own part of the sidebar's header row.
-  listHeader: ReactNode;
-  list: ReactNode;
-  // The page beside the list, which draws its own header; a compact or medium window shows it over the list.
-  page?: ReactNode;
-  // The Inspector's page, told whether it fills the page's area, which the Scaffold decides from the window's width.
-  inspector: (expanded: boolean) => ReactNode;
-  // Floats over the top of the page, so the page under it never moves.
-  banner?: ReactNode;
-  sidebarShown: boolean;
-  onSidebarShownChange: (shown: boolean) => void;
-  inspectorState: InspectorState;
-  onInspectorStateChange: (state: InspectorState) => void;
-}
 
 interface PreferredWidths {
   preferredListWidth: number;
@@ -50,10 +31,13 @@ interface WindowWidth {
   onLayout: (event: LayoutChangeEvent) => void;
 }
 
-export interface ScaffoldLayout
-  extends ScaffoldGeometry, PreferredWidths, WindowWidth {
-  measures: ScaffoldMeasures;
+// The wide window's Frame layout, with what the panes draw it with: the window's width, the measures and the setters a divider or toggle calls.
+export interface ScaffoldLayout extends FrameLayout, WindowWidth {
+  measures: FrameMeasures;
+  bandLeading: BandLeading;
   safeTop: number;
+  setPreferredListWidth: PreferredWidths['setPreferredListWidth'];
+  setPreferredInspectorWidth: PreferredWidths['setPreferredInspectorWidth'];
   requestSidebar: SidebarIntent['requestSidebar'];
   motion: FrameMotion;
   setResizing: (resizing: boolean) => void;
@@ -64,27 +48,43 @@ export interface ScaffoldPartProps {
   layout: ScaffoldLayout;
 }
 
+// What a part reads of the props and the layout, by field, so it takes no more than it uses.
+export interface PartReads<
+  Scaffold extends keyof ScaffoldProps,
+  Layout extends keyof ScaffoldLayout,
+> {
+  scaffold: Pick<ScaffoldProps, Scaffold>;
+  layout: Pick<ScaffoldLayout, Layout>;
+}
+
 function useCSSPixels(name: string): number {
   return Number.parseFloat(String(useCSSVariable(name)));
 }
 
-function useScaffoldMeasures(): ScaffoldMeasures {
+const contentMeasures = ({
+  gutter,
+  maximum,
+}: ContentRule): Pick<FrameMeasures, 'contentGutter' | 'contentMaximum'> => ({
+  contentGutter: gutter,
+  contentMaximum: maximum,
+});
+
+function useFrameMeasures(bandLeading: BandLeading): FrameMeasures {
   return {
     listWidth: useCSSPixels('--spacing-frame-list'),
     inspectorWidth: useCSSPixels('--spacing-frame-inspector'),
     railWidth: useCSSPixels('--spacing-frame-rail'),
     inset: useCSSPixels('--spacing-frame-inset'),
-    barHeight: useCSSPixels('--spacing-frame-control'),
-    topBandHeight: useCSSPixels('--spacing-frame-control'),
+    bandHeight: useCSSPixels('--spacing-frame-control'),
+    bandLeading: bandLeading.width,
     workbenchWidth: useCSSPixels('--spacing-frame-list'),
     paneGap: useCSSPixels('--spacing-4'),
     composerWidth: useCSSPixels('--container-composer'),
-    contentGutter: useCSSPixels('--spacing-6'),
-    contentMaximum: useCSSPixels('--container-column'),
+    ...contentMeasures(useContentRule()),
   };
 }
 
-function usePreferredWidths(measures: ScaffoldMeasures): PreferredWidths {
+function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
   const [preferredListWidth, setPreferredListWidth] = useState(
     measures.listWidth,
   );
@@ -111,51 +111,54 @@ function useWindowWidth(): WindowWidth {
   };
 }
 
-function useScaffoldWidths(): PreferredWidths & { measures: ScaffoldMeasures } {
-  const measures = useScaffoldMeasures();
-
-  return { measures, ...usePreferredWidths(measures) };
+interface ScaffoldSizing extends PreferredWidths, SidebarIntent {
+  measures: FrameMeasures;
+  bandLeading: BandLeading;
 }
 
-function useScaffoldSizing(
-  scaffold: ScaffoldProps,
-): ReturnType<typeof useScaffoldWidths> & SidebarIntent {
-  return { ...useScaffoldWidths(), ...useSidebarIntent(scaffold) };
-}
-
-function useFrameMotion(
-  { transitionKey }: ScaffoldGeometry,
-  resizing: boolean,
-): FrameMotion {
-  return { transitionKey, animate: !resizing, timing: frameTiming };
-}
-
-export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
-  const widths = useScaffoldSizing(scaffold);
-  const windowWidth = useWindowWidth();
-  const [resizing, setResizing] = useState(false);
-  const geometry = geometryOf(scaffold, widths, windowWidth);
+function useScaffoldSizing(scaffold: ScaffoldProps): ScaffoldSizing {
+  const bandLeading = useBandLeading();
+  const measures = useFrameMeasures(bandLeading);
 
   return {
-    ...geometry,
-    safeTop: useSafeAreaInsets().top,
-    ...widths,
-    ...windowWidth,
-    motion: useFrameMotion(geometry, resizing),
-    setResizing,
+    bandLeading,
+    measures,
+    ...usePreferredWidths(measures),
+    ...useSidebarIntent(scaffold),
   };
 }
 
-function geometryOf(
+// The phone shell draws no Frame, so only a change of the sidebar's state moves its page.
+const transitionKey = (scaffold: ScaffoldProps, layout: FrameLayout): string =>
+  isFramed(scaffold.sizeClass)
+    ? layout.transitionKey
+    : transitionKeyOf({ sidebarShown: scaffold.sidebarShown });
+
+const layoutOf = (
   scaffold: ScaffoldProps,
-  widths: ReturnType<typeof useScaffoldSizing>,
-  windowWidth: WindowWidth,
-): ScaffoldGeometry {
-  return scaffoldGeometry({
+  sizing: ScaffoldSizing,
+  width: number,
+): FrameLayout =>
+  frameLayout({
     ...scaffold,
-    ...widths,
-    ...windowWidth,
-    framed: scaffold.sizeClass === 'wide',
+    ...sizing,
+    width,
     workbenchAvailable: Boolean(scaffold.band?.workbench),
   });
+
+export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
+  const sizing = useScaffoldSizing(scaffold);
+  const windowWidth = useWindowWidth();
+  const [resizing, setResizing] = useState(false);
+  const layout = layoutOf(scaffold, sizing, windowWidth.width);
+  const key = transitionKey(scaffold, layout);
+
+  return {
+    ...sizing,
+    ...layout,
+    ...windowWidth,
+    safeTop: useSafeAreaInsets().top,
+    motion: { transitionKey: key, animate: !resizing, timing: frameTiming },
+    setResizing,
+  };
 }

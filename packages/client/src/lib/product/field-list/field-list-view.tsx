@@ -7,9 +7,10 @@ export type { FieldListSection } from './field-list-entries';
 export interface FieldListProps {
   sections: readonly FieldListSection[];
   testID?: string;
-  gap?: 'sm';
   // Drawn above the sections and scrolled with them.
   header?: ReactNode;
+  // The header scrolls sideways to the edges instead of lining up with the cards.
+  headerBleeds?: boolean;
 }
 
 export function FieldList(props: FieldListProps): ReactElement {
@@ -17,9 +18,9 @@ export function FieldList(props: FieldListProps): ReactElement {
     <List
       fit={false}
       appearance="cards"
-      padding={cardInset}
       testID={props.testID}
       header={props.header}
+      headerBleeds={props.headerBleeds}
     >
       {props.sections.map(sectionView)}
     </List>
@@ -37,6 +38,3 @@ function sectionView(section: FieldListSection, index: number): ReactElement {
     </List.Section>
   );
 }
-
-// The cards stand 16 from a phone's edges, as the Settings pages' cards do; a wide page's column insets them already.
-const cardInset = { compact: 4, wide: 0 } as const;

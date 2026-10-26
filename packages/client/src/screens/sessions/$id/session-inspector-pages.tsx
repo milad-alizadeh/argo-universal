@@ -5,49 +5,46 @@ import {
   type InspectorProps,
 } from '@repo/kit/primitives/scaffolds/inspector';
 import type { ReactElement } from 'react';
-import {
-  type SessionPanel,
-  type SessionPanels,
-  sessionPanelLabels,
-} from '#features/sessions';
-import {
-  panelContent,
-  type SessionInspectorContent,
-} from './session-inspector-content';
+import type { SessionPanels } from '#features/sessions';
+import type { SessionSection } from './sections/session-section';
+import { sectionOf, sectionTab } from './sections/session-sections';
+import type { SessionInspectorContent } from './session-inspector-content';
 
 type Props = SessionInspectorContent & {
   panels: SessionPanels;
   inspector: InspectorProps;
-  scrollState: InspectorProps['scrollState'];
 };
 
-type PageProps = Props & { panel: SessionPanel };
+type PageProps = Props & { section: SessionSection };
 
 function RetainedPage(props: PageProps): ReactElement {
   return (
     <InspectorScreen
-      active={props.panels.state.shown === props.panel}
-      label={sessionPanelLabels[props.panel].label}
+      active={props.panels.state.shown === props.section.key}
+      label={props.section.title}
     >
       <PageBody {...props} />
     </InspectorScreen>
   );
 }
 
-function PageBody(props: PageProps): ReactElement {
+function PageBody({ section, ...props }: PageProps): ReactElement {
   return (
     <InspectorBody {...props.inspector} surface="bg-transparent" contentScrolls>
-      {panelContent[props.panel](props, props.scrollState)?.body}
+      {section.tab(props, sectionTab(props.panels, section.key)).body}
     </InspectorBody>
   );
 }
+
+const openSections = (panels: SessionPanels): SessionSection[] =>
+  panels.state.tabs.flatMap((key) => sectionOf(key) ?? []);
 
 // Hidden tab pages keep their content tree and native/virtualised scroll views mounted.
 export function RetainedInspectorPages(props: Props): ReactElement {
   return (
     <InspectorScreens>
-      {props.panels.state.tabs.map((panel) => (
-        <RetainedPage key={panel} {...props} panel={panel} />
+      {openSections(props.panels).map((section) => (
+        <RetainedPage key={section.key} {...props} section={section} />
       ))}
     </InspectorScreens>
   );

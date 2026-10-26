@@ -9,7 +9,8 @@ import recordings from './changes-recordings.json';
 const ChangesMock = z.strictObject({
   summary: ChangesSummary,
   files: SessionChangesOutput.shape.files,
-  diffs: z.record(z.string(), SessionDiffOutput),
+  // Whole diffs, recorded before the diff was paged.
+  diffs: z.record(z.string(), SessionDiffOutput.omit({ nextCursor: true })),
 });
 
 // Saved Git diffs and explicit procedure responses for the existing Checkout scenarios.

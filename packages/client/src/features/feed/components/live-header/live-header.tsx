@@ -7,6 +7,7 @@ import { formatElapsed, millisecondsPerSecond } from '@repo/kit/format-elapsed';
 import { fullTurnDegrees } from '@repo/kit/motion';
 import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
+import { Orb } from '@repo/kit/primitives/status/orb';
 import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type { IconName } from '@repo/kit/symbols/icon-names';
 import { useClock } from '@repo/kit/use-clock';
@@ -24,7 +25,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ShimmerText } from '../shimmer-text';
 import { toolCallIcon } from '../tool-call-icon';
-import { WorkingMark } from '../working-mark';
 
 const rowClassName = 'w-full flex-row items-center gap-1.5';
 
@@ -84,7 +84,7 @@ const sourceIcons: Record<
 > = {
   request: () => <StatusDot testID="live-header-dot" tone="warning" pulse />,
   retry: () => <RetryIcon />,
-  working: () => <WorkingMark />,
+  working: () => <Orb size="sm" />,
   thought: () => mutedIcon('thinking'),
   tool_call: (toolCall) =>
     mutedIcon(toolCall ? toolCallIcon(toolCall) : 'tool'),

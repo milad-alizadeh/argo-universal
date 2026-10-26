@@ -6,14 +6,14 @@ import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { panelsSession } from './session-detail-view-panels.test.mocks';
 
-const desktopWithStage = 1920;
+const desktopWithInspector = 1920;
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/Panels',
   parameters: { screenPreview: true },
   args: { view: panelsSession },
   render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,
-  beforeEach: (): Promise<void> => settleViewport(desktopWithStage),
+  beforeEach: (): Promise<void> => settleViewport(desktopWithInspector),
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export default meta;
@@ -74,9 +74,11 @@ export const ExpandSelectedPanel: Story = {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Stage' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Expand Inspector' }),
+    );
     await expect(
-      await canvas.findByRole('button', { name: 'Restore Stage' }),
+      await canvas.findByRole('button', { name: 'Restore Inspector' }),
     ).toBeVisible();
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
@@ -102,7 +104,7 @@ export const CloseTabs: Story = {
     );
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
     await expect(
-      canvas.getByRole('button', { name: 'Show Stage' }),
+      canvas.getByRole('button', { name: 'Show Inspector' }),
     ).toHaveAttribute('aria-pressed', 'false');
   },
 };
@@ -113,7 +115,9 @@ export const CloseInspector: Story = {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
-    await userEvent.click(canvas.getByRole('button', { name: 'Hide Stage' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Hide Inspector' }),
+    );
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', subagentsEntry));
     await expect(canvas.getAllByRole('tab')).toHaveLength(1);

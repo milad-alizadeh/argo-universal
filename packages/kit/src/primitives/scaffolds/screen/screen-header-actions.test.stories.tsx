@@ -42,6 +42,48 @@ export const HeaderSubmenuPhone = atWidth(screenWidths.Phone, headerSubmenu);
 
 export const HeaderSubmenuWide = atWidth(screenWidths.Wide, headerSubmenu);
 
+// The badge hangs on the button's top-end corner, not below it.
+function onTriggerCorner(badge: HTMLElement, trigger: HTMLElement): boolean {
+  const on = badge.getBoundingClientRect();
+  const button = trigger.getBoundingClientRect();
+
+  return on.top < button.top + button.height / 2 && on.right > button.right - 8;
+}
+
+// A wide header's submenu button wears its badge at the icon: a count's number, or a status dot named by its label.
+export const HeaderSubmenuCountBadge = atWidth(screenWidths.Wide, {
+  args: { actions: exampleSubmenu(sorted) },
+  play: async ({ canvas }) => {
+    const badge = canvas.getByText('2');
+    await expect(badge).toBeVisible();
+    await expect(
+      onTriggerCorner(badge, canvas.getByRole('button', { name: 'Sort, 2' })),
+    ).toBe(true);
+  },
+});
+
+export const HeaderSubmenuDotBadge = atWidth(screenWidths.Wide, {
+  args: {
+    actions: exampleSubmenu(sorted, {
+      kind: 'status',
+      tone: 'accent',
+      label: 'Changed',
+    }),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText('Changed')).toBeVisible();
+  },
+});
+
+// A count of zero draws no badge.
+export const HeaderSubmenuZeroCountNoBadge = atWidth(screenWidths.Wide, {
+  args: { actions: exampleSubmenu(sorted, { kind: 'count', count: 0 }) },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: 'Sort' })).toBeVisible();
+    await expect(canvas.queryByText('0')).toBeNull();
+  },
+});
+
 const picked = fn();
 
 // A submenu of choices checks the chosen one and runs the Action picked.

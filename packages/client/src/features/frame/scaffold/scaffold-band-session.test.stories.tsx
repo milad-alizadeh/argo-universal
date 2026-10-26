@@ -1,9 +1,11 @@
+import { Action } from '@repo/kit/primitives/actions/action';
 import { Text } from '@repo/kit/primitives/content/text';
+import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { SessionHeader } from '#features/sessions';
+import { SessionBandClaim } from '#features/sessions';
 import { HostedScaffoldMock } from './hosted-scaffold.mocks';
 
 const meta = {
@@ -16,14 +18,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// A Screen's header, declared once, is the band's on a wide window: its title and Actions.
 export const SessionIdentityMovesIntoTheBand: Story = {
   render: () => (
     <HostedScaffoldMock>
-      <SessionHeader
+      <ScreenStackHeader
+        title="Build the window band"
+        actions={
+          <Action label="More" icon="more">
+            <Action label="Rename" icon="rename" onPress={fn()} />
+          </Action>
+        }
+      />
+      <SessionBandClaim
         title="Build the window band"
         status="running"
         startedAt={null}
-        menu={{ archived: false, status: 'running' }}
       />
       <View testID="session-feed" className="flex-1">
         <Text>Feed content</Text>
@@ -39,8 +49,9 @@ export const SessionIdentityMovesIntoTheBand: Story = {
     });
 
     await expect(band).toContainElement(title);
-    await expect(canvas.getByRole('button', { name: /^More$/ })).toBeDisabled();
-    await expect(canvas.queryByTestId('session-header-bar')).toBeNull();
+    await expect(band).toContainElement(
+      canvas.getByRole('button', { name: /^More$/ }),
+    );
     await expect(canvas.getByTestId('session-feed')).toBeVisible();
   },
 };

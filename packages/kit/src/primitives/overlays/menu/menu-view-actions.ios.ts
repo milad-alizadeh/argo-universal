@@ -3,9 +3,8 @@ import type {
   NativeActionEvent,
 } from '@expo/ui/community/menu';
 import type { SFSymbol } from 'sf-symbols-typescript';
-import { isCustomSymbol } from '../../../symbols/custom-symbols';
-import { drawnSymbol } from '../../../symbols/drawn-symbol';
-import { type IconName, iconSymbols } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
+import { iosSystemName } from '../../../symbols/ios-image';
 import {
   choosableItems,
   type NativeMenuItem,
@@ -75,21 +74,14 @@ function submenuAction(
   };
 }
 
-// The system menus take SF Symbol names only, so Argo's custom and SVG symbols draw none.
-export const menuSymbol = (icon: IconName | undefined): SFSymbol | undefined =>
-  icon ? systemSymbol(icon) : undefined;
-
-function systemSymbol(icon: IconName): SFSymbol | undefined {
-  const symbol = drawnSymbol(iconSymbols[icon]);
-
-  if (symbol.kind === 'svg' || isCustomSymbol(symbol.sf)) return undefined;
-
-  return symbol.sf;
+// MenuView's iOS rows take SF Symbol names only, so an asset image (Argo's own symbol) or SVG icon draws none.
+export function menuSymbol(icon: IconSymbol | undefined): SFSymbol | undefined {
+  return icon ? iosSystemName(icon) : undefined;
 }
 
 // MenuAction.image: an SF Symbol name, which the system draws before the title, after its check.
 function itemImage(
-  icon: IconName | undefined,
+  icon: IconSymbol | undefined,
 ): Pick<NativeMenuAction, 'image'> {
   const image = menuSymbol(icon);
 

@@ -1,45 +1,67 @@
 import {
-  type ClaimStore,
-  createClaimStore,
+  createPlace,
+  createPlaceOffer,
   useClaim,
-} from '@repo/kit/claim-store';
-import { useWide } from '@repo/kit/use-wide/use-wide';
-import { createContext, use, type ReactNode } from 'react';
-import { useScreenFocused } from './navigation/navigation';
+  useClaimed,
+  useOfferedPlace,
+  type Place,
+} from '@repo/kit/place';
+import {
+  ScreenBandPlaceOffer,
+  type ScreenBand,
+} from '@repo/kit/primitives/scaffolds/screen';
+import type { ReactNode } from 'react';
 
-// The focused page supplies its identity and summary; the window owns their placement and pane controls.
+// The focused page supplies its overview and how its Inspector opens; the window owns their placement and pane controls. Its title and menu are its Screen's header, which the kit claims for the band.
 export interface WindowBandContent {
-  title: ReactNode;
-  menu?: ReactNode;
   workbench?: ReactNode;
-  onStageToggle?: () => void;
+  onInspectorToggle?: () => void;
 }
 
-export type WindowBandHost = ClaimStore<WindowBandContent | null>;
+// What the band draws: the focused Screen's title and menu, and the focused page's overview.
+export type WindowBandView = WindowBandContent & Partial<ScreenBand>;
 
-export const createWindowBandHost = (): WindowBandHost =>
-  createClaimStore<WindowBandContent | null>(null);
+const WindowBandPlaceOffer = createPlaceOffer<WindowBandContent>();
 
-export const WindowBandHostContext = createContext<WindowBandHost | undefined>(
-  undefined,
-);
+// Both claims into the band: the page's overview, and the kit's Screen header.
+export interface WindowBandPlaces {
+  content: Place<WindowBandContent>;
+  screen: Place<ScreenBand>;
+}
 
-// A retained page gives up the band's claim while another page is focused. A phone keeps its own native header.
-export function WindowBand({
+export const createWindowBandPlaces = (): WindowBandPlaces => ({
+  content: createPlace(),
+  screen: createPlace(),
+});
+
+export function WindowBandProvider({
+  places,
   children,
-  ...content
-}: WindowBandContent & { children?: ReactNode }): ReactNode {
-  const host = use(WindowBandHostContext);
-  const activeHost = useWide() ? host : undefined;
-  useBandClaim(activeHost, content);
-
-  return activeHost ? null : children;
+}: {
+  places: WindowBandPlaces;
+  children: ReactNode;
+}): ReactNode {
+  return (
+    <WindowBandPlaceOffer value={places.content}>
+      <ScreenBandPlaceOffer value={places.screen}>
+        {children}
+      </ScreenBandPlaceOffer>
+    </WindowBandPlaceOffer>
+  );
 }
 
-function useBandClaim(
-  host: WindowBandHost | undefined,
-  content: WindowBandContent,
-): void {
-  const focused = useScreenFocused();
-  useClaim(focused ? host : undefined, content);
+export function useWindowBandView(
+  places: WindowBandPlaces,
+): WindowBandView | null {
+  const content = useClaimed(places.content);
+  const screen = useClaimed(places.screen);
+
+  return content || screen ? { ...screen, ...content } : null;
+}
+
+// Under wide the page keeps its own native header, and a retained page gives up the band while another is focused.
+export function WindowBand(content: WindowBandContent): null {
+  useClaim(useOfferedPlace(WindowBandPlaceOffer), content);
+
+  return null;
 }

@@ -2,7 +2,7 @@ export { List } from './list';
 
 export { useListItemGroup } from './list-item-grouping';
 
-export { PhoneGroupedList } from './list-phone-grouped';
+export { NativeGroupedList } from './list-native-grouped';
 
 export { ListSection } from './list-section';
 
@@ -17,3 +17,7 @@ export {
   useNewestKeyWhenLeftEnd,
   type JumpToLatestButtonProps,
 } from './list-jump-to-latest';
+
+export { ListHeaderRow } from './list-header';
+
+export { cardSides, phonesGrouped } from '../../../list-look';

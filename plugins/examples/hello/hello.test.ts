@@ -4,6 +4,7 @@ import {
   type PluginTest,
   type PluginTestView,
 } from '@argo/plugin-kit/testing';
+import { demos } from './demo-list';
 
 test('pressing Tap me updates the hello page', async ({ mount }) => {
   const page = await mount({ page: '/', surface: { platform: 'web' } });
@@ -90,4 +91,37 @@ test('cancelling a build offers to rerun it', async ({ mount }) => {
 
   await page.press('Cancel');
   assert.equal((await page.find('Rerun')).type, 'Action');
+});
+
+const mountHello = (mount: PluginTest['mount']): Promise<PluginTestView> =>
+  mount({ page: '/', surface: { platform: 'web' } });
+
+test('the hello page lists each demo', async ({ mount }) => {
+  const page = await mountHello(mount);
+
+  for (const { title } of demos)
+    assert.equal((await page.find(title)).type, 'Card');
+});
+
+test('a demo opens the page registered at its own path', async ({ mount }) => {
+  const { props } = await (await mountHello(mount)).find('Builds');
+
+  assert.equal(
+    JSON.stringify(props.onPress),
+    JSON.stringify({ action: 'navigate', path: '/builds' }),
+  );
+
+  const builds = await mount({ page: '/builds', surface: { platform: 'web' } });
+
+  assert.equal((await builds.find('Select a build')).type, 'EmptyState');
+});
+
+// The manifest declares the host the page fetches; without it the Server refuses the call and the list shows the refusal.
+test('the remote posts page is not refused its host', async ({ mount }) => {
+  const page = await mount({ page: '/posts', surface: { platform: 'web' } });
+
+  await page.waitFor(() =>
+    JSON.stringify(page.tree).includes('"isLoading":false'),
+  );
+  assert.doesNotMatch(JSON.stringify(page.tree), /Refused/);
 });

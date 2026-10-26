@@ -14,15 +14,15 @@ const issues = [
 
 const issuesPath = '/issues';
 
-// A Plugin opens its pages by their full App path: the Plugin id, the nav id, then its own path.
-const issueHref = (issue) => `/plugins/lists/issues${issuesPath}/${issue.id}`;
+// The same path registers an Issue's page and opens it.
+const issuePath = (issue) => `${issuesPath}/${issue.id}`;
 
 const renderIssue = (selected) => (issue) => (
   <ListItem
     key={issue.id}
     title={issue.title}
     selected={issue.id === selected?.id}
-    onPress={{ action: 'navigate', path: issueHref(issue) }}
+    onPress={{ action: 'navigate', path: issuePath(issue) }}
   />
 );
 
@@ -65,5 +65,5 @@ export function registerIssues(pages) {
   pages.register(issuesPath, () => <IssuesListDetail />);
 
   for (const issue of issues)
-    pages.register(`${issuesPath}/${issue.id}`, issuePage(issue));
+    pages.register(issuePath(issue), issuePage(issue));
 }

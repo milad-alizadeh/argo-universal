@@ -1,6 +1,5 @@
 import type { Subagent } from '@repo/contracts';
-import { groupedOnPhones } from '@repo/kit/list-grouped';
-import { List } from '@repo/kit/primitives/lists/list';
+import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { Chevron } from '@repo/kit/primitives/status/chevron';
 import type { ComponentProps, JSX } from 'react';
@@ -70,7 +69,8 @@ function phoneRows(props: PhoneProps): JSX.Element[] {
 export function PhoneSubagentList(props: PhoneProps): JSX.Element {
   return (
     <List
-      appearance={groupedOnPhones('cards')}
+      appearance="cards"
+      onPhones={phonesGrouped}
       fit={false}
       accessibilityLabel="Subagents"
     >

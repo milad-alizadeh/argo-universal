@@ -106,5 +106,3 @@ export const Canvas: PluginComponents['Canvas'] & {
 };
 
 export const Chart: PluginComponents['Chart'];
-
-export const ListSection: PluginComponents['List.Section'];

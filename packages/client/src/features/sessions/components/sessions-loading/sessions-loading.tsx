@@ -1,100 +1,79 @@
-import type { ListAppearance } from '@repo/kit/list-context';
-import { groupedOnPhones } from '@repo/kit/list-grouped';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import { List } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import { SizeClass } from '@repo/kit/size-class/size-class';
+import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import type { SessionsLayout } from '../../stores/sessions-view';
-
-// Placeholder text never shows: each skeleton bar takes the width its line would.
-const skeletonRows = [
-  {
-    title: 'Fix the sidebar scroll',
-    subtitle: 'Claude Code · main',
-    meta: '2 hours',
-  },
-  { title: 'Add a sign-in step', subtitle: 'Codex · auth', meta: '1 day' },
-  {
-    title: 'Draw the loading rows again',
-    subtitle: 'Claude Code · list-ui',
-    meta: '3 days',
-  },
-  { title: 'Rename the Drawer', subtitle: 'Gemini · nav', meta: '1 week' },
-] as const;
+import { sessionsListLook } from '../sessions-list/sessions-list-look';
+import { SessionListRow } from '../sessions-list/sessions-list-rows';
+import { standardTopPadding } from '../sessions-list/sessions-list-top-padding';
+import {
+  placeholderProjectName,
+  placeholderRows,
+} from './sessions-loading-rows';
 
 export interface SessionsLoadingProps {
   // Regular rows carry their Agent line and age; Compact rows are one line each.
   layout?: SessionsLayout;
+  // Drawn in the Sessions list's own empty slot, whose sides already hold the list's inset.
+  inList?: boolean;
 }
 
-// Compact rows show a title only; Regular rows add their Agent line and age, as the Session rows do.
-function SkeletonRows({ layout }: SessionsLoadingProps): React.ReactNode {
-  const compact = layout === 'compact';
+const ignoreSelect = (): void => {};
 
-  return skeletonRows.map((row) => (
-    <ListItem
-      key={row.title}
-      isLoading
-      leading={null}
-      title={row.title}
-      subtitle={compact ? undefined : row.subtitle}
-      meta={compact ? undefined : row.meta}
+function PlaceholderRows({ layout }: SessionsLoadingProps): React.ReactNode {
+  return placeholderRows.map((row) => (
+    <SessionListRow
+      key={row.session.sessionId}
+      session={row.session}
+      logo=""
+      age={row.age}
+      layout={layout}
+      onSelect={ignoreSelect}
     />
   ));
 }
 
-const skeletonInsets = {
-  fit: true,
-  padding: { compact: 4, wide: 0 },
-  paddingTop: { compact: 5, wide: 2 },
-} as const;
-
-// The Sessions list's own shape, a Project's section header over its rows, so nothing shifts when Sessions load.
-function SkeletonList({
+function PlaceholderSection({
   layout,
-  appearance,
-}: SessionsLoadingProps & { appearance: ListAppearance }): React.JSX.Element {
+}: SessionsLoadingProps): React.JSX.Element {
   return (
-    <List appearance={appearance} {...skeletonInsets}>
-      <List.Section isLoading title="Example Project">
-        <SkeletonRows layout={layout} />
-      </List.Section>
+    <List.Section
+      title={placeholderProjectName}
+      leading={<Icon name="folder-open" />}
+    >
+      <PlaceholderRows layout={layout} />
+    </List.Section>
+  );
+}
+
+function PlaceholderList({
+  layout,
+  inList,
+}: SessionsLoadingProps): React.JSX.Element {
+  return (
+    <List
+      {...sessionsListLook(layout ?? 'regular', inList ? 'inset' : 'padded')}
+      fit
+      paddingTop={standardTopPadding}
+    >
+      <PlaceholderSection layout={layout} />
     </List>
   );
 }
 
-const sidebarAppearance = (appearance: ListAppearance): ListAppearance =>
-  Platform.OS === 'web' ? 'plain' : appearance;
-
-// A wide web sidebar keeps loading rows as flat as the Sessions they will replace.
-function LoadingList({ layout }: SessionsLoadingProps): React.JSX.Element {
-  const appearance = layout === 'compact' ? groupedOnPhones('plain') : 'cards';
-
-  return (
-    <SizeClass
-      compact={<SkeletonList layout={layout} appearance={appearance} />}
-      wide={
-        <SkeletonList
-          layout={layout}
-          appearance={sidebarAppearance(appearance)}
-        />
-      }
-    />
-  );
-}
-
-// Wide, this view sits outside the list, so it adds the list column's inset itself: 8 from the left, 14 from the right.
+// The Sessions list's own rows under a Project's section, drawn by the real Session row; the Skeleton swaps each line for a bar, so nothing shifts when the Sessions load.
 export function SessionsLoading({
   layout = 'regular',
+  inList,
 }: SessionsLoadingProps): React.JSX.Element {
   return (
-    <View
-      role="status"
-      accessibilityLabel="Loading Sessions"
-      className="wide:pl-2 wide:pr-3.5"
-    >
-      <LoadingList layout={layout} />
+    <View role="status" accessibilityLabel="Loading Sessions">
+      <Skeleton loading>
+        <View pointerEvents="none">
+          <PlaceholderList layout={layout} inList={inList} />
+        </View>
+      </Skeleton>
     </View>
   );
 }

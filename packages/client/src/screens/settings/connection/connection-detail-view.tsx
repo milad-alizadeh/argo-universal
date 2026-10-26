@@ -8,7 +8,7 @@ import { formatServerClock, formatServerStart } from '#features/connection';
 
 export type ServerDetails =
   | { status: 'loading' }
-  // The Connection is down: the banner over the page says so.
+  // The Connection is down: the banner says so where the Frame draws one; the page keeps its loading look either way.
   | { status: 'down' }
   | { status: 'error'; message: string }
   | {
@@ -47,14 +47,8 @@ function ServerForm({ server }: { server: ServerDetails }): React.JSX.Element {
 const loadError = (server: ServerDetails): string | undefined =>
   server.status === 'error' ? server.message : undefined;
 
-function ServerState({
-  server,
-}: {
-  server: ServerDetails;
-}): React.JSX.Element | null {
-  if (server.status === 'down') return null;
-
-  // A failed load keeps the loading look: the toast says why, and the query retries when the Connection reopens.
+function ServerState({ server }: { server: ServerDetails }): React.JSX.Element {
+  // A down Connection or a failed load keeps the loading look, never a blank page: the banner or toast says why, and the query retries when the Connection reopens.
   return (
     <Skeleton loading={server.status !== 'loaded'} fill>
       <ServerRows server={server} />

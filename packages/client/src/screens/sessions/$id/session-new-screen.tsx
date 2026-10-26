@@ -17,7 +17,7 @@ export function SessionNewScreen({
   // The header stays empty until the first prompt starts the Session and gives it a title.
   return (
     <>
-      <ScreenStackHeader title="" />
+      <ScreenStackHeader />
       <EmptySessionOpening projectId={projectId} draft={draft}>
         {(props) => <SessionNewView {...props} />}
       </EmptySessionOpening>

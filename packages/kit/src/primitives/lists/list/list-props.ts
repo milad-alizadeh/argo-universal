@@ -1,6 +1,7 @@
 import type { SpacingStep } from '@repo/contracts/kit-tokens';
 import type { ReactNode } from 'react';
 import type { ListSelection } from '../../../list-context';
+import type { PhoneOverrides } from '../../../list-look';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
@@ -34,6 +35,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'onStartReached'
     | 'onStartReachedThreshold'
     | 'drawDistance'
+    | 'stickyHeaderIndices'
     | 'keyboardDismissMode'
     | 'keyboardShouldPersistTaps'
   > & {
@@ -44,6 +46,10 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     accessibilityRole?: 'list' | 'radiogroup';
     accessibilityLabel?: string;
     fit?: boolean;
+    // Kit-only: what the phones draw in place of `appearance` and `padding`, so a caller never asks the platform.
+    onPhones?: PhoneOverrides;
+    // The header scrolls sideways and runs to the List's edges; it is drawn as a `ListHeaderRow`, which takes the gutter.
+    headerBleeds?: boolean;
     padding?: SizeClassValue<SpacingStep>;
     paddingTop?: SizeClassValue<SpacingStep>;
     getSelectionId?: (item: Item) => string | undefined;

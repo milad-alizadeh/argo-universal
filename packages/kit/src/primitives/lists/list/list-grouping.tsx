@@ -1,4 +1,3 @@
-import { listDefaults } from '@repo/contracts/kit-tokens';
 import {
   createContext,
   useContext,
@@ -12,10 +11,8 @@ import {
   ListContext,
   listSelection,
   type ListSelection,
-  type ListAppearance,
   type ListPosition,
 } from '../../../list-context';
-import { childRenderers } from './list-child-renderers';
 import type { ListChild } from './list-children';
 import { ListGroupEnds, ListGroupEndsContext } from './list-group-ends';
 import { GroupedCells } from './list-grouped-cell';
@@ -23,15 +20,13 @@ import type { ListProps } from './list-props';
 import { dataRowPosition, rowPosition } from './list-row-position';
 
 type RowLayout = {
-  appearance: ListAppearance;
-  // The appearance a data row draws its card piece in; a fixed child draws its own cell.
-  cellAppearance: ListAppearance;
+  // Whether a data row draws its card piece; a fixed child draws its own cell.
+  cell: boolean;
   positionAt: (index: number) => ListPosition;
 };
 
 const emptyLayout: RowLayout = {
-  appearance: 'plain',
-  cellAppearance: 'plain',
+  cell: false,
   positionAt: () => 'only',
 };
 
@@ -54,20 +49,11 @@ export function ListGrouping<Item>({
   );
 }
 
-const dataCellAppearance = <Item,>(
-  list: ListProps<Item>,
-  appearance: ListAppearance,
-): ListAppearance =>
-  childRenderers.has(list.renderItem ?? {}) ? 'plain' : appearance;
-
 function rowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
   if (!list) return emptyLayout;
 
-  const appearance = list.appearance ?? listDefaults.appearance;
-
   return {
-    appearance,
-    cellAppearance: dataCellAppearance(list, appearance),
+    cell: list.renderItem !== childRenderer,
     positionAt: (index) => dataRowPosition(list, index),
   };
 }
@@ -82,7 +68,6 @@ type DataRowProps = {
 
 type FixedRowProps = {
   item: ListChild;
-  appearance: ListProps<never>['appearance'];
 };
 
 type SectionRowProps = {
@@ -94,37 +79,26 @@ type SectionRowProps = {
 
 type DataRow = {
   value: ContextType<typeof ListContext>;
-  cellAppearance: ListAppearance;
+  cell: boolean;
   position: ListPosition;
 };
 
 function useDataRow(index: number, part?: boolean): DataRow {
-  const { appearance, cellAppearance, positionAt } =
-    useContext(RowLayoutContext);
+  const { cell, positionAt } = useContext(RowLayoutContext);
 
   const position = positionAt(index);
 
-  const value = useMemo(
-    () => ({ appearance, position, index }),
-    [appearance, position, index],
-  );
+  const value = useMemo(() => ({ position, index }), [position, index]);
 
-  return {
-    value,
-    cellAppearance: part ? 'plain' : cellAppearance,
-    position,
-  };
+  return { value, cell: cell && !part, position };
 }
 
 export function DataListRow(props: DataRowProps): ReactElement {
-  const { value, cellAppearance, position } = useDataRow(
-    props.index,
-    props.part,
-  );
+  const { value, cell, position } = useDataRow(props.index, props.part);
 
   return (
     <ListContext value={value}>
-      <GroupedCells appearance={cellAppearance} position={position}>
+      <GroupedCells cell={cell} position={position}>
         {props.children}
       </GroupedCells>
     </ListContext>
@@ -133,33 +107,30 @@ export function DataListRow(props: DataRowProps): ReactElement {
 
 const fixedValue = (
   parent: ContextType<typeof ListContext>,
-  { item, appearance }: FixedRowProps,
+  { item }: FixedRowProps,
 ): ContextType<typeof ListContext> => ({
   ...parent,
-  appearance: appearance ?? listDefaults.appearance,
   position: item.position,
   inList: true,
   ...listSelection(item),
 });
-
-// A section's header, footer and gap are not rows of its card.
-const cellAppearance = ({ item, appearance }: FixedRowProps): ListAppearance =>
-  item.fullSpan ? 'plain' : (appearance ?? listDefaults.appearance);
 
 export function FixedListRow(props: FixedRowProps): ReactElement {
   const value = fixedValue(useContext(ListContext), props);
 
   return (
     <ListContext value={value}>
-      <GroupedCells
-        appearance={cellAppearance(props)}
-        position={props.item.position}
-      >
+      <GroupedCells cell={!props.item.fullSpan} position={props.item.position}>
         {props.item.content}
       </GroupedCells>
     </ListContext>
   );
 }
+
+// The renderer List hands its data list for fixed children, which draw their own cells.
+export const childRenderer = (item: ListChild): ReactElement => (
+  <FixedListRow item={item} />
+);
 
 export function SectionListRow(props: SectionRowProps): ReactElement {
   const { section, index, count, children } = props;

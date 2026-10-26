@@ -1,7 +1,6 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { Text } from '@repo/kit/primitives/content/text';
+import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type * as React from 'react';
-import { View } from 'react-native';
 import { installedError, registryError, type RowsLoad } from '#features/agents';
 
 type StateProps = {
@@ -16,28 +15,20 @@ const failedMessage = {
   registry: registryError,
 } as const;
 
+// The kit's empty state, which owns its spacing: what is missing, and Retry when a load failed.
 export function RegistryState(props: StateProps): React.JSX.Element {
   return (
-    <View className="min-h-40 items-center justify-center gap-3 p-4">
-      <StateMessage {...props} />
-      <RetryRegistry {...props} />
-    </View>
+    <EmptyState
+      title={props.empty ?? loadMessage(props.load)}
+      action={retryRegistry(props)}
+    />
   );
 }
 
 const loadMessage = (load: StateProps['load']): string =>
   load ? failedMessage[load.failed] : '';
 
-function StateMessage(props: StateProps): React.JSX.Element {
-  return (
-    <Text role="body" tone="muted">
-      {props.empty ?? loadMessage(props.load)}
-    </Text>
-  );
-}
-
-function RetryRegistry(props: StateProps): React.JSX.Element | null {
-  return props.load ? (
+const retryRegistry = (props: StateProps): React.JSX.Element | undefined =>
+  props.load ? (
     <Button label="Retry" variant="secondary" onPress={props.onRetry} />
-  ) : null;
-}
+  ) : undefined;

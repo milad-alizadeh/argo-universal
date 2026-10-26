@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { openChangedFiles } from './changed-files';
+import { greetingHeader, openChangedFiles } from './changed-files';
 import { When } from './fixtures';
 import { onPhone } from './frame';
 
@@ -10,15 +10,13 @@ When("I review the Frame's file comparison", async ({ page }) => {
     : reviewDesktopComparison(page));
 });
 
+// Diffs open in place in the Inspector; a new comparison folds its files again, so the greeting's header reopens it.
 async function reviewDesktopComparison(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
   await compareAgainstRemote(page);
-  await page
-    .getByRole('button', { name: 'Diff for greeting.txt', exact: true })
-    .click();
+  await greetingHeader(page).click();
 }
 
-// Paper's phone Git sheet contains the panels, without a separate title or comparison bar.
+// The phone sheet's page carries the one title; the pane under it draws no header of its own or comparison bar.
 async function inspectPhoneSheet(page: Page): Promise<void> {
   await openChangedFiles(page);
   await expect(
@@ -33,7 +31,7 @@ async function inspectPhoneSheet(page: Page): Promise<void> {
 async function expectNoExtraHeader(page: Page): Promise<void> {
   await expect(
     page.getByRole('heading', { name: 'Changes', exact: true }),
-  ).toHaveCount(0);
+  ).toHaveCount(1);
   await expect(
     page.getByRole('button', { name: 'Close Inspector', exact: true }),
   ).toHaveCount(0);

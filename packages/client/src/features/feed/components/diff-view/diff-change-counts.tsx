@@ -20,7 +20,9 @@ function ChangeCount(props: ChangeCountProps): React.JSX.Element | null {
 }
 
 // A file's added and removed line counts; a count of zero is left out.
-export function ChangeCounts({ file }: { file: FileDiff }): ReactNode {
+type Counted = Pick<FileDiff, 'added' | 'removed'>;
+
+export function ChangeCounts({ file }: { file: Counted }): ReactNode {
   return (
     <>
       <ChangeCount count={file.added} tone="success">

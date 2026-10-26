@@ -34,16 +34,35 @@ export const SessionComparison = z.union([
 
 export type SessionComparison = z.infer<typeof SessionComparison>;
 
+const largestPage = 500;
+
+// The changed files in a page, unless the caller asks for another count.
+export const sessionChangesPageFiles = 50;
+
+// The diff lines in a page of one file's diff; a long new file arrives a page at a time.
+export const sessionDiffPageLines = 400;
+
+// Where a page starts and how much it holds; the next page starts at the returned `nextCursor`.
+const pageInput = {
+  cursor: z.int().min(0).optional(),
+  limit: z.int().min(1).max(largestPage).optional(),
+};
+
 export const SessionChangesInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   comparison: SessionComparison.optional(),
+  ...pageInput,
+  direction: z.literal('forward').optional(),
 });
 
 export type SessionChangesInput = z.infer<typeof SessionChangesInput>;
 
+// One page of the changed files, with the whole comparison's totals.
 export const SessionChangesOutput = z.strictObject({
   mainBranch: z.string().nullable(),
+  summary: ChangesSummary,
   files: z.array(ChangedFile),
+  nextCursor: z.int().nullable(),
 });
 
 export type SessionChangesOutput = z.infer<typeof SessionChangesOutput>;
@@ -52,14 +71,19 @@ export const SessionDiffInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   path: z.string(),
   comparison: SessionComparison.optional(),
+  ...pageInput,
 });
 
 export type SessionDiffInput = z.infer<typeof SessionDiffInput>;
 
-// One file's unified diff, as `git diff` prints it; a binary file's patch has no hunks.
+/*
+ * One page of a file's unified diff, as `git diff` prints it, counted in diff lines; each page repeats the file's
+ * header lines. A binary file's patch has no hunks.
+ */
 export const SessionDiffOutput = z.strictObject({
   file: ChangedFile,
   patch: DiffPatch,
+  nextCursor: z.int().nullable(),
 });
 
 export type SessionDiffOutput = z.infer<typeof SessionDiffOutput>;

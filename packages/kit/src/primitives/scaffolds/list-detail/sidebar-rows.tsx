@@ -1,10 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
-import { RowDrawingContext } from '../../../row-drawing-context';
+import { RowDrawingContext, useInSidebar } from '../../../row-drawing-context';
 
-// Paper's SettingsList: a wide web list beside its item holds its rows 8 from its left edge and 14 from its right, as rounded tiles flat on the glass.
+// A wide web list beside its item holds its rows 8 from its left edge and 14 from its right, as rounded tiles flat on the glass. A list that holds its rows so itself keeps them once inside a ListDetail.
 export function SidebarRows(props: { children: ReactNode }): ReactNode {
-  if (Platform.OS !== 'web') return props.children;
+  const inSidebar = useInSidebar();
+
+  if (Platform.OS !== 'web' || inSidebar) return props.children;
 
   return <Rows>{props.children}</Rows>;
 }

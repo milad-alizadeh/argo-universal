@@ -9,6 +9,8 @@ import {
 
 export type { CheckoutFile } from './changes-parse';
 
+export { pagePatch, type PatchPage } from './patch-page';
+
 const execute = promisify(execFile);
 
 const gitOutputLimit = 33_554_432;
@@ -60,6 +62,23 @@ async function mainBranch(projectCheckout: string): Promise<string | null> {
   );
 }
 
+// Every changed path against the base, renames paired, as `git diff --name-status -z` prints them.
+const nameStatus = (base: string): string[] => [
+  'diff',
+  '--name-status',
+  '-z',
+  '-M',
+  base,
+];
+
+// The working tree's state, untracked files listed one by one.
+const worktreeStatus = [
+  'status',
+  '--porcelain=v1',
+  '-z',
+  '--untracked-files=all',
+];
+
 async function baseCommit(
   checkout: string,
   comparison: ChangeComparison,
@@ -83,6 +102,18 @@ async function baseCommit(
   if (!local.includes(ref)) throw new Error(`No branch ${branch}`);
 
   return (await git(checkout, ['merge-base', ref, 'HEAD'])).trim();
+}
+
+type ComparisonBase = { main: string | null; base: string };
+
+async function comparisonBase(
+  checkout: string,
+  projectCheckout: string,
+  comparison: ChangeComparison,
+): Promise<ComparisonBase> {
+  const main = await mainBranch(projectCheckout);
+
+  return { main, base: await baseCommit(checkout, comparison, main) };
 }
 
 export async function listComparisonBranches(
@@ -111,6 +142,8 @@ export async function listComparisonBranches(
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
+const untrackedBatchSize = 8;
+
 async function untrackedChange(
   checkout: string,
   path: string,
@@ -126,21 +159,43 @@ async function untrackedChange(
   return untrackedFile(path, stat);
 }
 
+// Each untracked file costs one git process, so they run in small batches.
+async function untrackedChanges(
+  checkout: string,
+  paths: string[],
+): Promise<CheckoutFile[]> {
+  const files: CheckoutFile[] = [];
+
+  for (let start = 0; start < paths.length; start += untrackedBatchSize)
+    files.push(
+      ...(await Promise.all(
+        paths
+          .slice(start, start + untrackedBatchSize)
+          .map((path) => untrackedChange(checkout, path)),
+      )),
+    );
+
+  return files;
+}
+
 export async function readCheckoutChanges(
   checkout: string,
   projectCheckout: string,
   comparison: ChangeComparison,
 ): Promise<CheckoutChanges> {
-  const main = await mainBranch(projectCheckout);
-  const base = await baseCommit(checkout, comparison, main);
+  const { main, base } = await comparisonBase(
+    checkout,
+    projectCheckout,
+    comparison,
+  );
 
-  const [status, numstat, worktreeStatus] = await Promise.all([
-    git(checkout, ['diff', '--name-status', '-z', '-M', base]),
+  const [status, numstat, worktree] = await Promise.all([
+    git(checkout, nameStatus(base)),
     git(checkout, ['diff', '--numstat', '-z', '-M', base]),
-    git(checkout, ['status', '--porcelain=v1', '-z', '--untracked-files=all']),
+    git(checkout, worktreeStatus),
   ]);
 
-  const untracked = untrackedPaths(worktreeStatus);
+  const untracked = untrackedPaths(worktree);
   const untrackedSet = new Set(untracked);
 
   // An index deletion can leave the same path as an untracked working file.
@@ -148,8 +203,7 @@ export async function readCheckoutChanges(
     (file) => !untrackedSet.has(file.path),
   );
 
-  for (const path of untracked)
-    files.push(await untrackedChange(checkout, path));
+  files.push(...(await untrackedChanges(checkout, untracked)));
   files.sort((a, b) => a.path.localeCompare(b.path));
 
   return {
@@ -163,38 +217,87 @@ export async function readCheckoutChanges(
   };
 }
 
+type CheckoutDiff = { file: CheckoutFile; patch: string };
+
+// A path is a name, never a glob or a pathspec magic.
+const literalPathspecs = '--literal-pathspecs';
+
+// A path that leaves the Checkout names no changed file.
+const leavesCheckout = (path: string): boolean =>
+  path.startsWith('/') || path.split('/').includes('..');
+
+async function isUntracked(checkout: string, path: string): Promise<boolean> {
+  const status = await git(checkout, [
+    literalPathspecs,
+    ...worktreeStatus,
+    '--',
+    path,
+  ]);
+
+  return untrackedPaths(status).includes(path);
+}
+
+async function untrackedDiff(
+  checkout: string,
+  path: string,
+): Promise<CheckoutDiff> {
+  const [file, patch] = await Promise.all([
+    untrackedChange(checkout, path),
+    gitDiffNoIndex(checkout, ['--', '/dev/null', path]),
+  ]);
+
+  return { file, patch };
+}
+
+// The names are enough to find the file; its counts are read for its own paths afterwards.
+const noNumstat = '';
+
+// Renames are found across the whole comparison; the counts and the patch are read for this file's paths alone.
+async function trackedDiff(
+  checkout: string,
+  base: string,
+  path: string,
+): Promise<CheckoutDiff | null> {
+  const status = await git(checkout, nameStatus(base));
+
+  const entry = trackedFiles(status, noNumstat).find(
+    (item) => item.path === path,
+  );
+
+  if (!entry) return null;
+
+  const paths = ['--', ...new Set([entry.oldPath ?? path, path])];
+
+  const [numstat, patch] = await Promise.all([
+    git(checkout, [
+      literalPathspecs,
+      'diff',
+      '--numstat',
+      '-z',
+      '-M',
+      base,
+      ...paths,
+    ]),
+    git(checkout, [literalPathspecs, 'diff', '-M', base, ...paths]),
+  ]);
+
+  const file = trackedFiles(status, numstat).find((item) => item.path === path);
+
+  return file ? { file, patch } : null;
+}
+
+// One file's patch, without reading the rest of the comparison's files.
 export async function readCheckoutDiff(
   checkout: string,
   projectCheckout: string,
   comparison: ChangeComparison,
   path: string,
-): Promise<{ file: CheckoutFile; patch: string } | null> {
-  const changes = await readCheckoutChanges(
-    checkout,
-    projectCheckout,
-    comparison,
-  );
+): Promise<CheckoutDiff | null> {
+  if (leavesCheckout(path)) return null;
 
-  const file = changes.files.find((item) => item.path === path);
+  const { base } = await comparisonBase(checkout, projectCheckout, comparison);
 
-  if (!file) return null;
-  const base = await baseCommit(checkout, comparison, changes.mainBranch);
+  if (await isUntracked(checkout, path)) return untrackedDiff(checkout, path);
 
-  const patch =
-    file.operation === 'add' &&
-    (await git(checkout, ['ls-files', '--error-unmatch', '--', path]).then(
-      () => false,
-      () => true,
-    ))
-      ? await gitDiffNoIndex(checkout, ['--', '/dev/null', path])
-      : await git(checkout, [
-          'diff',
-          '-M',
-          base,
-          '--',
-          file.oldPath ?? path,
-          path,
-        ]);
-
-  return { file, patch };
+  return trackedDiff(checkout, base, path);
 }

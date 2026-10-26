@@ -1,6 +1,14 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
+import { CollapsibleCardContent } from './card-collapsible';
+import {
+  ActionLane,
+  CardBody,
+  CardHeading,
+  cardSpace,
+  IconLane,
+} from './card-parts';
 import type { CardProps } from './card-props';
 
 // The press layer's name: the header's own words unless the author gives one.
@@ -26,10 +34,14 @@ export function CardGroup(
 
 // Everything below the media, inside the card padding: the header, then the body.
 export function CardContent(props: CardProps): ReactElement {
+  if (props.collapsible) return <CollapsibleCardContent {...props} />;
+
+  const space = cardSpace(props);
+
   return (
-    <View className="gap-2 p-4">
+    <View className={`${space.gap} ${space.padding}`}>
       <CardHeader {...props} />
-      {props.children}
+      <CardBody density={props.density}>{props.children}</CardBody>
     </View>
   );
 }
@@ -38,7 +50,7 @@ export function CardContent(props: CardProps): ReactElement {
 function CardHeader(props: CardProps): ReactElement {
   return (
     <View className="flex-row items-start gap-4">
-      <HeaderLane>{props.icon}</HeaderLane>
+      <IconLane>{props.icon}</IconLane>
       <CardTitle title={props.title} subtitle={props.subtitle} />
       <ActionLane>{props.actions}</ActionLane>
     </View>
@@ -49,9 +61,7 @@ function CardHeader(props: CardProps): ReactElement {
 function CardTitle(props: Pick<CardProps, 'title' | 'subtitle'>): ReactElement {
   return (
     <View className="min-w-0 flex-1">
-      <Text role="heading" accessibilityRole="heading" aria-level={3}>
-        {props.title}
-      </Text>
+      <CardHeading title={props.title} />
       {props.subtitle === undefined ? null : (
         <Text role="secondary" tone="muted">
           {props.subtitle}
@@ -59,20 +69,4 @@ function CardTitle(props: Pick<CardProps, 'title' | 'subtitle'>): ReactElement {
       )}
     </View>
   );
-}
-
-function HeaderLane({ children }: { children?: ReactNode }): ReactNode {
-  return children ? (
-    <View className="h-6 min-w-6 wide-type:h-5 wide-type:min-w-5 shrink-0 items-center justify-center">
-      {children}
-    </View>
-  ) : null;
-}
-
-function ActionLane({ children }: { children?: ReactNode }): ReactNode {
-  return children ? (
-    <View className="h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end">
-      {children}
-    </View>
-  ) : null;
 }

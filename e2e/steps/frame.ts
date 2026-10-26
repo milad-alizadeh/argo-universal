@@ -4,7 +4,7 @@ import { Given } from './fixtures';
 
 export const phone = { width: 390, height: 844 };
 
-// Room for the sidebar, Workbench and Stage without automatic folding.
+// Room for the sidebar, Workbench and Inspector without automatic folding.
 export const wide = { width: 1920, height: 800 };
 
 // The Frame's test ID names the Size class it lays out.

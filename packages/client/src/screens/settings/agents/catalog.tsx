@@ -3,11 +3,12 @@ import {
   loadingRows,
 } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import { View } from 'react-native';
 import {
   agentRows,
   filterAgents,
   agentsEmptyLabel,
+  AgentsFilterPills,
+  type AgentsFilterProps,
   type RowsLoad,
 } from '#features/agents';
 import {
@@ -15,11 +16,7 @@ import {
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
 import type { AgentListViewProps } from './agent-list-view';
-import {
-  AgentsFilterPills,
-  type AgentsFilterProps,
-  type AgentsSearchProps,
-} from './agents-toolbar';
+import type { AgentsSearchProps } from './agents-header';
 import { RegistryState } from './catalog-states';
 
 type CatalogProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
@@ -29,19 +26,11 @@ export const agentsCatalogTestId = 'agents-catalog';
 export function AgentCatalog(props: CatalogProps): React.JSX.Element {
   return (
     <FieldList
-      gap="sm"
       testID={agentsCatalogTestId}
       sections={catalogSections(props)}
-      header={<FilterHeader {...props} />}
+      header={<AgentsFilterPills {...props} />}
+      headerBleeds
     />
-  );
-}
-
-function FilterHeader(props: CatalogProps): React.JSX.Element {
-  return (
-    <View className="pb-3">
-      <AgentsFilterPills {...props} />
-    </View>
   );
 }
 

@@ -5,144 +5,125 @@ import {
   type PanelResizeHandleProps,
 } from '../components/panel-resize-handle/panel-resize-handle';
 import {
-  detailMinimum,
-  type InspectorState,
-  listMaximum,
-} from './scaffold-geometry';
-import type {
-  ScaffoldLayout,
-  ScaffoldPartProps,
-  ScaffoldProps,
-} from './use-scaffold-layout';
+  type ResizeHandle,
+  type ResizeOutcome,
+  resizeOutcome,
+} from './frame-layout';
+import { moveInspector } from './inspector-column';
+import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
 
+type ListHandleReads = PartReads<
+  'sidebarShown' | 'onSidebarShownChange',
+  'handles' | 'setPreferredListWidth' | 'setResizing'
+>;
+
+type InspectorHandleReads = PartReads<
+  'inspectorState' | 'onInspectorStateChange' | 'band',
+  'handles' | 'setPreferredInspectorWidth' | 'setResizing'
+>;
+
+// The list never expands, so any outcome other than a width closes it.
 function resizeList(
-  nextWidth: number,
-  { sidebarShown, onSidebarShownChange }: ScaffoldProps,
-  { measures, listLimit, setPreferredListWidth }: ScaffoldLayout,
+  outcome: ResizeOutcome,
+  { sidebarShown, onSidebarShownChange }: ListHandleReads['scaffold'],
+  { setPreferredListWidth }: ListHandleReads['layout'],
 ): void {
-  if (nextWidth < measures.listWidth / 2) {
+  if (typeof outcome !== 'number') {
     onSidebarShownChange(false);
 
     return;
   }
 
-  setPreferredListWidth(
-    Math.max(measures.listWidth, Math.min(listMaximum, listLimit, nextWidth)),
-  );
+  setPreferredListWidth(outcome);
 
   if (!sidebarShown) onSidebarShownChange(true);
 }
 
-function snappedInspectorState(
-  nextWidth: number,
-  layout: ScaffoldLayout,
-): InspectorState | undefined {
-  if (nextWidth < layout.measures.inspectorWidth / 2) return 'closed';
-
-  if (nextWidth > layout.availableWidth - detailMinimum / 2) return 'expanded';
-
-  return undefined;
-}
-
-function isInspectorBeside(layout: ScaffoldLayout): boolean {
-  return layout.inspectorOpen && !layout.inspectorExpanded;
-}
-
-function clampedInspectorWidth(
-  nextWidth: number,
-  layout: ScaffoldLayout,
-): number {
-  return Math.max(
-    layout.measures.inspectorWidth,
-    Math.min(layout.availableWidth - detailMinimum, nextWidth),
-  );
-}
-
 function resizeInspector(
-  nextWidth: number,
-  scaffold: ScaffoldProps,
-  layout: ScaffoldLayout,
+  outcome: ResizeOutcome,
+  scaffold: InspectorHandleReads['scaffold'],
+  { setPreferredInspectorWidth }: InspectorHandleReads['layout'],
 ): void {
-  const snapped = snappedInspectorState(nextWidth, layout);
+  if (typeof outcome === 'number') setPreferredInspectorWidth(outcome);
 
-  if (snapped) {
-    scaffold.onInspectorStateChange(snapped);
-
-    return;
-  }
-
-  layout.setPreferredInspectorWidth(clampedInspectorWidth(nextWidth, layout));
-
-  if (!isInspectorBeside(layout)) scaffold.onInspectorStateChange('open');
+  moveInspector(scaffold, { dragged: outcome });
 }
 
-function listHandleProps({
-  scaffold,
-  layout,
-}: ScaffoldPartProps): PanelResizeHandleProps {
+function handleProps(
+  handle: ResizeHandle,
+  { setResizing }: Pick<ScaffoldLayout, 'setResizing'>,
+): Pick<
+  PanelResizeHandleProps,
+  'value' | 'minimum' | 'maximum' | 'onDragStateChange'
+> {
   return {
-    label: 'Resize sidebar',
-    value: layout.shownListWidth,
+    value: handle.value,
     minimum: 0,
-    maximum: Math.min(listMaximum, layout.listLimit),
+    maximum: handle.reach,
+    onDragStateChange: setResizing,
+  };
+}
+
+function listHandleProps(
+  handle: ResizeHandle,
+  { scaffold, layout }: ListHandleReads,
+): PanelResizeHandleProps {
+  return {
+    ...handleProps(handle, layout),
+    label: 'Resize sidebar',
     direction: 1,
-    onChange: (nextWidth) => resizeList(nextWidth, scaffold, layout),
-    onDragStateChange: layout.setResizing,
+    onChange: (width) =>
+      resizeList(resizeOutcome(handle, width), scaffold, layout),
   };
 }
 
 function inspectorHandleProps({
   scaffold,
   layout,
-}: ScaffoldPartProps): PanelResizeHandleProps {
+}: InspectorHandleReads): PanelResizeHandleProps {
+  const handle = layout.handles.inspector;
+
   return {
+    ...handleProps(handle, layout),
     label: 'Resize Inspector',
     edge: 'left',
-    value: layout.inspectorTargetWidth,
-    minimum: 0,
-    maximum: layout.availableWidth,
     direction: -1,
-    onChange: (nextWidth) => resizeInspector(nextWidth, scaffold, layout),
-    onDragStateChange: layout.setResizing,
+    onChange: (width) =>
+      resizeInspector(resizeOutcome(handle, width), scaffold, layout),
   };
 }
 
-function ListResizeHandle(parts: ScaffoldPartProps): React.JSX.Element | null {
-  const { layout } = parts;
+function ListResizeHandle(parts: ListHandleReads): React.JSX.Element | null {
+  const handle = parts.layout.handles.list;
 
-  // Only a wide window frames the page, so only it resizes its panes.
-  if (parts.scaffold.sizeClass !== 'wide') return null;
-
-  if (layout.listLimit <= layout.measures.listWidth) return null;
+  if (!handle) return null;
 
   return (
     <View
       className="absolute top-0 bottom-frame-inset z-40"
-      style={{ left: layout.listHandleLeft }}
+      style={{ left: handle.left }}
     >
-      <PanelResizeHandle {...listHandleProps(parts)} />
+      <PanelResizeHandle {...listHandleProps(handle, parts)} />
     </View>
   );
 }
 
-function InspectorResizeHandle(
-  parts: ScaffoldPartProps,
-): React.JSX.Element | null {
-  // Only a wide window has the Inspector's column.
-  if (parts.scaffold.sizeClass !== 'wide') return null;
-
+function InspectorResizeHandle(parts: InspectorHandleReads): React.JSX.Element {
   return (
     <View
       className="absolute top-0 bottom-0 z-30"
-      style={{ left: parts.layout.inspectorHandleLeft }}
+      style={{ left: parts.layout.handles.inspector.left }}
     >
       <PanelResizeHandle {...inspectorHandleProps(parts)} />
     </View>
   );
 }
 
+type ResizeHandlesReads = ListHandleReads & InspectorHandleReads;
+
+// Drawn among a framed window's overlays only, so it never checks the Size class: only a wide window resizes its panes.
 export function ScaffoldResizeHandles(
-  parts: ScaffoldPartProps,
+  parts: ResizeHandlesReads,
 ): React.JSX.Element {
   return (
     <>

@@ -60,6 +60,7 @@ export type WireEvent = z.infer<typeof WireEvent>;
 // Built-in Actions run in the App without a round trip to the Server.
 export const Action = z.discriminatedUnion('action', [
   z.strictObject({ action: z.literal('toast'), message: z.string() }),
+  // Opens the Plugin's own page at `path`, the one it registered with `argo.pages.register`; the App finds the route.
   z.strictObject({ action: z.literal('navigate'), path: z.string() }),
   z.strictObject({ action: z.literal('openUrl'), url: WebUrl }),
   z.strictObject({ action: z.literal('copy'), text: z.string() }),

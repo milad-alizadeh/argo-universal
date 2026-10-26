@@ -1,29 +1,28 @@
-import type { FileDiff } from '#features/feed';
-import { uniqueChangedFiles } from './changes-files';
+import type { ChangesSummary } from '@repo/contracts';
+import type { ChangedFile } from './changes-view-props';
 
-export interface ChangesTotals {
-  files: number;
+export interface ChangesTotals extends ChangesSummary {
   viewed: number;
-  added: number;
-  removed: number;
 }
 
+/*
+ * The comparison's counts, and how many of the listed paths are marked Viewed, each counted once. A file is marked
+ * from its row, and loaded pages stay loaded, so only a file that has left the comparison drops out of the count.
+ */
 export function changesTotals(
-  files: readonly FileDiff[],
-  viewed: readonly string[],
+  summary: ChangesSummary,
+  files: readonly ChangedFile[] = [],
+  viewed: readonly string[] = [],
 ): ChangesTotals {
-  const unique = uniqueChangedFiles(files);
+  const listed = new Set(files.map((file) => file.path));
 
   return {
-    files: unique.length,
-    viewed: unique.filter((file) => viewed.includes(file.path)).length,
-    added: unique.reduce((sum, file) => sum + file.added, 0),
-    removed: unique.reduce((sum, file) => sum + file.removed, 0),
+    ...summary,
+    viewed: [...new Set(viewed)].filter((path) => listed.has(path)).length,
   };
 }
 
-const count = (value: number, one: string, many: string): string =>
-  `${value.toLocaleString('en-US')} ${value === 1 ? one : many}`;
+const count = (value: number): string => value.toLocaleString('en-US');
 
 export const filesSummary = (totals: ChangesTotals): string =>
-  `${count(totals.files, 'file', 'files')} · ${totals.viewed.toLocaleString('en-US')} viewed`;
+  `${count(totals.viewed)}/${count(totals.files)} viewed`;

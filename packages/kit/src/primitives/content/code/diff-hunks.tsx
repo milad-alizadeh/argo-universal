@@ -119,6 +119,8 @@ function VerticalScroll(props: {
     scrollEnabled: props.inline,
     testID: 'diff-scroll',
     className: props.inline ? 'max-h-75 wide:max-h-100' : undefined,
+    // A diff that does not scroll on its own has no fade to clear, so its last line ends the block.
+    contentContainerClassName: props.inline ? undefined : 'pb-0',
     surfaceClassName: 'bg-card',
   };
 

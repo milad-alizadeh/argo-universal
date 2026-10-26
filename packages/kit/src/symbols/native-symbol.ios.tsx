@@ -4,21 +4,22 @@ import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { useIconSize } from '#primitives/content/icon';
-import { isCustomSymbol } from './custom-symbols';
-import { type DrawnSymbol, drawnSymbol } from './drawn-symbol';
 import { useIconPixels } from './icon-size';
-import { resolveIcon } from './icon-symbol';
+import { iosImage } from './ios-image';
 import type { NativeSymbolProps } from './native-symbol-props';
 
-// Argo's custom symbols are in the app's asset catalog; an SVG symbol has no image a SwiftUI tree can draw.
+// Argo's own symbols are in the app's asset catalog; an SVG symbol has no image a SwiftUI tree can draw.
 function imageSource(
-  symbol: DrawnSymbol,
+  icon: NativeSymbolProps['name'],
+  filled: boolean | undefined,
 ): Pick<ImageProps, 'assetName' | 'systemName'> {
-  if (symbol.kind === 'svg') return {};
+  const image = iosImage(icon, filled);
 
-  return isCustomSymbol(symbol.sf)
-    ? { assetName: symbol.sf }
-    : { systemName: symbol.sf };
+  if (!image) return {};
+
+  return image.kind === 'asset'
+    ? { assetName: image.name }
+    : { systemName: image.name };
 }
 
 // A muted symbol takes Argo's tertiary token where iOS would use its tertiary label grey.
@@ -41,7 +42,7 @@ export function NativeSymbol({
 
   return (
     <Image
-      {...imageSource(drawnSymbol(resolveIcon(name).symbol, filled))}
+      {...imageSource(name, filled)}
       size={pixels}
       modifiers={useMutedStyle(muted)}
     />

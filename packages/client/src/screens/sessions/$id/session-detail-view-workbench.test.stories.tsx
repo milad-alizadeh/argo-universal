@@ -2,7 +2,7 @@ import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, within } from 'storybook/test';
-import { changesArgs } from '../../../features/frame/components/changes-inspector/changes-inspector.mocks';
+import { fewChanges, useMemoryChanges } from './session-changes.test.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
@@ -31,39 +31,53 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const firstChangeLabel = 'Open Change #45';
+const firstChangeLabel = 'Open files of Change #45';
+
+// The Inspector's own glyph label for the same Changes.
+const stageLabels = ['Open Change #45', 'Open Change #46'];
 
 export const ChecksStayWithTheChangesSummary: Story = {
   play: async ({ canvas }) => {
     await expect(
       await canvas.findByLabelText('CI Checks 3/5, 2 running'),
     ).toBeVisible();
-    await expect(canvas.queryByTestId('session-header-bar')).toBeNull();
     await expect(canvas.getByTestId('session-workbench')).toBeVisible();
   },
 };
 
-export const SeveralPullRequestsInStage: Story = {
+export const SeveralPullRequestsInInspector: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: firstChangeLabel }),
     );
     await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
-    const stage = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
+    const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
 
-    await expect(stage.getByLabelText(firstChangeLabel)).toBeVisible();
-    await expect(stage.getByLabelText('Open Change #46')).toBeVisible();
+    for (const label of stageLabels) {
+      await expect(panel.getByLabelText(label)).toBeVisible();
+    }
   },
 };
+
+// The Session page with its changed files read from an in-memory Server.
+function WithChangedFiles(view: SessionDetailViewProps): JSX.Element {
+  const changes = useMemoryChanges(fewChanges);
+
+  return (
+    <FramedSessionPreview
+      {...(view.state === 'open' ? { ...view, changes } : view)}
+    />
+  );
+}
 
 export const SwitchesChangeAndFiles: Story = {
   args: {
     view: {
       state: 'open',
       ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
-      changes: changesArgs,
     },
   },
+  render: ({ view }): JSX.Element => <WithChangedFiles {...view} />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: firstChangeLabel }),

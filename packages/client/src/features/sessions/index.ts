@@ -1,4 +1,4 @@
-export { SessionHeader } from './components/session-header';
+export { SessionBandClaim } from './components/session-band-claim';
 
 export { SubagentList } from './components/subagent-list/subagent-list';
 
@@ -23,24 +23,21 @@ export { ShellSheet } from './components/shell-list/shell-sheet';
 
 export { shellsRunning } from './components/shell-list/shell-format';
 
-export { SessionHeaderBar } from './components/session-header-bar';
-
-export { sessionPanelLabels } from './components/session-panel-triggers';
-
 export {
-  type SessionPanel,
-  sessionPanelOrder,
-  offeredWorkPanels,
-  type SessionPanels,
-  useSessionPanels,
-} from './stores/session-panels';
+  type SessionWorkbench,
+  SessionWorkbenchColumn,
+  type WorkbenchSection,
+} from './components/session-workbench';
 
-export {
-  SessionsHeader,
-  searchSessionsLabel,
-} from './components/sessions-header';
+export { WorkbenchAgents } from './components/session-workbench-agents';
 
-export { SessionsViewMenu } from './components/sessions-view-menu/sessions-view-menu';
+export { WorkbenchChangesSummary } from './components/session-workbench-change-section';
+
+export { WorkbenchMoreChanges } from './components/session-workbench-changes';
+
+export { WorkbenchCountSummary } from './components/workbench-count-summary';
+
+export { type SessionPanels, useSessionPanels } from './stores/session-panels';
 
 export {
   type SessionsViewGroup,
@@ -53,7 +50,6 @@ export {
 } from './stores/sessions-view-state';
 
 export {
-  chooseSessionsView,
   defaultSessionsView,
   isDefaultSessionsView,
   type SessionsLayout,
@@ -61,10 +57,7 @@ export {
   useSessionsViewKept,
 } from './stores/sessions-view';
 
-export {
-  olderServerView,
-  sessionsListInput,
-} from './utils/sessions-list-input';
+export { sessionsListInput } from './utils/sessions-list-input';
 
 export { type StartingFeed } from './utils/starting-feed';
 
@@ -132,9 +125,7 @@ export { useSessionPlanActions } from './hooks/use-session-plan-actions';
 export {
   type SessionHeaderProps,
   type SessionHeaderStatus,
-} from './components/session-header';
-
-export { SessionHeaderMenu } from './components/session-header-menu';
+} from './components/session-header-props';
 
 export { sessionActions, type SessionMenu } from './components/session-actions';
 
@@ -222,3 +213,5 @@ export {
   SessionRow,
   type SessionRowProps,
 } from './components/session-row/session-row';
+
+export { NewSessionQuestion } from './components/new-session-question/new-session-question';

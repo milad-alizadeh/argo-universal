@@ -34,9 +34,8 @@ type Build = (typeof buildItems)[number];
 // The list's own path; each build's page sits below it, as `/builds/web`.
 const listPath = '/builds';
 
-// A Plugin opens its pages by their full App path: the Plugin id, the nav id, then its own path.
-const buildHref = (build: Build): string =>
-  `/plugins/hello/hello-builds${listPath}/${build.id}`;
+// The same path registers a build's page and opens it.
+const buildPath = (build: Build): string => `${listPath}/${build.id}`;
 
 const buildMetadata = (
   <Metadata>
@@ -102,7 +101,7 @@ function BuildRow({ build, selected }: BuildRowProps): JSX.Element {
       title={build.title}
       subtitle="main"
       selected={selected}
-      onPress={{ action: 'navigate', path: buildHref(build) }}
+      onPress={{ action: 'navigate', path: buildPath(build) }}
       meta={buildMeta}
       badge={{ kind: 'count', count: 3, label: '3 queued jobs' }}
       progress={{ value: 0.4, tone: 'success', active: true }}
@@ -160,5 +159,5 @@ export function registerBuilds(pages: Argo['pages']): void {
   pages.register(listPath, HelloBuildsPage);
 
   for (const build of buildItems)
-    pages.register(`${listPath}/${build.id}`, buildPage(build));
+    pages.register(buildPath(build), buildPage(build));
 }

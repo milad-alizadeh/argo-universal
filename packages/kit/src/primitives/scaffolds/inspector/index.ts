@@ -10,12 +10,7 @@ export { InspectorBody } from './inspector-pane';
 
 export { InspectorPane, type InspectorPaneProps } from './inspector-pane';
 
-export {
-  createInspectorHost,
-  InspectorHostContext,
-  useHostedInspector,
-  type InspectorHost,
-} from './inspector-host';
+export { InspectorPlaceOffer } from './inspector-place';
 
 export { InspectorControlsContext } from './inspector-controls-context';
 

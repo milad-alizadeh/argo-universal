@@ -1,6 +1,6 @@
 import { createElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
-import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
+import { FieldLink } from '#primitives/fields/field-link';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import { useWide } from '../../../use-wide/use-wide';
 import { DrillPopover } from './drill-popover';
@@ -12,7 +12,7 @@ export function useDrillBeside(): boolean {
   return useWide() && Platform.OS === 'web';
 }
 
-// Paper: desktop rows open beside their group; phones push within their owning Sheet.
+// Desktop rows open beside their group; phones push within their owning Sheet.
 export function Drill(props: DrillProps): ReactElement {
   const desktop = useDrillBeside();
   const trigger = useDrillTrigger(props);
@@ -28,18 +28,22 @@ export function Drill(props: DrillProps): ReactElement {
   );
 }
 
+const noPress = (): void => {};
+
+// The row is a FieldGroup link, so a Drill sits in a FieldGroup section; its press is the Drill's own.
 function useDrillTrigger(
   props: DrillProps,
 ): NonNullable<DrillProps['trigger']> {
   const value = useSizeClassValue(props.value);
 
-  const row: ListItemProps = {
-    title: props.label,
-    value,
-    leading: props.valueLeading,
-    disabled: props.disabled,
-    accessibilityRole: 'button',
-  };
-
-  return props.trigger ?? createElement(ListItem, { ...row, disclosure: true });
+  return (
+    props.trigger ??
+    createElement(FieldLink, {
+      title: props.label,
+      value,
+      leading: props.leading,
+      disabled: props.disabled,
+      onPress: noPress,
+    })
+  );
 }

@@ -2,18 +2,16 @@ import type { EmptyStateProps } from '@repo/kit/primitives/status/empty-state';
 import type { ReactNode } from 'react';
 import { createContext, use } from 'react';
 import type { FirstPage } from '#lib/product/navigation/navigation';
-import type { CoreSection } from '../../../lib/product/navigation/sections';
+import type {
+  CoreSection,
+  NavigationSection,
+  Section,
+} from '../../../lib/product/navigation/sections';
 
 // What a section hands the Frame: its list, and what goes with it.
 export interface SectionList {
-  // The list's own part of the sidebar's header row.
-  header: ReactNode;
-  // Null where the section's pages hold the sidebar with their own ListDetail, as Settings' SettingsLayout does.
+  // The list under its own Screen, which declares its header: drawn above the list in the sidebar on a wide window, and as the root page of the section's stack under wide.
   list: ReactNode;
-  // The sidebar's search, for the section's pages to narrow their list by.
-  query?: string;
-  // A narrow window's root page: a Screen around the list, which declares the root's header itself.
-  rootPage: ReactNode;
   /*
    * The page a window with the list beside it opens at the section's root, or undefined while
    * it is still being chosen; without one, the root keeps its own page. Called as a hook.
@@ -24,6 +22,13 @@ export interface SectionList {
 }
 
 export type SectionLists = Record<CoreSection, SectionList>;
+
+// The sections the navigator shows: the open one, every core section's list, and the rail's items.
+export interface FrameSections {
+  section: Section;
+  lists: SectionLists;
+  items: readonly NavigationSection[];
+}
 
 export const SectionListsContext = createContext<SectionLists | null>(null);
 

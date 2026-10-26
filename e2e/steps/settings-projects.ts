@@ -6,8 +6,8 @@ import { phone } from './frame';
 // The Server's own Project is the test repository it was started with, named after its folder.
 const projectName = 'project';
 
-// A Project row is named "<name>, <trailing detail>"; the test repository has no origin.
-const projectRow = `${projectName}, No remote`;
+// A Project row is named by its Project alone while its folder is there.
+const projectRow = projectName;
 
 function settingsRow(page: Page, title: string): Locator {
   return page.getByRole('link', { name: new RegExp(`^${title}(?:,|$)`) });

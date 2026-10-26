@@ -6,6 +6,10 @@ import {
   imePadding,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import {
+  OutsideColumn,
+  useClaimColumn,
+} from '#kit/content-column/content-column';
 import { flattenedChildren } from '#kit/flattened-children';
 import { GroupDisabledContext } from '#primitives/fields/field-row';
 import { Host, InsideHostContext } from '#primitives/native/host';
@@ -27,11 +31,16 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  * each row as itself. It goes when Expo fixes the headline wrapping (expo/expo#50086).
  */
 function FieldGroupRoot(props: FieldGroupProps): ReactElement {
+  // Its cards keep Material's own inset, so the Screen adds no gutter of its own; its rows are outside the column.
+  useClaimColumn('grouped');
+
   return (
     <Host style={{ flex: 1 }}>
       <GroupDisabledContext.Provider value={props.disabled ?? false}>
         <InsideHostContext.Provider value>
-          <Column>{props.children}</Column>
+          <OutsideColumn>
+            <Column>{props.children}</Column>
+          </OutsideColumn>
         </InsideHostContext.Provider>
       </GroupDisabledContext.Provider>
     </Host>

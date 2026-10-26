@@ -1,6 +1,5 @@
-import { groupedOnPhones } from '@repo/kit/list-grouped';
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
-import { List } from '@repo/kit/primitives/lists/list';
+import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
 import type { ReactNode, JSX } from 'react';
 import { Platform } from 'react-native';
 
@@ -14,7 +13,7 @@ export function StatusSheetList({
   children: ReactNode;
 }): JSX.Element {
   return (
-    <List appearance={groupedOnPhones('cards')} fit={false}>
+    <List appearance="cards" onPhones={phonesGrouped} fit={false}>
       {children}
     </List>
   );
@@ -27,11 +26,6 @@ export const unselectableTextClassName = 'select-none';
 export const chipClassName =
   'h-full sm:h-full py-0 px-2.5 gap-1.5 rounded-full';
 
-interface ChipSurfaceProps {
-  glass?: boolean;
-  children: ReactNode;
-}
-
 const chipSurfaceProps = {
   corners: 'pill',
   interactive: true,
@@ -39,13 +33,11 @@ const chipSurfaceProps = {
   fallbackClassName: 'rounded-full border border-border bg-card shadow-card',
 } as const;
 
+// Every status control draws the same Pill surface: glass on iOS, a bordered card elsewhere.
 export function ChipSurface({
-  glass,
   children,
-}: ChipSurfaceProps): JSX.Element {
-  return (
-    <LiquidGlass {...chipSurfaceProps} glass={glass}>
-      {children}
-    </LiquidGlass>
-  );
+}: {
+  children: ReactNode;
+}): JSX.Element {
+  return <LiquidGlass {...chipSurfaceProps}>{children}</LiquidGlass>;
 }

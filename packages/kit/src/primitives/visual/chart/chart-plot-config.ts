@@ -1,5 +1,5 @@
+import { chartDefaults } from '@repo/contracts/kit-tokens';
 import type { ComponentProps } from 'react';
-import { StyleSheet } from 'react-native';
 import type { CartesianChart } from 'victory-native';
 import type { NativeTheme } from '../../../native-theme';
 import { skiaColor } from '../canvas/canvas-srgb';
@@ -48,29 +48,29 @@ export const layoutConfig = ({
   domainPadding: props.kind === 'scatter' ? scatterPadding : undefined,
 });
 
-// Gridlines are opt-in; the frame keeps its hairline either way.
-interface LineWidths {
-  grid: number;
-  frame: number;
-}
-
-const lineWidths = (grid: boolean): LineWidths => ({
-  grid: grid ? StyleSheet.hairlineWidth : 0,
-  frame: StyleSheet.hairlineWidth,
-});
-
 export function axisConfig(
+  props: ChartProps,
   theme: NativeTheme,
   columns: number,
-  grid: boolean,
-): Pick<Plot, 'axisOptions'> {
-  const line = theme.colors.border;
+): Pick<Plot, 'axisOptions' | 'frame'> {
+  const line = theme.colors.border ? skiaColor(theme.colors.border) : undefined;
 
   return {
     axisOptions: {
-      lineColor: line ? skiaColor(line) : undefined,
-      lineWidth: lineWidths(grid),
+      lineColor: line ? lineColors(props, line) : undefined,
       tickCount: { x: xTickCount(columns), y: yTickCount },
     },
+    frame: { lineColor: line, lineWidth: axisLines },
   };
 }
+
+// The gridlines show only when the chart asks for them. Skia strokes a 0 width as a hairline, so a hidden grid is drawn transparent.
+type LineColor = NonNullable<Plot['axisOptions']>['lineColor'];
+
+const lineColors = (props: ChartProps, line: string): LineColor => ({
+  grid: (props.grid ?? chartDefaults.grid) ? line : 'transparent',
+  frame: line,
+});
+
+// Of the frame around the plot, only the two axes draw: the left and bottom edges.
+const axisLines = { top: 0, right: 0 };

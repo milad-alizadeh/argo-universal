@@ -1,6 +1,9 @@
 import { useMemo, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
-import { useSelectionMode, type SelectionMode } from '#kit/selection-mode';
+import {
+  useOwnsSelectionHeader,
+  type SelectionMode,
+} from '#kit/selection-mode';
 import { HeaderActions, type ActionGroup } from '#primitives/actions/action';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
@@ -108,7 +111,7 @@ export function SelectionToolbar(props: ToolbarProps): ReactElement | null {
   );
 }
 
-// The List offers its selection mode to the host that owns its Screen's header; with no host, or another List holding it, it draws the toolbar in its own column.
+// The List offers its selection mode to the Screen that owns its header; with no Screen, or another List holding it, it draws the toolbar in its own column.
 function SelectionHeader(props: EditingToolbar): ReactElement | null {
   const { selection, groups } = props;
 
@@ -117,9 +120,9 @@ function SelectionHeader(props: EditingToolbar): ReactElement | null {
     [selection, groups],
   );
 
-  const hosted = useSelectionMode(mode);
+  const owned = useOwnsSelectionHeader(mode);
 
-  return hosted ? null : topToolbar(props);
+  return owned ? null : topToolbar(props);
 }
 
 function selectionMode(props: EditingToolbar): SelectionMode {

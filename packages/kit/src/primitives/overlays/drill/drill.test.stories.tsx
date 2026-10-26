@@ -30,7 +30,7 @@ async function openChoices(
   await userEvent.click(page.getByRole('button', { name: 'Configure' }));
   const menu = await page.findByRole('dialog', { name: 'Configure' });
   await userEvent.click(
-    within(menu).getByRole('button', { name: new RegExp(`^${label},`) }),
+    within(menu).getByRole('link', { name: new RegExp(`^${label},`) }),
   );
 
   return {
@@ -45,15 +45,15 @@ export const KeepOpenKeepsBothOpenAfterAPick: Story = {
     const { menu, choices } = await openChoices(userEvent, 'Fruit');
 
     await userEvent.click(
-      within(choices).getByRole('button', { name: 'Banana' }),
+      within(choices).getByRole('radio', { name: 'Banana' }),
     );
     await userEvent.click(
-      within(choices).getByRole('button', { name: 'Cherry' }),
+      within(choices).getByRole('radio', { name: 'Cherry' }),
     );
 
     await expect(picked.mock.calls).toEqual([['Banana'], ['Cherry']]);
     await expect(
-      within(menu).getByRole('button', { name: 'Fruit, Cherry' }),
+      within(menu).getByRole('link', { name: 'Fruit, Cherry' }),
     ).toBeVisible();
     await expect(choices).toHaveAttribute(openState, 'open');
     await expect(menu).toHaveAttribute(openState, 'open');
@@ -70,7 +70,7 @@ export const MenuClickClosesTheChoices: Story = {
     const { menu, choices } = await openChoices(userEvent, 'Fruit');
 
     await userEvent.click(
-      within(menu).getByRole('button', { name: /^Vegetable,/ }),
+      within(menu).getByRole('link', { name: /^Vegetable,/ }),
     );
 
     await waitFor(() => expect(choices).not.toBeInTheDocument());
@@ -87,16 +87,14 @@ export const KeepOpenEscapeReturnsToMenu: Story = {
     const { menu, choices } = await openChoices(userEvent, 'Fruit');
 
     await userEvent.click(
-      within(choices).getByRole('button', { name: 'Banana' }),
+      within(choices).getByRole('radio', { name: 'Banana' }),
     );
     await userEvent.keyboard('{Escape}');
 
     await waitFor(() => expect(choices).not.toBeInTheDocument());
     await expect(menu).toHaveAttribute(openState, 'open');
     await waitFor(() =>
-      expect(
-        within(menu).getByRole('button', { name: /^Fruit,/ }),
-      ).toHaveFocus(),
+      expect(within(menu).getByRole('link', { name: /^Fruit,/ })).toHaveFocus(),
     );
   },
 };
@@ -116,11 +114,11 @@ export const EscapeClosesChoicesThenMenu: Story = {
   },
 };
 
-// Paper's drilled row: the choices open beside the menu with no title of their own.
+// A drilled row: the choices open beside the menu with no title of their own.
 export const RowChoicesHaveNoTitle: Story = {
   play: async ({ userEvent }) => {
     const { choices } = await openChoices(userEvent, 'Fruit');
-    const apple = within(choices).getByRole('button', { name: 'Apple' });
+    const apple = within(choices).getByRole('radio', { name: 'Apple' });
 
     // The choices fade in from transparent, so a row shows once their entrance starts.
     await waitFor(() => expect(apple).toBeVisible());
@@ -135,9 +133,7 @@ export const PickClosesChoicesByDefault: Story = {
   play: async ({ userEvent }) => {
     const { choices } = await openChoices(userEvent, 'Vegetable');
 
-    await userEvent.click(
-      within(choices).getByRole('button', { name: 'Leek' }),
-    );
+    await userEvent.click(within(choices).getByRole('radio', { name: 'Leek' }));
 
     await expect(picked.mock.calls).toEqual([['Leek']]);
     await expect(choices).toHaveAttribute(openState, 'closed');

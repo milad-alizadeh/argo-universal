@@ -35,7 +35,7 @@ export const scaffoldWireParts = {
         .min(1)
         .optional()
         .describe(
-          'The list screen’s title on compact windows, where the list is the screen; the header returns to it when the item closes.',
+          'The list’s title: the list screen’s header on compact windows, where the list is the screen and the header returns to it when the item closes, and the heading above the list on wide windows.',
         ),
     }),
     {

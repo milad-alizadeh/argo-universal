@@ -17,12 +17,9 @@ export {
   useNeedsAttention,
   usePhoneDrawerWidth,
   useSectionList,
-  ScreenInspector,
 } from '#features/frame';
 
 export { useSectionLists } from './screens/section-lists';
-
-export { SettingsSection } from './screens/settings/settings-section';
 
 export {
   OnboardingLayout,

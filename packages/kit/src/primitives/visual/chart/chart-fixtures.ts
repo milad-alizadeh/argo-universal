@@ -10,6 +10,9 @@ const chart = (name: keyof typeof fixtures): ChartProps =>
 
 export const lineChart = chart('line');
 
+// A chart has no gridlines unless it asks for them.
+export const gridlinesLineChart = { ...lineChart, grid: true };
+
 export const barChart = chart('bar');
 
 export const groupedBarChart = chart('groupedBar');

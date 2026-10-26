@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
+import { buttonDefaults } from '../kit-tokens';
 import { handler } from './plugin-part-props';
 import { selectionValue } from './selection-value';
 
@@ -73,7 +74,11 @@ const splitBase = z.object({
   menuLabel: z.string().describe('Spoken secondary menu name.'),
   primary: z.boolean().optional().describe('Filled treatment.'),
   disabled: z.boolean().optional().describe(disabledDescription),
-  size: z.enum(['sm', 'xs']).optional().describe('Split size.'),
+  size: z
+    .enum(['xs', 'sm', 'md'])
+    .optional()
+    .meta({ default: buttonDefaults.size })
+    .describe("Both segments' Button size; xs draws as sm."),
   fullWidth: z
     .union([z.boolean(), z.literal('narrow')])
     .optional()

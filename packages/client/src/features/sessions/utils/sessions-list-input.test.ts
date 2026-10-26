@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SessionsView } from '../stores/sessions-view';
-import {
-  olderServerView,
-  sessionsListInput,
-  showsUnderStatus,
-} from './sessions-list-input';
+import { sessionsListInput, showsUnderStatus } from './sessions-list-input';
 
 const defaults: SessionsView = {
   group: 'project',
@@ -54,31 +50,6 @@ describe('which Sessions a status shows', () => {
     '$status shows a Session archived at $archivedAt: $shows',
     ({ status, archivedAt, shows }) => {
       expect(showsUnderStatus(status, archivedAt)).toBe(shows);
-    },
-  );
-});
-
-describe('the view an older Server can list after it refused this one', () => {
-  it('falls back from All to Active, keeping the rest of the view', () => {
-    expect(olderServerView(chosen, 'BAD_REQUEST')).toStrictEqual({
-      ...chosen,
-      status: 'active',
-    });
-  });
-
-  it.each(['active', 'archived'] as const)(
-    'has nothing to fall back to for %s',
-    (status) => {
-      expect(
-        olderServerView({ ...chosen, status }, 'BAD_REQUEST'),
-      ).toBeUndefined();
-    },
-  );
-
-  it.each(['INTERNAL_SERVER_ERROR', 'TIMEOUT', undefined])(
-    'keeps the view for any other failure (%s)',
-    (code) => {
-      expect(olderServerView(chosen, code)).toBeUndefined();
     },
   );
 });

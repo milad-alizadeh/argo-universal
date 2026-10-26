@@ -2,6 +2,7 @@ import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, screen, within, waitFor } from 'storybook/test';
+import { pullRequestMocks } from '../../../features/sessions/components/session-pull-request.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
@@ -27,32 +28,40 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const firstChange = { name: 'Open Change #45' };
+// The Inspector's own glyph label for the same Change.
+const stageLabel = 'Open Change #45';
+
+const firstChange = { name: 'Open files of Change #45' };
+
+const { title: firstTitle, checks: firstPullRequestChecks } =
+  pullRequestMocks.checksRunning;
+
+const firstChecks = firstPullRequestChecks.details;
 
 type Context = Parameters<NonNullable<Story['play']>>[0];
 
 async function expectPrDetails({
   canvas,
 }: Pick<Context, 'canvas'>): Promise<void> {
-  const stage = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
+  const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
 
-  await expect(await stage.findByLabelText(firstChange.name)).toBeVisible();
+  await expect(await panel.findByLabelText(stageLabel)).toBeVisible();
 }
 
 export const BoundedPreview: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('button', firstChange)).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: 'Open Change #44' }),
+      canvas.getByRole('button', { name: 'Open files of Change #44' }),
     ).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: 'Open Change #43' }),
+      canvas.getByRole('button', { name: 'Open files of Change #43' }),
     ).toBeVisible();
     await expect(
-      canvas.queryByRole('button', { name: 'Open Change #46' }),
+      canvas.queryByRole('button', { name: 'Open files of Change #46' }),
     ).toBeNull();
     await expect(
-      canvas.queryByRole('button', { name: 'Open Change #42' }),
+      canvas.queryByRole('button', { name: 'Open files of Change #42' }),
     ).toBeNull();
     await expect(
       canvas.getByText('1 more open, 1 merged, 1 closed'),
@@ -67,7 +76,7 @@ export const BoundedPreview: Story = {
   },
 };
 
-export const DisclosureKeepsStageClosed: Story = {
+export const DisclosureKeepsInspectorClosed: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Collapse Changes' }),
@@ -90,7 +99,9 @@ export const MenuOpensStage: Story = {
     );
     await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
     await userEvent.click(
-      await screen.findByRole('menuitem', { name: 'Open Changes in Stage' }),
+      await screen.findByRole('menuitem', {
+        name: 'Open Changes in Inspector',
+      }),
     );
     await expectPrDetails({ canvas });
   },
@@ -107,10 +118,36 @@ export const RemainderOpensStage: Story = {
   },
 };
 
-export const RowOpensStage: Story = {
+export const FilesOpenStage: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByRole('button', firstChange));
     await expectPrDetails({ canvas });
+  },
+};
+
+// The row is not a control: the title is plain text, and only its parts press.
+export const RowIsNotPressable: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByText(firstTitle));
+    await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: firstTitle })).toBeNull();
+  },
+};
+
+export const ChecksPopoverListsEachCheck: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: /CI Checks 3\/5/ }),
+    );
+    const popover = await screen.findByRole('dialog', { name: 'CI Checks' });
+
+    for (const { name } of firstChecks) {
+      await waitFor(() =>
+        expect(within(popover).getByText(name)).toBeVisible(),
+      );
+    }
+
+    await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
   },
 };
 

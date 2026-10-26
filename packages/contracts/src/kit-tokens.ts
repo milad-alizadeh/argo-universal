@@ -60,6 +60,8 @@ export const buttonSizes = ['xs', 'sm', 'md', 'lg'] as const;
  */
 export const buttonDefaults = { variant: 'default', size: 'md' } as const;
 
+export const cardDefaults = { kind: 'card', density: 'regular' } as const;
+
 export const iconButtonSizes = ['sm', 'md', 'lg'] as const;
 
 export type IconButtonSize = (typeof iconButtonSizes)[number];
@@ -67,5 +69,14 @@ export type IconButtonSize = (typeof iconButtonSizes)[number];
 export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;
+
+export const chartDefaults = { grid: false } as const;
+
+// How wide a Screen's content runs on a window: the centred reading column, or the whole region.
+export const screenWidths = ['content', 'full'] as const;
+
+export type ScreenWidth = (typeof screenWidths)[number];
+
+export const screenDefaults = { width: 'content' } as const;
 
 export const listDefaults = { appearance: 'cards' } as const;

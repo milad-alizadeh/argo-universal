@@ -45,22 +45,6 @@ describe('the Sessions view on this Device', () => {
     await expect(loadView()).resolves.toEqual(chosen);
   });
 
-  it('keeps the layout this Device kept before it kept the whole view', async () => {
-    useMemoryStorage().setItem('sessions-layout', 'compact');
-    await expect(loadView()).resolves.toEqual({
-      ...defaults,
-      layout: 'compact',
-    });
-  });
-
-  it('drops the order this Device kept before the list always ordered by last activity', async () => {
-    useMemoryStorage().setItem(
-      viewKey,
-      JSON.stringify({ ...chosen, order: 'created' }),
-    );
-    await expect(loadView()).resolves.toEqual(chosen);
-  });
-
   it.each([
     ['an unknown value', JSON.stringify({ ...chosen, status: 'pinned' })],
     ['a missing field', JSON.stringify({ ...chosen, status: undefined })],

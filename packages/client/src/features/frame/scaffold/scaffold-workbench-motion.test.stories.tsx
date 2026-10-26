@@ -8,7 +8,7 @@ const meta = {
   title: 'Tests/Frame/Scaffold/WorkbenchMotion',
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
-  args: { stageOpen: true },
+  args: { inspectorOpen: true },
   beforeEach: (): Promise<void> => settleViewport(1920),
 } satisfies Meta<typeof WorkbenchScaffold>;
 
@@ -44,20 +44,24 @@ async function assertSliding(canvas: Canvas, action: string): Promise<void> {
 function closesAt(width: number): Story {
   return {
     beforeEach: (): Promise<void> => settleViewport(width),
-    play: async ({ canvas }) => assertSliding(canvas, 'Hide Stage'),
+    play: async ({ canvas }) => assertSliding(canvas, 'Hide Inspector'),
   };
 }
 
-export const DockedWorkbenchSlidesWhenStageCloses: Story = closesAt(1920);
+export const DockedWorkbenchSlidesWhenTheInspectorCloses: Story =
+  closesAt(1920);
 
-export const AutoHiddenWorkbenchSlidesWhenStageCloses: Story = closesAt(1440);
+export const AutoHiddenWorkbenchSlidesWhenTheInspectorCloses: Story =
+  closesAt(1440);
 
-export const WorkbenchSlidesWhenExpandedStageRestores: Story = {
+export const WorkbenchSlidesWhenTheExpandedInspectorRestores: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Stage' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Expand Inspector' }),
+    );
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );
-    await assertSliding(canvas, 'Restore Stage');
+    await assertSliding(canvas, 'Restore Inspector');
   },
 };

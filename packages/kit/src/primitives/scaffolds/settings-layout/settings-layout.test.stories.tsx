@@ -9,9 +9,9 @@ import {
   deviceGroup,
   ExampleSettingsLayout,
   exampleSections,
-  examplePinned,
+  exampleLastSection,
   noScreens,
-  pinnedGroup,
+  lastGroup,
   serverGroup,
 } from './settings-layout.mocks';
 
@@ -109,30 +109,37 @@ function inPageOrder(canvas: Canvas, titles: string[]): boolean {
   });
 }
 
-// A pinned group ends the list at every width: below the pages' groups, on a wide sidebar pinned under them.
-const pinnedEndsTheList = (width: number): Story =>
+// The last group ends the list at every width, below the pages' groups.
+const lastSectionEndsTheList = (width: number): Story =>
   at(width, {
     render: () => (
       <View className="h-120">
-        <ExampleSettingsLayout pinned={examplePinned} />
+        <ExampleSettingsLayout lastSection={exampleLastSection} />
       </View>
     ),
     play: async ({ canvas }) => {
       await expect(await canvas.findByText('Version')).toBeVisible();
       await expect(
-        inPageOrder(canvas, [serverGroup, deviceGroup, pinnedGroup]),
+        inPageOrder(canvas, [serverGroup, deviceGroup, lastGroup]),
       ).toBe(true);
     },
   });
 
-export const PinnedEndsTheListPhone = pinnedEndsTheList(layoutWidths.phone);
+export const LastSectionEndsTheListPhone = lastSectionEndsTheList(
+  layoutWidths.phone,
+);
 
-export const PinnedEndsTheListWide = pinnedEndsTheList(layoutWidths.wide);
+export const LastSectionEndsTheListWide = lastSectionEndsTheList(
+  layoutWidths.wide,
+);
 
-// A search that leaves only the pinned group shows it, not the empty state.
-export const PinnedAloneIsNotEmpty = at(layoutWidths.wide, {
+// A search that leaves only the last group shows it, not the empty state.
+export const LastSectionAloneIsNotEmpty = at(layoutWidths.wide, {
   render: () => (
-    <ExampleSettingsLayout sections={[{ items: [] }]} pinned={examplePinned} />
+    <ExampleSettingsLayout
+      sections={[{ items: [] }]}
+      lastSection={exampleLastSection}
+    />
   ),
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Version')).toBeVisible();

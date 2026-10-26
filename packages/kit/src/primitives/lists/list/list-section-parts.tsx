@@ -2,11 +2,8 @@ import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { Text, TextClassContext } from '#primitives/content/text';
-import { groupedHeading, useWebGrouped } from '../../../list-grouped';
-import {
-  type SectionDrawing,
-  useSectionDrawing,
-} from '../../../list-section-drawing';
+import { useListLook, useSectionDrawing } from '../../../list-look-context';
+import type { SectionDrawing } from '../../../list-look-section';
 import { SkeletonBar } from '../../../list-skeleton';
 import { SizeClass } from '../../../size-class/size-class';
 import { cn } from '../../../utils';
@@ -114,19 +111,26 @@ function HeaderButton(props: DrawnHeaderProps): ReactElement {
 const headerClassName = (
   props: HeaderProps,
   drawing: SectionDrawing,
-  grouped: boolean,
+  edge: string,
 ): string =>
   props.sidebar
     ? 'group min-h-6 flex-row items-center gap-1 px-3'
-    : cn(
-        'group flex-row items-start gap-1',
-        drawing.inset,
-        grouped && groupedHeading,
-      );
+    : cn('group flex-row items-start gap-1', drawing.inset, edge);
+
+interface HeaderDrawing {
+  drawing: SectionDrawing;
+  className: string;
+}
+
+function useHeaderDrawing(props: HeaderProps): HeaderDrawing {
+  const drawing = useSectionDrawing();
+  const { edges } = useListLook();
+
+  return { drawing, className: headerClassName(props, drawing, edges.heading) };
+}
 
 function HeaderRow(props: HeaderProps & { wide: boolean }): ReactElement {
-  const drawing = useSectionDrawing();
-  const className = headerClassName(props, drawing, useWebGrouped());
+  const { drawing, className } = useHeaderDrawing(props);
 
   return (
     <View className={className}>

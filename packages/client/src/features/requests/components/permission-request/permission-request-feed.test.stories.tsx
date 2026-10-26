@@ -2,17 +2,14 @@ import { layoutWidths } from '@repo/kit/each-layout';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, within } from 'storybook/test';
-import { PermissionOutcome } from '#features/feed';
 import {
   chosenOptionFeed,
   permissionFeed,
 } from '../../../../../mocks/requests/permission/permission-feed.test.mocks';
 import {
-  allowedOnceAnswer,
   meta as permissionTestMeta,
   type Story,
 } from '../../../../../mocks/requests/permission/permission-story-context.test.mocks';
-import { RequestFrame } from '../../../../lib/product/request-frame';
 import { permissionProps, permissionMocks } from '../request.mocks';
 
 const meta = {
@@ -83,22 +80,6 @@ export const SecondAgentNeverAllowWide = chosenOptionFeed(
   1,
   chosenNeverAllow,
 );
-
-// Rows kept before the outcome carried a name and kind still read as their native option.
-export const StoredNativeOutcome: Story = {
-  render: () => (
-    <RequestFrame>
-      <PermissionOutcome
-        outcome={{ outcome: 'selected', optionId: 'allow_once' }}
-      />
-    </RequestFrame>
-  ),
-  play: async () => {
-    const canvas = within(document.body);
-    await settleViewport(1440);
-    await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
-  },
-};
 
 // Each Agent's recorded request draws its title and the input it sent.
 function recordedRequest(mock: RequestMock, width: number): Story {

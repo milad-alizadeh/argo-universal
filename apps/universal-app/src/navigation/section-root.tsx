@@ -77,13 +77,13 @@ interface RootListProps extends SectionRootProps {
   narrow: boolean;
 }
 
-// The section's list, or on a narrow window its root page, whose Screen declares the header above it.
+// The section's list, which on a narrow window is its root page: the list's Screen declares the header above it.
 function RootList({ section, narrow }: RootListProps): React.JSX.Element {
-  const { list, rootPage } = useSectionList(section);
+  const { list } = useSectionList(section);
 
   return (
     <View className="flex-1 bg-content">
-      {narrow ? <NarrowRoot>{rootPage}</NarrowRoot> : list}
+      {narrow ? <NarrowRoot>{list}</NarrowRoot> : list}
     </View>
   );
 }

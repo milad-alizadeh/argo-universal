@@ -13,13 +13,19 @@ export const uncommittedLabel = 'Uncommitted Changes';
 
 export const compareAgainstLabel = 'Compare Against';
 
+// Shown until the Server has said which branch the main checkout has checked out.
+const unknownMainBranch = '…';
+
+const mainBranchName = (mainBranch: string | undefined): string =>
+  mainBranch ?? unknownMainBranch;
+
 // "main" names the branch the main checkout has checked out, whatever it is called.
-export const allChangesLabel = (mainBranch: string): string =>
-  `All Changes (vs ${mainBranch})`;
+export const allChangesLabel = (mainBranch: string | undefined): string =>
+  `All Changes (vs ${mainBranchName(mainBranch)})`;
 
 export function comparisonLabel(
   comparison: ChangesComparison,
-  mainBranch: string,
+  mainBranch: string | undefined,
 ): string {
   if (comparison.kind === 'main') return allChangesLabel(mainBranch);
 
@@ -31,11 +37,14 @@ export function comparisonLabel(
 // The empty state names the comparison in force.
 export function noChangesDescription(
   comparison: ChangesComparison,
-  mainBranch: string,
+  mainBranch: string | undefined,
 ): string {
   if (comparison.kind === 'uncommitted') return 'No uncommitted changes.';
 
-  const base = comparison.kind === 'branch' ? comparison.branch : mainBranch;
+  const base =
+    comparison.kind === 'branch'
+      ? comparison.branch
+      : mainBranchName(mainBranch);
 
   return `Nothing has changed since this branched from ${base}.`;
 }

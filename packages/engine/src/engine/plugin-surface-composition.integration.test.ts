@@ -130,13 +130,13 @@ it.each(['page', 'Slot'] as const)(
     // An older App reports no wire version.
     const phone = app(url, { platform: 'ios' });
     const current = app(url, desktop);
-    const legacy = app(url);
+    const unreported = app(url);
     // A surface that is not JSON, or has the wrong shape, reports no wire version.
     const notJson = app(url, 'not json');
     const malformed = app(url, '{"platform":"ios","wireVersion":"one"}');
 
-    const views = [phone, current, legacy, notJson, malformed].map((viewer) =>
-      watch(viewer, kind),
+    const views = [phone, current, unreported, notJson, malformed].map(
+      (viewer) => watch(viewer, kind),
     );
 
     await expect

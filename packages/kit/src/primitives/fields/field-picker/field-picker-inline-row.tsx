@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn } from '#kit/utils';
-import { NativeText } from '#primitives/content/native-text';
 import { SelectedCheck } from '#primitives/status/selected-check';
 import { Spinner } from '#primitives/status/spinner';
 import { moveThroughRadios } from './field-picker-inline-keys';
@@ -76,22 +75,8 @@ const focusProps = (
 
 function Text({ option }: OptionRowProps): ReactElement {
   return (
-    <View className="min-w-0 flex-1 gap-0.5">
+    <View className="min-w-0 flex-1">
       <OptionTitle option={option} />
-      <Subtitle text={option.subtitle} tone={option.subtitleTone} />
     </View>
-  );
-}
-
-function Subtitle(props: {
-  text?: string;
-  tone?: 'warning';
-}): ReactElement | null {
-  if (!props.text) return null;
-
-  return (
-    <NativeText role="secondary" tone={props.tone ?? 'muted'}>
-      {props.text}
-    </NativeText>
   );
 }

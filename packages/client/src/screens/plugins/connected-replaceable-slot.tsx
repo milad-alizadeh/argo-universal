@@ -16,6 +16,7 @@ import {
   usePluginDispatch,
   type PluginDispatch,
 } from './use-plugin-dispatch';
+import { usePluginOpener } from './use-plugin-opener';
 import { usePluginStreamState } from './use-plugin-stream-state';
 
 export function renderConnectedReplaceableSlot(
@@ -71,16 +72,22 @@ function useDrawingFallback(state: ReplaceableState): (reason: string) => void {
 
 const ignoreEvent = (): void => {};
 
-function useRenderActions(
-  state: ReplaceableState,
-): Pick<
+type RenderActions = Pick<
   React.ComponentProps<typeof ReplaceableSlotView>,
-  'onEvent' | 'onFallback'
-> {
-  const send = usePluginDispatch();
-  const onFallback = useDrawingFallback(state);
+  'onEvent' | 'onFallback' | 'onOpenPage'
+>;
 
-  return { onFallback, onEvent: renderDispatch(send, state.replacement) };
+function useRenderActions(state: ReplaceableState): RenderActions {
+  const send = usePluginDispatch();
+  const opener = usePluginOpener();
+
+  return {
+    onFallback: useDrawingFallback(state),
+    onEvent: renderDispatch(send, state.replacement),
+    onOpenPage: state.replacement
+      ? opener(state.replacement.pluginId)
+      : undefined,
+  };
 }
 
 function renderDispatch(
