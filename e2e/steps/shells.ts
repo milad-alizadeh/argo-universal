@@ -21,7 +21,8 @@ function shellEntry(page: Page): Locator {
     : page.getByRole('button', { name: 'Open Shells overview', exact: true });
 }
 
-const shellOutput = (page: Page): Locator => page.getByLabel(/ output$/);
+const shellOutput = (page: Page): Locator =>
+  page.getByLabel(/Shell ready.* output$/);
 
 Then('the Session offers no Shells', async ({ page }) => {
   await expect(
