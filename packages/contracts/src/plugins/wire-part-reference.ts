@@ -8,7 +8,6 @@ export interface WirePartReference {
   };
   appearance: string;
   sdkProps?: string;
-  deprecated?: string;
 }
 
 const layout = (summary: string): WirePartReference => ({

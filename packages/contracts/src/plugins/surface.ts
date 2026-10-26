@@ -22,7 +22,7 @@ export const currentPluginSurface = (
 export const drawsPluginWire = (surface: PluginSurface | undefined): boolean =>
   (surface?.wireVersion ?? 0) >= minimumPluginWireVersion;
 
-// Render context belongs to one App; legacy Connections did not report a surface.
+// Render context belongs to one App; a Connection that reports no surface draws no Plugin wire.
 export type PluginRenderContext = Readonly<{
   serverDevice: boolean;
   projectId?: string;

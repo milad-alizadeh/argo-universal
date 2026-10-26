@@ -43,9 +43,9 @@ type Context = Parameters<NonNullable<Story['play']>>[0];
 async function expectPrDetails({
   canvas,
 }: Pick<Context, 'canvas'>): Promise<void> {
-  const stage = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
+  const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
 
-  await expect(await stage.findByLabelText(stageLabel)).toBeVisible();
+  await expect(await panel.findByLabelText(stageLabel)).toBeVisible();
 }
 
 export const BoundedPreview: Story = {
@@ -76,7 +76,7 @@ export const BoundedPreview: Story = {
   },
 };
 
-export const DisclosureKeepsStageClosed: Story = {
+export const DisclosureKeepsInspectorClosed: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Collapse Changes' }),

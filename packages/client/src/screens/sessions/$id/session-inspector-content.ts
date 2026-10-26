@@ -4,7 +4,7 @@ import type {
   ShellPanelProps,
   SubagentListProps,
 } from '#features/sessions';
-import type { AgentFeedSlot } from './session-agents-stage';
+import type { AgentFeedSlot } from './session-agents-tab';
 
 // What a Session gives its Sections to draw from.
 export interface SessionInspectorContent {

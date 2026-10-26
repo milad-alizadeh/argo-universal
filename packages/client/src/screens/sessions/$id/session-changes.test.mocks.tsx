@@ -110,7 +110,7 @@ interface MemoryInspectorProps {
   header?: SessionHeaderProps;
 }
 
-// The Session's Inspector with its Changes tab shown: the Stage when wide, the sheet on a phone.
+// The Session's Inspector with its Changes tab shown: the Inspector when wide, the sheet on a phone.
 export function MemoryChangesInspector(
   props: MemoryInspectorProps,
 ): JSX.Element {

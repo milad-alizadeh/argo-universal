@@ -19,7 +19,7 @@ export interface SessionHeaderProps {
   status: SessionHeaderStatus;
   // The running Turn's start, for "4m 12s"; null when no Turn runs.
   startedAt: number | null;
-  // The Session's PRs, drawn in the Workbench and Stage.
+  // The Session's PRs, drawn in the Workbench and Inspector.
   pullRequests?: SessionPullRequest[];
   // Rename and Archive under ⋯, as the Session's row offers them; absent where the page offers neither.
   menu?: SessionMenu;

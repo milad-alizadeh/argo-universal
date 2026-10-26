@@ -50,7 +50,7 @@ export const ActivePreviewAndDoneGroup: Story = {
   },
 };
 
-export const DisclosureKeepsStageClosed: Story = {
+export const DisclosureKeepsInspectorClosed: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Collapse Agents' }),

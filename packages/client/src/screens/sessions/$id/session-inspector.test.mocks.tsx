@@ -17,25 +17,25 @@ import { manyChanges, useMemoryChanges } from './session-changes.test.mocks';
 import { SessionInspector } from './session-inspector';
 
 // Long real entry shapes with distinct identities exercise each section's scroll independently.
-const stageAgents = [
+const inspectorAgents = [
   runningSubagent,
   ...Array.from({ length: 30 }, (_, index) => ({
     ...runningSubagent,
-    sessionId: `stage-agent-${index}`,
+    sessionId: `inspector-agent-${index}`,
     title: `Inspect module ${index}`,
   })),
 ];
 
-const stageShells = [
+const inspectorShells = [
   ...sessionShells,
   ...Array.from({ length: 30 }, (_, index) => ({
     ...runningShell,
-    id: `stage-shell-${index}`,
+    id: `inspector-shell-${index}`,
     command: `pnpm check-module-${index}`,
   })),
 ];
 
-export function Stage(): JSX.Element {
+export function OverflowingInspector(): JSX.Element {
   const panels = useSessionPanels(['changes', 'shells', 'subagents']);
   const [opened, setOpened] = useState(false);
   const changes = useMemoryChanges(manyChanges);
@@ -51,13 +51,13 @@ export function Stage(): JSX.Element {
     <View className="h-80 flex-row">
       <SessionInspector
         panels={panels}
-        subagents={{ subagents: stageAgents, now: subagentNow }}
+        subagents={{ subagents: inspectorAgents, now: subagentNow }}
         renderSubagentFeed={(props) => (
           <SubagentFeed {...props} feed={runningFeed} now={subagentNow} />
         )}
         changes={changes}
         shells={{
-          shells: stageShells,
+          shells: inspectorShells,
           output: longRunningOutput,
           now: shellNow,
           onStop: fn(),

@@ -1,6 +1,5 @@
 import type { SessionListInput } from '@repo/contracts';
 import {
-  defaultSessionsView,
   type SessionsStatus,
   type SessionsView,
   sessionsStatusChoices,
@@ -29,18 +28,4 @@ export function sessionsListInput(
     archived: statusArchived(view.status),
     query: query || undefined,
   };
-}
-
-/*
- * The view an older Server can list, when it refused this one: a Server from before Status All answers BAD_REQUEST
- * to a request without `archived`, so All falls back to Active.
- * Undefined when the refusal is not that, so the list shows its load failure as before.
- */
-export function olderServerView(
-  view: SessionsView,
-  errorCode: string | undefined,
-): SessionsView | undefined {
-  if (errorCode !== 'BAD_REQUEST' || view.status !== 'all') return undefined;
-
-  return { ...view, status: defaultSessionsView.status };
 }

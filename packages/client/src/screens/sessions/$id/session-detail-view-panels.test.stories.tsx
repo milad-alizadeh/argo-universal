@@ -6,14 +6,14 @@ import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { panelsSession } from './session-detail-view-panels.test.mocks';
 
-const desktopWithStage = 1920;
+const desktopWithInspector = 1920;
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/Panels',
   parameters: { screenPreview: true },
   args: { view: panelsSession },
   render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,
-  beforeEach: (): Promise<void> => settleViewport(desktopWithStage),
+  beforeEach: (): Promise<void> => settleViewport(desktopWithInspector),
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export default meta;

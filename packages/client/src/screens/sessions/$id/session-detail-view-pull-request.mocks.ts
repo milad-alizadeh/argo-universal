@@ -7,7 +7,7 @@ export {
   severalPullRequests,
 } from '../../../features/sessions/components/session-pull-request.mocks';
 
-// The Session's PR props, presented by its Workbench and Stage.
+// The Session's PR props, presented by its Workbench and Inspector.
 export function withPullRequests(
   session: OpenSessionViewProps,
   pullRequests: SessionPullRequest[],

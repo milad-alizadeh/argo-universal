@@ -50,7 +50,6 @@ export {
 } from './stores/sessions-view-state';
 
 export {
-  chooseSessionsView,
   defaultSessionsView,
   isDefaultSessionsView,
   type SessionsLayout,
@@ -58,10 +57,7 @@ export {
   useSessionsViewKept,
 } from './stores/sessions-view';
 
-export {
-  olderServerView,
-  sessionsListInput,
-} from './utils/sessions-list-input';
+export { sessionsListInput } from './utils/sessions-list-input';
 
 export { type StartingFeed } from './utils/starting-feed';
 

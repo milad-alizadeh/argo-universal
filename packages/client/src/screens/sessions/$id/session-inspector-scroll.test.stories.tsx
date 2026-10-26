@@ -4,11 +4,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import { runningSubagent } from '../../../features/sessions/components/subagent-list/subagent-list.mocks';
-import { Stage } from './session-inspector-stage.test.mocks';
+import { OverflowingInspector } from './session-inspector.test.mocks';
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/InspectorScroll',
-  render: (): JSX.Element => <Stage />,
+  render: (): JSX.Element => <OverflowingInspector />,
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta;
 

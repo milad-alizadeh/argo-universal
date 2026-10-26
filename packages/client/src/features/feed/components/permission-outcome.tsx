@@ -1,5 +1,5 @@
-import {
-  type PermissionOutcome as Outcome,
+import type {
+  PermissionOutcome as Outcome,
   PermissionOptionKind,
 } from '@repo/contracts';
 import { Icon } from '@repo/kit/primitives/content/icon';
@@ -11,21 +11,11 @@ export interface PermissionOutcomeProps {
   outcome: Outcome;
 }
 
-type SelectedOutcome = Extract<Outcome, { outcome: 'selected' }>;
-
-const selectedKind = (
-  outcome: SelectedOutcome,
-): PermissionOptionKind | undefined =>
-  outcome.kind ?? PermissionOptionKind.safeParse(outcome.optionId).data;
-
-// The kind of option the user chose; rows written before the kind was kept carry only a native option id, which is its kind.
-export function chosenPermissionKind(
+// The kind of option the user chose.
+export const chosenPermissionKind = (
   outcome: Outcome | undefined,
-): PermissionOptionKind | undefined {
-  if (outcome?.outcome !== 'selected') return undefined;
-
-  return selectedKind(outcome);
-}
+): PermissionOptionKind | undefined =>
+  outcome?.outcome === 'selected' ? outcome.kind : undefined;
 
 const chosenName = (outcome: Outcome): string | undefined =>
   outcome.outcome === 'selected' ? outcome.name : undefined;

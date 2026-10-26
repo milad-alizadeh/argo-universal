@@ -33,7 +33,7 @@ type Story = StoryObj<typeof meta>;
 
 const firstChangeLabel = 'Open files of Change #45';
 
-// The Stage's own glyph label for the same Changes.
+// The Inspector's own glyph label for the same Changes.
 const stageLabels = ['Open Change #45', 'Open Change #46'];
 
 export const ChecksStayWithTheChangesSummary: Story = {
@@ -45,16 +45,16 @@ export const ChecksStayWithTheChangesSummary: Story = {
   },
 };
 
-export const SeveralPullRequestsInStage: Story = {
+export const SeveralPullRequestsInInspector: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: firstChangeLabel }),
     );
     await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
-    const stage = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
+    const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
 
     for (const label of stageLabels) {
-      await expect(stage.getByLabelText(label)).toBeVisible();
+      await expect(panel.getByLabelText(label)).toBeVisible();
     }
   },
 };

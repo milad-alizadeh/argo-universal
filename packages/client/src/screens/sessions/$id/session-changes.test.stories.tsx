@@ -54,7 +54,7 @@ async function expectFolded(): Promise<void> {
   await expect(fileHeader(shortFile)).toHaveAttribute(expanded, 'false');
 }
 
-// The Stage's toolbar names the comparison and counts the files and their lines; a phone's sheet shows the files alone.
+// The Inspector's toolbar names the comparison and counts the files and their lines; a phone's sheet shows the files alone.
 export const ShowsFilesAndTotalsWide: Story = {
   play: async () => {
     await settleViewport(layoutWidths.wide);

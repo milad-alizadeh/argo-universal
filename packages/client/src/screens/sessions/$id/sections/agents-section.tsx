@@ -1,5 +1,5 @@
 import { WorkbenchAgents } from '#features/sessions';
-import { SessionAgentsStage } from '../session-agents-stage';
+import { SessionAgentsTab } from '../session-agents-tab';
 import { agentsFacts } from './agents-facts';
 import type { SessionSection } from './session-section';
 
@@ -16,6 +16,6 @@ export const agentsSection: SessionSection = {
     countTone: subagents.subagents.some((one) => one.state !== 'idle')
       ? 'success'
       : 'muted',
-    body: <SessionAgentsStage {...subagents} renderFeed={renderSubagentFeed} />,
+    body: <SessionAgentsTab {...subagents} renderFeed={renderSubagentFeed} />,
   }),
 };

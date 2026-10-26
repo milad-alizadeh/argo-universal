@@ -2,7 +2,7 @@ import { InspectorBody } from '@repo/kit/primitives/scaffolds/inspector';
 import { useState, type ComponentProps, type ReactElement } from 'react';
 import {
   ChangesFiles,
-  ChangesStageToolbar,
+  ChangesInspectorToolbar,
   type ChangesViewProps,
 } from '#features/changes';
 import {
@@ -27,15 +27,15 @@ function Files({ changes }: Props): ReactElement | null {
   return changes ? <ChangesFiles {...changes} /> : null;
 }
 
-function StageContent(props: Page): ReactElement | null {
+function ChangesContent(props: Page): ReactElement | null {
   if (props.segment === 'change' && props.header)
     return <SessionChangeDetail {...props.header} />;
 
   return <Files {...props} />;
 }
 
-const stageToolbar = (props: Page): ReactElement => (
-  <ChangesStageToolbar
+const changesToolbar = (props: Page): ReactElement => (
+  <ChangesInspectorToolbar
     hasChange={hasChange(props)}
     segment={props.segment}
     onSelect={props.onSelect}
@@ -43,24 +43,24 @@ const stageToolbar = (props: Page): ReactElement => (
   />
 );
 
-function stageFrame(props: Page): ComponentProps<typeof InspectorBody> {
+function changesFrame(props: Page): ComponentProps<typeof InspectorBody> {
   return {
     title: 'Changes',
     open: true,
     onOpenChange: ignore,
     surface: 'bg-transparent',
-    toolbar: stageToolbar(props),
+    toolbar: changesToolbar(props),
     // The files are their own virtualised list; the change detail scrolls in the Inspector's.
     contentScrolls: props.segment === 'files',
   };
 }
 
 // Segments and comparison stay above the scroller.
-export function SessionChangesStage(props: Props): ReactElement {
-  return <ChangesStagePage key={props.changesRequest} {...props} />;
+export function SessionChangesTab(props: Props): ReactElement {
+  return <ChangesTabPage key={props.changesRequest} {...props} />;
 }
 
-function ChangesStagePage(props: Props): ReactElement {
+function ChangesTabPage(props: Props): ReactElement {
   const [selected, onSelect] = useState(
     props.changesRequest ? 'change' : 'files',
   );
@@ -72,8 +72,8 @@ function ChangesStagePage(props: Props): ReactElement {
   };
 
   return (
-    <InspectorBody {...stageFrame(page)}>
-      <StageContent {...page} />
+    <InspectorBody {...changesFrame(page)}>
+      <ChangesContent {...page} />
     </InspectorBody>
   );
 }

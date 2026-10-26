@@ -17,7 +17,7 @@ export type AgentFeedSlot = (
 type Props = SubagentListProps & { renderFeed?: AgentFeedSlot };
 
 // Selection belongs to this retained tab; opening another tab never navigates away from its detail.
-export function SessionAgentsStage(props: Props): ReactNode {
+export function SessionAgentsTab(props: Props): ReactNode {
   const [selected, select] = useState<string | null>(null);
   const subagent = props.subagents.find((one) => one.sessionId === selected);
 

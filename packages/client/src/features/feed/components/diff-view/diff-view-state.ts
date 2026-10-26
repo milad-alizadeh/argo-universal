@@ -5,7 +5,7 @@ import type { FileHeaderProps } from './diff-file-header';
 export interface DiffViewProps {
   file: FileDiff;
   inline?: boolean;
-  // A file opened directly from the Stage list reveals its diff even when already viewed.
+  // A file opened directly from the Inspector list reveals its diff even when already viewed.
   initialOpen?: boolean;
   // Inspector only: the file's Viewed mark. Marking a file viewed folds it; clearing the mark opens it.
   viewed?: boolean;

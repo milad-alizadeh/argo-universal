@@ -83,7 +83,7 @@ export const severalPullRequests: SessionPullRequest[] = [
   {
     ...pullRequestMocks.checksPassed,
     number: 43,
-    title: 'Add the Stage tab strip',
+    title: 'Add the Inspector tab strip',
   },
   pullRequestMocks.followUp,
   pullRequestMocks.merged,

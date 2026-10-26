@@ -4,7 +4,7 @@ import {
   WorkbenchChangesSummary,
   WorkbenchMoreChanges,
 } from '#features/sessions';
-import { SessionChangesStage } from '../session-changes-stage';
+import { SessionChangesTab } from '../session-changes-tab';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import { changesFacts, pullRequestsOf, summaryOf } from './changes-facts';
 import type {
@@ -51,7 +51,7 @@ export const changesSection: SessionSection = {
   card: changesCard,
   tab: (content, tab) => ({
     body: (
-      <SessionChangesStage
+      <SessionChangesTab
         changes={content.changes}
         header={content.header}
         changesRequest={tab.requested}

@@ -41,7 +41,12 @@ it.each(workMocks)(
       _meta: {
         argo: {
           ...recorded._meta?.argo,
-          permissionOutcome: { outcome: 'selected', optionId: 'allow_once' },
+          permissionOutcome: {
+            outcome: 'selected',
+            optionId: 'allow_once',
+            name: 'Allow',
+            kind: 'allow_once',
+          },
         },
       },
     };

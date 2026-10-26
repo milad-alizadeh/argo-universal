@@ -19,7 +19,7 @@ const meta = {
     initialOpen: {
       control: 'boolean',
       description:
-        'A file opened from the Stage list reveals its diff even when already viewed.',
+        'A file opened from the Inspector list reveals its diff even when already viewed.',
     },
     viewed: {
       control: 'boolean',
