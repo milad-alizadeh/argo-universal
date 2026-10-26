@@ -1,3 +1,5 @@
+import { rename } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
   projectDetailsSlotId,
   type PluginSlotInput,
@@ -8,7 +10,7 @@ import {
 } from '@repo/contracts/plugins/wire-fixtures';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { createRuntimePlugins } from '#mocks/runtime-plugins';
+import { createRuntimePlugins, shippedFolder } from '#mocks/runtime-plugins';
 
 const slotCounterId = 'slot-counter';
 
@@ -113,5 +115,55 @@ it('ends at once with no contributors when no Plugin declares the Slot', async (
     messages.push(message);
 
   expect(messages).toEqual([{ type: 'contributors', pluginIds: [] }]);
+  controller.abort();
+}, 20_000);
+
+it('orders contributors by Plugin id, not by folder', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'alpha', fixture: 'slot', slots: [projectDetailsSlotId] },
+    { id: 'beta', fixture: 'slot', slots: [projectDetailsSlotId] },
+  ]);
+
+  await rename(
+    join(home, shippedFolder, 'alpha'),
+    join(home, shippedFolder, 'zeta'),
+  );
+
+  const { createCaller } = await startEngineTestHost({ home });
+  const controller = new AbortController();
+
+  const messages = (
+    await createCaller({ signal: controller.signal }).plugins.slot(
+      projectDetails('bento'),
+    )
+  )[Symbol.asyncIterator]();
+
+  expect((await messages.next()).value).toEqual({
+    type: 'contributors',
+    pluginIds: ['alpha', 'beta'],
+  });
+  controller.abort();
+}, 20_000);
+
+it('orders contributors by declared order before Plugin id', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'alpha', fixture: 'slot', slots: [projectDetailsSlotId], order: 2 },
+    { id: 'beta', fixture: 'slot', slots: [projectDetailsSlotId], order: 1 },
+    { id: 'gamma', fixture: 'slot', slots: [projectDetailsSlotId] },
+  ]);
+
+  const { createCaller } = await startEngineTestHost({ home });
+  const controller = new AbortController();
+
+  const messages = (
+    await createCaller({ signal: controller.signal }).plugins.slot(
+      projectDetails('bento'),
+    )
+  )[Symbol.asyncIterator]();
+
+  expect((await messages.next()).value).toEqual({
+    type: 'contributors',
+    pluginIds: ['gamma', 'beta', 'alpha'],
+  });
   controller.abort();
 }, 20_000);

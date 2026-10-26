@@ -55,6 +55,7 @@ pnpm test
 
 `argo-plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
 It reports Hook registrations, `argo` calls, and Slot registrations from the entry and its imports.
+For a Plugin that hooks `ui.render`, it also reports the declared order, as `order: ui.render <n>`.
 Diagnostics include the file, line, column, and refusal reason. A refused Plugin produces a non-zero exit code.
 
 The command checks source without starting the Plugin or running its machine calls.
@@ -95,12 +96,14 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | --- | --- |
 | `mount({ page, surface })` | Opens a page with the chosen App platform. |
 | `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
+| `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
 | `view.find(text)` | Waits for a matching node and returns its wire data. |
 | `view.press(text)` | Sends `onPress` through the production dispatch path. |
 | `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, and Hook deadlines together. The kit keeps its real rendering scheduler. |
 | `settings` | Provides a Map with the manifest defaults. Changes reach `argo.settings.get`. |
 | `storage.execute(queries)` | Reads or seeds the isolated Plugin SQLite database through the production storage API. |
 | `session` | Provides test Session, Project, and Agent identifiers. |
+| `sessions` option | What `argo.sessions.get` answers, by Session id. |
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
 `find` matches a label, title, text, text content, or accessible label. It waits up to three seconds.
@@ -141,11 +144,9 @@ Use `useData` to describe a read. Argo runs the Query, shares its answer, and re
 import { Label, useData, type Argo } from '@argo/plugin-kit';
 
 export function register(argo: Argo): void {
-  argo.slots.register('argo/session/row/v1', ({ context: { projectId, branch } }) => {
+  argo.slots.register('argo/project/details/v1', ({ context: { projectId } }) => {
     const { data, error } = useData(
-      branch === null
-        ? null
-        : { api: 'process', action: 'run', argv: ['forge', 'list', '--json'] },
+      { api: 'process', action: 'run', argv: ['forge', 'list', '--json'] },
       { every: 30_000 },
     );
 
@@ -171,14 +172,40 @@ Storage Queries are never polled. A committed Plugin storage write marks them du
 
 Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different Slots.
 Object key order and header name case do not change the entry.
-**A Query built from a row's own `sessionId` or `branch` makes one call per row.**
-To share a list, describe the same list Query in each row and select that row's value from the answer.
 
-The Session-row Slot context is `{ sessionId, projectId, branch }`, with `branch` nullable.
-Its children are the existing `ListItem.meta` parts: `Label` and `Pill`. Return a fragment to provide multiple children.
-A Pill uses the kit's existing `text`, `tone`, and optional `color` props. Core adds no pull request or check schema.
-App placement, meta overflow presentation, and nav badge appearance remain gated on approved Paper states in #1166.
-A Plugin that throws while drawing shows one error toast naming the Plugin, and its other pages, Slots, Hooks and background pass keep running.
+## Session row items
+
+A Session row's meta line takes items, not a kit tree. Argo asks each Plugin that declares `argo/session/row/v1` once per list, with every row's `{ sessionId, projectId }`, and the Plugin answers with items keyed by Session id (ADR-0035):
+
+```tsx
+import type { Argo } from '@argo/plugin-kit';
+
+export function register(argo: Argo): void {
+  argo.slots.register('argo/session/row/v1', async ({ contexts }) => {
+    const rows = await Promise.all(
+      contexts.map(async ({ sessionId }) => {
+        const session = await argo.sessions.get(sessionId);
+        const issue = session?.branch?.match(/^issue-(\d+)/)?.[1];
+
+        return [
+          sessionId,
+          issue ? [{ text: `#${issue}`, action: { path: `/issues/${issue}` } }] : [],
+        ];
+      }),
+    );
+
+    return Object.fromEntries(rows);
+  });
+}
+```
+
+An item is `{ icon?, text, tone?, tooltip?, action? }`: `text` is at most 40 characters, `tone` is a kit tone, and `action.path` opens one of the Plugin's own pages. Anything else fails the Slot's schema.
+A Session id left out of the answer has no items. One Plugin sends at most 8 items for one row; more fails the schema.
+The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session.
+
+Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.slots.changed('argo/session/row/v1')`, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
+Argo's own items come first, then each Plugin's in Slot order. A phone shows 1 item and a desktop or the web shows 3; the rest come with their Plugin id as overflow for "+N".
+A Plugin that throws, answers off-schema, or takes over two seconds is left out alone, and the Server logs it once per Plugin, Slot and reason. Argo does not ask it again, nor wait for it, until it calls `argo.slots.changed` or restarts.
 
 ## Background pages and badges
 
@@ -205,6 +232,18 @@ The failure subscription records one non-fatal drawing failure per Plugin.
 The core Hook events are `prompt.submit`, `tool.check`, and `process.spawn` (ADR-0038).
 Both `prompt.submit` and `tool.check` carry `sessionId` and `projectId`.
 The separate `ui.render` Hook draws Replaceable Slots with its existing payload and answer.
+List the Replaceable Slots it draws in `contributes.renders`, which needs `ui.render` in `contributes.hooks`. `contributes.slots` and `argo.slots.register` take only add-only Slots.
+
+Order a Plugin with `contributes.order` in `plugin.json`, an integer that defaults to 0 (ADR-0035).
+A Slot's contributors and a Feed row's `ui.render` chain both run first-party Plugins first, then lower `order` first, then by Plugin id; folder names do not change it.
+The order is the Plugin's, so it covers all of its Slots and `ui.render` Hooks. The other Hook events keep worker order (ADR-0038).
+Declaring `order` without a Slot in `contributes.slots` or `contributes.renders` is a manifest error.
+The Server logs, once per Plugin and Slot, each Plugin that changed a row's props, and each Plugin shadowed because a Hook before it answered with a tree:
+
+```text
+Plugin <id>: changed <slotId> props
+Plugin <id>: <slotId> shadowed by Plugin <id>'s tree
+```
 
 Argo sets each Hook's wall-clock budget: 2000 ms for `prompt.submit`, and 10000 ms for the other events, including `ui.render`.
 Only time spent waiting on `next` stops the budget. Calls to `argo` count against it.
@@ -225,6 +264,8 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 
 ## Accounts and OAuth
+
+`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, in-progress, signed-in, continue-on-the-Server-Device and port-in-use states, PKCE sign-in against GitHub, and the provider handler. Copy it for a new service.
 
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
 Register that page with `argo.pages.register` before registration completes.

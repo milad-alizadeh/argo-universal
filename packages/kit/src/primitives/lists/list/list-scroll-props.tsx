@@ -117,11 +117,12 @@ function ScrollEndGap(): ReactElement | null {
   return <View style={{ height: gap }} />;
 }
 
+// ListFooter takes its section's inset; only Android's info icon needs one of its own.
 function ScreenFooter({ text }: { text?: string }): ReactNode {
   if (!text) return null;
 
   return (
-    <View className="flex-row items-center px-4">
+    <View className="flex-row items-center android:px-4">
       {Platform.OS === 'android' ? <Icon name="info" /> : null}
       <ListFooter text={text} />
     </View>

@@ -3,6 +3,7 @@ import { type ReactNode, useContext } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { InsideHostContext } from './host-nesting';
 import type { HostProps } from './host-props';
+import { useRedactionProps } from './host-redaction-props';
 
 /*
  * Every Expo UI tree in Argo sits in this Host, which themes it the way Expo intends: the Appearance and a
@@ -11,12 +12,14 @@ import type { HostProps } from './host-props';
  */
 export function Host({ seed, children, ...props }: HostProps): ReactNode {
   const theme = useNativeTheme();
+  const redaction = useRedactionProps();
 
   if (useContext(InsideHostContext)) return children;
 
   return (
     <ExpoHost
       {...props}
+      {...redaction}
       colorScheme={theme.colorScheme}
       seedColor={theme.colors[seed ?? 'accent']}
     >

@@ -67,6 +67,18 @@
       "command": "gh",
       "args": ["issue", "view", "*", "--repo", "*", "--json", "*"],
       "env": ["GH_HOST", "GH_TOKEN"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "close", "*", "--repo", "*"],
+      "env": ["GH_HOST", "GH_TOKEN"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "reopen", "*", "--repo", "*"],
+      "env": ["GH_HOST", "GH_TOKEN"]
     }
   ]
 }

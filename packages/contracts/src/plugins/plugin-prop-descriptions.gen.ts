@@ -81,7 +81,8 @@ export type WireSchemaHints = {
     "onChangeText": PropValue<"Screen", "onChangeText">;
   };
   "ListDetail": {
-
+    /** The list screen’s title on compact windows, where the list is the screen; the header returns to it when the item closes. */
+    "title": PropValue<"ListDetail", "title">;
   };
   "Detail": {
     /** The content drawn by the kit Markdown part. */
@@ -347,6 +348,18 @@ export type WireSchemaHints = {
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"SplitButton", "onValueChange">;
   };
+  "SegmentedControl": {
+    /** The visible and accessible label. */
+    "label": PropValue<"SegmentedControl", "label">;
+    /** The mutually exclusive views, all visible at once. */
+    "options": PropValue<"SegmentedControl", "options">;
+    /** The selected view. */
+    "value": PropValue<"SegmentedControl", "value">;
+    /** Action or Plugin event invoked by onValueChange. */
+    "onValueChange": PropValue<"SegmentedControl", "onValueChange">;
+    /** Whether the whole control is unavailable. */
+    "disabled": PropValue<"SegmentedControl", "disabled">;
+  };
   "SearchField": {
     /** Search name and placeholder. */
     "label": PropValue<"SearchField", "label">;
@@ -502,7 +515,7 @@ export type WireSchemaHints = {
     "onChangeText": PropValue<"FieldGroup.TextField", "onChangeText">;
     /** Example shown while empty. */
     "placeholder": PropValue<"FieldGroup.TextField", "placeholder">;
-    /** Why the value is not accepted. */
+    /** Rejection reason; also set Section.footer to show it. */
     "error": PropValue<"FieldGroup.TextField", "error">;
     /** The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad. */
     "keyboardType": PropValue<"FieldGroup.TextField", "keyboardType">;
@@ -534,7 +547,7 @@ export type WireSchemaHints = {
     "onChangeText": PropValue<"FieldGroup.SecretField", "onChangeText">;
     /** Example shown while empty. */
     "placeholder": PropValue<"FieldGroup.SecretField", "placeholder">;
-    /** Why the value is not accepted. */
+    /** Rejection reason; also set Section.footer to show it. */
     "error": PropValue<"FieldGroup.SecretField", "error">;
     /** The keyboard Expo UI TextInput shows; a number is a number-pad or decimal-pad. */
     "keyboardType": PropValue<"FieldGroup.SecretField", "keyboardType">;

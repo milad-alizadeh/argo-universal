@@ -3,12 +3,18 @@ import type {
   PluginProjectInfo,
   PluginSettingValue,
 } from '@repo/contracts/plugins';
+import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { JsonObject, Json } from '@repo/contracts/plugins/hook-protocol';
+import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   PluginBadge,
   PluginFailure,
 } from '@repo/contracts/plugins/runtime';
-import type { PluginSlotInput } from '@repo/contracts/plugins/wire';
+import type {
+  PluginSlotInput,
+  SlotItems,
+  SlotItemsInput,
+} from '@repo/contracts/plugins/wire';
 import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
 import type { TestProjects } from './test-projects';
 import type { PluginMount, PluginTestView } from './view';
@@ -24,7 +30,15 @@ export interface PluginTestOptions {
   clockStart?: number;
   network?: PluginNetwork;
   settings?: Map<string, PluginSettingValue>;
+  // What `argo.sessions.get` answers, by Session id.
+  sessions?: Record<string, PluginSessionInfo>;
 }
+
+// The App an items Slot list is asked from; it decides how many items show before "+N".
+export type SlotItemsOptions = {
+  signal: AbortSignal;
+  platform?: PluginSurface['platform'];
+};
 
 export interface PluginTest {
   projects: TestProjects;
@@ -37,6 +51,11 @@ export interface PluginTest {
     projectId?: string,
   ) => PluginTestView;
   slot: (slot: PluginSlotInput, pluginId?: string) => PluginTestView;
+  // One list's merged items, sent again each time a Plugin says its items changed.
+  slotItems: (
+    input: SlotItemsInput,
+    options: SlotItemsOptions,
+  ) => AsyncGenerator<SlotItems>;
   close: () => Promise<void>;
   mount: (input: PluginMount) => Promise<PluginTestView>;
   emit: (name: HookEventName, event: JsonObject) => Promise<Json>;

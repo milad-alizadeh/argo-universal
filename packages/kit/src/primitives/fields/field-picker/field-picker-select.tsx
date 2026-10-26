@@ -13,6 +13,8 @@ export type FieldPickerSelectProps = {
   options: readonly FieldPickerOption[];
   onValueChange: (value: string) => void;
   disabled?: boolean;
+  // Shown while no option is chosen, as the schema's `summary` is everywhere else.
+  summary?: string;
   // The row's title, drawn inside the trigger so the whole row presses.
   lead?: ReactNode;
 };
@@ -21,6 +23,12 @@ export type FieldPickerSelectProps = {
 const emptyValue = 'field-picker-empty';
 
 const toRadix = (value: string): string => (value === '' ? emptyValue : value);
+
+// Radix shows its placeholder only for the empty string, so a value no option has stands as that.
+const radixValue = (props: FieldPickerSelectProps): string =>
+  props.options.some((option) => option.value === props.value)
+    ? toRadix(props.value)
+    : '';
 
 const fromRadix = (value: string): string =>
   value === emptyValue ? '' : value;
@@ -37,7 +45,7 @@ export function FieldPickerSelect(
   return (
     <RadixSelect.Root
       {...state}
-      value={toRadix(props.value)}
+      value={radixValue(props)}
       onValueChange={(value) => props.onValueChange(fromRadix(value))}
       disabled={props.disabled}
     >

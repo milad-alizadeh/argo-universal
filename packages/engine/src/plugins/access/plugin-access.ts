@@ -12,7 +12,6 @@ import { CapabilityRefusal } from './capability-refusal';
 import {
   allowLinks,
   allowRead,
-  allowWrite,
   argsMatch,
   childEnvironment,
   realOrMissing,
@@ -21,6 +20,7 @@ import {
   type Subject,
 } from './plugin-access-rules';
 import { allowLiteral } from './plugin-addresses';
+import { allowWrite } from './plugin-write-rules';
 
 // What the Server holds for an activated Plugin: its Grants, and its code folder, which `argo.fs` never writes.
 export type ActivatedPlugin = {
@@ -109,6 +109,12 @@ export class PluginAccess {
         this.scope.environment,
       ),
     };
+  }
+
+  // `argo.sessions.get` reads Session details only under a `sessions:read` Grant.
+  checkSessionsRead(): void {
+    if (!this.scope.grants.some(({ kind }) => kind === 'sessions:read'))
+      throw new CapabilityRefusal('sessions:read is not a declared Capability');
   }
 
   checkHost(url: URL): HostRule {

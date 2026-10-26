@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useClaim } from '#kit/claim-store';
 import { useWide } from '#kit/use-wide/use-wide';
 import {
+  Screen,
   ScreenBesideList,
   ScreenNavigationEnabled,
 } from '#primitives/scaffolds/screen';
@@ -11,6 +12,7 @@ import {
   ListDetailSidebarContext,
   type ListDetailSidebar,
 } from './list-detail-sidebar';
+import { SidebarRows } from './sidebar-rows';
 
 /*
  * Foundations / ListDetail: on a wide window the list sits beside the selected item, in the App's sidebar at a
@@ -28,8 +30,15 @@ export function ListDetail(props: ListDetailProps): ReactElement {
   return <WithDetail {...props} wide={false} />;
 }
 
+// A titled list is the screen's own: its Screen replaces the header an item's Screen left in the navigator.
 function ListOnly(props: ListDetailProps): ReactElement {
-  return <Pane testID={props.testID}>{props.list}</Pane>;
+  const { title, list } = props;
+
+  return (
+    <Pane testID={props.testID}>
+      {title ? <Screen title={title}>{list}</Screen> : list}
+    </Pane>
+  );
 }
 
 /*
@@ -46,11 +55,12 @@ function WithDetail({
   sidebar,
   ...props
 }: WithDetailProps): ReactElement {
-  useClaim(sidebar, props.list);
+  const list = <SidebarRows>{props.list}</SidebarRows>;
+  useClaim(sidebar, list);
 
   return (
     <View testID={props.testID} className="flex-1 flex-row">
-      {wide && !sidebar && <ListPane list={props.list} />}
+      {wide && !sidebar && <ListPane list={list} />}
       <DetailPane {...props} />
     </View>
   );

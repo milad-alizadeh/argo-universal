@@ -19,12 +19,13 @@ import { pluginKeychainService, type Keychain } from './keychain';
 import type { PluginNetwork } from './plugin-fetch';
 import type { PluginResources } from './plugin-resources';
 import type { PluginServiceOptions } from './plugin-services';
+import { answerSession } from './session-calls';
 import type { PluginStorage } from './storage';
 
-// Pages and Hooks are the runtime's own; every other call is answered by PluginServices.
+// Pages, Hooks and Slot items are the runtime's own; every other call is answered by PluginServices.
 export type StateRequest = Exclude<
   PluginRequest,
-  { api: 'view' | 'hooks' | 'dispatchResult' | 'data' | 'nav' }
+  { api: 'view' | 'hooks' | 'dispatchResult' | 'data' | 'nav' | 'slots' }
 >;
 
 type Api = StateRequest['api'];
@@ -92,6 +93,10 @@ const calls: CallKinds = {
     ({ call }) => `argo.secrets.${call.action} ${call.account}`,
     (call, request) => secrets(call, request.call),
   ),
+  sessions: {
+    describe: ({ sessionId }) => `argo.sessions.get ${sessionId}`,
+    answer: answerSession,
+  },
   assets: {
     describe: () => 'argo.assets.resolve',
     answer: (call, { source }) => answerAsset(call, source),

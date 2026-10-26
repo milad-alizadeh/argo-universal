@@ -1238,7 +1238,7 @@
 
     {
       // D7, after D8 so that it replaces D8 for the Agent machine in agents/src.
-      "files": ["packages/git/**"],
+      "files": ["packages/git/src/**"],
       "rules": {
         "no-restricted-imports": [
           "error",

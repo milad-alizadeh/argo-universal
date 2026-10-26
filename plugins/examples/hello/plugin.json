@@ -66,6 +66,11 @@
         "id": "hello-log",
         "title": "Hello log",
         "path": "/log"
+      },
+      {
+        "id": "hello-views",
+        "title": "Issue views",
+        "path": "/views"
       }
     ],
     "settings": [

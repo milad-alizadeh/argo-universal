@@ -1,72 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { currentPluginSurface } from '@repo/contracts/plugins/kit';
-import {
-  messageSlotFixture,
-  rewrittenMessage,
-  traySlotFixture,
-} from '@repo/contracts/plugins/replaceable-fixtures';
+import { toolCallSlotFixture } from '@repo/contracts/plugins/replaceable-fixtures';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { writeHookPlugins } from '#mocks/hook-plugins';
 import { renderApp } from '#mocks/replaceable-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
-
-it.each([
-  {
-    name: 'message',
-    input: messageSlotFixture,
-    rewrite: rewrittenMessage(),
-    expected: rewrittenMessage(),
-  },
-  {
-    name: 'new Shell action',
-    input: traySlotFixture,
-    rewrite: {
-      ...traySlotFixture,
-      props: {
-        ...traySlotFixture.props,
-        status: { shells: { count: 1, running: true } },
-      },
-    },
-    expected: traySlotFixture,
-  },
-  {
-    name: 'new Subagent action',
-    input: traySlotFixture,
-    rewrite: {
-      ...traySlotFixture,
-      props: {
-        ...traySlotFixture.props,
-        status: { subagents: { count: 1, running: true } },
-      },
-    },
-    expected: traySlotFixture,
-  },
-])(
-  'validates the $name rewrite before drawing core',
-  async ({ input, rewrite, expected }) => {
-    const home = await createRuntimePlugins([]);
-    await writeHookPlugins(home, [
-      {
-        id: 'rewrite',
-        hooks: ['ui.render'],
-        slots: [input.slotId],
-        source: `export async function register(argo) {
-      await argo.on('ui.render', (ctx, e, next) => next(${JSON.stringify(rewrite)}));
-    }`,
-      },
-    ]);
-    const { url } = await startEngineTestHost({ home });
-
-    const app = renderApp(url, input, currentPluginSurface('web'));
-
-    await expect
-      .poll(() => app.messages[0], { timeout: 10_000 })
-      .toEqual({ type: 'core', input: expected });
-  },
-  20_000,
-);
 
 it('retains a downstream replacement when an outer Hook exhausts its budget on an argo call', async () => {
   const home = await createRuntimePlugins([]);
@@ -74,7 +14,7 @@ it('retains a downstream replacement when an outer Hook exhausts its budget on a
     {
       id: 'a-delay',
       hooks: ['ui.render'],
-      slots: [traySlotFixture.slotId],
+      renders: [toolCallSlotFixture.slotId],
       capabilities: [{ kind: 'process:exec', command: 'sleep', args: ['31'] }],
       source: `export async function register(argo) {
         await argo.on('ui.render', async (ctx, e, next) => {
@@ -87,7 +27,7 @@ it('retains a downstream replacement when an outer Hook exhausts its budget on a
     {
       id: 'b-tree',
       hooks: ['ui.render'],
-      slots: [traySlotFixture.slotId],
+      renders: [toolCallSlotFixture.slotId],
       source: `import { Text } from '@argo/plugin-kit';
         import { jsx } from '@argo/plugin-kit/jsx-runtime';
         export async function register(argo) {
@@ -97,7 +37,7 @@ it('retains a downstream replacement when an outer Hook exhausts its budget on a
   ]);
   const { url } = await startEngineTestHost({ home });
 
-  const app = renderApp(url, traySlotFixture, currentPluginSurface('web'));
+  const app = renderApp(url, toolCallSlotFixture, currentPluginSurface('web'));
 
   await expect
     .poll(() => app.messages[0], { timeout: 15_000 })
@@ -111,7 +51,7 @@ it('retains a downstream replacement when an outer Hook exhausts its budget on a
     log.split('\n').filter((line) => line.includes('10000 ms budget')),
   ).toEqual([
     expect.stringContaining(
-      'Plugin a-delay: core fallback argo/composer/above/v1: ui.render Hook: missed its 10000 ms budget',
+      'Plugin a-delay: core fallback argo/feed/tool-call/v1: ui.render Hook: missed its 10000 ms budget',
     ),
   ]);
 }, 20_000);

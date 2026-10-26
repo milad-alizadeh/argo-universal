@@ -1,0 +1,52 @@
+{
+  "id": "code-map",
+  "name": "Code Map",
+  "version": "0.0.1",
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
+  "main": "index.tsx",
+  "icon": {
+    "sf": "rectangle.split.3x3",
+    "sfFilled": "rectangle.split.3x3.fill",
+    "material": "view_quilt"
+  },
+  "contributes": {
+    "nav": [],
+    "slots": ["argo/project/details/v1"]
+  },
+  "capabilities": [
+    {
+      "kind": "process:exec",
+      "command": "git",
+      "args": ["grep", "--no-color", "-I", "-z", "-c", "-e", "^"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "git",
+      "args": [
+        "grep",
+        "--no-color",
+        "-I",
+        "-z",
+        "-c",
+        "-E",
+        "-e",
+        "(^|[^A-Za-z0-9_])(if|case|catch|while|for)([^A-Za-z0-9_]|$)|&&|[|][|]|[?][?]"
+      ]
+    },
+    {
+      "kind": "process:exec",
+      "command": "git",
+      "args": [
+        "log",
+        "--no-color",
+        "-z",
+        "-n",
+        "1000",
+        "--format=",
+        "--name-only"
+      ]
+    }
+  ]
+}

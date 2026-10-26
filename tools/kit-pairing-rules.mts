@@ -41,8 +41,6 @@ export const exemptFolders = {
     'The drawing every FieldGroup row shares; it draws no schema of its own.',
   'controls/rich-textarea':
     'The desktop editor behind the Composer; not on the wire.',
-  'controls/segmented-control':
-    'The App draws it for its own screens; a Plugin sends a FieldGroup.Picker.',
   'layout/spacing': 'The spacing scale the layout components read.',
   'lists/drawer-item': 'The drawer shell draws it; a Plugin has no drawer.',
   'lists/virtual-list-item': 'The virtualised row List draws for ListItem.',
@@ -56,6 +54,8 @@ export const exemptFolders = {
   'status/disclosure-chevron': 'The chevron a collapsible row draws.',
   'status/orb': 'App-only for now; a Plugin sends a Spinner.',
   'status/selected-check': 'The check a selected row draws.',
+  'status/skeleton':
+    'App-only for now (ADR-0020, ADR-0040): it works its placeholders out from what its children draw, so it has no props for a Plugin to send.',
 } satisfies Record<string, string>;
 
 // A schema name that has no drawing folder of its own, with the reason it is exempt.

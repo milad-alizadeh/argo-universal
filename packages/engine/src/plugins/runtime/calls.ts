@@ -1,3 +1,4 @@
+import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import { replyFailure } from '../access/capability-refusal';
 import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
@@ -8,6 +9,8 @@ import type {
 } from '../protocol/runtime';
 import type { StateRequest } from '../services/plugin-calls';
 import type { PluginServices } from '../services/plugin-services';
+import type { PluginSlotItems } from '../slots/plugin-slot-items';
+import type { Caller } from '../slots/slot-item-calls';
 import type { PluginViews } from '../views/plugin-views';
 
 type RuntimeCalls = {
@@ -15,6 +18,7 @@ type RuntimeCalls = {
   services: PluginServices;
   views: PluginViews;
   data: PluginData;
+  items: PluginSlotItems;
 };
 
 type Call = Extract<HostMessage, { type: 'call' }>;
@@ -82,21 +86,30 @@ function answerHookOrView(
   return answerViewOrService(runtime, { ...message, request });
 }
 
+// A Plugin's batched items answer, failure or change signal (ADR-0035); it waits for nothing.
+function receiveSlotCall(
+  runtime: RuntimeCalls,
+  caller: Caller,
+  call: SlotCall,
+): Promise<PluginReply> {
+  runtime.items.receive(caller, call);
+
+  return Promise.resolve({ ok: true });
+}
+
 function answerViewOrService(
   runtime: RuntimeCalls,
-  { pluginId, generation, request, viewId, projectId }: ServiceCall,
+  call: ServiceCall,
 ): Promise<PluginReply> {
-  if (request.api === 'dispatchResult') {
-    return settleDispatch(runtime, pluginId, request);
-  }
+  const { pluginId, generation, request } = call;
 
-  return answerService(runtime, {
-    pluginId,
-    generation,
-    request,
-    viewId,
-    projectId,
-  });
+  if (request.api === 'dispatchResult')
+    return settleDispatch(runtime, pluginId, request);
+
+  if (request.api === 'slots')
+    return receiveSlotCall(runtime, { pluginId, generation }, request.call);
+
+  return answerService(runtime, { ...call, request });
 }
 
 type StateCall = Pick<

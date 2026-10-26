@@ -10,6 +10,7 @@ import {
 } from '../protocol/runtime';
 import { hostCompletion } from './completion';
 import { hostLifecycleMachine, hostBudgetExhausted } from './lifecycle.machine';
+import { readHostMessage } from './read-host-message';
 import { TestRequests } from './test-requests';
 
 export type PluginHostProcess = ChildProcess;
@@ -100,7 +101,9 @@ export class HostConnection {
     child.once('spawn', () =>
       this.callbacks.log(`Plugin host started: ${child.pid}`),
     );
-    child.on('message', (value) => this.receive(HostMessage.safeParse(value)));
+    child.on('message', (value) =>
+      this.receive(readHostMessage(HostMessage.safeParse(value))),
+    );
     this.logOutput(child);
   }
 
@@ -113,11 +116,11 @@ export class HostConnection {
     );
   }
 
-  private receive(parsed: ReturnType<typeof HostMessage.safeParse>): void {
-    if (!parsed.success) return;
+  private receive(message: HostMessage | undefined): void {
+    if (!message) return;
 
-    if (parsed.data.type === 'test.done') this.tests.settle(parsed.data);
-    else this.message(parsed.data);
+    if (message.type === 'test.done') this.tests.settle(message);
+    else this.message(message);
   }
 
   private message(message: HostMessage): void {

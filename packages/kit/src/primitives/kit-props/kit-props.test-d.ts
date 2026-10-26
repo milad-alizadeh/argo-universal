@@ -1,4 +1,8 @@
+import type { KitSchemaProps } from '@repo/contracts/kit-props';
+import type { ComponentProps } from 'react';
 import { expectTypeOf } from 'vitest';
+import type { SegmentedControlProps } from '../controls/segmented-control';
+import type { FieldGroup } from '../fields/field-group';
 import type { ListProps } from '../lists/list';
 import type { KitProps } from './index';
 
@@ -31,3 +35,23 @@ expectTypeOf<KitProps<'List'>>().toExtend<ListProps<unknown>>();
 expectTypeOf<
   NonNullable<KitProps<'List'>['selection']>['onChange']
 >().toEqualTypeOf<((ids: readonly string[]) => void) | undefined>();
+
+expectTypeOf<
+  Omit<KitSchemaProps['SegmentedControl'], 'onValueChange'>
+>().toExtend<Omit<SegmentedControlProps, 'onValueChange'>>();
+
+expectTypeOf<SegmentedControlProps['onValueChange']>().toEqualTypeOf<
+  (value: string) => void
+>();
+
+expectTypeOf<
+  Omit<
+    KitSchemaProps['FieldGroup.SecretField'],
+    'onChangeText' | 'onFocus' | 'onBlur' | 'onSubmit'
+  >
+>().toExtend<
+  Omit<
+    ComponentProps<typeof FieldGroup.SecretField>,
+    'onChangeText' | 'onFocus' | 'onBlur' | 'onSubmit'
+  >
+>();

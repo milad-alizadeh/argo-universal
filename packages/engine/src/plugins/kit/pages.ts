@@ -1,9 +1,7 @@
 import type { Page, SlotContent } from '@repo/contracts/plugins/argo-api';
-import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
 import type {
   PluginEvent,
   PluginViewId,
-  SlotId,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
@@ -26,10 +24,13 @@ type Open = Extract<PluginEvent, { type: 'open' }>;
 
 type Dispatch = Extract<PluginEvent, { type: 'dispatch' }>;
 
+// What the pages answer: data goes to `useData` and items calls to the Slot providers.
+type PageEvent = Exclude<PluginEvent, { type: 'data' | 'slotItems' }>;
+
 export interface Pages {
   register: (path: string, page: Page) => void;
-  registerSlot: (slotId: SlotId, content: SlotContent) => void;
-  receive: (event: Exclude<PluginEvent, { type: 'data' }>) => void;
+  registerSlot: (slotId: string, content: SlotContent) => void;
+  receive: (event: PageEvent) => void;
   registerReplacement: (path: string, element: ReactNode) => void;
   requirePage: (path: string, contribution?: string) => void;
 }
@@ -69,14 +70,9 @@ function openElement(hub: Hub, event: Open): void {
       viewId: event.viewId,
       element,
       replaceable: Boolean(event.renderSlot),
-      rowMeta: rowMeta(event),
       background: event.background,
     });
   missingRender(hub, event);
-}
-
-function rowMeta(event: Open): boolean {
-  return event.slot?.slotId === sessionRowSlotId;
 }
 
 function close(hub: Hub, viewId: PluginViewId): void {
@@ -102,10 +98,7 @@ async function dispatch(hub: Hub, event: Dispatch): Promise<void> {
   }
 }
 
-function receive(
-  hub: Hub,
-  event: Exclude<PluginEvent, { type: 'data' }>,
-): void {
+function receive(hub: Hub, event: PageEvent): void {
   if (event.type === 'dispatch') void dispatch(hub, event).catch(reportFailure);
   else receiveDrawing(hub, event);
 }
@@ -155,7 +148,7 @@ function pageHub(
 
 function receiveDrawing(
   hub: Hub,
-  event: Exclude<PluginEvent, { type: 'dispatch' | 'data' }>,
+  event: Exclude<PageEvent, { type: 'dispatch' }>,
 ): void {
   if (event.type === 'open') open(hub, event);
   else if (event.type === 'close') close(hub, event.viewId);

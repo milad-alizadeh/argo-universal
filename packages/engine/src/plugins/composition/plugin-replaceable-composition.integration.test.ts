@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { currentPluginSurface } from '@repo/contracts/plugins/kit';
-import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
+import { messageSlotId } from '@repo/contracts/plugins/replaceable';
 import {
   messageSlotFixture,
+  rewrittenMessage,
   toolCallSlotFixture,
-  traySlotFixture,
 } from '@repo/contracts/plugins/replaceable-fixtures';
 import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
@@ -13,15 +13,12 @@ import { writeHookPlugins } from '#mocks/hook-plugins';
 import { renderApp } from '#mocks/replaceable-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-it('keeps the Composer tray props when no Plugin declares its Replaceable Slot', async () => {
+it('keeps the Slot props when no Plugin declares its Replaceable Slot', async () => {
   const home = await createRuntimePlugins([]);
   const { createCaller } = await startEngineTestHost({ home });
   const controller = new AbortController();
 
-  const input = {
-    slotId: 'argo/composer/above/v1' as const,
-    props: { wide: true, inactive: false },
-  };
+  const input = toolCallSlotFixture;
 
   const messages = [];
 
@@ -34,7 +31,7 @@ it('keeps the Composer tray props when no Plugin declares its Replaceable Slot',
   controller.abort();
 }, 20_000);
 
-it.each([traySlotFixture, messageSlotFixture, toolCallSlotFixture])(
+it.each([messageSlotFixture, toolCallSlotFixture])(
   'passes through $slotId with a frozen context and this Connection surface',
   async (input) => {
     const home = await createRuntimePlugins([]);
@@ -42,7 +39,7 @@ it.each([traySlotFixture, messageSlotFixture, toolCallSlotFixture])(
       {
         id: 'pass',
         hooks: ['ui.render'],
-        slots: [input.slotId],
+        renders: [input.slotId],
         source: `
     export async function register(argo) {
       await argo.on('ui.render', '${input.slotId}', (ctx, e, next) => {
@@ -66,20 +63,24 @@ it.each([traySlotFixture, messageSlotFixture, toolCallSlotFixture])(
 );
 
 it.each([
-  { inactive: true, expected: true },
-  { inactive: 'invalid', expected: false },
+  {
+    name: 'valid',
+    props: rewrittenMessage().props,
+    expected: rewrittenMessage(),
+  },
+  { name: 'invalid', props: { row: 'invalid' }, expected: messageSlotFixture },
 ])(
-  'validates a tray rewrite with inactive=$inactive',
-  async ({ inactive, expected }) => {
+  'validates a $name message rewrite',
+  async ({ props, expected }) => {
     const home = await createRuntimePlugins([]);
     await writeHookPlugins(home, [
       {
         id: 'rewrite',
         hooks: ['ui.render'],
-        slots: [composerAboveSlotId],
+        renders: [messageSlotId],
         source: `
     export async function register(argo) {
-      await argo.on('ui.render', (ctx, e, next) => next({ ...e, props: { ...e.props, inactive: ${JSON.stringify(inactive)} } }));
+      await argo.on('ui.render', (ctx, e, next) => next({ ...e, props: ${JSON.stringify(props)} }));
     }`,
       },
     ]);
@@ -89,13 +90,13 @@ it.each([
 
     const stream = (
       await createCaller({ signal: controller.signal }).plugins.render(
-        traySlotFixture,
+        messageSlotFixture,
       )
     )[Symbol.asyncIterator]();
 
-    expect((await stream.next()).value).toMatchObject({
+    expect((await stream.next()).value).toEqual({
       type: 'core',
-      input: { props: { inactive: expected } },
+      input: expected,
     });
   },
   20_000,
@@ -115,13 +116,13 @@ it('never starts a ui.render Plugin that did not declare the Slot', async () => 
   onTestFinished(() => controller.abort());
   const app = createCaller({ signal: controller.signal });
 
-  const stream = (await app.plugins.render(traySlotFixture))[
+  const stream = (await app.plugins.render(toolCallSlotFixture))[
     Symbol.asyncIterator
   ]();
 
   expect((await stream.next()).value).toEqual({
     type: 'core',
-    input: traySlotFixture,
+    input: toolCallSlotFixture,
   });
   expect((await app.plugins.list()).plugins[0]?.state).toBe('not-started');
 }, 20_000);

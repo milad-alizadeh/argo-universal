@@ -1,6 +1,7 @@
 import { type BlobRef, type LinkPreviewData } from '@repo/contracts';
 import { gitPreview, gitTarget, type GitTarget } from './github';
 import { openGraph, type OpenGraph } from './opengraph';
+import { PreviewUnavailable } from './preview-unavailable';
 import { previewUrl, type PreviewResponse } from './read-url';
 import type { PreviewSources } from './sources';
 
@@ -62,13 +63,23 @@ async function image(
 ): Promise<BlobRef | undefined> {
   if (!href) return undefined;
 
-  try {
-    const response = await sources.read(previewUrl(href).href);
+  return readImage(sources, href).catch(ignoreUnavailable);
+}
 
-    return await storeImage(sources, response);
-  } catch {
-    return undefined;
-  }
+async function readImage(
+  sources: PreviewSources,
+  href: string,
+): Promise<BlobRef | undefined> {
+  const response = await sources.read(previewUrl(href).href);
+
+  return storeImage(sources, response);
+}
+
+// An image that cannot be fetched leaves the text card; a fault storing it is not expected, so it surfaces.
+function ignoreUnavailable(cause: unknown): undefined {
+  if (cause instanceof PreviewUnavailable) return undefined;
+
+  throw cause;
 }
 
 async function storeImage(

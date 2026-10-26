@@ -19,12 +19,12 @@ export const sidebarLayouts = {
 
 /*
  * Rows keep 16 from their edge and 20 on wide. A sidebar List's row (Paper's SettingsList) is a 52-high tile whose
- * 24 icon slot centres its glyph where Paper's 20 box does, 20 in, and starts the title 56 in.
+ * content starts 8 in, on the sidebar title's edge.
  */
 export const pressLayouts = {
   row: 'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5',
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
-  'sidebar-tile': 'w-full min-h-13 flex-row items-center gap-3.5 px-4.5 py-1.5',
+  'sidebar-tile': 'w-full min-h-13 flex-row items-center gap-3.5 px-2 py-1.5',
   ...sidebarPressLayouts,
 };
 

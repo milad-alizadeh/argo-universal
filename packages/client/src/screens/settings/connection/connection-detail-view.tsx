@@ -2,9 +2,9 @@ import { errorToast } from '@repo/kit/error-toast';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { formatServerClock, formatServerStart } from '#features/connection';
-import { SettingsLoading } from '../settings-loading';
 
 export type ServerDetails =
   | { status: 'loading' }
@@ -19,8 +19,6 @@ export type ServerDetails =
       // The Server's latest clock tick; absent until the first one arrives.
       clock?: string;
     };
-
-type LoadedServer = Extract<ServerDetails, { status: 'loaded' }>;
 
 interface ConnectionDetailViewProps {
   server: ServerDetails;
@@ -56,38 +54,60 @@ function ServerState({
 }): React.JSX.Element | null {
   if (server.status === 'down') return null;
 
-  // A failed load keeps the loading note: the toast says why, and the query retries when the Connection reopens.
-  if (server.status !== 'loaded')
-    return <SettingsLoading label="Connecting to the Server…" />;
-
-  return <ServerRows server={server} />;
+  // A failed load keeps the loading look: the toast says why, and the query retries when the Connection reopens.
+  return (
+    <Skeleton loading={server.status !== 'loaded'}>
+      <ServerRows server={server} />
+    </Skeleton>
+  );
 }
 
 const ServerRows = ({
   server,
 }: {
-  server: LoadedServer;
+  server: ServerDetails;
 }): React.JSX.Element => (
   <FieldGroup>
-    <FieldGroup.Section title="Server">{loadedRows(server)}</FieldGroup.Section>
+    <FieldGroup.Section title="Server">
+      <DetailRows values={rowValues(server)} />
+    </FieldGroup.Section>
   </FieldGroup>
 );
 
-function loadedRows(server: LoadedServer): React.JSX.Element {
+interface RowValues {
+  version?: string;
+  started?: string;
+  pid?: string;
+  clock?: string;
+}
+
+// The rows are the page's own; one whose value has not arrived has none, which the Skeleton leaves as its title alone.
+function rowValues(server: ServerDetails): RowValues {
+  if (server.status !== 'loaded') return {};
+
+  return {
+    version: server.version,
+    started: formatServerStart(server.startedAt, server.clock),
+    pid: String(server.pid),
+    clock: formatServerClock(server.clock),
+  };
+}
+
+function DetailRows({ values }: { values: RowValues }): React.JSX.Element {
   return (
     <>
-      <DetailRow title="Version" value={server.version} />
-      <DetailRow
-        title="Started"
-        value={formatServerStart(server.startedAt, server.clock)}
-      />
-      <DetailRow title="PID" value={String(server.pid)} />
-      <DetailRow title="Clock" value={formatServerClock(server.clock)} />
+      <DetailRow title="Version" value={values.version} />
+      <DetailRow title="Started" value={values.started} />
+      <DetailRow title="PID" value={values.pid} />
+      <DetailRow title="Clock" value={values.clock} />
     </>
   );
 }
 
 // A Server detail is a read-only value row.
-function DetailRow(props: { title: string; value: string }): React.JSX.Element {
-  return <FieldGroup.Value {...props} />;
+function DetailRow(props: {
+  title: string;
+  value: string | undefined;
+}): React.JSX.Element {
+  return <FieldGroup.Value title={props.title} value={props.value ?? ''} />;
 }

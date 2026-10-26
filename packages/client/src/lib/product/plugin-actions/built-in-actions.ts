@@ -3,15 +3,9 @@ import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { setStringAsync } from 'expo-clipboard';
 import { router, type Href } from 'expo-router';
 import { Linking } from 'react-native';
+import { newSessionHref } from '../navigation/navigation';
 import { shareContent } from './share';
-
-type External = Extract<Action, { action: 'openUrl' | 'copy' }>;
-
-async function runExternal(action: External): Promise<void> {
-  await (action.action === 'openUrl'
-    ? Linking.openURL(action.url)
-    : setStringAsync(action.text));
-}
+import { mayRun } from './web-action';
 
 // A Plugin opens its own pages: `/plugins/<Plugin id>/<nav id>/<page>`.
 function pluginHref(path: string): Href | null {
@@ -29,27 +23,38 @@ function openPage(path: string): void {
   else showToast({ title: 'That page is not available', tone: 'danger' });
 }
 
-type LocalAction = Extract<Action, { action: 'toast' | 'navigate' }>;
+type Actions = { [Each in Action as Each['action']]: Each };
 
-type DeviceAction = Exclude<Action, LocalAction>;
+type Name = keyof Actions;
 
-function runLocal(action: LocalAction): void {
-  if (action.action === 'toast')
-    showToast({ title: action.message, tone: 'success' });
-  else openPage(action.path);
-}
+type Runners = {
+  [Each in Name]: (action: Actions[Each]) => Promise<void> | void;
+};
 
-async function runDevice(action: DeviceAction): Promise<void> {
-  if (action.action === 'pop') return router.back();
+// One runner per Action, so a new Action fails to compile until the App runs it.
+const runners: Runners = {
+  toast: ({ message }) => showToast({ title: message, tone: 'success' }),
+  navigate: ({ path }) => openPage(path),
+  newSession: ({ projectId, draft }) =>
+    router.navigate(newSessionHref(projectId, draft)),
+  openUrl: async ({ url }) => {
+    await Linking.openURL(url);
+  },
+  copy: async ({ text }) => {
+    await setStringAsync(text);
+  },
+  share: shareContent,
+  pop: () => router.back(),
+};
 
-  await (action.action === 'share'
-    ? shareContent(action)
-    : runExternal(action));
+async function dispatch<Each extends Name>(
+  name: Each,
+  action: Actions[Each],
+): Promise<void> {
+  await runners[name](action);
 }
 
 // The built-in Actions run here, in the App, with no round trip to the Server.
 export async function runAction(action: Action): Promise<void> {
-  if (action.action === 'toast' || action.action === 'navigate')
-    runLocal(action);
-  else await runDevice(action);
+  if (mayRun(action)) await dispatch(action.action, action);
 }

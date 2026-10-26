@@ -10,7 +10,7 @@ export function drawingFailure(
   message: ViewMessage,
 ): string | undefined {
   // A replaceable Slot's `#render-error` asks for core's own drawing, so it fails nothing (ADR-0037).
-  if (view.opening.renderSlot) return;
+  if (view.draws.kind === 'replaceable') return;
 
   return rootFailure(nextRootNode(message));
 }

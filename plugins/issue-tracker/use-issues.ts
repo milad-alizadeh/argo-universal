@@ -1,11 +1,13 @@
-import { useEffect, useState, type Argo } from '@argo/plugin-kit';
-import type { Issue } from './github-issues';
+import { useState, type Argo } from '@argo/plugin-kit';
+import type { Issue, IssueStatus } from './github-issues';
 import type { Project } from './issue-data';
+import { changeStatus, statusRequest, type StatusChange } from './issue-status';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 import { useProjectIssues } from './use-project-issues';
+import { useProjects, type ProjectSetters } from './use-projects';
 
-type Setter<Value> = (value: Value) => void;
+type Setter<Value> = (value: Value | ((current: Value) => Value)) => void;
 
 export type IssueSelection = { type: 'issue'; issue: Issue };
 
@@ -25,6 +27,8 @@ export type IssuePage = {
   setMessage: Setter<string>;
   onIssue: (event: IssueEvent) => void;
   onBack: () => void;
+  // Shows the open Issue's new status at once, and the old one again when the Tracker refuses it.
+  onStatus: (status: IssueStatus) => Promise<void>;
 };
 
 // The Issue list and an open Issue draw the page apart from its selection.
@@ -41,12 +45,6 @@ type IssueState = {
   trackerId: State<string | null>;
 };
 
-type ProjectSetters = {
-  setProjects: Setter<Project[]>;
-  setProjectId: Setter<string | null>;
-  setMessage: Setter<string>;
-};
-
 export function useIssuePage(
   argo: Argo,
   storage: TrackerStorage,
@@ -56,7 +54,12 @@ export function useIssuePage(
 
   useIssueData(argo, state, { storage, trackers });
 
-  return { ...pageState(state), storage, trackers, ...pageActions(state) };
+  return {
+    ...pageState(state),
+    storage,
+    trackers,
+    ...pageActions(state, { storage, trackers }),
+  };
 }
 
 function useIssueData(
@@ -64,7 +67,7 @@ function useIssueData(
   state: IssueState,
   dependencies: Pick<IssuePage, 'storage' | 'trackers'>,
 ): void {
-  useProjects(argo, state);
+  useProjects(argo.projects.list, projectSetters(state));
   useProjectIssues({
     ...dependencies,
     projectId: state.projectId[0],
@@ -86,63 +89,12 @@ function useIssueState(): IssueState {
   };
 }
 
-function useProjects(argo: Argo, state: IssueState): void {
-  const load = argo.projects.list;
-  const [, setProjects] = state.projects;
-  const [, setProjectId] = state.projectId;
-  const [, setMessage] = state.message;
-
-  useEffect(() => {
-    return observeProjects(load, { setProjects, setProjectId, setMessage });
-  }, [load, setProjects, setProjectId, setMessage]);
-}
-
-function observeProjects(
-  load: Argo['projects']['list'],
-  setters: ProjectSetters,
-): () => void {
-  let active = true;
-
-  void load().then(
-    (rows) => showProjects(rows, setters, active),
-    () => reportProjectError(active, setters.setMessage),
-  );
-
-  return () => {
-    active = false;
-  };
-}
-
-function showProjects(
-  rows: Project[],
-  setters: ProjectSetters,
-  active: boolean,
-): void {
-  if (!active) return;
-
-  setters.setProjects(rows);
-  selectFirstProject(rows, setters.setProjectId);
-  setters.setMessage(projectsMessage(rows));
-}
-
-function selectFirstProject(
-  rows: Project[],
-  setProjectId: Setter<string | null>,
-): void {
-  setProjectId(rows[0]?.id ?? null);
-}
-
-function projectsMessage(rows: Project[]): string {
-  return rows.length === 0 ? 'No Projects yet.' : 'Loading Issues…';
-}
-
-function reportProjectError(active: boolean, setMessage: Setter<string>): void {
-  if (active) setMessage('Could not load Projects.');
-}
-
 type PageState = Omit<IssuePage, 'storage' | 'trackers' | keyof PageActions>;
 
-type PageActions = Pick<IssuePage, 'setMessage' | 'onIssue' | 'onBack'>;
+type PageActions = Pick<
+  IssuePage,
+  'setMessage' | 'onIssue' | 'onBack' | 'onStatus'
+>;
 
 function pageState(state: IssueState): PageState {
   const [projects] = state.projects;
@@ -159,13 +111,18 @@ function pageState(state: IssueState): PageState {
   };
 }
 
-function pageActions(state: IssueState): PageActions {
+function pageActions(
+  state: IssueState,
+  dependencies: Pick<IssuePage, 'storage' | 'trackers'>,
+): PageActions {
   const [, setSelected] = state.selected;
 
   return {
     setMessage: state.message[1],
     onIssue: (event) => updateSelection(event, state),
     onBack: () => setSelected(null),
+    onStatus: (status) =>
+      changeStatus(statusChange(state, dependencies), status),
   };
 }
 
@@ -182,3 +139,24 @@ function selectProject(id: string, state: IssueState): void {
   state.projectId[1](id);
   state.selected[1](null);
 }
+
+function statusChange(
+  state: IssueState,
+  dependencies: Pick<IssuePage, 'storage' | 'trackers'>,
+): StatusChange<IssueSelection> {
+  return {
+    request: statusRequest(
+      pageState(state).project,
+      state.selected[0],
+      dependencies,
+    ),
+    setIssues: state.issues[1],
+    setSelected: state.selected[1],
+  };
+}
+
+const projectSetters = (state: IssueState): ProjectSetters => ({
+  setProjects: state.projects[1],
+  setProjectId: state.projectId[1],
+  setMessage: state.message[1],
+});

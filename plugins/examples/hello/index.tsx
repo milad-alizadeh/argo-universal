@@ -24,6 +24,7 @@ import { HelloLog } from './log';
 import { helloMedia } from './media';
 import { helloPosts } from './paged-posts';
 import { HelloRunsPage } from './runs';
+import { HelloViews } from './views';
 
 const headingRole = 'heading';
 
@@ -132,6 +133,7 @@ export function register(argo: Argo): void {
 }
 
 function registerMediaPages(argo: Argo): void {
+  argo.pages.register('/views', HelloViews);
   argo.pages.register('/media', helloMedia(argo.assets));
   argo.pages.register('/gallery', helloGallery(argo.assets));
 }

@@ -44,3 +44,10 @@ expectTypeOf<
 expectTypeOf<
   NonNullable<PluginProps['List']['pagination']>['onLoadMore']
 >().toExtend<Action | Handler>();
+
+expectTypeOf<
+  Extract<
+    PluginProps['SegmentedControl']['onValueChange'],
+    (payload: never) => void | Promise<void>
+  >
+>().toEqualTypeOf<(value: string) => void | Promise<void>>();

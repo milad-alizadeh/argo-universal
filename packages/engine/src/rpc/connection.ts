@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import type { Socket } from 'node:net';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { PluginSurface } from '@repo/contracts/plugins/kit';
+import { createRejectionCounter } from '@repo/machine-log';
+
+const rejections = createRejectionCounter('Plugin surface header');
 
 export interface RpcConnection {
   id: string;
@@ -9,12 +12,19 @@ export interface RpcConnection {
   serverDevice?: boolean;
 }
 
+// The part of a Connection's socket the context reads: when it closes, and whether both ends are on one device.
+export interface RpcSocket {
+  once(event: 'close', listener: () => void): void;
+  readonly remoteAddress?: string;
+  readonly localAddress?: string;
+}
+
 export interface RpcContext {
   connection?: RpcConnection;
 }
 
 export function createRpcContext(
-  socket: Socket,
+  socket: RpcSocket,
   params?: Record<string, string | undefined> | null,
 ): RpcContext {
   const controller = new AbortController();
@@ -24,7 +34,7 @@ export function createRpcContext(
 }
 
 function socketConnection(
-  socket: Socket,
+  socket: RpcSocket,
   params: Record<string, string | undefined> | null | undefined,
   signal: AbortSignal,
 ): RpcConnection {
@@ -36,19 +46,36 @@ function socketConnection(
   };
 }
 
-const sameDeviceSocket = (socket: Socket): boolean =>
+const sameDeviceSocket = (socket: RpcSocket): boolean =>
   socket.remoteAddress !== undefined &&
   socket.remoteAddress === socket.localAddress;
 
-// A missing, non-JSON or malformed surface reports no wire version: that App sees "Update Argo", not a broken Connection.
-function reportedSurface(
+// A missing surface reports no wire version, and that App sees "Update Argo", not a broken Connection. A surface that is present but not JSON or not recognised does too, and is reported.
+const reportedSurface = (
   reported: string | undefined,
-): PluginSurface | undefined {
-  if (!reported) return undefined;
+): PluginSurface | undefined => (reported ? readSurface(reported) : undefined);
 
+function readSurface(text: string): PluginSurface | undefined {
+  const json = parseJson(text);
+
+  return json === undefined ? undefined : recognisedSurface(json);
+}
+
+function parseJson(text: string): Json | undefined {
   try {
-    return PluginSurface.safeParse(JSON.parse(reported)).data;
-  } catch {
+    return JSON.parse(text);
+  } catch (cause) {
+    rejections.report('non-JSON surface', cause);
+
     return undefined;
   }
+}
+
+function recognisedSurface(json: Json): PluginSurface | undefined {
+  const parsed = PluginSurface.safeParse(json);
+
+  if (parsed.success) return parsed.data;
+  rejections.report('unrecognised surface', parsed.error.issues);
+
+  return undefined;
 }

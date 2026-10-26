@@ -21,7 +21,6 @@ type Content = {
   viewId: PluginViewId;
   element: ReactNode;
   replaceable: boolean;
-  rowMeta: boolean;
   background?: boolean;
 };
 
@@ -102,7 +101,6 @@ function pageView(content: Content): OpenView {
   return {
     viewId: content.viewId,
     replaceable: content.replaceable,
-    rowMeta: content.rowMeta,
     background: content.background,
     frame: undefined,
     tree: null,
@@ -131,7 +129,6 @@ function tryCommit(
 }
 
 function pageRoot(view: OpenView, container: Instance): Instance | undefined {
-  if (view.rowMeta) return metaRoot(container);
   requireReplacementRoot(view, container);
 
   return container.children[0];
@@ -140,14 +137,6 @@ function pageRoot(view: OpenView, container: Instance): Instance | undefined {
 function requireReplacementRoot(view: OpenView, container: Instance): void {
   if (view.replaceable && container.children.length !== 1)
     throw new Error('A replacement must draw one component');
-}
-
-function metaRoot(container: Instance): Instance {
-  return {
-    type: 'Stack',
-    props: { direction: 'row' },
-    children: container.children,
-  };
 }
 
 export function failedDrawingRoot(reason: string): WireNode {

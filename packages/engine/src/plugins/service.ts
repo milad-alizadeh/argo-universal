@@ -19,13 +19,14 @@ import {
   type PluginDispatchInput,
   type PluginViewInput,
   type PluginSlotInput,
+  type SlotItems,
+  type SlotItemsInput,
   type SlotMessage,
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
 import {
-  fillsSlot,
   hooksEvent,
   rendersSlot,
   runsBackground,
@@ -39,8 +40,9 @@ import {
   startPlugins,
   type PluginServiceDeps,
 } from './located-plugins';
+import { startOrderedPlugins } from './plugin-order';
 import { renderSlot } from './slots/render-slot';
-import { slotViews } from './slots/slot-views';
+import { slotFor, slotItemsFor } from './slots/slot-streams';
 
 export type { PluginServiceDeps } from './located-plugins';
 
@@ -125,28 +127,25 @@ export class PluginService {
     );
   }
 
-  // Every enabled Plugin that declares the Slot fills it; one that fails to start is left out, and its failure is reported like any other.
-  async *slot(
+  slot(
     slot: PluginSlotInput,
     connection: RpcConnection,
   ): AsyncGenerator<SlotMessage> {
-    const { running: pluginIds } = await startPlugins(this.deps, ({ plugin }) =>
-      fillsSlot(plugin, slot),
-    );
+    return slotFor(this.deps, slot, connection);
+  }
 
-    yield { type: 'contributors', pluginIds };
-    yield* slotViews(
-      this.deps.pluginRuntime.views,
-      { pluginIds, slot },
-      connection,
-    );
+  slotItems(
+    input: SlotItemsInput,
+    connection: RpcConnection,
+  ): AsyncGenerator<SlotItems> {
+    return slotItemsFor(this.deps, input, connection);
   }
 
   public async *render(
     input: ReplaceableInput,
     connection: RpcConnection,
   ): AsyncGenerator<ReplaceableMessage> {
-    const plugins = await startPlugins(this.deps, ({ plugin }) =>
+    const plugins = await startOrderedPlugins(this.deps, ({ plugin }) =>
       rendersSlot(plugin, input.slotId),
     );
 

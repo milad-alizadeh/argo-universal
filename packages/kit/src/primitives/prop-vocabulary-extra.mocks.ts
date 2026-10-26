@@ -87,6 +87,7 @@ export type AdditionalPrimitives = {
   StatusDotProps: StatusDotKit.StatusDotProps;
   SvgProps: SvgKit.SvgProps;
   CanvasProps: SvgKit.CanvasProps;
+  ChartProps: SvgKit.ChartProps;
   DateMode: DateValueKit.DateMode;
   DialogStep: DateDialogsKit.DialogStep;
   HeaderIconButtonProps: HeaderIconButtonKit.HeaderIconButtonProps;

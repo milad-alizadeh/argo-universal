@@ -1,5 +1,5 @@
 import { type PluginManifest } from '@repo/contracts/plugins';
-import { SlotId } from '@repo/contracts/plugins/wire';
+import { AddOnlySlotId, ReplaceableSlotId } from '@repo/contracts/plugins/wire';
 import {
   parseSync,
   Visitor,
@@ -94,7 +94,17 @@ function slotReason(
   manifest: PluginManifest,
   slotId: string,
 ): string | undefined {
-  const parsed = SlotId.safeParse(slotId);
+  if (ReplaceableSlotId.safeParse(slotId).success)
+    return `Replaceable Slot ${slotId} is drawn through ui.render, not slots.register`;
+
+  return addOnlySlotReason(manifest, slotId);
+}
+
+function addOnlySlotReason(
+  manifest: PluginManifest,
+  slotId: string,
+): string | undefined {
+  const parsed = AddOnlySlotId.safeParse(slotId);
 
   if (!parsed.success) return `Unknown Slot ${slotId}`;
 

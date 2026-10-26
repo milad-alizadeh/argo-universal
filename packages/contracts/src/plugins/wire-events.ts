@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import { PluginDataState } from '#plugin-argo-calls';
-import { ReplaceableSlotId } from '#plugin-replaceable-slot-id';
 import { PluginSurface } from '#plugin-surface';
 import { WireJson } from '#plugin-wire-json';
-import { PluginSlotInput } from '#plugin-wire-slot';
+import {
+  PluginSlotInput,
+  ReplaceableSlotId,
+  SlotItemsInput,
+} from '#plugin-wire-slot';
 
 export const PluginViewId = z.string().min(1).brand<'PluginViewId'>();
 
@@ -113,6 +116,12 @@ export const PluginEvent = z.union([
     requestId: PluginDispatchId,
     ...target.shape,
     ...PartEvent.shape,
+  }),
+  // One batched call to a Plugin's items Slot provider; it answers by `id`.
+  z.object({
+    type: z.literal('slotItems'),
+    id: z.number(),
+    input: SlotItemsInput,
   }),
 ]);
 

@@ -54,6 +54,8 @@ export const Action: PluginComponents['Action'] & {
 
 export const SplitButton: PluginComponents['SplitButton'];
 
+export const SegmentedControl: PluginComponents['SegmentedControl'];
+
 export const Slider: PluginComponents['Slider'];
 
 export const FieldGroup: PluginComponents['FieldGroup'] & {
@@ -102,5 +104,7 @@ export const Canvas: PluginComponents['Canvas'] & {
   Text: PluginComponents['Canvas.Text'];
   Group: PluginComponents['Canvas.Group'];
 };
+
+export const Chart: PluginComponents['Chart'];
 
 export const ListSection: PluginComponents['List.Section'];

@@ -18,6 +18,7 @@ import {
   reactNativeWorkletsWebImports,
   skiaAssetRegistry,
 } from './expo-web-imports.ts';
+import { victoryWeb } from './victory-web.ts';
 
 function getAbsolutePath(value: string): string {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
@@ -45,6 +46,7 @@ const PREBUNDLED_DEPENDENCIES = [
   '@repo/kit > expo-symbols',
   '@repo/kit > expo-audio',
   '@repo/kit > expo-symbols/androidWeights/extraLight',
+  '@repo/kit > victory-native > react-fast-compare',
   'storybook/actions',
 ];
 
@@ -84,6 +86,7 @@ const VITE_RESOLVE = {
       find: '@react-native/assets-registry/registry',
       replacement: ASSET_REGISTRY,
     },
+    victoryWeb.alias,
   ],
   extensions: RESOLVED_EXTENSIONS,
 };
@@ -104,6 +107,7 @@ const vitePlugins = (): PluginOption[] => [
 
 const OPTIMIZE_DEPS: DepOptimizationConfig = {
   include: PREBUNDLED_DEPENDENCIES,
+  exclude: victoryWeb.optimizeExclude,
   rolldownOptions: {
     plugins: WEB_IMPORT_REWRITES,
     moduleTypes: { '.ts': 'ts' },
@@ -158,10 +162,7 @@ const config: StorybookConfig & {
   framework: {
     name: getAbsolutePath('@storybook/react-native-web-vite'),
     options: {
-      // Reanimated's Babel plugin, as Storybook's react-native-web-vite guide sets it; without it no derived value updates on web.
-      pluginReactOptions: {
-        babel: { plugins: ['react-native-worklets/plugin'] },
-      },
+      pluginReactOptions: victoryWeb.pluginReactOptions,
     },
   },
   viteFinal: storybookVite,

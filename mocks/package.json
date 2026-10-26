@@ -19,7 +19,9 @@
       "default": "./media/*"
     },
     "./plugins/media.json": "./plugins/media.json",
-    "./plugins/canvas.json": "./plugins/canvas.json"
+    "./plugins/canvas.json": "./plugins/canvas.json",
+    "./plugins/chart.json": "./plugins/chart.json",
+    "./plugins/segmented-secret.json": "./plugins/segmented-secret.json"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

@@ -12,14 +12,19 @@ import { createContext, type ReactNode, use } from 'react';
 import { newSessionId } from './new-session';
 import { isPage, sectionOf } from './sections';
 
-// New Session, in the Project it was opened from when there is one: one route draws it and the Session it becomes.
-export const newSessionHref = (projectId?: string): Href => ({
-  pathname: '/sessions/[id]',
-  params:
-    projectId === undefined
-      ? { id: newSessionId }
-      : { id: newSessionId, projectId },
-});
+// New Session, in the Project it was opened from when there is one, with a draft a Plugin hands it: one route draws it and the Session it becomes.
+type NewSessionParams = { id: string; projectId?: string; draft?: string };
+
+export function newSessionHref(projectId?: string, draft?: string): Href {
+  const params: NewSessionParams = { id: newSessionId };
+
+  if (projectId !== undefined) params.projectId = projectId;
+
+  // useLocalSearchParams decodes every param once more, so a draft with `%2F` in it would arrive as `/`.
+  if (draft !== undefined) params.draft = encodeURIComponent(draft);
+
+  return { pathname: '/sessions/[id]', params };
+}
 
 // A Session's page.
 export const sessionHref = (id: string): Href => ({

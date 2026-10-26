@@ -12,6 +12,7 @@ import { Link } from '@repo/kit/primitives/content/link';
 import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
+import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { Slider } from '@repo/kit/primitives/controls/slider';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { KitProps } from '@repo/kit/primitives/kit-props';
@@ -33,7 +34,7 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
-import { Canvas, Svg } from '@repo/kit/primitives/visual';
+import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
 import { PluginButton } from './plugin-button';
 
@@ -54,6 +55,7 @@ export const pluginEntries = {
   'Action.Section': Action.Section,
   EmptyState,
   Slider,
+  SegmentedControl,
   FieldGroup,
   'FieldGroup.Section': FieldGroup.Section,
   'FieldGroup.Value': FieldGroup.Value,
@@ -84,6 +86,7 @@ export const pluginEntries = {
   Surface,
   ScrollView,
   Svg,
+  Chart,
   Canvas,
   'Canvas.Rect': Canvas.Rect,
   'Canvas.Circle': Canvas.Circle,

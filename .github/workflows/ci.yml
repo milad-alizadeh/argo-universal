@@ -94,10 +94,10 @@ jobs:
       - name: Fetch main for the waiver merge base
         run: git fetch origin main:refs/remotes/origin/main
 
-      # Only the story tests open a browser, and they run in the stories job.
+      # The desktop CSP test checks the policy in real Chromium; the story tests run in the stories job.
       - uses: ./.github/actions/setup
         with:
-          playwright: none
+          playwright: chromium
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Lint

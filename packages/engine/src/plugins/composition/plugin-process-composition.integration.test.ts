@@ -1,8 +1,12 @@
 import type { PluginCapability } from '@repo/contracts/plugins';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
+import { journeyMs } from '#mocks/journey-budget';
 import { registeredProject } from '#mocks/probe-plugin';
 import { refusal, refusedLines, runProbe } from '#mocks/probe-run';
 import { argoLimitBytes } from '../services/plugin-limits';
+
+// Plugin workers start a real process: budget this file's tests for startup.
+vi.setConfig({ testTimeout: journeyMs });
 
 const exec = 'process:exec';
 
