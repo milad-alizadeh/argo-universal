@@ -6,11 +6,7 @@ import {
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { ReactNode } from 'react';
 import { createElement, type JSX } from 'react';
-import {
-  useChangesStage,
-  ChangesSheetHeader,
-  ChangesFiles,
-} from '#features/changes';
+import { ChangesSheetHeader, ChangesFiles } from '#features/changes';
 import {
   type SessionPanel,
   sessionPanelLabels,
@@ -93,9 +89,7 @@ const phonePanels = new Set<SessionPanel | undefined>(['subagents', 'shells']);
 export function SessionInspector(
   props: SessionInspectorProps,
 ): JSX.Element | null {
-  const stage = useChangesStage(props.changes);
-  const content = { ...props, changes: stage.changes };
-  const inspector = renderInspector(content, stage);
+  const inspector = renderInspector(props);
 
   return (
     <SizeClass
@@ -113,16 +107,14 @@ function phoneInspector(props: SessionInspectorProps): JSX.Element {
     {
       ...inspectorProps(props),
       sheetHeader: createElement(ChangesSheetHeader),
+      contentScrolls: true,
     },
     props.changes && createElement(ChangesFiles, props.changes),
   );
 }
 
 // Open tabs retain their actual content trees, including virtualised detail scroll and local selection.
-function renderInspector(
-  content: SessionInspectorProps,
-  stage: ReturnType<typeof useChangesStage>,
-): JSX.Element {
+function renderInspector(content: SessionInspectorProps): JSX.Element {
   return createElement(
     Inspector,
     { ...inspectorProps(content), toolbar: undefined, contentScrolls: true },
@@ -130,7 +122,6 @@ function renderInspector(
       {...content}
       changesRequest={content.panels.state.changesRequest}
       inspector={inspectorProps(content)}
-      scrollState={stage.scrollState}
     />,
   );
 }

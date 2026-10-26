@@ -2,12 +2,16 @@ import { layoutWidths } from '@repo/kit/each-layout';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
-import { ChangesInspectorSheet, manyFiles } from './changes-inspector.mocks';
+import {
+  ChangesInspectorSheet,
+  loadedChanges,
+  manyFiles,
+} from './changes-inspector.mocks';
 import {
   allChanges,
   comparisonDialog,
-  fileHeader,
   picker,
+  scrollToFile,
   testMeta,
 } from './changes-inspector.test.mocks';
 
@@ -69,7 +73,7 @@ export const SearchesBranchesInAPopover: Story = {
 
 // The phone sheet titles itself Changes and owns its segmented header instead of the desktop comparison controls.
 export const PhoneHasTheGitHeader: Story = {
-  args: { files: manyFiles },
+  args: loadedChanges(manyFiles),
   render: (args) => <ChangesInspectorSheet {...args} />,
   play: async () => {
     await settleViewport(layoutWidths.phone);
@@ -87,8 +91,7 @@ export const PhoneHasTheGitHeader: Story = {
     await expect(
       screen.queryByRole('button', { name: /^Comparison/ }),
     ).toBeNull();
-    const last = fileHeader('/repo/src/module-60/index.ts');
-    last.scrollIntoView();
+    const last = await scrollToFile('/repo/src/module-60/index.ts');
     await waitFor(() => expect(last).toBeVisible());
     await expect(
       screen.getByRole('button', { name: 'Files', pressed: true }),

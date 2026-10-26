@@ -1,24 +1,20 @@
-import type { FileDiff } from '#features/feed';
-import { uniqueChangedFiles } from './changes-files';
+import type { ChangedFile, ChangesSummary } from './changes-view-props';
 
-export interface ChangesTotals {
-  files: number;
+export interface ChangesTotals extends ChangesSummary {
   viewed: number;
-  added: number;
-  removed: number;
 }
 
+// The comparison's counts, and how many of the listed paths are marked Viewed, each counted once.
 export function changesTotals(
-  files: readonly FileDiff[],
-  viewed: readonly string[],
+  summary: ChangesSummary,
+  files: readonly ChangedFile[] = [],
+  viewed: readonly string[] = [],
 ): ChangesTotals {
-  const unique = uniqueChangedFiles(files);
+  const listed = new Set(files.map((file) => file.path));
 
   return {
-    files: unique.length,
-    viewed: unique.filter((file) => viewed.includes(file.path)).length,
-    added: unique.reduce((sum, file) => sum + file.added, 0),
-    removed: unique.reduce((sum, file) => sum + file.removed, 0),
+    ...summary,
+    viewed: [...new Set(viewed)].filter((path) => listed.has(path)).length,
   };
 }
 

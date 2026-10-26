@@ -5,9 +5,9 @@ import type { SessionDetailViewProps } from './session-detail-view';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 
 const summary: ChangesSummary = {
-  files: changesArgs.files.length,
-  additions: changesArgs.files.reduce((total, file) => total + file.added, 0),
-  deletions: changesArgs.files.reduce((total, file) => total + file.removed, 0),
+  files: changesArgs.summary.files,
+  additions: changesArgs.summary.added,
+  deletions: changesArgs.summary.removed,
 };
 
 // Recorded branch edits make Changes a real section beside the Session's Agents.

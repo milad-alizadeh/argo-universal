@@ -1,4 +1,3 @@
-import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
@@ -8,7 +7,10 @@ import {
   filesSummary,
   type ChangesTotals,
 } from '../../view/changes-totals';
-import type { ChangesViewProps } from '../../view/changes-view-props';
+import type {
+  ChangesSummary,
+  ChangesViewProps,
+} from '../../view/changes-view-props';
 import { ComparisonPicker } from '../comparison-picker/comparison-picker';
 
 /*
@@ -18,7 +20,7 @@ import { ComparisonPicker } from '../comparison-picker/comparison-picker';
 export function ChangesToolbar(props: ChangesViewProps): React.JSX.Element {
   return (
     <SizeClass
-      compact={<Summary files={props.files} viewed={props.viewed} />}
+      compact={<Summary {...props} />}
       medium={<DesktopToolbar {...props} />}
       wide={<DesktopToolbar {...props} />}
     />
@@ -26,8 +28,6 @@ export function ChangesToolbar(props: ChangesViewProps): React.JSX.Element {
 }
 
 function DesktopToolbar(props: ChangesViewProps): React.JSX.Element {
-  if (props.selectedFile) return <BackRow {...props} />;
-
   return (
     <View>
       <ComparisonRow {...props} />
@@ -36,25 +36,25 @@ function DesktopToolbar(props: ChangesViewProps): React.JSX.Element {
   );
 }
 
+// A long comparison name truncates at the pill's cap, a share of the row: whole in a wide Stage, the totals always shown.
 function ComparisonRow(props: ChangesViewProps): React.JSX.Element {
   return (
     <View className="h-11 flex-row items-center gap-2 px-2 wide:px-3">
-      <View className="min-w-0 flex-1">
+      <View className="min-w-0 max-w-3/4 shrink">
         <ComparisonPicker {...props} />
       </View>
-      {props.files && (
-        <LineTotals {...changesTotals(props.files, props.viewed)} />
-      )}
+      <View className="flex-1" />
+      {props.summary?.files ? <LineTotals {...props.summary} /> : null}
     </View>
   );
 }
 
 function Summary(
-  props: Pick<ChangesViewProps, 'files' | 'viewed'>,
+  props: Pick<ChangesViewProps, 'files' | 'summary' | 'viewed'>,
 ): React.JSX.Element | null {
-  if (!props.files?.length) return null;
+  if (!props.summary?.files) return null;
 
-  const totals = changesTotals(props.files, props.viewed);
+  const totals = changesTotals(props.summary, props.files, props.viewed);
 
   return (
     <View className="flex-row items-center gap-2 px-4 wide:px-5 pt-4 pb-2 medium:h-6 medium:bg-content medium:py-0">
@@ -75,43 +75,11 @@ function FileCounts(totals: ChangesTotals): React.JSX.Element {
 
 const lines = (count: number): string => count.toLocaleString('en-US');
 
-function LineTotals(totals: ChangesTotals): React.JSX.Element {
+function LineTotals(totals: ChangesSummary): React.JSX.Element {
   return (
-    <View className="flex-row gap-2 pr-2">
+    <View className="shrink-0 flex-row gap-2 pr-2">
       <Text role="badge" tone="success">{`+${lines(totals.added)}`}</Text>
       <Text role="badge" tone="danger">{`−${lines(totals.removed)}`}</Text>
-    </View>
-  );
-}
-
-// Back and the file's name: Back's glyph shares its centre line with the file rows' icons and chevrons below it.
-function BackRow(props: ChangesViewProps): React.JSX.Element {
-  return (
-    <View className="h-11 flex-row items-center gap-4 wide:gap-3 px-4 wide:px-5">
-      <IconButton
-        icon="back"
-        size="sm"
-        variant="ghost"
-        muted
-        accessibilityLabel="Back"
-        onPress={() => props.onFileSelect?.()}
-      />
-      <FileTitle path={props.selectedFile} />
-    </View>
-  );
-}
-
-function FileTitle({ path = '' }: { path?: string }): React.JSX.Element {
-  return (
-    <View className="min-w-0 flex-1">
-      <Text
-        role="heading"
-        accessibilityRole="heading"
-        aria-level={3}
-        numberOfLines={1}
-      >
-        {path.slice(path.lastIndexOf('/') + 1)}
-      </Text>
     </View>
   );
 }

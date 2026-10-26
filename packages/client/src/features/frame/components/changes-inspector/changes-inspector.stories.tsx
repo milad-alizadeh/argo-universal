@@ -13,7 +13,12 @@ import {
   noUncommittedChanges,
   unloadableChanges,
 } from './changes-inspector-fixtures';
-import { ChangesInspectorSheet } from './changes-inspector.mocks';
+import { PagedChangesInspector } from './changes-inspector-paging.mocks';
+import {
+  ChangesInspectorSheet,
+  fewFiles,
+  manyFiles,
+} from './changes-inspector.mocks';
 
 // Paper: Feed & Inspector, Session Explorations, Flow / Changes comparison (owner, 2026-10-19).
 const meta = {
@@ -49,9 +54,18 @@ const meta = {
         'Undefined until the first load for this comparison settles.',
     },
     viewed: { control: false, description: 'The paths marked Viewed.' },
-    selectedFile: {
-      control: 'text',
-      description: 'The file the desktop Stage has open.',
+    summary: {
+      control: false,
+      description:
+        "The whole comparison's counts, including files no page has brought yet.",
+    },
+    moreFiles: {
+      control: 'boolean',
+      description: 'More files wait on the Server.',
+    },
+    diffs: {
+      control: false,
+      description: "Each opened file's diff, a page of lines at a time.",
     },
     loadError: {
       control: 'text',
@@ -68,7 +82,8 @@ const meta = {
     },
     onComparisonChange: { control: false },
     onViewedChange: { control: false },
-    onFileSelect: { control: false },
+    onLoadMoreFiles: { control: false },
+    onLoadDiff: { control: false },
     onExpandedChange: { control: false },
     onOpenChange: { control: false },
   },
@@ -76,6 +91,7 @@ const meta = {
     ...aFewChanges,
     onComparisonChange: action('comparison changed'),
     onViewedChange: action('Viewed changed'),
+    onLoadDiff: action('diff pages asked for'),
     onExpandedChange: action('expanded changed'),
     onOpenChange: action('open changed'),
   },
@@ -104,4 +120,11 @@ export const Expanded: Story = { args: expandedChanges };
 // The phone shell's Inspector sheet.
 export const InASheet: Story = {
   render: (args) => <ChangesInspectorSheet {...args} />,
+};
+
+// The Server's pages: fifty files at a time, and each opened diff in pages of lines, as the list scrolls to them.
+export const Paged: Story = {
+  render: (args) => (
+    <PagedChangesInspector {...args} source={[...fewFiles, ...manyFiles]} />
+  ),
 };

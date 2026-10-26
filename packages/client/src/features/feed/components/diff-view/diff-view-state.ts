@@ -12,7 +12,7 @@ export interface DiffViewProps {
   onViewedChange?: (viewed: boolean) => void;
 }
 
-export type DiffViewState = FileHeaderProps;
+export type DiffViewState = FileHeaderProps & { file: FileDiff };
 
 // The fold follows the Viewed mark whenever it changes, here or from the owner, such as marks that load after the files.
 function useViewedFold(

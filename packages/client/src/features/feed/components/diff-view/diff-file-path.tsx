@@ -1,13 +1,32 @@
-import { Text } from '@repo/kit/primitives/content/text';
+import { Text, TextClassContext } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { use, useRef } from 'react';
+import { Platform, View, type ViewInstance } from 'react-native';
+import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 
+// On web the folder keeps left-to-right order inside the right-to-left text that ellipsizes its start.
+const isolated = (folder: string): string =>
+  Platform.OS === 'web' ? `\u2066${folder}\u2069` : folder;
+
+const folderText = {
+  selectable: false,
+  numberOfLines: 1,
+  ellipsizeMode: 'head',
+  role: 'code',
+  tone: 'muted',
+} as const;
+
+// The web's Text sets its own direction, so the right-to-left box is set on the Text itself.
+const headFirst = 'web:[direction:rtl] web:text-left';
+
+// A narrow header gives up the folder's start, so what stays is the part beside the name.
 function FolderName({ folder }: { folder: string }): React.JSX.Element {
   return (
     <View className="min-w-0 shrink">
-      <Text selectable={false} numberOfLines={1} role="code" tone="muted">
-        {folder}
-      </Text>
+      <TextClassContext value={cn(use(TextClassContext), headFirst)}>
+        <Text {...folderText}>{isolated(folder)}</Text>
+      </TextClassContext>
     </View>
   );
 }
@@ -22,14 +41,92 @@ function FileBaseName({ name }: { name: string }): React.JSX.Element {
   );
 }
 
-// The path starts beside its chevron; a long folder gives up its end, never the file name.
-export function FilePath({ path }: { path: string }): React.JSX.Element {
+interface PathParts {
+  folder: string;
+  name: string;
+}
+
+const splitPath = (path: string): PathParts => {
   const slash = path.lastIndexOf('/');
 
+  return { folder: path.slice(0, slash + 1), name: path.slice(slash + 1) };
+};
+
+// On web a View is its DOM element.
+const domNode = (view: ViewInstance | null): Element | undefined => {
+  const node: unknown = view;
+
+  return Platform.OS === 'web' && node instanceof Element ? node : undefined;
+};
+
+// A line cut short holds more than its box shows; each part of the path is one box around one line.
+const cutShort = (row: Element): boolean =>
+  [...row.children].some(
+    ({ firstElementChild: line }) =>
+      line !== null && line.scrollWidth > line.clientWidth,
+  );
+
+interface CutShortWatch {
+  ref: React.RefObject<ViewInstance | null>;
+  onLayout: () => void;
+}
+
+// Reports, on web, whether the path is cut short each time its row changes width.
+function useCutShort(onCutShortChange?: (cut: boolean) => void): CutShortWatch {
+  const row = useRef<ViewInstance>(null);
+
+  const onLayout = (): void => {
+    const node = domNode(row.current);
+
+    if (node) onCutShortChange?.(cutShort(node));
+  };
+
+  return { ref: row, onLayout };
+}
+
+interface FilePathProps {
+  path: string;
+  // Desktop: told whether the row cuts the path short, so the whole path can show elsewhere.
+  onCutShortChange?: (cut: boolean) => void;
+}
+
+// The path starts beside its chevron; a long folder gives up its start, never the file name.
+export function FilePath(props: FilePathProps): React.JSX.Element {
+  const { folder, name } = splitPath(props.path);
+
   return (
-    <View className="min-w-0 flex-1 flex-row items-center">
-      <FolderName folder={path.slice(0, slash + 1)} />
-      <FileBaseName name={path.slice(slash + 1)} />
+    <View
+      {...useCutShort(props.onCutShortChange)}
+      className="min-w-0 flex-1 flex-row items-center"
+    >
+      <FolderName folder={folder} />
+      <FileBaseName name={name} />
     </View>
+  );
+}
+
+function WholePath({ folder, name }: PathParts): React.JSX.Element {
+  return (
+    <>
+      <Text selectable={false} role="code" tone="muted">
+        {folder}
+      </Text>
+      <Text selectable={false} role="code">
+        {name}
+      </Text>
+    </>
+  );
+}
+
+// The phone keeps the whole path on its line and scrolls it sideways when it is longer than the row.
+export function ScrollingFilePath(props: { path: string }): React.JSX.Element {
+  return (
+    <ScrollFadeView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="flex-1"
+    >
+      <WholePath {...splitPath(props.path)} />
+    </ScrollFadeView>
   );
 }

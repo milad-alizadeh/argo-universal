@@ -2,13 +2,14 @@ import { layoutWidths } from '@repo/kit/each-layout';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { manyFiles } from './changes-inspector.mocks';
+import { loadedChanges, manyFiles } from './changes-inspector.mocks';
 import {
   allChanges,
   fewSummary,
   fileHeader,
   largeFile,
   expectComparison,
+  scrollToFile,
   testMeta,
   widths,
 } from './changes-inspector.test.mocks';
@@ -37,23 +38,16 @@ async function expectLineTotals(
   }
 }
 
-// A phone folds each file's diff under its header; a desktop lists the files and opens one at a time.
+// Every file starts folded, so a long comparison opens fast; a header opens its diff in place.
 async function expectInitialFiles(
   canvas: ReturnType<typeof within>,
-  width: number,
 ): Promise<void> {
-  if (width === layoutWidths.phone) {
-    await expect(canvas.getByText(lastAddedLine)).toBeVisible();
-    await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'true');
-    await expect(fileHeader('/repo/src/feed.ts')).toHaveAttribute(
-      expanded,
-      'false',
-    );
-  } else {
-    await expect(canvas.queryByText(lastAddedLine)).toBeNull();
-    await expect(fileHeader(largeFile)).toBeVisible();
-    await expect(fileHeader('/repo/src/feed.ts')).not.toHaveAttribute(expanded);
-  }
+  await expect(canvas.queryByText(lastAddedLine)).toBeNull();
+  await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
+  await expect(fileHeader('/repo/src/feed.ts')).toHaveAttribute(
+    expanded,
+    'false',
+  );
 }
 
 // The toolbar counts every file and its lines; a viewed file starts folded.
@@ -66,67 +60,50 @@ export const ShowsFilesAndTotals: Story = {
       await expectComparison(allChanges, width);
       await expect(canvas.getByText(fewSummary)).toBeVisible();
       await expectLineTotals(canvas, width);
-      await expectInitialFiles(canvas, width);
+      await expectInitialFiles(canvas);
     }
   },
 };
 
 // Sixty files scroll inside the Inspector, down to the last one.
 export const ManyFilesScroll: Story = {
-  args: { files: manyFiles },
+  args: loadedChanges(manyFiles),
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
 
     for (const width of widths) {
       await settleViewport(width);
       await expect(canvas.getByText('60 files · 0 viewed')).toBeVisible();
-      const last = fileHeader('/repo/src/module-60/index.ts');
-      last.scrollIntoView();
+      const last = await scrollToFile('/repo/src/module-60/index.ts');
       await waitFor(() => expect(last).toBeVisible());
     }
   },
 };
 
-// A phone ticks a check; a desktop toggles a button.
-const checks = { role: 'checkbox', state: 'aria-checked' } as const;
-
-const toggles = { role: 'button', state: 'aria-pressed' } as const;
-
-// Marking a file viewed neither opens it from the desktop's list nor leaves it open on a phone.
-async function expectStillFolded(
-  canvas: ReturnType<typeof within>,
-  width: number,
-): Promise<void> {
-  if (width === layoutWidths.phone)
-    return expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
-
-  await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
-}
-
-// Marking a file viewed folds it and tells the owner; one story per width, each with a fresh spy.
-function marksViewed(
-  width: number,
-  mark: typeof checks | typeof toggles,
-): Story {
+// Marking an open file viewed folds it and tells the owner; one story per width, each with a fresh spy.
+function marksViewed(width: number): Story {
   return {
     args: { onViewedChange: fn() },
     play: async ({ args, canvas, userEvent }) => {
       await settleViewport(width);
+      await userEvent.click(fileHeader(largeFile));
+      await expect(canvas.getByText(lastAddedLine)).toBeVisible();
 
-      const [large, feed] = canvas.getAllByRole(mark.role, { name: 'Viewed' });
+      const [large, feed] = canvas.getAllByRole('checkbox', { name: 'Viewed' });
 
       if (!large || !feed) throw new Error('Missing Viewed marks');
-      await expect(feed).toHaveAttribute(mark.state, 'true');
+      await expect(feed).toHaveAttribute('aria-checked', 'true');
       await userEvent.click(large);
       await expect(args.onViewedChange).toHaveBeenCalledWith(largeFile, true);
-      await expectStillFolded(canvas, width);
+      await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
+      await expect(canvas.queryByText(lastAddedLine)).toBeNull();
     },
   };
 }
 
-export const MarksViewedPhone = marksViewed(layoutWidths.phone, checks);
+export const MarksViewedPhone = marksViewed(layoutWidths.phone);
 
-export const MarksViewedWide = marksViewed(layoutWidths.wide, toggles);
+export const MarksViewedWide = marksViewed(layoutWidths.wide);
 
 // Expanded, the Inspector keeps the comparison, totals and files, and offers Restore in place of Expand.
 export const ExpandedKeepsTheChanges: Story = {

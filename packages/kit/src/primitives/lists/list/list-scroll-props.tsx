@@ -53,6 +53,7 @@ function streamProps<Item>(
     onStartReached: props.onStartReached,
     onStartReachedThreshold: props.onStartReachedThreshold,
     drawDistance: props.drawDistance,
+    stickyHeaderIndices: props.stickyHeaderIndices,
   };
 }
 

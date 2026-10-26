@@ -4,6 +4,7 @@ import { fn } from 'storybook/test';
 import { SubagentFeed, useSessionPanels } from '#features/sessions';
 import {
   changesArgs,
+  loadedChanges,
   manyFiles,
 } from '../../../features/frame/components/changes-inspector/changes-inspector.mocks';
 import {
@@ -57,7 +58,7 @@ export function Stage(): JSX.Element {
         renderSubagentFeed={(props) => (
           <SubagentFeed {...props} feed={runningFeed} now={subagentNow} />
         )}
-        changes={{ ...changesArgs, files: manyFiles }}
+        changes={{ ...changesArgs, ...loadedChanges(manyFiles) }}
         shells={{
           shells: stageShells,
           output: longRunningOutput,

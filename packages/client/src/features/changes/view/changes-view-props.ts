@@ -8,17 +8,42 @@ export interface ChangesBranches {
   loadError?: string;
 }
 
+// A changed file as its row draws it; its diff loads in pages once the row is opened.
+export type ChangedFile = Omit<FileDiff, 'hunks'>;
+
+// What has loaded of one file's diff, a page of hunks at a time.
+export interface FileDiffPages {
+  pages: readonly FileDiff['hunks'][];
+  // A page is on its way.
+  loading?: boolean;
+  // The Server holds more pages after the last one loaded.
+  more?: boolean;
+  loadError?: string;
+}
+
+// The whole comparison's counts, including the files no page has brought yet.
+export interface ChangesSummary {
+  files: number;
+  added: number;
+  removed: number;
+}
+
 export interface ChangesViewProps {
-  // Desktop Stage navigation; phone file changes retain their inline diffs.
-  selectedFile?: string;
-  onFileSelect?: (path?: string) => void;
   comparison: ChangesComparison;
   // The branch the Project's main checkout has checked out.
   mainBranch: string;
   branches: ChangesBranches;
   onComparisonChange: (comparison: ChangesComparison) => void;
-  // Undefined until the first load for this comparison settles.
-  files?: readonly FileDiff[];
+  // The pages of changed files loaded so far; undefined until the first page for this comparison settles.
+  files?: readonly ChangedFile[];
+  summary?: ChangesSummary;
+  // More files wait on the Server; the list asks for them as its end comes into view.
+  moreFiles?: boolean;
+  onLoadMoreFiles?: () => void;
+  // Each opened file's diff, by path.
+  diffs: Readonly<Record<string, FileDiffPages>>;
+  // Asks for a file's diff up to this many pages; asking again for the same count does nothing.
+  onLoadDiff: (path: string, pages: number) => void;
   // The last load failed; files from an earlier load stay on screen.
   loadError?: string;
   // The paths marked Viewed.

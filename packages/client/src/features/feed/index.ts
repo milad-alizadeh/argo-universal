@@ -18,6 +18,7 @@ export { findLiveToolCall } from './view/live-tool-call';
 
 export type { FeedViewItem } from './view/feed-view';
 
-export { ChangeCounts } from './components/diff-view/diff-change-counts';
-
-export { ViewedMark } from './components/diff-view/diff-viewed-mark';
+export {
+  FileHeader as DiffFileHeader,
+  type FileHeaderProps as DiffFileHeaderProps,
+} from './components/diff-view/diff-file-header';

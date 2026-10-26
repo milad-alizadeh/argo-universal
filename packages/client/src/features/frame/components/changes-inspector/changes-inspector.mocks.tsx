@@ -1,5 +1,11 @@
 import { Sheet, type SheetProps } from '@repo/kit/primitives/overlays/sheet';
 import type * as React from 'react';
+import {
+  type ChangedFile,
+  type ChangesSummary,
+  type ChangesViewProps,
+  uniqueChangedFiles,
+} from '#features/changes';
 import type { FileDiff } from '#features/feed';
 import { recordedFile } from '../../../../../mocks/feed-edit-mock';
 import {
@@ -42,12 +48,41 @@ export const manyFiles: FileDiff[] = Array.from(
 
 const ignore = (): void => {};
 
+type LoadedChanges = Pick<ChangesViewProps, 'diffs' | 'onLoadDiff'> & {
+  files: ChangedFile[];
+  summary: ChangesSummary;
+};
+
+const withoutHunks = ({ hunks: _, ...file }: FileDiff): ChangedFile => file;
+
+function summaryOf(files: readonly FileDiff[]): ChangesSummary {
+  const unique = uniqueChangedFiles(files);
+
+  return {
+    files: unique.length,
+    added: unique.reduce((sum, file) => sum + file.added, 0),
+    removed: unique.reduce((sum, file) => sum + file.removed, 0),
+  };
+}
+
+// What the Server pages in for these files once it has sent them all: every file listed, each diff in one page.
+export function loadedChanges(files: readonly FileDiff[]): LoadedChanges {
+  return {
+    files: files.map(withoutHunks),
+    summary: summaryOf(files),
+    diffs: Object.fromEntries(
+      files.map((file) => [file.path, { pages: [file.hunks] }]),
+    ),
+    onLoadDiff: ignore,
+  };
+}
+
 export const changesArgs = {
   comparison: { kind: 'main' },
   mainBranch: 'main',
   branches: { names: branchNames },
   onComparisonChange: ignore,
-  files: fewFiles,
+  ...loadedChanges(fewFiles),
   viewed: [viewedPath],
   onViewedChange: ignore,
   expanded: false,

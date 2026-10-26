@@ -4,22 +4,20 @@ import {
 } from '@repo/kit/primitives/overlays/toast';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
-import { SizeClass } from '@repo/kit/size-class/size-class';
-import * as React from 'react';
+import type * as React from 'react';
 import { View } from 'react-native';
-import { DiffView, type FileDiff } from '#features/feed';
 import { noChangesDescription } from '../../view/changes-comparison';
 import { uniqueChangedFiles } from '../../view/changes-files';
 import type { ChangesViewProps } from '../../view/changes-view-props';
-import { BranchFiles } from './changes-branch-files';
+import { FileList } from './changes-file-list';
 
 export const loadingChangesLabel = 'Loading changes';
 
 export const loadErrorTitle = "Couldn't load changes";
 
 /*
- * The changed files for the comparison in force, each with its diff, folded once marked Viewed. A failed load is
- * the standard error toast; a failed refresh keeps the files from the last load.
+ * The changed files for the comparison in force, each opening its diff in place and folded once marked Viewed. A
+ * failed load is the standard error toast; a failed refresh keeps the files from the last load.
  */
 export function ChangesFiles(
   props: ChangesViewProps,
@@ -65,54 +63,4 @@ function NoChanges(
       />
     </View>
   );
-}
-
-function FileList(
-  props: ChangesViewProps & { files: NonNullable<ChangesViewProps['files']> },
-): React.JSX.Element {
-  const phone = <InlineFiles {...props} />;
-  const desktop = props.onFileSelect ? <StageFiles {...props} /> : phone;
-
-  return <SizeClass compact={phone} medium={desktop} wide={desktop} />;
-}
-
-function InlineFiles(
-  props: ChangesViewProps & { files: NonNullable<ChangesViewProps['files']> },
-): React.JSX.Element {
-  return (
-    <View className="gap-2 medium:gap-0 medium:bg-content">
-      {props.files.map((file) => (
-        <FileDiffRow key={file.path} {...props} file={file} />
-      ))}
-    </View>
-  );
-}
-
-type FileDiffRowProps = Pick<ChangesViewProps, 'viewed' | 'onViewedChange'> & {
-  file: FileDiff;
-  initialOpen?: boolean;
-};
-
-function FileDiffRow(props: FileDiffRowProps): React.JSX.Element {
-  const { file } = props;
-
-  return (
-    <DiffView
-      file={file}
-      initialOpen={props.initialOpen}
-      viewed={props.viewed.includes(file.path)}
-      onViewedChange={(viewed) => props.onViewedChange(file.path, viewed)}
-    />
-  );
-}
-
-// The branch list opens one file directly; the comparison is still the branch's comparison.
-function StageFiles(
-  props: ChangesViewProps & { files: readonly FileDiff[] },
-): React.JSX.Element {
-  const selected = props.files.find((file) => file.path === props.selectedFile);
-
-  if (selected) return <FileDiffRow {...props} file={selected} initialOpen />;
-
-  return <BranchFiles {...props} />;
 }

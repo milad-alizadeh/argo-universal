@@ -1,7 +1,4 @@
-import type {
-  InspectorTab,
-  InspectorProps,
-} from '@repo/kit/primitives/scaffolds/inspector';
+import type { InspectorTab } from '@repo/kit/primitives/scaffolds/inspector';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
 import type { ChangesViewProps } from '#features/changes';
@@ -68,15 +65,15 @@ function shellsPanel({
 }
 
 // Changes is always offered; until the page loads them it is empty.
-function changesPanel(
-  { changes, header, changesRequest }: SessionInspectorContent,
-  scrollState?: InspectorProps['scrollState'],
-): PanelContent {
+function changesPanel({
+  changes,
+  header,
+  changesRequest,
+}: SessionInspectorContent): PanelContent {
   return {
     body: createElement(SessionChangesStage, {
       changes,
       header,
-      scrollState,
       changesRequest,
     }),
   };
@@ -84,8 +81,5 @@ function changesPanel(
 
 export const panelContent: Record<
   SessionPanel,
-  (
-    content: SessionInspectorContent,
-    scrollState?: InspectorProps['scrollState'],
-  ) => PanelContent | undefined
+  (content: SessionInspectorContent) => PanelContent | undefined
 > = { subagents: subagentsPanel, shells: shellsPanel, changes: changesPanel };

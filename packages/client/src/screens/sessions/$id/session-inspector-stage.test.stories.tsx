@@ -16,13 +16,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const scrollTestID = 'desktop-inspector-scroll';
+const changesList = 'changes-files';
 
+type Named = { name: string };
+
+const fileHeader = (path: string): Named => ({ name: `Diff for ${path}` });
+
+const firstFile = '/repo/src/module-1/index.ts';
+
+// Hidden tab pages stay mounted, so the Changes list keeps its scroll and its opened files.
 export const RemembersListPositionAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
     const list = within(
       await canvas.findByRole('tabpanel', { name: 'Changes' }),
-    ).getByTestId(scrollTestID);
+    ).getByTestId(changesList);
 
     list.scrollTop = 500;
     await fireEvent.scroll(list);
@@ -34,7 +41,7 @@ export const RemembersListPositionAcrossTabs: Story = {
     await waitFor(() =>
       expect(
         within(canvas.getByRole('tabpanel', { name: 'Changes' })).getByTestId(
-          scrollTestID,
+          changesList,
         ).scrollTop,
         'restored scroll',
       ).toBeGreaterThan(400),
@@ -42,22 +49,19 @@ export const RemembersListPositionAcrossTabs: Story = {
   },
 };
 
-export const RemembersFileDetailAcrossTabs: Story = {
+export const RemembersOpenFilesAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
-      await canvas.findByRole('button', {
-        name: 'Diff for /repo/src/module-1/index.ts',
-      }),
+      await canvas.findByRole('button', fileHeader(firstFile)),
     );
-    await expect(canvas.getByRole('button', { name: 'Back' })).toBeVisible();
+    await expect(
+      canvas.getByRole('button', fileHeader(firstFile)),
+    ).toHaveAttribute('aria-expanded', 'true');
     await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
-    await expect(canvas.getByRole('button', { name: 'Back' })).toBeVisible();
     await expect(
-      canvas.queryByRole('button', {
-        name: 'Diff for /repo/src/module-2/index.ts',
-      }),
-    ).toBeNull();
+      canvas.getByRole('button', fileHeader(firstFile)),
+    ).toHaveAttribute('aria-expanded', 'true');
   },
 };
 
@@ -121,7 +125,7 @@ export const KeepsComparisonAboveScrollingFiles: Story = {
       name: /^Comparison/,
     });
 
-    const files = page.getByTestId(scrollTestID);
+    const files = page.getByTestId(changesList);
 
     const top = comparison.getBoundingClientRect().top;
 

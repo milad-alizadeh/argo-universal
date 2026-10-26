@@ -18,7 +18,6 @@ import {
 type Props = SessionInspectorContent & {
   panels: SessionPanels;
   inspector: InspectorProps;
-  scrollState: InspectorProps['scrollState'];
 };
 
 type PageProps = Props & { panel: SessionPanel };
@@ -37,7 +36,7 @@ function RetainedPage(props: PageProps): ReactElement {
 function PageBody(props: PageProps): ReactElement {
   return (
     <InspectorBody {...props.inspector} surface="bg-transparent" contentScrolls>
-      {panelContent[props.panel](props, props.scrollState)?.body}
+      {panelContent[props.panel](props)?.body}
     </InspectorBody>
   );
 }

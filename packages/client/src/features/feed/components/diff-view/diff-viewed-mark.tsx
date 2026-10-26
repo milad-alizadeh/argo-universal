@@ -1,5 +1,5 @@
 import { CheckButton } from '@repo/kit/primitives/actions/check-button';
-import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import type * as React from 'react';
 import type { FileHeaderProps } from './diff-file-header';
 
@@ -7,39 +7,23 @@ type ViewedMarkProps = Pick<FileHeaderProps, 'viewed' | 'onViewedChange'> & {
   compact?: boolean;
 };
 
-type ActiveViewedMark = ViewedMarkProps &
-  Required<Pick<FileHeaderProps, 'onViewedChange'>>;
+const viewedTooltip = (viewed: boolean | undefined): string =>
+  viewed ? 'Mark as not viewed' : 'Mark as viewed';
 
+// Desktop draws the mark with its "Viewed" label and a tooltip; the phone keeps the bare circular check.
 export function ViewedMark(props: ViewedMarkProps): React.JSX.Element | null {
   if (!props.onViewedChange) return null;
 
-  const mark = { ...props, onViewedChange: props.onViewedChange };
-
-  if (props.compact) return <PhoneViewedMark {...mark} />;
-
-  return <DesktopViewedMark {...mark} />;
-}
-
-// An empty circle until the file is viewed, then a checked one, so the two states read apart at a glance.
-function DesktopViewedMark(props: ActiveViewedMark): React.JSX.Element {
-  return (
-    <IconButton
-      icon={props.viewed ? 'passed' : 'pending'}
-      accessibilityLabel="Viewed"
-      variant="ghost"
-      size="sm"
-      selected={props.viewed ?? false}
-      onPress={() => props.onViewedChange(!props.viewed)}
-    />
-  );
-}
-
-function PhoneViewedMark(props: ActiveViewedMark): React.JSX.Element {
-  return (
+  const mark = (
     <CheckButton
       label="Viewed"
-      value={props.viewed ?? false}
+      labelled={!props.compact}
+      value={props.viewed === true}
       onValueChange={props.onViewedChange}
     />
   );
+
+  if (props.compact) return mark;
+
+  return <Tooltip label={viewedTooltip(props.viewed)}>{mark}</Tooltip>;
 }

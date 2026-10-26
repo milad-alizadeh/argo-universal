@@ -2,7 +2,7 @@ import { layoutWidths } from '@repo/kit/each-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { expect, screen } from 'storybook/test';
+import { expect, screen, waitFor } from 'storybook/test';
 import { ChangesInspector } from './changes-inspector';
 import { changesArgs } from './changes-inspector.mocks';
 
@@ -54,3 +54,31 @@ export async function expectComparison(
 
 export const fileHeader = (path: string): HTMLElement =>
   screen.getByRole('button', { name: `Diff for ${path}` });
+
+export const fileHeaders = (): HTMLElement[] =>
+  screen.getAllByRole('button', { name: /^Diff for / });
+
+// Scrolls the last drawn element of a list into view until `done` holds, so the list draws or asks for what comes next.
+export async function scrollUntil(
+  last: () => HTMLElement | undefined,
+  done: () => boolean,
+): Promise<void> {
+  await waitFor(
+    () => {
+      last()?.scrollIntoView({ block: 'end' });
+
+      if (!done()) throw new Error('Still scrolling');
+    },
+    { timeout: 10_000, interval: 100 },
+  );
+}
+
+// The file list draws only the rows near the viewport, so a far file's header appears once the list scrolls to it.
+export async function scrollToFile(path: string): Promise<HTMLElement> {
+  await scrollUntil(
+    () => fileHeaders().at(-1),
+    () => screen.queryByRole('button', { name: `Diff for ${path}` }) !== null,
+  );
+
+  return fileHeader(path);
+}

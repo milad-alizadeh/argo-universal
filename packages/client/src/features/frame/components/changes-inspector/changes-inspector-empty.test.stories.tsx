@@ -21,8 +21,11 @@ type Story = StoryObj<typeof meta>;
 
 const loadError = "Git couldn't find main.";
 
+// The Server's answer when the comparison holds no changed files.
+const noFiles = { files: [], summary: { files: 0, added: 0, removed: 0 } };
+
 export const NoChangesSinceMain: Story = {
-  args: { files: [] },
+  args: noFiles,
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
 
@@ -35,7 +38,7 @@ export const NoChangesSinceMain: Story = {
 };
 
 export const NoUncommittedChanges: Story = {
-  args: { files: [], comparison: { kind: 'uncommitted' } },
+  args: { ...noFiles, comparison: { kind: 'uncommitted' } },
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
 
@@ -48,7 +51,7 @@ export const NoUncommittedChanges: Story = {
 };
 
 export const ComparedAgainstABranch: Story = {
-  args: { files: [], comparison: { kind: 'branch', branch: 'release/2.4' } },
+  args: { ...noFiles, comparison: { kind: 'branch', branch: 'release/2.4' } },
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
 

@@ -7,8 +7,11 @@ export { ChangesSheetHeader } from './components/changes-sheet-header/changes-sh
 export type { ChangesComparison } from './view/changes-comparison';
 
 export type {
+  ChangedFile,
   ChangesBranches,
+  ChangesSummary,
   ChangesViewProps,
+  FileDiffPages,
 } from './view/changes-view-props';
 
-export { useChangesStage } from './view/use-changes-stage';
+export { uniqueChangedFiles } from './view/changes-files';

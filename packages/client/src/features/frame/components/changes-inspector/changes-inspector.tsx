@@ -2,10 +2,10 @@ import {
   InspectorPane,
   type InspectorPaneProps,
 } from '@repo/kit/primitives/scaffolds/inspector';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import {
   ChangesFiles,
-  useChangesStage,
   ChangesToolbar,
   ChangesSheetHeader,
   type ChangesViewProps,
@@ -32,20 +32,32 @@ const paneOf = ({
   sheetHeader: <ChangesSheetHeader />,
 });
 
-// The Changes Inspector: the comparison and totals stay under the header while the files scroll.
+/*
+ * The Changes Inspector: the comparison and totals stay under the header while the files scroll in their own list. On
+ * a phone it is the sheet's page: the sheet draws the title and the close, so the pane draws neither, nor an expand.
+ */
 export function ChangesInspector(
   props: ChangesInspectorProps,
 ): React.JSX.Element {
-  const stage = useChangesStage(props);
-  const changes = stage.changes ?? props;
+  const pane = <ChangesPane {...props} />;
 
+  return (
+    <SizeClass
+      compact={<ChangesPane {...props} inSheet />}
+      medium={pane}
+      wide={pane}
+    />
+  );
+}
+
+function ChangesPane(props: ChangesInspectorProps): React.JSX.Element {
   return (
     <InspectorPane
       {...paneOf(props)}
-      scrollState={stage.scrollState}
-      toolbar={<ChangesToolbar {...changes} />}
+      contentScrolls
+      toolbar={<ChangesToolbar {...props} />}
     >
-      <ChangesFiles {...changes} />
+      <ChangesFiles {...props} />
     </InspectorPane>
   );
 }

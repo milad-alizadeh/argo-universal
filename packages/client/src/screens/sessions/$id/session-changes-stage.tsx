@@ -1,9 +1,6 @@
 import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { Stack } from '@repo/kit/primitives/layout/stack';
-import {
-  InspectorBody,
-  type InspectorProps,
-} from '@repo/kit/primitives/scaffolds/inspector';
+import { InspectorBody } from '@repo/kit/primitives/scaffolds/inspector';
 import { useState, type ComponentProps, type ReactElement } from 'react';
 import {
   ChangesFiles,
@@ -19,7 +16,6 @@ type Props = {
   changesRequest?: number;
   changes?: ChangesViewProps;
   header?: SessionHeaderProps;
-  scrollState?: InspectorProps['scrollState'];
 };
 
 type Page = Props & { segment: string; onSelect: (segment: string) => void };
@@ -67,9 +63,6 @@ function StageToolbar(props: Page): ReactElement {
   );
 }
 
-const pageScroll = (props: Page): InspectorProps['scrollState'] =>
-  props.segment === 'files' ? props.scrollState : undefined;
-
 function stageFrame(props: Page): ComponentProps<typeof InspectorBody> {
   return {
     title: 'Changes',
@@ -77,11 +70,12 @@ function stageFrame(props: Page): ComponentProps<typeof InspectorBody> {
     onOpenChange: ignore,
     surface: 'bg-transparent',
     toolbar: <StageToolbar {...props} />,
-    scrollState: pageScroll(props),
+    // The files are their own virtualised list; the change detail scrolls in the Inspector's.
+    contentScrolls: props.segment === 'files',
   };
 }
 
-// Segments and comparison belong above the scroller; each file page keeps its own position.
+// Segments and comparison stay above the scroller.
 export function SessionChangesStage(props: Props): ReactElement {
   return <ChangesStagePage key={props.changesRequest} {...props} />;
 }

@@ -2,6 +2,7 @@ import type { ChangesInspectorProps } from './changes-inspector';
 import {
   branchNames,
   fewFiles,
+  loadedChanges,
   manyFiles,
   viewedPath,
 } from './changes-inspector.mocks';
@@ -9,19 +10,17 @@ import {
 // A story supplies the callbacks; a fixture is the comparison, its branches and the Changes it found.
 type ChangesInspectorFixture = Omit<
   ChangesInspectorProps,
-  | 'onComparisonChange'
-  | 'onViewedChange'
-  | 'onFileSelect'
-  | 'onExpandedChange'
-  | 'onOpenChange'
+  'onComparisonChange' | 'onViewedChange' | 'onExpandedChange' | 'onOpenChange'
 >;
+
+const nothingLoaded = { files: [], summary: undefined, diffs: {} };
 
 // The Changes of one Checkout against its main branch, one file marked Viewed.
 export const aFewChanges = {
   comparison: { kind: 'main' },
   mainBranch: 'main',
   branches: { names: branchNames },
-  files: fewFiles,
+  ...loadedChanges(fewFiles),
   viewed: [viewedPath],
   expanded: false,
 } satisfies ChangesInspectorFixture;
@@ -29,13 +28,14 @@ export const aFewChanges = {
 // Enough Changes that the file list scrolls under the toolbar.
 export const manyChanges = {
   ...aFewChanges,
-  files: manyFiles,
+  ...loadedChanges(manyFiles),
   viewed: [],
 } satisfies ChangesInspectorFixture;
 
 export const noChanges = {
   ...aFewChanges,
-  files: [],
+  ...nothingLoaded,
+  summary: { files: 0, added: 0, removed: 0 },
   viewed: [],
 } satisfies ChangesInspectorFixture;
 
@@ -53,6 +53,7 @@ export const changesAgainstABranch = {
 // Nothing has settled for this comparison yet.
 export const loadingChanges = {
   ...aFewChanges,
+  ...nothingLoaded,
   files: undefined,
   viewed: [],
 } satisfies ChangesInspectorFixture;
