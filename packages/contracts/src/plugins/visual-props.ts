@@ -28,6 +28,12 @@ export const chartProps = z.strictObject({
   kind: z.enum(['line', 'bar', 'area', 'scatter', 'pie', 'donut']),
   label,
   stacked: z.boolean().optional(),
+  grid: z
+    .boolean()
+    .optional()
+    .describe(
+      'Draw gridlines behind a line, bar, area or scatter chart; off by default.',
+    ),
   onPress: svgProps.shape.onPress,
   series: z
     .array(series)

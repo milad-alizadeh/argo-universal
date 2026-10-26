@@ -951,6 +951,8 @@ export type WireSchemaHints = {
     "label": PropValue<"Chart", "label">;
     /** stacked for this part. */
     "stacked": PropValue<"Chart", "stacked">;
+    /** Draw gridlines behind a line, bar, area or scatter chart; off by default. */
+    "grid": PropValue<"Chart", "grid">;
     /** The action run when the artwork is pressed. */
     "onPress": PropValue<"Chart", "onPress">;
     /** series for this part. */
