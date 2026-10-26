@@ -77,6 +77,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
 }
 
 const namedScenarioSteps = [
+  [agentStep('starts a Shell when released'), 'shell-live'],
   [agentStep('edits a file and keeps its Turn running'), 'changed-files'],
   [agentStep('supplies a long Feed history'), 'feed-history'],
   [agentStep('asks for an Elicitation'), 'elicitation'],

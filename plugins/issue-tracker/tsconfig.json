@@ -1,1 +1,5 @@
-{ "extends": "@argo/plugin-kit/tsconfig.json" }
+{
+  "extends": "@argo/plugin-kit/tsconfig.json",
+  // The journeys' fixture runs in Node, so it is checked with the tests.
+  "exclude": ["**/*.test.ts", "**/node_modules", "journey-fixture.ts"]
+}

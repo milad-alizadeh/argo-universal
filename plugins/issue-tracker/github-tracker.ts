@@ -1,109 +1,97 @@
 import type { Argo, ProcessResult } from '@argo/plugin-kit';
 import {
+  countCommand,
+  labelsCommand,
+  listCommand,
+  statusCommand,
+  viewCommand,
+} from './github-commands';
+import {
+  mapCount,
   mapIssue,
+  mapLabels,
   parseJson,
-  type GitHubJson,
+  type GitHubCount,
+  type GitHubIssue,
+  type GitHubLabel,
   type Issue,
   type IssueStatus,
 } from './github-issues';
 
-const listFields = 'number,title,state,labels,assignees,url';
-
-const issueFields = `${listFields},body`;
-
+// Each list and count is a GitHub search, as `is:open label:bug`.
 export type TrackerClient = {
   authStatus: () => Promise<string>;
-  listIssues: () => Promise<Issue[]>;
+  listIssues: (search: string, limit: number) => Promise<Issue[]>;
+  countIssues: (search: string) => Promise<number>;
+  listLabels: () => Promise<string[]>;
   getIssue: (number: number) => Promise<Issue>;
   setStatus: (number: number, status: IssueStatus) => Promise<void>;
 };
 
 type GitHub = { process: Pick<Argo['process'], 'run'> };
 
+type Read = <Reply>(
+  argv: string[],
+  description: string,
+) => Promise<Reply | null>;
+
 // The Tracker talks to GitHub only through the Server-owned `argo` API.
 export function createGitHubTracker(
   argo: GitHub,
   repository: string,
 ): TrackerClient {
+  const read: Read = async (argv, description) =>
+    parseJson(await run(argo, argv), description);
+
   return {
     authStatus: () => run(argo, ['gh', 'auth', 'status']),
-    listIssues: () => listIssues(argo, repository),
-    getIssue: (number) => getIssue(argo, repository, number),
-    setStatus: async (number, status) => {
-      await run(argo, statusCommand(repository, number, status));
-    },
+    ...searches(read, repository),
+    ...issueCalls(argo, read, repository),
   };
 }
 
-async function listIssues(argo: GitHub, repository: string): Promise<Issue[]> {
-  const [open = '', closed = ''] = await Promise.all(
-    ['open', 'closed'].map((state) =>
-      run(argo, listCommand(repository, state)),
+type Searches = Pick<
+  TrackerClient,
+  'listIssues' | 'countIssues' | 'listLabels'
+>;
+
+const searches = (read: Read, repository: string): Searches => ({
+  listIssues: async (search, limit) =>
+    mapIssueList(
+      await read(listCommand(repository, search, limit), 'GitHub Issue list'),
     ),
-  );
+  countIssues: async (search) =>
+    mapCount(
+      await read<GitHubCount>(countCommand(repository, search), 'GitHub count'),
+    ),
+  listLabels: async () =>
+    mapLabels(
+      await read<GitHubLabel[]>(labelsCommand(repository), 'GitHub label list'),
+    ),
+});
 
-  return [
-    ...mapIssueList(parseJson(open, 'GitHub open issue list')),
-    ...mapIssueList(parseJson(closed, 'GitHub closed issue list')),
-  ];
-}
+type IssueCalls = Pick<TrackerClient, 'getIssue' | 'setStatus'>;
 
-const listCommand = (repository: string, state: string): string[] => [
-  'gh',
-  'issue',
-  'list',
-  '--repo',
-  repository,
-  '--state',
-  state,
-  '--limit',
-  '50',
-  '--json',
-  listFields,
-];
+const issueCalls = (
+  argo: GitHub,
+  read: Read,
+  repository: string,
+): IssueCalls => ({
+  getIssue: async (number) =>
+    mapIssue(
+      await read<GitHubIssue>(viewCommand(repository, number), 'GitHub Issue'),
+    ),
+  setStatus: async (number, status) => {
+    await run(argo, statusCommand(repository, number, status));
+  },
+});
 
-function mapIssueList(issues: GitHubJson): Issue[] {
+function mapIssueList(issues: GitHubIssue[] | null): Issue[] {
   if (!Array.isArray(issues))
     throw new Error('GitHub returned an invalid Issue list.');
 
-  return issues.map(mapIssue);
+  return issues.map((issue) => mapIssue(issue));
 }
-
-async function getIssue(
-  argo: GitHub,
-  repository: string,
-  number: number,
-): Promise<Issue> {
-  const output = await run(argo, viewCommand(repository, number));
-
-  return mapIssue(parseJson(output, 'GitHub Issue'));
-}
-
-const viewCommand = (repository: string, number: number): string[] => [
-  'gh',
-  'issue',
-  'view',
-  issueNumber(number),
-  '--repo',
-  repository,
-  '--json',
-  issueFields,
-];
-
-const statusCommands = { open: 'reopen', closed: 'close' } as const;
-
-const statusCommand = (
-  repository: string,
-  number: number,
-  status: IssueStatus,
-): string[] => [
-  'gh',
-  'issue',
-  statusCommands[status],
-  issueNumber(number),
-  '--repo',
-  repository,
-];
 
 async function run(argo: GitHub, argv: string[]): Promise<string> {
   const result = await argo.process.run(argv);
@@ -126,13 +114,6 @@ function rejectFailure(argv: string[], result: ProcessResult): void {
 
   const detail = result.stderr.trim();
   throw new Error(detail || `gh ${argv[1]} exited with ${result.exitCode}.`);
-}
-
-function issueNumber(number: number): string {
-  if (!Number.isSafeInteger(number) || number < 1)
-    throw new Error('Issue number must be a positive integer.');
-
-  return String(number);
 }
 
 export function githubRepositoryFromOrigin(

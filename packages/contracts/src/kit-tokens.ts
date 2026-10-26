@@ -80,3 +80,5 @@ export const screenWidths = ['content', 'full'] as const;
 export type ScreenWidth = (typeof screenWidths)[number];
 
 export const screenDefaults = { width: 'content' } as const;
+
+export const listDefaults = { appearance: 'cards' } as const;

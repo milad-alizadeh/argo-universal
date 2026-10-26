@@ -32,7 +32,7 @@ const appearanceClasses = {
   plain: '',
   grouped: Platform.OS === 'web' ? '' : 'bg-card',
   cards:
-    'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:bg-transparent web:wide:shadow-hairline',
+    'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:shadow-hairline',
 };
 
 export interface ItemDrawing {

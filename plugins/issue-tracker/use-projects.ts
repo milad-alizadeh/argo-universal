@@ -1,5 +1,5 @@
 import { useEffect, type Argo } from '@argo/plugin-kit';
-import type { Project } from './issue-data';
+import type { Project } from './issue-client';
 
 type Setter<Value> = (value: Value) => void;
 

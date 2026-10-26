@@ -28,6 +28,7 @@ export { sessionPanelLabels } from './components/session-panel-triggers';
 export {
   type SessionPanel,
   sessionPanelOrder,
+  offeredWorkPanels,
   type SessionPanels,
   useSessionPanels,
 } from './stores/session-panels';
@@ -98,6 +99,8 @@ export {
 } from './utils/session-option-choices';
 
 export { useSessionOptions } from './hooks/use-session-options';
+
+export { useSessionWork } from './hooks/use-session-work';
 
 export {
   chooseProject,

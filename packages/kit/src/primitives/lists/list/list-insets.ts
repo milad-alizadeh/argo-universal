@@ -1,3 +1,4 @@
+import { listDefaults } from '@repo/contracts/kit-tokens';
 import { isNativeGrouped, isWebGrouped } from '../../../list-grouped';
 import type { ListProps } from './list-props';
 
@@ -20,7 +21,24 @@ export function listInsets(props: Options, menu: boolean): Insets {
 function appearanceInsets(props: Options): Insets {
   if (isNativeGrouped(props.appearance)) return phoneInsets(props);
 
-  return isWebGrouped(props.appearance) ? groupedInsets(props) : props;
+  return contentInsets(props);
+}
+
+function contentInsets(props: Options): Insets {
+  if (isWebGrouped(props.appearance)) return groupedInsets(props);
+
+  return isCards(props.appearance) ? cardInsets(props) : props;
+}
+
+const isCards = (appearance: Options['appearance']): boolean =>
+  (appearance ?? listDefaults.appearance) === 'cards';
+
+function cardInsets(props: Options): Insets {
+  return {
+    padding: orInset(props.padding, { compact: 4, wide: 0 }),
+    paddingTop: props.paddingTop,
+    paddingBottom: props.paddingBottom,
+  };
 }
 
 // A phone's grouped List of ListItems holds its cards 16 from the sides, as it did before FieldGroup.

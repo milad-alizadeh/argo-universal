@@ -11,6 +11,7 @@ import {
   type SessionPanel,
   sessionPanelLabels,
   sessionPanelOrder,
+  offeredWorkPanels,
   type SessionPanels,
 } from '#features/sessions';
 import {
@@ -24,7 +25,10 @@ export type { SessionInspectorContent } from './session-inspector-content';
 export const offeredSessionPanels = (
   content: SessionInspectorContent,
 ): SessionPanel[] =>
-  sessionPanelOrder.filter((panel) => panelContent[panel](content));
+  offeredWorkPanels({
+    shells: content.shells?.shells,
+    subagents: content.subagents?.subagents,
+  });
 
 const tabOf = (
   panel: SessionPanel,

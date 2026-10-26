@@ -25,6 +25,7 @@ export type SheetProps = KitProps<'Sheet'> & {
 
 export interface SheetScreenProps {
   name: string;
+  onExit?: () => void;
   // Shown in the page's title row; a pushed page also gets a back button.
   title?: string;
   // The page's one header action, at the trailing end of its title row.
@@ -56,7 +57,6 @@ export interface SheetLinkProps {
 // A caller can supply a page when its choices are only known when the field opens.
 export interface SheetDestination extends SheetScreenProps {
   contentScrolls?: boolean;
-  onExit?: () => void;
   /*
    * Whether the sheet carries the page from the moment it opens rather than mounting it on the way in.
    * A page on standby is already drawn when it is pushed, so pushing it is a slide and nothing else.
