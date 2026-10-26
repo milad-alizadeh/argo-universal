@@ -15,22 +15,22 @@ import { type StyleProp, View, type ViewStyle } from 'react-native';
 import { SettingsLoading } from '../../settings-loading';
 import type { SlotPluginsLoad } from './slot-plugins';
 import { SlotPreview } from './slot-preview';
-import type { SlotPart, SlotSettings } from './slot-settings';
+import type { OwnerSlot, SlotSettings } from './slot-settings';
 import {
   effectiveOwner,
   optionValueOf,
   ownerOfOption,
-  partOptions,
-  previewProps,
+  ownerOptions,
   type SlotOwner,
   type SlotPlugin,
+  visibilityOf,
 } from './slot-settings-model';
 
 export interface SlotSettingsViewProps {
   settings: SlotSettings;
   caption?: string;
   plugins: SlotPluginsLoad;
-  // The Plugin that writes the Slot's replaceable part, or null while it is Argo's.
+  // The Plugin that writes the Slot's Single-owner Slot, or null while it is Argo's.
   owner: SlotOwner;
   onShownChange: (pluginId: string, shown: boolean) => void;
   onOwnerChange: (owner: SlotOwner) => void;
@@ -43,7 +43,7 @@ const loadFailed: ErrorToast = {
 };
 
 /*
- * Any Slot's page, drawn from its declaration: which Plugins fill it, and who writes its replaceable part. The
+ * Any Slot's page, drawn from its declaration: which Plugins fill it, and who writes its Single-owner Slot. The
  * preview is the Slot's own component, pinned above the rows that change it, and redraws as each one changes.
  */
 export function SlotSettingsView(
@@ -78,12 +78,13 @@ const Loaded = (props: LoadedProps): React.JSX.Element => (
     <View className="pt-2 pb-1" style={usePreviewColumn()}>
       <SlotPreview
         settings={props.settings}
-        {...previewProps(props.plugins, props.owner)}
+        visibility={visibilityOf(props.plugins, props.owner)}
       />
     </View>
     <FieldGroup>
       {showSection(props)}
-      {props.settings.part && partSection(props, props.settings.part)}
+      {props.settings.ownerSlot &&
+        ownerSection(props, props.settings.ownerSlot)}
     </FieldGroup>
   </View>
 );
@@ -128,18 +129,21 @@ const switchRow = (
   />
 );
 
-const partSection = (props: LoadedProps, part: SlotPart): React.JSX.Element => (
-  <FieldGroup.Section title={part.title}>
+const ownerSection = (
+  props: LoadedProps,
+  ownerSlot: OwnerSlot,
+): React.JSX.Element => (
+  <FieldGroup.Section title={ownerSlot.title}>
     <FieldGroup.Picker
-      title={part.title}
+      title={ownerSlot.title}
       presentation="inline"
       value={chosenOption(props)}
-      options={partOptions(part, props.plugins, props.owner)}
+      options={ownerOptions(ownerSlot, props.plugins, props.owner)}
       onValueChange={(value) => props.onOwnerChange(ownerOfOption(value))}
     />
   </FieldGroup.Section>
 );
 
-// A Plugin turned off gives the part back to Argo, so its option is not the chosen one.
+// A Plugin turned off gives the line back to Argo, so its option is not the chosen one.
 const chosenOption = ({ plugins, owner }: LoadedProps): string =>
   optionValueOf(effectiveOwner(plugins, owner)?.pluginId ?? null);

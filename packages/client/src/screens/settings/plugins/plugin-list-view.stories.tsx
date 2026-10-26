@@ -27,7 +27,7 @@ export const Default: Story = {};
 
 export const SlotRows: Story = {
   args: {
-    slots: [{ path: 'session-rows', title: 'Session rows', count: 3 }],
+    slots: [{ slotId: 'argo/session/row/v1', title: 'Session rows', count: 3 }],
   },
 };
 

@@ -10,9 +10,12 @@ import {
 export {
   addOnlySlots,
   itemsSlotEntry,
+  mergedItems,
   replaceableSlots,
   messageSlotId,
   projectDetailsSlotId,
+  sessionActivitySlotId,
+  SessionActivityItem,
   sessionRowSlotId,
   SessionRowItem,
   toolCallSlotId,

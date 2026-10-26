@@ -1,3 +1,5 @@
+import type { SessionRowPreviewData } from './session-row-preview';
+import { previewSession } from './session-row-slot';
 import type { SlotPlugin } from './slot-settings-model';
 
 export const issueRef = (number: number): string => `#${number}`;
@@ -6,24 +8,22 @@ export const issueTracker: SlotPlugin = {
   pluginId: 'issue-tracker',
   name: 'Issue tracker',
   shown: true,
-  sample: { text: issueRef(412), tone: 'info' },
-  part: 'Awaiting review · 1 of 2',
+  asks: true,
 };
 
 export const deploys: SlotPlugin = {
   pluginId: 'deploys',
   name: 'Deploys',
   shown: true,
-  sample: { text: 'Preview ready', tone: 'success' },
-  part: 'Deploying preview',
+  asks: true,
 };
 
-// Fills the Slot but does not ask for its replaceable part.
+// Fills the Slot but does not ask for its Single-owner Slot.
 export const coverage: SlotPlugin = {
   pluginId: 'coverage',
   name: 'Coverage',
   shown: true,
-  sample: { text: '78%' },
+  asks: false,
 };
 
 export const slotPlugins: SlotPlugin[] = [issueTracker, deploys, coverage];
@@ -33,3 +33,35 @@ export const deploysOff: SlotPlugin[] = [
   { ...deploys, shown: false },
   coverage,
 ];
+
+export const previewReady = 'Preview ready';
+
+export const issueTrackerLine = 'Awaiting review · 1 of 2';
+
+export const deploysLine = 'Deploying preview';
+
+// What the three Plugins answer for the preview's Session, as the Server sends it.
+export const sessionRowPreviewData: SessionRowPreviewData = {
+  session: previewSession,
+  age: '2m',
+  items: {
+    items: [
+      {
+        pluginId: issueTracker.pluginId,
+        item: { text: issueRef(412), tone: 'info' },
+      },
+      {
+        pluginId: deploys.pluginId,
+        item: { text: previewReady, tone: 'success' },
+      },
+      { pluginId: coverage.pluginId, item: { text: '78%' } },
+    ],
+    overflow: [],
+  },
+  lines: {
+    items: [
+      { pluginId: issueTracker.pluginId, item: { text: issueTrackerLine } },
+    ],
+    overflow: [{ pluginId: deploys.pluginId, item: { text: deploysLine } }],
+  },
+};

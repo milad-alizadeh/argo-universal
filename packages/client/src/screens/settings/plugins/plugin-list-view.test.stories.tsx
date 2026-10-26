@@ -10,7 +10,7 @@ import {
   pluginRows,
 } from './plugin-settings.fixtures';
 
-const sessionRowsPath = 'session-rows';
+const sessionRowsSlotId = 'argo/session/row/v1';
 
 const sessionRowsTitle = 'Session rows';
 
@@ -57,12 +57,12 @@ export const ARowOpensItsPlugin: Story = {
 
 export const ASlotRowOpensItsPage: Story = {
   args: {
-    slots: [{ path: sessionRowsPath, title: sessionRowsTitle, count: 3 }],
+    slots: [{ slotId: sessionRowsSlotId, title: sessionRowsTitle, count: 3 }],
   },
   play: async ({ args, canvas, userEvent }) => {
     await expect(canvas.getByText('3 on')).toBeVisible();
     await userEvent.click(canvas.getByText(sessionRowsTitle));
-    await expect(args.onOpenSlot).toHaveBeenCalledWith(sessionRowsPath);
+    await expect(args.onOpenSlot).toHaveBeenCalledWith(sessionRowsSlotId);
   },
 };
 

@@ -14,10 +14,17 @@ export {
 export { type ThemeChoice, themeChoices } from './stores/theme-choice';
 
 export {
-  isShownInSlot,
   slotChoicesQuery,
   type SlotChoices,
   type SlotChoosers,
   useSlotChoices,
   useSlotChoosers,
 } from './stores/slot-choices';
+
+export {
+  ownerItem,
+  slotVisibility,
+  type SlotVisibility,
+  useSlotVisibility,
+  visibleItems,
+} from './stores/slot-visibility';

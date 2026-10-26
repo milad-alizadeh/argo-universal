@@ -19,7 +19,7 @@ function slotLink(
   plugins: readonly PluginEntry[],
   hidden: readonly string[] = [],
 ): SlotLink[] {
-  const filling = toSlotPlugins(settings.slotId, plugins, {
+  const filling = toSlotPlugins(settings, plugins, {
     hidden,
     owner: null,
   });
@@ -29,8 +29,8 @@ function slotLink(
   return [{ ...pick(settings), count: shownCount(filling) }];
 }
 
-const pick = ({ path, title }: SlotSettings): Omit<SlotLink, 'count'> => ({
-  path,
+const pick = ({ slotId, title }: SlotSettings): Omit<SlotLink, 'count'> => ({
+  slotId,
   title,
 });
 
@@ -56,7 +56,9 @@ export function PluginListScreen(): React.JSX.Element {
       plugins={usePluginsLoad()}
       slots={useSlotLinks()}
       onOpenPlugin={(pluginId) => navigate(`/settings/plugins/${pluginId}`)}
-      onOpenSlot={(path) => navigate(`/settings/plugins/slots/${path}`)}
+      onOpenSlot={(slotId) =>
+        navigate(`/settings/plugins/slots/${encodeURIComponent(slotId)}`)
+      }
     />
   );
 }

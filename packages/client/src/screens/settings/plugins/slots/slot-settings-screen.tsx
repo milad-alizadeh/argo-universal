@@ -1,4 +1,3 @@
-import type { AddOnlySlotId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import {
   PlaceholderDetailView,
@@ -15,13 +14,13 @@ import {
   type SlotSettingsViewProps,
 } from './slot-settings-view';
 
-// The page of the Slot declared at `path`; an old link to a Slot without one says so.
+// The page of the Slot declared for `slotId`; an old link to a Slot without one says so.
 export function SlotSettingsScreen({
-  path,
+  slotId,
 }: {
-  path: string;
+  slotId: string;
 }): React.JSX.Element {
-  const settings = findSlotSettings(path);
+  const settings = findSlotSettings(slotId);
 
   if (!settings)
     return (
@@ -37,10 +36,10 @@ type SlotState = Pick<
   'plugins' | 'owner' | 'onShownChange' | 'onOwnerChange'
 >;
 
-const useSlotState = (slotId: AddOnlySlotId): SlotState => ({
-  plugins: useSlotPlugins(slotId),
-  owner: useSlotChoices(slotId).owner,
-  ...useSlotChoosers(slotId),
+const useSlotState = (settings: SlotSettings): SlotState => ({
+  plugins: useSlotPlugins(settings),
+  owner: useSlotChoices(settings.slotId).owner,
+  ...useSlotChoosers(settings.slotId),
 });
 
 function DeclaredSlot({
@@ -54,7 +53,7 @@ function DeclaredSlot({
     <SlotSettingsView
       settings={settings}
       caption={useServerPageCaption()}
-      {...useSlotState(settings.slotId)}
+      {...useSlotState(settings)}
       onBack={() => navigate('/settings/plugins')}
     />
   );

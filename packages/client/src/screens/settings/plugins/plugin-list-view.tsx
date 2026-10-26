@@ -21,7 +21,7 @@ export type PluginsLoad =
 
 // A Slot's page, entered from its own row; `count` is how many Plugins are on in it.
 export interface SlotLink {
-  path: string;
+  slotId: string;
   title: string;
   count: number;
 }
@@ -32,7 +32,7 @@ export interface PluginListViewProps {
   // The Slots some Plugin fills; a Slot no Plugin fills has no row.
   slots: readonly SlotLink[];
   onOpenPlugin: (pluginId: string) => void;
-  onOpenSlot: (path: string) => void;
+  onOpenSlot: (slotId: string) => void;
 }
 
 export const pluginsTitle = 'Plugins';
@@ -68,13 +68,13 @@ function slotsSection({
 
 const slotRow = (
   slot: SlotLink,
-  onOpen: (path: string) => void,
+  onOpen: (slotId: string) => void,
 ): React.JSX.Element => (
   <FieldGroup.Link
-    key={slot.path}
+    key={slot.slotId}
     title={slot.title}
     value={`${slot.count} on`}
-    onPress={() => onOpen(slot.path)}
+    onPress={() => onOpen(slot.slotId)}
   />
 );
 

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { sessionRowSlot } from './session-row-slot';
+import { fixtureSessionRowSlot } from './slot-fixture-settings';
 import { deploysOff, issueTracker, slotPlugins } from './slot-fixtures';
 import { SlotSettingsView } from './slot-settings-view';
 
@@ -15,11 +15,11 @@ const meta = {
   },
   parameters: { screenPreview: true },
   args: {
-    settings: sessionRowSlot,
+    settings: fixtureSessionRowSlot,
     plugins: { status: 'loaded', plugins: slotPlugins },
     owner: null,
     onShownChange: action('show in the Slot'),
-    onOwnerChange: action('part owner'),
+    onOwnerChange: action('Activity line owner'),
     onBack: action('back'),
   },
 } satisfies Meta<typeof SlotSettingsView>;

@@ -74,6 +74,10 @@ _Avoid_: Listener, interceptor, middleware
 A named, versioned place in a core page that Plugins fill, such as Project details. Each Plugin adds its own content; Argo decides where it goes and how much fits, and Plugins never change Argo's or each other's. A Slot takes either a page of kit components or items of a fixed shape that Argo draws, such as a Session row's meta items, asked for once per list.
 _Avoid_: Contribution point, hook, outlet
 
+**Single-owner Slot**:
+An items Slot only one source shows at a time, such as a Session row's Activity line. Every Plugin that declares it answers; the App shows the answer of the one Plugin the user chose in Settings on that Device, or Argo's own while none is chosen or the chosen Plugin is turned off or has no answer.
+_Avoid_: Part, takeover, exclusive Slot
+
 **Replaceable Slot**:
 A Slot placed around a core component, a Tool call or a message in the Feed. A Plugin reaches one only through its `ui.render` Hook and may pass it through, change its props or draw its own; core draws its own when the Plugin's tree is refused.
 _Avoid_: Override, component override

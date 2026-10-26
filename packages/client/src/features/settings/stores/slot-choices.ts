@@ -128,11 +128,6 @@ export const chooseSlotOwner = (
 ): Promise<void> =>
   choose(client, slotId, (choices) => ({ ...choices, owner }));
 
-export const isShownInSlot = (
-  choices: SlotChoices,
-  pluginId: string,
-): boolean => !choices.hidden.includes(pluginId);
-
 /*
  * This Device's choices for one Slot: Argo's own until the kept ones load. A Slot reads this to leave out a hidden
  * Plugin, and to find who writes its replaceable part.

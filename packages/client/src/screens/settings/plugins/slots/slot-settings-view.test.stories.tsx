@@ -3,12 +3,17 @@ import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
-import { argoActivity, sessionRowSlot } from './session-row-slot';
-import { deploys, issueRef, slotPlugins } from './slot-fixtures';
+import { argoActivity } from './session-row-slot';
+import { fixtureSessionRowSlot } from './slot-fixture-settings';
+import {
+  deploysLine,
+  issueRef,
+  issueTrackerLine,
+  previewReady,
+  slotPlugins,
+} from './slot-fixtures';
 import type { SlotOwner, SlotPlugin } from './slot-settings-model';
 import { SlotSettingsView } from './slot-settings-view';
-
-const previewReady = deploys.sample.text;
 
 const deploysName = 'Deploys';
 
@@ -19,7 +24,7 @@ const meta = {
   component: SlotSettingsView,
   parameters: { screenPreview: true },
   args: {
-    settings: sessionRowSlot,
+    settings: fixtureSessionRowSlot,
     plugins: { status: 'loaded', plugins: slotPlugins },
     owner: null,
     onShownChange: fn(),
@@ -39,7 +44,7 @@ function Live(props: { plugins: SlotPlugin[] }): React.JSX.Element {
 
   return (
     <SlotSettingsView
-      settings={sessionRowSlot}
+      settings={fixtureSessionRowSlot}
       plugins={{ status: 'loaded', plugins }}
       owner={owner}
       onOwnerChange={setOwner}
@@ -90,13 +95,13 @@ export const ChoosingAPluginWritesTheActivityLineAtOnce: Story = {
   render: () => <Live plugins={slotPlugins} />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('radio', { name: /Issue tracker/ }));
-    await expect(canvas.getByText('Awaiting review · 1 of 2')).toBeVisible();
+    await expect(canvas.getByText(issueTrackerLine)).toBeVisible();
     await expect(canvas.queryByText(argoActivity)).toBeNull();
     await expect(
       canvas.getByText('Also asks. Replaces Issue tracker.'),
     ).toBeVisible();
     await userEvent.click(canvas.getByRole('radio', { name: /Deploys/ }));
-    await expect(canvas.getByText('Deploying preview')).toBeVisible();
+    await expect(canvas.getByText(deploysLine)).toBeVisible();
   },
 };
 

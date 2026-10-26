@@ -5,7 +5,6 @@ import { memoryStorage } from '../../../../mocks/memory-storage';
 import {
   chooseSlotOwner,
   chooseSlotPluginShown,
-  isShownInSlot,
   type SlotChoices,
   slotChoicesQuery,
 } from './slot-choices';
@@ -33,7 +32,7 @@ describe('the Plugins hidden in a Slot on this Device', () => {
     const choices = await loadChoices();
 
     expect(choices).toEqual({ hidden: [], owner: null });
-    expect(isShownInSlot(choices, 'issues')).toBe(true);
+    expect(choices.hidden).not.toContain('issues');
   });
 
   it('keeps a Plugin turned off for the next App start', async () => {
@@ -45,7 +44,7 @@ describe('the Plugins hidden in a Slot on this Device', () => {
     const choices = await loadChoices();
 
     expect(choices.hidden).toEqual(['deploys']);
-    expect(isShownInSlot(choices, 'deploys')).toBe(false);
+    expect(choices.hidden).toContain('deploys');
   });
 
   it('shows a Plugin again once it is turned back on', async () => {
