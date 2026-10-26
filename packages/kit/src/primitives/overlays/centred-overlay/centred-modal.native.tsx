@@ -1,10 +1,4 @@
-import {
-  type ReactElement,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-} from 'react';
+import { type ReactElement, useCallback, useEffect, useId } from 'react';
 import { BackHandler, View } from 'react-native';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
 import {
@@ -17,10 +11,7 @@ import {
   modalExiting,
   scrimEntering,
 } from './centred-modal-motion';
-import type {
-  CentredModalFrameProps,
-  CentredModalRootProps,
-} from './centred-modal-props';
+import type { CentredModalFrameProps } from './centred-modal-props';
 import {
   CentredModalContext,
   useCentredModalState,
@@ -29,16 +20,7 @@ import { CentredOverlayScope } from './centred-overlay';
 import { mayDismiss } from './dismissal';
 
 // The phone's centred modal, drawn with React Native views. A phone raises a sheet at every width, so this draws only where the app asks for a centred card.
-export function CentredModalRoot(props: CentredModalRootProps): ReactElement {
-  const { open, onOpenChange } = props;
-  const state = useMemo(() => ({ open, onOpenChange }), [open, onOpenChange]);
-
-  return (
-    <CentredModalContext.Provider value={state}>
-      {props.children}
-    </CentredModalContext.Provider>
-  );
-}
+export { CentredModalProvider as CentredModalRoot } from './centred-modal-provider';
 
 export function CentredModalTrigger(props: {
   children: TriggerElement;

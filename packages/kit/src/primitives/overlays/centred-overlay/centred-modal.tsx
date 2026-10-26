@@ -1,5 +1,5 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
-import { type ReactElement, type ReactNode, useMemo } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { type GestureResponderEvent, Pressable, View } from 'react-native';
 import {
   triggerChild,
@@ -9,10 +9,8 @@ import type {
   CentredModalFrameProps,
   CentredModalRootProps,
 } from './centred-modal-props';
-import {
-  CentredModalContext,
-  useCentredModalState,
-} from './centred-modal-state';
+import { CentredModalProvider } from './centred-modal-provider';
+import { useCentredModalState } from './centred-modal-state';
 import { CentredModalTitle } from './centred-modal-text';
 import { CentredOverlayScope } from './centred-overlay';
 import { dismissesOnBackdropPress, mayDismiss } from './dismissal';
@@ -23,15 +21,12 @@ import { dismissesOnBackdropPress, mayDismiss } from './dismissal';
  * Radix keeps focus inside, closes on Escape and hands focus back to the trigger; React Native views draw the rest.
  */
 export function CentredModalRoot(props: CentredModalRootProps): ReactElement {
-  const { open, onOpenChange } = props;
-  const state = useMemo(() => ({ open, onOpenChange }), [open, onOpenChange]);
-
   return (
-    <CentredModalContext.Provider value={state}>
-      <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
+    <CentredModalProvider {...props}>
+      <RadixDialog.Root open={props.open} onOpenChange={props.onOpenChange}>
         {props.children}
       </RadixDialog.Root>
-    </CentredModalContext.Provider>
+    </CentredModalProvider>
   );
 }
 
