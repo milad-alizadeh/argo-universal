@@ -9,13 +9,18 @@ import {
   type PluginOnEvent,
 } from '../../../lib/product/plugin-registry';
 
+// What a page's tree reports back: the events its controls send, and the page a `navigate` Action opens.
+export interface PluginPageCallbacks {
+  onEvent: PluginOnEvent;
+  onOpenPage?: OpenPluginPage;
+}
+
 export interface PluginDetailViewProps {
   // The page the Plugin draws; blank until the Server's first snapshot arrives.
   root: WireNode | null;
   title?: string;
   viewId?: PluginViewId | null;
-  onEvent: PluginOnEvent;
-  onOpenPage?: OpenPluginPage;
+  callbacks: PluginPageCallbacks;
 }
 
 // A Plugin's page, drawn by the App's registry; one that is not a Screen of its own scrolls in the kit's Detail, in the Screen's column.
@@ -40,11 +45,6 @@ function ownsPage(root: WireNode | null): boolean {
 
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   return props.root ? (
-    <PluginTree
-      key={props.viewId}
-      root={props.root}
-      onEvent={props.onEvent}
-      onOpenPage={props.onOpenPage}
-    />
+    <PluginTree key={props.viewId} root={props.root} {...props.callbacks} />
   ) : null;
 }

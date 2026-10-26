@@ -10,13 +10,13 @@ import { Text } from '#primitives/content/text';
 import { useStackPush, withStack } from '#story-stack';
 import {
   createPlace,
-  placeOffer,
+  createPlaceOffer,
   useClaim,
   useClaimed,
   useOfferedPlace,
 } from './place';
 
-const Offer = placeOffer<string>();
+const Offer = createPlaceOffer<string>();
 
 // One Place for the story: the pages below claim it, and a probe reads it as a Frame's band would.
 const place = createPlace<string>();

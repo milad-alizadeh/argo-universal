@@ -11,7 +11,10 @@ import {
   type PluginSection,
 } from '../use-plugin-sections';
 import { usePluginView } from '../use-plugin-view';
-import { PluginDetailView } from './plugin-detail-view';
+import {
+  PluginDetailView,
+  type PluginPageCallbacks,
+} from './plugin-detail-view';
 
 interface PluginDetailScreenProps {
   // The catch-all route's segments: Plugin id, nav id, then the page's own path.
@@ -51,12 +54,7 @@ function PluginPage({
   const view = usePluginView(section.pluginId, pluginPagePath(path));
   const onOpenPage = usePluginOpener()(section.pluginId);
 
-  return (
-    <PluginDetailView
-      {...pluginPageProps(section, view)}
-      onOpenPage={onOpenPage}
-    />
-  );
+  return <PluginDetailView {...pluginPageProps(section, view, onOpenPage)} />;
 }
 
 function PluginUnavailable(): React.JSX.Element {
@@ -68,11 +66,12 @@ function PluginUnavailable(): React.JSX.Element {
 function pluginPageProps(
   section: PluginSection,
   view: ReturnType<typeof usePluginView>,
+  onOpenPage: PluginPageCallbacks['onOpenPage'],
 ): React.ComponentProps<typeof PluginDetailView> {
   return {
     title: section.title,
     viewId: view.viewId,
     root: view.root,
-    onEvent: view.dispatch,
+    callbacks: { onEvent: view.dispatch, onOpenPage },
   };
 }

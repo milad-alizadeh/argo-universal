@@ -8,7 +8,7 @@ import { selectionOptions } from './screen-selection-options';
 
 // The navigator's entry for the Screen; its header shows only where the plan draws it there.
 export function ScreenNavigation(props: ScreenHeaderPlanned): ReactNode {
-  const headerTitle = useHeaderTitle(props);
+  const headerTitle = headerTitleOf(props);
   const leading = drawerLeading(useScreenMenu());
 
   if (!props.plan.stackEntry) return null;
@@ -25,7 +25,7 @@ export function ScreenNavigation(props: ScreenHeaderPlanned): ReactNode {
 }
 
 // The navigator draws the header outside the Screen's tree, so it draws the Actions the Screen declared.
-function useHeaderTitle(props: ScreenHeaderPlanned): () => React.ReactElement {
+function headerTitleOf(props: ScreenHeaderPlanned): () => React.ReactElement {
   return () => <HeadingRow {...props} />;
 }
 

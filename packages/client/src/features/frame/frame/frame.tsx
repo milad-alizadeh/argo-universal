@@ -1,4 +1,4 @@
-import { InspectorPlace } from '@repo/kit/primitives/scaffolds/inspector';
+import { InspectorPlaceOffer } from '@repo/kit/primitives/scaffolds/inspector';
 import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -105,13 +105,13 @@ export interface FrameProps {
 export function Frame({ frame, children }: FrameProps): React.JSX.Element {
   return (
     <SectionListsContext value={frame.lists}>
-      <InspectorPlace value={frame.inspectorPlace}>
+      <InspectorPlaceOffer value={frame.inspectorPlace}>
         <FrameListDetailSidebar value={frame.listDetail.sidebar}>
           <WindowBandProvider places={frame.bandPlaces}>
             <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
           </WindowBandProvider>
         </FrameListDetailSidebar>
-      </InspectorPlace>
+      </InspectorPlaceOffer>
     </SectionListsContext>
   );
 }

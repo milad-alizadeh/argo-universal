@@ -4,7 +4,7 @@ export type { ScreenProps } from './screen-props';
 
 export { ScreenColumn } from './screen-column';
 
-export { ScreenBandPlace, type ScreenBand } from './screen-band';
+export { ScreenBandPlaceOffer, type ScreenBand } from './screen-band';
 
 export {
   ScreenListColumn,

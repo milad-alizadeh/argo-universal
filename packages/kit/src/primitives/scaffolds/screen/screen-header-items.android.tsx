@@ -5,7 +5,6 @@ import { View } from 'react-native';
 import {
   isSubmenu,
   type HeaderEntry,
-  screenHeader,
   type ScreenHeader,
 } from '#primitives/actions/action';
 import { ScreenActionButton } from './screen-action-button.android';
@@ -27,7 +26,7 @@ export const screenTitleOptions = { headerTitleAlign: 'left' } as const;
 export function ScreenHeaderItems(
   props: ScreenHeaderInput,
 ): ReactElement | null {
-  const header = screenHeader(props.declaration, 'android');
+  const header = props.headers.native;
   const leading = drawerLeading(useScreenMenu());
 
   if (header.selecting) return null;

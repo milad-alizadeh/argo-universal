@@ -4,7 +4,7 @@ import {
   usePlaceHeld,
   type Place,
 } from '@repo/kit/place';
-import { ListDetailSidebarPlace } from '@repo/kit/primitives/scaffolds/list-detail';
+import { ListDetailSidebarPlaceOffer } from '@repo/kit/primitives/scaffolds/list-detail';
 import { createContext, use, type ReactNode, useState } from 'react';
 import { isCoreSection } from '../../../lib/product/navigation/sections';
 import type { ScaffoldProps } from '../scaffold/scaffold';
@@ -24,9 +24,9 @@ export function SectionListDetail({
   children,
 }: SectionListDetailProps): React.JSX.Element {
   return (
-    <ListDetailSidebarPlace value={use(FrameListDetailSidebar)}>
+    <ListDetailSidebarPlaceOffer value={use(FrameListDetailSidebar)}>
       {children}
-    </ListDetailSidebarPlace>
+    </ListDetailSidebarPlaceOffer>
   );
 }
 

@@ -1,4 +1,7 @@
-import { type HeaderDeclaration } from '#primitives/actions/action';
+import {
+  type HeaderDeclaration,
+  type ScreenHeader,
+} from '#primitives/actions/action';
 import type { KitProps } from '../../kit-props';
 import type { HeaderPlan } from './header-site';
 
@@ -14,9 +17,16 @@ export type ScreenProps = Omit<KitProps<'Screen'>, 'title'> & {
   onBack?: () => void;
 };
 
-// What a Screen's header pieces draw from: its props and the header they declare, read once.
+// The header finished once for the two rooms a Screen can draw it in: its own heading, and the platform's stack and FAB.
+export interface ScreenHeaders {
+  heading: ScreenHeader;
+  native: ScreenHeader;
+}
+
+// What a Screen's header pieces draw from: its props, and the header they declare and finish, read once.
 export type ScreenHeaderInput = ScreenProps & {
   declaration: HeaderDeclaration;
+  headers: ScreenHeaders;
 };
 
 // What an adapter draws a header from: the Screen's header and the site its plan chose for it.

@@ -8,7 +8,7 @@ import {
   ScreenListColumn,
 } from '#primitives/scaffolds/screen';
 import type { ListDetailProps } from './list-detail-props';
-import { ListDetailSidebarPlace } from './list-detail-sidebar';
+import { ListDetailSidebarPlaceOffer } from './list-detail-sidebar';
 import { SidebarRows } from './sidebar-rows';
 
 /*
@@ -18,7 +18,7 @@ import { SidebarRows } from './sidebar-rows';
  */
 export function ListDetail(props: ListDetailProps): ReactElement {
   const wide = useWide();
-  const sidebar = useOfferedPlace(ListDetailSidebarPlace);
+  const sidebar = useOfferedPlace(ListDetailSidebarPlaceOffer);
 
   if (wide) return <WithDetail {...props} wide sidebar={sidebar} />;
 
@@ -92,9 +92,9 @@ function Pane(props: {
 }): ReactElement {
   return (
     <View testID={props.testID} className={props.className ?? 'flex-1'}>
-      <ListDetailSidebarPlace value={undefined}>
+      <ListDetailSidebarPlaceOffer value={undefined}>
         {props.children}
-      </ListDetailSidebarPlace>
+      </ListDetailSidebarPlaceOffer>
     </View>
   );
 }

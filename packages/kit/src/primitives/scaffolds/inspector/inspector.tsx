@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useClaim, useOfferedPlace, type Place } from '#kit/place';
 import { useWide } from '#kit/use-wide/use-wide';
 import { InspectorPane } from './inspector-pane';
-import { InspectorPlace } from './inspector-place';
+import { InspectorPlaceOffer } from './inspector-place';
 import type { InspectorProps } from './inspector-props';
 import { InspectorSheet } from './inspector-sheet';
 
@@ -13,7 +13,7 @@ import { InspectorSheet } from './inspector-sheet';
  * children open in a Sheet. A page's own header action opens it; there is no generic toggle.
  */
 export function Inspector(props: InspectorProps): ReactElement | null {
-  const place = useOfferedPlace(InspectorPlace);
+  const place = useOfferedPlace(InspectorPlaceOffer);
 
   if (!useWide()) return <InspectorSheet {...props} />;
 

@@ -12,7 +12,7 @@ import { ScreenNavigationEnabled } from './screen-navigation-context';
 /*
  * The heading a Screen in a list column hands up to the column's top row, drawn there instead of in the Screen's own
  * place: a list column is a Screen's content with its heading above it, as a page's is. The column is part of the
- * Screen's own page, so it is not offered through `placeOffer`: the heading is claimed whenever the column is drawn.
+ * Screen's own page, so it is not offered through `createPlaceOffer`: the heading is claimed whenever the column is drawn.
  */
 const ListColumnHeadingContext = createContext<Place<ReactNode> | undefined>(
   undefined,

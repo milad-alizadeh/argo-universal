@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
 import { createPlace, useClaimed, type Place } from '#kit/place';
 import { Action } from '#primitives/actions/action';
-import { ScreenBandPlace, type ScreenBand } from './screen-band';
+import { ScreenBandPlaceOffer, type ScreenBand } from './screen-band';
 import { ScreenStackHeader } from './screen-stack-header';
 import { atWidth, screenWidths } from './screen-widths.mocks';
 
@@ -35,7 +35,7 @@ function Host(): ReactElement {
   const [place] = useState(() => createPlace<ScreenBand>());
 
   return (
-    <ScreenBandPlace value={place}>
+    <ScreenBandPlaceOffer value={place}>
       <Band place={place} />
       <ScreenStackHeader
         title="Build the band"
@@ -45,7 +45,7 @@ function Host(): ReactElement {
           </Action>
         }
       />
-    </ScreenBandPlace>
+    </ScreenBandPlaceOffer>
   );
 }
 

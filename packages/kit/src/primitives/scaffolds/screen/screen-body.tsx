@@ -9,7 +9,6 @@ import {
 import { flattenedChildren } from '#kit/flattened-children';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
-import { screenHeader } from '#primitives/actions/action';
 import { screenContentEnds, useScreenColumn } from './screen-column';
 import type { ScreenHeaderInput } from './screen-props';
 
@@ -110,4 +109,4 @@ const fabClearance = (props: PartProps, wide: boolean): string | false =>
 
 // Android's FAB, which the body's end clears.
 const hasFab = (props: PartProps): boolean =>
-  screenHeader(props.declaration, 'android').primary !== undefined;
+  props.headers.native.primary !== undefined;

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { ActionShortcutScope } from '#primitives/actions/action';
 import { ScreenBandClaim } from './screen-band-claim';
+import { screenHeadersOf } from './screen-headers';
 import { ScreenNavigation } from './screen-navigation';
 import type { ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
@@ -14,7 +15,8 @@ export function ScreenStackHeader(props: ScreenStackHeaderProps): ReactElement {
   // A header-only Screen has no List below it to select.
   const declaration = useHeaderDeclaration(props, null);
   const plan = useHeaderPlan('header only');
-  const drawing = { ...props, declaration, plan };
+  const headers = screenHeadersOf(declaration);
+  const drawing = { ...props, declaration, headers, plan };
 
   return (
     <ActionShortcutScope>

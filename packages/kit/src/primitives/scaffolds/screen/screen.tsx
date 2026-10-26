@@ -1,11 +1,15 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { ColumnScope } from '#kit/content-column/content-column';
-import { SelectionModeScope, useSelectionModeHost } from '#kit/selection-mode';
+import {
+  SelectionModeScope,
+  useClaimedSelectionMode,
+} from '#kit/selection-mode';
 import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';
 import { ScreenAccessory } from './screen-accessory';
 import { ScreenBody } from './screen-body';
+import { screenHeadersOf } from './screen-headers';
 import { ScreenHeadingBody } from './screen-heading-row';
 import { ListColumnScreen } from './screen-list-column-screen';
 import { ScreenNavigation } from './screen-navigation';
@@ -38,9 +42,15 @@ function ScreenSurface(props: ScreenProps): ReactElement {
 
 // The header draws where its plan says (header-site.ts); each site's adapter only draws.
 function ScreenHeaderSource(props: ScreenProps): ReactElement {
-  const declaration = useHeaderDeclaration(props, useSelectionModeHost());
+  const declaration = useHeaderDeclaration(props, useClaimedSelectionMode());
   const plan = useHeaderPlan('screen');
-  const drawing = { ...props, declaration, plan };
+
+  const drawing = {
+    ...props,
+    declaration,
+    headers: screenHeadersOf(declaration),
+    plan,
+  };
 
   if (plan.site === 'list column') return <ListColumnScreen {...drawing} />;
 

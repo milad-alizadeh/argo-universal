@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { iconSymbols } from '#kit/symbols/icon-names';
-import { screenHeader, type ScreenHeader } from '#primitives/actions/action';
+import type { ScreenHeader } from '#primitives/actions/action';
 import { useScreenMenu } from './screen-menu-context';
 import type { ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';
@@ -22,7 +22,7 @@ export const screenTitleOptions = {
 export function ScreenHeaderItems(
   props: ScreenHeaderInput,
 ): ReactElement | null {
-  const header = screenHeader(props.declaration, 'ios');
+  const header = props.headers.native;
 
   if (header.selecting) return null;
 

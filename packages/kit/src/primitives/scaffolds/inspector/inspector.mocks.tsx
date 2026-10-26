@@ -7,7 +7,7 @@ import { Text } from '#primitives/content/text';
 import { useOptionalSheet } from '#primitives/overlays/sheet';
 import { Inspector } from './inspector';
 import { InspectorPane, type InspectorPaneProps } from './inspector-pane';
-import { InspectorPlace } from './inspector-place';
+import { InspectorPlaceOffer } from './inspector-place';
 import type {
   InspectorProps,
   InspectorTab,
@@ -94,9 +94,9 @@ export function HostedExampleInspector(): ReactElement {
   return (
     <View className="flex-1 flex-row">
       <View className="flex-1">
-        <InspectorPlace value={place}>
+        <InspectorPlaceOffer value={place}>
           <ExampleInspector />
-        </InspectorPlace>
+        </InspectorPlaceOffer>
       </View>
       <HostColumn place={place} />
     </View>

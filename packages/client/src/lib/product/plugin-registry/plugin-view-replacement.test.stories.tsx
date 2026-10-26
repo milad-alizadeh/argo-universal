@@ -48,7 +48,7 @@ function Replacement(): React.JSX.Element {
     <PluginDetailView
       viewId={viewId}
       root={root}
-      onEvent={fn(delivery(viewId, replace))}
+      callbacks={{ onEvent: fn(delivery(viewId, replace)) }}
     />
   );
 }

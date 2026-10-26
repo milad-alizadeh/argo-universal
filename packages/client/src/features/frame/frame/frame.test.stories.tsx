@@ -1,6 +1,6 @@
 import {
   Inspector,
-  InspectorPlace,
+  InspectorPlaceOffer,
 } from '@repo/kit/primitives/scaffolds/inspector';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -35,7 +35,7 @@ function FrameStatePage({
 
   return (
     <View className="flex-1">
-      <InspectorPlace value={inspectorPlace}>
+      <InspectorPlaceOffer value={inspectorPlace}>
         <WindowBandProvider places={bandPlaces}>
           <Scaffold
             {...scaffold}
@@ -45,7 +45,7 @@ function FrameStatePage({
             page={content}
           />
         </WindowBandProvider>
-      </InspectorPlace>
+      </InspectorPlaceOffer>
     </View>
   );
 }

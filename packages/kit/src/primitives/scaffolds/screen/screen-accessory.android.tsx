@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
 import { useWide } from '#kit/use-wide/use-wide';
-import { type IconAction, screenHeader } from '#primitives/actions/action';
+import type { IconAction } from '#primitives/actions/action';
 import { Icon } from '#primitives/content/icon';
 import { ButtonIcon } from '#primitives/native/button-icon';
 import { Host } from '#primitives/native/host';
@@ -14,8 +14,7 @@ type FabProps = { action: IconAction };
 
 // Android's primary Action is the Material FAB, below a wide window, where the heading draws it as a button.
 export function ScreenAccessory(props: ScreenHeaderInput): ReactElement | null {
-  const header = screenHeader(props.declaration, 'android');
-  const action = useWide() ? undefined : header.primary;
+  const action = useWide() ? undefined : props.headers.native.primary;
 
   if (!action) return null;
 

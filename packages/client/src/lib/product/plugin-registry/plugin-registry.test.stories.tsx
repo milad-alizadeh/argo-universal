@@ -80,7 +80,7 @@ export const RefusedPage: Story = {
 
 export const ListAnatomy: Story = {
   parameters: { screenPreview: true },
-  render: () => <PluginDetailView root={runListRoot} onEvent={onEvent} />,
+  render: () => <PluginDetailView root={runListRoot} callbacks={{ onEvent }} />,
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByText('CI runs')).toBeVisible();
     await expect(canvas.getByText('main')).toBeVisible();
@@ -100,7 +100,9 @@ export const ListAnatomy: Story = {
 
 export const EmptyList: Story = {
   parameters: { screenPreview: true },
-  render: () => <PluginDetailView root={emptyRunListRoot} onEvent={onEvent} />,
+  render: () => (
+    <PluginDetailView root={emptyRunListRoot} callbacks={{ onEvent }} />
+  ),
   play: async ({ canvas, userEvent }) => {
     await expect(
       await canvas.findByRole('heading', { name: 'No runs yet' }),

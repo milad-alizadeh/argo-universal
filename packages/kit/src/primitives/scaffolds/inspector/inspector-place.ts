@@ -1,4 +1,4 @@
-import { placeOffer } from '#kit/place';
+import { createPlaceOffer } from '#kit/place';
 import type { InspectorProps } from './inspector-props';
 
 /*
@@ -6,4 +6,4 @@ import type { InspectorProps } from './inspector-props';
  * the page's Inspector draws there, and the Frame gives the page the rest of the width. Offered by the App to the
  * shown page; absent in previews, where a wide Inspector draws its column in place.
  */
-export const InspectorPlace = placeOffer<InspectorProps>();
+export const InspectorPlaceOffer = createPlaceOffer<InspectorProps>();

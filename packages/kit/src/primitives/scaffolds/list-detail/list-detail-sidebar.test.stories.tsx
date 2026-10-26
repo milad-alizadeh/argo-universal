@@ -7,7 +7,7 @@ import { createPlace, useClaimed, type Place } from '#kit/place';
 import { Text } from '#primitives/content/text';
 import { Screen } from '#primitives/scaffolds/screen';
 import { ListDetail } from './list-detail';
-import { ListDetailSidebarPlace } from './list-detail-sidebar';
+import { ListDetailSidebarPlaceOffer } from './list-detail-sidebar';
 import { at, heading } from './list-detail-test.mocks';
 import { ExampleListDetail, issues, syncIssue } from './list-detail.mocks';
 
@@ -31,9 +31,9 @@ function WithSidebar(props: { nested?: boolean }): ReactElement {
         <HostSidebar sidebar={sidebar} />
       </View>
       <View testID="host-page" className="flex-1">
-        <ListDetailSidebarPlace value={sidebar}>
+        <ListDetailSidebarPlaceOffer value={sidebar}>
           <HostScreen nested={props.nested} />
-        </ListDetailSidebarPlace>
+        </ListDetailSidebarPlaceOffer>
       </View>
     </View>
   );

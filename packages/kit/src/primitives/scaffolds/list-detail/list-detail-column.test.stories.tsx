@@ -8,7 +8,7 @@ import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { ScreenListColumn } from '#primitives/scaffolds/screen';
 import { ListDetail } from './list-detail';
-import { ListDetailSidebarPlace } from './list-detail-sidebar';
+import { ListDetailSidebarPlaceOffer } from './list-detail-sidebar';
 import { at } from './list-detail-test.mocks';
 
 const meta = {
@@ -53,13 +53,13 @@ function WithColumn(): ReactElement {
         <SidebarColumn sidebar={sidebar} />
       </View>
       <View testID="host-page" className="flex-1">
-        <ListDetailSidebarPlace value={sidebar}>
+        <ListDetailSidebarPlaceOffer value={sidebar}>
           <ListDetail
             screen={screen}
             list={<Text>Issue rows</Text>}
             detail={<Text>Issue detail</Text>}
           />
-        </ListDetailSidebarPlace>
+        </ListDetailSidebarPlaceOffer>
       </View>
     </View>
   );

@@ -33,7 +33,7 @@ export function usePageFocused(): boolean {
 }
 
 // The one rule for every Place: only the shown page may hold it, and only on a wide window.
-export function useShownPage(): boolean {
+export function useIsShownPage(): boolean {
   const wide = useWide();
 
   return usePageFocused() && wide;

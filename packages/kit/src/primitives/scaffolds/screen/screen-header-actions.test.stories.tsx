@@ -42,11 +42,23 @@ export const HeaderSubmenuPhone = atWidth(screenWidths.Phone, headerSubmenu);
 
 export const HeaderSubmenuWide = atWidth(screenWidths.Wide, headerSubmenu);
 
+// The badge hangs on the button's top-end corner, not below it.
+function onTriggerCorner(badge: HTMLElement, trigger: HTMLElement): boolean {
+  const on = badge.getBoundingClientRect();
+  const button = trigger.getBoundingClientRect();
+
+  return on.top < button.top + button.height / 2 && on.right > button.right - 8;
+}
+
 // A wide header's submenu button wears its badge at the icon: a count's number, or a status dot named by its label.
 export const HeaderSubmenuCountBadge = atWidth(screenWidths.Wide, {
   args: { actions: exampleSubmenu(sorted) },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('2')).toBeVisible();
+    const badge = canvas.getByText('2');
+    await expect(badge).toBeVisible();
+    await expect(
+      onTriggerCorner(badge, canvas.getByRole('button', { name: 'Sort, 2' })),
+    ).toBe(true);
   },
 });
 

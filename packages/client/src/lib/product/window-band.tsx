@@ -1,13 +1,13 @@
 import {
   createPlace,
-  placeOffer,
+  createPlaceOffer,
   useClaim,
   useClaimed,
   useOfferedPlace,
   type Place,
 } from '@repo/kit/place';
 import {
-  ScreenBandPlace,
+  ScreenBandPlaceOffer,
   type ScreenBand,
 } from '@repo/kit/primitives/scaffolds/screen';
 import type { ReactNode } from 'react';
@@ -21,7 +21,7 @@ export interface WindowBandContent {
 // What the band draws: the focused Screen's title and menu, and the focused page's overview.
 export type WindowBandView = WindowBandContent & Partial<ScreenBand>;
 
-const WindowBandPlace = placeOffer<WindowBandContent>();
+const WindowBandPlaceOffer = createPlaceOffer<WindowBandContent>();
 
 // Both claims into the band: the page's overview, and the kit's Screen header.
 export interface WindowBandPlaces {
@@ -42,9 +42,11 @@ export function WindowBandProvider({
   children: ReactNode;
 }): ReactNode {
   return (
-    <WindowBandPlace value={places.content}>
-      <ScreenBandPlace value={places.screen}>{children}</ScreenBandPlace>
-    </WindowBandPlace>
+    <WindowBandPlaceOffer value={places.content}>
+      <ScreenBandPlaceOffer value={places.screen}>
+        {children}
+      </ScreenBandPlaceOffer>
+    </WindowBandPlaceOffer>
   );
 }
 
@@ -59,7 +61,7 @@ export function useWindowBandView(
 
 // Under wide the page keeps its own native header, and a retained page gives up the band while another is focused.
 export function WindowBand(content: WindowBandContent): null {
-  useClaim(useOfferedPlace(WindowBandPlace), content);
+  useClaim(useOfferedPlace(WindowBandPlaceOffer), content);
 
   return null;
 }

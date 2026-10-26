@@ -35,7 +35,7 @@ function TriggerBadge(
   if (!hasBadge(props.badge)) return null;
 
   return (
-    <View pointerEvents="none">
+    <View pointerEvents="none" className="absolute inset-0">
       <ItemBadge badge={props.badge} />
     </View>
   );

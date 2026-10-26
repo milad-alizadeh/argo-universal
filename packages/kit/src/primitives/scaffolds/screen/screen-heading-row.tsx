@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useHeadingInset } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
-import { screenHeader, type ScreenHeader } from '#primitives/actions/action';
+import type { ScreenHeader } from '#primitives/actions/action';
 import type { IconButtonSize } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { ScreenBack } from './screen-back';
@@ -13,7 +13,7 @@ import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 
 // The Screen's own heading, drawn where its plan puts the header there.
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
-  const header = screenHeader(props.declaration, 'heading');
+  const header = props.headers.heading;
 
   return (
     <View className="py-6">
@@ -60,7 +60,7 @@ export type HeadingPlacement = 'page' | 'list';
 type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
 
 export function HeadingRow(props: HeadingRowProps): ReactNode {
-  const header = screenHeader(props.declaration, 'heading');
+  const header = props.headers.heading;
 
   return header.selecting ?? <DeclaredHeading {...props} header={header} />;
 }

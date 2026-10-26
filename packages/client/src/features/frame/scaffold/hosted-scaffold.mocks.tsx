@@ -1,4 +1,4 @@
-import { InspectorPlace } from '@repo/kit/primitives/scaffolds/inspector';
+import { InspectorPlaceOffer } from '@repo/kit/primitives/scaffolds/inspector';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { JSX, PropsWithChildren } from 'react';
 import { View } from 'react-native';
@@ -48,11 +48,11 @@ export function HostedScaffoldMock({
 
   return (
     <View className="flex-1">
-      <InspectorPlace value={state.inspectorPlace}>
+      <InspectorPlaceOffer value={state.inspectorPlace}>
         <WindowBandProvider places={state.bandPlaces}>
           <AdaptiveScaffold {...state}>{children}</AdaptiveScaffold>
         </WindowBandProvider>
-      </InspectorPlace>
+      </InspectorPlaceOffer>
     </View>
   );
 }

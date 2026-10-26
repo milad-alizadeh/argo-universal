@@ -1,21 +1,20 @@
 import type { ReactElement } from 'react';
 import { useClaim, useOfferedPlace } from '#kit/place';
-import { screenHeader } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
-import { ScreenBandPlace, type ScreenBand } from './screen-band';
+import { ScreenBandPlaceOffer, type ScreenBand } from './screen-band';
 import { HeadingActions } from './screen-heading-actions';
 import type { ScreenHeaderInput } from './screen-props';
 
 // Drawn where a header-only Screen's plan puts its header in the band; a preview has no band offered to claim.
 export function ScreenBandClaim(props: ScreenHeaderInput): null {
-  useClaim(useOfferedPlace(ScreenBandPlace), bandOf(props));
+  useClaim(useOfferedPlace(ScreenBandPlaceOffer), bandOf(props));
 
   return null;
 }
 
 // An empty header leaves the menu to the band, which keeps its own control box.
 function bandOf(props: ScreenHeaderInput): ScreenBand {
-  const header = screenHeader(props.declaration, 'heading');
+  const header = props.headers.heading;
 
   return {
     title: <BandTitle title={props.title} />,
