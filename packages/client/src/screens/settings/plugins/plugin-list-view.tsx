@@ -19,16 +19,21 @@ export type PluginsLoad =
   | { status: 'error' }
   | { status: 'loaded'; plugins: PluginRow[] };
 
+// A Slot's page, entered from its own row; `count` is how many Plugins are on in it.
+export interface SlotLink {
+  path: string;
+  title: string;
+  count: number;
+}
+
 export interface PluginListViewProps {
   caption?: string;
   plugins: PluginsLoad;
-  // How many Plugins add to Session rows: the entry row's value. The row is left out until a Plugin can add to them.
-  sessionRowPluginCount?: number;
+  // The Slots some Plugin fills; a Slot no Plugin fills has no row.
+  slots: readonly SlotLink[];
   onOpenPlugin: (pluginId: string) => void;
-  onOpenSessionRows?: () => void;
+  onOpenSlot: (path: string) => void;
 }
-
-export const sessionRowsEntryTitle = 'Session rows';
 
 export const pluginsTitle = 'Plugins';
 
@@ -40,33 +45,38 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
     <Screen title={pluginsTitle} caption={props.caption}>
       <List appearance="grouped">
         <ListSection>{pluginRows(props)}</ListSection>
-        {sessionRowsSection(props)}
+        {slotsSection(props)}
       </List>
     </Screen>
   );
 }
 
 /*
- * Its own card below the Plugins: the Session rows setting is the Server's Plugins taken together, not one Plugin's.
+ * Their own card below the Plugins: a Slot's page is the Server's Plugins taken together, not one Plugin's.
  * Called, not rendered, so the List sees its section.
  */
-function sessionRowsSection(
-  props: PluginListViewProps,
-): React.JSX.Element | null {
-  const { onOpenSessionRows, sessionRowPluginCount } = props;
-
-  if (sessionRowPluginCount === undefined || !onOpenSessionRows) return null;
+function slotsSection({
+  slots,
+  onOpenSlot,
+}: PluginListViewProps): React.JSX.Element | null {
+  if (slots.length === 0) return null;
 
   return (
-    <ListSection>
-      <FieldGroup.Link
-        title={sessionRowsEntryTitle}
-        value={`${sessionRowPluginCount} on`}
-        onPress={onOpenSessionRows}
-      />
-    </ListSection>
+    <ListSection>{slots.map((slot) => slotRow(slot, onOpenSlot))}</ListSection>
   );
 }
+
+const slotRow = (
+  slot: SlotLink,
+  onOpen: (path: string) => void,
+): React.JSX.Element => (
+  <FieldGroup.Link
+    key={slot.path}
+    title={slot.title}
+    value={`${slot.count} on`}
+    onPress={() => onOpen(slot.path)}
+  />
+);
 
 const loadFailed: ErrorToast = {
   title: 'Could not load Plugins',

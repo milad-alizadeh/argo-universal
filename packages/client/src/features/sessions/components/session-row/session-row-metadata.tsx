@@ -34,13 +34,25 @@ function ageContent({ age }: SessionRowMetadataProps): React.ReactNode {
   );
 }
 
+// Each Plugin item as Argo draws it: its text in its tone.
+const pluginItems = ({
+  items = [],
+}: SessionRowMetadataProps): React.ReactNode =>
+  items.map((item) => (
+    <Text key={item.text} role="secondary" tone={item.tone ?? 'muted'}>
+      {item.text}
+    </Text>
+  ));
+
 function hasMetadata({
   session,
   pullRequest,
   age,
+  items = [],
 }: SessionRowMetadataProps): boolean {
   return [
     age !== undefined,
+    items.length > 0,
     session.subagents.total > 0,
     sidebarRows && session.shells.total > 0,
     session.archivedAt !== null,
@@ -48,7 +60,7 @@ function hasMetadata({
   ].some(Boolean);
 }
 
-// The time, the Change, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList").
+// The time, the Change, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList"), then the Plugins' items.
 export function sessionMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {
@@ -61,6 +73,7 @@ export function sessionMetadata(
       <ShellsCount {...props} />
       <SubagentsCount {...props} />
       {archivedContent(props)}
+      {pluginItems(props)}
     </View>
   );
 }

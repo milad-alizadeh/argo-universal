@@ -13,37 +13,29 @@ import type * as React from 'react';
 import { use } from 'react';
 import { type StyleProp, View, type ViewStyle } from 'react-native';
 import { SettingsLoading } from '../../settings-loading';
+import type { SlotPluginsLoad } from './slot-plugins';
+import { SlotPreview } from './slot-preview';
+import type { SlotPart, SlotSettings } from './slot-settings';
 import {
-  activityOptions,
-  type ActivityOwner,
   effectiveOwner,
   optionValueOf,
   ownerOfOption,
-  previewContent,
-  type SessionRowsPlugin,
-} from './session-rows-model';
-import { SessionRowsPreview } from './session-rows-preview';
+  partOptions,
+  previewProps,
+  type SlotOwner,
+  type SlotPlugin,
+} from './slot-settings-model';
 
-export type SessionRowsLoad =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'loaded'; plugins: SessionRowsPlugin[] };
-
-export interface SessionRowsViewProps {
+export interface SlotSettingsViewProps {
+  settings: SlotSettings;
   caption?: string;
-  plugins: SessionRowsLoad;
-  // The Plugin that writes the Activity line, or null while it is Argo's.
-  activityOwner: ActivityOwner;
+  plugins: SlotPluginsLoad;
+  // The Plugin that writes the Slot's replaceable part, or null while it is Argo's.
+  owner: SlotOwner;
   onShownChange: (pluginId: string, shown: boolean) => void;
-  onActivityOwnerChange: (owner: ActivityOwner) => void;
+  onOwnerChange: (owner: SlotOwner) => void;
   onBack?: () => void;
 }
-
-export const sessionRowsTitle = 'Session rows';
-
-export const showSectionTitle = 'Show on Session rows';
-
-export const activitySectionTitle = 'Activity line';
 
 const loadFailed: ErrorToast = {
   title: 'Could not load Plugins',
@@ -51,17 +43,17 @@ const loadFailed: ErrorToast = {
 };
 
 /*
- * Which Plugins add to rows in the Sessions list, and who writes a row's Activity line. The preview stays pinned
- * above the rows that change it, and redraws as each one changes.
+ * Any Slot's page, drawn from its declaration: which Plugins fill it, and who writes its replaceable part. The
+ * preview is the Slot's own component, pinned above the rows that change it, and redraws as each one changes.
  */
-export function SessionRowsView(
-  props: SessionRowsViewProps,
+export function SlotSettingsView(
+  props: SlotSettingsViewProps,
 ): React.JSX.Element {
   useErrorToast(props.plugins.status === 'error' ? loadFailed : undefined);
 
   return (
     <Screen
-      title={sessionRowsTitle}
+      title={props.settings.title}
       caption={props.caption}
       onBack={props.onBack}
     >
@@ -70,27 +62,28 @@ export function SessionRowsView(
   );
 }
 
-function Body(props: SessionRowsViewProps): React.JSX.Element {
+function Body(props: SlotSettingsViewProps): React.JSX.Element {
   if (props.plugins.status !== 'loaded')
     return <SettingsLoading label="Loading Plugins…" />;
 
   return <Loaded {...props} plugins={props.plugins.plugins} />;
 }
 
-type LoadedProps = Omit<SessionRowsViewProps, 'plugins'> & {
-  plugins: SessionRowsPlugin[];
+type LoadedProps = Omit<SlotSettingsViewProps, 'plugins'> & {
+  plugins: SlotPlugin[];
 };
 
 const Loaded = (props: LoadedProps): React.JSX.Element => (
   <View className="min-h-0 flex-1">
     <View className="pt-2 pb-1" style={usePreviewColumn()}>
-      <SessionRowsPreview
-        {...previewContent(props.plugins, props.activityOwner)}
+      <SlotPreview
+        settings={props.settings}
+        {...previewProps(props.plugins, props.owner)}
       />
     </View>
     <FieldGroup>
       {showSection(props)}
-      {activitySection(props)}
+      {props.settings.part && partSection(props, props.settings.part)}
     </FieldGroup>
   </View>
 );
@@ -114,35 +107,39 @@ const phoneGutter: ViewStyle = { paddingHorizontal: groupedRowInset };
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
 const showSection = ({
+  settings,
   plugins,
   onShownChange,
 }: LoadedProps): React.JSX.Element => (
-  <FieldGroup.Section title={showSectionTitle}>
-    {plugins.map((plugin) => (
-      <FieldGroup.Toggle
-        key={plugin.pluginId}
-        title={plugin.name}
-        value={plugin.shown}
-        onValueChange={(shown) => onShownChange(plugin.pluginId, shown)}
-      />
-    ))}
+  <FieldGroup.Section title={settings.showTitle}>
+    {plugins.map((plugin) => switchRow(plugin, onShownChange))}
   </FieldGroup.Section>
 );
 
-const activitySection = (props: LoadedProps): React.JSX.Element => (
-  <FieldGroup.Section title={activitySectionTitle}>
+const switchRow = (
+  plugin: SlotPlugin,
+  onShownChange: LoadedProps['onShownChange'],
+): React.JSX.Element => (
+  <FieldGroup.Toggle
+    key={plugin.pluginId}
+    title={plugin.name}
+    value={plugin.shown}
+    onValueChange={(shown) => onShownChange(plugin.pluginId, shown)}
+  />
+);
+
+const partSection = (props: LoadedProps, part: SlotPart): React.JSX.Element => (
+  <FieldGroup.Section title={part.title}>
     <FieldGroup.Picker
-      title={activitySectionTitle}
+      title={part.title}
       presentation="inline"
       value={chosenOption(props)}
-      options={activityOptions(props.plugins, props.activityOwner)}
-      onValueChange={(value) =>
-        props.onActivityOwnerChange(ownerOfOption(value))
-      }
+      options={partOptions(part, props.plugins, props.owner)}
+      onValueChange={(value) => props.onOwnerChange(ownerOfOption(value))}
     />
   </FieldGroup.Section>
 );
 
-// A Plugin turned off gives the line back to Argo, so its option is not the chosen one.
-const chosenOption = ({ plugins, activityOwner }: LoadedProps): string =>
-  optionValueOf(effectiveOwner(plugins, activityOwner)?.pluginId ?? null);
+// A Plugin turned off gives the part back to Argo, so its option is not the chosen one.
+const chosenOption = ({ plugins, owner }: LoadedProps): string =>
+  optionValueOf(effectiveOwner(plugins, owner)?.pluginId ?? null);

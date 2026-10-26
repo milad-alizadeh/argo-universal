@@ -13,7 +13,9 @@ const meta = {
   parameters: { screenPreview: true },
   args: {
     plugins: { status: 'loaded', plugins: pluginRows },
+    slots: [],
     onOpenPlugin: action('open Plugin'),
+    onOpenSlot: action('open Slot page'),
   },
 } satisfies Meta<typeof PluginListView>;
 
@@ -23,10 +25,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const SessionRowsEntry: Story = {
+export const SlotRows: Story = {
   args: {
-    sessionRowPluginCount: 3,
-    onOpenSessionRows: action('open Session rows'),
+    slots: [{ path: 'session-rows', title: 'Session rows', count: 3 }],
   },
 };
 

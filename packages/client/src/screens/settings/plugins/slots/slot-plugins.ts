@@ -1,46 +1,56 @@
-import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
+import type { AddOnlySlotId } from '@repo/contracts/plugins/wire';
 import {
-  isShownOnSessionRows,
-  type SessionRowChoices,
-  useSessionRowChoices,
-} from '#features/sessions';
+  isShownInSlot,
+  type SlotChoices,
+  useSlotChoices,
+} from '#features/settings';
 import { type PluginEntry, usePluginEntries } from '../use-plugins';
-import type { SessionRowsPlugin } from './session-rows-model';
-import type { SessionRowsLoad } from './session-rows-view';
+import type { SlotPlugin } from './slot-settings-model';
 
-// A Plugin that declares the Session row items Slot, and is on, is the Server's to ask for row items.
-const fillsSessionRows = ({ enabled, manifest }: PluginEntry): boolean =>
-  enabled && (manifest.contributes.slots ?? []).includes(sessionRowSlotId);
+export type SlotPluginsLoad =
+  | { status: 'loading' }
+  | { status: 'error' }
+  | { status: 'loaded'; plugins: SlotPlugin[] };
+
+// A Plugin that declares the Slot, and is on, is the Server's to ask for the Slot's content.
+const fills = (
+  slotId: AddOnlySlotId,
+  { enabled, manifest }: PluginEntry,
+): boolean => enabled && (manifest.contributes.slots ?? []).includes(slotId);
 
 /*
  * The Plugins that fill the Slot, with their switch from what this Device hid. The preview shows each Plugin's name
- * as its item until Session rows ask the Plugins for real ones.
+ * as its sample until the Slot asks the Plugins for real content.
  */
-export function toSessionRowsPlugins(
+export function toSlotPlugins(
+  slotId: AddOnlySlotId,
   entries: readonly PluginEntry[],
-  choices: SessionRowChoices,
-): SessionRowsPlugin[] {
+  choices: SlotChoices,
+): SlotPlugin[] {
   return entries.flatMap((entry) =>
-    fillsSessionRows(entry) ? [toPlugin(entry, choices)] : [],
+    fills(slotId, entry) ? [toPlugin(entry, choices)] : [],
   );
 }
 
 const toPlugin = (
   { manifest }: PluginEntry,
-  choices: SessionRowChoices,
-): SessionRowsPlugin => ({
+  choices: SlotChoices,
+): SlotPlugin => ({
   pluginId: manifest.id,
   name: manifest.name,
-  shown: isShownOnSessionRows(choices, manifest.id),
+  shown: isShownInSlot(choices, manifest.id),
   sample: { text: manifest.name },
 });
 
-// The Server's Plugins that fill Session rows, each with this Device's switch, once the Server has answered.
-export function useSessionRowsPlugins(): SessionRowsLoad {
+// The Server's Plugins that fill the Slot, each with this Device's switch, once the Server has answered.
+export function useSlotPlugins(slotId: AddOnlySlotId): SlotPluginsLoad {
   const { plugins, isError } = usePluginEntries();
-  const choices = useSessionRowChoices();
+  const choices = useSlotChoices(slotId);
 
   if (!plugins) return { status: isError ? 'error' : 'loading' };
 
-  return { status: 'loaded', plugins: toSessionRowsPlugins(plugins, choices) };
+  return {
+    status: 'loaded',
+    plugins: toSlotPlugins(slotId, plugins, choices),
+  };
 }

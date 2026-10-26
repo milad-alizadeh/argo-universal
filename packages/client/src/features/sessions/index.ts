@@ -216,9 +216,6 @@ export { archivedToast } from './components/archive-session/archived-toast';
 export { SessionChangeDetail } from './components/session-change-detail';
 
 export {
-  isShownOnSessionRows,
-  type SessionRowChoices,
-  type SessionRowChoosers,
-  useSessionRowChoices,
-  useSessionRowChoosers,
-} from './stores/session-row-plugins';
+  SessionRow,
+  type SessionRowProps,
+} from './components/session-row/session-row';

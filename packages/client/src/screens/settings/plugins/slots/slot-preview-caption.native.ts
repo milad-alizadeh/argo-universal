@@ -1,1 +1,1 @@
-export const previewCaption = 'Preview';
+export const previewCaptionOf = (_stands: string): string => 'Preview';

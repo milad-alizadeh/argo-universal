@@ -1,64 +1,52 @@
-import type { Tone } from '@repo/kit/primitives/content/text';
+import type { SlotPart, SlotPreviewProps, SlotSample } from './slot-settings';
 
-// One item a Plugin puts on the Session row's meta line, as the preview draws it.
-export interface PreviewItem {
-  text: string;
-  tone?: Tone;
-}
-
-// A Plugin that fills the Session row items Slot.
-export interface SessionRowsPlugin {
+// A Plugin that fills a Slot, with this Device's switch for it.
+export interface SlotPlugin {
   pluginId: string;
   name: string;
   shown: boolean;
-  // What the preview shows of this Plugin's items.
-  sample: PreviewItem;
-  // The Activity line this Plugin asks to write; left out when it does not ask for the line.
-  activity?: string;
+  // What the preview shows of this Plugin.
+  sample: SlotSample;
+  // What this Plugin writes in the Slot's replaceable part; left out when it does not ask for the part.
+  part?: string;
 }
 
-// The Activity line's two writers: Argo, or one Plugin by id.
-export type ActivityOwner = string | null;
-
-export const argoActivity = 'Editing login.ts';
-
-export const argoLineSubtitle = 'Status and time, as today.';
+// The replaceable part's two writers: Argo, or one Plugin by id.
+export type SlotOwner = string | null;
 
 export const argoOptionValue = 'argo';
 
 const pluginOptionPrefix = 'plugin:';
 
-export const optionValueOf = (owner: ActivityOwner): string =>
+export const optionValueOf = (owner: SlotOwner): string =>
   owner === null ? argoOptionValue : `${pluginOptionPrefix}${owner}`;
 
-export const ownerOfOption = (value: string): ActivityOwner =>
+export const ownerOfOption = (value: string): SlotOwner =>
   value.startsWith(pluginOptionPrefix)
     ? value.slice(pluginOptionPrefix.length)
     : null;
 
-// Only the Plugins that ask for the Activity line are listed for it.
-export const askingPlugins = (
-  plugins: readonly SessionRowsPlugin[],
-): SessionRowsPlugin[] =>
-  plugins.filter((plugin) => plugin.activity !== undefined);
+// Only the Plugins that ask for the replaceable part are listed for it.
+export const askingPlugins = (plugins: readonly SlotPlugin[]): SlotPlugin[] =>
+  plugins.filter((plugin) => plugin.part !== undefined);
 
 /*
- * The Plugin that writes the line: the chosen one while it is listed and its switch is on. A Plugin turned off on
- * Session rows gives the line back to Argo, so a hidden Plugin never writes it.
+ * The Plugin that writes the part: the chosen one while it is listed and its switch is on. A Plugin turned off gives
+ * the part back to Argo, so a hidden Plugin never writes it.
  */
 export function effectiveOwner(
-  plugins: readonly SessionRowsPlugin[],
-  owner: ActivityOwner,
-): SessionRowsPlugin | undefined {
+  plugins: readonly SlotPlugin[],
+  owner: SlotOwner,
+): SlotPlugin | undefined {
   return askingPlugins(plugins).find(
     (plugin) => plugin.pluginId === owner && plugin.shown,
   );
 }
 
-export const shownCount = (plugins: readonly SessionRowsPlugin[]): number =>
+export const shownCount = (plugins: readonly SlotPlugin[]): number =>
   plugins.filter((plugin) => plugin.shown).length;
 
-export interface ActivityOption {
+export interface PartOption {
   value: string;
   label: string;
   subtitle: string;
@@ -67,19 +55,19 @@ export interface ActivityOption {
 }
 
 const optionOf = (
-  plugin: SessionRowsPlugin,
-  owner: SessionRowsPlugin | undefined,
-): ActivityOption => ({
+  plugin: SlotPlugin,
+  owner: SlotPlugin | undefined,
+): PartOption => ({
   value: optionValueOf(plugin.pluginId),
   label: plugin.name,
   ...pluginSubtitle(plugin, owner),
 });
 
-type Subtitle = Pick<ActivityOption, 'subtitle' | 'subtitleTone' | 'disabled'>;
+type Subtitle = Pick<PartOption, 'subtitle' | 'subtitleTone' | 'disabled'>;
 
 function pluginSubtitle(
-  plugin: SessionRowsPlugin,
-  owner: SessionRowsPlugin | undefined,
+  plugin: SlotPlugin,
+  owner: SlotPlugin | undefined,
 ): Subtitle {
   if (!plugin.shown)
     return { subtitle: 'Off. Turn it on to choose it.', disabled: true };
@@ -87,10 +75,10 @@ function pluginSubtitle(
   return conflictSubtitle(plugin, owner) ?? writesSubtitle(plugin);
 }
 
-// A Plugin that asks while another holds the line warns whom it would replace.
+// A Plugin that asks while another holds the part warns whom it would replace.
 const conflictSubtitle = (
-  plugin: SessionRowsPlugin,
-  owner: SessionRowsPlugin | undefined,
+  plugin: SlotPlugin,
+  owner: SlotPlugin | undefined,
 ): Subtitle | undefined =>
   owner && owner.pluginId !== plugin.pluginId
     ? {
@@ -99,55 +87,33 @@ const conflictSubtitle = (
       }
     : undefined;
 
-const writesSubtitle = ({ activity }: SessionRowsPlugin): Subtitle => ({
-  subtitle: `Writes the line, such as “${activity ?? ''}”.`,
+const writesSubtitle = ({ part }: SlotPlugin): Subtitle => ({
+  subtitle: `Writes it, such as “${part ?? ''}”.`,
 });
 
-// Argo's own, then each Plugin that asks for the line.
-export function activityOptions(
-  plugins: readonly SessionRowsPlugin[],
-  owner: ActivityOwner,
-): ActivityOption[] {
+// Argo's own, then each Plugin that asks for the part.
+export function partOptions(
+  part: SlotPart,
+  plugins: readonly SlotPlugin[],
+  owner: SlotOwner,
+): PartOption[] {
   const holder = effectiveOwner(plugins, owner);
 
   return [
     {
       value: argoOptionValue,
       label: 'Argo’s own',
-      subtitle: argoLineSubtitle,
+      subtitle: part.argoSubtitle,
     },
     ...askingPlugins(plugins).map((plugin) => optionOf(plugin, holder)),
   ];
 }
 
-export interface SessionRowPreviewContent {
-  title: string;
-  activity: string;
-  items: PreviewItem[];
-}
-
-export const previewTitle = 'Fix login redirect';
-
-export const issueRef = (number: number): string => `#${number}`;
-
-const sessionIssue = 1301;
-
-export const argoItems: PreviewItem[] = [
-  { text: '2m' },
-  { text: issueRef(sessionIssue) },
-];
-
-// Argo's own meta items come first, then each Plugin whose switch is on, in the Plugins' order.
-export function previewContent(
-  plugins: readonly SessionRowsPlugin[],
-  owner: ActivityOwner,
-): SessionRowPreviewContent {
-  return {
-    title: previewTitle,
-    activity: effectiveOwner(plugins, owner)?.activity ?? argoActivity,
-    items: [
-      ...argoItems,
-      ...plugins.flatMap((plugin) => (plugin.shown ? [plugin.sample] : [])),
-    ],
-  };
-}
+// The samples of the Plugins that are on, in the Plugins' order, and what the part's owner writes.
+export const previewProps = (
+  plugins: readonly SlotPlugin[],
+  owner: SlotOwner,
+): SlotPreviewProps => ({
+  samples: plugins.flatMap((plugin) => (plugin.shown ? [plugin.sample] : [])),
+  part: effectiveOwner(plugins, owner)?.part,
+});

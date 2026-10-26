@@ -1,18 +1,50 @@
+import { useQueries } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useServerPageCaption } from '#features/settings';
+import { slotChoicesQuery, useServerPageCaption } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { PluginListView } from './plugin-list-view';
-import { shownCount } from './session-rows/session-rows-model';
-import { useSessionRowsPlugins } from './session-rows/session-rows-plugins';
-import { usePluginsLoad } from './use-plugins';
+import { PluginListView, type SlotLink } from './plugin-list-view';
+import { toSlotPlugins } from './slots/slot-plugins';
+import type { SlotSettings } from './slots/slot-settings';
+import { shownCount } from './slots/slot-settings-model';
+import { slotSettings } from './slots/slot-settings-registry';
+import {
+  type PluginEntry,
+  usePluginEntries,
+  usePluginsLoad,
+} from './use-plugins';
 
-// How many Plugins add to Session rows, once the Server has answered and one can.
-function useSessionRowPluginCount(): number | undefined {
-  const load = useSessionRowsPlugins();
+// A declared Slot's row, while some Plugin fills it, with how many are on in it.
+function slotLink(
+  settings: SlotSettings,
+  plugins: readonly PluginEntry[],
+  hidden: readonly string[] = [],
+): SlotLink[] {
+  const filling = toSlotPlugins(settings.slotId, plugins, {
+    hidden,
+    owner: null,
+  });
 
-  if (load.status !== 'loaded' || load.plugins.length === 0) return undefined;
+  if (filling.length === 0) return [];
 
-  return shownCount(load.plugins);
+  return [{ ...pick(settings), count: shownCount(filling) }];
+}
+
+const pick = ({ path, title }: SlotSettings): Omit<SlotLink, 'count'> => ({
+  path,
+  title,
+});
+
+// Every declared Slot some Plugin fills, once the Server has answered.
+function useSlotLinks(): SlotLink[] {
+  const { plugins = [] } = usePluginEntries();
+
+  const choices = useQueries({
+    queries: slotSettings.map(({ slotId }) => slotChoicesQuery(slotId)),
+  });
+
+  return slotSettings.flatMap((settings, index) =>
+    slotLink(settings, plugins, choices[index]?.data?.hidden),
+  );
 }
 
 export function PluginListScreen(): React.JSX.Element {
@@ -22,9 +54,9 @@ export function PluginListScreen(): React.JSX.Element {
     <PluginListView
       caption={useServerPageCaption()}
       plugins={usePluginsLoad()}
-      sessionRowPluginCount={useSessionRowPluginCount()}
+      slots={useSlotLinks()}
       onOpenPlugin={(pluginId) => navigate(`/settings/plugins/${pluginId}`)}
-      onOpenSessionRows={() => navigate('/settings/plugins/session-rows')}
+      onOpenSlot={(path) => navigate(`/settings/plugins/slots/${path}`)}
     />
   );
 }

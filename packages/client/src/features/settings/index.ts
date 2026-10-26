@@ -12,3 +12,12 @@ export {
 } from './hooks/use-theme-choice';
 
 export { type ThemeChoice, themeChoices } from './stores/theme-choice';
+
+export {
+  isShownInSlot,
+  slotChoicesQuery,
+  type SlotChoices,
+  type SlotChoosers,
+  useSlotChoices,
+  useSlotChoosers,
+} from './stores/slot-choices';
