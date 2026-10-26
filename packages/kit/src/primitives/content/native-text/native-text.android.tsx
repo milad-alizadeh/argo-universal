@@ -1,7 +1,8 @@
 // Android only: universal Text starts from Compose's TextStyle.Default, so Material's type needs Compose's own Text.
 import { Text, type TextProps } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { codeFace, useTextColor } from './native-text-exceptions';
+import { useTextColor } from './native-text-color';
+import { codeFace } from './native-text-exceptions';
 import type { NativeTextProps, NativeTextRole } from './native-text-props';
 
 type Typography = NonNullable<NonNullable<TextProps['style']>['typography']>;

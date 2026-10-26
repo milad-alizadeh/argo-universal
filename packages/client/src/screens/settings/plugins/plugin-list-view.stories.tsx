@@ -24,7 +24,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const SessionRowsEntry: Story = {
-  args: { sessionRowPluginCount: 3 },
+  args: {
+    sessionRowPluginCount: 3,
+    onOpenSessionRows: action('open Session rows'),
+  },
 };
 
 export const NoPlugins: Story = {

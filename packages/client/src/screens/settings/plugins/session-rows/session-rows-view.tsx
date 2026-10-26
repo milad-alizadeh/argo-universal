@@ -1,11 +1,17 @@
+import { groupedRowInset } from '@repo/kit/heading-inset';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import {
+  ScrollColumnContext,
+  useScrollColumnStyle,
+} from '@repo/kit/scroll-column';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { use } from 'react';
+import { type StyleProp, View, type ViewStyle } from 'react-native';
 import { SettingsLoading } from '../../settings-loading';
 import {
   activityOptions,
@@ -77,7 +83,7 @@ type LoadedProps = Omit<SessionRowsViewProps, 'plugins'> & {
 
 const Loaded = (props: LoadedProps): React.JSX.Element => (
   <View className="min-h-0 flex-1">
-    <View className="px-4 pt-2 pb-1">
+    <View className="pt-2 pb-1" style={usePreviewColumn()}>
       <SessionRowsPreview
         {...previewContent(props.plugins, props.activityOwner)}
       />
@@ -88,6 +94,23 @@ const Loaded = (props: LoadedProps): React.JSX.Element => (
     </FieldGroup>
   </View>
 );
+
+/*
+ * The preview card lines up with the section cards under it: in a wide pane's column they stand out of it by the
+ * rows' inset, and on a phone they keep the page's gutter.
+ */
+function usePreviewColumn(): StyleProp<ViewStyle> {
+  const inColumn = use(ScrollColumnContext) !== undefined;
+
+  return useScrollColumnStyle(inColumn ? outOfColumn : phoneGutter);
+}
+
+const outOfColumn: ViewStyle = {
+  paddingLeft: -groupedRowInset,
+  paddingRight: -groupedRowInset,
+};
+
+const phoneGutter: ViewStyle = { paddingHorizontal: groupedRowInset };
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
 const showSection = ({
@@ -106,10 +129,8 @@ const showSection = ({
   </FieldGroup.Section>
 );
 
-const activityFooter = 'Only one Plugin writes the Activity line.';
-
 const activitySection = (props: LoadedProps): React.JSX.Element => (
-  <FieldGroup.Section title={activitySectionTitle} footer={activityFooter}>
+  <FieldGroup.Section title={activitySectionTitle}>
     <FieldGroup.Picker
       title={activitySectionTitle}
       presentation="inline"

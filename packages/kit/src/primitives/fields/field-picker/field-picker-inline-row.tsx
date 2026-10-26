@@ -6,7 +6,11 @@ import { RowTitle } from '#primitives/fields/field-row';
 import { SelectedCheck } from '#primitives/status/selected-check';
 import { Spinner } from '#primitives/status/spinner';
 import { moveThroughRadios } from './field-picker-inline-keys';
-import { optionChoice, type OptionRowProps } from './field-picker-kind';
+import {
+  isOptionOff,
+  optionChoice,
+  type OptionRowProps,
+} from './field-picker-kind';
 
 /*
  * One option as a row of its own: the title (and icon or logo), the subtitle under it, and the check at the end once
@@ -42,10 +46,6 @@ const tabStop = (props: OptionRowProps, selected: boolean): boolean =>
 const noneChosen = (props: OptionRowProps): boolean =>
   !props.options.some((option) => props.held.includes(option.value));
 
-// The whole picker is disabled, or just this option.
-const off = (props: OptionRowProps): boolean =>
-  Boolean(props.disabled || props.option.disabled);
-
 const pressProps = (
   props: OptionRowProps,
   selected: boolean,
@@ -53,12 +53,15 @@ const pressProps = (
 ): React.ComponentProps<typeof Pressable> => ({
   role: props.multiple ? 'checkbox' : 'radio',
   'aria-checked': selected,
-  'aria-disabled': off(props),
-  disabled: off(props),
+  'aria-disabled': isOptionOff(props),
+  disabled: isOptionOff(props),
   onPress,
   ...focusProps(props, selected),
-  className: cn('flex-row items-center gap-3', off(props) && 'opacity-50'),
+  className: rowClass(props),
 });
+
+const rowClass = (props: OptionRowProps): string =>
+  cn('flex-row items-center gap-3', isOptionOff(props) && 'opacity-50');
 
 const focusProps = (
   props: OptionRowProps,
@@ -80,16 +83,19 @@ function Text({ option }: OptionRowProps): ReactElement {
         logo={option.logo}
         tone={option.tone}
       />
-      <Subtitle text={option.subtitle} />
+      <Subtitle text={option.subtitle} tone={option.subtitleTone} />
     </View>
   );
 }
 
-function Subtitle(props: { text?: string }): ReactElement | null {
+function Subtitle(props: {
+  text?: string;
+  tone?: 'warning';
+}): ReactElement | null {
   if (!props.text) return null;
 
   return (
-    <NativeText role="secondary" tone="muted">
+    <NativeText role="secondary" tone={props.tone ?? 'muted'}>
       {props.text}
     </NativeText>
   );

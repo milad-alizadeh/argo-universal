@@ -62,6 +62,7 @@ export interface ActivityOption {
   value: string;
   label: string;
   subtitle: string;
+  subtitleTone?: 'warning';
   disabled?: boolean;
 }
 
@@ -71,30 +72,36 @@ const optionOf = (
 ): ActivityOption => ({
   value: optionValueOf(plugin.pluginId),
   label: plugin.name,
-  subtitle: pluginSubtitle(plugin, owner),
-  disabled: plugin.shown ? undefined : true,
+  ...pluginSubtitle(plugin, owner),
 });
+
+type Subtitle = Pick<ActivityOption, 'subtitle' | 'subtitleTone' | 'disabled'>;
 
 function pluginSubtitle(
   plugin: SessionRowsPlugin,
   owner: SessionRowsPlugin | undefined,
-): string {
-  if (!plugin.shown) return 'Off. Turn it on to choose it.';
+): Subtitle {
+  if (!plugin.shown)
+    return { subtitle: 'Off. Turn it on to choose it.', disabled: true };
 
   return conflictSubtitle(plugin, owner) ?? writesSubtitle(plugin);
 }
 
-// A Plugin that asks while another holds the line says whom it would replace.
+// A Plugin that asks while another holds the line warns whom it would replace.
 const conflictSubtitle = (
   plugin: SessionRowsPlugin,
   owner: SessionRowsPlugin | undefined,
-): string | undefined =>
+): Subtitle | undefined =>
   owner && owner.pluginId !== plugin.pluginId
-    ? `Also asks. Replaces ${owner.name}.`
+    ? {
+        subtitle: `Also asks. Replaces ${owner.name}.`,
+        subtitleTone: 'warning',
+      }
     : undefined;
 
-const writesSubtitle = ({ activity }: SessionRowsPlugin): string =>
-  `Writes the line, such as “${activity ?? ''}”.`;
+const writesSubtitle = ({ activity }: SessionRowsPlugin): Subtitle => ({
+  subtitle: `Writes the line, such as “${activity ?? ''}”.`,
+});
 
 // Argo's own, then each Plugin that asks for the line.
 export function activityOptions(

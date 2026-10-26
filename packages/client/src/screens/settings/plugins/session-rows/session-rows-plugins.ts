@@ -1,13 +1,15 @@
 import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
 import {
-  type HiddenSessionRowPlugins,
   isShownOnSessionRows,
+  type SessionRowChoices,
+  useSessionRowChoices,
 } from '#features/sessions';
-import type { PluginEntry } from '../use-plugins';
+import { type PluginEntry, usePluginEntries } from '../use-plugins';
 import type { SessionRowsPlugin } from './session-rows-model';
+import type { SessionRowsLoad } from './session-rows-view';
 
 // A Plugin that declares the Session row items Slot, and is on, is the Server's to ask for row items.
-export const fillsSessionRows = ({ enabled, manifest }: PluginEntry): boolean =>
+const fillsSessionRows = ({ enabled, manifest }: PluginEntry): boolean =>
   enabled && (manifest.contributes.slots ?? []).includes(sessionRowSlotId);
 
 /*
@@ -16,19 +18,29 @@ export const fillsSessionRows = ({ enabled, manifest }: PluginEntry): boolean =>
  */
 export function toSessionRowsPlugins(
   entries: readonly PluginEntry[],
-  hidden: HiddenSessionRowPlugins,
+  choices: SessionRowChoices,
 ): SessionRowsPlugin[] {
   return entries.flatMap((entry) =>
-    fillsSessionRows(entry) ? [toPlugin(entry, hidden)] : [],
+    fillsSessionRows(entry) ? [toPlugin(entry, choices)] : [],
   );
 }
 
 const toPlugin = (
   { manifest }: PluginEntry,
-  hidden: HiddenSessionRowPlugins,
+  choices: SessionRowChoices,
 ): SessionRowsPlugin => ({
   pluginId: manifest.id,
   name: manifest.name,
-  shown: isShownOnSessionRows(hidden, manifest.id),
+  shown: isShownOnSessionRows(choices, manifest.id),
   sample: { text: manifest.name },
 });
+
+// The Server's Plugins that fill Session rows, each with this Device's switch, once the Server has answered.
+export function useSessionRowsPlugins(): SessionRowsLoad {
+  const { plugins, isError } = usePluginEntries();
+  const choices = useSessionRowChoices();
+
+  if (!plugins) return { status: isError ? 'error' : 'loading' };
+
+  return { status: 'loaded', plugins: toSessionRowsPlugins(plugins, choices) };
+}

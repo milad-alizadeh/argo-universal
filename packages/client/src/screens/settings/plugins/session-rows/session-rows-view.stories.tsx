@@ -21,6 +21,7 @@ const meta = {
     activityOwner: null,
     onShownChange: action('show on Session rows'),
     onActivityOwnerChange: action('activity line owner'),
+    onBack: action('back'),
   },
 } satisfies Meta<typeof SessionRowsView>;
 

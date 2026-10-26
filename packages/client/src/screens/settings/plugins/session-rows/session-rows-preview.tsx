@@ -6,9 +6,7 @@ import type {
   PreviewItem,
   SessionRowPreviewContent,
 } from './session-rows-model';
-
-export const previewCaption =
-  'Preview · how a Session row looks with these settings';
+import { previewCaption } from './session-rows-preview-caption';
 
 // One specimen Session row, pinned above the switches so every choice below shows its effect at once.
 export const SessionRowsPreview = (
@@ -19,9 +17,10 @@ export const SessionRowsPreview = (
       <Text role="secondary" tone="muted">
         {previewCaption}
       </Text>
-      <Surface kind="muted" padding={3}>
+      {/* A flat tile, as a row sits on the list: no tray shadow. */}
+      <View className="rounded-xl bg-muted p-3">
         <SpecimenRow {...props} />
-      </Surface>
+      </View>
     </View>
   </Surface>
 );
