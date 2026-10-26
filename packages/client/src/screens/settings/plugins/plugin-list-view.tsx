@@ -1,13 +1,12 @@
 import type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { ListSection } from '@repo/kit/primitives/lists/list';
+import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
-import { SettingsGroupedList } from '../settings-grouped-list';
 
 export interface PluginRow {
   pluginId: string;
@@ -44,10 +43,10 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
 
   return (
     <Screen title={pluginsTitle} caption={props.caption}>
-      <SettingsGroupedList>
+      <List appearance="grouped">
         <ListSection>{pluginRows(props)}</ListSection>
         {slotsSection(props)}
-      </SettingsGroupedList>
+      </List>
     </Screen>
   );
 }
@@ -111,7 +110,7 @@ type PluginItemProps = {
 
 /*
  * A Settings row like every other: it pushes the Plugin's page, led by the Plugin's own symbol. It is the FieldGroup
- * row itself, not a component around it, so a phone's grouped List sees a row it can draw natively.
+ * row itself, not a component around it, so a grouped List on iOS or Android sees a row it can draw natively.
  */
 function pluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
   return (

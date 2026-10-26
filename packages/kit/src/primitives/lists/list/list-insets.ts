@@ -1,4 +1,4 @@
-import { isPhoneGrouped, isWebGrouped } from '../../../list-grouped';
+import { isNativeGrouped, isWebGrouped } from '../../../list-grouped';
 import type { ListProps } from './list-props';
 
 type Insets = Pick<
@@ -18,7 +18,7 @@ export function listInsets(props: Options, menu: boolean): Insets {
 }
 
 function appearanceInsets(props: Options): Insets {
-  if (isPhoneGrouped(props.appearance)) return phoneInsets(props);
+  if (isNativeGrouped(props.appearance)) return phoneInsets(props);
 
   return isWebGrouped(props.appearance) ? groupedInsets(props) : props;
 }

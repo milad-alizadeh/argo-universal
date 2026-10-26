@@ -17,9 +17,9 @@ type RowTitleProps = RowTextProps & {
 };
 
 /*
- * The title as SwiftUI draws it in a stock row: a plain Text, or a Label with its icon. A row is one line; its
- * explanation goes in its Section's footer, as iOS Settings does. A picker option's subtitle goes in the Label's title
- * view, under the title.
+ * The title as SwiftUI draws it in a stock row: a plain Text, or a Label with its icon. A row is one line, a long title
+ * truncated; its explanation goes in its Section's footer, as iOS Settings does. A picker option's subtitle goes in
+ * the Label's title view, under the title.
  */
 export function RowTitle(props: RowTitleProps): ReactElement {
   const icon = rowIcon(props);
@@ -52,7 +52,7 @@ const subtitleModifiers = (
 // The Label's title view: the title and any subtitle under it, so the subtitle starts where the title does.
 function TitleLines(props: RowTitleProps): ReactElement {
   const warning = useTextColor(props.subtitleTone);
-  const title = <NativeText tone={props.tone}>{props.title}</NativeText>;
+  const title = <OneLine tone={props.tone}>{props.title}</OneLine>;
 
   if (!props.subtitle) return title;
 
@@ -65,6 +65,16 @@ function TitleLines(props: RowTitleProps): ReactElement {
     </VStack>
   );
 }
+
+// A row's title keeps to one line, truncating a long one.
+const OneLine = (props: {
+  tone: RowTextProps['tone'];
+  children: string;
+}): ReactElement => (
+  <NativeText tone={props.tone} numberOfLines={1}>
+    {props.children}
+  </NativeText>
+);
 
 // A Label's title is a plain string, so the destructive tone colours the whole label.
 function useDangerStyle(

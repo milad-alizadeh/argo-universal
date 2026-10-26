@@ -61,7 +61,11 @@ export function RowListItem(props: RowListItemProps): ReactElement {
 
 function Headline(props: RowListItemProps): ReactNode {
   return (
-    props.headline ?? <NativeText tone={props.tone}>{props.title}</NativeText>
+    props.headline ?? (
+      <NativeText tone={props.tone} numberOfLines={1}>
+        {props.title}
+      </NativeText>
+    )
   );
 }
 

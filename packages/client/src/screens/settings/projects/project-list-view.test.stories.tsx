@@ -14,13 +14,6 @@ import { ProjectListView } from './project-list-view';
 
 const folderNotFound = 'Folder not found';
 
-// Each row's trailing detail, from the fixture facts: a hosted origin, none, and a missing folder.
-const rowDetails = [
-  { project: worktreeProject, detail: 'GitHub' },
-  { project: localProject, detail: 'No remote' },
-  { project: missingFolderProject, detail: folderNotFound },
-];
-
 if (
   worktreeProject.remoteHost !== 'GitHub' ||
   localProject.remoteHost !== null ||
@@ -30,8 +23,9 @@ if (
     'Recorded Projects need one on GitHub, one without a remote and one whose folder is gone.',
   );
 
+// A row is named by its Project alone; only a missing folder adds its words.
 const rowName = (project: (typeof settingsProjects)[number]): string =>
-  `${project.name}, ${rowDetails.find((row) => row.project === project)?.detail}`;
+  project.folderExists ? project.name : `${project.name}, ${folderNotFound}`;
 
 const meta = {
   title: 'Tests/Screens/Settings/Projects',
@@ -53,9 +47,10 @@ export const ListsAndOpensProjects: Story = {
     await expect(
       canvas.getByRole('heading', { name: 'Projects', level: 1 }),
     ).toBeVisible();
+    // One plain list: no count heading over it.
     await expect(
-      canvas.getByText(`${settingsProjects.length} Projects`),
-    ).toBeVisible();
+      canvas.queryByText(`${settingsProjects.length} Projects`),
+    ).toBeNull();
     await expect(
       canvas.getByRole('button', { name: 'Add Project' }),
     ).toBeDisabled();
@@ -79,16 +74,13 @@ export const RowsNameTheProjectWithoutItsFolder: Story = {
   },
 };
 
-// A missing folder says so in words at every width, as the row's value, with no badge beside it.
-export const RowsSayWhereEachProjectIs: Story = {
+// A missing folder says so in words at every width, as the row's value, with no badge beside it; a remote says nothing.
+export const RowsSayOnlyAMissingFolder: Story = {
   play: async ({ canvas }) => {
     await eachLayout(async () => {
-      for (const { project, detail } of rowDetails) {
-        await expect(
-          canvas.getByRole('link', { name: `${project.name}, ${detail}` }),
-        ).toBeVisible();
-        await expect(canvas.getByText(detail)).toBeVisible();
-      }
+      await expect(canvas.getByText(folderNotFound)).toBeVisible();
+      await expect(canvas.queryByText('GitHub')).toBeNull();
+      await expect(canvas.queryByText('No remote')).toBeNull();
     });
   },
 };

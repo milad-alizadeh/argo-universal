@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
+import { isNativeGrouped } from '../../../list-grouped';
 import { useInMenu } from '../../../menu-rows-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
@@ -12,6 +13,8 @@ import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import { ListGrouping } from './list-grouping';
 import { ListKeyboard } from './list-keyboard';
 import { ListMenuRows } from './list-menu-rows';
+import { NativeGroupedList } from './list-native-grouped';
+import { holdsNativeRows } from './list-native-rows';
 import type { ListProps } from './list-props';
 import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
@@ -108,8 +111,19 @@ function childMaxHeight(
   return props.maxHeight ?? height;
 }
 
+// iOS and Android draw a grouped List of FieldGroup rows as their own grouped list, at every width (ADR-0042).
+const drawsNatively = (props: ListProps<never>): boolean =>
+  isNativeGrouped(props.appearance) && holdsNativeRows(props.children);
+
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   if (props.items !== undefined) return <DataList {...props} />;
+
+  if (drawsNatively(props))
+    return (
+      <NativeGroupedList empty={props.empty}>
+        {props.children}
+      </NativeGroupedList>
+    );
 
   return (
     <ListKeyboard fit={props.fit}>

@@ -4,24 +4,24 @@ import type { ListSectionProps } from './list-props';
 import { ListSection } from './list-section';
 
 /*
- * What a phone's native grouped List draws: sections of FieldGroup rows (list-phone-props). A row is only a function
+ * What a native grouped List draws: sections of FieldGroup rows (list-native-props). A row is only a function
  * that makes its element, so the native list mounts the rows near the viewport.
  */
-export type PhoneRow = { key: string; render: () => ReactElement };
+export type NativeRow = { key: string; render: () => ReactElement };
 
-export type PhoneSection = {
+export type NativeSection = {
   key: string;
   title?: string;
   footer?: string;
-  rows: PhoneRow[];
+  rows: NativeRow[];
 };
 
-const elementRow = (element: ReactElement, index: number): PhoneRow => ({
+const elementRow = (element: ReactElement, index: number): NativeRow => ({
   key: String(element.key ?? index),
   render: () => element,
 });
 
-const rowsOf = (nodes: ReactNode): PhoneRow[] =>
+const rowsOf = (nodes: ReactNode): NativeRow[] =>
   flattenedChildren(nodes).filter(isValidElement).map(elementRow);
 
 const isSection = (child: ReactNode): child is ReactElement<ListSectionProps> =>
@@ -40,7 +40,7 @@ function addChild(runs: ReactNode[][], child: ReactNode): ReactNode[][] {
   return runs;
 }
 
-function toSection(run: ReactNode[], index: number): PhoneSection {
+function toSection(run: ReactNode[], index: number): NativeSection {
   const [first] = run;
 
   if (!isSection(first)) return { key: `rows-${index}`, rows: rowsOf(run) };
@@ -55,17 +55,17 @@ function toSection(run: ReactNode[], index: number): PhoneSection {
   };
 }
 
-const hasRows = (section: PhoneSection): boolean => section.rows.length > 0;
+const hasRows = (section: NativeSection): boolean => section.rows.length > 0;
 
-const childSections = (children: ReactNode): PhoneSection[] =>
+const childSections = (children: ReactNode): NativeSection[] =>
   flattenedChildren(children)
     .reduce<ReactNode[][]>(addChild, [])
     .map(toSection)
     .filter(hasRows);
 
-export const phoneSections = childSections;
+export const nativeSections = childSections;
 
-export const phoneRowKey = (row: PhoneRow): string => row.key;
+export const nativeRowKey = (row: NativeRow): string => row.key;
 
 // The platform's own row height until a row is measured.
-export const estimatedPhoneRowHeight = 56;
+export const estimatedNativeRowHeight = 56;

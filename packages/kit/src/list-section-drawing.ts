@@ -1,6 +1,6 @@
 import { use } from 'react';
 import { ListContext } from './list-context';
-import { isPhoneGrouped } from './list-grouped';
+import { isNativeGrouped } from './list-grouped';
 import { useInChoiceMenu, useInMenu } from './menu-rows-context';
 import { useRowDrawing } from './row-drawing-context';
 
@@ -72,7 +72,7 @@ const listDrawing = (
 export function useSectionDrawing(): SectionDrawing {
   const inMenu = useInMenu();
   const choosing = useInChoiceMenu();
-  const phone = isPhoneGrouped(use(ListContext).appearance);
+  const phone = isNativeGrouped(use(ListContext).appearance);
 
   if (useRowDrawing() === 'sidebar') return sidebar;
 

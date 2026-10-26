@@ -2,7 +2,7 @@ export { List } from './list';
 
 export { useListItemGroup } from './list-item-grouping';
 
-export { PhoneGroupedList } from './list-phone-grouped';
+export { NativeGroupedList } from './list-native-grouped';
 
 export { ListSection } from './list-section';
 

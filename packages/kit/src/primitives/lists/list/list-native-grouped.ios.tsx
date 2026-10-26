@@ -5,14 +5,14 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement, ReactNode } from 'react';
 import { NativeText } from '#primitives/content/native-text';
-import { PhoneGroupedFrame } from './list-phone-host';
-import type { PhoneGroupedProps } from './list-phone-props';
+import { NativeGroupedFrame } from './list-native-host';
+import type { NativeGroupedProps } from './list-native-props';
 import {
-  estimatedPhoneRowHeight,
-  phoneRowKey,
-  type PhoneRow,
-  type PhoneSection,
-} from './list-phone-sections';
+  estimatedNativeRowHeight,
+  nativeRowKey,
+  type NativeRow,
+  type NativeSection,
+} from './list-native-sections';
 
 // No background of its own, so the page's shows between the section cards, as the FieldGroup's Form does.
 const modifiers = [
@@ -25,11 +25,11 @@ const modifiers = [
  * `List.ForEach` Expo recycles, so a long list mounts only the rows near the screen. Its rows are FieldGroup rows,
  * SwiftUI views, as in a FieldGroup; React Native content cannot sit in it.
  */
-export function PhoneGroupedList(props: PhoneGroupedProps): ReactNode {
-  return <PhoneGroupedFrame list={props}>{groupedList}</PhoneGroupedFrame>;
+export function NativeGroupedList(props: NativeGroupedProps): ReactNode {
+  return <NativeGroupedFrame list={props}>{groupedList}</NativeGroupedFrame>;
 }
 
-const groupedList = (sections: PhoneSection[]): ReactElement => (
+const groupedList = (sections: NativeSection[]): ReactElement => (
   <SwiftList modifiers={modifiers}>
     {sections.map((section) => (
       <GroupedSection key={section.key} section={section} />
@@ -37,15 +37,16 @@ const groupedList = (sections: PhoneSection[]): ReactElement => (
   </SwiftList>
 );
 
-const renderRow = ({ item }: { item: PhoneRow }): ReactElement => item.render();
+const renderRow = ({ item }: { item: NativeRow }): ReactElement =>
+  item.render();
 
-function GroupedSection({ section }: { section: PhoneSection }): ReactElement {
+function GroupedSection({ section }: { section: NativeSection }): ReactElement {
   return (
     <Section header={heading(section.title)} footer={footnote(section.footer)}>
       <SwiftList.ForEach
         data={section.rows}
-        keyExtractor={phoneRowKey}
-        estimatedItemSize={estimatedPhoneRowHeight}
+        keyExtractor={nativeRowKey}
+        estimatedItemSize={estimatedNativeRowHeight}
       >
         {renderRow}
       </SwiftList.ForEach>

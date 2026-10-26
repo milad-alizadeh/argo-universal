@@ -17,14 +17,14 @@ import {
   titleInsets,
 } from '#primitives/fields/field-group';
 import { PositionContext } from '#primitives/fields/field-row';
-import { PhoneGroupedFrame } from './list-phone-host';
-import type { PhoneGroupedProps } from './list-phone-props';
+import { NativeGroupedFrame } from './list-native-host';
+import type { NativeGroupedProps } from './list-native-props';
 import {
-  estimatedPhoneRowHeight,
-  phoneRowKey,
-  type PhoneRow,
-  type PhoneSection,
-} from './list-phone-sections';
+  estimatedNativeRowHeight,
+  nativeRowKey,
+  type NativeRow,
+  type NativeSection,
+} from './list-native-sections';
 
 /*
  * The FieldGroup's layout (field-group-caption-insets.ts) as one lazy column. Every item of the column is a lazy
@@ -37,15 +37,15 @@ const listModifiers = [fillMaxSize(), imePadding()];
  * as Material's connected rows as Expo's FieldSection.android.tsx does (rounded ends, small corners between, 2dp
  * gaps; each row clips itself by the position it is given). Its rows are FieldGroup rows, as in a FieldGroup.
  */
-export function PhoneGroupedList(props: PhoneGroupedProps): ReactNode {
-  return <PhoneGroupedFrame list={props}>{groupedColumn}</PhoneGroupedFrame>;
+export function NativeGroupedList(props: NativeGroupedProps): ReactNode {
+  return <NativeGroupedFrame list={props}>{groupedColumn}</NativeGroupedFrame>;
 }
 
-const groupedColumn = (sections: PhoneSection[]): ReactElement => (
+const groupedColumn = (sections: NativeSection[]): ReactElement => (
   <GroupedColumn sections={sections} />
 );
 
-function GroupedColumn(props: { sections: PhoneSection[] }): ReactElement {
+function GroupedColumn(props: { sections: NativeSection[] }): ReactElement {
   return (
     <LazyColumn
       verticalArrangement={{ spacedBy: rowSpacing }}
@@ -58,9 +58,9 @@ function GroupedColumn(props: { sections: PhoneSection[] }): ReactElement {
 }
 
 const groupedSection = (
-  section: PhoneSection,
+  section: NativeSection,
   index: number,
-  all: PhoneSection[],
+  all: NativeSection[],
 ): ReactElement => (
   <GroupedSection
     key={section.key}
@@ -76,7 +76,7 @@ const withinColumn = (insets: typeof titleInsets): typeof titleInsets => ({
   bottom: Math.max(insets.bottom - rowSpacing, 0),
 });
 
-type SectionProps = { section: PhoneSection; last: boolean };
+type SectionProps = { section: NativeSection; last: boolean };
 
 // Lazy items the column reads as its own children: the title, the rows, the footer and the gap.
 function GroupedSection({ section, last }: SectionProps): ReactElement {
@@ -97,7 +97,7 @@ function GroupedSection({ section, last }: SectionProps): ReactElement {
 // Each row is told where it sits in its section, for the corners of Material's connected rows.
 function usePositionedRow(
   count: number,
-): (info: { item: PhoneRow; index: number }) => ReactElement {
+): (info: { item: NativeRow; index: number }) => ReactElement {
   return useCallback(
     ({ item, index }) => (
       <PositionContext.Provider value={getFieldItemPosition(index, count)}>
@@ -108,12 +108,12 @@ function usePositionedRow(
   );
 }
 
-function SectionRows({ section }: { section: PhoneSection }): ReactElement {
+function SectionRows({ section }: { section: NativeSection }): ReactElement {
   return (
     <LazyColumn.Items
       data={section.rows}
-      keyExtractor={phoneRowKey}
-      estimatedItemSize={estimatedPhoneRowHeight}
+      keyExtractor={nativeRowKey}
+      estimatedItemSize={estimatedNativeRowHeight}
     >
       {usePositionedRow(section.rows.length)}
     </LazyColumn.Items>

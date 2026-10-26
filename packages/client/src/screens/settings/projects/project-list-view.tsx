@@ -79,15 +79,15 @@ const loadingProjects: LoadingRow[] = [
 
 const loadingRow = <FieldGroup.Value title="Loading…" value="" />;
 
-// A phone's native list holds only FieldGroup rows, so it waits on one; the web draws the rows' shapes.
+// The native list on iOS and Android holds only FieldGroup rows, so it waits on one; the web draws the rows' shapes.
 const waiting = (): React.JSX.Element | React.JSX.Element[] =>
   Platform.OS === 'web' ? loadingRows(loadingProjects) : loadingRow;
 
-// The count's heading says what the rows wait for, so the card stands where the loaded one will.
+// The loading rows stand in the one card the loaded ones fill.
 function LoadingProjects(): React.JSX.Element {
   return (
     <ProjectsColumn>
-      <List.Section title="Loading Projects…">{waiting()}</List.Section>
+      <List.Section>{waiting()}</List.Section>
     </ProjectsColumn>
   );
 }

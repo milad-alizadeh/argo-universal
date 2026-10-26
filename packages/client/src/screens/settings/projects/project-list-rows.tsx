@@ -3,7 +3,6 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { SettingsGroupedList } from '../settings-grouped-list';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -33,15 +32,12 @@ export function ProjectsColumn(props: {
 }): React.JSX.Element {
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <SettingsGroupedList fit={false} padding={{ compact: 4, wide: 0 }}>
+      <List appearance="grouped" fit={false} padding={{ compact: 4, wide: 0 }}>
         {props.children}
-      </SettingsGroupedList>
+      </List>
     </View>
   );
 }
-
-const countTitle = (count: number): string =>
-  count === 1 ? '1 Project' : `${count} Projects`;
 
 function projectRows(props: FoundProps): React.JSX.Element {
   if (props.found.length === 0) return noProjects(props.searching);
@@ -67,17 +63,15 @@ function foundProjects({
   const row = { onOpen: onOpenProject };
 
   return (
-    <List.Section title={countTitle(found.length)}>
+    <List.Section>
       {found.map((project) => projectRow({ project, ...row }))}
     </List.Section>
   );
 }
 
-// The Project's remote, or its missing folder, is what the row shows of the page it opens.
-const projectValue = (project: ProjectInfo): string =>
-  project.folderExists
-    ? (project.remoteHost ?? 'No remote')
-    : 'Folder not found';
+// A row shows its name alone; only a missing folder adds a word, as the page it opens can't load.
+const projectValue = (project: ProjectInfo): string | undefined =>
+  project.folderExists ? undefined : 'Folder not found';
 
 type ProjectRowProps = {
   project: ProjectInfo;
@@ -86,7 +80,7 @@ type ProjectRowProps = {
 
 /*
  * A Settings row like every other: the folder path sits only on the Project's own page. It is the FieldGroup row
- * itself, not a component around it, so a phone's grouped List sees a row it can draw natively.
+ * itself, not a component around it, so a grouped List on iOS or Android sees a row it can draw natively.
  */
 function projectRow(props: ProjectRowProps): React.JSX.Element {
   return (

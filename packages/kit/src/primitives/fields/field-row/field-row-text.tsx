@@ -68,7 +68,7 @@ function TitleLines(props: RowTitleProps): ReactElement {
 
 function Title(props: RowTitleProps): ReactElement {
   return (
-    <NativeText numberOfLines={props.numberOfLines} tone={props.tone}>
+    <NativeText numberOfLines={props.numberOfLines ?? 1} tone={props.tone}>
       {props.title}
     </NativeText>
   );

@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import type { ListAppearance, ListPosition } from '../../../list-context';
-import { isPhoneGrouped } from '../../../list-grouped';
+import { isNativeGrouped } from '../../../list-grouped';
 import type { RowDrawing } from '../../../row-drawing-context';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
@@ -72,7 +72,8 @@ function corners(
   drawing: ItemDrawing,
   tone: ListItemProps['tone'],
 ): string | undefined {
-  if (tone === 'muted' || !isPhoneGrouped(drawing.appearance)) return undefined;
+  if (tone === 'muted' || !isNativeGrouped(drawing.appearance))
+    return undefined;
 
   return sectionCorners[drawing.position];
 }

@@ -2,11 +2,11 @@ import { useContext } from 'react';
 import { Platform } from 'react-native';
 import { ListContext, type ListAppearance } from './list-context';
 
-// On the web a grouped List is drawn as a FieldGroup section on LegendList; the phones draw it natively (list-phone-grouped).
+// On the web a grouped List is drawn as a FieldGroup section on LegendList; iOS and Android draw FieldGroup rows natively (list-native-grouped).
 export const isWebGrouped = (appearance?: ListAppearance): boolean =>
   Platform.OS === 'web' && appearance === 'grouped';
 
-export const isPhoneGrouped = (appearance?: ListAppearance): boolean =>
+export const isNativeGrouped = (appearance?: ListAppearance): boolean =>
   Platform.OS !== 'web' && appearance === 'grouped';
 
 // A list of ListItems is grouped cards on the phones (owner, 2026-10-24); the web and desktop keep the appearance they draw.
