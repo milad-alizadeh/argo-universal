@@ -1,4 +1,3 @@
-import { listDefaults } from '@repo/contracts/kit-tokens';
 import {
   createContext,
   useContext,
@@ -24,6 +23,7 @@ import { dataRowPosition, rowPosition } from './list-row-position';
 
 type RowLayout = {
   appearance: ListAppearance;
+  cardStyle?: ListProps<never>['cardStyle'];
   // The appearance a data row draws its card piece in; a fixed child draws its own cell.
   cellAppearance: ListAppearance;
   positionAt: (index: number) => ListPosition;
@@ -63,10 +63,11 @@ const dataCellAppearance = <Item,>(
 function rowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
   if (!list) return emptyLayout;
 
-  const appearance = list.appearance ?? listDefaults.appearance;
+  const appearance = list.appearance ?? 'plain';
 
   return {
     appearance,
+    cardStyle: list.cardStyle,
     cellAppearance: dataCellAppearance(list, appearance),
     positionAt: (index) => dataRowPosition(list, index),
   };
@@ -99,14 +100,14 @@ type DataRow = {
 };
 
 function useDataRow(index: number, part?: boolean): DataRow {
-  const { appearance, cellAppearance, positionAt } =
+  const { appearance, cardStyle, cellAppearance, positionAt } =
     useContext(RowLayoutContext);
 
   const position = positionAt(index);
 
   const value = useMemo(
-    () => ({ appearance, position, index }),
-    [appearance, position, index],
+    () => ({ appearance, cardStyle, position, index }),
+    [appearance, cardStyle, position, index],
   );
 
   return {
@@ -136,7 +137,7 @@ const fixedValue = (
   { item, appearance }: FixedRowProps,
 ): ContextType<typeof ListContext> => ({
   ...parent,
-  appearance: appearance ?? listDefaults.appearance,
+  appearance: appearance ?? 'plain',
   position: item.position,
   inList: true,
   ...listSelection(item),
@@ -144,7 +145,7 @@ const fixedValue = (
 
 // A section's header, footer and gap are not rows of its card.
 const cellAppearance = ({ item, appearance }: FixedRowProps): ListAppearance =>
-  item.fullSpan ? 'plain' : (appearance ?? listDefaults.appearance);
+  item.fullSpan ? 'plain' : (appearance ?? 'plain');
 
 export function FixedListRow(props: FixedRowProps): ReactElement {
   const value = fixedValue(useContext(ListContext), props);

@@ -68,4 +68,4 @@ export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;
 
-export const listDefaults = { appearance: 'cards' } as const;
+export const listDefaults = { cardStyle: 'outline' } as const;

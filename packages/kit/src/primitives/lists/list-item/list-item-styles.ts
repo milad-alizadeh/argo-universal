@@ -1,5 +1,9 @@
 import { Platform } from 'react-native';
-import type { ListAppearance, ListPosition } from '../../../list-context';
+import type {
+  ListAppearance,
+  ListCardStyle,
+  ListPosition,
+} from '../../../list-context';
 import { isPhoneGrouped } from '../../../list-grouped';
 import type { RowDrawing } from '../../../row-drawing-context';
 import { cn } from '../../../utils';
@@ -32,11 +36,12 @@ const appearanceClasses = {
   plain: '',
   grouped: Platform.OS === 'web' ? '' : 'bg-card',
   cards:
-    'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:shadow-hairline',
+    'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:bg-transparent web:wide:shadow-hairline',
 };
 
 export interface ItemDrawing {
   appearance: ListAppearance;
+  cardStyle?: ListCardStyle;
   position: ListPosition;
   menu: boolean;
   rows: RowDrawing;
@@ -83,10 +88,17 @@ function rowSurface(
 ): string {
   return cn(
     'relative overflow-hidden',
-    tone !== 'muted' && appearanceClasses[drawing.appearance],
+    tone !== 'muted' &&
+      cn(appearanceClasses[drawing.appearance], cardFill(drawing)),
     corners(drawing, tone),
     selected && 'web:wide:shadow-none',
   );
+}
+
+function cardFill(drawing: ItemDrawing): string | undefined {
+  return drawing.appearance === 'cards' && drawing.cardStyle === 'filled'
+    ? 'web:wide:bg-card'
+    : undefined;
 }
 
 // iOS separates a plain list's rows; the web and Android leave rows apart.

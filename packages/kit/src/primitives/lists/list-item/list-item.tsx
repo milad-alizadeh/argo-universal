@@ -1,3 +1,4 @@
+import { listDefaults } from '@repo/contracts/kit-tokens';
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
@@ -32,9 +33,19 @@ import {
 const hairline = { height: StyleSheet.hairlineWidth };
 
 function useItemDrawing(): ItemDrawing {
-  const { appearance, position } = useContext(ListContext);
+  const {
+    appearance,
+    position,
+    cardStyle = listDefaults.cardStyle,
+  } = useContext(ListContext);
 
-  return { appearance, position, menu: useInMenu(), rows: useRowDrawing() };
+  return {
+    appearance,
+    position,
+    cardStyle,
+    menu: useInMenu(),
+    rows: useRowDrawing(),
+  };
 }
 
 function ItemSeparator(props: ListItemProps): ReactNode {

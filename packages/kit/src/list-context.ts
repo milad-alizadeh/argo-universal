@@ -3,6 +3,8 @@ import { createContext } from 'react';
 
 export type ListAppearance = NonNullable<KitSchemaProps['List']['appearance']>;
 
+export type ListCardStyle = NonNullable<KitSchemaProps['List']['cardStyle']>;
+
 export type ListPosition = 'only' | 'first' | 'middle' | 'last';
 
 export interface ListSelection {
@@ -14,6 +16,7 @@ export interface ListSelection {
 export const ListContext = createContext<
   ListSelection & {
     appearance: ListAppearance;
+    cardStyle?: ListCardStyle;
     position: ListPosition;
     // Set inside a List's own rows, so a part that would draw its own List draws a section instead.
     inList?: boolean;

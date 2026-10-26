@@ -28,6 +28,11 @@ export const cardsList = {
   children,
 } satisfies ListProps<unknown>;
 
+export const filledCardsList = {
+  ...cardsList,
+  cardStyle: 'filled',
+} satisfies ListProps<unknown>;
+
 const branches = Array.from(
   { length: 12 },
   (_, index) => `feature/branch-${index + 1}`,

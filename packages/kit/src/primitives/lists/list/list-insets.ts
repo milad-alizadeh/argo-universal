@@ -1,4 +1,3 @@
-import { listDefaults } from '@repo/contracts/kit-tokens';
 import { isPhoneGrouped, isWebGrouped } from '../../../list-grouped';
 import type { ListProps } from './list-props';
 
@@ -7,7 +6,8 @@ type Insets = Pick<
   'padding' | 'paddingTop' | 'paddingBottom'
 >;
 
-type Options = Insets & Pick<ListProps<never>, 'appearance' | 'fit'>;
+type Options = Insets &
+  Pick<ListProps<never>, 'appearance' | 'cardStyle' | 'fit'>;
 
 // Paper's Configure popover (menu-surface.ts): a list in a popover holds its rows 4px in from every side.
 const menuInset = { sides: 1, ends: 1 } as const;
@@ -21,19 +21,15 @@ export function listInsets(props: Options, menu: boolean): Insets {
 function appearanceInsets(props: Options): Insets {
   if (isPhoneGrouped(props.appearance)) return phoneInsets(props);
 
-  return contentInsets(props);
+  return isWebGrouped(props.appearance)
+    ? groupedInsets(props)
+    : filledCardInsets(props);
 }
 
-function contentInsets(props: Options): Insets {
-  if (isWebGrouped(props.appearance)) return groupedInsets(props);
+function filledCardInsets(props: Options): Insets {
+  if (props.appearance !== 'cards' || props.cardStyle !== 'filled')
+    return props;
 
-  return isCards(props.appearance) ? cardInsets(props) : props;
-}
-
-const isCards = (appearance: Options['appearance']): boolean =>
-  (appearance ?? listDefaults.appearance) === 'cards';
-
-function cardInsets(props: Options): Insets {
   return {
     padding: orInset(props.padding, { compact: 4, wide: 0 }),
     paddingTop: props.paddingTop,

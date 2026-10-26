@@ -3,6 +3,7 @@ import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from './list';
 import {
   cardsList,
+  filledCardsList,
   groupedItemsList,
   groupedList,
   plainList,
@@ -21,6 +22,8 @@ type Story = StoryObj<typeof meta>;
 export const Plain: Story = { args: plainList };
 
 export const Cards: Story = { args: cardsList };
+
+export const FilledCards: Story = { args: filledCardsList };
 
 export const Grouped: Story = {
   args: groupedList,

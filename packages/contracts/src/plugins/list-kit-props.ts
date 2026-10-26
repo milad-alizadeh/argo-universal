@@ -75,9 +75,15 @@ export const contentListProps = z.object({
   appearance: z
     .enum(['plain', 'cards', 'grouped'])
     .optional()
-    .meta({ default: listDefaults.appearance })
     .describe(
       'The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists).',
+    ),
+  cardStyle: z
+    .enum(['outline', 'filled'])
+    .optional()
+    .meta({ default: listDefaults.cardStyle })
+    .describe(
+      'Card presentation on wide windows; filled cards also use inset phone rows.',
     ),
   footer: z.string().optional().describe('Page-level supporting text.'),
   isLoading: z.boolean().optional().describe('Whether the list is loading.'),
