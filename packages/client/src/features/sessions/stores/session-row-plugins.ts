@@ -77,18 +77,20 @@ const withShown = (
   return shown ? others : [...others, pluginId];
 };
 
-// Shows the choice at once, wins over a read still loading, and keeps it for the next App start.
-export function chooseSessionRowPluginShown(
+// Shows the choice, built on the kept list once it has loaded so an earlier choice is never lost, and keeps it.
+export async function chooseSessionRowPluginShown(
   client: QueryClient,
   pluginId: string,
   shown: boolean,
-): void {
-  const { queryKey } = hiddenSessionRowPluginsQuery();
-  const current = client.getQueryData(queryKey) ?? noneHidden;
-  const next = withShown(current, pluginId, shown);
+): Promise<void> {
+  const options = hiddenSessionRowPluginsQuery();
+  const loaded = client.getQueryData(options.queryKey);
+  const current = loaded ?? (await client.ensureQueryData(options));
+  // A choice made while this one waited for the load is already in the cache.
+  const latest = client.getQueryData(options.queryKey) ?? current;
+  const next = withShown(latest, pluginId, shown);
 
-  void client.cancelQueries({ queryKey, exact: true });
-  client.setQueryData(queryKey, next);
+  client.setQueryData(options.queryKey, next);
   keep(next);
 }
 
@@ -124,6 +126,7 @@ export function useSessionRowPluginShown(): (
 ) => void {
   const client = useQueryClient();
 
-  return (pluginId, shown) =>
-    chooseSessionRowPluginShown(client, pluginId, shown);
+  return (pluginId, shown) => {
+    void chooseSessionRowPluginShown(client, pluginId, shown);
+  };
 }

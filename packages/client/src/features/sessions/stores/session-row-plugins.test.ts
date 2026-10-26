@@ -31,7 +31,7 @@ describe('the Plugins hidden on Session rows on this Device', () => {
 
   it('keeps a Plugin turned off for the next App start', async () => {
     useMemoryStorage();
-    chooseSessionRowPluginShown(new QueryClient(), 'deploys', false);
+    await chooseSessionRowPluginShown(new QueryClient(), 'deploys', false);
     const hidden = await loadHidden();
 
     expect(hidden).toEqual(['deploys']);
@@ -41,9 +41,9 @@ describe('the Plugins hidden on Session rows on this Device', () => {
   it('shows a Plugin again once it is turned back on', async () => {
     useMemoryStorage();
     const client = new QueryClient();
-    chooseSessionRowPluginShown(client, 'deploys', false);
-    chooseSessionRowPluginShown(client, 'coverage', false);
-    chooseSessionRowPluginShown(client, 'deploys', true);
+    await chooseSessionRowPluginShown(client, 'deploys', false);
+    await chooseSessionRowPluginShown(client, 'coverage', false);
+    await chooseSessionRowPluginShown(client, 'deploys', true);
 
     await expect(loadHidden(new QueryClient())).resolves.toEqual(['coverage']);
   });

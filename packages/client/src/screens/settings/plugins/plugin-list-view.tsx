@@ -53,14 +53,16 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
 function sessionRowsSection(
   props: PluginListViewProps,
 ): React.JSX.Element | null {
-  if (props.sessionRowPluginCount === undefined) return null;
+  const { onOpenSessionRows, sessionRowPluginCount } = props;
+
+  if (sessionRowPluginCount === undefined || !onOpenSessionRows) return null;
 
   return (
     <ListSection>
       <FieldGroup.Link
         title={sessionRowsEntryTitle}
-        value={`${props.sessionRowPluginCount} on`}
-        onPress={() => props.onOpenSessionRows?.()}
+        value={`${sessionRowPluginCount} on`}
+        onPress={onOpenSessionRows}
       />
     </ListSection>
   );
