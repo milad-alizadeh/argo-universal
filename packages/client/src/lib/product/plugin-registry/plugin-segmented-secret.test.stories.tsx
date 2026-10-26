@@ -4,6 +4,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
+const pressedState = 'aria-pressed';
+
 const password = 'password';
 
 const tokenValue = 'test-token';
@@ -35,9 +37,9 @@ export const SwitchView: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Closed' }));
     await expect(
       canvas.getByRole('button', { name: 'Closed' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    ).toHaveAttribute(pressedState, 'true');
     await expect(canvas.getByRole('button', { name: 'Open' })).toHaveAttribute(
-      'aria-pressed',
+      pressedState,
       'false',
     );
     await expect(onEvent).toHaveBeenCalledWith('views', {
@@ -53,13 +55,13 @@ export const RefusedViewKeepsSelection: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Closed' }));
     await waitFor(() =>
       expect(canvas.getByRole('button', { name: 'Open' })).toHaveAttribute(
-        'aria-pressed',
+        pressedState,
         'true',
       ),
     );
     await expect(
       canvas.getByRole('button', { name: 'Closed' }),
-    ).toHaveAttribute('aria-pressed', 'false');
+    ).toHaveAttribute(pressedState, 'false');
   },
 };
 
