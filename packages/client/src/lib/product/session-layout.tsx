@@ -11,8 +11,9 @@ import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ComposerCover,
+  GlassCoverProvider,
   composerOverlap,
+  useGlassBarSpace,
   useGlassComposer,
   useGlassCover,
 } from './composer-cover';
@@ -122,7 +123,7 @@ function OverlapComposer(props: { children: ReactNode }): React.JSX.Element {
   );
 }
 
-// The Feed runs to the screen's bottom edge behind the glass Composer, which keeps the home indicator's space below it until the keyboard opens.
+// The Feed runs to the screen's bottom edge behind the glass Composer, which keeps the stock glass bars' space below it until the keyboard opens.
 function GlassComposerLayout(props: SessionLayoutProps): React.JSX.Element {
   return (
     <Screen testID="session-layout" edges={[]} className={sessionSurface}>
@@ -139,17 +140,17 @@ type SessionStageProps = Pick<SessionLayoutProps, 'feed' | 'composer'>;
 
 // Its own box, so the Composer laid over its end stays above the keyboard's padding.
 function GlassComposerStage(props: SessionStageProps): React.JSX.Element {
-  const { bottom } = useSafeAreaInsets();
-  const { cover, measureComposer, onComposerLayout } = useGlassCover(bottom);
+  const { cover, measureComposer, onComposerLayout } =
+    useGlassCover(useGlassBarSpace());
 
   return (
     <View className="relative min-h-0 flex-1">
-      <ComposerCover.Provider value={cover}>
+      <GlassCoverProvider cover={cover}>
         {props.feed}
-      </ComposerCover.Provider>
-      <GlassComposer measure={measureComposer} onLayout={onComposerLayout}>
-        {props.composer}
-      </GlassComposer>
+        <GlassComposer measure={measureComposer} onLayout={onComposerLayout}>
+          {props.composer}
+        </GlassComposer>
+      </GlassCoverProvider>
     </View>
   );
 }
@@ -178,7 +179,7 @@ function GlassComposer({
 function useHomeIndicatorSpace(): ReturnType<
   typeof useAnimatedStyle<ViewStyle>
 > {
-  const { bottom } = useSafeAreaInsets();
+  const bottom = useGlassBarSpace();
   const { progress } = useReanimatedKeyboardAnimation();
 
   return useAnimatedStyle(

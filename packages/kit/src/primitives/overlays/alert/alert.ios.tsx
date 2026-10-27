@@ -17,10 +17,13 @@ import {
   type AnsweredAlertProps,
 } from './alert-props';
 
+// The anchor still measures a line tall, which in flow would push the sibling Screen up by that much; out of flow, it only presents.
+const anchorOutOfFlow = { position: 'absolute' } as const;
+
 // Every question, a destructive one too, is the stock centred alert with its answers side by side (Paper).
 export function Alert(props: AlertProps): React.JSX.Element {
   return (
-    <Host matchContents>
+    <Host matchContents style={anchorOutOfFlow}>
       <PlainAlert {...answeredAlert(props)} />
     </Host>
   );
