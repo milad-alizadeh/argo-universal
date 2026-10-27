@@ -7,6 +7,7 @@ import type { ScreenHeader } from '#primitives/actions/action';
 import { useScreenMenu } from './screen-menu-context';
 import type { ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';
+import { SelectionItems } from './screen-selection-items.ios';
 import {
   overflowMenu,
   toolbarButton,
@@ -18,10 +19,14 @@ export const screenTitleOptions = {
   headerLargeTitleEnabled: false,
 } as const;
 
-// A selecting List's header replaces the whole stack header, so none of these items are drawn meanwhile.
-export function ScreenHeaderItems(
-  props: ScreenHeaderInput,
-): ReactElement | null {
+// A selecting List's items replace the whole stack header's (screen-selection-items.ios.tsx).
+export function ScreenHeaderItems(props: ScreenHeaderInput): ReactElement {
+  const bar = props.declaration.selection?.bar;
+
+  return bar ? <SelectionItems bar={bar} /> : <IdleItems {...props} />;
+}
+
+function IdleItems(props: ScreenHeaderInput): ReactElement | null {
   const header = props.headers.native;
 
   if (header.selecting) return null;

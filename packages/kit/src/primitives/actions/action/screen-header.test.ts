@@ -58,7 +58,7 @@ describe('screenHeader', () => {
   );
 
   it('does not count the iOS Select entry among the bar buttons', () => {
-    const selection = { header: null, begin };
+    const selection = { bar: null, header: null, begin };
 
     expect(directIds(declared(['a', 'b'], { selection }), 'ios')).toEqual([
       'a',
@@ -100,7 +100,7 @@ describe('screenHeader', () => {
   ] satisfies [HeaderRoom, (() => void) | null][])(
     'draws the Select entry in the %s room only where it has one',
     (room, select) => {
-      const selection = { header: null, begin };
+      const selection = { bar: null, header: null, begin };
 
       expect(screenHeader(declared([], { selection }), room).select).toBe(
         select,
@@ -111,7 +111,7 @@ describe('screenHeader', () => {
   it.each(['heading', 'ios', 'android'] satisfies HeaderRoom[])(
     'replaces the whole %s header with a selecting List’s',
     (room) => {
-      const selection = { header: 'Selecting', begin };
+      const selection = { bar: null, header: 'Selecting', begin };
 
       const declaration = declared(['a'], {
         primary: withPrimary(),
@@ -137,7 +137,7 @@ describe('screenHeader', () => {
     ['a primary Action', declared([], { primary: withPrimary() }), false],
     [
       'a Select entry',
-      declared([], { selection: { header: null, begin } }),
+      declared([], { selection: { bar: null, header: null, begin } }),
       false,
     ],
   ] satisfies [string, HeaderDeclaration, boolean][])(

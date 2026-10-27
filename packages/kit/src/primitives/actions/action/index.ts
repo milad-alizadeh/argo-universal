@@ -46,7 +46,11 @@ export {
   submenuLabel,
 } from './submenu-badge';
 
-export { type HeaderEntry, type IconAction } from './header-actions';
+export {
+  splitHeaderActions,
+  type HeaderEntry,
+  type IconAction,
+} from './header-actions';
 
 export {
   screenHeader,

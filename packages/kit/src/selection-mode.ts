@@ -7,10 +7,22 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import type { ActionGroup } from '#primitives/actions/action';
 import { createPlace, useClaim, useClaimed, type Place } from './place';
 
 // What a List tells the Screen that owns its header (ADR-0043's one exception to a header declared once).
+export interface SelectionBar {
+  title: string;
+  allSelected: boolean;
+  onSelectAll: () => void;
+  onClose: () => void;
+  // The selected Actions, for the native bar to draw.
+  groups: ActionGroup[];
+}
+
 export interface SelectionMode {
+  // What a phone's stack draws as its own header meanwhile; null while the List does not select, and on the web.
+  bar: SelectionBar | null;
   // The whole header while the List selects: its count, Select All and Done or Close, and the selected Actions. Null while it does not.
   header: ReactNode;
   // Starts selecting, for the Screen to draw a Select entry while the List is not; null where selecting starts from a row.

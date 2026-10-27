@@ -1,7 +1,9 @@
 import { useMemo, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import {
+  useClaimedSelectionMode,
   useOwnsSelectionHeader,
+  type SelectionBar,
   type SelectionMode,
 } from '#kit/selection-mode';
 import { HeaderActions, type ActionGroup } from '#primitives/actions/action';
@@ -94,7 +96,14 @@ function topToolbar(props: EditingToolbar): ReactElement | null {
   );
 }
 
-function bottomToolbar(props: EditingToolbar): ReactElement | null {
+// A Screen's stack draws the Actions in its own bottom toolbar; only a List with no Screen draws them here.
+function BottomSelection(props: EditingToolbar): ReactElement | null {
+  const owned = useClaimedSelectionMode()?.bar;
+
+  return owned ? null : <IosBottom {...props} />;
+}
+
+function IosBottom(props: EditingToolbar): ReactElement | null {
   const visible = Platform.OS === 'ios' && props.selection.selecting;
 
   return visible ? <BottomToolbar {...props} /> : null;
@@ -105,7 +114,7 @@ export function SelectionToolbar(props: ToolbarProps): ReactElement | null {
   const selecting = { selection: props.selection, groups: props.groups };
 
   return props.bottom ? (
-    bottomToolbar(selecting)
+    <BottomSelection {...selecting} />
   ) : (
     <SelectionHeader {...selecting} />
   );
@@ -129,6 +138,7 @@ function selectionMode(props: EditingToolbar): SelectionMode {
   const { selection } = props;
 
   return {
+    bar: selectionBar(props),
     header: selectionTop(props),
     begin: showsEntry(selection) ? () => selection.setSelecting(true) : null,
   };
@@ -138,4 +148,22 @@ function selectionTitle(selection: ContentSelection): string {
   const label = Platform.OS === 'ios' ? 'Selected' : 'selected';
 
   return `${selection.selected.length} ${label}`;
+}
+
+function selectionBar(props: EditingToolbar): SelectionBar | null {
+  const { selection } = props;
+
+  return Platform.OS !== 'web' && selection.selecting ? barOf(props) : null;
+}
+
+function barOf({ selection, groups }: EditingToolbar): SelectionBar {
+  return {
+    title: selectionTitle(selection),
+    allSelected: selection.allSelected,
+    onSelectAll: selection.allSelected
+      ? () => selection.change([])
+      : selection.all,
+    onClose: selection.close,
+    groups,
+  };
 }

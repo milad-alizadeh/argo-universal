@@ -1,16 +1,14 @@
 import type { NativeStackNavigationOptions } from 'expo-router';
-import { View } from 'react-native';
 import type { SelectionMode } from '#kit/selection-mode';
 
-// A phone's stack draws the selecting List's header in place of its own.
+// A stack merges each Screen's options into the last ones, so leaving selection names the keys it set to give Back back.
+const idle = { headerBackVisible: undefined };
+
+// A phone's stack draws the selecting List's count as its title; its items come from ScreenHeaderItems.
 export function selectionOptions(
   mode?: SelectionMode | null,
 ): NativeStackNavigationOptions {
-  const { header } = mode ?? {};
+  const bar = mode?.bar;
 
-  return {
-    header: header
-      ? () => <View className="bg-content pt-safe">{header}</View>
-      : undefined,
-  };
+  return bar ? { title: bar.title, headerBackVisible: false } : idle;
 }
