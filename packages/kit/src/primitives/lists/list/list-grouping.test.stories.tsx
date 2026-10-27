@@ -105,6 +105,8 @@ export const RecycleDescribedRows: Story = {
   },
 };
 
+const firstSelected = 'Selected: first';
+
 function InheritedSection(): React.JSX.Element {
   const [selection, onSelectionChange] = useState<readonly string[]>(['first']);
 
@@ -129,11 +131,58 @@ export const StandaloneSelectionInheritance: Story = {
   render: () => <InheritedSection />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await expect(canvas.getByText('Selected: first')).toBeVisible();
+    await expect(canvas.getByText(firstSelected)).toBeVisible();
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Second choice' }),
     );
     await expect(canvas.getByText('Selected: second')).toBeVisible();
-    await expect(canvas.queryByText('Selected: first')).toBeNull();
+    await expect(canvas.queryByText(firstSelected)).toBeNull();
+  },
+};
+
+const dataRows = ['first', 'second'];
+
+// A List of data rows inside a choosing section chooses nothing for that section: its rows keep their own presses.
+function DataRowsInChoosingSection(): React.JSX.Element {
+  const [selection, onSelectionChange] = useState<readonly string[]>(['first']);
+  const [pressed, press] = useState<string>();
+
+  return (
+    <View className="flex-1">
+      <List.Section
+        selectionMode="single"
+        selection={selection}
+        onSelectionChange={onSelectionChange}
+      >
+        <View className="h-40">
+          <List
+            items={dataRows}
+            keyExtractor={(id) => id}
+            renderItem={(id) => (
+              <ListItem
+                id={id}
+                title={`Data ${id}`}
+                onPress={() => press(id)}
+              />
+            )}
+          />
+        </View>
+      </List.Section>
+      <Text>{`Selected: ${selection.join(',')}`}</Text>
+      <Text>{`Pressed: ${pressed ?? 'none'}`}</Text>
+    </View>
+  );
+}
+
+export const DataRowsClearInheritedSelection: Story = {
+  render: () => <DataRowsInChoosingSection />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Data second' }),
+    );
+    await expect(canvas.getByText('Pressed: second')).toBeVisible();
+    await expect(canvas.getByText(firstSelected)).toBeVisible();
+    await expect(canvas.queryByText('Selected: second')).toBeNull();
   },
 };
