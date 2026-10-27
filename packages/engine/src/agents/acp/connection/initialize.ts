@@ -11,7 +11,7 @@ const clientCapabilities: ClientCapabilities = {
   auth: { terminal: true },
   session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
   elicitation: { form: {} },
-  // Agents send `subagent_update` only to a client that advertises this (claude-acp and codex-acp otherwise draw plain tool calls).
+  // Without it, claude-agent-acp and codex-acp draw a child Session's work as plain tool calls.
   subagents: {},
 };
 

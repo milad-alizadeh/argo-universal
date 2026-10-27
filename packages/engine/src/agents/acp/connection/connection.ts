@@ -27,7 +27,7 @@ import type {
 } from '../resources/resource-types';
 import { routeTerminalRequests } from '../shell-commands/terminal-requests';
 import { createAgentClient, awaitAcpOpening } from './client';
-import { standardSubagentUpdates } from './draft-subagent-updates';
+import { createDraftSubagentTranslator } from './draft-subagent-updates';
 import { negotiateAcpInitialize } from './initialize';
 import { sessionCapabilities, openProtocolSession } from './open-session';
 import { cancelledElicitation, cancelledPermission } from './refusals';
@@ -135,6 +135,9 @@ export class AcpConnection {
   private readonly openings: Registration[] = [];
   private readonly readers = createAcpResponseReaders(
     createRejectionCounter('ACP responses'),
+  );
+  private readonly translateDraftSubagents = createDraftSubagentTranslator(
+    createRejectionCounter('ACP draft subagent updates'),
   );
   private connection: ClientConnection | undefined;
   private initialized: Omit<Ready, 'connection'> | undefined;
@@ -322,8 +325,8 @@ export class AcpConnection {
         transform: async (message, controller) => {
           const registered = this.registerResponse(message);
 
-          for (const update of standardSubagentUpdates(message))
-            controller.enqueue(update);
+          for (const translated of this.translateDraftSubagents(message))
+            controller.enqueue(translated);
           await registered;
         },
       }),

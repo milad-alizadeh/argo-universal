@@ -4,114 +4,144 @@ import type {
   StateUpdate,
 } from '@agentclientprotocol/sdk';
 import { z } from 'zod';
+import type { RejectionReporter } from './schema-reader';
 
 /*
- * codex-acp 2.3.0 sends the first draft of the ACP subagents RFD, `subagent_spawned` and
- * `subagent_state_update`, to every client that advertises `subagents`. The SDK schema Argo reads
- * names the same two events `subagent_update`, so they are rewritten here before dispatch.
+ * ADR-0016's recorded exception: codex-acp 2.3.0 and claude-agent-acp 0.97.0 send the draft
+ * `subagent_spawned` and `subagent_state_update` to clients that advertise `subagents` (claude-agent-acp
+ * only to JetBrains AIR clients). They become the standard `subagent_update` before the SDK reads them.
+ * Delete this once the Agents Argo supports send the standard update.
  * https://github.com/agentclientprotocol/codex-acp/blob/main/docs/subagent-sessions.md
  */
+const sessionUpdateMethod = 'session/update';
+
+const DraftState = z.enum(['completed', 'cancelled', 'failed', 'disconnected']);
+
 const Spawned = z.object({
   sessionUpdate: z.literal('subagent_spawned'),
-  subagentSessionId: z.string(),
+  subagentSessionId: z.string().min(1),
   name: z.string().optional(),
   task: z.string().optional(),
+  prompt: z.string().optional(),
+  capabilities: z.strictObject({}).optional(),
 });
 
 const StateUpdated = z.object({
   sessionUpdate: z.literal('subagent_state_update'),
-  subagentSessionId: z.string(),
-  state: z.string(),
+  subagentSessionId: z.string().min(1),
+  state: DraftState,
 });
 
 const DraftNotification = z.object({
-  jsonrpc: z.literal('2.0'),
-  method: z.literal('session/update'),
+  method: z.literal(sessionUpdateMethod),
   params: z.object({
     sessionId: z.string(),
-    update: z.union([Spawned, StateUpdated]),
+    update: z.discriminatedUnion('sessionUpdate', [Spawned, StateUpdated]),
+  }),
+});
+
+const DraftSignature = z.object({
+  method: z.literal(sessionUpdateMethod),
+  params: z.object({
+    update: z.object({
+      sessionUpdate: z.enum(['subagent_spawned', 'subagent_state_update']),
+    }),
   }),
 });
 
 type Update = SessionNotification['update'];
 
-export type DraftSubagentUpdate =
-  | z.infer<typeof Spawned>
-  | z.infer<typeof StateUpdated>;
+type Spawn = z.infer<typeof Spawned>;
 
-// codex-acp names the task like this when the spawn gave it none.
-const placeholderTask = 'Delegated task for ';
+type Ending = z.infer<typeof StateUpdated>;
 
-const notification = (sessionId: string, update: Update): AnyMessage => ({
-  jsonrpc: '2.0',
-  method: 'session/update',
-  params: { sessionId, update },
+type FromParent<Draft> = { sessionId: string; update: Draft };
+
+const missingTask = 'Delegated task';
+
+// `failed` ends the work with Argo's `error` stop reason; `disconnected` is not an outcome, so the SDK's `unknown` leaves the child unconfirmed.
+const standardStates: Record<z.infer<typeof DraftState>, StateUpdate> = {
+  completed: { state: 'idle', stopReason: 'end_turn' },
+  cancelled: { state: 'idle', stopReason: 'cancelled' },
+  failed: { state: 'idle', stopReason: 'error' },
+  disconnected: { state: 'unknown' },
+};
+
+// codex-acp and claude-agent-acp name a task `Delegated task` or `Delegated task for <name>` when the spawn gave none.
+const isPlaceholder = (task: string): boolean =>
+  task === missingTask || task.startsWith(`${missingTask} for `);
+
+// `prompt` is the full task when the Agent sends one; `task` is then only a description.
+const delegatedTask = ({ prompt, task }: Spawn): string | undefined =>
+  [prompt, task].find(
+    (text) => text !== undefined && text.trim() !== '' && !isPlaceholder(text),
+  );
+
+const runningUpdate = (spawn: Spawn): Update => ({
+  sessionUpdate: 'subagent_update',
+  sessionId: spawn.subagentSessionId,
+  title: spawn.name,
+  capabilities: spawn.capabilities,
+  state: { state: 'running' },
 });
 
-const hasTask = (task: string | undefined): task is string =>
-  task !== undefined && task.trim() !== '' && !task.startsWith(placeholderTask);
+// The task is the parent's first message to the child, which Argo folds into the child's Started row.
+const taskMessage = ({ sessionId, update }: FromParent<Spawn>): Update[] => {
+  const text = delegatedTask(update);
 
-function spawnedUpdate(update: z.infer<typeof Spawned>): Update {
-  const running: Update = {
-    sessionUpdate: 'subagent_update',
-    sessionId: update.subagentSessionId,
-    capabilities: {},
-    state: { state: 'running' },
-  };
-
-  if (update.name) running.title = update.name;
-
-  return running;
-}
-
-// The task is the parent's first message to the child, which Argo folds into the Subagent's Started row.
-function taskUpdate(
-  parentId: string,
-  update: z.infer<typeof Spawned>,
-): Update[] {
-  if (!hasTask(update.task)) return [];
+  if (text === undefined) return [];
 
   return [
     {
       sessionUpdate: 'session_message',
       messageId: `${update.subagentSessionId}:task`,
-      senderSessionId: parentId,
+      senderSessionId: sessionId,
       recipientSessionId: update.subagentSessionId,
-      content: [{ type: 'text', text: update.task }],
+      content: [{ type: 'text', text }],
     },
   ];
-}
+};
 
-// Every codex-acp outcome ends the child's work; only the two with a known cause name a stop reason.
-function idleState(outcome: string): StateUpdate {
-  if (outcome === 'completed') return { state: 'idle', stopReason: 'end_turn' };
+const endUpdate = (ending: Ending): Update => ({
+  sessionUpdate: 'subagent_update',
+  sessionId: ending.subagentSessionId,
+  state: standardStates[ending.state],
+});
 
-  if (outcome === 'cancelled')
-    return { state: 'idle', stopReason: 'cancelled' };
+const rewriteDraftUpdate = ({
+  sessionId,
+  update,
+}: FromParent<Spawn | Ending>): Update[] => {
+  if (update.sessionUpdate === 'subagent_state_update')
+    return [endUpdate(update)];
 
-  return { state: 'idle' };
-}
+  return [runningUpdate(update), ...taskMessage({ sessionId, update })];
+};
 
-function updatesOf(parentId: string, draft: DraftSubagentUpdate): Update[] {
-  if (draft.sessionUpdate === 'subagent_spawned')
-    return [spawnedUpdate(draft), ...taskUpdate(parentId, draft)];
+type DraftSubagentTranslator = (message: AnyMessage) => AnyMessage[];
 
-  return [
-    {
-      sessionUpdate: 'subagent_update',
-      sessionId: draft.subagentSessionId,
-      state: idleState(draft.state),
-    },
-  ];
-}
+const notification = (sessionId: string, update: Update): AnyMessage => ({
+  jsonrpc: '2.0',
+  method: sessionUpdateMethod,
+  params: { sessionId, update },
+});
 
-export function standardSubagentUpdates(message: AnyMessage): AnyMessage[] {
-  const parsed = DraftNotification.safeParse(message);
+// A draft that does not match what the Agents send is reported, counted and dropped; every other message passes through.
+export const createDraftSubagentTranslator =
+  (rejections: RejectionReporter): DraftSubagentTranslator =>
+  (message) => {
+    if (!DraftSignature.safeParse(message).success) return [message];
+    const draft = DraftNotification.safeParse(message);
 
-  if (!parsed.success) return [message];
-  const { sessionId, update } = parsed.data.params;
+    if (!draft.success) {
+      rejections.report('Rejected draft subagent update', draft.error);
 
-  return updatesOf(sessionId, update).map((next) =>
-    notification(sessionId, next),
-  );
-}
+      return [];
+    }
+
+    const { sessionId } = draft.data.params;
+
+    return rewriteDraftUpdate(draft.data.params).map((update) =>
+      notification(sessionId, update),
+    );
+  };
