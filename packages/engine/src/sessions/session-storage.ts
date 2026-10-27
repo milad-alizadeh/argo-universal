@@ -4,7 +4,6 @@ import { project, session, turn } from '@repo/db/schema';
 import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { SQLiteUpdateSetSource } from 'drizzle-orm/sqlite-core';
 import { projectQueuedFeedSession, queuedFeedSessionId } from '../feed';
-import { ShellWriteJob } from './shells/storage';
 import {
   readQueuedJobs,
   type StorageTransaction,
@@ -13,6 +12,7 @@ import {
 } from '../storage';
 import { SessionArchiveJob } from './archive/archive-storage';
 import { SessionSeenJob } from './session-seen';
+import { ShellWriteJob } from './shells/storage';
 import {
   decodeStoredTurn,
   latestTurnOf,

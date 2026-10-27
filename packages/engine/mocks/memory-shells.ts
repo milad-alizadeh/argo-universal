@@ -20,7 +20,7 @@ import { createScriptedAgentWire } from './scripted-agent';
 
 type Exit = { exitCode: number | null; signal?: string };
 
-export type MemoryShellCommand = ShellCommand & {
+type MemoryShellCommand = ShellCommand & {
   input: ShellCommandInput;
   // Output the command prints, delivered to the Shell as a process would.
   print: (text: string) => Promise<void>;

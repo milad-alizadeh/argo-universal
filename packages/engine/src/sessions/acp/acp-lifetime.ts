@@ -6,8 +6,8 @@ import type {
 } from '../../agents';
 import type { DeferredAgentLaunch, InstalledAgents } from '../../agents';
 import { requireInstalledAgent } from '../../agents';
-import type { Shells } from '../shells';
 import type { SessionData } from '../session-data';
+import type { Shells } from '../shells';
 import {
   createLifetimeDestination,
   type AcpLifetimeEvent,

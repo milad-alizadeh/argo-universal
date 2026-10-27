@@ -15,11 +15,8 @@ export {
 } from './shells';
 
 export {
-  crashedSubagentTurns,
   flushSubagents,
-  hasRunningSubagentTurn,
   noSubagents,
-  ownsSubagentUpdate,
   routeSubagentUpdate,
   type SubagentHost,
   type Subagents,

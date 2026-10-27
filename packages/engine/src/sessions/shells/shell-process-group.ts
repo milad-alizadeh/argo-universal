@@ -8,7 +8,7 @@ const observationIntervalMs = 25;
 
 const Missing = z.object({ code: z.literal('ESRCH') });
 
-export const killShellGroup = (pid: number): void => {
+const killShellGroup = (pid: number): void => {
   try {
     process.kill(-pid, 'SIGKILL');
   } catch (error) {

@@ -1,6 +1,6 @@
 import { emptyChangesSummary, type SessionSnapshot } from '@repo/contracts';
-import { toShell } from '../shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
+import { toShell } from '../shells';
 import { snapshotState, type SessionState } from './state';
 
 // The Live header reader's active Turn and Live header, with the Feed's revision.
