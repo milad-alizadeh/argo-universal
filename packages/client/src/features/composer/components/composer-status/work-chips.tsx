@@ -23,15 +23,16 @@ interface WorkCountProps {
   work: ComposerWork;
 }
 
+// The count and word in the Secondary role, as the Usage and Context controls' are, so the glyph beside them reads in proportion.
 function WorkCount({ label, work }: WorkCountProps): JSX.Element {
   const className = work.running ? 'text-success' : mutedTextClassName;
 
   return (
     <View className="flex-row items-center gap-1">
-      <StatusText role="badge" className={className}>
+      <StatusText role="secondary" className={className}>
         {work.count}
       </StatusText>
-      <StatusText role="badge" className="select-none">
+      <StatusText role="secondary" className="text-foreground">
         {label}
       </StatusText>
     </View>
