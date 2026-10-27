@@ -21,6 +21,7 @@ export interface SessionsListProps {
   onArchive?: (id: string) => void;
   onEndReached: () => void;
   onRefresh?: () => Promise<void>;
+  // Desktop and the web only: the List draws no selection mode on a phone.
   onArchiveMany?: (sessionIds: readonly string[]) => void;
   onNewSession?: (projectId: string) => void;
   onProjectSettings?: (projectName: string) => void;

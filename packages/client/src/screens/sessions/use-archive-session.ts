@@ -61,7 +61,6 @@ function alertProps(
 ): ArchiveSessionAlertProps {
   return {
     open: asking !== undefined,
-    count: asking?.length,
     onArchive: () => {
       if (asking) archive(asking);
     },

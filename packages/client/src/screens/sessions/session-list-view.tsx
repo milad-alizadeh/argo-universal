@@ -42,6 +42,7 @@ export interface SessionListViewProps {
   onProjectSettings: (projectName: string) => void;
   onLoadMore: () => void;
   onRefresh?: () => Promise<void>;
+  // Desktop and the web: the Sessions chosen in selection mode; a phone has no selection mode.
   onArchiveMany?: (sessionIds: readonly string[]) => void;
 }
 
