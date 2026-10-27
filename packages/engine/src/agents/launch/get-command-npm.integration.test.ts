@@ -33,14 +33,36 @@ const startNpmHost = async (
   };
 };
 
-it('installs npm again for a new connection', async () => {
+it('installs an npm version once for every connection after it', async () => {
   const runTool = vi.fn<InstallPorts['runTool']>(installationPorts.runTool);
   const input = await startNpmHost(runTool);
   await getCommand(input);
-  await getCommand(input);
+  const command = await getCommand(input);
+  expect(runTool.mock.calls.filter(([tool]) => isInstall(tool))).toHaveLength(
+    1,
+  );
+  expect(existsSync(command.args[0] ?? '')).toBe(true);
+});
+
+it('installs npm again for the next connection after an install fails', async () => {
+  let failures = 1;
+
+  const runTool = vi.fn<InstallPorts['runTool']>(async (tool) => {
+    const output = await installationPorts.runTool(tool);
+
+    if (isInstall(tool) && failures-- > 0) throw new Error('npm failed');
+
+    return output;
+  });
+
+  const input = await startNpmHost(runTool);
+  await expect(getCommand(input)).rejects.toThrow('npm failed');
+
+  const command = await getCommand(input);
   expect(runTool.mock.calls.filter(([tool]) => isInstall(tool))).toHaveLength(
     2,
   );
+  expect(existsSync(command.args[0] ?? '')).toBe(true);
 });
 
 it('launches a non-executable npm entry point through Node', async () => {

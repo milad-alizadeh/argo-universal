@@ -28,11 +28,10 @@ it.each([
       installationPorts.runTool,
     );
 
-    const directory = expect.stringMatching(
-      new RegExp(`^${host.home}/agents/registry/npx/${entry.id}/v_1\\.2\\.3_`),
-    );
+    const base = `${host.home}/agents/registry/npx/${entry.id}`;
+    const staging = expect.stringMatching(new RegExp(`^${base}/\\.staging-`));
 
-    await getCommand({
+    const command = await getCommand({
       database: host.database,
       registry: host.engine.system.get('registry'),
       home: host.home,
@@ -43,12 +42,13 @@ it.each([
       isDirectoryInUse:
         host.engine.getSnapshot().context.acpResources.isDirectoryInUse,
     });
+
     expect(runTool).toHaveBeenCalledWith(
       expect.objectContaining({
         args: [
           'install',
           '--prefix',
-          directory,
+          staging,
           '--no-audit',
           '--no-fund',
           '--save-exact',
@@ -57,5 +57,6 @@ it.each([
         ],
       }),
     );
+    expect(command.directory).toMatch(new RegExp(`^${base}/v_1\\.2\\.3_`));
   },
 );
