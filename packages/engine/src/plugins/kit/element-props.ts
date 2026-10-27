@@ -1,5 +1,5 @@
-import { wirePart } from '@repo/contracts/plugins/kit';
-import { partEventRules, WireJson } from '@repo/contracts/plugins/wire';
+import { kitComponentEvents } from '@repo/contracts/plugins/kit';
+import { componentEventRules, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import type { Prop, Props } from './wire-tree';
 
@@ -66,10 +66,10 @@ const isPlainObject = (value: unknown): value is ElementProps =>
 
 type EventPlace = { name: string; within: string };
 
-// The Part events whose schema keeps their handler inside a prop object, such as a Picker's `footerAction.onPress`.
+// The Component events whose schema keeps their handler inside a prop object, such as a Picker's `footerAction.onPress`.
 const eventPlaces = (type: string): EventPlace[] =>
-  Object.entries(wirePart(type)?.events ?? {}).flatMap(([name, schema]) => {
-    const { within } = partEventRules(schema);
+  Object.entries(kitComponentEvents(type)).flatMap(([name, schema]) => {
+    const { within } = componentEventRules(schema);
 
     return within === undefined ? [] : [{ name, within }];
   });

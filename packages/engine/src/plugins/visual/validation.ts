@@ -3,15 +3,15 @@ import { actionUrlReason } from './action-urls';
 import { canvasReason } from './canvas-validation';
 import { visualPropsReason, visualSchemas } from './props';
 
-// Parts the Server refuses outright, with the reason it gives.
-const refusedParts = new Map([
+// Kit components the Server refuses outright, with the reason it gives.
+const refusedComponents = new Map([
   ['CodeMap', 'unsupported CodeMap; use Canvas (ADR-0028)'],
 ]);
 
-// Every visual part a Plugin can draw or be refused for; Canvas drawings are named `Canvas.*`.
-export const visualParts = [
+// Every visual kit component a Plugin can draw or be refused for; Canvas drawings are named `Canvas.*`.
+export const visualComponents = [
   ...[...visualSchemas.keys()].filter((type) => !drawsInCanvas(type)),
-  ...refusedParts.keys(),
+  ...refusedComponents.keys(),
 ];
 
 // A node outside any Canvas; a drawing inside one is checked by canvasReason or drawingReason.
@@ -19,11 +19,11 @@ export function visualReason(
   node: WireNode,
   partial = false,
 ): string | undefined {
-  return actionUrlReason(node.props) ?? partReason(node, partial);
+  return actionUrlReason(node.props) ?? componentReason(node, partial);
 }
 
 function placementReason(type: string): string | undefined {
-  const refused = refusedParts.get(type);
+  const refused = refusedComponents.get(type);
 
   if (refused) return refused;
 
@@ -47,6 +47,6 @@ function sceneReason(node: WireNode, partial: boolean): string | undefined {
   return node.type === 'Canvas' ? canvasReason(node, partial) : undefined;
 }
 
-function partReason(node: WireNode, partial: boolean): string | undefined {
+function componentReason(node: WireNode, partial: boolean): string | undefined {
   return placementReason(node.type) ?? dataReason(node, partial);
 }

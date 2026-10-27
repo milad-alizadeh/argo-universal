@@ -1,20 +1,19 @@
 import type { z } from 'zod';
+import type { KitComponentName } from '../kit-props';
+import { kitComponentSchemas } from './kit-component-schemas';
 import { literal, memberTexts, typeText } from './kit-prop-type-text';
-import { partObjectSchema } from './plugin-object-schema';
-import { pluginPartSchemas } from './plugin-part-schemas';
+import { componentObjectSchema } from './plugin-object-schema';
 import { type JsonValue, type SchemaType, schemaType } from './schema-type';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
 type SchemaNode = z.core.JSONSchema._JSONSchema;
 
-export { pluginPartSchemas };
-
-export type KitPartName = keyof typeof pluginPartSchemas;
+export { kitComponentSchemas };
 
 // A name read from source, such as `KitProps<'Button'>`, checked against the schemas.
-export const isKitPartName = (name: string): name is KitPartName =>
-  Object.hasOwn(pluginPartSchemas, name);
+export const isKitComponentName = (name: string): name is KitComponentName =>
+  Object.hasOwn(kitComponentSchemas, name);
 
 /*
  * What a reader can set from a props table. A prop whose value is an object or a
@@ -141,8 +140,10 @@ function describe(
  * defines it. The schema is the one definition of a kit component's props, so a
  * props table built from it cannot drift from the component.
  */
-export function kitPropDescriptors(name: KitPartName): KitPropDescriptor[] {
-  return objectDescriptors(partObjectSchema(pluginPartSchemas[name]));
+export function kitPropDescriptors(
+  name: KitComponentName,
+): KitPropDescriptor[] {
+  return objectDescriptors(componentObjectSchema(kitComponentSchemas[name]));
 }
 
 function objectDescriptors(schema: JsonSchema): KitPropDescriptor[] {

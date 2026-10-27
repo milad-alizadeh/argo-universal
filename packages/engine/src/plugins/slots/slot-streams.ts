@@ -19,7 +19,7 @@ type Failed = Contributors['failed'];
 const failedOf =
   ({ pluginRuntime }: PluginServiceDeps): Failed =>
   (pluginId, slotId, reason) =>
-    pluginRuntime.contributionFailed(pluginId, slotId, reason);
+    pluginRuntime.contributionFailed({ pluginId, slotId, reason });
 
 async function fillingPlugins(
   deps: PluginServiceDeps,

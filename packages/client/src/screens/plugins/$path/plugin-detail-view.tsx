@@ -39,7 +39,7 @@ export function PluginDetailView(
   );
 }
 
-// A root-only part, Screen or ListDetail, draws its own screen and header.
+// A root-only kit component, Screen or ListDetail, draws its own screen and header.
 function ownsPage(root: WireNode | null): boolean {
   return root ? isRootOnly(root) : false;
 }

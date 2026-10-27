@@ -1,4 +1,4 @@
-import { ViewMessage, type PartEvent } from '@repo/contracts/plugins/wire';
+import { ViewMessage, type ComponentEvent } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { connectPluginApp } from '#mocks/plugin-app';
@@ -24,7 +24,7 @@ type App = Awaited<ReturnType<typeof overlayApp>>;
 
 async function dispatch(
   app: App,
-  event: { key: string } & PartEvent,
+  event: { key: string } & ComponentEvent,
 ): Promise<void> {
   const latest = ViewMessage.parse(app.messages.at(-1));
 
@@ -41,7 +41,7 @@ async function dispatch(
 const latestText = (app: App): string => JSON.stringify(app.messages.at(-1));
 
 it(
-  'opens an overlay node and delivers its Part events to the Plugin',
+  'opens an overlay node and delivers its Component events to the Plugin',
   { timeout: 20_000 },
   async () => {
     const app = await overlayApp();

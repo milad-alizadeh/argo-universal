@@ -11,7 +11,6 @@ import {
 import { hostCompletion } from './completion';
 import { hostLifecycleMachine, hostBudgetExhausted } from './lifecycle.machine';
 import { readHostMessage } from './read-host-message';
-import { TestRequests } from './test-requests';
 
 export type PluginHostProcess = ChildProcess;
 
@@ -22,6 +21,7 @@ const hostStartupLimitMs = 10_000;
 type HostCallbacks = {
   log: (line: string) => void;
   status: (message: Extract<HostMessage, { type: 'status' }>) => void;
+  test: (message: Extract<HostMessage, { type: 'test.done' }>) => void;
   crash: (message: string) => void;
   call: (
     message: Extract<HostMessage, { type: 'call' }>,
@@ -30,7 +30,6 @@ type HostCallbacks = {
 
 export class HostConnection {
   private child: ChildProcess | null = null;
-  public readonly tests = new TestRequests((command) => this.tell(command));
   private readonly lifecycle;
   private completion: Promise<void> = Promise.resolve();
 
@@ -119,13 +118,13 @@ export class HostConnection {
   private receive(message: HostMessage | undefined): void {
     if (!message) return;
 
-    if (message.type === 'test.done') this.tests.settle(message);
-    else this.message(message);
+    if (message.type === 'call') void this.answerCall(message);
+    else this.report(message);
   }
 
-  private message(message: HostMessage): void {
+  private report(message: Exclude<HostMessage, { type: 'call' }>): void {
     if (message.type === 'status') this.callbacks.status(message);
-    else if (message.type === 'call') void this.answerCall(message);
+    else if (message.type === 'test.done') this.callbacks.test(message);
   }
 
   private async answerCall(

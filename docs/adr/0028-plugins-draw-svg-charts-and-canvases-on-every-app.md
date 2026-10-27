@@ -2,7 +2,7 @@
 
 This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md) and [ADR-0027](0027-plugins-act-through-one-api-hook-core-and-replace-named-components.md) (owner, 2026-10-16, Spec 0016 #725). The kit cannot draw a diagram, a chart or a visualisation, and Plugins such as Atlas need all three. Claude Code mods have an `Svg` element, but only on Desktop. Argo adds `Svg`, `Chart` and `Canvas` to the kit on iOS, Android, web and desktop. All three start as proposed API, as ADR-0025 says. A council review (platforms, security, library health, fit with Argo's rules) shaped the first version.
 
-The first version also added `CodeMap`, the Atlas Code Map as a kit part with a 3D view. The owner rejected it on 2026-10-18: it is one Plugin's screen, no Argo screen would use it so it could never turn stable (ADR-0031), and every new visualisation (a heatmap, a dependency graph) would need its own part and an Argo release. `Canvas` replaces it: Plugins send shapes as data and lay them out themselves. 3D is dropped for now.
+The first version also added `CodeMap`, the Atlas Code Map as a kit component with a 3D view. The owner rejected it on 2026-10-18: it is one Plugin's screen, no Argo screen would use it so it could never turn stable (ADR-0031), and every new visualisation (a heatmap, a dependency graph) would need its own kit component and an Argo release. `Canvas` replaces it: Plugins send shapes as data and lay them out themselves. 3D is dropped for now.
 
 ## Decision
 
@@ -16,7 +16,7 @@ The first version also added `CodeMap`, the Atlas Code Map as a kit part with a 
 
   Copied from Claude Code's `Svg` element and its cap, made to work on phones by the subset.
 - **`Chart` draws data, not markup.** Its props are `kind` (`line`, `bar`, `area`, `scatter`, `pie` or `donut`), `label`, an optional `stacked`, an optional `grid` (off by default), an optional `onPress`, and `series`: each series has a name, a tone and `{ x, y }` points. At most 8 series (one per tone) and 2,000 points per series; names and labels at most 120 characters; finite numbers only. Plugins never see the renderer's API, so it can be replaced without breaking a Plugin. Copied from Block Kit's data visualization block and Raycast's typed props, as the research advised against passing chart SVG through.
-- **`Canvas` draws shapes the Plugin sends as data.** It is the one way to draw a visualisation the kit has no part for: a heatmap is a grid of rects, a code map nested rects, a dependency graph circles and lines. The App never knows which visualisation it is drawing.
+- **`Canvas` draws shapes the Plugin sends as data.** It is the one way to draw a visualisation the kit has no kit component for: a heatmap is a grid of rects, a code map nested rects, a dependency graph circles and lines. The App never knows which visualisation it is drawing.
   - `Canvas` takes `label`, `width` and `height` (the scene's own units, which the App scales to fit), an optional `aspectRatio`, `camera` (`fixed`, or `pan-zoom` for a scene larger than its frame), an optional `selectedKey`, and shapes as keyed children.
   - Shapes are `Canvas.Rect`, `Canvas.Circle`, `Canvas.Line`, `Canvas.Path` (SVG path data, under `Svg`'s rules), `Canvas.Text` and `Canvas.Group` (a translate, scale and rotate for its children). Shapes are only valid inside a `Canvas`.
   - Each shape takes geometry, `tone`, an optional `intensity` (0 to 1, which picks a shade of that tone, so a heatmap has a ramp and every colour is still a token), `fill` or `stroke` with `strokeWidth`, and optional `label` and `onPress`.
@@ -37,7 +37,7 @@ The first version also added `CodeMap`, the Atlas Code Map as a kit part with a 
 - **The Server checks all three.** `argo plugin validate`, the plugin host and `mount()` in the test kit refuse an `Svg`, `Chart` or `Canvas` that breaks these rules and log one line naming the Plugin, the node and the reason. The plugin host also caps each node's size before sending it. In a Replaceable Slot the whole tree is refused and core draws its own, as ADR-0027 says. In pages and ordinary Slots the node is dropped, as an unknown leaf is in ADR-0025.
 - **Where it lives.** The three components are kit components in `visual/` (Spec 0017 #959). They are drawn by Argo, not Expo UI (ADR-0020).
 
-## Checks before the parts turn stable
+## Checks before the kit components turn stable
 
 - Done (2026-10-16): a prototype drew line, bar, grouped bar, stacked bar, area, stacked area, scatter, pie and donut charts on web (production export) and in the desktop App over `app://`, with press and touch working. CanvasKit loaded in 76–175 ms cold on localhost, about 1.4 s cold at 20 Mbps, and about 35 ms on desktop; charts were drawn about 0.4–0.65 s after the page mounted. Desktop needed the content security policy change above.
 - Charts must be drawn on a physical iPhone and a physical Android phone, recording pan frame rate, rotation and the release app size added by Skia (Skia's docs say about 6 MB on iOS and 4 MB on Android).
@@ -63,8 +63,8 @@ Accepted by the owner on 2026-10-18 with these checks still to run. If any check
 - **Charts as SVG from the Plugin.** Rejected: every Plugin would draw its own axes and labels, and they would not match.
 - **Plugin-drawn WebGL.** Rejected: WebGL needs JavaScript draw calls and shaders, which are code, and ADR-0025 keeps Plugin code off the Apps. Desktop and web may get it later through ADR-0025's web view escape hatch.
 - **Exposing Victory Native's or Skia's components to Plugins.** Rejected: the renderer could never change, and props would carry styles the kit forbids.
-- **`CodeMap` as a kit part,** as first proposed. Rejected (owner, 2026-10-18): it is one Plugin's screen and could never turn stable, and Atlas can draw it with `Canvas`.
-- **A kit part per visualisation** (Treemap, Heatmap, Graph). Rejected (owner): too specific; each new visualisation would wait for an Argo release.
+- **`CodeMap` as a kit component,** as first proposed. Rejected (owner, 2026-10-18): it is one Plugin's screen and could never turn stable, and Atlas can draw it with `Canvas`.
+- **A kit component per visualisation** (Treemap, Heatmap, Graph). Rejected (owner): too specific; each new visualisation would wait for an Argo release.
 - **A Vega-Lite spec the App renders.** Rejected: every App would carry a large grammar runtime, and it still cannot draw free layouts such as a code map. `Chart` covers the standard charts.
 - **`Svg` for everything.** Rejected: the 131,072-character cap stops at a few thousand shapes, markup is resent whole on every change, and shapes cannot be pressed, panned or zoomed.
 - **3D.** Dropped for now (owner, 2026-10-18). three.js on `expo-gl` is broken on phones (expo/expo#51543) and `@react-three/fiber` v10 drops its native entry. If a Plugin needs 3D later, it follows `Canvas`: boxes, lines and groups as keyed data with tones, the App owns the camera.

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { wirePart } from './kit';
+import { kitComponent } from './kit';
 import { supportsWireNode } from './prepare-tree';
 import type { WireNode } from './wire';
 
-const labelPart = 'Metadata.Label';
+const labelComponent = 'Metadata.Label';
 
 const accepted = [
   {
-    type: labelPart,
+    type: labelComponent,
     props: { title: 'Path', text: '~/Developer/argo', icon: 'computer' },
   },
   {
@@ -35,11 +35,11 @@ function node(type: string, children: WireNode[] = []): WireNode {
 
 describe('Metadata fields', () => {
   it.each(accepted)('accepts $type props', ({ type, props }) => {
-    expect(wirePart(type)?.props.parse(props)).toEqual(props);
+    expect(kitComponent(type)?.props.parse(props)).toEqual(props);
   });
 
   it.each([
-    { type: labelPart, props: { title: 'Path', text: 12 } },
+    { type: labelComponent, props: { title: 'Path', text: 12 } },
     { type: 'Metadata.Link', props: { title: 'Docs', text: 'Argo' } },
     {
       type: 'Metadata.StatusDot',
@@ -47,7 +47,7 @@ describe('Metadata fields', () => {
     },
     { type: 'Metadata.Avatar', props: { title: 'Assignee', src: 'image.png' } },
   ])('rejects malformed $type props', ({ type, props }) => {
-    expect(wirePart(type)?.props.safeParse(props).success).toBe(false);
+    expect(kitComponent(type)?.props.safeParse(props).success).toBe(false);
   });
 
   it.each(accepted)('accepts $type as a Metadata child', ({ type }) => {
@@ -64,7 +64,7 @@ describe('Metadata fields', () => {
   it.each([
     ['Pill', true],
     ['Text', false],
-    [labelPart, false],
+    [labelComponent, false],
   ] as const)('Metadata.Pills accepts %s: %s', (type, expected) => {
     const pills = {
       ...node('Metadata.Pills', [node(type)]),

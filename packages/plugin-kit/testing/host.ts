@@ -56,8 +56,8 @@ class HostedPlugin implements PluginTest {
   private readonly views = new Set<PluginTestView>();
   readonly session = testSession;
   readonly clock = {
-    advance: (ms: number, pluginId = this.options.pluginId): Promise<void> =>
-      this.runtime.advanceClock(pluginId, ms),
+    advance: (ms: number): Promise<void> =>
+      this.runtime.testControl.advanceClock(ms),
   };
   readonly storage = {
     execute: (

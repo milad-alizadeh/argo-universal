@@ -1,14 +1,16 @@
 import { on } from 'node:events';
 import type { ViewMessage } from '@repo/contracts/plugins/wire';
-import type { ViewSnapshot } from './messages';
+import type { OpenView } from './open-view';
 
-const snapshotOf = (view: ViewSnapshot): ViewMessage[] =>
-  view.root
+type Watched = Pick<OpenView, 'drawn' | 'revision' | 'opening' | 'events'>;
+
+const snapshotOf = (view: Watched): ViewMessage[] =>
+  view.drawn
     ? [
         {
           type: 'snapshot',
           revision: view.revision,
-          root: view.root,
+          root: view.drawn,
           viewId: view.opening.viewId,
         },
       ]
@@ -28,7 +30,7 @@ async function* untilAborted<T>(
 
 // The stream starts listening before the snapshot is handed out, so no patch falls between the two.
 export async function* messages(
-  view: ViewSnapshot,
+  view: Watched,
   signal: AbortSignal,
 ): AsyncGenerator<ViewMessage> {
   const stream = on(view.events, 'message', { signal, close: ['close'] });

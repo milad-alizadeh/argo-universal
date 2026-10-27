@@ -10,10 +10,10 @@ import type {
   KitMappedProps,
 } from '@repo/contracts/kit-props';
 import type {
-  WirePart,
+  WireComponentName,
   WireProps,
-  wireParts,
-  listPartNames,
+  kitComponents,
+  listComponentNames,
 } from '@repo/contracts/plugins/kit';
 import type { ComponentType, ReactNode, ReactElement } from 'react';
 
@@ -31,7 +31,8 @@ export {
   Fragment,
 } from 'react';
 
-type Events<Name extends WirePart> = (typeof wireParts)[Name]['events'];
+type Events<Name extends WireComponentName> =
+  (typeof kitComponents)[Name]['events'];
 
 // Plugin JSX: declared events accept callbacks at their declared place; other nested handlers are built-in Actions.
 interface PluginDrawing<Item> extends KitDrawing {
@@ -43,70 +44,75 @@ interface PluginDrawing<Item> extends KitDrawing {
   plugin: true;
 }
 
-type MappedPluginProps<Props, Name extends WirePart, Item> = KitMappedProps<
+type MappedPluginProps<
   Props,
-  Events<Name>,
-  never,
-  PluginDrawing<Item>
->;
+  Name extends WireComponentName,
+  Item,
+> = KitMappedProps<Props, Events<Name>, never, PluginDrawing<Item>>;
 
-type EventProps<Name extends WirePart, Item = unknown> = MappedPluginProps<
-  DeclaredProps<WireProps[Name] & Expansion<(typeof wireParts)[Name]>>,
+type EventProps<
+  Name extends WireComponentName,
+  Item = unknown,
+> = MappedPluginProps<
+  DeclaredProps<WireProps[Name] & Expansion<(typeof kitComponents)[Name]>>,
   Name,
   Item
 >;
 
 type SlotChild = ReactElement | boolean | null | undefined;
 
-type SlotProps<Name extends WirePart> = {
-  [Slot in keyof (typeof wireParts)[Name]['slots']]?:
+type SlotProps<Name extends WireComponentName> = {
+  [Slot in keyof (typeof kitComponents)[Name]['slots']]?:
     | SlotChild
     | readonly SlotChild[];
 };
 
-type Children<Name extends WirePart> =
-  (typeof wireParts)[Name]['children'] extends false
+type Children<Name extends WireComponentName> =
+  (typeof kitComponents)[Name]['children'] extends false
     ? { children?: never }
     : { children?: ReactNode };
 
-type Content<Name extends WirePart> = Name extends 'Text'
+type Content<Name extends WireComponentName> = Name extends 'Text'
   ? EventProps<Name>
   : EventProps<Name> & SlotProps<Name> & Children<Name>;
 
-type ListPart = Extract<(typeof listPartNames)[number], WirePart>;
+type ListComponentName = Extract<
+  (typeof listComponentNames)[number],
+  WireComponentName
+>;
 
-type ListProps<Name extends ListPart, Item> = EventProps<Name, Item> &
+type ListProps<Name extends ListComponentName, Item> = EventProps<Name, Item> &
   SlotProps<Name> &
   Children<Name>;
 
-type ListComponent<Name extends ListPart> = <Item>(
+type ListComponent<Name extends ListComponentName> = <Item>(
   props: ListProps<Name, Item>,
 ) => ReactElement | null;
 
 // Inferred directly from Contracts; adding a schema prop updates Plugin JSX immediately.
 export type PluginProps = {
-  [Name in WirePart]: Name extends ListPart
+  [Name in WireComponentName]: Name extends ListComponentName
     ? ListProps<Name, unknown>
     : Content<Name>;
 };
 
 export type PluginComponents = {
-  [Name in WirePart]: Name extends ListPart
+  [Name in WireComponentName]: Name extends ListComponentName
     ? ListComponent<Name>
     : ComponentType<PluginProps[Name]>;
 };
 
-export * from './components';
+export * from './components.gen';
 
 export type PluginWireNode = {
-  [Name in WirePart]: {
+  [Name in WireComponentName]: {
     type: Name;
     key: string;
     props: MappedPluginProps<DeclaredProps<WireProps[Name]>, Name, unknown>;
     children: PluginWireNode[];
     slots: Record<string, PluginWireNode[]>;
   };
-}[WirePart];
+}[WireComponentName];
 
 // The timers a Plugin realm provides; Plugin code has no other host globals.
 declare global {
@@ -129,20 +135,11 @@ export type {
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
 
-import type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
-import type { QueryResult } from '@repo/contracts/plugins/query-results';
+import type { UseData } from '@repo/contracts/plugins/argo-api';
 
 export type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
 
 // One definition, shared with the Engine's readers: what a Query answers comes from its api.
 export type { QueryResult } from '@repo/contracts/plugins/query-results';
 
-export declare function useData<Query extends PluginQuery>(
-  query: Query | null,
-  options?: { every?: number },
-): {
-  data: QueryResult<Query> | undefined;
-  error: string | undefined;
-  stale: boolean;
-  refresh: () => Promise<void>;
-};
+export declare const useData: UseData;

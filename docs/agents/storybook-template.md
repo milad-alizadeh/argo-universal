@@ -32,15 +32,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // One story per branch in the variants map, named for the value.
-export const Default: Story = { args: { variant: 'default' } };
+export const Primary: Story = { args: { variant: 'primary' } };
 
-export const Outline: Story = { args: { variant: 'outline' } };
+export const Secondary: Story = { args: { variant: 'secondary' } };
+
+export const Text: Story = { args: { variant: 'text' } };
+
+export const Danger: Story = { args: { variant: 'danger' } };
+
+export const Small: Story = { args: { size: 'sm' } };
 
 export const Disabled: Story = { args: { disabled: true } };
 
-// A pair earns a story only because the component has a rule for it: destructive is transparent whatever its variant.
-export const DestructiveOutline: Story = {
-  args: { tone: 'danger', variant: 'outline' },
+// A pair earns a story only because the component has a rule for it: a disabled danger button reads as disabled, not as danger.
+export const DisabledDanger: Story = {
+  args: { variant: 'danger', disabled: true },
 };
 ```
 

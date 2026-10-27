@@ -1,9 +1,4 @@
-export {
-  Button,
-  type ButtonDataProps,
-  type ButtonProps,
-  type ButtonSize,
-} from './button';
+export { Button, type ButtonProps, type ButtonSize } from './button';
 
 export {
   disabledLooks as buttonDisabledLooks,

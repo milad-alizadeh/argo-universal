@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
 import { stockIcon } from '../kit-symbols/stock-icon-schema';
 import { fieldGroupRowProps } from './field-group-row-props';
-import { handler } from './plugin-part-props';
+import { handler } from './kit-component-props';
 import { datePickerProps } from './text-field-kit-props';
 
 // The rows that choose a value: a Picker from options, and a DatePicker from the calendar.

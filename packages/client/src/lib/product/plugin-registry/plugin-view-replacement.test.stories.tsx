@@ -1,7 +1,7 @@
 import {
   PluginViewId,
   WireNode,
-  type PartEvent,
+  type ComponentEvent,
 } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import fixture from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
@@ -37,7 +37,7 @@ function delivery(
   };
 }
 
-function isConfirmation(key: string, event: PartEvent): boolean {
+function isConfirmation(key: string, event: ComponentEvent): boolean {
   return key === 'overlays/sheet/body/apply' && event.event === 'onPress';
 }
 

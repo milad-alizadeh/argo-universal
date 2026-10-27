@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { wirePart } from './kit';
+import { kitComponent } from './kit';
 import {
   acceptsChildren,
   acceptsSlots,
   type ChildRule,
   type SlotRules,
 } from './prepare-slots';
-import { refusedBelowRoot, rootSlotParts } from './root-only';
+import { refusedBelowRoot, rootSlotComponents } from './root-only';
 import { WireJson, type WireNode } from './wire';
 
 const jsonProps = z.record(z.string(), WireJson);
@@ -17,10 +17,10 @@ const hasSlots = (node: WireNode): boolean =>
 const hasContent = (node: WireNode): boolean =>
   node.children.length > 0 || hasSlots(node);
 
-export { isRootOnly, refusedBelowRoot, rootSlotParts } from './root-only';
+export { isRootOnly, refusedBelowRoot, rootSlotComponents } from './root-only';
 
 export const isWireContainer = (node: WireNode): boolean =>
-  Boolean(wirePart(node.type)?.container) || hasContent(node);
+  Boolean(kitComponent(node.type)?.container) || hasContent(node);
 
 // Shown for a container no App can draw, and for a whole Plugin tree when the App is older than the wire minimum.
 export function updateArgoNode(key: string): WireNode {
@@ -65,13 +65,13 @@ const allowedStructure = (node: WireNode, rules: ContentRules): boolean =>
   !styled(node) && validContent(node, rules);
 
 function currentNode(node: WireNode): WireNode | null {
-  const part = wirePart(node.type);
+  const component = kitComponent(node.type);
 
-  if (!part) return null;
+  if (!component) return null;
 
-  if (!allowedStructure(node, part)) return null;
+  if (!allowedStructure(node, component)) return null;
 
-  return parsedNode(node, part.props);
+  return parsedNode(node, component.props);
 }
 
 function prepareNodes(
@@ -90,7 +90,7 @@ function prepareNodes(
 function slotsOf(node: WireNode): WireNode['slots'] {
   return Object.fromEntries(
     Object.entries(node.slots).flatMap(([name, children]) => {
-      const prepared = prepareNodes(children, rootSlotParts(node, name));
+      const prepared = prepareNodes(children, rootSlotComponents(node, name));
 
       return prepared.length ? [[name, prepared]] : [];
     }),

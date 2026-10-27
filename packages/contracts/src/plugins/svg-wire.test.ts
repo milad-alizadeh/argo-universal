@@ -17,7 +17,7 @@ const svg: WireNode = {
   slots: {},
 };
 
-describe('Svg wire part', () => {
+describe('Svg kit component', () => {
   it('preserves valid Svg props', () => {
     expect(prepareWireTree(svg)).toEqual(svg);
   });

@@ -1,45 +1,30 @@
-import { z } from 'zod';
-import type { WithPropHints } from '../kit-prop-hints';
-import { pluginPartSchemas } from './plugin-part-schemas';
-import type { WireSchemaHints } from './plugin-prop-descriptions.gen';
-import { wireParts, type WirePartDefinition } from './wire-parts';
+import type { z } from 'zod';
+import { kitComponents, type KitComponentDefinition } from './kit-components';
 
-export type { WirePartDefinition } from './wire-parts';
+export type { KitComponentDefinition } from './kit-components';
 
-export { wireParts, listPartNames } from './wire-parts';
+export { kitComponents, listComponentNames } from './kit-components';
 
-export {
-  contentListProps,
-  listSectionProps,
-  listItemProps,
-  labelProps,
-  progressBarProps,
-  pillProps,
-  textProps,
-  buttonProps,
-  stackProps,
-  svgProps,
-  emptyStateProps,
-} from './kit-props';
+export type WireComponentName = keyof typeof kitComponents;
 
-export type WirePart = keyof typeof wireParts;
-
+// Hover hints come from the generated `@argo/plugin-kit` declarations, not from here.
 export type WireProps = {
-  [Name in WirePart]: WithPropHints<
-    z.output<(typeof wireParts)[Name]['props']>,
-    Name extends keyof WireSchemaHints
-      ? WireSchemaHints[Name]
-      : Record<never, never>
-  >;
+  [Name in WireComponentName]: z.output<(typeof kitComponents)[Name]['props']>;
 };
 
-const partsByType = new Map(
-  Object.entries({ ...pluginPartSchemas, ...wireParts }),
+// Only kit components resolve, so the Server refuses an App-only kit component such as Menu.
+const componentsByType = new Map<string, KitComponentDefinition>(
+  Object.entries(kitComponents),
 );
 
-export function wirePart(type: string): WirePartDefinition | undefined {
-  return partsByType.get(type);
+export function kitComponent(type: string): KitComponentDefinition | undefined {
+  return componentsByType.get(type);
 }
+
+// A type that is no kit component has no events.
+export const kitComponentEvents = (
+  type: string,
+): KitComponentDefinition['events'] => kitComponent(type)?.events ?? {};
 
 export {
   PluginSurface,
@@ -50,4 +35,4 @@ export {
   type PluginRenderContext,
 } from './surface';
 
-export { pluginKitExports, type PluginKitExport } from './plugin-part-names';
+export { pluginKitExports, type PluginKitExport } from './plugin-kit-exports';

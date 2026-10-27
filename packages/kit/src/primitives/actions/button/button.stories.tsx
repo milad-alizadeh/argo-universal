@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
+import { kitArgTypes } from '#kit/kit-arg-types';
 import { Button, type ButtonProps } from './button';
 
 const label = 'Save changes';
@@ -33,17 +34,7 @@ const smallLeadingIconButton = {
 const meta = {
   title: 'Design System/Primitives/Actions/Button',
   component: Button,
-  // The kit Button's props are its own, not the Plugin wire's, so the table is declared here.
-  argTypes: {
-    label: { control: 'text' },
-    variant: {
-      control: 'select',
-      options: ['primary', 'secondary', 'text', 'danger'],
-    },
-    size: { control: 'select', options: ['sm', 'md'] },
-    fullWidth: { control: 'boolean' },
-    disabled: { control: 'boolean' },
-  },
+  argTypes: kitArgTypes('Button'),
   // The button keeps its own width, as it sits in a product layout; a full-width one fills the row.
   decorators: [
     (Story): React.JSX.Element => (

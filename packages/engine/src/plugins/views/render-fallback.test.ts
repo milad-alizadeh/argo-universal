@@ -4,22 +4,49 @@ import {
   forgetOnce,
   logFallback,
   logOnce,
-  updateArgoKey,
+  type OnceKey,
 } from './render-fallback';
 
-it('writes a line once per key and again after its Plugin is forgotten', () => {
-  const log = vi.fn<(line: string) => void>();
-  const key = fallbackKey('hook', 'counter', 'argo/composer/above/v1');
+const hookKey = fallbackKey('hook', 'counter', 'argo/composer/above/v1');
 
-  logOnce(log, key, 'first');
-  logOnce(log, key, 'second, same Slot');
+const updateArgoKey = (pluginId: string, path: string): OnceKey => [
+  pluginId,
+  'update-argo',
+  path,
+];
+
+it('writes a line once per key', () => {
+  const log = vi.fn<(line: string) => void>();
+
+  logOnce(log, hookKey, 'first');
+  logOnce(log, hookKey, 'second, same Slot');
+
+  expect(log.mock.calls.flat()).toEqual(['first']);
+});
+
+it('writes a line again after its Plugin is forgotten', () => {
+  const log = vi.fn<(line: string) => void>();
+
+  logOnce(log, hookKey, 'first');
   forgetOnce(log, 'counter');
-  logOnce(log, key, 'third, after the Plugin was forgotten');
+  logOnce(log, hookKey, 'third, after the Plugin was forgotten');
+
+  expect(log.mock.calls.flat()).toEqual([
+    'first',
+    'third, after the Plugin was forgotten',
+  ]);
+});
+
+it('writes the repeats held back as one line when its Plugin is forgotten', () => {
+  const log = vi.fn<(line: string) => void>();
+
+  logOnce(log, hookKey, 'first');
+  logOnce(log, hookKey, 'second, same Slot');
+  forgetOnce(log, 'counter');
 
   expect(log.mock.calls.flat()).toEqual([
     'first',
     'Plugin counter: 1 more repeats of core-fallback hook argo/composer/above/v1',
-    'third, after the Plugin was forgotten',
   ]);
 });
 
@@ -36,9 +63,21 @@ it('logs a failing contribution once per Plugin, Slot id and reason', () => {
   const log = vi.fn<(line: string) => void>();
   const slot = 'argo/session/row/v1';
 
-  logFallback(log, 'contribution', ['a', slot, 'boom']);
-  logFallback(log, 'contribution', ['a', slot, 'boom']);
-  logFallback(log, 'contribution', ['a', slot, 'bang']);
+  logFallback(log, 'contribution', {
+    pluginId: 'a',
+    slotId: slot,
+    reason: 'boom',
+  });
+  logFallback(log, 'contribution', {
+    pluginId: 'a',
+    slotId: slot,
+    reason: 'boom',
+  });
+  logFallback(log, 'contribution', {
+    pluginId: 'a',
+    slotId: slot,
+    reason: 'bang',
+  });
 
   expect(log.mock.calls.flat()).toEqual([
     `Plugin a: core fallback ${slot}: boom`,

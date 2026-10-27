@@ -98,7 +98,7 @@ describe('Plugin wire preparation', () => {
     expect(prepareWireTree(root).slots).toEqual({ empty: [stack, label] });
   });
 
-  it('refuses undeclared slots and parts outside their closed accepted set', () => {
+  it('refuses undeclared slots and kit components outside their closed accepted set', () => {
     const root: WireNode = {
       type: 'List',
       key: 'list',
@@ -114,5 +114,35 @@ describe('Plugin wire preparation', () => {
         slots: { empty: [{ ...stack, type: 'Svg' }] },
       }).props['children'],
     ).toBe(updateMessage);
+  });
+
+  it.each([
+    {
+      type: 'Menu',
+      props: {
+        accessibilityLabel: 'Sort',
+        actions: [{ label: 'Name', onPress: { $event: 'onPress' } }],
+      },
+    },
+    {
+      type: 'SearchField',
+      props: {
+        label: 'Search',
+        value: '',
+        onChangeText: { $event: 'onChangeText' },
+      },
+    },
+    {
+      type: 'FilterPill',
+      props: {
+        label: 'Open',
+        selected: false,
+        onPress: { $event: 'onPress' },
+      },
+    },
+  ])('refuses $type, a kit component only the App draws', (refused) => {
+    const root = { ...stack, children: [label, { ...label, ...refused }] };
+
+    expect(prepareWireTree(root)).toEqual({ ...stack, children: [label] });
   });
 });

@@ -20,7 +20,7 @@ export function WebButton(props: ButtonProps): ReactElement {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={props.label}
+      accessibilityLabel={props.accessibilityLabel ?? props.label}
       disabled={props.disabled ?? false}
       onPress={props.onPress}
       testID={props.testID}

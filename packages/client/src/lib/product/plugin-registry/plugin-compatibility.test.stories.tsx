@@ -1,3 +1,4 @@
+import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
@@ -6,6 +7,7 @@ const onEvent = fn();
 
 const updateMessage = /Update Argo/;
 
+// Each story draws what the Server prepared from a Plugin's tree.
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Compatibility',
 } satisfies Meta;
@@ -17,13 +19,13 @@ type Story = StoryObj<typeof meta>;
 export const NewerOptionalProp: Story = {
   render: () => (
     <PluginTree
-      root={{
+      root={prepareWireTree({
         type: 'Text',
         key: 'text',
         props: { children: 'Still readable', futureOptionalProp: true },
         children: [],
         slots: {},
-      }}
+      })}
       onEvent={onEvent}
     />
   ),
@@ -36,7 +38,7 @@ export const NewerOptionalProp: Story = {
 export const InvalidContainer: Story = {
   render: () => (
     <PluginTree
-      root={{
+      root={prepareWireTree({
         type: 'Stack',
         key: 'stack',
         props: { direction: 'diagonal' },
@@ -50,7 +52,7 @@ export const InvalidContainer: Story = {
           },
         ],
         slots: {},
-      }}
+      })}
       onEvent={onEvent}
     />
   ),
@@ -63,13 +65,13 @@ export const InvalidContainer: Story = {
 export const InvalidEmptyContainer: Story = {
   render: () => (
     <PluginTree
-      root={{
+      root={prepareWireTree({
         type: 'Stack',
         key: 'empty',
         props: { direction: 'row', gap: 'invalid' },
         children: [],
         slots: {},
-      }}
+      })}
       onEvent={onEvent}
     />
   ),

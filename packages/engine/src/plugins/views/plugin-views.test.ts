@@ -1,8 +1,10 @@
 import { toolCallSlotId } from '@repo/contracts/plugins/replaceable';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import { pluginPageBytes } from '@repo/contracts/plugins/wire-limits';
 import { expect, it } from 'vitest';
 import type { Opening } from './open-view';
 import { PluginViews } from './plugin-views';
+import { noViewLifecycle } from './view-registry';
 
 const atlas = 'atlas';
 
@@ -28,35 +30,55 @@ const redrawn = (root: WireNode): ViewMessage => ({
   ops: [{ op: 'replace', key: [], node: root }],
 });
 
-type Drawing = { logs: string[]; views: PluginViews; viewId: string };
+type Drawing = { logs: string[]; failed: string[] };
 
 function drawing(opening: Opening, messages: ViewMessage[]): Drawing {
   const logs: string[] = [];
+  const failed: string[] = [];
 
   const views = new PluginViews(
     () => {},
     (line) => logs.push(line),
+    {
+      ...noViewLifecycle,
+      failed: (_view, reason): void => {
+        failed.push(reason);
+      },
+    },
   );
 
   const { viewId } = views.headless(atlas, opening, 60_000);
 
   for (const message of messages) views.receive(atlas, viewId, message);
 
-  return { logs, views, viewId };
+  return { logs, failed };
 }
 
 it('writes a reason a Plugin spread over lines as one log line', () => {
-  const { logs } = drawing({ path: '/sync' }, [
+  const { logs, failed } = drawing({ path: '/sync' }, [
     drawn(node(renderError, { reason: 'Atlas threw\nPlugin argo: all well' })),
   ]);
 
   expect(logs).toEqual([
     'Plugin atlas: could not draw /sync: Atlas threw Plugin argo: all well',
   ]);
+  expect(failed).toEqual(['Atlas threw\nPlugin argo: all well']);
 });
 
-it('keeps a replaceable Slot that asks core to draw after it has drawn once', () => {
-  const { logs, views, viewId } = drawing(
+it('fails a page that throws after its snapshot was refused for size', () => {
+  const oversized = node('Text', { children: 'x'.repeat(pluginPageBytes) });
+
+  const { logs, failed } = drawing({ path: '/sync' }, [
+    drawn(oversized),
+    redrawn(node(renderError, { reason: 'Atlas threw' })),
+  ]);
+
+  expect(failed).toEqual(['Atlas threw']);
+  expect(logs).toContain('Plugin atlas: could not draw /sync: Atlas threw');
+});
+
+it('falls a replaceable Slot back to core, failing nothing, when it asks core to draw after it has drawn once', () => {
+  const { logs, failed } = drawing(
     { path: 'render:tool-call', renderSlot: toolCallSlotId },
     [
       drawn(node('Stack', { direction: 'column' })),
@@ -64,8 +86,25 @@ it('keeps a replaceable Slot that asks core to draw after it has drawn once', ()
     ],
   );
 
-  expect(logs).toEqual([]);
-  expect(views.dataView(atlas, viewId).root).toMatchObject({
-    type: renderError,
-  });
+  expect(logs).toEqual([
+    `Plugin atlas: core fallback ${toolCallSlotId}: Atlas declines this call`,
+  ]);
+  expect(failed).toEqual([]);
+});
+
+it('falls a replaceable Slot back to core when its tree holds SVG the sanitiser refuses', () => {
+  const unsafe = {
+    ...node('Svg', { xml: '<svg><script/></svg>', label: 'x' }),
+    key: 'x',
+  };
+
+  const { logs, failed } = drawing(
+    { path: 'render:tool-call', renderSlot: toolCallSlotId },
+    [drawn({ ...node('Stack', { direction: 'column' }), children: [unsafe] })],
+  );
+
+  expect(logs).toEqual([
+    `Plugin atlas: core fallback ${toolCallSlotId}: Stack#root/Svg#x: element <script> refused`,
+  ]);
+  expect(failed).toEqual([]);
 });

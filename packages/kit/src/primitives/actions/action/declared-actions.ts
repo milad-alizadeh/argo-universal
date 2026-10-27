@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
+import { usePluginTree } from '#kit/plugin-tree-context';
 import {
   actionGroups,
   isPress,
@@ -8,7 +9,10 @@ import {
   type DeclaredAction,
   type DeclaredEntry,
 } from './action-declarations';
-import { useActionShortcuts } from './action-shortcut-scope';
+import {
+  useActionShortcuts,
+  type ShortcutOptions,
+} from './action-shortcut-scope';
 
 export interface DeclaredActions {
   // Ordered by `orderedGroups`, each Action showing its shortcut only while this declaration owns it.
@@ -20,14 +24,17 @@ export interface DeclaredActions {
 
 /*
  * Reads an `actions` Slot's Actions and Sections, and claims their shortcuts in the enclosing scope. A `context`
- * declaration's shortcuts run only while focus is inside the node carrying its `id`.
+ * declaration's shortcuts run only while focus is inside the node carrying its `id`. Inside a Plugin's tree they
+ * cannot claim Argo's reserved keys, unless `builtIn` says Argo itself declared them, as a List's refresh does.
  */
 export function useDeclaredActions(
   declared: ReactNode,
   context = false,
+  builtIn = false,
 ): DeclaredActions {
   const groups = useMemo(() => actionGroups(declared), [declared]);
-  const { id, actions } = useGroupShortcuts(groups, context);
+  const plugin = useIsPlugin(builtIn);
+  const { id, actions } = useGroupShortcuts(groups, { context, plugin });
 
   const owned = ownedShortcuts(actions);
   const hinted = useMemo(() => hintedGroups(groups, owned), [groups, owned]);
@@ -35,20 +42,23 @@ export function useDeclaredActions(
   return { groups: hinted, id, actions };
 }
 
+// Whether these Actions are a Plugin's, so they cannot claim Argo's reserved keys.
+function useIsPlugin(builtIn: boolean): boolean {
+  const inPluginTree = usePluginTree();
+
+  return inPluginTree && !builtIn;
+}
+
 function useGroupShortcuts(
   groups: ActionGroup[],
-  context: boolean,
+  options: Pick<ShortcutOptions, 'context' | 'plugin'>,
 ): ReturnType<typeof useActionShortcuts> {
   const declarations = useMemo(
     () => pressActions(groups.flatMap((group) => group.actions)),
     [groups],
   );
 
-  return useActionShortcuts({
-    actions: declarations,
-    plugin: declarations.some((action) => action.plugin),
-    context,
-  });
+  return useActionShortcuts({ actions: declarations, ...options });
 }
 
 // A string, so the groups only change when the shortcuts this declaration owns do.

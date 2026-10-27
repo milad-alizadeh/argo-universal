@@ -1,20 +1,31 @@
-import type { WirePartDefinition } from '@repo/contracts/plugins/kit';
+import type { KitComponentDefinition } from '@repo/contracts/plugins/kit';
 import {
-  partEventRules,
-  type PartEventRules,
+  componentEventRules,
+  type ComponentEventRules,
   type WireJson,
 } from '@repo/contracts/plugins/wire';
-import type { Change, Edit } from './plugin-events';
 import type { ControlInput, PluginProps } from './plugin-rendering';
 
+// One user edit of a field, and how it reaches the Plugin.
+export type Edit = {
+  rules: ComponentEventRules;
+  value?: WireJson;
+  deliver: () => Promise<void>;
+};
+
+export type Change = (edit: Edit) => void;
+
+// What the field shows: the accepted value, ordered by when each edit was made, so an answer arriving late never wins.
 type Value = { sequence: number; value: WireJson | undefined };
 
 type PendingEdit = { value: WireJson | undefined; blocks: boolean };
 
-// The Part event whose metadata names a prop the App echoes at once.
-const echoRules = (part: WirePartDefinition): Partial<PartEventRules> =>
-  Object.values(part.events)
-    .map(partEventRules)
+// The Component event whose metadata names a prop the App echoes at once.
+const echoRules = (
+  definition: KitComponentDefinition,
+): Partial<ComponentEventRules> =>
+  Object.values(definition.events)
+    .map(componentEventRules)
     .find((rules) => rules.value !== undefined) ?? {};
 
 const isDescendant = (child: string, key: string): boolean =>
@@ -30,7 +41,7 @@ export class ControlField {
 
   private constructor(
     public readonly type: string,
-    public readonly rules: Partial<PartEventRules>,
+    public readonly rules: Partial<ComponentEventRules>,
   ) {}
 
   public static matching(
@@ -39,7 +50,7 @@ export class ControlField {
   ): ControlField {
     return field?.type === input.node.type
       ? field
-      : new ControlField(input.node.type, echoRules(input.part));
+      : new ControlField(input.node.type, echoRules(input.definition));
   }
 
   // A pending blocking edit waits for its Server answer.

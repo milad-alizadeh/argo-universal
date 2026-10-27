@@ -3,10 +3,10 @@ import { updateArgoNode } from '@repo/contracts/plugins/prepare-tree';
 import type { ViewMessage } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import type { OpenView } from './open-view';
-import { preparedView } from './prepared-view';
-import { logOnce, updateArgoKey, updateArgoLine } from './render-fallback';
+import { belowWireMinimum, logOnce } from './render-fallback';
 import { messages } from './stream';
 
+// What one App reads of a view: the drawn tree, or "Update Argo" when the App is below the wire minimum.
 export function appView(
   view: OpenView,
   connection: RpcConnection,
@@ -14,34 +14,21 @@ export function appView(
 ): AsyncGenerator<ViewMessage> {
   const source = messages(view, connection.signal);
 
-  if (view.draws.kind === 'replaceable') return source;
+  if (drawsPluginWire(connection.surface)) return source;
+  logUpdateArgo(view, log);
 
-  if (!drawsPluginWire(connection.surface)) {
-    logUpdateArgo(view, log);
-
-    return replaceWithUpdateArgo(source);
-  }
-
-  return preparedSlot(view, source, log);
+  return replaceWithUpdateArgo(source);
 }
 
-function logUpdateArgo(view: OpenView, log: (line: string) => void): void {
-  const { pluginId, opening } = view;
-
+// Logged once when an App older than the wire minimum opens a page or ordinary Slot (ADR-0034).
+function logUpdateArgo(
+  { pluginId, opening }: OpenView,
+  log: (line: string) => void,
+): void {
   logOnce(
     log,
-    updateArgoKey(pluginId, opening.path),
-    updateArgoLine(pluginId, opening.path),
-  );
-}
-
-function preparedSlot(
-  view: OpenView,
-  source: AsyncIterable<ViewMessage>,
-  log: (line: string) => void,
-): AsyncGenerator<ViewMessage> {
-  return preparedView(source, (reason) =>
-    log(`Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`),
+    [pluginId, 'update-argo', opening.path],
+    `Plugin ${pluginId}: Update Argo ${opening.path}: ${belowWireMinimum}`,
   );
 }
 

@@ -1,4 +1,4 @@
-import { WireNode, type PartEvent } from '@repo/contracts/plugins/wire';
+import { WireNode, type ComponentEvent } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import overlays from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -36,7 +36,7 @@ type Row = {
   running: boolean;
   // The named button confirms; without one, Return submits the field.
   confirm?: string;
-  sent: [string, PartEvent];
+  sent: [string, ComponentEvent];
 };
 
 // A Submit or confirming press reaches the Plugin only after the edit before it settles.

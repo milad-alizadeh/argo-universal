@@ -6,9 +6,10 @@ import type { OAuthOptions } from './accounts/plugin-oauth';
 import type { PluginClock } from './clock';
 import { discoverPlugins } from './discovery/loader';
 import { HookPort } from './hooks/hook-port';
-import { pluginManifest } from './located-plugins';
+import { pluginLocation, pluginManifest } from './located-plugins';
 import { projectPorts } from './project-ports';
 import { createPluginRuntime } from './runtime/create-runtime';
+import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
 import { macKeychain, type Keychain } from './services/keychain';
@@ -46,17 +47,6 @@ export type Assembled = {
   hookPort: HookPort;
 };
 
-// The runtime wakes an account provider through the service that wraps it, so it reaches the service late.
-class LateService {
-  service?: PluginService;
-
-  activate(pluginId: string): ReturnType<PluginService['activate']> {
-    if (!this.service) throw new Error('Plugins are not assembled yet');
-
-    return this.service.activate(pluginId);
-  }
-}
-
 type Foundations = {
   keychain: Keychain;
   discovery: Discovery;
@@ -64,13 +54,6 @@ type Foundations = {
   settings: PluginSettings;
   accounts: PluginAccounts;
 };
-
-async function wake(late: LateService, pluginId: string): Promise<void> {
-  const status = await late.activate(pluginId);
-
-  if (status.state !== 'running')
-    throw new Error('Account provider is unavailable');
-}
 
 function accountsFor(
   options: PluginsOptions,
@@ -121,9 +104,9 @@ function runtimePorts(
 
 function runtimeFor(
   options: PluginsOptions,
-  parts: Foundations & { late: LateService },
+  parts: Foundations,
 ): PluginRuntime {
-  const { accounts, keychain, settings, late } = parts;
+  const { accounts, keychain, settings } = parts;
 
   return createPluginRuntime(options.home, {
     accounts,
@@ -132,8 +115,17 @@ function runtimeFor(
     ...projectPorts(options),
     hooks: parts.hookPort.hooks,
     settings: async (pluginId, key) => settings.read(pluginId, key),
-    wakePlugin: (pluginId) => wake(late, pluginId),
+    locate: locator(parts),
   });
+}
+
+// A sign-in wakes its account provider the way the service activates any Plugin.
+function locator({
+  discovery,
+  settings,
+}: Foundations): (pluginId: string) => Promise<PluginLocation> {
+  return (pluginId) =>
+    pluginLocation({ ...discovery, pluginSettings: settings }, pluginId);
 }
 
 function serviceFor(parts: Foundations, runtime: PluginRuntime): PluginService {
@@ -148,10 +140,8 @@ function serviceFor(parts: Foundations, runtime: PluginRuntime): PluginService {
 // The one place PluginService is built, with every dependency in hand.
 export function assemble(options: PluginsOptions): Assembled {
   const parts = foundations(options);
-  const late = new LateService();
-  const runtime = runtimeFor(options, { ...parts, late });
+  const runtime = runtimeFor(options, parts);
   const service = serviceFor(parts, runtime);
-  late.service = service;
 
   return {
     service,

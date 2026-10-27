@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
 import { buttonDefaults } from '../kit-tokens';
-import { handler } from './plugin-part-props';
+import { echoes, handler } from './kit-component-props';
 import { selectionValue } from './selection-value';
 
 const disabledDescription = 'Disable activation.';
@@ -85,10 +85,12 @@ const splitBase = z.object({
     .describe('Fill the row always, or only when narrow.'),
 });
 
+// A draft SplitButton may leave `onValueChange` off: the App holds the draft.
 const splitChoices = menuChoice.omit({ groups: true }).extend({
   options: z
     .array(selectionOption.pick({ value: true, label: true }))
     .readonly(),
+  onValueChange: menuChoice.shape.onValueChange.optional(),
 });
 
 // Without choices, the secondary menu lists the SplitButton's keyed Action children.
@@ -102,3 +104,9 @@ export const splitButtonSchema = z.union([
   splitBase.extend(splitChoices.shape),
   splitBase.extend(splitActionChildren.shape),
 ]);
+
+// A Menu and a SplitButton echo the chosen value and run a pressed action.
+export const menuEvents = {
+  onValueChange: echoes(menuChoice, 'value'),
+  onPress: z.undefined(),
+};
