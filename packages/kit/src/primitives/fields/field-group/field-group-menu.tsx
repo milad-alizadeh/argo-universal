@@ -5,14 +5,22 @@ import { cn } from '#kit/utils';
 import { NativeText } from '#primitives/content/native-text';
 import { expandInlinePickers } from '#primitives/fields/field-picker';
 import { RowFrame } from '#primitives/fields/field-row';
+import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupSectionProps } from './field-group-section';
 
 /*
  * A FieldGroup inside a desktop or web popover draws its rows flat on the popover: Expo's card, its border and the
  * lines between rows are left out, and each row keeps the tint and radius of a menu row. Pages and sheets keep the card.
+ * The rows still sit in a Host: Expo's Switch and Slider colour themselves from the variables it sets.
  */
 export function MenuFieldGroup(props: { children?: ReactNode }): ReactElement {
-  return <View className="gap-2">{props.children}</View>;
+  return (
+    <Host>
+      <InsideHostContext.Provider value>
+        <View className="gap-2">{props.children}</View>
+      </InsideHostContext.Provider>
+    </Host>
+  );
 }
 
 export function MenuSection(props: FieldGroupSectionProps): ReactElement {
