@@ -5,12 +5,12 @@ import type {
   Turn,
 } from '@repo/contracts';
 import type { FeedDeps } from '../../feed';
+import { storedShells } from '../../shells/reader';
+import { createSubagentsReader } from '../../subagents';
 import { createLiveHeaderReader } from '../live-header';
 import type { SessionActorRef } from '../session-machine';
 import { createQueuedSessionReader } from '../session-record';
 import { readLatestTurn } from '../session-storage';
-import { storedShells } from '../shells/reader';
-import { createSubagentsReader } from '../subagents';
 import {
   toSessionSnapshot,
   type FeedSnapshot,

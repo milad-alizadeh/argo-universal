@@ -28,7 +28,14 @@ import {
 } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
+import { readShellRecords } from '../shells/reader';
+import { createShellRuntime, withShell } from '../shells/shells';
 import type { WriterActorRef, WriterEvent } from '../storage';
+import { flushSubagentFeeds } from '../subagents/subagent-feeds';
+import {
+  isSubagentUpdate,
+  routeSubagentNotification,
+} from '../subagents/subagents';
 import {
   cancelAcp,
   closeAcp,
@@ -47,7 +54,6 @@ import type {
   AcpPromptResponse as PromptResponse,
 } from './acp/prompts/prompt-types';
 import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
-import { flushSubagentFeeds } from './acp/subagents/subagent-feeds';
 import {
   admitsPermissionAnswer,
   answeredRequest,
@@ -107,13 +113,7 @@ import {
   type SessionInput,
   toSessionInsert,
 } from './session-data';
-import { createShellRuntime, withShell } from './session-shells';
 import { SessionRowUpdateJob, SessionTitleJob } from './session-storage';
-import { readShellRecords } from './shells/reader';
-import {
-  isSubagentUpdate,
-  routeSubagentNotification,
-} from './subagent-routing';
 import {
   connectionLostDuringTurn,
   endTurn,

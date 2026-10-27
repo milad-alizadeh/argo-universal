@@ -6,9 +6,9 @@ import { openTestDatabase } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { unstartedWriter } from '#mocks/unstarted-writer';
 import { createAcpResources } from '../agents';
+import { routeSubagentNotification } from '../subagents/subagents';
 import type { SessionData, SessionInput } from './session-data';
 import { sessionMachine, type SessionMachineInput } from './session-machine';
-import { routeSubagentNotification } from './subagent-routing';
 
 const { database, directory, remove } = openTestDatabase();
 

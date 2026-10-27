@@ -6,6 +6,8 @@ import type {
 } from '../../agents';
 import type { DeferredAgentLaunch, InstalledAgents } from '../../agents';
 import { requireInstalledAgent } from '../../agents';
+import { withShellDestination } from '../../shells/shell-destination';
+import type { ShellRuntime } from '../../shells/shell-runtime';
 import type { SessionData } from '../session-data';
 import {
   createLifetimeDestination,
@@ -13,8 +15,6 @@ import {
 } from './acp-session-destination';
 import { selectSessionOpening } from './acp-session-opening';
 import { AcpSessionRequests } from './requests/acp-session-requests';
-import { withShellDestination } from './shells/shell-destination';
-import type { ShellRuntime } from './shells/shell-runtime';
 
 export type { AcpLifetimeEvent } from './acp-session-destination';
 

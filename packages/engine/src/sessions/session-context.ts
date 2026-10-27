@@ -10,7 +10,9 @@ import type { CoreHooks } from '@repo/contracts/plugins';
 import type { createRejectionCounter } from '@repo/machine-log';
 import type { AcpSessionLease, createAcpResponseReaders } from '../agents';
 import type { FeedTurnEnding } from '../feed';
+import type { ShellRuntime } from '../shells/shell-runtime';
 import type { WriterActorRef, WriterEvent } from '../storage';
+import type { SubagentFeeds } from '../subagents/subagent-feeds';
 import type {
   AcpLifetimeEvent,
   AcpSessionDependencies,
@@ -20,8 +22,6 @@ import type { AcpTurnOutcome } from './acp/prompts/prompt-outcome';
 import type { AcpPromptRequest as PromptRequest } from './acp/prompts/prompt-types';
 import type { LocalSubmission } from './acp/prompts/submission';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
-import type { ShellRuntime } from './acp/shells/shell-runtime';
-import type { SubagentFeeds } from './acp/subagents/subagent-feeds';
 import type { PermissionHooked } from './permission-hooks';
 import type { SessionData, SessionInput } from './session-data';
 

@@ -35,5 +35,3 @@ export {
   type InstalledAgent,
   type InstalledAgents,
 } from './servers/installed-agents';
-
-export { ShellProcessRecord } from './acp/shell-commands/shell-process-record';

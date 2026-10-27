@@ -37,6 +37,8 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../rpc';
+import { createShellSessionRouter } from '../shells/router';
+import { createSubagentsReader } from '../subagents';
 import { agentOptionsUpdates } from './agent-options';
 import { createArchiveRouter } from './archive/archive-router';
 import { createChangesRouter } from './changes-router';
@@ -54,8 +56,6 @@ import { promptSession } from './session-prompt';
 import { renameSession } from './session-rename';
 import { saveSessionPlan } from './session-save-plan';
 import { markSessionSeen } from './session-seen';
-import { createShellSessionRouter } from './shells/router';
-import { createSubagentsReader } from './subagents';
 
 type SessionList = ReturnType<typeof createSessionList>;
 

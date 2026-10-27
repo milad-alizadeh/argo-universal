@@ -10,6 +10,8 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '../..';
+import { routeTerminalRequests } from '../../../shells/terminal-requests';
+import { SubagentRoutes } from '../../../subagents/routes';
 import type { AuthChanges } from '../../auth/auth-changes';
 import { ConnectionAuthentication } from '../../auth/authenticate';
 import { authenticationMethods } from '../auth-methods';
@@ -25,14 +27,12 @@ import type {
   AcpSessionDestination,
   AcpSessionLease,
 } from '../resources/resource-types';
-import { routeTerminalRequests } from '../shell-commands/terminal-requests';
 import { createAgentClient, awaitAcpOpening } from './client';
 import { createDraftSubagentTranslator } from './draft-subagent-updates';
 import { negotiateAcpInitialize } from './initialize';
 import { sessionCapabilities, openProtocolSession } from './open-session';
 import { cancelledElicitation, cancelledPermission } from './refusals';
 import { createAcpResponseReaders } from './response-readers';
-import { SubagentRoutes } from './subagent-routing';
 import { vendorInitialization } from './vendor-initialization';
 
 type AgentSession = {
