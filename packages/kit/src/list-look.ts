@@ -49,7 +49,7 @@ export function resolveListLook(input: ListLookInput): ListLook {
   const phone = form.phone !== undefined;
 
   return {
-    ...placeLook(input.place, place),
+    ...placeLook(input, place),
     ...form,
     ...rows,
     ...insetLook(drawing, input, { ...form, menu: place.menu }),

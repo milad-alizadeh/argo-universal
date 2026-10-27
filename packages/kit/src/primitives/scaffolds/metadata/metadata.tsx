@@ -1,12 +1,13 @@
-import { use, useMemo, type ReactNode } from 'react';
+import { use, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { List, ListSection } from '#primitives/lists/list';
 import { flattenedChildren } from '../../../flattened-children';
-import { metadataDrawing, type MetadataDrawing } from './metadata-drawing';
+import type { MetadataDrawing } from './metadata-drawing';
 import {
-  MetadataSceneContext,
-  useMetadataFacts,
+  MetadataDrawingContext,
+  MetadataWidthContext,
+  useResolvedMetadataDrawing,
 } from './metadata-drawing-context';
 import {
   MetadataLabel,
@@ -34,26 +35,15 @@ const roots = {
  * such as a Settings page, it is one more section of it.
  */
 function MetadataRoot(props: MetadataProps): ReactNode {
-  const drawing = useRootDrawing();
-  const { width } = use(MetadataSceneContext);
-  const scene = useMemo(() => ({ width, drawing }), [width, drawing]);
+  const drawing = useResolvedMetadataDrawing(use(MetadataWidthContext));
   const Root = roots[drawing.root];
 
   if (flattenedChildren(props.children).length === 0) return null;
 
   return (
-    <MetadataSceneContext value={scene}>
+    <MetadataDrawingContext value={drawing}>
       <Root {...props} />
-    </MetadataSceneContext>
-  );
-}
-
-function useRootDrawing(): MetadataDrawing {
-  const { platform, inList, width } = useMetadataFacts();
-
-  return useMemo(
-    () => metadataDrawing({ platform, inList, width }),
-    [platform, inList, width],
+    </MetadataDrawingContext>
   );
 }
 

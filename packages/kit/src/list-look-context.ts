@@ -18,8 +18,8 @@ type Declared = Pick<
 
 type Where = Pick<ListLookInput, 'place' | 'wide'>;
 
-const lookOf = (declared: Declared, where: Where): ListLook =>
-  resolveListLook({ ...declared, ...where, platform: Platform.OS });
+const lookOf = (declared: Declared, where: Where, inList: boolean): ListLook =>
+  resolveListLook({ ...declared, ...where, inList, platform: Platform.OS });
 
 function useWhere(): Where {
   const place = useListPlace();
@@ -34,13 +34,10 @@ export function useDeclaredListLook(declared: Declared): ListLook {
   const where = useWhere();
 
   return useMemo(
-    () => lookOf({ appearance, density, onPhones, fit }, where),
+    () => lookOf({ appearance, density, onPhones, fit }, where, true),
     [appearance, density, onPhones, fit, where],
   );
 }
-
-// Inside a List's rows, a part that would draw its own List draws a section of it instead.
-export const useInList = (): boolean => use(ListLookContext) !== null;
 
 const outsideLooks = new Map<string, ListLook>();
 
@@ -54,6 +51,7 @@ function outsideLook({ place, wide }: Where): ListLook {
   const look = lookOf(
     { appearance: 'plain', density: 'regular' },
     { place, wide },
+    false,
   );
 
   outsideLooks.set(key, look);
@@ -86,6 +84,7 @@ export function useCardHeadingInset(grouped: boolean): number {
   const where = useWhere();
 
   return grouped
-    ? lookOf({ appearance: 'grouped', density: 'regular' }, where).headingInset
+    ? lookOf({ appearance: 'grouped', density: 'regular' }, where, false)
+        .headingInset
     : 0;
 }

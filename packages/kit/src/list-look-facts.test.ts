@@ -122,6 +122,16 @@ const selecting = {
   native: contextual,
 } satisfies Record<Platform, Selecting>;
 
+// Metadata drew its own rows as iOS's and Android's on those phones and as the desktop's everywhere else.
+const fieldRows = {
+  web: 'web',
+  ios: 'ios',
+  android: 'android',
+  macos: 'web',
+  windows: 'web',
+  native: 'web',
+} satisfies Record<Platform, string>;
+
 const everywhere = everyPlatform.flatMap((platform) =>
   places.flatMap((place) => widths.map((wide) => ({ platform, place, wide }))),
 );
@@ -141,6 +151,7 @@ describe('what a platform draws, whatever the place and the width', () => {
       expect(resolved.pushChevron).toBe(expected.push);
       expect(resolved.rowHighlight).toBe(highlights[where.platform]);
       expect(resolved).toMatchObject(selecting[where.platform]);
+      expect(resolved.fieldRows).toBe(fieldRows[where.platform]);
     },
   );
 

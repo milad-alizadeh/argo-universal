@@ -36,10 +36,14 @@ export interface ListLookInput {
   place: ListPlace;
   // A wide desktop or web window, where compact rows are one line and the tree is drawn.
   wide: boolean;
+  // The look is a List's own; a part outside any List draws a plain look of its own place.
+  inList: boolean;
 }
 
 export interface PlaceLook {
   place: ListPlace;
+  // A part reading this look sits in a List's rows, so a part that would draw its own List draws a section of it.
+  inList: boolean;
   // Rows are menu rows of a popover.
   menu: boolean;
   // Rows are tiles on the desktop sidebar's glass.
@@ -170,9 +174,13 @@ export function insetLook(
   };
 }
 
-export function placeLook(place: ListPlace, facts: ListPlaceFacts): PlaceLook {
+export function placeLook(
+  { place, inList }: Pick<ListLookInput, 'place' | 'inList'>,
+  facts: ListPlaceFacts,
+): PlaceLook {
   return {
     place,
+    inList,
     menu: facts.menu,
     sidebar: facts.sidebar,
     sectionEnds: facts.ends,

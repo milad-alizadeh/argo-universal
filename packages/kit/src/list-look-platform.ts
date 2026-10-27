@@ -71,6 +71,8 @@ export interface PlatformFacts {
   selectingDropsRowActions: boolean;
   // A row's own selected mark stands until the user selects rows, as the web's sidebar marks the open page.
   primarySelectionStands: boolean;
+  // How a part that lays out its own label and value rows, such as Metadata, draws them: as iOS's or Android's rows, or as the desktop's on every other platform.
+  fieldRows: Drawing;
 }
 
 const pressed = 'active:bg-pressed';
@@ -93,6 +95,7 @@ const web = {
   longPressSelects: false,
   selectingDropsRowActions: false,
   primarySelectionStands: true,
+  fieldRows: 'web',
 } satisfies PlatformFacts;
 
 const ios = {
@@ -113,6 +116,7 @@ const ios = {
   longPressSelects: false,
   selectingDropsRowActions: false,
   primarySelectionStands: false,
+  fieldRows: 'ios',
 } satisfies PlatformFacts;
 
 const android = {
@@ -133,6 +137,7 @@ const android = {
   longPressSelects: true,
   selectingDropsRowActions: true,
   primarySelectionStands: false,
+  fieldRows: 'android',
 } satisfies PlatformFacts;
 
 // Windows and other native platforms keep the trailing value, the footer, the web's chevron and a plain tint on drawn rows, with no ListItem press tint or row highlight.
@@ -154,6 +159,7 @@ const otherNative = {
   longPressSelects: false,
   selectingDropsRowActions: false,
   primarySelectionStands: false,
+  fieldRows: 'web',
 } satisfies PlatformFacts;
 
 // The one place the platforms' conventions are asked; every part of a List reads the answer from its List look. macOS draws SF Symbols, so it takes iOS's chevron.

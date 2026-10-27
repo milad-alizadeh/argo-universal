@@ -46,5 +46,6 @@ export const look = (
     platform: 'web',
     place: 'page',
     wide: false,
+    inList: true,
     ...input,
   });
