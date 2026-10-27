@@ -5,6 +5,7 @@ import type { Meta } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { toFeedView } from '#features/feed';
+import { SubagentFeed } from '#features/sessions';
 import {
   meta as sessionDetailViewTestMeta,
   type Story,
@@ -13,6 +14,7 @@ import {
   subagentRowsFor,
   subagentSnapshot,
 } from '../../../../mocks/subagent-rows.mocks';
+import { runningFeed } from '../../../features/sessions/components/subagent-feed/subagent-feed.mocks';
 import {
   runningSubagent,
   subagentNow,
@@ -41,16 +43,42 @@ function feedOfSubagentRows(subagent: Subagent): OpenSessionViewProps['feed'] {
   return { ...runningSession.feed, items: toFeedView(rows, snapshot).items };
 }
 
+// What the connected screen supplies: the child's own Feed, drawn for the Subagent that is open.
+const renderSubagentFeed: NonNullable<
+  OpenSessionViewProps['renderSubagentFeed']
+> = (props) => <SubagentFeed {...props} feed={runningFeed} now={subagentNow} />;
+
 const sessionWithSubagentFeed = (): SessionDetailViewProps => ({
   state: 'open',
   ...runningSession,
   feed: feedOfSubagentRows(runningSubagent),
+  renderSubagentFeed,
   subagents: {
     subagents: subagentStates.oneRunning,
     onSelect: fn(),
     now: subagentNow,
   },
 });
+
+// The open Subagent's own Feed, once its row has been chosen where the list is drawn.
+async function assertFeedShown(
+  canvas: PlayContext['canvas'],
+  wide: boolean,
+): Promise<void> {
+  const page = wide ? canvas : within(document.body);
+
+  await expect(
+    await page.findByRole('heading', { name: runningSubagent.title }),
+  ).toBeVisible();
+  await expect(await page.findAllByText(incomingMessage)).not.toHaveLength(0);
+
+  if (wide)
+    await expect(
+      canvas.getByRole('button', { name: 'Back to Subagents' }),
+    ).toBeVisible();
+}
+
+const incomingMessage = /^Use apply_patch to change beta to gamma/;
 
 // Tapping a Subagent row in the Feed opens where its Subagents list row opens.
 function feedRowOpens(width: number): Story {
@@ -65,6 +93,35 @@ function feedRowOpens(width: number): Story {
       );
 
       await assertOpened(canvas, width === layoutWidths.wide);
+      await assertFeedShown(canvas, width === layoutWidths.wide);
+    },
+  };
+}
+
+// Choosing a Subagent in the list opens its Feed, in the Sheet below wide and the Inspector's tab at wide.
+function listRowOpensFeed(width: number): Story {
+  const wide = width === layoutWidths.wide;
+
+  return {
+    beforeEach: () => settleViewport(width),
+    args: { view: sessionWithSubagentFeed() },
+    play: async ({ canvas, userEvent }) => {
+      await userEvent.click(
+        await canvas.findByRole('button', {
+          name: wide ? 'Open Agents overview' : 'Subagents: 1',
+        }),
+      );
+
+      const list = wide ? canvas : within(document.body);
+
+      await userEvent.click(
+        await list.findByRole('button', {
+          name: new RegExp(`^${runningSubagent.title},`),
+        }),
+      );
+
+      await assertFeedShown(canvas, wide);
+      await assertOpened(canvas, wide);
     },
   };
 }
@@ -94,3 +151,7 @@ async function assertOpened(
 export const WideFeedRowOpensTab = feedRowOpens(layoutWidths.wide);
 
 export const PhoneFeedRowOpensSheet = feedRowOpens(layoutWidths.phone);
+
+export const WideListRowOpensFeed = listRowOpensFeed(layoutWidths.wide);
+
+export const PhoneListRowOpensFeed = listRowOpensFeed(layoutWidths.phone);

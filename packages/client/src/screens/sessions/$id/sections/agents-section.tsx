@@ -11,11 +11,17 @@ export const agentsSection: SessionSection = {
     summary: <WorkbenchAgents {...subagents} />,
     onOpen: tab.open,
   }),
-  tab: ({ subagents = noAgents, renderSubagentFeed }) => ({
+  tab: ({ subagents = noAgents, renderSubagentFeed, openSubagentFeed }) => ({
     count: subagents.subagents.length,
     countTone: subagents.subagents.some((one) => one.state !== 'idle')
       ? 'success'
       : 'muted',
-    body: <SessionAgentsTab {...subagents} renderFeed={renderSubagentFeed} />,
+    body: (
+      <SessionAgentsTab
+        {...subagents}
+        renderFeed={renderSubagentFeed}
+        open={openSubagentFeed}
+      />
+    ),
   }),
 };

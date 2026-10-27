@@ -6,6 +6,7 @@ export { type SubagentListProps } from './components/subagent-list/subagent-list
 
 export {
   SubagentSheet,
+  type SubagentFeedPage,
   type SubagentSheetProps,
 } from './components/subagent-list/subagent-sheet';
 

@@ -39,6 +39,7 @@ export function OverflowingInspector(): JSX.Element {
   const panels = useSessionPanels(['changes', 'shells', 'subagents']);
   const [opened, setOpened] = useState(false);
   const changes = useMemoryChanges(manyChanges);
+  const [open, setOpen] = useState<string>();
 
   if (!opened) {
     panels.select('subagents');
@@ -51,7 +52,16 @@ export function OverflowingInspector(): JSX.Element {
     <View className="h-80 flex-row">
       <SessionInspector
         panels={panels}
-        subagents={{ subagents: inspectorAgents, now: subagentNow }}
+        subagents={{
+          subagents: inspectorAgents,
+          now: subagentNow,
+          onSelect: (one) => setOpen(one.sessionId),
+        }}
+        openSubagentFeed={
+          open === undefined
+            ? undefined
+            : { sessionId: open, onBack: () => setOpen(undefined) }
+        }
         renderSubagentFeed={(props) => (
           <SubagentFeed {...props} feed={runningFeed} now={subagentNow} />
         )}
