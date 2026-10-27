@@ -60,3 +60,20 @@ it('closes the host and its workers when the composed Engine stops, without cons
   expect(() => process.kill(pid ?? 0, 0)).toThrow('kill ESRCH');
   expect(await pluginHostPids(home)).toHaveLength(1);
 });
+
+// `pnpm dev` runs the Engine under `node --watch`, which makes every descendant report its imports over IPC as `watch:*` messages.
+it('runs a Plugin under a watching Engine, whose watch reports never reach the Plugin protocol', async () => {
+  vi.stubEnv('WATCH_REPORT_DEPENDENCIES', '1');
+  const home = await createRuntimePlugins([
+    { id: 'healthy', fixture: 'healthy' },
+  ]);
+
+  const { caller } = await startEngineTestHost({ home });
+
+  expect(await caller.plugins.activate({ pluginId: 'healthy' })).toMatchObject({
+    state: 'running',
+  });
+  expect(await readFile(join(home, 'logs/plugins.log'), 'utf8')).not.toContain(
+    'invalid message',
+  );
+});
