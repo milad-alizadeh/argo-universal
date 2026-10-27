@@ -20,7 +20,7 @@ function ControlledSlider(props: SliderProps): React.JSX.Element {
 
   const onValueChange = (next: number): void => {
     setValue(next);
-    props.onValueChange(next);
+    props.onValueChange?.(next);
   };
 
   return (

@@ -38,6 +38,13 @@ import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
 import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
 
+// A Plugin's sheet holds composed content, so it takes the standard sheet inset.
+function PluginSheet(
+  props: KitProps<'Sheet', string, React.JSX.Element>,
+): React.JSX.Element {
+  return <Sheet {...props} inset />;
+}
+
 export const pluginEntries = {
   Markdown,
   Code,
@@ -100,7 +107,7 @@ export const pluginEntries = {
   Avatar,
   Icon,
   Alert,
-  Sheet,
+  Sheet: PluginSheet,
 } satisfies {
   [Name in WirePart]: ComponentType<KitProps<Name, string, React.JSX.Element>>;
 };

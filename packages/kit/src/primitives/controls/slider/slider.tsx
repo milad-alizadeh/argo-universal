@@ -61,9 +61,10 @@ function rangeInteraction(
   return {
     onPointerUp: (event) => {
       if (props.value === undefined)
-        props.onValueChange(Number(event.currentTarget.value));
+        props.onValueChange?.(Number(event.currentTarget.value));
     },
-    onChange: (event) => props.onValueChange(Number(event.currentTarget.value)),
+    onChange: (event) =>
+      props.onValueChange?.(Number(event.currentTarget.value)),
     className: rangeClasses(props.value === undefined),
   };
 }

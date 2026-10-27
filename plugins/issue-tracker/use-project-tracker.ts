@@ -37,16 +37,35 @@ function useStoredTracker({
 
 type TrackerSave = Pick<TrackerChoice, 'choose'> & { saveMessage: string };
 
+// A save's message belongs to the Project it was saved for; another Project starts without one.
+type SaveResult = { projectId: string; message: string };
+
 function useTrackerSave(
   source: TrackerSource,
   set: Async<Selection>['set'],
 ): TrackerSave {
-  const [saveMessage, setSaveMessage] = useState('');
+  const [result, setResult] = useState<SaveResult>({
+    projectId: source.projectId,
+    message: '',
+  });
 
   const choose = async (id: Selection): Promise<void> =>
-    setSaveMessage(await saveChoice(source, id, () => set(() => id)));
+    setResult(await savedResult(source, id, () => set(() => id)));
 
-  return { saveMessage, choose };
+  const own = result.projectId === source.projectId;
+
+  return { saveMessage: own ? result.message : '', choose };
+}
+
+async function savedResult(
+  source: TrackerSource,
+  id: Selection,
+  saved: () => void,
+): Promise<SaveResult> {
+  return {
+    projectId: source.projectId,
+    message: await saveChoice(source, id, saved),
+  };
 }
 
 // The message a save leaves: none, or why it failed.

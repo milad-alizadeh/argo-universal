@@ -1,11 +1,10 @@
 import { wirePart, type WirePartDefinition } from '@repo/contracts/plugins/kit';
-import { WireJson, type WireNode } from '@repo/contracts/plugins/wire';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   childNodeKey,
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
 import { Fragment, createElement, type ElementType } from 'react';
-import { z } from 'zod';
 import { pluginEntries } from './plugin-entries';
 import type * as Rendering from './plugin-rendering';
 
@@ -24,22 +23,13 @@ export function RenderNode({
   if (!part || !component) return null;
 
   const input = {
-    node: appNode(node, part),
+    node,
     part,
     context,
     source: node.props,
   };
 
   return renderPart(component, input, renderedSlots(node, part, context));
-}
-
-const jsonProps = z.record(z.string(), WireJson);
-
-// The props only the App adds, such as an Action's `plugin` mark.
-function appNode(node: WireNode, part: WirePartDefinition): WireNode {
-  if (!part.appProps) return node;
-
-  return { ...node, props: part.appProps.pipe(jsonProps).parse(node.props) };
 }
 
 function renderPart(

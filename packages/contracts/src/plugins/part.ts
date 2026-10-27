@@ -19,7 +19,6 @@ export interface PartOptions extends Partial<Omit<PartReference, 'summary'>> {
   root?: boolean;
   container?: boolean;
   expansion?: z.ZodType;
-  appProps?: z.ZodType;
 }
 
 type Option<Options, Key extends PropertyKey, Fallback> =
@@ -46,7 +45,7 @@ export type PartDefinition<
   WirePartDefinition,
   'props' | 'slots' | 'events' | 'children' | 'group' | 'wire'
 > &
-  Pick<Options, Extract<keyof Options, 'expansion' | 'appProps'>> & {
+  Pick<Options, Extract<keyof Options, 'expansion'>> & {
     props: Schema;
     slots: Option<Options, 'slots', Record<never, never>>;
     events: PartEvents<Schema, Options>;
@@ -72,9 +71,9 @@ const containerOf = (options: PartOptions): boolean =>
   options.container ?? (Boolean(options.children) || hasSlots(options));
 
 function extras(options: PartOptions): Partial<WirePartDefinition> {
-  const { expansion, appProps } = options;
+  const { expansion } = options;
 
-  return { ...(expansion && { expansion }), ...(appProps && { appProps }) };
+  return expansion ? { expansion } : {};
 }
 
 type Structure = Pick<

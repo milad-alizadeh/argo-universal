@@ -1,5 +1,6 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
+import { PluginTreeContext } from '@repo/kit/plugin-tree-context';
 import { SvgBudget } from '@repo/kit/primitives/visual';
 import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
@@ -24,5 +25,9 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
     controls: usePartEvents(props.root, props.onEvent),
   };
 
-  return <SvgBudget>{RenderNode({ node: props.root, context })}</SvgBudget>;
+  return (
+    <PluginTreeContext value>
+      <SvgBudget>{RenderNode({ node: props.root, context })}</SvgBudget>
+    </PluginTreeContext>
+  );
 }

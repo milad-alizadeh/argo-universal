@@ -25,8 +25,6 @@ export const overlaysParts = {
     group: 'overlays',
     children: true,
     events: { onOpenChange: openChange(sheetProps) },
-    // A Plugin's sheet holds composed content, so the kit Sheet gives it the standard sheet inset.
-    appProps: sheetProps.transform((props) => ({ ...props, inset: true })),
   }),
   Menu: part('A choice or action menu.', menuSchema, {
     group: 'overlays',

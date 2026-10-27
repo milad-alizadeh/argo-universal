@@ -11,13 +11,15 @@ import type { SliderProps } from './slider-props';
 
 type UniversalSliderProps = React.ComponentProps<typeof UniversalSlider>;
 
+const noop = (): void => undefined;
+
 export function Slider(props: SliderProps): React.JSX.Element {
   return (
     <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <UniversalSlider
         {...sliderRange(props)}
         disabled={props.disabled}
-        onValueChange={props.onValueChange}
+        onValueChange={props.onValueChange ?? noop}
         modifiers={sliderModifiers(props)}
       />
     </ControlHost>

@@ -22,11 +22,6 @@ export const actionsParts = {
       children: ['Action.Section'],
       container: false,
       events: flushingPress,
-      // The renderer marks Plugin Actions so they cannot claim reserved shortcuts.
-      appProps: actionEntryProps.transform((props) => ({
-        ...props,
-        plugin: true,
-      })),
       label: 'Action labels name buttons and menu rows.',
       accessibility: {
         keyboard:

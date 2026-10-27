@@ -35,7 +35,6 @@ export interface PartReference {
 // The one definition of a kit component: its props, events, slots and reference text, its group, and whether a Plugin can send it.
 export interface WirePartDefinition {
   props: z.ZodType;
-  appProps?: z.ZodType;
   expansion?: z.ZodType;
   container: boolean;
   children: boolean | readonly string[];
