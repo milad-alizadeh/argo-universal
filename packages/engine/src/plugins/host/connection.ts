@@ -160,10 +160,15 @@ function launchPluginHost(): ChildProcess {
   });
 }
 
+/*
+ * `node --watch` (the dev Server) sets WATCH_REPORT_DEPENDENCIES so every descendant reports each import to its parent over IPC as
+ * `watch:*` messages. The host's IPC is the Plugin protocol, so it must not inherit it: the Engine itself still reports.
+ */
 function hostEnvironment(): NodeJS.ProcessEnv {
   const env = { ...process.env };
 
   delete env.NODE_OPTIONS;
+  delete env.WATCH_REPORT_DEPENDENCIES;
 
   return env;
 }

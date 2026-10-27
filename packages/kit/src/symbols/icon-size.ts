@@ -1,4 +1,5 @@
 import type { IconSize } from '@repo/contracts/kit-symbols';
+import { useContext } from 'react';
 import type { ViewStyle } from 'react-native';
 import {
   type SizeClassValue,
@@ -6,6 +7,7 @@ import {
 } from '../use-size-class/size-class-value';
 import { useSizeClass } from '../use-size-class/use-size-class';
 import { useWide } from '../use-wide/use-wide';
+import { GlyphScaleContext } from './glyph-scale-context';
 import { glyphPixels } from './glyph-sizing';
 
 export type { IconSize } from '@repo/contracts/kit-symbols';
@@ -14,7 +16,8 @@ export type { IconSize } from '@repo/contracts/kit-symbols';
 export type IconSizeValue = SizeClassValue<IconSize>;
 
 export function useIconPixels(size: IconSizeValue): number {
-  const scale = useWide() ? 'wide' : 'phone';
+  const wide = useWide();
+  const scale = useContext(GlyphScaleContext) ?? (wide ? 'wide' : 'phone');
 
   return glyphPixels(sizeClassValue(size, useSizeClass()), scale);
 }

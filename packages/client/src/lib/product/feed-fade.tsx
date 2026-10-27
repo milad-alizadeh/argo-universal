@@ -1,6 +1,6 @@
 import { hasLiquidGlass } from '@repo/kit/native-header';
 import { useWide } from '@repo/kit/use-wide/use-wide';
-import { useComposerFadeDepth, useFeedEndClearance } from './composer-cover';
+import { useComposerFade } from './composer-cover';
 import type {
   PerEdge,
   ScrollFadeEdge,
@@ -21,16 +21,15 @@ const feedFadeEdges = (wide: boolean): PerEdge<ScrollFadeEdge> => ({
   bottom: 'always',
 });
 
-// The Feed fades out where the Composer begins, so nothing shows under it, and wide under the header. At its end, whether the reader is there.
+// The Feed fades out where the Composer's card begins, so nothing shows under it, and wide under the header. Where the Composer is not glass, its depth follows whether the reader is at the Feed's end.
 export function useFeedFade(atEnd: boolean): ScrollFadeOptions {
   const wide = useWide();
-  const { composerTop } = useFeedEndClearance();
-  const bottom = useComposerFadeDepth(atEnd);
+  const { inset, depth } = useComposerFade(atEnd);
 
   return {
     edges: feedFadeEdges(wide),
-    depth: { top: wide ? headerFadeDepth : undefined, bottom },
-    inset: { bottom: composerTop },
+    depth: { top: wide ? headerFadeDepth : undefined, bottom: depth },
+    inset: { bottom: inset },
     surfaceClassName: sessionSurface,
   };
 }

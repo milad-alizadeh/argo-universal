@@ -44,14 +44,15 @@ async function viewedMark(index: number): Promise<HTMLElement> {
 // The last added line of the recorded long file: the list shows every line of a file's diff.
 const lastAddedLine = 'new value 60';
 
-// Every file starts folded, so a long comparison opens fast.
-async function expectFolded(): Promise<void> {
-  await expect(screen.queryByText(lastAddedLine)).toBeNull();
+// Every file starts open, so the diffs read without a press per file.
+async function expectOpen(): Promise<void> {
   await expect(await findFileHeader(largeFile)).toHaveAttribute(
     expanded,
-    'false',
+    'true',
   );
-  await expect(fileHeader(shortFile)).toHaveAttribute(expanded, 'false');
+  await expect(await screen.findByText(lastAddedLine)).toBeVisible();
+  // A phone's list may draw the next file only once it scrolls toward it.
+  await expect(await scrollToFile(shortFile)).toHaveAttribute(expanded, 'true');
 }
 
 // The Inspector's toolbar names the comparison and counts the files and their lines; a phone's sheet shows the files alone.
@@ -62,14 +63,14 @@ export const ShowsFilesAndTotalsWide: Story = {
     await expect(screen.getByText('0/4 viewed')).toBeVisible();
     await expect(screen.getByText('+65')).toBeVisible();
     await expect(screen.getByText('−64')).toBeVisible();
-    await expectFolded();
+    await expectOpen();
   },
 };
 
 export const ShowsFilesPhone: Story = {
   play: async () => {
     await settleViewport(layoutWidths.phone);
-    await expectFolded();
+    await expectOpen();
     await expect(screen.queryByText('+65')).toBeNull();
   },
 };
@@ -91,40 +92,23 @@ export const ManyFilesScrollPhone = manyFilesScroll(layoutWidths.phone);
 
 export const ManyFilesScrollWide = manyFilesScroll(layoutWidths.wide);
 
-// Marking an open file Viewed folds it and checks its mark.
-function marksViewed(width: number): Story {
-  return {
-    play: async ({ userEvent }) => {
-      await settleViewport(width);
-      await userEvent.click(await findFileHeader(largeFile));
-      await expect(await screen.findByText(lastAddedLine)).toBeVisible();
-
-      const mark = await viewedMark(0);
-      await expect(mark).toHaveAttribute('aria-checked', 'false');
-      await userEvent.click(mark);
-      await expect(mark).toHaveAttribute('aria-checked', 'true');
-      await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
-      await expect(screen.queryByText(lastAddedLine)).toBeNull();
-    },
-  };
-}
-
-export const MarksViewedPhone = marksViewed(layoutWidths.phone);
-
-export const MarksViewedWide = marksViewed(layoutWidths.wide);
-
-// A file's diff opens under its header, in the list: the toolbar and the other files stay, and nothing offers Back.
-export const FilesOpenInPlace: Story = {
+// A file folds and opens again under its header, in the list: the toolbar and the other files stay, and nothing offers Back.
+export const FilesFoldInPlace: Story = {
   play: async ({ userEvent }) => {
     await settleViewport(layoutWidths.wide);
-    await userEvent.click(await findFileHeader(largeFile));
-    await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'true');
-    await expect(await screen.findByText(lastAddedLine)).toBeVisible();
+    await expect(await findFileHeader(largeFile)).toHaveAttribute(
+      expanded,
+      'true',
+    );
+    await userEvent.click(fileHeader(largeFile));
+    await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
+    await expect(screen.queryByText(lastAddedLine)).toBeNull();
     await expect(fileHeader(shortFile)).toBeVisible();
     await expect(screen.getByText('0/4 viewed')).toBeVisible();
     await expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
     await userEvent.click(fileHeader(largeFile));
-    await expect(screen.queryByText(lastAddedLine)).toBeNull();
+    await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'true');
+    await expect(await screen.findByText(lastAddedLine)).toBeVisible();
   },
 };
 
@@ -144,7 +128,7 @@ export const CountsEachPathOnce: Story = {
   },
 };
 
-// A Viewed file stays folded like any other and opens on its header.
+// A Viewed file is folded and opens again on its header.
 export const ViewedFileOpensItsDiff: Story = {
   play: async ({ userEvent }) => {
     await settleViewport(layoutWidths.wide);
@@ -153,9 +137,9 @@ export const ViewedFileOpensItsDiff: Story = {
     const mark = await viewedMark(1);
     await userEvent.click(mark);
     await expect(screen.getByText('1/4 viewed')).toBeVisible();
+    await expect(fileHeader(shortFile)).toHaveAttribute(expanded, 'false');
     await userEvent.click(fileHeader(shortFile));
-    await waitFor(() =>
-      expect(screen.getAllByTestId('diff-line').length).toBeGreaterThan(0),
-    );
+    await expect(fileHeader(shortFile)).toHaveAttribute(expanded, 'true');
+    await expect(mark).toHaveAttribute('aria-checked', 'true');
   },
 };

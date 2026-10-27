@@ -47,9 +47,6 @@ export function workStatusCounts(
       const shells = canvas.getByRole('button', { name: 'Shells: 1' });
       await expect(subagents).toBeVisible();
       await expect(shells).toBeVisible();
-      await expect(
-        canvas.queryByRole('button', { name: 'Agents: 2' }),
-      ).not.toBeInTheDocument();
     },
   };
 }

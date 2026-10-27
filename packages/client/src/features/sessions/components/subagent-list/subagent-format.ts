@@ -3,8 +3,8 @@ import { formatElapsed } from '@repo/kit/format-elapsed';
 
 const thousand = 1_000;
 
-function tokensLabel(tokens: number | null): string {
-  if (tokens === null) return '— tokens';
+function tokensLabel(tokens: number | null): string | null {
+  if (tokens === null) return null;
 
   if (tokens < thousand) return `${tokens} tokens`;
 
@@ -33,8 +33,9 @@ export function subagentStateLabel(subagent: Subagent): string {
   return subagent.state === 'idle' ? finishedLabel(subagent) : 'Running';
 }
 
-const modelLabel = (subagent: Subagent): string =>
-  subagent.model ?? 'Unknown model';
+// The parts of a row's line, leaving out what the Agent did not send.
+const joined = (parts: (string | null)[]): string =>
+  parts.filter((part) => part !== null).join(' · ');
 
 function durationLabel(subagent: Subagent, now: number): string {
   const elapsed = subagentElapsedMs(subagent, now);
@@ -47,18 +48,16 @@ function finishedSupporting(subagent: Subagent, duration: string): string {
 
   if (subagent.stopReason === 'cancelled') return `${label} · ${duration}`;
 
-  return [label, duration, tokensLabel(subagent.tokens)].join(' · ');
+  return joined([label, duration, tokensLabel(subagent.tokens)]);
 }
 
 export function subagentSupporting(subagent: Subagent, now: number): string {
   if (subagent.state === 'requires_action')
-    return `${modelLabel(subagent)} · ${subagentStateLabel(subagent)}`;
+    return joined([subagent.model, subagentStateLabel(subagent)]);
 
   const duration = durationLabel(subagent, now);
 
   if (subagent.state === 'idle') return finishedSupporting(subagent, duration);
 
-  return [modelLabel(subagent), duration, tokensLabel(subagent.tokens)].join(
-    ' · ',
-  );
+  return joined([subagent.model, duration, tokensLabel(subagent.tokens)]);
 }

@@ -1,6 +1,7 @@
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useReportComposerPills } from '#lib/product/composer-cover';
 import {
   ComposerPlan,
   ComposerWorkChips,
@@ -50,17 +51,22 @@ function ComposerWidePlan(layout: PlanLayout): React.JSX.Element | null {
 }
 
 function ComposerPhonePlan(layout: PlanLayout): React.JSX.Element | null {
-  if (!hasPhoneTray(layout)) return null;
+  return hasPhoneTray(layout) ? <ComposerPhonePills {...layout} /> : null;
+}
 
+// The pill row reports its height, so the Feed's fade starts at its top and ends under it.
+function ComposerPhonePills(layout: PlanLayout): React.JSX.Element {
   return (
-    <View className="min-h-7 max-w-full mb-1 flex-row flex-wrap items-center justify-center gap-2">
-      <ComposerPlans {...layout} />
-      {layout.props.status && (
-        <ComposerWorkChips
-          status={layout.props.status}
-          disabled={layout.inactive}
-        />
-      )}
+    <View className="max-w-full pb-1" onLayout={useReportComposerPills()}>
+      <View className="min-h-7 max-w-full flex-row flex-wrap items-center justify-center gap-2">
+        <ComposerPlans {...layout} />
+        {layout.props.status && (
+          <ComposerWorkChips
+            status={layout.props.status}
+            disabled={layout.inactive}
+          />
+        )}
+      </View>
     </View>
   );
 }

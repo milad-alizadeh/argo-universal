@@ -3,7 +3,6 @@ import type * as React from 'react';
 
 export interface ArchiveSessionAlertProps {
   open: boolean;
-  count?: number;
   // Archive: the caller archives the Session and the row leaves the list.
   onArchive: () => void;
   // Cancel, or the system closing the alert: the Session stays.
@@ -26,7 +25,8 @@ export function ArchiveSessionAlert(
     <Alert
       open={props.open}
       onOpenChange={(open) => !open && props.onClose()}
-      {...archiveCopy(props.count)}
+      title={archiveSessionCopy.title}
+      message={archiveSessionCopy.message}
       actions={archiveActions(props.onArchive)}
     />
   );
@@ -36,15 +36,3 @@ const archiveActions = (onArchive: () => void): AlertAction[] => [
   { label: archiveSessionCopy.cancel, role: 'cancel' },
   { label: archiveSessionCopy.archive, tone: 'danger', onPress: onArchive },
 ];
-
-function archiveCopy(
-  count?: number,
-): Pick<typeof archiveSessionCopy, 'title' | 'message'> {
-  if (count === undefined || count < 2) return archiveSessionCopy;
-
-  return {
-    title: `Archive ${count} Sessions?`,
-    message:
-      'Their worktrees and any uncommitted files are removed. The branches are kept.',
-  };
-}

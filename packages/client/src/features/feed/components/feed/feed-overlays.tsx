@@ -4,8 +4,10 @@ import {
   JumpToLatestButton,
   type JumpToLatestButtonProps,
 } from '@repo/kit/primitives/lists/list';
+import { scrollFadeLayer } from '@repo/kit/scroll-fade/scroll-fade-options';
 import type * as React from 'react';
 import type { RefObject } from 'react';
+import type { ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { SessionColumn } from '#lib/product/session-column';
@@ -19,6 +21,14 @@ const jumpToLatestMotion = {
   className: 'pointer-events-box-none absolute inset-x-0',
 } as const;
 
+// Above the Feed's edge fades. On native a frame without a style of its own is flattened away, and its fades then compete with this overlay on one level.
+const jumpToLatestLayer = scrollFadeLayer + 1;
+
+const jumpToLatestStyle = (composerTop: number): ViewStyle => ({
+  bottom: composerTop + jumpToLatestGap,
+  zIndex: jumpToLatestLayer,
+});
+
 // Shown while the reader is away from the end; the dot marks rows that arrived since. It sits in the Composer's column, so it stays centred over the Composer.
 function JumpToLatest(props: JumpToLatestButtonProps): React.JSX.Element {
   const { composerTop } = useFeedEndClearance();
@@ -26,7 +36,7 @@ function JumpToLatest(props: JumpToLatestButtonProps): React.JSX.Element {
   return (
     <Animated.View
       {...jumpToLatestMotion}
-      style={{ bottom: composerTop + jumpToLatestGap }}
+      style={jumpToLatestStyle(composerTop)}
     >
       <SessionColumn className="pointer-events-box-none items-center">
         <JumpToLatestButton {...props} />

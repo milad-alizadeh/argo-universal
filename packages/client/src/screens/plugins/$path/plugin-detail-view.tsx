@@ -3,6 +3,7 @@ import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { useKeepSidebarWhilePending } from '#features/frame';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
   PluginTree,
@@ -46,5 +47,14 @@ function ownsPage(root: WireNode | null): boolean {
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   return props.root ? (
     <PluginTree key={props.viewId} root={props.root} {...props.callbacks} />
-  ) : null;
+  ) : (
+    <PendingPage />
+  );
+}
+
+// A page waiting for its first snapshot draws nothing, but holds the sidebar as the page before it left it.
+function PendingPage(): null {
+  useKeepSidebarWhilePending();
+
+  return null;
 }

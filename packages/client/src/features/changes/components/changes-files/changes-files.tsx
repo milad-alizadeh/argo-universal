@@ -16,7 +16,7 @@ export const loadingChangesLabel = 'Loading changes';
 export const loadErrorTitle = "Couldn't load changes";
 
 /*
- * The changed files for the comparison in force, each opening its diff in place and folded once marked Viewed. A
+ * The changed files for the comparison in force, each showing its diff in place and folded once marked Viewed. A
  * failed load is the standard error toast; a failed refresh keeps the files from the last load.
  */
 export function ChangesFiles(
@@ -28,7 +28,7 @@ export function ChangesFiles(
 
   if (!props.files.length) return <NoChanges {...props} />;
 
-  // Each comparison gets its own list, so its files start folded.
+  // Each comparison gets its own list, so its files start open again.
   return (
     <FileList
       key={comparisonKey(props.comparison)}

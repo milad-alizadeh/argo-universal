@@ -8,9 +8,9 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { markdownBlockClassNames } from '#kit/markdown-marks';
-import { withOccurrenceKeys } from '#kit/occurrence-keys';
 import { cn } from '#kit/utils';
 import { Text } from '#primitives/content/text';
+import { keyedBlocks, keyedTokens } from './block-keys';
 import { Caret } from './caret';
 import { useClampLeaf, useLineHeight } from './clamp-leaves';
 import {
@@ -50,14 +50,12 @@ function listItems(
 ): (ListItemProps & { key: string })[] {
   const last = list.items.length - 1;
 
-  return withOccurrenceKeys(list.items, (item) => item.raw).map(
-    ({ item, key }, index) => ({
-      key,
-      marker: listMarker(list, index),
-      tokens: item.tokens,
-      caret: caret && index === last,
-    }),
-  );
+  return keyedTokens(list.items, () => 'item').map(({ token, key }, index) => ({
+    key,
+    marker: listMarker(list, index),
+    tokens: token.tokens,
+    caret: caret && index === last,
+  }));
 }
 
 function ListMarker({ children }: { children: string }): ReactElement {
@@ -132,14 +130,12 @@ function Block({ token, caret }: BlockTokenProps): ReactElement {
 }
 
 export function Blocks({ tokens, caret }: BlocksProps): ReactNode[] {
-  const blocks = tokens.filter((token) => token.type !== 'space');
+  const blocks = keyedBlocks(tokens);
 
   if (caret && blocks.length === 0) return [<Caret key="caret" />];
   const last = blocks.length - 1;
 
-  return withOccurrenceKeys(blocks, (token) => token.raw).map(
-    ({ item: token, key }, index) => (
-      <Block key={key} token={token} caret={caret && index === last} />
-    ),
-  );
+  return blocks.map(({ token, key }, index) => (
+    <Block key={key} token={token} caret={caret && index === last} />
+  ));
 }

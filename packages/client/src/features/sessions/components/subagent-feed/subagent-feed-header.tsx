@@ -8,7 +8,7 @@ import type { SubagentFeedProps } from './subagent-feed-props';
 
 type HeaderProps = Omit<SubagentFeedProps, 'feed'>;
 
-export const subagentFeedBackLabel = 'Back to Subagents';
+export const subagentFeedBackLabel = 'Back to Agents';
 
 function BackButton({
   onBack,

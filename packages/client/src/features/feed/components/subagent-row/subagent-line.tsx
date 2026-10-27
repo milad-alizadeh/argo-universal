@@ -1,5 +1,6 @@
-import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
+import { IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
+import { Chevron } from '@repo/kit/primitives/status/chevron';
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { FeedSubagent } from '../../view/feed-view';
@@ -37,15 +38,14 @@ function lineWords(item: FeedSubagent): string {
   return `${verbs.started} ${item.title}`;
 }
 
-// The chevron promises the Subagent's Feed, so it is drawn only where the row can open it.
+/*
+ * The chevron promises the Subagent's Feed, so it is drawn only where the row can open it. It is the chevron the
+ * Feed's collapsible rows draw.
+ */
 function RowChevron({ opens }: { opens: boolean }): React.JSX.Element | null {
   if (!opens) return null;
 
-  return (
-    <IconSlot>
-      <Icon name="disclosure" />
-    </IconSlot>
-  );
+  return <Chevron direction="right" />;
 }
 
 export function SubagentLine({

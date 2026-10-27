@@ -9,7 +9,10 @@ import {
 import Animated, { type AnimatedStyle } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import type { ScrollFadeEdgeName } from './scroll-fade-options';
+import {
+  type ScrollFadeEdgeName,
+  scrollFadeLayer,
+} from './scroll-fade-options';
 
 export interface ScrollFadeGradientProps {
   edge: ScrollFadeEdgeName;
@@ -85,7 +88,7 @@ const decorative = {
 const overlay = {
   position: 'absolute',
   pointerEvents: 'none',
-  zIndex: 10,
+  zIndex: scrollFadeLayer,
 } as const;
 
 // Laid over the list's edge.

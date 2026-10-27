@@ -6,6 +6,7 @@ import {
   type ShellPanelProps,
   shellsRunning,
   SubagentSheet,
+  type SubagentFeedPage,
   type SubagentListProps,
 } from '#features/sessions';
 
@@ -90,29 +91,14 @@ export function useWorkSheet<Props>(
   };
 }
 
-// Picking a Subagent leaves the sheet for its page, so the sheet closes first.
-const selectAndClose = (
-  props: SubagentListProps,
-  sheet: WorkSheet,
-): SubagentListProps['onSelect'] => {
-  if (!props.onSelect) return undefined;
+// The Subagents list, and the Subagent whose Feed is open over it, when one is.
+export type SubagentWork = SubagentListProps & { feed?: SubagentFeedPage };
 
-  return (selected): void => {
-    sheet.onOpenChange(false);
-    props.onSelect?.(selected);
-  };
-};
-
-export const subagentsPanel: WorkPanel<SubagentListProps> = {
+export const subagentsPanel: WorkPanel<SubagentWork> = {
   pill: 'subagents',
   count: (props) => props.subagents.length,
   running: (props) => props.subagents.some((item) => item.state !== 'idle'),
-  sheet: (props, sheet) =>
-    createElement(SubagentSheet, {
-      ...props,
-      ...sheet,
-      onSelect: selectAndClose(props, sheet),
-    }),
+  sheet: (props, sheet) => createElement(SubagentSheet, { ...props, ...sheet }),
 };
 
 export const shellsPanel: WorkPanel<ShellPanelProps> = {

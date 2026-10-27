@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { greetingHeader, openChangedFiles } from './changed-files';
+import { openChangedFiles } from './changed-files';
 import { When } from './fixtures';
 import { onPhone } from './frame';
 
@@ -10,10 +10,9 @@ When("I review the Frame's file comparison", async ({ page }) => {
     : reviewDesktopComparison(page));
 });
 
-// Diffs open in place in the Inspector; a new comparison folds its files again, so the greeting's header reopens it.
+// Diffs open in place in the Inspector, and a new comparison's files open as the first one's did.
 async function reviewDesktopComparison(page: Page): Promise<void> {
   await compareAgainstRemote(page);
-  await greetingHeader(page).click();
 }
 
 // The phone sheet's page carries the one title; the pane under it draws no header of its own or comparison bar.

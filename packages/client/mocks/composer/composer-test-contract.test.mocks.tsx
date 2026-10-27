@@ -30,7 +30,7 @@ export const pressedAttribute = 'aria-pressed';
 
 export const expandedAttribute = 'aria-expanded';
 
-export const subagentCountLabel = 'Subagents: 2';
+export const subagentCountLabel = 'Agents: 2';
 
 export const contextWindowLabel = 'Context window';
 

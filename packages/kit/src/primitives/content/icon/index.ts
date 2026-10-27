@@ -18,3 +18,5 @@ export {
   IconSizeProvider,
   type IconSizeProviderProps,
 } from './icon-size-provider';
+
+export { SecondaryGlyphs } from './secondary-glyphs';

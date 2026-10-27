@@ -61,9 +61,7 @@ export const PullRequestWithoutOtherMetadata: Story = {
       const pullRequest = canvas.getByLabelText('Open Change #45');
       await expect(pullRequest).toBeVisible();
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByLabelText(/^Subagents:/),
-      ).not.toBeInTheDocument();
+      await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Issue #/)).not.toBeInTheDocument();
     }
   },
@@ -92,9 +90,7 @@ export const PlanAndSubagents: Story = {
       // A running Plan sweeps; a Regular row's Plan is a bar, with no step count.
       await expect(canvas.getByTestId('session-plan-sweep')).toBeVisible();
       await expect(canvas.queryByText('2/5')).not.toBeInTheDocument();
-      await expect(
-        canvas.getByLabelText('Subagents: 3, 2 running'),
-      ).toBeVisible();
+      await expect(canvas.getByLabelText('Agents: 3, 2 running')).toBeVisible();
       // The web's sidebar row draws the count alone; its own status dot speaks for the Session.
       await expect(
         canvas.queryByTestId('subagents-status'),
@@ -109,9 +105,7 @@ export const NoPlanOrSubagents: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByLabelText(/^Subagents:/),
-      ).not.toBeInTheDocument();
+      await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
       await expect(
         canvas.queryByTestId('session-issue-slot'),
       ).not.toBeInTheDocument();
@@ -131,9 +125,7 @@ export const FinishedSubagents: Story = {
       await page.viewport(width, 844);
       // A finished Plan leaves no bar.
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
-      await expect(
-        canvas.getByLabelText('Subagents: 3, 0 running'),
-      ).toBeVisible();
+      await expect(canvas.getByLabelText('Agents: 3, 0 running')).toBeVisible();
       await expect(
         canvas.queryByTestId('subagents-status'),
       ).not.toBeInTheDocument();

@@ -60,7 +60,6 @@ const feedListProps = {
   getItemType: entryType,
   // Each row keeps its own expanded state, which a recycled row would inherit.
   recycleItems: false,
-  alignItemsAtEnd: true,
   maintainScrollAtEndThreshold: endThreshold,
   maintainVisibleContentPosition: keepPosition,
   // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
@@ -102,6 +101,8 @@ export interface FeedScrollProps extends EntryDrawing {
   loadingOlder: boolean;
   // Whether the reader is at the Feed's end, where its bottom fade is shallower.
   atEnd: boolean;
+  // Rows start at the top and the Feed does not follow its end, for a Feed read without a Composer.
+  alignAtTop?: boolean;
 }
 
 type FeedListProps = Pick<
@@ -110,6 +111,7 @@ type FeedListProps = Pick<
   | 'renderItem'
   | 'initialScrollIndex'
   | 'maintainScrollAtEnd'
+  | 'alignItemsAtEnd'
   | 'onStartReached'
   | 'header'
 >;
@@ -124,8 +126,10 @@ function useFeedListProps(
     items: entries,
     renderItem: useRenderEntry(entries, { ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
-    maintainScrollAtEnd,
+    // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there. Aligned at the top, it stays where the reader is.
+    maintainScrollAtEnd: props.alignAtTop ? false : maintainScrollAtEnd,
+    // Rows rest against the Composer below them, or against the top when there is none.
+    alignItemsAtEnd: !props.alignAtTop,
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

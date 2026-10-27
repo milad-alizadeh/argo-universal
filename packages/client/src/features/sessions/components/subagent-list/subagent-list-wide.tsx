@@ -60,7 +60,7 @@ function WideRow({ subagent, onSelect, now }: RowProps): JSX.Element {
 // Keep the Server's spawn order as rows change state; never regroup them.
 export function WideSubagentList(props: WideProps): JSX.Element {
   return (
-    <View className="p-2" accessibilityLabel="Subagents">
+    <View className="p-2" accessibilityLabel="Agents">
       {props.subagents.map((subagent) => (
         <WideRow
           key={subagent.sessionId}

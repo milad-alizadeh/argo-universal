@@ -159,25 +159,40 @@ export const findFileHeader = (path: string): Promise<HTMLElement> =>
 export const fileHeaders = (): HTMLElement[] =>
   screen.getAllByRole('button', { name: /^Diff for / });
 
-// Scrolls the last drawn element of a list into view until `done` holds, so the list draws or asks for what comes next.
+// The drawn file headers and diff lines: an open file is mostly its lines, so the list's end is often one of them.
+export const drawnRows = (): HTMLElement[] => [
+  ...screen.queryAllByRole('button', { name: /^Diff for / }),
+  ...screen.queryAllByTestId('diff-line'),
+];
+
+// Legend List places its rows itself, so the lowest on screen is not the last in the document.
+const lowest = (rows: HTMLElement[]): HTMLElement | undefined =>
+  rows
+    .toSorted(
+      (a, b) =>
+        a.getBoundingClientRect().bottom - b.getBoundingClientRect().bottom,
+    )
+    .at(-1);
+
+// Brings the lowest drawn row to the top until `done` holds, a screen at a time, so the list draws or asks for what comes next.
 export async function scrollUntil(
-  last: () => HTMLElement | undefined,
+  rows: () => HTMLElement[],
   done: () => boolean,
 ): Promise<void> {
   await waitFor(
     () => {
-      last()?.scrollIntoView({ block: 'end' });
+      lowest(rows())?.scrollIntoView({ block: 'start' });
 
       if (!done()) throw new Error('Still scrolling');
     },
-    { timeout: 10_000, interval: 100 },
+    { timeout: 20_000, interval: 100 },
   );
 }
 
 // The file list draws only the rows near the viewport, so a far file's header appears once the list scrolls to it.
 export async function scrollToFile(path: string): Promise<HTMLElement> {
   await scrollUntil(
-    () => fileHeaders().at(-1),
+    drawnRows,
     () => screen.queryByRole('button', { name: `Diff for ${path}` }) !== null,
   );
 

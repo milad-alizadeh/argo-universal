@@ -1,6 +1,6 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
-import { Icon } from '@repo/kit/primitives/content/icon';
+import { Icon, SecondaryGlyphs } from '@repo/kit/primitives/content/icon';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import type { ComposerStatusProps, ComposerWork } from '../../utils/status';
@@ -12,7 +12,10 @@ import {
 import { StatusText } from './status-text';
 
 interface WorkChipProps {
+  // The plural, which names the chip to assistive tech.
   label: string;
+  // What one item is called.
+  singular: string;
   icon: 'agent' | 'terminal';
   work?: ComposerWork;
   disabled: boolean;
@@ -20,26 +23,28 @@ interface WorkChipProps {
 
 interface WorkCountProps {
   label: string;
+  singular: string;
   work: ComposerWork;
 }
 
-function WorkCount({ label, work }: WorkCountProps): JSX.Element {
+// The count and word in the Secondary role, as the Usage and Context controls' are, so the glyph beside them reads in proportion.
+function WorkCount({ label, singular, work }: WorkCountProps): JSX.Element {
   const className = work.running ? 'text-success' : mutedTextClassName;
 
   return (
     <View className="flex-row items-center gap-1">
-      <StatusText role="badge" className={className}>
+      <StatusText role="secondary" className={className}>
         {work.count}
       </StatusText>
-      <StatusText role="badge" className="select-none">
-        {label}
+      <StatusText role="secondary" className="text-foreground">
+        {work.count === 1 ? singular : label}
       </StatusText>
     </View>
   );
 }
 
 function WorkChip(props: WorkChipProps): JSX.Element | null {
-  const { label, icon, work, disabled } = props;
+  const { label, singular, icon, work, disabled } = props;
 
   if (!work) return null;
   const pressableProps = workPressableProps({ label, work, disabled });
@@ -47,8 +52,10 @@ function WorkChip(props: WorkChipProps): JSX.Element | null {
   return (
     <ChipSurface>
       <Pressable {...pressableProps} role="button">
-        <Icon name={icon} className={mutedTextClassName} />
-        <WorkCount label={label} work={work} />
+        <SecondaryGlyphs>
+          <Icon name={icon} className={mutedTextClassName} />
+        </SecondaryGlyphs>
+        <WorkCount label={label} singular={singular} work={work} />
       </Pressable>
     </ChipSurface>
   );
@@ -59,9 +66,17 @@ interface WorkChipsProps {
   disabled: boolean;
 }
 
-const subagentProps = { label: 'Subagents', icon: 'agent' } as const;
+const subagentProps = {
+  label: 'Agents',
+  singular: 'Agent',
+  icon: 'agent',
+} as const;
 
-const shellProps = { label: 'Shells', icon: 'terminal' } as const;
+const shellProps = {
+  label: 'Shells',
+  singular: 'Shell',
+  icon: 'terminal',
+} as const;
 
 export function WorkChips({ status, disabled }: WorkChipsProps): JSX.Element {
   return (
@@ -84,7 +99,7 @@ interface WorkPressableProps {
 }
 
 function workPressableProps(
-  props: WorkCountProps & { disabled: boolean },
+  props: Pick<WorkCountProps, 'label' | 'work'> & { disabled: boolean },
 ): WorkPressableProps {
   const { label, work, disabled } = props;
 

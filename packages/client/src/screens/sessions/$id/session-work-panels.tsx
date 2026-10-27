@@ -2,20 +2,31 @@ import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import type { ComposerProps } from '#features/composer';
 import type { FeedProps } from '#features/feed';
 import type { SessionPanels, SubagentListProps } from '#features/sessions';
-import type { SessionInspectorContent } from './session-inspector';
+import type {
+  OpenSubagentFeed,
+  SessionInspectorContent,
+} from './session-inspector-content';
 import {
   type OpenSubagent,
   selectSubagent,
   shellsPanel,
+  type SubagentWork,
   subagentsPanel,
   useWorkSheet,
   type WorkHome,
   type WorkPresentation,
 } from './session-work-sheet';
+import {
+  type SubagentSelection,
+  useSubagentSelection,
+} from './use-subagent-selection';
 
 interface WorkPanels {
   composer: ComposerProps;
   feed: FeedProps;
+  // The Subagents the Session lists, selecting one opens its Feed in the sheet or the Inspector tab.
+  subagents: SubagentListProps | undefined;
+  openSubagentFeed: OpenSubagentFeed | undefined;
   sheets: ReactNode;
 }
 
@@ -62,6 +73,43 @@ const workHome = (
   },
 });
 
+// A sheet opens on its list, so closing it closes the Subagent's Feed too.
+const closingFeed = (home: WorkHome, closeFeed: () => void): WorkHome => ({
+  ...home,
+  sheet: {
+    ...home.sheet,
+    onOpenChange: (open) => {
+      home.sheet.onOpenChange(open);
+
+      if (!open) closeFeed();
+    },
+  },
+});
+
+interface SubagentParts {
+  selection: SubagentSelection;
+  // What a Feed row asks for: the panel opened, then the Subagent it names.
+  open: OpenSubagent;
+  sheet: WorkPresentation;
+}
+
+// The Subagents list with the open Subagent's Feed, which the sheet pushes over it.
+const listWithFeed = (selection: SubagentSelection): SubagentWork | undefined =>
+  selection.list && { ...selection.list, feed: selection.page };
+
+function useSubagentWork(
+  props: WorkProps,
+  panels: SessionPanels,
+): SubagentParts {
+  const selection = useSubagentSelection(props);
+  const plain = workHome(props.composer, panels, 'subagents');
+  const home = closingFeed(plain, selection.close);
+  const sheet = useWorkSheet(subagentsPanel, listWithFeed(selection), home);
+  const open = useOpenSubagent(selectSubagent(selection.list, home.sheet));
+
+  return { selection, open, sheet };
+}
+
 /*
  * The Session's Subagents and Shells: a Composer pill and a sheet each on a phone, the Inspector's
  * tabs when wide. The pills chain, so the Composer carries both.
@@ -70,16 +118,16 @@ export function useWorkPanels(
   props: WorkProps,
   panels: SessionPanels,
 ): WorkPanels {
-  const home = workHome(props.composer, panels, 'subagents');
-  const subagents = useWorkSheet(subagentsPanel, props.subagents, home);
-  const next = workHome(subagents.composer, panels, 'shells');
+  const { selection, open, sheet } = useSubagentWork(props, panels);
+  const next = workHome(sheet.composer, panels, 'shells');
   const shells = useWorkSheet(shellsPanel, props.shells, next);
-  const open = useOpenSubagent(selectSubagent(props.subagents, home.sheet));
 
   return {
     composer: shells.composer,
     feed: feedWithSubagents(props.feed, props.subagents, open),
-    sheets: bothSheets(subagents, shells),
+    subagents: selection.list,
+    openSubagentFeed: selection.open,
+    sheets: bothSheets(sheet, shells),
   };
 }
 

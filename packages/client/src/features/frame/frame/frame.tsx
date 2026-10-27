@@ -27,6 +27,7 @@ import {
 import { LiveConnectionBanner } from './connection-banner';
 import {
   type FrameListDetail,
+  FrameListDetailPendingOffer,
   FrameListDetailSidebar,
   sectionScaffold,
   useFrameListDetail,
@@ -84,7 +85,7 @@ const sectionsOf = ({
 // What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
 export function useFrame(options: FrameOptions): FrameParts {
   const { scaffold, inspectorPlace, bandPlaces } = useFrameState();
-  const listDetail = useFrameListDetail();
+  const listDetail = useFrameListDetail(options.section);
 
   return {
     bandPlaces,
@@ -107,9 +108,11 @@ export function Frame({ frame, children }: FrameProps): React.JSX.Element {
     <SectionListsContext value={frame.lists}>
       <InspectorPlaceOffer value={frame.inspectorPlace}>
         <FrameListDetailSidebar value={frame.listDetail.sidebar}>
-          <WindowBandProvider places={frame.bandPlaces}>
-            <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
-          </WindowBandProvider>
+          <FrameListDetailPendingOffer value={frame.listDetail.pending}>
+            <WindowBandProvider places={frame.bandPlaces}>
+              <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
+            </WindowBandProvider>
+          </FrameListDetailPendingOffer>
         </FrameListDetailSidebar>
       </InspectorPlaceOffer>
     </SectionListsContext>

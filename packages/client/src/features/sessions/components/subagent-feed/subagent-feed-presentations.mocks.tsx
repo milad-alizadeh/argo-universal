@@ -44,16 +44,22 @@ export function SubagentFeedInspector(
   );
 }
 
+const sheetProps = {
+  subagents: subagentStates.severalMixed,
+  open: true,
+  onOpenChange: ignore,
+  onSelect: ignore,
+};
+
 // The phone Sheet: the Subagents list with the open Subagent's Feed pushed over it.
 export function SubagentFeedSheet(props: SubagentFeedProps): React.JSX.Element {
+  const { subagent, onBack } = props;
+
   return (
     <SubagentSheet
-      subagents={subagentStates.severalMixed}
-      open
-      onOpenChange={ignore}
-      onSelect={ignore}
+      {...sheetProps}
       now={props.now}
-      feed={props}
+      feed={{ subagent, onBack, content: <SubagentFeed {...props} /> }}
     />
   );
 }

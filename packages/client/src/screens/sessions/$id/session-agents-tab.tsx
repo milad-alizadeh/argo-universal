@@ -3,46 +3,40 @@ import {
   InspectorScreens,
 } from '@repo/kit/primitives/scaffolds/inspector';
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
   SubagentList,
   type SubagentListProps,
   type SubagentFeedProps,
 } from '#features/sessions';
+import type { OpenSubagentFeed } from './session-inspector-content';
 
 export type AgentFeedSlot = (
   props: Pick<SubagentFeedProps, 'subagent' | 'onBack'>,
 ) => ReactNode;
 
-type Props = SubagentListProps & { renderFeed?: AgentFeedSlot };
+type Props = SubagentListProps & {
+  renderFeed?: AgentFeedSlot;
+  open?: OpenSubagentFeed;
+};
 
-// Selection belongs to this retained tab; opening another tab never navigates away from its detail.
+// The Session owns which Subagent is open, so a Feed row can open one here; the tab only draws it.
 export function SessionAgentsTab(props: Props): ReactNode {
-  const [selected, select] = useState<string | null>(null);
-  const subagent = props.subagents.find((one) => one.sessionId === selected);
-
-  const detail = agentDetail(props, subagent, () => select(null));
-
-  return (
-    <AgentPages
-      {...props}
-      detail={detail}
-      onSelect={(one) => {
-        select(one.sessionId);
-        props.onSelect?.(one);
-      }}
-    />
-  );
+  return <AgentPages {...props} detail={agentDetail(props)} />;
 }
 
-function agentDetail(
-  props: Props,
-  subagent: SubagentFeedProps['subagent'] | undefined,
-  onBack: () => void,
-): ReactNode {
-  if (!subagent || !props.renderFeed) return null;
+const openFeed = (props: Props): Parameters<AgentFeedSlot>[0] | undefined => {
+  const subagent = props.subagents.find(
+    (one) => one.sessionId === props.open?.sessionId,
+  );
 
-  return props.renderFeed({ subagent, onBack });
+  return subagent && props.open && { subagent, onBack: props.open.onBack };
+};
+
+function agentDetail(props: Props): ReactNode {
+  const feed = openFeed(props);
+
+  return feed && props.renderFeed?.(feed);
 }
 
 function AgentPages(

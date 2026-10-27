@@ -35,25 +35,33 @@ export function AgentCatalog(props: CatalogProps): React.JSX.Element {
 }
 
 /*
+ * Every Agent is a card in one section, so the cards sit a card's gap apart rather than a section's.
  * A load still going stands in for the cards it will bring; one that failed says so and offers Retry.
  * Either way the Agents already known keep their cards above it.
  */
 const catalogSections = (props: CatalogProps): FieldListSection[] => {
   const { rows, ...load } = props.agents;
-  const agents = filterAgents(rows, props.filter, props.search);
-  const cards = agents.map((agent) => ({ rows: agentRows([agent], props) }));
 
-  if (load.status === 'loading') return [...cards, ...loadingCards];
+  const cards = [
+    ...agentRows(filterAgents(rows, props.filter, props.search), props),
+    ...(load.status === 'loading' ? loadingCards : []),
+  ];
 
-  if (load.status === 'failed') return [...cards, registrySection(load, props)];
-
-  return foundSections(cards, props);
+  return [...cardsSection(cards), ...belowCards(load, cards, props)];
 };
 
-const foundSections = (
-  cards: FieldListSection[],
+const cardsSection = (cards: React.ReactElement[]): FieldListSection[] =>
+  cards.length ? [{ rows: cards }] : [];
+
+const belowCards = (
+  load: RowsLoad,
+  cards: React.ReactElement[],
   props: CatalogProps,
-): FieldListSection[] => (cards.length ? cards : [emptySection(props)]);
+): FieldListSection[] => {
+  if (load.status === 'failed') return [registrySection(load, props)];
+
+  return cards.length ? [] : [emptySection(props)];
+};
 
 /*
  * Widths, not words: an Agent card is its logo, its name, the line of description under it and its version
@@ -79,10 +87,8 @@ const loadingAgents: LoadingRow[] = [
   },
 ];
 
-// Each Agent is its own card, so each loading row is its own section, as the cards above them are.
-const loadingCards: FieldListSection[] = loadingRows(loadingAgents).map(
-  (row) => ({ rows: [row] }),
-);
+// The loading rows join the Agents' section, a card each, as the cards above them are.
+const loadingCards = loadingRows(loadingAgents);
 
 const registrySection = (
   load: Extract<RowsLoad, { status: 'failed' }>,

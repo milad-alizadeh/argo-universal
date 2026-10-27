@@ -68,6 +68,9 @@ export const scrollFadeEndGap = '--spacing-4';
 // How far content scrolls past an edge before its fade is whole; react-native-web.css keeps the same length for the web.
 export const scrollFadeRamp = 24;
 
+// The layer a native edge fade draws on; anything meant to stay clear of the fade, such as Jump to latest, stacks above it.
+export const scrollFadeLayer = 10;
+
 // The scroll view's measures along its axis, which native reads on the UI thread; the web's CSS reads its own.
 export interface ScrollFadeMetrics {
   offset: SharedValue<number>;

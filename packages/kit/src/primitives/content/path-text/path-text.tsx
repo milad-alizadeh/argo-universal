@@ -45,12 +45,22 @@ function Line({ ref, onLayout, ...props }: LineProps): React.JSX.Element {
   );
 }
 
-function Hinted(
-  props: PathTextProps & { children: React.ReactElement },
-): React.JSX.Element {
+type HintedProps = PathTextProps & {
+  children: React.ReactElement;
+  // Measures the path again, so a cut that a later layout undid, as a font loading, shows no tooltip.
+  onHoverIn: () => void;
+};
+
+// The tooltip's hover box hugs the path's text, not the row it sits in.
+function Hinted(props: HintedProps): React.JSX.Element {
   return (
     <Tooltip label={props.path}>
-      <Pressable {...unfocusable} onPress={props.onPress} className="min-w-0">
+      <Pressable
+        {...unfocusable}
+        onPress={props.onPress}
+        onHoverIn={props.onHoverIn}
+        className="min-w-0 max-w-full self-start"
+      >
         {props.children}
       </Pressable>
     </Tooltip>
@@ -65,7 +75,13 @@ function CutLine(props: PathTextProps): React.JSX.Element {
   // A column, so the tooltip's own wrapper takes the row's width rather than the path's.
   return (
     <View className="min-w-0 flex-1">
-      {cut ? <Hinted {...props}>{line}</Hinted> : line}
+      {cut ? (
+        <Hinted {...props} onHoverIn={watch.onLayout}>
+          {line}
+        </Hinted>
+      ) : (
+        line
+      )}
     </View>
   );
 }

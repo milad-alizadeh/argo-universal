@@ -11,6 +11,8 @@ const clientCapabilities: ClientCapabilities = {
   auth: { terminal: true },
   session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
   elicitation: { form: {} },
+  // Without it, claude-agent-acp and codex-acp draw a child Session's work as plain tool calls.
+  subagents: {},
 };
 
 const negotiate = async (

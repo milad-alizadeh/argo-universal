@@ -9,7 +9,8 @@ export type { SubagentFeedProps } from './subagent-feed-props';
 
 /*
  * One Subagent's Feed, read-only. In the Inspector it carries its own header, with Back to the
- * Subagents list; in the phone Sheet the pushed page's header draws the title and Back instead.
+ * Subagents list; in the phone Sheet the pushed page's header draws the title and Back instead. With no
+ * Composer below it, its rows start at the top and it opens on the first, the task message.
  */
 export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
   return (
@@ -17,7 +18,7 @@ export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
       <SizeClass only="wide">
         <SubagentFeedHeader {...props} />
       </SizeClass>
-      <Feed {...props.feed} />
+      <Feed {...props.feed} alignAtTop />
     </View>
   );
 }

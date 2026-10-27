@@ -64,7 +64,7 @@ function returnsToList(label: string, rowName: RegExp, back: string): Story {
 export const AgentBackRetainsList = returnsToList(
   'Agents',
   /^Inspect module/,
-  'Back to Subagents',
+  'Back to Agents',
 );
 
 export const ShellBackRetainsList = returnsToList(

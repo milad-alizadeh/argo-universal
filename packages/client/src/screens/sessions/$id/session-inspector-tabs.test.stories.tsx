@@ -24,7 +24,7 @@ const fileHeader = (path: string): Named => ({ name: `Diff for ${path}` });
 
 const firstFile = '/repo/src/module-1/index.ts';
 
-// Hidden tab pages stay mounted, so the Changes list keeps its scroll and its opened files.
+// Hidden tab pages stay mounted, so the Changes list keeps its scroll and its folded files.
 export const RemembersListPositionAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
     const list = within(
@@ -49,19 +49,19 @@ export const RemembersListPositionAcrossTabs: Story = {
   },
 };
 
-export const RemembersOpenFilesAcrossTabs: Story = {
+export const RemembersFoldedFilesAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', fileHeader(firstFile)),
     );
     await expect(
       canvas.getByRole('button', fileHeader(firstFile)),
-    ).toHaveAttribute('aria-expanded', 'true');
+    ).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     await expect(
       canvas.getByRole('button', fileHeader(firstFile)),
-    ).toHaveAttribute('aria-expanded', 'true');
+    ).toHaveAttribute('aria-expanded', 'false');
   },
 };
 
@@ -85,7 +85,7 @@ export const RemembersShellDetailAcrossTabs: Story = {
 
 const backToShells = 'Back to Shells';
 
-const backToAgents = 'Back to Subagents';
+const backToAgents = 'Back to Agents';
 
 export const RemembersAgentDetailAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {

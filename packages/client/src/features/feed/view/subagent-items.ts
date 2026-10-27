@@ -86,7 +86,7 @@ function foldPrompt(
 
 type Known = SessionSnapshot['subagents'][number] | undefined;
 
-const ownTitle = (row: SubagentUpdate): string => row.title ?? 'Subagent';
+const ownTitle = (row: SubagentUpdate): string => row.title ?? 'Agent';
 
 // The Subagents list names the child; the row's own title stands in until the list knows it.
 const titleOf = (known: Known, row: SubagentUpdate): string =>

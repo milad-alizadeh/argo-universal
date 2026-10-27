@@ -4,13 +4,14 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
 import {
+  drawnRows,
   fileHeader,
-  fileHeaders,
   findFileHeader,
   largeFile,
   MemoryChangesInspector,
   pagedChanges,
   scrollUntil,
+  shortFile,
 } from './session-changes.test.mocks';
 
 const meta = {
@@ -31,6 +32,16 @@ const lastAddedLine = 'new value 60';
 
 const diffLines = (): HTMLElement[] => screen.queryAllByTestId('diff-line');
 
+// Every file opens, so the long file's lines are the drawn lines above the next file's header.
+function largeFileLines(): HTMLElement[] {
+  const next = screen.queryByRole('button', { name: `Diff for ${shortFile}` });
+  const end = next?.getBoundingClientRect().top ?? Infinity;
+
+  return diffLines().filter(
+    (line) => line.getBoundingClientRect().bottom <= end,
+  );
+}
+
 // The toolbar counts the whole comparison while the files arrive twenty at a time, until the last.
 export const FilesArriveInPages: Story = {
   play: async () => {
@@ -40,11 +51,11 @@ export const FilesArriveInPages: Story = {
       screen.queryByRole('button', { name: `Diff for ${lastFile}` }),
     ).toBeNull();
     await scrollUntil(
-      () => fileHeaders().at(-1),
+      drawnRows,
       () => screen.queryByLabelText('Loading more files') !== null,
     );
     await scrollUntil(
-      () => fileHeaders().at(-1),
+      drawnRows,
       () =>
         screen.queryByRole('button', { name: `Diff for ${lastFile}` }) !== null,
     );
@@ -54,14 +65,14 @@ export const FilesArriveInPages: Story = {
   },
 };
 
-// An opened diff shows its first page of lines, then the next as its end scrolls into view, down to its last line.
+// An open diff shows its first page of lines, then the next as its end scrolls into view, down to its last line.
 export const DiffArrivesInPages: Story = {
-  play: async ({ userEvent }) => {
-    await userEvent.click(await findFileHeader(largeFile));
+  play: async () => {
+    await findFileHeader(largeFile);
     await waitFor(() => expect(diffLines().length).toBeGreaterThan(0));
     await expect(screen.queryByText(lastAddedLine)).toBeNull();
     await scrollUntil(
-      () => diffLines().at(-1),
+      largeFileLines,
       () => screen.queryByText(lastAddedLine) !== null,
     );
     await expect(fileHeader(largeFile)).toHaveAttribute(
