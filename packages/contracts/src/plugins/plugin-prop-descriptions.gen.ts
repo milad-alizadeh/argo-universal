@@ -105,7 +105,7 @@ export type WireSchemaHints = {
     "isLoading": PropValue<"Detail", "isLoading">;
   };
   "Metadata": {
-    /** Optional section heading. */
+    /** Optional section heading; on desktop and web, beside a Detail's content, it defaults to Properties. */
     "title": PropValue<"Metadata", "title">;
   };
   "Metadata.Label": {

@@ -333,8 +333,8 @@ A small coloured dot that shows an item's state.
 _Avoid_: Status indicator
 
 **Metadata**:
-Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar.
-_Avoid_: Properties, key-value list
+Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar. On desktop and web, beside a Detail's content, it is headed "Properties" unless the Plugin names it; a Detail too narrow for that column draws it as one line of values under the title.
+_Avoid_: key-value list
 
 **Screen**:
 One entry on a navigation stack: its header (title, search, primary Action, Actions) and its content, declared together. A route shows one Screen; a Sheet stacks Screens of its own.

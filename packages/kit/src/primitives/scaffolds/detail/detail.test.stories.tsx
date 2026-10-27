@@ -55,20 +55,27 @@ export const ReadsContentAndMetadata: Story = {
   },
 };
 
-// Whether the Metadata starts below the content's last line or beside it.
-function metadataIsBelow(canvas: Parameters<Play>[0]['canvas']): boolean {
+type Place = 'above' | 'beside';
+
+// Where the Metadata sits: inline above the content, or beside it in its own column.
+function metadataPlace(canvas: Parameters<Play>[0]['canvas']): Place {
   const content = canvas.getByText(body).getBoundingClientRect();
 
   const status = canvas
     .getByRole('group', { name: statusGroup })
     .getBoundingClientRect();
 
-  return status.top >= content.bottom;
+  return status.bottom <= content.top ? 'above' : 'beside';
 }
+
+// The Metadata column is headed Properties; inline, the line of values has no heading.
+const propertiesHeading = (
+  canvas: Parameters<Play>[0]['canvas'],
+): Element | null => canvas.queryByRole('heading', { name: 'Properties' });
 
 const inContainer = (
   size: 'h-160 w-90' | 'h-160 w-200',
-  below: boolean,
+  place: Place,
 ): Story => ({
   render: (args) => (
     <View className={size}>
@@ -79,13 +86,17 @@ const inContainer = (
   ),
   play: async ({ canvas }) => {
     await expectMetadata(canvas);
-    await waitFor(() => expect(metadataIsBelow(canvas)).toBe(below));
+    await waitFor(() => expect(metadataPlace(canvas)).toBe(place));
+    await expect(Boolean(propertiesHeading(canvas))).toBe(place === 'beside');
   },
 });
 
-export const NarrowContainerStacksMetadata = inContainer('h-160 w-90', true);
+export const NarrowContainerDrawsMetadataInline = inContainer(
+  'h-160 w-90',
+  'above',
+);
 
-export const WideContainerSplitsColumns = inContainer('h-160 w-200', false);
+export const WideContainerSplitsColumns = inContainer('h-160 w-200', 'beside');
 
 export const LoadingKeepsMetadata: Story = {
   args: { ...issue.detail, isLoading: true },
@@ -194,7 +205,7 @@ const onWide = (story: Story): Story => ({
 export const MetadataWidensTheColumnNotTheText: Story = onWide({
   render: ScreenActionsLeadTheContent.render,
   play: async ({ canvas }) => {
-    await waitFor(() => expect(metadataIsBelow(canvas)).toBe(false));
+    await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
 
     const content = rect(canvas.getByText(body));
     const title = rect(canvas.getByRole('heading', { name: issue.title }));
@@ -206,12 +217,12 @@ export const MetadataWidensTheColumnNotTheText: Story = onWide({
   },
 });
 
-// A phone is inside the reading width, so the widened column changes nothing and the Metadata still stacks.
-export const PhoneWidthStacksMetadata: Story = {
+// A phone-wide web window is inside the reading width, so the widened column changes nothing and the Metadata draws inline.
+export const PhoneWidthDrawsMetadataInline: Story = {
   parameters: { screenPreview: true },
   beforeEach: () => settleViewport(layoutWidths.phone),
   play: async ({ canvas }) => {
     await expectMetadata(canvas);
-    await waitFor(() => expect(metadataIsBelow(canvas)).toBe(true));
+    await waitFor(() => expect(metadataPlace(canvas)).toBe('above'));
   },
 };
