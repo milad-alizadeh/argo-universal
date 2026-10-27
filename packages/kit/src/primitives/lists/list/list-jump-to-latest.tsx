@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { type RefObject, useEffect, useEffectEvent, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
+import { LiquidGlass } from '#primitives/content/liquid-glass';
 
 type ListRef = RefObject<LegendListRef | null>;
 
@@ -31,7 +32,15 @@ export function useNewestKeyWhenLeftEnd(
 }
 
 const jumpToLatestClassName =
-  'size-8 items-center justify-center rounded-full border border-border bg-card shadow-raised active:opacity-70';
+  'size-8 items-center justify-center rounded-full active:opacity-70';
+
+// The same Pill surface as the Composer's status controls: glass where the system draws it, a bordered raised card elsewhere.
+const jumpToLatestSurface = {
+  corners: 'pill',
+  interactive: true,
+  className: 'size-8',
+  fallbackClassName: 'rounded-full border border-border bg-card shadow-raised',
+} as const;
 
 const newRowsDot = (
   <View className="absolute -top-px -right-px size-2.25 rounded-full border-2 border-card bg-info" />
@@ -50,10 +59,12 @@ export function JumpToLatestButton(
   props: JumpToLatestButtonProps,
 ): React.JSX.Element {
   return (
-    <Pressable {...jumpButtonProps(props)} className={jumpToLatestClassName}>
-      <Icon name="arrow-down" tone="neutral" />
-      {props.hasNewRows && newRowsDot}
-    </Pressable>
+    <LiquidGlass {...jumpToLatestSurface}>
+      <Pressable {...jumpButtonProps(props)} className={jumpToLatestClassName}>
+        <Icon name="arrow-down" tone="neutral" />
+        {props.hasNewRows && newRowsDot}
+      </Pressable>
+    </LiquidGlass>
   );
 }
 

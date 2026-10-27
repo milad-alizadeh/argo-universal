@@ -1,4 +1,5 @@
 import { layoutWidths } from '@repo/kit/each-layout';
+import { scrollFadeLayer } from '@repo/kit/scroll-fade/scroll-fade-options';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -72,5 +73,37 @@ export const ReportsWhetherItsEndIsShown: Story = {
     await waitFor(() =>
       expect(args.onAtEndChange).toHaveBeenLastCalledWith(true),
     );
+  },
+};
+
+const ancestorsOf = (element: HTMLElement): HTMLElement[] =>
+  element.parentElement
+    ? [element.parentElement, ...ancestorsOf(element.parentElement)]
+    : [];
+
+// The absolutely placed layer the button sits in, over the Feed.
+function overlayOf(button: HTMLElement): HTMLElement {
+  const layer = ancestorsOf(button).find(
+    (ancestor) => getComputedStyle(ancestor).position === 'absolute',
+  );
+
+  if (!layer) throw new Error('Jump to latest is not laid over the Feed');
+
+  return layer;
+}
+
+// The Feed's edge fades draw over its content; Jump to latest must stack above them, not under, so it is never washed out.
+export const StacksAboveTheFeedFades: Story = {
+  render: (args) => <PagedFeed {...args} rows={longRows} />,
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    await scrollAwayFromEnd(canvas, scroll);
+    const button = canvas.getByRole('button', { name: 'Jump to latest' });
+
+    await expect(
+      Number(getComputedStyle(overlayOf(button)).zIndex),
+    ).toBeGreaterThan(scrollFadeLayer);
   },
 };
