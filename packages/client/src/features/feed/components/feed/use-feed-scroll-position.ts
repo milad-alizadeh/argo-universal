@@ -12,10 +12,9 @@ import { type FeedEntry, entryKey } from './feed-entry';
 
 type ListRef = RefObject<LegendListRef | null>;
 
-// Opens on the newest row by estimated sizes, then a frame after the page is first shown at the very end; from there `followEnd` keeps it there as rows measure. A page preloaded out of sight, as behind iOS's long-press preview, gains its header's inset only once shown.
-function useOpensAtEnd(list: ListRef, lastIndex: number): number {
-  const [initialIndex] = useState(lastIndex);
-  const shown = useScreenFocused();
+// A frame after the page is first shown, once, scrolls to the very end. A page preloaded out of sight, as behind iOS's long-press preview, gains its header's inset only once shown.
+function useScrollsToEndWhenShown(list: ListRef, enabled: boolean): void {
+  const shown = useScreenFocused() && enabled;
   const opened = useRef(false);
   useEffect(() => {
     if (!shown || opened.current) return;
@@ -27,6 +26,16 @@ function useOpensAtEnd(list: ListRef, lastIndex: number): number {
 
     return (): void => cancelAnimationFrame(frame);
   }, [list, shown]);
+}
+
+// Opens on the newest row by estimated sizes, then at the very end; from there `followEnd` keeps it there as rows measure. A Feed that aligns at the top opens on its first row and does not scroll.
+function useOpensAtEnd(
+  list: ListRef,
+  lastIndex: number,
+  alignAtTop: boolean | undefined,
+): number {
+  const [initialIndex] = useState(alignAtTop ? 0 : lastIndex);
+  useScrollsToEndWhenShown(list, !alignAtTop);
 
   return initialIndex;
 }
@@ -77,17 +86,21 @@ const positionAt = (
   atEnd: newestKeyWhenLeftEnd === null,
 });
 
+interface PositionInput {
+  entries: FeedEntry[];
+  newestKey: string;
+  onStartReached: () => void;
+  alignAtTop?: boolean;
+}
+
 // Where the reader is in the Feed: where it opened, and whether they left the end.
 export function useFeedScrollPosition(
   list: ListRef,
-  {
-    entries,
-    newestKey,
-    onStartReached,
-  }: { entries: FeedEntry[]; newestKey: string; onStartReached: () => void },
+  input: PositionInput,
 ): FeedScrollPosition {
-  const initialIndex = useOpensAtEnd(list, entries.length - 1);
-  useRequestsOlderNearTop(list, keyOf(entries[0]), onStartReached);
+  const { entries, newestKey, alignAtTop } = input;
+  const initialIndex = useOpensAtEnd(list, entries.length - 1, alignAtTop);
+  useRequestsOlderNearTop(list, keyOf(entries[0]), input.onStartReached);
 
   return positionAt(initialIndex, useNewestKeyWhenLeftEnd(list, newestKey));
 }

@@ -7,6 +7,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
+import { ComposerCover } from '#lib/product/composer-cover';
 import type { FeedViewItem } from '../../view/feed-view';
 import { isDrawnFeedItem } from '../drawn-feed-item';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
@@ -32,6 +33,8 @@ export interface FeedProps {
   onOpenSubagent?: (subagentSessionId: string) => void;
   // Whether the reader can see the Feed's end; an empty Feed always shows it.
   onAtEndChange?: (atEnd: boolean) => void;
+  // A Feed read without a Composer, such as a Subagent's: its rows start at the top, it opens on the first row and does not follow the end, and nothing at its end clears a Composer.
+  alignAtTop?: boolean;
 }
 
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
@@ -81,6 +84,9 @@ function useFeedEntries({
   return { entries, newestKey: newestKeyOf(drawnItems) };
 }
 
+// What a Feed read without a Composer leaves for one at its end.
+const noComposerCover = 0;
+
 // A Session's rows, oldest first: it opens at the newest, follows new rows while the reader is at the bottom, and keeps their place when older rows page in above.
 export function Feed({
   checkoutBranch,
@@ -96,5 +102,16 @@ export function Feed({
       />
     );
 
-  return <FeedList {...props} {...feed} />;
+  return <FeedWithCover {...props} {...feed} />;
+}
+
+// A Feed that aligns at the top has no Composer at its end, so it keeps no room for one.
+function FeedWithCover(props: FeedListProps & FeedProps): React.JSX.Element {
+  if (!props.alignAtTop) return <FeedList {...props} />;
+
+  return (
+    <ComposerCover.Provider value={noComposerCover}>
+      <FeedList {...props} />
+    </ComposerCover.Provider>
+  );
 }

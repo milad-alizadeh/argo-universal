@@ -1,7 +1,9 @@
 import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
 import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
+import { SubagentFeed } from './subagent-feed';
 import { subagentFeedBackLabel } from './subagent-feed-header';
 import {
   SubagentFeedInspector,
@@ -128,12 +130,52 @@ export const AsAPageSheet: Story = {
     await expect(
       await screen.findByRole('heading', subagentHeading),
     ).toBeVisible();
-    await expect(screen.getAllByText(incomingMessage)[0]).toBeVisible();
+    // A row shows once the list has placed it, a frame after the page opens.
+    await waitFor(() =>
+      expect(screen.getAllByText(incomingMessage)[0]).toBeVisible(),
+    );
     await userEvent.click(
       screen.getByRole('button', { name: subagentFeedBackLabel }),
     );
     await waitFor(() =>
       expect(screen.queryByRole('heading', subagentHeading)).toBeNull(),
     );
+  },
+};
+
+// A short Subagent Feed has no Composer to rest against, so its first row sits at the top of the Feed, not at the bottom.
+const startsAtTheTop = async (
+  within: Pick<typeof screen, 'findByTestId' | 'getByRole'>,
+): Promise<void> => {
+  const row = within.getByRole('status', { name: 'Starting 2s' });
+  const scroll = await within.findByTestId('feed-scroll');
+  const rowBox = row.getBoundingClientRect();
+  const scrollBox = scroll.getBoundingClientRect();
+
+  await expect(rowBox.top - scrollBox.top).toBeLessThan(
+    scrollBox.bottom - rowBox.bottom,
+  );
+};
+
+export const StartsAtTheTopInTheInspector: Story = {
+  args: { subagent: startingSubagent, feed: emptyFeed },
+  render: (args) => <SubagentFeedInspector {...args} />,
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    await startsAtTheTop(canvas);
+  },
+};
+
+// The phone Sheet's pushed page at full height: the Feed fills a viewport taller than its rows.
+export const StartsAtTheTopOnAPhone: Story = {
+  args: { subagent: startingSubagent, feed: emptyFeed },
+  render: (args) => (
+    <View className="h-175">
+      <SubagentFeed {...args} />
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    await startsAtTheTop(canvas);
   },
 };
