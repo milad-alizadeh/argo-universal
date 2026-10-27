@@ -37,7 +37,13 @@ export const labelProps = z.object({
 export const pillProps = z.object({
   text: z.string().describe('The text displayed by the part.'),
   tone: semanticTone,
-  color: z.string().optional().describe('A tracker label color.'),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .describe(
+      'A tracker label color as #rrggbb: the text takes it, over a lighter fill of it.',
+    ),
 });
 
 export const rowBadgeProps = z.discriminatedUnion('kind', [

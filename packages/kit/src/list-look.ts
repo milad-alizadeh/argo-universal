@@ -1,6 +1,6 @@
 import type { KitSchemaProps } from '@repo/contracts/kit-props';
 import type { PlatformOSType } from 'react-native';
-import type { ListAppearance } from './list-context';
+import type { ListAppearance, ListDensity } from './list-context';
 import { sectionDrawings, type SectionDrawings } from './list-look-section';
 import type { SizeClassValue } from './use-size-class/size-class-value';
 
@@ -29,6 +29,8 @@ export interface ListLookInput {
   platform: PlatformOSType;
   // The List's own, with the default filled in.
   appearance: ListAppearance;
+  // The List's own, with the default filled in; a phone draws regular rows whatever it declares.
+  density: ListDensity;
   onPhones?: PhoneOverrides;
   fit?: boolean;
   // Inside a web popover, whose rows are menu rows.
@@ -43,6 +45,8 @@ export interface ListLookInput {
  */
 export interface ListLook extends SectionDrawings {
   appearance: ListAppearance;
+  // Compact rows are one line on a wide desktop or web window (Paper "Issue row"); phones keep regular rows.
+  density: ListDensity;
   // A grouped section is a card the web draws as a cell per row on LegendList.
   webGrouped: boolean;
   // Set when a phone draws the grouped section: corners on its rows, or a native list of FieldGroup rows.
@@ -152,9 +156,25 @@ export function resolveListLook(input: ListLookInput): ListLook {
 
   return {
     ...grouped,
+    density: drawing ? 'regular' : input.density,
     ...rowLook(drawing, appearance),
     insets: insetsOf(input, grouped),
     phonePadding: phonePaddingOf(drawing, input),
     ...sectionDrawings({ ...input, phone: grouped.phone !== undefined }),
   };
 }
+
+export interface CompactPlace {
+  menu: boolean;
+  wide: boolean;
+  // A sidebar row, by its own option or its List's drawing.
+  sidebar: boolean;
+}
+
+const oneLine = ({ wide, sidebar }: CompactPlace): boolean => wide || sidebar;
+
+// A compact List's rows draw as one line on a wide window, and a sidebar's at every web width; never as a popover's menu rows.
+export const rowsAreCompact = (
+  density: ListDensity,
+  place: CompactPlace,
+): boolean => density === 'compact' && !place.menu && oneLine(place);

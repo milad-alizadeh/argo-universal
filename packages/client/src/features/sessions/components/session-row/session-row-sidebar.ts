@@ -24,14 +24,11 @@ type SidebarDrawing = Pick<
 >;
 
 // A sidebar row's title is semibold while unread; a Regular row's activity takes the status's colour.
-export function sidebarDrawing(
-  status: SessionInfo['status'],
-  layout: NonNullable<ListItemProps['sidebar']>,
-): SidebarDrawing {
+export function sidebarDrawing(status: SessionInfo['status']): SidebarDrawing {
   if (!sidebarRows) return {};
 
   return {
-    sidebar: layout,
+    sidebar: true,
     emphasized: status === 'unread',
     subtitleTone: activityTones[status],
   };

@@ -1,6 +1,6 @@
 import type { IssueStatus } from './github-issues';
 
-const listFields = 'number,title,state,labels,assignees,url';
+const listFields = 'number,title,state,stateReason,labels,assignees,parent,url';
 
 const issueFields = `${listFields},body`;
 

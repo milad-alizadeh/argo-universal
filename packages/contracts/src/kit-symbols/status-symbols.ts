@@ -8,7 +8,11 @@ export const statusSymbols = {
     material: 'cancel',
   },
   info: { sf: 'info.circle', material: 'info' },
-  passed: { sf: 'checkmark.circle', material: 'check_circle' },
+  passed: {
+    sf: 'checkmark.circle',
+    sfFilled: 'checkmark.circle.fill',
+    material: 'check_circle',
+  },
   pending: { sf: 'circle', material: 'radio_button_unchecked' },
   permission: {
     sf: 'exclamationmark.shield',

@@ -1,7 +1,9 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { useUniwind } from 'uniwind';
 import { cn } from '#kit/utils';
 import { Text, type Tone } from '#primitives/content/text';
+import { labelColours, type LabelColours } from './label-colour';
 import type { PillProps } from './pill-props';
 
 const fills = {
@@ -42,34 +44,51 @@ function pillClassName(
   );
 }
 
+type Label = { label: LabelColours | undefined };
+
 const PillText = ({
   text,
   tone,
-  color,
-}: Pick<PillProps, 'text' | 'tone' | 'color'>): ReactElement => (
+  label,
+}: Pick<PillProps, 'text' | 'tone'> & Label): ReactElement => (
   <Text
     role="badge"
     tone={textTones[tone ?? 'muted']}
     numberOfLines={1}
-    style={color ? { color } : undefined}
+    style={label ? { color: label.text } : undefined}
   >
     {text}
   </Text>
 );
 
+type PillViewProps = Omit<PillProps, 'text' | 'color'> &
+  Label & { children: ReactElement };
+
+const fillStyle = (
+  label: LabelColours | undefined,
+): { backgroundColor: string } | undefined =>
+  label?.fill ? { backgroundColor: label.fill } : undefined;
+
 function PillView({
   className,
   tone,
-  children,
+  label,
   ...props
-}: Omit<PillProps, 'text' | 'color'> & {
-  children: ReactElement;
-}): ReactElement {
+}: PillViewProps): ReactElement {
   return (
-    <View {...props} className={pillClassName(tone, className)}>
-      {children}
-    </View>
+    <View
+      {...props}
+      className={pillClassName(tone, className)}
+      style={fillStyle(label)}
+    />
   );
+}
+
+// A tracker label's colour, read for the theme the Pill draws on.
+function useLabel(color: string | undefined): LabelColours | undefined {
+  const { theme } = useUniwind();
+
+  return color ? labelColours(color, theme === 'dark') : undefined;
 }
 
 export function Pill({
@@ -78,9 +97,11 @@ export function Pill({
   color,
   ...props
 }: PillProps): ReactElement {
+  const label = useLabel(color);
+
   return (
-    <PillView {...props} tone={tone}>
-      <PillText text={text} tone={tone} color={color} />
+    <PillView {...props} tone={tone} label={label}>
+      <PillText text={text} tone={tone} label={label} />
     </PillView>
   );
 }

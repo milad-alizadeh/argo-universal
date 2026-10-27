@@ -304,8 +304,16 @@ _Avoid_: Group (when naming a List section)
 How one List draws, resolved once from the platform, its appearance and where it sits (a popover, a sidebar): its insets, its headings and footers, whether rows are separated, and whether the web draws its grouped sections as cards or a phone draws them as corners. Every part of the List reads it; none asks the platform itself.
 _Avoid_: Theme, style
 
+**Density**:
+How tightly a List or a Card draws its content: `regular` or `compact`. A compact List draws each row as one line on a wide desktop or web window; phones and narrow windows always draw regular rows.
+_Avoid_: Size, dense, condensed
+
+**Nested row**:
+A ListItem written inside another ListItem, its parent. A wide desktop or web window draws it one tree lane further in, with a rail from its parent, and folds it under its parent's chevron; phones draw it flat, right after its parent.
+_Avoid_: Sub-item, child row, tree item
+
 **Pill**:
-A short, static label that shows an Argo status or a label from a Plugin.
+A short, static label that shows an Argo status or a label from a Plugin. A tracker label keeps its colour: the text takes it, over a lighter fill of it.
 _Avoid_: Badge, chip
 
 **Path text**:
@@ -325,8 +333,8 @@ A small coloured dot that shows an item's state.
 _Avoid_: Status indicator
 
 **Metadata**:
-Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar.
-_Avoid_: Properties, key-value list
+Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar. On desktop and web, beside a Detail's content, it is headed "Properties" unless the Plugin names it; a Detail too narrow for that column draws it as one line of values under the title.
+_Avoid_: key-value list
 
 **Screen**:
 One entry on a navigation stack: its header (title, search, primary Action, Actions) and its content, declared together. A route shows one Screen; a Sheet stacks Screens of its own.
@@ -341,7 +349,7 @@ Where a Screen's header draws, decided once from the facts around it: its own he
 _Avoid_: Header placement, header mode
 
 **Content column**:
-The column a Screen's heading and content keep to: on a wide window the reading width centred in the pane, inside the Screen's side margins. Each part of a Screen offers it to what it holds; a scroll view or grouped cards claim it and keep to it themselves, and the part pads anything else. A popover, a sheet's page or a FieldGroup's rows are outside it.
+The column a Screen's heading and content keep to: on a wide window the reading width centred in the pane, inside the Screen's side margins; a Metadata column beside the content widens it, so the reading width stays the content's. Each part of a Screen offers it to what it holds; a scroll view or grouped cards claim it and keep to it themselves, and the part pads anything else. A popover, a sheet's page or a FieldGroup's rows are outside it.
 _Avoid_: Scroll column, heading inset
 
 **Content wide**:

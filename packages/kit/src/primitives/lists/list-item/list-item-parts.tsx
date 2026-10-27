@@ -6,6 +6,7 @@ import {
   type IconSizing,
 } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { useCompactRows } from '../../../list-look-context';
 import { useInMenu } from '../../../menu-rows-context';
 import {
   hasBadge,
@@ -25,8 +26,8 @@ export function hasLeading(
 }
 
 /*
- * Paper: a menu row's icon slot is 20px and sizes its icon with the menu role, a sidebar row's is 16 wide on its
- * title's 20 line; other rows keep the row icon slot.
+ * Paper: a menu row's icon slot is 20px and sizes its icon with the menu role, a sidebar row's and a compact row's
+ * is 16 wide on its title's 20 line; other rows keep the row icon slot.
  */
 const leadingClasses = {
   row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',
@@ -53,8 +54,14 @@ function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
   return sidebar ? 'sidebar' : 'row';
 }
 
+function useLeadingLane(sidebar: boolean | undefined): LeadingLane {
+  const compact = useCompactRows(sidebar);
+
+  return leadingLane(useInMenu(), sidebar === true || compact);
+}
+
 export function Leading(props: LeadingProps): ReactNode {
-  const lane = leadingLane(useInMenu(), props.sidebar !== undefined);
+  const lane = useLeadingLane(props.sidebar);
   const badge = useLeadingBadge(props.badge);
 
   if (!hasLeading(props)) return null;

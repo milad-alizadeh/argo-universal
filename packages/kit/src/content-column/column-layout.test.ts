@@ -22,6 +22,16 @@ describe('claimState', () => {
       claimed: false,
       filled: false,
       grouped: false,
+      side: false,
+    });
+  });
+
+  it('reports a side column without claiming the column', () => {
+    expect(claimState(claimed('side'))).toEqual({
+      claimed: false,
+      filled: false,
+      grouped: false,
+      side: true,
     });
   });
 
@@ -41,6 +51,7 @@ describe('claimState', () => {
       claimed: true,
       filled: true,
       grouped: true,
+      side: false,
     });
   });
 

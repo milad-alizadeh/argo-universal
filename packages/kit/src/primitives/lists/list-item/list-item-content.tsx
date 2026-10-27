@@ -4,6 +4,7 @@ import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
+import { TreeLane } from './list-item-tree';
 
 type SubtitleProps = Pick<
   ListItemProps,
@@ -56,7 +57,7 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   return (
     <Text
       role="row"
-      tone={props.titleTone ?? props.tone}
+      tone={props.finished ? 'muted' : props.tone}
       numberOfLines={lineLimit(props.multiline)}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
     >
@@ -65,7 +66,7 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   );
 }
 
-// A Regular sidebar row ends its title line with its trailing item, 8 after the title, so the lines below run the full width.
+// A regular sidebar row ends its title line with its trailing item, 8 after the title, so the lines below run the full width.
 function TitleLine(props: ListItemProps): ReactElement {
   if (!trailsTitle(props) || props.trailing === undefined)
     return <Title {...props} />;
@@ -80,7 +81,7 @@ function TitleLine(props: ListItemProps): ReactElement {
 
 export const trailsTitle = (
   props: Pick<ListItemProps, 'sidebar' | 'value'>,
-): boolean => props.sidebar === 'regular' && props.value === undefined;
+): boolean => props.sidebar === true && props.value === undefined;
 
 // A row's subtitle shows every line when a description, Android's placed value or the caller asks for it.
 const subtitleWraps = (props: PlacedContentProps): boolean =>
@@ -97,7 +98,48 @@ export function ItemContent(props: PlacedContentProps): ReactElement {
         subtitleTone={props.subtitleTone ?? 'muted'}
         subtitleDimmed={props.subtitleDimmed}
       />
-      <Meta sidebar={props.sidebar !== undefined}>{props.meta}</Meta>
+      <Meta sidebar={props.sidebar === true}>{props.meta}</Meta>
     </View>
   );
+}
+
+// A compact row's subtitle reads beside its title, at the title's size and muted, short enough never to crowd it out.
+function InlineSubtitle(props: PlacedContentProps): ReactNode {
+  if (props.subtitle === undefined) return null;
+
+  return (
+    <Text
+      role="row"
+      tone={props.subtitleTone ?? 'muted'}
+      dimmed={props.subtitleDimmed}
+      numberOfLines={1}
+      className="max-w-1/2 shrink-0"
+    >
+      {props.subtitle}
+    </Text>
+  );
+}
+
+/*
+ * A compact List's row on a wide window is one line (Paper "Issue row"): the tree lane, then the subtitle leading the
+ * title as a short muted identifier, such as an Issue's number, then the title, which truncates; the meta lane follows,
+ * pushed to the end before trailing. The line holds no second line, so its subtitle is a word or two, not a sentence.
+ */
+export function CompactContent(props: PlacedContentProps): ReactElement {
+  return (
+    <>
+      <View className="min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch">
+        <TreeLane title={props.title} compact />
+        <InlineSubtitle {...props} />
+        <Title {...props} multiline={false} inLine />
+      </View>
+      <CompactMeta meta={props.meta} />
+    </>
+  );
+}
+
+function CompactMeta({ meta }: Pick<PlacedContentProps, 'meta'>): ReactNode {
+  if (!meta) return null;
+
+  return <View className="shrink-0 flex-row items-center gap-1">{meta}</View>;
 }

@@ -144,6 +144,7 @@ const useLook = <Item,>(props: ListProps<Item>): ListLook =>
   useDeclaredListLook({
     ...props,
     appearance: props.appearance ?? listDefaults.appearance,
+    density: props.density ?? listDefaults.density,
   });
 
 const renderRows = <Item,>(prepared: ListProps<Item>): ReactElement => (

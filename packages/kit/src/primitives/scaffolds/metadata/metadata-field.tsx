@@ -3,6 +3,7 @@ import { Platform, View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import { BesideField } from './metadata-field-beside';
+import { useMetadataInline } from './metadata-inline';
 
 export interface MetadataFieldProps {
   title: string;
@@ -36,20 +37,41 @@ export function MetadataField(props: MetadataFieldProps): ReactElement {
 
 const stackedClass = 'mb-4 w-full gap-1 select-none';
 
-// A stacked label/value pair, not a row: no press, hover, separator or lanes.
+// A stacked label/value pair, not a row: no press, hover, separator or lanes. Inline, the value stands alone.
 function StackedField(props: FieldProps): ReactElement {
+  if (useMetadataInline()) return <InlineField {...props} />;
+
   return (
     <TextClassContext value={undefined}>
-      <View
-        accessible
-        role="group"
-        accessibilityLabel={props.label}
-        className={stackedClass}
-      >
-        <StackedLabel title={props.title} />
-        <View className="min-w-0 self-stretch">{props.children}</View>
-      </View>
+      <StackedGroup {...props} />
     </TextClassContext>
+  );
+}
+
+function StackedGroup(props: FieldProps): ReactElement {
+  return (
+    <View
+      accessible
+      role="group"
+      accessibilityLabel={props.label}
+      className={stackedClass}
+    >
+      <StackedLabel title={props.title} />
+      <View className="min-w-0 self-stretch">{props.children}</View>
+    </View>
+  );
+}
+
+function InlineField(props: FieldProps): ReactElement {
+  return (
+    <View
+      accessible
+      role="group"
+      accessibilityLabel={props.label}
+      className="min-w-0 max-w-full flex-row items-center select-none"
+    >
+      {props.children}
+    </View>
   );
 }
 

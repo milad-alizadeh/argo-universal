@@ -17,3 +17,14 @@ export const warningPill = { text, tone: 'warning' } satisfies PillProps;
 export const dangerPill = { text, tone: 'danger' } satisfies PillProps;
 
 export const donePill = { text, tone: 'done' } satisfies PillProps;
+
+// Tracker labels in their own colours, as GitHub sends them: a light, a dark and a grey one among them.
+export const labelPills = [
+  { text: 'Feature', color: '#bb87fc' },
+  { text: 'Bug', color: '#d73a4a' },
+  { text: 'Feed', color: '#26b5ce' },
+  { text: 'good first issue', color: '#7057ff' },
+  { text: 'help wanted', color: '#fbca04' },
+  { text: 'wontfix', color: '#ffffff' },
+  { text: 'docs', color: '#0e1a2b' },
+] as const satisfies readonly PillProps[];

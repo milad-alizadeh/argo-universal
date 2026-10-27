@@ -1,6 +1,8 @@
+import { List } from '@repo/kit/primitives/lists/list';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { sessionsLayoutChoices } from '../../stores/sessions-view';
 import { SessionRow, type SessionRowProps } from './session-row';
@@ -78,8 +80,24 @@ export const Selected: Story = { args: selectedSession };
 // An archived Session ends its meta line on the Archived pill.
 export const Archived: Story = { args: archivedSession };
 
-// One line per Session: its PR's glyph in the PR's state colour, or with no PR how long ago it was active, then its status dot unless idle.
-export const Compact: Story = { args: compactSession };
+/*
+ * One line per Session: its PR's glyph in the PR's state colour, or with no PR how long ago it was active, then its
+ * status dot unless idle. The line is the compact List's (its `density`), so the row sits in one, as the Sessions list
+ * draws it, at the Sessions list's width.
+ */
+export const Compact: Story = {
+  args: compactSession,
+  parameters: { screenPreview: true },
+  decorators: [
+    (Row) => (
+      <View className="flex-1 wide:w-frame-list">
+        <List appearance="plain" density="compact">
+          <Row />
+        </List>
+      </View>
+    ),
+  ],
+};
 
 // The pointer over a row tints it; Regular keeps its hairline. Wide layouts only.
 const hover: Story['play'] = async ({ canvas, userEvent }) => {

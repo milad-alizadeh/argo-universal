@@ -11,7 +11,12 @@ const field = z.object({
 });
 
 export const metadataProps = z.object({
-  title: z.string().optional().describe('Optional section heading.'),
+  title: z
+    .string()
+    .optional()
+    .describe(
+      "Optional section heading; on desktop and web, beside a Detail's content, it defaults to Properties.",
+    ),
 });
 
 export const metadataLabelProps = field.extend({

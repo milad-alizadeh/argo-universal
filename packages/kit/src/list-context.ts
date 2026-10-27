@@ -3,6 +3,8 @@ import { createContext } from 'react';
 
 export type ListAppearance = NonNullable<KitSchemaProps['List']['appearance']>;
 
+export type ListDensity = NonNullable<KitSchemaProps['List']['density']>;
+
 export type ListPosition = 'only' | 'first' | 'middle' | 'last';
 
 export interface ListSelection {

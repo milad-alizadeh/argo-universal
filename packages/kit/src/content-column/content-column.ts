@@ -90,7 +90,7 @@ export function ColumnScope(props: { children: ReactNode }): ReactElement {
 
 /*
  * One part of a Screen's body: it learns who claims what it holds, offers them its column, and draws itself from the
- * layout. Grouped cards in it move the Screen's heading.
+ * layout. Grouped cards in it move the Screen's heading, and a side column in it widens the Screen's column.
  */
 export function ColumnPart(props: {
   column: ContentColumn;
@@ -99,6 +99,7 @@ export function ColumnPart(props: {
   const outer = use(ColumnContext);
   const scope = useScope();
   useClaimOn(outer.scope, scope.state.grouped ? 'grouped' : undefined);
+  useClaimOn(outer.scope, scope.state.side ? 'side' : undefined);
   const layout = usePartLayout(scope.state, props.column, outer.column);
 
   return useProvide({ column: layout.offered, scope }, props.children(layout));
@@ -131,6 +132,15 @@ export function useClaimColumn(claim?: ColumnClaim): ContentColumn | undefined {
 
   return here.column;
 }
+
+// Content that draws a side column beside itself says so while drawn, so the Screen's capped column makes room for it.
+export function useClaimSide(drawn: boolean): void {
+  useClaimOn(use(ColumnContext).scope, drawn ? 'side' : undefined);
+}
+
+// Whether the Screen's content draws a side column, for its column to widen by.
+export const useSideColumn = (): boolean =>
+  use(ColumnContext).scope?.state.side ?? false;
 
 // A Screen heading's inset, so a narrow web heading over grouped cards starts on their rows' text.
 export function useHeadingInset(): number {

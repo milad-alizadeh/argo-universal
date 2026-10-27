@@ -2,7 +2,7 @@
 
 `material-filled.ttf` is Google's Material Symbols Outlined, with FILL 1, weight 400, optical size 48 and grade 0, the default weight like the outlined font bundled by `expo-symbols`, apart from fill. `LICENSE` is Google's Apache 2.0 licence.
 
-The font contains the 129 distinct Material names that `icon-names.ts`, `file-symbols.ts` and `status-symbols.ts` held when it was cut, plus `play_arrow` and `pause` for the Audio transport; the git icons' former names (`alt_route`, `fork_left`, `merge`, `difference`, `book`) stay in it unused now that those icons draw SVG components. The exact Google Fonts request is in `material-filled-source.txt`. To regenerate, fetch that CSS and download its TrueType `src` URL. Update the sorted `icon_names` query when the map gains an icon that needs a filled variant. Check every requested codepoint against Expo's `android/symbols.json` before replacing the asset.
+The font contains the 129 distinct Material names that `icon-names.ts`, `file-symbols.ts` and `status-symbols.ts` held when it was cut, plus `play_arrow` and `pause` for the Audio transport and `check_circle` for a done Issue; the git icons' former names (`alt_route`, `fork_left`, `merge`, `difference`, `book`) stay in it unused now that those icons draw SVG components. The exact Google Fonts request is in `material-filled-source.txt`. To regenerate, fetch that CSS and download its TrueType `src` URL. Update the sorted `icon_names` query when the map gains an icon that needs a filled variant. Check every requested codepoint against Expo's `android/symbols.json` before replacing the asset.
 
 Metro imports the font as an asset ID; Vite imports its URL. `expo-symbols` passes either to `expo-font`.
 

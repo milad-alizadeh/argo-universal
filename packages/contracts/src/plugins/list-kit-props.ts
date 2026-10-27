@@ -79,6 +79,13 @@ export const contentListProps = z.object({
     .describe(
       'The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists).',
     ),
+  density: z
+    .enum(['regular', 'compact'])
+    .optional()
+    .meta({ default: listDefaults.density })
+    .describe(
+      'compact draws each row as one line on a wide desktop or web window; phones always draw regular rows.',
+    ),
   footer: z.string().optional().describe('Page-level supporting text.'),
   isLoading: z.boolean().optional().describe('Whether the list is loading.'),
 });
@@ -122,6 +129,12 @@ export const listItemProps = z.object({
     .optional()
     .describe('Progress along the bottom of the row.'),
   selected: z.boolean().optional().describe('Whether the item is selected.'),
+  finished: z
+    .boolean()
+    .optional()
+    .describe(
+      'A finished item, such as a closed Issue or an archived Session: its title reads muted.',
+    ),
   disabled: z
     .boolean()
     .optional()

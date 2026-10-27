@@ -105,7 +105,7 @@ export type WireSchemaHints = {
     "isLoading": PropValue<"Detail", "isLoading">;
   };
   "Metadata": {
-    /** Optional section heading. */
+    /** Optional section heading; on desktop and web, beside a Detail's content, it defaults to Properties. */
     "title": PropValue<"Metadata", "title">;
   };
   "Metadata.Label": {
@@ -181,6 +181,8 @@ export type WireSchemaHints = {
     "aspect": PropValue<"List", "aspect">;
     /** The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists). */
     "appearance": PropValue<"List", "appearance">;
+    /** compact draws each row as one line on a wide desktop or web window; phones always draw regular rows. */
+    "density": PropValue<"List", "density">;
     /** Page-level supporting text. */
     "footer": PropValue<"List", "footer">;
     /** Whether the list is loading. */
@@ -221,6 +223,8 @@ export type WireSchemaHints = {
     "progress": PropValue<"ListItem", "progress">;
     /** Whether the item is selected. */
     "selected": PropValue<"ListItem", "selected">;
+    /** A finished item, such as a closed Issue or an archived Session: its title reads muted. */
+    "finished": PropValue<"ListItem", "finished">;
     /** Whether row activation is disabled. */
     "disabled": PropValue<"ListItem", "disabled">;
     /** Optional spoken label; defaults to title and value. */
@@ -253,7 +257,7 @@ export type WireSchemaHints = {
     "text": PropValue<"Pill", "text">;
     /** The Argo semantic tone. */
     "tone": PropValue<"Pill", "tone">;
-    /** A tracker label color. */
+    /** A tracker label color as #rrggbb: the text takes it, over a lighter fill of it. */
     "color": PropValue<"Pill", "color">;
   };
   "Table": {

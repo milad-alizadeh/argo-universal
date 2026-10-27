@@ -44,6 +44,12 @@ const plain = {
   ...rowInset,
 } satisfies SectionDrawing;
 
+// A compact List's rows keep 10 from their edge (Paper "Issue row"), so its heading starts there, on its rows' leading marks.
+export const compactSection = (section: SectionDrawing): SectionDrawing => ({
+  ...section,
+  inset: 'px-2.5',
+});
+
 // A popover's section heading starts where its rows' icons do: the row's 8 padding in from the card's inset.
 const menu = { ...plain, inset: 'px-2' } satisfies SectionDrawing;
 

@@ -1,10 +1,10 @@
 #!/bin/sh
-# Issue 42 changes status; gh refuses to change issue 43's. Closed searches find nothing.
+# Issue 43 is a sub-Issue of 42. Issue 42 changes status; gh refuses to change issue 43's. Closed searches find nothing.
 issue() {
-  printf '{"number":%s,"title":"%s","state":"OPEN","body":"This Issue came from the fixture gh executable.","labels":[{"name":"fixture","color":"d73a4a"}],"assignees":[{"login":"octocat"}],"url":"https://github.com/owner/repository/issues/%s"}' "$1" "$2" "$1"
+  printf '{"number":%s,"title":"%s","state":"OPEN","stateReason":"","body":"This Issue came from the fixture gh executable.","labels":[{"name":"fixture","color":"d73a4a"}],"assignees":[{"login":"octocat"}],"parent":%s,"url":"https://github.com/owner/repository/issues/%s"}' "$1" "$2" "$3" "$1"
 }
-issue_42() { issue 42 'Fixture issue from GitHub'; }
-issue_43() { issue 43 'Fixture issue gh cannot change'; }
+issue_42() { issue 42 'Fixture issue from GitHub' null; }
+issue_43() { issue 43 'Fixture issue gh cannot change' '{"number":42}'; }
 if [ "$1" = "auth" ] && [ "$2" = "status" ]; then
   exit 0
 fi

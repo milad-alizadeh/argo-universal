@@ -61,12 +61,12 @@ export const listWireParts = {
     },
   ),
   ListItem: part(
-    'A slotted row or media tile, arranged by its List, with selection, a corner badge and context Actions.',
+    'A slotted row or media tile, arranged by its List, with selection, a corner badge and context Actions. Child ListItems nest under it and fold on desktop.',
     listItemProps,
     {
       group: 'lists',
       container: true,
-      children: false,
+      children: ['ListItem'] as const,
       slots: {
         actions: actionSlot,
         media: listMediaParts,
