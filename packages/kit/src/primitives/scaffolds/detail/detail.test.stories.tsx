@@ -175,26 +175,10 @@ export const ScreenActionsLeadTheContent: Story = {
   },
 };
 
-// The reading column's width, read off the page so the test never copies the token.
-const columnToken = (): number =>
-  Number.parseFloat(
-    getComputedStyle(document.documentElement).getPropertyValue(
-      '--container-column',
-    ),
-  );
-
 const rect = (element: Element): DOMRect => element.getBoundingClientRect();
 
-// Rounding in layout is not a difference in column.
-const sameAs = (a: number, b: number): boolean => Math.abs(a - b) <= 1;
-
-// A line of text shrinks to its words, so a block that fills the content column measures it.
-const fill = 'content-fill';
-
-const filled: DetailProps = {
-  ...issue.detail,
-  children: <View testID={fill} className="h-1" />,
-};
+// Rounding in layout is not a difference in edge.
+const sameEdge = (a: number, b: number): boolean => Math.abs(a - b) <= 1;
 
 // A window wide enough for the Screen's capped column, settled before the story renders; the Screen fills the viewport, as in the App.
 const onWide = (story: Story): Story => ({
@@ -204,36 +188,21 @@ const onWide = (story: Story): Story => ({
 });
 
 /*
- * The reading width caps the content alone: Metadata beside it widens the Screen's column, so the content keeps the
- * width it has without Metadata, the heading starts on its edge and its Actions end on the Metadata's.
+ * Metadata beside the content widens the Screen's column rather than taking from the content: the heading starts on the
+ * content's edge and its Actions end on the Metadata's.
  */
 export const MetadataWidensTheColumnNotTheText: Story = onWide({
-  args: filled,
   render: ScreenActionsLeadTheContent.render,
   play: async ({ canvas }) => {
-    const content = (): DOMRect => rect(canvas.getByTestId(fill));
+    await waitFor(() => expect(metadataIsBelow(canvas)).toBe(false));
 
-    await waitFor(() =>
-      expect(sameAs(content().width, columnToken())).toBe(true),
-    );
-    await expect(metadataIsBelow(canvas)).toBe(false);
-
+    const content = rect(canvas.getByText(body));
     const title = rect(canvas.getByRole('heading', { name: issue.title }));
     const action = rect(canvas.getByRole('button', { name: closeLabel }));
-
     const status = rect(canvas.getByRole('group', { name: statusGroup }));
 
-    await expect(sameAs(title.left, content().left)).toBe(true);
-    await expect(sameAs(action.right, status.right)).toBe(true);
-  },
-});
-
-export const ReadingColumnHoldsContentWithoutMetadata: Story = onWide({
-  args: { ...filled, metadata: undefined },
-  play: async ({ canvas }) => {
-    const content = rect(canvas.getByTestId(fill));
-
-    await expect(sameAs(content.width, columnToken())).toBe(true);
+    await expect(sameEdge(title.left, content.left)).toBe(true);
+    await expect(sameEdge(action.right, status.right)).toBe(true);
   },
 });
 

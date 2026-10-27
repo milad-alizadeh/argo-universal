@@ -19,7 +19,7 @@ const vanishes = { light: 0.85, dark: 0.04 } as const;
 // How much further toward black or white each try mixes the text.
 const mixStep = 0.02;
 
-// The fill's alpha as two hex digits: 18%, as the tone fills.
+// The fill's alpha as two hex digits: 18%, light enough for the coloured text to read on it.
 const fillAlpha = '2e';
 
 const hex = { base: 16, digits: 2, channelMax: 255 } as const;

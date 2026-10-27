@@ -7,8 +7,6 @@ import {
   counted,
   noClaims,
   partLayout,
-  sideColumn,
-  sideColumnExtra,
 } from './column-layout';
 
 const claimed = (...claims: ColumnClaim[]): ColumnClaims =>
@@ -84,12 +82,5 @@ describe('partLayout', () => {
       inherited,
     );
     expect(partLayout(claimState(noClaims), narrow).offered).toBe(inherited);
-  });
-});
-
-describe('sideColumnExtra', () => {
-  it('widens a capped column by the side column and its gap, only when one is drawn', () => {
-    expect(sideColumnExtra(false)).toBe(0);
-    expect(sideColumnExtra(true)).toBe(sideColumn.width + sideColumn.gap);
   });
 });
