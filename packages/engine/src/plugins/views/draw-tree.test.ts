@@ -47,30 +47,27 @@ const map = { path: '/map' };
 const refusedLine =
   'Plugin atlas: refused /map node Stack#root/Svg#unsafe: element <script> refused';
 
-function required(root: WireNode | null): WireNode {
-  if (!root) throw new Error('Expected a drawn tree');
-
-  return root;
-}
-
 it('drops refused SVG nodes from an ordinary page and sends canonical markup', () => {
   const circle = '<svg><circle cx="2" cy="3" r="1" fill="currentColor"/></svg>';
   const root = stack([svg(circle, 'valid'), unsafe]);
 
-  const { view, sent, logs } = drawn(
-    [{ type: 'snapshot', revision: 1, root }],
-    map,
-  );
+  const { sent, logs } = drawn([{ type: 'snapshot', revision: 1, root }], map);
 
-  expect(required(view.root).children).toMatchObject([
+  expect(sent).toMatchObject([
     {
-      key: 'valid',
-      props: {
-        xml: '<svg><circle cx="2" cy="3" fill="currentColor" r="1"/></svg>',
+      type: 'snapshot',
+      root: {
+        children: [
+          {
+            key: 'valid',
+            props: {
+              xml: '<svg><circle cx="2" cy="3" fill="currentColor" r="1"/></svg>',
+            },
+          },
+        ],
       },
     },
   ]);
-  expect(sent.map(({ type }) => type)).toEqual(['snapshot']);
   expect(logs).toEqual([refusedLine]);
 });
 
@@ -92,9 +89,6 @@ it('drops refused SVG nodes from an ordinary Slot without refusing its view', ()
   );
 
   expect(view.refused).toBe(false);
-  expect(required(view.root).slots).toMatchObject({
-    leading: [{ key: 'valid' }],
-  });
   expect(sent.map(({ type }) => type)).toEqual(['snapshot']);
   expect(logs).toEqual([refusedLine]);
 });

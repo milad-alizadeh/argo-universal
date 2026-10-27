@@ -6,15 +6,22 @@ export const WireProps = z.record(z.string(), WireJson);
 
 export type WireProps = z.infer<typeof WireProps>;
 
-// The props a Component event's schema `within` names: that prop object of the node, or the node's own props when it names none.
+/*
+ * The props a Component event's schema `within` names: that prop object of the node, or the node's own props when it names none.
+ * Returned by reference, never copied: a field tells the Server's answer from a redraw by the echoed value's identity.
+ */
 export function propsWithin(
   props: WireProps,
   within: string | undefined,
 ): WireProps {
   if (within === undefined) return props;
+  const holder = props[within];
 
-  return WireProps.safeParse(props[within]).data ?? {};
+  return isWireProps(holder) ? holder : {};
 }
+
+const isWireProps = (value: WireJson | undefined): value is WireProps =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 // A Component event's handler on the node: at the event's name, inside the props its schema's `within` names.
 export function componentEventHandler(

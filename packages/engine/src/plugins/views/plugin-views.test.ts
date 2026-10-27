@@ -1,5 +1,6 @@
 import { toolCallSlotId } from '@repo/contracts/plugins/replaceable';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import { pluginPageBytes } from '@repo/contracts/plugins/wire-limits';
 import { expect, it } from 'vitest';
 import type { Opening } from './open-view';
 import { PluginViews } from './plugin-views';
@@ -62,6 +63,18 @@ it('writes a reason a Plugin spread over lines as one log line', () => {
     'Plugin atlas: could not draw /sync: Atlas threw Plugin argo: all well',
   ]);
   expect(failed).toEqual(['Atlas threw\nPlugin argo: all well']);
+});
+
+it('fails a page that throws after its snapshot was refused for size', () => {
+  const oversized = node('Text', { children: 'x'.repeat(pluginPageBytes) });
+
+  const { logs, failed } = drawing({ path: '/sync' }, [
+    drawn(oversized),
+    redrawn(node(renderError, { reason: 'Atlas threw' })),
+  ]);
+
+  expect(failed).toEqual(['Atlas threw']);
+  expect(logs).toContain('Plugin atlas: could not draw /sync: Atlas threw');
 });
 
 it('falls a replaceable Slot back to core, failing nothing, when it asks core to draw after it has drawn once', () => {

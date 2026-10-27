@@ -17,9 +17,10 @@ type Reception = { log: (line: string) => void; revision: number };
 type Drawing = { view: OpenView; message: ViewMessage; reception: Reception };
 
 /*
- * Draws one message from the worker for the view's App: folds it onto the Plugin's tree, sanitises,
- * prepares and caps that tree, and sends the App what changed. A patch with no tree under it, before the
- * first snapshot or after a refused one, draws nothing. Returns why the view failed, if it did.
+ * Draws one message from the worker for the view's App: folds it onto the Plugin's tree, which the view
+ * keeps as the worker sent it, then sanitises, prepares and caps a copy and sends the App what changed. A
+ * patch with no tree under it, before the first snapshot or after a refused one, draws nothing, except a
+ * throw replacing the root, which still fails the view. Returns why the view failed, if it did.
  */
 export function drawTree(
   view: OpenView,
@@ -32,8 +33,23 @@ export function drawTree(
   if (tooLarge) return refuseTree(drawing, tooLarge);
   const root = nextRoot(view.root, message);
 
-  return root ? pluginTree(drawing, root) : null;
+  return root ? pluginTree(drawing, root) : thrownRoot(drawing, message);
 }
+
+// A page sends a snapshot only until it first draws, so a throw after that arrives as the patch replacing the root.
+function thrownRoot({ view }: Drawing, message: ViewMessage): string | null {
+  const thrown = replacedRoot(message);
+
+  return thrown ? (view.draws.failure(thrown) ?? null) : null;
+}
+
+const replacedRoot = (message: ViewMessage): WireNode | undefined =>
+  message.type === 'patch'
+    ? message.ops.findLast(replacesRoot)?.node
+    : undefined;
+
+const replacesRoot = (op: PatchOp): op is Extract<PatchOp, { op: 'replace' }> =>
+  op.op === 'replace' && op.key.length === 0;
 
 function pluginTree(drawing: Drawing, root: WireNode): string | null {
   const failure = drawing.view.draws.failure(root);
@@ -41,9 +57,10 @@ function pluginTree(drawing: Drawing, root: WireNode): string | null {
   if (failure !== undefined) return failure;
   const tooLarge = sizeReason(root, pluginPageBytes, 'page');
 
-  return tooLarge
-    ? refuseTree(drawing, tooLarge)
-    : sanitized(drawing, sanitizeTree(root));
+  if (tooLarge) return refuseTree(drawing, tooLarge);
+  drawing.view.root = root;
+
+  return sanitized(drawing, sanitizeTree(root));
 }
 
 function sanitized(
@@ -54,12 +71,11 @@ function sanitized(
   const failure = view.draws.refusedSvg(view, refused, reception.log);
 
   if (failure !== undefined) return failure;
-  view.root = root;
 
   return prepared(drawing, prepareWireTree(root));
 }
 
-// Preparation may grow an admissible tree past the caps: the Plugin's tree is kept, so a patch can recover it.
+// Sanitising and preparation may change an admissible tree or grow it past the caps: the Plugin's own tree is kept, so a patch can recover it.
 function prepared(drawing: Drawing, tree: WireNode): string | null {
   const { view, message } = drawing;
   const held = message.type === 'snapshot' ? null : view.drawn;

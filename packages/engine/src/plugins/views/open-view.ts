@@ -21,9 +21,9 @@ export type Opening = Omit<Open, 'type' | 'viewId'>;
 export type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
 
 /*
- * One App's view of a Plugin route or Slot. `root` is the Plugin's tree as sanitised, which handlers and
- * data are looked up in; `drawn` is the prepared tree the App holds, at `revision`. `refused` is set while
- * the App holds the fallback for a tree over the wire caps.
+ * One App's view of a Plugin route or Slot. `root` is the Plugin's tree as the worker sent it, which
+ * handlers and data are looked up in; `drawn` is the sanitised, prepared tree the App holds, at
+ * `revision`. `refused` is set while the App holds the fallback for a tree over the wire caps.
  */
 export interface OpenView {
   pluginId: string;

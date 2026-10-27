@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readdir, readFile, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pluginKitDeclarations } from './plugin-kit-declarations';
@@ -12,12 +13,25 @@ const outputDirectory = resolve(
   '../../../docs/plugins/kit-components',
 );
 
+const repositoryRoot = resolve(import.meta.dirname, '../../..');
+
+const oxfmtBinary = resolve(repositoryRoot, 'node_modules/oxfmt/bin/oxfmt');
+
 const checking = process.argv.includes('--check');
 
 const kitDeclarationFile = resolve(
   import.meta.dirname,
   '../../plugin-kit/src/components.d.ts',
 );
+
+// The repo's oxfmt owns the declarations' layout, so the file written is the file `oxfmt --check` accepts.
+function formatted(path: string, source: string): string {
+  return execFileSync(
+    process.execPath,
+    [oxfmtBinary, `--stdin-filepath=${path}`],
+    { cwd: repositoryRoot, encoding: 'utf8', input: source },
+  );
+}
 
 function generatedFiles(): Map<string, string> {
   const pages = componentNames.map(
@@ -27,7 +41,10 @@ function generatedFiles(): Map<string, string> {
 
   return new Map([
     ...pages,
-    [kitDeclarationFile, pluginKitDeclarations()],
+    [
+      kitDeclarationFile,
+      formatted(kitDeclarationFile, pluginKitDeclarations()),
+    ],
     [resolve(outputDirectory, 'index.md'), renderIndex(componentNames)],
   ]);
 }

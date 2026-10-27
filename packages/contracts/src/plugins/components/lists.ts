@@ -72,7 +72,7 @@ export const listsComponents = {
         actions: actionSlot,
         media: listMediaComponents,
         leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
-        trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],
+        trailing: ['Text', 'Label', 'Pill', 'Button'],
         meta: ['Label', 'Pill'],
       },
       events: { onPress: rowPress },
@@ -120,11 +120,11 @@ export const listsComponents = {
     },
   ),
   'Table.Cell': defineKitComponent(
-    "One cell; text alone, or a Pill, Label, StatusDot or Text drawn in the text's place.",
+    "One cell; text alone, or a Pill, Label or Text drawn in the text's place.",
     tableCellProps,
     {
       group: 'lists',
-      children: ['Text', 'Label', 'Pill', 'StatusDot'],
+      children: ['Text', 'Label', 'Pill'],
       label: 'The required `text` is the spoken value.',
     },
   ),

@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from '@argo/plugin-kit';
+import {
+  edited,
+  failed,
+  owned,
+  shown,
+  unowned,
+  type State,
+} from './async-state';
 
 export type Show<Value> = (value: Value) => void;
 
 // Answers the value, and may `show` an earlier one first, such as a cached answer.
 export type Load<Value> = (show: Show<Value>) => Promise<Value>;
 
-type Update<Value> = (value: Value | undefined) => Value | undefined;
+export type Update<Value> = (value: Value | undefined) => Value | undefined;
 
 export type Async<Value> = {
   // `undefined` until a load shows one; a failed load keeps the last.
@@ -18,62 +26,9 @@ export type Async<Value> = {
   reload: (next?: Load<Value>) => Promise<void>;
 };
 
-type State<Value> = {
-  owner: Load<Value> | undefined;
-  value: Value | undefined;
-  error: string | undefined;
-};
-
 type SetState<Value> = (
   update: (previous: State<Value>) => State<Value>,
 ) => void;
-
-const unowned = { owner: undefined, value: undefined, error: undefined };
-
-// A state belongs to the `load` that made it; another `load` starts from nothing.
-const owned = <Value>(state: State<Value>, load: Load<Value>): State<Value> =>
-  state.owner === load ? state : unowned;
-
-// Values are JSON, so equal ones are told apart by their text.
-const same = <Value>(left: Value, right: Value): boolean =>
-  JSON.stringify(left) === JSON.stringify(right);
-
-// Showing the answer already shown changes nothing, so no new view revision is published.
-function shown<Value>(
-  state: State<Value>,
-  load: Load<Value>,
-  value: Value,
-): State<Value> {
-  return unchanged(state, load, value)
-    ? state
-    : { owner: load, value, error: undefined };
-}
-
-const unchanged = <Value>(
-  state: State<Value>,
-  load: Load<Value>,
-  value: Value,
-): boolean => state.owner === load && !state.error && same(state.value, value);
-
-function failed<Value>(
-  state: State<Value>,
-  load: Load<Value>,
-  cause: unknown,
-): State<Value> {
-  const error = cause instanceof Error ? cause.message : String(cause);
-
-  return { ...owned(state, load), owner: load, error };
-}
-
-function edited<Value>(
-  state: State<Value>,
-  load: Load<Value>,
-  update: Update<Value>,
-): State<Value> {
-  const { value } = owned(state, load);
-
-  return { owner: load, value: update(value), error: undefined };
-}
 
 type Run<Value> = {
   load: Load<Value>;

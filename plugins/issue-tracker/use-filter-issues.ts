@@ -1,13 +1,10 @@
 import { useCallback, useEffect } from '@argo/plugin-kit';
-import { githubError } from './github-errors';
+import { filterMessage, pageSize, unloaded, type Shown } from './filter-shown';
 import type { Issue } from './github-issues';
 import { openClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import type { IssueFilter } from './issue-filters';
 import { useAsync, type Async, type Show } from './use-async';
-
-// Issues a page loads at a time, and again for each further page.
-const pageSize = 30;
 
 export type FilterSource = {
   project: Project;
@@ -23,10 +20,6 @@ export type FilterIssues = {
   refresh: () => Promise<void>;
 };
 
-type Shown = { issues: Issue[]; limit: number };
-
-const unloaded: Shown = { issues: [], limit: pageSize };
-
 type CacheKey = Parameters<IssueDeps['storage']['readCache']>[0];
 
 const cacheKey = ({ project, filter }: FilterSource): CacheKey => ({
@@ -40,7 +33,8 @@ const cacheKey = ({ project, filter }: FilterSource): CacheKey => ({
  */
 export function useFilterIssues(source: FilterSource): FilterIssues {
   const { value, error, reload } = useFirstPage(source);
-  const { issues, limit } = value ?? unloaded;
+  const shown = value ?? unloaded;
+  const { issues, limit } = shown;
   const load = useLoad(source, reload);
   const refresh = useCallback(() => load(limit), [load, limit]);
 
@@ -48,7 +42,7 @@ export function useFilterIssues(source: FilterSource): FilterIssues {
 
   return {
     issues,
-    message: filterMessage(value, error),
+    message: filterMessage(shown, error),
     hasMore: issues.length >= limit,
     loadMore: () => load(limit + pageSize),
     refresh,
@@ -62,7 +56,7 @@ function useFirstPage(source: FilterSource): Async<Shown> {
         const key = cacheKey(source);
         const cached = await source.deps.storage.readCache<Issue[]>(key);
 
-        if (cached) show({ issues: cached, limit: pageSize });
+        if (cached) show({ issues: cached, limit: pageSize, fetched: false });
 
         return fetchIssues(source, pageSize, show);
       },
@@ -80,15 +74,6 @@ function useLoad(
     (limit) => reload((show) => fetchIssues(source, limit, show)),
     [reload, source],
   );
-}
-
-function filterMessage(
-  shown: Shown | undefined,
-  error: string | undefined,
-): string {
-  if (error !== undefined) return githubError(error);
-
-  return shown === undefined ? 'Loading Issues…' : '';
 }
 
 // An Issue whose status changed on its own page may have left this filter, or joined it.
@@ -109,7 +94,7 @@ async function fetchIssues(
 ): Promise<Shown> {
   const client = await openClient({ ...source, ...source.deps });
   const issues = await client.listIssues(source.filter.search, limit);
-  const shown = { issues, limit };
+  const shown = { issues, limit, fetched: true };
 
   show(shown);
   await source.deps.storage.writeCache(
