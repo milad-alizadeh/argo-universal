@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
@@ -86,7 +85,7 @@ function sectionsAndSidebar(width: number): ScaffoldStory {
   return {
     play: controlledPlay(async (context, controlled) => {
       const { canvas } = context;
-      await settleViewport(width);
+      await settleLayout(width);
       await expectSidebarInsideScaffold(context);
       await openEachSection(context, controlled);
       await toggleSidebar(context, controlled, false);
@@ -131,7 +130,7 @@ function attention(
   return {
     args: { attentionCount },
     play: controlledPlay(async ({ canvas }) => {
-      await settleViewport(layoutWidths.wide);
+      await settleLayout('wide');
       await check(canvas);
     }),
   };

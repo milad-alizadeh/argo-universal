@@ -1,5 +1,8 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import {
+  eachLayout,
+  layoutWidths,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { interleavedSubagents, subagentStates } from './subagent-list.mocks';
@@ -58,7 +61,7 @@ export const SeveralMixed: Story = {
 export const SelectFinished: Story = {
   args: { subagents: subagentStates.severalMixed },
   play: async ({ canvas, userEvent, args }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await userEvent.click(
       canvas.getByRole('button', { name: /Port the mock CLIs/ }),
     );

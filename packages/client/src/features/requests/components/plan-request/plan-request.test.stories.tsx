@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, within } from 'storybook/test';
@@ -44,7 +44,7 @@ const menuItem = (name: string): Promise<HTMLElement> =>
 // Build sends the Agent's manual-approval option, so each edit still asks.
 const builds = (width: number): Story => ({
   play: async ({ userEvent, args }) => {
-    await settleViewport(width);
+    await settleLayout(width);
     await expect(canvas().getByText(planTitleText)).toBeVisible();
     await userEvent.click(button('Build'));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -60,7 +60,7 @@ export const BuildWide = builds(1440);
 
 const keepsPlanning = (width: number): Story => ({
   play: async ({ userEvent, args }) => {
-    await settleViewport(width);
+    await settleLayout(width);
     await userEvent.click(button('No, keep planning'));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
     await expect(args.onAnswer).toHaveBeenCalledWith({
@@ -76,7 +76,7 @@ export const KeepPlanningWide = keepsPlanning(1440);
 // Each of the chevron's rows runs at once.
 export const BuildAutoAcceptWide: Story = {
   play: async ({ userEvent, args }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await userEvent.click(button(buildOptions));
     await userEvent.click(await menuItem('Build, auto-accept edits'));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -89,7 +89,7 @@ export const BuildAutoAcceptWide: Story = {
 // A new Session builds the plan; this one keeps planning.
 export const BuildInNewSessionWide: Story = {
   play: async ({ userEvent, args }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await userEvent.click(button(buildOptions));
     await userEvent.click(await menuItem('Build in new Session'));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -103,7 +103,7 @@ export const BuildInNewSessionWide: Story = {
 // Show plan reads the plan in the card, its title drawn once in the header.
 export const ShowPlanWide: Story = {
   play: async ({ userEvent }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await expect(canvas().queryByText(planStep)).not.toBeInTheDocument();
     await userEvent.click(button('Show plan'));
     await expect(await canvas().findByText(planStep)).toBeVisible();
@@ -116,7 +116,7 @@ export const ShowPlanWide: Story = {
 // Expand opens the plan full page; Restore brings the card back.
 export const ExpandPlanWide: Story = {
   play: async ({ userEvent }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await userEvent.click(button('Expand plan'));
     await expect(await canvas().findByText(planStep)).toBeVisible();
     await expect(button('Restore plan')).toBeVisible();
@@ -125,7 +125,7 @@ export const ExpandPlanWide: Story = {
 
 export const SaveToWorkspaceWide: Story = {
   play: async ({ userEvent, args }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await userEvent.click(button(buildOptions));
     await userEvent.click(await menuItem('Save to workspace'));
     await expect(args.onSavePlan).toHaveBeenCalledTimes(1);
@@ -136,7 +136,7 @@ export const SaveToWorkspaceWide: Story = {
 // A phone opens the plan as the request sheet's next page.
 export const ShowPlanPhone: Story = {
   play: async ({ userEvent }) => {
-    await settleViewport(390);
+    await settleLayout(390);
     await userEvent.click(button('Show plan'));
     await expect(await canvas().findByText(planStep)).toBeVisible();
   },

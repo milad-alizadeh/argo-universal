@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import {
@@ -15,7 +14,7 @@ export async function openWrittenPlan(
   width: number,
   { canvas, userEvent }: WrittenPlanPlayContext,
 ): Promise<Body> {
-  await settleViewport(width);
+  await settleLayout(width);
   await userEvent.click(canvas.getByRole('button', { name: 'Written plan' }));
 
   return within(document.body);

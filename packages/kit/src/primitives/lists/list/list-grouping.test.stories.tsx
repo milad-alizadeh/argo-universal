@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
+import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
-import { settleViewport } from '../../../settle-viewport';
 import { ListItem } from '../list-item';
 import { List } from './list';
 import { Recycling } from './list-recycling.stories';
@@ -58,7 +58,7 @@ function reordering(width: number): Story {
   return {
     render: () => <ReorderedSelection />,
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(
         await canvas.findByRole('button', { name: 'Reverse rows' }),
       );
@@ -85,7 +85,7 @@ export const ReorderAndRemovePhone = reordering(390);
 export const RecycleDescribedRows: Story = {
   ...Recycling,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(390);
+    await settleLayout(390);
     await expect(await canvas.findByText(rowDescription)).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Last rows' }));
     await expect(await canvas.findByText('Row 80')).toBeVisible();
@@ -128,7 +128,7 @@ function InheritedSection(): React.JSX.Element {
 export const StandaloneSelectionInheritance: Story = {
   render: () => <InheritedSection />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await expect(canvas.getByText('Selected: first')).toBeVisible();
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Second choice' }),

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { mediumBreakpoint, wideBreakpoint } from '../each-layout';
+import { mediumBreakpoint, wideBreakpoint } from '#mocks/story-layout';
 import { SizeClassMock } from './use-size-class.mocks';
 
 const meta = {

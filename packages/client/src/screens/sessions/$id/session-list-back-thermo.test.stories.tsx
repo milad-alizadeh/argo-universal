@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fireEvent, waitFor, within } from 'storybook/test';
@@ -7,7 +7,7 @@ import { OverflowingInspector } from './session-inspector.test.mocks';
 const meta = {
   title: 'Tests/Screens/Sessions/Session/ListBackThermo',
   render: (): ReactElement => <OverflowingInspector />,
-  beforeEach: (): Promise<void> => settleViewport(1920),
+  beforeEach: (): Promise<void> => settleLayout(1920),
 } satisfies Meta;
 
 export default meta;

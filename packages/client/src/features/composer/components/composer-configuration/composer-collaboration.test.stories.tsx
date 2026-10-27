@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -59,7 +58,7 @@ type Story = StoryObj<typeof meta>;
 function collaboration(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
       const overlay = within(document.body);
       await userEvent.click(
@@ -84,7 +83,7 @@ export const PermissionMenuPhone = collaboration(layoutWidths.phone);
 
 export const ModelMenuExcludesCollaboration: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(canvas.getByTestId('fast-mode-on')).toBeVisible();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Agent and model' }),

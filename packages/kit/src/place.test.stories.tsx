@@ -3,8 +3,7 @@ import { useRouter } from 'expo-router';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { useStackPush, withStack } from '#story-stack';
@@ -88,7 +87,7 @@ const heldIs = async (
 
 // A page pushed over another takes the Place, and the page under it takes it again when the pushed one goes.
 export const OnlyTheShownPageHoldsThePlace: Story = {
-  beforeEach: () => settleViewport(layoutWidths.wide),
+  beforeEach: () => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     await heldIs(canvas, 'Root');
 
@@ -106,7 +105,7 @@ export const OnlyTheShownPageHoldsThePlace: Story = {
 
 // Below wide nothing is offered, so no page holds the Place.
 export const NothingHoldsThePlaceBelowWide: Story = {
-  beforeEach: () => settleViewport(layoutWidths.tablet),
+  beforeEach: () => settleLayout('tablet'),
   play: async ({ canvas }) => {
     await canvas.findByText('Root page');
     await expect(canvas.getByTestId('held')).toHaveTextContent('nothing');

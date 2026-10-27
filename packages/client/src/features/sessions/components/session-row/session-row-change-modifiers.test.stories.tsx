@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, within } from 'storybook/test';
 import {
   meta as sessionRowTestMeta,
@@ -32,7 +31,7 @@ function modifiers(width: number, layout: 'regular' | 'compact'): Story {
       </>
     ),
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       for (const label of ['Draft', 'Conflict']) {
         const row = within(

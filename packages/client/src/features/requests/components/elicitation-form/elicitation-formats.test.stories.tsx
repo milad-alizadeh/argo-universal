@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import {
   meta as elicitationTestMeta,
@@ -21,7 +21,7 @@ function emptyAnswers(width: number): Story {
   return {
     args: { request: emptyAnswersRequest },
     play: async ({ canvas, canvasElement, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: /^Choice/ }));
       const page = within(canvasElement.ownerDocument.body);
       await userEvent.click(await page.findByRole('option', { name: 'None' }));
@@ -48,7 +48,7 @@ function dateFormats(width: number): Story {
   return {
     args: { request: dateFormatsRequest, initialValues: dateFormatsValues },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByText(/Enter a valid date\./)).toBeVisible();
       await expect(
         canvas.getByText(/Enter a valid date and time\./),

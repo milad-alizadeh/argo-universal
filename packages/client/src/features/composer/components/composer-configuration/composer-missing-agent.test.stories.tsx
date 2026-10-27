@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -39,7 +38,7 @@ type Story = StoryObj<typeof meta>;
 
 export const NamedByIdInConfigureWide: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
@@ -63,7 +62,7 @@ export const NamedByIdInConfigureWide: Story = {
 export const WithoutModelHidesControlWide: Story = {
   args: { configuration: { ...configuration, configOptions: [] } },
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(
       canvas.queryByRole('button', { name: agentModelLabel }),
     ).not.toBeInTheDocument();
@@ -75,7 +74,7 @@ function withoutAgentAt(width: number): Story {
   return {
     args: { configuration: { ...configuration, agentId: undefined } },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.queryByRole('button', { name: agentModelLabel }),
       ).not.toBeInTheDocument();

@@ -1,6 +1,5 @@
 import type { TurnEnd } from '@repo/contracts';
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { feedContentArgs } from '../feed-content/feed-content.mocks';
@@ -28,7 +27,7 @@ function ending(
   return {
     args: { items: turnEndItems(end) },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const role = end.stopReason === 'error' ? 'alert' : 'status';
       await expect(canvas.getByRole(role)).toBeVisible();
       await expect(canvas.getByRole(role)).toHaveTextContent(expected.title);

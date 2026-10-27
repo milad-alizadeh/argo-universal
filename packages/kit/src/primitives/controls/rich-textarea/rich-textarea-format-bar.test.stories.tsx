@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import {
   exampleLabel as label,
   RichTextareaExample,
@@ -14,7 +13,7 @@ const meta = {
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
 } satisfies Meta<typeof RichTextareaExample>;
 

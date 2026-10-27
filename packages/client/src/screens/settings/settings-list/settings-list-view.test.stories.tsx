@@ -1,4 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
 import {

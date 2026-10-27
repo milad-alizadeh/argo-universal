@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { composerFastModeConfiguration } from '../composer-mock';
 import {
@@ -27,7 +26,7 @@ async function testFastMode(
   context: PlayContext,
   width: number,
 ): Promise<void> {
-  await settleViewport(width);
+  await settleLayout(width);
   const trigger = context.canvas.getByRole('button', { name: agentModelLabel });
   await expect(
     within(trigger).queryByTestId('fast-mode-on'),

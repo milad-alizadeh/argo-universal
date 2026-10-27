@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { Pressable } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
+import { type LayoutName, settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import {
   Dialog,
   DialogCancel,
@@ -38,7 +37,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-type Layout = keyof typeof layoutWidths;
+type Layout = LayoutName;
 
 const dialogName = { name: 'Rename the Project' };
 
@@ -51,7 +50,7 @@ const rename = { name: 'Rename' };
 
 function opensAt(layout: Layout): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', rename));
       const dialog = await body.findByRole('dialog', dialogName);
@@ -75,7 +74,7 @@ export const CentredOnDesktop: Story = opensAt('wide');
 // Tabbing past the last control comes back round inside the dialog, never to the page behind it.
 function trapsFocusAt(layout: Layout): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', rename));
       const dialog = await body.findByRole('dialog', dialogName);
@@ -96,7 +95,7 @@ export const FocusStaysInDialog: Story = trapsFocusAt('wide');
 
 function returnsFocusAt(layout: Layout): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ canvas, userEvent }) => {
       const trigger = canvas.getByRole('button', rename);
       await userEvent.click(trigger);
@@ -129,7 +128,7 @@ function dragLockEnds(): Promise<void> {
 // Dragging the phone sheet down far enough closes it; a short drag lets it settle back open.
 function swipesDown(distance: number, staysOpen: boolean): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+    beforeEach: (): Promise<void> => settleLayout('phone'),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', rename));
       const dialog = await body.findByRole('dialog', dialogName);
@@ -164,7 +163,7 @@ export const SheetStaysOpenAfterShortDrag: Story = swipesDown(20, true);
 // Cancel is the dialog's own action: it closes the sheet or the centred dialog.
 function cancelsAt(layout: Layout): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ canvas, userEvent }) => {
       const trigger = canvas.getByRole('button', rename);
       await userEvent.click(trigger);

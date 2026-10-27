@@ -4,7 +4,7 @@ import {
   look,
   phones,
   platformsAndAppearances,
-} from './list-look-fixtures';
+} from '../mocks/list-look-fixtures';
 
 const noEdges = { heading: '', footer: '' };
 

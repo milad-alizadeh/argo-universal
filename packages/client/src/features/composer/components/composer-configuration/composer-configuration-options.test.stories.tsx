@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { expectRowInsideScroll } from '../../../../../mocks/composer-configuration/scroll-reachability';
@@ -45,7 +44,7 @@ async function openConfigure(
   { canvas, userEvent }: PlayContext,
   width: number,
 ): Promise<void> {
-  await settleViewport(width);
+  await settleLayout(width);
   await userEvent.click(canvas.getByRole('button', { name: agentModelLabel }));
 }
 

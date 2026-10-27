@@ -1,15 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Menu, picked } from './drill-menu.mocks';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Overlays/Drill',
   beforeEach: async (): Promise<void> => {
     picked.mockClear();
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
   render: (): ReactElement => <Menu />,
 } satisfies Meta;

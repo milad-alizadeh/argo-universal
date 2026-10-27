@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import {
@@ -29,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 function completed(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const row = canvas.getByRole('button', {
         name: commandTitle,
@@ -74,7 +73,7 @@ function outputDisclosure(width: number): Story {
   return {
     args: { row: longOutputCommand },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const row = canvas.getByRole('button', { name: completedCommandTitle });
       await expect(
         canvas.queryByText(/\nPreparing checks\nChecking files/, {
@@ -112,7 +111,7 @@ function failed(width: number): Story {
   return {
     args: { row: failedCommand },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const failure = canvas.getByText('Ran command exit 2 · 0s');
       await expect(failure).toBeVisible();
       await expect(canvas.queryByText('Exit 2')).not.toBeInTheDocument();

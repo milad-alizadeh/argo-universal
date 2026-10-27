@@ -1,5 +1,5 @@
 import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
@@ -9,7 +9,7 @@ const meta = {
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
   args: { inspectorOpen: true },
-  beforeEach: (): Promise<void> => settleViewport(1920),
+  beforeEach: (): Promise<void> => settleLayout(1920),
 } satisfies Meta<typeof WorkbenchScaffold>;
 
 export default meta;
@@ -43,7 +43,7 @@ async function assertSliding(canvas: Canvas, action: string): Promise<void> {
 
 function closesAt(width: number): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     play: async ({ canvas }) => assertSliding(canvas, 'Hide Inspector'),
   };
 }

@@ -6,8 +6,7 @@ import {
   within,
   userEvent as browserUserEvent,
 } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
@@ -17,7 +16,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/Shelf',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
 } satisfies Meta;
 
@@ -123,7 +122,7 @@ export const ShelfEndControls: Story = {
 export const CompactShelf: Story = {
   render: () => <ShelfControlsExample />,
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
   },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('One')).toBeVisible();

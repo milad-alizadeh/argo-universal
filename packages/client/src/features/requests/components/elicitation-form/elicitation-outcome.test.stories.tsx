@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect } from 'storybook/test';
 import {
@@ -95,7 +94,7 @@ function recordedRequest(mock: RequestMock, width: number): Story {
   return {
     args: props,
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.getAllByText(props.request.message).length,
       ).toBeGreaterThan(0);

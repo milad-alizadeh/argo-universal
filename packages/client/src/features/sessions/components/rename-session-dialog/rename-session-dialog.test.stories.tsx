@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { RenameSessionDialog } from './rename-session-dialog';
@@ -38,7 +37,7 @@ async function titleField(): Promise<HTMLInputElement> {
 // The field takes focus with the whole title selected, so typing replaces it; nothing has failed yet, so it is valid.
 function opensSelectedAt(layout: Layout): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async () => {
       const field = await titleField();
       await waitFor(() => expect(field).toHaveFocus());
@@ -56,7 +55,7 @@ export const OpensSelectedWide: Story = opensSelectedAt('wide');
 // Save, or Enter in the field, saves the typed title without its outer spaces.
 function savesAt(layout: Layout, submit: 'button' | 'enter'): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ args, userEvent }) => {
       const field = await titleField();
       await userEvent.clear(field);
@@ -81,7 +80,7 @@ export const EnterSavesWide: Story = savesAt('wide', 'enter');
 // A blank title, or the same one again, closes the dialog and keeps the old title without a word.
 function keepsTitleAt(layout: Layout, draft: string): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ args, userEvent }) => {
       const field = await titleField();
       await userEvent.clear(field);
@@ -106,7 +105,7 @@ export const SameTitleClosesWide: Story = keepsTitleAt('wide', title);
 // Cancel and Escape close without saving.
 function cancelsAt(layout: Layout, how: 'cancel' | 'escape'): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ args, userEvent }) => {
       const dialog = await openDialog();
       await (how === 'escape'
@@ -130,7 +129,7 @@ const failure = 'Couldn’t rename the Session. Try again.';
 function failedAt(layout: Layout): Story {
   return {
     args: { error: failure },
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async () => {
       const dialog = await openDialog();
       await waitFor(() => expect(dialog.getByText(failure)).toBeVisible());

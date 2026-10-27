@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import { expect, within } from 'storybook/test';
 import { page } from 'vitest/browser';
@@ -38,7 +37,7 @@ export const PluginItemTooltipWide: Story = {
     items: [{ text: 'Issue 412', tooltip: 'Issue 412: In review' }],
   },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.hover(canvas.getByText('Issue 412'));
     await expect(
       await within(document.body).findByRole('tooltip'),
@@ -137,7 +136,7 @@ function longTitleSelected(width: number): Story {
   return {
     args: { session: sessionRows.longTitle, selected: true },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const row = canvas.getByRole('button', {
         name: `${sessionRows.longTitle.title}, Idle`,

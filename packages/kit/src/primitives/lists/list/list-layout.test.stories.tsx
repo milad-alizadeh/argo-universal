@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
@@ -10,7 +9,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/Layout',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.tablet);
+    await settleLayout('tablet');
   },
 } satisfies Meta;
 

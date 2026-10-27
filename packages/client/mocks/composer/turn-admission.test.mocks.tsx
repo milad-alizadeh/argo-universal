@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { expect, fn } from 'storybook/test';
 import { oversizedComposerImage } from '../composer-mock';
@@ -34,7 +34,7 @@ export function stopPrecedence(
       },
     },
     play: async ({ canvas, userEvent, args }): Promise<void> => {
-      await settleViewport(width);
+      await settleLayout(width);
       const stop = canvas.getByRole('button', { name: 'Stop' });
       await expect(stop).toHaveProperty('disabled', disabled);
       await expect(

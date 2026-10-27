@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -54,7 +53,7 @@ export const feedReflowsAfterThePaneCollapses: Story = {
   args: { view: { state: 'open', ...idleSession } },
   render: ({ view }): React.JSX.Element => <SessionInPane view={view} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await canvas.findByTestId(feedScrollTestId);
     const before = rowWidths(canvas);
     await expect(Math.min(...before)).toBeGreaterThan(0);

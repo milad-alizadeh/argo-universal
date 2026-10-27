@@ -1,6 +1,5 @@
 import { runTableRoot } from '@repo/contracts/plugins/wire-fixtures';
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
@@ -21,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 export const DrawsAPluginTable: Story = {
   render: () => <PluginTree root={runTableRoot} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const table = await canvas.findByRole('table', { name: 'CI runs' });
 
@@ -42,7 +41,7 @@ export const DrawsAPluginTable: Story = {
 export const SendsTheSelection: Story = {
   render: () => <PluginTree root={runTableRoot} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const row = await canvas.findByRole('row', { name: /^Test API/ });
 
@@ -60,7 +59,7 @@ export const SendsTheSelection: Story = {
 export const PhoneDrawsAList: Story = {
   render: () => <PluginTree root={runTableRoot} onEvent={onEvent} />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     await expect(await canvas.findByText('Deploy web')).toBeVisible();
     await expect(canvas.queryByRole('table')).toBeNull();

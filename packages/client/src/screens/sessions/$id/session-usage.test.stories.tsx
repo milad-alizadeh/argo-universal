@@ -1,6 +1,5 @@
 import type { ContextUsage } from '@repo/contracts';
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, within, waitFor } from 'storybook/test';
@@ -73,7 +72,7 @@ const contextRing = (
 ): Story => ({
   render: renderUsage(level.usage),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(width);
+    await settleLayout(width);
     const trigger = canvas.getByRole('button', { name: contextLabel });
     const inline = within(trigger).getByText(level.used);
     await (inlineTokens
@@ -101,7 +100,7 @@ const contextRing = (
 const hidden = (width: number, usage?: ContextUsage): Story => ({
   render: renderUsage(usage),
   play: async ({ canvas }) => {
-    await settleViewport(width);
+    await settleLayout(width);
     await expect(
       canvas.queryByRole('button', { name: contextLabel }),
     ).not.toBeInTheDocument();

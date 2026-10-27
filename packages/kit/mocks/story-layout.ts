@@ -1,5 +1,25 @@
 import { Uniwind } from 'uniwind';
-import { settleViewport } from './settle-viewport';
+import { page } from 'vitest/browser';
+
+// The one story-test driver for the viewport: a named layout, the breakpoints behind it, and waiting for the page to settle.
+// It imports the browser runner, so it lives with the kit's test mocks, and tools/check-test-only-imports.mts keeps shipped code from reaching it.
+// Tablet sits between the phone and wide layouts, like an iPad in portrait.
+export const layoutWidths = { phone: 390, tablet: 1024, wide: 1440 } as const;
+
+export type LayoutName = keyof typeof layoutWidths;
+
+const viewportHeight = 844;
+
+// Sizes the viewport to a named layout, or to an exact width, and waits for fonts and two frames.
+export async function settleLayout(layout: LayoutName | number): Promise<void> {
+  const width = typeof layout === 'number' ? layout : layoutWidths[layout];
+
+  await page.viewport(width, viewportHeight);
+  await document.fonts.ready;
+  await new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+}
 
 // Reads a width token from tooling/uniwind/theme.css off the page, so tests never copy it.
 function tokenWidth(name: string): number {
@@ -26,9 +46,6 @@ export function contentWideMin(): number {
   return tokenWidth('--container-content-wide');
 }
 
-// Tablet sits between the phone and wide layouts, like an iPad in portrait.
-export const layoutWidths = { phone: 390, tablet: 1024, wide: 1440 } as const;
-
 type LayoutAssertion = (wide: boolean) => Promise<void>;
 
 // Runs the assertion at phone and wide widths, in light and dark; outside the browser runner, once at the default size.
@@ -50,7 +67,7 @@ async function eachMode(
   assertion: LayoutAssertion,
   wide: boolean,
 ): Promise<void> {
-  await settleViewport(wide ? layoutWidths.wide : layoutWidths.phone);
+  await settleLayout(wide ? 'wide' : 'phone');
 
   for (const mode of ['light', 'dark'] as const) {
     Uniwind.setTheme(mode);

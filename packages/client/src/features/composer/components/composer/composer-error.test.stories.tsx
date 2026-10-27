@@ -1,9 +1,8 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { findToast } from '@repo/kit/mocks/find-toast';
 import { canPointAt } from '@repo/kit/mocks/point-hit';
 import { shownText } from '@repo/kit/mocks/shown-text';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Text } from '@repo/kit/primitives/content/text';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { ScrollView } from 'react-native';
@@ -47,7 +46,7 @@ type Story = StoryObj<typeof meta>;
 function errorKeepsComposerReachable(width: number): Story {
   return {
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await findToast(failedAttachment);
       const layout = within(canvas.getByTestId('session-layout'));
       await expect(

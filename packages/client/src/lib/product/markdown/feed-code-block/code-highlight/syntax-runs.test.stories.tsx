@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 
@@ -30,7 +29,7 @@ type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
  * business, not the test's.
  */
 async function codeRuns(canvas: Canvas): Promise<string[]> {
-  await settleViewport(layoutWidths.wide);
+  await settleLayout('wide');
   const text = canvas.getByTestId('code-text');
 
   return [...text.children].map((run) => run.textContent ?? '');
@@ -38,7 +37,7 @@ async function codeRuns(canvas: Canvas): Promise<string[]> {
 
 // Every character the block draws, however many runs it is split into.
 async function wholeCode(canvas: Canvas): Promise<string> {
-  await settleViewport(layoutWidths.wide);
+  await settleLayout('wide');
 
   return canvas.getByTestId('code-text').textContent ?? '';
 }

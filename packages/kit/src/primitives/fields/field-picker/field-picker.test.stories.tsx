@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { ControlledScreen, ControlledPicker } from './field-picker-controlled';
 import { inStackedSection } from './field-picker-decorators';
 import {
@@ -45,7 +44,7 @@ export const ShowsTitle: Story = {
 // A page shows the chosen label on its row; choosing another reports it, closes the page (a popover on a desktop window, Back on a phone) and shows on the row.
 function choosing(width: number): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     render: () => (
       <ControlledPicker {...screenWithSearch} onValueChange={changed} />
     ),
@@ -77,7 +76,7 @@ export const RowOpensFromTitleMenu: Story = {
 
 // A page's row leads with the chosen option's logo.
 export const RowLeadsWithChosenLogo: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => (
     <ControlledPicker {...screenWithLogo} onValueChange={changed} />
   ),
@@ -87,7 +86,7 @@ export const RowLeadsWithChosenLogo: Story = {
 };
 
 export const RowOpensFromTitleScreen: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => (
     <ControlledPicker {...screenWithSearch} onValueChange={changed} />
   ),
@@ -105,7 +104,7 @@ export const ChoosesInPopover = choosing(layoutWidths.wide);
 export const ChoosesOnPushedScreen = choosing(layoutWidths.phone);
 
 export const SearchFiltersAndShowsEmptyState: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => (
     <ControlledPicker {...screenWithSearch} onValueChange={changed} />
   ),
@@ -129,7 +128,7 @@ export const SearchFiltersAndShowsEmptyState: Story = {
 };
 
 export const ArrowKeysAndEnterChoose: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => (
     <ControlledPicker {...screenWithSearch} onValueChange={changed} />
   ),
@@ -147,7 +146,7 @@ export const ArrowKeysAndEnterChoose: Story = {
 
 // A multiple page stays open, and every toggle reports the whole list in the options' order.
 export const MultipleReportsEachToggle: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => (
     <ControlledPicker {...screenMultiple} onValueChange={changed} />
   ),
@@ -169,7 +168,7 @@ export const MultipleReportsEachToggle: Story = {
 
 // A choice the search hides stays chosen while the reader ticks another.
 export const MultipleKeepsHiddenChoices: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => (
     <ControlledPicker {...screenMultiple} onValueChange={changed} />
   ),
@@ -195,7 +194,7 @@ export const HeaderActionRunsAndCloses = actionRunning(layoutWidths.phone);
 
 function actionRunning(width: number): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     render: () => (
       <ControlledPicker
         {...screenWithButton}
@@ -218,7 +217,7 @@ function actionRunning(width: number): Story {
 
 // A short several-of choice opens in place on the web as the page does, and also reports the list.
 export const MultipleMenuReportsList: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => <ControlledPicker {...menuMultiple} onValueChange={changed} />,
   play: async ({ canvas, userEvent }) => {
     const page = within(document.body);
@@ -281,7 +280,7 @@ export const ScreenRowsChoose: Story = {
 };
 
 export const InlineArrowKeysMoveAndChoose: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => <ControlledPicker {...inline} onValueChange={changed} />,
   play: async ({ canvas, userEvent }) => {
     const radios = await canvas.findAllByRole('radio');

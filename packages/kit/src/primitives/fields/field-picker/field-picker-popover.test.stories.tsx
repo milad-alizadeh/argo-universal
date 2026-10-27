@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { PopoverFieldGroup } from './field-picker-popover.mocks';
 
 const changed = fn<(value: string | readonly string[]) => void>();
@@ -11,7 +10,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/Forms/FieldPicker/Popover',
   beforeEach: async (): Promise<void> => {
     changed.mockClear();
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
   render: (): ReactElement => <PopoverFieldGroup onValueChange={changed} />,
 } satisfies Meta;

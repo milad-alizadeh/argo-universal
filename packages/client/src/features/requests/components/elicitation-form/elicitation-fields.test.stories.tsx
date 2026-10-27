@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
 import {
   meta as elicitationTestMeta,
@@ -30,7 +30,7 @@ function formFields(width: number): Story {
       initialValues: configurationValues,
     },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByText(/1024.*65535/)).toBeVisible();
       await expect(canvas.getByText('Fix Port to submit')).toBeVisible();
       await expect(canvas.queryByText(choiceHint)).not.toBeInTheDocument();
@@ -63,7 +63,7 @@ function textField(width: number): Story {
   return {
     args: { request: functionNameRequest },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.getByRole('heading', { name: functionNameRequest.message }),
       ).toBeVisible();
@@ -88,7 +88,7 @@ export const TextFieldWide = textField(1440);
 export const SubmitWithEnter: Story = {
   args: { request: configurationRequest, initialValues: validPort },
   play: async ({ canvas, userEvent, args }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await userEvent.click(canvas.getByRole('textbox', { name: /^Name/ }));
     await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -100,7 +100,7 @@ function skip(width: number): Story {
   return {
     args: { request: configurationRequest },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Skip' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'decline' });
     },
@@ -114,7 +114,7 @@ export const SkipDeclinesWide = skip(1440);
 export const DismissWide: Story = {
   args: { request: configurationRequest },
   play: async ({ canvas, userEvent, args }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });
   },
@@ -123,7 +123,7 @@ export const DismissWide: Story = {
 export const InvalidSchema: Story = {
   args: { request: invalidSchemaRequest },
   play: async ({ canvas, userEvent, args }) => {
-    await settleViewport(1440);
+    await settleLayout(1440);
     await expect(canvas.getByRole('button', { name: 'Submit' })).toBeDisabled();
     await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });
@@ -134,7 +134,7 @@ function clearOptionalNumber(width: number): Story {
   return {
     args: { request: configurationRequest, initialValues: validPort },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.clear(canvas.getByRole('textbox', { name: 'Port' }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({

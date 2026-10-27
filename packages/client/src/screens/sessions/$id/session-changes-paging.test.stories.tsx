@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
@@ -19,7 +18,7 @@ const meta = {
   globals: { mode: 'light' },
   args: { catalog: pagedChanges },
   render: (args): JSX.Element => <MemoryChangesInspector {...args} />,
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof MemoryChangesInspector>;
 
 export default meta;

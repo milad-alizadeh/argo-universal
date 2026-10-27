@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { expect, within, waitFor } from 'storybook/test';
 import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';
@@ -26,7 +25,7 @@ export function configuration(agentIndex: 0 | 1): Story {
       },
     },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(layoutWidths.wide);
+      await settleLayout('wide');
       await userEvent.click(
         canvas.getByRole('button', { name: 'Agent and model' }),
       );

@@ -1,6 +1,5 @@
 import type { AgentThought, Notice, TurnEnd } from '@repo/contracts';
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
@@ -66,7 +65,7 @@ function thinking(
       now: 18_000,
     },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expectThought(canvas, state);
     },
   };
@@ -111,7 +110,7 @@ function hiddenEnding(width: number, end: TurnEnd): Story {
   return {
     args: { items: turnEndItems(end) },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.getByRole('heading', { name: 'What should we build?' }),
       ).toBeVisible();
@@ -160,7 +159,7 @@ function crashNotice(width: number): Story {
       ).items,
     },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Ran 1 command' }),
       );

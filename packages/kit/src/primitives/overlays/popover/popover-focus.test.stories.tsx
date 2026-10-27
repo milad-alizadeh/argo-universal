@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { expect, waitFor, within } from 'storybook/test';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import {
   Popover,
   PopoverContent,
@@ -67,7 +66,7 @@ function TwoPopovers(): React.JSX.Element {
 export const OpeningAnotherWhileOneClosesKeepsItOpenWide: Story = {
   render: () => <TwoPopovers />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const page = within(document.body);
 
     await userEvent.click(canvas.getByRole('button', { name: 'Agent' }));

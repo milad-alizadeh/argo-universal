@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { completedRead, readMocks } from '../tool-call.mocks';
@@ -18,7 +17,7 @@ type Story = StoryObj<typeof meta>;
 function readFile(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const row = canvas.getByRole('button', {
         name: 'Read /project/hello.txt',
@@ -57,7 +56,7 @@ function agentParity(width: number): Story {
       </>
     ),
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       for (const [label, output] of [
         ['Read /project/hello.txt', /hello world/],

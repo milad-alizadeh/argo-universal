@@ -1,5 +1,8 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import {
+  eachLayout,
+  layoutWidths,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
 import {
   meta as sessionRowTestMeta,
@@ -48,7 +51,7 @@ function selectsCompactRow(width: number): Story {
   return {
     args: pullRequestArgs,
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', rowName));
       await expect(args.onSelect).toHaveBeenCalledWith('session-plan');
     },

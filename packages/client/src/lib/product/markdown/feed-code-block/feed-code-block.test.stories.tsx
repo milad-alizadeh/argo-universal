@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor } from 'storybook/test';
@@ -31,7 +30,7 @@ export const CodeBlockScrollsInsideTheBox: Story = {
     if (process.env.NODE_ENV !== 'test') return;
 
     for (const width of [390, 1440]) {
-      await settleViewport(width);
+      await settleLayout(width);
       const box = canvas.getByTestId(codeScrollId);
       await expect(box.scrollHeight).toBeGreaterThan(box.clientHeight);
       box.scrollTop = box.scrollHeight;
@@ -55,7 +54,7 @@ export const LongTitleKeepsFilenameVisible: Story = {
     if (process.env.NODE_ENV !== 'test') return;
 
     for (const width of [390, 1440]) {
-      await settleViewport(width);
+      await settleLayout(width);
       const title = canvas.getByTestId('code-block-title');
       await expect(title.textContent).toContain('useWide.ts');
       const filename = canvas.getByText('useWide.ts').getBoundingClientRect();
@@ -75,7 +74,7 @@ function copyControlFollowsHoverAndFocus(width: number): Story {
     ),
     play: async ({ canvas }) => {
       if (process.env.NODE_ENV !== 'test') return;
-      await settleViewport(width);
+      await settleLayout(width);
       const copy = canvas.getByRole('button', { name: 'Copy code' });
       const box = canvas.getByTestId(codeScrollId).parentElement;
 
@@ -104,7 +103,7 @@ function copiesResource(width: number, code?: string): Story {
   return {
     args: { uri: embeddedResource.uri, code },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByLabelText(embeddedResource.uri)).toBeVisible();
       await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
 

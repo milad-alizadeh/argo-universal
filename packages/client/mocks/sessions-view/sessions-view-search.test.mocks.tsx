@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import { expect } from 'storybook/test';
 import { SessionsPreviewMock } from '../sessions-preview-mock';
@@ -12,7 +12,7 @@ function searchPreview(width: number, query: string): Story {
     args: { query, sessions: [sessionRows.running, sessionRows.idle] },
     render: (args) => <SessionsPreviewMock {...args} />,
     beforeEach: async () => {
-      await settleViewport(width);
+      await settleLayout(width);
     },
   };
 }

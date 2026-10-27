@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
@@ -35,7 +34,7 @@ export const AttachmentInNarrowContent: Story = {
     </View>
   ),
   play: async ({ canvas, userEvent }): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Attach' }),
     );
@@ -72,7 +71,7 @@ export const EnvelopeWithInspectorOpen: Story = {
     </View>
   ),
   play: async ({ canvas }): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(
       await canvas.findByRole('button', { name: 'Checkout' }),
     ).toBeVisible();

@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, screen, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Inspector } from './inspector';
 import {
   branchesText,
@@ -26,7 +25,7 @@ type Story = StoryObj<typeof meta>;
 
 const at = (width: number, story: Story): Story => ({
   ...story,
-  beforeEach: () => settleViewport(width),
+  beforeEach: () => settleLayout(width),
 });
 
 const closeLabel = 'Close Inspector';

@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import {
@@ -32,7 +31,7 @@ function running(width: number): Story {
   return {
     args: { row: runningCommand, now: commandNow },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const row = canvas.getByRole('button', {
         name: commandTitle,
@@ -81,7 +80,7 @@ function agentParity(width: number): Story {
       </>
     ),
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       for (const label of [commandTitle, completedCommandTitle]) {
         const row = canvas.getByRole('button', { name: label });
@@ -102,7 +101,7 @@ function stopped(width: number): Story {
   return {
     args: { row: stoppedCommand },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const row = canvas.getByRole('button', {
         name: 'Wait 20 seconds then print done',

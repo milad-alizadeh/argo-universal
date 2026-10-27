@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor } from 'storybook/test';
 import type { PlayContext, Story } from './settings-list-story.test.mocks';
 import { appearanceRow } from './settings-list-theme.test.mocks';
@@ -108,7 +107,7 @@ async function clickWidePages({
 export function allPagesNavigate(width: number): Story {
   return {
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expectOpened(args.onSelect, []);
       await expectGroupedPages(canvas, width);
       await clickEveryWidthsPages({ canvas, userEvent }, width);
@@ -127,7 +126,7 @@ export function searchNarrowsThePages(width: number): Story {
   return {
     args: { query: ' agen' },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.getByRole('link', { name: /^Agents, 1/ }),
       ).toBeVisible();
@@ -142,7 +141,7 @@ export function searchSaysWhenNothingMatches(width: number): Story {
   return {
     args: { query: 'mistral' },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByText('No matching settings')).toBeVisible();
       await expect(
         canvas.getByText('No Settings page has "mistral" in its name.'),

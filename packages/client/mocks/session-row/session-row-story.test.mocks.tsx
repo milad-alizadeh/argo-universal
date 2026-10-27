@@ -1,5 +1,4 @@
-import { eachLayout } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Platform } from 'react-native';
@@ -25,7 +24,7 @@ export const dark = { globals: { mode: 'dark' } };
 export function running(width: number): Story {
   return {
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByText('Running the tests')).toBeVisible();
 
       const row = canvas.getByRole('button', {
@@ -56,7 +55,7 @@ export function metadata(width: number): Story {
       </>
     ),
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       for (const stage of ['Working', 'Branch', 'Open', 'Merged', 'Closed']) {
         const label = `${stage} Change #45`;

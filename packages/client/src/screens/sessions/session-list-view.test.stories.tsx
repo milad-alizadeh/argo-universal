@@ -1,6 +1,9 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
 import { allToasts, findToast } from '@repo/kit/mocks/find-toast';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import {
+  eachLayout,
+  type LayoutName,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import { activeSessions } from '@repo/mocks/app';
 import { expect, fn, screen, within } from 'storybook/test';
 import { navigationCallbacks } from '../../../mocks/sessions-view/sessions-view-navigation.test.mocks';
@@ -129,12 +132,12 @@ if (!foundIdleRow) throw new Error('Recorded catalog needs an idle Session');
 const idleRow = foundIdleRow;
 
 // A row's right-click menu archives its Session through the list.
-function archiveFromARowAt(layout: keyof typeof layoutWidths): Story {
+function archiveFromARowAt(layout: LayoutName): Story {
   return {
     args: { onArchive },
     beforeEach: async () => {
       onArchive.mockClear();
-      await settleViewport(layoutWidths[layout]);
+      await settleLayout(layout);
     },
     play: async ({ canvas, userEvent }) => {
       const [title] = await canvas.findAllByText(idleRow.title);
@@ -154,7 +157,7 @@ export const ArchiveFromARowWide: Story = archiveFromARowAt('wide');
 
 // A phone's Sessions Screen: New Session is its primary Action, and the filter a header submenu of checked choices; the view it chooses stays chosen and marks the filter Changed.
 export const PhonePageFiltersTheView: Story = {
-  beforeEach: () => settleViewport(layoutWidths.phone),
+  beforeEach: () => settleLayout('phone'),
   play: async ({ canvas, userEvent }) => {
     await expect(
       canvas.getByRole('heading', { name: 'Sessions' }),
@@ -189,7 +192,7 @@ export const ArchiveSeveralSelectedSessions: Story = {
   },
   beforeEach: async () => {
     archiveSelected.mockClear();
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
   play: async ({ canvas, userEvent }) => {
     const first = activeSessions.sessions[0];

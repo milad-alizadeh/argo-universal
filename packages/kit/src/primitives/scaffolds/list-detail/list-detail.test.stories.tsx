@@ -1,8 +1,7 @@
 import type { Meta } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { ListDetail } from './list-detail';
 import { at, heading, row } from './list-detail-test.mocks';
 import {
@@ -112,14 +111,14 @@ export const CrossingWideKeepsTheSelection = at(layoutWidths.wide, {
   play: async ({ canvas }) => {
     await expect(await heading(canvas, issues.title)).toBeVisible();
 
-    await settleViewport(layoutWidths.tablet);
+    await settleLayout('tablet');
 
     await expect(await heading(canvas, syncIssue.title)).toBeVisible();
     await expect(
       canvas.queryByRole('heading', { name: issues.title }),
     ).not.toBeInTheDocument();
 
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     await expect(await heading(canvas, issues.title)).toBeVisible();
     await expect(await heading(canvas, syncIssue.title)).toBeVisible();

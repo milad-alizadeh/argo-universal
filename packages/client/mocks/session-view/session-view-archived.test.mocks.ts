@@ -1,4 +1,4 @@
-import { eachLayout } from '@repo/kit/each-layout';
+import { eachLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fn } from 'storybook/test';
 import { archivedBannerText } from '../../src/features/sessions';
 import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';

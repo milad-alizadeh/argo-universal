@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -96,7 +96,7 @@ async function testHeldConfiguration(
   context: PlayContext,
   scenario: HeldScenario,
 ): Promise<void> {
-  await settleViewport(scenario.width);
+  await settleLayout(scenario.width);
   const overlay = within(document.body);
   const picker = configure(context, scenario.width);
   await picker.open();

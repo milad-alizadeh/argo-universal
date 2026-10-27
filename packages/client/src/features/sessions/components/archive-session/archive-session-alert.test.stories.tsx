@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import {
@@ -33,7 +32,7 @@ async function openAlert(): Promise<ReturnType<typeof within>> {
 async function atPhoneWidth(): Promise<void> {
   onArchive.mockClear();
   onClose.mockClear();
-  await settleViewport(layoutWidths.phone);
+  await settleLayout('phone');
 }
 
 // The alert says what archiving removes and what it keeps.

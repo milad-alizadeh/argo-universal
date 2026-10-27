@@ -1,5 +1,5 @@
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { fn, expect, waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import { composerImages } from '../composer-mock';
@@ -23,7 +23,7 @@ export function multiline(width: number): Story {
   return {
     render: () => <SendingComposer onSend={prompt} />,
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
       await browserUserEvent.type(input, typedLines(multilineSpacingPrompt));
       await expect(shownText(input)).toBe(multilineSpacingPrompt);
@@ -43,7 +43,7 @@ export function sending(width: number): Story {
   return {
     args: { draft: { text: spacingPrompt, attachments: [] }, sending: true },
     play: async ({ canvas, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.getByRole('button', { name: 'Send' }),
       ).toHaveAttribute('aria-busy', 'true');
@@ -77,7 +77,7 @@ export function disabled(width: number): Story {
       disabled: true,
     },
     play: async ({ canvas, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const input = canvas.getByRole('textbox');
       await expect(input).toHaveAttribute(readOnlyAttribute, 'true');
       await browserUserEvent.type(input, 'Another prompt');

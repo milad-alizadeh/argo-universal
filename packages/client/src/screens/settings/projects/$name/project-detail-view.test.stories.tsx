@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Text } from '@repo/kit/primitives/content/text';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { homePath } from '#features/settings';
@@ -24,7 +23,7 @@ const meta = {
     project: { status: 'loaded', project: worktreeProject },
     onBack: fn(),
   },
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof ProjectDetailView>;
 
 export default meta;

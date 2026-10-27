@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
@@ -51,7 +51,7 @@ export const EveryStep: Story = {
   ),
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await settleViewport(width);
+      await settleLayout(width);
       await expectEveryStep(canvas.getAllByRole('status'));
     }
   },

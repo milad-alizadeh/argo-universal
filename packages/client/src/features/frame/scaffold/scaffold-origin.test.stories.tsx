@@ -1,5 +1,5 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Text } from '@repo/kit/primitives/content/text';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
@@ -11,7 +11,7 @@ const meta = {
   title: 'Tests/Frame/Scaffold/Origin',
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
-  beforeEach: (): Promise<void> => settleViewport(1180),
+  beforeEach: (): Promise<void> => settleLayout(1180),
 } satisfies Meta<typeof WorkbenchScaffold>;
 
 export default meta;
@@ -19,7 +19,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const NoInspectorDisablesTheInspectorToggle: Story = {
-  beforeEach: (): Promise<void> => settleViewport(1440),
+  beforeEach: (): Promise<void> => settleLayout(1440),
   render: (): JSX.Element => (
     <HostedScaffoldMock>
       <Text>No Inspector offered</Text>
@@ -33,7 +33,7 @@ export const NoInspectorDisablesTheInspectorToggle: Story = {
 };
 
 export const SafeAreaKeepsBandAndPanesClear: Story = {
-  beforeEach: (): Promise<void> => settleViewport(1920),
+  beforeEach: (): Promise<void> => settleLayout(1920),
   args: { inspectorOpen: true },
   decorators: [
     (Story): JSX.Element => (

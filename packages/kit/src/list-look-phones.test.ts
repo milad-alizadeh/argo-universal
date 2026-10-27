@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { look, phones } from '../mocks/list-look-fixtures';
 import { rowsAreCompact } from './list-look';
-import { look, phones } from './list-look-fixtures';
 
 describe('onPhones', () => {
   const onPhones = { appearance: 'cards', padding: 0 } as const;

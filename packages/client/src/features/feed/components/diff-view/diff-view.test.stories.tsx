@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
@@ -39,7 +38,7 @@ export const InspectorFileShowsEveryLine: Story = {
     if (process.env.NODE_ENV !== 'test') return;
 
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.queryByText(/@@/)).toBeNull();
 
       const header = canvas.getByRole('button', largeHeader);
@@ -65,7 +64,7 @@ function inlinePreview(width: number): Story {
       ).mockResolvedValue();
 
       try {
-        await settleViewport(width);
+        await settleLayout(width);
         const title = canvas.getByTestId('code-block-title');
         await expect(title.textContent).toContain('large.txt');
         // Only the folder is isolated for display; the whole path is the label assistive tech reads.
@@ -153,7 +152,7 @@ export const ClearingViewedOpens: Story = {
 export const SpaceMarksViewedPhone: Story = {
   args: { viewed: false, onViewedChange: fn() },
   play: async ({ args, canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     canvas.getByRole('checkbox', { name: 'Viewed' }).focus();
     await userEvent.keyboard(' ');
     await expect(args.onViewedChange).toHaveBeenCalledWith(true);

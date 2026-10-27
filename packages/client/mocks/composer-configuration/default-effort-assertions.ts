@@ -1,4 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, within } from 'storybook/test';
 import { type Configuration } from './common';
 import type { DefaultEffortCase } from './default-effort-cases';

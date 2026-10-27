@@ -1,6 +1,9 @@
-import { layoutWidths, wideBreakpoint } from '@repo/kit/each-layout';
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import {
+  layoutWidths,
+  settleLayout,
+  wideBreakpoint,
+} from '@repo/kit/mocks/story-layout';
 import { expect, within } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
@@ -35,7 +38,7 @@ export const EditorScrollsAfterTenLinesWide = editorScrollsAfterTenLines(
 export const Empty: Story = {
   play: async ({ canvas }) => {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         shownText(canvas.getByRole('textbox', { name: 'Message' })),
       ).toBe('');
@@ -77,7 +80,7 @@ export const TypingWide = typing(layoutWidths.wide);
 export const ReturnSends: Story = {
   render: () => <SendingComposer onSend={returnPrompt} />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const input = await canvas.findByRole('textbox', { name: 'Message' });
     await browserUserEvent.type(input, '{Enter}');
     await expect(returnPrompt).not.toHaveBeenCalled();
@@ -96,7 +99,7 @@ export const ReturnSends: Story = {
 // The inline Mode choices are radios: the arrow keys, Home and End move between them, one at a time.
 export const ArrowKeysMoveThroughModeWide: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
     const overlay = within(document.body);
     const radios = await overlay.findAllByRole('radio');

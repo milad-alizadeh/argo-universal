@@ -1,5 +1,8 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import {
+  eachLayout,
+  layoutWidths,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { Feed } from './feed';
@@ -70,7 +73,7 @@ export const PagesOlderRows: Story = {
 export const KeepsPlaceWhenOlderRowsLoad: Story = {
   render: (args) => <PagedFeed {...args} rows={longRows} holdOlderPages />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     // At the top, the page before is already on its way.

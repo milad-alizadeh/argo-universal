@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, within } from 'storybook/test';
 import { sessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
 import {
@@ -16,7 +15,7 @@ const body = within(document.body);
 
 // A phone's heading draws no buttons: a long press opens New Session and Project settings, titled with the Project. The web's long touch, like a right-click, opens the context menu.
 export const phoneProjectMenu: Story = {
-  beforeEach: () => settleViewport(layoutWidths.phone),
+  beforeEach: () => settleLayout('phone'),
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,

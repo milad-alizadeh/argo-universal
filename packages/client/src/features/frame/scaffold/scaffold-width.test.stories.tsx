@@ -1,5 +1,4 @@
-import { contentWideMin } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { contentWideMin, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
@@ -81,7 +80,7 @@ export const MainContentUsesAvailableWidth: ScaffoldStory = {
   },
   play: controlledPlay(async (context, controlled) => {
     const { canvas, userEvent } = context;
-    await settleViewport(narrowDesktopWidth);
+    await settleLayout(narrowDesktopWidth);
     const content = canvas.getByTestId('responsive-main-content');
     await waitForAllow(canvas);
     await expectSessionLabel(canvas);

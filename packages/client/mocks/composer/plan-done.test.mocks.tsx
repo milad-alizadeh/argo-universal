@@ -1,5 +1,4 @@
-import { wideBreakpoint } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { waitFor, expect, within } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
 import { composerProps, composerPlanDone } from '../composer-mock';
@@ -19,7 +18,7 @@ export function planDone(width: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       const overlay = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       const plan = canvas.getByRole('button', { name: 'Plan' });
       await expect(plan).toBeVisible();
 

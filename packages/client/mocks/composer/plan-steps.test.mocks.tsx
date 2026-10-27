@@ -1,5 +1,4 @@
-import { wideBreakpoint } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, within, waitFor, expect } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
@@ -36,7 +35,7 @@ export function equalPlanSteps(width: number, agentIndex: number): Story {
       />
     ),
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const overlay = within(document.body);
       await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
 

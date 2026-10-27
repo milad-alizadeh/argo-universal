@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { agentRow as agent } from '../registry-icons.mocks';
@@ -26,7 +25,7 @@ function action(width: number, installed: boolean): Story {
   return {
     args: { agent: { ...agent, installed } },
     play: async ({ args, canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.queryByRole('button', { name: actionName(other) }),
       ).not.toBeInTheDocument();
@@ -60,7 +59,7 @@ function links(width: number): Story {
       },
     },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.getByRole('button', { name: 'Repository' }),
       ).toBeVisible();
@@ -88,7 +87,7 @@ const anyAction = /^(Install|Remove) /;
 export const UnavailablePhone: Story = {
   args: unavailableAgent,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expect(canvas.getByLabelText(unsupported)).toBeVisible();
     await expect(canvas.queryByText('Unavailable')).not.toBeInTheDocument();
     await expect(
@@ -101,7 +100,7 @@ export const UnavailablePhone: Story = {
 export const UnavailableWide: Story = {
   args: unavailableAgent,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(canvas.getByText('Unavailable')).toBeVisible();
     await expect(canvas.getByText(unsupported)).toBeVisible();
     await expect(

@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { findToast } from '@repo/kit/mocks/find-toast';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { ConnectionDetailView } from './connection-detail-view';
@@ -30,12 +29,12 @@ export const ShowsServerInfoAndClock: Story = {
 // Screen owns where its title goes at each width; this checks the caption shows on a wide window only.
 export const CaptionsThePageOnWideWindows: Story = {
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(
       await canvas.findByRole('heading', { name: 'Connection' }),
     ).toBeVisible();
     await expect(canvas.getByText(/Argo Server/)).toBeVisible();
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expect(canvas.queryByText(/Argo Server/)).toBeNull();
     await expect(canvas.getByText('4242')).toBeVisible();
   },

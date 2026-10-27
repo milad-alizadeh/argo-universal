@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { ReactElement } from 'react';
 import { expect, within } from 'storybook/test';
 import {
@@ -30,7 +30,7 @@ export const RetainAnswersAcrossSheetTransition: Story = {
     </RequestFrame>
   ),
   beforeEach: async (): Promise<void> => {
-    await settleViewport(1440);
+    await settleLayout(1440);
   },
   play: async ({ canvas, userEvent }) => {
     await userEvent.type(
@@ -39,7 +39,7 @@ export const RetainAnswersAcrossSheetTransition: Story = {
     );
     await userEvent.click(canvas.getByRole('button', { name: nextQuestion }));
     await userEvent.click(option(canvas, buildFeature));
-    await settleViewport(390);
+    await settleLayout(390);
     const sheet = within(await within(document.body).findByRole('dialog'));
     await expect(option(sheet, buildFeature)).toHaveAttribute(
       'aria-checked',

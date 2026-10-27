@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ScrollView } from 'react-native';
 import { expect, waitFor, fn } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
 import { Svg } from '#primitives/visual';
@@ -13,7 +12,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/Integration',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
 } satisfies Meta;
 

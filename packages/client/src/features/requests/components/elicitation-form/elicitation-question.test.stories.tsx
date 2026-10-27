@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, within } from 'storybook/test';
 import { boundedChoicesRequest } from '../../../../../mocks/elicitation-questions';
 import {
@@ -32,7 +32,7 @@ const option = (
 function answers(width: number): Story {
   return {
     beforeEach: async (): Promise<void> => {
-      await settleViewport(width);
+      await settleLayout(width);
     },
     play: async ({ canvas, userEvent, args }) => {
       await expect(
@@ -113,7 +113,7 @@ export const SkipAnsweredQuestion: Story = {
 
 export const KeyboardSelection: Story = {
   beforeEach: async (): Promise<void> => {
-    await settleViewport(1440);
+    await settleLayout(1440);
   },
   play: async ({ canvas, userEvent, args }) => {
     await userEvent.click(option(canvas, buildFeature));

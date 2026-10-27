@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { Menu } from './menu';
 import { type MenuOption, menuLoadingLabel } from './menu-props';
 
@@ -70,7 +69,7 @@ function disabledAnswer(kind: StatesProps['kind']): Story {
   return {
     args: { kind },
     play: async ({ canvas, canvasElement, userEvent, args }) => {
-      await settleViewport(layoutWidths.wide);
+      await settleLayout('wide');
       const page = within(canvasElement.ownerDocument.body);
       canvas.getByRole('button', { name: 'Permissions' }).focus();
       await userEvent.keyboard('{Enter}');
@@ -102,7 +101,7 @@ function loadingMenu(kind: StatesProps['kind']): Story {
   return {
     args: { kind, loading: true },
     play: async ({ canvas, canvasElement, userEvent, args }) => {
-      await settleViewport(layoutWidths.wide);
+      await settleLayout('wide');
       const page = within(canvasElement.ownerDocument.body);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Permissions' }),

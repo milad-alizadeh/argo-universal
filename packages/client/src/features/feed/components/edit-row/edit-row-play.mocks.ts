@@ -1,5 +1,5 @@
 import type { ToolCallUpdate } from '@repo/contracts';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import type { EditRow } from './edit-row';
@@ -100,7 +100,7 @@ export function editRow(width: number, edit: RecordedEdit): Story {
     args: { row: edit.row },
     play: async ({ canvas, userEvent }) => {
       if (process.env.NODE_ENV !== 'test') return;
-      await settleViewport(width);
+      await settleLayout(width);
       const feed = within(canvas.getByTestId('edit-feed'));
       await playEditRow({ canvas, userEvent, feed }, edit);
     },

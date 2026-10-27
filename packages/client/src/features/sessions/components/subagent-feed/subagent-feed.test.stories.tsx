@@ -1,5 +1,8 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import {
+  eachLayout,
+  layoutWidths,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
@@ -104,7 +107,7 @@ export const NoIncomingMessage: Story = {
 
 export const BackToTheList: Story = {
   play: async ({ canvas, userEvent, args }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       canvas.getByRole('button', { name: subagentFeedBackLabel }),
     );
@@ -115,7 +118,7 @@ export const BackToTheList: Story = {
 export const InTheInspector: Story = {
   render: (args) => <SubagentFeedInspector {...args} />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(canvas.getByRole('heading', subagentHeading)).toBeVisible();
     await expect(canvas.getByText('Running · 34s')).toBeVisible();
     await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
@@ -126,7 +129,7 @@ export const InTheInspector: Story = {
 export const AsAPageSheet: Story = {
   render: (args) => <SubagentFeedSheet {...args} />,
   play: async ({ userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expect(
       await screen.findByRole('heading', subagentHeading),
     ).toBeVisible();
@@ -161,7 +164,7 @@ export const StartsAtTheTopInTheInspector: Story = {
   args: { subagent: startingSubagent, feed: emptyFeed },
   render: (args) => <SubagentFeedInspector {...args} />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await startsAtTheTop(canvas);
   },
 };
@@ -175,7 +178,7 @@ export const StartsAtTheTopOnAPhone: Story = {
     </View>
   ),
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await startsAtTheTop(canvas);
   },
 };

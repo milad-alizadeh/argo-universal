@@ -1,6 +1,9 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
 import { findToast } from '@repo/kit/mocks/find-toast';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import {
+  eachLayout,
+  layoutWidths,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { homePath } from '#features/settings';
@@ -35,7 +38,7 @@ const meta = {
     projects: { status: 'loaded', projects: settingsProjects },
     onOpenProject: fn(),
   },
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof ProjectListView>;
 
 export default meta;

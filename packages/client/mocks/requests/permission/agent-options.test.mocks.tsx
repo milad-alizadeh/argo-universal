@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, within } from 'storybook/test';
 import { agentOptionsWithAlwaysReject } from '../../../src/features/requests/components/request.mocks';
@@ -21,7 +21,7 @@ export function allowMenuWide(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(1440);
+      await settleLayout(1440);
       await expect(
         canvas.queryByRole('button', { name: alwaysAllow }),
       ).not.toBeInTheDocument();
@@ -43,7 +43,7 @@ export function allowOnceLeads(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(1440);
+      await settleLayout(1440);
       await userEvent.click(canvas.getByText(args.request.title));
       await userEvent.keyboard('{Enter}');
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -58,7 +58,7 @@ export function enterSendsPicked(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(1440);
+      await settleLayout(1440);
       await userEvent.click(canvas.getByRole('button', { name: allowOptions }));
       await pickFromMenu(userEvent, alwaysAllow);
       await userEvent.click(canvas.getByText(args.request.title));
@@ -76,7 +76,7 @@ export function rejectMenuWide(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(1440);
+      await settleLayout(1440);
       await expect(
         canvas.queryByRole('button', { name: alwaysReject }),
       ).not.toBeInTheDocument();
@@ -99,7 +99,7 @@ export function groupedPhone(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(390);
+      await settleLayout(390);
       const buttons = canvas.getAllByRole('button');
       await expect(buttons).toHaveLength(4);
       await expect(buttons[0]).toHaveAccessibleName('Allow');
@@ -124,7 +124,7 @@ export function rejectAnswersAtOnce(width: number, mock?: RequestMock): Story {
     args: agentOptionsArgs(mock),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Reject' }));
       await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
       await expect(args.onAnswer).toHaveBeenCalledWith({ optionId: 'reject' });

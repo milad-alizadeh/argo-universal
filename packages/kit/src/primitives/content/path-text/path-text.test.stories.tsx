@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, within } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { PathText } from './path-text';
 import { longPath, shortPath } from './path-text-fixtures';
 
@@ -29,7 +28,7 @@ const settleTooltipDelay = (): Promise<void> =>
 export const CutPathShowsWholePathInTooltip: Story = {
   args: longPath,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.hover(canvas.getByLabelText(longPath.path));
     await expect(
       await within(document.body).findByRole('tooltip'),
@@ -40,7 +39,7 @@ export const CutPathShowsWholePathInTooltip: Story = {
 export const UncutPathShowsNoTooltip: Story = {
   args: shortPath,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.hover(canvas.getByLabelText(shortPath.path));
     await settleTooltipDelay();
     await expect(
@@ -52,7 +51,7 @@ export const UncutPathShowsNoTooltip: Story = {
 export const CutPathKeepsNameWhole: Story = {
   args: longPath,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const line = canvas.getByLabelText(longPath.path);
     const name = within(line).getByText('useWide.ts');
     await expect(name.getBoundingClientRect().left).toBeGreaterThanOrEqual(

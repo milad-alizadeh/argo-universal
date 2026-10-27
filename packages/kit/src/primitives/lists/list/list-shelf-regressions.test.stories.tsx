@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
 import { List } from './list';
@@ -12,7 +11,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/ShelfRegressions',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
 } satisfies Meta;
 

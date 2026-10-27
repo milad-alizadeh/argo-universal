@@ -1,5 +1,5 @@
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { type Meta, type StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -74,7 +74,7 @@ export function typing(width: number): Story {
   return {
     render: () => <SendingComposer onSend={prompt} />,
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await browserUserEvent.type(input, spacingPrompt);

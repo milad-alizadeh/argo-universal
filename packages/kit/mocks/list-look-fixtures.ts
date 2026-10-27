@@ -1,5 +1,5 @@
-import type { ListAppearance } from './list-context';
-import { type ListLookInput, resolveListLook } from './list-look';
+import type { ListAppearance } from '#kit/list-context';
+import { type ListLookInput, resolveListLook } from '#kit/list-look';
 
 type Platform = ListLookInput['platform'];
 

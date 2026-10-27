@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within, waitFor } from 'storybook/test';
@@ -32,7 +31,7 @@ type Story = StoryObj<typeof meta>;
 
 function selectAgent(width: number): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     play: async ({ canvas, userEvent }) => {
       const first = agents[0],
         second = agents[1];
@@ -74,7 +73,7 @@ function addAgents(width: number): Story {
         },
       },
     },
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     play: async ({ canvas, userEvent }) => {
       const trigger = canvas.getByRole('button', { name: 'Agent and model' });
       await expect(trigger).toHaveTextContent('Choose Agent');

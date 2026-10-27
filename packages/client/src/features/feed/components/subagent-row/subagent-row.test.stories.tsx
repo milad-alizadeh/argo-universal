@@ -1,5 +1,8 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import {
+  eachLayout,
+  layoutWidths,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import {
@@ -69,7 +72,7 @@ export const Replied: Story = {
 function opens(width: number): Story {
   return {
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: /^Started/ }));
       await expect(args.onOpen).toHaveBeenCalledWith(exploreSessionId);
     },

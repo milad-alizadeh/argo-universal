@@ -1,6 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -41,7 +40,7 @@ function atWidth(layout: Layout): () => Promise<void> {
   return async () => {
     onRename.mockClear();
     onArchive.mockClear();
-    await settleViewport(layoutWidths[layout]);
+    await settleLayout(layout);
   };
 }
 

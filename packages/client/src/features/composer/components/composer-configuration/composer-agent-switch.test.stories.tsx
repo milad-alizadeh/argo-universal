@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -69,7 +68,7 @@ function SwitchingAgent(): React.JSX.Element {
 export const SwitchKeepsPickerOpenWhileLoading: Story = {
   render: () => <SwitchingAgent />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const body = within(document.body);
     const trigger = canvas.getByRole('button', { name: agentModelLabel });
     await userEvent.click(trigger);
@@ -113,7 +112,7 @@ export const SavedOptionsStayVisibleDuringRefresh: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );

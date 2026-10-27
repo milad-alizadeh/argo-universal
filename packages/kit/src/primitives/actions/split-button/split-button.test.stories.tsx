@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { SplitButton } from './split-button';
 
 const menuLabel = 'Allow options';
@@ -60,7 +59,7 @@ function actsAlone(narrow: boolean, width: number): Story {
   return {
     args: { narrow },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Allow' }));
       await expect(args.onAllow).toHaveBeenCalledTimes(1);
       await expect(
@@ -80,7 +79,7 @@ function opensMenu(narrow: boolean, width: number): Story {
   return {
     args: { narrow },
     play: async ({ canvas, canvasElement, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const page = within(canvasElement.ownerDocument.body);
       await userEvent.click(canvas.getByRole('button', { name: menuLabel }));
 

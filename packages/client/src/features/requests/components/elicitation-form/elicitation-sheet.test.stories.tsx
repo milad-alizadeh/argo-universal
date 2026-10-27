@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { questionsRequest } from '../../../../../mocks/elicitation-questions';
@@ -15,7 +15,7 @@ const meta = {
   title: 'Tests/Requests/ElicitationSheet',
   component: ElicitationSheet,
   beforeEach: async (): Promise<void> => {
-    await settleViewport(390);
+    await settleLayout(390);
   },
   args: { ...elicitationProps({ mock: elicitationMock }), onAnswer: fn() },
 } satisfies Meta<typeof ElicitationSheet>;
@@ -88,7 +88,7 @@ export const RetainFieldAnswersAcrossTrayTransition: Story = {
     const name = sheet.getByRole('textbox', { name: /^Name/ });
     await userEvent.clear(name);
     await userEvent.type(name, retainedDraft);
-    await settleViewport(1440);
+    await settleLayout(1440);
 
     const tray = within(
       await page.findByRole('region', { name: 'Elicitation questions' }),

@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
@@ -11,7 +10,7 @@ import { GridExample } from './list-tiles.stories';
 const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/Tiles',
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
   parameters: { screenPreview: true },
 } satisfies Meta;
@@ -126,6 +125,6 @@ export const RecycledSvgWall: Story = {
 export const CompactSelection: Story = {
   ...Selection,
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
   },
 };
