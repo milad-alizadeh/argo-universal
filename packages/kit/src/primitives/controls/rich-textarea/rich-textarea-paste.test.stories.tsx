@@ -2,7 +2,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { cdp, userEvent } from 'vitest/browser';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import {
   type PastedHtml,
   pastedHtml,

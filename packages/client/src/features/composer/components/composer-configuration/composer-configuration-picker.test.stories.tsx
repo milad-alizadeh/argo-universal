@@ -1,4 +1,4 @@
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';

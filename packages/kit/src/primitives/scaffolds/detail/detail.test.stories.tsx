@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Screen } from '#primitives/scaffolds/screen';

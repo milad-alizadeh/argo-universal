@@ -1,9 +1,5 @@
 import { type AgentServer } from '@repo/contracts';
-import {
-  layoutWidths,
-  settleLayout,
-  wideBreakpoint,
-} from '@repo/kit/mocks/story-layout';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
 import { composerPlan } from '../composer-mock';

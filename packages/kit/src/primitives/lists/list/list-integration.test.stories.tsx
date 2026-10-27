@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ScrollView } from 'react-native';
 import { expect, waitFor, fn } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
 import { Svg } from '#primitives/visual';

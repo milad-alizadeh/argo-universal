@@ -1,4 +1,4 @@
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { runningShell } from './shell-list.mocks';

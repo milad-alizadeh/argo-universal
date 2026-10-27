@@ -6,7 +6,7 @@ import {
   within,
   userEvent as browserUserEvent,
 } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';

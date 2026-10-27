@@ -1,4 +1,4 @@
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { fadedEdges } from '../../../../../mocks/scroll-fade';

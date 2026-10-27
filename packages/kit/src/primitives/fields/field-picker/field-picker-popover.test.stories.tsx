@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { PopoverFieldGroup } from './field-picker-popover.mocks';
 
 const changed = fn<(value: string | readonly string[]) => void>();

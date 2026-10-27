@@ -1,8 +1,4 @@
-import {
-  eachLayout,
-  layoutWidths,
-  settleLayout,
-} from '@repo/kit/mocks/story-layout';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { interleavedSubagents, subagentStates } from './subagent-list.mocks';

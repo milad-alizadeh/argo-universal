@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { Link } from '#primitives/content/link';
 import { LinkPreviewCard } from './link-preview-card';
 import { LinkPreviewContext } from './link-preview-context';

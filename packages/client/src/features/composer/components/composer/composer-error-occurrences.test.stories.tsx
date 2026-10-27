@@ -1,6 +1,6 @@
 import { allToasts, findToast } from '@repo/kit/mocks/find-toast';
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { dismissToasts } from '@repo/kit/primitives/overlays/toast';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';

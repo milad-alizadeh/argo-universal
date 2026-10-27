@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
 import { nestedList } from './list-nested-fixtures';

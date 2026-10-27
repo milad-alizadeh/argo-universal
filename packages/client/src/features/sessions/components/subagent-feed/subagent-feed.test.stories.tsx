@@ -1,8 +1,4 @@
-import {
-  eachLayout,
-  layoutWidths,
-  settleLayout,
-} from '@repo/kit/mocks/story-layout';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';

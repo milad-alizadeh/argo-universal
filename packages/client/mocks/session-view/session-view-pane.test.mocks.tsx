@@ -1,4 +1,4 @@
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import type * as React from 'react';
 import { useState } from 'react';

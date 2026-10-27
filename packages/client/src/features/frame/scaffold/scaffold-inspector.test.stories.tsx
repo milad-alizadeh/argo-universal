@@ -1,8 +1,4 @@
-import {
-  layoutWidths,
-  settleLayout,
-  wideBreakpoint,
-} from '@repo/kit/mocks/story-layout';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, screen, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';

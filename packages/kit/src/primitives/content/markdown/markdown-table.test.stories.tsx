@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { router } from 'expo-router';
 import { expect, spyOn, waitFor } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { canPointAt } from '../../../../mocks/point-hit';
 import { Markdown } from './index';
 

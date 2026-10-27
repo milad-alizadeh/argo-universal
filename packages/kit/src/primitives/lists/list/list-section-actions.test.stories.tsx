@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { Action, ActionShortcutScope } from '#primitives/actions/action';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';

@@ -1,8 +1,4 @@
-import {
-  eachLayout,
-  layoutWidths,
-  settleLayout,
-} from '@repo/kit/mocks/story-layout';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, within } from 'storybook/test';
 import { configuration } from '../../../../mocks/session-view/session-view-agent.test.mocks';
 import { archivedIsReadOnly } from '../../../../mocks/session-view/session-view-archived.test.mocks';

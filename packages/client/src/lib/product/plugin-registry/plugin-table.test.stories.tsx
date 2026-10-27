@@ -1,5 +1,5 @@
 import { runTableRoot } from '@repo/contracts/plugins/wire-fixtures';
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { PluginTree } from './plugin-registry';

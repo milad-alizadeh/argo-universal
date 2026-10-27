@@ -1,8 +1,4 @@
-import {
-  eachLayout,
-  layoutWidths,
-  settleLayout,
-} from '@repo/kit/mocks/story-layout';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
 import type { ReadySessionNewViewProps } from '../../src/screens/sessions/$id/session-new-view';
 import {

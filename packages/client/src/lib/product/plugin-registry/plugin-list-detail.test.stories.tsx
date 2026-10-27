@@ -1,5 +1,5 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';

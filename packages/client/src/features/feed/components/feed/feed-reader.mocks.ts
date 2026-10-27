@@ -1,5 +1,5 @@
 import { canPointAt, centreOf, topmostAt } from '@repo/kit/mocks/point-hit';
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, type within } from 'storybook/test';
 import { splitGroupHeader } from './feed.mocks';
 

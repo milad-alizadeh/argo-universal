@@ -1,4 +1,4 @@
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';

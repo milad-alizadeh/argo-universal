@@ -1,5 +1,5 @@
 import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect } from 'storybook/test';

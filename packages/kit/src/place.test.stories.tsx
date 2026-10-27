@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { useStackPush, withStack } from '#story-stack';

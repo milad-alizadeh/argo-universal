@@ -1,5 +1,5 @@
 import { canPointAt } from '@repo/kit/mocks/point-hit';
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
 import {

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { shownText } from '../../../../mocks/shown-text';
 import { RichTextarea } from './rich-textarea';

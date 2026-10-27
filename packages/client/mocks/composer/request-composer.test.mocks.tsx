@@ -1,6 +1,6 @@
 import { canPointAt } from '@repo/kit/mocks/point-hit';
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { newSessionCatalogs, recordedRequestMocks } from '@repo/mocks/app';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';

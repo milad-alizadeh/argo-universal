@@ -1,4 +1,4 @@
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fn, within } from 'storybook/test';
 import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import type { Story } from './session-view-story.test.mocks';
