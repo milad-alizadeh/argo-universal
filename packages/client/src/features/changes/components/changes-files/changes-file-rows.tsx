@@ -88,7 +88,7 @@ function HeaderRow({ item, context }: RowProps<'header'>): React.JSX.Element {
   return (
     <DiffFileHeader
       file={item.file}
-      open={context.open.has(path)}
+      open={!context.folded.has(path)}
       onOpenChange={(open) => context.setOpen(path, open)}
       viewed={context.viewed.includes(path)}
       onViewedChange={(viewed) => {

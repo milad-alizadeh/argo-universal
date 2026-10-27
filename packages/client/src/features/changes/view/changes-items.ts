@@ -27,7 +27,7 @@ export interface ChangesItems {
 
 type Diffs = Readonly<Record<string, FileDiffPages>>;
 
-type Lists = { open: ReadonlySet<string>; diffs: Diffs };
+type Lists = { folded: ReadonlySet<string>; diffs: Diffs };
 
 const hasLines = (diff: FileDiffPages): boolean =>
   diff.pages.some((hunks) => hunks.length > 0);
@@ -59,17 +59,17 @@ const separatorBefore = (file: ChangedFile, index: number): ChangesItem[] =>
   index > 0 ? [{ kind: 'separator', key: `separator:${file.path}` }] : [];
 
 const openedItems = (file: ChangedFile, lists: Lists): ChangesItem[] =>
-  lists.open.has(file.path) ? diffItems(file, lists.diffs[file.path]) : [];
+  lists.folded.has(file.path) ? [] : diffItems(file, lists.diffs[file.path]);
 
 export function changesItems(
   files: readonly ChangedFile[],
-  open: ReadonlySet<string>,
+  folded: ReadonlySet<string>,
   diffs: Diffs,
 ): ChangesItems {
   const items = files.flatMap((file, index): ChangesItem[] => [
     ...separatorBefore(file, index),
     { kind: 'header', key: `header:${file.path}`, file },
-    ...openedItems(file, { open, diffs }),
+    ...openedItems(file, { folded, diffs }),
   ]);
 
   return { items, sticky: headerIndices(items) };

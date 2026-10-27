@@ -28,8 +28,12 @@ const itemKey = (item: ChangesItem): string => item.key;
 const itemType = (item: ChangesItem): string =>
   isDiffItem(item) ? item.kind : 'section';
 
-// The top edge holds the stuck file header, which a fade would wash out.
+/*
+ * The top edge holds the stuck file header, which a fade would wash out. Plain: each row holds its own 16 inset, the
+ * same at every width, so the list adds none.
+ */
 const identity = {
+  appearance: 'plain',
   testID: 'changes-files',
   accessibilityRole: 'list',
   accessibilityLabel: changedFilesLabel,
@@ -43,9 +47,9 @@ const identity = {
  * diff arrive a page at a time, as the end of each comes into view.
  */
 export function FileList(props: FileListProps): React.JSX.Element {
-  const { open, setOpen } = useOpenFiles();
-  const lists = useListItems(props, open);
-  const context: RowContext = { ...props, open, setOpen };
+  const { folded, setOpen } = useOpenFiles();
+  const lists = useListItems(props, folded);
+  const context: RowContext = { ...props, folded, setOpen };
 
   return (
     <List<ChangesItem>
@@ -61,11 +65,11 @@ export function FileList(props: FileListProps): React.JSX.Element {
 
 function useListItems(
   props: FileListProps,
-  open: ReadonlySet<string>,
+  folded: ReadonlySet<string>,
 ): ChangesItems {
   return useMemo(
-    () => changesItems(props.files, open, props.diffs),
-    [props.files, open, props.diffs],
+    () => changesItems(props.files, folded, props.diffs),
+    [props.files, folded, props.diffs],
   );
 }
 

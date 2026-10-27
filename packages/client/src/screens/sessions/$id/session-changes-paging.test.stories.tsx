@@ -54,10 +54,10 @@ export const FilesArriveInPages: Story = {
   },
 };
 
-// An opened diff shows its first page of lines, then the next as its end scrolls into view, down to its last line.
+// An open diff shows its first page of lines, then the next as its end scrolls into view, down to its last line.
 export const DiffArrivesInPages: Story = {
-  play: async ({ userEvent }) => {
-    await userEvent.click(await findFileHeader(largeFile));
+  play: async () => {
+    await findFileHeader(largeFile);
     await waitFor(() => expect(diffLines().length).toBeGreaterThan(0));
     await expect(screen.queryByText(lastAddedLine)).toBeNull();
     await scrollUntil(

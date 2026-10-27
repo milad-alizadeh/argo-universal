@@ -79,38 +79,31 @@ function PathToggle(
   );
 }
 
-// The Inspector's file header, one line: the path with its folder muted and its name strong, the counts, the Viewed mark.
+type RowProps = FileHeaderProps & { compact?: boolean };
+
+/*
+ * One row at every width: the path (scrolling sideways on a phone), the counts and the Viewed mark, 16 in from each
+ * side. A phone draws the mark as a bare circle; a wider window adds its "Viewed" label and a tooltip.
+ */
+function FileHeaderRow(props: RowProps): React.JSX.Element {
+  return (
+    <View className="flex-row items-center gap-2 bg-muted px-4 py-2.5">
+      <PathToggle {...props} scroll={props.compact} />
+      <ChangeCounts file={props.file} />
+      <ViewedMark {...props} compact={props.compact} />
+    </View>
+  );
+}
+
+// The Inspector's file header: the path with its folder muted and its name strong, the counts, the Viewed mark.
 export function FileHeader(props: FileHeaderProps): React.JSX.Element {
-  const full = <FullFileHeader {...props} />;
+  const labelled = <FileHeaderRow {...props} />;
 
   return (
     <SizeClass
-      compact={<CompactFileHeader {...props} />}
-      medium={full}
-      wide={full}
+      compact={<FileHeaderRow {...props} compact />}
+      medium={labelled}
+      wide={labelled}
     />
-  );
-}
-
-function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
-  return (
-    <View className="h-10.5 flex-row items-center gap-2 bg-content">
-      <PathToggle {...props} />
-      <ChangeCounts file={props.file} />
-      <ViewedMark {...props} />
-    </View>
-  );
-}
-
-// The phone draws one row: counts beside the path and a circular Viewed mark.
-function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
-  return (
-    <View className="flex-row items-center gap-2 bg-card py-2.5">
-      <PathToggle {...props} scroll />
-      <View className="flex-row gap-1">
-        <ChangeCounts file={props.file} />
-      </View>
-      <ViewedMark {...props} compact />
-    </View>
   );
 }
