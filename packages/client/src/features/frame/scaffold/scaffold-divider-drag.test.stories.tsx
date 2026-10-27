@@ -1,6 +1,6 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   acceptInspector,
   acceptSidebar,
@@ -70,7 +70,7 @@ async function waitForZeroWidth(canvas: Canvas, testId: string): Promise<void> {
 export const DragToCollapseExpandAndReopen: ScaffoldStory = {
   play: controlledPlay(async (context, controlled) => {
     const { canvas } = context;
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     await drag(context, resizeSidebarLabel, -220);
     await acceptSidebar(controlled, false);
     await expect(

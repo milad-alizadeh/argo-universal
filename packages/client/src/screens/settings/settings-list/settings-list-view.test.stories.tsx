@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/mocks/story-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   allPagesNavigate,
   searchNarrowsThePages,
@@ -27,7 +26,7 @@ export const WaitingForData: Story = {
   args: { projectCount: 0, agentCount: 0 },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       await expect(
         canvas.getByRole('link', { name: /^Projects(?:,|$)/ }),
       ).toBeVisible();
@@ -66,7 +65,7 @@ export const ChildSelectionAndAttention: Story = {
   },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       await waitFor(() =>
         expect(
           canvas

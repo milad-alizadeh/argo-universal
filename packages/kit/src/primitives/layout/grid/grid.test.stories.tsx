@@ -32,10 +32,10 @@ export const ReflowPreservesChildState: Story = {
     </Grid>
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Count 0' }));
     await expect(canvas.getByRole('button', { name: 'Count 1' })).toBeVisible();
-    await settleLayout(390);
+    await settleLayout('phone');
     await expect(canvas.getByRole('button', { name: 'Count 1' })).toBeVisible();
     await expect(canvas.getByText('Final item')).toBeVisible();
   },

@@ -1,7 +1,6 @@
 import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, screen, waitFor } from 'storybook/test';
-import { page } from 'vitest/browser';
 import { fadedEdges } from '../../../../mocks/scroll-fade';
 import { InspectorFilesMock } from './inspector-files.mocks';
 import {
@@ -140,7 +139,7 @@ export const InspectorScrollKeepsHeaderReachable: ScaffoldStory = {
     inspector: <InspectorFilesMock />,
   },
   play: controlledPlay(async ({ canvas }) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     const inspector = await canvas.findByTestId('desktop-inspector-scroll');
     await waitFor(() =>
       expect(inspector.scrollHeight).toBeGreaterThan(inspector.clientHeight),

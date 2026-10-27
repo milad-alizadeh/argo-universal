@@ -40,7 +40,7 @@ function anchoredSession(agent: Agent): Story {
   return {
     args: pendingSession(agent, onAnswer),
     beforeEach: async (): Promise<void> => {
-      await settleLayout(1440);
+      await settleLayout('wide');
     },
     play: async (context) => {
       await resizeAndDismiss(context);

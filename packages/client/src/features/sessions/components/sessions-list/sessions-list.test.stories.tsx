@@ -159,7 +159,7 @@ export const ScrollFade: Story = {
     </View>
   ),
   play: async ({ canvas }) => {
-    if ('__vitest_browser__' in globalThis) await settleLayout(390);
+    if ('__vitest_browser__' in globalThis) await settleLayout('phone');
     const scroll = await canvas.findByTestId(sessionsScrollId);
     scroll.scrollTop = 0;
     // The last rows always sink into the bottom edge; the top fades once rows scroll under it.

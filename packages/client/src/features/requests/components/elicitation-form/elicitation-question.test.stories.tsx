@@ -113,7 +113,7 @@ export const SkipAnsweredQuestion: Story = {
 
 export const KeyboardSelection: Story = {
   beforeEach: async (): Promise<void> => {
-    await settleLayout(1440);
+    await settleLayout('wide');
   },
   play: async ({ canvas, userEvent, args }) => {
     await userEvent.click(option(canvas, buildFeature));

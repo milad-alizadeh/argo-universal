@@ -19,7 +19,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const NoInspectorDisablesTheInspectorToggle: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1440),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: (): JSX.Element => (
     <HostedScaffoldMock>
       <Text>No Inspector offered</Text>

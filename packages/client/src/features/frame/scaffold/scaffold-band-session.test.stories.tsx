@@ -1,10 +1,10 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Action } from '@repo/kit/primitives/actions/action';
 import { Text } from '@repo/kit/primitives/content/text';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
-import { page } from 'vitest/browser';
 import { SessionBandClaim } from '#features/sessions';
 import { HostedScaffoldMock } from './hosted-scaffold.mocks';
 
@@ -41,7 +41,7 @@ export const SessionIdentityMovesIntoTheBand: Story = {
     </HostedScaffoldMock>
   ),
   play: async ({ canvas }) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     const band = await canvas.findByTestId('window-band');
 
     const title = await canvas.findByRole('heading', {

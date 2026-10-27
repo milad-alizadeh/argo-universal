@@ -1,7 +1,6 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import { expect, within } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   dark,
   metadata,
@@ -25,7 +24,7 @@ export const Archived: Story = {
   args: { session: sessionRows.archived },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       await expect(canvas.getByText('Archived', { exact: true })).toBeVisible();
     }
   },
@@ -56,7 +55,7 @@ export const PullRequestWithoutOtherMetadata: Story = {
   },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       const pullRequest = canvas.getByLabelText('Open Change #45');
       await expect(pullRequest).toBeVisible();
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
@@ -82,7 +81,7 @@ export const PlanAndSubagents: Story = {
   },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       await expect(
         canvas.getByLabelText('Plan: 2 of 5 complete'),
       ).toBeVisible();
@@ -102,7 +101,7 @@ export const NoPlanOrSubagents: Story = {
   args: { session: sessionRows.idle },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
       await expect(
@@ -121,7 +120,7 @@ export const FinishedSubagents: Story = {
   },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       // A finished Plan leaves no bar.
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(canvas.getByLabelText('Agents: 3, 0 running')).toBeVisible();

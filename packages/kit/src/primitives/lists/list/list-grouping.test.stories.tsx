@@ -85,7 +85,7 @@ export const ReorderAndRemovePhone = reordering(390);
 export const RecycleDescribedRows: Story = {
   ...Recycling,
   play: async ({ canvas, userEvent }) => {
-    await settleLayout(390);
+    await settleLayout('phone');
     await expect(await canvas.findByText(rowDescription)).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Last rows' }));
     await expect(await canvas.findByText('Row 80')).toBeVisible();
@@ -128,7 +128,7 @@ function InheritedSection(): React.JSX.Element {
 export const StandaloneSelectionInheritance: Story = {
   render: () => <InheritedSection />,
   play: async ({ canvas, userEvent }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await expect(canvas.getByText('Selected: first')).toBeVisible();
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Second choice' }),

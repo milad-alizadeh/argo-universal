@@ -47,7 +47,7 @@ export default meta;
 
 export const FieldGroupDrawsSettingsRows: StoryObj<typeof meta> = {
   play: async ({ canvas, userEvent }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await userEvent.click(await canvas.findByText('Fast mode'));
     await expect(onEvent).toHaveBeenCalledWith('settings/section/fast', {
       event: 'onValueChange',
@@ -58,7 +58,7 @@ export const FieldGroupDrawsSettingsRows: StoryObj<typeof meta> = {
 
 export const FieldDraftSurvivesEventDelivery: StoryObj<typeof meta> = {
   play: async ({ canvas, userEvent }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     const name = await canvas.findByRole('textbox', { name: 'Name' });
     await userEvent.type(name, 'Argo');
     await expect(name).toHaveValue('Argo');

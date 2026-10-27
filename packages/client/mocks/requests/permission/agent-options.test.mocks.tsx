@@ -21,7 +21,7 @@ export function allowMenuWide(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleLayout(1440);
+      await settleLayout('wide');
       await expect(
         canvas.queryByRole('button', { name: alwaysAllow }),
       ).not.toBeInTheDocument();
@@ -43,7 +43,7 @@ export function allowOnceLeads(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleLayout(1440);
+      await settleLayout('wide');
       await userEvent.click(canvas.getByText(args.request.title));
       await userEvent.keyboard('{Enter}');
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -58,7 +58,7 @@ export function enterSendsPicked(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleLayout(1440);
+      await settleLayout('wide');
       await userEvent.click(canvas.getByRole('button', { name: allowOptions }));
       await pickFromMenu(userEvent, alwaysAllow);
       await userEvent.click(canvas.getByText(args.request.title));
@@ -76,7 +76,7 @@ export function rejectMenuWide(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleLayout(1440);
+      await settleLayout('wide');
       await expect(
         canvas.queryByRole('button', { name: alwaysReject }),
       ).not.toBeInTheDocument();
@@ -99,7 +99,7 @@ export function groupedPhone(mock?: RequestMock): Story {
     args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleLayout(390);
+      await settleLayout('phone');
       const buttons = canvas.getAllByRole('button');
       await expect(buttons).toHaveLength(4);
       await expect(buttons[0]).toHaveAccessibleName('Allow');

@@ -1,20 +1,9 @@
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { suffixProblems, type Sources } from './test-suffix-rules.mts';
+import { root, trackedFiles } from './tracked-files.mts';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
-
-const trackedSources = (): string[] =>
-  execFileSync('git', ['ls-files', '--', '*.ts', '*.tsx', '*.mts'], {
-    cwd: root,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter((file) => file && existsSync(resolve(root, file)));
-
-const files = trackedSources();
+const files = trackedFiles(['*.ts', '*.tsx', '*.mts']);
 
 const sources: Sources = new Map(
   files.map((file): [string, string] => [

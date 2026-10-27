@@ -84,7 +84,7 @@ export const WideTablesKeepEveryColumnReachable: Story = {
     text: '| A | B | C | D | E | F | G |\n| --- | --- | --- | --- | --- | --- | --- |\n| First | Two | Three | Four | Five | Six | Last column |',
   },
   play: async ({ canvas }) => {
-    await settleLayout(1024);
+    await settleLayout('tablet');
     const last = canvas.getByText('Last column');
     const scroller = horizontalScroller(last);
     scroller.scrollLeft = scroller.scrollWidth;
