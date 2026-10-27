@@ -2159,14 +2159,25 @@
       }
     },
     {
-      // Spec 0011: the ACP SDK stays in acp/, the two translators and the Shells and Subagents modules, which each own the ACP side of their own work; tests and mocks script an Agent with it.
+      // Spec 0011: the ACP SDK stays in acp/, the two translators, and the Shells and Subagents files that translate the Agent's terminal requests and Subagent updates; tests and mocks script an Agent with it.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
         "packages/engine/src/agents/acp/**",
         "packages/engine/src/feed/acp/**",
         "packages/engine/src/sessions/acp/**",
-        "packages/engine/src/sessions/shells/**",
-        "packages/engine/src/sessions/subagents/**",
+        "packages/engine/src/sessions/shells/shell-capture.ts",
+        "packages/engine/src/sessions/shells/shell-command.ts",
+        "packages/engine/src/sessions/shells/shell-data.ts",
+        "packages/engine/src/sessions/shells/shell-output-preview.ts",
+        "packages/engine/src/sessions/shells/shell-preview-file.ts",
+        "packages/engine/src/sessions/shells/shell-runtime.ts",
+        "packages/engine/src/sessions/shells/shell-terminal.ts",
+        "packages/engine/src/sessions/subagents/routing.ts",
+        "packages/engine/src/sessions/subagents/subagent-actions.ts",
+        "packages/engine/src/sessions/subagents/subagent-messages.ts",
+        "packages/engine/src/sessions/subagents/subagent-rows.ts",
+        "packages/engine/src/sessions/subagents/subagent-work.ts",
+        "packages/engine/src/sessions/subagents/subagents.ts",
         "**/*.test.*",
         "**/mocks/**",
         "mocks/**"
