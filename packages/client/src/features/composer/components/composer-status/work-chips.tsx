@@ -1,6 +1,6 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
-import { Icon } from '@repo/kit/primitives/content/icon';
+import { Icon, SecondaryGlyphs } from '@repo/kit/primitives/content/icon';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import type { ComposerStatusProps, ComposerWork } from '../../utils/status';
@@ -52,7 +52,9 @@ function WorkChip(props: WorkChipProps): JSX.Element | null {
   return (
     <ChipSurface>
       <Pressable {...pressableProps} role="button">
-        <Icon name={icon} className={mutedTextClassName} />
+        <SecondaryGlyphs>
+          <Icon name={icon} className={mutedTextClassName} />
+        </SecondaryGlyphs>
         <WorkCount label={label} singular={singular} work={work} />
       </Pressable>
     </ChipSurface>
