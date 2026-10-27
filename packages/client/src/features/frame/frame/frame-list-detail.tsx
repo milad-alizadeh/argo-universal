@@ -1,12 +1,23 @@
 import {
   createPlace,
+  useClaim,
   useClaimed,
   usePlaceHeld,
   type Place,
 } from '@repo/kit/place';
 import { ListDetailSidebarPlaceOffer } from '@repo/kit/primitives/scaffolds/list-detail';
-import { createContext, use, type ReactNode, useState } from 'react';
-import { isCoreSection } from '../../../lib/product/navigation/sections';
+import { useIsShownPage } from '@repo/kit/use-shown-page';
+import {
+  createContext,
+  use,
+  type ReactNode,
+  useLayoutEffect,
+  useState,
+} from 'react';
+import {
+  isCoreSection,
+  type Section,
+} from '../../../lib/product/navigation/sections';
 import type { ScaffoldProps } from '../scaffold/scaffold';
 import type { FrameSections } from './section-lists';
 
@@ -14,6 +25,20 @@ import type { FrameSections } from './section-lists';
 export const FrameListDetailSidebar = createContext<
   Place<ReactNode> | undefined
 >(undefined);
+
+// Held by a Plugin page that is waiting for its first drawing, so the sidebar keeps the list the page before it drew.
+const FrameListDetailPending = createContext<Place<true> | undefined>(
+  undefined,
+);
+
+export const FrameListDetailPendingOffer = FrameListDetailPending.Provider;
+
+// A Plugin page's drawing arrives after its route opens. Until it does, the sidebar keeps the list the shown section last drew, since a claim only lives with a drawn ListDetail and would blank the list in between.
+export function useKeepSidebarWhilePending(): void {
+  const pending = use(FrameListDetailPending);
+
+  useClaim(useIsShownPage() ? pending : undefined, true);
+}
 
 export interface SectionListDetailProps {
   children: ReactNode;
@@ -31,8 +56,11 @@ export function SectionListDetail({
 }
 
 // The list a Plugin page's ListDetail holds the Frame's sidebar with.
-function ClaimedList(props: { sidebar: Place<ReactNode> }): React.JSX.Element {
-  return <>{useClaimed(props.sidebar)}</>;
+function ClaimedList(props: {
+  sidebar: Place<ReactNode>;
+  kept?: ReactNode;
+}): ReactNode {
+  return useClaimed(props.sidebar) ?? props.kept;
 }
 
 type SectionScaffold = Pick<ScaffoldProps, 'list'> &
@@ -40,15 +68,72 @@ type SectionScaffold = Pick<ScaffoldProps, 'list'> &
 
 export interface FrameListDetail {
   sidebar: Place<ReactNode>;
-  // Whether the shown page's ListDetail holds the sidebar.
+  // The Place a page waiting for its drawing holds.
+  pending: Place<true>;
+  // Whether the shown page's ListDetail holds the sidebar, or the list it drew is kept for the page that follows.
   held: boolean;
+  // The list the section drew last, while its next page is pending.
+  kept?: ReactNode;
 }
 
-// The Frame's one sidebar store, made once, and whether a ListDetail holds it now.
-export function useFrameListDetail(): FrameListDetail {
-  const [sidebar] = useState(() => createPlace<ReactNode>());
+interface Remembered {
+  section: Section;
+  list: ReactNode;
+}
 
-  return { sidebar, held: usePlaceHeld(sidebar) };
+// Remembers what the sidebar is claimed with now, and each claim after. A page that claimed in the same commit did so before this subscribed.
+function rememberClaims(
+  sidebar: Place<ReactNode>,
+  section: Section,
+  memory: { last?: Remembered },
+): () => void {
+  const remember = (): void => {
+    const list = sidebar.claims.current();
+
+    if (list !== undefined) memory.last = { section, list };
+  };
+
+  remember();
+
+  return sidebar.claims.subscribe(remember);
+}
+
+// The list the sidebar showed last in `section`, kept across the claim that lets go with its page. It is read as the claim shows, not rendered with it, so a list that redraws does not redraw the Frame.
+function useRemembered(sidebar: Place<ReactNode>, section: Section): ReactNode {
+  const [memory] = useState<{ last?: Remembered }>(() => ({}));
+
+  useLayoutEffect(
+    () => rememberClaims(sidebar, section, memory),
+    [sidebar, section, memory],
+  );
+
+  return memory.last?.section === section ? memory.last.list : undefined;
+}
+
+// The Frame's one sidebar store, made once, and whether a ListDetail holds it now, or its list is kept while the next page draws.
+export function useFrameListDetail(section: Section): FrameListDetail {
+  const [sidebar] = useState(() => createPlace<ReactNode>());
+  const [pending] = useState(() => createPlace<true>());
+  const kept = useKeptList({ sidebar, pending }, section);
+
+  return {
+    sidebar,
+    pending,
+    held: usePlaceHeld(sidebar) || kept !== undefined,
+    kept,
+  };
+}
+
+// The remembered list, while the section's next page is pending and no page holds the sidebar.
+function useKeptList(
+  places: Pick<FrameListDetail, 'sidebar' | 'pending'>,
+  section: Section,
+): ReactNode {
+  const remembered = useRemembered(places.sidebar, section);
+  const pending = usePlaceHeld(places.pending);
+  const held = usePlaceHeld(places.sidebar);
+
+  return pending && !held ? remembered : undefined;
 }
 
 const noList: SectionScaffold = {
@@ -73,8 +158,12 @@ export function sectionScaffold(
 function pluginSectionScaffold({
   sidebar,
   held,
+  kept,
 }: FrameListDetail): SectionScaffold {
   if (!held) return noList;
 
-  return { list: <ClaimedList sidebar={sidebar} />, inspectorState: 'closed' };
+  return {
+    list: <ClaimedList sidebar={sidebar} kept={kept} />,
+    inspectorState: 'closed',
+  };
 }

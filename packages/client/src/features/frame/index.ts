@@ -14,7 +14,10 @@ export {
   useSectionList,
 } from './frame/frame';
 
-export { SectionListDetail } from './frame/frame-list-detail';
+export {
+  SectionListDetail,
+  useKeepSidebarWhilePending,
+} from './frame/frame-list-detail';
 
 export { OnboardingFrame } from './components/onboarding-frame/onboarding-frame';
 
