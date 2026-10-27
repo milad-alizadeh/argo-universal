@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
+import { layoutWidths } from '#kit/each-layout';
+import { settleViewport } from '#kit/settle-viewport';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Screen } from '#primitives/scaffolds/screen';
@@ -26,12 +28,12 @@ type Story = StoryObj<typeof meta>;
 
 const body = issue.detail.markdown;
 
+const statusGroup = 'Status, In progress';
+
 async function expectMetadata(
   canvas: Parameters<Play>[0]['canvas'],
 ): Promise<void> {
-  await expect(
-    canvas.getByRole('group', { name: 'Status, In progress' }),
-  ).toBeVisible();
+  await expect(canvas.getByRole('group', { name: statusGroup })).toBeVisible();
   await expect(
     canvas.getByRole('group', { name: 'Labels, bug, sync' }),
   ).toBeVisible();
@@ -58,7 +60,7 @@ function metadataIsBelow(canvas: Parameters<Play>[0]['canvas']): boolean {
   const content = canvas.getByText(body).getBoundingClientRect();
 
   const status = canvas
-    .getByRole('group', { name: 'Status, In progress' })
+    .getByRole('group', { name: statusGroup })
     .getBoundingClientRect();
 
   return status.top >= content.bottom;
@@ -170,5 +172,77 @@ export const ScreenActionsLeadTheContent: Story = {
       button.compareDocumentPosition(canvas.getByText(body)) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  },
+};
+
+// The reading column's width, read off the page so the test never copies the token.
+const columnToken = (): number =>
+  Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(
+      '--container-column',
+    ),
+  );
+
+const rect = (element: Element): DOMRect => element.getBoundingClientRect();
+
+// Rounding in layout is not a difference in column.
+const sameAs = (a: number, b: number): boolean => Math.abs(a - b) <= 1;
+
+// A line of text shrinks to its words, so a block that fills the content column measures it.
+const fill = 'content-fill';
+
+const filled: DetailProps = {
+  ...issue.detail,
+  children: <View testID={fill} className="h-1" />,
+};
+
+// A window wide enough for the Screen's capped column, settled before the story renders; the Screen fills the viewport, as in the App.
+const onWide = (story: Story): Story => ({
+  ...story,
+  parameters: { screenPreview: true },
+  beforeEach: () => settleViewport(layoutWidths.wide),
+});
+
+/*
+ * The reading width caps the content alone: Metadata beside it widens the Screen's column, so the content keeps the
+ * width it has without Metadata, the heading starts on its edge and its Actions end on the Metadata's.
+ */
+export const MetadataWidensTheColumnNotTheText: Story = onWide({
+  args: filled,
+  render: ScreenActionsLeadTheContent.render,
+  play: async ({ canvas }) => {
+    const content = (): DOMRect => rect(canvas.getByTestId(fill));
+
+    await waitFor(() =>
+      expect(sameAs(content().width, columnToken())).toBe(true),
+    );
+    await expect(metadataIsBelow(canvas)).toBe(false);
+
+    const title = rect(canvas.getByRole('heading', { name: issue.title }));
+    const action = rect(canvas.getByRole('button', { name: closeLabel }));
+
+    const status = rect(canvas.getByRole('group', { name: statusGroup }));
+
+    await expect(sameAs(title.left, content().left)).toBe(true);
+    await expect(sameAs(action.right, status.right)).toBe(true);
+  },
+});
+
+export const ReadingColumnHoldsContentWithoutMetadata: Story = onWide({
+  args: { ...filled, metadata: undefined },
+  play: async ({ canvas }) => {
+    const content = rect(canvas.getByTestId(fill));
+
+    await expect(sameAs(content.width, columnToken())).toBe(true);
+  },
+});
+
+// A phone is inside the reading width, so the widened column changes nothing and the Metadata still stacks.
+export const PhoneWidthStacksMetadata: Story = {
+  parameters: { screenPreview: true },
+  beforeEach: () => settleViewport(layoutWidths.phone),
+  play: async ({ canvas }) => {
+    await expectMetadata(canvas);
+    await waitFor(() => expect(metadataIsBelow(canvas)).toBe(true));
   },
 };

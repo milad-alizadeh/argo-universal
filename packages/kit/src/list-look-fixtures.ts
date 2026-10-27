@@ -22,6 +22,7 @@ export const look = (
 ): ReturnType<typeof resolveListLook> =>
   resolveListLook({
     appearance: 'cards',
+    density: 'regular',
     platform: 'web',
     menu: false,
     sidebar: false,

@@ -5,7 +5,6 @@ import { cn } from '../../../utils';
 import {
   controlLines,
   pressLayouts,
-  sidebarLayouts,
   type PressLayout,
 } from './list-item-layouts';
 import type { ListItemProps } from './list-item-props';
@@ -27,6 +26,8 @@ type PressDrawing = {
   rows: RowDrawing;
   interactive: boolean;
   control: boolean;
+  // A compact List's row on a wide window.
+  compact: boolean;
 } & Pick<ListItemProps, 'sidebar'>;
 
 // A sidebar List (Paper's SettingsList) draws its rows as tiles; others draw them by their card.
@@ -34,9 +35,18 @@ function listLayout(press: PressDrawing): PressLayout {
   return press.rows === 'sidebar' ? 'sidebar-tile' : 'row';
 }
 
-// A row's own sidebar option (Paper "SessionsList") comes before its List's drawing.
+// A compact List's row is one line: a sidebar's keeps the sidebar's insets (Paper "SessionsList"), others Paper "Issue row"'s.
+function compactLayout(press: PressDrawing): PressLayout {
+  return press.sidebar || press.rows === 'sidebar'
+    ? 'sidebar-compact'
+    : 'compact';
+}
+
+// A compact List's line comes first, then a row's own sidebar option (Paper "SessionsList"), then its List's drawing.
 function rowLayout(press: PressDrawing): PressLayout {
-  return press.sidebar ? sidebarLayouts[press.sidebar] : listLayout(press);
+  if (press.compact) return compactLayout(press);
+
+  return press.sidebar ? 'sidebar' : listLayout(press);
 }
 
 const layoutOf = (press: PressDrawing): PressLayout =>

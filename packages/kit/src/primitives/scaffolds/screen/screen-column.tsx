@@ -2,23 +2,30 @@ import { type ScreenWidth, screenDefaults } from '@repo/contracts/kit-tokens';
 import { type ReactElement, type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import type { ContentColumn } from '#kit/content-column/content-column';
+import { sideColumnExtra } from '#kit/content-column/column-layout';
+import {
+  type ContentColumn,
+  useSideColumn,
+} from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
 
 /*
  * The one column a Screen's heading and content keep to: on a wide window the reading width (`--container-column`)
  * centred in the region, or the whole region for `full` (no max width), inside the Screen's side margins either way.
- * Below wide the phone shell's header runs from the window's edge, so the content does too.
+ * Below wide the phone shell's header runs from the window's edge, so the content does too. A side column beside the
+ * content (a Detail's Metadata) widens the cap by itself, so the content keeps the reading width and the heading
+ * spans both.
  */
 export function useScreenColumn(
   width: ScreenWidth = screenDefaults.width,
 ): ContentColumn {
   const capped = useWide() && width === 'content';
+  const side = sideColumnExtra(useSideColumn());
   const [column, inset] = useColumnTokens();
 
   return useMemo(
-    () => columnStyle(capped, column, inset),
-    [capped, column, inset],
+    () => columnStyle(capped, column + side, inset),
+    [capped, column, side, inset],
   );
 }
 

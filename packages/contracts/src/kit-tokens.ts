@@ -79,4 +79,7 @@ export type ScreenWidth = (typeof screenWidths)[number];
 
 export const screenDefaults = { width: 'content' } as const;
 
-export const listDefaults = { appearance: 'cards' } as const;
+export const listDefaults = {
+  appearance: 'cards',
+  density: 'regular',
+} as const;

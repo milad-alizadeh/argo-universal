@@ -8,12 +8,14 @@ import { View } from 'react-native';
 import { TextClassContext } from '#primitives/content/text';
 import { Svg } from '#primitives/visual';
 import { ListTileContext } from '../../../list-context';
+import { useCompactRows } from '../../../list-look-context';
 import { hasBadge, ItemBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { cn } from '../../../utils';
-import { ItemContent, trailsTitle } from './list-item-content';
+import { CompactContent, ItemContent, trailsTitle } from './list-item-content';
 import { Accessory, Control, Leading, Trailing } from './list-item-parts';
 import type { DrawingProps } from './list-item-press-props';
+import { TreeLane } from './list-item-tree';
 
 // The row's lanes in order: a menu's check, leading, title, trailing, accessory, and a control on its own line.
 export function ItemContentSlots(props: DrawingProps): ReactElement {
@@ -25,15 +27,40 @@ export function ItemContentSlots(props: DrawingProps): ReactElement {
 }
 
 function RowContentSlots(props: DrawingProps): ReactElement {
+  const compact = useCompactRows();
+
   return (
     <TextClassContext value={undefined}>
       {props.choice}
       <Leading {...props} />
-      {props.content ?? <ItemContent {...props} />}
-      {trailsTitle(props) ? null : <Trailing {...props} />}
+      <RowContent props={props} compact={compact} />
+      {!compact && trailsTitle(props) ? null : <Trailing {...props} />}
       <Accessory>{props.accessory}</Accessory>
       <Control>{props.control}</Control>
     </TextClassContext>
+  );
+}
+
+// A compact row draws its tree lane inside its one line; a regular row draws it before its content.
+function RowContent({
+  props,
+  compact,
+}: {
+  props: DrawingProps;
+  compact: boolean;
+}): ReactNode {
+  return compact ? <CompactRow {...props} /> : <RegularRow {...props} />;
+}
+
+const CompactRow = (props: DrawingProps): ReactNode =>
+  props.content ?? <CompactContent {...props} />;
+
+function RegularRow(props: DrawingProps): ReactElement {
+  return (
+    <>
+      <TreeLane title={props.title} compact={false} />
+      {props.content ?? <ItemContent {...props} />}
+    </>
   );
 }
 

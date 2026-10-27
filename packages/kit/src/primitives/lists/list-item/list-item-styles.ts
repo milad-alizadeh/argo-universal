@@ -32,6 +32,8 @@ export interface ItemDrawing {
   position: ListPosition;
   menu: boolean;
   rows: RowDrawing;
+  // A compact List's row on a wide window.
+  compact: boolean;
 }
 
 // Paper's Combobox master: a popover's rows sit flat on it, 2px apart, each with the menu-row radius.
@@ -42,7 +44,7 @@ const menuGaps = {
   last: '',
 } satisfies Record<ListPosition, string>;
 
-type SurfaceState = Pick<ListItemProps, 'selected' | 'tone'>;
+type SurfaceState = Pick<ListItemProps, 'selected' | 'tone' | 'sidebar'>;
 
 // Paper's SettingsList: a sidebar row is its own rounded tile, flat on the glass.
 const sidebarSurface = 'relative overflow-hidden rounded-xl';
@@ -54,10 +56,26 @@ export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
       menuGaps[drawing.position],
     );
 
+  return ownTile(drawing, state) ?? rowSurface(drawing, state);
+}
+
+// A sidebar row and a plain compact row are each their own rounded tile.
+function ownTile(
+  drawing: ItemDrawing,
+  state: SurfaceState,
+): string | undefined {
   if (drawing.rows === 'sidebar') return sidebarSurface;
 
-  return rowSurface(drawing, state);
+  return compactTile(drawing, state) ? compactSurface : undefined;
 }
+
+// Paper "Issue row": a plain compact row is its own rounded tile, so its hover and selected tints sit inset.
+const compactSurface = 'relative overflow-hidden rounded-md';
+
+const compactTile = (
+  { compact, look }: ItemDrawing,
+  { sidebar }: SurfaceState,
+): boolean => compact && look.appearance === 'plain' && !sidebar;
 
 // A muted row, such as an empty section's placeholder, has no surface, so it takes no corners either.
 function corners(

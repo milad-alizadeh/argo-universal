@@ -5,6 +5,13 @@ import type { ListChild } from './list-children';
 import type { ListSectionProps } from './list-props';
 import { ListSection } from './list-section';
 import { prepareSection, type SectionState } from './list-section-state';
+import {
+  holdsTree,
+  topLevel,
+  treeChildren,
+  type TreeChild,
+  type TreeFolding,
+} from './list-tree-rows';
 
 export type ListBlock = ItemBlock | SectionBlock;
 
@@ -21,20 +28,56 @@ interface SectionBlock {
   blocks: ListBlock[];
 }
 
+// How a List's rows fold, and whether it holds a tree at all; a List without one draws its children as they are.
+export interface ListTree {
+  folding: TreeFolding;
+  holds: boolean;
+}
+
+const sectionChildren = (child: ReactNode): ReactNode[] | undefined =>
+  isSection(child) ? flattenedChildren(child.props.children) : undefined;
+
+export function listTree(children: ReactNode, folding: TreeFolding): ListTree {
+  return {
+    folding,
+    holds: holdsTree(flattenedChildren(children), sectionChildren),
+  };
+}
+
+// A List's children in order, each child ListItem lifted to a row of its own after its parent.
+function treeEntries(
+  children: ReactNode,
+  prefix: string,
+  tree: ListTree,
+): TreeChild[] {
+  const entries = flattenedChildren(children);
+
+  if (!tree.holds)
+    return entries.map((child, index) => ({
+      child,
+      key: `${prefix}/${isValidElement(child) ? child.key : index}`,
+      content: child,
+    }));
+
+  return treeChildren(entries, tree.folding, topLevel(prefix, isSection));
+}
+
+// A child in its List's order: the node itself, and the entry the List draws for it.
+interface PlacedChild {
+  child: ReactNode;
+  entry: ListChild;
+}
+
 export function prepareChildren(
   children: ReactNode,
   prefix: string,
+  tree: ListTree,
 ): ListBlock[] {
   const blocks: ListBlock[] = [];
-  const entries = flattenedChildren(children);
+  const entries = treeEntries(children, prefix, tree);
 
-  for (const [index, child] of entries.entries()) {
-    appendChild(
-      blocks,
-      child,
-      childEntry(child, { prefix, index, count: entries.length }),
-    );
-  }
+  for (const [index, entry] of entries.entries())
+    appendChild(blocks, placedChild(entry, index, entries.length), tree);
 
   return blocks;
 }
@@ -45,19 +88,26 @@ function isSection(child: ReactNode): child is ReactElement<ListSectionProps> {
 
 function appendChild(
   blocks: ListBlock[],
-  child: ReactNode,
-  entry: ListChild,
+  { child, entry }: PlacedChild,
+  tree: ListTree,
 ): void {
-  if (isSection(child)) {
-    const section = prepareSection(child.props, entry.key);
+  if (isSection(child)) blocks.push(sectionBlock(child, entry.key, tree));
+  else appendItem(blocks, entry);
+}
 
-    blocks.push({
-      key: entry.key,
-      kind: 'section',
-      section,
-      blocks: prepareChildren(section.children, entry.key),
-    });
-  } else appendItem(blocks, entry);
+function sectionBlock(
+  child: ReactElement<ListSectionProps>,
+  key: string,
+  tree: ListTree,
+): SectionBlock {
+  const section = prepareSection(child.props, key);
+
+  return {
+    key,
+    kind: 'section',
+    section,
+    blocks: prepareChildren(section.children, key, tree),
+  };
 }
 
 function appendItem(blocks: ListBlock[], entry: ListChild): void {
@@ -72,14 +122,18 @@ function appendItem(blocks: ListBlock[], entry: ListChild): void {
     });
 }
 
-function childEntry(
-  child: ReactNode,
-  place: { prefix: string; index: number; count: number },
-): ListChild {
+function placedChild(
+  { child, key, content }: TreeChild,
+  index: number,
+  count: number,
+): PlacedChild {
   return {
-    key: `${place.prefix}/${isValidElement(child) ? child.key : place.index}`,
-    content: child,
-    position: listPosition(place.index === 0, place.index === place.count - 1),
+    child,
+    entry: {
+      key,
+      content,
+      position: listPosition(index === 0, index === count - 1),
+    },
   };
 }
 

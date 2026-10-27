@@ -38,7 +38,7 @@ function RegularRow(props: SessionRowProps): React.JSX.Element {
     <ListItem
       {...rowIdentity(props)}
       {...sessionRowMenu(props)}
-      {...sidebarDrawing(props.session.status, 'regular')}
+      {...sidebarDrawing(props.session.status)}
       leading={<SessionMark {...props} />}
       trailing={rowStatusDot(props.session.status)}
       meta={sessionMetadata({ ...props, selected })}

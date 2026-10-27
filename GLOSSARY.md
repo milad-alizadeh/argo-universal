@@ -304,6 +304,14 @@ _Avoid_: Group (when naming a List section)
 How one List draws, resolved once from the platform, its appearance and where it sits (a popover, a sidebar): its insets, its headings and footers, whether rows are separated, and whether the web draws its grouped sections as cards or a phone draws them as corners. Every part of the List reads it; none asks the platform itself.
 _Avoid_: Theme, style
 
+**Density**:
+How tightly a List or a Card draws its content: `regular` or `compact`. A compact List draws each row as one line on a wide desktop or web window; phones and narrow windows always draw regular rows.
+_Avoid_: Size, dense, condensed
+
+**Nested row**:
+A ListItem written inside another ListItem, its parent. A wide desktop or web window draws it one tree lane further in, with a rail from its parent, and folds it under its parent's chevron; phones draw it flat, right after its parent.
+_Avoid_: Sub-item, child row, tree item
+
 **Pill**:
 A short, static label that shows an Argo status or a label from a Plugin.
 _Avoid_: Badge, chip
@@ -341,7 +349,7 @@ Where a Screen's header draws, decided once from the facts around it: its own he
 _Avoid_: Header placement, header mode
 
 **Content column**:
-The column a Screen's heading and content keep to: on a wide window the reading width centred in the pane, inside the Screen's side margins. Each part of a Screen offers it to what it holds; a scroll view or grouped cards claim it and keep to it themselves, and the part pads anything else. A popover, a sheet's page or a FieldGroup's rows are outside it.
+The column a Screen's heading and content keep to: on a wide window the reading width centred in the pane, inside the Screen's side margins; a Metadata column beside the content widens it, so the reading width stays the content's. Each part of a Screen offers it to what it holds; a scroll view or grouped cards claim it and keep to it themselves, and the part pads anything else. A popover, a sheet's page or a FieldGroup's rows are outside it.
 _Avoid_: Scroll column, heading inset
 
 **Content wide**:

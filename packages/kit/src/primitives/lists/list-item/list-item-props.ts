@@ -39,10 +39,10 @@ export type ListItemProps = KitProps<'ListItem'> & {
   testID?: string;
   /*
    * A desktop sidebar row (Paper "SessionsList"): 10 by 12 inside, 10 between lanes, a 16 leading slot and a medium
-   * title. Regular ends its title line with the trailing item and insets the progress bar under the content; Compact
-   * is one 36-tall line.
+   * title. It ends its title line with the trailing item and insets the progress bar under the content; in a compact
+   * List it is one 36-tall line.
    */
-  sidebar?: 'regular' | 'compact';
+  sidebar?: boolean;
   // A sidebar row that holds news for its reader, such as an unread Session: its title is semibold.
   emphasized?: boolean;
   // The subtitle's colour; muted unless the row says otherwise.

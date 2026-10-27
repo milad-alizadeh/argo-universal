@@ -181,6 +181,8 @@ export type WireSchemaHints = {
     "aspect": PropValue<"List", "aspect">;
     /** The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists). */
     "appearance": PropValue<"List", "appearance">;
+    /** compact draws each row as one line on a wide desktop or web window; phones always draw regular rows. */
+    "density": PropValue<"List", "density">;
     /** Page-level supporting text. */
     "footer": PropValue<"List", "footer">;
     /** Whether the list is loading. */

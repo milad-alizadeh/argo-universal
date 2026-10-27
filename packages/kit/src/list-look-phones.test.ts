@@ -22,3 +22,16 @@ describe('onPhones', () => {
     expect(look({ onPhones }).phonePadding).toBeUndefined();
   });
 });
+
+describe('density', () => {
+  it('keeps a compact List compact on the web', () => {
+    expect(look({ density: 'compact' }).density).toBe('compact');
+  });
+
+  it.each(phones)(
+    'draws regular rows on %s whatever it declares',
+    (platform) => {
+      expect(look({ density: 'compact', platform }).density).toBe('regular');
+    },
+  );
+});

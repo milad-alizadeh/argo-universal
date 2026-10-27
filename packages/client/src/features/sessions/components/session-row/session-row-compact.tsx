@@ -62,7 +62,7 @@ const compactPresses = (
   onPress: () => props.onSelect(props.session.sessionId),
 });
 
-// Compact: one line, a row of its Project's grouped list on a phone.
+// Compact: one line in its compact List, a row of its Project's grouped list on a phone.
 export function CompactSessionRow(props: SessionRowProps): React.JSX.Element {
   const selected = props.selected ?? false;
 
@@ -71,7 +71,7 @@ export function CompactSessionRow(props: SessionRowProps): React.JSX.Element {
       {...compactPresses(props)}
       {...sessionRowMenu(props)}
       title={props.session.title}
-      {...sidebarDrawing(props.session.status, 'compact')}
+      {...sidebarDrawing(props.session.status)}
       accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} />}
       trailing={compactTrailing(props)}

@@ -79,6 +79,13 @@ export const contentListProps = z.object({
     .describe(
       'The list appearance: plain rows, cards, or grouped, one card per section in the look of a FieldGroup section (a look only, for long lists).',
     ),
+  density: z
+    .enum(['regular', 'compact'])
+    .optional()
+    .meta({ default: listDefaults.density })
+    .describe(
+      'compact draws each row as one line on a wide desktop or web window; phones always draw regular rows.',
+    ),
   footer: z.string().optional().describe('Page-level supporting text.'),
   isLoading: z.boolean().optional().describe('Whether the list is loading.'),
 });

@@ -1,6 +1,7 @@
 import { Icon } from '#primitives/content/icon';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { ListItem } from '#primitives/lists/list-item';
+import { Pill } from '#primitives/status/pill';
 import { List } from './list';
 import type { ListProps } from './list-props';
 
@@ -62,4 +63,53 @@ export const groupedItemsList = {
   appearance: 'grouped',
   maxHeight: 520,
   children,
+} satisfies ListProps<unknown>;
+
+const onSelect = (): void => undefined;
+
+/*
+ * One line per row: a leading mark, the subtitle as a short muted identifier before the title, Pills in the meta lane
+ * and a trailing value, end-aligned.
+ */
+const compactChildren = (
+  <>
+    <List.Section title="Section one">
+      <ListItem
+        title="Item one"
+        subtitle="A-1"
+        leading={<Icon name="agent" />}
+        meta={<Pill text="Label" />}
+        value="2"
+        onPress={onSelect}
+      />
+      <ListItem
+        title="Item two, a longer title that runs on until the line truncates it"
+        subtitle="A-2"
+        leading={<Icon name="agent" />}
+        meta={
+          <>
+            <Pill text="Label" />
+            <Pill text="Other" />
+          </>
+        }
+        selected
+        onPress={onSelect}
+      />
+    </List.Section>
+    <List.Section title="Section two">
+      <ListItem
+        title="Item three"
+        subtitle="A-3"
+        leading={<Icon name="agent" />}
+        onPress={onSelect}
+      />
+    </List.Section>
+  </>
+);
+
+export const compactList = {
+  appearance: 'plain',
+  density: 'compact',
+  maxHeight: 400,
+  children: compactChildren,
 } satisfies ListProps<unknown>;

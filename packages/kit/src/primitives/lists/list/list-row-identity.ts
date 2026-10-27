@@ -1,15 +1,30 @@
-import { isValidElement, useMemo, useState, type ReactNode } from 'react';
+import {
+  isValidElement,
+  useMemo,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { flattenedChildren } from '../../../flattened-children';
+import { childRows } from '../../../list-tree';
 import type { ListProps } from './list-props';
 
 type Row = { id?: string; disabled?: boolean; children?: ReactNode };
 
+// A row with an id is one row, followed by any child ListItems nested under it.
 function childId(child: ReactNode): string[] {
   if (!isValidElement<Row>(child)) return [];
 
-  if (child.props.disabled) return [];
+  return [...ownIds(child.props), ...nestedIds(child)];
+}
 
-  return rowChildIds(child.props);
+function ownIds(props: Row): string[] {
+  return props.disabled ? [] : rowChildIds(props);
+}
+
+// A wrapper without an id already counted its children among its own ids.
+function nestedIds(child: ReactElement<Row>): string[] {
+  return child.props.id === undefined ? [] : childRows(child).flatMap(childId);
 }
 
 function childIds(children: ReactNode): string[] {

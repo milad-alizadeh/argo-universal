@@ -3,8 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup } from '#primitives/lists/list';
 import { ListContext, ListTileContext } from '../../../list-context';
-import { useListLook } from '../../../list-look-context';
+import { useCompactRows, useListLook } from '../../../list-look-context';
 import { loadingLanes } from '../../../list-skeleton-lanes';
+import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useInMenu } from '../../../menu-rows-context';
 import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
@@ -14,6 +15,7 @@ import {
   useSelectedSeparator,
 } from './list-item-content-selection';
 import { drawingContent } from './list-item-drawing-content';
+import { NestingItem } from './list-item-nesting';
 import { hasLeading, LinkAccessory, separatorClass } from './list-item-parts';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import { ItemProgress } from './list-item-progress';
@@ -40,6 +42,7 @@ function useItemDrawing(): ItemDrawing {
     position,
     menu: useInMenu(),
     rows: useRowDrawing(),
+    compact: useCompactRows(),
   };
 }
 
@@ -110,11 +113,18 @@ function LoadingItem(props: ListItemProps): ReactElement {
   return <ListItemFrame title={props.title} {...loadingLanes(props)} />;
 }
 
-export function ListItem(props: ListItemProps): ReactElement {
+export function ListItem({ children, ...props }: ListItemProps): ReactElement {
   if (props.isLoading) return <LoadingItem {...props} />;
 
-  return <ChoosingItem {...props} />;
+  const rows = nestedRows(children);
+
+  if (rows.length === 0) return <ChoosingItem {...props} />;
+
+  return <NestingItem row={<ChoosingItem {...props} />} rows={rows} />;
 }
+
+// A List lifts child ListItems to rows of their own; it hands them on to this row's tree lane instead.
+nestsChildren(ListItem);
 
 // A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {

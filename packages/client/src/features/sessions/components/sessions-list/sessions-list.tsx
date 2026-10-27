@@ -108,12 +108,17 @@ function sessionListSection(
   return listsFlat(props) ? undefined : entrySection;
 }
 
-function sessionListOptions(
-  props: SessionsListProps,
-): Pick<
+type SessionListOptions = Pick<
   React.ComponentProps<typeof List<SessionsListEntry>>,
-  'appearance' | 'getSectionKey' | 'onPhones' | 'padding' | 'paddingTop'
-> {
+  | 'appearance'
+  | 'density'
+  | 'getSectionKey'
+  | 'onPhones'
+  | 'padding'
+  | 'paddingTop'
+>;
+
+function sessionListOptions(props: SessionsListProps): SessionListOptions {
   return {
     ...sessionsListLook(props.view.layout),
     getSectionKey: sessionListSection(props),
