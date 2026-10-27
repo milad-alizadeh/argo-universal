@@ -180,11 +180,10 @@ export function placeLook(place: ListPlace, facts: ListPlaceFacts): PlaceLook {
 }
 
 export function platformLook(
-  drawing: Drawing,
   input: ListLookInput,
   menu: boolean,
 ): PlatformLook {
-  const { treeCapable, ...facts } = platformFactsOf(drawing);
+  const { treeCapable, ...facts } = platformFactsOf(input.platform);
 
   return { ...facts, treeDrawn: treeCapable && input.wide && !menu };
 }

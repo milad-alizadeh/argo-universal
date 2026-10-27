@@ -48,7 +48,7 @@ function SelectedTint(): ReactElement {
 const rowClass = (look: ListLook): string =>
   cn(
     'flex-row items-center gap-4 p-3 web:select-none web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2',
-    look.pressedTint,
+    !look.ripple && 'active:bg-pressed',
     tintTransitionClassName,
   );
 

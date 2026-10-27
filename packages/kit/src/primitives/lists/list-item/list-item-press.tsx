@@ -1,6 +1,7 @@
 import { type ReactElement, type ComponentProps } from 'react';
-import { Platform, Pressable, type KeyDownEvent } from 'react-native';
+import { Pressable, type KeyDownEvent } from 'react-native';
 import { usePressRipple } from '#primitives/native/material-palette';
+import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
 import { useContentItemPress } from './list-item-content-selection';
@@ -124,11 +125,15 @@ function switchKeyDown(props: DrawingProps): RowKeyDown {
   };
 }
 
+// The web draws a radio row as a DOM radio, as its List look says.
+const useRadioRow = (props: DrawingProps): boolean =>
+  useListLook().domRows && props.accessibilityRole === 'radio';
+
 export function ItemPress(props: DrawingProps): ReactElement {
   const press = usePressProps(props);
   const focus = useRowFocus();
 
-  if (Platform.OS === 'web' && props.accessibilityRole === 'radio')
+  if (useRadioRow(props))
     return <RadioRow row={props} className={press.className} />;
 
   return (

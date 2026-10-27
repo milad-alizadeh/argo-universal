@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useListLook } from '../../../list-look-context';
 import type { ListProps } from './list-props';
 import { rowId, useSelectionIds } from './list-row-identity';
 import { closingActions } from './list-selection-actions';
@@ -132,10 +133,12 @@ function useSelectionBase<Item>(
   const { ids, selected, onChange } = useChosen(props);
   const parts = useParts();
   const close = useClose(onChange, mode, parts);
+  const pointer = useListLook().pointerSelection;
 
   return useMemo(
-    () => selectionValue({ ids, selected, onChange, mode, close, parts }),
-    [ids, selected, onChange, mode, close, parts],
+    () =>
+      selectionValue({ ids, selected, onChange, mode, close, parts, pointer }),
+    [ids, selected, onChange, mode, close, parts, pointer],
   );
 }
 

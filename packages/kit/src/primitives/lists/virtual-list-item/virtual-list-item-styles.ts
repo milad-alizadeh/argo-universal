@@ -30,13 +30,13 @@ export function surfaceClasses(
 const rowGeometryClasses =
   'min-h-11 flex-row items-center gap-3 px-4 py-2.75 android:min-h-14 android:gap-4 android:py-2 wide:min-h-8 wide:gap-3 wide:py-0 wide:pl-4 wide:pr-3';
 
-// The row's List look says which pressed tint it takes: Android's Pressable draws the ripple instead.
-export const rowClasses = (pressedTint: string): string =>
+// Android's Pressable draws the ripple, as the row's List look says; elsewhere the row takes the pressed tint.
+export const rowClasses = (ripple: boolean): string =>
   cn(
     rowGeometryClasses,
     'web:hover:bg-hover web:select-none',
     tintTransitionClassName,
-    pressedTint,
+    !ripple && 'active:bg-pressed',
   );
 
 const separated = {
