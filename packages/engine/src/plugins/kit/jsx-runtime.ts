@@ -1,3 +1,4 @@
+import { wireParts } from '@repo/contracts/plugins/kit';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
 import { expandList } from './list-props';
@@ -79,7 +80,7 @@ function prepare(
 }
 
 // A kit component that carries members, as `List` carries `List.Section`, with the wire type it stands for.
-type KitComponent = React.ComponentType<ElementProps>;
+export type KitComponent = React.ComponentType<ElementProps>;
 
 const kitParts = new WeakMap<KitComponent, string>();
 
@@ -109,20 +110,13 @@ export const jsx = create;
 
 export const jsxs = create;
 
-// Empty named Slots remain slots; other empty arrays can be ordinary JSON data.
+// Empty named Slots remain slots; other empty arrays can be ordinary JSON data. The names are the ones Contracts gives its parts.
+const slotNames = new Set(
+  Object.values(wireParts).flatMap(({ slots }) => Object.keys(slots)),
+);
+
 const hasElementMeaning = (name: string, length: number): boolean =>
   length > 0 || slotNames.has(name);
-
-const slotNames = new Set([
-  'leading',
-  'media',
-  'accessories',
-  'trailing',
-  'meta',
-  'empty',
-  'footer',
-  'detail',
-]);
 
 const isEmptyChild = (value: ElementProps[string]): boolean =>
   value === null || value === undefined || typeof value === 'boolean';

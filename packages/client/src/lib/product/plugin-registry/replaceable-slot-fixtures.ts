@@ -4,8 +4,8 @@ import {
   rewrittenMessage,
 } from '@repo/contracts/plugins/replaceable-fixtures';
 import { replacementState } from '../../../../mocks/replaceable-slot';
+import { coreSlotState } from './plugin-stream-state';
 import type { ReplaceableSlotViewProps } from './replaceable-slot';
-import { coreSlotState } from './replaceable-state';
 
 // A story supplies the drawing and the spies; a fixture is the Slot's input and what a Plugin made of it.
 type ReplaceableSlotFixture = Omit<

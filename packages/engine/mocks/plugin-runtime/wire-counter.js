@@ -13,7 +13,7 @@ function Buttons({ onTap }) {
       <Button label="Tap me" onPress={onTap} />
       <Button
         label="Say hi"
-        variant="outline"
+        variant="secondary"
         onPress={{ action: 'toast', message: 'Hello from the Plugin' }}
       />
     </Stack>

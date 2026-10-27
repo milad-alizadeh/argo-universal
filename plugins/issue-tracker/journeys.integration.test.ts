@@ -1,5 +1,4 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
-import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
+import { findWireNodeEntry, type WireNode } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import {
   chooseGithub,

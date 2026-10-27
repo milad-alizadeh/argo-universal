@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { KitPart } from '../kit-props';
 import { literal, memberTexts, typeText } from './kit-prop-type-text';
 import { partObjectSchema } from './plugin-object-schema';
 import { pluginPartSchemas } from './plugin-part-schemas';
@@ -10,10 +11,8 @@ type SchemaNode = z.core.JSONSchema._JSONSchema;
 
 export { pluginPartSchemas };
 
-export type KitPartName = keyof typeof pluginPartSchemas;
-
 // A name read from source, such as `KitProps<'Button'>`, checked against the schemas.
-export const isKitPartName = (name: string): name is KitPartName =>
+export const isKitPartName = (name: string): name is KitPart =>
   Object.hasOwn(pluginPartSchemas, name);
 
 /*
@@ -141,7 +140,7 @@ function describe(
  * defines it. The schema is the one definition of a kit component's props, so a
  * props table built from it cannot drift from the component.
  */
-export function kitPropDescriptors(name: KitPartName): KitPropDescriptor[] {
+export function kitPropDescriptors(name: KitPart): KitPropDescriptor[] {
   return objectDescriptors(partObjectSchema(pluginPartSchemas[name]));
 }
 

@@ -4,8 +4,14 @@ import {
   forgetOnce,
   logFallback,
   logOnce,
-  updateArgoKey,
+  type OnceKey,
 } from './render-fallback';
+
+const updateArgoKey = (pluginId: string, path: string): OnceKey => [
+  pluginId,
+  'update-argo',
+  path,
+];
 
 it('writes a line once per key and again after its Plugin is forgotten', () => {
   const log = vi.fn<(line: string) => void>();

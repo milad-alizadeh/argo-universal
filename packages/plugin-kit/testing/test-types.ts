@@ -59,7 +59,7 @@ export interface PluginTest {
   close: () => Promise<void>;
   mount: (input: PluginMount) => Promise<PluginTestView>;
   emit: (name: HookEventName, event: JsonObject) => Promise<Json>;
-  clock: { advance: (ms: number, pluginId?: string) => Promise<void> };
+  clock: { advance: (ms: number) => Promise<void> };
   settings: Map<string, PluginSettingValue>;
   storage: {
     execute: (

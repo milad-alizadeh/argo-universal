@@ -2,7 +2,6 @@ import {
   messageSlotFixture,
   rewrittenMessage,
   replacementTreeFixture,
-  refusedTreeFixture,
   renderThrowReason,
 } from '@repo/contracts/plugins/replaceable-fixtures';
 import { Text } from '@repo/kit/primitives/content/text';
@@ -13,8 +12,8 @@ import {
   renderCoreMessage,
   replacementState,
 } from '../../../../mocks/replaceable-slot';
+import { coreSlotState, type ReplaceableState } from './plugin-stream-state';
 import { ReplaceableSlotView } from './replaceable-slot';
-import { coreSlotState, type ReplaceableState } from './replaceable-state';
 
 const meta = {
   title: 'Tests/Design System/Patterns/ReplaceableSlot',
@@ -68,17 +67,6 @@ export const Replaced: Story = {
     await expect(canvas.getByText('Plugin replacement')).toBeVisible();
     await expect(canvas.queryByText(coreMessageText)).toBeNull();
     await expect(canvas.getByText(restOfFeedText)).toBeVisible();
-  },
-};
-
-export const RefusedWhole: Story = {
-  render: () => draw(replacementState(refusedTreeFixture)),
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(coreMessageText)).toBeVisible();
-    await expect(canvas.queryByText('Plugin replacement')).toBeNull();
-    await expect(onFallback).toHaveBeenCalledWith(
-      'FuturePart is not a kit part',
-    );
   },
 };
 

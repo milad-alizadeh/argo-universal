@@ -1,9 +1,7 @@
 import type { z } from 'zod';
 import type { KitCallbackReturn } from './kit-callback-return';
-import type { WithPropHints } from './kit-prop-hints';
 import type { KitListItem, KitNode } from './plugins/list-expansion';
 import type { pluginPartSchemas } from './plugins/plugin-part-schemas';
-import type { WireSchemaHints } from './plugins/plugin-prop-descriptions.gen';
 import type { KitChoiceValue } from './plugins/selection-value';
 import type { WireEvent, WireNode } from './plugins/wire';
 
@@ -35,13 +33,10 @@ export type Expansion<Part> = Part extends {
   : Record<never, never>;
 
 export type KitSchemaProps = {
-  [Name in KitPart]: WithPropHints<
-    DeclaredProps<z.output<(typeof pluginPartSchemas)[Name]['props']>> &
-      Expansion<(typeof pluginPartSchemas)[Name]>,
-    Name extends keyof WireSchemaHints
-      ? WireSchemaHints[Name]
-      : Record<never, never>
-  >;
+  [Name in KitPart]: DeclaredProps<
+    z.output<(typeof pluginPartSchemas)[Name]['props']>
+  > &
+    Expansion<(typeof pluginPartSchemas)[Name]>;
 };
 
 export type KitEvents<Name extends KitPart> =

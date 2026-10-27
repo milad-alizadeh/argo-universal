@@ -1,26 +1,18 @@
-import type {
-  PluginSlotInput,
-  WireNode,
-  PluginViewId,
-} from '@repo/contracts/plugins/wire';
+import type { PluginSlotInput } from '@repo/contracts/plugins/wire';
 import { useQuery } from '@tanstack/react-query';
-import { useSubscription } from '@trpc/tanstack-react-query';
-import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { useTRPC } from '#features/connection';
 import {
   emptyPluginSlot,
   reducePluginSlot,
   type PluginSlotContribution,
   type PluginSlotState,
+  type ContributedView,
 } from '../../lib/product/plugin-registry';
 import {
-  usePluginDispatch,
-  bindPluginDispatch,
-  type PluginDispatch,
-} from './use-plugin-dispatch';
-import { usePluginOpener } from './use-plugin-opener';
-import { usePluginStreamState } from './use-plugin-stream-state';
-
-type PluginOpener = ReturnType<typeof usePluginOpener>;
+  usePluginBinding,
+  usePluginStream,
+  type PluginBinding,
+} from './use-plugin-stream';
 
 type NameOf = (pluginId: string) => string;
 
@@ -36,66 +28,35 @@ function useNames(): NameOf {
   return (pluginId) => names.get(pluginId) ?? pluginId;
 }
 
-type Drawn = {
-  pluginId: string;
-  path: string;
-  root: WireNode;
-  revision: number;
-  viewId: PluginViewId | null;
-};
-
-type PluginSlotWiring = {
+type Wiring = {
   nameOf: NameOf;
-  send: PluginDispatch;
-  opener: PluginOpener;
+  bind: (drawn: ContributedView) => PluginBinding;
 };
 
-const contribution = (
-  { pluginId, path, root, revision, viewId }: Drawn,
-  { nameOf, send, opener }: PluginSlotWiring,
-): PluginSlotContribution => ({
-  pluginId,
-  name: nameOf(pluginId),
-  root,
-  viewId,
-  onEvent: bindPluginDispatch(send, { pluginId, path, revision, viewId }),
-  onOpenPage: opener(pluginId),
-});
+// Watches a core page's Slot on the connected Server: each declaring Plugin's contribution, drawn once it has a tree.
+export function usePluginSlot(slot: PluginSlotInput): PluginSlotContribution[] {
+  const { state } = usePluginStream(
+    slot,
+    (trpc, input, onData) =>
+      trpc.plugins.slot.subscriptionOptions(input, { onData }),
+    { initial: emptyPluginSlot, reduce: reducePluginSlot },
+  );
+
+  return drawn(state, { nameOf: useNames(), bind: usePluginBinding() });
+}
 
 // Only a contribution with a tree is drawn.
 const drawn = (
   state: PluginSlotState,
-  wiring: PluginSlotWiring,
+  { nameOf, bind }: Wiring,
 ): PluginSlotContribution[] =>
   state.flatMap(({ pluginId, path, view }) => {
     if (!view.root || !path) return [];
 
-    const shown = { ...view, pluginId, path, root: view.root };
+    const { root, viewId } = view;
+    const name = nameOf(pluginId);
 
-    return [contribution(shown, wiring)];
+    return [
+      { pluginId, name, root, viewId, ...bind({ pluginId, path, view }) },
+    ];
   });
-
-const usePluginSlotWiring = (): PluginSlotWiring => ({
-  nameOf: useNames(),
-  send: usePluginDispatch(),
-  opener: usePluginOpener(),
-});
-
-// Watches a core page's Slot on the connected Server: each declaring Plugin's contribution, drawn once it has a tree.
-export function usePluginSlot(slot: PluginSlotInput): PluginSlotContribution[] {
-  const trpc = useTRPC();
-
-  const { value: state, receive } = usePluginStreamState(
-    { trpc, key: JSON.stringify(slot) },
-    emptyPluginSlot,
-    reducePluginSlot,
-  );
-
-  const subscription = useSubscription(
-    trpc.plugins.slot.subscriptionOptions(slot, { onData: receive }),
-  );
-
-  useResubscribeOnReconnect(subscription);
-
-  return drawn(state, usePluginSlotWiring());
-}

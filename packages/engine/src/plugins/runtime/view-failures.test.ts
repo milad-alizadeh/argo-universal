@@ -8,7 +8,6 @@ import { expect, it } from 'vitest';
 import type { Opening } from '../views/open-view';
 import { PluginViews } from '../views/plugin-views';
 import { PluginFailures } from './failures';
-import { ViewFailures } from './view-failures';
 
 const root = (type: string, props: Record<string, string>): WireNode => ({
   type,
@@ -33,22 +32,21 @@ type Wiring = {
 };
 
 function wiring(): Wiring {
-  const failures = new PluginFailures();
-  const sent: PluginEvent[] = [];
-
-  const viewFailures = new ViewFailures(failures, (pluginId) => ({
+  const failures = new PluginFailures((pluginId) => ({
     pluginId,
     name: 'Atlas',
   }));
+
+  const sent: PluginEvent[] = [];
 
   const views = new PluginViews(
     (_pluginId, event) => sent.push(event),
     () => {},
     {
       opened: (): void => {},
-      received: (view): void => viewFailures.drew(view),
-      failed: (view, message): void => viewFailures.failed(view, message),
-      released: (view, last): void => viewFailures.released(view, last),
+      received: (view): void => failures.drew(view),
+      failed: (view, message): void => failures.failed(view, message),
+      released: (view, last): void => failures.released(view, last),
     },
   );
 

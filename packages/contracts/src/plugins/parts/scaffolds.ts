@@ -1,54 +1,116 @@
-import { z } from 'zod';
-import { iconName } from '../../kit-symbols/icon-schema';
-import { listItemProps } from '../kit-props';
-import { openChange } from '../overlay-kit-props';
 import {
-  actionSlot,
-  handler,
-  part,
-  stringLabel,
-} from '../plugin-part-schema-utils';
-import { perSizeClass } from '../schema-size-class';
+  metadataAvatarProps,
+  metadataChildParts,
+  metadataLabelProps,
+  metadataLinkProps,
+  metadataPillsProps,
+  metadataProps,
+  metadataStatusDotProps,
+} from '../metadata-props';
+import { openChange } from '../overlay-kit-props';
+import { actionSlot, part } from '../part';
+import { echoes } from '../plugin-part-props';
+import {
+  detailProps,
+  inspectorProps,
+  listDetailProps,
+  screenProps,
+  settingsLayoutProps,
+} from '../scaffold-kit-props';
 
-const inspectorProps = z.object({
-  title: stringLabel.describe(
-    'The Inspector heading; on compact screens, the sheet title.',
-  ),
-  open: z.boolean().describe('Whether the Inspector is shown.'),
-  onOpenChange: handler('onOpenChange').describe(
-    'Reports the Inspector closing, by its close button, a swipe down, Escape or Back.',
-  ),
-});
+const screenReader =
+  'Announces the title as the screen title, then the search field and header Actions, then the content.';
 
-const settingsPage = z.object({
-  id: z.string().describe('The page identity, which `selected` names.'),
-  title: z.string().describe('The page title on its row.'),
-  icon: iconName.optional().describe('An Argo icon before the title.'),
-  href: z.string().describe('The Argo route the row opens.'),
-  value: listItemProps.shape.value,
-  badge: listItemProps.shape.badge,
-  disabled: listItemProps.shape.disabled,
-  accessibilityLabel: listItemProps.shape.accessibilityLabel,
-});
+const listDetailReader =
+  'Reads the list, then the selected item beside it on wide windows; on compact ones the list is the screen and opening a row moves to the item.';
 
-const settingsLayoutProps = z.object({
-  sections: perSizeClass(
-    z
-      .array(
-        z.object({
-          title: z.string().optional().describe('The group heading.'),
-          items: z.array(settingsPage).readonly().describe('The group pages.'),
+export const scaffoldsParts = {
+  Screen: part(
+    'A screen with a title, header Actions, a primary Action, optional search, and content.',
+    screenProps,
+    {
+      group: 'scaffolds',
+      children: true,
+      root: true,
+      slots: {
+        // The header's verbs, in Sections: buttons on wide screens and iOS, the toolbar and overflow menu on Android. Header Actions nested in content are not a header.
+        actions: actionSlot,
+        // The main Action: a header button, iOS toolbar item, or Android FAB.
+        primaryAction: ['Action'],
+      },
+      // Typed search echoes at once and coalesces, and never holds the screen.
+      events: {
+        onChangeText: echoes(screenProps, 'value', {
+          throttleMs: 150,
+          blocks: false,
         }),
-      )
-      .readonly(),
-  ).describe('The settings pages, in groups, optionally by Size class.'),
-  selected: z
-    .string()
-    .optional()
-    .describe('The id of the page shown, whose row a wide window marks.'),
-});
-
-export const scaffoldsPartSchemas = {
+      },
+      accessibility: {
+        label: 'The required `title` names the screen.',
+        keyboard:
+          'The screen is not focusable. Its search field, header Actions and primary Action use their standard keyboard behavior; typing in search dispatches onChangeText.',
+        voiceOver: screenReader,
+        talkBack: screenReader,
+      },
+    },
+  ),
+  ListDetail: part(
+    'A list beside its selected item on wide windows; on compact ones the list drills in to the item.',
+    listDetailProps,
+    {
+      group: 'scaffolds',
+      root: true,
+      // The detail is a whole page: its own title and Actions.
+      slots: {
+        list: ['List'],
+        detail: ['Screen', 'Detail'],
+        empty: ['EmptyState'],
+      },
+      accessibility: {
+        label:
+          'Not labelled itself: the list and the detail name themselves, and the detail Screen names the screen.',
+        keyboard:
+          'The scaffold is not focusable. Tab moves from the list to the detail on wide windows.',
+        voiceOver: listDetailReader,
+        talkBack: listDetailReader,
+      },
+    },
+  ),
+  Detail: part(
+    'An item page: content beside its Metadata on wide screens, above it on narrow ones.',
+    detailProps,
+    {
+      group: 'scaffolds',
+      children: true,
+      slots: { metadata: ['Metadata'] },
+    },
+  ),
+  Metadata: part(
+    'Read-only label/value fields for a detail view.',
+    metadataProps,
+    { group: 'scaffolds', children: metadataChildParts },
+  ),
+  'Metadata.Label': part('A text Metadata field.', metadataLabelProps, {
+    group: 'scaffolds',
+  }),
+  'Metadata.Link': part(
+    'A link Metadata field, currently drawn as plain text.',
+    metadataLinkProps,
+    { group: 'scaffolds' },
+  ),
+  'Metadata.Pills': part(
+    'A Metadata field containing Pills.',
+    metadataPillsProps,
+    { group: 'scaffolds', children: ['Pill'] },
+  ),
+  'Metadata.StatusDot': part(
+    'A labelled status Metadata field.',
+    metadataStatusDotProps,
+    { group: 'scaffolds' },
+  ),
+  'Metadata.Avatar': part('A person Metadata field.', metadataAvatarProps, {
+    group: 'scaffolds',
+  }),
   Inspector: part(
     'Secondary detail about what is open: its own column on wide screens and a Sheet on compact ones.',
     inspectorProps,

@@ -1,7 +1,6 @@
-import { useEffect, useState } from '@argo/plugin-kit';
+import { useCallback, useState } from '@argo/plugin-kit';
 import type { TrackerStorage } from './tracker-storage';
-
-type Setter<Value> = (value: Value) => void;
+import { useAsync, type Async } from './use-async';
 
 // A Tracker's id, or `null` for none.
 type Selection = string | null;
@@ -15,72 +14,53 @@ export type TrackerChoice = {
 
 type TrackerSource = { storage: TrackerStorage; projectId: string };
 
-type TrackerState = TrackerSource & {
-  setSelection: Setter<Selection | undefined>;
-  setMessage: Setter<string>;
-};
-
 export function useProjectTracker(source: TrackerSource): TrackerChoice {
-  const { storage, projectId } = source;
-  const [selection, setSelection] = useState<Selection>();
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    return readProjectTracker({ storage, projectId, setSelection, setMessage });
-  }, [projectId, storage]);
+  const stored = useStoredTracker(source);
+  const { saveMessage, choose } = useTrackerSave(source, stored.set);
+  const failed = stored.error !== undefined;
 
   return {
-    selection,
-    message,
-    choose: (id) =>
-      saveProjectTracker({ storage, projectId, setSelection, setMessage }, id),
+    selection: failed ? null : stored.value,
+    message: failed ? 'Could not load the Tracker choice.' : saveMessage,
+    choose,
   };
 }
 
-function readProjectTracker(state: TrackerState): () => void {
-  const { storage, projectId, setSelection, setMessage } = state;
-  let active = true;
-
-  setSelection(undefined);
-  setMessage('');
-  void storage.selectedTracker(projectId).then(
-    (id) => setTrackerSelection(id, active, setSelection),
-    () => setTrackerLoadError(active, setSelection, setMessage),
+function useStoredTracker({
+  storage,
+  projectId,
+}: TrackerSource): Async<Selection> {
+  return useAsync(
+    useCallback(() => storage.selectedTracker(projectId), [storage, projectId]),
   );
-
-  return () => {
-    active = false;
-  };
 }
 
-function setTrackerSelection(
+type TrackerSave = Pick<TrackerChoice, 'choose'> & { saveMessage: string };
+
+function useTrackerSave(
+  source: TrackerSource,
+  set: Async<Selection>['set'],
+): TrackerSave {
+  const [saveMessage, setSaveMessage] = useState('');
+
+  const choose = async (id: Selection): Promise<void> =>
+    setSaveMessage(await saveChoice(source, id, () => set(() => id)));
+
+  return { saveMessage, choose };
+}
+
+// The message a save leaves: none, or why it failed.
+async function saveChoice(
+  { storage, projectId }: TrackerSource,
   id: Selection,
-  active: boolean,
-  setSelection: Setter<Selection>,
-): void {
-  if (active) setSelection(id);
-}
-
-function setTrackerLoadError(
-  active: boolean,
-  setSelection: Setter<Selection>,
-  setMessage: Setter<string>,
-): void {
-  if (!active) return;
-
-  setSelection(null);
-  setMessage('Could not load the Tracker choice.');
-}
-
-async function saveProjectTracker(
-  state: TrackerState,
-  id: Selection,
-): Promise<void> {
+  saved: () => void,
+): Promise<string> {
   try {
-    await state.storage.chooseTracker(state.projectId, id);
-    state.setSelection(id);
-    state.setMessage('');
+    await storage.chooseTracker(projectId, id);
+    saved();
+
+    return '';
   } catch {
-    state.setMessage('Could not save the Tracker choice.');
+    return 'Could not save the Tracker choice.';
   }
 }

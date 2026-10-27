@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { KitPart } from '../kit-props';
 import {
-  type KitPartName,
   type KitPropDescriptor,
   kitPropDescriptors,
 } from './kit-prop-descriptors';
 
-function prop(part: KitPartName, name: string): KitPropDescriptor {
+function prop(part: KitPart, name: string): KitPropDescriptor {
   const found = kitPropDescriptors(part).find((it) => it.name === name);
 
   if (!found) throw new Error(`${part} has no ${name} prop`);
@@ -18,7 +18,7 @@ describe('a kit prop descriptor', () => {
     [
       'a choice',
       { part: 'Button', name: 'variant' },
-      "'default' | 'outline' | 'secondary' | 'ghost' | 'link'",
+      "'primary' | 'secondary' | 'text' | 'danger'",
     ],
     ['a scalar', { part: 'Button', name: 'label' }, 'string'],
     ['a schema that names itself', { part: 'List', name: 'items' }, 'Item[]'],
@@ -32,7 +32,7 @@ describe('a kit prop descriptor', () => {
   });
 
   it('offers a choice prop its values, in schema order', () => {
-    expect(prop('Button', 'size').options).toEqual(['xs', 'sm', 'md', 'lg']);
+    expect(prop('Button', 'size').options).toEqual(['sm', 'md']);
   });
 
   it('leaves a free field without options', () => {
@@ -58,7 +58,7 @@ describe('a kit prop descriptor', () => {
 
 describe('a kit prop default', () => {
   it.each([
-    ['Button', 'variant', "'default'"],
+    ['Button', 'variant', "'primary'"],
     ['Button', 'size', "'md'"],
     ['IconButton', 'size', "'md'"],
     ['IconButton', 'variant', "'primary'"],

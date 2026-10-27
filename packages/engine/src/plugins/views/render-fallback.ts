@@ -1,4 +1,8 @@
-import { oneLine } from './log-line';
+type Log = (line: string) => void;
+
+// A Plugin writes the text of its own failures, so nothing it says may spell a second log line.
+export const oneLine = (text: string): string =>
+  text.replaceAll(/[\r\n]/g, ' ');
 
 export const renderFallbackLine = (
   pluginId: string,
@@ -8,10 +12,6 @@ export const renderFallbackLine = (
 
 export const belowWireMinimum = 'App is below the wire minimum';
 
-// Logged once when an App older than the wire minimum opens a page or ordinary Slot (ADR-0034).
-export const updateArgoLine = (pluginId: string, path: string): string =>
-  `Plugin ${pluginId}: Update Argo ${path}: ${belowWireMinimum}`;
-
 // Where a Slot's fall back to core came from: the runtime itself, an App that failed to draw, a `ui.render` Hook, or a Slot contribution that threw.
 export type FallbackSource = 'runtime' | 'drawing' | 'hook' | 'contribution';
 
@@ -19,7 +19,7 @@ export type Fallback = [pluginId: string, slotId: string, reason: string];
 
 // A contribution that threw is logged once per Plugin, Slot and reason, however many contexts the Slot is open in.
 export function logFallback(
-  log: (line: string) => void,
+  log: Log,
   source: FallbackSource,
   [pluginId, slotId, reason]: Fallback,
 ): void {
@@ -39,56 +39,51 @@ export const fallbackKey = (
   ...reason: string[]
 ): OnceKey => [pluginId, 'core-fallback', source, slotId, ...reason];
 
-export const updateArgoKey = (pluginId: string, path: string): OnceKey => [
-  pluginId,
-  'update-argo',
-  path,
-];
-
 // The Plugin id first, then the stable identity of what fell back. Never free-form text a Plugin chose.
 export type OnceKey = readonly [pluginId: string, ...identity: string[]];
 
-type Log = (line: string) => void;
+type Held = { key: OnceKey; repeats: number };
 
-type Held = { identity: string; count: number };
+// Per log, every key written once and how often it came back since. Collected with the log.
+const written = new WeakMap<Log, Map<string, Held>>();
 
-// Per log: Plugin id -> key -> what was held back. Collected with the log; one Plugin's keys leave with `forgetOnce`.
-const held = new WeakMap<Log, Map<string, Map<string, Held>>>();
+function writtenTo(log: Log): Map<string, Held> {
+  const held = written.get(log) ?? new Map<string, Held>();
+  written.set(log, held);
 
-function heldFor(log: Log, pluginId: string): Map<string, Held> {
-  const plugins = held.get(log) ?? new Map<string, Map<string, Held>>();
-  const repeats = plugins.get(pluginId) ?? new Map<string, Held>();
-
-  held.set(log, plugins.set(pluginId, repeats));
-
-  return repeats;
+  return held;
 }
 
 // Writes `line` the first time `key` is seen on this log and counts every later call instead.
 export function logOnce(log: Log, key: OnceKey, line: string): void {
-  const repeats = heldFor(log, key[0]);
-  const id = JSON.stringify(key);
-  const seen = repeats.get(id);
+  const held = writtenTo(log);
+  const seen = held.get(JSON.stringify(key));
 
-  if (seen) seen.count += 1;
+  if (seen) seen.repeats += 1;
   else {
-    repeats.set(id, { identity: key.slice(1).join(' '), count: 0 });
+    held.set(JSON.stringify(key), { key, repeats: 0 });
     log(line);
   }
 }
 
-function take(log: Log, pluginId: string): Held[] {
-  const plugins = held.get(log) ?? new Map<string, Map<string, Held>>();
-  const repeats = plugins.get(pluginId) ?? new Map<string, Held>();
-
-  plugins.delete(pluginId);
-
-  return [...repeats.values()];
-}
-
 // Frees a Plugin's keys, so what it falls back on next is written again. Repeats held back come out as one line each.
 export function forgetOnce(log: Log, pluginId: string): void {
-  for (const { identity, count } of take(log, pluginId))
-    if (count > 0)
-      log(`Plugin ${pluginId}: ${count} more repeats of ${oneLine(identity)}`);
+  const held = writtenTo(log);
+
+  for (const [id, { key, repeats }] of held)
+    if (key[0] === pluginId) {
+      held.delete(id);
+      logRepeats(log, key, repeats);
+    }
+}
+
+function logRepeats(
+  log: Log,
+  [pluginId, ...identity]: OnceKey,
+  repeats: number,
+): void {
+  if (repeats > 0)
+    log(
+      `Plugin ${pluginId}: ${repeats} more repeats of ${oneLine(identity.join(' '))}`,
+    );
 }

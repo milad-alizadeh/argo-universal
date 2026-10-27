@@ -1,40 +1,20 @@
-import { z } from 'zod';
-import type { WithPropHints } from '../kit-prop-hints';
-import { pluginPartSchemas } from './plugin-part-schemas';
-import type { WireSchemaHints } from './plugin-prop-descriptions.gen';
+import type { z } from 'zod';
 import { wireParts, type WirePartDefinition } from './wire-parts';
 
 export type { WirePartDefinition } from './wire-parts';
 
 export { wireParts, listPartNames } from './wire-parts';
 
-export {
-  contentListProps,
-  listSectionProps,
-  listItemProps,
-  labelProps,
-  progressBarProps,
-  pillProps,
-  textProps,
-  buttonProps,
-  stackProps,
-  svgProps,
-  emptyStateProps,
-} from './kit-props';
-
 export type WirePart = keyof typeof wireParts;
 
+// Hover hints come from the generated `@argo/plugin-kit` declarations, not from here.
 export type WireProps = {
-  [Name in WirePart]: WithPropHints<
-    z.output<(typeof wireParts)[Name]['props']>,
-    Name extends keyof WireSchemaHints
-      ? WireSchemaHints[Name]
-      : Record<never, never>
-  >;
+  [Name in WirePart]: z.output<(typeof wireParts)[Name]['props']>;
 };
 
-const partsByType = new Map(
-  Object.entries({ ...pluginPartSchemas, ...wireParts }),
+// Only wire parts resolve, so the Server refuses an App-only kit component such as Menu.
+const partsByType = new Map<string, WirePartDefinition>(
+  Object.entries(wireParts),
 );
 
 export function wirePart(type: string): WirePartDefinition | undefined {

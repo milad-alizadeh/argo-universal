@@ -1,5 +1,4 @@
 import type { PluginList, PluginManifest } from '@repo/contracts/plugins';
-import type { PluginStatus } from '@repo/contracts/plugins/runtime';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { discoverPlugins, type PluginsDeps } from './discovery/loader';
 import type { PluginLocation } from './runtime/plugin-location';
@@ -23,10 +22,12 @@ export type ServiceAccounts = Pick<
   'list' | 'grants' | 'removePlugin'
 >;
 
-export type PluginServiceDeps = PluginsDeps & {
+// What finding a Plugin needs: where Plugins are and whether each is turned on.
+export type LocateDeps = PluginsDeps & { pluginSettings: ServiceSettings };
+
+export type PluginServiceDeps = LocateDeps & {
   pluginAccounts: ServiceAccounts;
   pluginRuntime: PluginRuntime;
-  pluginSettings: ServiceSettings;
 };
 
 export function applyEnabled(
@@ -62,9 +63,7 @@ function locatedIn({ result, locations }: Discovered): LocatedPlugin[] {
 }
 
 // Each admitted Plugin with its folder and whether it's turned on.
-async function locatePlugins(
-  deps: PluginServiceDeps,
-): Promise<LocatedPlugin[]> {
+async function locatePlugins(deps: LocateDeps): Promise<LocatedPlugin[]> {
   const discovered = await discover(deps);
   applyEnabled(discovered.result, deps.pluginSettings);
 
@@ -83,10 +82,18 @@ function findLocated(
 }
 
 export async function locatePlugin(
-  deps: PluginServiceDeps,
+  deps: LocateDeps,
   pluginId: string,
 ): Promise<LocatedPlugin> {
   return findLocated(await locatePlugins(deps), pluginId);
+}
+
+// Where the runtime loads a Plugin from; a turned-off Plugin has none.
+export async function pluginLocation(
+  deps: LocateDeps,
+  pluginId: string,
+): Promise<PluginLocation> {
+  return launchable(deps, await locatePlugin(deps, pluginId));
 }
 
 // The manifest of a Plugin the loader admits, for reading its settings schema.
@@ -97,19 +104,15 @@ export async function pluginManifest(
   return findLocated(locatedIn(await discover(deps)), pluginId).plugin.manifest;
 }
 
-function refuseTurnedOff(deps: PluginServiceDeps, pluginId: string): void {
-  if (!deps.pluginSettings.enabled(pluginId))
-    throw new Error(`Plugin ${pluginId} is turned off`);
-}
+// A turned-off Plugin does not load.
+function launchable(
+  deps: LocateDeps,
+  { plugin: { manifest }, directory }: LocatedPlugin,
+): PluginLocation {
+  if (!deps.pluginSettings.enabled(manifest.id))
+    throw new Error(`Plugin ${manifest.id} is turned off`);
 
-export function startPlugin(
-  deps: PluginServiceDeps,
-  { plugin, directory }: LocatedPlugin,
-): Promise<PluginStatus> {
-  const { manifest } = plugin;
-  refuseTurnedOff(deps, manifest.id);
-
-  return deps.pluginRuntime.activate(locationFor(manifest, directory));
+  return locationFor(manifest, directory);
 }
 
 function locationFor(
@@ -178,7 +181,11 @@ async function isStarted(
   deps: PluginServiceDeps,
   located: LocatedPlugin,
 ): Promise<boolean> {
-  const status = await startPlugin(deps, located).catch(() => null);
+  try {
+    const location = launchable(deps, located);
 
-  return status?.state === 'running';
+    return (await deps.pluginRuntime.activate(location)).state === 'running';
+  } catch {
+    return false;
+  }
 }

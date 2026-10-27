@@ -5,18 +5,13 @@ export type { WirePartDefinition } from './wire-part-definition';
 
 export { listPartNames } from './list-expansion';
 
-// What a Plugin sends for a part is its `wireProps` when it has them.
-type OnTheWire<Part> = Part extends { wireProps: infer Props }
-  ? Omit<Part, 'props' | 'wireProps'> & { props: Props }
-  : Part;
-
 type WireParts<Parts> = {
   [
     Name in keyof Parts as Parts[Name] extends { wire: false } ? never : Name
-  ]: OnTheWire<Parts[Name]>;
+  ]: Parts[Name];
 };
 
-// The overload says what the filter and swap leave; `fromEntries` can only say a record.
+// The overload says what the filter leaves; `fromEntries` can only say a record.
 function onTheWire<Parts extends Record<string, WirePartDefinition>>(
   parts: Parts,
 ): WireParts<Parts>;
@@ -24,12 +19,7 @@ function onTheWire(
   parts: Record<string, WirePartDefinition>,
 ): Record<string, WirePartDefinition> {
   return Object.fromEntries(
-    Object.entries(parts)
-      .filter(([, { wire }]) => wire)
-      .map(([name, { wireProps, ...part }]) => [
-        name,
-        wireProps ? { ...part, props: wireProps } : part,
-      ]),
+    Object.entries(parts).filter(([, { wire }]) => wire),
   );
 }
 

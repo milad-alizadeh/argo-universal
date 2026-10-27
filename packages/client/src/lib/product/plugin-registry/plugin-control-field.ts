@@ -4,9 +4,18 @@ import {
   type PartEventRules,
   type WireJson,
 } from '@repo/contracts/plugins/wire';
-import type { Change, Edit } from './plugin-events';
 import type { ControlInput, PluginProps } from './plugin-rendering';
 
+// One user edit of a field, and how it reaches the Plugin.
+export type Edit = {
+  rules: PartEventRules;
+  value?: WireJson;
+  deliver: () => Promise<void>;
+};
+
+export type Change = (edit: Edit) => void;
+
+// What the field shows: the accepted value, ordered by when each edit was made, so an answer arriving late never wins.
 type Value = { sequence: number; value: WireJson | undefined };
 
 type PendingEdit = { value: WireJson | undefined; blocks: boolean };

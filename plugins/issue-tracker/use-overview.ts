@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from '@argo/plugin-kit';
+import { useCallback, useEffect, useMemo } from '@argo/plugin-kit';
 import { githubError } from './github-errors';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -7,22 +7,17 @@ import {
   requestOverview,
   type Overview,
 } from './overview-requests';
+import { useAsync, type Async, type Show } from './use-async';
 
 export type { Overview } from './overview-requests';
 
-type Shown = { projectId: string; overview: Overview | null; message: string };
-
-export type OverviewState = Omit<Shown, 'projectId'> & {
+export type OverviewState = {
+  overview: Overview | null;
+  message: string;
   refresh: () => Promise<void>;
 };
 
-type Show = (change: Partial<Omit<Shown, 'projectId'>>) => void;
-
-type SetShown = (update: (shown: Shown) => Shown) => void;
-
-type OverviewSource = { deps: IssueDeps; project: Project; show: Show };
-
-const nothing: Shown = { projectId: '', overview: null, message: '' };
+type OverviewSource = { deps: IssueDeps; project: Project };
 
 // A Project's filters to navigate by: the cached overview at once, then GitHub's, kept apart by Project.
 export function useOverview(
@@ -30,105 +25,64 @@ export function useOverview(
   project: Project | undefined,
   reload: boolean,
 ): OverviewState {
-  const [shown, setShown] = useState(nothing);
+  const source = useOverviewSource(deps, project);
+  const loaded = useFirstOverview(source, reload);
+  const refresh = useRefresh(source, loaded.reload);
 
-  const source = useOverviewSource(deps, project, setShown);
-  const refresh = useRefresh(deps, source);
-
-  useEffect(() => {
-    if (source) void openOverview(source, reload);
-  }, [source, reload]);
-
-  return currentOverview(shown, project?.id, refresh);
+  return {
+    overview: loaded.value ?? null,
+    message: loaded.error === undefined ? '' : githubError(loaded.error),
+    refresh,
+  };
 }
 
-function useOverviewSource(
+const useOverviewSource = (
   deps: IssueDeps,
   project: Project | undefined,
-  setShown: SetShown,
-): OverviewSource | undefined {
-  return useMemo(
-    () => project && { deps, project, show: shower(setShown, project.id) },
-    [deps, project, setShown],
-  );
-}
+): OverviewSource | undefined =>
+  useMemo(() => project && { deps, project }, [deps, project]);
 
-function currentOverview(
-  shown: Shown,
-  projectId: string | undefined,
-  refresh: OverviewState['refresh'],
-): OverviewState {
-  return { ...(shown.projectId === projectId ? shown : nothing), refresh };
-}
-
-// Loads again on a pull, and when an Issue's status changes on another page.
-function useRefresh(
-  deps: IssueDeps,
+function useFirstOverview(
   source: OverviewSource | undefined,
-): () => Promise<void> {
-  const refresh = useCallback(async () => {
-    if (source) await loadOverview(source, true);
-  }, [source]);
-
-  useEffect(
-    () => deps.changes.subscribe(() => void refresh()),
-    [deps, refresh],
-  );
-
-  return refresh;
-}
-
-// A change for one Project starts from nothing when another Project's overview is shown.
-const shower =
-  (setShown: SetShown, projectId: string): Show =>
-  (change) =>
-    setShown((shown) => updatedOverview(shown, projectId, change));
-
-function updatedOverview(
-  shown: Shown,
-  projectId: string,
-  change: Parameters<Show>[0],
-): Shown {
-  const next = {
-    ...(shown.projectId === projectId ? shown : { ...nothing, projectId }),
-    ...change,
-  };
-
-  return sameOverview(shown, next) ? shown : next;
-}
-
-// Identical counts must not publish a new view revision during an Issue action.
-function sameOverview(previous: Shown, next: Shown): boolean {
-  return (
-    next.projectId === previous.projectId &&
-    next.message === previous.message &&
-    JSON.stringify(next.overview) === JSON.stringify(previous.overview)
+  reload: boolean,
+): Async<Overview | null> {
+  return useAsync(
+    useCallback(
+      (show) =>
+        source ? openOverview(source, reload, show) : Promise.resolve(null),
+      [source, reload],
+    ),
   );
 }
 
 async function openOverview(
-  source: OverviewSource,
+  { deps, project }: OverviewSource,
   reload: boolean,
-): Promise<void> {
-  const cached = await readOverview(source.deps, source.project);
+  show: Show<Overview | null>,
+): Promise<Overview> {
+  const cached = await readOverview(deps, project);
 
-  if (cached) {
-    source.show({ overview: cached });
+  if (!cached) return requestOverview(deps, project, reload);
 
-    if (!reload) return;
-  }
+  show(cached);
 
-  await loadOverview(source, reload);
+  return reload ? requestOverview(deps, project, reload) : cached;
 }
 
-async function loadOverview(
-  { deps, project, show }: OverviewSource,
-  reload: boolean,
-): Promise<void> {
-  try {
-    const overview = await requestOverview(deps, project, reload);
-    show({ overview, message: '' });
-  } catch (error) {
-    show({ message: githubError(error) });
-  }
+// Loads again on a pull, and when an Issue's status changes on another page.
+function useRefresh(
+  source: OverviewSource | undefined,
+  reload: Async<Overview | null>['reload'],
+): () => Promise<void> {
+  const refresh = useCallback(async () => {
+    if (source)
+      await reload(() => requestOverview(source.deps, source.project, true));
+  }, [source, reload]);
+
+  useEffect(
+    () => source?.deps.changes.subscribe(() => void refresh()),
+    [source, refresh],
+  );
+
+  return refresh;
 }

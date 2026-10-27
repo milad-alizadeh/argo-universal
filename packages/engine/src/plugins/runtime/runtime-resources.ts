@@ -10,10 +10,8 @@ import type { ViewLifecycle } from '../views/view-registry';
 import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
 import { pluginIdentity } from './status';
-import { ViewFailures } from './view-failures';
 
 export class RuntimeResources {
-  readonly failures = new PluginFailures();
   readonly views;
   readonly data;
   readonly background;
@@ -22,7 +20,7 @@ export class RuntimeResources {
     string,
     ReturnType<typeof pluginIdentity>
   >();
-  private readonly viewFailures = new ViewFailures(this.failures, (pluginId) =>
+  readonly failures = new PluginFailures((pluginId) =>
     this.identities.get(pluginId),
   );
   private readonly unwatch;
@@ -46,18 +44,18 @@ export class RuntimeResources {
       opened: (view) => this.data.opened(view.pluginId),
       released: (view, lastOfOpening) => this.releaseView(view, lastOfOpening),
       received: (view) => this.drew(view),
-      failed: (view, message) => this.viewFailures.failed(view, message),
+      failed: (view, message) => this.failures.failed(view, message),
     };
   }
 
   private releaseView(view: OpenView, lastOfOpening: boolean): void {
     this.data.releaseView(view.opening.viewId);
     this.background.released(view.opening.viewId);
-    this.viewFailures.released(view, lastOfOpening);
+    this.failures.released(view, lastOfOpening);
   }
 
   private drew(view: OpenView): void {
-    this.viewFailures.drew(view);
+    this.failures.drew(view);
     this.background.rendered(view.opening.viewId);
   }
 

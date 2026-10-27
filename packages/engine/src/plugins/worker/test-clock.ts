@@ -1,4 +1,11 @@
 import { setImmediate } from 'node:timers/promises';
+import type { z } from 'zod';
+import type {
+  TestAction,
+  TestClockState,
+  TestCommand,
+  TestReply,
+} from '../protocol/test-control.ts';
 
 export class PluginTestClock {
   private time: number;
@@ -54,4 +61,27 @@ export class PluginTestClock {
 export function requireAdvance(ms: number): void {
   if (!Number.isFinite(ms) || ms < 0)
     throw new Error('Clock advance must be finite and nonnegative');
+}
+
+// The worker's side of the runtime's test control: it runs one action on the realm's clock and answers it.
+export async function answerTest(
+  clock: PluginTestClock | undefined,
+  { id, action }: z.infer<typeof TestCommand>,
+): Promise<TestReply> {
+  try {
+    return { type: 'test.done', id, clock: await runTest(clock, action) };
+  } catch (error) {
+    return { type: 'test.done', id, error: String(error) };
+  }
+}
+
+async function runTest(
+  clock: PluginTestClock | undefined,
+  action: TestAction,
+): Promise<TestClockState> {
+  if (!clock) throw new Error('Plugin has no test clock');
+
+  await clock.advance(action.action === 'advanceClock' ? action.ms : 0);
+
+  return { now: clock.now(), nextAt: clock.nextAt() };
 }

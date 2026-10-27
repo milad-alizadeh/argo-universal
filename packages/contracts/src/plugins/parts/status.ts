@@ -1,9 +1,49 @@
 import { z } from 'zod';
 import { tones } from '../../kit-tokens';
-import { part, stringLabel, optionalLabel } from '../plugin-part-schema-utils';
+import { emptyStateProps } from '../core-kit-props';
+import { part } from '../part';
+import { optionalLabel, stringLabel } from '../plugin-part-props';
 import { calloutProps } from '../presentation-kit-props';
+import { pillProps, progressBarProps } from '../status-kit-props';
 
-export const statusPartSchemas = {
+export const statusParts = {
+  ProgressBar: part(
+    'A determinate progress indicator with an optional running sweep.',
+    progressBarProps,
+    {
+      group: 'status',
+      accessibility: {
+        keyboard: 'ProgressBar adds no keyboard focus stop or shortcut.',
+        voiceOver:
+          'VoiceOver exposes a progress indicator and announces its value with accessibilityLabel when supplied.',
+        talkBack:
+          'TalkBack exposes a progress indicator and announces its value with accessibilityLabel when supplied.',
+      },
+    },
+  ),
+  Pill: part('Static short text with a semantic tone.', pillProps, {
+    group: 'status',
+  }),
+  EmptyState: part(
+    'A centred message for an empty container with an optional icon, description, and one action.',
+    emptyStateProps,
+    {
+      group: 'status',
+      slots: { action: ['Button'] },
+      appearance:
+        'Uses Argo semantic tokens and the approved EmptyState master; its icon illustration is decorative.',
+      accessibility: {
+        label:
+          'The required `title` is a heading, followed by the optional description and action.',
+        keyboard:
+          'The container is not focusable. Its optional Button uses its standard keyboard behavior.',
+        voiceOver:
+          'Reads the title as a heading, then the optional description and action.',
+        talkBack:
+          'Reads the title as a heading, then the optional description and action.',
+      },
+    },
+  ),
   StatusDot: part(
     'A compact semantic status mark with an optional pulse.',
     z.object({

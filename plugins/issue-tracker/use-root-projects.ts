@@ -1,7 +1,6 @@
-import { useState } from '@argo/plugin-kit';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
-import { useProjects } from './use-projects';
+import { useAsync } from './use-async';
 
 export type RootProjects = {
   projects: Project[];
@@ -9,19 +8,26 @@ export type RootProjects = {
   message: string;
 };
 
+// Loads the Projects once and opens the first.
 export function useRootProjects(
   deps: IssueDeps,
   selected?: Project,
 ): RootProjects {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [message, setMessage] = useState('Loading Projects…');
-
-  useProjects(deps.listProjects, { setProjects, setProjectId, setMessage });
+  const { value, error } = useAsync(deps.listProjects);
+  const projects = value ?? [];
 
   return {
     projects,
-    project: selected ?? projects.find((row) => row.id === projectId),
-    message,
+    project: selected ?? projects[0],
+    message: projectsMessage(value, error !== undefined),
   };
 }
+
+function projectsMessage(rows: Project[] | undefined, failed: boolean): string {
+  if (failed) return 'Could not load Projects.';
+
+  return rows ? loadedMessage(rows) : 'Loading Projects…';
+}
+
+const loadedMessage = (rows: Project[]): string =>
+  rows.length === 0 ? 'No Projects yet.' : 'Loading Issues…';

@@ -1,7 +1,8 @@
-import { buttonDefaults } from '@repo/contracts/kit-tokens';
-import { cva } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '#kit/utils';
-import type { KitProps } from '../../kit-props';
+
+// A chip or menu trigger keeps its own looks; the kit Button's variants are the schema's (kit-tokens.ts).
+const pressableDefaults = { variant: 'default', size: 'md' } as const;
 
 const actionClasses = cva(
   'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-focus web:focus-visible:ring-3 web:focus-visible:ring-focus/50 disabled:pointer-events-none',
@@ -26,7 +27,7 @@ const actionClasses = cva(
       },
       disabled: { true: 'opacity-50' },
     },
-    defaultVariants: buttonDefaults,
+    defaultVariants: pressableDefaults,
   },
 );
 
@@ -50,10 +51,13 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
     },
     disabled: { true: 'ios:opacity-38 android:opacity-38' },
   },
-  defaultVariants: { variant: buttonDefaults.variant },
+  defaultVariants: { variant: pressableDefaults.variant },
 });
 
-type ActionClassProps = Pick<KitProps<'Button'>, 'variant' | 'disabled'> & {
+type ActionClassProps = Pick<
+  VariantProps<typeof actionClasses>,
+  'variant' | 'disabled'
+> & {
   className?: string;
   native?: boolean;
 };

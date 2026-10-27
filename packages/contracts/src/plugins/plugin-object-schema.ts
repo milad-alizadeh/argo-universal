@@ -48,8 +48,25 @@ export function pluginObjectSchema(schema: z.ZodType): JsonSchema {
   };
 }
 
+// A prop its schema leaves undescribed reads as its own name, so every row of a props table says something.
+function describedProperty(name: string, schema: SchemaNode): SchemaNode {
+  if (typeof schema === 'boolean' || schema.description) return schema;
+
+  const words = name.replaceAll(/([a-z])([A-Z])/g, '$1 $2');
+
+  return { ...schema, description: `${words} for this part.` };
+}
+
+function describedProperties(schema: JsonSchema): JsonSchema {
+  const properties = Object.entries(schema.properties ?? {}).map(
+    ([name, value]) => [name, describedProperty(name, value)],
+  );
+
+  return { ...schema, properties: Object.fromEntries(properties) };
+}
+
 export function partObjectSchema(part: WirePartDefinition): JsonSchema {
-  const wire = pluginObjectSchema(part.props);
+  const wire = describedProperties(pluginObjectSchema(part.props));
 
   if (!part.expansion) return wire;
   const expansion = pluginObjectSchema(part.expansion);

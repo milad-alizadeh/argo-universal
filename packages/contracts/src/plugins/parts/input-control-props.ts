@@ -6,9 +6,10 @@ export const sliderProps = z.object({
   minimumValue: z.number().describe('The lowest allowed value.'),
   maximumValue: z.number().describe('The highest allowed value.'),
   step: z.number().describe('The increment between allowed values.'),
-  onValueChange: handler('onValueChange').describe(
-    'Called with the new range value.',
-  ),
+  // A draft Slider may leave its handler off: the App holds the draft.
+  onValueChange: handler('onValueChange')
+    .optional()
+    .describe('Called with the new range value.'),
   accessibilityLabel: stringLabel.describe(
     'The spoken name of the range control.',
   ),

@@ -173,5 +173,6 @@ export type SlotMessage = z.infer<typeof SlotMessage>;
 export {
   partEventHandler,
   placedPartEvent,
+  propsWithin,
   WireProps,
 } from '#plugin-wire-part-events';

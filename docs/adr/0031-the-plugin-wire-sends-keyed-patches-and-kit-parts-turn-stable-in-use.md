@@ -16,7 +16,7 @@ ADR-0025's stability rule also blocks the spec: a kit part turns stable only onc
 
 ## Decision
 
-- **Lists are expanded on the Server.** Plugin JSX lists (VirtualList, Table, GroupedList) take `items` and `renderItem`, as Argo's own kit does. The Plugin kit runs `renderItem` in the worker and sends keyed children; no function ever crosses the wire. Every child of a list needs a `key`, and a list child without one is refused with one log line naming the Plugin. Copied from Raycast, whose `List.Item`s are children, not templates.
+- **Lists are expanded on the Server.** Plugin JSX lists (List and Table) take `items` and `renderItem`, as Argo's own kit does. The Plugin kit runs `renderItem` in the worker and sends keyed children; no function ever crosses the wire. Every child of a list needs a `key`, and a list child without one is refused with one log line naming the Plugin. Copied from Raycast, whose `List.Item`s are children, not templates.
 - **Patches are keyed.** Children are matched by `key`, falling back to position only where a parent has no keyed children. A patch is a list of ops:
   - `insert` (parent, index, node), `remove` (key), `move` (key, parent, index);
   - `setProps` (key, changed props only);
@@ -43,7 +43,7 @@ ADR-0025's stability rule also blocks the spec: a kit part turns stable only onc
   - The Server validates each tree before sending it, using ADR-0025's rules for pages and ordinary Slots and ADR-0027's for Replaceable Slots.
   - Plugin JSX types are generated from the schemas, so a wrong prop fails in the author's editor, and `argo plugin validate` (#824) checks trees with them.
   - The schema is the only definition of a part's Plugin-facing props, including each prop's description. The kit component's props type is derived from it: one mapped type in the client turns events into callbacks and Slots into React nodes, and a component adds its kit-only props (such as ListItem's `accessory`) by intersection. Changing a Plugin-facing prop means changing the schema; there is nothing to keep in step. Amended by the owner on 2026-10-18.
-  - Plugin JSX types and the per-part docs are generated from the same schemas. The docs are built, never committed, and CI runs the build.
+  - Plugin JSX types and the per-part docs are generated from the same schemas. `pnpm docs:build` generates them: the per-part docs are built and never committed, while the Plugin kit's `components.d.ts` and the prop descriptions are committed, and CI runs the build and fails when they are stale.
   - The App keeps only the renderers. Its registry maps each wire type straight to its kit component, and one generic renderer reads the schema to turn events into callbacks and Slots into nodes. App-owned state such as drafts, optimistic toggles and selection is handled there once, from schema metadata, never in a per-part adapter. Amended by the owner on 2026-10-18 (#1050).
 - **One wire version, not per-part versions.** Each App reports one Plugin wire version, and an App below the minimum sees "Update Argo" (ADR-0034, which replaced the per-part versions and lowering first decided here).
   - A container whose props fail to parse shows "Update Argo to see this", like an unknown container, instead of vanishing.

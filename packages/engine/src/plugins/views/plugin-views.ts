@@ -8,8 +8,7 @@ import type {
 import type { RpcConnection } from '../../rpc';
 import { appView } from './app-view';
 import { PluginDispatches } from './dispatches';
-import { drawingFailure } from './drawing-failure';
-import { oneLine } from './log-line';
+import { drawTree } from './draw-tree';
 import {
   currentDispatch,
   dispatchEvent,
@@ -19,8 +18,6 @@ import {
   type Opening,
   connectionOpening,
 } from './open-view';
-import { reportDrawingFailure } from './render-failure';
-import { receive } from './state';
 import {
   ViewRegistry,
   noViewLifecycle,
@@ -58,20 +55,19 @@ export class PluginViews {
   }
 
   private receiveCurrent(view: OpenView, message: ViewMessage): void {
-    const reason = drawingFailure(view, message);
+    const reception = { log: this.log, revision: ++this.revision };
+    const reason = drawTree(view, message, reception);
 
-    if (reason !== undefined) return this.failed(view, reason);
-    receive(view, message, { log: this.log, revision: ++this.revision });
+    if (reason !== null) return this.failed(view, reason);
     this.lifecycle.received(view);
   }
 
   // The failure outlives the view it came from, so it is raised after the removal that would evict it.
   private failed(view: OpenView, reason: string): void {
-    this.log(
-      `Plugin ${view.pluginId}: could not draw ${view.opening.path}: ${oneLine(reason)}`,
-    );
+    const raised = view.draws.failed(view, reason, this.log);
     this.views.remove(view);
-    this.lifecycle.failed(view, reason);
+
+    if (raised) this.lifecycle.failed(view, reason);
   }
 
   public headless(
@@ -166,14 +162,14 @@ export class PluginViews {
     this.send(pluginId, { type: 'discardRender', path });
   }
 
+  // Only the Connection that holds this revision of the view can say its App failed to draw it.
   public renderFailed(
     connection: RpcConnection,
     input: RenderFailureInput,
   ): void {
-    reportDrawingFailure(
-      this.views.find(connection.id, input),
-      input,
-      this.log,
-    );
+    const view = this.views.find(connection.id, input);
+
+    if (view?.revision === input.revision)
+      view.draws.appFailed(view, input.reason, this.log);
   }
 }

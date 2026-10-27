@@ -17,19 +17,22 @@ import {
 } from '../views/render-fallback';
 import { answerPluginCall } from './calls';
 import type { PluginLocation } from './plugin-location';
-import { PluginTurns } from './plugin-turns';
-import { RuntimeClock } from './runtime-clock';
 import { RuntimePlugins } from './runtime-plugins';
 import { RuntimeResources } from './runtime-resources';
+import { TestControl } from './test-control';
 
 export class PluginRuntime {
-  private readonly plugins;
-  private readonly resources;
-  private readonly host: HostConnection;
   readonly hooks;
+  // What a Plugin's test kit drives: the clock every deadline and worker realm share.
+  readonly testControl: TestControl;
+  readonly views: RuntimeResources['views'];
+  readonly data: RuntimeResources['data'];
+  readonly items: RuntimeResources['items'];
+  readonly background: RuntimeResources['background'];
+  private readonly plugins: RuntimePlugins;
+  private readonly resources: RuntimeResources;
+  private readonly host: HostConnection;
   private hostError: string | null = null;
-  private readonly clock;
-  readonly turns = new PluginTurns(() => this.plugins.values());
 
   constructor(
     private readonly log: (line: string) => void,
@@ -37,56 +40,57 @@ export class PluginRuntime {
     clock: PluginClock = realClock,
   ) {
     this.host = new HostConnection(this.callbacks());
+    this.connectAccounts();
+    this.testControl = this.controlFor(clock);
+    this.hooks = hostHooks(this.host, this.log, clock);
+    this.resources = new RuntimeResources(this.resourceInput());
+    ({ views: this.views, data: this.data } = this.resources);
+    ({ items: this.items, background: this.background } = this.resources);
+    this.plugins = new RuntimePlugins(this.pluginInput());
+  }
+
+  private connectAccounts(): void {
     this.services.accountCalls.connect((pluginId, generation, invocation) =>
       this.host.tell({ ...invocation, pluginId, generation }),
     );
-    this.clock = new RuntimeClock(this.host.tests, clock);
-    this.hooks = hostHooks(this.host, this.log, this.clock.source);
-    this.resources = new RuntimeResources(this.resourceInput());
-    this.plugins = new RuntimePlugins(this.pluginInput());
+  }
+
+  private controlFor(clock: PluginClock): TestControl {
+    return new TestControl({
+      clock,
+      tell: (command): void => this.host.tell(command),
+      running: (): string[] => this.plugins.runningIds(),
+    });
   }
 
   private pluginInput(): ConstructorParameters<typeof RuntimePlugins>[0] {
     return {
       host: this.host,
       hooks: this.hooks,
-      clock: this.clock,
+      clockStart: () => this.testControl.workerStart(),
       resources: this.resources,
       log: this.log,
-      turnsRunning: () => this.turns.running,
     };
   }
 
   private resourceInput(): QueryServices {
     return {
       services: this.services,
-      clock: this.clock.source,
+      clock: this.testControl.clock,
       log: this.log,
       send: (pluginId, event): void => this.host.event(pluginId, event),
       during: <T>(call: () => Promise<T>): Promise<T> =>
-        this.clock.during(call),
+        this.testControl.during(call),
     };
-  }
-
-  get views(): RuntimeResources['views'] {
-    return this.resources.views;
-  }
-  get data(): RuntimeResources['data'] {
-    return this.resources.data;
-  }
-  get items(): RuntimeResources['items'] {
-    return this.resources.items;
-  }
-  get background(): RuntimeResources['background'] {
-    return this.resources.background;
   }
 
   refreshProjects(): Promise<void> {
     return this.resources.refreshProjects();
   }
 
-  public advanceClock(_pluginId: string, ms: number): Promise<void> {
-    return this.clock.advance(() => this.plugins.runningIds(), ms);
+  // While any Turn can be writing Plugin sources, workers keep their last complete build.
+  turnsChanged(active: boolean): void {
+    this.plugins.turnsChanged(active);
   }
 
   public renderFallback(...fallback: Fallback): void {
@@ -101,8 +105,9 @@ export class PluginRuntime {
     return {
       log: this.log,
       call: (message): Promise<PluginReply> =>
-        this.clock.during(() => this.answer(message)),
+        this.testControl.during(() => this.answer(message)),
       status: (message): void => this.plugins.update(message),
+      test: (message): void => this.testControl.settle(message),
       crash: (message): void => this.crashed(message),
     };
   }

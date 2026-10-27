@@ -1,11 +1,12 @@
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
-import type { WirePartDefinition } from '../src/plugins/wire-parts';
+import type { WirePartDefinition } from '../src/plugins/wire-part-definition';
 import { accessibilitySection } from './plugin-reference-accessibility';
 import {
   partDefinition,
   propsSchema,
   propsTable,
 } from './plugin-reference-format';
+import { resolvedReference } from './plugin-reference-inference';
 import { slotTable } from './plugin-reference-slots';
 
 const generatedNote =
@@ -13,13 +14,13 @@ const generatedNote =
 
 function colorRule(name: string, part: WirePartDefinition): string {
   return propsSchema(name).properties?.color
-    ? part.reference.appearance
+    ? resolvedReference(part).appearance
     : 'This schema does not declare a `color` prop; use the part’s documented semantic tokens.';
 }
 
 function imageRule(name: string, part: WirePartDefinition): string {
   return name === 'Image'
-    ? part.reference.appearance
+    ? resolvedReference(part).appearance
     : 'This part does not declare a direct Image prop. Image Slots use the Image part’s source and appearance rules.';
 }
 
@@ -64,7 +65,9 @@ function childrenNote(part: WirePartDefinition): string {
 }
 
 function sdkPropNote(part: WirePartDefinition): string {
-  return part.reference.sdkProps ? `\n${part.reference.sdkProps}` : '';
+  const { sdkProps } = part.reference;
+
+  return sdkProps ? `\n${sdkProps}` : '';
 }
 
 function appearanceSection(name: string, part: WirePartDefinition): string {

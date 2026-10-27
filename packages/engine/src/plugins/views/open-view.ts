@@ -5,11 +5,12 @@ import {
   PluginViewId,
   type PluginDispatchId,
   type PluginEvent,
-  type ReplaceableSlotId,
+  type ViewMessage,
+  type WireNode,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
+import { drawsFor, type Draws } from './draws';
 import { requireViewHandler } from './handler';
-import type { ViewSnapshot } from './messages';
 
 const staleView = 'Plugin view changed; try again';
 
@@ -17,14 +18,22 @@ export type Open = Extract<PluginEvent, { type: 'open' }>;
 
 export type Opening = Omit<Open, 'type' | 'viewId'>;
 
-// A page draws a Plugin route; a replaceable view draws a Replaceable Slot's replacement tree (ADR-0035).
-export type ViewKind =
-  | { kind: 'page' }
-  | { kind: 'replaceable'; slotId: ReplaceableSlotId };
+export type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
 
-export interface OpenView extends ViewSnapshot {
+/*
+ * One App's view of a Plugin route or Slot. `root` is the Plugin's tree as sanitised, which handlers and
+ * data are looked up in; `drawn` is the prepared tree the App holds, at `revision`. `refused` is set while
+ * the App holds the fallback for a tree over the wire caps.
+ */
+export interface OpenView {
   pluginId: string;
-  draws: ViewKind;
+  draws: Draws;
+  root: WireNode | null;
+  drawn: WireNode | null;
+  revision: number;
+  workerRevision: number | null;
+  refused: boolean;
+  events: ViewEvents;
   projectId?: string;
   connectionId: string;
   opening: Open;
@@ -39,7 +48,7 @@ export function createOpenView(
 ): OpenView {
   return {
     pluginId,
-    draws: viewKind(opening),
+    draws: drawsFor(opening),
     projectId: projectOfOpening(opening),
     connectionId,
     events: viewEvents(),
@@ -48,18 +57,12 @@ export function createOpenView(
   };
 }
 
-function viewKind(opening: Opening): ViewKind {
-  return opening.renderSlot
-    ? { kind: 'replaceable', slotId: opening.renderSlot }
-    : { kind: 'page' };
-}
-
 export function projectOfOpening(opening: Opening): string | undefined {
   return opening.slot?.context.projectId ?? opening.projectId;
 }
 
-function viewEvents(): OpenView['events'] {
-  const events: OpenView['events'] = new EventEmitter();
+function viewEvents(): ViewEvents {
+  const events: ViewEvents = new EventEmitter();
   events.setMaxListeners(0);
 
   return events;
@@ -68,17 +71,16 @@ function viewEvents(): OpenView['events'] {
 export type HeadlessView = { viewId: PluginViewId; close: () => void };
 
 export function temporary(view: OpenView): boolean {
-  return (
-    view.draws.kind === 'replaceable' || view.backgroundInterval !== undefined
-  );
+  return view.draws.temporary || view.backgroundInterval !== undefined;
 }
 
 function blankView(): Pick<
   OpenView,
-  'root' | 'revision' | 'workerRevision' | 'watchers' | 'refused'
+  'root' | 'drawn' | 'revision' | 'workerRevision' | 'watchers' | 'refused'
 > {
   return {
     root: null,
+    drawn: null,
     revision: 0,
     workerRevision: null,
     watchers: 0,

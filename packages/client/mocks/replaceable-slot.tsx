@@ -5,7 +5,7 @@ import {
 import { messageSlotFixture } from '@repo/contracts/plugins/replaceable-fixtures';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { FeedItem } from '../src/features/feed/components/feed-item';
-import type { ReplaceableState } from '../src/lib/product/plugin-registry/replaceable-state';
+import type { ReplaceableState } from '../src/lib/product/plugin-registry/plugin-stream-state';
 
 export function renderCoreMessage(
   input: ReplaceableInput,

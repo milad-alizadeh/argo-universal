@@ -26,7 +26,7 @@ export class Plugins {
     this.attachHooks();
 
     this.unwatchTurns = watchTurnActivity(options.sessions, (active) => {
-      this.parts.runtime.turns.changed(active);
+      this.parts.runtime.turnsChanged(active);
     });
   }
 

@@ -1,7 +1,7 @@
 import { tagEnd } from './markup-tag-end';
 import { svgDepthLimit, svgElementLimit } from './types';
 
-interface MarkupToken {
+export interface MarkupToken {
   end: number;
   kind: 'comment' | 'cdata' | 'instruction' | 'declaration' | 'open' | 'close';
   selfClosing?: boolean;
@@ -106,7 +106,7 @@ function depthChange(token: MarkupToken): number {
   return depthDelta[token.kind];
 }
 
-function readToken(source: string, start: number): MarkupToken {
+export function readToken(source: string, start: number): MarkupToken {
   const marker = source.slice(start, start + 2);
 
   if (marker === '<!') return readDeclaration(source, start);

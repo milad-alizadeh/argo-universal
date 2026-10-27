@@ -6,7 +6,7 @@ import {
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
-import { jsx, jsxs, registerKitPart } from './jsx-runtime';
+import { jsx, jsxs, registerKitPart, type KitComponent } from './jsx-runtime';
 import {
   mountPages,
   type Pages,
@@ -33,13 +33,11 @@ const hooks = {
   memo: React.memo,
 };
 
-type KitComponent =
-  | string
-  | (((props: ElementProps) => ReturnType<typeof jsx>) &
-      Record<string, string>);
-
 // A part with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
-function kitComponent({ part, members }: PluginKitExport): KitComponent {
+function kitComponent({
+  part,
+  members,
+}: PluginKitExport): string | KitComponent {
   if (!Object.keys(members).length) return part;
 
   const component = Object.assign(

@@ -1,11 +1,38 @@
 import { z } from 'zod';
-import { toastProps } from '../overlay-kit-props';
-import { tooltipProps } from '../overlay-kit-props';
-import { openStateProps } from '../overlay-kit-props';
-import { openChange } from '../overlay-kit-props';
-import { part } from '../plugin-part-schema-utils';
+import {
+  alertProps,
+  openChange,
+  openStateProps,
+  sheetProps,
+  toastProps,
+  tooltipProps,
+} from '../overlay-kit-props';
+import { part } from '../part';
+import { menuEvents, menuSchema } from '../selection-schemas';
 
-export const overlaysPartSchemas = {
+// The App owns an overlay's open state: it flips it at once and tells the Plugin.
+export const overlaysParts = {
+  Alert: part(
+    'A question asked over the page; its Actions answer it.',
+    alertProps,
+    {
+      group: 'overlays',
+      children: true,
+      events: { onOpenChange: openChange(alertProps) },
+    },
+  ),
+  Sheet: part('A sheet raised over the page.', sheetProps, {
+    group: 'overlays',
+    children: true,
+    events: { onOpenChange: openChange(sheetProps) },
+    // A Plugin's sheet holds composed content, so the kit Sheet gives it the standard sheet inset.
+    appProps: sheetProps.transform((props) => ({ ...props, inset: true })),
+  }),
+  Menu: part('A choice or action menu.', menuSchema, {
+    group: 'overlays',
+    wire: false,
+    events: menuEvents,
+  }),
   Dialog: part(
     'A form overlay; presented as a sheet on phone.',
     openStateProps,

@@ -53,8 +53,8 @@ function SlotPreview({ root, onEvent }: PluginTreeProps): ReactElement {
 
 /*
  * One story per drawing path RenderNode takes: a part's slots, its children, and each entry it
- * looks up in the registry. A node whose type is not in the registry has no story: it draws
- * "Update Argo to see this", which plugin-compatibility.test.stories.tsx asserts.
+ * looks up in the registry. A node the App cannot draw has no story: the Server sends
+ * "Update Argo to see this" in its place, which plugin-compatibility.test.stories.tsx asserts.
  */
 
 // A part's named slots hold nodes of their own; pressing the Button patches the node beside it.

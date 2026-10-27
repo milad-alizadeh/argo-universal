@@ -1,5 +1,6 @@
 import type { WirePart } from '@repo/contracts/plugins/kit';
 import { Action } from '@repo/kit/primitives/actions/action';
+import { Button } from '@repo/kit/primitives/actions/button';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { SplitButton } from '@repo/kit/primitives/actions/split-button';
 import { Audio } from '@repo/kit/primitives/content/audio';
@@ -36,7 +37,6 @@ import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
 import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
-import { PluginButton } from './plugin-button';
 
 export const pluginEntries = {
   Markdown,
@@ -78,7 +78,7 @@ export const pluginEntries = {
   ProgressBar,
   Pill,
   Text,
-  Button: PluginButton,
+  Button,
   Stack,
   Spacer,
   Card,

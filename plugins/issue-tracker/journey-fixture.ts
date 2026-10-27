@@ -1,10 +1,11 @@
 import { fileURLToPath } from 'node:url';
-import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
 import {
   Action,
   projectDetailsSlotId,
+  startPluginTest,
   type PluginSlotInput,
-} from '@repo/contracts/plugins/wire';
+  type PluginTest,
+} from '@argo/plugin-kit/testing';
 import { expect, onTestFinished } from 'vitest';
 
 export const project = {

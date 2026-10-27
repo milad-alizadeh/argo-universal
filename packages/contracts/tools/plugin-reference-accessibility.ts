@@ -1,6 +1,7 @@
-import { z } from 'zod';
-import type { WirePartDefinition } from '../src/plugins/wire-parts';
+import type { z } from 'zod';
+import type { WirePartDefinition } from '../src/plugins/wire-part-definition';
 import { propsSchema } from './plugin-reference-format';
+import { resolvedReference } from './plugin-reference-inference';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
@@ -44,7 +45,7 @@ function accessibleName(name: string, part: WirePartDefinition): string {
   return chooseName(
     requiredName(required),
     optionalName(properties),
-    trimFinalPunctuation(part.reference.accessibility.label),
+    trimFinalPunctuation(resolvedReference(part).accessibility.label),
   );
 }
 
@@ -52,7 +53,7 @@ export function accessibilitySection(
   name: string,
   part: WirePartDefinition,
 ): string {
-  const { accessibility } = part.reference;
+  const { accessibility } = resolvedReference(part);
 
   return [
     `- **Accessible name:** ${accessibleName(name, part)}.`,

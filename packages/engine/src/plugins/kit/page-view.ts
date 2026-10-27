@@ -6,7 +6,7 @@ import type {
   ViewMessage,
   WireNode,
 } from '@repo/contracts/plugins/wire';
-import { diff } from './diff';
+import { diff } from '@repo/contracts/plugins/wire-patch';
 import type { Mounted } from './reconciler';
 import type { KitTimer } from './scheduler';
 import type { Handlers } from './wire-tree';

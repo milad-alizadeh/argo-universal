@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { iconSymbol, iconSize } from '../kit-symbols/icon-schema';
 import { iconButtonDefaults, iconButtonSizes, tones } from '../kit-tokens';
-import { imageAsset } from './image-wire-part';
+import { imageAsset } from './media-kit-props';
 import { handler } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
 
