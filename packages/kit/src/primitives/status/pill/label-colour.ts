@@ -1,7 +1,8 @@
 /*
  * A tracker label's own colour, as the Pill draws it: the text in that colour, mixed toward black on a light theme and
  * toward white on a dark one until it reads, over a fill of the colour itself at the alpha the tone fills use. A colour
- * as light as a light page, or as dark as a dark one, would leave no fill, so that Pill keeps its tone's.
+ * as light as a light page, or as dark as a dark one, would leave no fill, so that Pill keeps its tone's. A grey label,
+ * black and white among them, has no hue to show, so it draws as a plain Pill.
  */
 export interface LabelColours {
   text: string;
@@ -11,10 +12,13 @@ export interface LabelColours {
 type Rgb = readonly [red: number, green: number, blue: number];
 
 // The perceived luminance text keeps to: at most this on a light theme, at least this on a dark one.
-const readable = { light: 0.09, dark: 0.45 } as const;
+const readable = { light: 0.09, dark: 0.5 } as const;
 
 // Beyond these a fill of the colour vanishes into the page.
 const vanishes = { light: 0.85, dark: 0.04 } as const;
+
+// The spread between a colour's strongest and weakest channel below which it reads as grey.
+const greyChroma = 0.15;
 
 // How much further toward black or white each try mixes the text.
 const mixStep = 0.02;
@@ -66,6 +70,12 @@ const mix = (rgb: Rgb, target: number, amount: number): Rgb => [
   rgb[2] + (target - rgb[2]) * amount,
 ];
 
+const grey = (rgb: Rgb): boolean =>
+  Math.max(...rgb) - Math.min(...rgb) < greyChroma;
+
+const fills = (rgb: Rgb, dark: boolean): boolean =>
+  dark ? luminance(rgb) > vanishes.dark : luminance(rgb) < vanishes.light;
+
 const reads = (rgb: Rgb, dark: boolean): boolean =>
   dark ? luminance(rgb) >= readable.dark : luminance(rgb) <= readable.light;
 
@@ -88,13 +98,16 @@ const hexDigits = (value: number): string =>
 
 const toHex = (rgb: Rgb): string => `#${rgb.map(hexDigits).join('')}`;
 
-export function labelColours(color: string, dark: boolean): LabelColours {
+export function labelColours(
+  color: string,
+  dark: boolean,
+): LabelColours | undefined {
   const rgb = channels(color);
-  const own = luminance(rgb);
-  const fills = dark ? own > vanishes.dark : own < vanishes.light;
+
+  if (grey(rgb)) return undefined;
 
   return {
     text: toHex(readableText(rgb, dark)),
-    fill: fills ? `${color}${fillAlpha}` : undefined,
+    fill: fills(rgb, dark) ? `${color}${fillAlpha}` : undefined,
   };
 }
