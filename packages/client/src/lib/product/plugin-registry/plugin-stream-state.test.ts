@@ -3,6 +3,7 @@ import {
   rewrittenMessage,
 } from '@repo/contracts/plugins/replaceable-fixtures';
 import {
+  counterRoot,
   counterSnapshot,
   counterTapPatch,
   counterTappedRoot,
@@ -23,7 +24,11 @@ import {
 describe('reducePluginView', () => {
   const shown = reducePluginView(emptyPluginView, counterSnapshot);
 
-  it('shows a snapshot, then applies the next revision', () => {
+  it('shows a snapshot', () => {
+    expect(shown).toEqual({ root: counterRoot, revision: 1, viewId: null });
+  });
+
+  it('applies the next revision', () => {
     expect(reducePluginView(shown, counterTapPatch)).toEqual({
       root: counterTappedRoot,
       revision: 2,
@@ -73,27 +78,27 @@ describe('reducePluginSlot', () => {
     ]);
   });
 
-  it('draws a contributor from its snapshot, then its patches', () => {
-    const listed = reducePluginSlot([], {
-      type: 'contributors',
-      pluginIds: ['hello'],
-    });
+  const listed = reducePluginSlot([], {
+    type: 'contributors',
+    pluginIds: ['hello'],
+  });
 
-    const drawn = reducePluginSlot(listed, view('hello'));
-
-    const patched = reducePluginSlot(
-      drawn,
-      view('hello', slotCounterWavePatch),
-    );
-
-    expect(drawn).toEqual([
+  it('draws a contributor from its snapshot', () => {
+    expect(reducePluginSlot(listed, view('hello'))).toEqual([
       {
         pluginId: 'hello',
         path,
         view: { root: slotCounterRoot, revision: 1, viewId: null },
       },
     ]);
-    expect(patched).toEqual([
+  });
+
+  it('redraws a contributor from its patch', () => {
+    const drawn = reducePluginSlot(listed, view('hello'));
+
+    expect(
+      reducePluginSlot(drawn, view('hello', slotCounterWavePatch)),
+    ).toEqual([
       {
         pluginId: 'hello',
         path,
@@ -134,7 +139,18 @@ const replacement = (message = slotCounterSnapshot) =>
 describe('reduceReplaceable', () => {
   const core = coreSlotState(messageSlotFixture);
 
-  it('draws a replacement from its snapshot, then its patches', () => {
+  it('draws a replacement from its snapshot', () => {
+    expect(reduceReplaceable(core, replacement())).toEqual({
+      input: messageSlotFixture,
+      replacement: {
+        pluginId: 'hello',
+        path,
+        view: { root: slotCounterRoot, revision: 1, viewId: null },
+      },
+    });
+  });
+
+  it('redraws a replacement from its patch', () => {
     const drawn = reduceReplaceable(core, replacement());
 
     expect(reduceReplaceable(drawn, replacement(slotCounterWavePatch))).toEqual(

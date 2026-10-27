@@ -11,7 +11,8 @@ import {
   type ReplaceableSlotProps,
   type ReplaceableSlotViewProps,
 } from '../../lib/product/plugin-registry/replaceable-slot';
-import { usePluginBinding, usePluginStream } from './use-plugin-stream';
+import { usePluginBinding } from './use-plugin-binding';
+import { usePluginStream } from './use-plugin-stream';
 
 export function renderConnectedReplaceableSlot(
   props: ReplaceableSlotProps,

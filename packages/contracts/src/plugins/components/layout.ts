@@ -66,8 +66,6 @@ export const layoutComponents = {
           "A Card with onPress is one focus stop that activates with Enter or Space; its action stays a focus stop of its own. A collapsible Card's title is a button that toggles the body with Enter or Space.",
         voiceOver:
           'A pressable Card is a button named by accessibilityLabel, or its title and subtitle; a static Card is a group of the same name that reads its media, title, subtitle, action and body in order.',
-        talkBack:
-          'A pressable Card is a button named by accessibilityLabel, or its title and subtitle; a static Card is a group of the same name that reads its media, title, subtitle, action and body in order.',
       },
       appearance:
         'Desktop, web and iOS draw the card Surface; Android draws the stock Material 3 filled Card. media runs full bleed across the top; one Button or IconButton sits top right on the title line. A collapsible Card puts its chevron after the title and animates the body open and shut; footer sits under the body inside the same fold.',

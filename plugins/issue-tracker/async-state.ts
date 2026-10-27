@@ -1,3 +1,4 @@
+import { githubError } from './github-errors';
 import type { Load, Update } from './use-async';
 
 export type State<Value> = {
@@ -19,7 +20,7 @@ const same = <Value>(left: Value, right: Value): boolean =>
   JSON.stringify(left) === JSON.stringify(right);
 
 // Showing the answer already shown changes nothing, so no new view revision is published.
-export function shown<Value>(
+export function showValue<Value>(
   state: State<Value>,
   load: Load<Value>,
   value: Value,
@@ -41,12 +42,13 @@ const repeated = <Value>(
   error: string,
 ): boolean => state.owner === load && state.error === error;
 
+// The state keeps the failure as a person reads it, so no page words it again.
 export function failed<Value>(
   state: State<Value>,
   load: Load<Value>,
   cause: unknown,
 ): State<Value> {
-  const error = cause instanceof Error ? cause.message : String(cause);
+  const error = githubError(cause);
 
   // The same failure again changes nothing, so no new view revision is published.
   if (repeated(state, load, error)) return state;

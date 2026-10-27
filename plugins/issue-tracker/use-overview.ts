@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo } from '@argo/plugin-kit';
-import { githubError } from './github-errors';
+import { useCallback, useMemo } from '@argo/plugin-kit';
+import { useReloadOnChange } from './issue-changes';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import {
@@ -23,15 +23,15 @@ type OverviewSource = { deps: IssueDeps; project: Project };
 export function useOverview(
   deps: IssueDeps,
   project: Project | undefined,
-  reload: boolean,
+  shouldRefetch: boolean,
 ): OverviewState {
   const source = useOverviewSource(deps, project);
-  const loaded = useFirstOverview(source, reload);
+  const loaded = useFirstOverview(source, shouldRefetch);
   const refresh = useRefresh(source, loaded.reload);
 
   return {
     overview: loaded.value ?? null,
-    message: loaded.error === undefined ? '' : githubError(loaded.error),
+    message: loaded.error ?? '',
     refresh,
   };
 }
@@ -44,29 +44,31 @@ const useOverviewSource = (
 
 function useFirstOverview(
   source: OverviewSource | undefined,
-  reload: boolean,
+  shouldRefetch: boolean,
 ): Async<Overview | null> {
   return useAsync(
     useCallback(
       (show) =>
-        source ? openOverview(source, reload, show) : Promise.resolve(null),
-      [source, reload],
+        source
+          ? openOverview(source, shouldRefetch, show)
+          : Promise.resolve(null),
+      [source, shouldRefetch],
     ),
   );
 }
 
 async function openOverview(
   { deps, project }: OverviewSource,
-  reload: boolean,
+  shouldRefetch: boolean,
   show: Show<Overview | null>,
 ): Promise<Overview> {
   const cached = await readOverview(deps, project);
 
-  if (!cached) return requestOverview(deps, project, reload);
+  if (!cached) return requestOverview(deps, project, shouldRefetch);
 
   show(cached);
 
-  return reload ? requestOverview(deps, project, reload) : cached;
+  return shouldRefetch ? requestOverview(deps, project, shouldRefetch) : cached;
 }
 
 // Loads again on a pull, and when an Issue's status changes on another page.
@@ -79,10 +81,7 @@ function useRefresh(
       await reload(() => requestOverview(source.deps, source.project, true));
   }, [source, reload]);
 
-  useEffect(
-    () => source?.deps.changes.subscribe(() => void refresh()),
-    [source, refresh],
-  );
+  useReloadOnChange(source?.deps.changes, refresh);
 
   return refresh;
 }

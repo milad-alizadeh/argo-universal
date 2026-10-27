@@ -134,4 +134,4 @@ ${rows.join('\n')}
 `;
 }
 
-export const componentNames = Object.keys(kitComponentSchemas).sort();
+export const documentedComponentNames = Object.keys(kitComponentSchemas).sort();

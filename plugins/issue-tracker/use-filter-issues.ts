@@ -1,7 +1,13 @@
-import { useCallback, useEffect } from '@argo/plugin-kit';
-import { filterMessage, pageSize, unloaded, type Shown } from './filter-shown';
+import { useCallback } from '@argo/plugin-kit';
+import {
+  filterMessage,
+  pageSize,
+  unloaded,
+  type ShownIssues,
+} from './filter-shown';
 import type { Issue } from './github-issues';
-import { openClient, type Project } from './issue-client';
+import { useReloadOnChange } from './issue-changes';
+import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import type { IssueFilter } from './issue-filters';
 import { useAsync, type Async, type Show } from './use-async';
@@ -33,23 +39,23 @@ const cacheKey = ({ project, filter }: FilterSource): CacheKey => ({
  */
 export function useFilterIssues(source: FilterSource): FilterIssues {
   const { value, error, reload } = useFirstPage(source);
-  const shown = value ?? unloaded;
-  const { issues, limit } = shown;
+  const page = value ?? unloaded;
+  const { issues, limit } = page;
   const load = useLoad(source, reload);
   const refresh = useCallback(() => load(limit), [load, limit]);
 
-  useReloadOnChange(source, refresh);
+  useReloadOnChange(source.deps.changes, refresh);
 
   return {
     issues,
-    message: filterMessage(shown, error),
+    message: filterMessage(page, error),
     hasMore: issues.length >= limit,
     loadMore: () => load(limit + pageSize),
     refresh,
   };
 }
 
-function useFirstPage(source: FilterSource): Async<Shown> {
+function useFirstPage(source: FilterSource): Async<ShownIssues> {
   return useAsync(
     useCallback(
       async (show) => {
@@ -68,7 +74,7 @@ function useFirstPage(source: FilterSource): Async<Shown> {
 // Loads again with a longer or the same list, keeping the Issues on screen.
 function useLoad(
   source: FilterSource,
-  reload: Async<Shown>['reload'],
+  reload: Async<ShownIssues>['reload'],
 ): (limit: number) => Promise<void> {
   return useCallback(
     (limit) => reload((show) => fetchIssues(source, limit, show)),
@@ -76,31 +82,20 @@ function useLoad(
   );
 }
 
-// An Issue whose status changed on its own page may have left this filter, or joined it.
-function useReloadOnChange(
-  source: FilterSource,
-  reload: () => Promise<void>,
-): void {
-  useEffect(
-    () => source.deps.changes.subscribe(() => void reload()),
-    [source, reload],
-  );
-}
-
 async function fetchIssues(
   source: FilterSource,
   limit: number,
-  show: Show<Shown>,
-): Promise<Shown> {
-  const client = await openClient({ ...source, ...source.deps });
+  show: Show<ShownIssues>,
+): Promise<ShownIssues> {
+  const client = await openDepsClient(source);
   const issues = await client.listIssues(source.filter.search, limit);
-  const shown = { issues, limit, fetched: true };
+  const page = { issues, limit, fetched: true };
 
-  show(shown);
+  show(page);
   await source.deps.storage.writeCache(
     cacheKey(source),
     issues.slice(0, pageSize),
   );
 
-  return shown;
+  return page;
 }

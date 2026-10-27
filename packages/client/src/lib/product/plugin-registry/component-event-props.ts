@@ -32,7 +32,7 @@ type Placed = { within?: string; name: string; value: PluginProps[string] };
 
 // The kit component's props: the node's own, each Component event's callback, the echoed value, focus and pending state.
 export function componentEventProps(node: NodeEvents): PluginProps {
-  const placed = [...callbacks(node), ...echoed(node)];
+  const placed = [...placeCallbacks(node), ...placeEcho(node)];
 
   return {
     ...placedProps(node.input, placed),
@@ -41,7 +41,7 @@ export function componentEventProps(node: NodeEvents): PluginProps {
   };
 }
 
-const declared = ({ node, definition }: ControlInput): Declared[] =>
+const declareEvents = ({ node, definition }: ControlInput): Declared[] =>
   Object.entries(definition.events).map(([name, schema]) => ({
     name,
     schema,
@@ -51,8 +51,8 @@ const declared = ({ node, definition }: ControlInput): Declared[] =>
   }));
 
 // A missing callback still replaces whatever the node holds at the event's name.
-const callbacks = (node: NodeEvents): Placed[] =>
-  declared(node.input).map((event) => {
+const placeCallbacks = (node: NodeEvents): Placed[] =>
+  declareEvents(node.input).map((event) => {
     const value = callback(node, event);
     const within = value === undefined ? undefined : event.rules.within;
 
@@ -88,7 +88,7 @@ function ownsEcho(input: ControlInput, rules: ComponentEventRules): boolean {
 const holds = ({ node }: ControlInput, within?: string): boolean =>
   within === undefined || node.props[within] !== undefined;
 
-function echoed({ input, field }: NodeEvents): Placed[] {
+function placeEcho({ input, field }: NodeEvents): Placed[] {
   const { value: name, within } = field.rules;
 
   if (name === undefined || !holds(input, within)) return [];

@@ -1,7 +1,7 @@
 import { useCallback } from '@argo/plugin-kit';
 import { githubError } from './github-errors';
 import type { Issue, IssueStatus } from './github-issues';
-import { openClient, type Project } from './issue-client';
+import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { useAsync, type Async } from './use-async';
 
@@ -30,7 +30,7 @@ export function useIssueDetail(source: DetailSource): IssueDetailState {
 
   return {
     issue: value ?? null,
-    message: error === undefined ? 'Loading Issue…' : githubError(error),
+    message: error ?? 'Loading Issue…',
     onStatus,
   };
 }
@@ -38,7 +38,7 @@ export function useIssueDetail(source: DetailSource): IssueDetailState {
 function useIssue(source: DetailSource): Async<Issue> {
   return useAsync(
     useCallback(async () => {
-      const client = await openClient({ ...source, ...source.deps });
+      const client = await openDepsClient(source);
 
       return client.getIssue(source.number);
     }, [source]),
@@ -67,7 +67,7 @@ async function sendStatus(
   source: DetailSource,
   status: IssueStatus,
 ): Promise<void> {
-  const client = await openClient({ ...source, ...source.deps });
+  const client = await openDepsClient(source);
 
   await client.setStatus(source.number, status);
   source.deps.changes.publish(source.number);

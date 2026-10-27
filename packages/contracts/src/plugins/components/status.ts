@@ -43,8 +43,6 @@ export const statusComponents = {
           'The container is not focusable. Its optional Button uses its standard keyboard behavior.',
         voiceOver:
           'Reads the title as a heading, then the optional description and action.',
-        talkBack:
-          'Reads the title as a heading, then the optional description and action.',
       },
     },
   ),

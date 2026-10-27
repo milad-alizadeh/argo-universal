@@ -55,8 +55,6 @@ export const actionsComponents = {
           'Follows the platform button focus order. On web, Enter and Space activate the focused button.',
         voiceOver:
           'Exposes a button, reads its label, and reports the disabled state.',
-        talkBack:
-          'Exposes a button, reads its label, and reports the disabled state.',
       },
       appearance:
         '`variant` selects an Argo treatment that adapts to light and dark appearance. This kit component has no arbitrary `color` or Image prop.',

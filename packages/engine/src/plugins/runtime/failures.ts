@@ -5,8 +5,7 @@ import {
   type PluginStatus,
 } from '@repo/contracts/plugins/runtime';
 import type { z } from 'zod';
-import type { OpenView } from '../views/open-view';
-import { openingKey } from '../views/opening-key';
+import { openingKey, type Asked } from '../views/opening-key';
 
 export type PluginIdentity = Pick<
   z.input<typeof PluginFailure>,
@@ -47,17 +46,21 @@ export class PluginFailures {
     if (this.stopped.delete(pluginId)) this.changed();
   }
 
-  public failed(view: OpenView, message: string): void {
-    const plugin = this.identity(view.pluginId);
-    const opening = openingKey(view);
+  public failed(asked: Asked, message: string): void {
+    const plugin = this.identity(asked.pluginId);
+    const opening = openingKey(asked);
 
-    if (!plugin || this.known(plugin.pluginId, opening, message)) return;
+    if (!plugin || this.isRepeat(plugin.pluginId, opening, message)) return;
     this.drawings.set(opening, failure(plugin, 'drawing', message));
     this.changed();
   }
 
   // A stopped Plugin's views fail nothing more, and the same message on the same Opening is not news.
-  private known(pluginId: string, opening: string, message: string): boolean {
+  private isRepeat(
+    pluginId: string,
+    opening: string,
+    message: string,
+  ): boolean {
     return (
       this.stopped.has(pluginId) ||
       this.drawings.get(opening)?.message === message
@@ -73,12 +76,8 @@ export class PluginFailures {
    * An Opening's drawing failure goes when a view for it draws, and when the App stops asking for it.
    * Another Opening of the same Plugin clears nothing, and the viewId a reload mints keeps the Opening.
    */
-  public drew(view: OpenView): void {
-    if (this.drawings.delete(openingKey(view))) this.changed();
-  }
-
-  public released(view: OpenView, lastOfOpening: boolean): void {
-    if (lastOfOpening) this.drew(view);
+  public clearDrawing(asked: Asked): void {
+    if (this.drawings.delete(openingKey(asked))) this.changed();
   }
 
   private endDrawings(pluginId: string): boolean {

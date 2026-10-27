@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
-import { edited, failed, shown, unowned, type State } from './async-state';
+import { edited, failed, showValue, unowned, type State } from './async-state';
 
-type Load = Parameters<typeof shown<number>>[1];
+type Load = Parameters<typeof showValue<number>>[1];
 
 const gone = 'gh is down';
 
@@ -9,7 +9,8 @@ const load: Load = () => Promise.resolve(1);
 
 const otherLoad: Load = () => Promise.resolve(2);
 
-const showing = (value: number): State<number> => shown(unowned, load, value);
+const showing = (value: number): State<number> =>
+  showValue(unowned, load, value);
 
 it('keeps the state when the same failure comes again', () => {
   const once = failed(showing(1), load, new Error(gone));
@@ -24,7 +25,7 @@ it('keeps the value on screen through a failure', () => {
 });
 
 it('drops an edit made by a load that has been replaced', () => {
-  const current = shown(unowned, otherLoad, 2);
+  const current = showValue(unowned, otherLoad, 2);
 
   expect(edited(current, load, () => 9)).toBe(current);
 });

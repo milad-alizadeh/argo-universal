@@ -27,3 +27,6 @@ function onTheWire(
 
 // Each kit component has one props schema; a change an older App can't draw bumps the Plugin wire version (ADR-0034).
 export const kitComponents = onTheWire(kitComponentSchemas);
+
+// The current App draws every kit component on the wire.
+export const wireComponentNames = Object.keys(kitComponents);

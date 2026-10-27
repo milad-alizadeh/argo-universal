@@ -4,7 +4,8 @@ import {
   type PluginViewState,
   type PluginOnEvent,
 } from '../../lib/product/plugin-registry';
-import { usePluginBinding, usePluginStream } from './use-plugin-stream';
+import { usePluginBinding } from './use-plugin-binding';
+import { usePluginStream } from './use-plugin-stream';
 
 interface PluginView extends PluginViewState {
   dispatch: PluginOnEvent;

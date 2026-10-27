@@ -167,7 +167,7 @@ function readAttributes(tag: string, from: number): Attributes {
 function attribute(match: RegExpExecArray): [string, string] {
   const name = match[1] ?? '';
 
-  return [camelCase(name), valueOf(name, match[2])];
+  return [camelCase(name), readValue(name, match[2])];
 }
 
 const camelCase = (name: string): string =>
@@ -176,7 +176,7 @@ const camelCase = (name: string): string =>
   );
 
 // An attribute with no value is the string "true".
-function valueOf(name: string, raw: string | undefined): string {
+function readValue(name: string, raw: string | undefined): string {
   if (raw === undefined) return 'true';
 
   return numeric(name, /^["']/.test(raw) ? raw.slice(1, -1) : raw);

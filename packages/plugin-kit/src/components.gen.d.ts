@@ -19,7 +19,10 @@ type HintValues<Props, Hints> = {
 // It distributes over a union of props, so each alternative keeps its own required keys.
 type Hinted<Props, Hints> = Props extends unknown
   ? Required<
-      Pick<HintValues<Props, Hints>, Extract<RequiredProps<Props>, keyof Hints>>
+      Pick<
+        HintValues<Props, Hints>,
+        Extract<RequiredProps<Props>, keyof Hints>
+      >
     > &
       Partial<
         Pick<
@@ -448,7 +451,9 @@ type FieldGroupSecretFieldHints = {
   onSubmit: unknown;
 };
 
-type SpacerHints = {};
+type SpacerHints = {
+
+};
 
 type GridHints = {
   /** Equal columns, optionally per Size class. Phones draw at most two. */
@@ -948,27 +953,17 @@ type CanvasGroupHints = {
   rotate: unknown;
 };
 
-export const Action: ComponentType<
-  Hinted<PluginProps['Action'], ActionHints>
-> & {
-  Section: ComponentType<
-    Hinted<PluginProps['Action.Section'], ActionSectionHints>
-  >;
+export const Action: ComponentType<Hinted<PluginProps['Action'], ActionHints>> & {
+  Section: ComponentType<Hinted<PluginProps['Action.Section'], ActionSectionHints>>;
 };
 
-export const SplitButton: ComponentType<
-  Hinted<PluginProps['SplitButton'], SplitButtonHints>
->;
+export const SplitButton: ComponentType<Hinted<PluginProps['SplitButton'], SplitButtonHints>>;
 
-export const IconButton: ComponentType<
-  Hinted<PluginProps['IconButton'], IconButtonHints>
->;
+export const IconButton: ComponentType<Hinted<PluginProps['IconButton'], IconButtonHints>>;
 
 export const Button: ComponentType<Hinted<PluginProps['Button'], ButtonHints>>;
 
-export const Markdown: ComponentType<
-  Hinted<PluginProps['Markdown'], MarkdownHints>
->;
+export const Markdown: ComponentType<Hinted<PluginProps['Markdown'], MarkdownHints>>;
 
 export const Code: ComponentType<Hinted<PluginProps['Code'], CodeHints>>;
 
@@ -988,57 +983,31 @@ export const Text: ComponentType<Hinted<PluginProps['Text'], TextHints>>;
 
 export const Label: ComponentType<Hinted<PluginProps['Label'], LabelHints>>;
 
-export const SegmentedControl: ComponentType<
-  Hinted<PluginProps['SegmentedControl'], SegmentedControlHints>
->;
+export const SegmentedControl: ComponentType<Hinted<PluginProps['SegmentedControl'], SegmentedControlHints>>;
 
 export const Slider: ComponentType<Hinted<PluginProps['Slider'], SliderHints>>;
 
-export const FieldGroup: ComponentType<
-  Hinted<PluginProps['FieldGroup'], FieldGroupHints>
-> & {
-  Section: ComponentType<
-    Hinted<PluginProps['FieldGroup.Section'], FieldGroupSectionHints>
-  >;
-  Value: ComponentType<
-    Hinted<PluginProps['FieldGroup.Value'], FieldGroupValueHints>
-  >;
-  Link: ComponentType<
-    Hinted<PluginProps['FieldGroup.Link'], FieldGroupLinkHints>
-  >;
-  Toggle: ComponentType<
-    Hinted<PluginProps['FieldGroup.Toggle'], FieldGroupToggleHints>
-  >;
-  Picker: ComponentType<
-    Hinted<PluginProps['FieldGroup.Picker'], FieldGroupPickerHints>
-  >;
-  DatePicker: ComponentType<
-    Hinted<PluginProps['FieldGroup.DatePicker'], FieldGroupDatePickerHints>
-  >;
-  Slider: ComponentType<
-    Hinted<PluginProps['FieldGroup.Slider'], FieldGroupSliderHints>
-  >;
-  TextField: ComponentType<
-    Hinted<PluginProps['FieldGroup.TextField'], FieldGroupTextFieldHints>
-  >;
-  SecretField: ComponentType<
-    Hinted<PluginProps['FieldGroup.SecretField'], FieldGroupSecretFieldHints>
-  >;
+export const FieldGroup: ComponentType<Hinted<PluginProps['FieldGroup'], FieldGroupHints>> & {
+  Section: ComponentType<Hinted<PluginProps['FieldGroup.Section'], FieldGroupSectionHints>>;
+  Value: ComponentType<Hinted<PluginProps['FieldGroup.Value'], FieldGroupValueHints>>;
+  Link: ComponentType<Hinted<PluginProps['FieldGroup.Link'], FieldGroupLinkHints>>;
+  Toggle: ComponentType<Hinted<PluginProps['FieldGroup.Toggle'], FieldGroupToggleHints>>;
+  Picker: ComponentType<Hinted<PluginProps['FieldGroup.Picker'], FieldGroupPickerHints>>;
+  DatePicker: ComponentType<Hinted<PluginProps['FieldGroup.DatePicker'], FieldGroupDatePickerHints>>;
+  Slider: ComponentType<Hinted<PluginProps['FieldGroup.Slider'], FieldGroupSliderHints>>;
+  TextField: ComponentType<Hinted<PluginProps['FieldGroup.TextField'], FieldGroupTextFieldHints>>;
+  SecretField: ComponentType<Hinted<PluginProps['FieldGroup.SecretField'], FieldGroupSecretFieldHints>>;
 };
 
 export const Spacer: ComponentType<Hinted<PluginProps['Spacer'], SpacerHints>>;
 
 export const Grid: ComponentType<Hinted<PluginProps['Grid'], GridHints>>;
 
-export const Surface: ComponentType<
-  Hinted<PluginProps['Surface'], SurfaceHints>
->;
+export const Surface: ComponentType<Hinted<PluginProps['Surface'], SurfaceHints>>;
 
 export const Card: ComponentType<Hinted<PluginProps['Card'], CardHints>>;
 
-export const ScrollView: ComponentType<
-  Hinted<PluginProps['ScrollView'], ScrollViewHints>
->;
+export const ScrollView: ComponentType<Hinted<PluginProps['ScrollView'], ScrollViewHints>>;
 
 export const Stack: ComponentType<Hinted<PluginProps['Stack'], StackHints>>;
 
@@ -1048,9 +1017,7 @@ export const List: (<Item>(
   Section: ComponentType<Hinted<PluginProps['List.Section'], ListSectionHints>>;
 };
 
-export const ListItem: ComponentType<
-  Hinted<PluginProps['ListItem'], ListItemHints>
->;
+export const ListItem: ComponentType<Hinted<PluginProps['ListItem'], ListItemHints>>;
 
 export const Table: (<Item>(
   props: Hinted<Parameters<typeof tableComponent<Item>>[0], TableHints>,
@@ -1065,51 +1032,31 @@ export const Sheet: ComponentType<Hinted<PluginProps['Sheet'], SheetHints>>;
 
 export const Screen: ComponentType<Hinted<PluginProps['Screen'], ScreenHints>>;
 
-export const ListDetail: ComponentType<
-  Hinted<PluginProps['ListDetail'], ListDetailHints>
->;
+export const ListDetail: ComponentType<Hinted<PluginProps['ListDetail'], ListDetailHints>>;
 
 export const Detail: ComponentType<Hinted<PluginProps['Detail'], DetailHints>>;
 
-export const Metadata: ComponentType<
-  Hinted<PluginProps['Metadata'], MetadataHints>
-> & {
-  Label: ComponentType<
-    Hinted<PluginProps['Metadata.Label'], MetadataLabelHints>
-  >;
+export const Metadata: ComponentType<Hinted<PluginProps['Metadata'], MetadataHints>> & {
+  Label: ComponentType<Hinted<PluginProps['Metadata.Label'], MetadataLabelHints>>;
   Link: ComponentType<Hinted<PluginProps['Metadata.Link'], MetadataLinkHints>>;
-  Pills: ComponentType<
-    Hinted<PluginProps['Metadata.Pills'], MetadataPillsHints>
-  >;
-  StatusDot: ComponentType<
-    Hinted<PluginProps['Metadata.StatusDot'], MetadataStatusDotHints>
-  >;
-  Avatar: ComponentType<
-    Hinted<PluginProps['Metadata.Avatar'], MetadataAvatarHints>
-  >;
+  Pills: ComponentType<Hinted<PluginProps['Metadata.Pills'], MetadataPillsHints>>;
+  StatusDot: ComponentType<Hinted<PluginProps['Metadata.StatusDot'], MetadataStatusDotHints>>;
+  Avatar: ComponentType<Hinted<PluginProps['Metadata.Avatar'], MetadataAvatarHints>>;
 };
 
-export const ProgressBar: ComponentType<
-  Hinted<PluginProps['ProgressBar'], ProgressBarHints>
->;
+export const ProgressBar: ComponentType<Hinted<PluginProps['ProgressBar'], ProgressBarHints>>;
 
 export const Pill: ComponentType<Hinted<PluginProps['Pill'], PillHints>>;
 
-export const EmptyState: ComponentType<
-  Hinted<PluginProps['EmptyState'], EmptyStateHints>
->;
+export const EmptyState: ComponentType<Hinted<PluginProps['EmptyState'], EmptyStateHints>>;
 
 export const Svg: ComponentType<Hinted<PluginProps['Svg'], SvgHints>>;
 
 export const Chart: ComponentType<Hinted<PluginProps['Chart'], ChartHints>>;
 
-export const Canvas: ComponentType<
-  Hinted<PluginProps['Canvas'], CanvasHints>
-> & {
+export const Canvas: ComponentType<Hinted<PluginProps['Canvas'], CanvasHints>> & {
   Rect: ComponentType<Hinted<PluginProps['Canvas.Rect'], CanvasRectHints>>;
-  Circle: ComponentType<
-    Hinted<PluginProps['Canvas.Circle'], CanvasCircleHints>
-  >;
+  Circle: ComponentType<Hinted<PluginProps['Canvas.Circle'], CanvasCircleHints>>;
   Line: ComponentType<Hinted<PluginProps['Canvas.Line'], CanvasLineHints>>;
   Path: ComponentType<Hinted<PluginProps['Canvas.Path'], CanvasPathHints>>;
   Text: ComponentType<Hinted<PluginProps['Canvas.Text'], CanvasTextHints>>;

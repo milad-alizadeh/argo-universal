@@ -21,6 +21,11 @@ export function kitComponent(type: string): KitComponentDefinition | undefined {
   return componentsByType.get(type);
 }
 
+// A type that is no kit component has no events.
+export const kitComponentEvents = (
+  type: string,
+): KitComponentDefinition['events'] => kitComponent(type)?.events ?? {};
+
 export {
   PluginSurface,
   currentPluginSurface,
@@ -30,4 +35,4 @@ export {
   type PluginRenderContext,
 } from './surface';
 
-export { pluginKitExports, type PluginKitExport } from './kit-component-names';
+export { pluginKitExports, type PluginKitExport } from './plugin-kit-exports';

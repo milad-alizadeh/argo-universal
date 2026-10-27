@@ -24,7 +24,6 @@ export const visualComponents = {
         keyboard:
           'Not focusable as an image; `onPress` enables button activation.',
         voiceOver: svgReader,
-        talkBack: svgReader,
       },
       appearance:
         '`tone` sets semantic color; Server sanitizes markup and rejects unsupported SVG.',
@@ -41,8 +40,6 @@ export const visualComponents = {
         keyboard:
           'Not focusable as an image; `onPress` enables button activation.',
         voiceOver:
-          'Reads the label as an image or button, then a table of each series and its points.',
-        talkBack:
           'Reads the label as an image or button, then a table of each series and its points.',
       },
       appearance:
@@ -61,8 +58,6 @@ export const visualComponents = {
         keyboard:
           'Tab through labelled shapes; Enter or Space selects and presses a shape. Arrow keys pan and + or - zoom a pan-zoom scene; Home resets the camera.',
         voiceOver:
-          'The image label names the scene. An ordered list exposes labelled shapes; activating one selects and presses that shape.',
-        talkBack:
           'The image label names the scene. An ordered list exposes labelled shapes; activating one selects and presses that shape.',
       },
       appearance:

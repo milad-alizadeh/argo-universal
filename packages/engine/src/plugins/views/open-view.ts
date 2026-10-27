@@ -88,6 +88,48 @@ function blankView(): Pick<
   };
 }
 
+// The Plugin's tree as the worker sent it, which handlers and data are looked up in; none until the next snapshot.
+export function holdRoot(view: OpenView, root: WireNode | null): void {
+  view.root = root;
+}
+
+// The worker's message was not drawn, so no handler answers it.
+export function forgetWorkerRevision(view: OpenView): void {
+  view.workerRevision = null;
+}
+
+type WorkerTree = {
+  tree: WireNode;
+  message: ViewMessage;
+  workerRevision: number;
+};
+
+// The App holds the tree drawn from the worker's message at `workerRevision`.
+export function showWorkerTree(
+  view: OpenView,
+  { tree, message, workerRevision }: WorkerTree,
+): void {
+  view.refused = false;
+  view.workerRevision = workerRevision;
+  show(view, tree, message);
+}
+
+// The App holds core's fallback in place of a tree over the wire caps.
+export function showFallback(
+  view: OpenView,
+  fallback: WireNode,
+  message: ViewMessage,
+): void {
+  view.refused = true;
+  show(view, fallback, message);
+}
+
+function show(view: OpenView, tree: WireNode, message: ViewMessage): void {
+  view.drawn = tree;
+  view.revision = message.revision;
+  view.events.emit('message', message);
+}
+
 type DispatchTarget = { viewId: PluginViewId; revision: number };
 
 export function currentDispatch(

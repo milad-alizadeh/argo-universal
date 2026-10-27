@@ -93,11 +93,11 @@ export class PluginRuntime {
     this.plugins.turnsChanged(active);
   }
 
-  public renderFallback(...fallback: Fallback): void {
+  public renderFallback(fallback: Fallback): void {
     logFallback(this.log, 'runtime', fallback);
   }
 
-  public contributionFailed(...fallback: Fallback): void {
+  public contributionFailed(fallback: Fallback): void {
     logFallback(this.log, 'contribution', fallback);
   }
 

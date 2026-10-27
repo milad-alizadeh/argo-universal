@@ -1,4 +1,4 @@
-import { kitComponent } from '@repo/contracts/plugins/kit';
+import { kitComponentEvents } from '@repo/contracts/plugins/kit';
 import {
   componentEventHandler,
   componentEventPayload,
@@ -25,13 +25,10 @@ export function requireViewHandler(
 }
 
 function eventSchema(type: string, event: string): z.ZodType | undefined {
-  const events = componentEvents(type);
+  const events = kitComponentEvents(type);
 
   return Object.hasOwn(events, event) ? events[event] : undefined;
 }
-
-const componentEvents = (type: string): Record<string, z.ZodType> =>
-  kitComponent(type)?.events ?? {};
 
 function requireNode(root: WireNode | null, key: string): WireNode {
   if (!root) throw new Error('Plugin view is no longer available');

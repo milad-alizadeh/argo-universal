@@ -43,7 +43,7 @@ export class RuntimeResources {
     return {
       opened: (view) => this.data.opened(view.pluginId),
       released: (view, lastOfOpening) => this.releaseView(view, lastOfOpening),
-      received: (view) => this.drew(view),
+      received: (view) => this.markDrawn(view),
       failed: (view, message) => this.failures.failed(view, message),
     };
   }
@@ -51,11 +51,12 @@ export class RuntimeResources {
   private releaseView(view: OpenView, lastOfOpening: boolean): void {
     this.data.releaseView(view.opening.viewId);
     this.background.released(view.opening.viewId);
-    this.failures.released(view, lastOfOpening);
+
+    if (lastOfOpening) this.failures.clearDrawing(view);
   }
 
-  private drew(view: OpenView): void {
-    this.failures.drew(view);
+  private markDrawn(view: OpenView): void {
+    this.failures.clearDrawing(view);
     this.background.rendered(view.opening.viewId);
   }
 

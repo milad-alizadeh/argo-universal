@@ -50,7 +50,6 @@ export const scaffoldsComponents = {
         keyboard:
           'The screen is not focusable. Its search field, header Actions and primary Action use their standard keyboard behavior; typing in search dispatches onChangeText.',
         voiceOver: screenReader,
-        talkBack: screenReader,
       },
     },
   ),
@@ -72,7 +71,6 @@ export const scaffoldsComponents = {
         keyboard:
           'The scaffold is not focusable. Tab moves from the list to the detail on wide windows.',
         voiceOver: listDetailReader,
-        talkBack: listDetailReader,
       },
     },
   ),

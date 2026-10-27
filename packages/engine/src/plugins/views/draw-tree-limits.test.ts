@@ -56,8 +56,8 @@ it('caps a page that becomes too large only after invalid containers become Upda
   expect(sent).toMatchObject([{ type: 'snapshot', root: pluginPageFallback }]);
 });
 
-it('logs one refusal and recovers from an admissible patch using the last tree actually sent', () => {
-  const { sent, logs } = drawn([
+const refusedThenPatched = (): Drawn =>
+  drawn([
     { type: 'snapshot', revision: 1, root: large },
     { type: 'snapshot', revision: 2, root: large },
     {
@@ -67,16 +67,20 @@ it('logs one refusal and recovers from an admissible patch using the last tree a
     },
   ]);
 
-  expect(sent).toMatchObject([
+it('logs one refusal however many refused snapshots follow', () => {
+  expect(refusedThenPatched().logs).toEqual([
+    `Plugin atlas: refused /map: prepared page exceeds ${pluginPageBytes} bytes`,
+  ]);
+});
+
+it('recovers from an admissible patch using the last tree actually sent', () => {
+  expect(refusedThenPatched().sent).toMatchObject([
     { type: 'snapshot', revision: 1, root: { key: 'fallback' } },
     {
       type: 'patch',
       revision: 3,
       ops: [{ op: 'replace', key: [], node: small }],
     },
-  ]);
-  expect(logs).toEqual([
-    `Plugin atlas: refused /map: prepared page exceeds ${pluginPageBytes} bytes`,
   ]);
 });
 

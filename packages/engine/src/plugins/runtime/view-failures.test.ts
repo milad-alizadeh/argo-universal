@@ -44,9 +44,11 @@ function wiring(): Wiring {
     () => {},
     {
       opened: (): void => {},
-      received: (view): void => failures.drew(view),
+      received: (view): void => failures.clearDrawing(view),
       failed: (view, message): void => failures.failed(view, message),
-      released: (view, last): void => failures.released(view, last),
+      released: (view, last): void => {
+        if (last) failures.clearDrawing(view);
+      },
     },
   );
 

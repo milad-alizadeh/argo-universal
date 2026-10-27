@@ -70,16 +70,16 @@ const page: Draws = {
 function replacement(slotId: ReplaceableSlotId): Draws {
   return {
     temporary: true,
-    failure: (root) => replacementTreeReason(root) ?? undefined,
+    failure: (root) => replacementTreeReason(root),
     refusedSvg: (_view, [first]) => first && `${first.node}: ${first.reason}`,
     changes: () => [],
     failed: (view, reason, log) => {
-      logFallback(log, 'runtime', [view.pluginId, slotId, reason]);
+      logFallback(log, 'runtime', { pluginId: view.pluginId, slotId, reason });
 
       return false;
     },
     appFailed: (view, reason, log) =>
-      logFallback(log, 'drawing', [view.pluginId, slotId, reason]),
+      logFallback(log, 'drawing', { pluginId: view.pluginId, slotId, reason }),
   };
 }
 

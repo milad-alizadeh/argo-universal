@@ -1,4 +1,4 @@
-import { kitComponent } from '@repo/contracts/plugins/kit';
+import { kitComponentEvents } from '@repo/contracts/plugins/kit';
 import { componentEventRules, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import type { Prop, Props } from './wire-tree';
@@ -68,7 +68,7 @@ type EventPlace = { name: string; within: string };
 
 // The Component events whose schema keeps their handler inside a prop object, such as a Picker's `footerAction.onPress`.
 const eventPlaces = (type: string): EventPlace[] =>
-  Object.entries(kitComponent(type)?.events ?? {}).flatMap(([name, schema]) => {
+  Object.entries(kitComponentEvents(type)).flatMap(([name, schema]) => {
     const { within } = componentEventRules(schema);
 
     return within === undefined ? [] : [{ name, within }];

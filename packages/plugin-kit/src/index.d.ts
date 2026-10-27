@@ -102,7 +102,7 @@ export type PluginComponents = {
     : ComponentType<PluginProps[Name]>;
 };
 
-export * from './components';
+export * from './components.gen';
 
 export type PluginWireNode = {
   [Name in WireComponentName]: {

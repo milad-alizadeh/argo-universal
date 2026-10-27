@@ -8,11 +8,8 @@ import {
   type PluginSlotState,
   type ContributedView,
 } from '../../lib/product/plugin-registry';
-import {
-  usePluginBinding,
-  usePluginStream,
-  type PluginBinding,
-} from './use-plugin-stream';
+import { usePluginBinding, type PluginBinding } from './use-plugin-binding';
+import { usePluginStream } from './use-plugin-stream';
 
 type NameOf = (pluginId: string) => string;
 

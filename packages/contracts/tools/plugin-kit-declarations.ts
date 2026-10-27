@@ -1,11 +1,14 @@
 import type { z } from 'zod';
 import type { KitComponentDefinition } from '../src/plugins/kit-component-definition';
 import {
+  kitComponents,
+  wireComponentNames,
+} from '../src/plugins/kit-components';
+import { listComponentNames } from '../src/plugins/list-expansion';
+import {
   pluginKitExports,
   type PluginKitExport,
-} from '../src/plugins/kit-component-names';
-import { kitComponents } from '../src/plugins/kit-components';
-import { listComponentNames } from '../src/plugins/list-expansion';
+} from '../src/plugins/plugin-kit-exports';
 import { componentObjectSchema } from '../src/plugins/plugin-object-schema';
 
 const preamble = `/* Generated from Contracts kit components and prop descriptions by \`pnpm docs:build\`. Do not edit by hand. */
@@ -106,13 +109,11 @@ function declaration({ name, component, members }: PluginKitExport): string {
   return `export const ${name}: ${componentType(component)} & {\n${lines.join('\n')}\n};`;
 }
 
-const componentNames = Object.keys(kitComponents);
-
-// The Plugin kit's `components.d.ts`: one typed export per entry the kit's runtime exports, each prop carrying its description as a hover hint.
+// The Plugin kit's `components.gen.d.ts`: one typed export per entry the kit's runtime exports, each prop carrying its description as a hover hint.
 export function pluginKitDeclarations(): string {
   return [
     preamble.trimEnd(),
-    componentNames.filter(isList).map(listComponent).join('\n'),
+    wireComponentNames.filter(isList).map(listComponent).join('\n'),
     Object.entries(kitComponents).map(hints).join('\n\n'),
     pluginKitExports.map(declaration).join('\n\n'),
   ]

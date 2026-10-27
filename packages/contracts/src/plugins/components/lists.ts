@@ -98,8 +98,6 @@ export const listsComponents = {
           'Each sortable header is a focus stop that sorts with Enter or Space. Each pressable or selectable row is one focus stop; Enter or Space runs it and the context-menu key opens its Actions.',
         voiceOver:
           'Regular widths read a table of header buttons and rows, announcing the sort order and selection. Compact widths read a list of rows; each opens its Row detail.',
-        talkBack:
-          'Regular widths read a table of header buttons and rows, announcing the sort order and selection. Compact widths read a list of rows; each opens its Row detail.',
       },
       appearance:
         'Draws a tint tray with a card body and semantic text colors that adapt to light and dark appearance. Column widths are tokens; no arbitrary color or size.',

@@ -53,15 +53,27 @@ function lifecycle(): Lifecycle {
 const reported = ({ actor, loads }: Lifecycle, status: PluginStatus): void =>
   actor.send({ type: 'worker.status', status, generation: loads.at(-1) ?? 0 });
 
-it('waits for the first build, loads a worker from it and answers once the worker runs', () => {
+it('loads no worker before the first build', () => {
   const plugin = lifecycle();
   plugin.actor.send(activate);
-  expect(plugin.loads).toEqual([]);
 
+  expect(plugin.loads).toEqual([]);
+});
+
+it('loads a worker from the first build', () => {
+  const plugin = lifecycle();
+  plugin.actor.send(activate);
+  plugin.actor.send(built('1'));
+
+  expect(plugin.loads).toEqual([1]);
+});
+
+it('answers once the worker runs', () => {
+  const plugin = lifecycle();
+  plugin.actor.send(activate);
   plugin.actor.send(built('1'));
   reported(plugin, running);
 
-  expect(plugin.loads).toEqual([1]);
   expect(plugin.answers).toEqual([running]);
 });
 
@@ -91,7 +103,7 @@ it('ignores a status from a worker an earlier build loaded', () => {
   expect(plugin.loads).toEqual([1, 2]);
 });
 
-it('keeps the running build while a Turn runs and reloads once Turns end', () => {
+function rebuiltDuringTurn(): Lifecycle {
   const plugin = lifecycle();
   plugin.actor.send(activate);
   plugin.actor.send(built('1'));
@@ -99,7 +111,16 @@ it('keeps the running build while a Turn runs and reloads once Turns end', () =>
 
   plugin.turns.running = true;
   plugin.actor.send(built('2'));
-  expect(plugin.loads).toEqual([1]);
+
+  return plugin;
+}
+
+it('keeps the running build while a Turn runs', () => {
+  expect(rebuiltDuringTurn().loads).toEqual([1]);
+});
+
+it('reloads the latest build once Turns end', () => {
+  const plugin = rebuiltDuringTurn();
 
   plugin.turns.running = false;
   plugin.actor.send({ type: 'turns.ended' });
@@ -120,13 +141,24 @@ it('answers a failed build with its error, without loading, until a build succee
   expect(plugin.loads).toEqual([3]);
 });
 
-it('answers a host crash while loading and retries on the next activation', () => {
+function hostCrashedWhileLoading(): Lifecycle {
   const plugin = lifecycle();
   plugin.actor.send(activate);
   plugin.actor.send(built('1'));
   plugin.actor.send({ type: 'host.crashed', message: 'Plugin host exited' });
 
-  expect(plugin.answers).toEqual([crashed('Plugin host exited')]);
+  return plugin;
+}
+
+it('answers a host crash while loading', () => {
+  expect(hostCrashedWhileLoading().answers).toEqual([
+    crashed('Plugin host exited'),
+  ]);
+});
+
+it('retries a host crash on the next activation', () => {
+  const plugin = hostCrashedWhileLoading();
   plugin.actor.send(activate);
+
   expect(plugin.loads).toEqual([1, 2]);
 });

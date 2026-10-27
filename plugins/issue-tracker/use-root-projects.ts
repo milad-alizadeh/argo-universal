@@ -1,3 +1,4 @@
+import { loadingIssues } from './filter-shown';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { useAsync } from './use-async';
@@ -19,15 +20,18 @@ export function useRootProjects(
   return {
     projects,
     project: selected ?? projects[0],
-    message: projectsMessage(value, error !== undefined),
+    message: projectsMessage(value, error),
   };
 }
 
-function projectsMessage(rows: Project[] | undefined, failed: boolean): string {
-  if (failed) return 'Could not load Projects.';
+function projectsMessage(
+  rows: Project[] | undefined,
+  error: string | undefined,
+): string {
+  if (error !== undefined) return 'Could not load Projects.';
 
   return rows ? loadedMessage(rows) : 'Loading Projects…';
 }
 
 const loadedMessage = (rows: Project[]): string =>
-  rows.length === 0 ? 'No Projects yet.' : 'Loading Issues…';
+  rows.length === 0 ? 'No Projects yet.' : loadingIssues;

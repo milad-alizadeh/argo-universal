@@ -3,7 +3,7 @@ import {
   edited,
   failed,
   owned,
-  shown,
+  showValue,
   unowned,
   type State,
 } from './async-state';
@@ -40,7 +40,7 @@ async function run<Value>(next: Load<Value>, using: Run<Value>): Promise<void> {
   const { load, setState, isCurrent } = using;
 
   const show = (value: Value): void => {
-    if (isCurrent()) setState((state) => shown(state, load, value));
+    if (isCurrent()) setState((state) => showValue(state, load, value));
   };
 
   try {

@@ -58,7 +58,7 @@ export class PluginViews {
     const reception = { log: this.log, revision: ++this.revision };
     const reason = drawTree(view, message, reception);
 
-    if (reason !== null) return this.failed(view, reason);
+    if (reason !== undefined) return this.failed(view, reason);
     this.lifecycle.received(view);
   }
 

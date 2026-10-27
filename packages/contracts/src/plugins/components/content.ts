@@ -111,7 +111,6 @@ export const contentComponents = {
           'Text children supply the content. Optional `accessibilityLabel` overrides the spoken label.',
         keyboard: 'Text is not focusable and adds no keyboard shortcut.',
         voiceOver: textReader,
-        talkBack: textReader,
       },
       appearance:
         '`tone` selects an Argo semantic text color that adapts to light and dark appearance. This kit component has no arbitrary `color` or Image prop.',

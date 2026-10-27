@@ -28,6 +28,7 @@ export interface KitComponentReference {
   summary: string;
   label: string | undefined;
   appearance: string | undefined;
+  // `talkBack` reads as `voiceOver` when left out.
   accessibility: Partial<KitComponentAccessibility> | undefined;
   sdkProps: string | undefined;
 }

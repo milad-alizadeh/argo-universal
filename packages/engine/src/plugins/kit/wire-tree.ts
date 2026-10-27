@@ -1,4 +1,4 @@
-import { kitComponent } from '@repo/contracts/plugins/kit';
+import { kitComponentEvents } from '@repo/contracts/plugins/kit';
 import {
   placedComponentEvent,
   type WireJson,
@@ -98,7 +98,7 @@ const placedEvents = (
   type: string,
   props: WireNode['props'],
 ): WireNode['props'] =>
-  Object.entries(kitComponent(type)?.events ?? {}).reduce(
+  Object.entries(kitComponentEvents(type)).reduce(
     (placed, [name, schema]) => placedComponentEvent(placed, name, schema),
     props,
   );

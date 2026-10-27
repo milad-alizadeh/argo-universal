@@ -3,7 +3,7 @@ import type { WireNode } from './wire';
 interface Candidate {
   key: string;
   position: number;
-  previous?: Candidate | undefined;
+  previous: Candidate | undefined;
 }
 
 function lowerBound(tails: Candidate[], position: number): number {
@@ -20,9 +20,9 @@ function lowerBound(tails: Candidate[], position: number): number {
   return low;
 }
 
-function retain(tails: Candidate[], candidate: Candidate): void {
-  const index = lowerBound(tails, candidate.position);
-  tails[index] = { ...candidate, previous: tails[index - 1] };
+function retain(tails: Candidate[], key: string, position: number): void {
+  const index = lowerBound(tails, position);
+  tails[index] = { key, position, previous: tails[index - 1] };
 }
 
 function keysOf(last: Candidate | undefined): Set<string> {
@@ -45,7 +45,7 @@ export function retainedKeys(
   for (const node of after) {
     const position = positions.get(node.key);
 
-    if (position !== undefined) retain(tails, { key: node.key, position });
+    if (position !== undefined) retain(tails, node.key, position);
   }
 
   return keysOf(tails.at(-1));

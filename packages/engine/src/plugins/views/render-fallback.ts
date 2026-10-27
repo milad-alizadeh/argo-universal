@@ -4,31 +4,33 @@ type Log = (line: string) => void;
 export const oneLine = (text: string): string =>
   text.replaceAll(/[\r\n]/g, ' ');
 
-export const renderFallbackLine = (
-  pluginId: string,
-  slotId: string,
-  reason: string,
-): string => `Plugin ${pluginId}: core fallback ${slotId}: ${oneLine(reason)}`;
+export type Fallback = { pluginId: string; slotId: string; reason: string };
+
+export const renderFallbackLine = ({
+  pluginId,
+  slotId,
+  reason,
+}: Fallback): string =>
+  `Plugin ${pluginId}: core fallback ${slotId}: ${oneLine(reason)}`;
 
 export const belowWireMinimum = 'App is below the wire minimum';
 
 // Where a Slot's fall back to core came from: the runtime itself, an App that failed to draw, a `ui.render` Hook, or a Slot contribution that threw.
 export type FallbackSource = 'runtime' | 'drawing' | 'hook' | 'contribution';
 
-export type Fallback = [pluginId: string, slotId: string, reason: string];
-
 // A contribution that threw is logged once per Plugin, Slot and reason, however many contexts the Slot is open in.
 export function logFallback(
   log: Log,
   source: FallbackSource,
-  [pluginId, slotId, reason]: Fallback,
+  fallback: Fallback,
 ): void {
+  const { pluginId, slotId, reason } = fallback;
   const parts = source === 'contribution' ? [reason] : [];
 
   logOnce(
     log,
     fallbackKey(source, pluginId, slotId, ...parts),
-    renderFallbackLine(pluginId, slotId, reason),
+    renderFallbackLine(fallback),
   );
 }
 

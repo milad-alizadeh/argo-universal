@@ -103,14 +103,28 @@ const inferredAccessibility = (
     container: component.container,
   });
 
+// What a kit component declares over what its schema implies; `talkBack` reads as the declared `voiceOver` when left out.
+const resolvedAccessibility = (
+  declared: Partial<KitComponentAccessibility>,
+  inferred: KitComponentAccessibility,
+): KitComponentAccessibility => ({
+  ...inferred,
+  ...declared,
+  talkBack: declared.talkBack ?? declared.voiceOver ?? inferred.talkBack,
+});
+
 // The reference text the docs print: what the kit component declares, over what its schema implies.
 export function resolvedReference(
   component: KitComponentDefinition,
 ): ResolvedReference {
-  const { appearance = defaultAppearance, accessibility } = component.reference;
+  const { appearance = defaultAppearance, accessibility = {} } =
+    component.reference;
 
   return {
-    accessibility: { ...inferredAccessibility(component), ...accessibility },
+    accessibility: resolvedAccessibility(
+      accessibility,
+      inferredAccessibility(component),
+    ),
     appearance,
   };
 }
