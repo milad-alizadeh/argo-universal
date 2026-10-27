@@ -27,7 +27,7 @@ export function ItemContentSlots(props: DrawingProps): ReactElement {
 }
 
 function RowContentSlots(props: DrawingProps): ReactElement {
-  const compact = useCompactRows();
+  const compact = useCompactRows(props.sidebar);
 
   return (
     <TextClassContext value={undefined}>

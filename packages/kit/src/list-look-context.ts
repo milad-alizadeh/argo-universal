@@ -4,8 +4,9 @@ import {
   type ListLook,
   type ListLookInput,
   resolveListLook,
+  rowsAreCompact,
 } from './list-look';
-import type { SectionDrawing } from './list-look-section';
+import { compactSection, type SectionDrawing } from './list-look-section';
 import { useInChoiceMenu, useInMenu } from './menu-rows-context';
 import { useInSidebar } from './row-drawing-context';
 import { useWide } from './use-wide/use-wide';
@@ -57,17 +58,34 @@ export function useListLook(): ListLook {
   return provided ?? outsideLooks[`${menu}-${sidebar}`];
 }
 
-export function useSectionDrawing(): SectionDrawing {
-  const look = useListLook();
+// A compact List's rows keep their leading edge in; the sidebar's own drawing already sits on its rows.
+function useRowsSection(): SectionDrawing {
+  const { section } = useListLook();
+  const compact = useCompactRows();
+  const inSidebar = useInSidebar();
 
-  return useInChoiceMenu() ? look.choosingSection : look.section;
+  return compact && !inSidebar ? compactSection(section) : section;
 }
 
-// A compact List's rows draw as one line only on a wide window, and never as a popover's menu rows.
-export function useCompactRows(): boolean {
-  const { density } = useListLook();
-  const menu = useInMenu();
-  const wide = useWide();
+// A compact List's section heading starts on its rows' leading edge, where a regular List's starts on its content's.
+export function useSectionDrawing(): SectionDrawing {
+  const { choosingSection } = useListLook();
+  const rows = useRowsSection();
 
-  return density === 'compact' && wide && !menu;
+  return useInChoiceMenu() ? choosingSection : rows;
+}
+
+/*
+ * A compact List's rows draw as one line on a wide window, and never as a popover's menu rows. A sidebar row (its own
+ * `sidebar` option, or its List's sidebar drawing) keeps its one line at every web width; phones resolve regular density.
+ */
+export function useCompactRows(sidebar?: boolean): boolean {
+  const { density } = useListLook();
+  const inSidebar = useInSidebar();
+
+  return rowsAreCompact(density, {
+    menu: useInMenu(),
+    wide: useWide(),
+    sidebar: sidebar === true || inSidebar,
+  });
 }

@@ -223,6 +223,8 @@ export type WireSchemaHints = {
     "progress": PropValue<"ListItem", "progress">;
     /** Whether the item is selected. */
     "selected": PropValue<"ListItem", "selected">;
+    /** A finished item, such as a closed Issue or an archived Session: its title reads muted. */
+    "finished": PropValue<"ListItem", "finished">;
     /** Whether row activation is disabled. */
     "disabled": PropValue<"ListItem", "disabled">;
     /** Optional spoken label; defaults to title and value. */
@@ -255,7 +257,7 @@ export type WireSchemaHints = {
     "text": PropValue<"Pill", "text">;
     /** The Argo semantic tone. */
     "tone": PropValue<"Pill", "tone">;
-    /** A tracker label color. */
+    /** A tracker label color as #rrggbb: the text takes it, over a lighter fill of it. */
     "color": PropValue<"Pill", "color">;
   };
   "Table": {

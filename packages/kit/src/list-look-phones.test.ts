@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { rowsAreCompact } from './list-look';
 import { look, phones } from './list-look-fixtures';
 
 describe('onPhones', () => {
@@ -34,4 +35,27 @@ describe('density', () => {
       expect(look({ density: 'compact', platform }).density).toBe('regular');
     },
   );
+});
+
+describe('rowsAreCompact', () => {
+  const place = { menu: false, wide: true, sidebar: false };
+
+  it('draws a content List compact on a wide window only', () => {
+    expect(rowsAreCompact('compact', place)).toBe(true);
+    expect(rowsAreCompact('compact', { ...place, wide: false })).toBe(false);
+  });
+
+  it('keeps a sidebar List compact at every width', () => {
+    expect(
+      rowsAreCompact('compact', { ...place, wide: false, sidebar: true }),
+    ).toBe(true);
+  });
+
+  it('draws a regular List regular, sidebar or not', () => {
+    expect(rowsAreCompact('regular', { ...place, sidebar: true })).toBe(false);
+  });
+
+  it('never draws a popover compact', () => {
+    expect(rowsAreCompact('compact', { ...place, menu: true })).toBe(false);
+  });
 });

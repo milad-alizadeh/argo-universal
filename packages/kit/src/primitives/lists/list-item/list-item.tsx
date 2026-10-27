@@ -34,7 +34,7 @@ import {
 
 const hairline = { height: StyleSheet.hairlineWidth };
 
-function useItemDrawing(): ItemDrawing {
+function useItemDrawing(props: Pick<ListItemProps, 'sidebar'>): ItemDrawing {
   const { position } = useContext(ListContext);
 
   return {
@@ -42,7 +42,7 @@ function useItemDrawing(): ItemDrawing {
     position,
     menu: useInMenu(),
     rows: useRowDrawing(),
-    compact: useCompactRows(),
+    compact: useCompactRows(props.sidebar),
   };
 }
 
@@ -51,7 +51,7 @@ function ItemSeparator(props: ListItemProps): ReactNode {
   const highlighted = useSeparatorCovered(index);
   const selected = useSelectedSeparator(props.id);
   const covered = [highlighted, selected].some(Boolean);
-  const separator = itemSeparator(useItemDrawing(), hasLeading(props));
+  const separator = itemSeparator(useItemDrawing(props), hasLeading(props));
 
   if (covered) return null;
 
@@ -93,7 +93,7 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
  * keeps its tint: it is the only mark that row carries.
  */
 function ItemSurface(props: DrawingProps): ReactElement {
-  const drawing = useItemDrawing();
+  const drawing = useItemDrawing(props);
   const tile = useContext(ListTileContext);
 
   const className = tile

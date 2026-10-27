@@ -269,6 +269,11 @@
       "rules": { "argo/style-tokens": "off" }
     },
     {
+      // Tracker label colours as GitHub sends them: a Plugin's data, which the Pill reads for its text and fill.
+      "files": ["packages/kit/src/primitives/status/pill/pill-fixtures.ts"],
+      "rules": { "argo/style-tokens": "off" }
+    },
+    {
       // Only the vendor module names Registry vendors (ADR-0004, #717).
       "files": ["packages/engine/src/agents/vendor.ts"],
       "rules": { "argo/vendor-name": "off" }

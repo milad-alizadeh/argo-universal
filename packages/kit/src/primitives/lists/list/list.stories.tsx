@@ -36,17 +36,27 @@ export const GroupedItems: Story = {
 };
 
 // Each row one line on a wide window; phones draw regular rows.
-export const Compact: Story = { args: compactList };
+export const Compact: Story = {
+  args: compactList,
+  parameters: { screenPreview: true },
+};
 
 // Child ListItems under their parents, in the tree lane: chevrons on parents, rails beside children, an elbow on a last child.
-export const Nested: Story = { args: nestedList };
+export const Nested: Story = {
+  args: nestedList,
+  parameters: { screenPreview: true },
+};
 
 // The same tree in regular rows: the lane runs each row's full height.
-export const NestedRegular: Story = { args: nestedRegularList };
+export const NestedRegular: Story = {
+  args: nestedRegularList,
+  parameters: { screenPreview: true },
+};
 
 // A folded parent hides its children behind a closed chevron.
 export const NestedFolded: Story = {
   args: nestedList,
+  parameters: { screenPreview: true },
   play: async ({ canvas, userEvent }) => {
     const toggle = await canvas.findByRole('button', {
       name: 'Second parent item',

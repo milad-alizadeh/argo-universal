@@ -313,7 +313,7 @@ A ListItem written inside another ListItem, its parent. A wide desktop or web wi
 _Avoid_: Sub-item, child row, tree item
 
 **Pill**:
-A short, static label that shows an Argo status or a label from a Plugin.
+A short, static label that shows an Argo status or a label from a Plugin. A tracker label keeps its colour: the text takes it, over a lighter fill of it.
 _Avoid_: Badge, chip
 
 **Path text**:

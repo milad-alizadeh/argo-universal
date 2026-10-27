@@ -17,7 +17,12 @@ export type { SessionRowProps } from './session-row-props';
 
 type RowIdentity = Pick<
   ListItemProps,
-  'title' | 'subtitle' | 'accessibilityLabel' | 'onPress' | 'selected'
+  | 'title'
+  | 'subtitle'
+  | 'accessibilityLabel'
+  | 'onPress'
+  | 'selected'
+  | 'finished'
 >;
 
 function rowIdentity(props: SessionRowProps): RowIdentity {
@@ -27,6 +32,7 @@ function rowIdentity(props: SessionRowProps): RowIdentity {
     accessibilityLabel: sessionRowLabel(props.session),
     onPress: () => props.onSelect(props.session.sessionId),
     selected: props.selected,
+    finished: props.session.archivedAt !== null,
   };
 }
 

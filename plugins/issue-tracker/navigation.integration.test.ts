@@ -44,6 +44,19 @@ it('groups Issues by status, by you and by label, each with its own list', async
   );
 }, 20_000);
 
+it('nests a sub-Issue under its parent in a filter list', async () => {
+  const { test, root } = await issuesRoot();
+  const list = await follow(test, root, 'Open');
+
+  await expect.poll(() => list.findText(issueTitle), wait).toBeDefined();
+
+  const parent = list.findText(issueTitle)?.node;
+
+  expect(JSON.stringify(parent?.children)).toContain(
+    'Fixture issue gh cannot change',
+  );
+}, 20_000);
+
 it('opens a filter list, then an Issue from it, on their own pages', async () => {
   const { test, root } = await issuesRoot();
   const list = await follow(test, root, 'Open');

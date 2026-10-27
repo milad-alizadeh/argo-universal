@@ -1,6 +1,9 @@
 // What gh prints, checked and mapped to the Issues the Tracker shows.
 export type IssueStatus = 'open' | 'closed';
 
+// Why GitHub closed an Issue: done, or set aside (not planned, or a duplicate).
+export type IssueClosedAs = 'completed' | 'not-planned';
+
 // A label's colour is GitHub's own, as `#d73a4a`, or none when GitHub sends no valid one.
 export type IssueLabel = { name: string; color?: string };
 
@@ -12,6 +15,9 @@ export type Issue = {
   url: string;
   labels: IssueLabel[];
   assignees: string[];
+  closedAs?: IssueClosedAs;
+  // The number of the Issue this one is a sub-Issue of, when it has a parent.
+  parent?: number;
 };
 
 type GitHubName = { name?: string; login?: string; color?: string };
@@ -24,6 +30,8 @@ export type GitHubIssue = {
   url?: string;
   labels?: GitHubName[];
   assignees?: GitHubName[];
+  stateReason?: string;
+  parent?: { number?: unknown } | null;
 };
 
 export type GitHubCount = { total_count?: number };
@@ -31,6 +39,12 @@ export type GitHubCount = { total_count?: number };
 export type GitHubLabel = Pick<GitHubName, 'name'>;
 
 const statuses = { OPEN: 'open', CLOSED: 'closed' } as const;
+
+const closedReasons = new Map<string, IssueClosedAs>([
+  ['COMPLETED', 'completed'],
+  ['NOT_PLANNED', 'not-planned'],
+  ['DUPLICATE', 'not-planned'],
+]);
 
 type CheckedIssue = GitHubIssue & {
   number: number;
@@ -62,7 +76,26 @@ export function mapIssue(issue: GitHubIssue | null): Issue {
     url: issue.url,
     labels: labels(issue.labels),
     assignees: names(issue.assignees, 'login'),
+    ...closedAs(issue),
+    ...parentOf(issue.parent),
   };
+}
+
+// A closed Issue's reason, when GitHub names one this Tracker knows.
+function closedAs(issue: CheckedIssue): { closedAs?: IssueClosedAs } {
+  const reason = closedReasons.get(String(issue.stateReason));
+
+  return reason && issue.state === 'CLOSED' ? { closedAs: reason } : {};
+}
+
+const isIssueNumber = (value: unknown): value is number =>
+  Number.isSafeInteger(value) && Number(value) > 0;
+
+// A parent is `{ number }`; anything else means no parent.
+function parentOf(parent: GitHubIssue['parent']): { parent?: number } {
+  const number = parent?.number;
+
+  return isIssueNumber(number) ? { parent: number } : {};
 }
 
 const issueChecks = [

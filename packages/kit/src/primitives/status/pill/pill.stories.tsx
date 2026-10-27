@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Pill } from './pill';
 import {
@@ -6,6 +7,7 @@ import {
   dangerPill,
   donePill,
   infoPill,
+  labelPills,
   mutedPill,
   neutralPill,
   successPill,
@@ -37,3 +39,15 @@ export const Warning: Story = { args: warningPill };
 export const Danger: Story = { args: dangerPill };
 
 export const Done: Story = { args: donePill };
+
+// A tracker label's own colour: its text in that colour, made readable for the theme, over a light fill of it.
+export const Labels: Story = {
+  args: labelPills[0],
+  render: () => (
+    <View className="flex-row flex-wrap gap-2">
+      {labelPills.map((label) => (
+        <Pill key={label.text} {...label} />
+      ))}
+    </View>
+  ),
+};

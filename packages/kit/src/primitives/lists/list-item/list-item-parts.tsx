@@ -55,7 +55,7 @@ function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
 }
 
 function useLeadingLane(sidebar: boolean | undefined): LeadingLane {
-  const compact = useCompactRows();
+  const compact = useCompactRows(sidebar);
 
   return leadingLane(useInMenu(), sidebar === true || compact);
 }

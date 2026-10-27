@@ -163,3 +163,18 @@ export function resolveListLook(input: ListLookInput): ListLook {
     ...sectionDrawings({ ...input, phone: grouped.phone !== undefined }),
   };
 }
+
+export interface CompactPlace {
+  menu: boolean;
+  wide: boolean;
+  // A sidebar row, by its own option or its List's drawing.
+  sidebar: boolean;
+}
+
+const oneLine = ({ wide, sidebar }: CompactPlace): boolean => wide || sidebar;
+
+// A compact List's rows draw as one line on a wide window, and a sidebar's at every web width; never as a popover's menu rows.
+export const rowsAreCompact = (
+  density: ListDensity,
+  place: CompactPlace,
+): boolean => density === 'compact' && !place.menu && oneLine(place);

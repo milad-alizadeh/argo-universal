@@ -1,8 +1,16 @@
-import { EmptyState, List, ListItem, Screen } from '@argo/plugin-kit';
+import {
+  EmptyState,
+  Icon,
+  List,
+  ListItem,
+  Screen,
+  type PluginProps,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
 import { repositoryText } from './issue-client';
-import { labelPills } from './label-pills';
+import { issueTree, type IssueNode } from './issue-tree';
+import { rowLabelPills } from './label-pills';
 import {
   useFilterIssues,
   type FilterIssues,
@@ -28,30 +36,52 @@ function IssueList({ source, issues }: IssueListProps): JSX.Element {
 
   return (
     <List
-      appearance="cards"
+      appearance="plain"
+      density="compact"
       footer={message || repositoryText(source.project)}
       empty={<EmptyState title={message || 'No Issues.'} />}
       pagination={{ hasMore: issues.hasMore, onLoadMore: issues.loadMore }}
       onRefresh={issues.refresh}
     >
-      {issues.issues.map((issue) => issueRow(source, issue))}
+      {issueTree(issues.issues).map((node) => issueRow(source, node))}
     </List>
   );
 }
 
-// A keyed ListItem itself, as a List draws its children, not a component that returns one.
-function issueRow({ project, deps }: FilterSource, issue: Issue): JSX.Element {
+// A keyed ListItem itself, as a List draws its children, not a component that returns one; its sub-Issues nest inside.
+function issueRow(source: FilterSource, node: IssueNode): JSX.Element {
   return (
-    <ListItem
-      key={issue.number}
-      id={String(issue.number)}
-      title={issue.title}
-      subtitle={`#${issue.number}`}
-      onPress={{
-        action: 'navigate',
-        path: deps.pages.issuePagePath(project, issue.number),
-      }}
-      meta={labelPills(issue.labels)}
-    />
+    <ListItem key={node.issue.number} {...rowProps(source, node.issue)}>
+      {node.children.map((child) => issueRow(source, child))}
+    </ListItem>
+  );
+}
+
+type RowProps = Pick<
+  PluginProps['ListItem'],
+  'id' | 'leading' | 'title' | 'subtitle' | 'finished' | 'onPress' | 'meta'
+>;
+
+const rowProps = ({ project, deps }: FilterSource, issue: Issue): RowProps => ({
+  id: String(issue.number),
+  leading: statusMark(issue),
+  title: issue.title,
+  subtitle: `#${issue.number}`,
+  finished: issue.status !== 'open',
+  onPress: {
+    action: 'navigate',
+    path: deps.pages.issuePagePath(project, issue.number),
+  },
+  meta: rowLabelPills(issue.labels),
+});
+
+// GitHub has no workflow, so its states take the tracker types' default marks: open, done, and closed with a reason.
+function statusMark({ status, closedAs }: Issue): JSX.Element {
+  if (status === 'open') return <Icon name="pending" tone="muted" size="sm" />;
+
+  return closedAs === 'not-planned' ? (
+    <Icon name="failed" tone="muted" size="sm" filled />
+  ) : (
+    <Icon name="passed" tone="done" size="sm" filled />
   );
 }

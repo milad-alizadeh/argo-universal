@@ -129,6 +129,12 @@ export const listItemProps = z.object({
     .optional()
     .describe('Progress along the bottom of the row.'),
   selected: z.boolean().optional().describe('Whether the item is selected.'),
+  finished: z
+    .boolean()
+    .optional()
+    .describe(
+      'A finished item, such as a closed Issue or an archived Session: its title reads muted.',
+    ),
   disabled: z
     .boolean()
     .optional()

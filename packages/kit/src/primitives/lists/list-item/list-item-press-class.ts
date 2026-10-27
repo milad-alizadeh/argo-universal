@@ -37,7 +37,7 @@ export function usePressClass(props: DrawingProps): string {
   const place = {
     menu: useInMenu(),
     rows: useRowDrawing(),
-    compact: useCompactRows(),
+    compact: useCompactRows(props.sidebar),
   };
 
   const tile = use(ListTileContext);

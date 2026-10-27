@@ -57,7 +57,7 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   return (
     <Text
       role="row"
-      tone={props.titleTone ?? props.tone}
+      tone={props.finished ? 'muted' : props.tone}
       numberOfLines={lineLimit(props.multiline)}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
     >
