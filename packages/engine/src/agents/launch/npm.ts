@@ -1,5 +1,6 @@
-import { mkdir } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { existsSync } from 'node:fs';
+import { mkdir, mkdtemp, rename, rm } from 'node:fs/promises';
+import { dirname, join, relative } from 'node:path';
 import type { ACPAgent } from '@repo/contracts';
 import { checkInstallationFile } from './materialization/files';
 import { requireExactPackageVersion } from './materialization/package-version';
@@ -30,7 +31,7 @@ const npmPackage = (input: NpmInput): NpmPackage => {
   return { name, specification: boundedSpecification(name, pkg) };
 };
 
-// Each Registry version installs into its own folder; older folders go once no connection uses them.
+// Each Registry version installs once into its own folder; older folders go once no connection uses them.
 export const npmCommand = async (input: NpmInput): Promise<RegistryCommand> => {
   const base = join(input.home, 'agents', 'registry', 'npx', input.id);
   const source = distribution(input).package;
@@ -112,9 +113,22 @@ const installOnce = (installation: Installation): Promise<void> =>
     install({ ...installation, input: { ...installation.input, signal } }),
   );
 
+// A version folder exists only once npm finished in it, so later connections launch it without installing again.
 const install = async (installation: Installation): Promise<void> => {
-  await mkdir(installation.directory, { recursive: true });
-  await installation.input.ports.runTool(toolInput(installation));
+  if (existsSync(installation.directory)) return;
+  const base = dirname(installation.directory);
+  await mkdir(base, { recursive: true });
+  const staging = await mkdtemp(join(base, '.staging-'));
+
+  try {
+    await installation.input.ports.runTool(
+      toolInput({ ...installation, directory: staging }),
+    );
+    await rename(staging, installation.directory);
+  } catch (error) {
+    await rm(staging, { recursive: true, force: true });
+    throw error;
+  }
 };
 
 const distribution = (

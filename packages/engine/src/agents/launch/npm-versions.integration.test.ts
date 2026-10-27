@@ -98,7 +98,7 @@ it.each([
     newer.release();
 
     expect(newer.directory).not.toBe(older.directory);
-    expect(versions.installs).toEqual([older.directory, newer.directory]);
+    expect(versions.installs).toHaveLength(2);
     expect(existsSync(older.args[0] ?? '')).toBe(olderKept);
   },
 );
