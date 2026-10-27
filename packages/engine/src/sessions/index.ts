@@ -17,6 +17,7 @@ export {
 export {
   flushSubagents,
   noSubagents,
+  ownsSubagentUpdate,
   routeSubagentUpdate,
   type SubagentSession,
   type Subagents,
