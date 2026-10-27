@@ -6,7 +6,7 @@ import type { ShellRecord } from '@repo/contracts';
 import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
-} from '../storage';
+} from '../../storage';
 import { appendShellOutput } from './files';
 import { shellOutputBlob, type ShellOutputBlob } from './output-blob';
 import { shellFromTerminal } from './shell-data';

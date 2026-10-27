@@ -13,10 +13,10 @@ import {
   router,
   routerFactory,
   zAsyncIterable,
-} from '../rpc';
-import type { SessionRouterDeps } from '../sessions/router-deps';
-import { validateSessionCommandAdmission } from '../sessions/session-command';
-import { requireLiveSessionActor } from '../sessions/session-system';
+} from '../../rpc';
+import type { SessionRouterDeps } from '../router-deps';
+import { validateSessionCommandAdmission } from '../session-command';
+import { requireLiveSessionActor } from '../session-system';
 import { watchShellOutput } from './output';
 import { requireShell } from './output-reader';
 import { readShellRecords } from './reader';

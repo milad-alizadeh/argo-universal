@@ -17,6 +17,8 @@ export { defaultInstallPorts } from './launch/default-ports';
 
 export { shellEnvironment } from './launch/shell-env';
 
+export { agentEnvironment } from './launch/agent-environment';
+
 export type { InstallPorts } from './launch/ports';
 
 export {

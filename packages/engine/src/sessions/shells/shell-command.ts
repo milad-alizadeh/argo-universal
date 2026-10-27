@@ -3,7 +3,7 @@ import type {
   TerminalExitStatus,
 } from '@agentclientprotocol/sdk';
 import { z } from 'zod';
-import type { AgentLaunch } from '../agents/agent-launch';
+import type { AgentLaunch } from '../../agents';
 import {
   captureShellCommandOutput,
   endShellCommandOutput,
@@ -27,6 +27,8 @@ export type ShellCommandInput = {
   home: string;
   output: (chunk: Buffer) => void | Promise<void>;
 };
+
+export type ShellLauncher = (input: ShellCommandInput) => Promise<ShellCommand>;
 
 const ShellMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('started') }),

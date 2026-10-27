@@ -28,14 +28,13 @@ import {
 } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
-import { readShellRecords } from '../shells/reader';
-import { createShellRuntime, withShell } from '../shells/shells';
+import { createShells, withShell, readShellRecords } from './shells';
 import type { WriterActorRef, WriterEvent } from '../storage';
-import { flushSubagentFeeds } from '../subagents/subagent-feeds';
+import { flushSubagentFeeds } from './subagents/subagent-feeds';
 import {
   isSubagentUpdate,
   routeSubagentNotification,
-} from '../subagents/subagents';
+} from './subagents/subagents';
 import {
   cancelAcp,
   closeAcp,
@@ -849,7 +848,19 @@ const archiveOperationOutcome = {
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
   context: ({ input, self }): SessionContext => {
-    const shellRuntime = createShellRuntime(input, self);
+    // The Session's Shells report back to it: a change updates its list, a storage failure cancels the Turn.
+    const shellRuntime = createShells({
+      sessionId: input.sessionId,
+      home: input.runtimeDirectory,
+      writer: input.writer,
+      now: input.now,
+      createId: input.createId,
+      changed: (shell): void => self.send({ type: 'agent.shellChanged', shell }),
+      failed: (error): void => {
+        console.error('Shell storage failed', error);
+        self.send({ type: storageFailingEvent });
+      },
+    });
 
     return {
       input,

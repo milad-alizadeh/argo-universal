@@ -5,7 +5,7 @@ import type {
   SessionUpdate,
   SubagentUpdate,
 } from '@repo/contracts';
-import type { FeedActorRef } from '../feed';
+import type { FeedActorRef } from '../../feed';
 import type { ChildFeed } from './child-feed';
 import type { SubagentRouting } from './routing-types';
 

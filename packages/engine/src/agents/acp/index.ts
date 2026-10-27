@@ -14,7 +14,9 @@ export type {
   AcpProcess,
 } from './resources/resource-types';
 
-export { awaitAcpOpening } from './connection/client';
+export type { TerminalRequests } from './connection/terminal-requests';
+
+export { awaitAcpOpening, createAgentClient } from './connection/client';
 
 export {
   cancelledElicitation,

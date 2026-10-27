@@ -1,5 +1,5 @@
-import type { FeedActorRef, FeedEvent, FeedTurnEnding } from '../feed';
-import { TurnUpdateJob } from '../sessions/session-storage';
+import type { FeedActorRef, FeedEvent, FeedTurnEnding } from '../../feed';
+import { TurnUpdateJob } from '../session-storage';
 import type { ChildFeed } from './child-feed';
 
 type CrashEnding = Extract<FeedTurnEnding, { kind: 'agent_crash' }>;

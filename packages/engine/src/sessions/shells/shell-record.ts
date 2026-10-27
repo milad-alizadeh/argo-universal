@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';
-import { jsonCodec } from '../lib/json-codec';
+import { jsonCodec } from '../../lib/json-codec';
 import {
   processGroupMembers,
   type ProcessGroupMember,

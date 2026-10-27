@@ -1,6 +1,6 @@
 import type { ShellRecord } from '@repo/contracts';
 import { blob, blobRef, shell } from '@repo/db/schema';
-import type { StorageTransaction, WriterJob } from '../storage';
+import type { StorageTransaction, WriterJob } from '../../storage';
 import { writeShellBlob, type ShellOutputBlob } from './output-blob';
 
 export class ShellWriteJob implements WriterJob {

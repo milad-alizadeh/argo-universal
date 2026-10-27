@@ -1,7 +1,7 @@
 import type { ContentBlock } from '@repo/contracts';
 import { AgentProcessExitError } from '../agents';
 import { turnEndingEvent, type FeedEvent, type FeedTurnEnding } from '../feed';
-import { crashedSubagentTurns } from '../subagents/crash';
+import { crashedSubagentTurns } from './subagents/crash';
 import type { AcpLifetimeEvent } from './acp/acp-lifetime';
 import { currentModel } from './configuration/config-choices';
 import type {

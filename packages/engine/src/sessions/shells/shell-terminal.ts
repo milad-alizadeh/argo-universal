@@ -2,14 +2,17 @@ import type {
   TerminalExitStatus,
   TerminalOutputResponse,
 } from '@agentclientprotocol/sdk';
-import { awaitAcpOpening, type AgentLaunch } from '../agents';
+import { awaitAcpOpening, type AgentLaunch } from '../../agents';
 import { createShellOutput, removeShellOutput } from './files';
 import { ShellCapture, type ShellCaptureInput } from './shell-capture';
-import type { ShellCommand } from './shell-command';
-import { launchShellCommand } from './shell-launch';
+import type { ShellCommand, ShellLauncher } from './shell-command';
 import { readShellPreview } from './shell-preview-file';
 
-type TerminalInput = ShellCaptureInput & { launch: AgentLaunch; home: string };
+type TerminalInput = ShellCaptureInput & {
+  launch: AgentLaunch;
+  launchCommand: ShellLauncher;
+  home: string;
+};
 
 export class ShellTerminal {
   private command?: ShellCommand;
@@ -30,7 +33,7 @@ export class ShellTerminal {
   }
   private async launch(): Promise<void> {
     await createShellOutput(this.input.path);
-    this.command = await launchShellCommand({
+    this.command = await this.input.launchCommand({
       ...this.input,
       output: (chunk) => this.capture.append(chunk),
     });

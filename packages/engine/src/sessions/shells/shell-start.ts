@@ -1,5 +1,5 @@
 import type { Readable, Writable } from 'node:stream';
-import { agentEnvironment } from '../agents/launch/agent-environment';
+import { agentEnvironment } from '../../agents';
 import type { ShellCommandInput } from './shell-command';
 import type { Serializable } from './shell-launch';
 import type { ShellChild } from './shell-launch';

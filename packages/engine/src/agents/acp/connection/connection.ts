@@ -10,8 +10,8 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '../..';
-import { routeTerminalRequests } from '../../../shells/terminal-requests';
-import { SubagentRoutes } from '../../../subagents/routes';
+import { routeTerminalRequests } from './terminal-requests';
+import { SubagentRoutes } from './subagent-routing';
 import type { AuthChanges } from '../../auth/auth-changes';
 import { ConnectionAuthentication } from '../../auth/authenticate';
 import { authenticationMethods } from '../auth-methods';

@@ -4,11 +4,11 @@ import { eq } from 'drizzle-orm';
 import {
   decodeStoredSession,
   storedSessionColumns,
-} from '../sessions/session-record';
+} from '../session-record';
 import {
   readQueuedSessionRows,
   type RowSources,
-} from '../sessions/session-storage';
+} from '../session-storage';
 
 type StoredSession = typeof session.$inferSelect;
 

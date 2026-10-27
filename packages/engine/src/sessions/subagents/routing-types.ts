@@ -1,7 +1,7 @@
 import type { Database } from '@repo/db';
-import type { FeedActorRef, FeedInput } from '../feed';
-import type { SessionData } from '../sessions/session-data';
-import type { WriterActorRef, WriterJob } from '../storage';
+import type { FeedActorRef, FeedInput } from '../../feed';
+import type { SessionData } from '../session-data';
+import type { WriterActorRef, WriterJob } from '../../storage';
 
 export type SubagentRouting = {
   parent: SessionData;

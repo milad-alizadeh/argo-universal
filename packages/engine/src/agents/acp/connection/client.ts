@@ -8,7 +8,7 @@ import {
 import {
   acceptTerminalRequests,
   type TerminalRequests,
-} from '../../../shells/terminal-requests';
+} from './terminal-requests';
 
 type AgentClientInput = {
   stream: Stream;

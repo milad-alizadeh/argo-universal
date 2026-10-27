@@ -1,11 +1,11 @@
-import type { FeedActorRef } from '../feed';
-import type { AcpLifetimeEvent } from '../sessions/acp/acp-lifetime';
+import type { FeedActorRef } from '../../feed';
+import type { AcpLifetimeEvent } from '../acp/acp-lifetime';
 import {
   acpUpdateEvent,
   writeFeedEvent,
   type SessionContext,
   type SessionEvent,
-} from '../sessions/session-context';
+} from '../session-context';
 import type { SubagentRouting } from './routing-types';
 import { routeSubagentUpdate, type SubagentFeeds } from './subagent-feeds';
 

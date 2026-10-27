@@ -6,6 +6,14 @@ export {
 
 export { type SessionData } from './session-data';
 
+export {
+  createShells,
+  type ShellCommand,
+  type ShellCommandInput,
+  type ShellLauncher,
+  type Shells,
+} from './shells';
+
 export { type SessionActorRef, sessionMachine } from './session-machine';
 
 export {
@@ -40,7 +48,7 @@ export {
   TurnUpdateJob,
 } from './session-storage';
 
-export { createShellRouter } from '../shells/router';
+export { createShellRouter } from './shells/router';
 
 export {
   type SessionConnections,
@@ -51,4 +59,6 @@ export { recoverArchivedCheckouts } from './archive/archive-operations';
 
 export { findSessionFeed } from './session-system';
 
-export { recoverShells } from '../shells/recovery';
+export { recoverShells } from './shells/recovery';
+
+export { releaseShellGroups } from './shells/shell-record';

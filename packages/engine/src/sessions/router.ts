@@ -37,8 +37,8 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../rpc';
-import { createShellSessionRouter } from '../shells/router';
-import { createSubagentsReader } from '../subagents';
+import { createShellSessionRouter } from './shells/router';
+import { createSubagentsReader } from './subagents';
 import { agentOptionsUpdates } from './agent-options';
 import { createArchiveRouter } from './archive/archive-router';
 import { createChangesRouter } from './changes-router';

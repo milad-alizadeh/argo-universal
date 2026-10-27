@@ -4,7 +4,7 @@ import {
   type FeedUpdate,
   type SubagentUpdate,
 } from '@repo/contracts';
-import { type FeedEvent } from '../feed';
+import { type FeedEvent } from '../../feed';
 import type { OpenedChildFeed } from './child-feed';
 import type { SubagentRouting } from './routing-types';
 

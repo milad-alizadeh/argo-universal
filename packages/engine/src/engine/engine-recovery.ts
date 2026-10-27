@@ -8,8 +8,8 @@ import {
   recoverAfterRestart,
   recoverArchivedCheckouts,
   recoverShells,
+  releaseShellGroups,
 } from '../sessions';
-import { releaseShellGroups } from '../shells/shell-record';
 
 export type RecoveryInput = {
   database: Database;

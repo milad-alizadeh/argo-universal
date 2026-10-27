@@ -1,5 +1,5 @@
 import type { ContentBlock } from '@repo/contracts';
-import { mapSupportedContentBlock } from '../feed';
+import { mapSupportedContentBlock } from '../../feed';
 import type { AcpSessionMessage } from './subagent-actions';
 
 function replaceContent(

@@ -10,9 +10,9 @@ import type { CoreHooks } from '@repo/contracts/plugins';
 import type { createRejectionCounter } from '@repo/machine-log';
 import type { AcpSessionLease, createAcpResponseReaders } from '../agents';
 import type { FeedTurnEnding } from '../feed';
-import type { ShellRuntime } from '../shells/shell-runtime';
+import type { Shells } from './shells';
 import type { WriterActorRef, WriterEvent } from '../storage';
-import type { SubagentFeeds } from '../subagents/subagent-feeds';
+import type { SubagentFeeds } from './subagents/subagent-feeds';
 import type {
   AcpLifetimeEvent,
   AcpSessionDependencies,
@@ -121,7 +121,7 @@ export interface SessionContext extends SessionData {
   feedEnded: boolean;
   subagentFeeds: SubagentFeeds;
   shells: ShellRecord[];
-  shellRuntime: ShellRuntime;
+  shellRuntime: Shells;
   // The database writer refused this Turn's Feed rows, so the Turn is cancelled and ends with a storage error.
   storageFailedTurn: boolean;
 }

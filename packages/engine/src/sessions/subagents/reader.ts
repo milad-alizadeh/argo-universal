@@ -13,8 +13,8 @@ import {
   storedFeedColumns,
   type FeedDeps,
   type FeedRowWrite,
-} from '../feed';
-import { readLatestTurns, type RowSources } from '../sessions/session-storage';
+} from '../../feed';
+import { readLatestTurns, type RowSources } from '../session-storage';
 import { readChildSessions } from './children';
 import { toSubagent } from './subagent-view';
 

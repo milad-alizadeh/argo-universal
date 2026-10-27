@@ -1,19 +1,20 @@
 import type {
   CreateTerminalRequest,
-  SessionNotification,
   CreateTerminalResponse,
 } from '@agentclientprotocol/sdk';
 import type { ShellRecord } from '@repo/contracts';
-import type { AgentLaunch } from '../agents';
-import type { SessionData } from '../sessions/session-data';
-import type { WriterActorRef } from '../storage';
+import type { AcpSessionDestination, AgentLaunch } from '../../agents';
+import type { WriterActorRef } from '../../storage';
+import type { SessionData } from '../session-data';
 import { shellOutputPath } from './files';
+import { attachShellRuntime } from './shell-acp';
 import type { ShellCaptureInput } from './shell-capture';
-import { terminalReferences } from './shell-data';
+import type { ShellLauncher } from './shell-command';
+import { launchShellCommand } from './shell-launch';
 import { ShellTerminal } from './shell-terminal';
-import type { TerminalRequests } from './terminal-requests';
+import type { Shells } from './shells';
 
-type ShellRuntimeInput = {
+export type ShellRuntimeInput = {
   sessionId: string;
   home: string;
   writer: WriterActorRef;
@@ -21,9 +22,11 @@ type ShellRuntimeInput = {
   createId: () => string;
   changed: (record: ShellRecord) => void;
   failed: (error: Error) => void;
+  // How a command starts; tests substitute one that runs nothing.
+  launch?: ShellLauncher;
 };
 
-export class ShellRuntime {
+export class ShellRuntime implements Shells {
   private readonly terminals = new Map<string, ShellTerminal>();
   private launch?: AgentLaunch;
   private cwd = '';
@@ -33,21 +36,11 @@ export class ShellRuntime {
     this.launch = launch;
     this.cwd = session.checkout.path;
   }
-  public requests(): TerminalRequests {
-    return {
-      'terminal/create': ({ params }) => this.create(params),
-      'terminal/output': ({ params }) =>
-        this.requireTerminal(params.terminalId).output(),
-      'terminal/kill': ({ params }) =>
-        this.requireTerminal(params.terminalId).kill(),
-      'terminal/wait_for_exit': ({ params, signal }) =>
-        this.requireTerminal(params.terminalId).wait(signal),
-      'terminal/release': ({ params }) =>
-        this.requireTerminal(params.terminalId).release(),
-    };
+  public attach(destination: AcpSessionDestination): AcpSessionDestination {
+    return attachShellRuntime(this, destination);
   }
-  private async create(
-    request: Parameters<TerminalRequests['terminal/create']>[0]['params'],
+  public async create(
+    request: CreateTerminalRequest,
   ): Promise<CreateTerminalResponse> {
     const id = this.input.createId();
     const terminal = this.createTerminal(id, request);
@@ -70,18 +63,8 @@ export class ShellRuntime {
       throw error;
     }
   }
-  public associate(notification: SessionNotification): void {
-    if (this.closed) return;
-    const update = notification.update;
-
-    for (const reference of terminalReferences(update))
-      this.associateTerminal(reference);
-  }
-  private associateTerminal(reference: {
-    toolCallId: string;
-    terminalId: string;
-  }): void {
-    this.terminals.get(reference.terminalId)?.associate(reference.toolCallId);
+  public associate(terminalId: string, toolCallId: string): void {
+    if (!this.closed) this.terminals.get(terminalId)?.associate(toolCallId);
   }
   private createTerminal(
     id: string,
@@ -91,6 +74,7 @@ export class ShellRuntime {
       ...this.captureInput(id, request),
       home: this.input.home,
       launch: this.requireLaunch(),
+      launchCommand: this.input.launch ?? launchShellCommand,
     });
   }
   private captureInput(
@@ -119,7 +103,7 @@ export class ShellRuntime {
     await terminal.close('lost');
     throw new Error('Shell runtime closed during launch');
   }
-  private requireTerminal(id: string): ShellTerminal {
+  public requireTerminal(id: string): ShellTerminal {
     const terminal = this.terminals.get(id);
 
     if (!terminal || this.closed) throw new Error('Unknown ACP terminal');

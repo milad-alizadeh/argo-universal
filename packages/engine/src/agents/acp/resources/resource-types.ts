@@ -12,7 +12,7 @@ import type {
 } from '@agentclientprotocol/sdk';
 import type { AgentLaunch, DeferredAgentLaunch } from '../..';
 import type { LaunchLoginTerminal } from '../..';
-import type { TerminalRequests } from '../../../shells/terminal-requests';
+import type { TerminalRequests } from '../connection/terminal-requests';
 import type { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 

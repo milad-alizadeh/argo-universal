@@ -9,7 +9,7 @@ import {
   hydrateStoredFeedRow,
   newestRows,
   storedFeedColumns,
-} from '../feed';
+} from '../../feed';
 import type { SubagentRouting } from './routing-types';
 
 const writtenRow =
