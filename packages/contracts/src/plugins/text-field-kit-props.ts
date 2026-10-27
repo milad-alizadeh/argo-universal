@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { echoes, handler } from './plugin-part-props';
+import { echoes, handler } from './kit-component-props';
 
 type TextProps = Record<string, z.ZodType> & { value: z.ZodType };
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { defineKitComponent } from '../define-kit-component';
 import {
   alertProps,
   openChange,
@@ -7,12 +8,11 @@ import {
   toastProps,
   tooltipProps,
 } from '../overlay-kit-props';
-import { part } from '../part';
 import { menuEvents, menuSchema } from '../selection-schemas';
 
 // The App owns an overlay's open state: it flips it at once and tells the Plugin.
-export const overlaysParts = {
-  Alert: part(
+export const overlaysComponents = {
+  Alert: defineKitComponent(
     'A question asked over the page; its Actions answer it.',
     alertProps,
     {
@@ -21,17 +21,17 @@ export const overlaysParts = {
       events: { onOpenChange: openChange(alertProps) },
     },
   ),
-  Sheet: part('A sheet raised over the page.', sheetProps, {
+  Sheet: defineKitComponent('A sheet raised over the page.', sheetProps, {
     group: 'overlays',
     children: true,
     events: { onOpenChange: openChange(sheetProps) },
   }),
-  Menu: part('A choice or action menu.', menuSchema, {
+  Menu: defineKitComponent('A choice or action menu.', menuSchema, {
     group: 'overlays',
     wire: false,
     events: menuEvents,
   }),
-  Dialog: part(
+  Dialog: defineKitComponent(
     'A form overlay; presented as a sheet on phone.',
     openStateProps,
     {
@@ -49,17 +49,21 @@ export const overlaysParts = {
       events: { onOpenChange: openChange(openStateProps) },
     },
   ),
-  Popover: part('A popover overlay.', openStateProps, {
+  Popover: defineKitComponent('A popover overlay.', openStateProps, {
     group: 'overlays',
     wire: false,
     children: true,
     events: { onOpenChange: openChange(openStateProps) },
   }),
-  Tooltip: part('A short description attached to a control.', tooltipProps, {
-    group: 'overlays',
-    wire: false,
-  }),
-  Toast: part(
+  Tooltip: defineKitComponent(
+    'A short description attached to a control.',
+    tooltipProps,
+    {
+      group: 'overlays',
+      wire: false,
+    },
+  ),
+  Toast: defineKitComponent(
     'A transient status message opened through an Action.',
     toastProps,
     {

@@ -1,24 +1,24 @@
 import type { z } from 'zod';
-import { wireParts, type WirePartDefinition } from './wire-parts';
+import { kitComponents, type KitComponentDefinition } from './kit-components';
 
-export type { WirePartDefinition } from './wire-parts';
+export type { KitComponentDefinition } from './kit-components';
 
-export { wireParts, listPartNames } from './wire-parts';
+export { kitComponents, listComponentNames } from './kit-components';
 
-export type WirePart = keyof typeof wireParts;
+export type WireComponentName = keyof typeof kitComponents;
 
 // Hover hints come from the generated `@argo/plugin-kit` declarations, not from here.
 export type WireProps = {
-  [Name in WirePart]: z.output<(typeof wireParts)[Name]['props']>;
+  [Name in WireComponentName]: z.output<(typeof kitComponents)[Name]['props']>;
 };
 
-// Only wire parts resolve, so the Server refuses an App-only kit component such as Menu.
-const partsByType = new Map<string, WirePartDefinition>(
-  Object.entries(wireParts),
+// Only kit components resolve, so the Server refuses an App-only kit component such as Menu.
+const componentsByType = new Map<string, KitComponentDefinition>(
+  Object.entries(kitComponents),
 );
 
-export function wirePart(type: string): WirePartDefinition | undefined {
-  return partsByType.get(type);
+export function kitComponent(type: string): KitComponentDefinition | undefined {
+  return componentsByType.get(type);
 }
 
 export {
@@ -30,4 +30,4 @@ export {
   type PluginRenderContext,
 } from './surface';
 
-export { pluginKitExports, type PluginKitExport } from './plugin-part-names';
+export { pluginKitExports, type PluginKitExport } from './kit-component-names';

@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { tones } from '../../kit-tokens';
 import { emptyStateProps } from '../core-kit-props';
-import { part } from '../part';
-import { optionalLabel, stringLabel } from '../plugin-part-props';
+import { defineKitComponent } from '../define-kit-component';
+import { optionalLabel, stringLabel } from '../kit-component-props';
 import { calloutProps } from '../presentation-kit-props';
 import { pillProps, progressBarProps } from '../status-kit-props';
 
-export const statusParts = {
-  ProgressBar: part(
+export const statusComponents = {
+  ProgressBar: defineKitComponent(
     'A determinate progress indicator with an optional running sweep.',
     progressBarProps,
     {
@@ -21,10 +21,14 @@ export const statusParts = {
       },
     },
   ),
-  Pill: part('Static short text with a semantic tone.', pillProps, {
-    group: 'status',
-  }),
-  EmptyState: part(
+  Pill: defineKitComponent(
+    'Static short text with a semantic tone.',
+    pillProps,
+    {
+      group: 'status',
+    },
+  ),
+  EmptyState: defineKitComponent(
     'A centred message for an empty container with an optional icon, description, and one action.',
     emptyStateProps,
     {
@@ -44,7 +48,7 @@ export const statusParts = {
       },
     },
   ),
-  StatusDot: part(
+  StatusDot: defineKitComponent(
     'A compact semantic status mark with an optional pulse.',
     z.object({
       tone: z.enum(tones).describe('The Argo semantic status tone.'),
@@ -70,7 +74,7 @@ export const statusParts = {
       },
     },
   ),
-  Spinner: part(
+  Spinner: defineKitComponent(
     'An indeterminate progress indicator.',
     z.object({ accessibilityLabel: stringLabel }),
     {
@@ -86,7 +90,7 @@ export const statusParts = {
       },
     },
   ),
-  Callout: part(
+  Callout: defineKitComponent(
     'A heading, description, detail, and optional actions.',
     calloutProps,
     {

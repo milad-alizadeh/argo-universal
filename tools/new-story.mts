@@ -3,18 +3,18 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import {
-  isKitPartName,
+  isKitComponentName,
   kitPropDescriptors,
 } from '@repo/contracts/plugins/kit-prop-descriptors';
 import { declaredProps, type Prop } from './new-story-props.mts';
-import { branchesIn, kitPartIn, renderStory } from './new-story-rules.mts';
+import { branchesIn, kitComponentIn, renderStory } from './new-story-rules.mts';
 import { derivedStoryTitle } from './story-title-rules.mts';
 
 const root = path.resolve(import.meta.dirname, '..');
 
-const kitProps = (part: string): Prop[] =>
-  isKitPartName(part)
-    ? kitPropDescriptors(part).map(
+const kitProps = (component: string): Prop[] =>
+  isKitComponentName(component)
+    ? kitPropDescriptors(component).map(
         ({ name, required, kind, options }): Prop => ({
           name,
           required,
@@ -55,9 +55,9 @@ function exportedComponent(source: string, named: string): string {
 
 // A kit component's props come from its Contracts schema; any other component's from its own `<Component>Props`.
 function propsFor(file: string, component: string, sources: string[]): Prop[] {
-  const kitPart = kitPartIn(sources);
+  const kitComponent = kitComponentIn(sources);
 
-  if (kitPart !== undefined) return kitProps(kitPart);
+  if (kitComponent !== undefined) return kitProps(kitComponent);
 
   const own = readFileSync(file, 'utf8');
 
@@ -74,7 +74,7 @@ function storyFor(file: string): string {
     title,
     component,
     importPath: `./${path.basename(file).replace(/\.tsx?$/, '')}`,
-    kitPart: kitPartIn(sources),
+    kitComponent: kitComponentIn(sources),
     props: propsFor(file, component, sources),
     branches: branchesIn(sources),
   });

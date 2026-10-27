@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { wirePart } from './kit';
-import { partEventHandler, partEventPayload } from './wire';
+import { kitComponent } from './kit';
+import { componentEventHandler, componentEventPayload } from './wire';
 
 it('keeps pagination and anchoring on a Plugin List', () => {
   const props = {
@@ -11,14 +11,17 @@ it('keeps pagination and anchoring on a Plugin List', () => {
     onSearchTextChange: { $event: 'onSearchTextChange' },
   };
 
-  expect(wirePart('List')?.props.parse(props)).toMatchObject(props);
+  expect(kitComponent('List')?.props.parse(props)).toMatchObject(props);
 });
 
 it('checks the nested selection event payload', () => {
-  const event = wirePart('List')?.events.onChange;
-  expect(partEventPayload(event, ['web', 'phone'])).toEqual(['web', 'phone']);
+  const event = kitComponent('List')?.events.onChange;
+  expect(componentEventPayload(event, ['web', 'phone'])).toEqual([
+    'web',
+    'phone',
+  ]);
   expect(
-    partEventHandler(
+    componentEventHandler(
       {
         selection: {
           mode: 'multiple',

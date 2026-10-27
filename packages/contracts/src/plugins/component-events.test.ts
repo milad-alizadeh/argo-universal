@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { wirePart } from './kit';
-import { partEventPayload } from './wire';
+import { kitComponent } from './kit';
+import { componentEventPayload } from './wire';
 
 it.each([
   { type: 'Button', event: 'onPress', payload: undefined },
@@ -9,11 +9,11 @@ it.each([
   { type: 'List.Section', event: 'onSelectionChange', payload: ['alpha'] },
   { type: 'Sheet', event: 'onOpenChange', payload: false },
 ])(
-  'checks $type.$event against the part schema',
+  'checks $type.$event against the kit component schema',
   ({ type, event, payload }) => {
-    const schema = wirePart(type)?.events[event];
+    const schema = kitComponent(type)?.events[event];
 
-    expect(partEventPayload(schema, payload)).toEqual(payload);
+    expect(componentEventPayload(schema, payload)).toEqual(payload);
   },
 );
 
@@ -24,9 +24,9 @@ it.each([
   { type: 'List.Section', event: 'onSelectionChange', payload: ['a', 42] },
   { type: 'Button', event: 'invented', payload: 'anything' },
 ])('refuses a mismatched payload for $type.$event', (input) => {
-  const schema = wirePart(input.type)?.events[input.event];
+  const schema = kitComponent(input.type)?.events[input.event];
 
-  expect(() => partEventPayload(schema, input.payload)).toThrow(
+  expect(() => componentEventPayload(schema, input.payload)).toThrow(
     'Invalid Plugin event payload',
   );
 });

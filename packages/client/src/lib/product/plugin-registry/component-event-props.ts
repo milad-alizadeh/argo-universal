@@ -1,9 +1,9 @@
 import {
   Handler,
-  partEventHandler,
-  partEventRules,
+  componentEventHandler,
+  componentEventRules,
   propsWithin,
-  type PartEventRules,
+  type ComponentEventRules,
   type WireJson,
 } from '@repo/contracts/plugins/wire';
 import type { z } from 'zod';
@@ -23,15 +23,15 @@ export type NodeEvents = {
 type Declared = {
   name: string;
   schema: z.ZodType;
-  rules: PartEventRules;
+  rules: ComponentEventRules;
   handler?: Handler;
 };
 
-// A prop a Part event places: on the node itself, or inside the prop object its schema's `within` names.
+// A prop a Component event places: on the node itself, or inside the prop object its schema's `within` names.
 type Placed = { within?: string; name: string; value: PluginProps[string] };
 
-// The kit component's props: the node's own, each Part event's callback, the echoed value, focus and pending state.
-export function partEventProps(node: NodeEvents): PluginProps {
+// The kit component's props: the node's own, each Component event's callback, the echoed value, focus and pending state.
+export function componentEventProps(node: NodeEvents): PluginProps {
   const placed = [...callbacks(node), ...echoed(node)];
 
   return {
@@ -41,12 +41,13 @@ export function partEventProps(node: NodeEvents): PluginProps {
   };
 }
 
-const declared = ({ node, part }: ControlInput): Declared[] =>
-  Object.entries(part.events).map(([name, schema]) => ({
+const declared = ({ node, definition }: ControlInput): Declared[] =>
+  Object.entries(definition.events).map(([name, schema]) => ({
     name,
     schema,
-    rules: partEventRules(schema),
-    handler: Handler.safeParse(partEventHandler(node.props, name, schema)).data,
+    rules: componentEventRules(schema),
+    handler: Handler.safeParse(componentEventHandler(node.props, name, schema))
+      .data,
   }));
 
 // A missing callback still replaces whatever the node holds at the event's name.
@@ -77,7 +78,7 @@ function callback(node: NodeEvents, event: Declared): Callback | undefined {
 const handled = (input: ControlInput, event: Declared): boolean =>
   event.handler !== undefined || ownsEcho(input, event.rules);
 
-function ownsEcho(input: ControlInput, rules: PartEventRules): boolean {
+function ownsEcho(input: ControlInput, rules: ComponentEventRules): boolean {
   if (!rules.value) return false;
 
   return holds(input, rules.within);

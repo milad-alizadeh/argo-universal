@@ -1,9 +1,9 @@
-import { listPartNames } from '@repo/contracts/plugins/kit';
+import { listComponentNames } from '@repo/contracts/plugins/kit';
 import { WireJson } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
 
-export const listTypes = new Set<string>(listPartNames);
+export const listTypes = new Set<string>(listComponentNames);
 
 // Render callbacks run only in the worker; items and renderItem never become wire props.
 export function expandList(type: string, props: ElementProps): ElementProps {

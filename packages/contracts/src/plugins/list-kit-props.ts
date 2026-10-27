@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { listDefaults } from '../kit-tokens';
+import { handler } from './kit-component-props';
 import { pressHandler } from './kit-event-props';
-import { handler } from './plugin-part-props';
 import { progressBarProps, rowBadgeProps } from './status-kit-props';
 
 export const contentListProps = z.object({

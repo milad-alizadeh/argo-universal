@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { handler, stringLabel } from '../plugin-part-props';
+import { handler, stringLabel } from '../kit-component-props';
 
 export const sliderProps = z.object({
   value: z.number().optional().describe('The current range value.'),

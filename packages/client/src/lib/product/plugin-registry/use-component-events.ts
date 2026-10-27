@@ -3,7 +3,7 @@ import { wireNodeKeys } from '@repo/contracts/plugins/wire-node-key';
 import { errorMessage } from '@repo/kit/error-toast';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useEffect, useReducer, useState } from 'react';
-import { partEventProps } from './part-event-props';
+import { componentEventProps } from './component-event-props';
 import { ControlField, blurWithin } from './plugin-control-field';
 import {
   PluginDispatcher,
@@ -22,10 +22,10 @@ const reportFailure: ReportFailure = (error): void =>
 type Fields = Map<string, ControlField>;
 
 /*
- * One tree's Part events, handled once from each part's schema metadata: the callbacks its kit components take, the
+ * One tree's Component events, handled once from each kit component's schema metadata: the callbacks its kit components take, the
  * value the App echoes at once and rolls back when refused, the draft a focused field keeps, and the throttled sends.
  */
-export function usePartEvents(
+export function useComponentEvents(
   root: WireNode,
   onEvent: PluginOnEvent,
 ): PluginControls {
@@ -34,8 +34,11 @@ export function usePartEvents(
   const [, update] = useReducer((revision: number) => revision + 1, 0);
   const send = dispatcher.send.bind(dispatcher);
 
-  return (input) =>
-    partEventProps({ input, field: fieldFor(fields, input), send, update });
+  return (input) => {
+    const field = fieldFor(fields, input);
+
+    return componentEventProps({ input, field, send, update });
+  };
 }
 
 // One dispatcher for the tree's life; closing it sends what is still queued.

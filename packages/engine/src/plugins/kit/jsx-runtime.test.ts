@@ -20,8 +20,8 @@ describe('a named Slot passed empty', () => {
     ['List', 'header'],
     ['EmptyState', 'action'],
     ['ListItem', 'trailing'],
-  ])('stays a Slot on %s as %s', (part, slot) => {
-    expect(slotNames(jsx(part, { [slot]: [] }))).toEqual([slot]);
+  ])('stays a Slot on %s as %s', (component, slot) => {
+    expect(slotNames(jsx(component, { [slot]: [] }))).toEqual([slot]);
   });
 
   it('leaves an empty array on a prop that is not a Slot as data', () => {

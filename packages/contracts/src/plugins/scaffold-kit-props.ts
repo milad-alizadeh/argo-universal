@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
 import { screenDefaults, screenWidths } from '../kit-tokens';
+import { handler, stringLabel } from './kit-component-props';
 import { listItemProps } from './list-kit-props';
-import { handler, stringLabel } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
 import { WireEvent } from './wire';
 
@@ -39,7 +39,7 @@ export const detailProps = z.object({
   markdown: z
     .string()
     .optional()
-    .describe('The content drawn by the kit Markdown part.'),
+    .describe('The content drawn by the Markdown kit component.'),
   isLoading: z
     .boolean()
     .optional()

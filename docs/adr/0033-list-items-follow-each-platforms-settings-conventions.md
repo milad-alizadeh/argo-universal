@@ -24,7 +24,7 @@ This amends [ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.
 ## Consequences
 
 - `ListItem` takes at most one `Button` in `trailing`, and only outside settings rows. The Agents card becomes a `ListItem` in `List appearance="cards"`: logo in `leading`, version and links in `meta`, Install or Remove in `trailing`.
-- `ListItem` rows gain `description`, and `List` gains `footer`. The Plugin wire's `List` and `ListItem` parts (ADR-0031) take the same props, so Plugin settings get the Android behaviour for free.
+- `ListItem` rows gain `description`, and `List` gains `footer`. The Plugin wire's `List` and `ListItem` kit components (ADR-0031) take the same props, so Plugin settings get the Android behaviour for free.
 - Settings, Project details, Plugin settings and the elicitation forms move descriptions accordingly as #1007 moves them onto `List appearance="grouped"`.
 - The Paper `ListItem` master shows the Android section with row subtitles, a page footer and a destructive Button.
 

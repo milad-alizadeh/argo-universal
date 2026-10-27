@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { kitJsonSchema } from '../kit-schema-json';
-import type { WirePartDefinition } from './wire-part-definition';
+import type { KitComponentDefinition } from './kit-component-definition';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
@@ -54,7 +54,7 @@ function describedProperty(name: string, schema: SchemaNode): SchemaNode {
 
   const words = name.replaceAll(/([a-z])([A-Z])/g, '$1 $2');
 
-  return { ...schema, description: `${words} for this part.` };
+  return { ...schema, description: `${words} for this kit component.` };
 }
 
 function describedProperties(schema: JsonSchema): JsonSchema {
@@ -65,11 +65,13 @@ function describedProperties(schema: JsonSchema): JsonSchema {
   return { ...schema, properties: Object.fromEntries(properties) };
 }
 
-export function partObjectSchema(part: WirePartDefinition): JsonSchema {
-  const wire = describedProperties(pluginObjectSchema(part.props));
+export function componentObjectSchema(
+  component: KitComponentDefinition,
+): JsonSchema {
+  const wire = describedProperties(pluginObjectSchema(component.props));
 
-  if (!part.expansion) return wire;
-  const expansion = pluginObjectSchema(part.expansion);
+  if (!component.expansion) return wire;
+  const expansion = pluginObjectSchema(component.expansion);
 
   return {
     ...wire,

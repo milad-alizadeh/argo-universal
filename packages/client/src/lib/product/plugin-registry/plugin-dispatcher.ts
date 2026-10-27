@@ -1,18 +1,18 @@
 import {
-  partEventPayload,
-  partEventRules,
-  type PartEvent,
+  componentEventPayload,
+  componentEventRules,
+  type ComponentEvent,
   type WireJson,
 } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 
 export type PluginOnEvent = (
   key: string,
-  event: PartEvent,
+  event: ComponentEvent,
 ) => void | Promise<void>;
 
-// A Part event before the App checks its payload against the part's event schema.
-export type PartEventInput = {
+// A Component event before the App checks its payload against the kit component's event schema.
+export type ComponentEventInput = {
   event: string;
   payload?: WireJson;
   schema: z.ZodType;
@@ -20,7 +20,7 @@ export type PartEventInput = {
 
 type Queued = {
   key: string;
-  event: PartEvent;
+  event: ComponentEvent;
   deliver: PluginOnEvent;
   timer: ReturnType<typeof setTimeout>;
   reply: PromiseWithResolvers<void>;
@@ -33,7 +33,7 @@ export type ReportFailure = (failure: DeliveryFailure) => void;
 
 const ignoreFailure: ReportFailure = (): void => {};
 
-// The one place a tree's Part events are coalesced: a throttled edit waits, and only its latest value is sent.
+// The one place a tree's Component events are coalesced: a throttled edit waits, and only its latest value is sent.
 export class PluginDispatcher {
   private readonly queued = new Map<string, Queued>();
   // Throttled edits on their way to the Plugin; they settle, never reject.
@@ -47,9 +47,9 @@ export class PluginDispatcher {
     this.deliver = deliver;
   }
 
-  public send(key: string, input: PartEventInput): void | Promise<void> {
-    const event = checkedPartEvent(input);
-    const { awaits, flush, throttleMs } = partEventRules(input.schema);
+  public send(key: string, input: ComponentEventInput): void | Promise<void> {
+    const event = checkedComponentEvent(input);
+    const { awaits, flush, throttleMs } = componentEventRules(input.schema);
     const deliver = this.deliveryFor(awaits);
 
     if (throttleMs) return this.queue({ key, event, deliver }, throttleMs);
@@ -64,7 +64,7 @@ export class PluginDispatcher {
     void this.releaseAll();
   }
 
-  // An awaited event's part reports its own failure; any other is reported here.
+  // An awaited event's kit component reports its own failure; any other is reported here.
   private deliveryFor(awaits?: boolean): PluginOnEvent {
     return awaits ? this.deliver : reporting(this.deliver, this.report);
   }
@@ -105,19 +105,22 @@ export class PluginDispatcher {
 }
 
 // A payload that fails the check is not sent; the field it came from rolls back.
-function checkedPartEvent(input: PartEventInput): PartEvent {
+function checkedComponentEvent(input: ComponentEventInput): ComponentEvent {
   const { event, schema } = input;
 
   try {
-    return { event, payload: partEventPayload(schema, sent(input)) };
+    return { event, payload: componentEventPayload(schema, sent(input)) };
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') console.error(event, error);
     throw error;
   }
 }
 
-// A press reports a native event object; its Part event carries no payload.
-const sent = ({ schema, payload }: PartEventInput): WireJson | undefined =>
+// A press reports a native event object; its Component event carries no payload.
+const sent = ({
+  schema,
+  payload,
+}: ComponentEventInput): WireJson | undefined =>
   schema instanceof z.ZodUndefined ? undefined : payload;
 
 // A failed delivery is reported once, as it fails; the caller still sees the rejection.

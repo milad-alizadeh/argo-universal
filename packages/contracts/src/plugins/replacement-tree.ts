@@ -1,4 +1,4 @@
-import { wirePart } from './kit';
+import { kitComponent } from './kit';
 import { isRootOnly, supportsWireNode } from './prepare-tree';
 import type { WireNode } from './wire';
 
@@ -10,7 +10,7 @@ export function replacementTreeReason(node: WireNode): string | null {
 function replacementNodeReason(node: WireNode): string | null {
   if (node.type === '#render-error') return drawingErrorReason(node);
 
-  if (!wirePart(node.type)) return `${node.type} is not a kit part`;
+  if (!kitComponent(node.type)) return `${node.type} is not a kit component`;
 
   return kitNodeReason(node);
 }

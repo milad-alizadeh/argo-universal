@@ -24,16 +24,16 @@ export const PluginViewInput = z.object({
 
 export type PluginViewInput = z.infer<typeof PluginViewInput>;
 
-// A Part event: the App names the node by key and the handler prop by event name.
-export const PartEvent = z.object({
+// A Component event: the App names the node by key and the handler prop by event name.
+export const ComponentEvent = z.object({
   event: z.string().min(1),
   payload: WireJson.optional(),
 });
 
-export type PartEvent = z.infer<typeof PartEvent>;
+export type ComponentEvent = z.infer<typeof ComponentEvent>;
 
-// The App before it sends and the Server on arrival both check a payload against the part's event schema.
-export function partEventPayload(
+// The App before it sends and the Server on arrival both check a payload against the kit component's event schema.
+export function componentEventPayload(
   schema: z.ZodType | undefined,
   payload?: WireJson,
 ): WireJson | undefined {
@@ -47,12 +47,12 @@ export function partEventPayload(
 }
 
 /*
- * What a Part event's schema metadata asks of the App. `value` names the prop the App echoes the payload into
- * at once; `blocks` holds the part disabled while the Plugin answers; `flush` sends pending edits first;
+ * What a Component event's schema metadata asks of the App. `value` names the prop the App echoes the payload into
+ * at once; `blocks` holds the kit component disabled while the Plugin answers; `flush` sends pending edits first;
  * `throttleMs` coalesces quick edits. `within` names the prop object that holds the event's handler, as a Picker's
- * `footerAction` holds `onPress`. `awaits` returns the dispatch acknowledgement to a part that owns its loading state.
+ * `footerAction` holds `onPress`. `awaits` returns the dispatch acknowledgement to a kit component that owns its loading state.
  */
-const PartEventRules = z.object({
+const ComponentEventRules = z.object({
   value: z.string().optional(),
   within: z.string().optional(),
   awaits: z.boolean().optional(),
@@ -61,10 +61,12 @@ const PartEventRules = z.object({
   throttleMs: z.number().default(0),
 });
 
-export type PartEventRules = z.output<typeof PartEventRules>;
+export type ComponentEventRules = z.output<typeof ComponentEventRules>;
 
-export function partEventRules(schema: z.ZodType | undefined): PartEventRules {
-  return PartEventRules.parse(schema?.meta() ?? {});
+export function componentEventRules(
+  schema: z.ZodType | undefined,
+): ComponentEventRules {
+  return ComponentEventRules.parse(schema?.meta() ?? {});
 }
 
 const target = z.object({
@@ -74,7 +76,7 @@ const target = z.object({
 
 export const PluginDispatchInput = PluginViewInput.extend({
   ...target.shape,
-  ...PartEvent.shape,
+  ...ComponentEvent.shape,
   viewId: PluginViewId,
 });
 
@@ -115,7 +117,7 @@ export const PluginEvent = z.union([
     viewId: PluginViewId,
     requestId: PluginDispatchId,
     ...target.shape,
-    ...PartEvent.shape,
+    ...ComponentEvent.shape,
   }),
   // One batched call to a Plugin's items Slot provider; it answers by `id`.
   z.object({

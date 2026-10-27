@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { cardDefaults, spacingSteps } from '../kit-tokens';
+import { onPress } from './kit-component-props';
 import { openStateProps } from './overlay-kit-props';
-import { onPress } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
 
 export const spacerProps = z.object({});

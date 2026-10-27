@@ -1,4 +1,4 @@
-import { wireParts } from '@repo/contracts/plugins/kit';
+import { kitComponents } from '@repo/contracts/plugins/kit';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
@@ -15,7 +15,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const kinds = wireParts.Surface.props.shape.kind.options;
+const kinds = kitComponents.Surface.props.shape.kind.options;
 
 export const ComposesContent: Story = {
   render: () => (

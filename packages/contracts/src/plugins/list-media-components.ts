@@ -1,5 +1,5 @@
 // ListItem media accepts this vocabulary at every depth.
-export const listMediaParts = [
+export const listMediaComponents = [
   'Image',
   'Avatar',
   'Icon',

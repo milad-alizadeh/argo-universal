@@ -1,4 +1,4 @@
-import { partDefinition } from './plugin-reference-format';
+import { componentDefinition } from './plugin-reference-format';
 
 function codeName(name: string): string {
   return `\`${name}\``;
@@ -9,11 +9,16 @@ function slotRow(slot: string, types: readonly string[]): string {
 }
 
 export function slotTable(name: string): string {
-  const slots = Object.entries(partDefinition(name).slots);
+  const slots = Object.entries(componentDefinition(name).slots);
 
-  if (!slots.length) return 'This part has no named Slots.\n';
+  if (!slots.length) return 'This kit component has no named Slots.\n';
 
   const rows = slots.map(([slot, types]) => slotRow(slot, types));
 
-  return ['| Slot | Accepted parts |', '| --- | --- |', ...rows, ''].join('\n');
+  return [
+    '| Slot | Accepted kit components |',
+    '| --- | --- |',
+    ...rows,
+    '',
+  ].join('\n');
 }

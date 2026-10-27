@@ -1,6 +1,8 @@
+import { actionSlot, defineKitComponent } from '../define-kit-component';
+import { echoes } from '../kit-component-props';
 import {
   metadataAvatarProps,
-  metadataChildParts,
+  metadataChildComponents,
   metadataLabelProps,
   metadataLinkProps,
   metadataPillsProps,
@@ -8,8 +10,6 @@ import {
   metadataStatusDotProps,
 } from '../metadata-props';
 import { openChange } from '../overlay-kit-props';
-import { actionSlot, part } from '../part';
-import { echoes } from '../plugin-part-props';
 import {
   detailProps,
   inspectorProps,
@@ -24,8 +24,8 @@ const screenReader =
 const listDetailReader =
   'Reads the list, then the selected item beside it on wide windows; on compact ones the list is the screen and opening a row moves to the item.';
 
-export const scaffoldsParts = {
-  Screen: part(
+export const scaffoldsComponents = {
+  Screen: defineKitComponent(
     'A screen with a title, header Actions, a primary Action, optional search, and content.',
     screenProps,
     {
@@ -54,7 +54,7 @@ export const scaffoldsParts = {
       },
     },
   ),
-  ListDetail: part(
+  ListDetail: defineKitComponent(
     'A list beside its selected item on wide windows; on compact ones the list drills in to the item.',
     listDetailProps,
     {
@@ -76,7 +76,7 @@ export const scaffoldsParts = {
       },
     },
   ),
-  Detail: part(
+  Detail: defineKitComponent(
     'An item page: content beside its Metadata on wide screens, above it on narrow ones.',
     detailProps,
     {
@@ -85,33 +85,41 @@ export const scaffoldsParts = {
       slots: { metadata: ['Metadata'] },
     },
   ),
-  Metadata: part(
+  Metadata: defineKitComponent(
     'Read-only label/value fields for a detail view.',
     metadataProps,
-    { group: 'scaffolds', children: metadataChildParts },
+    { group: 'scaffolds', children: metadataChildComponents },
   ),
-  'Metadata.Label': part('A text Metadata field.', metadataLabelProps, {
-    group: 'scaffolds',
-  }),
-  'Metadata.Link': part(
+  'Metadata.Label': defineKitComponent(
+    'A text Metadata field.',
+    metadataLabelProps,
+    {
+      group: 'scaffolds',
+    },
+  ),
+  'Metadata.Link': defineKitComponent(
     'A link Metadata field, currently drawn as plain text.',
     metadataLinkProps,
     { group: 'scaffolds' },
   ),
-  'Metadata.Pills': part(
+  'Metadata.Pills': defineKitComponent(
     'A Metadata field containing Pills.',
     metadataPillsProps,
     { group: 'scaffolds', children: ['Pill'] },
   ),
-  'Metadata.StatusDot': part(
+  'Metadata.StatusDot': defineKitComponent(
     'A labelled status Metadata field.',
     metadataStatusDotProps,
     { group: 'scaffolds' },
   ),
-  'Metadata.Avatar': part('A person Metadata field.', metadataAvatarProps, {
-    group: 'scaffolds',
-  }),
-  Inspector: part(
+  'Metadata.Avatar': defineKitComponent(
+    'A person Metadata field.',
+    metadataAvatarProps,
+    {
+      group: 'scaffolds',
+    },
+  ),
+  Inspector: defineKitComponent(
     'Secondary detail about what is open: its own column on wide screens and a Sheet on compact ones.',
     inspectorProps,
     {
@@ -122,7 +130,7 @@ export const scaffoldsParts = {
       events: { onOpenChange: openChange(inspectorProps) },
     },
   ),
-  SettingsLayout: part(
+  SettingsLayout: defineKitComponent(
     'Settings pages: a grouped list of links beside the page shown on wide screens; on compact ones the list pushes each page.',
     settingsLayoutProps,
     {

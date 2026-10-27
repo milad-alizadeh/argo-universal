@@ -1,9 +1,12 @@
-import type { PartEvent } from '@repo/contracts/plugins/wire';
+import type { ComponentEvent } from '@repo/contracts/plugins/wire';
 import { expect, it, onTestFinished } from 'vitest';
 import { z } from 'zod';
-import { PluginDispatcher, type PartEventInput } from './plugin-dispatcher';
+import {
+  PluginDispatcher,
+  type ComponentEventInput,
+} from './plugin-dispatcher';
 
-const typed = (payload: string): PartEventInput => ({
+const typed = (payload: string): ComponentEventInput => ({
   event: 'onChangeText',
   payload,
   schema: z.string().meta({ throttleMs: 150 }),
@@ -14,10 +17,10 @@ const submit = {
   schema: z.undefined().meta({ flush: true }),
 };
 
-type Recording = { delivered: PartEvent[]; events: PluginDispatcher };
+type Recording = { delivered: ComponentEvent[]; events: PluginDispatcher };
 
 function recording(): Recording {
-  const delivered: PartEvent[] = [];
+  const delivered: ComponentEvent[] = [];
 
   const events = new PluginDispatcher((_key, event) => {
     delivered.push(event);
@@ -30,7 +33,7 @@ function recording(): Recording {
 
 it('throttles a typed value and retains the latest with its originating delivery', async () => {
   const { delivered, events } = recording();
-  const later: PartEvent[] = [];
+  const later: ComponentEvent[] = [];
   void events.send('search', typed('a'));
   void events.send('search', typed('argo'));
   events.setDelivery((_key, event) => {

@@ -6,7 +6,7 @@ import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
 import { RenderNode } from './plugin-nodes';
 import type { PluginOnEvent } from './plugin-rendering';
-import { usePartEvents } from './use-part-events';
+import { useComponentEvents } from './use-component-events';
 
 export type { PluginOnEvent } from './plugin-rendering';
 
@@ -22,7 +22,7 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
   const context = {
     key: childNodeKey('', props.root.key),
     openPage: props.onOpenPage ?? pageUnavailable,
-    controls: usePartEvents(props.root, props.onEvent),
+    controls: useComponentEvents(props.root, props.onEvent),
   };
 
   return (

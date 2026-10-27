@@ -1,6 +1,6 @@
 import { z } from 'zod';
+import { handler } from './kit-component-props';
 import { pressHandler } from './kit-event-props';
-import { handler } from './plugin-part-props';
 
 export const tableColumnProps = z.object({
   id: z.string().min(1).describe('The column identity cells name.'),

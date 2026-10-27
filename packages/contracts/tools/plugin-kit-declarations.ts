@@ -1,14 +1,14 @@
 import type { z } from 'zod';
-import { listPartNames } from '../src/plugins/list-expansion';
-import { partObjectSchema } from '../src/plugins/plugin-object-schema';
+import type { KitComponentDefinition } from '../src/plugins/kit-component-definition';
 import {
   pluginKitExports,
   type PluginKitExport,
-} from '../src/plugins/plugin-part-names';
-import type { WirePartDefinition } from '../src/plugins/wire-part-definition';
-import { wireParts } from '../src/plugins/wire-parts';
+} from '../src/plugins/kit-component-names';
+import { kitComponents } from '../src/plugins/kit-components';
+import { listComponentNames } from '../src/plugins/list-expansion';
+import { componentObjectSchema } from '../src/plugins/plugin-object-schema';
 
-const preamble = `/* Generated from Contracts parts and prop descriptions by \`pnpm docs:build\`. Do not edit by hand. */
+const preamble = `/* Generated from Contracts kit components and prop descriptions by \`pnpm docs:build\`. Do not edit by hand. */
 import type { ComponentType, ReactElement } from 'react';
 import type { PluginComponents, PluginProps } from './index';
 
@@ -50,7 +50,8 @@ const quoted = (value: string): string =>
 const propertyKey = (prop: string): string =>
   /^[A-Za-z_$][\w$]*$/.test(prop) ? prop : JSON.stringify(prop);
 
-const hintsName = (part: string): string => `${part.replaceAll('.', '')}Hints`;
+const hintsName = (component: string): string =>
+  `${component.replaceAll('.', '')}Hints`;
 
 type PropertySchema = z.core.JSONSchema._JSONSchema;
 
@@ -63,50 +64,56 @@ function propertyHint([prop, schema]: [string, PropertySchema]): string {
   return `  /** ${description} */\n  ${propertyKey(prop)}: unknown;`;
 }
 
-function hints([part, definition]: [string, WirePartDefinition]): string {
-  const { properties } = partObjectSchema(definition);
+function hints([component, definition]: [
+  string,
+  KitComponentDefinition,
+]): string {
+  const { properties } = componentObjectSchema(definition);
   const lines = Object.entries(properties ?? {}).map(propertyHint);
 
-  return `type ${hintsName(part)} = {\n${lines.join('\n')}\n};`;
+  return `type ${hintsName(component)} = {\n${lines.join('\n')}\n};`;
 }
 
-const isList = (part: string): boolean =>
-  listPartNames.some((name) => name === part);
+const isList = (component: string): boolean =>
+  listComponentNames.some((name) => name === component);
 
-const listValue = (part: string): string => `${part.toLowerCase()}Component`;
+const listValue = (component: string): string =>
+  `${component.toLowerCase()}Component`;
 
-function listComponent(part: string): string {
-  return `declare const ${listValue(part)}: PluginComponents[${quoted(part)}];`;
+function listComponent(component: string): string {
+  return `declare const ${listValue(component)}: PluginComponents[${quoted(component)}];`;
 }
 
 // A List or Table stays generic over its items.
-function component(part: string): string {
-  if (isList(part))
-    return `(<Item>(\n  props: Hinted<Parameters<typeof ${listValue(part)}<Item>>[0], ${hintsName(part)}>,\n) => ReactElement | null)`;
+function componentType(component: string): string {
+  if (isList(component))
+    return `(<Item>(\n  props: Hinted<Parameters<typeof ${listValue(component)}<Item>>[0], ${hintsName(component)}>,\n) => ReactElement | null)`;
 
-  return `ComponentType<Hinted<PluginProps[${quoted(part)}], ${hintsName(part)}>>`;
+  return `ComponentType<Hinted<PluginProps[${quoted(component)}], ${hintsName(component)}>>`;
 }
 
-function declaration({ name, part, members }: PluginKitExport): string {
+function declaration({ name, component, members }: PluginKitExport): string {
   const entries = Object.entries(members);
 
-  if (!entries.length) return `export const ${name}: ${component(part)};`;
+  if (!entries.length)
+    return `export const ${name}: ${componentType(component)};`;
 
   const lines = entries.map(
-    ([member, memberPart]) => `  ${member}: ${component(memberPart)};`,
+    ([member, memberComponent]) =>
+      `  ${member}: ${componentType(memberComponent)};`,
   );
 
-  return `export const ${name}: ${component(part)} & {\n${lines.join('\n')}\n};`;
+  return `export const ${name}: ${componentType(component)} & {\n${lines.join('\n')}\n};`;
 }
 
-const partNames = Object.keys(wireParts);
+const componentNames = Object.keys(kitComponents);
 
 // The Plugin kit's `components.d.ts`: one typed export per entry the kit's runtime exports, each prop carrying its description as a hover hint.
 export function pluginKitDeclarations(): string {
   return [
     preamble.trimEnd(),
-    partNames.filter(isList).map(listComponent).join('\n'),
-    Object.entries(wireParts).map(hints).join('\n\n'),
+    componentNames.filter(isList).map(listComponent).join('\n'),
+    Object.entries(kitComponents).map(hints).join('\n\n'),
     pluginKitExports.map(declaration).join('\n\n'),
   ]
     .join('\n\n')

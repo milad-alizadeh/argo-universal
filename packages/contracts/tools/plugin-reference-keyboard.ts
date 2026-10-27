@@ -86,7 +86,7 @@ const keyboardByRole = {
     'Keyboard focus reaches the disclosure in platform order; Enter or Space changes its expanded state.',
 } satisfies Record<string, string>;
 
-export function partRole(summary: string, properties: Props): string {
+export function componentRole(summary: string, properties: Props): string {
   const lower = summary.toLowerCase();
   const role = knownRoles.find(([pattern]) => pattern.test(lower))?.[1];
 
@@ -128,7 +128,7 @@ function staticKeyboardBehavior(container: boolean): string {
   if (container)
     return 'The container adds no keyboard focus stop; navigation reaches its child controls.';
 
-  return 'This static part adds no keyboard focus stop or shortcut.';
+  return 'This static kit component adds no keyboard focus stop or shortcut.';
 }
 
 function keyboardWithoutRole(
@@ -146,10 +146,10 @@ function keyboardWithoutRole(
   return staticKeyboardBehavior(input.container);
 }
 
-export function partKeyboardBehavior(input: KeyboardInput): string {
+export function componentKeyboardBehavior(input: KeyboardInput): string {
   const properties = schemaProperties(input.schema);
   const events = eventsOf(properties);
-  const role = partRole(input.summary, properties);
+  const role = componentRole(input.summary, properties);
   const roleBehavior = keyboardForRole(role);
 
   if (roleBehavior) return eventNote(roleBehavior, events);

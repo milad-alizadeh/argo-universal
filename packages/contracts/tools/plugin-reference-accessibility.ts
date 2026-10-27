@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { WirePartDefinition } from '../src/plugins/wire-part-definition';
+import type { KitComponentDefinition } from '../src/plugins/kit-component-definition';
 import { propsSchema } from './plugin-reference-format';
 import { resolvedReference } from './plugin-reference-inference';
 
@@ -37,7 +37,10 @@ function chooseName(
   return fallback;
 }
 
-function accessibleName(name: string, part: WirePartDefinition): string {
+function accessibleName(
+  name: string,
+  component: KitComponentDefinition,
+): string {
   const schema = propsSchema(name);
   const required = new Set(schema.required ?? []);
   const properties = schema.properties ?? {};
@@ -45,18 +48,18 @@ function accessibleName(name: string, part: WirePartDefinition): string {
   return chooseName(
     requiredName(required),
     optionalName(properties),
-    trimFinalPunctuation(resolvedReference(part).accessibility.label),
+    trimFinalPunctuation(resolvedReference(component).accessibility.label),
   );
 }
 
 export function accessibilitySection(
   name: string,
-  part: WirePartDefinition,
+  component: KitComponentDefinition,
 ): string {
-  const { accessibility } = resolvedReference(part);
+  const { accessibility } = resolvedReference(component);
 
   return [
-    `- **Accessible name:** ${accessibleName(name, part)}.`,
+    `- **Accessible name:** ${accessibleName(name, component)}.`,
     `- **Keyboard:** ${accessibility.keyboard}`,
     `- **VoiceOver:** ${accessibility.voiceOver}`,
     `- **TalkBack:** ${accessibility.talkBack}`,

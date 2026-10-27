@@ -1,4 +1,4 @@
-import type { WirePart } from '@repo/contracts/plugins/kit';
+import type { WireComponentName } from '@repo/contracts/plugins/kit';
 import { Action } from '@repo/kit/primitives/actions/action';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
@@ -109,5 +109,7 @@ export const pluginEntries = {
   Alert,
   Sheet: PluginSheet,
 } satisfies {
-  [Name in WirePart]: ComponentType<KitProps<Name, string, React.JSX.Element>>;
+  [Name in WireComponentName]: ComponentType<
+    KitProps<Name, string, React.JSX.Element>
+  >;
 };

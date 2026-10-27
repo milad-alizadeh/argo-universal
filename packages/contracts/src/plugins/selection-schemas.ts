@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
 import { buttonDefaults } from '../kit-tokens';
-import { echoes, handler } from './plugin-part-props';
+import { echoes, handler } from './kit-component-props';
 import { selectionValue } from './selection-value';
 
 const disabledDescription = 'Disable activation.';

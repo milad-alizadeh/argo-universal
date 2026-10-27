@@ -1,4 +1,4 @@
-import type { KitPart } from '@repo/contracts/kit-props';
+import type { KitComponentName } from '@repo/contracts/kit-props';
 import {
   type KitPropDescriptor,
   type KitPropKind,
@@ -79,7 +79,7 @@ function argType(prop: KitPropDescriptor): ArgTypes[string] {
  * defines its props. Docgen cannot read them: `KitProps<'Button'>` is a generic
  * mapped type over those schemas, and no docgen expands one.
  */
-export function kitArgTypes(name: KitPart): ArgTypes {
+export function kitArgTypes(name: KitComponentName): ArgTypes {
   return argTypes(kitPropDescriptors(name));
 }
 

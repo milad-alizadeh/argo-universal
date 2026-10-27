@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { part } from '../part';
-import { echoes, handler, stringLabel } from '../plugin-part-props';
+import { defineKitComponent } from '../define-kit-component';
+import { echoes, handler, stringLabel } from '../kit-component-props';
 import { filterPillProps, searchFieldProps } from '../presentation-kit-props';
 import { textChangeEvents } from '../text-field-kit-props';
 import { sliderProps } from './input-control-props';
@@ -28,8 +28,8 @@ const segmentedControlProps = z.object({
     .describe('Whether the whole control is unavailable.'),
 });
 
-export const controlsParts = {
-  SegmentedControl: part(
+export const controlsComponents = {
+  SegmentedControl: defineKitComponent(
     'Switches between a short set of views.',
     segmentedControlProps,
     {
@@ -52,7 +52,7 @@ export const controlsParts = {
         'Web uses the tint track, card thumb and track focus-visible ring, with hover and pressed feedback. Native drawings retain stock shapes and Dynamic Type. No custom animation; reduced motion needs no transition.',
     },
   ),
-  SearchField: part(
+  SearchField: defineKitComponent(
     'Search input for Screen headers and Lists.',
     searchFieldProps,
     {
@@ -72,12 +72,12 @@ export const controlsParts = {
       slots: { title: ['Text', 'Stack'], actions: ['Button', 'IconButton'] },
     },
   ),
-  FilterPill: part('A toggleable filter chip.', filterPillProps, {
+  FilterPill: defineKitComponent('A toggleable filter chip.', filterPillProps, {
     group: 'controls',
     wire: false,
     events: { onPress: z.undefined() },
   }),
-  Slider: part('A labeled numeric range control.', sliderProps, {
+  Slider: defineKitComponent('A labeled numeric range control.', sliderProps, {
     group: 'controls',
     events: {
       onValueChange: echoes(sliderProps, 'value', {

@@ -2,20 +2,20 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import { z } from 'zod';
 import {
   PluginDispatcher,
-  type PartEventInput,
+  type ComponentEventInput,
   type ReportFailure,
 } from './plugin-dispatcher';
 
 const refused = new Error('Refused');
 
-const press: PartEventInput = { event: 'onPress', schema: z.undefined() };
+const press: ComponentEventInput = { event: 'onPress', schema: z.undefined() };
 
-const awaited: PartEventInput = {
+const awaited: ComponentEventInput = {
   event: 'onLoadMore',
   schema: z.undefined().meta({ awaits: true }),
 };
 
-const typed = (payload: string): PartEventInput => ({
+const typed = (payload: string): ComponentEventInput => ({
   event: 'onChangeText',
   payload,
   schema: z.string().meta({ throttleMs: 20 }),
@@ -47,7 +47,7 @@ it('reports a failed press once and still rejects to its caller', async () => {
   );
 });
 
-it('leaves a failed awaited event to the part that awaits it', async () => {
+it('leaves a failed awaited event to the kit component that awaits it', async () => {
   const { events, report } = dispatcher(true);
   await expect(events.send('list', awaited)).rejects.toBe(refused);
   await Promise.resolve();

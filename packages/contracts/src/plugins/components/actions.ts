@@ -1,19 +1,23 @@
 import { z } from 'zod';
 import { actionEntryProps, actionSectionProps } from '../action-props';
 import { buttonProps } from '../core-kit-props';
-import { part } from '../part';
+import { defineKitComponent } from '../define-kit-component';
 import { iconButtonProps } from '../presentation-kit-props';
 import { menuEvents, splitButtonSchema } from '../selection-schemas';
 
 // A press sends pending edits first, so a confirming Button or Action acts on what the user typed.
 const flushingPress = { onPress: z.undefined().meta({ flush: true }) };
 
-export const actionsParts = {
-  'Action.Section': part('A group of Actions.', actionSectionProps, {
-    group: 'actions',
-    children: true,
-  }),
-  Action: part(
+export const actionsComponents = {
+  'Action.Section': defineKitComponent(
+    'A group of Actions.',
+    actionSectionProps,
+    {
+      group: 'actions',
+      children: true,
+    },
+  ),
+  Action: defineKitComponent(
     'One Action in a Screen header, a row or tile menu, a SplitButton or an Alert: it runs on press, or opens a submenu of keyed Action.Section children.',
     actionEntryProps,
     {
@@ -29,17 +33,17 @@ export const actionsParts = {
       },
     },
   ),
-  SplitButton: part(
+  SplitButton: defineKitComponent(
     'A primary action with a secondary action menu.',
     splitButtonSchema,
     { group: 'actions', children: true, events: menuEvents },
   ),
-  IconButton: part('An icon-only button.', iconButtonProps, {
+  IconButton: defineKitComponent('An icon-only button.', iconButtonProps, {
     group: 'actions',
     events: { onPress: z.undefined() },
     label: 'The required `accessibilityLabel` is the button name.',
   }),
-  Button: part(
+  Button: defineKitComponent(
     'An actionable control with Argo variants, sizes, and an optional activation handler.',
     buttonProps,
     {
@@ -55,7 +59,7 @@ export const actionsParts = {
           'Exposes a button, reads its label, and reports the disabled state.',
       },
       appearance:
-        '`variant` selects an Argo treatment that adapts to light and dark appearance. This part has no arbitrary `color` or Image prop.',
+        '`variant` selects an Argo treatment that adapts to light and dark appearance. This kit component has no arbitrary `color` or Image prop.',
     },
   ),
 };

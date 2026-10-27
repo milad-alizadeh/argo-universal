@@ -26,7 +26,7 @@ export const labelProps = z.object({
     .describe(
       'An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text.',
     ),
-  text: z.string().describe('The text displayed by the part.'),
+  text: z.string().describe('The text displayed by the kit component.'),
   tone: semanticTone,
   accessibilityLabel: z
     .string()
@@ -35,7 +35,7 @@ export const labelProps = z.object({
 });
 
 export const pillProps = z.object({
-  text: z.string().describe('The text displayed by the part.'),
+  text: z.string().describe('The text displayed by the kit component.'),
   tone: semanticTone,
   color: z
     .string()

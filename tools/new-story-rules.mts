@@ -82,17 +82,17 @@ export function branchesIn(sources: string[]): Branches {
   return branches;
 }
 
-// The kit part a props file names with `KitProps<'Part'>`, whose schema declares the props.
-export const kitPartIn = (sources: string[]): string | undefined =>
+// The kit component a props file names with `KitProps<'Name'>`, whose schema declares the props.
+export const kitComponentIn = (sources: string[]): string | undefined =>
   sources
     .map((source) => /KitProps<'(\w+)'>/.exec(source)?.[1])
-    .find((part) => part !== undefined);
+    .find((component) => component !== undefined);
 
 export interface StoryPlan {
   title: string;
   component: string;
   importPath: string;
-  kitPart: string | undefined;
+  kitComponent: string | undefined;
   props: Prop[];
   branches: Branches;
 }
@@ -200,8 +200,8 @@ function control(prop: Prop): string {
 }
 
 function argTypesSource(plan: StoryPlan): string {
-  if (plan.kitPart !== undefined)
-    return `  argTypes: kitArgTypes(${quote(plan.kitPart)}),\n`;
+  if (plan.kitComponent !== undefined)
+    return `  argTypes: kitArgTypes(${quote(plan.kitComponent)}),\n`;
 
   const lines = plan.props.map((prop) => `    ${prop.name}: ${control(prop)},`);
 
@@ -214,7 +214,7 @@ const handlerImport = (plan: StoryPlan): string =>
     : '';
 
 const kitImport = (plan: StoryPlan): string =>
-  plan.kitPart === undefined
+  plan.kitComponent === undefined
     ? ''
     : "import { kitArgTypes } from '#kit/kit-arg-types';\n";
 

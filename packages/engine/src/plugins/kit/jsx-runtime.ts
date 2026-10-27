@@ -1,4 +1,4 @@
-import { wireParts } from '@repo/contracts/plugins/kit';
+import { kitComponents } from '@repo/contracts/plugins/kit';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
 import { expandList } from './list-props';
@@ -80,19 +80,22 @@ function prepare(
 }
 
 // A kit component that carries members, as `List` carries `List.Section`, with the wire type it stands for.
-export type KitComponent = React.ComponentType<ElementProps>;
+export type KitElementType = React.ComponentType<ElementProps>;
 
-const kitParts = new WeakMap<KitComponent, string>();
+const kitWireTypes = new WeakMap<KitElementType, string>();
 
-export function registerKitPart(component: KitComponent, part: string): void {
-  kitParts.set(component, part);
+export function registerKitComponent(
+  element: KitElementType,
+  wireType: string,
+): void {
+  kitWireTypes.set(element, wireType);
 }
 
 type ElementType = React.ComponentType<ElementProps> | string;
 
 // A kit component is its wire type, so its author key reaches the node; any other component renders itself.
 const wireType = (type: ElementType): string | undefined =>
-  typeof type === 'string' ? type : kitParts.get(type);
+  typeof type === 'string' ? type : kitWireTypes.get(type);
 
 function create(
   type: ElementType,
@@ -110,9 +113,9 @@ export const jsx = create;
 
 export const jsxs = create;
 
-// Empty named Slots remain slots; other empty arrays can be ordinary JSON data. The names are the ones Contracts gives its parts.
+// Empty named Slots remain slots; other empty arrays can be ordinary JSON data. The names are the ones Contracts gives its kit components.
 const slotNames = new Set(
-  Object.values(wireParts).flatMap(({ slots }) => Object.keys(slots)),
+  Object.values(kitComponents).flatMap(({ slots }) => Object.keys(slots)),
 );
 
 const hasElementMeaning = (name: string, length: number): boolean =>

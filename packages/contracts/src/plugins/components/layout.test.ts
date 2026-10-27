@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { pluginPartSchemas } from '../plugin-part-schemas';
+import { kitComponentSchemas } from '../kit-component-schemas';
 
-const grid = pluginPartSchemas.Grid.props;
+const grid = kitComponentSchemas.Grid.props;
 
-const surface = pluginPartSchemas.Surface.props;
+const surface = kitComponentSchemas.Surface.props;
 
-const card = pluginPartSchemas.Card;
+const card = kitComponentSchemas.Card;
 
 describe('layout prop boundary', () => {
   it.each([0, -1, 1.5, { compact: 1, wide: 0 }, { compact: 1 }])(

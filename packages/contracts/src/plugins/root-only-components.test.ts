@@ -19,7 +19,7 @@ const host = (type: string, props: WireNode['props']): WireNode => ({
   slots: {},
 });
 
-describe('a root-only part', () => {
+describe('a root-only kit component', () => {
   it('stays when it is the tree root', () => {
     expect(prepareWireTree(page)).toEqual(page);
   });
@@ -61,7 +61,7 @@ const listDetail = (slots: WireNode['slots']): WireNode => ({
   slots,
 });
 
-describe("a root-only part in a root part's slot", () => {
+describe("a root-only kit component in a root kit component's slot", () => {
   it('stays where the root names it, as the detail Screen', () => {
     const root = listDetail({ detail: [page] });
 

@@ -1,5 +1,5 @@
 import { svgProps } from '../core-kit-props';
-import { part } from '../part';
+import { defineKitComponent } from '../define-kit-component';
 import { visualDataProps } from '../visual-props';
 
 const drawings = [
@@ -13,8 +13,8 @@ const drawings = [
 
 const svgReader = 'Reads the label as an image or button, based on `onPress`.';
 
-export const visualParts = {
-  Svg: part(
+export const visualComponents = {
+  Svg: defineKitComponent(
     'Sanitized SVG artwork. Use Canvas for interactive drawing.',
     svgProps,
     {
@@ -30,22 +30,26 @@ export const visualParts = {
         '`tone` sets semantic color; Server sanitizes markup and rejects unsupported SVG.',
     },
   ),
-  Chart: part('A bounded data visualization.', visualDataProps.Chart, {
-    group: 'visual',
-    label:
-      'The required label names the chart; a hidden table lists every series. A series may not repeat an x value.',
-    accessibility: {
-      keyboard:
-        'Not focusable as an image; `onPress` enables button activation.',
-      voiceOver:
-        'Reads the label as an image or button, then a table of each series and its points.',
-      talkBack:
-        'Reads the label as an image or button, then a table of each series and its points.',
+  Chart: defineKitComponent(
+    'A bounded data visualization.',
+    visualDataProps.Chart,
+    {
+      group: 'visual',
+      label:
+        'The required label names the chart; a hidden table lists every series. A series may not repeat an x value.',
+      accessibility: {
+        keyboard:
+          'Not focusable as an image; `onPress` enables button activation.',
+        voiceOver:
+          'Reads the label as an image or button, then a table of each series and its points.',
+        talkBack:
+          'Reads the label as an image or button, then a table of each series and its points.',
+      },
+      appearance:
+        'Each series takes one tone token. Axis and value labels are system Text over the chart. No automatic motion.',
     },
-    appearance:
-      'Each series takes one tone token. Axis and value labels are system Text over the chart. No automatic motion.',
-  }),
-  Canvas: part(
+  ),
+  Canvas: defineKitComponent(
     'A scene of keyed shapes laid out by the Plugin worker.',
     visualDataProps.Canvas,
     {
@@ -65,32 +69,32 @@ export const visualParts = {
         'Skia shapes use tone tokens and optional intensity shades. System Text overlays are culled when they do not fit. The App owns pan, zoom, selection outlines and pointer tooltips. No automatic motion.',
     },
   ),
-  'Canvas.Rect': part(
+  'Canvas.Rect': defineKitComponent(
     'A keyed rectangle inside Canvas.',
     visualDataProps['Canvas.Rect'],
     { group: 'visual' },
   ),
-  'Canvas.Circle': part(
+  'Canvas.Circle': defineKitComponent(
     'A keyed circle inside Canvas.',
     visualDataProps['Canvas.Circle'],
     { group: 'visual' },
   ),
-  'Canvas.Line': part(
+  'Canvas.Line': defineKitComponent(
     'A keyed line inside Canvas.',
     visualDataProps['Canvas.Line'],
     { group: 'visual' },
   ),
-  'Canvas.Path': part(
+  'Canvas.Path': defineKitComponent(
     'A keyed SVG path inside Canvas, under Svg’s path rules.',
     visualDataProps['Canvas.Path'],
     { group: 'visual' },
   ),
-  'Canvas.Text': part(
+  'Canvas.Text': defineKitComponent(
     'System Text over Canvas; hidden when it does not fit.',
     visualDataProps['Canvas.Text'],
     { group: 'visual' },
   ),
-  'Canvas.Group': part(
+  'Canvas.Group': defineKitComponent(
     'A translated, scaled and rotated group inside Canvas. Rotation is in degrees.',
     visualDataProps['Canvas.Group'],
     { group: 'visual', children: drawings },

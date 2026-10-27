@@ -29,7 +29,7 @@ export function handler<const Name extends string>(
 
 export const onPress = handler('onPress');
 
-// Events go only on a part's top-level props, so a press inside prop data runs a Built-in Action.
+// Events go only on a kit component's top-level props, so a press inside prop data runs a Built-in Action.
 export const builtInPress = Action.describe('Built-in Action run on press.');
 
 // The App echoes the payload into `prop` at once, so the payload schema is that prop's schema.

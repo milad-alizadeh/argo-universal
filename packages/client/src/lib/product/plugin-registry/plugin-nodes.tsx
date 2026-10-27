@@ -1,4 +1,7 @@
-import { wirePart, type WirePartDefinition } from '@repo/contracts/plugins/kit';
+import {
+  kitComponent,
+  type KitComponentDefinition,
+} from '@repo/contracts/plugins/kit';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   childNodeKey,
@@ -12,35 +15,33 @@ const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
 
 type RenderNodeProps = { node: WireNode; context: Rendering.RenderContext };
 
-// The Server prepared the tree (prepare-tree.ts): every node is a current part with valid props, and anything it could not draw is already its "Update Argo" note.
+// The Server prepared the tree (prepare-tree.ts): every node is a current kit component with valid props, and anything it could not draw is already its "Update Argo" note.
 export function RenderNode({
   node,
   context,
 }: RenderNodeProps): React.JSX.Element | null {
-  const part = wirePart(node.type);
+  const definition = kitComponent(node.type);
   const component = registry.get(node.type);
 
-  if (!part || !component) return null;
+  if (!definition || !component) return null;
 
-  const input = {
-    node,
-    part,
-    context,
-    source: node.props,
-  };
+  const input = { node, definition, context, source: node.props };
 
-  return renderPart(component, input, renderedSlots(node, part, context));
+  const slots = renderedSlots(node, definition, context);
+
+  return renderComponent(component, input, slots);
 }
 
-function renderPart(
+function renderComponent(
   component: ElementType,
   input: Rendering.ControlInput,
   slots: Rendering.PluginProps,
 ): React.JSX.Element {
-  const { node, part, context } = input;
+  const { node, definition, context } = input;
   const props = context.controls(input);
 
-  if (part.children) props.children = renderedChildren(node.children, context);
+  if (definition.children)
+    props.children = renderedChildren(node.children, context);
 
   return createElement(component, {
     ...props,
@@ -66,10 +67,12 @@ function renderedChildren(
 
 function renderedSlots(
   node: WireNode,
-  part: WirePartDefinition,
+  definition: KitComponentDefinition,
   context: Rendering.RenderContext,
 ): Record<string, React.JSX.Element> {
-  const slots = Object.keys(part.slots).filter((name) => node.slots[name]);
+  const slots = Object.keys(definition.slots).filter(
+    (name) => node.slots[name],
+  );
 
   return Object.fromEntries(
     slots.map((name) => {

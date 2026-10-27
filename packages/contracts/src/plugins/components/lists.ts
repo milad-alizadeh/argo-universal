@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { actionSlot, defineKitComponent } from '../define-kit-component';
+import { echoes } from '../kit-component-props';
 import { acknowledgedEvent } from '../kit-event-props';
 import { listExpansion } from '../list-expansion';
 import {
@@ -7,9 +9,7 @@ import {
   listSectionProps,
   rowPress,
 } from '../list-kit-props';
-import { listMediaParts } from '../list-media-parts';
-import { actionSlot, part } from '../part';
-import { echoes } from '../plugin-part-props';
+import { listMediaComponents } from '../list-media-components';
 import {
   tableCellProps,
   tableProps,
@@ -19,8 +19,8 @@ import {
 
 const searchThrottleMs = 250;
 
-export const listsParts = {
-  List: part(
+export const listsComponents = {
+  List: defineKitComponent(
     'A content list with rows, adaptive media grids or horizontal shelves.',
     contentListProps,
     {
@@ -45,7 +45,7 @@ export const listsParts = {
       expansion: listExpansion,
     },
   ),
-  'List.Section': part(
+  'List.Section': defineKitComponent(
     'A titled List section with optional subtitle, footer and header Actions.',
     listSectionProps,
     {
@@ -61,7 +61,7 @@ export const listsParts = {
       },
     },
   ),
-  ListItem: part(
+  ListItem: defineKitComponent(
     'A slotted row or media tile, arranged by its List, with selection, a corner badge and context Actions. Child ListItems nest under it and fold on desktop.',
     listItemProps,
     {
@@ -70,7 +70,7 @@ export const listsParts = {
       children: ['ListItem'] as const,
       slots: {
         actions: actionSlot,
-        media: listMediaParts,
+        media: listMediaComponents,
         leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
         trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],
         meta: ['Label', 'Pill'],
@@ -80,7 +80,7 @@ export const listsParts = {
         'The title and optional value supply the accessible name; accessibilityLabel overrides it.',
     },
   ),
-  Table: part(
+  Table: defineKitComponent(
     'Rows of data in columns on regular widths; a list of rows, or a sideways-scrolling grid, on compact widths.',
     tableProps,
     {
@@ -106,7 +106,7 @@ export const listsParts = {
       expansion: listExpansion,
     },
   ),
-  'Table.Row': part(
+  'Table.Row': defineKitComponent(
     'One Table row: a cell per column and optional row Actions.',
     tableRowProps,
     {
@@ -119,7 +119,7 @@ export const listsParts = {
         'accessibilityLabel names the row; otherwise the cell texts in column order.',
     },
   ),
-  'Table.Cell': part(
+  'Table.Cell': defineKitComponent(
     "One cell; text alone, or a Pill, Label, StatusDot or Text drawn in the text's place.",
     tableCellProps,
     {

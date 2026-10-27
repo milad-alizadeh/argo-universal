@@ -1,4 +1,5 @@
 import { stackProps } from '../core-kit-props';
+import { actionSlot, defineKitComponent } from '../define-kit-component';
 import {
   cardProps,
   collapsibleCard,
@@ -8,39 +9,46 @@ import {
   surfaceProps,
 } from '../layout-kit-props';
 import { collapsibleProps, openChange } from '../overlay-kit-props';
-import { actionSlot, part } from '../part';
 
 const layoutReader = (reader: string): string =>
   `Adds no accessibility element; ${reader} traverses descendants in source order.`;
 
-export const layoutParts = {
-  Spacer: part(
+export const layoutComponents = {
+  Spacer: defineKitComponent(
     'Flexible space along its parent Stack direction.',
     spacerProps,
     {
       group: 'layout',
     },
   ),
-  Grid: part('Static equal-column grid; use List for long grids.', gridProps, {
-    group: 'layout',
-    accessibility: {
-      keyboard:
-        'Grid is a static layout; keyboard focus moves through interactive children in platform order.',
-      voiceOver:
-        'VoiceOver traverses the Grid children in source order; the layout adds no grid navigation semantics.',
-      talkBack:
-        'TalkBack traverses the Grid children in source order; the layout adds no grid navigation semantics.',
+  Grid: defineKitComponent(
+    'Static equal-column grid; use List for long grids.',
+    gridProps,
+    {
+      group: 'layout',
+      accessibility: {
+        keyboard:
+          'Grid is a static layout; keyboard focus moves through interactive children in platform order.',
+        voiceOver:
+          'VoiceOver traverses the Grid children in source order; the layout adds no grid navigation semantics.',
+        talkBack:
+          'TalkBack traverses the Grid children in source order; the layout adds no grid navigation semantics.',
+      },
+      children: true,
     },
-    children: true,
-  }),
-  Surface: part('A named Surface with fill, radius and depth.', surfaceProps, {
-    group: 'layout',
-    children: true,
-    slots: { actions: actionSlot },
-    appearance:
-      'background is flat content; card is flat card; muted is recessed tray; glass is sidebar material, with a plain fill below iOS 26 and on Android.',
-  }),
-  Card: part(
+  ),
+  Surface: defineKitComponent(
+    'A named Surface with fill, radius and depth.',
+    surfaceProps,
+    {
+      group: 'layout',
+      children: true,
+      slots: { actions: actionSlot },
+      appearance:
+        'background is flat content; card is flat card; muted is recessed tray; glass is sidebar material, with a plain fill below iOS 26 and on Android.',
+    },
+  ),
+  Card: defineKitComponent(
     'A card on the card or glass Surface: media, an icon, title and subtitle, one action, a body and an optional footer; collapsible, its title toggles the body.',
     cardProps,
     {
@@ -65,7 +73,7 @@ export const layoutParts = {
         'Desktop, web and iOS draw the card Surface; Android draws the stock Material 3 filled Card. media runs full bleed across the top; one Button or IconButton sits top right on the title line. A collapsible Card puts its chevron after the title and animates the body open and shut; footer sits under the body inside the same fold.',
     },
   ),
-  ScrollView: part(
+  ScrollView: defineKitComponent(
     'A scroll container owning its scroll fade.',
     scrollViewProps,
     {
@@ -73,7 +81,7 @@ export const layoutParts = {
       children: true,
     },
   ),
-  Stack: part(
+  Stack: defineKitComponent(
     'A row or column layout with token spacing and cross-axis alignment.',
     stackProps,
     {
@@ -81,7 +89,7 @@ export const layoutParts = {
       children: true,
       accessibility: {
         label:
-          'The layout adds no label; child parts provide their own accessible names.',
+          'The layout adds no label; child kit components provide their own accessible names.',
         keyboard: 'The layout is not focusable and adds no keyboard shortcut.',
         voiceOver: layoutReader('VoiceOver'),
         talkBack: layoutReader('TalkBack'),
@@ -90,7 +98,7 @@ export const layoutParts = {
         'Layout uses spacing tokens only; it does not set color or draw Image content.',
     },
   ),
-  Collapsible: part(
+  Collapsible: defineKitComponent(
     'A disclosure container that shows or hides its content.',
     collapsibleProps,
     {

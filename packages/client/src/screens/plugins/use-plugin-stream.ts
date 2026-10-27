@@ -93,7 +93,7 @@ type Dispatch = (input: PluginDispatchInput) => Promise<void>;
 
 // Binds a drawn view to its Plugin: its events dispatch to that view, and its `navigate` Actions open that Plugin's pages.
 export function usePluginBinding(): (drawn: ContributedView) => PluginBinding {
-  // The Plugin tree's dispatcher reports a failure once, or the awaiting part does.
+  // The Plugin tree's dispatcher reports a failure once, or the awaiting kit component does.
   const dispatch = useMutation(useTRPC().plugins.dispatch.mutationOptions());
   const opener = usePluginOpener();
 

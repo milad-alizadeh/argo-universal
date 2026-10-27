@@ -1,4 +1,4 @@
-import { wireParts } from '@repo/contracts/plugins/kit';
+import { kitComponents } from '@repo/contracts/plugins/kit';
 import type {
   MediaAsset,
   MediaUrl,
@@ -7,8 +7,10 @@ import chime from '@repo/mocks/media/chime.mp3';
 import poster from '@repo/mocks/media/poster.jpeg';
 import { storyClip } from './story-clip.mocks';
 
-const formats = (part: 'Video' | 'Audio'): ReadonlySet<MediaAsset['format']> =>
-  new Set(wireParts[part].props.shape.source.shape.format.options);
+const formats = (
+  component: 'Video' | 'Audio',
+): ReadonlySet<MediaAsset['format']> =>
+  new Set(kitComponents[component].props.shape.source.shape.format.options);
 
 const videoFormats = formats('Video');
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PluginAssetRef } from './assets';
-import { stringLabel } from './plugin-part-props';
+import { stringLabel } from './kit-component-props';
 
 export const imageAsset = PluginAssetRef.extend({
   format: z.enum(['png', 'jpeg', 'gif', 'webp', 'avif']),

@@ -98,7 +98,7 @@ describe('Plugin wire preparation', () => {
     expect(prepareWireTree(root).slots).toEqual({ empty: [stack, label] });
   });
 
-  it('refuses undeclared slots and parts outside their closed accepted set', () => {
+  it('refuses undeclared slots and kit components outside their closed accepted set', () => {
     const root: WireNode = {
       type: 'List',
       key: 'list',

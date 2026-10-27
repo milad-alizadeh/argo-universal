@@ -2,14 +2,14 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pluginPartSchemas } from '@repo/contracts/plugins/kit-prop-descriptors';
+import { kitComponentSchemas } from '@repo/contracts/plugins/kit-prop-descriptors';
 import { pairingProblems, type SchemaEntry } from './kit-pairing-rules.mts';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 const primitives = 'packages/kit/src/primitives/';
 
-const schemas: SchemaEntry[] = Object.entries(pluginPartSchemas).map(
+const schemas: SchemaEntry[] = Object.entries(kitComponentSchemas).map(
   ([name, { group }]): SchemaEntry => ({ name, group }),
 );
 

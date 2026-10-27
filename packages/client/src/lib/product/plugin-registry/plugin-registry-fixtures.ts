@@ -10,7 +10,7 @@ import type { PluginTreeProps } from './plugin-registry';
 // A story supplies the event spy; a fixture is the wire tree a Plugin sent.
 type PluginTreeFixture = Omit<PluginTreeProps, 'onEvent'>;
 
-// Each control fixture is one node in the shared mocks, keyed by the part it draws.
+// Each control fixture is one node in the shared mocks, keyed by the kit component it draws.
 function controlTree(key: string): WireNode {
   const fixture = controlFixtures.find((control) => control.key === key);
 
@@ -45,7 +45,7 @@ const svgRoot = (): WireNode => ({
   slots: {},
 });
 
-// A row whose trailing slot holds nodes of its own, which the tree draws into the part's lane.
+// A row whose trailing slot holds nodes of its own, which the tree draws into the kit component's lane.
 export const slottedRowTree = { root: slottedRow } satisfies PluginTreeFixture;
 
 export const svgTree = { root: svgRoot() } satisfies PluginTreeFixture;

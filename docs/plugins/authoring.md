@@ -65,7 +65,7 @@ Source inspection reports literal Hook and Slot names. Computed registrations ne
 For literal visual props in JSX, validation uses the Server checks and reports the node and refusal reason.
 These checks cover `Svg` markup, `Chart` series, and `Canvas` scenes from amended ADR-0028.
 `CodeMap` is unsupported; use `Canvas`. Computed visual data needs a mount test.
-Chart and Canvas rendering remains part of the visual-parts work (#959).
+Chart and Canvas rendering remains part of the visual kit components work (#959).
 
 ## Plugin tests
 
@@ -308,7 +308,7 @@ Plugin removal also deletes its Accounts and dependent records when discovery su
 
 `argo.accounts.get(host)` returns the current Project’s Account or `null`.
 One available Account becomes the Project’s choice automatically. Multiple Accounts require an explicit choice.
-Page effects, Part event handlers, and Hooks carry their Project context across awaited calls.
+Page effects, Component event handlers, and Hooks carry their Project context across awaited calls.
 A call without a Project returns no Account.
 
 Use `argo.fetch(url, { account: host })` to borrow the Account.
@@ -318,7 +318,7 @@ The URL must name the Account’s exact host and port. A redirect away from that
 Argo removes any borrower header with the same name first. Network-reserved headers cannot provide authentication.
 First-party Plugins receive unset Grants silently until consent screens exist. A refused Grant stays refused across Server restarts.
 
-OAuth starts from a page effect or Part event handler on the Server Device.
+OAuth starts from a page effect or Component event handler on the Server Device.
 The Server stamps `context.serverDevice` from the Connection and independently refuses OAuth calls from other Devices.
 The App cannot set this flag through its reported platform.
 

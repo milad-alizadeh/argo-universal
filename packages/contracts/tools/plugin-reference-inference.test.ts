@@ -1,33 +1,34 @@
 import { describe, expect, it } from 'vitest';
-import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
+import { kitComponentSchemas } from '../src/plugins/kit-component-schemas';
 import { resolvedReference } from './plugin-reference-inference';
 
-describe('part accessibility reference', () => {
+describe('kit component accessibility reference', () => {
   it.each([
     {
       name: 'Link',
-      accessibility: resolvedReference(pluginPartSchemas.Link).accessibility,
+      accessibility: resolvedReference(kitComponentSchemas.Link).accessibility,
       keyboard: 'focus reaches the Link',
       voiceOver: 'exposes a link',
       talkBack: 'exposes a link',
     },
     {
       name: 'Dialog',
-      accessibility: resolvedReference(pluginPartSchemas.Dialog).accessibility,
+      accessibility: resolvedReference(kitComponentSchemas.Dialog)
+        .accessibility,
       keyboard: 'Focus remains within the Dialog',
       voiceOver: 'exposes a dialog',
       talkBack: 'exposes a dialog',
     },
     {
       name: 'Grid',
-      accessibility: resolvedReference(pluginPartSchemas.Grid).accessibility,
+      accessibility: resolvedReference(kitComponentSchemas.Grid).accessibility,
       keyboard: 'static layout',
       voiceOver: 'no grid navigation semantics',
       talkBack: 'no grid navigation semantics',
     },
     {
       name: 'Markdown',
-      accessibility: resolvedReference(pluginPartSchemas.Markdown)
+      accessibility: resolvedReference(kitComponentSchemas.Markdown)
         .accessibility,
       keyboard: 'adds no focus stop',
       voiceOver: 'exposes links as separate link controls',

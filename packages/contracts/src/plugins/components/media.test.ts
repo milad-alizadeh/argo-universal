@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { pluginPartSchemas } from '../plugin-part-schemas';
+import { kitComponentSchemas } from '../kit-component-schemas';
 
-const video = pluginPartSchemas.Video.props;
+const video = kitComponentSchemas.Video.props;
 
-const audio = pluginPartSchemas.Audio.props;
+const audio = kitComponentSchemas.Audio.props;
 
 const hash = 'a'.repeat(64);
 
@@ -52,13 +52,13 @@ const picture = { pluginId: 'hello', hash, format: 'jpeg' };
 
 it('accepts Image and Avatar assets resolved by the Server', () => {
   expect(
-    pluginPartSchemas.Image.props.safeParse({
+    kitComponentSchemas.Image.props.safeParse({
       source: picture,
       accessibilityLabel: 'Preview',
     }).success,
   ).toBe(true);
   expect(
-    pluginPartSchemas.Avatar.props.safeParse({
+    kitComponentSchemas.Avatar.props.safeParse({
       src: picture,
       name: 'Sam Rivera',
       size: 'xl',
@@ -72,13 +72,13 @@ it.each([
   { uri: 'https://example.com/private.png' },
 ])('refuses an unresolved image or avatar source', (source) => {
   expect(
-    pluginPartSchemas.Image.props.safeParse({
+    kitComponentSchemas.Image.props.safeParse({
       source,
       accessibilityLabel: 'Preview',
     }).success,
   ).toBe(false);
   expect(
-    pluginPartSchemas.Avatar.props.safeParse({
+    kitComponentSchemas.Avatar.props.safeParse({
       src: source,
       accessibilityLabel: 'Person',
     }).success,

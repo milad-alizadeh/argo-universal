@@ -52,12 +52,12 @@ function SlotPreview({ root, onEvent }: PluginTreeProps): ReactElement {
 }
 
 /*
- * One story per drawing path RenderNode takes: a part's slots, its children, and each entry it
+ * One story per drawing path RenderNode takes: a kit component's slots, its children, and each entry it
  * looks up in the registry. A node the App cannot draw has no story: the Server sends
  * "Update Argo to see this" in its place, which plugin-compatibility.test.stories.tsx asserts.
  */
 
-// A part's named slots hold nodes of their own; pressing the Button patches the node beside it.
+// A kit component's named slots hold nodes of their own; pressing the Button patches the node beside it.
 export const Slots: Story = {
   args: slottedRowTree,
   render: (args) => <SlotPreview {...args} />,

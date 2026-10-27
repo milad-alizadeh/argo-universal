@@ -1,4 +1,4 @@
-/* Generated from Contracts parts and prop descriptions by `pnpm docs:build`. Do not edit by hand. */
+/* Generated from Contracts kit components and prop descriptions by `pnpm docs:build`. Do not edit by hand. */
 import type { ComponentType, ReactElement } from 'react';
 import type { PluginComponents, PluginProps } from './index';
 
@@ -81,9 +81,9 @@ type SplitButtonHints = {
   size: unknown;
   /** Fill the row always, or only when narrow. */
   fullWidth: unknown;
-  /** value for this part. */
+  /** value for this kit component. */
   value: unknown;
-  /** options for this part. */
+  /** options for this kit component. */
   options: unknown;
   /** Action or Plugin event invoked by onValueChange. */
   onValueChange: unknown;
@@ -231,7 +231,7 @@ type TextHints = {
 type LabelHints = {
   /** An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text. */
   icon: unknown;
-  /** The text displayed by the part. */
+  /** The text displayed by the kit component. */
   text: unknown;
   /** The Argo semantic tone. */
   tone: unknown;
@@ -677,7 +677,7 @@ type ListDetailHints = {
 };
 
 type DetailHints = {
-  /** The content drawn by the kit Markdown part. */
+  /** The content drawn by the Markdown kit component. */
   markdown: unknown;
   /** Show the content loading state; the Metadata stays. */
   isLoading: unknown;
@@ -695,7 +695,7 @@ type MetadataLabelHints = {
   accessibilityLabel: unknown;
   /** The field value. */
   text: unknown;
-  /** icon for this part. */
+  /** icon for this kit component. */
   icon: unknown;
 };
 
@@ -724,7 +724,7 @@ type MetadataStatusDotHints = {
   accessibilityLabel: unknown;
   /** The status text. */
   text: unknown;
-  /** tone for this part. */
+  /** tone for this kit component. */
   tone: unknown;
 };
 
@@ -751,7 +751,7 @@ type ProgressBarHints = {
 };
 
 type PillHints = {
-  /** The text displayed by the part. */
+  /** The text displayed by the kit component. */
   text: unknown;
   /** The Argo semantic tone. */
   tone: unknown;
@@ -782,174 +782,174 @@ type SvgHints = {
 };
 
 type ChartHints = {
-  /** kind for this part. */
+  /** kind for this kit component. */
   kind: unknown;
-  /** label for this part. */
+  /** label for this kit component. */
   label: unknown;
-  /** stacked for this part. */
+  /** stacked for this kit component. */
   stacked: unknown;
   /** Gridlines behind the plot at each axis tick. */
   grid: unknown;
   /** The action run when the artwork is pressed. */
   onPress: unknown;
-  /** series for this part. */
+  /** series for this kit component. */
   series: unknown;
 };
 
 type CanvasHints = {
-  /** label for this part. */
+  /** label for this kit component. */
   label: unknown;
-  /** width for this part. */
+  /** width for this kit component. */
   width: unknown;
-  /** height for this part. */
+  /** height for this kit component. */
   height: unknown;
-  /** aspect Ratio for this part. */
+  /** aspect Ratio for this kit component. */
   aspectRatio: unknown;
-  /** camera for this part. */
+  /** camera for this kit component. */
   camera: unknown;
-  /** selected Key for this part. */
+  /** selected Key for this kit component. */
   selectedKey: unknown;
 };
 
 type CanvasRectHints = {
-  /** tone for this part. */
+  /** tone for this kit component. */
   tone: unknown;
-  /** intensity for this part. */
+  /** intensity for this kit component. */
   intensity: unknown;
-  /** fill for this part. */
+  /** fill for this kit component. */
   fill: unknown;
-  /** stroke for this part. */
+  /** stroke for this kit component. */
   stroke: unknown;
-  /** stroke Width for this part. */
+  /** stroke Width for this kit component. */
   strokeWidth: unknown;
-  /** label for this part. */
+  /** label for this kit component. */
   label: unknown;
   /** The action run when the artwork is pressed. */
   onPress: unknown;
-  /** x for this part. */
+  /** x for this kit component. */
   x: unknown;
-  /** y for this part. */
+  /** y for this kit component. */
   y: unknown;
-  /** width for this part. */
+  /** width for this kit component. */
   width: unknown;
-  /** height for this part. */
+  /** height for this kit component. */
   height: unknown;
-  /** rx for this part. */
+  /** rx for this kit component. */
   rx: unknown;
-  /** ry for this part. */
+  /** ry for this kit component. */
   ry: unknown;
 };
 
 type CanvasCircleHints = {
-  /** tone for this part. */
+  /** tone for this kit component. */
   tone: unknown;
-  /** intensity for this part. */
+  /** intensity for this kit component. */
   intensity: unknown;
-  /** fill for this part. */
+  /** fill for this kit component. */
   fill: unknown;
-  /** stroke for this part. */
+  /** stroke for this kit component. */
   stroke: unknown;
-  /** stroke Width for this part. */
+  /** stroke Width for this kit component. */
   strokeWidth: unknown;
-  /** label for this part. */
+  /** label for this kit component. */
   label: unknown;
   /** The action run when the artwork is pressed. */
   onPress: unknown;
-  /** cx for this part. */
+  /** cx for this kit component. */
   cx: unknown;
-  /** cy for this part. */
+  /** cy for this kit component. */
   cy: unknown;
-  /** r for this part. */
+  /** r for this kit component. */
   r: unknown;
 };
 
 type CanvasLineHints = {
-  /** tone for this part. */
+  /** tone for this kit component. */
   tone: unknown;
-  /** intensity for this part. */
+  /** intensity for this kit component. */
   intensity: unknown;
-  /** fill for this part. */
+  /** fill for this kit component. */
   fill: unknown;
-  /** stroke for this part. */
+  /** stroke for this kit component. */
   stroke: unknown;
-  /** stroke Width for this part. */
+  /** stroke Width for this kit component. */
   strokeWidth: unknown;
-  /** label for this part. */
+  /** label for this kit component. */
   label: unknown;
   /** The action run when the artwork is pressed. */
   onPress: unknown;
-  /** x1 for this part. */
+  /** x1 for this kit component. */
   x1: unknown;
-  /** y1 for this part. */
+  /** y1 for this kit component. */
   y1: unknown;
-  /** x2 for this part. */
+  /** x2 for this kit component. */
   x2: unknown;
-  /** y2 for this part. */
+  /** y2 for this kit component. */
   y2: unknown;
 };
 
 type CanvasPathHints = {
-  /** tone for this part. */
+  /** tone for this kit component. */
   tone: unknown;
-  /** intensity for this part. */
+  /** intensity for this kit component. */
   intensity: unknown;
-  /** fill for this part. */
+  /** fill for this kit component. */
   fill: unknown;
-  /** stroke for this part. */
+  /** stroke for this kit component. */
   stroke: unknown;
-  /** stroke Width for this part. */
+  /** stroke Width for this kit component. */
   strokeWidth: unknown;
-  /** label for this part. */
+  /** label for this kit component. */
   label: unknown;
   /** The action run when the artwork is pressed. */
   onPress: unknown;
-  /** d for this part. */
+  /** d for this kit component. */
   d: unknown;
 };
 
 type CanvasTextHints = {
-  /** tone for this part. */
+  /** tone for this kit component. */
   tone: unknown;
-  /** intensity for this part. */
+  /** intensity for this kit component. */
   intensity: unknown;
-  /** fill for this part. */
+  /** fill for this kit component. */
   fill: unknown;
-  /** stroke for this part. */
+  /** stroke for this kit component. */
   stroke: unknown;
-  /** stroke Width for this part. */
+  /** stroke Width for this kit component. */
   strokeWidth: unknown;
-  /** label for this part. */
+  /** label for this kit component. */
   label: unknown;
   /** The action run when the artwork is pressed. */
   onPress: unknown;
-  /** x for this part. */
+  /** x for this kit component. */
   x: unknown;
-  /** y for this part. */
+  /** y for this kit component. */
   y: unknown;
-  /** text for this part. */
+  /** text for this kit component. */
   text: unknown;
 };
 
 type CanvasGroupHints = {
-  /** tone for this part. */
+  /** tone for this kit component. */
   tone: unknown;
-  /** intensity for this part. */
+  /** intensity for this kit component. */
   intensity: unknown;
-  /** fill for this part. */
+  /** fill for this kit component. */
   fill: unknown;
-  /** stroke for this part. */
+  /** stroke for this kit component. */
   stroke: unknown;
-  /** stroke Width for this part. */
+  /** stroke Width for this kit component. */
   strokeWidth: unknown;
-  /** label for this part. */
+  /** label for this kit component. */
   label: unknown;
   /** The action run when the artwork is pressed. */
   onPress: unknown;
-  /** translate for this part. */
+  /** translate for this kit component. */
   translate: unknown;
-  /** scale for this part. */
+  /** scale for this kit component. */
   scale: unknown;
-  /** rotate for this part. */
+  /** rotate for this kit component. */
   rotate: unknown;
 };
 

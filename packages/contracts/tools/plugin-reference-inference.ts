@@ -1,14 +1,17 @@
 import type { z } from 'zod';
-import { schemaProperties } from '../src/plugins/schema-properties';
 import type {
-  PartAccessibility,
-  WirePartDefinition,
-} from '../src/plugins/wire-part-definition';
-import { partKeyboardBehavior, partRole } from './plugin-reference-keyboard';
+  KitComponentAccessibility,
+  KitComponentDefinition,
+} from '../src/plugins/kit-component-definition';
+import { schemaProperties } from '../src/plugins/schema-properties';
+import {
+  componentKeyboardBehavior,
+  componentRole,
+} from './plugin-reference-keyboard';
 
-// The reference a page prints: what the part declares, and what is inferred from its schema where it declares nothing.
+// The reference a page prints: what the kit component declares, and what is inferred from its schema where it declares nothing.
 export interface ResolvedReference {
-  accessibility: PartAccessibility;
+  accessibility: KitComponentAccessibility;
   appearance: string;
 }
 
@@ -69,39 +72,45 @@ function defaultLabel(summary: string, container: boolean): string {
   const description = summary.endsWith('.') ? summary.slice(0, -1) : summary;
 
   return container
-    ? `${description}; the container adds no name, and child parts keep their own accessible names`
+    ? `${description}; the container adds no name, and child kit components keep their own accessible names`
     : `${description}; its visible content supplies its accessible name`;
 }
 
-function partAccessibility(input: AccessibilityInput): PartAccessibility {
+function componentAccessibility(
+  input: AccessibilityInput,
+): KitComponentAccessibility {
   const properties = schemaProperties(input.schema);
 
   const name = declaredName(properties, input.container);
-  const role = partRole(input.summary, properties);
+  const role = componentRole(input.summary, properties);
   const states = stateSummary(properties);
 
   return {
     label: input.label || defaultLabel(input.summary, input.container),
-    keyboard: partKeyboardBehavior(input),
+    keyboard: componentKeyboardBehavior(input),
     voiceOver: readerBehavior({ reader: 'VoiceOver', role, name, states }),
     talkBack: readerBehavior({ reader: 'TalkBack', role, name, states }),
   };
 }
 
-const inferredAccessibility = (part: WirePartDefinition): PartAccessibility =>
-  partAccessibility({
-    summary: part.reference.summary,
-    schema: part.props,
-    label: part.reference.label ?? '',
-    container: part.container,
+const inferredAccessibility = (
+  component: KitComponentDefinition,
+): KitComponentAccessibility =>
+  componentAccessibility({
+    summary: component.reference.summary,
+    schema: component.props,
+    label: component.reference.label ?? '',
+    container: component.container,
   });
 
-// The reference text the docs print: what the part declares, over what its schema implies.
-export function resolvedReference(part: WirePartDefinition): ResolvedReference {
-  const { appearance = defaultAppearance, accessibility } = part.reference;
+// The reference text the docs print: what the kit component declares, over what its schema implies.
+export function resolvedReference(
+  component: KitComponentDefinition,
+): ResolvedReference {
+  const { appearance = defaultAppearance, accessibility } = component.reference;
 
   return {
-    accessibility: { ...inferredAccessibility(part), ...accessibility },
+    accessibility: { ...inferredAccessibility(component), ...accessibility },
     appearance,
   };
 }

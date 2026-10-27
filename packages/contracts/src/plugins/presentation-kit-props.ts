@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { iconSymbol, iconSize } from '../kit-symbols/icon-schema';
 import { iconButtonDefaults, iconButtonSizes, tones } from '../kit-tokens';
+import { handler } from './kit-component-props';
 import { imageAsset } from './media-kit-props';
-import { handler } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
 
 export const statusMark = z.object({
