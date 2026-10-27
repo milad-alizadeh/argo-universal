@@ -87,7 +87,7 @@ async function assertOpened(
   const page = within(document.body);
 
   await waitFor(() =>
-    expect(page.getByRole('dialog', { name: 'Subagents' })).toBeVisible(),
+    expect(page.getByRole('dialog', { name: 'Agents' })).toBeVisible(),
   );
 }
 

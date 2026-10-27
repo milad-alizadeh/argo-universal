@@ -72,7 +72,7 @@ export function PhoneSubagentList(props: PhoneProps): JSX.Element {
       appearance="cards"
       onPhones={phonesGrouped}
       fit={false}
-      accessibilityLabel="Subagents"
+      accessibilityLabel="Agents"
     >
       <List.Section>{phoneRows(props)}</List.Section>
     </List>

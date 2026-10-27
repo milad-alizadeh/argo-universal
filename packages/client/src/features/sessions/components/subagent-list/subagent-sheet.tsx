@@ -76,10 +76,10 @@ export function SubagentSheet(props: SubagentSheetProps): React.JSX.Element {
     <Sheet
       open={open}
       onOpenChange={onOpenChange}
-      label="Subagents"
+      label="Agents"
       contentScrolls
     >
-      <Sheet.Screen name="subagents" title="Subagents">
+      <Sheet.Screen name="subagents" title="Agents">
         <SubagentListPage {...pages} />
       </Sheet.Screen>
     </Sheet>

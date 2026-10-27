@@ -15,14 +15,14 @@ import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { runningSession } from './session-detail-view.mocks';
 
-const subagentsName = 'Subagents';
+const subagentsName = 'Agents';
 
 const agentsOverview = 'Open Agents overview';
 
 const selected = ['aria-selected', 'true'] as const;
 
 const triggerName = (wide: boolean, count: number): string =>
-  wide ? agentsOverview : `Subagents: ${count}`;
+  wide ? agentsOverview : `Agents: ${count}`;
 
 const meta = {
   ...sessionDetailViewTestMeta,

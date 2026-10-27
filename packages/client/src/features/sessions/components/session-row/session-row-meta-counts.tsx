@@ -55,7 +55,7 @@ export function SubagentsCount(
 
   return (
     <View
-      accessibilityLabel={`Subagents: ${total}, ${running} running`}
+      accessibilityLabel={`Agents: ${total}, ${running} running`}
       className="relative shrink-0"
     >
       <Label icon="agent" text={String(total)} sidebar={sidebarRows} />

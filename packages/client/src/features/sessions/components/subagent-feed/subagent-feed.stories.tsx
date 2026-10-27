@@ -38,7 +38,7 @@ const meta = {
     },
     now: { description: 'Fixes the meta line’s clock, for stories and tests.' },
   },
-  args: { ...runningSubagentFeed, onBack: action('Back to Subagents') },
+  args: { ...runningSubagentFeed, onBack: action('Back to Agents') },
 } satisfies Meta<typeof SubagentFeed>;
 
 export default meta;

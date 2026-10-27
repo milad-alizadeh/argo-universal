@@ -62,7 +62,7 @@ export const PullRequestWithoutOtherMetadata: Story = {
       await expect(pullRequest).toBeVisible();
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(
-        canvas.queryByLabelText(/^Subagents:/),
+        canvas.queryByLabelText(/^Agents:/),
       ).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Issue #/)).not.toBeInTheDocument();
     }
@@ -93,7 +93,7 @@ export const PlanAndSubagents: Story = {
       await expect(canvas.getByTestId('session-plan-sweep')).toBeVisible();
       await expect(canvas.queryByText('2/5')).not.toBeInTheDocument();
       await expect(
-        canvas.getByLabelText('Subagents: 3, 2 running'),
+        canvas.getByLabelText('Agents: 3, 2 running'),
       ).toBeVisible();
       // The web's sidebar row draws the count alone; its own status dot speaks for the Session.
       await expect(
@@ -110,7 +110,7 @@ export const NoPlanOrSubagents: Story = {
       await page.viewport(width, 844);
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(
-        canvas.queryByLabelText(/^Subagents:/),
+        canvas.queryByLabelText(/^Agents:/),
       ).not.toBeInTheDocument();
       await expect(
         canvas.queryByTestId('session-issue-slot'),
@@ -132,7 +132,7 @@ export const FinishedSubagents: Story = {
       // A finished Plan leaves no bar.
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(
-        canvas.getByLabelText('Subagents: 3, 0 running'),
+        canvas.getByLabelText('Agents: 3, 0 running'),
       ).toBeVisible();
       await expect(
         canvas.queryByTestId('subagents-status'),

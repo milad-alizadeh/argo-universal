@@ -34,9 +34,6 @@ export async function expectResponsiveFooter({
       canvas.getByRole('button', { name: 'Shells: 1' }),
     ).toBeVisible();
     await expect(subagents).toBeVisible();
-    await expect(
-      canvas.queryByRole('button', { name: 'Agents: 2' }),
-    ).not.toBeInTheDocument();
     await expectPhoneFooter({ canvas, card });
   } else {
     await expect(

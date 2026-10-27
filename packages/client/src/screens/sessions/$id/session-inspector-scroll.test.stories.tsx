@@ -120,11 +120,11 @@ export const RemembersAgentFeedPosition: Story = {
     await waitFor(() => expect(feed.scrollTop).toBeCloseTo(10, 0));
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     await expect(
-      canvas.queryByRole('button', { name: 'Back to Subagents' }),
+      canvas.queryByRole('button', { name: 'Back to Agents' }),
     ).toBeNull();
     await userEvent.click(canvas.getByRole('tab', { name: /Agents/ }));
     await expect(
-      canvas.getByRole('button', { name: 'Back to Subagents' }),
+      canvas.getByRole('button', { name: 'Back to Agents' }),
     ).toBeVisible();
     await expect(canvas.getByTestId('feed-scroll').scrollTop).toBeCloseTo(
       10,

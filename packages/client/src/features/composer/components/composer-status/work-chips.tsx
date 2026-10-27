@@ -67,8 +67,8 @@ interface WorkChipsProps {
 }
 
 const subagentProps = {
-  label: 'Subagents',
-  singular: 'Subagent',
+  label: 'Agents',
+  singular: 'Agent',
   icon: 'agent',
 } as const;
 

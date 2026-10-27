@@ -85,7 +85,7 @@ export const RemembersShellDetailAcrossTabs: Story = {
 
 const backToShells = 'Back to Shells';
 
-const backToAgents = 'Back to Subagents';
+const backToAgents = 'Back to Agents';
 
 export const RemembersAgentDetailAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
