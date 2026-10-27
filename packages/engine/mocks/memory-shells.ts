@@ -149,18 +149,22 @@ export const openMemoryShells = (): MemoryShells => {
   const changes: ShellRecord[] = [];
   let created = 0;
 
-  const shells = createShells({
-    sessionId: 'session-1',
-    home: directory,
-    writer: startWriter(database, directory),
-    now: Date.now,
-    createId: () => `terminal-${++created}`,
-    changed: (record) => changes.push(record),
-    failed: (error) => {
-      throw error;
+  const shells = createShells(
+    {
+      sessionId: 'session-1',
+      runtimeDirectory: directory,
+      writer: startWriter(database, directory),
+      now: Date.now,
+      createId: () => `terminal-${++created}`,
     },
-    launch: memoryLauncher(commands),
-  });
+    {
+      changed: (record) => changes.push(record),
+      failed: (error) => {
+        throw error;
+      },
+      launch: memoryLauncher(commands),
+    },
+  );
 
   shells.configure(session, resourceLaunch);
 

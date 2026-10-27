@@ -1,7 +1,13 @@
 import type { ShellRecord } from '@repo/contracts';
 import type { AcpSessionDestination, AgentLaunch } from '../../agents';
 import type { SessionData } from '../session-data';
-import { ShellRuntime, type ShellRuntimeInput } from './shell-runtime';
+import {
+  ShellRuntime,
+  type ShellReports,
+  type ShellSession,
+} from './shell-runtime';
+
+export type { ShellReports, ShellSession };
 
 // What a Session calls on its Shells. The Agent's terminal requests arrive through `attach` and the launch through `configure`; everything else a Shell does (output capture, storage, exit) the module keeps to itself.
 export type Shells = {
@@ -15,8 +21,19 @@ export type Shells = {
   close: (status: 'lost' | 'stopped') => Promise<void>;
 };
 
-export const createShells = (input: ShellRuntimeInput): Shells =>
-  new ShellRuntime(input);
+// Takes the Session's machine input as it is; the Shells keep only the fields they use.
+export const createShells = (
+  session: ShellSession,
+  reports: ShellReports,
+): Shells =>
+  new ShellRuntime({
+    sessionId: session.sessionId,
+    runtimeDirectory: session.runtimeDirectory,
+    writer: session.writer,
+    now: session.now,
+    createId: session.createId,
+    ...reports,
+  });
 
 export const withShell = (
   shells: readonly ShellRecord[],

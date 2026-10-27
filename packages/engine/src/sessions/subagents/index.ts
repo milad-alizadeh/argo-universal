@@ -7,6 +7,7 @@ export {
   noSubagents,
   ownsSubagentUpdate,
   routeSubagentUpdate,
-  type SubagentHost,
+  subagentFeed,
+  type SubagentSession,
   type Subagents,
 } from './subagents';

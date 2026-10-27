@@ -10,7 +10,7 @@ import {
   noSubagents,
   routeSubagentUpdate,
   type SessionData,
-  type SubagentHost,
+  type SubagentSession,
   type Subagents,
 } from '../src/sessions';
 import {
@@ -74,19 +74,23 @@ const startWriter = (database: Database, directory: string): WriterActorRef => {
   return writer;
 };
 
-const hostOf = (
+const sessionOf = (
   database: Database,
   writer: WriterActorRef,
   parentFeed?: FeedActorRef,
-): SubagentHost => {
+): SubagentSession => {
   let created = 0;
 
   return {
-    parent: session,
-    database,
-    now: Date.now,
-    createId: () => `child-${++created}`,
-    writer,
+    parent: {
+      ...session,
+      input: {
+        database,
+        now: Date.now,
+        createId: () => `child-${++created}`,
+        writer,
+      },
+    },
     parentFeed,
     spawn: (input) =>
       createActor(feedMachine, { input, parent: writer }).start(),
@@ -100,7 +104,7 @@ export const openMemorySubagents = (): MemorySubagents => {
   const { database, directory, remove } = openTestDatabase();
   onTestFinished(remove);
   const writer = startWriter(database, directory);
-  const host = hostOf(database, writer);
+  const host = sessionOf(database, writer);
   const parentFeed = host.spawn(parentFeedInput);
   const withFeed = { ...host, parentFeed };
   let subagents = noSubagents;
