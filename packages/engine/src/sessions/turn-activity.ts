@@ -1,5 +1,6 @@
 import type { OpenSessionsActorRef } from './open-sessions-machine';
 import type { SessionActorRef } from './session-machine';
+import { hasRunningSubagentTurn } from './subagents';
 
 /*
  * Whether any open Session has a Turn running, its own or a subagent's.
@@ -33,10 +34,7 @@ function anyTurnActive(sessions: OpenSessionsActorRef): boolean {
 }
 
 function hasActiveTurn(session: SessionActorRef): boolean {
-  const { activeTurnId, subagentFeeds } = session.getSnapshot().context;
+  const { activeTurnId, subagents } = session.getSnapshot().context;
 
-  return (
-    activeTurnId !== null ||
-    [...subagentFeeds.children.values()].some((child) => child.turnId !== null)
-  );
+  return activeTurnId !== null || hasRunningSubagentTurn(subagents);
 }

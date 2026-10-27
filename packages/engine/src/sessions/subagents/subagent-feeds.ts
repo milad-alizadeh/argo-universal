@@ -11,7 +11,7 @@ import { associationEvent } from './subagent-rows';
 import { subagentWorkState } from './subagent-work';
 import { updateSubagentWork } from './work';
 
-export type SubagentFeeds = {
+export type Subagents = {
   children: ReadonlyMap<string, ChildFeed>;
   pendingMessages: readonly SessionNotification[];
 };
@@ -99,11 +99,11 @@ function routeUpdate(
 }
 
 // Only explicit ACP associations establish parentage; an unknown id never becomes a Subagent.
-export function routeSubagentUpdate(
+export function routeSubagentFeeds(
   input: SubagentRouting,
-  previous: SubagentFeeds,
+  previous: Subagents,
   notification: SessionNotification,
-): SubagentFeeds {
+): Subagents {
   const children = new Map(previous.children);
   const routing = routingSource(input, children.get(notification.sessionId));
 
@@ -118,8 +118,8 @@ export function routeSubagentUpdate(
   };
 }
 
-export function flushSubagentFeeds(children: SubagentFeeds): void {
-  for (const child of children.children.values())
+export function flushSubagentFeeds(subagents: Subagents): void {
+  for (const child of subagents.children.values())
     child.feed.send({ type: 'feed.flush' });
 }
 

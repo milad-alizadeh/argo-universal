@@ -1,6 +1,7 @@
 import type { FeedActorRef, FeedEvent, FeedTurnEnding } from '../../feed';
 import { TurnUpdateJob } from '../session-storage';
 import type { ChildFeed } from './child-feed';
+import type { Subagents } from './subagent-feeds';
 
 type CrashEnding = Extract<FeedTurnEnding, { kind: 'agent_crash' }>;
 
@@ -31,7 +32,9 @@ const childCrash = (child: ChildFeed, ending: CrashEnding): ChildCrash[] =>
   child.turnId ? [crash(child.feed, child.turnId, ending)] : [];
 
 export const crashedSubagentTurns = (
-  children: ReadonlyMap<string, ChildFeed>,
+  subagents: Subagents,
   ending: CrashEnding,
 ): ChildCrash[] =>
-  [...children.values()].flatMap((child) => childCrash(child, ending));
+  [...subagents.children.values()].flatMap((child) =>
+    childCrash(child, ending),
+  );

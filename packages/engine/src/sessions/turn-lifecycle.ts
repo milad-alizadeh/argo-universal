@@ -1,7 +1,6 @@
 import type { ContentBlock } from '@repo/contracts';
 import { AgentProcessExitError } from '../agents';
 import { turnEndingEvent, type FeedEvent, type FeedTurnEnding } from '../feed';
-import { crashedSubagentTurns } from './subagents/crash';
 import type { AcpLifetimeEvent } from './acp/acp-lifetime';
 import { currentModel } from './configuration/config-choices';
 import type {
@@ -10,6 +9,7 @@ import type {
   SessionWrite,
 } from './session-context';
 import { TurnInsertJob, TurnUpdateJob } from './session-storage';
+import { crashedSubagentTurns } from './subagents';
 
 export type StartTurnParameters = { turnId: string; content: ContentBlock[] };
 
@@ -158,10 +158,7 @@ export const recordCrash = (
         : undefined,
   };
 
-  const subagents = crashedSubagentTurns(
-    context.subagentFeeds.children,
-    ending,
-  );
+  const subagents = crashedSubagentTurns(context.subagents, ending);
 
   if (duringTurn && context.activeTurnId)
     return { subagents, turnEnding: { ...context.turnEnding, ...ending } };

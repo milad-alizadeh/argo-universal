@@ -10,9 +10,7 @@ import type { CoreHooks } from '@repo/contracts/plugins';
 import type { createRejectionCounter } from '@repo/machine-log';
 import type { AcpSessionLease, createAcpResponseReaders } from '../agents';
 import type { FeedTurnEnding } from '../feed';
-import type { Shells } from './shells';
 import type { WriterActorRef, WriterEvent } from '../storage';
-import type { SubagentFeeds } from './subagents/subagent-feeds';
 import type {
   AcpLifetimeEvent,
   AcpSessionDependencies,
@@ -24,6 +22,8 @@ import type { LocalSubmission } from './acp/prompts/submission';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
 import type { PermissionHooked } from './permission-hooks';
 import type { SessionData, SessionInput } from './session-data';
+import type { Shells } from './shells';
+import type { Subagents } from './subagents';
 
 export const setConfigEvent = 'session.setConfigOption';
 
@@ -119,7 +119,7 @@ export interface SessionContext extends SessionData {
     { type: typeof setConfigEvent }
   > | null;
   feedEnded: boolean;
-  subagentFeeds: SubagentFeeds;
+  subagents: Subagents;
   shells: ShellRecord[];
   shellRuntime: Shells;
   // The database writer refused this Turn's Feed rows, so the Turn is cancelled and ends with a storage error.

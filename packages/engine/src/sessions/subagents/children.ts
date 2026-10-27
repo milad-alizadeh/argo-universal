@@ -1,14 +1,8 @@
 import { SessionRecord } from '@repo/contracts';
 import { session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
-import {
-  decodeStoredSession,
-  storedSessionColumns,
-} from '../session-record';
-import {
-  readQueuedSessionRows,
-  type RowSources,
-} from '../session-storage';
+import { decodeStoredSession, storedSessionColumns } from '../session-record';
+import { readQueuedSessionRows, type RowSources } from '../session-storage';
 
 type StoredSession = typeof session.$inferSelect;
 

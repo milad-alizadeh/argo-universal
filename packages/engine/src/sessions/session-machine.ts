@@ -28,13 +28,7 @@ import {
 } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
-import { createShells, withShell, readShellRecords } from './shells';
 import type { WriterActorRef, WriterEvent } from '../storage';
-import { flushSubagentFeeds } from './subagents/subagent-feeds';
-import {
-  isSubagentUpdate,
-  routeSubagentNotification,
-} from './subagents/subagents';
 import {
   cancelAcp,
   closeAcp,
@@ -113,6 +107,13 @@ import {
   toSessionInsert,
 } from './session-data';
 import { SessionRowUpdateJob, SessionTitleJob } from './session-storage';
+import { createShells, withShell, readShellRecords } from './shells';
+import {
+  flushSubagents,
+  noSubagents,
+  ownsSubagentUpdate,
+  routeSubagentUpdate,
+} from './subagents';
 import {
   connectionLostDuringTurn,
   endTurn,
@@ -247,22 +248,28 @@ const sessionSetup = setup({
       assertEvent(event, acpUpdateEvent);
 
       return {
-        subagentFeeds: routeSubagentNotification({
-          context,
-          notification: event.notification,
-          parentFeed: self.getSnapshot().children.feed,
-          spawn: (input) =>
-            spawn('feed', {
-              id: `subagent:${input.sessionId}`,
-              systemId: `subagent-feed:${input.sessionId}`,
-              input,
-            }),
-          storageFailing: () => self.send({ type: storageFailingEvent }),
-        }),
+        subagents: routeSubagentUpdate(
+          {
+            parent: context,
+            database: context.input.database,
+            now: context.input.now,
+            createId: context.input.createId,
+            writer: context.input.writer,
+            parentFeed: self.getSnapshot().children.feed,
+            spawn: (input) =>
+              spawn('feed', {
+                id: `subagent:${input.sessionId}`,
+                systemId: `subagent-feed:${input.sessionId}`,
+                input,
+              }),
+            storageFailing: () => self.send({ type: storageFailingEvent }),
+          },
+          context.subagents,
+          event.notification,
+        ),
       };
     }),
-    flushSubagentFeeds: ({ context }) =>
-      flushSubagentFeeds(context.subagentFeeds),
+    flushSubagentFeeds: ({ context }) => flushSubagents(context.subagents),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
     queueAcpConfig: assign(({ context, event }) => {
@@ -703,7 +710,9 @@ const sessionSetup = setup({
         stateIn({ open: { acp: { activeTurn: 'cancelling' } } }),
       ]),
     ]),
-    isSubagentUpdate: ({ context, event }) => isSubagentUpdate(context, event),
+    isSubagentUpdate: ({ context, event }): boolean =>
+      event.type === acpUpdateEvent &&
+      ownsSubagentUpdate(context.subagents, event.notification),
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&
       event.notification.update.sessionUpdate === 'config_option_update',
@@ -855,7 +864,8 @@ export const sessionMachine = sessionSetup.createMachine({
       writer: input.writer,
       now: input.now,
       createId: input.createId,
-      changed: (shell): void => self.send({ type: 'agent.shellChanged', shell }),
+      changed: (shell): void =>
+        self.send({ type: 'agent.shellChanged', shell }),
       failed: (error): void => {
         console.error('Shell storage failed', error);
         self.send({ type: storageFailingEvent });
@@ -899,7 +909,7 @@ export const sessionMachine = sessionSetup.createMachine({
       acpLease: null,
       pendingSubmission: null,
       feedEnded: false,
-      subagentFeeds: { children: new Map(), pendingMessages: [] },
+      subagents: noSubagents,
       acpPrompt: null,
       acpResponseReaders: createAcpResponseReaders(
         createRejectionCounter(`ACP Session ${input.sessionId}`),

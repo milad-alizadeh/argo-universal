@@ -1,64 +1,77 @@
+import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { FeedActorRef } from '../../feed';
-import type { AcpLifetimeEvent } from '../acp/acp-lifetime';
-import {
-  acpUpdateEvent,
-  writeFeedEvent,
-  type SessionContext,
-  type SessionEvent,
-} from '../session-context';
+import type { WriterActorRef } from '../../storage';
+import type { SessionData } from '../session-data';
 import type { SubagentRouting } from './routing-types';
-import { routeSubagentUpdate, type SubagentFeeds } from './subagent-feeds';
+import {
+  flushSubagentFeeds,
+  routeSubagentFeeds,
+  type Subagents,
+} from './subagent-feeds';
 
-type AcpUpdate = Extract<AcpLifetimeEvent, { type: 'acp.update' }>;
+export { crashedSubagentTurns } from './crash';
 
-type SubagentRoute = {
-  context: SessionContext;
-  notification: AcpUpdate['notification'];
+export type { Subagents };
+
+// What a Session lends to route a Subagent update: its own data and Feed, the database, the Writer, and how a child's Feed starts.
+export type SubagentHost = Pick<
+  SubagentRouting,
+  'database' | 'now' | 'createId' | 'spawn' | 'storageFailing'
+> & {
+  parent: SessionData;
+  writer: WriterActorRef;
   // The Session's own Feed, started with its open state; a Subagent update cannot arrive without it.
   parentFeed: FeedActorRef | undefined;
-  spawn: SubagentRouting['spawn'];
-  storageFailing: () => void;
 };
 
-export const isSubagentUpdate = (
-  context: SessionContext,
-  event: SessionEvent,
+export const noSubagents: Subagents = {
+  children: new Map(),
+  pendingMessages: [],
+};
+
+// Updates whose names say they concern a Subagent, and anything sent under the id of one already known.
+const subagentUpdates = new Set<string>([
+  'subagent_update',
+  'session_message',
+  'session_message_chunk',
+]);
+
+export const ownsSubagentUpdate = (
+  subagents: Subagents,
+  notification: SessionNotification,
 ): boolean =>
-  event.type === acpUpdateEvent &&
-  (event.notification.update.sessionUpdate === 'subagent_update' ||
-    event.notification.update.sessionUpdate === 'session_message' ||
-    event.notification.update.sessionUpdate === 'session_message_chunk' ||
-    context.subagentFeeds.children.has(event.notification.sessionId));
+  subagentUpdates.has(notification.update.sessionUpdate) ||
+  subagents.children.has(notification.sessionId);
+
+export const hasRunningSubagentTurn = (subagents: Subagents): boolean =>
+  [...subagents.children.values()].some((child) => child.turnId !== null);
+
+export const flushSubagents = flushSubagentFeeds;
+
+const routing = (
+  host: SubagentHost,
+  parentFeed: FeedActorRef,
+): SubagentRouting => ({
+  ...host,
+  parentId: host.parent.sessionId,
+  parentFeed,
+  write: (job) => host.writer.send({ type: 'writer.write', job }),
+});
 
 // Throws rather than drop the update when the Session has no Feed to attach the Subagent to.
-export const routeSubagentNotification = ({
-  context,
-  notification,
-  parentFeed,
-  spawn,
-  storageFailing,
-}: SubagentRoute): SubagentFeeds => {
-  if (!parentFeed)
+export const routeSubagentUpdate = (
+  host: SubagentHost,
+  subagents: Subagents,
+  notification: SessionNotification,
+): Subagents => {
+  if (!host.parentFeed)
     throw new Error(
-      `Session ${context.sessionId} has no Feed to route a Subagent update to`,
+      `Session ${host.parent.sessionId} has no Feed to route a Subagent update to`,
     );
 
-  const { writer } = context.input;
-
-  return routeSubagentUpdate(
-    {
-      parent: context,
-      parentId: context.sessionId,
-      database: context.input.database,
-      now: context.input.now,
-      createId: context.input.createId,
-      writer,
-      write: (job) => writer.send({ type: writeFeedEvent, job }),
-      storageFailing,
-      parentFeed,
-      spawn,
-    },
-    context.subagentFeeds,
+  return routeSubagentFeeds(
+    routing(host, host.parentFeed),
+    subagents,
     notification,
   );
 };
