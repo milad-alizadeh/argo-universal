@@ -6,15 +6,14 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import {
-  type LayoutChangeEvent,
-  Platform,
-  View,
-  type ViewInstance,
-} from 'react-native';
+import { type LayoutChangeEvent, View, type ViewInstance } from 'react-native';
 import { sideColumn } from '#kit/content-column/column-layout';
 import { useClaimSide } from '#kit/content-column/content-column';
-import { MetadataInlineContext } from '../metadata/metadata-inline';
+import { metadataDrawing } from '../metadata/metadata-drawing';
+import {
+  currentPlatform,
+  MetadataSceneContext,
+} from '../metadata/metadata-drawing-context';
 import type { DetailColumnsProps } from './detail-props';
 
 // The narrowest container that holds the content beside the 280 Metadata column.
@@ -27,14 +26,14 @@ const layouts = {
     content: 'min-w-0 flex-1',
     metadata: 'shrink-0',
     metadataStyle: { width: sideColumn.width },
-    inline: false,
+    scene: { width: 'column' },
   },
   stacked: {
     row: undefined,
     content: undefined,
     metadata: undefined,
     metadataStyle: undefined,
-    inline: false,
+    scene: { width: 'narrow' },
   },
   // Desktop and web: the Metadata leads the content as one line of values under the title.
   inline: {
@@ -42,11 +41,19 @@ const layouts = {
     content: undefined,
     metadata: undefined,
     metadataStyle: undefined,
-    inline: true,
+    scene: { width: 'narrow' },
   },
 } as const;
 
-const narrowLayout = Platform.OS === 'web' ? layouts.inline : layouts.stacked;
+// Where the Metadata goes when the container has no room for a column is its drawing's to say: inline above, or below.
+const narrowDrawing = metadataDrawing({
+  platform: currentPlatform,
+  inList: false,
+  width: 'narrow',
+});
+
+const narrowLayout =
+  narrowDrawing.root === 'inline' ? layouts.inline : layouts.stacked;
 
 const rowGap = { gap: sideColumn.gap };
 
@@ -79,9 +86,9 @@ function MetadataColumn(props: {
 
   return (
     <View className={layout.metadata} style={layout.metadataStyle}>
-      <MetadataInlineContext value={layout.inline}>
+      <MetadataSceneContext value={layout.scene}>
         {props.children}
-      </MetadataInlineContext>
+      </MetadataSceneContext>
     </View>
   );
 }

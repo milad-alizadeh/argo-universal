@@ -111,7 +111,6 @@ const fixedValue = (
 ): ContextType<typeof ListContext> => ({
   ...parent,
   position: item.position,
-  inList: true,
   ...listSelection(item),
 });
 

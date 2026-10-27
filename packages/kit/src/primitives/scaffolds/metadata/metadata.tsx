@@ -1,11 +1,13 @@
-import { useContext, type ReactNode } from 'react';
-import { Platform, View } from 'react-native';
+import { use, useMemo, type ReactNode } from 'react';
+import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
-import { Surface } from '#primitives/layout/surface';
 import { List, ListSection } from '#primitives/lists/list';
 import { flattenedChildren } from '../../../flattened-children';
-import { ListContext } from '../../../list-context';
-import { useMetadataInline } from './metadata-inline';
+import { metadataDrawing, type MetadataDrawing } from './metadata-drawing';
+import {
+  MetadataSceneContext,
+  useMetadataFacts,
+} from './metadata-drawing-context';
 import {
   MetadataLabel,
   MetadataLink,
@@ -17,35 +19,55 @@ import type { MetadataProps } from './metadata-props';
 
 const listOptions = { padding: 0, paddingTop: 0, paddingBottom: 0 } as const;
 
-// Inside a List, such as a Settings page, Metadata is one more section of it; alone it sits beside a Detail's content.
-function MetadataRoot({ title, children }: MetadataProps): ReactNode {
-  const inList = useContext(ListContext).inList === true;
-
-  if (flattenedChildren(children).length === 0) return null;
-
-  if (inList) return <ListSection title={title}>{children}</ListSection>;
-
-  return <OwnList title={title}>{children}</OwnList>;
-}
+const roots = {
+  'list-section': ListSectionRoot,
+  'grouped-rows': GroupedRows,
+  properties: HeadedColumn,
+  inline: InlineFields,
+} satisfies Record<
+  MetadataDrawing['root'],
+  (props: MetadataProps) => ReactNode
+>;
 
 /*
- * A Detail's scroll view gives a List no height to fill: a phone draws one card of the rows, which take their own
- * height. Desktop and web head the column Properties, unless the Plugin names it, or draw one line of values when the
- * Detail is too narrow for the column.
+ * Metadata draws the root its drawing names (metadata-drawing.ts) and gives that drawing to its fields. Inside a List,
+ * such as a Settings page, it is one more section of it.
  */
-function OwnList(props: MetadataProps): ReactNode {
-  const inline = useMetadataInline();
+function MetadataRoot(props: MetadataProps): ReactNode {
+  const drawing = useRootDrawing();
+  const { width } = use(MetadataSceneContext);
+  const scene = useMemo(() => ({ width, drawing }), [width, drawing]);
+  const Root = roots[drawing.root];
 
-  if (Platform.OS !== 'web')
-    return (
-      <Surface kind="card">
-        <ListSection title={props.title}>{props.children}</ListSection>
-      </Surface>
-    );
+  if (flattenedChildren(props.children).length === 0) return null;
 
-  if (inline) return <InlineFields>{props.children}</InlineFields>;
+  return (
+    <MetadataSceneContext value={scene}>
+      <Root {...props} />
+    </MetadataSceneContext>
+  );
+}
 
-  return <HeadedColumn {...props} />;
+function useRootDrawing(): MetadataDrawing {
+  const { platform, inList, width } = useMetadataFacts();
+
+  return useMemo(
+    () => metadataDrawing({ platform, inList, width }),
+    [platform, inList, width],
+  );
+}
+
+function ListSectionRoot({ title, children }: MetadataProps): ReactNode {
+  return <ListSection title={title}>{children}</ListSection>;
+}
+
+// A Detail's scroll view gives a List no height to fill: a phone draws the rows as one grouped section that takes its own.
+function GroupedRows({ title, children }: MetadataProps): ReactNode {
+  return (
+    <List {...listOptions} appearance="grouped">
+      <ListSection title={title}>{children}</ListSection>
+    </List>
+  );
 }
 
 // The heading starts on the fields' edge, not a List section's inset.
@@ -74,7 +96,7 @@ function ColumnHeading({ title }: { title: string }): ReactNode {
 }
 
 // Inline Metadata is one wrapping line of values; the line itself says what they are, so it needs no heading.
-function InlineFields({ children }: { children: ReactNode }): ReactNode {
+function InlineFields({ children }: MetadataProps): ReactNode {
   return (
     <View className="flex-row flex-wrap items-center gap-x-4 gap-y-2">
       {children}

@@ -37,6 +37,9 @@ export function useDeclaredListLook(declared: Declared): ListLook {
   );
 }
 
+// Inside a List's rows, a part that would draw its own List draws a section of it instead.
+export const useInList = (): boolean => use(ListLookContext) !== null;
+
 type Held = `${boolean}-${boolean}`;
 
 const outsideLook = (menu: boolean, sidebar: boolean): ListLook =>

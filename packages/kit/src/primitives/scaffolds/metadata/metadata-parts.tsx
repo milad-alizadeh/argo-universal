@@ -1,10 +1,10 @@
 import { isValidElement, type ReactElement } from 'react';
-import { Platform } from 'react-native';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
 import type { PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
 import { flattenedChildren } from '../../../flattened-children';
+import { useMetadataDrawing } from './metadata-drawing-context';
 import { MetadataField } from './metadata-field';
 import { MetadataPills } from './metadata-pills';
 import type {
@@ -42,13 +42,12 @@ export function MetadataLink(props: MetadataLinkProps): ReactElement {
 }
 
 export function MetadataStatus(props: MetadataStatusDotProps): ReactElement {
+  const { dotSize } = useMetadataDrawing();
+
   return (
     <MetadataField {...fieldProps(props)} valueLabel={props.text}>
       <MetadataText text={props.text}>
-        <StatusDot
-          tone={props.tone}
-          size={Platform.OS === 'ios' ? 'md' : 'sm'}
-        />
+        <StatusDot tone={props.tone} size={dotSize} />
       </MetadataText>
     </MetadataField>
   );
