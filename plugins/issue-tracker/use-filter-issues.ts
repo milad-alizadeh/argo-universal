@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useState } from '@argo/plugin-kit';
-import { githubError } from './github-errors';
+import { useCallback } from '@argo/plugin-kit';
+import {
+  filterMessage,
+  pageSize,
+  unloaded,
+  type ShownIssues,
+} from './filter-shown';
 import type { Issue } from './github-issues';
-import { openClient, type Project } from './issue-client';
+import { useReloadOnChange } from './issue-changes';
+import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import type { IssueFilter } from './issue-filters';
-
-// Issues a page loads at a time, and again for each further page.
-const pageSize = 30;
+import { useAsync, type Async, type Show } from './use-async';
 
 export type FilterSource = {
   project: Project;
@@ -22,15 +26,6 @@ export type FilterIssues = {
   refresh: () => Promise<void>;
 };
 
-type Shown = { issues: Issue[] | null; limit: number };
-
-const unloaded: Shown = { issues: null, limit: pageSize };
-
-type Setters = {
-  setShown: (shown: Shown) => void;
-  setMessage: (message: string) => void;
-};
-
 type CacheKey = Parameters<IssueDeps['storage']['readCache']>[0];
 
 const cacheKey = ({ project, filter }: FilterSource): CacheKey => ({
@@ -43,76 +38,64 @@ const cacheKey = ({ project, filter }: FilterSource): CacheKey => ({
  * page asks for a longer list, as gh has no cursor.
  */
 export function useFilterIssues(source: FilterSource): FilterIssues {
-  const [shown, setShown] = useState(unloaded);
-  const [message, setMessage] = useState('Loading Issues…');
+  const { value, error, reload } = useFirstPage(source);
+  const page = value ?? unloaded;
+  const { issues, limit } = page;
+  const load = useLoad(source, reload);
+  const refresh = useCallback(() => load(limit), [load, limit]);
 
-  const load = useCallback(
-    (next: number) => loadIssues(source, { setShown, setMessage }, next),
-    [source],
-  );
-
-  useEffect(() => {
-    void openIssues(source, { setShown, setMessage });
-  }, [source]);
-  useReloadOnChange(source, () => load(shown.limit));
-
-  return filterIssues(shown, message, load);
-}
-
-// An Issue whose status changed on its own page may have left this filter, or joined it.
-function useReloadOnChange(
-  source: FilterSource,
-  reload: () => Promise<void>,
-): void {
-  useEffect(
-    () => source.deps.changes.subscribe(() => void reload()),
-    [source, reload],
-  );
-}
-
-function filterIssues(
-  { issues, limit }: Shown,
-  message: string,
-  load: (limit: number) => Promise<void>,
-): FilterIssues {
-  const loaded = issues ?? [];
+  useReloadOnChange(source.deps.changes, refresh);
 
   return {
-    issues: loaded,
-    message,
-    hasMore: loaded.length >= limit,
+    issues,
+    message: filterMessage(page, error),
+    hasMore: issues.length >= limit,
     loadMore: () => load(limit + pageSize),
-    refresh: () => load(limit),
+    refresh,
   };
 }
 
-async function openIssues(
-  source: FilterSource,
-  setters: Setters,
-): Promise<void> {
-  const cached = await source.deps.storage.readCache<Issue[]>(cacheKey(source));
+function useFirstPage(source: FilterSource): Async<ShownIssues> {
+  return useAsync(
+    useCallback(
+      async (show) => {
+        const key = cacheKey(source);
+        const cached = await source.deps.storage.readCache<Issue[]>(key);
 
-  if (cached) setters.setShown({ issues: cached, limit: pageSize });
+        if (cached) show({ issues: cached, limit: pageSize, fetched: false });
 
-  await loadIssues(source, setters, pageSize);
+        return fetchIssues(source, pageSize, show);
+      },
+      [source],
+    ),
+  );
 }
 
-async function loadIssues(
+// Loads again with a longer or the same list, keeping the Issues on screen.
+function useLoad(
   source: FilterSource,
-  setters: Setters,
+  reload: Async<ShownIssues>['reload'],
+): (limit: number) => Promise<void> {
+  return useCallback(
+    (limit) => reload((show) => fetchIssues(source, limit, show)),
+    [reload, source],
+  );
+}
+
+async function fetchIssues(
+  source: FilterSource,
   limit: number,
-): Promise<void> {
-  try {
-    const client = await openClient({ ...source, ...source.deps });
-    const issues = await client.listIssues(source.filter.search, limit);
+  show: Show<ShownIssues>,
+): Promise<ShownIssues> {
+  const client = await openDepsClient(source);
+  const issues = await client.listIssues(source.filter.search, limit);
+  const page = { issues, limit, fetched: true };
 
-    setters.setShown({ issues, limit });
-    setters.setMessage('');
-    await saveFirstPage(source, issues);
-  } catch (error) {
-    setters.setMessage(githubError(error));
-  }
+  show(page);
+  await source.deps.storage.writeCache(
+    cacheKey(source),
+    issues.slice(0, pageSize),
+  );
+
+  return page;
 }
-
-const saveFirstPage = (source: FilterSource, issues: Issue[]): Promise<void> =>
-  source.deps.storage.writeCache(cacheKey(source), issues.slice(0, pageSize));

@@ -31,7 +31,7 @@ it.each([
   {
     scenario: 'refuse',
     surface: current,
-    body: `return jsx(Stack, { direction: 'column', children: [jsx(Text, ${JSON.stringify(refusedTreeFixture.children[0]?.props)}), jsx('FuturePart', {})] })`,
+    body: `return jsx(Stack, { direction: 'column', children: [jsx(Text, ${JSON.stringify(refusedTreeFixture.children[0]?.props)}), jsx('FutureComponent', {})] })`,
     expected: { type: 'core', input: toolCallSlotFixture },
     fallbacks: 1,
   },

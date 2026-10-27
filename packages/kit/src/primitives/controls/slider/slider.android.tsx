@@ -35,9 +35,11 @@ function controlProps(
 function changeHandler(
   props: SliderProps,
 ): React.ComponentProps<typeof MaterialSlider>['onValueChange'] {
-  if (props.disabled) return undefined;
+  const { disabled, onValueChange } = props;
 
-  return (value) => props.onValueChange(selectedStep(props, value));
+  if (disabled || !onValueChange) return undefined;
+
+  return (value) => onValueChange(selectedStep(props, value));
 }
 
 function rangeProps(

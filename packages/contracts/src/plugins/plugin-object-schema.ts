@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { kitJsonSchema } from '../kit-schema-json';
-import type { WirePartDefinition } from './wire-part-definition';
+import type { KitComponentDefinition } from './kit-component-definition';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
@@ -48,11 +48,30 @@ export function pluginObjectSchema(schema: z.ZodType): JsonSchema {
   };
 }
 
-export function partObjectSchema(part: WirePartDefinition): JsonSchema {
-  const wire = pluginObjectSchema(part.props);
+// A prop its schema leaves undescribed reads as its own name, so every row of a props table says something.
+function describedProperty(name: string, schema: SchemaNode): SchemaNode {
+  if (typeof schema === 'boolean' || schema.description) return schema;
 
-  if (!part.expansion) return wire;
-  const expansion = pluginObjectSchema(part.expansion);
+  const words = name.replaceAll(/([a-z])([A-Z])/g, '$1 $2');
+
+  return { ...schema, description: `${words} for this kit component.` };
+}
+
+function describedProperties(schema: JsonSchema): JsonSchema {
+  const properties = Object.entries(schema.properties ?? {}).map(
+    ([name, value]) => [name, describedProperty(name, value)],
+  );
+
+  return { ...schema, properties: Object.fromEntries(properties) };
+}
+
+export function componentObjectSchema(
+  component: KitComponentDefinition,
+): JsonSchema {
+  const wire = describedProperties(pluginObjectSchema(component.props));
+
+  if (!component.expansion) return wire;
+  const expansion = pluginObjectSchema(component.expansion);
 
   return {
     ...wire,

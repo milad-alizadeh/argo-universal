@@ -6,32 +6,18 @@ import { buttonDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Host } from '#primitives/native/host';
-import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { useWide } from '../../../use-wide/use-wide';
 import type { KitProps } from '../../kit-props';
 import { ButtonLabel } from './button-label';
 import { sizes, variantOf, widthOf } from './button-layout';
 import { WebButton } from './button-web';
 
-// What a Plugin sends for a Button over the wire.
-export type ButtonDataProps = KitProps<'Button'>;
-
-export interface ButtonProps {
-  label: string;
-  onPress?: () => void;
-  // Expo UI's filled, outlined and text looks; danger is the text look. Defaults to primary.
-  variant?: 'primary' | 'secondary' | 'text' | 'danger';
-  // Defaults to md.
-  size?: 'sm' | 'md';
-  // An Argo icon before the label.
-  icon?: IconSymbol;
-  // `narrow` is full width on a compact or medium window only, from the window's size class.
-  fullWidth?: boolean | 'narrow';
-  disabled?: boolean;
+// The schema's Button (variant defaults to primary, size to md), plus what only the kit draws.
+export type ButtonProps = KitProps<'Button'> & {
   // Kit-only, web only: a segment of a split button, its corners facing the other segment drawn small.
   joined?: 'start' | 'end';
   testID?: string;
-}
+};
 
 export type ButtonSize = NonNullable<ButtonProps['size']>;
 
@@ -41,7 +27,13 @@ type Variant = NonNullable<ButtonProps['variant']>;
 export function Button(props: ButtonProps): ReactElement {
   const wide = useWide();
 
-  return <DrawnButton {...props} fullWidth={fullWidthOf(props, wide)} />;
+  return (
+    <DrawnButton
+      {...props}
+      fullWidth={fullWidthOf(props, wide)}
+      disabled={props.disabled === true || props.loading === true}
+    />
+  );
 }
 
 const fullWidthOf = (props: ButtonProps, wide: boolean): boolean =>

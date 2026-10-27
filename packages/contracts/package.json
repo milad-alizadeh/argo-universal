@@ -10,7 +10,7 @@
     "#plugin-slot-registry": "./src/plugins/slot-registry.ts",
     "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
     "#plugin-wire-events": "./src/plugins/wire-events.ts",
-    "#plugin-wire-part-events": "./src/plugins/wire-part-events.ts",
+    "#plugin-kit-component-events": "./src/plugins/kit-component-events.ts",
     "#plugin-surface": "./src/plugins/surface.ts",
     "#plugin-wire-json": "./src/plugins/wire-json.ts",
     "#plugin-query-normalisation": "./src/plugins/query-normalisation.ts",

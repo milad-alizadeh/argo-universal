@@ -4,14 +4,10 @@ import {
   WorkerCommand,
   type WorkerCall,
 } from '../protocol/runtime.ts';
-import type {
-  TestAction,
-  TestReply,
-  TestClockState,
-} from '../protocol/test-control.ts';
+import type { TestReply } from '../protocol/test-control.ts';
 import { argoBridge, WorkerCalls } from './argo.ts';
 import { registerPlugin, type PluginInboxes } from './modules.ts';
-import { PluginTestClock } from './test-clock.ts';
+import { answerTest, PluginTestClock } from './test-clock.ts';
 
 const post = (message: WorkerCall | TestReply | 'pong' | 'ready'): void =>
   parentPort?.postMessage(message);
@@ -36,7 +32,7 @@ let inboxes: PluginInboxes | null = null;
 type Delivery = Exclude<WorkerCommand, 'ping'>;
 
 function deliver(command: Delivery): void {
-  if (command.type === 'test') void runTest(command);
+  if (command.type === 'test') void answerTest(clock, command).then(post);
   else if (command.type === 'reply') calls.settle(command);
   else deliverToInbox(command);
 }
@@ -66,25 +62,6 @@ parentPort?.on('message', (message) => {
 inboxes = await registerPlugin(entry, bridge, clock);
 
 post('ready');
-
-async function runTest(
-  command: Extract<Delivery, { type: 'test' }>,
-): Promise<void> {
-  try {
-    const state = await runTestAction(command.action);
-    post({ type: 'test.done', id: command.id, clock: state });
-  } catch (error) {
-    post({ type: 'test.done', id: command.id, error: String(error) });
-  }
-}
-
-async function runTestAction(action: TestAction): Promise<TestClockState> {
-  if (!clock) throw new Error('Plugin has no test clock');
-
-  await clock.advance(action.action === 'advanceClock' ? action.ms : 0);
-
-  return { now: clock.now(), nextAt: clock.nextAt() };
-}
 
 function deliverHook(
   hooks: PluginInboxes['hooks'],

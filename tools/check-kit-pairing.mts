@@ -1,10 +1,10 @@
-import { pluginPartSchemas } from '@repo/contracts/plugins/kit-prop-descriptors';
+import { kitComponentSchemas } from '@repo/contracts/plugins/kit-prop-descriptors';
 import { pairingProblems, type SchemaEntry } from './kit-pairing-rules.mts';
 import { trackedFiles } from './tracked-files.mts';
 
 const primitives = 'packages/kit/src/primitives/';
 
-const schemas: SchemaEntry[] = Object.entries(pluginPartSchemas).map(
+const schemas: SchemaEntry[] = Object.entries(kitComponentSchemas).map(
   ([name, { group }]): SchemaEntry => ({ name, group }),
 );
 

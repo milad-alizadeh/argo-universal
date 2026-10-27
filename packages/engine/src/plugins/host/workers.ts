@@ -64,7 +64,7 @@ export class HostWorkers {
     this.workers.delete(pluginId);
     clearTimeout(record.deadline);
 
-    if (record.heartbeat) clearInterval(record.heartbeat);
+    if (record.heartbeat) clearTimeout(record.heartbeat);
     void record.worker.terminate();
   }
 

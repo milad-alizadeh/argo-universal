@@ -1,9 +1,5 @@
 import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
-import {
-  fallbackKey,
-  logOnce,
-  renderFallbackLine,
-} from '../views/render-fallback';
+import { logFallback } from '../views/render-fallback';
 import type { RunningHook } from './running-hook';
 
 // A failed `ui.render` Hook falls its Slot back to core on every render: that is written once per Plugin and Slot.
@@ -17,9 +13,9 @@ export function logFailure(
 
   const { slotId } = ReplaceableInput.parse(step.event);
 
-  logOnce(
-    log,
-    fallbackKey('hook', hook.pluginId, slotId),
-    renderFallbackLine(hook.pluginId, slotId, `ui.render Hook: ${reason}`),
-  );
+  logFallback(log, 'hook', {
+    pluginId: hook.pluginId,
+    slotId,
+    reason: `ui.render Hook: ${reason}`,
+  });
 }

@@ -1,4 +1,4 @@
-import { WireNode, type PartEvent } from '@repo/contracts/plugins/wire';
+import { WireNode, type ComponentEvent } from '@repo/contracts/plugins/wire';
 import fixture from '@repo/mocks/plugins/screen.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -31,7 +31,7 @@ export const DrawsTitleAndContent: Story = {
 };
 
 // Every header Action, the primary one included, dispatches from its own keyed node.
-function headerAction(name: string, key: string, event: PartEvent): Story {
+function headerAction(name: string, key: string, event: ComponentEvent): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       onEvent.mockClear();

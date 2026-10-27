@@ -1,23 +1,18 @@
 import { renderReasonLimit } from '@repo/contracts/plugins/replaceable';
 import { useMutation } from '@tanstack/react-query';
-import { useSubscription } from '@trpc/tanstack-react-query';
-import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import {
-  ReplaceableSlotView,
-  type ReplaceableSlotProps,
-} from '../../lib/product/plugin-registry/replaceable-slot';
+import { useTRPC } from '#features/connection';
 import {
   coreSlotState,
   reduceReplaceable,
   type ReplaceableState,
-} from '../../lib/product/plugin-registry/replaceable-state';
+} from '../../lib/product/plugin-registry';
 import {
-  bindPluginDispatch,
-  usePluginDispatch,
-  type PluginDispatch,
-} from './use-plugin-dispatch';
-import { usePluginOpener } from './use-plugin-opener';
-import { usePluginStreamState } from './use-plugin-stream-state';
+  ReplaceableSlotView,
+  type ReplaceableSlotProps,
+  type ReplaceableSlotViewProps,
+} from '../../lib/product/plugin-registry/replaceable-slot';
+import { usePluginBinding } from './use-plugin-binding';
+import { usePluginStream } from './use-plugin-stream';
 
 export function renderConnectedReplaceableSlot(
   props: ReplaceableSlotProps,
@@ -25,38 +20,51 @@ export function renderConnectedReplaceableSlot(
   return <ConnectedReplaceableSlot {...props} />;
 }
 
+// A Replaceable Slot as the connected Server answers it; a failed stream leaves core's own drawing.
 function ConnectedReplaceableSlot(
   props: ReplaceableSlotProps,
 ): React.JSX.Element {
   const state = useReplaceableState(props.input);
-  const actions = useRenderActions(state);
+  const actions = useSlotActions(state.replacement);
 
-  return <ReplaceableSlotView {...props} state={state} {...actions} />;
+  return <ReplaceableSlotView {...props} {...actions} state={state} />;
+}
+
+type SlotActions = Pick<
+  ReplaceableSlotViewProps,
+  'onEvent' | 'onOpenPage' | 'onFallback'
+>;
+
+// What the Slot's drawing reports back: the replacement's events and `navigate` Actions, and a drawing that fell back.
+function useSlotActions(
+  replacement: ReplaceableState['replacement'],
+): SlotActions {
+  const onFallback = useDrawingFallback(replacement);
+  const bind = usePluginBinding();
+
+  return { onFallback, ...(replacement ? bind(replacement) : unbound) };
 }
 
 function useReplaceableState(
   input: ReplaceableSlotProps['input'],
 ): ReplaceableState {
-  const trpc = useTRPC();
-
-  const { value, receive } = usePluginStreamState(
-    { trpc, key: JSON.stringify(input) },
-    coreSlotState(input),
-    reduceReplaceable,
+  const { state, failed } = usePluginStream(
+    input,
+    (trpc, slot, onData) =>
+      trpc.plugins.render.subscriptionOptions(slot, { onData }),
+    { initial: coreSlotState(input), reduce: reduceReplaceable },
   );
 
-  const subscription = useSubscription(
-    trpc.plugins.render.subscriptionOptions(input, { onData: receive }),
-  );
-
-  useResubscribeOnReconnect(subscription);
-
-  return subscription.status === 'error' ? coreSlotState(input) : value;
+  return failed ? coreSlotState(input) : state;
 }
 
-function useDrawingFallback(state: ReplaceableState): (reason: string) => void {
+// Core draws the Slot, so there is no Plugin to send events to.
+const unbound = { onEvent: (): void => {} };
+
+function useDrawingFallback(
+  replacement: ReplaceableState['replacement'],
+): (reason: string) => void {
   const failure = useMutation(useTRPC().plugins.renderFailed.mutationOptions());
-  const replacement = state.replacement;
 
   return (reason) => {
     if (!replacement?.view.viewId) return;
@@ -68,33 +76,4 @@ function useDrawingFallback(state: ReplaceableState): (reason: string) => void {
       reason: reason.slice(0, renderReasonLimit),
     });
   };
-}
-
-const ignoreEvent = (): void => {};
-
-type RenderActions = Pick<
-  React.ComponentProps<typeof ReplaceableSlotView>,
-  'onEvent' | 'onFallback' | 'onOpenPage'
->;
-
-function useRenderActions(state: ReplaceableState): RenderActions {
-  const send = usePluginDispatch();
-  const opener = usePluginOpener();
-
-  return {
-    onFallback: useDrawingFallback(state),
-    onEvent: renderDispatch(send, state.replacement),
-    onOpenPage: state.replacement
-      ? opener(state.replacement.pluginId)
-      : undefined,
-  };
-}
-
-function renderDispatch(
-  send: PluginDispatch,
-  replacement: ReplaceableState['replacement'],
-): React.ComponentProps<typeof ReplaceableSlotView>['onEvent'] {
-  return replacement
-    ? bindPluginDispatch(send, { ...replacement, ...replacement.view })
-    : ignoreEvent;
 }

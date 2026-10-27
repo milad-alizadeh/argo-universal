@@ -10,6 +10,8 @@ import type {
 
 type Choose<Value extends string> = (value: Value) => void;
 
+export const noop = (): void => undefined;
+
 // Only what the split offers besides its button, not its own look.
 export function menuRows<Value extends string>(
   props: SplitButtonProps<Value>,
@@ -17,7 +19,7 @@ export function menuRows<Value extends string>(
   if (!props.options) return { actions: menuActions(props) };
   const { options, value, onValueChange } = props;
 
-  return { options, value, onValueChange };
+  return { options, value, onValueChange: onValueChange ?? noop };
 }
 
 // A Plugin declares its menu entries as keyed Action children, as a Screen declares them.

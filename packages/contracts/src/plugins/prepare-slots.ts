@@ -1,4 +1,4 @@
-import { listMediaParts } from './list-media-parts';
+import { listMediaComponents } from './list-media-components';
 import type { WireNode } from './wire';
 
 export type SlotRules = Record<string, readonly string[]>;
@@ -27,11 +27,11 @@ export function acceptsChildren(
 }
 
 // Composition stays within the media vocabulary, including nested children and Slots.
-const mediaParts: ReadonlySet<string> = new Set(listMediaParts);
+const mediaComponents: ReadonlySet<string> = new Set(listMediaComponents);
 
 function acceptsMedia(node: WireNode): boolean {
   return (
-    mediaParts.has(node.type) &&
+    mediaComponents.has(node.type) &&
     node.children.every(acceptsMedia) &&
     Object.values(node.slots).every((nodes) => nodes.every(acceptsMedia))
   );

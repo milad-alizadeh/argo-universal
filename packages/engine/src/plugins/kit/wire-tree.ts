@@ -1,6 +1,6 @@
-import { wirePart } from '@repo/contracts/plugins/kit';
+import { kitComponentEvents } from '@repo/contracts/plugins/kit';
 import {
-  placedPartEvent,
+  placedComponentEvent,
   type WireJson,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
@@ -93,13 +93,13 @@ function wireNode(source: Instance, id: string, handlers: Handlers): WireNode {
   };
 }
 
-// An event a part keeps inside a prop object goes there on the wire, such as a Picker's `footerAction.onPress`.
+// An event a kit component keeps inside a prop object goes there on the wire, such as a Picker's `footerAction.onPress`.
 const placedEvents = (
   type: string,
   props: WireNode['props'],
 ): WireNode['props'] =>
-  Object.entries(wirePart(type)?.events ?? {}).reduce(
-    (placed, [name, schema]) => placedPartEvent(placed, name, schema),
+  Object.entries(kitComponentEvents(type)).reduce(
+    (placed, [name, schema]) => placedComponentEvent(placed, name, schema),
     props,
   );
 

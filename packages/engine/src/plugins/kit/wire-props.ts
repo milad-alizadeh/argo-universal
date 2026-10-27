@@ -1,7 +1,7 @@
 import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
 import type { Prop, Props, Handlers } from './wire-tree';
 
-// A handler prop goes on the wire as a Part event the App sends back by node key and event name.
+// A handler prop goes on the wire as a Component event the App sends back by node key and event name.
 export function wireProps(
   props: Props,
   id: string,

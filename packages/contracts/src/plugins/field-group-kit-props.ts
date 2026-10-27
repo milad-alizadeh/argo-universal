@@ -8,8 +8,8 @@ import {
   fieldGroupLinkRowProps,
   fieldGroupRowProps,
 } from './field-group-row-props';
+import { echoes, handler } from './kit-component-props';
 import { rowPress } from './list-kit-props';
-import { echoes, handler } from './plugin-part-props';
 import { textChangeEvents } from './text-field-kit-props';
 
 // The App's FieldGroup and its rows (ADR-0042): one schema per component, shared by web, iOS and Android and by the Plugin wire.
@@ -121,7 +121,7 @@ const textEvents = {
   onSubmit: z.undefined().meta({ flush: true }),
 };
 
-export const fieldGroupKitParts = {
+export const fieldGroupKitComponents = {
   FieldGroup: { props: fieldGroupProps, events: {} },
   'FieldGroup.Section': { props: fieldGroupSectionProps, events: {} },
   'FieldGroup.Value': { props: fieldGroupValueProps, events: {} },
@@ -157,11 +157,10 @@ export const fieldGroupKitParts = {
   },
 } as const;
 
-export type FieldGroupKitPart = keyof typeof fieldGroupKitParts;
+export type FieldGroupKitComponentName = keyof typeof fieldGroupKitComponents;
 
-export type FieldGroupSchemaProps<Name extends FieldGroupKitPart> = z.output<
-  (typeof fieldGroupKitParts)[Name]['props']
->;
+export type FieldGroupSchemaProps<Name extends FieldGroupKitComponentName> =
+  z.output<(typeof fieldGroupKitComponents)[Name]['props']>;
 
-export type FieldGroupEvents<Name extends FieldGroupKitPart> =
-  (typeof fieldGroupKitParts)[Name]['events'];
+export type FieldGroupEvents<Name extends FieldGroupKitComponentName> =
+  (typeof fieldGroupKitComponents)[Name]['events'];

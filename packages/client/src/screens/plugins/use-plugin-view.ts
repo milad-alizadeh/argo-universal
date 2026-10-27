@@ -1,44 +1,28 @@
-import { useSubscription } from '@trpc/tanstack-react-query';
-import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import {
   emptyPluginView,
   reducePluginView,
   type PluginViewState,
   type PluginOnEvent,
 } from '../../lib/product/plugin-registry';
-import { usePluginDispatch, bindPluginDispatch } from './use-plugin-dispatch';
-import { usePluginStreamState } from './use-plugin-stream-state';
+import { usePluginBinding } from './use-plugin-binding';
+import { usePluginStream } from './use-plugin-stream';
 
 interface PluginView extends PluginViewState {
   dispatch: PluginOnEvent;
 }
 
-type Page = { pluginId: string; path: string };
-
-function usePageState(page: Page): PluginViewState {
-  const trpc = useTRPC();
-
-  const { value, receive } = usePluginStreamState(
-    { trpc, key: JSON.stringify(page) },
-    emptyPluginView,
-    reducePluginView,
-  );
-
-  const subscription = useSubscription(
-    trpc.plugins.view.subscriptionOptions(page, { onData: receive }),
-  );
-
-  useResubscribeOnReconnect(subscription);
-
-  return value;
-}
-
+// Watches one Plugin page on the connected Server; its events dispatch to the view they came from.
 export function usePluginView(pluginId: string, path: string): PluginView {
-  const state = usePageState({ pluginId, path });
-  const send = usePluginDispatch();
+  const page = { pluginId, path };
 
-  const { revision, viewId } = state;
-  const target = { pluginId, path, revision, viewId };
+  const { state } = usePluginStream(
+    page,
+    (trpc, input, onData) =>
+      trpc.plugins.view.subscriptionOptions(input, { onData }),
+    { initial: emptyPluginView, reduce: reducePluginView },
+  );
 
-  return { ...state, dispatch: bindPluginDispatch(send, target) };
+  const { onEvent } = usePluginBinding()({ ...page, view: state });
+
+  return { ...state, dispatch: onEvent };
 }

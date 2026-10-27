@@ -25,7 +25,7 @@ const counterButtons = (key: string): WireNode =>
     }),
     node('Button', '1', {
       label: 'Say hi',
-      variant: 'outline',
+      variant: 'secondary',
       onPress: { action: 'toast', message: 'Hello from the Plugin' },
     }),
   ]);
@@ -107,7 +107,7 @@ export const slotCounterTree = (projectId: string, waves: number): WireNode =>
     }),
     node('Button', '1', {
       label: 'Wave',
-      variant: 'outline',
+      variant: 'secondary',
       onPress: { $event: slotCounterWaveEvent },
     }),
   ]);

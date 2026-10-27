@@ -74,6 +74,10 @@ _Avoid_: Listener, interceptor, middleware
 A named, versioned place in a core page that Plugins fill, such as Project details. Each Plugin adds its own content; Argo decides where it goes and how much fits, and Plugins never change Argo's or each other's. A Slot takes either a page of kit components or items of a fixed shape that Argo draws, such as a Session row's meta items, asked for once per list.
 _Avoid_: Contribution point, hook, outlet
 
+**Plugin tree**:
+The kit components a Plugin sends for one page or Slot, which the App draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts.
+_Avoid_: Wire tree, Plugin UI
+
 **Single-owner Slot**:
 An items Slot only one source shows at a time, such as a Session row's Activity line. Every Plugin that declares it answers; the App shows the answer of the one Plugin the user chose in Settings on that Device, or Argo's own while none is chosen or the chosen Plugin is turned off or has no answer.
 _Avoid_: Part, takeover, exclusive Slot
@@ -84,15 +88,15 @@ _Avoid_: Override, component override
 
 **Plugin wire version**:
 The one version of the Plugin wire that an App reports when it connects. The Server sends Plugin trees only to an App at or above the minimum; an older App sees "Update Argo" in place of Plugin pages and Slots, and core's own component in Replaceable Slots. See ADR-0034.
-_Avoid_: Part version, kit version, protocol version
+_Avoid_: Kit component version, kit version, protocol version
 
 **Page path**:
 The path a Plugin registers one of its pages at with `argo.pages.register`, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
 _Avoid_: App path, route (for what a Plugin writes)
 
-**Part event**:
-A named handler prop on a kit part, such as `onPress`; the App sends it to the Plugin by node key and event name, checked against the part's schema.
-_Avoid_: Interaction, action (Action is a kit part), handler
+**Component event**:
+A named handler prop on a kit component, such as `onPress`; the App sends it to the Plugin by node key and event name, checked against the kit component's schema.
+_Avoid_: Interaction, action (Action is a kit component), handler
 
 **Capability**:
 Something a Plugin's manifest says it needs, such as running `gh` or reaching `api.github.com`. Without any, a Plugin's calls to the machine can only read Projects and use the Plugin's own data.
@@ -273,8 +277,12 @@ _Avoid_: Notice, Feed entry
 ## UI
 
 **UI kit**:
-Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
+Argo's small set of kit components, tokens and prop names that every screen, and later every plugin, is built from.
 _Avoid_: Design system (for the code), component library
+
+**Kit component**:
+One component of the UI kit, such as Button, List or Screen, drawn by Argo on every platform. A Plugin sends one by name and props; a Contracts schema defines its props, Slots and events once. A plain component is a function a Plugin author writes in JSX.
+_Avoid_: Part, UI kit component, primitive
 
 **FieldGroup**:
 A page's fixed rows of values and controls, such as Project details or Plugin settings, arranged in sections. Values save as they change, or a page that sends them puts one submit button below the FieldGroup.

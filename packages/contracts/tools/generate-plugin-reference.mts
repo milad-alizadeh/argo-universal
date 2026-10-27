@@ -1,37 +1,38 @@
 import { readdir, readFile, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pluginKitDeclarations } from './plugin-kit-declarations';
-import { propDescriptions } from './plugin-prop-descriptions';
-import { partNames, renderIndex, renderPart } from './plugin-reference-pages';
+import {
+  documentedComponentNames,
+  renderIndex,
+  renderComponent,
+} from './plugin-reference-pages';
 
 const outputDirectory = resolve(
   import.meta.dirname,
-  '../../../docs/plugins/parts',
+  '../../../docs/plugins/kit-components',
 );
 
 const checking = process.argv.includes('--check');
 
-const descriptionFile = resolve(
-  import.meta.dirname,
-  '../src/plugins/plugin-prop-descriptions.gen.ts',
-);
-
 const kitDeclarationFile = resolve(
   import.meta.dirname,
-  '../../plugin-kit/src/components.d.ts',
+  '../../plugin-kit/src/components.gen.d.ts',
 );
 
-function generatedFiles(): Map<string, string> {
-  const pages = partNames.map(
+const componentPages = (): (readonly [string, string])[] =>
+  documentedComponentNames.map(
     (name) =>
-      [resolve(outputDirectory, `${name}.md`), renderPart(name)] as const,
+      [resolve(outputDirectory, `${name}.md`), renderComponent(name)] as const,
   );
 
+function generatedFiles(): Map<string, string> {
   return new Map([
-    ...pages,
-    [descriptionFile, propDescriptions()],
+    ...componentPages(),
     [kitDeclarationFile, pluginKitDeclarations()],
-    [resolve(outputDirectory, 'index.md'), renderIndex(partNames)],
+    [
+      resolve(outputDirectory, 'index.md'),
+      renderIndex(documentedComponentNames),
+    ],
   ]);
 }
 

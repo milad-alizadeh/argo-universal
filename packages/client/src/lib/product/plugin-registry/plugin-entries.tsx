@@ -1,5 +1,6 @@
-import type { WirePart } from '@repo/contracts/plugins/kit';
+import type { WireComponentName } from '@repo/contracts/plugins/kit';
 import { Action } from '@repo/kit/primitives/actions/action';
+import { Button } from '@repo/kit/primitives/actions/button';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { SplitButton } from '@repo/kit/primitives/actions/split-button';
 import { Audio } from '@repo/kit/primitives/content/audio';
@@ -36,7 +37,13 @@ import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
 import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
-import { PluginButton } from './plugin-button';
+
+// A Plugin's sheet holds composed content, so it takes the standard sheet inset.
+function PluginSheet(
+  props: KitProps<'Sheet', string, React.JSX.Element>,
+): React.JSX.Element {
+  return <Sheet {...props} inset />;
+}
 
 export const pluginEntries = {
   Markdown,
@@ -78,7 +85,7 @@ export const pluginEntries = {
   ProgressBar,
   Pill,
   Text,
-  Button: PluginButton,
+  Button,
   Stack,
   Spacer,
   Card,
@@ -100,7 +107,9 @@ export const pluginEntries = {
   Avatar,
   Icon,
   Alert,
-  Sheet,
+  Sheet: PluginSheet,
 } satisfies {
-  [Name in WirePart]: ComponentType<KitProps<Name, string, React.JSX.Element>>;
+  [Name in WireComponentName]: ComponentType<
+    KitProps<Name, string, React.JSX.Element>
+  >;
 };

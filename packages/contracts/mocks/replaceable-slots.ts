@@ -55,7 +55,7 @@ export const refusedTreeFixture: WireNode = {
   props: { direction: 'column' },
   children: [
     replacementTreeFixture,
-    { type: 'FuturePart', key: '1', props: {}, children: [], slots: {} },
+    { type: 'FutureComponent', key: '1', props: {}, children: [], slots: {} },
   ],
   slots: {},
 };

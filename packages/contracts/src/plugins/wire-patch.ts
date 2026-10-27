@@ -1,5 +1,8 @@
 import type { PatchOp, PatchStep, ViewMessage, WireNode } from './wire';
 
+// The patch between two trees, the inverse of `applyPatch`: the Plugin worker and the Server both diff with it.
+export { diff } from './wire-diff';
+
 function collection(node: WireNode, slot?: string): WireNode[] {
   return slot === undefined ? node.children : (node.slots[slot] ?? []);
 }

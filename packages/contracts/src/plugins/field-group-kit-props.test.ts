@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isStockIconName } from '../kit-symbols/stock-icon-schema';
-import { fieldGroupKitParts } from './field-group-kit-props';
+import { fieldGroupKitComponents } from './field-group-kit-props';
 import { kitPropDescriptors } from './kit-prop-descriptors';
 
 describe('a FieldGroup row’s leading icon', () => {
@@ -17,7 +17,7 @@ describe('a FieldGroup row’s leading icon', () => {
   ])('refuses %s', (_, name) => {
     expect(isStockIconName(name)).toBe(false);
     expect(
-      fieldGroupKitParts['FieldGroup.Picker'].props.safeParse({
+      fieldGroupKitComponents['FieldGroup.Picker'].props.safeParse({
         title: 'Volume',
         value: 'a',
         options: [],
@@ -52,7 +52,7 @@ describe('a FieldGroup props table', () => {
 });
 
 const parseLogo = (logo: string): boolean =>
-  fieldGroupKitParts['FieldGroup.Picker'].props.safeParse({
+  fieldGroupKitComponents['FieldGroup.Picker'].props.safeParse({
     title: 'Agent',
     value: 'a',
     options: [{ value: 'a', label: 'A', logo }],

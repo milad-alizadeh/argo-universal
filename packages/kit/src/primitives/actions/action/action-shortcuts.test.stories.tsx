@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { TextInput } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
+import { PluginTreeContext } from '#kit/plugin-tree-context';
 import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import {
@@ -48,20 +49,21 @@ export const ShortcutConflicts: Story = {
       >
         <Button label="Second list" />
       </ContextActions>
-      <ContextActions
-        actions={
-          <Action
-            key="reserved"
-            plugin
-            label="Reserved"
-            icon="rename"
-            shortcut={{ modifiers: [], key: 'Enter' }}
-            onPress={() => choose('reserved')}
-          />
-        }
-      >
-        <Button label="Plugin row" />
-      </ContextActions>
+      <PluginTreeContext value>
+        <ContextActions
+          actions={
+            <Action
+              key="reserved"
+              label="Reserved"
+              icon="rename"
+              shortcut={{ modifiers: [], key: 'Enter' }}
+              onPress={() => choose('reserved')}
+            />
+          }
+        >
+          <Button label="Plugin row" />
+        </ContextActions>
+      </PluginTreeContext>
     </ActionShortcutScope>
   ),
   play: async ({ canvas, canvasElement, userEvent }) => {

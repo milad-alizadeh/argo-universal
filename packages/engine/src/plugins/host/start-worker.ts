@@ -7,7 +7,7 @@ export type WorkerRecord = {
   generation: number;
   worker: Worker;
   deadline: ReturnType<typeof setTimeout>;
-  heartbeat: ReturnType<typeof setInterval> | null;
+  heartbeat: ReturnType<typeof setTimeout> | null;
 };
 
 export function startWorker(entry: PluginEntry): Worker {

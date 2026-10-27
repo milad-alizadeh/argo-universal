@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { chartDefaults, tones } from '../kit-tokens';
-import { svgProps } from './kit-props';
+import { svgProps } from './core-kit-props';
 import { svgCharacterLimit } from './wire-limits';
 
 const labelLimit = 120;
