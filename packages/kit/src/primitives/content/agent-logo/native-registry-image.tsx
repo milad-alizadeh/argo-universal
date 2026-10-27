@@ -1,17 +1,12 @@
+import { Image, type ImageStyle } from 'expo-image';
 import type * as React from 'react';
-import { useMemo } from 'react';
-import { View } from 'react-native';
+import { type ComponentProps, useMemo, useState } from 'react';
 import { SvgXml, type XmlProps } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import {
-  type IconSizeValue,
-  useIconBox,
-  useIconPixels,
-} from '../../../symbols/icon-size';
+import { useIconBox, useIconPixels } from '../../../symbols/icon-size';
 import type { LoadedIconProps } from './registry-icon-props';
 import { type IconSource, decodeSource } from './registry-source';
 import { UnavailableIcon } from './unavailable-icon';
-import { useSvgText } from './use-svg-text';
 
 type ImageProps = Pick<
   XmlProps,
@@ -44,32 +39,52 @@ function SourceImage(props: SourceImageProps): React.JSX.Element {
 
   if (props.source.kind === 'uri')
     return (
-      <FetchedImage {...props} uri={props.source.uri} fallback={fallback} />
+      <RemoteImage
+        key={props.source.uri}
+        {...props}
+        uri={props.source.uri}
+        fallback={fallback}
+      />
     );
 
   return fallback;
 }
 
-interface FetchedImageProps {
-  uri: string;
-  size: IconSizeValue;
+interface RemoteImageProps extends LoadedIconProps {
   image: ImageProps;
   fallback: React.JSX.Element;
 }
 
-// The fetched SVG is kept by its URI (svg-text-cache), so a row a list mounts again draws its logo at once; while one loads, its box stays empty at the logo's size, so the row does not move when it arrives.
-function FetchedImage(props: FetchedImageProps): React.JSX.Element {
-  const svg = useSvgText(props.uri);
+// expo-image fetches a remote SVG once and keeps it in memory and on disk, so a row a list mounts again draws its logo at once. The tint paints the logo's one colour as the foreground.
+function RemoteImage(props: RemoteImageProps): React.JSX.Element {
+  const [failed, setFailed] = useState(false);
   const box = useIconBox(props.size);
 
-  if (svg.status === 'failed') return props.fallback;
+  if (failed) return props.fallback;
 
-  if (svg.status === 'loading') return <View style={box} />;
-
-  return <SvgXml {...props.image} xml={svg.xml} fallback={props.fallback} />;
+  return <Image {...remoteProps(props, box)} onError={() => setFailed(true)} />;
 }
 
-// A registry logo paints with currentColor, which would be black; it takes the foreground, so it reads on a dark surface. A fetched SVG takes it as `color`, an inline one written in.
+function remoteProps(
+  props: RemoteImageProps,
+  box: ImageStyle,
+): ComponentProps<typeof Image> {
+  return {
+    source: props.uri,
+    style: box,
+    contentFit: 'contain',
+    tintColor: tint(props.image.color),
+    cachePolicy: 'memory-disk',
+    recyclingKey: props.uri,
+    accessibilityRole: 'image',
+    accessibilityLabel: props.image.accessibilityLabel,
+  };
+}
+
+const tint = (color: ImageProps['color']): string | undefined =>
+  typeof color === 'string' ? color : undefined;
+
+// A registry logo paints with currentColor, which would be black; it takes the foreground, so it reads on a dark surface. A remote SVG is tinted with it, an inline one written in.
 function useForegroundColor(): string | undefined {
   const resolved = useResolveClassNames('text-foreground').color;
 
