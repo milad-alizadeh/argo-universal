@@ -1,7 +1,6 @@
 import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
 import type { ListPosition, ListSelection } from '../../../list-context';
-import { useTreeDrawn } from '../../../list-tree';
-import { useInMenu } from '../../../menu-rows-context';
+import { useListLook } from '../../../list-look-context';
 import type { ChildrenOptions } from './list-children-options';
 import { sectionEntries, menuEntries } from './list-section-entries';
 import {
@@ -25,7 +24,7 @@ interface PreparedChildren {
 }
 
 export function usePreparedChildren(props: ChildrenOptions): PreparedChildren {
-  const menu = useInMenu();
+  const { menu } = useListLook();
   const blocks = useChildBlocks(props.children);
 
   const shelves = hasShelves(props, blocks);
@@ -43,7 +42,7 @@ const noneFolded: ReadonlySet<string> = new Set();
 // The List owns which parents are folded: every parent starts open, and its chevron folds it.
 function useFolding(): TreeFolding {
   const [folded, setFolded] = useState(noneFolded);
-  const drawn = useTreeDrawn();
+  const { treeDrawn: drawn } = useListLook();
 
   const toggle = useCallback(
     (key: string) =>
@@ -63,10 +62,12 @@ function useFolding(): TreeFolding {
 function useChildBlocks(children: ReactNode): ListBlock[] {
   const id = useId();
   const folding = useFolding();
+  const { footerShown } = useListLook();
 
   return useMemo(
-    () => prepareChildren(children, id, listTree(children, folding)),
-    [children, id, folding],
+    () =>
+      prepareChildren(children, id, listTree(children, folding, footerShown)),
+    [children, id, folding, footerShown],
   );
 }
 

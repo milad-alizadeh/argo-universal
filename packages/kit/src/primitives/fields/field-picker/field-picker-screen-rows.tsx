@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { InChoiceMenu } from '#kit/menu-rows-context';
+import { choosingPlace, ListPlaceContext, useListPlace } from '#kit/list-place';
 import { AgentLogo } from '#primitives/content/agent-logo';
 import { Icon, IconSlot } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
@@ -43,23 +43,17 @@ function listProps(props: FieldPickerScreenProps): ListProps {
 // The options of a `page` as a menu's rows: the web, a desktop popover.
 export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
   return (
-    <List {...listProps(props)} empty={<EmptyState />}>
-      {optionSections(props.shown ?? props.options).map((section) => (
-        <ScreenSection key={section.key} {...props} section={section} />
-      ))}
-    </List>
+    <ListPlaceContext value={choosingPlace(useListPlace())}>
+      <List {...listProps(props)} empty={<EmptyState />}>
+        {optionSections(props.shown ?? props.options).map((section) => (
+          <ChoiceSection key={section.key} {...props} section={section} />
+        ))}
+      </List>
+    </ListPlaceContext>
   );
 }
 
 type SectionProps = FieldPickerScreenProps & { section: OptionSection };
-
-function ScreenSection(props: SectionProps): ReactElement {
-  return (
-    <InChoiceMenu value>
-      <ChoiceSection {...props} />
-    </InChoiceMenu>
-  );
-}
 
 function ChoiceSection(props: SectionProps): ReactElement {
   return (

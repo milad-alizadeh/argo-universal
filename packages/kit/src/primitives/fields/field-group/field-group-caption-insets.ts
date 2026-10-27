@@ -1,3 +1,4 @@
+import { rowInset } from '#kit/list-look-insets';
 import type { NativeTextRole } from '#primitives/content/native-text';
 
 /*
@@ -9,15 +10,30 @@ export const rowSpacing = 2;
 
 export const sectionBreakHeight = 24 - 2 * rowSpacing;
 
-export const contentPadding = { start: 16, end: 16, top: 16, bottom: 16 };
+export const contentPadding = {
+  start: rowInset,
+  end: rowInset,
+  top: 16,
+  bottom: 16,
+};
 
 /*
  * A section's title or footer as Expo UI's Android FieldGroup.Section draws it (FieldSection.android.tsx): 16dp in,
  * the title 8dp above its rows, the footer 4dp below them, in the kit's type role.
  */
-export const titleInsets = { start: 16, top: 0, end: 16, bottom: 8 };
+export const titleInsets = {
+  start: rowInset,
+  top: 0,
+  end: rowInset,
+  bottom: 8,
+};
 
-export const footerInsets = { start: 16, top: 4, end: 16, bottom: 0 };
+export const footerInsets = {
+  start: rowInset,
+  top: 4,
+  end: rowInset,
+  bottom: 0,
+};
 
 export type Insets = typeof titleInsets;
 

@@ -5,8 +5,7 @@ import {
   phones,
   platformsAndAppearances,
 } from '../mocks/list-look-fixtures';
-
-const noEdges = { heading: '', footer: '' };
+import { rowInset } from './list-look-insets';
 
 describe('insets', () => {
   it('leave a plain List to its caller', () => {
@@ -16,9 +15,11 @@ describe('insets', () => {
   it.each(platformsAndAppearances)(
     'give a popover the same insets whatever it holds: %s, %s',
     (platform, appearance) => {
-      const menu = look({ menu: true, appearance: 'plain' }).insets;
+      const menu = look({ place: 'popover', appearance: 'plain' }).insets;
 
-      expect(look({ menu: true, appearance, platform }).insets).toEqual(menu);
+      expect(look({ place: 'popover', appearance, platform }).insets).toEqual(
+        menu,
+      );
     },
   );
 
@@ -54,18 +55,18 @@ describe('insets', () => {
 });
 
 describe('headings and footers', () => {
-  it('start a web card on its rows text', () => {
-    expect(look({ appearance: 'grouped' }).edges).not.toEqual(noEdges);
+  it('start a web card on its rows text, 16 in at every width', () => {
+    const card = look({ appearance: 'grouped' }).section;
+
+    expect(card.inset).toBe('px-4');
+    expect(card.headingBelow).not.toBe('');
   });
 
-  it('start a phone grouped List with no edge of its own', () => {
-    expect(look({ appearance: 'grouped', platform: 'ios' }).edges).toEqual(
-      noEdges,
-    );
-  });
+  it('start a phone grouped List with no inset of a card of its own', () => {
+    const phone = look({ appearance: 'grouped', platform: 'ios' }).section;
 
-  it('start a plain List with no edge of its own', () => {
-    expect(look({ appearance: 'plain' }).edges).toEqual(noEdges);
+    expect(phone.inset).toBe(look({ appearance: 'plain' }).section.inset);
+    expect(phone.headingBelow).toBe('');
   });
 
   it('draw a phone grouped List on the grouped grey, apart from the web', () => {
@@ -87,21 +88,33 @@ describe('headings and footers', () => {
   it.each(appearances)(
     'draw a sidebar the same when it is %s',
     (appearance) => {
-      const sidebar = look({ sidebar: true }).section;
+      const sidebar = look({ place: 'sidebar' }).section;
 
-      expect(look({ sidebar: true, appearance }).choosingSection).toBe(sidebar);
+      expect(look({ place: 'sidebar', appearance }).section).toBe(sidebar);
     },
   );
 
   it('give a choosing popover its own heading', () => {
-    const popover = look({ menu: true, appearance: 'plain' });
+    const popover = look({ place: 'popover', appearance: 'plain' });
 
-    expect(popover.choosingSection).not.toBe(popover.section);
+    expect(look({ place: 'choice', appearance: 'plain' }).section).not.toBe(
+      popover.section,
+    );
+  });
+});
+
+describe('the heading inset of a Screen over grouped cards', () => {
+  it('is the rows inset on a narrow web window', () => {
+    expect(look({ appearance: 'grouped', wide: false }).headingInset).toBe(
+      rowInset,
+    );
   });
 
-  it('give any other List the same heading when it chooses', () => {
-    const plain = look({ appearance: 'plain' });
-
-    expect(plain.choosingSection).toBe(plain.section);
+  it.each([
+    ['a wide web window', { wide: true }],
+    ['a phone', { platform: 'ios' as const }],
+    ['plain rows', { appearance: 'plain' as const }],
+  ])('is none on %s', (_name, input) => {
+    expect(look({ appearance: 'grouped', ...input }).headingInset).toBe(0);
   });
 });

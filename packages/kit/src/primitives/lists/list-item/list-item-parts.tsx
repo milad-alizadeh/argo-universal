@@ -1,20 +1,18 @@
 import type { ReactElement, ReactNode } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import {
   Icon,
   IconSizeContext,
   type IconSizing,
 } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { useCompactRows } from '../../../list-look-context';
-import { useInMenu } from '../../../menu-rows-context';
+import { useCompactRows, useListLook } from '../../../list-look-context';
 import {
   hasBadge,
   ItemBadge,
   sidebarStatus,
   useLeadingBadge,
 } from '../../../row-badge';
-import { useInSidebar } from '../../../row-drawing-context';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
@@ -57,7 +55,7 @@ function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
 function useLeadingLane(sidebar: boolean | undefined): LeadingLane {
   const compact = useCompactRows(sidebar);
 
-  return leadingLane(useInMenu(), sidebar === true || compact);
+  return leadingLane(useListLook().menu, sidebar === true || compact);
 }
 
 export function Leading(props: LeadingProps): ReactNode {
@@ -98,7 +96,7 @@ function trailingContent(props: TrailingProps): ReactNode {
 
 function useTrailingContent(props: TrailingProps): ReactNode {
   const content = trailingContent(props);
-  const status = useInSidebar() ? sidebarStatus(props.badge) : undefined;
+  const status = useListLook().sidebar ? sidebarStatus(props.badge) : undefined;
 
   if (status === undefined) return content;
 
@@ -129,15 +127,17 @@ export function Accessory({ children }: { children?: ReactNode }): ReactNode {
 }
 
 /*
- * The disclosure chevron of a row that pushes a page; Android draws none. The two glyphs fill their
- * boxes differently, so each takes the role that lands it on the same 12pt chevron beside the title:
- * SF's inks most of its point size and takes the chevron role, while the SVG `web-disclosure` is
- * drawn inside its 24-point box and takes the full disclosure slot. iOS draws SF's.
+ * The disclosure chevron of a row that pushes a page, as its List look draws it; Android draws none. The two glyphs
+ * fill their boxes differently, so each takes the role that lands it on the same 12pt chevron beside the title: SF's
+ * inks most of its point size and takes the chevron role, while the SVG `web-disclosure` is drawn inside its 24-point
+ * box and takes the full disclosure slot.
  */
 export function LinkAccessory(): ReactElement | null {
-  if (Platform.OS === 'android') return null;
+  const { chevron } = useListLook();
 
-  return Platform.OS === 'ios' ? (
+  if (chevron === undefined) return null;
+
+  return chevron === 'disclosure' ? (
     <Icon name="disclosure" className="text-tertiary" />
   ) : (
     <Icon name="web-disclosure" size="md" className="text-tertiary" />
@@ -146,7 +146,7 @@ export function LinkAccessory(): ReactElement | null {
 
 // A desktop sidebar's rows push no chevron, so its accessory lane stays empty.
 export function useLinkAccessory(): ReactElement | undefined {
-  return useInSidebar() ? undefined : <LinkAccessory />;
+  return useListLook().sidebar ? undefined : <LinkAccessory />;
 }
 
 // Paper: a control under the row's title and value spans the row's content width, on its own line.

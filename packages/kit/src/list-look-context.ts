@@ -4,11 +4,9 @@ import {
   type ListLook,
   type ListLookInput,
   resolveListLook,
-  rowsAreCompact,
 } from './list-look';
-import { compactSection, type SectionDrawing } from './list-look-section';
-import { useInChoiceMenu, useInMenu } from './menu-rows-context';
-import { useInSidebar } from './row-drawing-context';
+import type { SectionDrawing } from './list-look-section';
+import { useListPlace } from './list-place';
 import { useWide } from './use-wide/use-wide';
 
 export const ListLookContext = createContext<ListLook | null>(null);
@@ -18,77 +16,76 @@ type Declared = Pick<
   'appearance' | 'density' | 'onPhones' | 'fit'
 >;
 
-const lookOf = (
-  declared: Declared,
-  menu: boolean,
-  sidebar: boolean,
-): ListLook =>
-  resolveListLook({ ...declared, platform: Platform.OS, menu, sidebar });
+type Where = Pick<ListLookInput, 'place' | 'wide'>;
+
+const lookOf = (declared: Declared, where: Where): ListLook =>
+  resolveListLook({ ...declared, ...where, platform: Platform.OS });
+
+function useWhere(): Where {
+  const place = useListPlace();
+  const wide = useWide();
+
+  return useMemo(() => ({ place, wide }), [place, wide]);
+}
 
 // A List resolves its look once, from what it declares and where it sits, and provides it to everything it draws.
 export function useDeclaredListLook(declared: Declared): ListLook {
   const { appearance, density, onPhones, fit } = declared;
-  const menu = useInMenu();
-  const sidebar = useInSidebar();
+  const where = useWhere();
 
   return useMemo(
-    () => lookOf({ appearance, density, onPhones, fit }, menu, sidebar),
-    [appearance, density, onPhones, fit, menu, sidebar],
+    () => lookOf({ appearance, density, onPhones, fit }, where),
+    [appearance, density, onPhones, fit, where],
   );
 }
 
 // Inside a List's rows, a part that would draw its own List draws a section of it instead.
 export const useInList = (): boolean => use(ListLookContext) !== null;
 
-type Held = `${boolean}-${boolean}`;
+const outsideLooks = new Map<string, ListLook>();
 
-const outsideLook = (menu: boolean, sidebar: boolean): ListLook =>
-  lookOf({ appearance: 'plain', density: 'regular' }, menu, sidebar);
+// Outside a List a part draws plain, in whichever place holds it.
+function outsideLook({ place, wide }: Where): ListLook {
+  const key = `${place}-${wide}`;
+  const held = outsideLooks.get(key);
 
-// Outside a List a part draws plain, in whichever popover or sidebar holds it.
-const outsideLooks: Record<Held, ListLook> = {
-  'false-false': outsideLook(false, false),
-  'false-true': outsideLook(false, true),
-  'true-false': outsideLook(true, false),
-  'true-true': outsideLook(true, true),
-};
+  if (held) return held;
 
-export function useListLook(): ListLook {
-  const provided = use(ListLookContext);
-  const menu = useInMenu();
-  const sidebar = useInSidebar();
+  const look = lookOf(
+    { appearance: 'plain', density: 'regular' },
+    { place, wide },
+  );
 
-  return provided ?? outsideLooks[`${menu}-${sidebar}`];
-}
+  outsideLooks.set(key, look);
 
-// A compact List's rows keep their leading edge in; the sidebar's own drawing already sits on its rows.
-function useRowsSection(): SectionDrawing {
-  const { section } = useListLook();
-  const compact = useCompactRows();
-  const inSidebar = useInSidebar();
-
-  return compact && !inSidebar ? compactSection(section) : section;
-}
-
-// A compact List's section heading starts on its rows' leading edge, where a regular List's starts on its content's.
-export function useSectionDrawing(): SectionDrawing {
-  const { choosingSection } = useListLook();
-  const rows = useRowsSection();
-
-  return useInChoiceMenu() ? choosingSection : rows;
+  return look;
 }
 
 /*
- * A compact List's rows draw as one line on a wide window, and never as a popover's menu rows. A sidebar row (its own
- * `sidebar` option, or its List's sidebar drawing) keeps its one line at every web width; phones resolve regular density.
+ * The look of the List that holds this part, or a plain one where it sits in no List. A part whose place is not its
+ * List's (a popover opened from a row) draws by its own place.
  */
-export function useCompactRows(sidebar?: boolean): boolean {
-  const { density } = useListLook();
-  const inSidebar = useInSidebar();
+export function useListLook(): ListLook {
+  const provided = use(ListLookContext);
+  const where = useWhere();
 
-  return rowsAreCompact(density, {
-    menu: useInMenu(),
-    wide: useWide(),
-    sidebar: sidebar === true || inSidebar,
-  });
+  return provided?.place === where.place ? provided : outsideLook(where);
+}
+
+export const useSectionDrawing = (): SectionDrawing => useListLook().section;
+
+// A row that asks for the sidebar's drawing is one line at every width.
+export function useCompactRows(sidebar?: boolean): boolean {
+  const { compact, compactSidebarRows } = useListLook();
+
+  return sidebar === true ? compactSidebarRows : compact;
+}
+
+// How far a Screen heading over grouped cards moves in, so a narrow web heading starts on the cards' rows' text.
+export function useCardHeadingInset(grouped: boolean): number {
+  const where = useWhere();
+
+  return grouped
+    ? lookOf({ appearance: 'grouped', density: 'regular' }, where).headingInset
+    : 0;
 }

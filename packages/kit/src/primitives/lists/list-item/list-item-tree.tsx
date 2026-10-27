@@ -1,7 +1,8 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
-import { useTreeDrawn, useTreeRow, type TreeRow } from '../../../list-tree';
+import { useListLook } from '../../../list-look-context';
+import { useTreeRow, type TreeRow } from '../../../list-tree';
 import { cn } from '../../../utils';
 
 /*
@@ -104,7 +105,7 @@ type LaneProps = { title: string; compact: boolean };
  */
 export function TreeLane(props: LaneProps): ReactNode {
   const tree = useTreeRow();
-  const drawn = useTreeDrawn();
+  const { treeDrawn: drawn } = useListLook();
 
   if (!tree || !drawn) return null;
 

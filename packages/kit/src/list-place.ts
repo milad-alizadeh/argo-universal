@@ -1,0 +1,48 @@
+import { createContext, use } from 'react';
+
+/*
+ * Where a List and its rows sit, said once by whatever makes the place: a popover, a choosing popover, the desktop
+ * sidebar, the last section of a Settings sidebar. List look reads it, so a row, a section or a FieldGroup never
+ * combines contexts to find out where it is.
+ */
+export type ListPlace =
+  | 'page'
+  | 'popover'
+  | 'choice'
+  | 'sidebar'
+  | 'sidebar-end';
+
+export interface ListPlaceFacts {
+  // Rows are a web popover's menu rows (Paper's Combobox master): flat on it, menu-row radius and tints, no card or separators.
+  menu: boolean;
+  // Rows keep a lane for their check, so a section's heading starts with the rows' text.
+  choosing: boolean;
+  // Rows are flat tiles on the desktop sidebar's glass.
+  sidebar: boolean;
+  // Its sections end their container, so none draws space after itself.
+  ends: boolean;
+}
+
+const none = { menu: false, choosing: false, sidebar: false, ends: false };
+
+const facts = {
+  page: none,
+  popover: { ...none, menu: true },
+  choice: { ...none, menu: true, choosing: true },
+  sidebar: { ...none, sidebar: true },
+  'sidebar-end': { ...none, menu: true, sidebar: true, ends: true },
+} satisfies Record<ListPlace, ListPlaceFacts>;
+
+export const listPlaceFacts = (place: ListPlace): ListPlaceFacts =>
+  facts[place];
+
+// A popover whose sections choose; anywhere else choosing changes nothing about where a row sits.
+export const choosingPlace = (place: ListPlace): ListPlace =>
+  place === 'popover' ? 'choice' : place;
+
+export const ListPlaceContext = createContext<ListPlace>('page');
+
+export const useListPlace = (): ListPlace => use(ListPlaceContext);
+
+// A web popover's rows are menu rows; a phone's popover is a Sheet and keeps the page place.
+export const useInMenu = (): boolean => listPlaceFacts(useListPlace()).menu;

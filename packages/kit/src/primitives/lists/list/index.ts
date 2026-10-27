@@ -20,4 +20,6 @@ export {
 
 export { ListHeaderRow } from './list-header';
 
-export { cardSides, phonesGrouped } from '../../../list-look';
+export { phonesGrouped } from '../../../list-look';
+
+export { cardSides } from '../../../list-look-insets';

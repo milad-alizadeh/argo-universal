@@ -7,8 +7,10 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
-import { Platform, type PressableProps } from 'react-native';
-import { ListContext } from './list-context';
+import type { PressableProps } from 'react-native';
+import { RowPositionContext } from './list-context';
+import type { RowHighlight } from './list-look';
+import { useListLook } from './list-look-context';
 
 /*
  * The row the pointer or finger is on: the web's hovered row, iOS's pressed one. Its tint covers the separators
@@ -57,36 +59,42 @@ export function useRowHighlightHandlers(
   row: RowHighlightHandlers,
   interactive: boolean,
 ): RowHighlightHandlers {
-  const setHighlighted = useContext(SetHighlightedRow);
-  const mark = useRowMark(setHighlighted);
+  const marker = useRowMarker();
 
-  return mark && interactive ? marking(row, mark) : row;
+  return marker && interactive ? marking(row, marker) : row;
 }
 
 // A row that draws a tint and keeps no hover or press handlers of its own.
 export const useRowHighlight = (): RowHighlightHandlers =>
   useRowHighlightHandlers({}, true);
 
-// A finger holds iOS's row; a pointer passes over the web's. Android has no separators to cover.
-const marksRows = Platform.OS === 'web' || Platform.OS === 'ios';
-
-type Mark = (held: boolean) => void;
-
-function useRowMark(
-  setHighlighted: Dispatch<SetStateAction<number | undefined>> | undefined,
-): Mark | undefined {
-  const { index } = useContext(ListContext);
-
-  if (!setHighlighted || !marksRows) return undefined;
-
-  return (held) => setHighlighted(held ? index : undefined);
+interface Marker {
+  highlight: RowHighlight;
+  mark: (held: boolean) => void;
 }
 
+// A row marks only where its List look says it is marked, and only inside a section that tracks it.
+function useRowMarker(): Marker | undefined {
+  const setHighlighted = useContext(SetHighlightedRow);
+  const { rowHighlight } = useListLook();
+  const { index } = useContext(RowPositionContext);
+
+  if (!setHighlighted || !rowHighlight) return undefined;
+
+  return {
+    highlight: rowHighlight,
+    mark: (held) => setHighlighted(held ? index : undefined),
+  };
+}
+
+// A finger holds iOS's row; a pointer passes over the web's. Android has no separators to cover.
 const marking = (
   row: RowHighlightHandlers,
-  mark: Mark,
+  { highlight, mark }: Marker,
 ): RowHighlightHandlers =>
-  Platform.OS === 'web' ? hovering(row, mark) : holding(row, mark);
+  highlight === 'hover' ? hovering(row, mark) : holding(row, mark);
+
+type Mark = Marker['mark'];
 
 function hovering(row: RowHighlightHandlers, mark: Mark): RowHighlightHandlers {
   return {

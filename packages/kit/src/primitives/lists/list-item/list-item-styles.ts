@@ -1,6 +1,5 @@
 import type { ListPosition } from '../../../list-context';
 import type { ListLook } from '../../../list-look';
-import type { RowDrawing } from '../../../row-drawing-context';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
 
@@ -30,8 +29,6 @@ const cardClasses =
 export interface ItemDrawing {
   look: ListLook;
   position: ListPosition;
-  menu: boolean;
-  rows: RowDrawing;
   // A compact List's row on a wide window.
   compact: boolean;
 }
@@ -50,7 +47,7 @@ type SurfaceState = Pick<ListItemProps, 'selected' | 'tone' | 'sidebar'>;
 const sidebarSurface = 'relative overflow-hidden rounded-xl';
 
 export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
-  if (drawing.menu)
+  if (drawing.look.menu)
     return cn(
       'relative overflow-hidden rounded-xl',
       menuGaps[drawing.position],
@@ -64,7 +61,7 @@ function ownTile(
   drawing: ItemDrawing,
   state: SurfaceState,
 ): string | undefined {
-  if (drawing.rows === 'sidebar') return sidebarSurface;
+  if (drawing.look.sidebar) return sidebarSurface;
 
   return compactTile(drawing, state) ? compactSurface : undefined;
 }
@@ -110,7 +107,7 @@ const separatedPositions = new Set<ListPosition>(['first', 'middle']);
 
 // A popover's rows and a sidebar's sit apart, as tiles.
 const tiled = (drawing: ItemDrawing): boolean =>
-  drawing.menu || drawing.rows === 'sidebar';
+  drawing.look.menu || drawing.look.sidebar;
 
 function hasSeparator(drawing: ItemDrawing): boolean {
   if (tiled(drawing)) return false;

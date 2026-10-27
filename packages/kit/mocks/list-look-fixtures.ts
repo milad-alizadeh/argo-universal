@@ -13,6 +13,23 @@ export const phones = ['ios', 'android'] satisfies Platform[];
 
 export const platforms = ['web', ...phones] satisfies Platform[];
 
+export const everyPlatform = [
+  'web',
+  'ios',
+  'android',
+  'macos',
+] satisfies Platform[];
+
+export const places = [
+  'page',
+  'popover',
+  'choice',
+  'sidebar',
+  'sidebar-end',
+] satisfies ListLookInput['place'][];
+
+export const widths = [false, true] as const;
+
 export const platformsAndAppearances = platforms.flatMap((platform) =>
   appearances.map((appearance) => [platform, appearance] as const),
 );
@@ -24,7 +41,7 @@ export const look = (
     appearance: 'cards',
     density: 'regular',
     platform: 'web',
-    menu: false,
-    sidebar: false,
+    place: 'page',
+    wide: false,
     ...input,
   });

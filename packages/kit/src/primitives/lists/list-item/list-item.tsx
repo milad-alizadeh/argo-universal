@@ -2,12 +2,14 @@ import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup } from '#primitives/lists/list';
-import { ListContext, ListTileContext } from '../../../list-context';
+import {
+  ListSelectionContext,
+  ListTileContext,
+  RowPositionContext,
+} from '../../../list-context';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { loadingLanes } from '../../../list-skeleton-lanes';
 import { nestedRows, nestsChildren } from '../../../list-tree';
-import { useInMenu } from '../../../menu-rows-context';
-import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
 import {
   useContentItemDrawing,
@@ -16,13 +18,14 @@ import {
 } from './list-item-content-selection';
 import { drawingContent } from './list-item-drawing-content';
 import { NestingItem } from './list-item-nesting';
-import { hasLeading, LinkAccessory, separatorClass } from './list-item-parts';
+import { hasLeading, separatorClass } from './list-item-parts';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import { ItemProgress } from './list-item-progress';
 import type { ListItemProps } from './list-item-props';
 import {
+  disclosureAccessory,
   useItemSelection,
-  ChoiceAccessory,
+  useTrailingChoice,
   ChoiceSlot,
 } from './list-item-selection';
 import {
@@ -34,20 +37,20 @@ import {
 
 const hairline = { height: StyleSheet.hairlineWidth };
 
+const tileSurface = 'relative overflow-hidden rounded-3xl bg-card';
+
 function useItemDrawing(props: Pick<ListItemProps, 'sidebar'>): ItemDrawing {
-  const { position } = useContext(ListContext);
+  const { position } = useContext(RowPositionContext);
 
   return {
     look: useListLook(),
     position,
-    menu: useInMenu(),
-    rows: useRowDrawing(),
     compact: useCompactRows(props.sidebar),
   };
 }
 
 function ItemSeparator(props: ListItemProps): ReactNode {
-  const { index } = useContext(ListContext);
+  const { index } = useContext(RowPositionContext);
   const highlighted = useSeparatorCovered(index);
   const selected = useSelectedSeparator(props.id);
   const covered = [highlighted, selected].some(Boolean);
@@ -76,32 +79,22 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   return (
     <ContextActions actions={actions} menu={props.contextMenu}>
       <>
-        <ListContext value={context}>
+        <RowPositionContext value={context}>
           <ItemSurface {...props} />
-        </ListContext>
+        </RowPositionContext>
         {footer}
       </>
     </ContextActions>
   );
 }
 
-/*
- * A chosen row shows its check only, with no selected fill. Every choosing List
- * draws that check, on a menu row and in a sheet's grouped card alike, so none of them tints the
- * row behind it; a tint there is the web leaking into a stock picker, and it paints over the
- * separator under the chosen row. A selected row without a check, such as the Sessions sidebar's,
- * keeps its tint: it is the only mark that row carries.
- */
+// A chosen row shows its check only, with no selected fill; a selected row without a check keeps its tint.
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing(props);
   const tile = useContext(ListTileContext);
 
-  const className = tile
-    ? 'relative overflow-hidden rounded-3xl bg-card'
-    : itemSurface(drawing, props);
-
   return (
-    <View className={className}>
+    <View className={tile ? tileSurface : itemSurface(drawing, props)}>
       <PressedContent props={props} drawing={drawing} tile={tile !== null} />
       <RowDetails tile={tile !== null} props={props} />
     </View>
@@ -129,7 +122,7 @@ nestsChildren(ListItem);
 // A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
-  const menu = useInMenu();
+  const { menu } = useListLook();
 
   const drawing = useContentItemDrawing({
     ...selected,
@@ -139,22 +132,6 @@ function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   });
 
   return <ListItemFrame {...drawing} />;
-}
-
-// A row that pushes a page outside a choosing List shows the disclosure chevron.
-const disclosureAccessory = (disclosure?: boolean): ReactElement | undefined =>
-  disclosure ? <LinkAccessory /> : undefined;
-
-// An empty trailing choice would hold the trailing lane off the row's edge.
-function useTrailingChoice(
-  menu: boolean,
-  selected: ListItemProps,
-): ReactElement | undefined {
-  const { selectionMode } = useContext(ListContext);
-
-  if (menu || !selectionMode) return undefined;
-
-  return <ChoiceAccessory {...selected} />;
 }
 
 function RowDetails({
@@ -181,12 +158,16 @@ interface PressedProps {
 }
 
 function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
-  const { selectionMode } = useContext(ListContext);
+  const { selectionMode } = useContext(ListSelectionContext);
 
   return (
     <>
-      <ItemPress {...drawingContent(props, tile)} />
-      <Selection selected={props.selected && !drawing.menu && !selectionMode} />
+      <ItemPress
+        {...drawingContent(props, tile, drawing.look.valuePlacement)}
+      />
+      <Selection
+        selected={props.selected && !drawing.look.menu && !selectionMode}
+      />
     </>
   );
 }

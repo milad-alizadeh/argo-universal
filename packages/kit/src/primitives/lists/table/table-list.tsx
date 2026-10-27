@@ -1,5 +1,6 @@
 import { use, type ReactElement } from 'react';
-import { Platform } from 'react-native';
+import type { ListLook } from '#kit/list-look';
+import { useListLook } from '#kit/list-look-context';
 import { ContextActions } from '#primitives/actions/action';
 import { List } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
@@ -64,17 +65,18 @@ function CompactRow(props: RowProps): ReactElement {
   );
 }
 
-// iOS marks a row that pushes its detail with the disclosure chevron; Android and the web draw none.
+// A row that pushes its detail takes the disclosure chevron where the List look draws one for it.
 function useItemProps({ roles, row, ...props }: RowProps): ListItemProps {
   const onPress = useRowOpen({ ...props, roles, row });
+  const look = useListLook();
 
   return {
     id: props.selectionMode ? row.id : undefined,
     title: cellOf(row, roles.title).text,
     accessibilityLabel: row.accessibilityLabel,
     onPress,
-    disclosure: Platform.OS === 'ios' && !!onPress,
-    ...lines(row, roles),
+    disclosure: look.pushChevron && !!onPress,
+    ...lines(row, roles, look),
   };
 }
 
@@ -96,16 +98,21 @@ function useRowOpen(props: RowProps): (() => void) | undefined {
 type Lines = Pick<ListItemProps, 'subtitle' | 'value' | 'trailing' | 'meta'>;
 
 // Android writes the value after the subtitle, "main · 2 min ago", as its other ListItems do.
-const textValue = (subtitle: string, value: string): Lines =>
-  Platform.OS === 'android'
+const textValue = (
+  subtitle: string,
+  value: string,
+  { valuePlacement }: ListLook,
+): Lines =>
+  valuePlacement === 'under-title'
     ? { subtitle: [subtitle, value].filter(Boolean).join(' · ') }
     : { subtitle, value };
 
-function lines(row: TableRow, roles: CompactColumns): Lines {
+function lines(row: TableRow, roles: CompactColumns, look: ListLook): Lines {
   const subtitle = cellOf(row, roles.subtitle).text;
   const value = cellOf(row, roles.value);
 
-  if (value.content) return { subtitle, ...nodeValue(value.content) };
+  if (value.content)
+    return { subtitle, ...nodeValue(value.content, look.valuePlacement) };
 
-  return textValue(subtitle, value.text);
+  return textValue(subtitle, value.text, look);
 }

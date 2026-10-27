@@ -13,13 +13,19 @@ export interface ListSelection {
   onSelectionChange?: (selection: readonly string[]) => void;
 }
 
-export const ListContext = createContext<
-  ListSelection & {
-    position: ListPosition;
-    // The row's place among its List's rows, for the separators a pressed neighbour covers.
-    index?: number;
-  }
->({ position: 'only' });
+// What a section or List chooses; it lasts as long as that section or List.
+export const ListSelectionContext = createContext<ListSelection>({});
+
+export interface RowPosition {
+  position: ListPosition;
+  // The row's place among its List's rows, for the separators a pressed neighbour covers.
+  index?: number;
+}
+
+// Where one row sits among its group's; every row has its own, so it lasts as long as that row.
+export const RowPositionContext = createContext<RowPosition>({
+  position: 'only',
+});
 
 const positions = {
   'true-true': 'only',

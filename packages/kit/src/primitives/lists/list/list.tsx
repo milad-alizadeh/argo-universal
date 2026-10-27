@@ -7,7 +7,6 @@ import {
   useDeclaredListLook,
   useListLook,
 } from '../../../list-look-context';
-import { useInMenu } from '../../../menu-rows-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
@@ -65,7 +64,7 @@ function RowList<Item>(props: ListProps<Item>): ReactElement {
     <ListGrouping list={props}>
       <RowHighlightProvider>
         <ScrollFadeList
-          surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
+          surfaceClassName={useListLook().menu ? 'bg-card' : 'bg-content'}
           style={fill}
           {...useDataListProps(props)}
         />

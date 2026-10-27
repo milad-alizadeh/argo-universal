@@ -13,7 +13,7 @@ import {
   useClaimColumn,
 } from '#kit/content-column/content-column';
 import { flattenedChildren } from '#kit/flattened-children';
-import { useInMenu } from '#kit/menu-rows-context';
+import { useInMenu } from '#kit/list-place';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupKitProps } from '../../kit-props';
 import { MenuFieldGroup } from './field-group-menu';

@@ -1,4 +1,4 @@
-import { ListContext } from '@repo/kit/list-context';
+import { RowPositionContext } from '@repo/kit/list-context';
 import { cn } from '@repo/kit/utils';
 import { use } from 'react';
 import { FadeIn } from 'react-native-reanimated';
@@ -32,7 +32,7 @@ export function rowClassName(closing?: boolean, endsSection?: boolean): string {
 
 // A row's place in its Project's section decides the space below it.
 export function useRowClassName(closing?: boolean): string {
-  const { position } = use(ListContext);
+  const { position } = use(RowPositionContext);
 
   return rowClassName(closing, position === 'last' || position === 'only');
 }

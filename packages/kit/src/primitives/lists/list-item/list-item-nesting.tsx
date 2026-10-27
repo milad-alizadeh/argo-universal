@@ -4,10 +4,10 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { useListLook } from '../../../list-look-context';
 import {
   childTree,
   ListTreeContext,
-  useTreeDrawn,
   useTreeRow,
   type TreeRow,
 } from '../../../list-tree';
@@ -19,7 +19,7 @@ const topRow: TreeRow = { depth: 0, through: [], last: true };
 // This row's place as a parent, under whichever row holds it; a flat drawing never folds it.
 function useParentRow(): ParentRow {
   const [open, setOpen] = useState(true);
-  const drawn = useTreeDrawn();
+  const { treeDrawn: drawn } = useListLook();
   const above = useTreeRow() ?? topRow;
   const toggle = useCallback(() => setOpen((current) => !current), []);
 

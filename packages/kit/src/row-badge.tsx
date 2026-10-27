@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
-import { useInSidebar } from './row-drawing-context';
+import { listPlaceFacts, useListPlace } from './list-place';
 
 interface BadgeProps {
   badge?: KitSchemaProps['ListItem']['badge'];
@@ -78,5 +78,5 @@ export function sidebarStatus(badge: BadgeProps['badge']): ReactNode {
 export function useLeadingBadge(
   badge: BadgeProps['badge'],
 ): BadgeProps['badge'] {
-  return useInSidebar() ? undefined : badge;
+  return listPlaceFacts(useListPlace()).sidebar ? undefined : badge;
 }

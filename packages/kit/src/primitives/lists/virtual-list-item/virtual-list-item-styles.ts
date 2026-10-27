@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '../../../utils';
 import type { VirtualListPosition } from './virtual-list-item-props';
@@ -27,19 +26,18 @@ export function surfaceClasses(
   );
 }
 
-// Android's Pressable draws the ripple; elsewhere the row takes the pressed tint.
-const pressedTint = Platform.OS === 'android' ? undefined : 'active:bg-pressed';
-
 // The stock rows' heights and gaps: iOS 44, Material 56; wide, 32.
 const rowGeometryClasses =
   'min-h-11 flex-row items-center gap-3 px-4 py-2.75 android:min-h-14 android:gap-4 android:py-2 wide:min-h-8 wide:gap-3 wide:py-0 wide:pl-4 wide:pr-3';
 
-export const rowClasses = cn(
-  rowGeometryClasses,
-  'web:hover:bg-hover web:select-none',
-  tintTransitionClassName,
-  pressedTint,
-);
+// The row's List look says which pressed tint it takes: Android's Pressable draws the ripple instead.
+export const rowClasses = (pressedTint: string): string =>
+  cn(
+    rowGeometryClasses,
+    'web:hover:bg-hover web:select-none',
+    tintTransitionClassName,
+    pressedTint,
+  );
 
 const separated = {
   only: false,

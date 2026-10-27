@@ -6,10 +6,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Platform } from 'react-native';
 import { flattenedChildren } from './flattened-children';
-import { useInMenu } from './menu-rows-context';
-import { useWide } from './use-wide/use-wide';
 
 /*
  * A row's place in a List's tree of ListItems (child ListItems nest under their parent). The List flattens the tree,
@@ -65,15 +62,4 @@ export function childRows(child: ReactNode): ReactElement[] {
   if (!nestingRow(child)) return [];
 
   return nestedRows(child.props.children);
-}
-
-/*
- * Only a wide desktop or web window draws the tree: lanes, rails and folding. Phones and narrow windows draw every
- * child flat after its parent, with no indent (Paper "Issue row", phone board), and a popover's menu rows stay flat.
- */
-export function useTreeDrawn(): boolean {
-  const wide = useWide();
-  const menu = useInMenu();
-
-  return Platform.OS === 'web' && wide && !menu;
 }

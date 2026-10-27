@@ -1,7 +1,7 @@
 import { FieldGroup as ExpoFieldGroup } from '@expo/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
-import { useInMenu } from '#kit/menu-rows-context';
+import { useInMenu } from '#kit/list-place';
 import { NativeText } from '#primitives/content/native-text';
 import { expandInlinePickers } from '#primitives/fields/field-picker';
 import type { FieldGroupKitProps } from '../../kit-props';

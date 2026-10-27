@@ -1,15 +1,11 @@
-import {
-  useContext,
-  useLayoutEffect,
-  type ContextType,
-  type ReactNode,
-} from 'react';
+import { useContext, useLayoutEffect, type ReactNode } from 'react';
 import { View } from 'react-native';
 import {
-  ListContext,
   ListTileContext,
+  RowPositionContext,
   listPosition,
   type ListPosition,
+  type RowPosition,
 } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { useListLook } from '../../../list-look-context';
@@ -24,12 +20,12 @@ const opensAt = new Set<ListPosition>(['first', 'only']);
 const endsAt = new Set<ListPosition>(['last', 'only']);
 
 type ListItemGroup = {
-  context: ContextType<typeof ListContext>;
+  context: RowPosition;
   footer: ReactNode;
 };
 
 export function useListItemGroup(description?: string): ListItemGroup {
-  const list = useContext(ListContext);
+  const list = useContext(RowPositionContext);
   const rowDescription = useRowDescription(description);
   const ends = useContext(ListGroupEndsContext);
   const closes = useClosesGroup(rowDescription);
@@ -58,7 +54,7 @@ const footerGap = (position: ListPosition): string | undefined =>
   endsAt.has(position) ? undefined : 'mb-4';
 
 function drawing(
-  list: ContextType<typeof ListContext>,
+  list: RowPosition,
   position: ListPosition,
   description?: string,
 ): ListItemGroup {
