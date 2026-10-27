@@ -40,9 +40,7 @@ export const CompactPullRequest: Story = {
       await expect(
         canvas.queryByText(session.activity),
       ).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByLabelText(/^Agents:/),
-      ).not.toBeInTheDocument();
+      await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
     }),
 };
 

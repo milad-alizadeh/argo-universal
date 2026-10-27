@@ -64,6 +64,7 @@ it('closes the host and its workers when the composed Engine stops, without cons
 // `pnpm dev` runs the Engine under `node --watch`, which makes every descendant report its imports over IPC as `watch:*` messages.
 it('runs a Plugin under a watching Engine, whose watch reports never reach the Plugin protocol', async () => {
   vi.stubEnv('WATCH_REPORT_DEPENDENCIES', '1');
+
   const home = await createRuntimePlugins([
     { id: 'healthy', fixture: 'healthy' },
   ]);

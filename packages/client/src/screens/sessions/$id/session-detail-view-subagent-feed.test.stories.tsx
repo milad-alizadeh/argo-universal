@@ -74,7 +74,7 @@ async function assertFeedShown(
 
   if (wide)
     await expect(
-      canvas.getByRole('button', { name: 'Back to Subagents' }),
+      canvas.getByRole('button', { name: 'Back to Agents' }),
     ).toBeVisible();
 }
 
@@ -108,7 +108,7 @@ function listRowOpensFeed(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(
         await canvas.findByRole('button', {
-          name: wide ? 'Open Agents overview' : 'Subagents: 1',
+          name: wide ? 'Open Agents overview' : 'Agents: 1',
         }),
       );
 
