@@ -10,6 +10,7 @@ import {
   findFileHeader,
   largeFile,
   MemoryChangesInspector,
+  scrollToFile,
   shortFile,
 } from './session-changes.test.mocks';
 
@@ -73,8 +74,12 @@ function opensExpanded(width: number): Story {
         expanded,
         'true',
       );
-      await expect(fileHeader(shortFile)).toHaveAttribute(expanded, 'true');
       await expect(await screen.findByText(lastAddedLine)).toBeVisible();
+      // A phone's list may draw the next file only once it scrolls toward it.
+      await expect(await scrollToFile(shortFile)).toHaveAttribute(
+        expanded,
+        'true',
+      );
     },
   };
 }

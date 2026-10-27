@@ -50,8 +50,9 @@ async function expectOpen(): Promise<void> {
     expanded,
     'true',
   );
-  await expect(fileHeader(shortFile)).toHaveAttribute(expanded, 'true');
   await expect(await screen.findByText(lastAddedLine)).toBeVisible();
+  // A phone's list may draw the next file only once it scrolls toward it.
+  await expect(await scrollToFile(shortFile)).toHaveAttribute(expanded, 'true');
 }
 
 // The Inspector's toolbar names the comparison and counts the files and their lines; a phone's sheet shows the files alone.

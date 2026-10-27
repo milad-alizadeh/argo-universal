@@ -118,10 +118,9 @@ When('the Agent edits the greeting', async ({ app }) => {
 
 When('I open the changed files', async ({ page }) => openChangedFiles(page));
 
-// Files start folded, so the greeting's header opens its diff.
+// Files open when the list loads, so the greeting's diff shows with no press on its header.
 export async function openChangedFiles(page: Page): Promise<void> {
   await (onPhone(page) ? openPhoneSheet(page) : openInspector(page));
-  await greetingHeader(page).click();
 }
 
 async function openPhoneSheet(page: Page): Promise<void> {
