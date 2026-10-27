@@ -1,5 +1,5 @@
 import type {
-  PartEvent,
+  ComponentEvent,
   PluginDispatchInput,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
@@ -13,7 +13,7 @@ const page = { pluginId: 'inputs', path: '/' };
 function event(
   view: ViewMessage | undefined,
   key: string,
-  interaction: PartEvent,
+  interaction: ComponentEvent,
 ): PluginDispatchInput {
   if (!view?.viewId) throw new Error('Expected a view identity');
 

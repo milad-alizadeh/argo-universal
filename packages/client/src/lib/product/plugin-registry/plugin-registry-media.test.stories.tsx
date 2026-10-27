@@ -1,10 +1,12 @@
+import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import { WireNode } from '@repo/contracts/plugins/wire';
 import fixture from '@repo/mocks/plugins/media.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
-const root = WireNode.parse(fixture);
+// The App draws what the Server prepared from the Plugin's tree.
+const root = prepareWireTree(WireNode.parse(fixture));
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Media',
@@ -24,7 +26,7 @@ export const DrawsResolvedVideoAndAudio: Story = {
   },
 };
 
-// A Plugin's own URL never reaches the App: the node is refused and nothing loads from that host.
+// A Plugin's own URL never reaches the App: the Server refuses the node and nothing loads from that host.
 export const RefusesAnUnresolvedSource: Story = {
   play: async ({ canvas }) => {
     await expect(

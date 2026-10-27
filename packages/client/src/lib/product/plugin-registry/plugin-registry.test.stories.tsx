@@ -1,3 +1,4 @@
+import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import {
   runListRoot,
   emptyRunListRoot,
@@ -39,7 +40,9 @@ export const Tap: Story = {
 };
 
 export const UnknownNodes: Story = {
-  render: () => <PluginTree root={unknownNodesRoot} onEvent={onEvent} />,
+  render: () => (
+    <PluginTree root={prepareWireTree(unknownNodesRoot)} onEvent={onEvent} />
+  ),
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Before')).toBeVisible();
     await expect(canvas.getByText('After')).toBeVisible();
@@ -50,7 +53,9 @@ export const UnknownNodes: Story = {
 };
 
 export const InvalidProps: Story = {
-  render: () => <PluginTree root={invalidPropsRoot} onEvent={onEvent} />,
+  render: () => (
+    <PluginTree root={prepareWireTree(invalidPropsRoot)} onEvent={onEvent} />
+  ),
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Still here')).toBeVisible();
     await expect(canvas.queryByText('42')).toBeNull();

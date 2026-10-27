@@ -1,7 +1,7 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { type PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
-  PartEvent,
+  ComponentEvent,
   PluginSlotInput,
   SlotMessage,
   ViewMessage,
@@ -32,7 +32,7 @@ export type PluginMount = {
 
 const viewLimitMs = 3000;
 
-type Event = PartEvent & { key: string };
+type Event = ComponentEvent & { key: string };
 
 // Observes production snapshots and patches; events use the same checked dispatch as an App.
 export class PluginTestView {

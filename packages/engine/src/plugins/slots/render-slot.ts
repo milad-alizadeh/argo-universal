@@ -8,7 +8,7 @@ import {
 import type { RpcConnection } from '../../rpc';
 import type { StartedPlugins } from '../located-plugins';
 import type { PluginRuntime } from '../runtime/plugin-runtime';
-import { belowWireMinimum } from '../views/render-fallback';
+import { belowWireMinimum, type Fallback } from '../views/render-fallback';
 import { renderView } from './render-view';
 
 type RenderRequest = { input: ReplaceableInput; plugins: StartedPlugins };
@@ -32,13 +32,19 @@ function coreInput(
   return 'input' in answer ? answer.input : input;
 }
 
+const notRunning = (pluginId: string, slotId: string): Fallback => ({
+  pluginId,
+  slotId,
+  reason: 'Plugin is not running',
+});
+
 async function renderAnswer(
   runtime: PluginRuntime,
   { input, plugins }: RenderRequest,
   connection: RpcConnection,
 ): Promise<RenderAnswer> {
   for (const pluginId of plugins.stopped)
-    runtime.renderFallback(pluginId, input.slotId, 'Plugin is not running');
+    runtime.renderFallback(notRunning(pluginId, input.slotId));
 
   return RenderAnswer.parse(
     await runtime.hooks.run(
@@ -77,7 +83,11 @@ function drawCoreForOlderApp(
   { pluginId, path, input }: Selected,
 ): ReplaceableMessage {
   runtime.views.discardRender(pluginId, path);
-  runtime.renderFallback(pluginId, input.slotId, belowWireMinimum);
+  runtime.renderFallback({
+    pluginId,
+    slotId: input.slotId,
+    reason: belowWireMinimum,
+  });
 
   return { type: 'core', input };
 }

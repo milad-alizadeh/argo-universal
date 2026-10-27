@@ -4,7 +4,7 @@ import {
   type JSXOpeningElement,
   type ImportDeclaration,
 } from 'oxc-parser';
-import { visualParts } from '../visual/validation';
+import { visualComponents } from '../visual/validation';
 
 export function visualImports(program: Program): Map<string, string> {
   const names = new Map<string, string>();
@@ -32,7 +32,7 @@ function addSpecifier(
 }
 
 function addNamespace(names: Map<string, string>, prefix: string): void {
-  for (const name of visualParts) names.set(`${prefix}.${name}`, name);
+  for (const name of visualComponents) names.set(`${prefix}.${name}`, name);
 }
 
 function addNamed(
@@ -47,7 +47,7 @@ function addNamed(
       ? specifier.imported.name
       : specifier.imported.value;
 
-  if (visualParts.includes(name)) names.set(specifier.local.name, name);
+  if (visualComponents.includes(name)) names.set(specifier.local.name, name);
 }
 
 export function jsxName(name: JSXOpeningElement['name']): string {

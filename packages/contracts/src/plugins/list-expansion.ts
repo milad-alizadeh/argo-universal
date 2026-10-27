@@ -36,4 +36,4 @@ export const listExpansion = z.union([
   z.object({ items: z.never().optional(), renderItem: z.never().optional() }),
 ]);
 
-export const listPartNames = ['List', 'Table'] as const;
+export const listComponentNames = ['List', 'Table'] as const;

@@ -11,6 +11,7 @@ import {
   PluginFileEntry,
   PluginFileInfo,
   PluginNavBadge,
+  type PluginQuery,
   ProcessCommand,
   ProcessResult,
   SecretSet,
@@ -21,6 +22,7 @@ import { PluginAssetRef, PluginAssetSource } from './assets';
 import type { Hook, HookArgs, HookEventName } from './hooks';
 import type { PluginRenderContext } from './kit';
 import { PluginSettingValue } from './plugin-settings';
+import type { QueryResult } from './query-results';
 import { sessionApiCalls } from './session-api';
 import type { SlotsApi } from './slot-api';
 
@@ -138,6 +140,19 @@ export const PluginApiCalls = z
   .readonly();
 
 type PluginApiCalls = z.infer<typeof PluginApiCalls>;
+
+// What `useData` hands a page for its Query, and the hook itself: the Engine's kit implements it, `@argo/plugin-kit` declares it.
+export type UseDataResult<Query extends PluginQuery> = {
+  data: QueryResult<Query> | undefined;
+  error: string | undefined;
+  stale: boolean;
+  refresh: () => Promise<void>;
+};
+
+export type UseData = <Query extends PluginQuery>(
+  query: Query | null,
+  options?: { every?: number },
+) => UseDataResult<Query>;
 
 export type Page = ComponentType<{ context: PluginRenderContext }>;
 

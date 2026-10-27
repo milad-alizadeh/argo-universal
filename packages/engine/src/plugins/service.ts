@@ -36,7 +36,7 @@ import {
   applyEnabled,
   applyStatus,
   locatePlugin,
-  startPlugin,
+  pluginLocation,
   startPlugins,
   type PluginServiceDeps,
 } from './located-plugins';
@@ -64,7 +64,9 @@ export class PluginService {
   }
 
   async activate(pluginId: string): Promise<PluginStatus> {
-    return startPlugin(this.deps, await locatePlugin(this.deps, pluginId));
+    return this.deps.pluginRuntime.activate(
+      await pluginLocation(this.deps, pluginId),
+    );
   }
 
   // Turning a Plugin off stops its worker and releases what it holds; it starts again when next asked for.

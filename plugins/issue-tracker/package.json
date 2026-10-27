@@ -10,8 +10,6 @@
   },
   "devDependencies": {
     "@argo/plugin-kit": "workspace:*",
-    "@repo/contracts": "workspace:*",
-    "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { declaredProps } from './new-story-props.mts';
 import {
   branchesIn,
-  kitPartIn,
+  kitComponentIn,
   renderStory,
   storyEntries,
 } from './new-story-rules.mts';
@@ -72,7 +72,7 @@ describe('renderStory', () => {
     title: 'Design System/Primitives/Actions/Button',
     component: 'Button',
     importPath: './button',
-    kitPart: kitPartIn(["type ButtonProps = KitProps<'Button'>;"]),
+    kitComponent: kitComponentIn(["type ButtonProps = KitProps<'Button'>;"]),
     props: [
       {
         name: 'label',
@@ -151,13 +151,13 @@ describe('declaredProps', () => {
   });
 });
 
-describe('renderStory without a kit part', () => {
+describe('renderStory without a kit component', () => {
   it('lists argTypes from the props and spies on a required handler', () => {
     const source = renderStory({
       title: 'Connection/ConnectionBanner',
       component: 'ConnectionBanner',
       importPath: './connection-banner',
-      kitPart: undefined,
+      kitComponent: undefined,
       props: declaredProps(
         [
           "interface ConnectionBannerProps { state: 'open' | 'offline'; onRetry: () => void }",

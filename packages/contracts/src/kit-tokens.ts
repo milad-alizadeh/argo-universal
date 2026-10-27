@@ -42,15 +42,15 @@ export type SpacingStep = (typeof spacingSteps)[keyof typeof spacingSteps];
 
 export const stackAlignments = ['start', 'center', 'end', 'stretch'] as const;
 
+// Expo UI's filled, outlined and text looks; danger is the text look in the danger colour.
 export const buttonVariants = [
-  'default',
-  'outline',
+  'primary',
   'secondary',
-  'ghost',
-  'link',
+  'text',
+  'danger',
 ] as const;
 
-export const buttonSizes = ['xs', 'sm', 'md', 'lg'] as const;
+export const buttonSizes = ['sm', 'md'] as const;
 
 /*
  * Where a kit component's defaults are declared. A schema marks a prop with
@@ -58,7 +58,7 @@ export const buttonSizes = ['xs', 'sm', 'md', 'lg'] as const;
  * and the component's styles apply the same value. Nothing is parsed or filled:
  * a Plugin that omits the prop still sends nothing.
  */
-export const buttonDefaults = { variant: 'default', size: 'md' } as const;
+export const buttonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const cardDefaults = { kind: 'card', density: 'regular' } as const;
 

@@ -45,7 +45,7 @@ export const metadataAvatarProps = field.extend({
   src: z.string().optional().describe('Optional avatar image URI.'),
 });
 
-export const metadataChildParts = [
+export const metadataChildComponents = [
   'Metadata.Label',
   'Metadata.Link',
   'Metadata.Pills',

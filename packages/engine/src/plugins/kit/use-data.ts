@@ -1,8 +1,10 @@
+import type { UseData, UseDataResult } from '@repo/contracts/plugins/argo-api';
 import {
   serialisePluginQuery,
   type PluginQuery,
   type PluginDataState,
 } from '@repo/contracts/plugins/argo-calls';
+import type { QueryResult } from '@repo/contracts/plugins/query-results';
 import type { PluginViewId } from '@repo/contracts/plugins/wire';
 import {
   createContext,
@@ -23,18 +25,10 @@ import { queryResult } from './query-result';
 
 export const QueryViewContext = createContext<PluginViewId | null>(null);
 
-type QueryData = Pick<PluginDataState, 'error' | 'stale'> & {
-  data: ReturnType<typeof queryResult>;
-  refresh: () => Promise<void>;
-};
-
 export type KitDataClient = {
   ready: PluginDataClient['ready'];
   receive: PluginDataClient['receive'];
-  useData: (
-    query: PluginQuery | null,
-    options?: { every?: number },
-  ) => QueryData;
+  useData: UseData;
 };
 
 export function dataClient(call: DataCall): KitDataClient {
@@ -47,11 +41,17 @@ export function dataClient(call: DataCall): KitDataClient {
   };
 }
 
+// A Query's api decides what its answer is (`QueryResult`); the readers behind `useResult` answer with that.
+export function useQueryData<Query extends PluginQuery>(
+  client: PluginDataClient,
+  query: Query | null,
+  options?: { every?: number },
+): UseDataResult<Query>;
 export function useQueryData(
   client: PluginDataClient,
   query: PluginQuery | null,
   { every }: { every?: number } = {},
-): QueryData {
+): UseDataResult<PluginQuery> {
   const { target, error } = useTarget(client, query, every);
   const state = useSubscription(client, target);
 
@@ -90,7 +90,7 @@ const refusal = (cause: unknown): string =>
 function useResult(
   query: PluginQuery | null,
   data: PluginDataState['data'],
-): QueryData['data'] {
+): QueryResult<PluginQuery> | undefined {
   const api = query?.api;
 
   return useMemo(() => queryResult(api, data), [api, data]);

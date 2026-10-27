@@ -9,7 +9,7 @@ export type AcknowledgedEvent = z.ZodUndefined & {
   readonly acknowledgement: true;
 };
 
-// The part waits for its dispatch to settle; its callback may return a promise.
+// The kit component waits for its dispatch to settle; its callback may return a promise.
 export function acknowledgedEvent(within?: string): AcknowledgedEvent {
   const schema = z.undefined().meta({ within, awaits: true, blocks: false });
 

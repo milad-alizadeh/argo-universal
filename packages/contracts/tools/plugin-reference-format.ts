@@ -1,8 +1,8 @@
 import type { z } from 'zod';
-import { partObjectSchema } from '../src/plugins/plugin-object-schema';
-import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
+import type { KitComponentDefinition } from '../src/plugins/kit-component-definition';
+import { kitComponentSchemas } from '../src/plugins/kit-component-schemas';
+import { componentObjectSchema } from '../src/plugins/plugin-object-schema';
 import { type SchemaType, schemaType } from '../src/plugins/schema-type';
-import { wireParts, type WirePartDefinition } from '../src/plugins/wire-parts';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
@@ -10,29 +10,29 @@ type JsonSchemaNode = z.core.JSONSchema._JSONSchema;
 
 const jsonValueDescription = 'JSON value';
 
-const referenceParts = { ...pluginPartSchemas, ...wireParts };
-
 const schemas: Record<string, JsonSchema> = Object.fromEntries(
-  Object.entries(referenceParts).map(([name, part]) => [
+  Object.entries(kitComponentSchemas).map(([name, component]) => [
     name,
-    partObjectSchema(part),
+    componentObjectSchema(component),
   ]),
 );
 
-export function partDefinition(name: string): WirePartDefinition {
-  const part = Object.entries(referenceParts).find(
-    ([partName]) => partName === name,
+export function componentDefinition(name: string): KitComponentDefinition {
+  const component = Object.entries(kitComponentSchemas).find(
+    ([componentName]) => componentName === name,
   )?.[1];
 
-  if (!part) throw new Error(`Missing Plugin part schema: ${name}`);
+  if (!component)
+    throw new Error(`Missing Plugin kit component schema: ${name}`);
 
-  return part;
+  return component;
 }
 
 export function propsSchema(name: string): JsonSchema {
   const schema = schemas[name];
 
-  if (!schema) throw new Error(`Missing props schema for Plugin part ${name}`);
+  if (!schema)
+    throw new Error(`Missing props schema for Plugin kit component ${name}`);
 
   return schema;
 }
@@ -142,5 +142,5 @@ export function propsTable(name: string): string {
 
   return rows.length
     ? propsTableRows(rows)
-    : 'This part has no serialized props.\n';
+    : 'This kit component has no serialized props.\n';
 }

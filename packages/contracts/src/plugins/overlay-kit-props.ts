@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { builtInPress, echoes, handler } from './plugin-part-props';
+import { builtInPress, echoes, handler } from './kit-component-props';
 
 // The App flips its open state at once and tells the Plugin without waiting.
 export const openChange = <

@@ -1,13 +1,11 @@
 import type { z } from 'zod';
 import type { KitCallbackReturn } from './kit-callback-return';
-import type { WithPropHints } from './kit-prop-hints';
+import type { kitComponentSchemas } from './plugins/kit-component-schemas';
 import type { KitListItem, KitNode } from './plugins/list-expansion';
-import type { pluginPartSchemas } from './plugins/plugin-part-schemas';
-import type { WireSchemaHints } from './plugins/plugin-prop-descriptions.gen';
 import type { KitChoiceValue } from './plugins/selection-value';
 import type { WireEvent, WireNode } from './plugins/wire';
 
-export type KitPart = keyof typeof pluginPartSchemas;
+export type KitComponentName = keyof typeof kitComponentSchemas;
 
 export type { KitListItem, KitNode } from './plugins/list-expansion';
 
@@ -17,7 +15,7 @@ export type { WireNode } from './plugins/wire';
 
 export type {
   FieldGroupEvents,
-  FieldGroupKitPart,
+  FieldGroupKitComponentName,
   FieldGroupSchemaProps,
 } from './plugins/field-group-kit-props';
 
@@ -28,32 +26,29 @@ export type DeclaredProps<Props> = Props extends object
     }
   : Props;
 
-export type Expansion<Part> = Part extends {
+export type Expansion<Component> = Component extends {
   expansion: infer Schema extends z.ZodType;
 }
   ? z.output<Schema>
   : Record<never, never>;
 
 export type KitSchemaProps = {
-  [Name in KitPart]: WithPropHints<
-    DeclaredProps<z.output<(typeof pluginPartSchemas)[Name]['props']>> &
-      Expansion<(typeof pluginPartSchemas)[Name]>,
-    Name extends keyof WireSchemaHints
-      ? WireSchemaHints[Name]
-      : Record<never, never>
-  >;
+  [Name in KitComponentName]: DeclaredProps<
+    z.output<(typeof kitComponentSchemas)[Name]['props']>
+  > &
+    Expansion<(typeof kitComponentSchemas)[Name]>;
 };
 
-export type KitEvents<Name extends KitPart> =
-  (typeof pluginPartSchemas)[Name]['events'];
+export type KitEvents<Name extends KitComponentName> =
+  (typeof kitComponentSchemas)[Name]['events'];
 
-export type KitSlots<Name extends KitPart> =
-  keyof (typeof pluginPartSchemas)[Name]['slots'];
+export type KitSlots<Name extends KitComponentName> =
+  keyof (typeof kitComponentSchemas)[Name]['slots'];
 
-export type KitHasChildren<Name extends KitPart> =
-  (typeof pluginPartSchemas)[Name]['children'] extends false ? false : true;
+export type KitHasChildren<Name extends KitComponentName> =
+  (typeof kitComponentSchemas)[Name]['children'] extends false ? false : true;
 
-// An event whose payload may take several shapes reports the one its part's own `value` holds, as Picker `multiple` reports a list.
+// An event whose payload may take several shapes reports the one its kit component's own `value` holds, as Picker `multiple` reports a list.
 type KitValuePayload<Payload, Props> = Props extends {
   value?: infer Value;
 }

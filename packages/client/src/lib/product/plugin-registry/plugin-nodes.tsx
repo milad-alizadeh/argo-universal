@@ -1,17 +1,13 @@
-import { wirePart, type WirePartDefinition } from '@repo/contracts/plugins/kit';
 import {
-  isWireContainer,
-  refusedBelowRoot,
-  rootSlotParts,
-} from '@repo/contracts/plugins/prepare-tree';
-import { WireJson, type WireNode } from '@repo/contracts/plugins/wire';
+  kitComponent,
+  type KitComponentDefinition,
+} from '@repo/contracts/plugins/kit';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   childNodeKey,
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
-import { Text } from '@repo/kit/primitives/content/text';
 import { Fragment, createElement, type ElementType } from 'react';
-import { z } from 'zod';
 import { pluginEntries } from './plugin-entries';
 import type * as Rendering from './plugin-rendering';
 
@@ -19,55 +15,33 @@ const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
 
 type RenderNodeProps = { node: WireNode; context: Rendering.RenderContext };
 
+// The Server prepared the tree (prepare-tree.ts): every node is a current kit component with valid props, and anything it could not draw is already its "Update Argo" note.
 export function RenderNode({
   node,
   context,
 }: RenderNodeProps): React.JSX.Element | null {
-  const part = drawablePart(node, context);
-
-  if (!part) return refused(node);
-  const input = parsedInput(node, part, context);
-
-  if (!input) return refused(node);
-
-  return renderParsed(input, renderedSlots(node, part, context));
-}
-
-function drawablePart(
-  node: WireNode,
-  { roots }: Rendering.RenderContext,
-): WirePartDefinition | undefined {
-  if (roots && refusedBelowRoot(node, roots)) return undefined;
-
-  return wirePart(node.type);
-}
-
-function parsedInput(
-  node: WireNode,
-  part: WirePartDefinition,
-  context: Rendering.RenderContext,
-): Rendering.ControlInput | null {
-  const parsed = (part.appProps ?? part.props)
-    .pipe(z.record(z.string(), WireJson))
-    .safeParse(node.props);
-
-  if (!parsed.success) return null;
-  const props = parsed.data;
-
-  return { node: { ...node, props }, part, context, source: node.props };
-}
-
-function renderParsed(
-  input: Rendering.ControlInput,
-  slots: Rendering.PluginProps,
-): React.JSX.Element | null {
-  const { node, part, context } = input;
+  const definition = kitComponent(node.type);
   const component = registry.get(node.type);
 
-  if (!component) return refused(node);
+  if (!definition || !component) return null;
+
+  const input = { node, definition, context, source: node.props };
+
+  const slots = renderedSlots(node, definition, context);
+
+  return renderComponent(component, input, slots);
+}
+
+function renderComponent(
+  component: ElementType,
+  input: Rendering.ControlInput,
+  slots: Rendering.PluginProps,
+): React.JSX.Element {
+  const { node, definition, context } = input;
   const props = context.controls(input);
 
-  if (part.children) props.children = renderedChildren(node.children, context);
+  if (definition.children)
+    props.children = renderedChildren(node.children, context);
 
   return createElement(component, {
     ...props,
@@ -76,55 +50,33 @@ function renderParsed(
   });
 }
 
-function refused(node: WireNode): React.JSX.Element | null {
-  if (!isWireContainer(node)) return null;
-
-  const props = {
-    role: 'secondary',
-    tone: 'muted',
-    children: 'Update Argo to see this',
-  } as const;
-
-  return <Text key={node.key} {...props} />;
-}
-
-interface SlotPlace {
-  name: string;
-  // The root-only parts this slot holds as the screen's own views, such as ListDetail's detail Screen.
-  roots: readonly string[];
-}
-
 function renderedChildren(
   nodes: WireNode[],
   context: Rendering.RenderContext,
-  slot?: SlotPlace,
+  slot?: string,
 ): (React.JSX.Element | null)[] {
-  const roots = slot?.roots ?? [];
-
   return nodes.map((node) => {
     const key =
       slot === undefined
         ? childNodeKey(context.key, node.key)
-        : slotNodeKey(context.key, slot.name, node.key);
+        : slotNodeKey(context.key, slot, node.key);
 
-    return RenderNode({ node, context: { ...context, key, roots } });
+    return RenderNode({ node, context: { ...context, key } });
   });
 }
 
 function renderedSlots(
   node: WireNode,
-  part: WirePartDefinition,
+  definition: KitComponentDefinition,
   context: Rendering.RenderContext,
 ): Record<string, React.JSX.Element> {
-  const slots = Object.keys(part.slots).filter((name) => node.slots[name]);
+  const slots = Object.keys(definition.slots).filter(
+    (name) => node.slots[name],
+  );
 
   return Object.fromEntries(
     slots.map((name) => {
-      const children = node.slots[name] ?? [];
-
-      const roots = rootSlotParts(node, name);
-
-      const nodes = renderedChildren(children, context, { name, roots });
+      const nodes = renderedChildren(node.slots[name] ?? [], context, name);
 
       return [name, slotContent(nodes, name)];
     }),

@@ -8,6 +8,7 @@ import type { KitProps } from '../../kit-props';
 import {
   actingButton,
   menuRows,
+  noop,
   splitButtonSize,
   stackedButtons,
 } from './split-button-items';
@@ -31,7 +32,9 @@ export type SplitButtonProps<Value extends string = string> = Derived<Value> & {
 
 // What the split offers besides its button: the choices, or the actions.
 export type SplitRows<Value extends string = string> =
-  | Pick<Choices<Value>, 'options' | 'value' | 'onValueChange'>
+  | (Pick<Choices<Value>, 'options' | 'value'> & {
+      onValueChange: (value: Value) => void;
+    })
   | { actions: readonly MenuAction[] };
 
 // The split's props once its width is resolved: `narrow` fills the row.
@@ -137,5 +140,3 @@ function usePressWhenChosen<Value extends string>(
     pending.current = { value: next };
   };
 }
-
-const noop = (): void => undefined;

@@ -28,6 +28,17 @@ export async function openClient(source: ClientSource): Promise<TrackerClient> {
   return client;
 }
 
+type DepsSource = {
+  project: Project;
+  deps: Omit<ClientSource, 'project'>;
+};
+
+// The Tracker client for a page's Project, opened with the deps its pages share.
+export const openDepsClient = ({
+  project,
+  deps,
+}: DepsSource): Promise<TrackerClient> => openClient({ ...deps, project });
+
 async function chosenTracker({
   project,
   storage,

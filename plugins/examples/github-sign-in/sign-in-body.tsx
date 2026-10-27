@@ -40,7 +40,7 @@ function InProgress({ cancel }: Pick<Actions, 'cancel'>): JSX.Element {
         primary="Finish signing in in your browser."
         secondary="Waiting for GitHub…"
       />
-      <Button label="Cancel" variant="outline" onPress={cancel} />
+      <Button label="Cancel" variant="secondary" onPress={cancel} />
     </>
   );
 }

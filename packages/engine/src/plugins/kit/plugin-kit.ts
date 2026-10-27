@@ -6,7 +6,12 @@ import {
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
-import { jsx, jsxs, registerKitPart } from './jsx-runtime';
+import {
+  jsx,
+  jsxs,
+  registerKitComponent,
+  type KitElementType,
+} from './jsx-runtime';
 import {
   mountPages,
   type Pages,
@@ -33,29 +38,27 @@ const hooks = {
   memo: React.memo,
 };
 
-type KitComponent =
-  | string
-  | (((props: ElementProps) => ReturnType<typeof jsx>) &
-      Record<string, string>);
+// A kit component with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
+function kitExport({
+  component,
+  members,
+}: PluginKitExport): string | KitElementType {
+  if (!Object.keys(members).length) return component;
 
-// A part with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
-function kitComponent({ part, members }: PluginKitExport): KitComponent {
-  if (!Object.keys(members).length) return part;
-
-  const component = Object.assign(
-    (props: ElementProps) => jsx(part, props),
+  const carrier = Object.assign(
+    (props: ElementProps) => jsx(component, props),
     members,
   );
 
-  registerKitPart(component, part);
+  registerKitComponent(carrier, component);
 
-  return component;
+  return carrier;
 }
 
 // What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
 const exportsOf = {
   ...Object.fromEntries(
-    pluginKitExports.map((entry) => [entry.name, kitComponent(entry)]),
+    pluginKitExports.map((entry) => [entry.name, kitExport(entry)]),
   ),
   ...hooks,
   Fragment: React.Fragment,

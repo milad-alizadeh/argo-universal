@@ -5,6 +5,9 @@ test('the gallery shows a thumbnail shelf and selectable Svg wall', async ({
   mount,
 }) => {
   const page = await mount({ page: '/gallery', surface: { platform: 'web' } });
+  await page.waitFor(
+    () => page.findText('Overview preview')?.node.props.source !== undefined,
+  );
   const thumbnail = await page.find('Overview preview');
   assert.equal(thumbnail.type, 'Image');
   assert.partialDeepStrictEqual(thumbnail.props, {

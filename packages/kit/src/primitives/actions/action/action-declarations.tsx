@@ -3,7 +3,7 @@ import { flattenedChildren } from '../../../flattened-children';
 import type {
   ActionProps,
   ActionSectionProps,
-  DeclaredPressProps,
+  PressActionProps,
   SubmenuActionProps,
 } from './action-props';
 import {
@@ -20,7 +20,7 @@ export function ActionSection(_props: ActionSectionProps): null {
   return null;
 }
 
-function ActionRoot(_props: ActionProps & { plugin?: boolean }): null {
+function ActionRoot(_props: ActionProps): null {
   return null;
 }
 
@@ -64,7 +64,7 @@ function actionGroup(child: ReactElement<ActionProps>): ActionGroup[] {
   return submenu.sections.length ? [{ actions: [submenu] }] : [];
 }
 
-const isPressProps = (props: ActionProps): props is DeclaredPressProps =>
+const isPressProps = (props: ActionProps): props is PressActionProps =>
   'onPress' in props && props.onPress !== undefined;
 
 function declaredSubmenu(

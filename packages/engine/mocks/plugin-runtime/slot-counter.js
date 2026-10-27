@@ -14,7 +14,7 @@ function ProjectDetails({ context }) {
       <Text>{greeting(context.projectId, waves)}</Text>
       <Button
         label="Wave"
-        variant="outline"
+        variant="secondary"
         onPress={() => setWaves(waves + 1)}
       />
     </Stack>

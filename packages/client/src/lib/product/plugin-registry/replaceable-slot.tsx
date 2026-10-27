@@ -1,17 +1,16 @@
 import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
-import { replacementTreeReason } from '@repo/contracts/plugins/replacement-tree';
-import type { WireNode } from '@repo/contracts/plugins/wire';
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
 import { PluginDrawingBoundary } from './plugin-drawing-boundary';
 import { PluginTree, type PluginOnEvent } from './plugin-registry';
-import type { ReplaceableState } from './replaceable-state';
+import type { ReplaceableState } from './plugin-stream-state';
 
 export interface ReplaceableSlotProps {
   input: ReplaceableInput;
   renderCore: (input: ReplaceableInput) => ReactNode;
 }
 
+// Draws a Replaceable Slot from the connected Server; with none, core draws the Slot.
 export const ReplaceableSlotRenderer = createContext<
   ((props: ReplaceableSlotProps) => ReactNode) | null
 >(null);
@@ -29,42 +28,19 @@ export interface ReplaceableSlotViewProps extends ReplaceableSlotProps {
   onFallback: (reason: string) => void;
 }
 
+// The Server sends only a tree it has checked; a drawing that throws still falls back to core.
 export function ReplaceableSlotView(
   props: ReplaceableSlotViewProps,
 ): ReactNode {
-  const { onFallback } = props;
-  const refused = useTreeRefusal(props);
-
   return (
     <PluginDrawingBoundary
       resetKey={drawingKey(props)}
       fallback={props.renderCore(props.input)}
-      onFallback={onFallback}
+      onFallback={props.onFallback}
     >
-      {slotDrawing(props, refused)}
+      {slotDrawing(props)}
     </PluginDrawingBoundary>
   );
-}
-
-function coreInput(
-  { input, state }: ReplaceableSlotViewProps,
-  refused: boolean,
-): ReplaceableInput {
-  if (refused) return input;
-  const parsed = ReplaceableInput.safeParse(state.input).data;
-
-  return matchingCore(input, parsed);
-}
-
-function useTreeRefusal(props: ReplaceableSlotViewProps): boolean {
-  const root = replacementRoot(props.state);
-  const reason = root ? replacementTreeReason(root) : null;
-  const { onFallback } = props;
-  useEffect(() => {
-    if (reason) onFallback(reason);
-  }, [reason, onFallback]);
-
-  return Boolean(reason);
 }
 
 function drawingKey({ input, state }: ReplaceableSlotViewProps): string {
@@ -73,13 +49,10 @@ function drawingKey({ input, state }: ReplaceableSlotViewProps): string {
   return JSON.stringify([view, input]);
 }
 
-function slotDrawing(
-  props: ReplaceableSlotViewProps,
-  refused: boolean,
-): ReactNode {
-  const root = replacementRoot(props.state);
+function slotDrawing(props: ReplaceableSlotViewProps): ReactNode {
+  const root = props.state.replacement?.view.root;
 
-  if (!root || refused) return props.renderCore(coreInput(props, refused));
+  if (!root) return props.renderCore(coreInput(props));
 
   return (
     <PluginTree
@@ -90,15 +63,12 @@ function slotDrawing(
   );
 }
 
-function replacementRoot(state: ReplaceableState): WireNode | null | undefined {
-  return state.replacement?.view.root;
-}
+// The props a Plugin passed on, for the same Slot only.
+function coreInput({
+  input,
+  state,
+}: ReplaceableSlotViewProps): ReplaceableInput {
+  const parsed = ReplaceableInput.safeParse(state.input).data;
 
-function matchingCore(
-  input: ReplaceableInput,
-  parsed: ReplaceableInput | undefined,
-): ReplaceableInput {
-  if (!parsed) return input;
-
-  return parsed.slotId === input.slotId ? parsed : input;
+  return parsed?.slotId === input.slotId ? parsed : input;
 }

@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from '@argo/plugin-kit';
+import { useCallback } from '@argo/plugin-kit';
 import { githubError } from './github-errors';
 import type { Issue, IssueStatus } from './github-issues';
-import { openClient, type Project } from './issue-client';
+import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
+import { useAsync, type Async } from './use-async';
 
 export type DetailSource = {
   project: Project;
@@ -17,38 +18,31 @@ export type IssueDetailState = {
   onStatus: (status: IssueStatus) => Promise<void>;
 };
 
-type SetIssue = (update: (issue: Issue | null) => Issue | null) => void;
+type SetIssue = Async<Issue>['set'];
 
 export function useIssueDetail(source: DetailSource): IssueDetailState {
-  const [issue, setIssue] = useState<Issue | null>(null);
-  const [message, setMessage] = useState('Loading Issue…');
-
-  useEffect(() => {
-    void showIssue(source, { setIssue, setMessage });
-  }, [source]);
+  const { value, error, set } = useIssue(source);
 
   const onStatus = useCallback(
-    (status: IssueStatus) => changeStatus(source, setIssue, status),
-    [source],
+    (status: IssueStatus) => changeStatus(source, set, status),
+    [source, set],
   );
 
-  return { issue, message, onStatus };
+  return {
+    issue: value ?? null,
+    message: error ?? 'Loading Issue…',
+    onStatus,
+  };
 }
 
-type Setters = { setIssue: SetIssue; setMessage: (message: string) => void };
+function useIssue(source: DetailSource): Async<Issue> {
+  return useAsync(
+    useCallback(async () => {
+      const client = await openDepsClient(source);
 
-async function showIssue(
-  source: DetailSource,
-  { setIssue, setMessage }: Setters,
-): Promise<void> {
-  try {
-    const client = await openClient({ ...source, ...source.deps });
-    const issue = await client.getIssue(source.number);
-
-    setIssue(() => issue);
-  } catch (error) {
-    setMessage(githubError(error));
-  }
+      return client.getIssue(source.number);
+    }, [source]),
+  );
 }
 
 async function changeStatus(
@@ -73,7 +67,7 @@ async function sendStatus(
   source: DetailSource,
   status: IssueStatus,
 ): Promise<void> {
-  const client = await openClient({ ...source, ...source.deps });
+  const client = await openDepsClient(source);
 
   await client.setStatus(source.number, status);
   source.deps.changes.publish(source.number);

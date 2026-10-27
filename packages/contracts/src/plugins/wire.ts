@@ -50,7 +50,7 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
   }),
 );
 
-// A handler prop on the wire; the App sends it back as a Part event by node key and event name.
+// A handler prop on the wire; the App sends it back as a Component event by node key and event name.
 export const WireEvent = z.strictObject({
   $event: z.string().min(1),
 });
@@ -144,13 +144,13 @@ export {
   PluginViewId,
   PluginDispatchId,
   PluginDispatchInput,
-  PartEvent,
-  partEventPayload,
+  ComponentEvent,
+  componentEventPayload,
   PluginDispatchResult,
   PluginViewInput,
   PluginEvent,
-  partEventRules,
-  type PartEventRules,
+  componentEventRules,
+  type ComponentEventRules,
 } from '#plugin-wire-events';
 
 // A Slot's stream: the Plugins that fill it, in list order, then each one's view as it arrives.
@@ -171,7 +171,8 @@ export const SlotMessage = z.discriminatedUnion('type', [
 export type SlotMessage = z.infer<typeof SlotMessage>;
 
 export {
-  partEventHandler,
-  placedPartEvent,
+  componentEventHandler,
+  placedComponentEvent,
+  propsWithin,
   WireProps,
-} from '#plugin-wire-part-events';
+} from '#plugin-kit-component-events';

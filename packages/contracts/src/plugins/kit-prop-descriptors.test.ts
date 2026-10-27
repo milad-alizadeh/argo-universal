@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import type { KitComponentName } from '../kit-props';
 import {
-  type KitPartName,
   type KitPropDescriptor,
   kitPropDescriptors,
 } from './kit-prop-descriptors';
 
-function prop(part: KitPartName, name: string): KitPropDescriptor {
-  const found = kitPropDescriptors(part).find((it) => it.name === name);
+function prop(component: KitComponentName, name: string): KitPropDescriptor {
+  const found = kitPropDescriptors(component).find((it) => it.name === name);
 
-  if (!found) throw new Error(`${part} has no ${name} prop`);
+  if (!found) throw new Error(`${component} has no ${name} prop`);
 
   return found;
 }
@@ -17,22 +17,26 @@ describe('a kit prop descriptor', () => {
   it.each([
     [
       'a choice',
-      { part: 'Button', name: 'variant' },
-      "'default' | 'outline' | 'secondary' | 'ghost' | 'link'",
+      { component: 'Button', name: 'variant' },
+      "'primary' | 'secondary' | 'text' | 'danger'",
     ],
-    ['a scalar', { part: 'Button', name: 'label' }, 'string'],
-    ['a schema that names itself', { part: 'List', name: 'items' }, 'Item[]'],
+    ['a scalar', { component: 'Button', name: 'label' }, 'string'],
+    [
+      'a schema that names itself',
+      { component: 'List', name: 'items' },
+      'Item[]',
+    ],
     [
       'a handler',
-      { part: 'List', name: 'renderItem' },
+      { component: 'List', name: 'renderItem' },
       '(item, index) => node',
     ],
   ] as const)('spells %s', (_, target, type) => {
-    expect(prop(target.part, target.name).type).toBe(type);
+    expect(prop(target.component, target.name).type).toBe(type);
   });
 
   it('offers a choice prop its values, in schema order', () => {
-    expect(prop('Button', 'size').options).toEqual(['xs', 'sm', 'md', 'lg']);
+    expect(prop('Button', 'size').options).toEqual(['sm', 'md']);
   });
 
   it('leaves a free field without options', () => {
@@ -58,13 +62,13 @@ describe('a kit prop descriptor', () => {
 
 describe('a kit prop default', () => {
   it.each([
-    ['Button', 'variant', "'default'"],
+    ['Button', 'variant', "'primary'"],
     ['Button', 'size', "'md'"],
     ['IconButton', 'size', "'md'"],
     ['IconButton', 'variant', "'primary'"],
     ['Text', 'role', "'body'"],
-  ] as const)('reads %s %s as %s', (part, name, defaultValue) => {
-    expect(prop(part, name).defaultValue).toBe(defaultValue);
+  ] as const)('reads %s %s as %s', (component, name, defaultValue) => {
+    expect(prop(component, name).defaultValue).toBe(defaultValue);
   });
 
   it('is absent where the schema declares none', () => {

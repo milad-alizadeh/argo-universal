@@ -1,4 +1,3 @@
-import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import { replyFailure } from '../access/capability-refusal';
 import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
@@ -10,7 +9,6 @@ import type {
 import type { StateRequest } from '../services/plugin-calls';
 import type { PluginServices } from '../services/plugin-services';
 import type { PluginSlotItems } from '../slots/plugin-slot-items';
-import type { Caller } from '../slots/slot-item-calls';
 import type { PluginViews } from '../views/plugin-views';
 
 type RuntimeCalls = {
@@ -23,12 +21,36 @@ type RuntimeCalls = {
 
 type Call = Extract<HostMessage, { type: 'call' }>;
 
-type ServiceCall = Omit<Call, 'request'> & {
-  request: Exclude<PluginRequest, { api: 'hooks' | 'view' | 'data' | 'nav' }>;
+// Pages, Hooks, Queries, badges and Slot items are the runtime's own; PluginServices answers the rest.
+type RuntimeRequest = Exclude<PluginRequest, StateRequest>;
+
+type RuntimeApi = RuntimeRequest['api'];
+
+type CallOf<Name extends RuntimeApi> = Omit<Call, 'request'> & {
+  request: Extract<RuntimeRequest, { api: Name }> & { api: Name };
 };
 
-type ViewCall = Omit<Call, 'request'> & {
-  request: Exclude<PluginRequest, { api: 'data' | 'nav' }>;
+type Answer<Name extends RuntimeApi> = (
+  runtime: RuntimeCalls,
+  call: CallOf<Name>,
+) => Promise<PluginReply> | void;
+
+type RuntimeAnswers = { [Name in RuntimeApi]: Answer<Name> };
+
+const runtimeCalls: RuntimeAnswers = {
+  nav: ({ data }, { pluginId, generation, request }) =>
+    data.badges.set(pluginId, generation, request),
+  data: ({ data }, { pluginId, generation, request }) =>
+    data.handle(pluginId, generation, request),
+  hooks: ({ hooks }, { pluginId, generation, request }) =>
+    hooks.reply({ pluginId, generation }, request.call),
+  view: ({ views }, { pluginId, request }) =>
+    views.receive(pluginId, request.viewId, request.message),
+  dispatchResult: ({ views }, { pluginId, request }) =>
+    views.dispatches.settle(pluginId, request.requestId, request.result),
+  // A Plugin's batched items answer, failure or change signal (ADR-0035); it waits for nothing.
+  slots: ({ items }, { pluginId, generation, request }) =>
+    items.receive({ pluginId, generation }, request.call),
 };
 
 export async function answerPluginCall(
@@ -42,80 +64,24 @@ export async function answerPluginCall(
   }
 }
 
-function answer(runtime: RuntimeCalls, message: Call): Promise<PluginReply> {
-  const { pluginId, generation, request } = message;
+const isRuntimeRequest = (request: PluginRequest): request is RuntimeRequest =>
+  Object.hasOwn(runtimeCalls, request.api);
 
-  if (request.api === 'nav')
-    return Promise.resolve(answerBadge(runtime, message, request));
+async function answer(runtime: RuntimeCalls, call: Call): Promise<PluginReply> {
+  const { request } = call;
 
-  if (request.api === 'data')
-    return runtime.data.handle(pluginId, generation, request);
+  if (!isRuntimeRequest(request))
+    return answerService(runtime, { ...call, request });
 
-  return answerHookOrView(runtime, { ...message, request });
+  return (await answerRuntime(runtime, { ...call, request })) ?? { ok: true };
 }
 
-function answerBadge(
+const answerRuntime = <Name extends RuntimeApi>(
   runtime: RuntimeCalls,
-  { pluginId, generation }: Call,
-  request: Extract<PluginRequest, { api: 'nav' }>,
-): PluginReply {
-  try {
-    runtime.data.badges.set(pluginId, generation, request);
+  call: CallOf<Name>,
+): ReturnType<Answer<Name>> => runtimeCalls[call.request.api](runtime, call);
 
-    return { ok: true };
-  } catch (error) {
-    return replyFailure(error);
-  }
-}
-
-function answerHookOrView(
-  runtime: RuntimeCalls,
-  message: ViewCall,
-): Promise<PluginReply> {
-  const { pluginId, generation, request } = message;
-
-  if (request.api === 'hooks')
-    return runtime.hooks.reply({ pluginId, generation }, request.call);
-
-  if (request.api === 'view') {
-    runtime.views.receive(pluginId, request.viewId, request.message);
-
-    return Promise.resolve({ ok: true });
-  }
-
-  return answerViewOrService(runtime, { ...message, request });
-}
-
-// A Plugin's batched items answer, failure or change signal (ADR-0035); it waits for nothing.
-function receiveSlotCall(
-  runtime: RuntimeCalls,
-  caller: Caller,
-  call: SlotCall,
-): Promise<PluginReply> {
-  runtime.items.receive(caller, call);
-
-  return Promise.resolve({ ok: true });
-}
-
-function answerViewOrService(
-  runtime: RuntimeCalls,
-  call: ServiceCall,
-): Promise<PluginReply> {
-  const { pluginId, generation, request } = call;
-
-  if (request.api === 'dispatchResult')
-    return settleDispatch(runtime, pluginId, request);
-
-  if (request.api === 'slots')
-    return receiveSlotCall(runtime, { pluginId, generation }, request.call);
-
-  return answerService(runtime, { ...call, request });
-}
-
-type StateCall = Pick<
-  Call,
-  'pluginId' | 'generation' | 'viewId' | 'projectId'
-> & { request: StateRequest };
+type StateCall = Omit<Call, 'request'> & { request: StateRequest };
 
 function answerService(
   runtime: RuntimeCalls,
@@ -141,13 +107,3 @@ function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
 }
 
 type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
-
-function settleDispatch(
-  runtime: RuntimeCalls,
-  pluginId: string,
-  request: Extract<PluginRequest, { api: 'dispatchResult' }>,
-): Promise<PluginReply> {
-  runtime.views.dispatches.settle(pluginId, request.requestId, request.result);
-
-  return Promise.resolve({ ok: true });
-}

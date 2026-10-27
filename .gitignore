@@ -6,7 +6,7 @@ dist/
 out/
 .build/
 .expo/
-docs/plugins/parts/
+docs/plugins/kit-components/
 
 # Turbo
 .turbo/
