@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
-import { settleLayout } from '#mocks/story-layout';
+import { settleLayout, type LayoutName } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '../list-item';
 import { List } from './list';
@@ -54,11 +54,11 @@ function ReorderedSelection(): React.JSX.Element {
   );
 }
 
-function reordering(width: number): Story {
+function reordering(layout: LayoutName): Story {
   return {
     render: () => <ReorderedSelection />,
     play: async ({ canvas, userEvent }) => {
-      await settleLayout(width);
+      await settleLayout(layout);
       await userEvent.click(
         await canvas.findByRole('button', { name: 'Reverse rows' }),
       );
@@ -78,9 +78,9 @@ function reordering(width: number): Story {
   };
 }
 
-export const ReorderAndRemoveWide = reordering(1440);
+export const ReorderAndRemoveWide = reordering('wide');
 
-export const ReorderAndRemovePhone = reordering(390);
+export const ReorderAndRemovePhone = reordering('phone');
 
 export const RecycleDescribedRows: Story = {
   ...Recycling,
