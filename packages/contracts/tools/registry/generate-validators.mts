@@ -21,6 +21,7 @@ const standalone = standaloneCode(validator, {
 });
 
 const bundled = buildSync({
+  absWorkingDir: fileURLToPath(new URL('../../../..', import.meta.url)),
   stdin: {
     contents: standalone,
     resolveDir: fileURLToPath(new URL('../..', import.meta.url)),

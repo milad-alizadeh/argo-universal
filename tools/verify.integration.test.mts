@@ -3,6 +3,7 @@ import {
   cpSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -14,19 +15,44 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
 
-const verifyScripts = ['verify.mts', 'verify-scope.mts', 'hook-checks.mts'];
+const reorderedSum = 'export const sum = (a, b) => b + a;\n';
+
+const verifyScripts = [
+  'verify.mts',
+  'verify-scope.mts',
+  'hook-checks.mts',
+  'check-operation-mutations.mts',
+  'operation-mutation-rules.mts',
+  'operation-mutation-exceptions.mts',
+  'tracked-files.mts',
+  'generate-operations.mts',
+];
+
+const generatedProcedureFile = 'packages/engine/src/operations/router.gen.ts';
+
+const registryValidatorGenerator =
+  'packages/contracts/tools/registry/generate-validators.mts';
 
 let root: string;
 
 function git(...args: string[]): void {
-  spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+
+  if (result.status !== 0) throw new Error(result.stderr);
 }
 
 function write(file: string, text: string): void {
   writeFileSync(path.join(root, file), text);
 }
 
+function copy(file: string): void {
+  const destination = path.join(root, file);
+  mkdirSync(path.dirname(destination), { recursive: true });
+  cpSync(path.join(repositoryRoot, file), destination);
+}
+
 function link(target: string): void {
+  mkdirSync(path.dirname(path.join(root, target)), { recursive: true });
   symlinkSync(path.join(repositoryRoot, target), path.join(root, target));
 }
 
@@ -46,15 +72,13 @@ beforeEach((): void => {
   root = mkdtempSync(path.join(tmpdir(), 'verify-'));
   mkdirSync(path.join(root, 'tools'));
 
-  for (const script of verifyScripts)
-    cpSync(
-      path.join(repositoryRoot, 'tools', script),
-      path.join(root, 'tools', script),
-    );
+  for (const script of verifyScripts) copy(`tools/${script}`);
+  copy(generatedProcedureFile);
+  copy('.oxfmtrc.json');
+  link(registryValidatorGenerator);
   link('tools/node_modules');
   link('node_modules');
   write('package.json', '{ "type": "module" }\n');
-  write('.oxfmtrc.json', '{ "singleQuote": true }\n');
   write('.gitignore', 'node_modules\n');
   write('sum.mjs', 'export const sum = (a, b) => a + b;\n');
   write(
@@ -81,11 +105,12 @@ describe('pnpm verify', (): void => {
   });
 
   it('runs the test that imports a changed file', (): void => {
-    write('sum.mjs', 'export const sum = (a, b) => b + a;\n');
+    write('sum.mjs', reorderedSum);
 
     const result = runVerify();
 
     expect(result.status).toBe(0);
+    expect(result.output).toContain('format, lint and types pass.');
     expect(result.output).toContain('running the 1 test files');
     expect(result.output).toContain('1 passed');
   });
@@ -102,6 +127,46 @@ describe('pnpm verify', (): void => {
   it('fails when a dependent test fails', (): void => {
     write('sum.mjs', 'export const sum = (a, b) => a - b;\n');
 
-    expect(runVerify().status).toBe(1);
+    const result = runVerify();
+
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('format, lint and types pass.');
+    expect(result.output).toContain('1 failed');
+  });
+
+  it('fails when a new hand-written mutation is added', (): void => {
+    write(
+      'packages/engine/src/new-router.mjs',
+      "import { initTRPC } from '@trpc/server';\n\nconst publicProcedure = initTRPC.create().procedure;\n\nexport const routes = {\n  erase: publicProcedure.mutation(() => null),\n};\n",
+    );
+    write('sum.mjs', reorderedSum);
+
+    const result = runVerify();
+
+    expect(result.status).toBe(1);
+    expect(result.output).toContain(
+      'Add an Operation instead of the hand-written mutation erase.',
+    );
+    expect(result.output).not.toContain('Operation procedures are stale.');
+    expect(result.output).toContain('1 passed');
+  });
+
+  it('fails when generated Operation procedures are stale before another file changes', (): void => {
+    const generated = readFileSync(
+      path.join(root, generatedProcedureFile),
+      'utf8',
+    );
+
+    write(generatedProcedureFile, `${generated}\n// Stale fixture.\n`);
+    git('add', generatedProcedureFile);
+    git('commit', '-q', '-m', 'stale generated procedure');
+    write('sum.mjs', reorderedSum);
+
+    const result = runVerify();
+
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('Operation procedures are stale.');
+    expect(result.output).not.toContain('Add an Operation instead');
+    expect(result.output).toContain('1 passed');
   });
 });
