@@ -80,7 +80,7 @@ export function readList(
   { prefix, tree, held }: Reader,
 ): ListReading {
   const rows = new Map<string, ReactNode>();
-  const level = { prefix, tree, held, movable: true, rows };
+  const level = { list: prefix, prefix, tree, held, movable: true, rows };
 
   return { blocks: readLevel(children, level), rows };
 }

@@ -6,18 +6,21 @@ import { moveNotice, type MoveNotice } from './list-move-notice';
 export type FocusRow = (ifLost: boolean) => void;
 
 /*
- * The rows of one List that take focus, by id: a row registers as it draws. A row moved to another Section can draw
- * there a commit after the frame that focused it where it was, so when the last moved row draws anew, it takes back
- * the focus its old copy lost.
+ * The rows of one List that take focus, by id: a row registers as it draws. A row moved to another lane draws anew
+ * there, possibly a commit after the frame that focused it where it was, so the moved row's next draw takes back the
+ * focus its old copy lost, once.
  */
 export class RowFocus {
   private readonly rows = new Map<string, FocusRow>();
-  private moved: string | undefined;
+  private pending: string | undefined;
 
   public register(id: string, focus: FocusRow): () => void {
     this.rows.set(id, focus);
 
-    if (this.moved === id) requestAnimationFrame(() => focus(true));
+    if (this.pending === id) {
+      this.pending = undefined;
+      requestAnimationFrame(() => focus(true));
+    }
 
     return (): void => {
       if (this.rows.get(id) === focus) this.rows.delete(id);
@@ -26,7 +29,7 @@ export class RowFocus {
 
   // Focuses row `id` a frame after a move, once it has drawn where it landed.
   public after(id: string): void {
-    this.moved = id;
+    this.pending = id;
     requestAnimationFrame(() => this.rows.get(id)?.(false));
   }
 }

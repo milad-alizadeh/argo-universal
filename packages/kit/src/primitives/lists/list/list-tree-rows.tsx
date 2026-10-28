@@ -28,6 +28,8 @@ interface Level {
   through: readonly boolean[];
   // A List.Section among a List's own children stays as it is; its rows are flattened with its own children.
   passes: (child: ReactNode) => boolean;
+  // A child's own key, when it has one: a moving row keeps it wherever it moves.
+  keyed?: (child: ReactNode) => string | undefined;
 }
 
 // Where one child sits among its siblings.
@@ -37,8 +39,15 @@ interface Place {
   last: boolean;
 }
 
-const childKey = (child: ReactNode, prefix: string, index: number): string =>
+// Where it sits: its React key, or its index when it has none.
+const placeKey = (child: ReactNode, prefix: string, index: number): string =>
   `${prefix}/${isValidElement(child) ? child.key : index}`;
+
+export const childKey = (
+  child: ReactNode,
+  level: Level,
+  index: number,
+): string => level.keyed?.(child) ?? placeKey(child, level.prefix, index);
 
 // A List holds a tree once any of its rows, in any Section, holds child ListItems.
 export function holdsTree(
@@ -70,7 +79,7 @@ export function treeChildren(
   return children.flatMap((child, index) =>
     treeChild(child, folding, {
       level,
-      key: childKey(child, level.prefix, index),
+      key: childKey(child, level, index),
       last: index === children.length - 1,
     }),
   );
@@ -133,10 +142,15 @@ function treeContent(
 function nextLevel(parent: TreeRow, key: string): Level {
   const { depth, through } = childTree(parent, false);
 
-  return { prefix: key, depth, through, passes: () => false };
+  return {
+    prefix: key,
+    depth,
+    through,
+    passes: () => false,
+  };
 }
 
 export const topLevel = (
   prefix: string,
-  passes: (child: ReactNode) => boolean,
-): Level => ({ prefix, depth: 0, through: [], passes });
+  { passes, keyed }: Required<Pick<Level, 'passes' | 'keyed'>>,
+): Level => ({ prefix, depth: 0, through: [], passes, keyed });

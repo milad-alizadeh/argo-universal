@@ -47,6 +47,22 @@ describe('RowFocus', () => {
     expect(landed.mock.calls).toEqual([[true]]);
   });
 
+  // A virtualised row scrolled away and back draws again, long after its move.
+  it('gives the focus back once, not on every later draw of the moved row', () => {
+    const focus = new RowFocus();
+    const landed = vi.fn<FocusRow>();
+    const later = vi.fn<FocusRow>();
+
+    focus.after('alpha');
+    nextFrame();
+    focus.register('alpha', landed)();
+    nextFrame();
+    focus.register('alpha', later);
+    nextFrame();
+
+    expect(later.mock.calls).toEqual([]);
+  });
+
   it('leaves other rows that draw after a move alone', () => {
     const focus = new RowFocus();
     const other = vi.fn<FocusRow>();
