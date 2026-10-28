@@ -21,6 +21,18 @@ export async function runOperation(
   params: Json | undefined,
 ): Promise<OperationResult> {
   switch (id) {
+    case 'agent.getAccess':
+      return implementations['agent.getAccess'](
+        operationParams(operations['agent.getAccess'].params, params),
+      );
+    case 'agent.setAccess':
+      return implementations['agent.setAccess'](
+        operationParams(operations['agent.setAccess'].params, params),
+      );
+    case 'agent.installInstructions':
+      return implementations['agent.installInstructions'](
+        operationParams(operations['agent.installInstructions'].params, params),
+      );
     case 'session.diff':
       return implementations['session.diff'](
         operationParams(operations['session.diff'].params, params),
@@ -136,6 +148,34 @@ export async function runOperation(
 
 export function generatedOperations(engine: Operations) {
   return {
+    agent: router({
+      getAccess: publicProcedure
+        .input(operations['agent.getAccess'].params)
+        .output(operations['agent.getAccess'].result)
+        .query(({ input }) => engine.runApp('agent.getAccess', input)),
+      setAccess: publicProcedure
+        .input(operations['agent.setAccess'].params)
+        .output(operations['agent.setAccess'].result)
+        .mutation(({ input }) => engine.runApp('agent.setAccess', input)),
+      installInstructions: publicProcedure
+        .input(operations['agent.installInstructions'].params)
+        .output(operations['agent.installInstructions'].result)
+        .mutation(({ input }) =>
+          engine.runApp('agent.installInstructions', input),
+        ),
+      list: publicProcedure
+        .input(operations['agent.list'].params)
+        .output(operations['agent.list'].result)
+        .query(({ input }) => engine.runApp('agent.list', input)),
+      install: publicProcedure
+        .input(operations['agent.install'].params)
+        .output(operations['agent.install'].result)
+        .mutation(({ input }) => engine.runApp('agent.install', input)),
+      remove: publicProcedure
+        .input(operations['agent.remove'].params)
+        .output(operations['agent.remove'].result)
+        .mutation(({ input }) => engine.runApp('agent.remove', input)),
+    }),
     session: router({
       diff: publicProcedure
         .input(operations['session.diff'].params)
@@ -243,20 +283,6 @@ export function generatedOperations(engine: Operations) {
         .input(operations['registry.sync'].params)
         .output(operations['registry.sync'].result)
         .mutation(({ input }) => engine.runApp('registry.sync', input)),
-    }),
-    agent: router({
-      list: publicProcedure
-        .input(operations['agent.list'].params)
-        .output(operations['agent.list'].result)
-        .query(({ input }) => engine.runApp('agent.list', input)),
-      install: publicProcedure
-        .input(operations['agent.install'].params)
-        .output(operations['agent.install'].result)
-        .mutation(({ input }) => engine.runApp('agent.install', input)),
-      remove: publicProcedure
-        .input(operations['agent.remove'].params)
-        .output(operations['agent.remove'].result)
-        .mutation(({ input }) => engine.runApp('agent.remove', input)),
     }),
   };
 }

@@ -117,3 +117,5 @@ export {
   type CoreSection,
   type NavigationSection,
 } from './lib/product/navigation/sections';
+
+export { AgentAccessDetailScreen } from './screens/settings/agent-access/agent-access-detail-screen';
