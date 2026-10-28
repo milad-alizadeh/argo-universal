@@ -64,6 +64,32 @@ describe('applyListMove', () => {
     ]);
   });
 
+  it('lands a move naming no Section in the first Section without an id only', () => {
+    const twoLoose = [
+      { rows: ['alpha'] },
+      { rows: ['beta'] },
+      { id: 'done', rows: ['gamma'] },
+    ];
+
+    expect(idsOf(applyListMove(twoLoose, { id: 'gamma', index: 0 }))).toEqual([
+      ['gamma', 'alpha'],
+      ['beta'],
+      [],
+    ]);
+  });
+
+  it('lands a row once when two Sections share an id', () => {
+    const twins = [
+      { id: 'todo', rows: ['alpha'] },
+      { id: 'done', rows: [] },
+      { id: 'done', rows: ['beta'] },
+    ];
+
+    expect(
+      idsOf(applyListMove(twins, { id: 'alpha', section: 'done', index: 0 })),
+    ).toEqual([[], ['alpha'], ['beta']]);
+  });
+
   it('keeps the rows as they are for a row or a Section it does not hold', () => {
     expect(
       applyListMove(board, { id: 'nope', section: 'done', index: 0 }),
