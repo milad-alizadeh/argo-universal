@@ -42,7 +42,7 @@ function laneAt(
   zones: readonly MeasuredZone[],
   { x }: Point,
 ): string | undefined {
-  const nearest = zones.toSorted(
+  const nearest = [...zones].sort(
     (a, b) => horizontalDistance(a.rect, x) - horizontalDistance(b.rect, x),
   )[0];
 
@@ -55,7 +55,7 @@ function sectionAt(
   rows: readonly PlacedRow[],
   { y }: Point,
 ): string | undefined {
-  const starts = [...zones, ...rows].toSorted((a, b) => a.rect.y - b.rect.y);
+  const starts = [...zones, ...rows].sort((a, b) => a.rect.y - b.rect.y);
   const above = starts.filter((start) => start.rect.y <= y);
 
   return (above.at(-1) ?? starts[0])?.sectionKey;
