@@ -52,6 +52,7 @@ export const initialSessionContext = (
     openError: null,
     stored: input.kind === 'existing',
     sessionInsertCommitted: null,
+    creationReceipt: null,
     acpLifetime: new AcpSessionLifetime(
       input.acp,
       input.createId,

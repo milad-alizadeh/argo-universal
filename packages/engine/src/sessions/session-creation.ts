@@ -7,6 +7,10 @@ import { waitFor } from 'xstate';
 import { requireInstalledAgent } from '../agents';
 import { readProjectPath } from '../projects';
 import { isOfferedConfigChoice } from './admission/config-admission';
+import {
+  observeSessionCreation,
+  type AcceptedSessionStart,
+} from './creation-receipt';
 import type { SessionRouterDeps } from './router-deps';
 import {
   submitSessionPrompt,
@@ -97,7 +101,13 @@ export type SessionCreationOrigin = {
   startedBySessionId?: string;
 };
 
-export type AcceptedSessionStart = { sessionId: string; turnId?: string };
+export type { AcceptedSessionStart } from './creation-receipt';
+
+export type SessionCreation = {
+  sessionId: string;
+  turnId: string;
+  accepted: Promise<AcceptedSessionStart>;
+};
 
 export async function createSession(
   deps: SessionCreationDeps,
@@ -115,6 +125,17 @@ export async function createSessionAccepted(
   newSession: SessionNewInput,
   origin?: SessionCreationOrigin,
 ): Promise<AcceptedSessionStart> {
+  const creation = await startSessionCreation(deps, newSession, origin);
+
+  return creation.accepted;
+}
+
+// Allocate native identity before waiting for the Agent or the first prompt's admission.
+export async function startSessionCreation(
+  deps: SessionCreationDeps,
+  newSession: SessionNewInput,
+  origin?: SessionCreationOrigin,
+): Promise<SessionCreation> {
   // The open Sessions machine checks again as the last word (ADR-0003); this check gives the typed failure.
   requireInstalledAgent(deps.installedAgents, newSession.agent);
 
@@ -125,26 +146,35 @@ export async function createSessionAccepted(
 
   validateSessionCommandAdmission(deps);
   const sessionId = origin?.sessionId ?? deps.createId();
+  const turnId = deps.createId();
   sendCheckedOpenSessionsCommand(deps.sessions, {
     type: 'sessions.create',
     sessionId,
-    turnId: deps.createId(),
+    turnId,
     ...newSession,
     startedBySessionId: origin?.startedBySessionId,
     projectPath,
   });
-  await waitForSessionStored(requireOpenSessionActor(deps.sessions, sessionId));
-  await waitForSessionInsertCommitted(
-    requireOpenSessionActor(deps.sessions, sessionId),
+  const session = requireOpenSessionActor(deps.sessions, sessionId);
+
+  const accepted = observeSessionCreation(
+    session,
+    completeCreation(deps, session, newSession),
   );
 
-  const turnId = await startSession(
-    deps,
-    requireOpenSessionActor(deps.sessions, sessionId),
-    newSession,
-  );
+  return { sessionId, turnId, accepted };
+}
 
-  return { sessionId, turnId };
+async function completeCreation(
+  deps: SessionCreationDeps,
+  session: SessionActorRef,
+  input: SessionNewInput,
+): Promise<AcceptedSessionStart> {
+  await waitForSessionStored(session);
+  await waitForSessionInsertCommitted(session);
+  const turnId = await startSession(deps, session, input);
+
+  return { sessionId: session.getSnapshot().context.sessionId, turnId };
 }
 
 // Once stored, the Session applies its first choices, then submits its first prompt.

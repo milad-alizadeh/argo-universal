@@ -21,6 +21,10 @@ import type { AcpPromptRequest as PromptRequest } from './acp/prompts/prompt-typ
 import type { LocalSubmission } from './acp/prompts/submission';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
 import type {
+  SessionCreationReceipt,
+  SessionCreationSettled,
+} from './creation-receipt';
+import type {
   NativePermissionEvent,
   NativePermissions,
 } from './native-permissions';
@@ -90,7 +94,8 @@ export type SessionEvent =
   | { type: 'session.shutdown' }
   | { type: 'agent.shellChanged'; shell: ShellRecord }
   | PermissionHooked
-  | NativePermissionEvent;
+  | NativePermissionEvent
+  | SessionCreationSettled;
 
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
@@ -111,6 +116,7 @@ export interface SessionContext extends SessionData {
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
   sessionInsertCommitted: Promise<'committed' | 'retrying' | 'failed'> | null;
+  creationReceipt: SessionCreationReceipt | null;
   acpLifetime: AcpSessionLifetime;
   acpLease: AcpSessionLease | null;
   pendingSubmission: LocalSubmission | null;

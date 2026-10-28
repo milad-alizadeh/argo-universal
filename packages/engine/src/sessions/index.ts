@@ -55,6 +55,8 @@ export { createSessionRouter } from './router';
 export {
   createSession,
   createSessionAccepted,
+  startSessionCreation,
+  type SessionCreation,
   type AcceptedSessionStart,
   type SessionCreationOrigin,
 } from './session-creation';
@@ -113,4 +115,15 @@ export { cancelSession } from './session-closure';
 
 export { archiveSession } from './archive/archive-commands';
 
-export { readSessionTurn, readSessionOperation } from './operation-work';
+export {
+  readSessionTurn,
+  readSessionOperation,
+  sessionTurnRequiresInput,
+} from './operation-work';
+
+export { readSessionCreation } from './creation-reader';
+
+export {
+  createSessionWorkWatcher,
+  type SessionWorkWatcher,
+} from './work-watcher';

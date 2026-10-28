@@ -1,10 +1,12 @@
 import type { Turn, ToolCallUpdate } from '@repo/contracts';
+import type { OperationWorkTarget } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { turn } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { readFeedRow } from '../feed';
+import { pendingInputRequest } from './pending-input';
 import type { SessionRouterDeps } from './router-deps';
 import { readQueuedSessionRows } from './session-storage';
 import { requireLiveSessionActor } from './session-system';
@@ -20,6 +22,7 @@ type SessionOperationWork = {
   result?: Json;
   error?: string;
   cancelled?: true;
+  work?: OperationWorkTarget;
 };
 
 // Reads the exact admitted Turn, including updates the Writer has not committed yet.
@@ -60,6 +63,19 @@ export function readSessionOperation(
       message: 'The Operation Tool call no longer exists',
     });
 
+  const state = operationRowState(deps, sessionId, row);
+  const work = row._meta?.argo?.operationWork;
+
+  if (work) state.work = work;
+
+  return state;
+}
+
+function operationRowState(
+  deps: Sources,
+  sessionId: string,
+  row: ToolCallUpdate,
+): SessionOperationWork {
   if (row.state === 'settled') {
     if (row.status === 'cancelled')
       return { status: 'settled', cancelled: true };
@@ -78,10 +94,24 @@ export function readSessionOperation(
   const waiting = session
     .getSnapshot()
     .context.permissionQueue.some(
-      (request) => request.toolCallId === toolCallId,
+      (request) => request.toolCallId === row.toolCallId,
     );
 
   return { status: waiting ? 'waiting_for_user' : 'still_running' };
+}
+
+export function sessionTurnRequiresInput(
+  deps: Sources,
+  sessionId: string,
+  turnId: string,
+): boolean {
+  const live = deps.sessions
+    .getSnapshot()
+    .context.sessions[sessionId]?.getSnapshot().context;
+
+  if (!live || live.activeTurnId !== turnId) return false;
+
+  return pendingInputRequest(live) !== null;
 }
 
 function failedMessage(row: ToolCallUpdate): string {

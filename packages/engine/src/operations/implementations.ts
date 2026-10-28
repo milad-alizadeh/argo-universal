@@ -1,5 +1,9 @@
 import type { ProjectsListOutput } from '@repo/contracts';
-import { operations, type OperationId } from '@repo/contracts/operations';
+import {
+  operations,
+  type OperationId,
+  type OperationExecution,
+} from '@repo/contracts/operations';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { z } from 'zod';
 import { readProjects } from '../projects';
@@ -14,6 +18,8 @@ import { sessionImplementations } from './sessions';
 export type OperationResult<Id extends OperationId = OperationId> = z.output<
   (typeof operations)[Id]['result']
 >;
+
+export type OperationRunResult = OperationResult | OperationExecution;
 
 export type OperationImplementations = {
   [Id in OperationId]: (

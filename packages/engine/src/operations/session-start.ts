@@ -1,6 +1,6 @@
 import { SessionNewInput, type SessionNewOutput } from '@repo/contracts';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { createSession, type SessionOperationCall } from '../sessions';
+import { startSessionCreation, type SessionOperationCall } from '../sessions';
 import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
 import type { SessionStartAdmission, SessionStarts } from './session-starts';
@@ -39,8 +39,16 @@ async function confirmedStart(
       'Start a Session outside the calling Session’s Project or delegation limits.',
     );
 
-  return createSession(deps, input, {
+  const creation = await startSessionCreation(deps, input, {
     sessionId,
     startedBySessionId: caller.sessionId,
   });
+
+  call.started({ kind: 'creation', sessionId, turnId: creation.turnId });
+  const accepted = await creation.accepted;
+
+  if (accepted.turnId)
+    call.started({ kind: 'turn', sessionId, turnId: accepted.turnId });
+
+  return { sessionId };
 }

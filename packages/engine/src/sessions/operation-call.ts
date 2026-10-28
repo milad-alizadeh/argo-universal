@@ -1,4 +1,5 @@
 import type { FeedUpdate } from '@repo/contracts';
+import type { OperationWorkTarget } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { toolCallEvent, type FeedActorRef } from '../feed';
@@ -21,6 +22,7 @@ export type SessionOperationCall = {
   turnId: string | null;
   finish: (result: Result) => void;
   confirm: (description: string) => Promise<void>;
+  started: (work: OperationWorkTarget) => void;
 };
 
 const toolRow = (id: string, operation: Operation): Tool => ({
@@ -95,6 +97,20 @@ class OperationCall implements SessionOperationCall {
   }
   public finish(result: Result): void {
     this.settle(completedRow(this.row, result));
+  }
+  public started(work: OperationWorkTarget): void {
+    if (this.finished) return;
+
+    if (!canSettleOperation(this.session, this.feed, this.turnId)) return;
+    this.feed.send({
+      type: 'feed.change',
+      turnId: this.turnId,
+      change: {
+        type: 'patch',
+        id: this.rowId,
+        set: { _meta: { argo: { operationWork: work } } },
+      },
+    });
   }
   private settle(row: Tool): void {
     if (this.finished) return;

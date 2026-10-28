@@ -5,7 +5,7 @@ import { Turn } from '../sessions/turn';
 export const OperationWaitId = z
   .string()
   .regex(
-    /^(?:turn|call):[A-Za-z0-9_-]+:[a-f0-9]{64}$/,
+    /^(?:creation|turn|call):[A-Za-z0-9_-]+:[a-f0-9]{64}$/,
     'Expected an Operation wait id returned by argo run',
   );
 

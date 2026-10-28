@@ -6,7 +6,6 @@ import {
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
-import type { FeedDeps } from '../feed';
 import type { PluginsRouterDeps } from '../plugins';
 import type {
   SessionOperationCall,
@@ -23,6 +22,7 @@ import {
   createImplementations,
   type OperationImplementations,
   type OperationResult,
+  type OperationRunResult,
 } from './implementations';
 import type { OperationInput } from './params';
 import { runOperation } from './router.gen';
@@ -37,6 +37,7 @@ import { OperationWork } from './work';
 export type {
   OperationImplementations,
   OperationResult,
+  OperationRunResult,
 } from './implementations';
 
 export type OperationsDeps = SessionRouterDeps &
@@ -46,7 +47,6 @@ export type OperationsDeps = SessionRouterDeps &
     sessionTokens: SessionTokens;
     blobsFolder: string;
     plugins: PluginsRouterDeps;
-    watchSessionSnapshot: FeedDeps['watchSessionSnapshot'];
     operationWaitClock?: OperationWaitClock;
   };
 
@@ -93,7 +93,7 @@ export class Operations {
   private start(
     caller: OperationCaller,
     input: RunInput,
-  ): StartedOperation<OperationResult> {
+  ): StartedOperation<OperationRunResult> {
     return startRecordedOperation(
       { deps: this.deps, caller },
       operationCall(input),
@@ -111,7 +111,7 @@ export class Operations {
     caller: OperationCaller,
     operation: { id: OperationId; params: Json },
     call?: SessionOperationCall,
-  ): Promise<OperationResult> {
+  ): Promise<OperationRunResult> {
     if (caller.kind === 'user') return this.runUser(operation);
 
     const access = {
@@ -130,7 +130,9 @@ export class Operations {
   }: {
     id: OperationId;
     params: Json;
-  }): Promise<OperationResult> {
+  }): Promise<OperationRunResult> {
+    if (id === 'session.new') return this.work.createSession(params);
+
     return operations[id].result.parseAsync(
       await runOperation(this.implementations, id, params),
     );
