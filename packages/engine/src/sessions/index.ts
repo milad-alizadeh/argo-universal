@@ -71,3 +71,13 @@ export { findSessionFeed } from './session-system';
 export { recoverShells } from './shells/recovery';
 
 export { releaseShellGroups } from './shells/shell-record';
+
+export { renameSession } from './session-rename';
+
+export { saveSessionPlan } from './session-save-plan';
+
+export { closeSession } from './session-closure';
+
+export { configureSession } from './session-configuration';
+
+export { stopShell } from './shells/stop';

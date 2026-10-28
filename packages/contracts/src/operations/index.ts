@@ -1,8 +1,11 @@
 import { z } from 'zod';
 import { ProjectsListOutput } from '../projects/list';
 import type { OperationTier } from './metadata';
+import { sessionOperations } from './sessions';
 
 export { OperationRow, OperationTier } from './metadata';
+
+export { sessionOperations } from './sessions';
 
 export interface OperationDefinition {
   id: string;
@@ -15,6 +18,7 @@ export interface OperationDefinition {
 }
 
 export const operations = {
+  ...sessionOperations,
   'project.list': {
     id: 'project.list',
     label: 'List Projects',

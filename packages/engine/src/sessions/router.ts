@@ -7,8 +7,6 @@ import {
   SessionAnswerPermissionOutput,
   SessionCancelInput,
   SessionCancelOutput,
-  SessionCloseInput,
-  SessionCloseOutput,
   SessionCounts,
   SessionListInput,
   SessionListOutput,
@@ -21,12 +19,6 @@ import {
   SessionOpenOutput,
   SessionPromptInput,
   SessionPromptOutput,
-  SessionRenameInput,
-  SessionRenameOutput,
-  SessionSavePlanInput,
-  SessionSavePlanOutput,
-  SessionSetConfigOptionInput,
-  SessionSetConfigOptionOutput,
   SessionSubagentsInput,
   SessionSubagentsOutput,
 } from '@repo/contracts';
@@ -46,13 +38,10 @@ import {
   answerSessionElicitation,
   answerSessionPermission,
 } from './session-answers';
-import { cancelSession, closeSession } from './session-closure';
-import { configureSession } from './session-configuration';
+import { cancelSession } from './session-closure';
 import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
-import { renameSession } from './session-rename';
-import { saveSessionPlan } from './session-save-plan';
 import { markSessionSeen } from './session-seen';
 import { createShellSessionRouter } from './shells/router';
 import { createSubagentsReader } from './subagents';
@@ -128,36 +117,10 @@ const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
 
 const createStopRouter = routerFactory((deps: SessionRouterDeps) =>
   router({
-    close: publicProcedure
-      .input(SessionCloseInput)
-      .output(SessionCloseOutput)
-      .mutation(({ input }) => closeSession(deps, input.sessionId)),
     cancel: publicProcedure
       .input(SessionCancelInput)
       .output(SessionCancelOutput)
       .mutation(({ input }) => cancelSession(deps, input.sessionId)),
-  }),
-);
-
-const createConfigurationRouter = routerFactory((deps: SessionRouterDeps) =>
-  router({
-    setConfigOption: publicProcedure
-      .input(SessionSetConfigOptionInput)
-      .output(SessionSetConfigOptionOutput)
-      .mutation(({ input }) => configureSession(deps, input)),
-  }),
-);
-
-const createRenameRouter = routerFactory((deps: SessionRouterDeps) =>
-  router({
-    rename: publicProcedure
-      .input(SessionRenameInput)
-      .output(SessionRenameOutput)
-      .mutation(({ input }) => renameSession(deps, input)),
-    savePlan: publicProcedure
-      .input(SessionSavePlanInput)
-      .output(SessionSavePlanOutput)
-      .mutation(({ input }) => saveSessionPlan(deps, input)),
   }),
 );
 
@@ -200,8 +163,6 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createStartRouter(deps),
     createStopRouter(deps),
     createArchiveRouter(deps),
-    createConfigurationRouter(deps),
-    createRenameRouter(deps),
     createAnswerRouter(deps),
     createSubagentsRouter(deps),
     createChangesRouter(deps),

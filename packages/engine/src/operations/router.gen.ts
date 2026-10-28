@@ -12,6 +12,36 @@ export async function runOperation(
   params: Json | undefined,
 ) {
   switch (id) {
+    case 'shell.stop':
+      return operations['shell.stop'].result.parseAsync(
+        await implementations['shell.stop'](
+          operationParams(operations['shell.stop'].params, params),
+        ),
+      );
+    case 'session.setConfigOption':
+      return operations['session.setConfigOption'].result.parseAsync(
+        await implementations['session.setConfigOption'](
+          operationParams(operations['session.setConfigOption'].params, params),
+        ),
+      );
+    case 'session.close':
+      return operations['session.close'].result.parseAsync(
+        await implementations['session.close'](
+          operationParams(operations['session.close'].params, params),
+        ),
+      );
+    case 'session.savePlan':
+      return operations['session.savePlan'].result.parseAsync(
+        await implementations['session.savePlan'](
+          operationParams(operations['session.savePlan'].params, params),
+        ),
+      );
+    case 'session.rename':
+      return operations['session.rename'].result.parseAsync(
+        await implementations['session.rename'](
+          operationParams(operations['session.rename'].params, params),
+        ),
+      );
     case 'project.list':
       return operations['project.list'].result.parseAsync(
         await implementations['project.list'](
@@ -25,6 +55,50 @@ export async function runOperation(
 
 export function generatedOperations(engine: Operations) {
   return {
+    shell: router({
+      stop: publicProcedure
+        .input(operations['shell.stop'].params)
+        .output(operations['shell.stop'].result)
+        .mutation(async ({ input }) =>
+          operations['shell.stop'].result.parseAsync(
+            await engine.runApp('shell.stop', input),
+          ),
+        ),
+    }),
+    session: router({
+      setConfigOption: publicProcedure
+        .input(operations['session.setConfigOption'].params)
+        .output(operations['session.setConfigOption'].result)
+        .mutation(async ({ input }) =>
+          operations['session.setConfigOption'].result.parseAsync(
+            await engine.runApp('session.setConfigOption', input),
+          ),
+        ),
+      close: publicProcedure
+        .input(operations['session.close'].params)
+        .output(operations['session.close'].result)
+        .mutation(async ({ input }) =>
+          operations['session.close'].result.parseAsync(
+            await engine.runApp('session.close', input),
+          ),
+        ),
+      savePlan: publicProcedure
+        .input(operations['session.savePlan'].params)
+        .output(operations['session.savePlan'].result)
+        .mutation(async ({ input }) =>
+          operations['session.savePlan'].result.parseAsync(
+            await engine.runApp('session.savePlan', input),
+          ),
+        ),
+      rename: publicProcedure
+        .input(operations['session.rename'].params)
+        .output(operations['session.rename'].result)
+        .mutation(async ({ input }) =>
+          operations['session.rename'].result.parseAsync(
+            await engine.runApp('session.rename', input),
+          ),
+        ),
+    }),
     project: router({
       list: publicProcedure
         .input(operations['project.list'].params)

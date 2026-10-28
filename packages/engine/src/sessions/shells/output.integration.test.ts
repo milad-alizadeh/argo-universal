@@ -69,7 +69,7 @@ it('streams stored output before new stdout/stderr and resumes at a UTF-8 byte o
   expect(tail.map((chunk) => chunk.text).join('')).toBe('ω done\n');
   expect(tail.at(-1)).toMatchObject({ after: 17, status: 'exited' });
   await expect(
-    host.caller.session.stopShell({ ...created, shellId }),
+    host.caller.shell.stop({ ...created, shellId }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
 });
 
@@ -96,7 +96,7 @@ it('rejects output and Stop for a Shell belonging to another Session', async () 
     code: 'NOT_FOUND',
   });
   await expect(
-    host.caller.session.stopShell({ ...other, shellId }),
+    host.caller.shell.stop({ ...other, shellId }),
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   await host.caller.session.close(created);
 });
