@@ -54,3 +54,19 @@ if (process.argv.includes('--check')) {
 } else {
   await writeFile(output, formatted);
 }
+
+execFileSync(
+  process.execPath,
+  [
+    '--import',
+    'tsx',
+    fileURLToPath(
+      new URL(
+        '../packages/contracts/tools/registry/generate-validators.mts',
+        import.meta.url,
+      ),
+    ),
+    ...process.argv.slice(2),
+  ],
+  { stdio: 'inherit' },
+);

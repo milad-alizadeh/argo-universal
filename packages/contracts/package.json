@@ -27,6 +27,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./operations": "./src/operations/index.ts",
+    "./operations/registry": "./src/operations/registry.ts",
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",
     "./plugins/runtime": "./src/plugins/runtime.ts",
@@ -76,6 +77,9 @@
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
+    "esbuild": "catalog:",
     "json-schema-to-typescript": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",

@@ -395,11 +395,11 @@ it('does not recreate saved options when the Agent is removed during discovery',
   // Removing an Agent drops its connection, so discovery may be cancelled before its reply.
   const settled = discovery.catch(() => []);
   await received.promise;
-  await host.caller.agents.remove({ id: emptySessionInput.agent });
+  await host.caller.agent.remove({ id: emptySessionInput.agent });
   release.resolve();
   await settled;
   expect(host.database.select().from(agentOptions).all()).toEqual([]);
-  expect(await host.caller.agents.servers()).toEqual([]);
+  expect(await host.caller.agent.list()).toEqual([]);
 });
 
 it('refreshes model-dependent options before Send without creating a Session', async () => {

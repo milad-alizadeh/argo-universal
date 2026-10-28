@@ -60,7 +60,7 @@ const startNpmVersions = async (): Promise<NpmVersions> => {
         version,
         distribution: { npx: { package: `fixture-install@${version}` } },
       };
-      await host.caller.agents.refreshRegistry();
+      await host.caller.registry.refresh();
     },
   };
 };

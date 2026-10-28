@@ -71,9 +71,9 @@ it('sessionId picks its live connection after its saved connection entry was dro
     protocolSessionLogin(agentCredentials({ signedIn: true })),
   );
 
-  await host.caller.agents.addRegistry({ id: 'mock' });
+  await host.caller.agent.install({ id: 'mock' });
   const session = await host.caller.session.new(emptySessionInput);
-  await host.caller.agents.remove({ id: 'mock' });
+  await host.caller.agent.remove({ id: 'mock' });
   await expect(host.caller.agents.authState(subject)).rejects.toMatchObject({
     code: 'PRECONDITION_FAILED',
     message: 'Agent "mock" is not installed.',

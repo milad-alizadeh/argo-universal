@@ -7,7 +7,7 @@ import type { AcpOpenInput, AcpResources, AcpSessionLease } from '../index';
 
 const exampleAgentId = 'example-agent';
 
-const mutations = ['addRegistry', 'remove'] as const;
+const mutations = ['install', 'remove'] as const;
 
 type Mutation = (typeof mutations)[number];
 
@@ -28,13 +28,13 @@ const mutateOpenAgent = async (mutation: Mutation): Promise<MutatedAgent> => {
     fetchAgents: async () => JSON.stringify(publishedRegistry),
   });
 
-  await host.caller.agents.refreshRegistry();
-  await host.caller.agents.addRegistry({ id: exampleAgentId });
+  await host.caller.registry.refresh();
+  await host.caller.agent.install({ id: exampleAgentId });
   const resources = host.engine.getSnapshot().context.acpResources;
   const opening = createResourceOpening();
   opening.launch = { ...opening.launch, agentId: exampleAgentId };
   const first = await resources.open(opening);
-  await host.caller.agents[mutation]({ id: exampleAgentId });
+  await host.caller.agent[mutation]({ id: exampleAgentId });
 
   return { host, scripted, resources, opening, first };
 };

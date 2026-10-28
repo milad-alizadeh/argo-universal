@@ -95,7 +95,7 @@ it('a Registry refresh starts New Sessions on the new version while the older ru
   const newSession = { ...emptySessionInput, agent: entry.id };
   const older = await host.caller.session.new(newSession);
   entry = { ...entry, version: '2.0.0' };
-  await host.caller.agents.refreshRegistry();
+  await host.caller.registry.refresh();
   await host.caller.session.new(newSession);
 
   expect(agent.processes.map(({ launch }) => launch.version)).toEqual([

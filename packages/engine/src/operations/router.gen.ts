@@ -42,6 +42,42 @@ export async function runOperation(
           operationParams(operations['session.rename'].params, params),
         ),
       );
+    case 'registry.get':
+      return operations['registry.get'].result.parseAsync(
+        await implementations['registry.get'](
+          operationParams(operations['registry.get'].params, params),
+        ),
+      );
+    case 'registry.refresh':
+      return operations['registry.refresh'].result.parseAsync(
+        await implementations['registry.refresh'](
+          operationParams(operations['registry.refresh'].params, params),
+        ),
+      );
+    case 'registry.sync':
+      return operations['registry.sync'].result.parseAsync(
+        await implementations['registry.sync'](
+          operationParams(operations['registry.sync'].params, params),
+        ),
+      );
+    case 'agent.list':
+      return operations['agent.list'].result.parseAsync(
+        await implementations['agent.list'](
+          operationParams(operations['agent.list'].params, params),
+        ),
+      );
+    case 'agent.install':
+      return operations['agent.install'].result.parseAsync(
+        await implementations['agent.install'](
+          operationParams(operations['agent.install'].params, params),
+        ),
+      );
+    case 'agent.remove':
+      return operations['agent.remove'].result.parseAsync(
+        await implementations['agent.remove'](
+          operationParams(operations['agent.remove'].params, params),
+        ),
+      );
     case 'project.list':
       return operations['project.list'].result.parseAsync(
         await implementations['project.list'](
@@ -96,6 +132,58 @@ export function generatedOperations(engine: Operations) {
         .mutation(async ({ input }) =>
           operations['session.rename'].result.parseAsync(
             await engine.runApp('session.rename', input),
+          ),
+        ),
+    }),
+    registry: router({
+      get: publicProcedure
+        .input(operations['registry.get'].params)
+        .output(operations['registry.get'].result)
+        .query(async ({ input }) =>
+          operations['registry.get'].result.parseAsync(
+            await engine.runApp('registry.get', input),
+          ),
+        ),
+      refresh: publicProcedure
+        .input(operations['registry.refresh'].params)
+        .output(operations['registry.refresh'].result)
+        .mutation(async ({ input }) =>
+          operations['registry.refresh'].result.parseAsync(
+            await engine.runApp('registry.refresh', input),
+          ),
+        ),
+      sync: publicProcedure
+        .input(operations['registry.sync'].params)
+        .output(operations['registry.sync'].result)
+        .mutation(async ({ input }) =>
+          operations['registry.sync'].result.parseAsync(
+            await engine.runApp('registry.sync', input),
+          ),
+        ),
+    }),
+    agent: router({
+      list: publicProcedure
+        .input(operations['agent.list'].params)
+        .output(operations['agent.list'].result)
+        .query(async ({ input }) =>
+          operations['agent.list'].result.parseAsync(
+            await engine.runApp('agent.list', input),
+          ),
+        ),
+      install: publicProcedure
+        .input(operations['agent.install'].params)
+        .output(operations['agent.install'].result)
+        .mutation(async ({ input }) =>
+          operations['agent.install'].result.parseAsync(
+            await engine.runApp('agent.install', input),
+          ),
+        ),
+      remove: publicProcedure
+        .input(operations['agent.remove'].params)
+        .output(operations['agent.remove'].result)
+        .mutation(async ({ input }) =>
+          operations['agent.remove'].result.parseAsync(
+            await engine.runApp('agent.remove', input),
           ),
         ),
     }),

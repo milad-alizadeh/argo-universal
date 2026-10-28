@@ -7,17 +7,20 @@ import {
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { z } from 'zod';
+import type { RegistryDeps } from '../agents';
 import { readProjects } from '../projects';
 import type { SessionRouterDeps } from '../sessions';
+import { createRegistryOperations } from './registry';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
 import { sessionImplementations } from './sessions';
 import { requireUserToken } from './tokens';
 
-export type OperationsDeps = SessionRouterDeps & {
-  controlToken: string;
-  blobsFolder: string;
-};
+export type OperationsDeps = SessionRouterDeps &
+  RegistryDeps & {
+    controlToken: string;
+    blobsFolder: string;
+  };
 
 export type OperationResult = z.output<
   (typeof operations)[OperationId]['result']
@@ -34,6 +37,7 @@ function createImplementations(deps: OperationsDeps): OperationImplementations {
 
   return {
     ...sessionImplementations(deps),
+    ...createRegistryOperations(deps),
     'project.list': (): Promise<ProjectsListOutput> =>
       readProjects(deps.database, rejections),
   };
