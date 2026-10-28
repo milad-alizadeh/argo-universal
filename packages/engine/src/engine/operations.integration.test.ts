@@ -9,11 +9,28 @@ const projectListId = 'project.list';
 
 const jsonHeaders = { 'content-type': 'application/json' };
 
-it('refuses discovery without a token', async () => {
-  const host = await startProjectTestHost();
-  const response = await fetch(`${host.url}/trpc/operations.list`);
-  expect(response.status).toBe(401);
-});
+it.each([
+  { procedure: 'list', options: undefined },
+  {
+    procedure: 'run',
+    options: {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ id: projectListId, params: {} }),
+    },
+  },
+])(
+  'refuses operations.$procedure without a token',
+  async ({ procedure, options }) => {
+    const host = await startProjectTestHost();
+    const response = await fetch(
+      `${host.url}/trpc/operations.${procedure}`,
+      options,
+    );
+
+    expect(response.status).toBe(401);
+  },
+);
 
 it('discovers and runs the same Project list as the App with its private user token', async () => {
   const host = await startProjectTestHost();
