@@ -68,6 +68,25 @@ Feature: Agent sign-in and launch callouts
       | wide  |
       | phone |
 
+  Scenario: Signing in to one Agent leaves another Agent signed out
+    Given a wide Frame
+    And Agent 1 needs sign-in
+    And Agent 2 needs sign-in
+    When I open a New Session
+    And I open the configuration picker
+    Then the App asks to authenticate to Agent 1 with "Sign in"
+    When I choose the sign-in method "Sign in"
+    Then the sign-in callout is gone
+    When I send the prompt "First Agent sign-in"
+    Then the Agent replies "The shared fixture completed this Turn."
+    When I open another New Session with Agent 2
+    And I open the configuration picker
+    Then the App asks to authenticate to Agent 2 with "Sign in"
+    When I choose the sign-in method "Sign in"
+    Then the sign-in callout is gone
+    When I send the prompt "Keep Agent sign-ins separate"
+    Then the Agent replies "The shared fixture completed this Turn."
+
   Scenario Outline: A failed sign-in method brings the methods back in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 offers two sign-in methods

@@ -37,7 +37,7 @@ const scriptedDistribution = (
     [target]: {
       archive: fixtureUrl(input.id, input.scenario),
       cmd: './agent',
-      env: input.env,
+      env: { ...input.env, ARGO_E2E_AGENT_ID: input.id },
     },
   },
 });
