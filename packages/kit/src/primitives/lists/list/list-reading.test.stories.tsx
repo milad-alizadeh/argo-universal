@@ -71,7 +71,7 @@ const moved =
 function reading(
   children: ReactNode[],
   shown: ShownOrder | undefined,
-  play: (read: ListReading) => void,
+  play: (read: ListReading) => Promise<void>,
 ): Story {
   const read = (): ListReading => readList(children, reader(children), shown);
 
@@ -84,15 +84,15 @@ function reading(
 export const ReadsRowsPerSectionInTheOwnersOrder = reading(
   board,
   owners,
-  (read) => {
-    expect(rowsPerBlock(read)).toEqual([
+  async (read) => {
+    await expect(rowsPerBlock(read)).toEqual([
       ['note'],
       ['login', 'docs'],
       ['search'],
       ['later'],
     ]);
 
-    expect(read.sections.map((section) => section.rows)).toEqual([
+    await expect(read.sections.map((section) => section.rows)).toEqual([
       ['note', 'later'],
       ['login', 'docs'],
       ['search'],
@@ -103,23 +103,23 @@ export const ReadsRowsPerSectionInTheOwnersOrder = reading(
 export const ReadsAHeldMoveIntoTheShownOrder = reading(
   board,
   moved({ id: 'login', section: 'done', index: 1 }),
-  (read) => {
-    expect(rowsPerBlock(read)).toEqual([
+  async (read) => {
+    await expect(rowsPerBlock(read)).toEqual([
       ['note'],
       ['docs'],
       ['search', 'login'],
       ['later'],
     ]);
 
-    expect(read.sections[1]?.rows).toEqual(['login', 'docs']);
+    await expect(read.sections[1]?.rows).toEqual(['login', 'docs']);
   },
 );
 
 export const MovesALooseRowIntoASection = reading(
   board,
   moved({ id: 'later', section: 'todo', index: 0 }),
-  (read) => {
-    expect(rowsPerBlock(read)).toEqual([
+  async (read) => {
+    await expect(rowsPerBlock(read)).toEqual([
       ['note'],
       ['later', 'login', 'docs'],
       ['search'],
@@ -127,17 +127,21 @@ export const MovesALooseRowIntoASection = reading(
   },
 );
 
-export const KeysRowsByPlaceWithoutMoves = reading(board, undefined, (read) => {
-  expect(read.sections).toEqual([]);
-  expect(keysOf(read).some((key) => key.includes('/row/'))).toBe(false);
-});
+export const KeysRowsByPlaceWithoutMoves = reading(
+  board,
+  undefined,
+  async (read) => {
+    await expect(read.sections).toEqual([]);
+    await expect(keysOf(read).some((key) => key.includes('/row/'))).toBe(false);
+  },
+);
 
 export const KeepsAPlaceKeyForARepeatedId = reading(
   [row('twin'), row('twin'), row('solo')],
   owners,
-  (read) => {
+  async (read) => {
     const keys = keysOf(read);
 
-    expect(new Set(keys).size).toBe(keys.length);
+    await expect(new Set(keys).size).toBe(keys.length);
   },
 );
