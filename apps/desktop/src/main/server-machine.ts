@@ -283,7 +283,8 @@ export const serverConnectionMachine = serverSetup.createMachine({
           target: '.answering',
           actions: assign({
             ownedPid: ({ event }): number => event.pid,
-            spawnedAt: ({ event }): number => event.at,
+            spawnedAt: ({ context, event }): number =>
+              context.spawnedAt ?? event.at,
           }),
         },
         'server.exited': {

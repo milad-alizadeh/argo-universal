@@ -584,6 +584,19 @@ describe('server connection', (): void => {
     expect(value()).toBe('failed');
   };
 
+  it('accepts delayed Supervisor pid reporting after its start time', async (): Promise<void> => {
+    await spawnSupervisor();
+    const address = { ...startedAddress, pid: 201 };
+    server.send({
+      type: 'server.spawned',
+      pid: address.pid,
+      at: Date.parse('2026-10-03T10:01:00.000Z'),
+    });
+    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await settle((): void => latest(readAddressCalls).resolve(address));
+    expect(readyAddresses).toEqual([address]);
+  });
+
   it('announces each Server startup failure once', async (): Promise<void> => {
     await abandonStuckSupervisor();
     expect(failures).toEqual([context().failure]);

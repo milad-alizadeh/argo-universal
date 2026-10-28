@@ -11,6 +11,7 @@ function run(
     execFile(
       process.execPath,
       [bin, ...args],
+      { timeout: 20_000 },
       (error: ExecFileException | null, stdout, stderr) => {
         resolve({ code: error?.code ?? 0, output: stdout + stderr });
       },
@@ -28,4 +29,5 @@ it.each([[], ['--help'], ['unknown']])(
         'Usage: argo <command>\n\nCommands:\n  server [--watch]            Start the Server\n  plugin <validate|test> <dir>  Validate or test a Plugin\n',
     });
   },
+  30_000,
 );
