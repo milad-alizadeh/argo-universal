@@ -25,8 +25,8 @@ export type OperationsDeps = SessionRouterDeps &
     plugins: PluginsRouterDeps;
   };
 
-export type OperationResult = z.output<
-  (typeof operations)[OperationId]['result']
+export type OperationResult<Id extends OperationId = OperationId> = z.output<
+  (typeof operations)[Id]['result']
 >;
 
 export type OperationImplementations = {
@@ -57,19 +57,21 @@ export class Operations {
 
     return listOperations(filter);
   }
-  public run(
+  public async run(
     token: string | undefined,
     id: OperationId,
     params: Json,
   ): Promise<OperationResult> {
     requireUserToken(this.deps.controlToken, token);
 
-    return runOperation(this.implementations, id, params);
+    return operations[id].result.parseAsync(
+      await runOperation(this.implementations, id, params),
+    );
   }
-  public runApp(
-    id: OperationId,
+  public runApp<Id extends OperationId>(
+    id: Id,
     params: Json | undefined,
-  ): Promise<OperationResult> {
+  ): Promise<OperationResult<Id>> {
     return runOperation(this.implementations, id, params);
   }
 }

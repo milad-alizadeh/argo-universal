@@ -3,116 +3,91 @@ import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { publicProcedure, router } from '../rpc';
-import type { OperationImplementations, Operations } from './operations';
+import type {
+  OperationImplementations,
+  OperationResult,
+  Operations,
+} from './operations';
 import { operationParams } from './params';
 
+export function runOperation<Id extends OperationId>(
+  implementations: OperationImplementations,
+  id: Id,
+  params: Json | undefined,
+): Promise<OperationResult<Id>>;
 export async function runOperation(
   implementations: OperationImplementations,
   id: OperationId,
   params: Json | undefined,
-) {
+): Promise<OperationResult> {
   switch (id) {
     case 'shell.stop':
-      return operations['shell.stop'].result.parseAsync(
-        await implementations['shell.stop'](
-          operationParams(operations['shell.stop'].params, params),
-        ),
+      return implementations['shell.stop'](
+        operationParams(operations['shell.stop'].params, params),
       );
     case 'session.setConfigOption':
-      return operations['session.setConfigOption'].result.parseAsync(
-        await implementations['session.setConfigOption'](
-          operationParams(operations['session.setConfigOption'].params, params),
-        ),
+      return implementations['session.setConfigOption'](
+        operationParams(operations['session.setConfigOption'].params, params),
       );
     case 'session.close':
-      return operations['session.close'].result.parseAsync(
-        await implementations['session.close'](
-          operationParams(operations['session.close'].params, params),
-        ),
+      return implementations['session.close'](
+        operationParams(operations['session.close'].params, params),
       );
     case 'session.savePlan':
-      return operations['session.savePlan'].result.parseAsync(
-        await implementations['session.savePlan'](
-          operationParams(operations['session.savePlan'].params, params),
-        ),
+      return implementations['session.savePlan'](
+        operationParams(operations['session.savePlan'].params, params),
       );
     case 'session.rename':
-      return operations['session.rename'].result.parseAsync(
-        await implementations['session.rename'](
-          operationParams(operations['session.rename'].params, params),
-        ),
+      return implementations['session.rename'](
+        operationParams(operations['session.rename'].params, params),
       );
     case 'plugin.list':
-      return operations['plugin.list'].result.parseAsync(
-        await implementations['plugin.list'](
-          operationParams(operations['plugin.list'].params, params),
-        ),
+      return implementations['plugin.list'](
+        operationParams(operations['plugin.list'].params, params),
       );
     case 'plugin.activate':
-      return operations['plugin.activate'].result.parseAsync(
-        await implementations['plugin.activate'](
-          operationParams(operations['plugin.activate'].params, params),
-        ),
+      return implementations['plugin.activate'](
+        operationParams(operations['plugin.activate'].params, params),
       );
     case 'plugin.setEnabled':
-      return operations['plugin.setEnabled'].result.parseAsync(
-        await implementations['plugin.setEnabled'](
-          operationParams(operations['plugin.setEnabled'].params, params),
-        ),
+      return implementations['plugin.setEnabled'](
+        operationParams(operations['plugin.setEnabled'].params, params),
       );
     case 'plugin.getSettings':
-      return operations['plugin.getSettings'].result.parseAsync(
-        await implementations['plugin.getSettings'](
-          operationParams(operations['plugin.getSettings'].params, params),
-        ),
+      return implementations['plugin.getSettings'](
+        operationParams(operations['plugin.getSettings'].params, params),
       );
     case 'plugin.setSetting':
-      return operations['plugin.setSetting'].result.parseAsync(
-        await implementations['plugin.setSetting'](
-          operationParams(operations['plugin.setSetting'].params, params),
-        ),
+      return implementations['plugin.setSetting'](
+        operationParams(operations['plugin.setSetting'].params, params),
       );
     case 'registry.get':
-      return operations['registry.get'].result.parseAsync(
-        await implementations['registry.get'](
-          operationParams(operations['registry.get'].params, params),
-        ),
+      return implementations['registry.get'](
+        operationParams(operations['registry.get'].params, params),
       );
     case 'registry.refresh':
-      return operations['registry.refresh'].result.parseAsync(
-        await implementations['registry.refresh'](
-          operationParams(operations['registry.refresh'].params, params),
-        ),
+      return implementations['registry.refresh'](
+        operationParams(operations['registry.refresh'].params, params),
       );
     case 'registry.sync':
-      return operations['registry.sync'].result.parseAsync(
-        await implementations['registry.sync'](
-          operationParams(operations['registry.sync'].params, params),
-        ),
+      return implementations['registry.sync'](
+        operationParams(operations['registry.sync'].params, params),
       );
     case 'agent.list':
-      return operations['agent.list'].result.parseAsync(
-        await implementations['agent.list'](
-          operationParams(operations['agent.list'].params, params),
-        ),
+      return implementations['agent.list'](
+        operationParams(operations['agent.list'].params, params),
       );
     case 'agent.install':
-      return operations['agent.install'].result.parseAsync(
-        await implementations['agent.install'](
-          operationParams(operations['agent.install'].params, params),
-        ),
+      return implementations['agent.install'](
+        operationParams(operations['agent.install'].params, params),
       );
     case 'agent.remove':
-      return operations['agent.remove'].result.parseAsync(
-        await implementations['agent.remove'](
-          operationParams(operations['agent.remove'].params, params),
-        ),
+      return implementations['agent.remove'](
+        operationParams(operations['agent.remove'].params, params),
       );
     case 'project.list':
-      return operations['project.list'].result.parseAsync(
-        await implementations['project.list'](
-          operationParams(operations['project.list'].params, params),
-        ),
+      return implementations['project.list'](
+        operationParams(operations['project.list'].params, params),
       );
     default:
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Unknown Operation' });
@@ -125,149 +100,83 @@ export function generatedOperations(engine: Operations) {
       stop: publicProcedure
         .input(operations['shell.stop'].params)
         .output(operations['shell.stop'].result)
-        .mutation(async ({ input }) =>
-          operations['shell.stop'].result.parseAsync(
-            await engine.runApp('shell.stop', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('shell.stop', input)),
     }),
     session: router({
       setConfigOption: publicProcedure
         .input(operations['session.setConfigOption'].params)
         .output(operations['session.setConfigOption'].result)
-        .mutation(async ({ input }) =>
-          operations['session.setConfigOption'].result.parseAsync(
-            await engine.runApp('session.setConfigOption', input),
-          ),
+        .mutation(({ input }) =>
+          engine.runApp('session.setConfigOption', input),
         ),
       close: publicProcedure
         .input(operations['session.close'].params)
         .output(operations['session.close'].result)
-        .mutation(async ({ input }) =>
-          operations['session.close'].result.parseAsync(
-            await engine.runApp('session.close', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('session.close', input)),
       savePlan: publicProcedure
         .input(operations['session.savePlan'].params)
         .output(operations['session.savePlan'].result)
-        .mutation(async ({ input }) =>
-          operations['session.savePlan'].result.parseAsync(
-            await engine.runApp('session.savePlan', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('session.savePlan', input)),
       rename: publicProcedure
         .input(operations['session.rename'].params)
         .output(operations['session.rename'].result)
-        .mutation(async ({ input }) =>
-          operations['session.rename'].result.parseAsync(
-            await engine.runApp('session.rename', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('session.rename', input)),
     }),
     plugin: router({
       list: publicProcedure
         .input(operations['plugin.list'].params)
         .output(operations['plugin.list'].result)
-        .query(async ({ input }) =>
-          operations['plugin.list'].result.parseAsync(
-            await engine.runApp('plugin.list', input),
-          ),
-        ),
+        .query(({ input }) => engine.runApp('plugin.list', input)),
       activate: publicProcedure
         .input(operations['plugin.activate'].params)
         .output(operations['plugin.activate'].result)
-        .mutation(async ({ input }) =>
-          operations['plugin.activate'].result.parseAsync(
-            await engine.runApp('plugin.activate', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('plugin.activate', input)),
       setEnabled: publicProcedure
         .input(operations['plugin.setEnabled'].params)
         .output(operations['plugin.setEnabled'].result)
-        .mutation(async ({ input }) =>
-          operations['plugin.setEnabled'].result.parseAsync(
-            await engine.runApp('plugin.setEnabled', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('plugin.setEnabled', input)),
       getSettings: publicProcedure
         .input(operations['plugin.getSettings'].params)
         .output(operations['plugin.getSettings'].result)
-        .query(async ({ input }) =>
-          operations['plugin.getSettings'].result.parseAsync(
-            await engine.runApp('plugin.getSettings', input),
-          ),
-        ),
+        .query(({ input }) => engine.runApp('plugin.getSettings', input)),
       setSetting: publicProcedure
         .input(operations['plugin.setSetting'].params)
         .output(operations['plugin.setSetting'].result)
-        .mutation(async ({ input }) =>
-          operations['plugin.setSetting'].result.parseAsync(
-            await engine.runApp('plugin.setSetting', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('plugin.setSetting', input)),
     }),
     registry: router({
       get: publicProcedure
         .input(operations['registry.get'].params)
         .output(operations['registry.get'].result)
-        .query(async ({ input }) =>
-          operations['registry.get'].result.parseAsync(
-            await engine.runApp('registry.get', input),
-          ),
-        ),
+        .query(({ input }) => engine.runApp('registry.get', input)),
       refresh: publicProcedure
         .input(operations['registry.refresh'].params)
         .output(operations['registry.refresh'].result)
-        .mutation(async ({ input }) =>
-          operations['registry.refresh'].result.parseAsync(
-            await engine.runApp('registry.refresh', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('registry.refresh', input)),
       sync: publicProcedure
         .input(operations['registry.sync'].params)
         .output(operations['registry.sync'].result)
-        .mutation(async ({ input }) =>
-          operations['registry.sync'].result.parseAsync(
-            await engine.runApp('registry.sync', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('registry.sync', input)),
     }),
     agent: router({
       list: publicProcedure
         .input(operations['agent.list'].params)
         .output(operations['agent.list'].result)
-        .query(async ({ input }) =>
-          operations['agent.list'].result.parseAsync(
-            await engine.runApp('agent.list', input),
-          ),
-        ),
+        .query(({ input }) => engine.runApp('agent.list', input)),
       install: publicProcedure
         .input(operations['agent.install'].params)
         .output(operations['agent.install'].result)
-        .mutation(async ({ input }) =>
-          operations['agent.install'].result.parseAsync(
-            await engine.runApp('agent.install', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('agent.install', input)),
       remove: publicProcedure
         .input(operations['agent.remove'].params)
         .output(operations['agent.remove'].result)
-        .mutation(async ({ input }) =>
-          operations['agent.remove'].result.parseAsync(
-            await engine.runApp('agent.remove', input),
-          ),
-        ),
+        .mutation(({ input }) => engine.runApp('agent.remove', input)),
     }),
     project: router({
       list: publicProcedure
         .input(operations['project.list'].params)
         .output(operations['project.list'].result)
-        .query(async ({ input }) =>
-          operations['project.list'].result.parseAsync(
-            await engine.runApp('project.list', input),
-          ),
-        ),
+        .query(({ input }) => engine.runApp('project.list', input)),
     }),
   };
 }
