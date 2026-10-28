@@ -16,8 +16,10 @@ import {
   type Measured,
   type MeasuredScroller,
 } from './list-drag-measure';
-import { FrameLoop, scrollEdges, type Schedule } from './list-drag-rules';
+import { scrollEdges } from './list-edge-scroll';
+import { FrameLoop } from './list-frame-loop';
 import type { Point, Rect } from './list-geometry';
+import type { Schedule } from './list-next-frame';
 
 interface Lift extends LiftedRow {
   // Where the pointer took the row, in the window.
@@ -40,7 +42,9 @@ export interface DragDrawing {
  * the pointer aims at a Section and an index there, scrollers under the pointer's edge scroll, and the drop reports
  * the move. Everything it draws is in the drag layer's coordinates.
  */
-export class ListDrag extends DragRegistry {
+export class ListDrag {
+  // Where its rows, Section zones and scrollers register as they draw.
+  public readonly registry: DragRegistry;
   private readonly listeners = listenerSet();
   public readonly subscribe = this.listeners.subscribe;
   private lift: Lift | undefined;
@@ -56,15 +60,20 @@ export class ListDrag extends DragRegistry {
     private readonly order: DragOrder,
     private readonly drawing: DragDrawing,
   ) {
-    super(layer);
+    this.registry = new DragRegistry(layer);
     this.scrolling = new FrameLoop(drawing.schedule);
   }
 
   public readonly current = (): DragFrame | undefined => this.frame;
 
+  // Measures the List around row `id` as a press on it begins.
+  public prepare(id: string): void {
+    this.registry.prepare(id);
+  }
+
   // Lifts row `id` under the pointer; it draws at once when its press was measured, else once its List is.
   public begin(id: string, ghost: ReactNode, point: Point): void {
-    const ready = this.measuredPress(id);
+    const ready = this.registry.measuredPress(id);
 
     this.end();
     this.generation += 1;
@@ -115,7 +124,7 @@ export class ListDrag extends DragRegistry {
     if (!lift) return;
 
     const last = sourceOf(this.measured);
-    const measured = await this.measureAround(lift.id, last);
+    const measured = await this.registry.measureAround(lift.id, last);
 
     if (generation === this.generation) this.measuredAs(lift, measured, first);
   }

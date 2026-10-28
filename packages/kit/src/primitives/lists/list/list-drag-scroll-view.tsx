@@ -36,7 +36,7 @@ function useDragScroll(
   const drag = useListMoves()?.drag;
 
   useEffect(
-    () => drag?.registerScroller(offsetScroller(axis, view, offset)),
+    () => drag?.registry.registerScroller(offsetScroller(axis, view, offset)),
     [drag, axis, view],
   );
 

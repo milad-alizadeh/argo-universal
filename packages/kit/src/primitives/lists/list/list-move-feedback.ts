@@ -1,9 +1,10 @@
+import { nextFrame } from './list-next-frame';
+import { registered } from './list-registered';
+
 // Focuses a row; with `ifLost`, only while nothing else holds the focus.
 export type FocusRow = (ifLost: boolean) => void;
 
 type Frame = (step: () => void) => void;
-
-const nextFrame: Frame = (step) => requestAnimationFrame(step);
 
 /*
  * The rows of one List that take focus, by id: a row registers as it draws. A row moved to another lane draws anew
@@ -17,16 +18,12 @@ export class RowFocus {
   public constructor(private readonly frame: Frame = nextFrame) {}
 
   public register(id: string, focus: FocusRow): () => void {
-    this.rows.set(id, focus);
-
     if (this.pending === id) {
       this.pending = undefined;
       this.frame(() => focus(true));
     }
 
-    return (): void => {
-      if (this.rows.get(id) === focus) this.rows.delete(id);
-    };
+    return registered(this.rows, id, focus);
   }
 
   // Focuses row `id` a frame after a move, once it has drawn where it landed.

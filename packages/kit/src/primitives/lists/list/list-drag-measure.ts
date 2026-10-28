@@ -1,5 +1,6 @@
 import type { MeasuredZone } from './list-drop-aim';
 import type { MeasuredRow, Rect } from './list-geometry';
+import { registered } from './list-registered';
 
 export type Measure = () => Promise<Rect | undefined>;
 
@@ -119,13 +120,6 @@ async function measureList(
   return assembled(layer, source, parts);
 }
 
-// Removes `value` from `map` when it is still the one registered under `key`.
-const unregister =
-  <Key, Value>(map: Map<Key, Value>, key: Key, value: Value) =>
-  (): void => {
-    if (map.get(key) === value) map.delete(key);
-  };
-
 // A press on a row, and the List measured around it once the measurement lands.
 interface Pressed {
   id: string;
@@ -142,15 +136,11 @@ export class DragRegistry {
   public constructor(private readonly layer: Measure) {}
 
   public registerRow(id: string, measure: Measure): () => void {
-    this.rows.set(id, measure);
-
-    return unregister(this.rows, id, measure);
+    return registered(this.rows, id, measure);
   }
 
   public registerZone(sectionKey: string, measure: MeasureZone): () => void {
-    this.zones.set(sectionKey, measure);
-
-    return unregister(this.zones, sectionKey, measure);
+    return registered(this.zones, sectionKey, measure);
   }
 
   public registerScroller(scroller: DragScroller): () => void {

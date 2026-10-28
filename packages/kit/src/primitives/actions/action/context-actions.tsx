@@ -33,21 +33,28 @@ export function ContextActions(props: ContextActionsProps): ReactElement {
   // Actions that are all submenus leave a context menu with nothing to show, so it never opens.
   if (!groups.length) return props.children;
 
-  return <AnchoredMenu {...props} ids={[own.id, added.id]} groups={groups} />;
+  return (
+    <AnchoredMenu
+      {...props}
+      ownId={own.id}
+      addedId={added.id}
+      groups={groups}
+    />
+  );
 }
 
 interface AnchoredMenuProps extends ContextActionsProps {
-  // The nodes each declaration's shortcuts run inside: the owner's, then Argo's.
-  ids: [string, string];
+  // The node the owner's Actions' shortcuts run inside.
+  ownId: string;
+  // The node Argo's own Actions' shortcuts run inside.
+  addedId: string;
   groups: ReturnType<typeof pressGroups>;
 }
 
 function AnchoredMenu(props: AnchoredMenuProps): ReactElement {
-  const [own, added] = props.ids;
-
   return (
-    <View nativeID={own}>
-      <View nativeID={added}>
+    <View nativeID={props.ownId}>
+      <View nativeID={props.addedId}>
         <ContextMenu {...props.menu} {...menuGroups(props.groups)}>
           {props.children}
         </ContextMenu>

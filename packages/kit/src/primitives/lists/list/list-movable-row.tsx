@@ -22,7 +22,10 @@ function useRegisteredRow(
 ): RefObject<ViewInstance | null> {
   const outer = useRef<ViewInstance>(null);
 
-  useEffect(() => drag.registerRow(id, () => measureView(outer)), [drag, id]);
+  useEffect(
+    () => drag.registry.registerRow(id, () => measureView(outer)),
+    [drag, id],
+  );
   useEffect(
     () => focus.register(id, (ifLost) => focusView(outer, ifLost)),
     [focus, id],

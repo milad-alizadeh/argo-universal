@@ -48,10 +48,10 @@ function registerLane(
   key: string,
   views: LaneViews,
 ): () => void {
-  const zone = drag.registerZone(key, () => measureLane(views));
+  const zone = drag.registry.registerZone(key, () => measureLane(views));
 
   // A lane's body scrolls up and down when a dragged row nears its top or bottom.
-  const scroller = drag.registerScroller(
+  const scroller = drag.registry.registerScroller(
     legendScroller(views.body, views.list),
   );
 

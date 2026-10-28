@@ -1,5 +1,5 @@
-import type { PressStart } from './list-drag-rules';
 import type { Point } from './list-geometry';
+import type { PressStart } from './list-press-rules';
 import { RowPress, type PressTarget } from './list-row-press';
 
 export interface WebPressStart extends PressStart {
@@ -31,6 +31,24 @@ function swallowReleaseClick(): void {
 // A `touchmove` listener that may cancel the page's scroll must say it is not passive.
 const blocking = { passive: false } as const;
 
+// One window listener, added and removed with the same options.
+interface Listening {
+  on: () => void;
+  off: () => void;
+}
+
+const listen = <Type extends keyof WindowEventMap>(
+  type: Type,
+  listener: (event: WindowEventMap[Type]) => void,
+  options?: AddEventListenerOptions,
+): Listening => ({
+  on: () => window.addEventListener(type, listener, options),
+  off: () => window.removeEventListener(type, listener, options),
+});
+
+// A held finger would otherwise open the row's context menu under the lifted row.
+const swallowMenu = listen('contextmenu', swallow, { capture: true });
+
 /*
  * The web's adapter for a RowPress: the window follows the press, so the drag keeps the pointer once it leaves the
  * row.
@@ -42,18 +60,24 @@ const blocking = { passive: false } as const;
  */
 export class WindowPress {
   private readonly press: RowPress;
+  private readonly listening: readonly Listening[];
 
   public constructor(
     target: PressTarget,
     private readonly start: WebPressStart,
   ) {
     this.press = new RowPress(target, start);
-    window.addEventListener('pointermove', this.onMove);
-    window.addEventListener('pointerup', this.onUp);
-    window.addEventListener('pointercancel', this.onCancel);
-    window.addEventListener('touchmove', this.onTouchMove, blocking);
-    // A drag across rows would otherwise select their text.
-    window.addEventListener('selectstart', prevent);
+
+    this.listening = [
+      listen('pointermove', this.onMove),
+      listen('pointerup', this.onUp),
+      listen('pointercancel', this.onCancel),
+      listen('touchmove', this.onTouchMove, blocking),
+      // A drag across rows would otherwise select their text.
+      listen('selectstart', prevent),
+    ];
+
+    for (const listener of this.listening) listener.on();
   }
 
   // Puts a lifted row back and stops following the press.
@@ -90,17 +114,12 @@ export class WindowPress {
     const step = this.press.move(at, Date.now());
 
     if (step === 'scroll') this.end();
-    // A held finger would otherwise open the row's context menu under the lifted row.
-    else if (step === 'lift')
-      window.addEventListener('contextmenu', swallow, true);
+    else if (step === 'lift') swallowMenu.on();
   }
 
   private end(): void {
-    window.removeEventListener('pointermove', this.onMove);
-    window.removeEventListener('pointerup', this.onUp);
-    window.removeEventListener('pointercancel', this.onCancel);
-    window.removeEventListener('touchmove', this.onTouchMove);
-    window.removeEventListener('contextmenu', swallow, true);
-    window.removeEventListener('selectstart', prevent);
+    for (const listener of this.listening) listener.off();
+
+    swallowMenu.off();
   }
 }

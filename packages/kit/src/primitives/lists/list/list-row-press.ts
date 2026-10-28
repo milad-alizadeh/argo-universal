@@ -1,8 +1,8 @@
 import type { ReactNode, RefObject } from 'react';
 import type { ViewInstance } from 'react-native';
 import type { ListDrag } from './list-drag-controller';
-import { holdToLift, startAt, type PressStart } from './list-drag-rules';
 import type { Point } from './list-geometry';
+import { holdToLift, startAt, type PressStart } from './list-press-rules';
 
 // The part of a List's drag a press drives.
 export type PressDrag = Pick<

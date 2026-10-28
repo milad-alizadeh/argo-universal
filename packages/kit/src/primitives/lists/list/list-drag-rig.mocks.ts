@@ -2,9 +2,9 @@ import type { ListMove } from '@repo/contracts/kit-moves';
 import { vi, type Mock } from 'vitest';
 import { ListDrag } from './list-drag-controller';
 import type { DragFrame } from './list-drag-frame';
-import type { Schedule } from './list-drag-rules';
 import type { Point, Rect } from './list-geometry';
 import type { DropPlace, MoveSection } from './list-move-model';
+import type { Schedule } from './list-next-frame';
 
 export const todoKey = 'todo-lane';
 
@@ -74,13 +74,13 @@ export function boardRig(): Rig {
   const rig = rigFor(board, true);
 
   for (const [lane, section] of board.entries()) {
-    rig.drag.registerZone(section.key, async () => ({
+    rig.drag.registry.registerZone(section.key, async () => ({
       rect: laneRect(lane),
       start: 60,
     }));
 
     for (const [index, id] of section.rows.entries())
-      rig.drag.registerRow(id, async () => cardRect(lane, index));
+      rig.drag.registry.registerRow(id, async () => cardRect(lane, index));
   }
 
   return rig;
@@ -109,13 +109,13 @@ export function columnRig(): Rig {
   const rig = rigFor(board.slice(0, 2), false);
 
   for (const [key, y] of headers)
-    rig.drag.registerZone(key, async () => ({
+    rig.drag.registry.registerZone(key, async () => ({
       rect: across(y, 30),
       start: y + 30,
     }));
 
   for (const [id, y] of columnRows)
-    rig.drag.registerRow(id, async () => across(y, 50));
+    rig.drag.registry.registerRow(id, async () => across(y, 50));
 
   return rig;
 }

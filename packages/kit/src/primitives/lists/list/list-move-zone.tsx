@@ -36,7 +36,7 @@ function useHeaderZone(
   const view = useRef<ViewInstance>(null);
 
   useEffect(
-    () => drag.registerZone(sectionKey, () => measureHeader(view)),
+    () => drag.registry.registerZone(sectionKey, () => measureHeader(view)),
     [drag, sectionKey],
   );
 

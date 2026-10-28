@@ -12,6 +12,7 @@ import {
 } from './list-children';
 import type { ChildrenOptions } from './list-children-options';
 import { MoveOrder, shownSections, type MoveAnswer } from './list-move-order';
+import { nextFrame } from './list-next-frame';
 import { useListRequest } from './list-request';
 import { readList, type ListReading } from './list-section-model';
 
@@ -20,17 +21,16 @@ const failure = {
   message: 'It went back to where it was.',
 };
 
-const nextFrame = (step: () => void): void => {
-  requestAnimationFrame(step);
-};
-
 // The List's one MoveOrder, which holds nothing until its owner's order reaches it.
 function useOwnedOrder(onMove: MoveAnswer): MoveOrder {
   const { report } = useListRequest(failure);
-  const owner = { base: [], onMove, lanes: false };
 
   const [order] = useState(
-    () => new MoveOrder(owner, { report, frame: nextFrame }),
+    () =>
+      new MoveOrder(
+        { base: [], onMove, lanes: false },
+        { report, frame: nextFrame },
+      ),
   );
 
   return order;

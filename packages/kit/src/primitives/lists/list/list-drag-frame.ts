@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import type { Measured } from './list-drag-measure';
-import { slideOffset, type Slide } from './list-drag-rules';
 import { aimAt, type DropAim, type InsertionLine } from './list-drop-aim';
 import type { Point, Rect } from './list-geometry';
 import {
@@ -10,6 +9,7 @@ import {
   type ResolvedMove,
 } from './list-move-model';
 import type { MoveOrder } from './list-move-order';
+import { slideOffset, type Slide } from './list-slide';
 
 // What a List's drag works on: the order the List shows, read as the drag aims and drops, and how a drop moves.
 export type DragOrder = Pick<MoveOrder, 'sections' | 'lanes' | 'move'>;

@@ -109,7 +109,7 @@ describe('dragging a row on a board', () => {
   it('drops nothing where no Section is measured', async () => {
     const rig = rigFor(board, true);
 
-    rig.drag.registerRow('login', async () => cardRect(0, 0));
+    rig.drag.registry.registerRow('login', async () => cardRect(0, 0));
     const drag = await lifted(rig, 'login', fromLogin);
 
     drag.follow({ x: 500, y: 100 });
