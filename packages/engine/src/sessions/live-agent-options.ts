@@ -3,6 +3,7 @@ import type {
   AgentOptionsUpdate,
   SessionAgentOptionsInput,
 } from '@repo/contracts';
+import type { Subscription } from 'xstate';
 import {
   readAgentConfiguration,
   AgentOptionsJob,
@@ -20,19 +21,21 @@ type Events = EventEmitter<{ update: [AgentOptionsUpdate]; done: [] }>;
 type Observation = {
   deps: Deps;
   input: Input;
-  session: SessionActorRef;
-  events: Events;
+  observer: {
+    update: (update: AgentOptionsUpdate) => void;
+    done: () => void;
+  };
 };
 
-function publication({
-  deps,
-  input,
-  session,
-  events,
-}: Observation): () => void {
+function publication({ deps, input, observer }: Observation): () => void {
   let previous = '';
 
   return () => {
+    const session =
+      deps.sessions.getSnapshot().context.sessions[input.sessionId];
+
+    if (!session) return;
+
     const context = session.getSnapshot().context;
 
     const saved = readAgentConfiguration(
@@ -56,25 +59,46 @@ function publication({
     if (key === previous) return;
 
     previous = key;
-    events.emit('update', update);
+    observer.update(update);
   };
 }
 
-function observe(deps: Deps, input: Input, events: Events): () => void {
-  const session = deps.sessions.getSnapshot().context.sessions[input.sessionId];
+function followSession(
+  { deps, input, observer }: Observation,
+  publish: () => void,
+): () => void {
+  let current: SessionActorRef | undefined;
+  let subscription: Subscription | undefined;
 
-  if (!session) {
-    events.emit('done');
+  const follow = (): void => {
+    const next = deps.sessions.getSnapshot().context.sessions[input.sessionId];
 
-    return () => {};
-  }
+    if (next === current) return;
 
-  const publish = publication({ deps, input, session, events });
+    subscription?.unsubscribe();
+    current = next;
+    subscription = current?.subscribe({ next: publish });
+    publish();
+  };
 
-  const sessionSubscription = session.subscribe({
-    next: publish,
-    complete: () => events.emit('done'),
+  const sessionsSubscription = deps.sessions.subscribe({
+    next: follow,
+    complete: observer.done,
   });
+
+  follow();
+
+  return () => {
+    subscription?.unsubscribe();
+    sessionsSubscription.unsubscribe();
+  };
+}
+
+// A Session reader follows replacement actors while the person closes and resumes it.
+export function observeLiveAgentOptions(observation: Observation): () => void {
+  const { deps, input } = observation;
+  const publish = publication(observation);
+  const unsubscribeSession = followSession(observation, publish);
 
   const writerSubscription = deps
     .findWriter()
@@ -86,7 +110,7 @@ function observe(deps: Deps, input: Input, events: Events): () => void {
   publish();
 
   return () => {
-    sessionSubscription.unsubscribe();
+    unsubscribeSession();
     writerSubscription?.unsubscribe();
   };
 }
@@ -99,7 +123,19 @@ export async function* liveAgentOptions(
 ): AsyncGenerator<AgentOptionsUpdate> {
   const events: Events = new EventEmitter();
   const stream = on(events, 'update', { signal, close: ['done'] });
-  const unsubscribe = observe(deps, input, events);
+
+  const unsubscribe = observeLiveAgentOptions({
+    deps,
+    input,
+    observer: {
+      update: (update) => {
+        events.emit('update', update);
+      },
+      done: () => {
+        events.emit('done');
+      },
+    },
+  });
 
   try {
     for await (const [update] of stream) yield update;

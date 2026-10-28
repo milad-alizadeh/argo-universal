@@ -26,7 +26,10 @@ import {
   readAgentConfiguration,
 } from './agent-options-storage';
 import { configureOptionsSession } from './configure-options-session';
-import { liveAgentOptions } from './live-agent-options';
+import {
+  liveAgentOptions,
+  observeLiveAgentOptions,
+} from './live-agent-options';
 import type { SessionRouterDeps } from './router-deps';
 import { validateSessionCommandAdmission } from './session-command';
 import { readSessionRow } from './session-record';
@@ -267,15 +270,36 @@ function sessionOptionsInput(
   };
 }
 
-// Buffer progress while discovery runs; cancellation stops this reader and its discovery.
+type DiscoveryReadOptions = {
+  cached: SessionAgentOptionsOutput | null;
+  signal?: AbortSignal;
+};
+
+// Buffer discovery and live updates together; cancelling the reader closes both.
 async function* discoveryUpdates(
   deps: OptionsDeps,
   input: SessionAgentOptionsInput,
-  {
-    cached,
-    signal,
-  }: { cached: SessionAgentOptionsOutput | null; signal?: AbortSignal },
+  options: DiscoveryReadOptions,
 ): AsyncGenerator<AgentOptionsUpdate> {
+  const reader = createDiscoveryReader(deps, input, options);
+
+  try {
+    yield* readDiscovery(reader.stream);
+  } finally {
+    await reader.close();
+  }
+}
+
+type DiscoveryReader = {
+  stream: ReturnType<typeof on>;
+  close: () => Promise<void>;
+};
+
+function createDiscoveryReader(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+  { cached, signal }: DiscoveryReadOptions,
+): DiscoveryReader {
   const controller = new AbortController();
 
   const active = signal
@@ -285,19 +309,36 @@ async function* discoveryUpdates(
   const events: DiscoveryEvents = new EventEmitter();
   const stream = on(events, 'update', { signal: active, close: ['done'] });
 
+  const unsubscribe = input.sessionId
+    ? observeLiveAgentOptions({
+        deps,
+        input: { ...input, sessionId: input.sessionId },
+        observer: {
+          update: (update) => {
+            events.emit('update', { update });
+          },
+          done: () => {
+            events.emit('done');
+          },
+        },
+      })
+    : undefined;
+
   const work = publishDiscovery(deps, input, {
     events,
     cached,
     signal: active,
   });
 
-  try {
-    yield* readDiscovery(stream);
-  } finally {
-    controller.abort();
-    await stream.return?.();
-    await work;
-  }
+  return {
+    stream,
+    close: async () => {
+      unsubscribe?.();
+      controller.abort();
+      await stream.return?.();
+      await work;
+    },
+  };
 }
 
 async function* readDiscovery(
@@ -325,18 +366,15 @@ function publishDiscovery(
   },
 ): Promise<boolean> {
   const owner = { agent: input.agent, projectId: input.projectId };
+  const emit = discoveryPublisher(deps, input, events);
 
   return refreshAgentOptions(deps, input, {
     signal,
     progress: (stage, progress) =>
-      events.emit('update', {
+      emit({
         update: {
           ...owner,
-          commands:
-            readAgentConfiguration(
-              { database: deps.database, writer: deps.findWriter() },
-              input,
-            )?.commands ?? null,
+          commands: readCommands(deps, input),
           configOptions: cached,
           stage,
           progress,
@@ -345,19 +383,45 @@ function publishDiscovery(
   })
     .then(
       (configOptions) =>
-        events.emit('update', {
+        emit({
           update: {
             ...owner,
-            commands:
-              readAgentConfiguration(
-                { database: deps.database, writer: deps.findWriter() },
-                input,
-              )?.commands ?? null,
+            commands: readCommands(deps, input),
             configOptions,
             stage: 'ready',
           },
         }),
-      (error) => events.emit('update', { error }),
+      (error) => emit({ error }),
     )
-    .finally(() => events.emit('done'));
+    .finally(() => {
+      if (!input.sessionId) events.emit('done');
+    });
+}
+
+function readCommands(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+): AgentOptionsUpdate['commands'] {
+  return (
+    readAgentConfiguration(
+      { database: deps.database, writer: deps.findWriter() },
+      input,
+    )?.commands ?? null
+  );
+}
+
+function discoveryPublisher(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+  events: DiscoveryEvents,
+): (value: z.infer<typeof DiscoveryEvent>) => boolean {
+  return (value) => {
+    if (
+      input.sessionId &&
+      deps.sessions.getSnapshot().context.sessions[input.sessionId]
+    )
+      return false;
+
+    return events.emit('update', value);
+  };
 }
