@@ -72,6 +72,10 @@ export async function runOperation(
       return implementations['session.new'](
         operationParams(operations['session.new'].params, params),
       );
+    case 'session.prompt':
+      return implementations['session.prompt'](
+        operationParams(operations['session.prompt'].params, params),
+      );
     case 'session.cancel':
       return implementations['session.cancel'](
         operationParams(operations['session.cancel'].params, params),
@@ -224,6 +228,10 @@ export function generatedOperations(engine: Operations) {
         .input(operations['session.new'].params)
         .output(operations['session.new'].result)
         .mutation(({ input }) => engine.runApp('session.new', input)),
+      prompt: publicProcedure
+        .input(operations['session.prompt'].params)
+        .output(operations['session.prompt'].result)
+        .mutation(({ input }) => engine.runApp('session.prompt', input)),
       cancel: publicProcedure
         .input(operations['session.cancel'].params)
         .output(operations['session.cancel'].result)

@@ -112,3 +112,11 @@ export {
 export { cancelSession } from './session-closure';
 
 export { archiveSession } from './archive/archive-commands';
+
+export {
+  promptSession,
+  promptSessionAccepted,
+  type AcceptedSessionPrompt,
+} from './session-prompt';
+
+export { sessionPromptSender } from './prompt-sender';

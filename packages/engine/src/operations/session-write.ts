@@ -9,6 +9,7 @@ import type {
 } from './operations';
 import { operationParams } from './params';
 import { runOperation } from './router.gen';
+import { runSessionPrompt } from './session-prompt';
 import { runSessionStart } from './session-start';
 import type { SessionStarts } from './session-starts';
 import type { SessionCaller } from './session-tokens';
@@ -24,13 +25,26 @@ type SessionWrite = {
 export async function runSessionWrite(
   deps: OperationsDeps,
   implementations: OperationImplementations,
-  { caller, operation, call, starts }: SessionWrite,
+  context: SessionWrite,
 ): Promise<OperationResult> {
+  const { caller, operation, call, starts } = context;
   const { id } = operation;
 
   if (id === 'session.new')
     return runSessionStart({ deps, caller, call, starts }, operation.params);
 
+  if (id === 'session.prompt')
+    return runSessionPrompt({ deps, caller, call, starts }, operation.params);
+
+  return runScopedWrite(deps, implementations, context);
+}
+
+async function runScopedWrite(
+  deps: OperationsDeps,
+  implementations: OperationImplementations,
+  { caller, operation, call }: SessionWrite,
+): Promise<OperationResult> {
+  const { id } = operation;
   const params = parsedParams(operation);
 
   if (requiresConfirmation(deps, caller, { id, params }))

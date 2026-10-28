@@ -7,6 +7,7 @@ import {
 import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
 import { SessionNewInput, SessionNewOutput } from '../sessions/new';
+import { SessionPromptInput, SessionPromptOutput } from '../sessions/prompt';
 import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
 import {
   SessionSavePlanInput,
@@ -32,6 +33,15 @@ export const sessionOperations = {
     result: SessionNewOutput,
     tier: 'act',
     keywords: ['create', 'delegate', 'agent', 'parallel'],
+  },
+  'session.prompt': {
+    id: 'session.prompt',
+    label: 'Prompt Session',
+    description: 'Send a prompt to a Session to start its next Turn.',
+    params: SessionPromptInput,
+    result: SessionPromptOutput,
+    tier: 'act',
+    keywords: ['message', 'steer', 'continue', 'agent'],
   },
   'session.cancel': {
     id: 'session.cancel',

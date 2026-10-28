@@ -3,6 +3,7 @@ import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
 import { UserMessage } from './user-message';
 import {
   clampedPrompt,
+  delegatedPrompt,
   imagePrompt,
   markdownPrompt,
 } from './user-message-fixtures';
@@ -31,3 +32,6 @@ export const Images: Story = { args: imagePrompt };
 
 // Longer than four lines: the bubble clamps behind Show more.
 export const Clamped: Story = { args: clampedPrompt };
+
+// A Session-sent Prompt keeps its sender visible above the existing message body.
+export const Delegated: Story = { args: delegatedPrompt };

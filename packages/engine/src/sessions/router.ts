@@ -11,8 +11,6 @@ import {
   SessionMarkSeenOutput,
   SessionOpenInput,
   SessionOpenOutput,
-  SessionPromptInput,
-  SessionPromptOutput,
 } from '@repo/contracts';
 import {
   mergeRouters,
@@ -29,7 +27,6 @@ import {
   answerSessionPermission,
 } from './session-answers';
 import { openSession } from './session-opening';
-import { promptSession } from './session-prompt';
 import { markSessionSeen } from './session-seen';
 
 const createListUpdatesRouter = routerFactory((sessionList: SessionList) =>
@@ -67,10 +64,6 @@ const createSeenRouter = routerFactory((deps: SessionRouterDeps) =>
 
 const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
   router({
-    prompt: publicProcedure
-      .input(SessionPromptInput)
-      .output(SessionPromptOutput)
-      .mutation(({ input }) => promptSession(deps, input)),
     open: publicProcedure
       .input(SessionOpenInput)
       .output(SessionOpenOutput)

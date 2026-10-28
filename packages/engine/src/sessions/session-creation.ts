@@ -1,4 +1,8 @@
-import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
+import type {
+  SessionNewInput,
+  SessionNewOutput,
+  PromptSender,
+} from '@repo/contracts';
 import { SessionOpenFailure } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import { listBranches } from '@repo/git';
@@ -95,6 +99,7 @@ type SessionCreationDeps = Pick<
 export type SessionCreationOrigin = {
   sessionId: string;
   startedBySessionId?: string;
+  sender?: PromptSender;
 };
 
 export type AcceptedSessionStart = { sessionId: string; turnId?: string };
@@ -141,7 +146,7 @@ export async function createSessionAccepted(
   const turnId = await startSession(
     deps,
     requireOpenSessionActor(deps.sessions, sessionId),
-    newSession,
+    { input: newSession, sender: origin?.sender },
   );
 
   return { sessionId, turnId };
@@ -151,17 +156,18 @@ export async function createSessionAccepted(
 async function startSession(
   deps: Pick<SessionRouterDeps, 'hooks'>,
   session: SessionActorRef,
-  newSession: SessionNewInput,
+  { input, sender }: { input: SessionNewInput; sender?: PromptSender },
 ): Promise<string | undefined> {
-  await applyInitialConfiguration(session, newSession);
+  await applyInitialConfiguration(session, input);
 
-  return submitInitialAcpPrompt(session, deps.hooks);
+  return submitInitialAcpPrompt(session, deps.hooks, sender);
 }
 
 // The first prompt passes `prompt.submit` Hooks like any other; a dropped one leaves the Session waiting.
 const submitInitialAcpPrompt = async (
   session: SessionActorRef,
   hooks: CoreHooks,
+  sender?: PromptSender,
 ): Promise<string | undefined> => {
   const { input, acpLease, sessionId } = session.getSnapshot().context;
 
@@ -178,6 +184,7 @@ const submitInitialAcpPrompt = async (
   await submitSessionPrompt(session, {
     turnId: input.turnId,
     content: answer.prompt,
+    sender,
   });
 
   return input.turnId;
