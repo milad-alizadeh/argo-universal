@@ -102,6 +102,7 @@ const feedModuleRouterInput = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   signal: AbortSignal,
 ): AppRouterInput => ({
+  controlToken: 'feed-module-test-token',
   database: host.database,
   hooks: coreOnlyHooks,
   plugins: new Plugins({

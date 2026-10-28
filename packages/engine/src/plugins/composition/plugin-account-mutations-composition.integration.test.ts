@@ -51,7 +51,7 @@ it('keeps writes available when sign-out races a Grant and Project choice', asyn
   await registeredProject();
   const host = await accountProvider();
   const [account] = await host.caller.plugins.accounts.list();
-  const [project] = await host.caller.projects.list();
+  const [project] = await host.caller.project.list();
 
   if (!account || !project)
     throw new Error('Missing Account or Project fixture');

@@ -96,7 +96,7 @@ export const startSessionJourney = async (
   const observed = createJourneyObservations();
   const host = await startAcpEngine(journeyScenario(observed, values));
 
-  const project = (await host.caller.projects.list()).find(
+  const project = (await host.caller.project.list()).find(
     ({ id }) => id === 'project-1',
   );
 

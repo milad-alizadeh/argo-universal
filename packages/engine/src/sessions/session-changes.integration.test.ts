@@ -13,7 +13,7 @@ const committedFileName = 'committed.txt';
 const secondFileName = 'second.txt';
 
 async function projectPath(host: Host): Promise<string> {
-  const project = (await host.caller.projects.list()).find(
+  const project = (await host.caller.project.list()).find(
     ({ id }) => id === 'project-1',
   );
 
