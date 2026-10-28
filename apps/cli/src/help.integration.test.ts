@@ -1,32 +1,39 @@
-import { execFile, type ExecFileException } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
-import { expect, it } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { expect, it, onTestFinished } from 'vitest';
+import { runCli } from '../mocks/cli-process';
 
-const bin = fileURLToPath(new URL('../bin/argo.mjs', import.meta.url));
+function temporaryRuntime(): string {
+  const home = mkdtempSync(join(tmpdir(), 'cli-help-'));
+  onTestFinished(() => rmSync(home, { recursive: true, force: true }));
 
-function run(
-  args: string[],
-): Promise<{ code: string | number; output: string }> {
-  return new Promise((resolve) => {
-    execFile(
-      process.execPath,
-      [bin, ...args],
-      { timeout: 20_000 },
-      (error: ExecFileException | null, stdout, stderr) => {
-        resolve({ code: error?.code ?? 0, output: stdout + stderr });
-      },
-    );
-  });
+  return home;
 }
 
 it.each([[], ['--help'], ['unknown']])(
   'prints commands for %j',
   async (...args) => {
-    const result = await run(args);
+    const result = await runCli(temporaryRuntime(), args);
     expect(result).toEqual({
       code: args[0] === 'unknown' ? 2 : 0,
-      output:
-        'Usage: argo <command>\n\nCommands:\n  server [--watch]            Start the Server\n  plugin <validate|test> <dir>  Validate or test a Plugin\n',
+      stdout:
+        "Usage: argo <command>\n\nCommands:\n  operations [filter] [--json]  Find available Operations\n  run <id> [--params '<json>']  Run an Operation\n  server [--watch]            Start the Server\n  plugin <validate|test> <dir>  Validate or test a Plugin\n",
+      stderr: '',
+    });
+  },
+  30_000,
+);
+
+it.each([['--unknown'], ['--watch=yes'], ['unexpected']])(
+  'server rejects malformed arguments %j with usage code 2',
+  async (...args) => {
+    const result = await runCli(temporaryRuntime(), ['server', ...args]);
+
+    expect(result).toMatchObject({
+      code: 2,
+      stdout: '',
+      stderr: expect.any(String),
     });
   },
   30_000,

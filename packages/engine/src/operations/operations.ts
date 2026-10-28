@@ -1,12 +1,16 @@
 import type { ProjectsListOutput } from '@repo/contracts';
-import { operations, type OperationId } from '@repo/contracts/operations';
+import {
+  operations,
+  type OperationId,
+  type OperationRow,
+} from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { Database } from '@repo/db';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { z } from 'zod';
 import { readProjects } from '../projects';
 import { runOperation } from './router.gen';
-import { listOperations, type OperationRow } from './search';
+import { listOperations } from './search';
 import { requireUserToken } from './tokens';
 
 export type OperationsDeps = {

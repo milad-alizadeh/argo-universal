@@ -1,14 +1,9 @@
 import {
   operations,
   describeOperation,
-  type OperationDescription,
+  type OperationRow,
   type OperationDefinition,
 } from '@repo/contracts/operations';
-
-export type OperationRow = OperationDescription & {
-  enabled: boolean;
-  disabledReason: string | null;
-};
 
 function matches(operation: OperationDefinition, search: string): boolean {
   return [operation.id, operation.label, ...operation.keywords].some((value) =>
