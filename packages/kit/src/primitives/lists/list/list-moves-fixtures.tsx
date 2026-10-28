@@ -8,24 +8,24 @@ export interface BoardCard {
 export interface BoardLane {
   id: string;
   title: string;
-  cards: readonly BoardCard[];
+  rows: readonly BoardCard[];
 }
 
 const card = (id: string, title: string): BoardCard => ({ id, title });
 
-// Placeholder lanes: a board's Sections, each holding cards.
+// Placeholder lanes: a board's Sections, each holding cards as its rows.
 export const boardLanes: readonly BoardLane[] = [
   {
     id: 'first',
     title: 'First',
-    cards: [
+    rows: [
       card('alpha', 'Alpha'),
       card('beta', 'Beta'),
       card('gamma', 'Gamma'),
     ],
   },
-  { id: 'second', title: 'Second', cards: [card('delta', 'Delta')] },
-  { id: 'third', title: 'Third', cards: [] },
+  { id: 'second', title: 'Second', rows: [card('delta', 'Delta')] },
+  { id: 'third', title: 'Third', rows: [] },
 ];
 
 // What the examples vary: a List of Sections draws as a board or a column.

@@ -1,32 +1,28 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
-import type { ReactElement, ReactNode, Ref } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { useListLook } from '../../../list-look-context';
 import { childIdentity } from './list-child-identity';
-import { drawsLanes, usePreparedChildren } from './list-children';
+import { usePreparedChildren, type PreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
 import { ListEmpty } from './list-data';
 import { DataList } from './list-data-list';
 import { childRenderer } from './list-grouping';
 import { ListKeyboard } from './list-keyboard';
 import { SectionLanes } from './list-lanes';
+import { useMovableReading } from './list-movable-reading';
 import { MovableList } from './list-moves';
 import type { ListProps } from './list-props';
-import type { ListBlock } from './list-section-model';
 import { SectionShelves, type ChildDataProps } from './list-section-shelves';
-import type { MoveAnswer } from './list-shown-moves';
+import type { MoveAnswer } from './list-shown-order';
 
-interface Prepared {
-  items: readonly unknown[];
-  shelves: boolean;
-  lanes: boolean;
-}
-
-const drawsNothing = ({ items, shelves, lanes }: Prepared): boolean =>
+const drawsNothing = ({ items, shelves, lanes }: PreparedChildren): boolean =>
   items.length === 0 && !shelves && !lanes;
 
-function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
-  const prepared = usePreparedChildren({ children, ...props });
+interface PreparedListProps extends Omit<ChildrenOptions, 'children'> {
+  prepared: PreparedChildren;
+}
+
+function PreparedList({ prepared, ...props }: PreparedListProps): ReactElement {
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
 
@@ -42,17 +38,23 @@ function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
   );
 }
 
+function ChildrenList({ children, ...options }: ChildrenOptions): ReactElement {
+  const prepared = usePreparedChildren({ ...options, children });
+
+  return <PreparedList {...options} prepared={prepared} />;
+}
+
+type ChildDataListProps = Omit<ChildDataProps, 'renderItem'> &
+  Omit<PreparedChildren, 'items'>;
+
 function ChildDataList({
   blocks,
   shelves,
   lanes,
+  looseKey,
   ...props
-}: Omit<ChildDataProps, 'renderItem'> & {
-  blocks: ListBlock[];
-  shelves: boolean;
-  lanes: boolean;
-}): ReactElement {
-  if (lanes) return <SectionLanes blocks={blocks} />;
+}: ChildDataListProps): ReactElement {
+  if (lanes) return <SectionLanes blocks={blocks} looseKey={looseKey} />;
 
   if (shelves)
     return <SectionShelves {...props} {...childDrawing} blocks={blocks} />;
@@ -77,16 +79,17 @@ function PlainRows<Item>(props: ListProps<Item>): ReactElement {
   );
 }
 
-type Render = (children: ReactNode, ref: Ref<LegendListRef>) => ReactElement;
+type Render = (ref: Ref<LegendListRef>) => ReactElement;
 
 // The List's rows, in the order they show, on the scroll view the drag scrolls.
 const rowsIn =
-  (options: ChildrenOptions): Render =>
-  (children, ref) => (
+  (
+    { children: _children, ...options }: ChildrenOptions,
+    prepared: PreparedChildren,
+  ): Render =>
+  (ref) => (
     <ListKeyboard fit={options.fit}>
-      <ChildrenList {...options} ref={ref}>
-        {children}
-      </ChildrenList>
+      <PreparedList {...options} prepared={prepared} ref={ref} />
     </ListKeyboard>
   );
 
@@ -97,18 +100,17 @@ interface MovableProps<Item> {
 }
 
 function MovableRows<Item>(props: MovableProps<Item>): ReactElement {
-  const { list, listRef, onMove } = props;
-  const lanes = drawsLanes(list.layout, useListLook());
+  const options = childrenOptions(props.list);
+  const { prepared, sections, move } = useMovableReading(options, props.onMove);
+  const layout = { sections, lanes: prepared.lanes };
 
   return (
     <MovableList
-      onMove={onMove}
-      lanes={lanes}
-      listRef={listRef}
-      render={rowsIn(childrenOptions(list))}
-    >
-      {list.children}
-    </MovableList>
+      layout={layout}
+      move={move}
+      listRef={props.listRef}
+      render={rowsIn(options, prepared)}
+    />
   );
 }
 

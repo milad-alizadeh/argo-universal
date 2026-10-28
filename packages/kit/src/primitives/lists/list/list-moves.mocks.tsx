@@ -1,33 +1,13 @@
 import { useState, type ReactElement } from 'react';
 import { ListItem } from '../list-item';
 import { List } from './list';
-import type { ListMove } from './list-move-model';
+import { applyListMove, type ListMove } from './list-move-model';
 import {
+  board,
   boardLanes,
-  type BoardCard,
   type BoardLane,
   type MovesProps,
 } from './list-moves-fixtures';
-
-// The lanes as they read once a move is made: the card leaves its lane and lands at the index in the named one.
-export function movedLanes(
-  lanes: readonly BoardLane[],
-  { id, section, index }: ListMove,
-): BoardLane[] {
-  const moved = lanes
-    .flatMap((lane) => lane.cards)
-    .find((card) => card.id === id);
-
-  if (!moved) return [...lanes];
-
-  return lanes.map((lane) => {
-    const cards: BoardCard[] = lane.cards.filter((card) => card.id !== id);
-
-    if (lane.id === section) cards.splice(index, 0, moved);
-
-    return { ...lane, cards };
-  });
-}
 
 type ExampleProps = MovesProps & {
   lanes?: readonly BoardLane[];
@@ -42,7 +22,7 @@ const laneSection =
   (onPress: ExampleProps['onPress']) =>
   (lane: BoardLane): ReactElement => (
     <List.Section key={lane.id} id={lane.id} title={lane.title}>
-      {lane.cards.map((card) => (
+      {lane.rows.map((card) => (
         <ListItem
           key={card.id}
           id={card.id}
@@ -62,7 +42,7 @@ function useMovedLanes(
   return [
     lanes,
     (move) => {
-      setLanes((current) => movedLanes(current, move));
+      setLanes((current) => applyListMove(current, move));
       onMove?.(move);
     },
   ];
@@ -76,6 +56,19 @@ export function MovesExample(example: ExampleProps): ReactElement {
   return (
     <List {...props} onMove={move}>
       {lanes.map(laneSection(onPress))}
+    </List>
+  );
+}
+
+const refuse = (): Promise<void> => Promise.reject(new Error('Refused'));
+
+const open = (): void => {};
+
+// A board whose owner refuses every move: a moved row goes back to where it was.
+export function RefusedMovesExample(): ReactElement {
+  return (
+    <List {...board} onMove={refuse}>
+      {boardLanes.map(laneSection(open))}
     </List>
   );
 }

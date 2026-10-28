@@ -9,9 +9,10 @@ import {
 import type { ViewInstance } from 'react-native';
 import { assignRef } from '../../../scroll-fade/legend-scroll-ref';
 import type { ListDrag } from './list-drag-controller';
-import { measureView } from './list-move-context';
+import { measureView } from './list-measure-view';
 
-function scrolledBy(list: LegendListRef | null, delta: number): void {
+// Scrolls a LegendList by `delta` from where it is.
+export function scrolledBy(list: LegendListRef | null, delta: number): void {
   if (!list) return;
 
   const offset = Math.max(0, list.getState().scroll + delta);

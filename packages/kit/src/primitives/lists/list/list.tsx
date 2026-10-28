@@ -12,7 +12,7 @@ import { DataList } from './list-data-list';
 import { ListMenuRows } from './list-menu-rows';
 import { NativeGroupedList } from './list-native-grouped';
 import { asksNothingNativeLacks, holdsNativeRows } from './list-native-rows';
-import type { ListProps } from './list-props';
+import type { ListProps, MovesOrItems } from './list-props';
 import { ListSection } from './list-section';
 
 // iOS and Android draw a grouped List of FieldGroup rows as their own grouped list, at every width (ADR-0042), unless it sets a prop that list cannot draw.
@@ -24,7 +24,7 @@ const drawsNatively = (look: ListLook, props: ListProps<never>): boolean =>
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   const look = useListLook();
 
-  if (props.items !== undefined) return <ItemRows {...props} />;
+  if (props.items !== undefined) return <DataList {...props} />;
 
   if (drawsNatively(look, props))
     return (
@@ -34,16 +34,6 @@ function ListRows<Item>(props: ListProps<Item>): ReactElement {
     );
 
   return <ChildRows {...props} />;
-}
-
-// Only a List of children moves its rows: an `items` List draws rows its `renderItem` makes, with no ids to move.
-function ItemRows<Item>(props: ListProps<Item>): ReactElement {
-  if (props.onMove && process.env.NODE_ENV !== 'production')
-    console.error(
-      'List: `onMove` moves rows passed as children; a List of `items` cannot move its rows.',
-    );
-
-  return <DataList {...props} />;
 }
 
 const useLook = <Item,>(props: ListProps<Item>): ListLook =>
@@ -59,12 +49,20 @@ const renderRows = <Item,>(prepared: ListProps<Item>): ReactElement => (
   </ListMenuRows>
 );
 
-export function List<Item>(props: ListProps<Item>): ReactElement {
+// A Plugin's List, whose props its wire checked: plugin-kit's types keep `onMove` off a List of `items` there.
+export function WireList<Item>(props: ListProps<Item>): ReactElement {
   return (
     <ListLookContext value={useLook(props)}>
       <ListBehaviours list={props} render={renderRows} />
     </ListLookContext>
   );
+}
+
+// `onMove` moves rows passed as children, so a List of `items` cannot take it.
+export function List<Item>(
+  props: ListProps<Item> & MovesOrItems,
+): ReactElement {
+  return <WireList {...props} />;
 }
 
 List.Section = ListSection;

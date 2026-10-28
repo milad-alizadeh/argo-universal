@@ -15,9 +15,9 @@ const animationFrames: Schedule = (step) => {
 export class FrameLoop {
   private cancelNext: (() => void) | undefined;
 
-  constructor(private readonly schedule: Schedule = animationFrames) {}
+  public constructor(private readonly schedule: Schedule = animationFrames) {}
 
-  start(step: () => void): void {
+  public start(step: () => void): void {
     this.stop();
 
     const next = (): void => {
@@ -28,7 +28,7 @@ export class FrameLoop {
     this.cancelNext = this.schedule(next);
   }
 
-  stop(): void {
+  public stop(): void {
     this.cancelNext?.();
     this.cancelNext = undefined;
   }

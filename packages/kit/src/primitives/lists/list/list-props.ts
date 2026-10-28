@@ -56,6 +56,9 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     getSectionKey?: (item: Item) => string | undefined;
   };
 
+// Only a List of children moves its rows: an `items` List draws rows its `renderItem` makes, with no ids to move.
+export type MovesOrItems = { items?: undefined } | { onMove?: undefined };
+
 // Kit-only: native selection, controlled section expansion and the loading header.
 export type ListSectionProps = KitProps<'List.Section'> &
   ListSelection & {

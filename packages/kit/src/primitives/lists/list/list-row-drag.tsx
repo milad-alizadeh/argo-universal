@@ -8,11 +8,14 @@ import {
   type GestureTouchEvent,
   type PanGesture,
 } from 'react-native-gesture-handler';
-import { startAt, type DragStart, type PressStart } from './list-drag-rules';
 import type { Point } from './list-drop-aim';
 import type { RowDragProps } from './list-row-drag-props';
-
-type PanConfig = Parameters<typeof usePanGesture>[0];
+import {
+  pressStart,
+  RowPress,
+  type PressStep,
+  type PressTarget,
+} from './list-row-press';
 
 const firstTouch = (event: GestureTouchEvent): Point | undefined => {
   const touch = event.allTouches[0] ?? event.changedTouches[0];
@@ -20,82 +23,65 @@ const firstTouch = (event: GestureTouchEvent): Point | undefined => {
   return touch && { x: touch.absoluteX, y: touch.absoluteY };
 };
 
-const pointerOf = (type: PointerType): PressStart['pointer'] =>
-  type === PointerType.MOUSE ? 'mouse' : 'touch';
-
-function pressFrom(event: GestureTouchEvent): PressStart | null {
-  const start = firstTouch(event);
-
-  return start
-    ? { start, at: Date.now(), pointer: pointerOf(event.pointerType) }
-    : null;
-}
-
 // Activates the Pan when the press lifts the row, and fails it when the press scrolls the List instead.
-function settle(next: DragStart, handlerTag: number): void {
-  if (next === 'lift') GestureStateManager.activate(handlerTag);
-  else if (next === 'scroll') GestureStateManager.fail(handlerTag);
+function settle(step: PressStep, handlerTag: number): void {
+  if (step === 'lift') GestureStateManager.activate(handlerTag);
+  else if (step === 'scroll') GestureStateManager.fail(handlerTag);
 }
 
-function decide(event: GestureTouchEvent, press: PressStart | null): void {
-  const at = firstTouch(event);
+// The native adapter for a RowPress: the press a Pan follows, from its first touch until the Pan ends.
+class PanPress {
+  private press: RowPress | null = null;
 
-  if (at && press) settle(startAt(press, at, Date.now()), event.handlerTag);
-}
+  public readonly down = (
+    event: GestureTouchEvent,
+    target: PressTarget,
+  ): void => {
+    const start = firstTouch(event);
+    const mouse = event.pointerType === PointerType.MOUSE;
 
-// The press a Pan follows, from its first touch until the Pan ends.
-class TrackedPress {
-  private press: PressStart | null = null;
-
-  readonly down = (event: GestureTouchEvent): void => {
-    this.press = pressFrom(event);
+    this.press = start ? new RowPress(target, pressStart(start, mouse)) : null;
   };
 
-  readonly move = (event: GestureTouchEvent): void => decide(event, this.press);
+  public readonly move = (event: GestureTouchEvent): void => {
+    const at = firstTouch(event);
 
-  readonly end = (): void => {
+    if (at && this.press)
+      settle(this.press.move(at, Date.now()), event.handlerTag);
+  };
+
+  public readonly drop = (canceled: boolean): void => {
+    if (!this.press) return;
+
+    if (canceled) this.press.cancel();
+    else this.press.release();
+  };
+
+  // A Pan that ends without dropping, failed or cancelled, puts a lifted row back.
+  public readonly end = (): void => {
+    this.press?.cancel();
     this.press = null;
   };
 }
 
-// The List is measured as the press begins, so a lifted row follows the finger from its first move.
-const pressHandlers = (
-  press: TrackedPress,
-  { drag, id }: RowDragProps,
-): PanConfig => ({
-  onTouchesDown: (event) => {
-    press.down(event);
-    drag.prepare(id);
-  },
-  onTouchesMove: press.move,
-  onFinalize: press.end,
-});
-
-const pointAt = (event: { absoluteX: number; absoluteY: number }): Point => ({
-  x: event.absoluteX,
-  y: event.absoluteY,
-});
-
-// Once the Pan activates, it lifts the row, follows it, and drops or puts it back.
-const dragHandlers = ({ drag, id, ghost }: RowDragProps): PanConfig => ({
-  onActivate: (event) => drag.begin(id, ghost, pointAt(event)),
-  onUpdate: (event) => drag.follow(pointAt(event)),
-  onDeactivate: (event) => (event.canceled ? drag.cancel() : drag.finish()),
-});
-
 /*
- * Gesture Handler's Pan with `manualActivation`: each touch move asks `dragStart` whether the press lifts the row,
+ * Gesture Handler's Pan with `manualActivation`: each touch move asks the RowPress whether the press lifts the row,
  * scrolls, or waits, and `GestureStateManager` activates or fails the Pan to match. Until it activates, the row's
  * own press, its context menu's long press and the List's scroll keep the touch.
  */
-function useRowDrag(props: RowDragProps): PanGesture {
-  const [press] = useState(() => new TrackedPress());
+function useRowDrag({ drag, id, ghost }: RowDragProps): PanGesture {
+  const [press] = useState(() => new PanPress());
 
+  const target: PressTarget = { drag, id, ghost };
+
+  // One object literal: the Worklets Babel plugin cannot read a spread config.
   return usePanGesture({
     runOnJS: true,
     manualActivation: true,
-    ...pressHandlers(press, props),
-    ...dragHandlers(props),
+    onTouchesDown: (event) => press.down(event, target),
+    onTouchesMove: (event) => press.move(event),
+    onDeactivate: (event) => press.drop(event.canceled),
+    onFinalize: () => press.end(),
   });
 }
 

@@ -31,7 +31,7 @@ export interface Measured {
 export interface Registered {
   layer: Measure;
   rows: ReadonlyMap<string, Measure>;
-  zones: ReadonlyMap<number, MeasureZone>;
+  zones: ReadonlyMap<string, MeasureZone>;
   scrollers: ReadonlySet<DragScroller>;
 }
 
@@ -65,7 +65,7 @@ type Parts = [
   layer: Rect | undefined,
   source: Rect | undefined,
   rows: [string, Rect][],
-  zones: [number, Zone][],
+  zones: [string, Zone][],
   scrollers: [DragScroller, Rect][],
 ];
 
@@ -94,7 +94,7 @@ function assembled(
     layer,
     source,
     rows: rows.map(([id, rect]) => ({ id, rect })),
-    zones: zones.map(([section, zone]) => ({ section, ...zone })),
+    zones: zones.map(([sectionKey, zone]) => ({ sectionKey, ...zone })),
     scrollers: scrollers.map(([scroller, rect]) => ({ scroller, rect })),
   };
 }

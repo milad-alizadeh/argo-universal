@@ -3,137 +3,100 @@ import type { ListDrag } from './list-drag-controller';
 import { holdToLift, startAt, type PressStart } from './list-drag-rules';
 import type { Point } from './list-drop-aim';
 
+// The part of a List's drag a press drives.
+export type PressDrag = Pick<
+  ListDrag,
+  'prepare' | 'begin' | 'follow' | 'finish' | 'cancel'
+>;
+
+// What a press drags: row `id` of a List's drag, drawn as `ghost` once lifted.
 export interface PressTarget {
-  drag: ListDrag;
+  drag: PressDrag;
   id: string;
   ghost: ReactNode;
 }
 
-export interface WebPressStart extends PressStart {
-  pointerId: number;
-}
+// What a press does at a move: waits, lifts the row, follows the lifted row, or leaves the touch to the List's scroll.
+export type PressStep = 'wait' | 'lift' | 'follow' | 'scroll';
 
-export const pointOf = (event: {
-  clientX: number;
-  clientY: number;
-}): Point => ({
-  x: event.clientX,
-  y: event.clientY,
+// A press begun at `start` now: a mouse drags at once, and a finger or pen holds the row first, as on the phones.
+export const pressStart = (start: Point, mouse: boolean): PressStart => ({
+  start,
+  at: Date.now(),
+  pointer: mouse ? 'mouse' : 'touch',
 });
 
-const prevent = (event: Event): void => event.preventDefault();
-
-const swallow = (event: MouseEvent): void => {
-  event.stopPropagation();
-  event.preventDefault();
-};
-
-// The click a drag's release sends to the row it began on, swallowed so a dropped row is not also pressed.
-function swallowReleaseClick(): void {
-  window.addEventListener('click', swallow, { capture: true, once: true });
-  // A release away from the row sends no click; the next real one goes through.
-  setTimeout(() => window.removeEventListener('click', swallow, true));
-}
-
-// A `touchmove` listener that may cancel the page's scroll must say it is not passive.
-const blocking = { passive: false } as const;
+type PressState = 'pressed' | 'lifted' | 'ended';
 
 /*
- * One press on a row, followed on the window, so the drag keeps the pointer once it leaves the row: it lifts the row
- * once `dragStart` says so, then follows it, and drops it on release. The List is measured as the press begins, so a
- * lifted row follows the pointer from its first move.
- *
- * A finger works as on the phones: a swipe before the hold ends is the page's scroll, which cancels the press, and
- * once the hold ends its moves no longer scroll, so they lift the row. The rows keep the browser's own `touch-action`,
- * which the browser reads as the touch begins, so a quick swipe still scrolls; a held finger's `touchmove` is
- * cancelled instead (https://developer.mozilla.org/docs/Web/API/Touch_events/Using_Touch_Events).
+ * One press on a row, as either platform reports it: it waits until the press lifts the row or scrolls the List,
+ * lifts the row from where the press began, follows it, and drops it on release. The List is measured as the press
+ * begins, so a lifted row follows the pointer from its first move.
  */
 export class RowPress {
-  private lifted = false;
+  private state: PressState = 'pressed';
 
-  constructor(
+  public constructor(
     private readonly target: PressTarget,
-    private readonly press: WebPressStart,
+    private readonly press: PressStart,
   ) {
     target.drag.prepare(target.id);
-    window.addEventListener('pointermove', this.onMove);
-    window.addEventListener('pointerup', this.onUp);
-    window.addEventListener('pointercancel', this.onCancel);
-    window.addEventListener('touchmove', this.onTouchMove, blocking);
-    // A drag across rows would otherwise select their text.
-    window.addEventListener('selectstart', prevent);
   }
 
-  // Puts a lifted row back and stops following the press.
-  readonly cancel = (): void => {
+  public get lifted(): boolean {
+    return this.state === 'lifted';
+  }
+
+  // A lifted row, or a finger held long enough to lift it, keeps its moves from the page's scroll.
+  public holds(now: number): boolean {
+    return this.lifted || now - this.press.at >= holdToLift;
+  }
+
+  public move(at: Point, now: number): PressStep {
+    if (this.lifted) return this.follow(at);
+
+    return this.state === 'ended' ? 'wait' : this.decide(at, now);
+  }
+
+  // Drops a lifted row where it aims; says whether one was lifted.
+  public release(): boolean {
+    const lifted = this.lifted;
+
+    if (lifted) this.target.drag.finish();
+
+    this.state = 'ended';
+
+    return lifted;
+  }
+
+  // Puts a lifted row back.
+  public cancel(): void {
     if (this.lifted) this.target.drag.cancel();
 
-    this.end();
-  };
-
-  private readonly onMove = (event: PointerEvent): void => {
-    if (this.ours(event)) this.moveTo(pointOf(event));
-  };
-
-  private readonly onUp = (event: PointerEvent): void => {
-    if (this.ours(event)) this.release();
-  };
-
-  private readonly onCancel = (event: PointerEvent): void => {
-    if (this.ours(event)) this.cancel();
-  };
-
-  private readonly onTouchMove = (event: TouchEvent): void => {
-    if (this.holds()) event.preventDefault();
-  };
-
-  // A lifted row, or a finger that has held it long enough to lift it, keeps its moves from the page's scroll.
-  private holds(): boolean {
-    return this.lifted || Date.now() - this.press.at >= holdToLift;
+    this.state = 'ended';
   }
 
-  private ours(event: PointerEvent): boolean {
-    return event.pointerId === this.press.pointerId;
+  private follow(at: Point): PressStep {
+    this.target.drag.follow(at);
+
+    return 'follow';
   }
 
-  private moveTo(at: Point): void {
-    if (this.lifted) this.target.drag.follow(at);
-    else this.decide(at);
-  }
+  private decide(at: Point, now: number): PressStep {
+    const next = startAt(this.press, at, now);
 
-  private decide(at: Point): void {
-    const next = startAt(this.press, at, Date.now());
+    if (next === 'scroll') this.state = 'ended';
 
-    if (next === 'scroll') this.end();
-    else if (next === 'lift') this.lift(at);
+    if (next === 'lift') this.lift(at);
+
+    return next;
   }
 
   private lift(at: Point): void {
     const { drag, id, ghost } = this.target;
 
-    this.lifted = true;
-    // A held finger would otherwise open the row's context menu under the lifted row.
-    window.addEventListener('contextmenu', swallow, true);
+    this.state = 'lifted';
     drag.begin(id, ghost, this.press.start);
     drag.follow(at);
-  }
-
-  private release(): void {
-    if (this.lifted) {
-      swallowReleaseClick();
-      this.target.drag.finish();
-    }
-
-    this.end();
-  }
-
-  private end(): void {
-    this.lifted = false;
-    window.removeEventListener('pointermove', this.onMove);
-    window.removeEventListener('pointerup', this.onUp);
-    window.removeEventListener('pointercancel', this.onCancel);
-    window.removeEventListener('touchmove', this.onTouchMove);
-    window.removeEventListener('contextmenu', swallow, true);
-    window.removeEventListener('selectstart', prevent);
   }
 }

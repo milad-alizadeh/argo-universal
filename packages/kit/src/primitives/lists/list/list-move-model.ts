@@ -1,24 +1,28 @@
-import type { KitProps } from '../../kit-props';
+import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
 
 // What a move reports: the row, the Section it lands in (none for rows outside any Section) and its index there.
-export type ListMove = Parameters<NonNullable<KitProps<'List'>['onMove']>>[0];
+export { applyListMove, type ListMove };
 
-// A List's movable rows, Section by Section, in the order it draws them.
+/*
+ * A List's movable rows, Section by Section, in the order it draws them. `key` is the Section's place in the List as
+ * the List reads its children: rows, zones and lanes all name their Section by it. The rows outside any Section are one
+ * Section of their own, without an id.
+ */
 export interface MoveSection {
+  key: string;
   id?: string;
   title?: string;
   rows: readonly string[];
 }
 
 export interface RowPlace {
-  // The Section's position in the List.
-  section: number;
+  sectionKey: string;
   index: number;
 }
 
-// Where a dragged row would go: before the row at `insertion` in the Section at `section`, counted with the row still in place.
+// Where a dragged row would go: before the row at `insertion` in the Section `sectionKey`, counted with the row still in place.
 export interface DropPlace {
-  section: number;
+  sectionKey: string;
   insertion: number;
 }
 
@@ -36,10 +40,10 @@ export function placeOf(
   sections: readonly MoveSection[],
   id: string,
 ): HeldPlace | undefined {
-  for (const [section, own] of sections.entries()) {
+  for (const own of sections) {
     const index = own.rows.indexOf(id);
 
-    if (index !== -1) return { section, index, own };
+    if (index !== -1) return { sectionKey: own.key, index, own };
   }
 
   return undefined;
@@ -54,25 +58,30 @@ const moveIn = (
     ? { id, index }
     : { id, section: section.id, index };
 
-// A Section a row can be moved to by name: one with an id and a title, other than its own.
-const namedTarget = (section: MoveSection, own: MoveSection): boolean =>
-  section !== own && section.id !== undefined && section.title !== undefined;
+// The rows outside any Section have no title; a Section without one is named by its place.
+function targetLabel(section: MoveSection, sectionIndex: number): string {
+  if (section.id === undefined) return 'Move out of Section';
 
-// To the end of each other named Section.
+  const name = section.title ?? `Section ${sectionIndex + 1}`;
+
+  return `Move to ${name}`;
+}
+
+// To the end of every other Section, so every move a drag makes can be made from the menu too.
 const sectionMoves = (
   sections: readonly MoveSection[],
   own: MoveSection,
   id: string,
 ): RowMove[] =>
-  sections.flatMap((section) =>
-    namedTarget(section, own)
-      ? [
+  sections.flatMap((section, sectionIndex) =>
+    section === own
+      ? []
+      : [
           {
-            label: `Move to ${section.title}`,
+            label: targetLabel(section, sectionIndex),
             move: moveIn(section, id, section.rows.length),
           },
-        ]
-      : [],
+        ],
   );
 
 // The Move Actions of a row: up and down within its Section, then to the end of each other Section, as a context menu lists them.
@@ -108,7 +117,7 @@ const shifted = ({ index }: RowPlace, insertion: number): number =>
 
 // Where a dropped row lands in the drop's Section, or none when that is its own slot.
 function landedIndex(place: RowPlace, drop: DropPlace): number | undefined {
-  if (place.section !== drop.section) return drop.insertion;
+  if (place.sectionKey !== drop.sectionKey) return drop.insertion;
 
   const index = shifted(place, drop.insertion);
 
@@ -131,33 +140,15 @@ export function landing(
   drop: DropPlace,
 ): ListMove | undefined {
   const place = placeOf(sections, id);
-  const target = sections[drop.section];
+  const target = sections.find((section) => section.key === drop.sectionKey);
 
   if (!place || !target) return undefined;
 
   return landedIn(target, id, landedIndex(place, drop));
 }
 
-const sectionOf = (section: MoveSection, move: ListMove): boolean =>
-  section.id === move.section;
-
-// The rows as they read once a move is made, so the List shows a drop at once while its owner answers.
-export function movedSections(
+// The rows as they read once a move is made, by the rule its owner applies too, so the List shows a drop at once.
+export const movedSections = (
   sections: readonly MoveSection[],
   move: ListMove,
-): MoveSection[] {
-  const without = sections.map((section) => ({
-    ...section,
-    rows: section.rows.filter((row) => row !== move.id),
-  }));
-
-  return without.map((section) => {
-    if (!sectionOf(section, move)) return section;
-
-    const rows = [...section.rows];
-
-    rows.splice(move.index, 0, move.id);
-
-    return { ...section, rows };
-  });
-}
+): MoveSection[] => applyListMove(sections, move);

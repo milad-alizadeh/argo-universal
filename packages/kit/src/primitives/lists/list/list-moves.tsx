@@ -16,16 +16,13 @@ import { useColumnScroll } from './list-column-scroll';
 import { ListDrag } from './list-drag-controller';
 import { ListDragLayer, useDragFrame } from './list-drag-layer';
 import { dragLook } from './list-drag-look';
-import type { Point } from './list-drop-aim';
+import type { MoveLayout, Point } from './list-drop-aim';
+import { measureView } from './list-measure-view';
 import { MoveAnnouncer } from './list-move-announcer';
-import {
-  ListMoveContext,
-  measureView,
-  type ListMoves,
-} from './list-move-context';
+import { ListMoveContext, type ListMoves } from './list-move-context';
 import { useMoveFeedback, type MoveFeedback } from './list-move-feedback';
+import type { ListMove } from './list-move-model';
 import type { MoveNotice } from './list-move-notice';
-import { useShownMoves, type MoveAnswer } from './list-shown-moves';
 
 interface GhostPoint {
   x: SharedValue<number>;
@@ -54,51 +51,45 @@ function useListDrag(
 
 function useConfiguredMoves(
   drag: ListDrag,
-  { shown: { sections, move }, focus }: MoveFeedback,
-  lanes: boolean,
+  layout: MoveLayout,
+  { move, focus }: MoveFeedback,
 ): ListMoves {
-  useEffect(
-    () => drag.configure({ sections, lanes, move }),
-    [drag, sections, lanes, move],
-  );
+  useEffect(() => drag.configure({ layout, move }), [drag, layout, move]);
 
   return useMemo(
-    () => ({ sections, lanes, look: dragLook, drag, focus, move }),
-    [sections, lanes, drag, focus, move],
+    () => ({ ...layout, look: dragLook, drag, focus, move }),
+    [layout, drag, focus, move],
   );
 }
 
 interface MovableListProps {
-  onMove: MoveAnswer;
-  lanes: boolean;
-  children: ReactNode;
+  layout: MoveLayout;
+  move: (move: ListMove) => void;
   // The List's own ref, kept on its scroll view.
   listRef: Ref<LegendListRef> | undefined;
   // Draws the List's rows, in the order they show, on a scroll view taking `ref`.
-  render: (children: ReactNode, ref: Ref<LegendListRef>) => ReactElement;
+  render: (ref: Ref<LegendListRef>) => ReactElement;
 }
 
 interface MoveHost {
   moves: ListMoves;
-  children: ReactNode;
   layer: RefObject<ViewInstance | null>;
   ghost: GhostPoint;
   scrollTo: Ref<LegendListRef>;
   notice: MoveNotice | null;
 }
 
-function useMoveHost({ lanes, ...props }: MovableListProps): MoveHost {
-  const shown = useShownMoves(props.children, props.onMove);
-  const feedback = useMoveFeedback(shown);
+function useMoveHost({ layout, move, listRef }: MovableListProps): MoveHost {
+  const { sections, lanes } = layout;
+  const stable = useMemo(() => ({ sections, lanes }), [sections, lanes]);
+  const feedback = useMoveFeedback(sections, move);
   const layer = useRef<ViewInstance>(null);
   const ghost = { x: useSharedValue(0), y: useSharedValue(0) };
   const drag = useListDrag(layer, ghost);
-  const own = props.listRef;
-  const scrollTo = useColumnScroll({ drag, frame: layer, own, lanes });
-  const moves = useConfiguredMoves(drag, feedback, lanes);
-  const { notice } = feedback;
+  const scrollTo = useColumnScroll({ drag, frame: layer, own: listRef, lanes });
+  const moves = useConfiguredMoves(drag, stable, feedback);
 
-  return { moves, children: shown.children, layer, ghost, scrollTo, notice };
+  return { moves, layer, ghost, scrollTo, notice: feedback.notice };
 }
 
 interface SurfaceProps {
@@ -125,12 +116,12 @@ function DragSurface({ drag, viewRef, children }: SurfaceProps): ReactElement {
  * After a move, focus stays on the moved row and a screen reader hears where it landed.
  */
 export function MovableList(props: MovableListProps): ReactElement {
-  const { moves, children, layer, ghost, ...host } = useMoveHost(props);
+  const { moves, layer, ghost, ...host } = useMoveHost(props);
 
   return (
     <DragSurface drag={moves.drag} viewRef={layer}>
       <ListMoveContext value={moves}>
-        {props.render(children, host.scrollTo)}
+        {props.render(host.scrollTo)}
       </ListMoveContext>
       <ListDragLayer drag={moves.drag} look={dragLook} {...ghost} />
       <MoveAnnouncer notice={host.notice} />

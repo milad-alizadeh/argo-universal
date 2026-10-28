@@ -1,18 +1,20 @@
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
-import { listPosition } from '../../../list-context';
 import type { ListChild } from './list-children';
-import type { ListSectionProps } from './list-props';
-import { rowIdOf } from './list-row-id';
-import { ListSection } from './list-section';
-import { prepareSection, type SectionState } from './list-section-state';
 import {
-  holdsTree,
-  topLevel,
-  treeChildren,
-  type TreeChild,
-  type TreeFolding,
-} from './list-tree-rows';
+  isSection,
+  levelEntries,
+  placedChild,
+  type Level,
+  type ListTree,
+  type PlacedChild,
+} from './list-level-entries';
+import type { HeldOrder } from './list-move-reading';
+import type { ListSectionProps } from './list-props';
+import { prepareSection, type SectionState } from './list-section-state';
+import { holdsTree, type TreeFolding } from './list-tree-rows';
+
+export type { ListTree };
 
 export type ListBlock = ItemBlock | SectionBlock;
 
@@ -27,14 +29,6 @@ interface SectionBlock {
   kind: 'section';
   section: SectionState;
   blocks: ListBlock[];
-}
-
-// How a List's rows fold, and whether it holds a tree at all; a List without one draws its children as they are.
-export interface ListTree {
-  folding: TreeFolding;
-  holds: boolean;
-  // A section's footer is drawn; Android puts the description on the row instead.
-  footerShown: boolean;
 }
 
 const sectionChildren = (child: ReactNode): ReactNode[] | undefined =>
@@ -52,70 +46,75 @@ export function listTree(
   };
 }
 
-// A List's children in order, each child ListItem lifted to a row of its own after its parent.
-function treeEntries(
-  children: ReactNode,
-  prefix: string,
-  tree: ListTree,
-): TreeChild[] {
-  const entries = flattenedChildren(children);
-
-  if (!tree.holds)
-    return entries.map((child, index) => ({
-      child,
-      key: `${prefix}/${isValidElement(child) ? child.key : index}`,
-      content: child,
-    }));
-
-  return treeChildren(entries, tree.folding, topLevel(prefix, isSection));
-}
-
-// A child in its List's order: the node itself, and the entry the List draws for it.
-interface PlacedChild {
-  child: ReactNode;
-  entry: ListChild;
-}
-
-export function prepareChildren(
-  children: ReactNode,
-  prefix: string,
-  tree: ListTree,
-): ListBlock[] {
+function readLevel(children: ReactNode, level: Level): ListBlock[] {
   const blocks: ListBlock[] = [];
-  const entries = treeEntries(children, prefix, tree);
+  const entries = levelEntries(children, level);
 
   for (const [index, entry] of entries.entries())
-    appendChild(blocks, placedChild(entry, index, entries.length), tree);
+    appendChild(
+      blocks,
+      placedChild(entry, { index, count: entries.length, level }),
+      level,
+    );
 
   return blocks;
 }
 
-function isSection(child: ReactNode): child is ReactElement<ListSectionProps> {
-  return isValidElement<ListSectionProps>(child) && child.type === ListSection;
+export interface ListReading {
+  blocks: ListBlock[];
+  rows: ReadonlyMap<string, ReactNode>;
+}
+
+interface Reader {
+  prefix: string;
+  tree: ListTree;
+  held: HeldOrder | undefined;
+}
+
+/*
+ * The one reader of a List's children: its rows, its Sections and every row's move identity, keyed by where it sits.
+ * A move the List holds is read into the order: each movable Section's rows in the moved order.
+ */
+export function readList(
+  children: ReactNode,
+  { prefix, tree, held }: Reader,
+): ListReading {
+  const rows = new Map<string, ReactNode>();
+  const level = { prefix, tree, held, movable: true, rows };
+
+  return { blocks: readLevel(children, level), rows };
 }
 
 function appendChild(
   blocks: ListBlock[],
   { child, entry }: PlacedChild,
-  tree: ListTree,
+  level: Level,
 ): void {
-  if (isSection(child)) blocks.push(sectionBlock(child, entry.key, tree));
+  if (isSection(child)) blocks.push(sectionBlock(child, entry.key, level));
   else appendItem(blocks, entry);
 }
 
+function sectionLevel(level: Level, key: string, section: SectionState): Level {
+  const movable = section.id !== undefined;
+
+  return {
+    ...level,
+    prefix: key,
+    movable,
+    held: movable ? level.held : undefined,
+  };
+}
+
+// A Section's rows read one level down, under its key; only a Section with an id names where its rows land.
 function sectionBlock(
   child: ReactElement<ListSectionProps>,
   key: string,
-  tree: ListTree,
+  level: Level,
 ): SectionBlock {
-  const section = prepareSection(child.props, key, tree.footerShown);
+  const section = prepareSection(child.props, key, level.tree.footerShown);
+  const blocks = readLevel(section.children, sectionLevel(level, key, section));
 
-  return {
-    key,
-    kind: 'section',
-    section,
-    blocks: prepareChildren(section.children, key, tree),
-  };
+  return { key, kind: 'section', section, blocks };
 }
 
 function appendItem(blocks: ListBlock[], entry: ListChild): void {
@@ -128,22 +127,6 @@ function appendItem(blocks: ListBlock[], entry: ListChild): void {
       kind: 'items',
       items: [entry],
     });
-}
-
-function placedChild(
-  { child, key, content }: TreeChild,
-  index: number,
-  count: number,
-): PlacedChild {
-  return {
-    child,
-    entry: {
-      key,
-      rowId: rowIdOf(child),
-      content,
-      position: listPosition(index === 0, index === count - 1),
-    },
-  };
 }
 
 function looseRunKey(previous: ListBlock | undefined): string {

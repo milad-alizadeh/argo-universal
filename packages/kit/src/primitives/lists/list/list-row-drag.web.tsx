@@ -1,7 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { View, type PointerEvent } from 'react-native';
 import type { RowDragProps } from './list-row-drag-props';
-import { pointOf, RowPress, type WebPressStart } from './list-row-press';
+import { pressStart } from './list-row-press';
+import { pointOf, WindowPress, type WebPressStart } from './list-window-press';
 
 type DownEvent = PointerEvent['nativeEvent'];
 
@@ -9,11 +10,9 @@ type DownEvent = PointerEvent['nativeEvent'];
 const drags = (event: DownEvent): boolean =>
   event.button === 0 && event.isPrimary;
 
-const pressStart = (event: DownEvent): WebPressStart => ({
+const webPress = (event: DownEvent): WebPressStart => ({
   pointerId: event.pointerId,
-  start: pointOf(event),
-  at: Date.now(),
-  pointer: event.pointerType === 'mouse' ? 'mouse' : 'touch',
+  ...pressStart(pointOf(event), event.pointerType === 'mouse'),
 });
 
 /*
@@ -21,7 +20,7 @@ const pressStart = (event: DownEvent): WebPressStart => ({
  * menu. A press on the row's view starts it; the window follows its moves and release.
  */
 function useRowDrag(props: RowDragProps): (event: PointerEvent) => void {
-  const active = useRef<RowPress | null>(null);
+  const active = useRef<WindowPress | null>(null);
 
   useEffect((): (() => void) => () => active.current?.cancel(), []);
 
@@ -29,7 +28,7 @@ function useRowDrag(props: RowDragProps): (event: PointerEvent) => void {
     if (!drags(nativeEvent)) return;
 
     active.current?.cancel();
-    active.current = new RowPress(props, pressStart(nativeEvent));
+    active.current = new WindowPress(props, webPress(nativeEvent));
   };
 }
 

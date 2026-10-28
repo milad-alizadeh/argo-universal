@@ -119,7 +119,7 @@ function useFixedPosition({ position }: ListChild): RowPosition {
 }
 
 const FixedCell = ({ item }: FixedRowProps): ReactElement => (
-  <MovableRow id={item.rowId} ghost={item.content}>
+  <MovableRow id={item.moveId} ghost={item.content}>
     <GroupedCells cell={!item.fullSpan} position={item.position}>
       {item.content}
     </GroupedCells>

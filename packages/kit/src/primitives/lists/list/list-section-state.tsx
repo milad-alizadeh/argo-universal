@@ -29,17 +29,17 @@ export function prepareSection(
     title: props.title,
     children: props.isExpanded === false ? null : props.children,
     selection: sectionSelection(props),
-    header: sectionHeader(props),
+    header: sectionHeader(props, key),
     footer: sectionFooter(props, key, footerShown),
   };
 }
 
 // A Section's header is where a dragged row lands first in its Section.
-function sectionHeader(props: ListSectionProps): ReactNode {
+function sectionHeader(props: ListSectionProps, key: string): ReactNode {
   if (!hasSectionHeader(props)) return null;
 
   return (
-    <SectionMoveZone section={props.id}>
+    <SectionMoveZone sectionKey={key}>
       <SectionHeader {...props} />
     </SectionMoveZone>
   );

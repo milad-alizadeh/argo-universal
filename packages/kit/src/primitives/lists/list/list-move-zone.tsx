@@ -9,8 +9,8 @@ import { View, type ViewInstance } from 'react-native';
 import type { ListDrag } from './list-drag-controller';
 import { useDragFrame } from './list-drag-layer';
 import type { MeasureZone } from './list-drag-measure';
-import { measureView, useListMoves, type ListMoves } from './list-move-context';
-import type { MoveSection } from './list-move-model';
+import { measureView } from './list-measure-view';
+import { useListMoves, type ListMoves } from './list-move-context';
 import { slideOf, Sliding } from './list-sliding';
 
 // A header's Section starts at its top, and its first row goes under it.
@@ -24,13 +24,13 @@ async function measureHeader(
 
 function useHeaderZone(
   drag: ListDrag,
-  index: number,
+  sectionKey: string,
 ): RefObject<ViewInstance | null> {
   const view = useRef<ViewInstance>(null);
 
   useEffect(
-    () => drag.registerZone(index, () => measureHeader(view)),
-    [drag, index],
+    () => drag.registerZone(sectionKey, () => measureHeader(view)),
+    [drag, sectionKey],
   );
 
   return view;
@@ -38,15 +38,16 @@ function useHeaderZone(
 
 interface ZoneProps {
   moves: ListMoves;
-  index: number;
+  sectionKey: string;
   children: ReactNode;
 }
 
 // A Section's header in one column: a row dragged over it lands first in its Section.
-function HeaderZone({ moves, index, children }: ZoneProps): ReactElement {
-  const view = useHeaderZone(moves.drag, index);
+function HeaderZone({ moves, sectionKey, children }: ZoneProps): ReactElement {
+  const view = useHeaderZone(moves.drag, sectionKey);
   const frame = useDragFrame(moves.drag);
-  const offset = moves.look.slides ? slideOf(frame?.zoneSlides, index) : 0;
+  const slides = frame?.zoneSlides;
+  const offset = moves.look.slides ? slideOf(slides, sectionKey) : 0;
 
   return (
     <View ref={view} collapsable={false}>
@@ -55,38 +56,28 @@ function HeaderZone({ moves, index, children }: ZoneProps): ReactElement {
   );
 }
 
-const sectionIndex = (
-  sections: readonly MoveSection[],
-  section: string | undefined,
-): number =>
-  section === undefined
-    ? -1
-    : sections.findIndex((candidate) => candidate.id === section);
-
-// A board's lanes are their Sections' zones, so only one column's headers are.
-const headerIndex = (
-  moves: ListMoves | null,
-  section: string | undefined,
-): number =>
-  moves && !moves.lanes ? sectionIndex(moves.sections, section) : -1;
+// A board's lanes are their Sections' zones, so only one column's headers are; only a Section whose rows move has one.
+const zoned = (moves: ListMoves | null, sectionKey: string): boolean =>
+  moves !== null &&
+  !moves.lanes &&
+  moves.sections.some((section) => section.key === sectionKey);
 
 interface SectionZoneProps {
-  section: string | undefined;
+  sectionKey: string;
   children: ReactNode;
 }
 
 // The header of a Section whose rows move; a board's lane is its zone instead, and any other header draws as it is.
 export function SectionMoveZone({
-  section,
+  sectionKey,
   children,
 }: SectionZoneProps): ReactNode {
   const moves = useListMoves();
-  const index = headerIndex(moves, section);
 
-  if (!moves || index === -1) return children;
+  if (!moves || !zoned(moves, sectionKey)) return children;
 
   return (
-    <HeaderZone moves={moves} index={index}>
+    <HeaderZone moves={moves} sectionKey={sectionKey}>
       {children}
     </HeaderZone>
   );

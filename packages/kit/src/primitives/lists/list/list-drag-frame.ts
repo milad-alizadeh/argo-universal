@@ -5,10 +5,11 @@ import {
   aimAt,
   type DropAim,
   type InsertionLine,
+  type MoveLayout,
   type Point,
   type Rect,
 } from './list-drop-aim';
-import type { DropPlace, MoveSection } from './list-move-model';
+import type { DropPlace } from './list-move-model';
 
 // A lifted row, in the drag layer's own coordinates, and where it would land.
 export interface DragFrame {
@@ -19,7 +20,7 @@ export interface DragFrame {
   place?: DropPlace;
   // How far each row and each Section header moves aside, where rows slide apart.
   rowSlides: ReadonlyMap<string, number>;
-  zoneSlides: ReadonlyMap<number, number>;
+  zoneSlides: ReadonlyMap<string, number>;
 }
 
 export interface LiftedRow {
@@ -32,8 +33,7 @@ export interface LiftedRow {
 export interface FrameInput {
   lift: LiftedRow;
   measured: Measured;
-  sections: readonly MoveSection[];
-  lanes: boolean;
+  layout: MoveLayout;
   point: Point;
 }
 
@@ -66,28 +66,27 @@ const slideFor = (source: Rect, aim: DropAim | undefined): Slide => ({
   lineY: aim?.line.y,
 });
 
-function slides(
+// How far each item moves aside, by the key it is drawn under.
+const offsetsOf = <Item extends { rect: Rect }>(
+  items: readonly Item[],
+  keyOf: (item: Item) => string,
+  slide: Slide,
+): Map<string, number> =>
+  new Map(items.map((item) => [keyOf(item), slideOffset(slide, item.rect.y)]));
+
+const slides = (
   { rows, zones }: Measured,
   slide: Slide,
-): Pick<DragFrame, 'rowSlides' | 'zoneSlides'> {
-  return {
-    rowSlides: new Map(
-      rows.map(({ id, rect }) => [id, slideOffset(slide, rect.y)]),
-    ),
-    zoneSlides: new Map(
-      zones.map(({ section, rect }) => [section, slideOffset(slide, rect.y)]),
-    ),
-  };
-}
+): Pick<DragFrame, 'rowSlides' | 'zoneSlides'> => ({
+  rowSlides: offsetsOf(rows, (row) => row.id, slide),
+  zoneSlides: offsetsOf(zones, (zone) => zone.sectionKey, slide),
+});
 
 // What a drag draws for the pointer at `point`: the lifted row, its insertion line, and the rows moved aside.
-export function dragFrame({
-  lift,
-  measured,
-  ...aiming
-}: FrameInput): DragFrame {
+export function dragFrame(input: FrameInput): DragFrame {
+  const { lift, measured } = input;
   const { source, layer } = measured;
-  const aim = aimAt({ ...aiming, ...measured });
+  const aim = aimAt({ ...input.layout, ...measured, point: input.point });
 
   return {
     id: lift.id,
@@ -98,9 +97,26 @@ export function dragFrame({
   };
 }
 
-const frameKey = (frame: DragFrame): string =>
-  JSON.stringify([frame.id, frame.place, frame.line]);
+const placeKeys: readonly (keyof DropPlace)[] = ['sectionKey', 'insertion'];
+
+const lineKeys: readonly (keyof InsertionLine)[] = ['x', 'y', 'width'];
+
+const frameKeys: readonly (keyof DragFrame)[] = ['id'];
+
+// Two values agree on every one of `keys`; two missing values agree too.
+const sameFields = <Value extends object>(
+  a: Value | undefined,
+  b: Value | undefined,
+  keys: readonly (keyof Value)[],
+): boolean => keys.every((key) => a?.[key] === b?.[key]);
+
+const sameParts = (a: DragFrame, b: DragFrame): boolean =>
+  [
+    sameFields(a, b, frameKeys),
+    sameFields(a.place, b.place, placeKeys),
+    sameFields(a.line, b.line, lineKeys),
+  ].every(Boolean);
 
 // The same lifted row aiming at the same place draws the same frame.
 export const sameFrame = (a: DragFrame | undefined, b: DragFrame): boolean =>
-  a !== undefined && frameKey(a) === frameKey(b);
+  a !== undefined && sameParts(a, b);

@@ -1,19 +1,34 @@
-import { useEffect, useRef, type ReactElement, type RefObject } from 'react';
+import type { LegendListRef } from '@legendapp/list/react-native';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactElement,
+  type RefObject,
+} from 'react';
 import { View, type ViewInstance } from 'react-native';
+import { OutsideColumn } from '../../../content-column/content-column';
 import { RowHighlightProvider } from '../../../row-highlights';
+import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
+import { childIdentity } from './list-child-identity';
 import type { ListChild } from './list-children';
-import type { MeasureZone } from './list-drag-measure';
+import { scrolledBy } from './list-column-scroll';
+import type { ListDrag } from './list-drag-controller';
+import type { DragScroller, MeasureZone } from './list-drag-measure';
 import { DragScrollView } from './list-drag-scroll-view';
 import { childRenderer, ListGrouping, SectionListRow } from './list-grouping';
 import { lanesOf, type Lane } from './list-lane-model';
-import { measureView, useListMoves, type ListMoves } from './list-move-context';
+import { measureView } from './list-measure-view';
+import { useListMoves } from './list-move-context';
 import type { ListBlock } from './list-section-model';
 
 interface LaneViews {
   lane: RefObject<ViewInstance | null>;
   body: RefObject<ViewInstance | null>;
+  list: RefObject<LegendListRef | null>;
 }
 
+// A lane across, and where its rows start: the top of its scrolling body.
 const measureLane = async ({
   lane,
   body,
@@ -26,75 +41,113 @@ const measureLane = async ({
   return rect && rows && { rect, start: rows.y };
 };
 
-const sectionIndex = (moves: ListMoves | null, id?: string): number =>
-  moves ? moves.sections.findIndex((section) => section.id === id) : -1;
+// A lane's body scrolls up and down when a dragged row nears its top or bottom.
+const laneScroller = ({ body, list }: LaneViews): DragScroller => ({
+  axis: 'y',
+  measure: () => measureView(body),
+  scrollBy: (delta) => scrolledBy(list.current, delta),
+});
 
-// Where a lane's rows start, and the lane across: a row dragged anywhere over it lands in its Section.
-function useLaneZone(id: string | undefined, views: LaneViews): void {
+// Registers a lane as the zone of Section `key` and its body as a scroller; returns the unregister.
+function registerLane(
+  drag: ListDrag,
+  key: string,
+  views: LaneViews,
+): () => void {
+  const zone = drag.registerZone(key, () => measureLane(views));
+
+  const scroller = drag.registerScroller(laneScroller(views));
+
+  return (): void => {
+    zone();
+    scroller();
+  };
+}
+
+// A row dragged anywhere over a lane lands in its Section, when its rows move; it scrolls near the lane's edges.
+function useLaneDrag(key: string, views: LaneViews): void {
   const moves = useListMoves();
-  const index = sectionIndex(moves, id);
   const drag = moves?.drag;
+  const moving = moves?.sections.some((section) => section.key === key);
 
   useEffect(() => {
-    if (!drag || index === -1) return;
-
-    return drag.registerZone(index, () => measureLane(views));
-  }, [drag, index, views]);
+    return drag && moving ? registerLane(drag, key, views) : undefined;
+  }, [drag, moving, key, views]);
 }
 
-interface LaneRowProps {
-  lane: Lane;
-  item: ListChild;
-  index: number;
-}
-
-function LaneRow({ lane, item, index }: LaneRowProps): ReactElement {
-  const count = lane.items.length;
-
-  return (
-    <SectionListRow section={lane.selection} index={index} count={count}>
+const laneRenderer =
+  (lane: Lane) =>
+  ({ item, index }: { item: ListChild; index: number }): ReactElement => (
+    <SectionListRow
+      section={lane.selection}
+      index={index}
+      count={lane.items.length}
+    >
       {childRenderer(item)}
     </SectionListRow>
   );
+
+const fill = { flex: 1 } as const;
+
+interface LaneRowsProps {
+  lane: Lane;
+  listRef: RefObject<LegendListRef | null>;
 }
 
-function LaneRows({ lane }: { lane: Lane }): ReactElement {
-  return (
-    <ListGrouping>
-      <RowHighlightProvider>
-        {lane.items.map((item, index) => (
-          <LaneRow key={item.key} lane={lane} item={item} index={index} />
-        ))}
-      </RowHighlightProvider>
-    </ListGrouping>
-  );
-}
+// A lane's rows on their own LegendList, which scrolls up and down.
+const LaneRows = ({ lane, listRef }: LaneRowsProps): ReactElement => (
+  <ListGrouping>
+    <RowHighlightProvider>
+      <ScrollFadeList
+        ref={listRef}
+        style={fill}
+        data={lane.items}
+        keyExtractor={childIdentity.keyExtractor}
+        renderItem={laneRenderer(lane)}
+      />
+    </RowHighlightProvider>
+  </ListGrouping>
+);
 
 interface LaneBodyProps {
   lane: Lane;
-  body: LaneViews['body'];
+  laneRef: RefObject<ViewInstance | null>;
 }
 
-function LaneBody({ lane, body }: LaneBodyProps): ReactElement {
+function LaneBody({ lane, laneRef }: LaneBodyProps): ReactElement {
+  const bodyRef = useRef<ViewInstance>(null);
+  const listRef = useRef<LegendListRef>(null);
+
+  const views = useMemo(
+    () => ({ lane: laneRef, body: bodyRef, list: listRef }),
+    [laneRef],
+  );
+
+  useLaneDrag(lane.key, views);
+
   return (
-    <DragScrollView className="min-h-0 grow">
-      <View ref={body} collapsable={false} className="pb-4">
-        <LaneRows lane={lane} />
-      </View>
-    </DragScrollView>
+    <View ref={bodyRef} collapsable={false} className="min-h-0 grow">
+      <LaneRows lane={lane} listRef={listRef} />
+    </View>
   );
 }
 
-function BoardLane({ lane }: { lane: Lane }): ReactElement {
-  const frame = useRef<ViewInstance>(null);
-  const body = useRef<ViewInstance>(null);
+// A lane reads as a group named after its Section.
+const namedGroup = (title: string | undefined) =>
+  ({ role: 'group', accessibilityLabel: title }) as const;
 
-  useLaneZone(lane.id, { lane: frame, body });
+function BoardLane({ lane }: { lane: Lane }): ReactElement {
+  const laneRef = useRef<ViewInstance>(null);
 
   return (
-    <View ref={frame} collapsable={false} className="w-72 shrink-0">
+    <View
+      ref={laneRef}
+      collapsable={false}
+      {...namedGroup(lane.title)}
+      className="w-72 shrink-0 pb-4"
+    >
       {lane.header}
-      <LaneBody lane={lane} body={body} />
+      <LaneBody lane={lane} laneRef={laneRef} />
       {lane.footer}
     </View>
   );
@@ -102,22 +155,26 @@ function BoardLane({ lane }: { lane: Lane }): ReactElement {
 
 interface LanesProps {
   blocks: ListBlock[];
+  // The key of the rows outside any Section.
+  looseKey: string;
 }
 
 /*
  * Each Section a lane, side by side, on a wide desktop or web window: the board scrolls sideways and each lane up and
- * down. Rows outside any Section form a lane of their own, without a header.
+ * down on its own LegendList (ADR-0032). Rows outside any Section form one lane of their own, without a header.
  */
-export function SectionLanes({ blocks }: LanesProps): ReactElement {
+export function SectionLanes({ blocks, looseKey }: LanesProps): ReactElement {
   return (
     <DragScrollView
       horizontal
       className="min-h-0 grow"
       contentContainerClassName="gap-4 px-4"
     >
-      {lanesOf(blocks).map((lane) => (
-        <BoardLane key={lane.key} lane={lane} />
-      ))}
+      <OutsideColumn>
+        {lanesOf(blocks, looseKey).map((lane) => (
+          <BoardLane key={lane.key} lane={lane} />
+        ))}
+      </OutsideColumn>
     </DragScrollView>
   );
 }

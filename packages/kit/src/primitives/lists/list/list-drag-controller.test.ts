@@ -1,178 +1,155 @@
-import { expect, it, vi, type Mock } from 'vitest';
-import { ListDrag } from './list-drag-controller';
-import type { DragScroller } from './list-drag-measure';
-import type { Point, Rect } from './list-drop-aim';
-import type { ListMove, MoveSection } from './list-move-model';
+import { describe, expect, it } from 'vitest';
+import {
+  board,
+  boardRig,
+  cardRect,
+  doingKey,
+  doneKey,
+  fromLogin,
+  lifted,
+  placeIn,
+  rigFor,
+  settle,
+  todoKey,
+} from './list-drag-rig.mocks';
 
-const board: MoveSection[] = [
-  { id: 'todo', title: 'To do', rows: ['login', 'docs'] },
-  { id: 'doing', title: 'Doing', rows: ['search'] },
-  { id: 'done', title: 'Done', rows: [] },
-];
+const toDone = { id: 'login', section: 'done', index: 0 };
 
-// Three lanes 200 wide, 20 apart, inside a layer at (10, 20); rows 50 tall, 10 apart, from y 60.
-const layer: Rect = { x: 10, y: 20, width: 700, height: 600 };
+describe('dragging a row on a board', () => {
+  it('reports a row dropped in another lane where it lands', async () => {
+    const rig = boardRig();
+    const drag = await lifted(rig, 'login', fromLogin);
 
-const laneRect = (section: number): Rect => ({
-  x: 10 + section * 220,
-  y: 20,
-  width: 200,
-  height: 600,
-});
+    drag.follow({ x: 500, y: 100 });
+    drag.finish();
 
-const cardRect = (section: number, index: number): Rect => ({
-  x: 10 + section * 220,
-  y: 60 + index * 60,
-  width: 200,
-  height: 50,
-});
+    expect(rig.move).toHaveBeenCalledWith(toDone);
+  });
 
-interface Rig {
-  drag: ListDrag;
-  move: Mock<(move: ListMove) => void>;
-  ghost: Point[];
-  frames: (() => void)[];
-}
+  it('draws the lifted row in the layer where the pointer holds it', async () => {
+    const rig = boardRig();
+    const drag = await lifted(rig, 'login', fromLogin);
 
-function rig(): Rig {
-  const ghost: Point[] = [];
-  const frames: (() => void)[] = [];
+    drag.follow({ x: 260, y: 70 });
 
-  const drag = new ListDrag(
-    async () => layer,
-    (point) => ghost.push(point),
-    (step) => {
-      frames.push(step);
+    // The grab sat 20 in and 10 down the card, so the card's corner follows the pointer at that distance.
+    expect(rig.ghost.at(-1)).toEqual({ x: 260 - 20 - 10, y: 70 - 10 - 20 });
+  });
 
-      return (): void => {};
-    },
-  );
+  it('aims before the row whose middle is below the pointer, and draws its line in the layer', async () => {
+    const drag = await lifted(boardRig(), 'login', fromLogin);
 
-  const move = vi.fn<(move: ListMove) => void>();
+    drag.follow({ x: 260, y: 70 });
 
-  drag.configure({ sections: board, lanes: true, move });
+    expect(drag.current()).toMatchObject({
+      place: { sectionKey: doingKey, insertion: 0 },
+      line: { x: 220, y: 40, width: 200 },
+    });
+  });
 
-  for (const [section, lane] of board.entries()) {
-    drag.registerZone(section, async () => ({
-      rect: laneRect(section),
-      start: 60,
-    }));
+  it('aims after the last row of a lane when the pointer is below its rows', async () => {
+    const drag = await lifted(boardRig(), 'login', fromLogin);
 
-    for (const [index, id] of lane.rows.entries())
-      drag.registerRow(id, async () => cardRect(section, index));
-  }
+    drag.follow({ x: 30, y: 400 });
 
-  return { drag, move, ghost, frames };
-}
+    expect(drag.current()).toMatchObject({
+      place: { sectionKey: todoKey, insertion: 2 },
+      line: { x: 0, y: 150, width: 200 },
+    });
+  });
 
-const settle = (): Promise<void> => new Promise((done) => setTimeout(done));
+  it('draws the line halfway across the gap between two rows', async () => {
+    const drag = await lifted(boardRig(), 'login', fromLogin);
 
-it('reports a row dropped in another lane where it lands', async () => {
-  const { drag, move } = rig();
+    drag.follow({ x: 30, y: 100 });
 
-  drag.begin('login', null, { x: 30, y: 70 });
-  await settle();
-  drag.follow({ x: 500, y: 100 });
-  drag.finish();
+    expect(drag.current()).toMatchObject({ line: { y: 95 } });
+  });
 
-  expect(move).toHaveBeenCalledWith({ id: 'login', section: 'done', index: 0 });
-});
+  it('aims at the top of an empty lane', async () => {
+    const drag = await lifted(boardRig(), 'login', fromLogin);
 
-it('draws the insertion line and the lifted row in the layer while it is dragged', async () => {
-  const { drag, ghost } = rig();
+    drag.follow({ x: 500, y: 300 });
 
-  drag.begin('login', null, { x: 30, y: 70 });
-  await settle();
-  drag.follow({ x: 260, y: 200 });
+    expect(drag.current()).toMatchObject({
+      place: { sectionKey: doneKey, insertion: 0 },
+      line: { x: 440, y: 40, width: 200 },
+    });
+  });
 
-  // The grab sat 20 in and 10 down the card, so the card's corner follows the pointer at that distance.
-  expect(ghost.at(-1)).toEqual({ x: 260 - 20 - 10, y: 200 - 10 - 20 });
-  expect(drag.current()).toMatchObject({
-    id: 'login',
-    place: { section: 1, insertion: 1 },
-    line: { x: 220, y: 90, width: 200 },
+  it('aims at the nearest lane when the pointer is past the lanes', async () => {
+    const drag = await lifted(boardRig(), 'login', fromLogin);
+
+    drag.follow({ x: 900, y: 70 });
+
+    expect(placeIn(drag)).toEqual({ sectionKey: doneKey, insertion: 0 });
+  });
+
+  it('reports nothing when a row is dropped back on its slot', async () => {
+    const rig = boardRig();
+    const drag = await lifted(rig, 'docs', { x: 30, y: 130 });
+
+    drag.follow({ x: 30, y: 135 });
+    drag.finish();
+
+    expect(rig.move).not.toHaveBeenCalled();
+  });
+
+  it('reports nothing for a cancelled drag, and draws nothing after it', async () => {
+    const rig = boardRig();
+    const drag = await lifted(rig, 'docs', { x: 30, y: 130 });
+
+    drag.follow({ x: 500, y: 100 });
+    drag.cancel();
+
+    expect(rig.move).not.toHaveBeenCalled();
+    expect(drag.current()).toBeUndefined();
+  });
+
+  it('drops nothing where no Section is measured', async () => {
+    const rig = rigFor(board, true);
+
+    rig.drag.registerRow('login', async () => cardRect(0, 0));
+    const drag = await lifted(rig, 'login', fromLogin);
+
+    drag.follow({ x: 500, y: 100 });
+    drag.finish();
+
+    expect(rig.move).not.toHaveBeenCalled();
   });
 });
 
-it('reports nothing when a row is dropped back on its slot, or the drag is cancelled', async () => {
-  const { drag, move } = rig();
+describe('a drag before its List is measured', () => {
+  it('drops a row released before its List is measured once it is', async () => {
+    const { drag, move } = boardRig();
 
-  drag.begin('docs', null, { x: 30, y: 130 });
-  await settle();
-  drag.follow({ x: 30, y: 135 });
-  drag.finish();
+    drag.begin('login', null, fromLogin);
+    drag.follow({ x: 500, y: 100 });
+    drag.finish();
+    await settle();
 
-  drag.begin('docs', null, { x: 30, y: 130 });
-  await settle();
-  drag.follow({ x: 500, y: 100 });
-  drag.cancel();
+    expect(move).toHaveBeenCalledWith(toDone);
+  });
 
-  expect(move).not.toHaveBeenCalled();
-  expect(drag.current()).toBeUndefined();
-});
+  it('draws a row lifted from a measured press from its first move', async () => {
+    const { drag, ghost } = boardRig();
 
-it('drops a row released before its List is measured once it is', async () => {
-  const { drag, move } = rig();
+    drag.prepare('login');
+    await settle();
+    drag.begin('login', null, fromLogin);
+    drag.follow({ x: 260, y: 200 });
 
-  drag.begin('login', null, { x: 30, y: 70 });
-  drag.follow({ x: 500, y: 100 });
-  drag.finish();
+    expect(ghost.at(-1)).toEqual({ x: 260 - 20 - 10, y: 200 - 10 - 20 });
+  });
 
-  expect(move).not.toHaveBeenCalled();
-  await settle();
-  expect(move).toHaveBeenCalledWith({ id: 'login', section: 'done', index: 0 });
-  expect(drag.current()).toBeUndefined();
-});
+  it('reports nothing for a drag cancelled before its List is measured', async () => {
+    const { drag, move } = boardRig();
 
-it('draws a row lifted from a measured press from its first move', async () => {
-  const { drag, ghost } = rig();
+    drag.begin('login', null, fromLogin);
+    drag.follow({ x: 500, y: 100 });
+    drag.cancel();
+    await settle();
 
-  drag.prepare('login');
-  await settle();
-  drag.begin('login', null, { x: 30, y: 70 });
-  drag.follow({ x: 260, y: 200 });
-
-  expect(ghost.at(-1)).toEqual({ x: 260 - 20 - 10, y: 200 - 10 - 20 });
-  expect(drag.current()).toMatchObject({ id: 'login' });
-});
-
-it('reports nothing for a drag cancelled before its List is measured', async () => {
-  const { drag, move } = rig();
-
-  drag.begin('login', null, { x: 30, y: 70 });
-  drag.follow({ x: 500, y: 100 });
-  drag.cancel();
-  await settle();
-
-  expect(move).not.toHaveBeenCalled();
-  expect(drag.current()).toBeUndefined();
-});
-
-// The scroll loop's latest step, as the next animation frame runs it.
-const nextFrame = (frames: readonly (() => void)[]): void => frames.at(-1)?.();
-
-it('scrolls a scroller while the pointer holds near its edge', async () => {
-  const { drag, frames } = rig();
-  const deltas: number[] = [];
-
-  const board: DragScroller = {
-    axis: 'x',
-    measure: async () => layer,
-    scrollBy: (delta) => deltas.push(delta),
-  };
-
-  drag.registerScroller(board);
-  drag.begin('login', null, { x: 30, y: 70 });
-  await settle();
-  drag.follow({ x: 700, y: 300 });
-  nextFrame(frames);
-
-  expect(deltas).not.toHaveLength(0);
-  expect(Math.min(...deltas)).toBeGreaterThan(0);
-
-  drag.follow({ x: 300, y: 300 });
-  deltas.splice(0);
-  nextFrame(frames);
-
-  expect(deltas).toEqual([]);
+    expect(move).not.toHaveBeenCalled();
+  });
 });

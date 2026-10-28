@@ -18,6 +18,8 @@ export interface TreeChild {
   child: ReactNode;
   key: string;
   content: ReactNode;
+  // Lifted out of a parent row: it moves with its parent, never on its own.
+  nested: boolean;
 }
 
 interface Level {
@@ -80,7 +82,7 @@ function treeChild(
   place: Place,
 ): TreeChild[] {
   if (place.level.passes(child))
-    return [{ child, key: place.key, content: child }];
+    return [{ child, key: place.key, content: child, nested: false }];
 
   return rowAndChildren(child, folding, place);
 }
@@ -92,12 +94,9 @@ function rowAndChildren(
 ): TreeChild[] {
   const rows = childRows(child);
   const tree = treeRow(rows, folding, place);
-
-  const row: TreeChild = {
-    child,
-    key: place.key,
-    content: treeContent(child, tree, rows),
-  };
+  const { key, level } = place;
+  const content = treeContent(child, tree, rows);
+  const row: TreeChild = { child, key, content, nested: level.depth > 0 };
 
   if (!tree.parent?.open) return [row];
 

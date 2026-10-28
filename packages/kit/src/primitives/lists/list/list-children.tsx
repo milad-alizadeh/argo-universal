@@ -6,25 +6,29 @@ import type { ChildrenOptions } from './list-children-options';
 import { sectionEntries, menuEntries } from './list-section-entries';
 import {
   listTree,
-  prepareChildren,
+  readList,
   type ListBlock,
+  type ListTree,
 } from './list-section-model';
 import type { TreeFolding } from './list-tree-rows';
 
 export interface ListChild extends ListSelection {
   key: string;
-  // The row's own `id`, which a move reports.
-  rowId?: string;
+  // The row's own `id`, which a move reports; only a row the List can move carries it.
+  moveId?: string;
   fullSpan?: boolean;
   content: ReactNode;
   position: ListPosition;
 }
 
-interface PreparedChildren {
+export interface PreparedChildren {
   blocks: ListBlock[];
   items: ListChild[];
   shelves: boolean;
+  // Lanes draw only for a List with Sections, so a drag over them always has a Section to land in.
   lanes: boolean;
+  // The key of the rows outside any Section, as the List's moves name them.
+  looseKey: string;
 }
 
 // Lanes are drawn only where a tree is: on a wide desktop or web window, outside a menu. Elsewhere the Sections stack as a List's do.
@@ -33,10 +37,13 @@ export const drawsLanes = (
   look: Pick<ListLook, 'treeDrawn'>,
 ): boolean => layout === 'lanes' && look.treeDrawn;
 
-export function usePreparedChildren(props: ChildrenOptions): PreparedChildren {
+// How the List draws the blocks it read: in one column, on shelves, or in lanes, decided here once.
+export function usePrepared(
+  props: ChildrenOptions,
+  blocks: ListBlock[],
+  looseKey: string,
+): PreparedChildren {
   const look = useListLook();
-  const blocks = useChildBlocks(props.children);
-
   const shelves = hasShelves(props, blocks);
   const lanes = drawsLanes(props.layout, look) && hasSections(blocks);
 
@@ -45,7 +52,19 @@ export function usePreparedChildren(props: ChildrenOptions): PreparedChildren {
     [look, blocks, shelves, lanes],
   );
 
-  return { blocks, shelves, lanes, items };
+  return { blocks, shelves, lanes, items, looseKey };
+}
+
+export function usePreparedChildren(props: ChildrenOptions): PreparedChildren {
+  const { children } = props;
+  const reader = useListReader(children);
+
+  const { blocks } = useMemo(
+    () => readList(children, { ...reader, held: undefined }),
+    [children, reader],
+  );
+
+  return usePrepared(props, blocks, reader.prefix);
 }
 
 function shownEntries(look: ListLook, blocks: ListBlock[]): ListChild[] {
@@ -76,15 +95,20 @@ function useFolding(): TreeFolding {
   return useMemo(() => ({ folded, toggle, drawn }), [folded, toggle, drawn]);
 }
 
-function useChildBlocks(children: ReactNode): ListBlock[] {
-  const id = useId();
+// How one List reads its children: under its own key, as its rows fold.
+export interface ListReader {
+  prefix: string;
+  tree: ListTree;
+}
+
+export function useListReader(children: ReactNode): ListReader {
+  const prefix = useId();
   const folding = useFolding();
   const { footerShown } = useListLook();
 
   return useMemo(
-    () =>
-      prepareChildren(children, id, listTree(children, folding, footerShown)),
-    [children, id, folding, footerShown],
+    () => ({ prefix, tree: listTree(children, folding, footerShown) }),
+    [children, prefix, folding, footerShown],
   );
 }
 

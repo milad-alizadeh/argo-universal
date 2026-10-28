@@ -1,4 +1,4 @@
-export { List } from './list';
+export { List, WireList } from './list';
 
 export { useListItemGroup } from './list-item-grouping';
 

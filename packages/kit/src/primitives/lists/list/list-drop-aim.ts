@@ -20,7 +20,7 @@ export interface MeasuredRow {
 
 // Where a Section starts: a lane's column on a board, or a Section's header in one column. `start` is where its first row goes.
 export interface MeasuredZone {
-  section: number;
+  sectionKey: string;
   rect: Rect;
   start: number;
 }
@@ -37,16 +37,20 @@ export interface DropAim {
   line: InsertionLine;
 }
 
-export interface AimInput {
+// A List's movable rows by Section, and whether its Sections draw as lanes side by side.
+export interface MoveLayout {
   sections: readonly MoveSection[];
   lanes: boolean;
+}
+
+export interface AimInput extends MoveLayout {
   zones: readonly MeasuredZone[];
   rows: readonly MeasuredRow[];
   point: Point;
 }
 
 interface PlacedRow {
-  section: number;
+  sectionKey: string;
   index: number;
   rect: Rect;
 }
@@ -59,7 +63,9 @@ function placedRows(input: AimInput): PlacedRow[] {
   return input.rows.flatMap(({ id, rect }) => {
     const place = placeOf(input.sections, id);
 
-    return place ? [{ section: place.section, index: place.index, rect }] : [];
+    return place
+      ? [{ sectionKey: place.sectionKey, index: place.index, rect }]
+      : [];
   });
 }
 
@@ -70,12 +76,12 @@ const horizontalDistance = (rect: Rect, x: number): number =>
 function laneAt(
   zones: readonly MeasuredZone[],
   { x }: Point,
-): number | undefined {
+): string | undefined {
   const nearest = zones.toSorted(
     (a, b) => horizontalDistance(a.rect, x) - horizontalDistance(b.rect, x),
   )[0];
 
-  return nearest?.section;
+  return nearest?.sectionKey;
 }
 
 // In one column, the Section of the last header or row that starts above the pointer, else the first.
@@ -83,11 +89,11 @@ function sectionAt(
   zones: readonly MeasuredZone[],
   rows: readonly PlacedRow[],
   { y }: Point,
-): number | undefined {
+): string | undefined {
   const starts = [...zones, ...rows].toSorted((a, b) => a.rect.y - b.rect.y);
   const above = starts.filter((start) => start.rect.y <= y);
 
-  return (above.at(-1) ?? starts[0])?.section;
+  return (above.at(-1) ?? starts[0])?.sectionKey;
 }
 
 interface Neighbours {
@@ -144,42 +150,42 @@ const insertionAt = ({ previous, next }: Neighbours): number =>
   next?.index ?? indexAfter(previous);
 
 interface SectionAim {
-  section: number;
+  sectionKey: string;
   rows: readonly PlacedRow[];
   zone: MeasuredZone | undefined;
   point: Point;
 }
 
-const rowsOf = (rows: readonly PlacedRow[], section: number): PlacedRow[] =>
+const rowsOf = (rows: readonly PlacedRow[], sectionKey: string): PlacedRow[] =>
   rows
-    .filter((row) => row.section === section)
+    .filter((row) => row.sectionKey === sectionKey)
     .toSorted((a, b) => a.index - b.index);
 
 function aimInSection({
-  section,
+  sectionKey,
   rows,
   zone,
   point,
 }: SectionAim): DropAim | undefined {
-  const near = neighboursAt(rowsOf(rows, section), point.y);
+  const near = neighboursAt(rowsOf(rows, sectionKey), point.y);
   const line = lineIn(near, zone);
 
   if (!line) return;
 
-  return { place: { section, insertion: insertionAt(near) }, line };
+  return { place: { sectionKey, insertion: insertionAt(near) }, line };
 }
 
 // Where a row dragged to `point` would land, and where its insertion line draws; nothing while nothing is measured.
 export function aimAt(input: AimInput): DropAim | undefined {
   const rows = placedRows(input);
 
-  const section = input.lanes
+  const sectionKey = input.lanes
     ? laneAt(input.zones, input.point)
     : sectionAt(input.zones, rows, input.point);
 
-  if (section === undefined) return undefined;
+  if (sectionKey === undefined) return undefined;
 
-  const zone = input.zones.find((candidate) => candidate.section === section);
+  const zone = input.zones.find((each) => each.sectionKey === sectionKey);
 
-  return aimInSection({ section, rows, zone, point: input.point });
+  return aimInSection({ sectionKey, rows, zone, point: input.point });
 }

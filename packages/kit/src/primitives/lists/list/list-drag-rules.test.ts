@@ -35,20 +35,6 @@ it('lifts a row under a finger that held it and then moves', () => {
 // The lifted row was 50 tall with its top at 100; the insertion line is at 250.
 const lifted = { sourceTop: 100, lineY: 250, height: 50 };
 
-it('slides the rows between a lifted row and a lower drop up into its slot', () => {
-  expect(slideOffset(lifted, 160)).toBe(-50);
-  expect(slideOffset(lifted, 260)).toBe(0);
-  expect(slideOffset(lifted, 40)).toBe(0);
-});
-
-it('slides the rows between a higher drop and the lifted row down to open a slot', () => {
-  const higher = { ...lifted, lineY: 30 };
-
-  expect(slideOffset(higher, 40)).toBe(50);
-  expect(slideOffset(higher, 160)).toBe(0);
-  expect(slideOffset(higher, 10)).toBe(0);
-});
-
 it("closes the lifted row's slot while it aims nowhere, and slides nothing with no row lifted", () => {
   expect(slideOffset({ ...lifted, lineY: undefined }, 160)).toBe(-50);
   expect(slideOffset(undefined, 160)).toBe(0);

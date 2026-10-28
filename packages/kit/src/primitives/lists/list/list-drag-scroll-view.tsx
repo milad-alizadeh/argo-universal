@@ -7,7 +7,8 @@ import {
   type ScrollViewProps,
 } from 'react-native';
 import type { DragScroller } from './list-drag-measure';
-import { measureView, useListMoves } from './list-move-context';
+import { measureView } from './list-measure-view';
+import { useListMoves } from './list-move-context';
 
 type Axis = DragScroller['axis'];
 
@@ -44,17 +45,31 @@ function useDragScroll(
   };
 }
 
-// A scroll view a dragged row scrolls when it nears its edges: the board sideways, a lane up and down.
-export function DragScrollView(props: ScrollViewProps): ReactElement {
+// Hears every scroll for the drag, then hands it to the caller's own `onScroll`.
+const both =
+  (tracked: OnScroll, onScroll: ScrollViewProps['onScroll']): OnScroll =>
+  (event) => {
+    tracked(event);
+    onScroll?.(event);
+  };
+
+/*
+ * A scroll view a dragged row scrolls when it nears its edges: the board, sideways.
+ * The caller's own `onScroll` still hears every scroll.
+ */
+export function DragScrollView({
+  onScroll,
+  ...props
+}: ScrollViewProps): ReactElement {
   const view = useRef<ScrollViewInstance>(null);
-  const onScroll = useDragScroll(props.horizontal ? 'x' : 'y', view);
+  const tracked = useDragScroll(props.horizontal ? 'x' : 'y', view);
 
   return (
     <ScrollView
       ref={view}
-      onScroll={onScroll}
       scrollEventThrottle={16}
       {...props}
+      onScroll={both(tracked, onScroll)}
     />
   );
 }

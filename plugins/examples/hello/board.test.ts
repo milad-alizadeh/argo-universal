@@ -27,5 +27,7 @@ test('the board moves a card to another lane', async ({ mount, clock }) => {
     payload: { id: 'login', section: 'done', index: 0 },
   });
 
-  while (laneOf('Fix login') !== JSON.stringify('done')) await clock.advance(0);
+  await clock.advance(0);
+  // The redraw arrives as a patch; waiting for it fails the test once the view's limit passes without it.
+  await page.waitFor(() => laneOf('Fix login') === JSON.stringify('done'));
 });

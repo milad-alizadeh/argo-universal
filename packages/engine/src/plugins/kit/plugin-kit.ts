@@ -3,6 +3,7 @@ import {
   pluginKitExports,
   type PluginKitExport,
 } from '@repo/contracts/plugins/kit';
+import { applyListMove } from '@repo/contracts/plugins/list-move-props';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
@@ -55,13 +56,14 @@ function kitExport({
   return carrier;
 }
 
-// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
+// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks, the JSX runtime and the List's move rule.
 const exportsOf = {
   ...Object.fromEntries(
     pluginKitExports.map((entry) => [entry.name, kitExport(entry)]),
   ),
   ...hooks,
   Fragment: React.Fragment,
+  applyListMove,
 };
 
 const jsxRuntime = { jsx, jsxs, Fragment: React.Fragment };

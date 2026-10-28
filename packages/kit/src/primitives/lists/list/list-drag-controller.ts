@@ -11,19 +11,15 @@ import {
 import type { Measure, Measured, MeasuredScroller } from './list-drag-measure';
 import { DragRegistry } from './list-drag-registry';
 import { FrameLoop, scrollEdges, type Schedule } from './list-drag-scroll';
-import type { Point, Rect } from './list-drop-aim';
-import {
-  landing,
-  type DropPlace,
-  type ListMove,
-  type MoveSection,
-} from './list-move-model';
+import type { MoveLayout, Point, Rect } from './list-drop-aim';
+import { landing, type DropPlace, type ListMove } from './list-move-model';
 
 export interface DragSetup {
-  sections: readonly MoveSection[];
-  lanes: boolean;
+  layout: MoveLayout;
   move: (move: ListMove) => void;
 }
+
+const noLayout: MoveLayout = { sections: [], lanes: false };
 
 interface Lift extends LiftedRow {
   // Where the pointer took the row, in the window.
@@ -37,17 +33,24 @@ const landedMove = (
   lift: Lift | undefined,
   place: DropPlace | undefined,
 ): ListMove | undefined =>
-  lift && place ? landing(setup.sections, lift.id, place) : undefined;
+  lift && place ? landing(setup.layout.sections, lift.id, place) : undefined;
+
+const sourceOf = (measured?: Measured): Rect | undefined => measured?.source;
 
 /*
  * One List's drag: rows, Section zones and scrollers register as they draw. A lift measures them all in the window,
  * the pointer aims at a Section and an index there, scrollers under the pointer's edge scroll, and the drop reports
  * the move. Everything it draws is in the drag layer's coordinates.
  */
-export class ListDrag extends DragRegistry {
+export class ListDrag {
   private readonly listeners = listenerSet();
-  readonly subscribe = this.listeners.subscribe;
-  private setup: DragSetup = { sections: [], lanes: false, move: () => {} };
+  public readonly subscribe = this.listeners.subscribe;
+  private readonly registry: DragRegistry;
+  public readonly registerRow: DragRegistry['registerRow'];
+  public readonly registerZone: DragRegistry['registerZone'];
+  public readonly registerScroller: DragRegistry['registerScroller'];
+  public readonly prepare: DragRegistry['prepare'];
+  private setup: DragSetup = { layout: noLayout, move: () => {} };
   private lift: Lift | undefined;
   private measured: Measured | undefined;
   private point: Point = { x: 0, y: 0 };
@@ -56,24 +59,30 @@ export class ListDrag extends DragRegistry {
   private remeasuring = false;
   private frame: DragFrame | undefined;
 
-  constructor(
+  public constructor(
     layer: Measure,
     private readonly ghostAt: (point: Point) => void,
     schedule?: Schedule,
   ) {
-    super(layer);
+    const registry = new DragRegistry(layer);
+
+    this.registry = registry;
+    this.registerRow = registry.registerRow.bind(registry);
+    this.registerZone = registry.registerZone.bind(registry);
+    this.registerScroller = registry.registerScroller.bind(registry);
+    this.prepare = registry.prepare.bind(registry);
     this.scrolling = new FrameLoop(schedule);
   }
 
-  configure(setup: DragSetup): void {
+  public configure(setup: DragSetup): void {
     this.setup = setup;
   }
 
-  current = (): DragFrame | undefined => this.frame;
+  public readonly current = (): DragFrame | undefined => this.frame;
 
   // Lifts row `id` under the pointer; it draws at once when its press was measured, else once its List is.
-  begin(id: string, ghost: ReactNode, point: Point): void {
-    const ready = this.measuredPress(id);
+  public begin(id: string, ghost: ReactNode, point: Point): void {
+    const ready = this.registry.measuredPress(id);
 
     this.end();
     this.generation += 1;
@@ -84,35 +93,25 @@ export class ListDrag extends DragRegistry {
     else void this.measure(this.generation, true);
   }
 
-  follow(point: Point): void {
+  public follow(point: Point): void {
     this.point = point;
     this.redraw(false);
   }
 
   // Drops the row where it aims, reporting the move unless it lands back on its own slot; before the List is measured, as soon as it is.
-  finish(): void {
+  public finish(): void {
     if (this.lift && !this.measured) this.lift.released = true;
     else this.drop();
   }
 
-  cancel(): void {
-    this.end();
-  }
-
-  private get landed(): ListMove | undefined {
-    return landedMove(this.setup, this.lift, this.frame?.place);
-  }
-
-  private get lastSource(): Rect | undefined {
-    return this.measured?.source;
-  }
+  public readonly cancel = (): void => this.end();
 
   private get measuredScrollers(): readonly MeasuredScroller[] {
     return this.measured?.scrollers ?? [];
   }
 
   private drop(): void {
-    const move = this.landed;
+    const move = landedMove(this.setup, this.lift, this.frame?.place);
 
     this.end();
 
@@ -133,7 +132,8 @@ export class ListDrag extends DragRegistry {
 
     if (!lift) return;
 
-    const measured = await this.measureAround(lift.id, this.lastSource);
+    const last = sourceOf(this.measured);
+    const measured = await this.registry.measureAround(lift.id, last);
 
     if (generation === this.generation) this.measuredAs(lift, measured, first);
   }
@@ -168,7 +168,7 @@ export class ListDrag extends DragRegistry {
 
     this.ghostAt(ghostPoint(point, lift, measured.layer));
 
-    const next = dragFrame({ lift, measured, point, ...setup });
+    const next = dragFrame({ lift, measured, point, layout: setup.layout });
 
     if (remeasured || !sameFrame(this.frame, next)) this.draw(next);
   }
