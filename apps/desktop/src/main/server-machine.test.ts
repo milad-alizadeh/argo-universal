@@ -38,6 +38,8 @@ import {
 
 const supervisorExitedEvent = 'server.exited';
 
+const supervisorSpawnedEvent = 'server.spawned';
+
 const retryServerEvent = 'server.retry';
 
 const countsChangedEvent = 'counts.changed';
@@ -177,7 +179,7 @@ const latest = <TCall>(calls: TCall[]): NonNullable<TCall> =>
 // What the real `spawnSupervisor` sends to the machine it was given.
 const reportSpawned = (): void =>
   latest(spawnCalls).input.parent.send({
-    type: 'server.spawned',
+    type: supervisorSpawnedEvent,
     pid: startedAddress.pid,
     at: spawnedAt,
   });
@@ -240,7 +242,7 @@ describe('server connection model', (): void => {
           actorId: 'checkRunning',
         }) as const,
     ),
-    { type: 'server.spawned', pid: startedAddress.pid, at: spawnedAt },
+    { type: supervisorSpawnedEvent, pid: startedAddress.pid, at: spawnedAt },
     { type: supervisorExitedEvent, reason: exitReason },
     { type: retryServerEvent },
     { type: 'app.quit' },
@@ -588,7 +590,7 @@ describe('server connection', (): void => {
     await spawnSupervisor();
     const address = { ...startedAddress, pid: 201 };
     server.send({
-      type: 'server.spawned',
+      type: supervisorSpawnedEvent,
       pid: address.pid,
       at: Date.parse('2026-10-03T10:01:00.000Z'),
     });
