@@ -1,13 +1,13 @@
 import type { Href } from 'expo-router';
 import type { ReactElement } from 'react';
 import type { ActionShortcut } from '#primitives/content/kbd';
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 
 // One action in a context menu: its icon leads the label; choosing it runs it and closes the menu.
 export interface ContextMenuItem {
   label: string;
   id?: string;
-  icon?: IconName;
+  icon?: IconSymbol;
   onPress: () => void;
   disabled?: boolean;
   tone?: 'danger';

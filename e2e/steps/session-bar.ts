@@ -11,7 +11,9 @@ Then(
 When(
   'I press Open for the {word} Plugin on the Session bar',
   async ({ page }, name: string): Promise<void> => {
+    // The bar sits in the Session's layout; the header's own actions live in the window band.
     await page
+      .getByTestId('session-layout')
       .getByRole('button', { name: `Open ${name}`, exact: true })
       .click();
   },

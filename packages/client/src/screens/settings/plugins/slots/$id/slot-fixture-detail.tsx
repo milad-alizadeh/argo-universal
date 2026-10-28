@@ -1,6 +1,9 @@
 import type * as React from 'react';
+import { declaredHeaderActions } from '../../../../sessions/$id/session-header-actions.mocks';
 import { SessionBarPreview } from './session-bar-preview';
 import { sessionBarSlot } from './session-bar-slot';
+import { SessionHeaderPreview } from './session-header-preview';
+import { sessionHeaderSlot } from './session-header-slot';
 import { SessionRowPreview } from './session-row-preview';
 import { sessionRowSlot } from './session-row-slot';
 import type { SlotPreviewProps, SlotDetail } from './slot-detail';
@@ -28,4 +31,19 @@ const FixtureBarPreview = ({
 export const fixtureSessionBarSlot: SlotDetail = {
   ...sessionBarSlot,
   Preview: FixtureBarPreview,
+};
+
+const FixtureHeaderPreview = ({
+  visibility,
+}: SlotPreviewProps): React.JSX.Element => (
+  <SessionHeaderPreview
+    declared={declaredHeaderActions}
+    visibility={visibility}
+  />
+);
+
+// The Session header page with the fixture Plugins' declared actions in place of the Server's.
+export const fixtureSessionHeaderSlot: SlotDetail = {
+  ...sessionHeaderSlot,
+  Preview: FixtureHeaderPreview,
 };

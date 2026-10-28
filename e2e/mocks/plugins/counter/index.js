@@ -23,7 +23,17 @@ function StartSession({ argo }) {
   );
 }
 
-function Counter({ argo }) {
+// A page opened from a Session's header names that Session.
+function Heading({ sessionId }) {
+  return (
+    <>
+      <Text>Counter fixture</Text>
+      {sessionId ? <Text>{`Opened for Session ${sessionId}`}</Text> : null}
+    </>
+  );
+}
+
+function Counter({ argo, sessionId }) {
   const [taps, setTaps] = useState(0);
   const [view, setView] = useState('counter');
 
@@ -33,7 +43,7 @@ function Counter({ argo }) {
 
   return (
     <Stack direction="column">
-      <Text>Counter fixture</Text>
+      <Heading sessionId={sessionId} />
       <Text>{`Tapped ${taps} times`}</Text>
       <Button label="Tap me" onPress={() => setTaps(taps + 1)} />
       <Views setView={setView} />
@@ -64,17 +74,6 @@ function Details({ onBack }) {
   );
 }
 
-export function register(argo) {
-  argo.pages.register('/', () => <Counter argo={argo} />);
-  argo.slots.register('argo/project/details/v1', ({ context }) => (
-    <Text>{`Fixture Slot for ${context.projectId}`}</Text>
-  ));
-  // One item on every Session row, which opens the Counter page.
-  argo.slots.register('argo/session/row/v1', everySession('Counter item'));
-  // Every open Session's bar carries one line that opens the Counter page.
-  argo.slots.register('argo/session/bar/v1', everySession('Counter bar'));
-}
-
 // An items Slot's answer: the same one item, opening the Counter page, for every Session asked about.
 const everySession =
   (text) =>
@@ -85,3 +84,16 @@ const everySession =
         [{ text, action: { path: '/' } }],
       ]),
     );
+
+export function register(argo) {
+  argo.pages.register('/', ({ context }) => (
+    <Counter argo={argo} sessionId={context.sessionId} />
+  ));
+  argo.slots.register('argo/project/details/v1', ({ context }) => (
+    <Text>{`Fixture Slot for ${context.projectId}`}</Text>
+  ));
+  // One item on every Session row, which opens the Counter page.
+  argo.slots.register('argo/session/row/v1', everySession('Counter item'));
+  // Every open Session's bar carries one line that opens the Counter page.
+  argo.slots.register('argo/session/bar/v1', everySession('Counter bar'));
+}

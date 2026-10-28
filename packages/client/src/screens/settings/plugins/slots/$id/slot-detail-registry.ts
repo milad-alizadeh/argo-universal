@@ -1,13 +1,14 @@
+import { sessionHeaderSlotId } from '@repo/contracts/plugins/declared-slots';
 import {
-  type AddOnlySlotId,
   projectDetailsSlotId,
   sessionActivitySlotId,
   sessionBarSlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
 import { sessionBarSlot } from './session-bar-slot';
+import { sessionHeaderSlot } from './session-header-slot';
 import { sessionRowSlot } from './session-row-slot';
-import type { SlotDetail } from './slot-detail';
+import type { SlotDetail, SlotDetailId } from './slot-detail';
 
 /*
  * Every Slot in the registry, with its page under Settings › Plugins or null for none: a new Slot does not compile
@@ -20,7 +21,8 @@ const declared = {
   // Chosen on the Session rows page, as its Activity line.
   [sessionActivitySlotId]: null,
   [sessionBarSlotId]: sessionBarSlot,
-} satisfies Record<AddOnlySlotId, SlotDetail | null>;
+  [sessionHeaderSlotId]: sessionHeaderSlot,
+} satisfies Record<SlotDetailId, SlotDetail | null>;
 
 export const slotDetails: readonly SlotDetail[] = Object.values(
   declared,

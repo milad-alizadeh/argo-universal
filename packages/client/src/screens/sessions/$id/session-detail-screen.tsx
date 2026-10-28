@@ -19,7 +19,7 @@ import {
   toSessionViewProps,
 } from './session-detail-view-props';
 import { SessionNewScreen } from './session-new-screen';
-import { SessionPageHeader } from './session-page-header';
+import { ConnectedSessionHeader } from './session-page-header';
 import { useSessionPageMenu } from './session-page-menu';
 import { useFeedRequests } from './use-feed-requests';
 import { useMarkSeen } from './use-mark-seen';
@@ -71,7 +71,7 @@ function ConnectedSession({
 
   return (
     <>
-      <SessionPageHeader {...props} />
+      <ConnectedSessionHeader sessionId={sessionId} {...props} />
       <SessionDetailView {...props} />
       {dialogs}
     </>

@@ -232,6 +232,34 @@ argo.slots.register('argo/session/bar/v1', ({ contexts }) =>
 An item is `{ icon?, text, action? }`: `text` is at most 80 characters, and `action.path` opens one of the Plugin's own pages. A tone, a tooltip, a kit tree or a second item fails the Slot's schema, and that Plugin is left out alone.
 The bar shows the first Plugin in Slot order that answers, after Argo's own banners, on phones and wide windows alike. The other Plugins' lines wait behind "+N", each named with its Plugin. A user can turn a Plugin off for the bar under Settings › Plugins › Session bar on that Device; the next Plugin in order then takes the line. With no answer, the Session draws no bar.
 
+## Session header actions
+
+A Plugin lists its Session header actions in `plugin.json` under `contributes.declared`, keyed by the Slot `argo/session/header/v1`. Argo draws them from the manifest without starting the Plugin (ADR-0025); pressing one opens the page, which starts it:
+
+```json
+"declared": {
+  "argo/session/header/v1": [
+    {
+      "id": "open-issue",
+      "label": "Open issue",
+      "icon": { "sf": "link", "material": "link" },
+      "placement": "header",
+      "target": { "type": "page", "path": "/issues" }
+    }
+  ]
+}
+```
+
+An action is `{ id, label, icon, placement, target }`: `label` is at most 40 characters, `placement` is `header` or `menu`, and the only target is `{ type: "page", path }`, one of the Plugin's own pages under one of its nav items. A Plugin lists at most 4 actions, each id once.
+Argo's own actions come first. On a wide window the first `header` action, in Slot order, is an icon before Argo's "…"; every other action goes inside "…" after Argo's entries. A compact or medium window (phones, and narrow web) keeps every Plugin action in "…". Settings › Plugins › Session header turns each Plugin's actions off on that Device.
+The page opens for the Session whose header it was pressed in: it reads the Session's id from `context.sessionId`.
+
+```tsx
+argo.pages.register('/issues', ({ context }) => <Issues sessionId={context.sessionId} />);
+```
+
+A page opened any other way has no `sessionId`.
+
 ## Background pages and badges
 
 Declare `contributes.background: { path, interval }` in `plugin.json`, and register that path as a page.
@@ -262,7 +290,7 @@ List the Replaceable Slots it draws in `contributes.renders`, which needs `ui.re
 Order a Plugin with `contributes.order` in `plugin.json`, an integer that defaults to 0 (ADR-0035).
 A Slot's contributors and a Feed row's `ui.render` chain both run first-party Plugins first, then lower `order` first, then by Plugin id; folder names do not change it.
 The order is the Plugin's, so it covers all of its Slots and `ui.render` Hooks. The other Hook events keep worker order (ADR-0038).
-Declaring `order` without a Slot in `contributes.slots` or `contributes.renders` is a manifest error.
+Declaring `order` without a Slot in `contributes.slots`, `contributes.renders` or `contributes.declared` is a manifest error.
 The Server logs, once per Plugin and Slot, each Plugin that changed a row's props, and each Plugin shadowed because a Hook before it answered with a tree:
 
 ```text

@@ -16,6 +16,11 @@ import {
   longSession,
   runningSession,
 } from './session-detail-view.mocks';
+import {
+  desktopPluginActions,
+  phonePluginActions,
+  pluginActionsSession,
+} from './session-header-actions.mocks';
 
 const meta = {
   title: 'Screens/Sessions/Session',
@@ -113,5 +118,17 @@ export const Elicitation: Story = {
 // The header opens the same Subagents list as the phone Composer, inside the Frame's Inspector.
 export const Subagents: Story = {
   args: subagentsSession,
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// Plugins' header actions as a desktop places them: the first beside "…", the rest inside it after Rename and Archive.
+export const PluginActions: Story = {
+  args: pluginActionsSession(desktopPluginActions()),
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// As iOS and Android place them: every Plugin action inside "…".
+export const PluginActionsOnPhone: Story = {
+  args: pluginActionsSession(phonePluginActions()),
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };

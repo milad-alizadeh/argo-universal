@@ -13,16 +13,26 @@ type Content = { pages: Map<string, Page>; slots: Map<string, SlotContent> };
 
 type Open = Extract<PluginEvent, { type: 'open' }>;
 
-function renderContext(
-  surface: PluginSurface | undefined,
-  projectId: string | undefined,
-  serverDevice: boolean,
-): PluginRenderContext {
-  const context = surface
-    ? { serverDevice, surface: frozenSurface(surface) }
-    : { serverDevice };
+type Writable<T> = { -readonly [Key in keyof T]: T[Key] };
 
-  return projectId === undefined ? context : { ...context, projectId };
+type Context = Writable<PluginRenderContext>;
+
+// The Project and Session the view opened for, each only when the App named it.
+function withOpened(context: Context, { projectId, sessionId }: Open): Context {
+  if (projectId !== undefined) context.projectId = projectId;
+
+  if (sessionId !== undefined) context.sessionId = sessionId;
+
+  return context;
+}
+
+// What a page or Slot reads from its context: the Connection's surface, then what the view opened for.
+function renderContext(open: Open): PluginRenderContext {
+  const context: Context = { serverDevice: open.serverDevice === true };
+
+  if (open.surface) context.surface = frozenSurface(open.surface);
+
+  return withOpened(context, open);
 }
 
 function slotElement(
@@ -40,11 +50,9 @@ function slotElement(
 }
 
 // Every page and Slot gets the surface of the Connection its view belongs to.
-export function elementOf(
-  content: Content,
-  { path, slot, surface, projectId, serverDevice }: Open,
-): ReactNode | null {
-  const context = renderContext(surface, projectId, serverDevice === true);
+export function elementOf(content: Content, open: Open): ReactNode | null {
+  const { path, slot } = open;
+  const context = renderContext(open);
 
   if (slot) return slotElement(content, slot, context);
   const page = content.pages.get(path);

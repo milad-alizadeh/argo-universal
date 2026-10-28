@@ -30,6 +30,8 @@ type FixturePlugin = {
   renders?: ReplaceableSlotId[];
   accounts?: PluginManifest['contributes']['accounts'];
   order?: number;
+  // What the manifest adds to declared Slots, such as Session header actions.
+  declared?: PluginManifest['contributes']['declared'];
 };
 
 export async function createRuntimePlugins(
@@ -75,6 +77,7 @@ async function writeManifest({
   settings,
   accounts,
   order,
+  declared,
 }: Pick<
   FixturePlugin,
   | 'id'
@@ -85,6 +88,7 @@ async function writeManifest({
   | 'settings'
   | 'accounts'
   | 'order'
+  | 'declared'
 > & {
   folder: string;
   main: string;
@@ -113,6 +117,7 @@ async function writeManifest({
         settings,
         accounts,
         order,
+        declared,
       },
     }),
   );

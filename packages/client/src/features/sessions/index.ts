@@ -130,6 +130,13 @@ export {
 
 export { sessionActions, type SessionMenu } from './components/session-actions';
 
+export {
+  type DeclaredHeaderAction,
+  placeSessionHeaderActions,
+  type SessionPluginAction,
+  type SessionPluginActions,
+} from './utils/session-header-actions';
+
 export { type SessionPullRequest } from './components/session-pull-request';
 
 export { type SessionConfigChange } from './hooks/use-session-config-change';
