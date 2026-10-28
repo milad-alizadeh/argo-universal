@@ -7,6 +7,7 @@ import {
   type RefObject,
 } from 'react';
 import type { ViewInstance } from 'react-native';
+import { isLegendList, type ListRef } from '../../../list-ref';
 import { assignRef } from '../../../scroll-fade/legend-scroll-ref';
 import type { ListDrag } from './list-drag-controller';
 import type { DragScroller } from './list-drag-measure';
@@ -36,7 +37,7 @@ export interface ColumnScroll {
   // The view the List's rows scroll inside.
   frame: RefObject<ViewInstance | null>;
   // The ref the List's owner passed, which still receives the scroller.
-  own: Ref<LegendListRef> | undefined;
+  own: Ref<ListRef> | undefined;
   lanes: boolean;
 }
 
@@ -51,16 +52,16 @@ function useColumnScroller(
   }, [drag, frame, lanes, list]);
 }
 
-// The ref for the column's scroll view: the drag scrolls it, and the owner's ref still receives it. Lanes scroll their own.
-export function useColumnScroll(column: ColumnScroll): Ref<LegendListRef> {
+// The ref for the column's scroll view: the drag scrolls it, and the owner's ref still receives it, or the board of lanes.
+export function useColumnScroll(column: ColumnScroll): Ref<ListRef> {
   const list = useRef<LegendListRef>(null);
   const { own } = column;
 
   useColumnScroller(column, list);
 
   return useCallback(
-    (instance: LegendListRef | null) => {
-      list.current = instance;
+    (instance: ListRef | null) => {
+      list.current = instance && isLegendList(instance) ? instance : null;
       assignRef(own, instance);
     },
     [own],

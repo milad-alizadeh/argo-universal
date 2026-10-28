@@ -38,6 +38,7 @@ export type MovesProps = Pick<
   | 'header'
   | 'footer'
   | 'pagination'
+  | 'ref'
 >;
 
 export const board = {

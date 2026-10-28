@@ -119,10 +119,10 @@ function useFrameSize(
   };
 }
 
-// One ref that sets both.
-function useBothRefs<T>(
+// One ref that sets both; the second may hold more than `T`.
+function useBothRefs<T extends Wider, Wider>(
   first: Ref<T> | undefined,
-  second: Ref<T> | undefined,
+  second: Ref<Wider> | undefined,
 ): (instance: T | null) => void {
   return useCallback(
     (instance: T | null) => {

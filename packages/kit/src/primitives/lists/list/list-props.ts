@@ -1,7 +1,8 @@
 import type { SpacingStep } from '@repo/contracts/kit-tokens';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { ListSelection } from '../../../list-context';
 import type { PhoneOverrides } from '../../../list-look';
+import type { ListRef } from '../../../list-ref';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
@@ -23,7 +24,6 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'edges'
     | 'maxHeight'
     | 'testID'
-    | 'ref'
     | 'depth'
     | 'inset'
     | 'initialScrollIndex'
@@ -39,6 +39,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'keyboardDismissMode'
     | 'keyboardShouldPersistTaps'
   > & {
+    ref?: Ref<ListRef>;
     header?: ReactNode;
     endContent?: ReactNode;
     startContent?: ReactNode;

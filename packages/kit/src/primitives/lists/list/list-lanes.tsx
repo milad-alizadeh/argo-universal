@@ -127,6 +127,11 @@ type LanesProps = ChildDataProps & {
   looseKey: string;
 };
 
+const boardLook = {
+  className: 'min-h-0 grow',
+  contentContainerClassName: 'gap-4 px-4',
+} as const;
+
 // The board itself, named as the List is, which calls the List's `onEndReached` as it scrolls to its end.
 function Board({ blocks, looseKey, ...list }: LanesProps): ReactElement {
   const lanes = useMemo(() => lanesOf(blocks, looseKey), [blocks, looseKey]);
@@ -136,10 +141,10 @@ function Board({ blocks, looseKey, ...list }: LanesProps): ReactElement {
   return (
     <DragScrollView
       horizontal
+      listRef={list.ref}
       aria-label={list.accessibilityLabel}
       onScroll={onScroll}
-      className="min-h-0 grow"
-      contentContainerClassName="gap-4 px-4"
+      {...boardLook}
     >
       <OutsideColumn>{lanes.map(boardLane)}</OutsideColumn>
     </DragScrollView>

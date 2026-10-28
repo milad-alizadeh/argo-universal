@@ -1,4 +1,11 @@
-import { useEffect, useRef, type ReactElement, type RefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  type ReactElement,
+  type Ref,
+  type RefObject,
+} from 'react';
 import {
   ScrollView,
   type NativeScrollEvent,
@@ -6,6 +13,8 @@ import {
   type ScrollViewInstance,
   type ScrollViewProps,
 } from 'react-native';
+import type { ListRef } from '../../../list-ref';
+import { assignRef } from '../../../scroll-fade/legend-scroll-ref';
 import type { DragScroller } from './list-drag-measure';
 import { measureView } from './list-geometry';
 import { useListMoves } from './list-move-context';
@@ -53,24 +62,49 @@ const both =
     onScroll?.(event);
   };
 
+// Keeps the scroll view for the drag, and hands it to the List's own ref.
+function useBoardRef(
+  own: Ref<ListRef> | undefined,
+): [RefObject<ScrollViewInstance | null>, Ref<ScrollViewInstance>] {
+  const view = useRef<ScrollViewInstance>(null);
+
+  const ref = useCallback(
+    (instance: ScrollViewInstance | null) => {
+      view.current = instance;
+      assignRef(own, instance);
+    },
+    [own],
+  );
+
+  return [view, ref];
+}
+
+type DragScrollViewProps = ScrollViewProps & { listRef?: Ref<ListRef> };
+
+type BoardScroll = ScrollViewProps & { ref: Ref<ScrollViewInstance> };
+
+// The scroll view's props: the drag hears every scroll before the caller's `onScroll`, and the List's ref is kept.
+function useBoardScroll({
+  listRef,
+  onScroll,
+  ...props
+}: DragScrollViewProps): BoardScroll {
+  const [view, ref] = useBoardRef(listRef);
+  const tracked = useDragScroll(props.horizontal ? 'x' : 'y', view);
+
+  return {
+    scrollEventThrottle: 16,
+    ...props,
+    ref,
+    onScroll: both(tracked, onScroll),
+  };
+}
+
 /*
  * A scroll view a dragged row scrolls when it nears its edges: the board, sideways. It fills its parent, so each lane's
  * LegendList has a height of its own; a horizontal ScrollFadeView fits its content's height, which a lane's list sets.
- * The caller's own `onScroll` still hears every scroll.
+ * The caller's own `onScroll` still hears every scroll, and the List's `ref` receives the scroll view.
  */
-export function DragScrollView({
-  onScroll,
-  ...props
-}: ScrollViewProps): ReactElement {
-  const view = useRef<ScrollViewInstance>(null);
-  const tracked = useDragScroll(props.horizontal ? 'x' : 'y', view);
-
-  return (
-    <ScrollView
-      ref={view}
-      scrollEventThrottle={16}
-      {...props}
-      onScroll={both(tracked, onScroll)}
-    />
-  );
+export function DragScrollView(props: DragScrollViewProps): ReactElement {
+  return <ScrollView {...useBoardScroll(props)} />;
 }

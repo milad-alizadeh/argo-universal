@@ -1,5 +1,6 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { useCallback, useEffect, useState, type Ref } from 'react';
+import type { ListRef } from '../../../list-ref';
 import type { ListProps } from './list-props';
 import type { TileGeometry } from './use-tile-layout';
 
@@ -63,7 +64,7 @@ function readEdges(list: LegendListRef): Edges {
 }
 
 export function assignListRef(
-  ref: Ref<LegendListRef> | undefined,
+  ref: Ref<ListRef> | undefined,
   value: LegendListRef | null,
 ): void {
   if (typeof ref === 'function') ref(value);
@@ -75,7 +76,7 @@ interface ShelfRef {
   ref: ShelfControls['ref'];
 }
 
-function useShelfRef(forwarded: Ref<LegendListRef> | undefined): ShelfRef {
+function useShelfRef(forwarded: Ref<ListRef> | undefined): ShelfRef {
   const [list, setList] = useState<LegendListRef | null>(null);
 
   const ref = useCallback(

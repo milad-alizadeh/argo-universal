@@ -14,6 +14,12 @@ export { ListSectionHeader } from './list-section-parts';
 
 export type { ListProps, ListSectionProps } from './list-props';
 
+export {
+  isLegendList,
+  type ListBoardRef,
+  type ListRef,
+} from '../../../list-ref';
+
 export type { ListAppearance } from '../../../list-context';
 
 export {

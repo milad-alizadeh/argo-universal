@@ -1,6 +1,6 @@
-import type { LegendListRef } from '@legendapp/list/react-native';
 import type { ReactElement, Ref } from 'react';
 import { useWindowDimensions } from 'react-native';
+import type { ListRef } from '../../../list-ref';
 import { childIdentity } from './list-child-identity';
 import { usePreparedChildren, type PreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
@@ -87,7 +87,7 @@ function PlainRows<Item>(props: ListProps<Item>): ReactElement {
   );
 }
 
-type Render = (ref: Ref<LegendListRef>) => ReactElement;
+type Render = (ref: Ref<ListRef>) => ReactElement;
 
 // The List's rows, in the order they show, on the scroll view the drag scrolls.
 const rowsIn =

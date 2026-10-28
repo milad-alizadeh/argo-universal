@@ -1,4 +1,3 @@
-import type { LegendListRef } from '@legendapp/list/react-native';
 import {
   useEffect,
   useMemo,
@@ -11,6 +10,7 @@ import {
 } from 'react';
 import { View, type ViewInstance } from 'react-native';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
+import type { ListRef } from '../../../list-ref';
 import { cn } from '../../../utils';
 import { useColumnScroll } from './list-column-scroll';
 import { ListDrag } from './list-drag-controller';
@@ -54,16 +54,16 @@ interface MovableListProps {
   // The List's Sections draw as lanes side by side.
   lanes: boolean;
   // The List's own ref, kept on its scroll view.
-  listRef: Ref<LegendListRef> | undefined;
+  listRef: Ref<ListRef> | undefined;
   // Draws the List's rows, in the order they show, on a scroll view taking `ref`.
-  render: (ref: Ref<LegendListRef>) => ReactElement;
+  render: (ref: Ref<ListRef>) => ReactElement;
 }
 
 interface MoveHost {
   moves: ListMoves;
   layer: RefObject<ViewInstance | null>;
   ghost: GhostPoint;
-  scrollTo: Ref<LegendListRef>;
+  scrollTo: Ref<ListRef>;
 }
 
 function useMoveHost({ order, lanes, listRef }: MovableListProps): MoveHost {
