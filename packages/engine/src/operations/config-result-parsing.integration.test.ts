@@ -27,12 +27,14 @@ it.each(['App', 'Operations'])(
 
     const created = await host.caller.session.new(emptySessionInput);
     const caller = await operationCaller(host);
+
     const params = {
       ...created,
       configId: 'model',
       type: 'id' as const,
       value: 'large',
     };
+
     const before = getConfigOptionDiagnostics().unknownCategories;
 
     const applied =
