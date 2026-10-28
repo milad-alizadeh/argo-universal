@@ -96,13 +96,16 @@ function useContentLength(
 
 interface FrameSize {
   className?: string;
-  style?: { flexBasis: number; maxHeight: number };
+  style?: { height: number; maxHeight: number };
 }
 
 /*
  * As tall as the content, up to the window's size class's cap, in a parent that grows with it; with
  * no cap the frame fills its parent. A bounded parent's free space still goes to the frame: iOS
  * insets the content under a see-through header, which a content-tall frame would cut off.
+ * The content's length is a height, not a flex basis: in a phone sheet, whose React Native content
+ * is hosted at its own size (RNHostView `matchContents`), Yoga gave a frame sized by its basis no
+ * height at all, so a fitted List in a PopoverContent drew nothing.
  */
 function useFrameSize(
   list: RefObject<LegendListRef | null>,
@@ -115,7 +118,7 @@ function useFrameSize(
 
   return {
     className: 'min-h-0 grow',
-    style: { flexBasis: Math.min(length ?? maxHeight, maxHeight), maxHeight },
+    style: { height: Math.min(length ?? maxHeight, maxHeight), maxHeight },
   };
 }
 
