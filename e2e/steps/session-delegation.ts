@@ -1,4 +1,5 @@
 import { expect } from '../fixtures';
+import { expectListedAgent } from './agents';
 import { Given, Then, When } from './fixtures';
 import { sessionRow } from './live-session';
 
@@ -6,9 +7,7 @@ const parentTitle = 'Delegate the investigation';
 
 const childTitle = 'Review delegated work';
 
-Given('Agent 1 delegates work through the argo CLI', () => {
-  // scenarioAgents supplies the external fixture Agent before the App starts.
-});
+Given('Agent {int} delegates work through the argo CLI', expectListedAgent);
 
 When('I return from the Session detail', async ({ page }) => {
   await page.getByRole('link', { name: 'Sessions, back' }).click();

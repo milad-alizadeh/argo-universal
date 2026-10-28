@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { openDatabase } from '@repo/db';
 import { project } from '@repo/db/schema';
 import { composeEngine } from '@repo/engine/compose';
@@ -72,6 +73,7 @@ for (const identity of fixtureAgents) {
 seed.$client.close();
 
 const engine = composeEngine({
+  cliEntry: fileURLToPath(new URL('../../cli/bin/argo.mjs', import.meta.url)),
   home,
   port,
   version,

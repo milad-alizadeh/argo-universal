@@ -1,6 +1,6 @@
 import { permissionOptions, type PendingPermission } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import type { FeedActorRef } from '../feed';
+import { nativePermissionOutcomeEvent, type FeedActorRef } from '../feed';
 import { nativePermissionEvent } from './native-permissions';
 import type { SessionOperationCall } from './operation-call';
 import { canConfirmOperation } from './operation-turn';
@@ -73,19 +73,10 @@ function publishOutcome(
   call: Pick<SessionOperationCall, 'rowId' | 'turnId'>,
   optionId: string | null,
 ): void {
-  const option = permissionOptions.find((item) => item.optionId === optionId);
-
-  const permissionOutcome = option
-    ? { outcome: 'selected' as const, ...option }
-    : { outcome: 'cancelled' as const };
-
   feed.send({
-    type: 'feed.change',
+    type: nativePermissionOutcomeEvent,
     turnId: call.turnId,
-    change: {
-      type: 'patch',
-      id: call.rowId,
-      set: { _meta: { argo: { permissionOutcome } } },
-    },
+    rowId: call.rowId,
+    option: permissionOptions.find((item) => item.optionId === optionId),
   });
 }

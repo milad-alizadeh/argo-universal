@@ -93,14 +93,13 @@ type PermissionOutcome =
   | { outcome: 'cancelled' }
   | ({ outcome: 'selected' } & PermissionOption);
 
-// Permission outcomes use the ACP-scoped Tool call identity.
-const permissionOutcomeChange = (
-  acpSessionId: string,
-  toolCallId: string,
+// Both Agent and native Permission outcomes patch their Feed Tool call.
+export const permissionOutcomeChange = (
+  rowId: string,
   permissionOutcome: PermissionOutcome,
 ): FeedChange => ({
   type: 'patch',
-  id: acpToolCallRowId(acpSessionId, toolCallId),
+  id: rowId,
   set: { _meta: { argo: { permissionOutcome } } },
 });
 
@@ -108,15 +107,20 @@ export const cancelledPermissionOutcome = (
   acpSessionId: string,
   toolCallId: string,
 ): FeedChange =>
-  permissionOutcomeChange(acpSessionId, toolCallId, { outcome: 'cancelled' });
+  permissionOutcomeChange(acpToolCallRowId(acpSessionId, toolCallId), {
+    outcome: 'cancelled',
+  });
 
 export const selectedPermissionOutcome = (
   event: PermissionSelectedEvent,
 ): FeedChange =>
-  permissionOutcomeChange(event.acpSessionId, event.toolCallId, {
-    outcome: 'selected',
-    ...event.option,
-  });
+  permissionOutcomeChange(
+    acpToolCallRowId(event.acpSessionId, event.toolCallId),
+    {
+      outcome: 'selected',
+      ...event.option,
+    },
+  );
 
 export const endingFeedChanges = (
   sessionId: string,

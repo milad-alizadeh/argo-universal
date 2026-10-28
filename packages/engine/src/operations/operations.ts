@@ -25,7 +25,6 @@ import {
   type OperationRunResult,
 } from './implementations';
 import { isNativeStartOperation } from './native-user-starts';
-import type { OperationInput } from './params';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
 import { scopedOperations, runSessionOperation } from './session-scope';
@@ -149,11 +148,8 @@ export class Operations {
 
     return this.deps.sessionTokens.require(token);
   }
-  public runApp<Id extends OperationId>(
-    id: Id,
-    params: OperationInput,
-  ): Promise<OperationResult<Id>> {
-    return runOperation(this.implementations, id, params);
+  public runApp<Id extends OperationId>(id: Id): OperationImplementations[Id] {
+    return this.implementations[id];
   }
 }
 

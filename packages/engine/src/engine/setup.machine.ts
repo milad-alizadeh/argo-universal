@@ -68,6 +68,7 @@ export interface EngineInput extends Pick<
   'now' | 'createId'
 > {
   home: string;
+  cliEntry: string;
   userHome?: string;
   port: number;
   version: string;

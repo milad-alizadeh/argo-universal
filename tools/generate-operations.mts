@@ -25,7 +25,7 @@ const routers = nouns
       .map(({ id, tier }) => {
         const verb = id.split('.')[1];
 
-        return `'${verb}': publicProcedure.input(operations['${id}'].params).output(operations['${id}'].result).${tier === 'read' ? 'query' : 'mutation'}(({ input }) => engine.runApp('${id}', input)),`;
+        return `'${verb}': publicProcedure.input(operations['${id}'].params).output(operations['${id}'].result).${tier === 'read' ? 'query' : 'mutation'}(({ input }) => engine.runApp('${id}')(input)),`;
       })
       .join('\n');
 

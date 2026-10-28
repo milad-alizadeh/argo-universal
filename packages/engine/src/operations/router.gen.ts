@@ -167,153 +167,153 @@ export function generatedOperations(engine: Operations) {
       getAccess: publicProcedure
         .input(operations['agent.getAccess'].params)
         .output(operations['agent.getAccess'].result)
-        .query(({ input }) => engine.runApp('agent.getAccess', input)),
+        .query(({ input }) => engine.runApp('agent.getAccess')(input)),
       setAccess: publicProcedure
         .input(operations['agent.setAccess'].params)
         .output(operations['agent.setAccess'].result)
-        .mutation(({ input }) => engine.runApp('agent.setAccess', input)),
+        .mutation(({ input }) => engine.runApp('agent.setAccess')(input)),
       installInstructions: publicProcedure
         .input(operations['agent.installInstructions'].params)
         .output(operations['agent.installInstructions'].result)
         .mutation(({ input }) =>
-          engine.runApp('agent.installInstructions', input),
+          engine.runApp('agent.installInstructions')(input),
         ),
       list: publicProcedure
         .input(operations['agent.list'].params)
         .output(operations['agent.list'].result)
-        .query(({ input }) => engine.runApp('agent.list', input)),
+        .query(({ input }) => engine.runApp('agent.list')(input)),
       install: publicProcedure
         .input(operations['agent.install'].params)
         .output(operations['agent.install'].result)
-        .mutation(({ input }) => engine.runApp('agent.install', input)),
+        .mutation(({ input }) => engine.runApp('agent.install')(input)),
       remove: publicProcedure
         .input(operations['agent.remove'].params)
         .output(operations['agent.remove'].result)
-        .mutation(({ input }) => engine.runApp('agent.remove', input)),
+        .mutation(({ input }) => engine.runApp('agent.remove')(input)),
     }),
     session: router({
       diff: publicProcedure
         .input(operations['session.diff'].params)
         .output(operations['session.diff'].result)
-        .query(({ input }) => engine.runApp('session.diff', input)),
+        .query(({ input }) => engine.runApp('session.diff')(input)),
       changes: publicProcedure
         .input(operations['session.changes'].params)
         .output(operations['session.changes'].result)
-        .query(({ input }) => engine.runApp('session.changes', input)),
+        .query(({ input }) => engine.runApp('session.changes')(input)),
       feed: publicProcedure
         .input(operations['session.feed'].params)
         .output(operations['session.feed'].result)
-        .query(({ input }) => engine.runApp('session.feed', input)),
+        .query(({ input }) => engine.runApp('session.feed')(input)),
       get: publicProcedure
         .input(operations['session.get'].params)
         .output(operations['session.get'].result)
-        .query(({ input }) => engine.runApp('session.get', input)),
+        .query(({ input }) => engine.runApp('session.get')(input)),
       list: publicProcedure
         .input(operations['session.list'].params)
         .output(operations['session.list'].result)
-        .query(({ input }) => engine.runApp('session.list', input)),
+        .query(({ input }) => engine.runApp('session.list')(input)),
       listAgents: publicProcedure
         .input(operations['session.listAgents'].params)
         .output(operations['session.listAgents'].result)
-        .query(({ input }) => engine.runApp('session.listAgents', input)),
+        .query(({ input }) => engine.runApp('session.listAgents')(input)),
       listShells: publicProcedure
         .input(operations['session.listShells'].params)
         .output(operations['session.listShells'].result)
-        .query(({ input }) => engine.runApp('session.listShells', input)),
+        .query(({ input }) => engine.runApp('session.listShells')(input)),
       listBranches: publicProcedure
         .input(operations['session.listBranches'].params)
         .output(operations['session.listBranches'].result)
-        .query(({ input }) => engine.runApp('session.listBranches', input)),
+        .query(({ input }) => engine.runApp('session.listBranches')(input)),
       new: publicProcedure
         .input(operations['session.new'].params)
         .output(operations['session.new'].result)
-        .mutation(({ input }) => engine.runApp('session.new', input)),
+        .mutation(({ input }) => engine.runApp('session.new')(input)),
       prompt: publicProcedure
         .input(operations['session.prompt'].params)
         .output(operations['session.prompt'].result)
-        .mutation(({ input }) => engine.runApp('session.prompt', input)),
+        .mutation(({ input }) => engine.runApp('session.prompt')(input)),
       cancel: publicProcedure
         .input(operations['session.cancel'].params)
         .output(operations['session.cancel'].result)
-        .mutation(({ input }) => engine.runApp('session.cancel', input)),
+        .mutation(({ input }) => engine.runApp('session.cancel')(input)),
       archive: publicProcedure
         .input(operations['session.archive'].params)
         .output(operations['session.archive'].result)
-        .mutation(({ input }) => engine.runApp('session.archive', input)),
+        .mutation(({ input }) => engine.runApp('session.archive')(input)),
       unarchive: publicProcedure
         .input(operations['session.unarchive'].params)
         .output(operations['session.unarchive'].result)
-        .mutation(({ input }) => engine.runApp('session.unarchive', input)),
+        .mutation(({ input }) => engine.runApp('session.unarchive')(input)),
       setConfigOption: publicProcedure
         .input(operations['session.setConfigOption'].params)
         .output(operations['session.setConfigOption'].result)
         .mutation(({ input }) =>
-          engine.runApp('session.setConfigOption', input),
+          engine.runApp('session.setConfigOption')(input),
         ),
       close: publicProcedure
         .input(operations['session.close'].params)
         .output(operations['session.close'].result)
-        .mutation(({ input }) => engine.runApp('session.close', input)),
+        .mutation(({ input }) => engine.runApp('session.close')(input)),
       savePlan: publicProcedure
         .input(operations['session.savePlan'].params)
         .output(operations['session.savePlan'].result)
-        .mutation(({ input }) => engine.runApp('session.savePlan', input)),
+        .mutation(({ input }) => engine.runApp('session.savePlan')(input)),
       rename: publicProcedure
         .input(operations['session.rename'].params)
         .output(operations['session.rename'].result)
-        .mutation(({ input }) => engine.runApp('session.rename', input)),
+        .mutation(({ input }) => engine.runApp('session.rename')(input)),
     }),
     project: router({
       listBranches: publicProcedure
         .input(operations['project.listBranches'].params)
         .output(operations['project.listBranches'].result)
-        .query(({ input }) => engine.runApp('project.listBranches', input)),
+        .query(({ input }) => engine.runApp('project.listBranches')(input)),
       list: publicProcedure
         .input(operations['project.list'].params)
         .output(operations['project.list'].result)
-        .query(({ input }) => engine.runApp('project.list', input)),
+        .query(({ input }) => engine.runApp('project.list')(input)),
     }),
     shell: router({
       stop: publicProcedure
         .input(operations['shell.stop'].params)
         .output(operations['shell.stop'].result)
-        .mutation(({ input }) => engine.runApp('shell.stop', input)),
+        .mutation(({ input }) => engine.runApp('shell.stop')(input)),
     }),
     plugin: router({
       list: publicProcedure
         .input(operations['plugin.list'].params)
         .output(operations['plugin.list'].result)
-        .query(({ input }) => engine.runApp('plugin.list', input)),
+        .query(({ input }) => engine.runApp('plugin.list')(input)),
       activate: publicProcedure
         .input(operations['plugin.activate'].params)
         .output(operations['plugin.activate'].result)
-        .mutation(({ input }) => engine.runApp('plugin.activate', input)),
+        .mutation(({ input }) => engine.runApp('plugin.activate')(input)),
       setEnabled: publicProcedure
         .input(operations['plugin.setEnabled'].params)
         .output(operations['plugin.setEnabled'].result)
-        .mutation(({ input }) => engine.runApp('plugin.setEnabled', input)),
+        .mutation(({ input }) => engine.runApp('plugin.setEnabled')(input)),
       getSettings: publicProcedure
         .input(operations['plugin.getSettings'].params)
         .output(operations['plugin.getSettings'].result)
-        .query(({ input }) => engine.runApp('plugin.getSettings', input)),
+        .query(({ input }) => engine.runApp('plugin.getSettings')(input)),
       setSetting: publicProcedure
         .input(operations['plugin.setSetting'].params)
         .output(operations['plugin.setSetting'].result)
-        .mutation(({ input }) => engine.runApp('plugin.setSetting', input)),
+        .mutation(({ input }) => engine.runApp('plugin.setSetting')(input)),
     }),
     registry: router({
       get: publicProcedure
         .input(operations['registry.get'].params)
         .output(operations['registry.get'].result)
-        .query(({ input }) => engine.runApp('registry.get', input)),
+        .query(({ input }) => engine.runApp('registry.get')(input)),
       refresh: publicProcedure
         .input(operations['registry.refresh'].params)
         .output(operations['registry.refresh'].result)
-        .mutation(({ input }) => engine.runApp('registry.refresh', input)),
+        .mutation(({ input }) => engine.runApp('registry.refresh')(input)),
       sync: publicProcedure
         .input(operations['registry.sync'].params)
         .output(operations['registry.sync'].result)
-        .mutation(({ input }) => engine.runApp('registry.sync', input)),
+        .mutation(({ input }) => engine.runApp('registry.sync')(input)),
     }),
   };
 }
