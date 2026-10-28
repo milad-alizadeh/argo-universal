@@ -44,7 +44,17 @@ export const contentListProps = z.object({
       'App filters loaded rows; plugin receives throttled search text.',
     ),
   onSearchTextChange: handler('onSearchTextChange').optional(),
-  layout: z.enum(['list', 'grid']).optional().describe('Rows or media tiles.'),
+  layout: z
+    .enum(['list', 'grid', 'lanes'])
+    .optional()
+    .describe(
+      'Rows, media tiles, or lanes: each Section a column, side by side, on a wide desktop or web window; phones draw lanes as ordinary sections.',
+    ),
+  onMove: handler('onMove')
+    .optional()
+    .describe(
+      'Turns moving on: a row with an id moves within and between Sections by drag, long press and drag on phones, or its Move Actions. Reports where it lands; the List redraws when the rows change.',
+    ),
   direction: z
     .enum(['vertical', 'horizontal'])
     .optional()
@@ -86,7 +96,24 @@ export const contentListProps = z.object({
 // A row press never holds the row disabled while the Plugin answers.
 export const rowPress = z.undefined().meta({ blocks: false });
 
+// Where a moved row lands: the row, the Section it lands in, and its index among that Section's rows once moved.
+export const listMoveProps = z.object({
+  id: z.string().describe('The moved row id.'),
+  section: z
+    .string()
+    .optional()
+    .describe(
+      'The id of the Section it lands in; absent for rows outside any Section.',
+    ),
+  index: z
+    .number()
+    .int()
+    .nonnegative()
+    .describe("Its index among that Section's rows after the move."),
+});
+
 export const listSectionProps = z.object({
+  id: z.string().optional().describe('The Section identity a move reports.'),
   selectionMode: z
     .enum(['single', 'multiple'])
     .optional()

@@ -40,6 +40,32 @@ export const runListRoot: WireNode = {
   ],
 };
 
+const card = (id: string, title: string): WireNode =>
+  node('ListItem', id, { id, title, onPress: { $event: 'onPress' } });
+
+const lane = (id: string, title: string, cards: WireNode[]): WireNode => ({
+  ...node('List.Section', id, { id, title }),
+  children: cards,
+});
+
+// A board: each Section is a lane, side by side on a wide window; its rows move by drag and by their Move Actions.
+export const boardListRoot: WireNode = {
+  ...node('List', 'board', {
+    accessibilityLabel: 'Board',
+    layout: 'lanes',
+    appearance: 'cards',
+    onMove: { $event: 'onMove' },
+  }),
+  children: [
+    lane('todo', 'To do', [
+      card('login', 'Fix login'),
+      card('docs', 'Write docs'),
+    ]),
+    lane('doing', 'Doing', [card('search', 'Add search')]),
+    lane('done', 'Done', []),
+  ],
+};
+
 export const emptyRunListRoot: WireNode = {
   ...node('List', 'empty-runs'),
   slots: {

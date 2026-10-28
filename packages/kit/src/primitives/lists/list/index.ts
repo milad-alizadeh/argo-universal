@@ -2,6 +2,8 @@ export { List } from './list';
 
 export { useListItemGroup } from './list-item-grouping';
 
+export { useMoveActions } from './list-move-actions';
+
 export { NativeGroupedList } from './list-native-grouped';
 
 export { ListSection } from './list-section';

@@ -1,7 +1,7 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
-import { useListItemGroup } from '#primitives/lists/list';
+import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
 import {
   ListSelectionContext,
   ListTileContext,
@@ -74,7 +74,7 @@ function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
   const { context, footer } = useListItemGroup(props.description);
-  const actions = useContentItemActions(props);
+  const actions = useMoveActions(props.id, useContentItemActions(props));
 
   return (
     <ContextActions actions={actions} menu={props.contextMenu}>

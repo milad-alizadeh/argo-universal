@@ -12,12 +12,14 @@ import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { ListBehaviours } from './list-behaviours';
 import { childIdentity } from './list-child-identity';
-import { usePreparedChildren } from './list-children';
+import { drawsLanes, usePreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import { childRenderer, ListGrouping } from './list-grouping';
 import { ListKeyboard } from './list-keyboard';
+import { SectionLanes } from './list-lanes';
 import { ListMenuRows } from './list-menu-rows';
+import { MovableList } from './list-moves';
 import { NativeGroupedList } from './list-native-grouped';
 import { asksNothingNativeLacks, holdsNativeRows } from './list-native-rows';
 import type { ListProps } from './list-props';
@@ -78,7 +80,7 @@ function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
 
-  if (prepared.items.length === 0 && !prepared.shelves)
+  if (prepared.items.length === 0 && !prepared.shelves && !prepared.lanes)
     return <ListEmpty {...props} />;
 
   return (
@@ -94,11 +96,15 @@ function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
 function ChildDataList({
   blocks,
   shelves,
+  lanes,
   ...props
 }: Omit<ChildDataProps, 'renderItem'> & {
   blocks: ListBlock[];
   shelves: boolean;
+  lanes: boolean;
 }): ReactElement {
+  if (lanes) return <SectionLanes blocks={blocks} />;
+
   if (shelves)
     return <SectionShelves {...props} {...childDrawing} blocks={blocks} />;
 
@@ -123,7 +129,7 @@ const drawsNatively = (look: ListLook, props: ListProps<never>): boolean =>
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   const look = useListLook();
 
-  if (props.items !== undefined) return <DataList {...props} />;
+  if (props.items !== undefined) return <DataList {...withoutMoves(props)} />;
 
   if (drawsNatively(look, props))
     return (
@@ -132,11 +138,41 @@ function ListRows<Item>(props: ListProps<Item>): ReactElement {
       </NativeGroupedList>
     );
 
+  if (props.onMove)
+    return (
+      <MovableList
+        onMove={props.onMove}
+        lanes={drawsLanes(props.layout, look)}
+        listRef={props.ref}
+        render={(children, ref) => (
+          <ChildRows {...props} ref={ref}>
+            {children}
+          </ChildRows>
+        )}
+      >
+        {props.children}
+      </MovableList>
+    );
+
+  return <ChildRows {...props} />;
+}
+
+function ChildRows<Item>(props: ListProps<Item>): ReactElement {
   return (
     <ListKeyboard fit={props.fit}>
       <ChildrenList {...childrenOptions(props)} />
     </ListKeyboard>
   );
+}
+
+// Only a List of children moves its rows: an `items` List draws rows its `renderItem` makes, with no ids to move.
+function withoutMoves<Item>(props: ListProps<Item>): ListProps<Item> {
+  if (props.onMove && process.env.NODE_ENV !== 'production')
+    console.error(
+      'List: `onMove` moves rows passed as children; a List of `items` cannot move its rows.',
+    );
+
+  return props;
 }
 
 const useLook = <Item,>(props: ListProps<Item>): ListLook =>

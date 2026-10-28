@@ -3,6 +3,7 @@ import { flattenedChildren } from '../../../flattened-children';
 import { listPosition } from '../../../list-context';
 import type { ListChild } from './list-children';
 import type { ListSectionProps } from './list-props';
+import { rowIdOf } from './list-row-id';
 import { ListSection } from './list-section';
 import { prepareSection, type SectionState } from './list-section-state';
 import {
@@ -138,6 +139,7 @@ function placedChild(
     child,
     entry: {
       key,
+      rowId: rowIdOf(child),
       content,
       position: listPosition(index === 0, index === count - 1),
     },

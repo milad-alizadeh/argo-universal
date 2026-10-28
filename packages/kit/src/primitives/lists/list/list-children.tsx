@@ -1,5 +1,6 @@
 import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
 import type { ListPosition, ListSelection } from '../../../list-context';
+import type { ListLook } from '../../../list-look';
 import { useListLook } from '../../../list-look-context';
 import type { ChildrenOptions } from './list-children-options';
 import { sectionEntries, menuEntries } from './list-section-entries';
@@ -12,6 +13,8 @@ import type { TreeFolding } from './list-tree-rows';
 
 export interface ListChild extends ListSelection {
   key: string;
+  // The row's own `id`, which a move reports.
+  rowId?: string;
   fullSpan?: boolean;
   content: ReactNode;
   position: ListPosition;
@@ -21,20 +24,33 @@ interface PreparedChildren {
   blocks: ListBlock[];
   items: ListChild[];
   shelves: boolean;
+  lanes: boolean;
 }
 
+// Lanes are drawn only where a tree is: on a wide desktop or web window, outside a menu. Elsewhere the Sections stack as a List's do.
+export const drawsLanes = (
+  layout: ChildrenOptions['layout'],
+  look: Pick<ListLook, 'treeDrawn'>,
+): boolean => layout === 'lanes' && look.treeDrawn;
+
 export function usePreparedChildren(props: ChildrenOptions): PreparedChildren {
-  const { menu } = useListLook();
+  const look = useListLook();
   const blocks = useChildBlocks(props.children);
 
   const shelves = hasShelves(props, blocks);
+  const lanes = drawsLanes(props.layout, look) && hasSections(blocks);
 
   const entries = useMemo(
-    () => (shelves ? [] : sectionEntries(blocks)),
-    [blocks, shelves],
+    () => (shelves || lanes ? [] : sectionEntries(blocks)),
+    [blocks, shelves, lanes],
   );
 
-  return { blocks, shelves, items: menu ? menuEntries(entries) : entries };
+  return {
+    blocks,
+    shelves,
+    lanes,
+    items: look.menu ? menuEntries(entries) : entries,
+  };
 }
 
 const noneFolded: ReadonlySet<string> = new Set();
@@ -71,9 +87,9 @@ function useChildBlocks(children: ReactNode): ListBlock[] {
   );
 }
 
+const hasSections = (blocks: ListBlock[]): boolean =>
+  blocks.some((block) => block.kind === 'section');
+
 function hasShelves(props: ChildrenOptions, blocks: ListBlock[]): boolean {
-  return (
-    props.direction === 'horizontal' &&
-    blocks.some((block) => block.kind === 'section')
-  );
+  return props.direction === 'horizontal' && hasSections(blocks);
 }

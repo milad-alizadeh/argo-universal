@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   type Dispatch,
   type ReactElement,
@@ -122,4 +123,20 @@ function holding(row: RowHighlightHandlers, mark: Mark): RowHighlightHandlers {
       row.onPressOut?.(event);
     },
   };
+}
+
+// A lifted row keeps the separators either side of its slot covered while it is dragged, as a held row's tint does.
+export function useLiftedRowMark(lifted: boolean): void {
+  const setHighlighted = useContext(SetHighlightedRow);
+  const { rowHighlight } = useListLook();
+  const { index } = useContext(RowPositionContext);
+  const marks = lifted && rowHighlight === 'press' ? setHighlighted : undefined;
+
+  useEffect(() => {
+    if (!marks) return;
+
+    marks(index);
+
+    return () => marks(undefined);
+  }, [marks, index]);
 }

@@ -1,12 +1,16 @@
 import type { ReactNode } from 'react';
 import type { ListSelection } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
+import { SectionMoveZone } from './list-move-zone';
 import type { ListSectionProps } from './list-props';
 import { hasSectionHeader } from './list-section-actions';
 import { SectionHeader } from './list-section-parts';
 
 export interface SectionState {
   key: string;
+  // The Section's own `id`, which a move reports.
+  id?: string;
+  title?: string;
   children: ReactNode;
   selection: ListSelection;
   header: ReactNode;
@@ -21,9 +25,15 @@ export function prepareSection(
 ): SectionState {
   return {
     key,
+    id: props.id,
+    title: props.title,
     children: props.isExpanded === false ? null : props.children,
     selection: sectionSelection(props),
-    header: hasSectionHeader(props) ? <SectionHeader {...props} /> : null,
+    header: hasSectionHeader(props) ? (
+      <SectionMoveZone section={props.id}>
+        <SectionHeader {...props} />
+      </SectionMoveZone>
+    ) : null,
     footer: sectionFooter(props, key, footerShown),
   };
 }

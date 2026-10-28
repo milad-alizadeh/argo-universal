@@ -15,6 +15,7 @@ import {
   type Argo,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { HelloBoard } from './board';
 import { HelloCanvasPage } from './canvas';
 import { HelloDashboard } from './dashboard';
 import { HelloDemos } from './demos';
@@ -149,4 +150,5 @@ function registerListPages(argo: Argo): void {
   argo.pages.register('/canvas', HelloCanvasPage);
   argo.pages.register('/posts', helloPosts(argo.fetch));
   argo.pages.register('/log', HelloLog);
+  argo.pages.register('/board', HelloBoard);
 }

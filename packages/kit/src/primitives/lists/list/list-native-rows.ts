@@ -21,6 +21,7 @@ const unhonouredProps = [
   'accessibilityLabel',
   'padding',
   'maxHeight',
+  'onMove',
 ] as const satisfies (keyof ListProps<never>)[];
 
 export const asksNothingNativeLacks = (props: ListProps<never>): boolean =>
