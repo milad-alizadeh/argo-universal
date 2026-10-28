@@ -25,6 +25,10 @@ const lanes: readonly BoardLane[] = Array.from({ length: 8 }, (_, lane) => ({
 
 const onLoadMore = fn((): Promise<void> => Promise.resolve());
 
+const onScroll = fn();
+
+const boardTestId = 'sprint-board';
+
 const headerText = 'Sprint board';
 
 const footerText = 'Cards sync every minute';
@@ -35,6 +39,7 @@ function pagedBoard(play: Story['play']): Story {
   return {
     beforeEach: async () => {
       onLoadMore.mockClear();
+      onScroll.mockClear();
       await settleLayout('wide');
     },
     render: () => (
@@ -45,6 +50,8 @@ function pagedBoard(play: Story['play']): Story {
         footer={footerText}
         pagination={{ hasMore: true, onLoadMore }}
         ref={boardRef}
+        testID={boardTestId}
+        onScroll={onScroll}
       />
     ),
     play,
@@ -92,5 +99,26 @@ export const TheListsRefScrollsTheBoard = pagedBoard(
     ref.scrollTo({ x: 200, animated: false });
 
     await waitFor(() => expect(scroller.scrollLeft).toBe(200));
+  },
+);
+
+// The board takes the List's test id.
+export const TheBoardTakesTheListsTestId = pagedBoard(
+  async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByTestId(boardTestId),
+    ).toHaveAccessibleName(board.accessibilityLabel);
+  },
+);
+
+// The List's own onScroll hears the board scroll sideways.
+export const TheListsOnScrollHearsTheBoard = pagedBoard(
+  async ({ canvasElement }) => {
+    const scroller = within(canvasElement).getByTestId(boardTestId);
+
+    scroller.scrollLeft = 200;
+    scroller.dispatchEvent(new Event('scroll'));
+
+    await waitFor(() => expect(onScroll).toHaveBeenCalled());
   },
 );

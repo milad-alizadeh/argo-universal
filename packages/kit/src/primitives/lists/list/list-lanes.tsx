@@ -6,7 +6,13 @@ import {
   type ReactElement,
   type RefObject,
 } from 'react';
-import { View, type ViewInstance } from 'react-native';
+import {
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type ScrollViewProps,
+  type ViewInstance,
+} from 'react-native';
 import { OutsideColumn } from '../../../content-column/content-column';
 import { useBoardEnd } from './list-board-end';
 import { legendScroller } from './list-column-scroll';
@@ -15,7 +21,7 @@ import type { MeasureZone } from './list-drag-measure';
 import { DragScrollView } from './list-drag-scroll-view';
 import { measureView } from './list-geometry';
 import { ListHeader } from './list-header';
-import { LaneRows } from './list-lane-rows';
+import { LaneRows, type LaneScroll } from './list-lane-rows';
 import { useListMoves } from './list-move-context';
 import { sectionKey, type SectionKey } from './list-move-model';
 import { useMoveOrder } from './list-move-order';
@@ -73,12 +79,14 @@ function useLaneDrag(key: SectionKey, views: LaneViews): void {
   }, [drag, moving, key, views]);
 }
 
-interface LaneBodyProps {
+interface LaneProps {
   lane: Lane;
-  laneRef: RefObject<ViewInstance | null>;
+  scroll: LaneScroll;
 }
 
-function LaneBody({ lane, laneRef }: LaneBodyProps): ReactElement {
+type LaneBodyProps = LaneProps & { laneRef: RefObject<ViewInstance | null> };
+
+function LaneBody({ lane, laneRef, scroll }: LaneBodyProps): ReactElement {
   const bodyRef = useRef<ViewInstance>(null);
   const listRef = useRef<LegendListRef>(null);
 
@@ -91,7 +99,7 @@ function LaneBody({ lane, laneRef }: LaneBodyProps): ReactElement {
 
   return (
     <View ref={bodyRef} collapsable={false} className="min-h-0 grow">
-      <LaneRows lane={lane} listRef={listRef} />
+      <LaneRows lane={lane} listRef={listRef} scroll={scroll} />
     </View>
   );
 }
@@ -100,7 +108,7 @@ function LaneBody({ lane, laneRef }: LaneBodyProps): ReactElement {
 const namedGroup = (title: string | undefined) =>
   ({ role: 'group', accessibilityLabel: title }) as const;
 
-function BoardLane({ lane }: { lane: Lane }): ReactElement {
+function BoardLane({ lane, scroll }: LaneProps): ReactElement {
   const laneRef = useRef<ViewInstance>(null);
 
   return (
@@ -111,15 +119,17 @@ function BoardLane({ lane }: { lane: Lane }): ReactElement {
       className="w-72 shrink-0 pb-4"
     >
       {lane.header}
-      <LaneBody lane={lane} laneRef={laneRef} />
+      <LaneBody lane={lane} laneRef={laneRef} scroll={scroll} />
       {lane.footer}
     </View>
   );
 }
 
-const boardLane = (lane: Lane): ReactElement => (
-  <BoardLane key={lane.key} lane={lane} />
-);
+const boardLane =
+  (scroll: LaneScroll) =>
+  (lane: Lane): ReactElement => (
+    <BoardLane key={lane.key} lane={lane} scroll={scroll} />
+  );
 
 type LanesProps = ChildDataProps & {
   blocks: ListBlock[];
@@ -127,26 +137,55 @@ type LanesProps = ChildDataProps & {
   looseKey: string;
 };
 
+type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
 const boardLook = {
   className: 'min-h-0 grow',
   contentContainerClassName: 'gap-4 px-4',
 } as const;
 
+// Each lane's list fades at its own top and bottom, and keeps the List's keyboard props.
+const laneScroll = (list: ChildDataProps): LaneScroll => ({
+  edges: list.edges,
+  keyboardDismissMode: list.keyboardDismissMode,
+  keyboardShouldPersistTaps: list.keyboardShouldPersistTaps,
+});
+
+/*
+ * The board's own ScrollView keeps the List's test id and keyboard props. It takes no `refreshControl`: React Native's
+ * ScrollView pulls to refresh only when it scrolls up and down, and the board scrolls sideways. It draws no edge fade, so
+ * `edges` goes to each lane.
+ */
+const boardScroll = (list: ChildDataProps): ScrollViewProps => ({
+  testID: list.testID,
+  keyboardDismissMode: list.keyboardDismissMode,
+  keyboardShouldPersistTaps: list.keyboardShouldPersistTaps,
+});
+
+// The List's own `onScroll` hears the board scroll sideways, after the board checks for its end.
+function useBoardScrolled(list: ChildDataProps): OnScroll {
+  const ended = useBoardEnd(list);
+
+  return (event) => {
+    ended(event);
+    list.onScroll?.(event);
+  };
+}
+
 // The board itself, named as the List is, which calls the List's `onEndReached` as it scrolls to its end.
 function Board({ blocks, looseKey, ...list }: LanesProps): ReactElement {
   const lanes = useMemo(() => lanesOf(blocks, looseKey), [blocks, looseKey]);
-
-  const onScroll = useBoardEnd(list);
 
   return (
     <DragScrollView
       horizontal
       listRef={list.ref}
       aria-label={list.accessibilityLabel}
-      onScroll={onScroll}
+      onScroll={useBoardScrolled(list)}
+      {...boardScroll(list)}
       {...boardLook}
     >
-      <OutsideColumn>{lanes.map(boardLane)}</OutsideColumn>
+      <OutsideColumn>{lanes.map(boardLane(laneScroll(list)))}</OutsideColumn>
     </DragScrollView>
   );
 }
