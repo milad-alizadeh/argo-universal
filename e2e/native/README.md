@@ -16,6 +16,16 @@ The slider row still exposes its headline "Effort" and value "Medium" as nodes b
 
 The "Markdown" prompt clamps to four lines. The flow taps its Show more and expects it to go, which holds only when the clipped markdown leaves Show more uncovered. Clipped lines still count as visible to Maestro, so the flow checks Show more rather than the hidden text.
 
+# Lists, Sessions and Settings
+
+`list-row-moves.yaml`, `session-list-rows.yaml` and `settings-list-rows.yaml` open their stories in the App's native Storybook through its `argo://storybook` link, so no Server runs. With Metro and the development client running, run `maestro --device <device-id> test e2e/native/<flow>.yaml`.
+
+- `list-row-moves.yaml` holds a row of **Lists → List → Moves → Column** until its menu opens, checks the menu offers Move to…, and expects Move down to draw the row under the next one.
+- `session-list-rows.yaml` checks the Sessions list draws its Project heading and rows, and scrolls the last row into view.
+- `settings-list-rows.yaml` checks the Settings list draws its root sections and scrolls to Appearance.
+
+On iOS, `session-list-rows.yaml` fails: a Session row exposes none of its text to XCUITest, so Maestro finds only the Project heading. Android passes all three.
+
 # Plugin page tap
 
 `plugin-hello-tap.yaml` runs on iOS or Android against a real Server that loads the first-party `hello` Plugin, with the App on the phone Sessions list. Start the Server and Metro, open the development client, then run `maestro --device <device-id> test e2e/native/plugin-hello-tap.yaml`.
