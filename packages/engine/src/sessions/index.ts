@@ -111,7 +111,12 @@ export { archiveSession } from './archive/archive-commands';
 
 export { type SessionWorkWatcher } from './work-watcher';
 
-export { createSessionWorkSource, type SessionWorkSource } from './work-source';
+export {
+  createSessionWorkSource,
+  type SessionWork,
+  type SessionWorkRead,
+  type SessionWorkSource,
+} from './work-source';
 
 export {
   createSessionDirectory,

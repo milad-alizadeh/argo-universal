@@ -3,7 +3,11 @@ import type {
   OperationExecution,
   OperationWorkTarget,
 } from '@repo/contracts/operations';
-import type { OperationCallRead, SessionWorkSource } from '../sessions';
+import type {
+  OperationCallRead,
+  SessionWorkRead,
+  SessionWorkSource,
+} from '../sessions';
 import type { OperationCaller } from './session-tokens';
 import type { NativeWork, WaitIds } from './wait-id';
 import { operationExecution } from './work-call-result';
@@ -17,48 +21,50 @@ type Context = {
 
 type Target = { id: string; work: NativeWork };
 
+type TurnRead = Extract<SessionWorkRead, { kind: 'turn' }>;
+
+type CreationRead = Extract<SessionWorkRead, { kind: 'creation' }>['creation'];
+
 export function readOperationWork(
   context: Context,
   target: Target,
 ): WorkObservation {
-  if (target.work.kind === 'turn') return readTurn(context, target);
+  const read = context.source.read(target.work);
 
-  if (target.work.kind === 'creation') return readCreation(context, target);
+  if (read.kind === 'turn') return turnObservation(target, read);
 
-  return readCall(context, target);
+  if (read.kind === 'creation')
+    return readCreation(context, target, read.creation);
+
+  return readCall(context, target, read.call);
 }
 
-function readCall(context: Context, { id, work }: Target): WorkObservation {
-  const value = context.source.call(work.sessionId, work.entityId);
-
-  requireCallResult(value);
-
-  return linkedCall(context, { id, work }, value);
-}
-
-function requireCallResult(value: OperationCallRead): void {
-  if (value.error) throw new Error(value.error);
-}
-
-function linkedCall(
+function readCall(
   context: Context,
   { id, work }: Target,
   value: OperationCallRead,
 ): WorkObservation {
+  requireCallResult(value);
+
   if (!value.cancelled && value.work)
     return readOperationWork(context, linkedTarget(context, value.work));
 
   return observation(operationExecution(id, value), work);
 }
 
-function readTurn({ source }: Context, { id, work }: Target): WorkObservation {
-  const turn = source.turn(work.sessionId, work.entityId);
+function requireCallResult(value: OperationCallRead): void {
+  if (value.error) throw new Error(value.error);
+}
 
+function turnObservation(
+  { id, work }: Target,
+  { turn, requiresInput }: TurnRead,
+): WorkObservation {
   return observation(
     {
       kind: 'operation_execution',
       id,
-      status: turnStatus(source, turn),
+      status: turnStatus(turn, requiresInput),
       turn,
       result: { sessionId: work.sessionId },
     },
@@ -67,26 +73,24 @@ function readTurn({ source }: Context, { id, work }: Target): WorkObservation {
 }
 
 function turnStatus(
-  source: SessionWorkSource,
   turn: Turn,
+  requiresInput: boolean,
 ): OperationExecution['status'] {
   if (turn.status === 'ended') return 'settled';
 
-  return source.turnRequiresInput(turn.sessionId, turn.id)
-    ? 'waiting_for_user'
-    : 'still_running';
+  return requiresInput ? 'waiting_for_user' : 'still_running';
 }
 
-function readCreation(context: Context, target: Target): WorkObservation {
-  const { id, work } = target;
+function readCreation(
+  context: Context,
+  target: Target,
+  creation: CreationRead,
+): WorkObservation {
+  if (creation.status === 'failed') throw new Error(creation.message);
 
-  const receipt = context.source.creation(work.sessionId, work.entityId);
+  if (creation.status === 'opening') return opening(target);
 
-  if (receipt.status === 'failed') throw new Error(receipt.message);
-
-  if (receipt.status === 'opening') return opening(target);
-
-  return acceptedCreation(context, { id, work }, receipt.start.turnId);
+  return acceptedCreation(context, target, creation.start.turnId);
 }
 
 function acceptedCreation(
@@ -102,7 +106,7 @@ function acceptedCreation(
     turnId,
   };
 
-  return readTurn(context, linkedTarget(context, link));
+  return readOperationWork(context, linkedTarget(context, link));
 }
 
 function opening(
