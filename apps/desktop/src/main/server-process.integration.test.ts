@@ -1,7 +1,10 @@
 import { spawnSync } from 'node:child_process';
+import { once } from 'node:events';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { ServerAddress } from '@repo/contracts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -57,13 +60,13 @@ describe('readLiveServerAddress', (): void => {
 
 describe('spawnSupervisor', (): void => {
   it('reports the pid before it returns, then the exit of a Supervisor that exits while it starts', async (): Promise<void> => {
-    // No src/main.ts here, so Node exits at once.
+    // No bin/argo.mjs here, so Node exits at once.
     const reports: string[] = [];
     let reportsOnReturn: string[] = [];
 
     const exited = new Promise<void>((resolve): void => {
       spawnSupervisor(
-        { home, serverDirectory: home },
+        { home, cliDirectory: home },
         {
           spawned: (pid): number => reports.push(`spawned ${typeof pid}`),
           exited: (reason): void => {
@@ -89,7 +92,7 @@ describe('spawnSupervisor', (): void => {
     let pid = 0;
 
     const stopListening = spawnSupervisor(
-      { home, serverDirectory: home },
+      { home, cliDirectory: home },
       {
         spawned: (value): void => {
           pid = value;
@@ -122,3 +125,45 @@ it.each([
   vi.stubEnv('ARGO_HOME', override);
   expect(resolveHome()).toBe(expected);
 });
+
+async function availablePort(): Promise<number> {
+  const server = createServer();
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const address = server.address();
+  server.close();
+
+  if (!address || typeof address === 'string') throw new Error('No test port');
+
+  return address.port;
+}
+
+it('launches argo server and owns the pid published by its Supervisor', async () => {
+  const port = await availablePort();
+  vi.stubEnv('ARGO_SERVER_PORT', String(port));
+  const pids: number[] = [];
+  const exited = Promise.withResolvers<void>();
+  const cliDirectory = fileURLToPath(new URL('../../../cli/', import.meta.url));
+
+  const stopListening = spawnSupervisor(
+    { home, cliDirectory },
+    {
+      spawned: (pid): void => {
+        pids.push(pid);
+      },
+      exited: (): void => exited.resolve(),
+    },
+  );
+
+  try {
+    await expect
+      .poll(() => readLiveServerAddress(home), { timeout: 20_000 })
+      .toMatchObject({ port });
+    expect(pids).toHaveLength(2);
+    expect(readLiveServerAddress(home)?.pid).toBe(pids[1]);
+  } finally {
+    for (const pid of pids) signalSupervisor(pid);
+    await exited.promise;
+    stopListening();
+  }
+}, 30_000);
