@@ -40,24 +40,29 @@ const moved = (lanes: Lane[], { id, section, index }: Move): Lane[] => {
   });
 };
 
+// One lane: a Section whose cards are rows with ids, so each one moves.
+const laneSection = (lane: Lane): JSX.Element => (
+  <List.Section key={lane.id} id={lane.id} title={lane.title}>
+    {lane.cards.map((card) => (
+      <ListItem key={card.id} id={card.id} title={card.title} />
+    ))}
+  </List.Section>
+);
+
+const boardLook = {
+  accessibilityLabel: 'Board',
+  layout: 'lanes',
+  appearance: 'cards',
+} as const;
+
 export function HelloBoard(): JSX.Element {
   const [lanes, setLanes] = useState(initial);
+  const onMove = (move: Move): void => setLanes(moved(lanes, move));
 
   return (
     <Screen title="Hello board">
-      <List
-        accessibilityLabel="Board"
-        layout="lanes"
-        appearance="cards"
-        onMove={(move) => setLanes(moved(lanes, move))}
-      >
-        {lanes.map((lane) => (
-          <List.Section key={lane.id} id={lane.id} title={lane.title}>
-            {lane.cards.map((card) => (
-              <ListItem key={card.id} id={card.id} title={card.title} />
-            ))}
-          </List.Section>
-        ))}
+      <List {...boardLook} onMove={onMove}>
+        {lanes.map(laneSection)}
       </List>
     </Screen>
   );

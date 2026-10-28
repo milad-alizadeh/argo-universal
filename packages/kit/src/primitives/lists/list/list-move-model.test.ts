@@ -6,37 +6,33 @@ import {
   type MoveSection,
 } from './list-move-model';
 
+const doing: MoveSection = { id: 'doing', title: 'Doing', rows: ['search'] };
+
 const board: MoveSection[] = [
   { id: 'todo', title: 'To do', rows: ['login', 'docs', 'tests'] },
-  { id: 'doing', title: 'Doing', rows: ['search'] },
+  doing,
   { id: 'done', title: 'Done', rows: [] },
 ];
+
+const toDoing = 'Move to Doing';
+
+const toDone = 'Move to Done';
 
 const labels = (id: string): string[] =>
   rowMoves(board, id).map((move) => move.label);
 
 it('offers a middle row both ways and every other Section', () => {
-  expect(labels('docs')).toEqual([
-    'Move up',
-    'Move down',
-    'Move to Doing',
-    'Move to Done',
-  ]);
+  expect(labels('docs')).toEqual(['Move up', 'Move down', toDoing, toDone]);
 });
 
 it('offers no move past either end of a Section', () => {
-  expect(labels('login')).toEqual([
-    'Move down',
-    'Move to Doing',
-    'Move to Done',
-  ]);
-  expect(labels('search')).toEqual(['Move to To do', 'Move to Done']);
+  expect(labels('login')).toEqual(['Move down', toDoing, toDone]);
+  expect(labels('search')).toEqual(['Move to To do', toDone]);
 });
 
 it('moves a row to the end of another Section', () => {
   expect(
-    rowMoves(board, 'login').find((move) => move.label === 'Move to Doing')
-      ?.move,
+    rowMoves(board, 'login').find((move) => move.label === toDoing)?.move,
   ).toEqual({ id: 'login', section: 'doing', index: 1 });
 });
 
@@ -52,12 +48,12 @@ it('offers nothing for a row the List does not hold', () => {
 });
 
 it('leaves rows outside any Section without a Move to entry', () => {
-  const loose: MoveSection[] = [{ rows: ['a', 'b'] }, board[1] as MoveSection];
+  const loose: MoveSection[] = [{ rows: ['a', 'b'] }, doing];
 
   expect(rowMoves(loose, 'search').map((move) => move.label)).toEqual([]);
   expect(rowMoves(loose, 'a')).toEqual([
     { label: 'Move down', move: { id: 'a', index: 1 } },
-    { label: 'Move to Doing', move: { id: 'a', section: 'doing', index: 1 } },
+    { label: toDoing, move: { id: 'a', section: 'doing', index: 1 } },
   ]);
 });
 

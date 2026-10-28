@@ -37,35 +37,45 @@ type ExampleProps = MovesProps & {
   onPress?: () => void;
 };
 
-// A List whose owner keeps the order: every move, dragged or chosen from a row's menu, redraws the rows.
-export function MovesExample({
-  lanes: initial = boardLanes,
-  onMove,
-  onPress,
-  ...props
-}: ExampleProps): ReactElement {
+// A plain function, not a component: the List reads its Sections from its own children.
+const laneSection =
+  (onPress: ExampleProps['onPress']) =>
+  (lane: BoardLane): ReactElement => (
+    <List.Section key={lane.id} id={lane.id} title={lane.title}>
+      {lane.cards.map((card) => (
+        <ListItem
+          key={card.id}
+          id={card.id}
+          title={card.title}
+          onPress={onPress}
+        />
+      ))}
+    </List.Section>
+  );
+
+function useMovedLanes(
+  initial: readonly BoardLane[],
+  onMove: ExampleProps['onMove'],
+): [readonly BoardLane[], (move: ListMove) => void] {
   const [lanes, setLanes] = useState(initial);
 
+  return [
+    lanes,
+    (move) => {
+      setLanes((current) => movedLanes(current, move));
+      onMove?.(move);
+    },
+  ];
+}
+
+// A List whose owner keeps the order: every move, dragged or chosen from a row's menu, redraws the rows.
+export function MovesExample(example: ExampleProps): ReactElement {
+  const { lanes: initial = boardLanes, onMove, onPress, ...props } = example;
+  const [lanes, move] = useMovedLanes(initial, onMove);
+
   return (
-    <List
-      {...props}
-      onMove={(move) => {
-        setLanes((current) => movedLanes(current, move));
-        onMove?.(move);
-      }}
-    >
-      {lanes.map((lane) => (
-        <List.Section key={lane.id} id={lane.id} title={lane.title}>
-          {lane.cards.map((card) => (
-            <ListItem
-              key={card.id}
-              id={card.id}
-              title={card.title}
-              onPress={onPress}
-            />
-          ))}
-        </List.Section>
-      ))}
+    <List {...props} onMove={move}>
+      {lanes.map(laneSection(onPress))}
     </List>
   );
 }

@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import {
   GestureDetector,
@@ -8,15 +8,11 @@ import {
   type GestureTouchEvent,
   type PanGesture,
 } from 'react-native-gesture-handler';
-import { dragStart, type PressTrack } from './list-drag-rules';
+import { startAt, type DragStart, type PressStart } from './list-drag-rules';
 import type { Point } from './list-drop-aim';
 import type { RowDragProps } from './list-row-drag-props';
 
-interface Press {
-  start: Point;
-  at: number;
-  pointer: PressTrack['pointer'];
-}
+type PanConfig = Parameters<typeof usePanGesture>[0];
 
 const firstTouch = (event: GestureTouchEvent): Point | undefined => {
   const touch = event.allTouches[0] ?? event.changedTouches[0];
@@ -24,60 +20,87 @@ const firstTouch = (event: GestureTouchEvent): Point | undefined => {
   return touch && { x: touch.absoluteX, y: touch.absoluteY };
 };
 
+const pointerOf = (type: PointerType): PressStart['pointer'] =>
+  type === PointerType.MOUSE ? 'mouse' : 'touch';
+
+function pressFrom(event: GestureTouchEvent): PressStart | null {
+  const start = firstTouch(event);
+
+  return start
+    ? { start, at: Date.now(), pointer: pointerOf(event.pointerType) }
+    : null;
+}
+
+// Activates the Pan when the press lifts the row, and fails it when the press scrolls the List instead.
+function settle(next: DragStart, handlerTag: number): void {
+  if (next === 'lift') GestureStateManager.activate(handlerTag);
+  else if (next === 'scroll') GestureStateManager.fail(handlerTag);
+}
+
+function decide(event: GestureTouchEvent, press: PressStart | null): void {
+  const at = firstTouch(event);
+
+  if (at && press) settle(startAt(press, at, Date.now()), event.handlerTag);
+}
+
+// The press a Pan follows, from its first touch until the Pan ends.
+class TrackedPress {
+  private press: PressStart | null = null;
+
+  readonly down = (event: GestureTouchEvent): void => {
+    this.press = pressFrom(event);
+  };
+
+  readonly move = (event: GestureTouchEvent): void => decide(event, this.press);
+
+  readonly end = (): void => {
+    this.press = null;
+  };
+}
+
+const pressHandlers = (press: TrackedPress): PanConfig => ({
+  onTouchesDown: press.down,
+  onTouchesMove: press.move,
+  onFinalize: press.end,
+});
+
+const pointAt = (event: { absoluteX: number; absoluteY: number }): Point => ({
+  x: event.absoluteX,
+  y: event.absoluteY,
+});
+
+// Once the Pan activates, it lifts the row, follows it, and drops or puts it back.
+const dragHandlers = ({ drag, id, ghost }: RowDragProps): PanConfig => ({
+  onActivate: (event) => drag.begin(id, ghost, pointAt(event)),
+  onUpdate: (event) => drag.follow(pointAt(event)),
+  onDeactivate: (event) => (event.canceled ? drag.cancel() : drag.finish()),
+});
+
 /*
  * Gesture Handler's Pan with `manualActivation`: each touch move asks `dragStart` whether the press lifts the row,
  * scrolls, or waits, and `GestureStateManager` activates or fails the Pan to match. Until it activates, the row's
  * own press, its context menu's long press and the List's scroll keep the touch.
  */
-function useRowDrag({ drag, id, ghost }: RowDragProps): PanGesture {
-  const press = useRef<Press | undefined>(undefined);
+function useRowDrag(props: RowDragProps): PanGesture {
+  const [press] = useState(() => new TrackedPress());
 
   return usePanGesture({
     runOnJS: true,
     manualActivation: true,
-    onTouchesDown: (event) => {
-      const start = firstTouch(event);
-
-      press.current = start && {
-        start,
-        at: Date.now(),
-        pointer: event.pointerType === PointerType.MOUSE ? 'mouse' : 'touch',
-      };
-    },
-    onTouchesMove: (event) => {
-      const at = firstTouch(event);
-      const started = press.current;
-
-      if (!at || !started) return;
-
-      const next = dragStart({
-        pointer: started.pointer,
-        heldFor: Date.now() - started.at,
-        distance: Math.hypot(at.x - started.start.x, at.y - started.start.y),
-      });
-
-      if (next === 'lift') GestureStateManager.activate(event.handlerTag);
-      else if (next === 'scroll') GestureStateManager.fail(event.handlerTag);
-    },
-    onActivate: (event) =>
-      drag.begin(id, ghost, { x: event.absoluteX, y: event.absoluteY }),
-    onUpdate: (event) =>
-      drag.follow({ x: event.absoluteX, y: event.absoluteY }),
-    onDeactivate: (event) => (event.canceled ? drag.cancel() : drag.finish()),
-    onFinalize: () => {
-      press.current = undefined;
-    },
+    ...pressHandlers(press),
+    ...dragHandlers(props),
   });
 }
 
 // iOS and Android: a finger holds a row, then drags it.
 export function RowDrag(props: RowDragProps): ReactNode {
   const gesture = useRowDrag(props);
+  const { viewRef, children } = props;
 
   return (
     <GestureDetector gesture={gesture}>
-      <View ref={props.viewRef} collapsable={false}>
-        {props.children}
+      <View ref={viewRef} collapsable={false}>
+        {children}
       </View>
     </GestureDetector>
   );

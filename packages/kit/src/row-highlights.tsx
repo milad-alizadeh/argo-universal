@@ -137,6 +137,8 @@ export function useLiftedRowMark(lifted: boolean): void {
 
     marks(index);
 
-    return () => marks(undefined);
+    // Clears only its own mark: another row may have marked itself since.
+    return (): void =>
+      marks((current) => (current === index ? undefined : current));
   }, [marks, index]);
 }

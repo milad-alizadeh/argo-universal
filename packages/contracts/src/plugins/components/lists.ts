@@ -6,11 +6,11 @@ import { listExpansion } from '../list-expansion';
 import {
   contentListProps,
   listItemProps,
-  listMoveProps,
   listSectionProps,
   rowPress,
 } from '../list-kit-props';
 import { listMediaComponents } from '../list-media-components';
+import { listMoveProps } from '../list-move-props';
 import {
   tableCellProps,
   tableProps,

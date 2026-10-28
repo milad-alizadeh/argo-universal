@@ -27,14 +27,19 @@ export interface RowMove {
   move: ListMove;
 }
 
+// Where a row sits: its Section's position and the Section itself, and its index there.
+export interface HeldPlace extends RowPlace {
+  own: MoveSection;
+}
+
 export function placeOf(
   sections: readonly MoveSection[],
   id: string,
-): RowPlace | undefined {
-  for (const [section, { rows }] of sections.entries()) {
-    const index = rows.indexOf(id);
+): HeldPlace | undefined {
+  for (const [section, own] of sections.entries()) {
+    const index = own.rows.indexOf(id);
 
-    if (index !== -1) return { section, index };
+    if (index !== -1) return { section, index, own };
   }
 
   return undefined;
@@ -53,24 +58,35 @@ const moveIn = (
 const namedTarget = (section: MoveSection, own: MoveSection): boolean =>
   section !== own && section.id !== undefined && section.title !== undefined;
 
+// To the end of each other named Section.
+const sectionMoves = (
+  sections: readonly MoveSection[],
+  own: MoveSection,
+  id: string,
+): RowMove[] =>
+  sections.flatMap((section) =>
+    namedTarget(section, own)
+      ? [
+          {
+            label: `Move to ${section.title}`,
+            move: moveIn(section, id, section.rows.length),
+          },
+        ]
+      : [],
+  );
+
 // The Move Actions of a row: up and down within its Section, then to the end of each other Section, as a context menu lists them.
 export function rowMoves(
   sections: readonly MoveSection[],
   id: string,
 ): RowMove[] {
   const place = placeOf(sections, id);
-  const own = place && sections[place.section];
 
-  if (!place || !own) return [];
+  if (!place) return [];
 
   return [
-    ...stepMoves(own, id, place.index),
-    ...sections
-      .filter((section) => namedTarget(section, own))
-      .map((section) => ({
-        label: `Move to ${section.title}`,
-        move: moveIn(section, id, section.rows.length),
-      })),
+    ...stepMoves(place.own, id, place.index),
+    ...sectionMoves(sections, place.own, id),
   ];
 }
 
@@ -86,6 +102,28 @@ function stepMoves(own: MoveSection, id: string, index: number): RowMove[] {
   return steps;
 }
 
+// Leaving its slot moves every later row of its own Section up by one.
+const shifted = ({ index }: RowPlace, insertion: number): number =>
+  insertion > index ? insertion - 1 : insertion;
+
+// Where a dropped row lands in the drop's Section, or none when that is its own slot.
+function landedIndex(place: RowPlace, drop: DropPlace): number | undefined {
+  if (place.section !== drop.section) return drop.insertion;
+
+  const index = shifted(place, drop.insertion);
+
+  return index === place.index ? undefined : index;
+}
+
+const landedIn = (
+  target: MoveSection,
+  id: string,
+  index: number | undefined,
+): ListMove | undefined =>
+  index === undefined
+    ? undefined
+    : moveIn(target, id, Math.min(index, target.rows.length));
+
 // The move a drop makes, or none when the row lands back on its own slot.
 export function landing(
   sections: readonly MoveSection[],
@@ -97,16 +135,7 @@ export function landing(
 
   if (!place || !target) return undefined;
 
-  const sameSection = place.section === drop.section;
-  // Leaving its slot moves every later row of its own Section up by one.
-  const index =
-    sameSection && drop.insertion > place.index
-      ? drop.insertion - 1
-      : drop.insertion;
-
-  if (sameSection && index === place.index) return undefined;
-
-  return moveIn(target, id, Math.min(index, target.rows.length));
+  return landedIn(target, id, landedIndex(place, drop));
 }
 
 const sectionOf = (section: MoveSection, move: ListMove): boolean =>

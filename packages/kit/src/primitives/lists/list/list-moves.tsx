@@ -1,8 +1,5 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import {
-  createContext,
-  useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -14,130 +11,65 @@ import {
 } from 'react';
 import { View, type ViewInstance } from 'react-native';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
-import { assignRef } from '../../../scroll-fade/legend-scroll-ref';
+import { useColumnScroll } from './list-column-scroll';
 import { ListDrag } from './list-drag-controller';
 import { ListDragLayer } from './list-drag-layer';
-import { dragLook, type DragLook } from './list-drag-look';
-import type { Rect } from './list-drop-aim';
+import { dragLook } from './list-drag-look';
+import type { Point } from './list-drop-aim';
 import {
-  movedSections,
-  type ListMove,
-  type MoveSection,
-} from './list-move-model';
-import { moveSections, reorderedChildren } from './list-move-sections';
-import type { ListProps } from './list-props';
+  ListMoveContext,
+  measureView,
+  type ListMoves,
+} from './list-move-context';
+import {
+  useShownMoves,
+  type MoveAnswer,
+  type ShownMoves,
+} from './list-shown-moves';
 
-export interface ListMoves {
-  sections: readonly MoveSection[];
-  lanes: boolean;
-  look: DragLook;
-  drag: ListDrag;
-  move: (move: ListMove) => void;
+interface GhostPoint {
+  x: SharedValue<number>;
+  y: SharedValue<number>;
 }
 
-const ListMoveContext = createContext<ListMoves | null>(null);
-
-// The moves of the List around a row, when it has `onMove`.
-export const useListMoves = (): ListMoves | null => useContext(ListMoveContext);
-
-// Measures a drawn view in the window, as a drag hit-tests and draws.
-export function measureView(
-  view: RefObject<Pick<ViewInstance, 'measureInWindow'> | null>,
-): Promise<Rect | undefined> {
-  return new Promise((resolve) => {
-    if (!view.current) return resolve(undefined);
-
-    view.current.measureInWindow((x, y, width, height) =>
-      resolve({ x, y, width, height }),
-    );
-  });
-}
-
-interface PendingMove {
-  move: ListMove;
-  // The order the move was made on; once the owner draws another, its answer stands instead.
-  order: string;
-}
-
-const thenable = (value: unknown): value is PromiseLike<unknown> =>
-  typeof value === 'object' &&
-  value !== null &&
-  'then' in value &&
-  typeof value.then === 'function';
-
-interface ShownMoves {
-  sections: readonly MoveSection[];
-  children: ReactNode;
-  move: (move: ListMove) => void;
-}
-
-/*
- * A move shows at once: the List draws its rows in the moved order until its owner draws a new order, or answers
- * without one, a frame after its `onMove` settles.
- */
-function useShownMoves(
-  children: ReactNode,
-  onMove: NonNullable<ListProps<never>['onMove']>,
-): ShownMoves {
-  const sections = useMemo(() => moveSections(children), [children]);
-  const order = useMemo(() => JSON.stringify(sections), [sections]);
-  const [pending, setPending] = useState<PendingMove>();
-  const held = pending?.order === order ? pending.move : undefined;
-
-  const shown = useMemo(
-    () => (held ? movedSections(sections, held) : sections),
-    [held, sections],
-  );
-
-  const move = useCallback(
-    (next: ListMove) => {
-      setPending({ move: next, order });
-
-      const settle = (): void => {
-        requestAnimationFrame(() =>
-          setPending((current) =>
-            current?.move === next ? undefined : current,
-          ),
-        );
-      };
-      const answer: unknown = onMove(next);
-
-      if (thenable(answer)) answer.then(settle, settle);
-      else settle();
-    },
-    [onMove, order],
-  );
-
-  const shownChildren = useMemo(
-    () => (held ? reorderedChildren(children, shown) : children),
-    [held, children, shown],
-  );
-
-  return { sections: shown, children: shownChildren, move };
-}
+const ghostMover =
+  ({ x, y }: GhostPoint) =>
+  (point: Point): void => {
+    x.set(point.x);
+    y.set(point.y);
+  };
 
 function useListDrag(
   layer: RefObject<ViewInstance | null>,
-  ghost: { x: SharedValue<number>; y: SharedValue<number> },
+  ghost: GhostPoint,
 ): ListDrag {
   const [drag] = useState(
-    () =>
-      new ListDrag(
-        () => measureView(layer),
-        (point) => {
-          ghost.x.value = point.x;
-          ghost.y.value = point.y;
-        },
-      ),
+    () => new ListDrag(() => measureView(layer), ghostMover(ghost)),
   );
 
-  useEffect(() => () => drag.cancel(), [drag]);
+  useEffect((): (() => void) => () => drag.cancel(), [drag]);
 
   return drag;
 }
 
+function useConfiguredMoves(
+  drag: ListDrag,
+  { sections, move }: ShownMoves,
+  lanes: boolean,
+): ListMoves {
+  useEffect(
+    () => drag.configure({ sections, lanes, move }),
+    [drag, sections, lanes, move],
+  );
+
+  return useMemo(
+    () => ({ sections, lanes, look: dragLook, drag, move }),
+    [sections, lanes, drag, move],
+  );
+}
+
 interface MovableListProps {
-  onMove: NonNullable<ListProps<never>['onMove']>;
+  onMove: MoveAnswer;
   lanes: boolean;
   children: ReactNode;
   // The List's own ref, kept on its scroll view.
@@ -146,81 +78,39 @@ interface MovableListProps {
   render: (children: ReactNode, ref: Ref<LegendListRef>) => ReactElement;
 }
 
-// One column scrolls up and down under a row dragged near its top or bottom edge.
-function useColumnScroll(
-  drag: ListDrag,
-  frame: RefObject<ViewInstance | null>,
-  own: Ref<LegendListRef> | undefined,
-  lanes: boolean,
-): Ref<LegendListRef> {
-  const list = useRef<LegendListRef>(null);
+interface MoveHost {
+  moves: ListMoves;
+  children: ReactNode;
+  layer: RefObject<ViewInstance | null>;
+  ghost: GhostPoint;
+  scrollTo: Ref<LegendListRef>;
+}
 
-  useEffect(() => {
-    if (lanes) return;
+function useMoveHost({ lanes, ...props }: MovableListProps): MoveHost {
+  const shown = useShownMoves(props.children, props.onMove);
+  const layer = useRef<ViewInstance>(null);
+  const ghost = { x: useSharedValue(0), y: useSharedValue(0) };
+  const drag = useListDrag(layer, ghost);
+  const own = props.listRef;
+  const scrollTo = useColumnScroll({ drag, frame: layer, own, lanes });
+  const moves = useConfiguredMoves(drag, shown, lanes);
 
-    return drag.registerScroller({
-      axis: 'y',
-      measure: () => measureView(frame),
-      scrollBy: (delta) => {
-        const scroll = list.current?.getState().scroll ?? 0;
-
-        void list.current?.scrollToOffset({
-          offset: Math.max(0, scroll + delta),
-          animated: false,
-        });
-      },
-    });
-  }, [drag, frame, lanes]);
-
-  return useCallback(
-    (instance: LegendListRef | null) => {
-      list.current = instance;
-      assignRef(own, instance);
-    },
-    [own],
-  );
+  return { moves, children: shown.children, layer, ghost, scrollTo };
 }
 
 /*
  * A List with `onMove`: its rows move from their context menus, and by dragging. The drag layer sits over the rows,
- * holding the lifted row and the line where it lands.
+ * holding the lifted row and the line where it lands; it draws outside the moves, so the lifted copy is a plain row.
  */
-export function MovableList({
-  onMove,
-  lanes,
-  children,
-  listRef,
-  render,
-}: MovableListProps): ReactElement {
-  const shown = useShownMoves(children, onMove);
-  const layer = useRef<ViewInstance>(null);
-  const x = useSharedValue(0);
-  const y = useSharedValue(0);
-  const drag = useListDrag(layer, { x, y });
-  const scrollRef = useColumnScroll(drag, layer, listRef, lanes);
-
-  useEffect(
-    () => drag.configure({ sections: shown.sections, lanes, move: shown.move }),
-    [drag, shown.sections, lanes, shown.move],
-  );
-
-  const moves = useMemo(
-    () => ({
-      sections: shown.sections,
-      lanes,
-      look: dragLook,
-      drag,
-      move: shown.move,
-    }),
-    [shown.sections, lanes, drag, shown.move],
-  );
+export function MovableList(props: MovableListProps): ReactElement {
+  const { moves, children, layer, ghost, scrollTo } = useMoveHost(props);
 
   return (
-    <ListMoveContext value={moves}>
-      <View ref={layer} collapsable={false} className="min-h-0 shrink grow">
-        {render(shown.children, scrollRef)}
-        <ListDragLayer drag={drag} look={dragLook} x={x} y={y} />
-      </View>
-    </ListMoveContext>
+    <View ref={layer} collapsable={false} className="min-h-0 shrink grow">
+      <ListMoveContext value={moves}>
+        {props.render(children, scrollTo)}
+      </ListMoveContext>
+      <ListDragLayer drag={moves.drag} look={dragLook} {...ghost} />
+    </View>
   );
 }

@@ -40,17 +40,18 @@ export function usePreparedChildren(props: ChildrenOptions): PreparedChildren {
   const shelves = hasShelves(props, blocks);
   const lanes = drawsLanes(props.layout, look) && hasSections(blocks);
 
-  const entries = useMemo(
-    () => (shelves || lanes ? [] : sectionEntries(blocks)),
-    [blocks, shelves, lanes],
+  const items = useMemo(
+    () => (shelves || lanes ? [] : shownEntries(look, blocks)),
+    [look, blocks, shelves, lanes],
   );
 
-  return {
-    blocks,
-    shelves,
-    lanes,
-    items: look.menu ? menuEntries(entries) : entries,
-  };
+  return { blocks, shelves, lanes, items };
+}
+
+function shownEntries(look: ListLook, blocks: ListBlock[]): ListChild[] {
+  const entries = sectionEntries(blocks);
+
+  return look.menu ? menuEntries(entries) : entries;
 }
 
 const noneFolded: ReadonlySet<string> = new Set();

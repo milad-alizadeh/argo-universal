@@ -14,6 +14,6 @@ export function useDragEscape(cancel: () => void, dragging: boolean): void {
 
     window.addEventListener('keydown', onKeyDown, true);
 
-    return () => window.removeEventListener('keydown', onKeyDown, true);
+    return (): void => window.removeEventListener('keydown', onKeyDown, true);
   }, [cancel, dragging]);
 }

@@ -48,7 +48,10 @@ const centre = (element: Element): Point => {
   return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
 };
 
-const coords = ({ x, y }: Point): { clientX: number; clientY: number } => ({
+const coords = ({
+  x,
+  y,
+}: Point): Pick<MouseEventInit, 'clientX' | 'clientY'> => ({
   clientX: x,
   clientY: y,
 });
@@ -135,9 +138,12 @@ export const MoveToAnotherLaneFromRowMenu = boardAt(
 
     const moved = await openRowMenu(user, rowNamed(canvasElement, alpha.title));
 
-    await expect(
-      within(moved).getByRole('menuitem', { name: `Move to ${first.title}` }),
-    ).toBeVisible();
+    // The menu fades in, so its items show once it has opened.
+    await waitFor(() =>
+      expect(
+        within(moved).getByRole('menuitem', { name: `Move to ${first.title}` }),
+      ).toBeVisible(),
+    );
     await expect(
       within(moved).queryByRole('menuitem', { name: `Move to ${third.title}` }),
     ).toBeNull();
@@ -218,6 +224,7 @@ export const PhoneStacksLanes = boardAt(
     const canvas = within(canvasElement);
     const firstHeader = canvas.getByText(first.title).getBoundingClientRect();
     const secondHeader = canvas.getByText(second.title).getBoundingClientRect();
+
     const lastOfFirst = canvas
       .getByRole('button', { name: gamma.title })
       .getBoundingClientRect();

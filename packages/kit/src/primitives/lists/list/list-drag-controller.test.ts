@@ -1,7 +1,8 @@
-import { expect, it, vi } from 'vitest';
-import { ListDrag, type DragScroller } from './list-drag-controller';
+import { expect, it, vi, type Mock } from 'vitest';
+import { ListDrag } from './list-drag-controller';
+import type { DragScroller } from './list-drag-measure';
 import type { Point, Rect } from './list-drop-aim';
-import type { MoveSection } from './list-move-model';
+import type { ListMove, MoveSection } from './list-move-model';
 
 const board: MoveSection[] = [
   { id: 'todo', title: 'To do', rows: ['login', 'docs'] },
@@ -11,12 +12,14 @@ const board: MoveSection[] = [
 
 // Three lanes 200 wide, 20 apart, inside a layer at (10, 20); rows 50 tall, 10 apart, from y 60.
 const layer: Rect = { x: 10, y: 20, width: 700, height: 600 };
+
 const laneRect = (section: number): Rect => ({
   x: 10 + section * 220,
   y: 20,
   width: 200,
   height: 600,
 });
+
 const cardRect = (section: number, index: number): Rect => ({
   x: 10 + section * 220,
   y: 60 + index * 60,
@@ -26,7 +29,7 @@ const cardRect = (section: number, index: number): Rect => ({
 
 interface Rig {
   drag: ListDrag;
-  move: ReturnType<typeof vi.fn>;
+  move: Mock<(move: ListMove) => void>;
   ghost: Point[];
   frames: (() => void)[];
 }
@@ -34,16 +37,18 @@ interface Rig {
 function rig(): Rig {
   const ghost: Point[] = [];
   const frames: (() => void)[] = [];
+
   const drag = new ListDrag(
     async () => layer,
     (point) => ghost.push(point),
     (step) => {
       frames.push(step);
 
-      return () => {};
+      return (): void => {};
     },
   );
-  const move = vi.fn();
+
+  const move = vi.fn<(move: ListMove) => void>();
 
   drag.configure({ sections: board, lanes: true, move });
 
@@ -131,27 +136,31 @@ it('reports nothing for a drag cancelled before its List is measured', async () 
   expect(drag.current()).toBeUndefined();
 });
 
+// The scroll loop's latest step, as the next animation frame runs it.
+const nextFrame = (frames: readonly (() => void)[]): void => frames.at(-1)?.();
+
 it('scrolls a scroller while the pointer holds near its edge', async () => {
   const { drag, frames } = rig();
-  const scrollBy = vi.fn();
+  const deltas: number[] = [];
+
   const board: DragScroller = {
     axis: 'x',
     measure: async () => layer,
-    scrollBy,
+    scrollBy: (delta) => deltas.push(delta),
   };
 
   drag.registerScroller(board);
   drag.begin('login', null, { x: 30, y: 70 });
   await settle();
   drag.follow({ x: 700, y: 300 });
-  frames.at(-1)?.();
+  nextFrame(frames);
 
-  expect(scrollBy).toHaveBeenCalledWith(expect.any(Number));
-  expect(scrollBy.mock.calls[0]?.[0]).toBeGreaterThan(0);
+  expect(deltas).not.toHaveLength(0);
+  expect(Math.min(...deltas)).toBeGreaterThan(0);
 
   drag.follow({ x: 300, y: 300 });
-  scrollBy.mockClear();
-  frames.at(-1)?.();
+  deltas.splice(0);
+  nextFrame(frames);
 
-  expect(scrollBy).not.toHaveBeenCalled();
+  expect(deltas).toEqual([]);
 });

@@ -29,9 +29,11 @@ export const BoardRowMovesToAnotherLane: Story = {
     const row = await canvas.findByRole('button', { name: 'Fix login' });
 
     await userEvent.pointer({ target: row, keys: '[MouseRight]' });
+
     const menu = await within(canvasElement.ownerDocument.body).findByRole(
       'menu',
     );
+
     await userEvent.click(
       within(menu).getByRole('menuitem', { name: 'Move to Done' }),
     );
