@@ -61,7 +61,10 @@ function moreAction(
  */
 export function sessionHeaderActions(
   menu: SessionMenu | undefined,
-  { beside, menu: inMenu }: SessionPluginActions,
+  plugins: SessionPluginActions,
 ): React.JSX.Element[] {
-  return [...beside.map(pluginAction), ...moreAction(menu, inMenu)];
+  return [
+    ...plugins.beside.map(pluginAction),
+    ...moreAction(menu, plugins.menu),
+  ];
 }

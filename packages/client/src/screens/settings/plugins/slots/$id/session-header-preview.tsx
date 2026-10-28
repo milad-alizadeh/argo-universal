@@ -1,11 +1,8 @@
-import { sessionHeaderSlotId } from '@repo/contracts/plugins/wire';
 import { ActionButtons } from '@repo/kit/primitives/actions/action';
 import { Text } from '@repo/kit/primitives/content/text';
-import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Platform, View } from 'react-native';
-import { useTRPC } from '#features/connection';
+import { View } from 'react-native';
 import {
   type DeclaredHeaderAction,
   placeSessionHeaderActions,
@@ -15,23 +12,27 @@ import {
 } from '#features/sessions';
 import type { SlotVisibility } from '#features/settings';
 import { sessionHeaderActions } from '../../../../sessions/$id/session-header-actions';
+import {
+  onPhone,
+  useDeclaredHeaderActions,
+} from '../../../../sessions/$id/use-plugin-header-actions';
 import type { SlotPreviewProps } from './slot-detail';
 
 export const previewSessionTitle = 'Fix login redirect';
 
-const ignore = (): void => undefined;
+const doNothing = (): void => undefined;
 
 // Argo's own entries in "…", as an idle Session offers them; the preview opens nothing.
 const previewMenu: SessionMenu = {
   archived: false,
   status: 'idle',
-  onRename: ignore,
-  onArchive: ignore,
+  onRename: doNothing,
+  onArchive: doNothing,
 };
 
-const inert = (declared: DeclaredHeaderAction): SessionPluginAction => ({
+const withoutPress = (declared: DeclaredHeaderAction): SessionPluginAction => ({
   ...declared,
-  onPress: ignore,
+  onPress: doNothing,
 });
 
 interface SessionHeaderPreviewProps {
@@ -47,8 +48,8 @@ export function SessionHeaderPreview({
   declared,
   visibility,
 }: SessionHeaderPreviewProps): React.JSX.Element {
-  const placed = placeSessionHeaderActions(declared.map(inert), {
-    phone: Platform.OS !== 'web',
+  const placed = placeSessionHeaderActions(declared.map(withoutPress), {
+    phone: onPhone,
     shows: visibility.shows,
   });
 
@@ -62,7 +63,10 @@ export function SessionHeaderPreview({
   );
 }
 
-// Declared Actions claim their shortcuts whenever they change, so they are built once per placement.
+/*
+ * ActionButtons registers its Actions' shortcuts whenever the array changes, and a new array every render loops the
+ * registry; the parent keys this by placement, so a switch rebuilds it and nothing else does.
+ */
 function PlacedButtons({
   placed,
 }: {
@@ -79,17 +83,14 @@ const idsOf = (actions: readonly DeclaredHeaderAction[]): string =>
 const placementKey = ({ beside, menu }: SessionPluginActions): string =>
   `${idsOf(beside)}|${idsOf(menu)}`;
 
-const noActions: DeclaredHeaderAction[] = [];
-
 // The preview on the App: what the enabled Plugins' manifests declare, read without starting any of them.
 export function LiveSessionHeaderPreview({
   visibility,
 }: SlotPreviewProps): React.JSX.Element {
-  const trpc = useTRPC();
-
-  const { data = noActions } = useQuery(
-    trpc.plugins.declared.queryOptions({ slotId: sessionHeaderSlotId }),
+  return (
+    <SessionHeaderPreview
+      declared={useDeclaredHeaderActions()}
+      visibility={visibility}
+    />
   );
-
-  return <SessionHeaderPreview declared={data} visibility={visibility} />;
 }
