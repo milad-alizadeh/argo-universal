@@ -23,6 +23,7 @@ The "Markdown" prompt clamps to four lines. The flow taps its Show more and expe
 - `list-row-moves.yaml` holds a row of **Lists → List → Moves → Column** until its menu opens, checks the menu offers Move to…, and expects Move down to draw the row under the next one.
 - `grouped-row-moves.yaml` holds Beta in **Lists → List → Moves → Grouped**, a native grouped List of FieldGroup rows: it expects Move down to draw Beta under Gamma, then picks the end of Second from Move to… and expects Beta under Delta.
 - `move-to-picker.yaml` holds Beta, opens Move to…, and expects the sheet to draw its places: it picks the end of Second and expects Beta under Delta. A fitted List in a phone sheet once drew only the sheet's title, which fails this flow.
+- Both move flows end with `subflows/move-beta-to-end-of-second.yaml`, the Move to… steps they share. Maestro runs only the top level of a folder, so the subflow never runs on its own.
 - `session-list-rows.yaml` checks the Sessions list draws its Project heading and rows, and scrolls the last row into view.
 - `settings-list-rows.yaml` checks the Settings list draws its root sections and scrolls to Appearance.
 

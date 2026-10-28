@@ -7,13 +7,4 @@ name: A native grouped List's FieldGroup rows move from their long-press menu
 - assertVisible:
     text: "^Beta$"
     below: "^Gamma$"
-- longPressOn: "^Beta$"
-- tapOn: "^Move to…$"
-- assertVisible: "^Move to$"
-- tapOn:
-    text: "^End$"
-    below: "^Second$"
-# Beta now ends the Second Section, under Delta.
-- assertVisible:
-    text: "^Beta$"
-    below: "^Delta$"
+- runFlow: subflows/move-beta-to-end-of-second.yaml

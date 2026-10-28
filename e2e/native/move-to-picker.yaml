@@ -2,14 +2,4 @@ appId: dev.argo.app
 name: A held row's Move to… opens a sheet that draws its places
 ---
 - openLink: "argo://storybook?STORYBOOK_STORY_ID=design-system-primitives-lists-list-moves--column"
-- longPressOn: "^Beta$"
-- tapOn: "^Move to…$"
-# The picker is a fitted List in a phone sheet, which once drew its title and no rows.
-- assertVisible: "^Move to$"
-- tapOn:
-    text: "^End$"
-    below: "^Second$"
-# Beta now ends the Second Section, under Delta.
-- assertVisible:
-    text: "^Beta$"
-    below: "^Delta$"
+- runFlow: subflows/move-beta-to-end-of-second.yaml
