@@ -47,19 +47,27 @@ function ChildrenList({ children, ...options }: ChildrenOptions): ReactElement {
 type ChildDataListProps = Omit<ChildDataProps, 'renderItem'> &
   Omit<PreparedChildren, 'items'>;
 
+// A plain List draws its rows, not its blocks.
+const rowsOf = ({
+  blocks: _blocks,
+  looseKey: _looseKey,
+  ...rows
+}: Omit<ChildDataListProps, 'shelves' | 'lanes'>): Omit<
+  ChildDataProps,
+  'renderItem'
+> => rows;
+
+// Lanes and shelves draw the List's blocks; a plain List draws its rows.
 function ChildDataList({
-  blocks,
   shelves,
   lanes,
-  looseKey,
   ...props
 }: ChildDataListProps): ReactElement {
-  if (lanes) return <SectionLanes blocks={blocks} looseKey={looseKey} />;
+  if (lanes) return <SectionLanes {...props} {...childDrawing} />;
 
-  if (shelves)
-    return <SectionShelves {...props} {...childDrawing} blocks={blocks} />;
+  if (shelves) return <SectionShelves {...props} {...childDrawing} />;
 
-  return <DataList {...props} {...childDrawing} />;
+  return <DataList {...rowsOf(props)} {...childDrawing} />;
 }
 
 function childMaxHeight(

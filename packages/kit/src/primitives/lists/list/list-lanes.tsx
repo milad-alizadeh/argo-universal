@@ -8,16 +8,20 @@ import {
 } from 'react';
 import { View, type ViewInstance } from 'react-native';
 import { OutsideColumn } from '../../../content-column/content-column';
+import { useBoardEnd } from './list-board-end';
 import { legendScroller } from './list-column-scroll';
 import type { ListDrag } from './list-drag-controller';
 import type { MeasureZone } from './list-drag-measure';
 import { DragScrollView } from './list-drag-scroll-view';
 import { measureView } from './list-geometry';
+import { ListHeader } from './list-header';
 import { LaneRows } from './list-lane-rows';
 import { useListMoves } from './list-move-context';
 import { useMoveOrder } from './list-move-order';
+import { ListEnd } from './list-scroll-props';
 import { lanesOf, type Lane } from './list-section-entries';
 import type { ListBlock } from './list-section-model';
+import type { ChildDataProps } from './list-section-shelves';
 
 interface LaneViews {
   lane: RefObject<ViewInstance | null>;
@@ -116,26 +120,43 @@ const boardLane = (lane: Lane): ReactElement => (
   <BoardLane key={lane.key} lane={lane} />
 );
 
-interface LanesProps {
+type LanesProps = ChildDataProps & {
   blocks: ListBlock[];
   // The key of the rows outside any Section.
   looseKey: string;
-}
+};
 
-/*
- * Each Section a lane, side by side, on a wide desktop or web window: the board scrolls sideways and each lane up and
- * down on its own LegendList (ADR-0032). Rows outside any Section form one lane of their own, without a header.
- */
-export function SectionLanes({ blocks, looseKey }: LanesProps): ReactElement {
+// The board itself, named as the List is, which calls the List's `onEndReached` as it scrolls to its end.
+function Board({ blocks, looseKey, ...list }: LanesProps): ReactElement {
   const lanes = useMemo(() => lanesOf(blocks, looseKey), [blocks, looseKey]);
+
+  const onScroll = useBoardEnd(list);
 
   return (
     <DragScrollView
       horizontal
+      aria-label={list.accessibilityLabel}
+      onScroll={onScroll}
       className="min-h-0 grow"
       contentContainerClassName="gap-4 px-4"
     >
       <OutsideColumn>{lanes.map(boardLane)}</OutsideColumn>
     </DragScrollView>
+  );
+}
+
+/*
+ * Each Section a lane, side by side, on a wide desktop or web window: the board scrolls sideways and each lane up and
+ * down on its own LegendList (ADR-0032). Rows outside any Section form one lane of their own, without a header. The
+ * List's header and footer stay above and below the board rather than scrolling with any one lane.
+ */
+export function SectionLanes(props: LanesProps): ReactElement {
+  return (
+    <View className="min-h-0 grow">
+      {props.startContent}
+      {props.header == null ? null : <ListHeader list={props} />}
+      <Board {...props} />
+      <ListEnd {...props} />
+    </View>
   );
 }
