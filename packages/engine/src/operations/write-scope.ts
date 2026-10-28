@@ -1,6 +1,7 @@
 import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { z } from 'zod';
+import { readSessionCloseTarget } from '../sessions';
 import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
 import type { SessionCaller } from './session-tokens';
@@ -40,7 +41,7 @@ const sessionParams = {
 } satisfies Record<SessionActOperationId, z.ZodType<{ sessionId: string }>>;
 
 export function actTarget(
-  deps: Pick<OperationsDeps, 'readSession'>,
+  deps: Pick<OperationsDeps, 'readSession' | 'database' | 'findWriter' | 'sessions'>,
   operation: { id: SessionActOperationId; params: Json },
 ): ActTarget {
   const { sessionId } = operationParams(
@@ -48,7 +49,7 @@ export function actTarget(
     operation.params,
   );
 
-  const target = deps.readSession(sessionId);
+  const target = operation.id === 'session.close' ? readSessionCloseTarget(deps, sessionId) : deps.readSession(sessionId);
 
   return {
     sessionId,

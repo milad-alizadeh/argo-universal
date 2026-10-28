@@ -95,6 +95,7 @@ export { renameSession } from './session-rename';
 export { saveSessionPlan } from './session-save-plan';
 
 export { closeSession } from './session-closure';
+export { readSessionCloseTarget } from './close-target';
 
 export { configureSession } from './session-configuration';
 

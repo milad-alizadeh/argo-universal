@@ -1,14 +1,15 @@
 import type { OperationWaitClock } from '../src/operations';
 
 export class TestOperationWaitClock implements OperationWaitClock {
-  private now = 0;
+  private elapsed = 0;
+  public now = (): number => this.elapsed;
   private readonly timers = new Set<{ at: number; callback: () => void }>();
   private scheduled = Promise.withResolvers<void>();
   public schedule = (
     callback: () => void,
     milliseconds: number,
   ): (() => void) => {
-    const timer = { at: this.now + milliseconds, callback };
+    const timer = { at: this.elapsed + milliseconds, callback };
     this.timers.add(timer);
     this.scheduled.resolve();
     this.scheduled = Promise.withResolvers<void>();
@@ -24,10 +25,10 @@ export class TestOperationWaitClock implements OperationWaitClock {
     return this.timers.size;
   }
   public advance(milliseconds: number): void {
-    this.now += milliseconds;
+    this.elapsed += milliseconds;
 
     for (const timer of this.timers) {
-      if (timer.at > this.now) continue;
+      if (timer.at > this.elapsed) continue;
       this.timers.delete(timer);
       timer.callback();
     }

@@ -9,6 +9,7 @@ import {
 import type { SessionActorRef } from './session-machine';
 import { readWritableSession } from './session-opening';
 import { requireLiveSessionActor } from './session-system';
+import { readSessionCloseTarget } from './close-target';
 
 const isClosing = (actor: SessionActorRef): boolean => {
   const snapshot = actor.getSnapshot();
@@ -23,13 +24,13 @@ const isClosing = (actor: SessionActorRef): boolean => {
 export const closeSession = async (
   deps: Pick<
     SessionRouterDeps,
-    'sessions' | 'readSession' | 'sessionCommandSignal'
+    'sessions' | 'readSession' | 'sessionCommandSignal' | 'database' | 'findWriter'
   >,
   sessionId: string,
 ): Promise<SessionCloseOutput> => {
   validateSessionCommandAdmission(deps);
 
-  if (deps.readSession(sessionId).parentSessionId !== null)
+  if (readSessionCloseTarget(deps, sessionId).parentSessionId !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Subagent is read-only',

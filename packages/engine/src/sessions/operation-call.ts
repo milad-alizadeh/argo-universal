@@ -63,7 +63,7 @@ class OperationCall implements SessionOperationCall {
   public readonly toolCallId: string;
   public readonly rowId: string;
   public readonly turnId: string | null;
-  private readonly row: Tool;
+  private row: Tool;
   private finished = false;
   private readonly closing: AbortSignal;
   public constructor(
@@ -102,15 +102,8 @@ class OperationCall implements SessionOperationCall {
     if (this.finished) return;
 
     if (!canSettleOperation(this.session, this.feed, this.turnId)) return;
-    this.feed.send({
-      type: 'feed.change',
-      turnId: this.turnId,
-      change: {
-        type: 'patch',
-        id: this.rowId,
-        set: { _meta: { argo: { operationWork: work } } },
-      },
-    });
+    this.row = { ...this.row, _meta: { argo: { operationWork: work } } };
+    this.publish(this.row);
   }
   private settle(row: Tool): void {
     if (this.finished) return;
@@ -128,6 +121,8 @@ export function beginSessionOperation(
   operation: Operation,
 ): SessionOperationCall {
   const session = requireLiveSessionActor(sessions.system, sessionId);
+  if (!session.getSnapshot().context.stored)
+    throw new TRPCError({ code: 'CONFLICT', message: 'The calling Session is still opening' });
   const feed = findSessionFeed(sessions.system, sessionId);
 
   if (!feed || session.getSnapshot().status !== 'active')

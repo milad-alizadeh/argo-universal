@@ -1,0 +1,31 @@
+import type { PromptRequest, TerminalOutputResponse } from '@agentclientprotocol/sdk';
+import { OperationExecution } from '@repo/contracts/operations';
+import { expect, it, onTestFinished } from 'vitest';
+import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
+import { openAccessSession, sessionIdentityStep } from '#mocks/session-access';
+import { createScriptedAgentProcess } from '#mocks/scripted-agent';
+
+it('keeps a Session caller waiting for its new Agent’s actual Turn instead of returning its admission result', async () => {
+  const clock = new TestOperationWaitClock();
+  const outputs: TerminalOutputResponse[] = [];
+  const prompted = Promise.withResolvers<PromptRequest>();
+  const release = Promise.withResolvers<void>();
+  onTestFinished(() => release.resolve());
+  const first = createScriptedAgentProcess({ steps: [sessionIdentityStep(outputs)] });
+  const delegated = createScriptedAgentProcess({ steps: [], responses: { 'session/prompt': [{ received: prompted, steps: [{ type: 'wait-for-cancel', until: release.promise }] }] } });
+  let launches = 0;
+  const host = await startAcpEngine({ steps: [], operationWaitClock: clock, launchProcess: (launch) => (launches++ === 0 ? first : delegated).launchProcess(launch) });
+  const caller = await openAccessSession({ host, outputs }, 'Delegating caller');
+  let answered = false;
+  const running = caller.caller.operations.run.mutate({ id: 'session.new', params: { ...emptySessionInput, prompt: [{ type: 'text', text: 'Keep delegated work running' }] }, wait: true }).then((value) => { answered = true; return value; });
+  await prompted.promise;
+  clock.advance(89_999);
+  await Promise.resolve();
+  expect(answered).toBe(false);
+  clock.advance(1);
+  const pending = OperationExecution.parse(await running);
+  expect(pending.status).toBe('still_running');
+  release.resolve();
+  expect(await caller.caller.operations.wait.mutate({ id: pending.id })).toMatchObject({ status: 'settled', turn: { stopReason: 'end_turn' } });
+}, 30_000);

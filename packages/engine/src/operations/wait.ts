@@ -14,6 +14,7 @@ export type WaitOptions = {
   clock?: OperationWaitClock;
   signal?: AbortSignal;
   stopOnInput?: boolean;
+  limitMs?: number;
 };
 
 type WorkFailure = { cause: unknown };
@@ -61,7 +62,7 @@ class NativeWorkObserver {
     this.cleanup.add(
       clock.schedule(
         () => this.finish(this.options.read),
-        operationWaitLimitMs,
+        this.options.limitMs ?? operationWaitLimitMs,
       ),
     );
   }

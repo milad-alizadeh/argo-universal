@@ -56,7 +56,7 @@ async function runScopedWrite(
 }
 
 function requiresConfirmation(
-  deps: Pick<OperationsDeps, 'readSession'>,
+  deps: OperationsDeps,
   caller: SessionCaller,
   operation: SessionWrite['operation'],
 ): boolean {
