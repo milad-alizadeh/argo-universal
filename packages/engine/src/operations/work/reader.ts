@@ -7,11 +7,11 @@ import type {
   OperationCallRead,
   SessionWorkRead,
   SessionWorkSource,
-} from '../sessions';
-import type { OperationCaller } from './session-tokens';
-import type { NativeWork, WaitIds } from './wait-id';
-import { operationExecution } from './work-call-result';
-import type { WorkObservation } from './work-observation';
+} from '../../sessions';
+import type { OperationCaller } from '../session-tokens';
+import { operationExecution } from './call-result';
+import type { NativeWork, WaitIds } from './ids';
+import type { WorkObservation } from './observation';
 
 type Context = {
   source: SessionWorkSource;

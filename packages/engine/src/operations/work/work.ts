@@ -1,16 +1,15 @@
 import { OperationExecution } from '@repo/contracts/operations';
-import type { SessionWorkSource } from '../sessions';
-import { requireOperationCall, type StartedOperation } from './call-recording';
-import { isNativeStartOperation } from './native-start';
-import type { OperationRunResult, OperationsDeps } from './operations';
-import type { OperationCaller } from './session-tokens';
-import { waitForNativeWork } from './wait';
-import { WaitBudget } from './wait-budget';
-import { WaitIds } from './wait-id';
-import { observationSignal, stoppingSignal } from './wait-signals';
-import { admitUserWork, type BeginWork } from './work-admission';
-import type { WorkObservation } from './work-observation';
-import { readOperationWork } from './work-reader';
+import type { SessionWorkSource } from '../../sessions';
+import { requireOperationCall, type StartedOperation } from '../call-recording';
+import { isNativeStartOperation } from '../native-start';
+import type { OperationRunResult, OperationsDeps } from '../operations';
+import type { OperationCaller } from '../session-tokens';
+import { admitUserWork, type BeginWork } from './admission';
+import { WaitBudget } from './budget';
+import { watchOperationWork } from './caller-watch';
+import { WaitIds } from './ids';
+import type { WorkObservation } from './observation';
+import { readOperationWork } from './reader';
 import {
   operationResponse,
   recordedCaller,
@@ -18,8 +17,9 @@ import {
   type RunContext,
   type ObserveOptions,
   type StartOperation,
-} from './work-response';
-import { watchOperationWork } from './work-watch';
+} from './response';
+import { observationSignal, stoppingSignal } from './signals';
+import { waitForNativeWork } from './wait';
 
 export class OperationWork {
   private readonly ids: WaitIds;

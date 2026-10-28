@@ -28,6 +28,6 @@ export const createOperationRouters = routerFactory((deps: OperationsDeps) => {
 
 export { SessionTokens } from './session-tokens';
 
-export type { OperationWaitClock } from './wait-clock';
+export type { OperationWaitClock } from './work';
 
 export { sessionLaunchPolicy } from './session-launch';

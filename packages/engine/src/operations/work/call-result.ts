@@ -1,5 +1,5 @@
 import type { OperationExecution } from '@repo/contracts/operations';
-import type { OperationCallRead } from '../sessions';
+import type { OperationCallRead } from '../../sessions';
 
 export function operationExecution(
   id: string,

@@ -31,8 +31,7 @@ import type { OperationsDeps } from './operations';
 import { parseResult, validateParams } from './params';
 import type { SessionScope } from './session-scope';
 import type { OperationCaller, SessionCaller } from './session-tokens';
-import type { WaitBudget } from './wait-budget';
-import type { OperationWork } from './work';
+import type { OperationWork, WaitBudget } from './work';
 
 type Operation = { id: OperationId; params: Json };
 

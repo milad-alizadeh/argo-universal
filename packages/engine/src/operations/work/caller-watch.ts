@@ -1,6 +1,6 @@
 import type { Subscription } from 'xstate';
-import type { SessionWorkWatcher } from '../sessions';
-import type { OperationCaller } from './session-tokens';
+import type { SessionWorkWatcher } from '../../sessions';
+import type { OperationCaller } from '../session-tokens';
 
 // Revocation belongs to the calling Session even when the target is another Session.
 export function watchOperationWork(

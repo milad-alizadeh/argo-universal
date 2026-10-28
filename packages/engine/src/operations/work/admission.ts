@@ -1,10 +1,10 @@
 import type { OperationExecution } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
-import type { SessionWorkSource } from '../sessions';
-import type { StartedWork } from './native-start';
-import { admissionTimedOut, type WaitBudget } from './wait-budget';
-import type { WaitIds } from './wait-id';
-import { readOperationWork } from './work-reader';
+import type { SessionWorkSource } from '../../sessions';
+import type { StartedWork } from '../native-start';
+import { admissionTimedOut, type WaitBudget } from './budget';
+import type { WaitIds } from './ids';
+import { readOperationWork } from './reader';
 
 type AdmissionContext = {
   source: SessionWorkSource;

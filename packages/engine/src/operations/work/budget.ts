@@ -3,7 +3,7 @@ import {
   operationWaitClock,
   operationWaitLimitMs,
   type OperationWaitClock,
-} from './wait-clock';
+} from './clock';
 
 type Expiration<Result> = {
   controller: AbortController;

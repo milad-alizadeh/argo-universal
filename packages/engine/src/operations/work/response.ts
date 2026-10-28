@@ -2,12 +2,12 @@ import type {
   OperationExecution,
   OperationId,
 } from '@repo/contracts/operations';
-import type { StartedOperation } from './call-recording';
-import { isNativeStartOperation } from './native-start';
-import type { OperationRunResult } from './operations';
-import type { OperationCaller } from './session-tokens';
-import type { WaitBudget } from './wait-budget';
-import type { WorkObservation } from './work-observation';
+import type { StartedOperation } from '../call-recording';
+import { isNativeStartOperation } from '../native-start';
+import type { OperationRunResult } from '../operations';
+import type { OperationCaller } from '../session-tokens';
+import type { WaitBudget } from './budget';
+import type { WorkObservation } from './observation';
 
 export type RunObservation = {
   caller: OperationCaller;

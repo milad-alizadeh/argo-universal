@@ -1,12 +1,12 @@
 import type { OperationExecution } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
-import type { SessionWorkWatcher } from '../sessions';
+import type { SessionWorkWatcher } from '../../sessions';
 import {
   operationWaitClock,
   operationWaitLimitMs,
   type OperationWaitClock,
-} from './wait-clock';
-import type { WorkObservation } from './work-observation';
+} from './clock';
+import type { WorkObservation } from './observation';
 
 export type WaitOptions = {
   read: () => WorkObservation;

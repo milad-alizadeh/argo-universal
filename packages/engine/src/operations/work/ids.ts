@@ -2,8 +2,8 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { OperationWaitId } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import type { OperationCaller } from './session-tokens';
-import { tokensMatch } from './tokens';
+import type { OperationCaller } from '../session-tokens';
+import { tokensMatch } from '../tokens';
 
 const Identity = z.tuple([
   z.string(),

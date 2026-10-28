@@ -31,8 +31,7 @@ import { listOperations } from './search';
 import { scopedOperations, SessionScope } from './session-scope';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
 import { tokensMatch } from './tokens';
-import type { OperationWaitClock } from './wait-clock';
-import { OperationWork } from './work';
+import { OperationWork, type OperationWaitClock } from './work';
 
 export type {
   OperationImplementations,
