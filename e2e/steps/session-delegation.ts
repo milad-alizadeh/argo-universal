@@ -1,7 +1,6 @@
 import { expect } from '../fixtures';
 import { Given, Then, When } from './fixtures';
 import { sessionRow } from './live-session';
-import { sendPrompt } from './new-session';
 
 const parentTitle = 'Delegate the investigation';
 
@@ -34,7 +33,10 @@ Then('the delegated Session accepts a new prompt', async ({ page }) => {
   await expect(
     page.getByRole('textbox', { name: 'Message', exact: true }),
   ).toBeEditable();
-  await sendPrompt(page, 'Continue the delegated review');
+  await page
+    .getByRole('textbox', { name: 'Message', exact: true })
+    .fill('Continue the delegated review');
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(
     page.getByText('Continue the delegated review', { exact: true }),
   ).toBeVisible();
