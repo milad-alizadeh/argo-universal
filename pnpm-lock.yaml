@@ -1295,12 +1295,6 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../db
-      ajv:
-        specifier: 'catalog:'
-        version: 8.20.0
-      ajv-formats:
-        specifier: 'catalog:'
-        version: 3.0.1(ajv@8.20.0)
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-rc.4(valibot@1.5.0(typescript@7.0.2))(zod@4.6.5)
@@ -1320,6 +1314,15 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
+      ajv-formats:
+        specifier: 'catalog:'
+        version: 3.0.1(ajv@8.20.0)
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       json-schema-to-typescript:
         specifier: 'catalog:'
         version: 16.0.0
