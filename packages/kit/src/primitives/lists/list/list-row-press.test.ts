@@ -54,7 +54,13 @@ describe('a press on a movable row', () => {
     expect(press.move({ x: 101, y: 101 }, 10)).toBe('wait');
   });
 
-  it('leaves a finger that moves before the hold ends to the scroll, and never lifts it', () => {
+  it('leaves a finger that moves before the hold ends to the scroll', () => {
+    const { press } = pressWith('touch');
+
+    expect(press.move(away, holdToLift - 1)).toBe('scroll');
+  });
+
+  it('never lifts a row once its finger went to the scroll', () => {
     const { press, calls } = pressWith('touch');
 
     press.move(away, holdToLift - 1);

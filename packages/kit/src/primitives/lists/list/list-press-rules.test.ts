@@ -21,7 +21,7 @@ it('waits while a finger stays still', () => {
   );
 });
 
-it('lifts a row under a finger that held it and then moves', () => {
+it('lifts a row under a finger that moves after holding it', () => {
   expect(dragStart({ pointer: 'touch', heldFor: 400, distance: 20 })).toBe(
     'lift',
   );

@@ -36,13 +36,22 @@ describe('dragging a row on a board', () => {
     expect(rig.ghost.at(-1)).toEqual({ x: 260 - 20 - 10, y: 70 - 10 - 20 });
   });
 
-  it('aims before the row whose middle is below the pointer, and draws its line in the layer', async () => {
+  it('aims before the row whose middle is below the pointer', async () => {
     const drag = await lifted(boardRig(), 'login', fromLogin);
 
     drag.follow({ x: 260, y: 70 });
 
     expect(drag.current()).toMatchObject({
       place: { sectionKey: doingKey, insertion: 0 },
+    });
+  });
+
+  it('draws the line before that row in the layer', async () => {
+    const drag = await lifted(boardRig(), 'login', fromLogin);
+
+    drag.follow({ x: 260, y: 70 });
+
+    expect(drag.current()).toMatchObject({
       line: { x: 220, y: 40, width: 200 },
     });
   });
@@ -95,7 +104,7 @@ describe('dragging a row on a board', () => {
     expect(rig.move).not.toHaveBeenCalled();
   });
 
-  it('reports nothing for a cancelled drag, and draws nothing after it', async () => {
+  it('reports nothing for a cancelled drag', async () => {
     const rig = boardRig();
     const drag = await lifted(rig, 'docs', { x: 30, y: 130 });
 
@@ -103,6 +112,14 @@ describe('dragging a row on a board', () => {
     drag.cancel();
 
     expect(rig.move).not.toHaveBeenCalled();
+  });
+
+  it('draws nothing after a cancelled drag', async () => {
+    const drag = await lifted(boardRig(), 'docs', { x: 30, y: 130 });
+
+    drag.follow({ x: 500, y: 100 });
+    drag.cancel();
+
     expect(drag.current()).toBeUndefined();
   });
 
