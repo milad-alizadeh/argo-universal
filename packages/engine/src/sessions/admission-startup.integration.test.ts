@@ -69,37 +69,61 @@ it.each(identities)(
 
     host.database.update(session).set({ agent }).run();
 
+    const firstPrompt = [
+      { type: 'text', text: 'First' },
+    ] satisfies PromptRequest['prompt'];
+
+    const secondPrompt = [
+      { type: 'text', text: 'Second' },
+    ] satisfies PromptRequest['prompt'];
+
     const first = host.caller.session.prompt({
       sessionId: 'session-1',
-      prompt: [...prompt],
+      prompt: firstPrompt,
     });
 
     const second = host.caller.session.prompt({
       sessionId: 'session-1',
-      prompt: [...prompt],
+      prompt: secondPrompt,
     });
 
     const outcomes = Promise.allSettled([first, second]);
     await began.promise;
     startup.resolve();
     const results = await outcomes;
-    expect(results.map((result) => result.status)).toEqual([
+    expect(results.map((result) => result.status).sort()).toEqual([
       'fulfilled',
       'rejected',
     ]);
-    expect(results[0]).toMatchObject({
-      value: { messageId: expect.any(String) },
-    });
-    expect(results[1]).toMatchObject({
+
+    const acknowledged = results.find(
+      (result) => result.status === 'fulfilled',
+    );
+
+    if (!acknowledged) throw new Error('No prompt was acknowledged');
+
+    const admittedPrompt =
+      results[0]?.status === 'fulfilled' ? firstPrompt : secondPrompt;
+
+    expect(
+      results.find((result) => result.status === 'rejected'),
+    ).toMatchObject({
       reason: {
         code: 'CONFLICT',
         message: expect.stringContaining('cannot accept'),
       },
     });
-    expect(host.agent.processes).toHaveLength(1);
+    expect(acknowledged.value.messageId).toEqual(expect.any(String));
+    expect(
+      await host.caller.feed.row({
+        sessionId: 'session-1',
+        id: acknowledged.value.messageId ?? 'dropped',
+      }),
+    ).toMatchObject({ content: admittedPrompt });
     await expect
       .poll(() => requests)
-      .toEqual([{ sessionId: 'owned-1', prompt: [...prompt] }]);
+      .toEqual([{ sessionId: 'owned-1', prompt: admittedPrompt }]);
+    expect(host.agent.processes).toHaveLength(1);
   },
 );
 
