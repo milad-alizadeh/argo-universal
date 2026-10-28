@@ -12,7 +12,7 @@ function optionsInput(
     return { agent: undefined, projectId: undefined, sessionId, picks: {} };
 
   return {
-    agent: snapshot.configOptions.length ? undefined : snapshot.agent,
+    agent: snapshot.agent,
     projectId: snapshot.projectId,
     sessionId,
     picks: {},

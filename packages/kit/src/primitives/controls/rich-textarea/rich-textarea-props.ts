@@ -1,4 +1,10 @@
 import type { ReferenceOption } from './rich-textarea-references';
+import type { SuggestionSource } from './rich-textarea-suggestions';
+
+export type {
+  ComposerSuggestion,
+  SuggestionSource,
+} from './rich-textarea-suggestions';
 
 export type { ReferenceOption } from './rich-textarea-references';
 
@@ -13,6 +19,7 @@ export interface RichTextareaProps {
   accessibilityLabel: string;
   // The Issues and pull requests `#` offers; the web editor only, as the phone area has no tokens.
   references?: readonly ReferenceOption[];
+  suggestions?: readonly SuggestionSource[];
   // Padding for the field itself, so a press anywhere in its padded area focuses the editor.
   fieldClassName?: string;
   // Focus the field when it mounts; the web editor only, as a phone keyboard should not open unasked.

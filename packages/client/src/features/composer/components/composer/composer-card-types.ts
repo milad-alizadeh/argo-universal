@@ -6,7 +6,10 @@ export type AttachmentLayout = Pick<ComposerLayout, 'inactive'> & {
 };
 
 export type TextLayout = Pick<ComposerLayout, 'inactive' | 'send'> & {
-  props: Pick<ComposerProps, 'draft' | 'onDraftChange' | 'placeholder'>;
+  props: Pick<
+    ComposerProps,
+    'draft' | 'onDraftChange' | 'placeholder' | 'slashCommands'
+  >;
 };
 
 export type CardLayout = ToolbarLayout & AttachmentLayout & TextLayout;

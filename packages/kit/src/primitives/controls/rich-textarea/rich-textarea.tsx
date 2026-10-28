@@ -27,8 +27,8 @@ import {
   $importMarkdown,
   richTextareaNodes,
 } from './web/rich-textarea-markdown';
-import { ReferencePlugin } from './web/rich-textarea-reference-plugin';
 import { ReferenceProviders } from './web/rich-textarea-reference-token';
+import { SuggestionPlugins } from './web/rich-textarea-suggestion-plugin';
 
 const placeholderClassName =
   'pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70 dark:text-muted-foreground';
@@ -114,7 +114,7 @@ function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
   return (
     <>
       <MessageField {...props} />
-      <ReferencePlugin references={references} />
+      <SuggestionPlugins {...props} references={references} />
       <EditingPlugins />
       <KeyboardPlugin onSubmit={props.onSubmit} />
       <EditablePlugin editable={props.editable} />

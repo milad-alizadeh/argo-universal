@@ -23,7 +23,9 @@ import {
   scrollableDraftComposer,
   sendingComposer,
   startedSessionComposer,
+  slashSuggestionsComposer,
 } from './composer-fixtures';
+import { SuggestionComposer } from './composer-suggestions.mocks';
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;
 
@@ -70,6 +72,7 @@ const meta = {
         ),
       },
     },
+    slashCommands: { control: false },
     draft: {
       control: false,
       description: 'The prompt being written, and what is attached to it.',
@@ -163,5 +166,14 @@ export const ImageSelectionFailed: Story = {
       feed={null}
       composer={<Composer {...composerProps(args)} />}
     />
+  ),
+};
+
+export const Suggestions: Story = {
+  args: slashSuggestionsComposer,
+  render: (args) => (
+    <SessionColumn>
+      <SuggestionComposer {...composerProps(args)} />
+    </SessionColumn>
   ),
 };
