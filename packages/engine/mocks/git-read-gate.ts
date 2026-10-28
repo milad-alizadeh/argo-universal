@@ -60,7 +60,7 @@ const run = () => {
 if (!process.argv.includes(input.argument) || existsSync(input.released)) run();
 else {
   writeFileSync(input.entered, 'reading');
-  const timer = setInterval(() => { if (!existsSync(input.released)) return; clearInterval(timer); run(); }, 10);
+  const timer = setInterval(() => { if (!existsSync(input.entered)) process.exit(1); if (!existsSync(input.released)) return; clearInterval(timer); run(); }, 10);
 }
 `;
 }
