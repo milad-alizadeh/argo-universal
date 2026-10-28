@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import {
   GestureDetector,
@@ -6,8 +6,9 @@ import {
   PointerType,
   usePanGesture,
   type GestureTouchEvent,
-  type PanGesture,
 } from 'react-native-gesture-handler';
+import { listenerSet } from '../../../listener-set';
+import { RowMenuDragContext, type RowMenuDrag } from '../../../row-menu-drag';
 import type { Point } from './list-geometry';
 import type { RowDragProps } from './list-row-press';
 import {
@@ -32,6 +33,8 @@ function settle(step: PressStep, handlerTag: number): void {
 // The native adapter for a RowPress: the press a Pan follows, from its first touch until the Pan ends.
 class PanPress {
   private press: RowPress | null = null;
+  private readonly lifts = listenerSet();
+  public readonly onLift = this.lifts.subscribe;
 
   public readonly down = (
     event: GestureTouchEvent,
@@ -46,8 +49,12 @@ class PanPress {
   public readonly move = (event: GestureTouchEvent): void => {
     const at = firstTouch(event);
 
-    if (at && this.press)
-      settle(this.press.move(at, Date.now()), event.handlerTag);
+    if (!at || !this.press) return;
+
+    const step = this.press.move(at, Date.now());
+
+    if (step === 'lift') this.lifts.notify();
+    settle(step, event.handlerTag);
   };
 
   public readonly drop = (canceled: boolean): void => {
@@ -69,13 +76,13 @@ class PanPress {
  * scrolls, or waits, and `GestureStateManager` activates or fails the Pan to match. Until it activates, the row's
  * own press, its context menu's long press and the List's scroll keep the touch.
  */
-function useRowDrag({ drag, id, ghost }: RowDragProps): PanGesture {
+function useRowDrag({ drag, id, ghost }: RowDragProps): RowMenuDrag {
   const [press] = useState(() => new PanPress());
 
   const target: PressTarget = { drag, id, ghost };
 
   // One object literal: the Worklets Babel plugin cannot read a spread config.
-  return usePanGesture({
+  const gesture = usePanGesture({
     runOnJS: true,
     manualActivation: true,
     onTouchesDown: (event) => press.down(event, target),
@@ -83,17 +90,19 @@ function useRowDrag({ drag, id, ghost }: RowDragProps): PanGesture {
     onDeactivate: (event) => press.drop(event.canceled),
     onFinalize: () => press.end(),
   });
+
+  return useMemo(() => ({ gesture, onLift: press.onLift }), [gesture, press]);
 }
 
-// iOS and Android: a finger holds a row, then drags it.
+// iOS and Android: a finger holds a row, then drags it; the row's context menu reads the drag to step aside for it.
 export function RowDrag(props: RowDragProps): ReactNode {
-  const gesture = useRowDrag(props);
+  const menuDrag = useRowDrag(props);
   const { viewRef, children } = props;
 
   return (
-    <GestureDetector gesture={gesture}>
+    <GestureDetector gesture={menuDrag.gesture}>
       <View ref={viewRef} collapsable={false}>
-        {children}
+        <RowMenuDragContext value={menuDrag}>{children}</RowMenuDragContext>
       </View>
     </GestureDetector>
   );

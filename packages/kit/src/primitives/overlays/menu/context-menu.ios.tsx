@@ -23,6 +23,11 @@ export function ContextMenu(props: ContextMenuProps): ReactElement {
   return <LiftMenu {...props} />;
 }
 
+/*
+ * On a movable row, SwiftUI's .contextMenu takes the touch from the row's Pan once it opens, and Expo UI exposes no
+ * draggable or onOpenMenu on iOS, so a row drags only when the finger moves before the menu opens; dragging on from
+ * an open menu, as on Android, waits on upstream.
+ */
 function LiftMenu(props: ContextMenuProps): ReactElement {
   const { colorScheme } = useNativeTheme();
 
