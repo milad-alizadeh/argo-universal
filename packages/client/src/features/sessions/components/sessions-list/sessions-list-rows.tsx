@@ -30,6 +30,8 @@ export type SessionListRowProps = Pick<
   | 'selected'
   | 'age'
   | 'layout'
+  | 'plugins'
+  | 'onOpenPluginPage'
   | 'onSelect'
   | 'onRename'
   | 'onArchive'

@@ -1,3 +1,4 @@
+import { pluginSymbol } from '../../../../../lib/product/plugin-symbol';
 import type { SessionBarPreviewData } from './session-bar-preview';
 import type { SessionRowPreviewData } from './session-row-preview';
 import { previewSession } from './session-row-slot';
@@ -48,35 +49,39 @@ export const deploysLine = 'Deploying preview';
 export const sessionRowPreviewData: SessionRowPreviewData = {
   session: previewSession,
   age: '2m',
-  items: {
-    items: [
-      {
-        pluginId: issueTracker.pluginId,
-        item: { text: issueRef(412), tone: 'info' },
-      },
-      {
-        pluginId: deploys.pluginId,
-        item: { text: previewReady, tone: 'success' },
-      },
-      { pluginId: coverage.pluginId, item: { text: '78%' } },
-    ],
-    overflow: [],
-  },
-  lines: {
-    items: [
-      { pluginId: issueTracker.pluginId, item: { text: issueTrackerLine } },
-    ],
-    overflow: [{ pluginId: deploys.pluginId, item: { text: deploysLine } }],
+  pluginOf: (pluginId) => ({
+    name:
+      slotPlugins.find((plugin) => plugin.pluginId === pluginId)?.name ??
+      pluginId,
+    icon: pluginSymbol({}),
+  }),
+  answer: {
+    items: {
+      items: [
+        {
+          pluginId: issueTracker.pluginId,
+          item: { text: issueRef(412), tone: 'info' },
+        },
+        {
+          pluginId: deploys.pluginId,
+          item: { text: previewReady, tone: 'success' },
+        },
+        { pluginId: coverage.pluginId, item: { text: '78%' } },
+      ],
+      overflow: [],
+    },
+    lines: {
+      items: [
+        { pluginId: issueTracker.pluginId, item: { text: issueTrackerLine } },
+      ],
+      overflow: [{ pluginId: deploys.pluginId, item: { text: deploysLine } }],
+    },
   },
 };
 
 export const issueTrackerBar = `${issueRef(412)} · In review`;
 
 export const coverageBar = '78% covered';
-
-const pluginNames: Record<string, string> = Object.fromEntries(
-  slotPlugins.map(({ pluginId, name }) => [pluginId, name]),
-);
 
 // What the three Plugins answer for the preview's Session bar, as the Server sends it: one fits, the rest overflow.
 export const sessionBarPreviewData: SessionBarPreviewData = {
@@ -103,5 +108,5 @@ export const sessionBarPreviewData: SessionBarPreviewData = {
       { pluginId: coverage.pluginId, item: { text: coverageBar } },
     ],
   },
-  pluginName: (pluginId) => pluginNames[pluginId] ?? pluginId,
+  pluginName: (pluginId) => sessionRowPreviewData.pluginOf(pluginId).name,
 };

@@ -1,7 +1,7 @@
-import type { SessionBarItem } from '@repo/contracts/plugins/wire';
+import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import type { SessionBarEntry, SessionBarProps } from '#features/sessions';
 import type { Merged, SlotVisibility } from '#features/settings';
-import { pluginSymbol } from './plugin-symbol';
+import { pluginSymbol } from '../../lib/product/plugin-symbol';
 
 type SessionBarLines = Pick<SessionBarProps, 'shown' | 'hidden'>;
 

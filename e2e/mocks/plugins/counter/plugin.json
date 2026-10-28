@@ -18,6 +18,10 @@
         "path": "/"
       }
     ],
-    "slots": ["argo/project/details/v1", "argo/session/bar/v1"]
+    "slots": [
+      "argo/project/details/v1",
+      "argo/session/row/v1",
+      "argo/session/bar/v1"
+    ]
   }
 }

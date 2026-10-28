@@ -19,12 +19,11 @@ export {
   sessionBarSlotId,
   sessionRowSlotId,
   SessionRowItem,
+  slotItemsListLimit,
   toolCallSlotId,
   type ItemsSlot,
   type SlotLimit,
 } from '#plugin-slot-registry';
-
-export { SessionBarItem } from '#plugin-session-bar-item';
 
 type AnyTreeSlot = TreeSlot<string, z.ZodObject>;
 

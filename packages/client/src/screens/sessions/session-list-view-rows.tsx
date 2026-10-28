@@ -9,7 +9,13 @@ import type { SessionListViewProps } from './session-list-view';
 
 type ListData = Pick<
   SessionsListProps,
-  'projects' | 'agents' | 'sessions' | 'query' | 'view' | 'selectedSessionId'
+  | 'projects'
+  | 'agents'
+  | 'sessions'
+  | 'query'
+  | 'view'
+  | 'selectedSessionId'
+  | 'rowPlugins'
 >;
 
 function listData(props: SessionListViewProps): ListData {
@@ -20,6 +26,7 @@ function listData(props: SessionListViewProps): ListData {
     query: props.query,
     view: props.view,
     selectedSessionId: props.selectedSessionId,
+    rowPlugins: props.rowPlugins,
   };
 }
 
@@ -29,6 +36,7 @@ type ListActions = Pick<
   | 'onStartSession'
   | 'onProjectSettings'
   | 'onSelect'
+  | 'onOpenPluginPage'
   | 'onRename'
   | 'onArchive'
   | 'onArchiveMany'
@@ -42,6 +50,7 @@ function listActions(props: SessionListViewProps): ListActions {
     onStartSession: props.onNewSession,
     onProjectSettings: props.onProjectSettings,
     onSelect: props.onSelect,
+    onOpenPluginPage: props.onOpenPluginPage,
     onRename: props.onRename,
     onArchive: props.onArchive,
     onArchiveMany: props.onArchiveMany,

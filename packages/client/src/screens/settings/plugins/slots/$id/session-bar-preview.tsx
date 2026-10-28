@@ -1,14 +1,12 @@
-import type { SessionBarItem } from '@repo/contracts/plugins/wire';
+import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { SessionBar } from '#features/sessions';
 import type { Merged, SlotVisibility } from '#features/settings';
 import { SessionBarStrip } from '#lib/product/session-bar-row';
 import { sessionBarLines } from '../../../../plugins/session-bar-lines';
-import {
-  usePluginName,
-  useSessionBarAnswer,
-} from '../../../../plugins/use-session-bar';
+import { usePluginNames } from '../../../../plugins/use-plugin-names';
+import { useSessionBarAnswer } from '../../../../plugins/use-session-bar';
 import { useLatestSession } from './session-row-preview';
 import type { SlotPreviewProps } from './slot-detail';
 
@@ -56,7 +54,7 @@ export function LiveSessionBarPreview({
 
   return (
     <SessionBarPreview
-      data={{ answer, pluginName: usePluginName() }}
+      data={{ answer, pluginName: usePluginNames() }}
       visibility={visibility}
     />
   );

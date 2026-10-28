@@ -1,14 +1,13 @@
+import { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import {
   mergedItems,
-  SessionBarItem,
   type SlotItemsInput,
   sessionBarSlotId,
 } from '@repo/contracts/plugins/wire';
-import { useQuery } from '@tanstack/react-query';
-import { useTRPC } from '#features/connection';
 import type { SessionBarProps } from '#features/sessions';
 import { type Merged, useSlotVisibility } from '#features/settings';
 import { sessionBarLines } from './session-bar-lines';
+import { usePluginNames } from './use-plugin-names';
 import { usePluginOpener } from './use-plugin-opener';
 import { useSlotItems } from './use-slot-items';
 
@@ -24,17 +23,6 @@ const inputOf = (
   session: SessionContext | undefined,
 ): SlotItemsInput | undefined =>
   session && { slotId: sessionBarSlotId, contexts: [session] };
-
-// Each Plugin's name for "+N", or its id until the Server has listed it.
-export function usePluginName(): (pluginId: string) => string {
-  const { data } = useQuery(useTRPC().plugins.list.queryOptions());
-
-  const names = new Map(
-    data?.plugins.map(({ manifest }) => [manifest.id, manifest.name]),
-  );
-
-  return (pluginId) => names.get(pluginId) ?? pluginId;
-}
 
 // What the Plugins answer for one Session's bar, live, in Slot order; none until the Session has loaded.
 export function useSessionBarAnswer(
@@ -52,7 +40,7 @@ export function useSessionBar(
   const lines = sessionBarLines(
     useSessionBarAnswer(session),
     useSlotVisibility(sessionBarSlotId),
-    usePluginName(),
+    usePluginNames(),
   );
 
   const onOpen = useOpenLine();

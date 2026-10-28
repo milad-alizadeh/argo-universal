@@ -69,13 +69,19 @@ export function register(argo) {
   argo.slots.register('argo/project/details/v1', ({ context }) => (
     <Text>{`Fixture Slot for ${context.projectId}`}</Text>
   ));
+  // One item on every Session row, which opens the Counter page.
+  argo.slots.register('argo/session/row/v1', everySession('Counter item'));
   // Every open Session's bar carries one line that opens the Counter page.
-  argo.slots.register('argo/session/bar/v1', ({ contexts }) =>
+  argo.slots.register('argo/session/bar/v1', everySession('Counter bar'));
+}
+
+// An items Slot's answer: the same one item, opening the Counter page, for every Session asked about.
+const everySession =
+  (text) =>
+  ({ contexts }) =>
     Object.fromEntries(
       contexts.map(({ sessionId }) => [
         sessionId,
-        [{ text: 'Counter bar', action: { path: '/' } }],
+        [{ text, action: { path: '/' } }],
       ]),
-    ),
-  );
-}
+    );
