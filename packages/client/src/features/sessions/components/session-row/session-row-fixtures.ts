@@ -1,5 +1,6 @@
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { SessionRowProps } from './session-row';
+import type { SessionRowPluginItem } from './session-row-props';
 
 /*
  * Paper "SessionsList": one row per status, both Agents, a Change at each stage, a failed
@@ -105,6 +106,48 @@ export const rowIssue = `#${412}`;
 
 export const moreIssue = `#${398}`;
 
+// The Issue on the row: a link to its page, with a tooltip.
+export const issueItem = {
+  ...issueTracker,
+  key: 'issue-tracker:0',
+  item: {
+    icon: ticket,
+    text: rowIssue,
+    tone: 'info',
+    tooltip: 'Issue #412: Sync fails on large repos',
+    action: { path: '/issues/412' },
+  },
+} satisfies SessionRowPluginItem;
+
+// An item with no page and no tooltip.
+export const previewItem = {
+  key: 'deploys:1',
+  pluginId: 'deploys',
+  pluginName: 'Deploys',
+  item: { text: 'Preview ready', tone: 'success' },
+} satisfies SessionRowPluginItem;
+
+// An item with a tooltip but no page.
+export const coverageItem = {
+  key: 'coverage:2',
+  pluginId: 'coverage',
+  pluginName: 'Coverage',
+  item: { text: '78%', tooltip: 'Line coverage on main' },
+} satisfies SessionRowPluginItem;
+
+export const lintItem = {
+  key: 'checks:0',
+  pluginId: 'checks',
+  pluginName: 'Checks',
+  item: { text: 'Lint passed', tone: 'success' },
+} satisfies SessionRowPluginItem;
+
+export const moreIssueItem = {
+  ...issueTracker,
+  key: 'issue-tracker:1',
+  item: { text: moreIssue, action: { path: '/issues/398' } },
+} satisfies SessionRowPluginItem;
+
 /*
  * Three Plugin items fit a desktop row after Argo's own; two more wait behind "+2", each with its Plugin's name. The
  * Issue opens the Issue tracker's page.
@@ -112,50 +155,27 @@ export const moreIssue = `#${398}`;
 export const pluginItemsSession = {
   ...idleSession,
   plugins: {
-    items: [
-      {
-        ...issueTracker,
-        key: 'issue-tracker:0',
-        item: {
-          icon: ticket,
-          text: rowIssue,
-          tone: 'info',
-          tooltip: 'Issue #412: Sync fails on large repos',
-          action: { path: '/issues/412' },
-        },
-      },
-      {
-        key: 'deploys:1',
-        pluginId: 'deploys',
-        pluginName: 'Deploys',
-        item: { text: 'Preview ready', tone: 'success' },
-      },
-      {
-        key: 'coverage:2',
-        pluginId: 'coverage',
-        pluginName: 'Coverage',
-        item: { text: '78%' },
-      },
-    ],
-    more: [
-      {
-        key: 'checks:0',
-        pluginId: 'checks',
-        pluginName: 'Checks',
-        item: { text: 'Lint passed', tone: 'success' },
-      },
-      {
-        ...issueTracker,
-        key: 'issue-tracker:1',
-        item: { text: moreIssue, action: { path: '/issues/398' } },
-      },
-    ],
+    items: [issueItem, previewItem, coverageItem],
+    more: [lintItem, moreIssueItem],
   },
 } satisfies SessionRowFixture;
 
 export const pluginItemsCompactSession = {
   ...pluginItemsSession,
   layout: 'compact',
+} satisfies SessionRowFixture;
+
+// Every item at its longest: the title keeps its room, the one item that fits truncates, and the rest join "+N".
+export const longPluginItemsCompactSession = {
+  ...pluginItemsCompactSession,
+  session: { ...pluginItemsCompactSession.session, title: 'Sync the Feed' },
+  plugins: {
+    items: pluginItemsSession.plugins.items.map((plugin) => ({
+      ...plugin,
+      item: { ...plugin.item, text: plugin.item.text.padEnd(40, ' long') },
+    })),
+    more: pluginItemsSession.plugins.more,
+  },
 } satisfies SessionRowFixture;
 
 // The Issue tracker writes the Activity line in place of Argo's, led by its glyph.

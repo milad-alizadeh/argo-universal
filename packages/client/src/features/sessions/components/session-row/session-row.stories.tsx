@@ -11,6 +11,7 @@ import {
   compactSession,
   failedSession,
   idleSession,
+  longPluginItemsCompactSession,
   needsInputSession,
   pluginActivitySession,
   pluginItemsCompactSession,
@@ -102,16 +103,26 @@ export const Compact: Story = {
   ],
 };
 
+const openPluginPage = action('open Plugin page');
+
 // Plugin items follow Argo's own on the meta line, each with its icon and tone; "+2" lists the rest by Plugin.
-export const PluginItems: Story = { args: pluginItemsSession };
+export const PluginItems: Story = {
+  args: { ...pluginItemsSession, onOpenPluginPage: openPluginPage },
+};
 
 // The chosen Plugin writes the Activity line in place of Argo's.
 export const PluginActivity: Story = { args: pluginActivitySession };
 
-// A Compact row draws the Plugins' items after its own detail, before the status dot.
+// A Compact row draws one Plugin item after its own detail, the rest behind "+N", then the status dot.
 export const PluginItemsCompact: Story = {
   ...Compact,
-  args: pluginItemsCompactSession,
+  args: { ...pluginItemsCompactSession, onOpenPluginPage: openPluginPage },
+};
+
+// Long items never squeeze a Compact row's title: the one item truncates.
+export const LongPluginItemsCompact: Story = {
+  ...Compact,
+  args: { ...longPluginItemsCompactSession, onOpenPluginPage: openPluginPage },
 };
 
 // The pointer over a row tints it; Regular keeps its hairline. Wide layouts only.

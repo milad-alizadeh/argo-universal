@@ -13,8 +13,10 @@ import { hasBadge, ItemBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { cn } from '../../../utils';
 import { CompactContent, ItemContent, trailsTitle } from './list-item-content';
-import { Accessory, Control, Leading, Trailing } from './list-item-parts';
+import { Accessory, Control, Leading } from './list-item-parts';
+import { InertLane } from './list-item-pass-through';
 import type { DrawingProps } from './list-item-press-props';
+import { Trailing } from './list-item-trailing';
 import { TreeLane } from './list-item-tree';
 
 // The row's lanes in order: a menu's check, leading, title, trailing, accessory, and a control on its own line.
@@ -31,7 +33,7 @@ function RowContentSlots(props: DrawingProps): ReactElement {
 
   return (
     <TextClassContext value={undefined}>
-      {props.choice}
+      <InertLane>{props.choice}</InertLane>
       <Leading {...props} />
       <RowContent props={props} compact={compact} />
       {!compact && trailsTitle(props) ? null : <Trailing {...props} />}

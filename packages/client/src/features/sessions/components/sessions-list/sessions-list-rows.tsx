@@ -9,6 +9,7 @@ import {
   type ProjectHeadingProps,
 } from '../project-heading/project-heading';
 import { SessionRow, type SessionRowProps } from '../session-row/session-row';
+import { useDrawnRow } from './sessions-list-drawn-rows';
 import {
   emptyRowClassName,
   headingClassName,
@@ -44,16 +45,24 @@ export type SessionListRowProps = Pick<
   closing?: boolean;
 };
 
+const rowSurface = (
+  animate: boolean | undefined,
+): ReturnType<typeof rowFade> & { testID: string } => ({
+  testID: 'session-row-surface',
+  ...rowFade(animate),
+});
+
 // Each row is held in a container of its own, so the space between rows is the container's: web rows sit 2 apart, flat; a phone's cards and grouped rows space themselves.
 export const SessionListRow = memo(function SessionListRow({
   animate,
   closing,
   ...props
 }: SessionListRowProps) {
+  useDrawnRow(props.session.sessionId);
+
   return (
     <Animated.View
-      testID="session-row-surface"
-      {...rowFade(animate)}
+      {...rowSurface(animate)}
       className={useRowClassName(closing)}
     >
       <SessionTreeRow {...props} />

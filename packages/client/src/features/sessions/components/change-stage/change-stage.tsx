@@ -1,3 +1,4 @@
+import { SecondaryGlyphs } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { ToneCaption, ToneMark } from '@repo/kit/tone-mark';
 import type { ReactElement } from 'react';
@@ -61,12 +62,23 @@ function accessibility(props: ChangeStageProps): StageContainerProps {
   };
 }
 
+// The icon of a meta line, beside Secondary text: a bare icon, so it keeps the desktop size on a phone; a disc has its own box.
+export function SecondaryChangeStageIcon(props: GlyphProps): ReactElement {
+  const icon = <ChangeStageIcon {...props} />;
+
+  return props.form === 'disc' ? (
+    icon
+  ) : (
+    <SecondaryGlyphs>{icon}</SecondaryGlyphs>
+  );
+}
+
 export function ChangeStage(props: ChangeStageProps): ReactElement {
   const appearance = resolveChangeStage(props);
 
   return (
     <View {...accessibility(props)}>
-      <ChangeStageIcon {...props} />
+      <SecondaryChangeStageIcon {...props} />
       <ToneCaption tone={appearance.tone}>{stageLabel(props)}</ToneCaption>
       <ChangeStageModifier {...props} />
     </View>

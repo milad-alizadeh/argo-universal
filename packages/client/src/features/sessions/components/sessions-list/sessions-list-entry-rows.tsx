@@ -1,7 +1,5 @@
-import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { useCallback, useMemo } from 'react';
-import type { SessionsLayout } from '../../stores/sessions-view';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import {
   type CollapsedProjects,
@@ -10,8 +8,10 @@ import {
 import type { SessionsListProps } from './sessions-list-props';
 import { useAnimateReorder } from './sessions-list-reorder';
 import {
+  type ListRowData,
   type SessionRowContext,
   sessionRowProps,
+  useListRowData,
   useSessionRowContext,
 } from './sessions-list-row-context';
 import {
@@ -94,49 +94,38 @@ export interface ListRows {
   // Whether the list is moving rows now.
   animating: boolean;
   items: SessionsListEntry[];
-  extraData: {
-    agents: AgentServer[];
+  extraData: ListRowData & {
     collapsed: ReadonlySet<string>;
     closing: ReadonlySet<string>;
-    selectedSessionId?: string;
-    layout: SessionsLayout;
-    rowPlugins?: SessionsListProps['rowPlugins'];
   };
   renderItem: (item: SessionsListEntry, index: number) => React.JSX.Element;
 }
 
-type RowsData = Omit<ListRows['extraData'], 'collapsed' | 'closing'>;
-
-// What every row draws from the list's props; a change to any redraws the rows.
-function useRowsData(props: SessionsListProps): RowsData {
-  const { agents, selectedSessionId, rowPlugins } = props;
-  const { layout } = props.view;
-
-  return useMemo(
-    () => ({ agents, selectedSessionId, layout, rowPlugins }),
-    [agents, selectedSessionId, layout, rowPlugins],
-  );
-}
-
+// What every row draws from the list; a change to any redraws the rows.
 function useExtraData(
-  props: SessionsListProps,
+  rows: ListRowData,
   { collapsed, closing }: CollapsedProjects,
 ): ListRows['extraData'] {
-  const rows = useRowsData(props);
-
   return useMemo(
     () => ({ ...rows, collapsed, closing }),
     [rows, collapsed, closing],
   );
 }
 
+interface RenderInputs {
+  rows: ListRowData;
+  collapsedProjects: CollapsedProjects;
+  animating: boolean;
+  nesting: SessionNesting;
+}
+
 function useRenderItem(
   props: SessionsListProps,
-  collapsedProjects: CollapsedProjects,
-  { animating, nesting }: { animating: boolean; nesting: SessionNesting },
+  { rows, collapsedProjects, animating, nesting }: RenderInputs,
 ): ListRows['renderItem'] {
   const { closing } = collapsedProjects;
-  const sessionContext = useSessionRowContext(props, animating, closing);
+  const motion = { animating, closing };
+  const sessionContext = useSessionRowContext(props, rows, motion);
   const headingContext = useHeadingContext(props, collapsedProjects);
 
   return useCallback(
@@ -146,22 +135,28 @@ function useRenderItem(
   );
 }
 
+type RowInputs = RenderInputs & { entries: SessionsListEntry[] };
+
+function useRowInputs(props: SessionsListProps, treeDrawn: boolean): RowInputs {
+  const collapsedProjects = useCollapsedProjects();
+  const nesting = useSessionNesting(treeDrawn);
+  const entries = useNestedEntries(props, collapsedProjects.collapsed, nesting);
+  const animating = useAnimateReorder(entries);
+  const rows = useListRowData(props);
+
+  return { collapsedProjects, nesting, entries, animating, rows };
+}
+
 export function useListRows(
   props: SessionsListProps,
   treeDrawn: boolean,
 ): ListRows {
-  const collapsedProjects = useCollapsedProjects();
-
-  const nesting = useSessionNesting(treeDrawn);
-
-  const entries = useNestedEntries(props, collapsedProjects.collapsed, nesting);
-
-  const animating = useAnimateReorder(entries);
+  const input = useRowInputs(props, treeDrawn);
 
   return {
-    animating,
-    items: props.placeholder ? noEntries : entries,
-    extraData: useExtraData(props, collapsedProjects),
-    renderItem: useRenderItem(props, collapsedProjects, { animating, nesting }),
+    animating: input.animating,
+    items: props.placeholder ? noEntries : input.entries,
+    extraData: useExtraData(input.rows, input.collapsedProjects),
+    renderItem: useRenderItem(props, input),
   };
 }

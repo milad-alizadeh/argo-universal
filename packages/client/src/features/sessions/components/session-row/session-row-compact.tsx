@@ -1,22 +1,29 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import {
   ListItem,
+  ListItemInert,
   type ListItemProps,
 } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
-  ChangeStageIcon,
   ChangeStageModifier,
+  SecondaryChangeStageIcon,
 } from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
 import {
+  compactItems,
   hasPluginItems,
+  PluginAccessories,
   SessionRowPluginItems,
 } from './session-row-plugin-items';
-import { type SessionRowProps, sessionRowLabel } from './session-row-props';
+import {
+  type SessionRowPlugins,
+  type SessionRowProps,
+  sessionRowLabel,
+} from './session-row-props';
 import { sidebarDrawing } from './session-row-sidebar';
 import { compactStatusDot } from './session-row-status';
 
@@ -30,7 +37,7 @@ function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
   if (pullRequest)
     return (
       <>
-        <ChangeStageIcon {...pullRequest} />
+        <SecondaryChangeStageIcon {...pullRequest} />
         <ChangeStageModifier {...pullRequest} />
       </>
     );
@@ -39,22 +46,52 @@ function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
 }
 
 /*
- * A Compact row's end: its detail, the Plugins' items after it as on a Regular row, then the status dot; a phone draws
- * no dot while the Session is idle, a sidebar row a muted one.
+ * A Compact row's end: its detail, then the status dot; a phone draws no dot while the Session is idle, a sidebar row
+ * a muted one. With Plugin items, the dot follows them as the row's accessories.
  */
-function compactTrailing(props: CompactEndProps): React.ReactNode {
+function compactEnd(
+  props: CompactEndProps,
+): Pick<ListItemProps, 'trailing' | 'trailingAccessories'> {
   const detail = compactDetail(props);
   const status = compactStatusDot(props.session.status);
-  const hasEnd = [detail, status].some((part) => part !== undefined);
 
-  if (!hasEnd && !hasPluginItems(props.plugins)) return undefined;
+  if (!hasPluginItems(props.plugins))
+    return { trailing: endParts(detail, status) };
 
-  return (
+  return {
+    trailing: detail,
+    trailingAccessories: (
+      <CompactAccessories {...props} plugins={props.plugins} status={status} />
+    ),
+  };
+}
+
+const endParts = (
+  detail: React.ReactNode,
+  status: React.ReactNode,
+): React.ReactNode =>
+  [detail, status].some((part) => part !== undefined) ? (
     <View className="flex-row items-center gap-1.5">
       {detail}
-      <SessionRowPluginItems {...props} />
       {status}
     </View>
+  ) : undefined;
+
+type CompactAccessoriesProps = CompactEndProps & {
+  plugins: SessionRowPlugins;
+  status: React.ReactNode;
+};
+
+// One item fits the line; the rest join "+N", and the dot stays part of the row.
+function CompactAccessories(props: CompactAccessoriesProps): React.JSX.Element {
+  return (
+    <PluginAccessories className="min-w-0 shrink flex-row items-center gap-1.5">
+      <SessionRowPluginItems
+        plugins={compactItems(props.plugins)}
+        onOpenPluginPage={props.onOpenPluginPage}
+      />
+      <ListItemInert>{props.status}</ListItemInert>
+    </PluginAccessories>
   );
 }
 
@@ -84,7 +121,7 @@ export function CompactSessionRow(props: SessionRowProps): React.JSX.Element {
       {...sidebarDrawing(props.session.status)}
       accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} />}
-      trailing={compactTrailing(props)}
+      {...compactEnd(props)}
       selected={props.selected ?? false}
       finished={props.session.archivedAt !== null}
     />

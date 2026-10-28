@@ -1,4 +1,5 @@
 import { databaseClient } from './database-client.ts';
+import { hermesArrayMethods } from './hermes-array-methods.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
 import { noInternalMock } from './no-internal-mock.ts';
 import { ruleTester } from './rule-tester.ts';
@@ -21,6 +22,24 @@ ruleTester.run('vendor-name', vendorName, {
       errors: [{ messageId: 'vendorName' }],
     },
     { code: 'const agent = "codex";', errors: [{ messageId: 'vendorName' }] },
+  ],
+});
+
+ruleTester.run('hermes-array-methods', hermesArrayMethods, {
+  valid: [
+    'const sorted = [...items].sort(compare);',
+    'const last = items.findLast(isDone);',
+    'const reversed = items.toReversed();',
+  ],
+  invalid: [
+    {
+      code: 'const sorted = items.toSorted(compare);',
+      errors: [{ messageId: 'hermesArrayMethods' }],
+    },
+    {
+      code: 'const sorted = items?.toSorted();',
+      errors: [{ messageId: 'hermesArrayMethods' }],
+    },
   ],
 });
 
