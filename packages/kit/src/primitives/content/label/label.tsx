@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
+import { Icon, SecondaryGlyphs } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import type { LabelProps } from './label-props';
 
@@ -44,11 +44,15 @@ function LabelText(props: LabelTextProps): ReactElement {
   );
 }
 
-// A text-only Label has no icon, so the row's gap never applies.
+// A text-only Label has no icon, so the row's gap never applies. Its icon sits beside Secondary text, so it keeps the desktop size on a phone.
 function LabelIcon(
   props: Pick<LabelProps, 'icon'> & { tone: NonNullable<LabelProps['tone']> },
 ): ReactElement | null {
   if (!props.icon) return null;
 
-  return <Icon name={props.icon} tone={props.tone} />;
+  return (
+    <SecondaryGlyphs>
+      <Icon name={props.icon} tone={props.tone} />
+    </SecondaryGlyphs>
+  );
 }
