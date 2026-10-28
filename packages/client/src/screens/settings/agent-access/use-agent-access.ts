@@ -57,7 +57,7 @@ function controlState(sources: Sources): Omit<Controls, 'access'> {
     onEnabledChange: (enabled) => change.mutate({ enabled }),
     onInstall: () => install.mutate(),
     onRetry: () => {
-      void access.refetch();
+      access.refetch();
     },
   };
 }

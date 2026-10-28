@@ -101,3 +101,7 @@ export {
   beginSessionOperation,
   type SessionOperationCall,
 } from './operation-call';
+
+export { cancelSession } from './session-closure';
+
+export { archiveSession } from './archive/archive-commands';

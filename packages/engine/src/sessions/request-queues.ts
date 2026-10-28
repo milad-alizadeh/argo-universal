@@ -125,7 +125,9 @@ export const cancelRequests = (
       acpSessionId: context.acpLease?.sessionId ?? '',
       toolCallIds: [
         ...pending,
-        ...context.permissionQueue.map((request) => request.toolCallId),
+        ...context.permissionQueue
+          .filter((request) => !request.operation)
+          .map((request) => request.toolCallId),
       ],
     },
   };

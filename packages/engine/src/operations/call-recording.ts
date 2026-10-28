@@ -1,4 +1,5 @@
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
   beginSessionOperation,
@@ -30,7 +31,7 @@ function failed(call: SessionOperationCall, cause: unknown): never {
 export function recordOperation<Result>(
   { deps, caller }: Recording,
   operation: Call,
-  run: () => Promise<Result>,
+  run: (call?: SessionOperationCall) => Promise<Result>,
 ): Promise<Result> {
   if (caller.kind === 'user') return run();
 
@@ -42,12 +43,23 @@ export function recordOperation<Result>(
 
 function runRecorded<Result>(
   call: SessionOperationCall,
-  run: () => Promise<Result>,
+  run: (call?: SessionOperationCall) => Promise<Result>,
 ): Promise<Result> {
   return Promise.resolve()
-    .then(run)
+    .then(() => run(call))
     .then(
       (result) => completed(call, result),
       (cause: unknown) => failed(call, cause),
     );
+}
+
+export function requireOperationCall(
+  call: SessionOperationCall | undefined,
+): SessionOperationCall {
+  if (call) return call;
+
+  throw new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'The calling Session has no Operation Tool call',
+  });
 }

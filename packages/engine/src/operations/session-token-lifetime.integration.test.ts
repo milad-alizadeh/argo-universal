@@ -46,8 +46,8 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
   expect(await first.caller.operations.list.query()).toContainEqual(
     expect.objectContaining({
       id: 'session.close',
-      enabled: false,
-      disabledReason: expect.any(String),
+      enabled: true,
+      disabledReason: null,
     }),
   );
   await expect(
@@ -55,7 +55,10 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
       id: 'session.close',
       params: { sessionId: second.sessionId },
     }),
-  ).rejects.toMatchObject({ data: { code: 'FORBIDDEN' } });
+  ).rejects.toMatchObject({
+    message: 'A Permission request requires an active Turn',
+    data: { code: 'CONFLICT' },
+  });
 
   const events = await fixture.host.caller.feed.subscribe({
     sessionId: second.sessionId,

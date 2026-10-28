@@ -63,7 +63,7 @@ const targetReads: TargetRead[] = [
 ];
 
 it.each(targetReads)(
-  'scopes $id to the calling Session Project while preserving user access',
+  'reads $id in scope and requires an active Turn to confirm foreign access while preserving user access',
   async ({ id, params, expected }) => {
     const { calling, target, foreign, otherId, user } =
       await sessionReadScope();
@@ -80,8 +80,8 @@ it.each(targetReads)(
         params: { ...params, sessionId: foreign.sessionId },
       }),
     ).rejects.toMatchObject({
-      data: { code: 'FORBIDDEN' },
-      message: expect.stringContaining('Project'),
+      data: { code: 'CONFLICT' },
+      message: 'A Permission request requires an active Turn',
     });
     expect(
       await user.operations.run.mutate({

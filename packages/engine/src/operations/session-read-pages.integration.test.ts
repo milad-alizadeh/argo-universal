@@ -114,5 +114,8 @@ it('pages messages, changed files and diff lines with a Session token and checks
         id: operation.id,
         params: { ...operation.params, sessionId: foreign.sessionId },
       }),
-    ).rejects.toMatchObject({ data: { code: 'FORBIDDEN' } });
+    ).rejects.toMatchObject({
+      data: { code: 'CONFLICT' },
+      message: 'A Permission request requires an active Turn',
+    });
 }, 30_000);

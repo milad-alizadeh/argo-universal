@@ -5,62 +5,65 @@ import {
   type OperationRow,
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { TRPCError } from '@trpc/server';
+import type { SessionOperationCall } from '../sessions';
 import type { OperationImplementations, OperationResult } from './operations';
 import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
 import { resolveReadTarget, type ResolvedReadOperation } from './read-target';
 import { runOperation } from './router.gen';
-import type { OperationCaller, SessionCaller } from './session-tokens';
+import type { SessionCaller } from './session-tokens';
+import { runSessionWrite } from './session-write';
 
-const unavailable = 'Session access to this Operation is not available';
+const needsTurn = 'A Permission request requires an active Turn';
 
 type SessionAccess = {
   implementations: OperationImplementations;
   caller: SessionCaller;
   deps: Pick<OperationsDeps, 'readSession'>;
+  call: SessionOperationCall;
 };
 
 export function scopedOperations(
-  caller: OperationCaller,
   rows: OperationRow[],
+  call?: SessionOperationCall,
 ): OperationRow[] {
-  if (caller.kind === 'user') return rows;
+  if (!call) return rows;
+
+  if (call.canConfirm) return rows;
 
   return rows.map((row) =>
-    row.tier === 'read'
-      ? row
-      : { ...row, enabled: false, disabledReason: unavailable },
+    row.tier === 'confirm'
+      ? { ...row, enabled: false, disabledReason: needsTurn }
+      : row,
   );
 }
 
 export async function runSessionOperation(
-  { implementations, caller, deps }: SessionAccess,
+  { implementations, caller, deps, call }: SessionAccess,
   operation: { id: OperationId; params: Json },
 ): Promise<OperationResult> {
   const read = resolveReadTarget(deps, caller, operation);
 
-  if (!read) throw new TRPCError({ code: 'FORBIDDEN', message: unavailable });
+  if (!read)
+    return runSessionWrite(deps, implementations, { caller, operation, call });
 
-  requireReadScope(caller, read);
+  await confirmReadScope({ caller, call }, read);
 
   return runSessionRead(implementations, caller, read);
 }
 
-function requireReadScope(
-  caller: SessionCaller,
+async function confirmReadScope(
+  { caller, call }: Pick<SessionAccess, 'caller' | 'call'>,
   read: ResolvedReadOperation,
-): void {
+): Promise<void> {
   if (read.target.projectId === null) return;
 
-  if (read.target.projectId !== caller.projectId)
-    throw new TRPCError({
-      code: 'FORBIDDEN',
-      message: 'This Operation is outside the calling Session’s Project',
-    });
+  if (read.target.projectId === caller.projectId) return;
+
+  await call.confirm(operations[read.id].description);
 }
 
-// Runs a read after scope was authorized; Permission policy can authorize a foreign target later.
+// Executes an authorized read while preserving its Project scope metadata.
 export async function runSessionRead(
   implementations: OperationImplementations,
   caller: SessionCaller,

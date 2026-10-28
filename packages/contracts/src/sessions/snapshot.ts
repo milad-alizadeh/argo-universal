@@ -43,6 +43,13 @@ export const PendingPermission = z.strictObject({
   requestId: z.string(),
   toolCallId: z.string(),
   title: z.string(),
+  operation: z
+    .strictObject({
+      id: z.string(),
+      description: z.string(),
+      input: z.string(),
+    })
+    .optional(),
   // The plan text when the request asks to leave plan mode (ACP `switch_mode` Tool call content).
   plan: z.string().optional(),
   options: z

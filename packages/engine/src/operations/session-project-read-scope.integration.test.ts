@@ -11,7 +11,7 @@ const listOperationId = 'session.list';
 
 const projectBranchesId = 'project.listBranches';
 
-it('limits a Session list to its caller Project and refuses an explicit foreign Project', async () => {
+it('defaults a Session list to its caller Project and requires an active Turn to confirm a foreign Project', async () => {
   const fixture = await sessionAccessHost();
   const otherId = await addOtherProject(fixture.host);
   const caller = await openAccessSession(fixture, 'Caller');
@@ -45,8 +45,8 @@ it('limits a Session list to its caller Project and refuses an explicit foreign 
       params: { projectId: otherId },
     }),
   ).rejects.toMatchObject({
-    data: { code: 'FORBIDDEN' },
-    message: expect.stringContaining('Project'),
+    data: { code: 'CONFLICT' },
+    message: 'A Permission request requires an active Turn',
   });
   expect((await fixture.host.caller.session.list({})).sessions).toContainEqual(
     expect.objectContaining({ sessionId: foreign.sessionId }),
@@ -78,7 +78,10 @@ it('scopes Project branch reads while keeping user access to another Project', a
       id: projectBranchesId,
       params: { projectId: otherId },
     }),
-  ).rejects.toMatchObject({ data: { code: 'FORBIDDEN' } });
+  ).rejects.toMatchObject({
+    data: { code: 'CONFLICT' },
+    message: 'A Permission request requires an active Turn',
+  });
   expect(
     await user.operations.run.mutate({
       id: projectBranchesId,
