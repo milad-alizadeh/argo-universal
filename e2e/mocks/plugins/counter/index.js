@@ -70,18 +70,19 @@ export function register(argo) {
     <Text>{`Fixture Slot for ${context.projectId}`}</Text>
   ));
   // One item on every Session row, which opens the Counter page.
-  argo.slots.register('argo/session/row/v1', ({ contexts }) =>
-    Object.fromEntries(
-      contexts.map(({ sessionId }) => [
-        sessionId,
-        [{ text: 'Counter item', action: { path: '/' } }],
-      ]),
-    ),
+  argo.slots.register(
+    'argo/session/row/v1',
+    everySession({ text: 'Counter item', action: { path: '/' } }),
   );
   // An Activity line for every Session, shown only on a Device that picks Counter to write it.
-  argo.slots.register('argo/session/activity/v1', ({ contexts }) =>
-    Object.fromEntries(
-      contexts.map(({ sessionId }) => [sessionId, [{ text: 'Counter line' }]]),
-    ),
+  argo.slots.register(
+    'argo/session/activity/v1',
+    everySession({ text: 'Counter line' }),
   );
 }
+
+// The same one item for every Session a Session row Slot asks about.
+const everySession =
+  (item) =>
+  ({ contexts }) =>
+    Object.fromEntries(contexts.map(({ sessionId }) => [sessionId, [item]]));
