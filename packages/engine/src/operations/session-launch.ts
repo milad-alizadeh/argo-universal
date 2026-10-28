@@ -1,11 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import {
-  mkdirSync,
-  readlinkSync,
-  renameSync,
-  symlinkSync,
-  unlinkSync,
-} from 'node:fs';
+import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AcpResourceInput } from '../agents';
@@ -15,35 +9,25 @@ const cliEntry = fileURLToPath(
   new URL('../../../../apps/cli/bin/argo.mjs', import.meta.url),
 );
 
-function alreadyExists(cause: unknown): boolean {
-  if (!(cause instanceof Error)) return false;
+const quote = (argument: string): string =>
+  `'${argument.replaceAll("'", "'\\''")}'`;
 
-  return 'code' in cause && cause.code === 'EEXIST';
-}
-
-function updateLink(link: string): void {
-  if (readlinkSync(link) === cliEntry) return;
-  const temporary = `${link}.${randomUUID()}`;
-  symlinkSync(cliEntry, temporary);
-
-  try {
-    renameSync(temporary, link);
-  } catch (error) {
-    unlinkSync(temporary);
-    throw error;
-  }
-}
+// The Server's Node can be bundled or absent from the Project login shell's PATH.
+const cliLauncher = `#!/bin/sh
+exec ${quote(process.execPath)} ${quote(cliEntry)} "$@"
+`;
 
 function cliDirectory(home: string): string {
   const directory = join(home, 'cli', 'bin');
   mkdirSync(directory, { recursive: true });
-  const link = join(directory, 'argo');
+  const temporary = join(directory, `argo.${randomUUID()}`);
 
   try {
-    symlinkSync(cliEntry, link);
-  } catch (cause) {
-    if (!alreadyExists(cause)) throw cause;
-    updateLink(link);
+    writeFileSync(temporary, cliLauncher, { mode: 0o755 });
+    renameSync(temporary, join(directory, 'argo'));
+  } catch (error) {
+    rmSync(temporary, { force: true });
+    throw error;
   }
 
   return directory;
