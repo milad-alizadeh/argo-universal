@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import type { PlacedContentProps } from './list-item-placement';
@@ -8,7 +9,7 @@ import { TreeLane } from './list-item-tree';
 
 type SubtitleProps = Pick<
   ListItemProps,
-  'subtitleTone' | 'subtitleDimmed' | 'subtitleLines'
+  'subtitleTone' | 'subtitleDimmed' | 'subtitleLines' | 'subtitleIcon'
 > & {
   text?: string;
   multiline?: boolean;
@@ -18,7 +19,22 @@ const subtitleLines = (props: SubtitleProps): number | undefined =>
   props.multiline ? undefined : (props.subtitleLines ?? 1);
 
 function Subtitle(props: SubtitleProps): ReactNode {
-  return props.text === undefined ? null : (
+  if (props.text === undefined) return null;
+
+  if (props.subtitleIcon === undefined) return <SubtitleText {...props} />;
+
+  return (
+    <View className="min-w-0 flex-row items-center gap-1">
+      <Icon name={props.subtitleIcon} tone={props.subtitleTone} />
+      <View className="min-w-0 flex-1">
+        <SubtitleText {...props} />
+      </View>
+    </View>
+  );
+}
+
+function SubtitleText(props: SubtitleProps): ReactElement {
+  return (
     <Text
       role="row-detail"
       tone={props.subtitleTone}
@@ -87,17 +103,20 @@ export const trailsTitle = (
 const subtitleWraps = (props: PlacedContentProps): boolean =>
   [props.description, props.multiline, props.subtitleWraps].some(Boolean);
 
+const subtitleOf = (props: PlacedContentProps): SubtitleProps => ({
+  text: props.subtitle,
+  multiline: subtitleWraps(props),
+  subtitleLines: props.subtitleLines,
+  subtitleTone: props.subtitleTone ?? 'muted',
+  subtitleDimmed: props.subtitleDimmed,
+  subtitleIcon: props.subtitleIcon,
+});
+
 export function ItemContent(props: PlacedContentProps): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
       <TitleLine {...props} />
-      <Subtitle
-        text={props.subtitle}
-        multiline={subtitleWraps(props)}
-        subtitleLines={props.subtitleLines}
-        subtitleTone={props.subtitleTone ?? 'muted'}
-        subtitleDimmed={props.subtitleDimmed}
-      />
+      <Subtitle {...subtitleOf(props)} />
       <Meta sidebar={props.sidebar === true}>{props.meta}</Meta>
     </View>
   );

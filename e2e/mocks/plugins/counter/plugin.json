@@ -18,7 +18,7 @@
         "path": "/"
       }
     ],
-    "slots": ["argo/project/details/v1"],
+    "slots": ["argo/project/details/v1", "argo/session/row/v1"],
     "declared": {
       "argo/session/header/v1": [
         {

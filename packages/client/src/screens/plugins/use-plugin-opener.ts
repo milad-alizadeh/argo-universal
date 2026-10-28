@@ -1,4 +1,5 @@
 import { router, usePathname } from 'expo-router';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import { sectionOf } from '../../lib/product/navigation/sections';
 import {
   pageUnavailable,
@@ -37,4 +38,22 @@ export function usePluginOpener(): (
     if (route) pushPage(route, sessionId);
     else pageUnavailable(path);
   };
+}
+
+/*
+ * Opens one Plugin's page by path, for a list whose rows hold the callback: it stays the same function across renders,
+ * so a memoised row is not redrawn when the App moves to another page, and it opens from wherever the App is then.
+ */
+export function useOpenPluginPage(): (pluginId: string, path: string) => void {
+  const opener = usePluginOpener();
+  const latest = useRef(opener);
+
+  useLayoutEffect(() => {
+    latest.current = opener;
+  });
+
+  return useCallback(
+    (pluginId: string, path: string) => latest.current(pluginId)(path),
+    [],
+  );
 }

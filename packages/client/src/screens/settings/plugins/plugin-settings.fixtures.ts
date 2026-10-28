@@ -2,7 +2,7 @@ import {
   PluginSettingsSchema,
   type PluginSettings,
 } from '@repo/contracts/plugins';
-import { pluginSymbol } from '../../plugins/plugin-symbol';
+import { pluginSymbol } from '../../../lib/product/plugin-symbol';
 import type { PluginRow } from './plugin-list-view';
 
 export const githubPlugin: PluginRow = {

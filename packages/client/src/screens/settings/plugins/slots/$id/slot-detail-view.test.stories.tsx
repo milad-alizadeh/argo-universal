@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
 import { argoActivity } from './session-row-slot';
+import { noActivityLine } from './slot-detail-model';
 import type { SlotOwner, SlotPlugin } from './slot-detail-model';
 import { SlotDetailView } from './slot-detail-view';
 import { fixtureSessionRowSlot } from './slot-fixture-detail';
@@ -80,13 +81,28 @@ export const ASwitchTakesAPluginOffTheRow: Story = {
   },
 };
 
-export const ListsOnlyPluginsThatAskForTheActivityLine: Story = {
+// Every Plugin on Session rows is listed; one that sends no Activity line says so and cannot be chosen.
+export const ListsEveryPluginOnSessionRowsForTheActivityLine: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByRole('radio')).toHaveLength(3);
+    await expect(canvas.getAllByRole('radio')).toHaveLength(4);
+    await expect(canvas.getByRole('radio', { name: /Default/ })).toBeChecked();
     await expect(
-      canvas.getByRole('radio', { name: /Argo’s own/ }),
-    ).toBeChecked();
-    await expect(canvas.queryByRole('radio', { name: /Coverage/ })).toBeNull();
+      canvas.getByRole('radio', { name: /Coverage/ }),
+    ).toHaveAttribute('aria-disabled', 'true');
+    await expect(canvas.getByText(noActivityLine)).toBeVisible();
+  },
+};
+
+// Choosing a Plugin asks nothing, and Default gives the line straight back to Argo.
+export const DefaultGivesTheLineBackToArgo: Story = {
+  render: () => <Live plugins={slotPlugins} />,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('radio', { name: /Issue tracker/ }));
+    await expect(canvas.getByText(issueTrackerLine)).toBeVisible();
+    await expect(canvas.queryByRole('alertdialog')).toBeNull();
+    await userEvent.click(canvas.getByRole('radio', { name: /Default/ }));
+    await expect(canvas.getByText(argoActivity)).toBeVisible();
+    await expect(canvas.queryByText(issueTrackerLine)).toBeNull();
   },
 };
 

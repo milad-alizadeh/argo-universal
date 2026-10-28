@@ -81,4 +81,13 @@ export function register(argo) {
   argo.slots.register('argo/project/details/v1', ({ context }) => (
     <Text>{`Fixture Slot for ${context.projectId}`}</Text>
   ));
+  // One item on every Session row, which opens the Counter page.
+  argo.slots.register('argo/session/row/v1', ({ contexts }) =>
+    Object.fromEntries(
+      contexts.map(({ sessionId }) => [
+        sessionId,
+        [{ text: 'Counter item', action: { path: '/' } }],
+      ]),
+    ),
+  );
 }

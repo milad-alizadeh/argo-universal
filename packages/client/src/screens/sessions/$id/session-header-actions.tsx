@@ -6,7 +6,7 @@ import {
   type SessionPluginActions,
   sessionActions,
 } from '#features/sessions';
-import { pluginSymbol } from '../../plugins/plugin-symbol';
+import { pluginSymbol } from '../../../lib/product/plugin-symbol';
 
 // A Plugin's action, keyed by its Plugin so two Plugins' ids never meet, drawn with the Plugin's own icon.
 const pluginAction = ({
