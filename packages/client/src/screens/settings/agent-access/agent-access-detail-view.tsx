@@ -81,8 +81,7 @@ function statusSection(
   if (!message) return null;
 
   return (
-    <FieldGroup.Section>
-      <FieldGroup.Value title={message} value="" />
+    <FieldGroup.Section footer={message}>
       {retryButton(status, props.onRetry)}
     </FieldGroup.Section>
   );
