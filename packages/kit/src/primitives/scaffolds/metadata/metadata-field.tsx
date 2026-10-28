@@ -1,16 +1,19 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/content/text';
-import { ListItem } from '#primitives/lists/list-item';
+import { ListItem, ListItemFrame } from '#primitives/lists/list-item';
 import type { MetadataFieldLayout } from './metadata-drawing';
 import { useMetadataDrawing } from './metadata-drawing-context';
 import { BesideField } from './metadata-field-beside';
+import { groupProps } from './metadata-group';
 
 export interface MetadataFieldProps {
   title: string;
   // What the value says, for the field's spoken label.
   valueLabel: string;
   accessibilityLabel?: string;
+  // Whether the field reads as one element; a Link value stays its own, so it can be focused and activated.
+  grouped?: boolean;
   // The read-only value: text, or text beside an icon, dot, avatar or Pills.
   children: ReactNode;
 }
@@ -52,12 +55,7 @@ function StackedField(props: FieldProps): ReactElement {
 
 function StackedGroup(props: FieldProps): ReactElement {
   return (
-    <View
-      accessible
-      role="group"
-      accessibilityLabel={props.label}
-      className={stackedClass}
-    >
+    <View {...groupProps(props)} className={stackedClass}>
       <StackedLabel title={props.title} />
       <View className="min-w-0 self-stretch">{props.children}</View>
     </View>
@@ -68,9 +66,7 @@ function StackedGroup(props: FieldProps): ReactElement {
 function InlineField(props: FieldProps): ReactElement {
   return (
     <View
-      accessible
-      role="group"
-      accessibilityLabel={props.label}
+      {...groupProps(props)}
       className="min-w-0 max-w-full flex-row items-center select-none"
     >
       {props.children}
@@ -87,6 +83,10 @@ function StackedLabel({ title }: { title: string }): ReactElement {
 }
 
 function UnderField(props: FieldProps): ReactElement {
+  if (props.grouped === false) {
+    return <ListItemFrame title={props.title} meta={props.children} />;
+  }
+
   return (
     <ListItem
       title={props.title}
