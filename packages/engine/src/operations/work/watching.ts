@@ -39,7 +39,7 @@ function subscribe(
 }
 
 class SettledChanges {
-  private readonly pending = new Set<NodeJS.Immediate>();
+  private readonly pending = new Set<ReturnType<typeof setImmediate>>();
   public constructor(private readonly changed: () => void) {}
   public readonly add = (): void => {
     const immediate = setImmediate(() => {
