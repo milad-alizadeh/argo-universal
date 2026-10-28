@@ -18,6 +18,7 @@ import {
   shownNativeSections,
   type NativeSection,
 } from './list-native-sections';
+import { useWarnRowsWithoutIds } from './list-native-unmoved';
 
 const fill = { flex: 1 };
 
@@ -74,6 +75,8 @@ function useShownSections(
     () => shownNativeSections(list.children, shown ?? []),
     [list.children, shown],
   );
+
+  useWarnRowsWithoutIds(sections);
 
   return { order, sections };
 }
