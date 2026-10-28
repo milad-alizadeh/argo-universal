@@ -42,7 +42,7 @@ function useWindowContexts(
 ): RowContexts | undefined {
   const asked = sessions
     .filter(({ sessionId }) => drawn.has(sessionId))
-    .toSorted(bySessionId)
+    .sort(bySessionId)
     .slice(0, slotItemsListLimit)
     .map(({ sessionId, projectId }) => ({ sessionId, projectId }));
 

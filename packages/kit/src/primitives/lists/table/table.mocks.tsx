@@ -83,7 +83,7 @@ const sortKey = (run: Run, column: string): number =>
 export function sortedRuns(sort: TableSort): readonly Run[] {
   const order = sort.direction === 'ascending' ? 1 : -1;
 
-  return runs.toSorted(
+  return [...runs].sort(
     (a, b) => order * (sortKey(a, sort.column) - sortKey(b, sort.column)),
   );
 }

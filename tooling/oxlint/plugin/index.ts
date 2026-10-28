@@ -5,6 +5,7 @@ import { childProcessImport } from './child-process.ts';
 import { crossPackageImport } from './cross-package-import.ts';
 import { databaseClient } from './database-client.ts';
 import { drizzleSchemaBoundary } from './drizzle-schema-boundary.ts';
+import { hermesArrayMethods } from './hermes-array-methods.ts';
 import { iconSize } from './icon-size.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
 import { kitStyling } from './kit-styling.ts';
@@ -27,6 +28,7 @@ export default definePlugin({
     'cross-package-import': crossPackageImport,
     'database-client': databaseClient,
     'drizzle-schema-boundary': drizzleSchemaBoundary,
+    'hermes-array-methods': hermesArrayMethods,
     'icon-size': iconSize,
     'json-parse-cast': jsonParseCast,
     'kit-styling': kitStyling,
