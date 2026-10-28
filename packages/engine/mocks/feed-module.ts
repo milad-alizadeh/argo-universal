@@ -105,6 +105,7 @@ const feedModuleRouterInput = (
 ): AppRouterInput => ({
   controlToken: 'feed-module-test-token',
   userHome: join(host.home, 'user-home'),
+  sessionTokens: host.engine.getSnapshot().context.sessionTokens,
   database: host.database,
   hooks: coreOnlyHooks,
   plugins: new Plugins({

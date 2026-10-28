@@ -173,6 +173,15 @@ export class AcpConnection {
       launch,
     };
     this.prepareAuthentication(launch);
+    this.inheritAuthentication(launch);
+  }
+  private inheritAuthentication(launch: AgentLaunch): void {
+    this.authentication?.inheritRequired(
+      this.hooks.authChanges.requiredDescription(
+        launch.agentId,
+        launch.projectId,
+      ),
+    );
   }
   // A stopping connection hands out no authentication, so nothing starts after shutdown.
   public getAuthentication(): ConnectionAuthentication | undefined {

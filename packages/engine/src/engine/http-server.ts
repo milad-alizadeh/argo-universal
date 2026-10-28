@@ -4,6 +4,7 @@ import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
+import type { SessionTokens } from '../operations';
 import { readControlToken } from '../operations';
 import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
@@ -26,6 +27,7 @@ import { createAppRouterDeps, type AppRouterInput } from './router-deps';
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
   userHome?: string;
+  sessionTokens: SessionTokens;
   registry: RegistryActor;
   createId: () => string;
   port: number;

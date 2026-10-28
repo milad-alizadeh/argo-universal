@@ -4,6 +4,7 @@ import { type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import { type FeedDeps } from '../feed';
 import type { NotificationsDeps } from '../notifications';
+import type { SessionTokens } from '../operations';
 import type { PluginsRouterDeps } from '../plugins';
 import {
   createSessionConnections,
@@ -28,6 +29,7 @@ export type AppRouterDeps = SessionRouterDeps &
   FeedDeps &
   NotificationsDeps & {
     userHome: string;
+    sessionTokens: SessionTokens;
     controlToken: string;
     plugins: PluginsRouterDeps;
   };

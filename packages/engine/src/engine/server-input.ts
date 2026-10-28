@@ -11,6 +11,7 @@ import {
 type ServerSource = {
   context: Pick<
     EngineContext,
+    | 'sessionTokens'
     | 'createId'
     | 'commandAdmission'
     | 'acp'
@@ -35,6 +36,7 @@ type ServerInput = (source: ServerSource) => HttpServerOptions;
 
 export const serverInput: ServerInput = ({ context, self }) => ({
   createId: context.createId,
+  sessionTokens: context.sessionTokens,
   sessions: requireOpenSessions(self.system),
   databaseWriter: requireDatabaseWriter(self.system),
   registry: requireRegistry(self.system),

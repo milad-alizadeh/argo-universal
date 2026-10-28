@@ -71,6 +71,9 @@ export class AcpSessionLifetime {
   ): AcpSessionDestination {
     return this.shells ? this.shells.attach(destination) : destination;
   }
+  public get signal(): AbortSignal {
+    return this.controller.signal;
+  }
   public finishRegistration(): void {
     this.registration.resolve();
   }
@@ -107,6 +110,7 @@ export class AcpSessionLifetime {
   ): Promise<AcpSessionLease> {
     return this.requireDependencies().resources.open({
       launch,
+      sessionId: session.sessionId,
       opening: selectSessionOpening(session),
       destination,
       signal: this.controller.signal,

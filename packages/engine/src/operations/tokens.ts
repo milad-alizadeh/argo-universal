@@ -1,7 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { TRPCError } from '@trpc/server';
 
 const tokenBytes = 32;
 
@@ -31,20 +30,9 @@ export async function readControlToken(home: string): Promise<string> {
   return (await readFile(path, 'utf8')).trim();
 }
 
-function tokensMatch(expected: string, supplied: string): boolean {
+export function tokensMatch(expected: string, supplied: string): boolean {
   const candidate = Buffer.from(supplied);
   const token = Buffer.from(expected);
 
   return candidate.length === token.length && timingSafeEqual(candidate, token);
-}
-
-export function requireUserToken(
-  expected: string,
-  supplied: string | undefined,
-): void {
-  if (supplied && tokensMatch(expected, supplied)) return;
-  throw new TRPCError({
-    code: 'UNAUTHORIZED',
-    message: 'An Argo token is required',
-  });
 }

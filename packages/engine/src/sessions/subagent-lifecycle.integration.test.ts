@@ -24,27 +24,20 @@ async function resumeBackgroundParent(): Promise<ResumedParent> {
 
   const { host, sessionId } = await openAcpFeedSession({
     ...background,
-    responses: {
-      'session/prompt': [
-        { steps: background.steps },
-        {
-          steps: [
-            {
-              type: 'update',
-              update: {
-                sessionUpdate: 'subagent_update',
-                sessionId: 'subagent-review',
-                state: {
-                  state: 'idle',
-                  stopReason: 'end_turn',
-                  usage: { totalTokens: 12, inputTokens: 8, outputTokens: 4 },
-                },
-              },
-            },
-          ],
+    resumedSteps: [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'subagent_update',
+          sessionId: 'subagent-review',
+          state: {
+            state: 'idle',
+            stopReason: 'end_turn',
+            usage: { totalTokens: 12, inputTokens: 8, outputTokens: 4 },
+          },
         },
-      ],
-    },
+      },
+    ],
   });
 
   const [child] = await host.caller.session.listAgents({ sessionId });

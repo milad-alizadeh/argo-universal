@@ -87,3 +87,8 @@ export { createSessionAgentReader, listSessionBranches } from './readers';
 export { listSessionShells } from './shells/list';
 
 export { unarchiveSession } from './archive/archive-commands';
+
+export {
+  beginSessionOperation,
+  type SessionOperationCall,
+} from './operation-call';

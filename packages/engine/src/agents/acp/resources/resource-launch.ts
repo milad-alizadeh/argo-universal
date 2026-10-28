@@ -35,9 +35,11 @@ const resolveEntry = async (
   entry.directory = resolved.installationDirectory;
   resolved.release?.();
 
+  entry.resolving.signal.throwIfAborted();
+
   if (stopped()) throw new Error('ACP resources are stopped');
 
-  return resolved;
+  return sessionLaunch(entry, resolved);
 };
 
 // The download stops once every Session waiting on it has withdrawn.
@@ -54,3 +56,8 @@ const abortWith = (
 ): void => {
   if (signal?.aborted) controller.abort(signal.reason);
 };
+
+const sessionLaunch = (entry: Entry, launch: AgentLaunch): AgentLaunch => ({
+  ...launch,
+  argo: entry.access?.environment,
+});

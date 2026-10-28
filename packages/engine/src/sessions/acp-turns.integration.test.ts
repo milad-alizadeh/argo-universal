@@ -222,7 +222,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     const process = host.agent.processes[0];
 
     if (!process) throw new Error('Owned lifetime is missing');
-    expect(process.terminations).toBe(0);
+    expect(process.terminations).toBe(1);
     const page = await host.caller.feed.page({ ...created, direction: 'tail' });
     expect(page.rows[1]).toMatchObject({
       state: 'settled',

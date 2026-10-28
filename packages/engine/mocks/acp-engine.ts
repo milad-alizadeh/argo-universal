@@ -26,7 +26,10 @@ export const startAcpEngine = async (
     > &
     Pick<
       AcpResourceInput,
-      'closeTimeoutMs' | 'launchLoginTerminal' | 'launchProcess'
+      | 'closeTimeoutMs'
+      | 'launchLoginTerminal'
+      | 'launchProcess'
+      | 'sessionAccess'
     > & {
       // Writes first-party fixture Plugins into the Engine's home before it starts.
       installPlugins?: (home: string) => Promise<void>;
@@ -56,6 +59,7 @@ export const startAcpEngine = async (
       launchProcess: scenario.launchProcess ?? agent.launchProcess,
       launchLoginTerminal: scenario.launchLoginTerminal,
       closeTimeoutMs: scenario.closeTimeoutMs,
+      sessionAccess: scenario.sessionAccess,
     },
   };
 
