@@ -1,6 +1,12 @@
-import type { ListMove } from './plugins/list-move-props';
-
-export type { ListMove };
+/*
+ * Where a moved row lands: the row, the Section it lands in (none for rows outside any), and its index among that
+ * Section's rows once moved. Kit-neutral: the Plugin wire schema in `plugins/list-move-props` is checked against it.
+ */
+export interface ListMove {
+  id: string;
+  section?: string;
+  index: number;
+}
 
 // A row as its owner holds it: its id, or a record carrying one.
 export type MovableRow = string | { id: string };

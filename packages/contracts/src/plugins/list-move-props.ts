@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import type { ListMove } from '../kit-moves';
 
 // Where a moved row lands: the row, the Section it lands in, and its index among that Section's rows once moved.
 export const listMoveProps = z.object({
   id: z.string().describe('The moved row id.'),
   section: z
     .string()
-    .optional()
+    .exactOptional()
     .describe(
       'The id of the Section it lands in; absent for rows outside any Section.',
     ),
@@ -14,6 +15,4 @@ export const listMoveProps = z.object({
     .int()
     .nonnegative()
     .describe("Its index among that Section's rows after the move."),
-});
-
-export type ListMove = z.infer<typeof listMoveProps>;
+}) satisfies z.ZodType<ListMove>;
