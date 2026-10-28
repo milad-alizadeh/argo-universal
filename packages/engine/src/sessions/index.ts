@@ -31,13 +31,18 @@ export {
   pendingInputRequest,
 } from './pending-input';
 
-export { createSessionSnapshotWatcher } from './snapshot';
+export {
+  createSessionSnapshotWatcher,
+  createSessionSnapshotReader,
+} from './snapshot';
 
 export { watchTurnActivity } from './turn-activity';
 
 export { createSessionReader, readSessionRow } from './session-record';
 
 export { readDefaultChangesSummary } from './changes-summary';
+
+export { readSessionChanges, readSessionDiff } from './change-readers';
 
 export { createSessionActorInput } from './session-actor-input';
 
@@ -46,6 +51,8 @@ export { openSessionsId } from './open-sessions-system';
 export { sessionActorId } from './session-system';
 
 export { createSessionRouter } from './router';
+
+export { createSessionList, type SessionList } from './list/session-list';
 
 export type { SessionRouterDeps } from './router-deps';
 

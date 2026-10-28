@@ -8,8 +8,6 @@ import {
   SessionCancelInput,
   SessionCancelOutput,
   SessionCounts,
-  SessionListInput,
-  SessionListOutput,
   SessionListUpdate,
   SessionMarkSeenInput,
   SessionMarkSeenOutput,
@@ -29,8 +27,7 @@ import {
 } from '../rpc';
 import { agentOptionsUpdates } from './agent-options';
 import { createArchiveRouter } from './archive/archive-router';
-import { createChangesRouter } from './changes-router';
-import { createSessionList } from './list/session-list';
+import type { SessionList } from './list/session-list';
 import type { SessionRouterDeps } from './router-deps';
 import {
   answerSessionElicitation,
@@ -41,19 +38,6 @@ import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
 import { markSessionSeen } from './session-seen';
-
-type SessionList = ReturnType<typeof createSessionList>;
-
-const createListRouter = routerFactory((sessionList: SessionList) =>
-  router({
-    list: publicProcedure
-      .input(SessionListInput)
-      .output(SessionListOutput)
-      .query(({ input }): Promise<SessionListOutput> =>
-        sessionList.list(input),
-      ),
-  }),
-);
 
 const createListUpdatesRouter = routerFactory((sessionList: SessionList) =>
   router({
@@ -133,18 +117,18 @@ const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
   }),
 );
 
-export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
-  const sessionList = createSessionList(deps);
+export const createSessionRouter = routerFactory(
+  (deps: SessionRouterDeps & { sessionList: SessionList }) => {
+    const { sessionList } = deps;
 
-  return mergeRouters(
-    createListRouter(sessionList),
-    createListUpdatesRouter(sessionList),
-    createCountsRouter(sessionList),
-    createSeenRouter(deps),
-    createStartRouter(deps),
-    createStopRouter(deps),
-    createArchiveRouter(deps),
-    createAnswerRouter(deps),
-    createChangesRouter(deps),
-  );
-});
+    return mergeRouters(
+      createListUpdatesRouter(sessionList),
+      createCountsRouter(sessionList),
+      createSeenRouter(deps),
+      createStartRouter(deps),
+      createStopRouter(deps),
+      createArchiveRouter(deps),
+      createAnswerRouter(deps),
+    );
+  },
+);
