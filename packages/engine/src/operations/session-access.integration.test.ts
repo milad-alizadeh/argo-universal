@@ -1,3 +1,6 @@
+import { mkdirSync, readFileSync, symlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type {
   AuthenticateRequest,
   TerminalOutputResponse,
@@ -14,7 +17,7 @@ import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { discoverOptions } from '#mocks/session-access';
 import { agentEnvironment } from '../agents';
 
-it('lets an Agent run argo from its Session and shows the call as an ordinary Feed Tool call', async () => {
+it('lets an Agent run argo without Node on PATH and shows the call as an ordinary Feed Tool call', async () => {
   const outputs: TerminalOutputResponse[] = [];
 
   const host = await startAcpEngine({
@@ -33,6 +36,7 @@ it('lets an Agent run argo from its Session and shows the call as an ordinary Fe
           command: 'argo',
           args: ['run', 'project.list'],
           env: [
+            { name: 'PATH', value: '/no-node-runtime' },
             { name: 'ARGO_TOKEN', value: 'stale-terminal-token' },
             { name: 'ARGO_HOME', value: '/wrong-terminal-home' },
           ],
@@ -46,12 +50,22 @@ it('lets an Agent run argo from its Session and shows the call as an ordinary Fe
   await host.caller.registry.refresh();
   publishControlAddress(host);
 
+  const cliEntry = fileURLToPath(
+    new URL('../../../../apps/cli/bin/argo.mjs', import.meta.url),
+  );
+
+  const originalEntry = readFileSync(cliEntry, 'utf8');
+  const bin = join(host.home, 'cli', 'bin');
+  mkdirSync(bin, { recursive: true });
+  symlinkSync(cliEntry, join(bin, 'argo'));
+
   const created = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'List my Projects' }],
   });
 
   await waitForAcpSessionIdle(host, created.sessionId);
+  expect(readFileSync(cliEntry, 'utf8')).toBe(originalEntry);
   expect(outputs).toMatchObject([{ exitStatus: { exitCode: 0 } }]);
   expect(JSON.parse(outputs[0]?.output ?? '')).toContainEqual(
     expect.objectContaining({ id: 'project-1', inScope: true }),

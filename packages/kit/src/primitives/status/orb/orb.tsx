@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { OrbBoundary } from './orb-boundary';
 import { OrbLoader } from './orb-loader';
 import type { OrbProps } from './orb-props';
 
@@ -17,7 +18,9 @@ export function Orb(props: OrbProps): ReactElement {
 
   return (
     <View role="img" accessibilityLabel={accessibilityLabel ?? labels[state]}>
-      <OrbLoader {...props} />
+      <OrbBoundary size={props.size}>
+        <OrbLoader {...props} />
+      </OrbBoundary>
     </View>
   );
 }
