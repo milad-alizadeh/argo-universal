@@ -1,4 +1,5 @@
 import type { ListMove } from '@repo/contracts/kit-moves';
+import { assertNever } from '#kit/assert-never';
 
 /*
  * A List's movable rows, Section by Section, in the order it draws them. `key` is the Section's place in the List as
@@ -17,20 +18,19 @@ export interface RowPlace {
   index: number;
 }
 
-// Where a dragged row would go: before the row at `insertion` in the Section `sectionKey`, counted with the row still in place.
+// Where a row would go: before the row at `insertion` in the Section `sectionKey`, counted with the row still in place.
 export interface DropPlace {
   sectionKey: string;
   insertion: number;
 }
 
 /*
- * What a menu entry, its shortcut or a drop asks of a row: a place up or down its Section, to the end of the Section
- * `sectionKey`, or where it is dropped. Each resolves against the order the List shows when it is made.
+ * What a menu entry, its shortcut, the Move to… picker or a drop asks of a row: a place up or down its Section, or a
+ * place it is picked or dropped at. Each resolves against the order the List shows when it is made.
  */
 export type MoveIntent =
   | { kind: 'step'; by: -1 | 1 }
-  | { kind: 'end'; sectionKey: string }
-  | { kind: 'drop'; place: DropPlace };
+  | { kind: 'place'; place: DropPlace };
 
 // A move and what a screen reader hears once it is made.
 export interface ResolvedMove {
@@ -89,16 +89,6 @@ const stepped =
       : undefined;
   };
 
-const toEnd =
-  (key: string): Lander =>
-  (sections, { own }) => {
-    const target = sectionAt(sections, key);
-
-    return target && target !== own
-      ? { target, index: target.rows.length }
-      : undefined;
-  };
-
 const shifted = ({ index }: RowPlace, insertion: number): number =>
   insertion > index ? insertion - 1 : insertion;
 
@@ -111,7 +101,7 @@ function dropIndex(place: RowPlace, drop: DropPlace): number | undefined {
   return index === place.index ? undefined : index;
 }
 
-const dropped =
+const placed =
   (drop: DropPlace): Lander =>
   (sections, place) => {
     const target = sectionAt(sections, drop.sectionKey);
@@ -123,11 +113,14 @@ const dropped =
   };
 
 function landerOf(intent: MoveIntent): Lander {
-  if (intent.kind === 'step') return stepped(intent.by);
-
-  if (intent.kind === 'end') return toEnd(intent.sectionKey);
-
-  return dropped(intent.place);
+  switch (intent.kind) {
+    case 'step':
+      return stepped(intent.by);
+    case 'place':
+      return placed(intent.place);
+    default:
+      return assertNever(intent);
+  }
 }
 
 const moveIn = ({ target, index }: Landing, id: string): ListMove =>

@@ -28,7 +28,7 @@ function useOwnedOrder(onMove: MoveAnswer): MoveOrder {
   const [order] = useState(
     () =>
       new MoveOrder(
-        { base: [], onMove, lanes: false },
+        { base: [], onMove, lanes: false, titles: new Map() },
         { report, frame: nextFrame },
       ),
   );
@@ -65,11 +65,12 @@ export function useMovableReading(
 ): MovableReading {
   const reader = useListReader(options.children);
   const order = useOwnedOrder(onMove);
-  const { blocks, sections: base } = useShownReading(options, reader, order);
+  const reading = useShownReading(options, reader, order);
+  const { blocks, sections: base, titles } = reading;
   const prepared = usePrepared(options, blocks, reader.prefix);
   const { lanes } = prepared;
 
-  useLayoutEffect(() => order.own({ base, onMove, lanes }));
+  useLayoutEffect(() => order.own({ base, onMove, lanes, titles }));
 
   return { prepared, order };
 }

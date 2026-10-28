@@ -17,6 +17,7 @@ import {
   useSelectedSeparator,
 } from './list-item-content-selection';
 import { drawingContent } from './list-item-drawing-content';
+import { RowMovePicker } from './list-item-move-picker';
 import { NestingItem } from './list-item-nesting';
 import { hasLeading, separatorClass } from './list-item-parts';
 import { ItemPress, type DrawingProps } from './list-item-press';
@@ -98,6 +99,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
     <View className={tile ? tileSurface : itemSurface(drawing, props)}>
       <PressedContent props={props} drawing={drawing} tile={tile !== null} />
       <RowDetails tile={tile !== null} props={props} />
+      <RowMovePicker id={props.id} Row={ListItem} />
     </View>
   );
 }

@@ -1,7 +1,7 @@
 import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
 import { useSyncExternalStore } from 'react';
 import { listenerSet } from '../../../listener-set';
-import { RowFocus, type MoveNotice } from './list-move-feedback';
+import { RowFocus, type FocusRow, type MoveNotice } from './list-move-feedback';
 import {
   placeOf,
   type MoveSection,
@@ -11,12 +11,23 @@ import {
 // A Plugin's `onMove` answers once its dispatch settles; an App owner's answers at once.
 export type MoveAnswer = (move: ListMove) => void | Promise<void>;
 
-// What the List's owner last drew: its order, its answer to a move, and whether its Sections draw as lanes.
+// What the List's owner last drew: its order, its answer to a move, whether its Sections draw as lanes, and each movable row's title.
 export interface MoveOwner {
   base: readonly MoveSection[];
   onMove: MoveAnswer;
   lanes: boolean;
+  titles: ReadonlyMap<string, string>;
 }
+
+// Which steps a row's Move menu offers: up, down, both or neither. Its Move to… entry is always there.
+export type MenuSteps = 'up' | 'down' | 'both' | 'none';
+
+const withUp = (down: boolean): MenuSteps => (down ? 'both' : 'up');
+
+const withoutUp = (down: boolean): MenuSteps => (down ? 'down' : 'none');
+
+const stepsOf = (index: number, length: number): MenuSteps =>
+  (index > 0 ? withUp : withoutUp)(index < length - 1);
 
 export interface MoveEffects {
   // Runs the owner's answer, and reports a refusal with one error toast.
@@ -54,14 +65,6 @@ export function shownSections(
   return applyListMove(base, held.move);
 }
 
-// Names every Section a row can move to, so a row's menu draws again only when one is added, removed or renamed.
-const targetsOf = (sections: readonly MoveSection[]): string =>
-  sections
-    .map(
-      (section) => `${section.key}=${section.id ?? ''}:${section.title ?? ''}`,
-    )
-    .join('|');
-
 const nextNotice = (last: MoveNotice | null, text: string): MoveNotice => ({
   text,
   count: (last?.count ?? 0) + 1,
@@ -76,9 +79,9 @@ const nextNotice = (last: MoveNotice | null, text: string): MoveNotice => ({
 export class MoveOrder {
   private readonly listeners = listenerSet();
   public readonly subscribe = this.listeners.subscribe;
-  public readonly focus: RowFocus;
+  private readonly focus: RowFocus;
   private shown: readonly MoveSection[];
-  private targets: string;
+  private picked: string | undefined;
   private current: HeldMove | null = null;
   private told: MoveNotice | null = null;
 
@@ -88,7 +91,6 @@ export class MoveOrder {
   ) {
     this.focus = new RowFocus(effects.frame);
     this.shown = owner.base;
-    this.targets = targetsOf(owner.base);
   }
 
   public get sections(): readonly MoveSection[] {
@@ -105,6 +107,32 @@ export class MoveOrder {
 
   public get notice(): MoveNotice | null {
     return this.told;
+  }
+
+  // The row the Move to… picker is open for, if any.
+  public get picking(): string | undefined {
+    return this.picked;
+  }
+
+  // Row `id`'s title, as its owner drew it.
+  public titleOf(id: string): string | undefined {
+    return this.owner.titles.get(id);
+  }
+
+  // Row `id` takes focus through `focus` while it is drawn, as a move lands it; returns what lets it go.
+  public registerFocus(id: string, focus: FocusRow): () => void {
+    return this.focus.register(id, focus);
+  }
+
+  // Opens the Move to… picker for row `id`.
+  public pick(id: string): void {
+    this.picked = id;
+    this.listeners.notify();
+  }
+
+  public closePicker(): void {
+    this.picked = undefined;
+    this.listeners.notify();
   }
 
   // The owner drew again; a new order lets go of a held move made on the old one.
@@ -132,14 +160,11 @@ export class MoveOrder {
     return this.shown.some((section) => section.key === sectionKey);
   }
 
-  // What row `id`'s Move menu shows: where it sits, how long its Section is, and every Section it can move to.
-  public menuOf(id: string | undefined): string | undefined {
+  // Which steps row `id`'s Move menu offers; none while the List does not hold the row.
+  public menuOf(id: string | undefined): MenuSteps | undefined {
     const place = id === undefined ? undefined : placeOf(this.shown, id);
 
-    return (
-      place &&
-      `${place.sectionKey}:${place.index}/${place.own.rows.length}|${this.targets}`
-    );
+    return place && stepsOf(place.index, place.own.rows.length);
   }
 
   // Lets go of a move once its answer settles, unless a later move has replaced it.
@@ -152,7 +177,6 @@ export class MoveOrder {
 
   private redraw(): void {
     this.shown = shownSections(this.current, this.owner.base);
-    this.targets = targetsOf(this.shown);
     this.listeners.notify();
   }
 }

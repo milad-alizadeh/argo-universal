@@ -10,7 +10,7 @@ import {
   type PlacedChild,
 } from './list-level-entries';
 import type { MoveSection } from './list-move-model';
-import { moveSectionsOf } from './list-move-reading';
+import { moveSectionsOf, rowTitles } from './list-move-reading';
 import type { ListSectionProps } from './list-props';
 import { prepareSection, type SectionState } from './list-section-state';
 import { holdsTree, type TreeFolding } from './list-tree-rows';
@@ -61,8 +61,9 @@ function readLevel(children: ReactNode, level: Level): ListBlock[] {
 
 export interface ListReading {
   blocks: ListBlock[];
-  // The movable rows, Section by Section, in the owner's order; none in a List without `onMove`.
+  // The movable rows, Section by Section, in the owner's order, and their titles by id; none without `onMove`.
   sections: MoveSection[];
+  titles: ReadonlyMap<string, string>;
 }
 
 // The order a List with `onMove` shows over its owner's: the owner's own, or a held move's.
@@ -111,15 +112,14 @@ function readMoving(
   const owner = readOnce(children, reader, { moves: true });
   const sections = moveSectionsOf(owner.blocks, reader.prefix);
   const order = shown(sections);
-
-  if (order === sections) return { blocks: owner.blocks, sections };
-
   const held = { sections: order, rows: owner.rows };
 
-  return {
-    blocks: readOnce(children, reader, { moves: true, held }).blocks,
-    sections,
-  };
+  const blocks =
+    order === sections
+      ? owner.blocks
+      : readOnce(children, reader, { moves: true, held }).blocks;
+
+  return { blocks, sections, titles: rowTitles(owner.rows) };
 }
 
 /*
@@ -137,6 +137,7 @@ export const readList = (
     : {
         blocks: readOnce(children, reader, { moves: false }).blocks,
         sections: [],
+        titles: new Map(),
       };
 
 function appendChild(
@@ -171,6 +172,9 @@ function sectionBlock(
   return { key, kind: 'section', section, blocks };
 }
 
+const looseRunKey = (previous: ListBlock | undefined): string =>
+  `${previous?.key ?? 'start'}:items`;
+
 function appendItem(blocks: ListBlock[], entry: ListChild): void {
   const previous = blocks.at(-1);
 
@@ -181,8 +185,4 @@ function appendItem(blocks: ListBlock[], entry: ListChild): void {
       kind: 'items',
       items: [entry],
     });
-}
-
-function looseRunKey(previous: ListBlock | undefined): string {
-  return `${previous?.key ?? 'start'}:items`;
 }

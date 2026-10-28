@@ -38,8 +38,20 @@ export const BoardRowMovesToAnotherLane: Story = {
     );
 
     await userEvent.click(
-      within(menu).getByRole('menuitem', { name: 'Move to Done' }),
+      within(menu).getByRole('menuitem', { name: 'Move to…' }),
     );
+
+    const picker = await within(canvasElement.ownerDocument.body).findByRole(
+      'dialog',
+      { name: 'Move to' },
+    );
+
+    // Done is the board's last Section, and empty, so its one place is the last Top.
+    const doneTop = within(picker)
+      .getAllByRole('button', { name: 'Top' })
+      .at(-1);
+
+    if (doneTop) await userEvent.click(doneTop);
 
     await expect(onEvent).toHaveBeenCalledWith('board', {
       event: 'onMove',

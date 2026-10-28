@@ -32,7 +32,7 @@ function harness(onMove: MoveAnswer): Harness {
   const result: Harness = {
     toasts: 0,
     order: new MoveOrder(
-      { base: board, onMove, lanes: false },
+      { base: board, onMove, lanes: false, titles: new Map() },
       {
         report: async (answer) => {
           await Promise.resolve(answer()).catch(() => (result.toasts += 1));
@@ -59,25 +59,37 @@ const answers = vi.fn<MoveAnswer>;
 const pending = (): Promise<void> => new Promise(() => {});
 
 describe('MoveOrder', () => {
-  it('shows a move at once and tells where it landed', () => {
+  it('shows a move at once', () => {
     const { order } = harness(answers());
 
     order.move(toDone);
 
     expect(rowsOf(order)).toEqual([['docs'], ['login']]);
-    expect(order.notice).toEqual({
-      text: toDoneFirst,
-      count: 1,
-    });
   });
 
-  it('puts a refused move back, with one toast', async () => {
+  it('tells where a move landed', () => {
+    const { order } = harness(answers());
+
+    order.move(toDone);
+
+    expect(order.notice).toEqual({ text: toDoneFirst, count: 1 });
+  });
+
+  it('puts a refused move back', async () => {
     const run = harness(() => Promise.reject(new Error('no')));
 
     run.order.move(toDone);
     await run.nextFrame();
 
     expect(rowsOf(run.order)).toEqual([['login', 'docs'], []]);
+  });
+
+  it('reports a refused move with one toast', async () => {
+    const run = harness(() => Promise.reject(new Error('no')));
+
+    run.order.move(toDone);
+    await run.nextFrame();
+
     expect(run.toasts).toBe(1);
   });
 
@@ -91,7 +103,12 @@ describe('MoveOrder', () => {
 
     run.order.move(toDone);
     await run.nextFrame();
-    run.order.own({ base: answered, onMove: answers(), lanes: false });
+    run.order.own({
+      base: answered,
+      onMove: answers(),
+      lanes: false,
+      titles: new Map(),
+    });
 
     expect(run.order.held).toBeNull();
     expect(run.order.sections).toBe(answered);
@@ -108,5 +125,30 @@ describe('MoveOrder', () => {
 
     expect(run.order.held?.move).toBe(docsToDone.move);
     expect(rowsOf(run.order)).toEqual([['login'], ['docs']]);
+  });
+
+  it('offers the first row of a Section only a step down', () => {
+    expect(harness(answers()).order.menuOf('login')).toBe('down');
+  });
+
+  it('offers no menu for a row it does not hold', () => {
+    expect(harness(answers()).order.menuOf('nowhere')).toBeUndefined();
+  });
+
+  it('opens the Move to… picker for one row', () => {
+    const { order } = harness(answers());
+
+    order.pick('docs');
+
+    expect(order.picking).toBe('docs');
+  });
+
+  it('closes the Move to… picker', () => {
+    const { order } = harness(answers());
+
+    order.pick('docs');
+    order.closePicker();
+
+    expect(order.picking).toBeUndefined();
   });
 });

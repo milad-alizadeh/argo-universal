@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
-import { rowNamed } from './list-move-pointer.mocks';
+import { moveVia } from './list-move-picker.mocks';
+import { rowNamed, type User } from './list-move-pointer.mocks';
 import { column, type BoardLane } from './list-moves-fixtures';
 import { MovesExample } from './list-moves.mocks';
 
@@ -31,8 +32,9 @@ const onMove = fn();
 
 const onPress = fn();
 
-// Moving the first row shown below the last one lands it at the true end of its Section, past the hidden row.
-export const MoveWhileSearchingCountsHiddenRows: Story = {
+const searched = (
+  play: (canvasElement: HTMLElement, user: User) => Promise<void>,
+): Story => ({
   beforeEach: async () => {
     onMove.mockClear();
     await settleLayout('wide');
@@ -51,9 +53,15 @@ export const MoveWhileSearchingCountsHiddenRows: Story = {
     await waitFor(() =>
       expect(within(canvasElement).queryByText('Beta')).toBeNull(),
     );
+    await play(canvasElement, userEvent);
+  },
+});
 
+// Moving the first row shown below the last one lands it at the true end of its Section, past the hidden row.
+export const MoveWhileSearchingCountsHiddenRows = searched(
+  async (canvasElement, user) => {
     rowNamed(canvasElement, 'Alpha').focus();
-    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await user.keyboard('{Alt>}{ArrowDown}{/Alt}');
 
     await expect(onMove).toHaveBeenCalledWith({
       id: 'alpha',
@@ -61,4 +69,17 @@ export const MoveWhileSearchingCountsHiddenRows: Story = {
       index: 2,
     });
   },
-};
+);
+
+// The picker lists only the rows the search shows, and places a row among them.
+export const PickerWhileSearchingPlacesAmongShownRows = searched(
+  async (canvasElement, user) => {
+    await moveVia(user, rowNamed(canvasElement, 'Alps'), ['First', 'Top']);
+
+    await expect(onMove).toHaveBeenCalledWith({
+      id: 'alps',
+      section: 'first',
+      index: 0,
+    });
+  },
+);

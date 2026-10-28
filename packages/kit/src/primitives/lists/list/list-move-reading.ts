@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { isValidElement, type ReactNode } from 'react';
 import type { ListChild } from './list-children';
 import type { MoveSection } from './list-move-model';
 import { gatherLoose } from './list-section-entries';
@@ -49,6 +49,25 @@ export function refilled(
 
   return [...slotted(children, next, movableId), ...next.slice(slots.length)];
 }
+
+// A movable row's title, as its ListItem draws it; a row without a text title has none.
+function titleOf(row: ReactNode): string[] {
+  if (!isValidElement<{ title?: unknown }>(row)) return [];
+
+  const { title } = row.props;
+
+  return typeof title === 'string' ? [title] : [];
+}
+
+// Every movable row's title, by id, for the Move to… picker to name the rows it places after.
+export const rowTitles = (
+  rows: ReadonlyMap<string, ReactNode>,
+): ReadonlyMap<string, string> =>
+  new Map(
+    [...rows].flatMap(([id, row]) =>
+      titleOf(row).map((title): [string, string] => [id, title]),
+    ),
+  );
 
 const movableIds = (items: readonly ListChild[]): string[] =>
   items.flatMap((item) => item.moveId ?? []);

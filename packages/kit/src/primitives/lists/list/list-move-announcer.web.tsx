@@ -12,7 +12,7 @@ interface AnnouncerProps {
  */
 export function MoveAnnouncer({ notice }: AnnouncerProps): ReactElement {
   return (
-    <View aria-live="polite" className="sr-only">
+    <View role="status" aria-live="polite" className="sr-only">
       <Text key={notice?.count}>{notice?.text}</Text>
     </View>
   );

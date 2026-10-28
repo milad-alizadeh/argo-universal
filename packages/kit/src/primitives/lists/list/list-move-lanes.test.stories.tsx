@@ -9,11 +9,15 @@ import {
   SectionWithoutIdExample,
 } from './list-move-lanes.mocks';
 import {
+  moveVia,
+  openPicker,
+  pickerPlaces,
+  untitledSection,
+} from './list-move-picker.mocks';
+import {
   centre,
   dragTo,
-  itemNames,
   laneNamed,
-  openRowMenu,
   rowNamed,
   topOf,
 } from './list-move-pointer.mocks';
@@ -69,14 +73,36 @@ export const NothingLandsInASectionWithoutId = wideBoard(
   },
 );
 
-// The rows outside any Section are a Section of their own, which a row's menu moves to; a Section without an id is not.
-export const MenuMovesOutOfASection = wideBoard(
+// The rows outside any Section are a Section of their own, which the picker moves a row to.
+export const PickerMovesOutOfASection = wideBoard(
   SectionWithoutIdExample,
   async (canvasElement, { user }) => {
-    const menu = await openRowMenu(user, rowNamed(canvasElement, 'Login'));
+    const picker = await openPicker(user, rowNamed(canvasElement, 'Login'));
 
-    await expect(itemNames(menu)).toContain('Move out of Section');
-    await expect(itemNames(menu)).not.toContain('Move to Notes');
+    await expect([...pickerPlaces(picker).keys()]).toContain('No Section');
+  },
+);
+
+// A Section without an id is not a place to move to.
+export const PickerLeavesOutASectionWithoutId = wideBoard(
+  SectionWithoutIdExample,
+  async (canvasElement, { user }) => {
+    const picker = await openPicker(user, rowNamed(canvasElement, 'Login'));
+
+    await expect([...pickerPlaces(picker).keys()]).not.toContain('Notes');
+  },
+);
+
+// A List without Sections still offers Move to…, placing a row among its own rows.
+export const PickerWithoutSections = wideBoard(
+  LooseOnlyExample,
+  async (canvasElement, { user, onMove }) => {
+    await moveVia(user, rowNamed(canvasElement, 'Gamma'), [
+      untitledSection,
+      'Top',
+    ]);
+
+    await expect(onMove).toHaveBeenCalledWith({ id: 'gamma', index: 0 });
   },
 );
 

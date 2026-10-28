@@ -147,5 +147,5 @@ export const landedMove = (
   frame: DragFrame | undefined,
 ): ResolvedMove | undefined =>
   frame?.place
-    ? resolveMove(sections, frame.id, { kind: 'drop', place: frame.place })
+    ? resolveMove(sections, frame.id, { kind: 'place', place: frame.place })
     : undefined;

@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { settleLayout, type LayoutName } from '#mocks/story-layout';
 import { dismissToasts } from '#primitives/overlays/toast';
+import { moveVia, pickerPlaces, openPicker } from './list-move-picker.mocks';
 import {
   centre,
   coords,
@@ -86,58 +87,94 @@ export const WideBoardDrawsEachSectionAsALane = boardAt(
   },
 );
 
-// The menu moves a row to every other Section, and up or down where it can go.
-export const RowMenuListsEveryOtherSection = boardAt(
+// The menu moves a row up or down where it can go, and to any place from Move to….
+export const RowMenuOffersStepsAndMoveTo = boardAt(
   'wide',
   async (canvasElement, { user }) => {
     const menu = await openRowMenu(user, rowNamed(canvasElement, alpha.title));
 
-    await expect(itemNames(menu)).toEqual(
-      expect.arrayContaining([
-        'Move down',
-        `Move to ${second.title}`,
-        `Move to ${third.title}`,
-      ]),
-    );
-    await expect(itemNames(menu)).not.toContain(`Move to ${first.title}`);
-    await expect(itemNames(menu)).not.toContain('Move up');
+    await expect(itemNames(menu)).toEqual(['Move down', 'Move to…']);
   },
 );
 
-// A Section's only row still moves from its menu, to every other Section.
+// A Section's only row has no step to make, but its menu still moves it.
 export const LoneRowMenuStillMoves = boardAt(
   'wide',
   async (canvasElement, { user }) => {
     const menu = await openRowMenu(user, rowNamed(canvasElement, delta.title));
 
-    await expect(itemNames(menu)).toEqual(
-      expect.arrayContaining([
-        `Move to ${first.title}`,
-        `Move to ${third.title}`,
-      ]),
+    await expect(itemNames(menu)).toContain('Move to…');
+  },
+);
+
+// The picker lists every Section the row can move to, its own included.
+export const PickerListsEverySection = boardAt(
+  'wide',
+  async (canvasElement, { user }) => {
+    const picker = await openPicker(user, rowNamed(canvasElement, alpha.title));
+
+    await expect([...pickerPlaces(picker).keys()]).toEqual(
+      boardLanes.map((lane) => lane.title),
     );
   },
 );
 
-export const MoveToAnotherLaneFromRowMenu = boardAt(
+// An empty Section offers only its top.
+export const PickerOffersTheTopOfAnEmptySection = boardAt(
+  'wide',
+  async (canvasElement, { user }) => {
+    const picker = await openPicker(user, rowNamed(canvasElement, alpha.title));
+
+    await expect(pickerPlaces(picker).get(third.title)).toEqual(['Top']);
+  },
+);
+
+export const MoveToAnotherLaneFromPicker = boardAt(
   'wide',
   async (canvasElement, { user, onMove }) => {
-    const menu = await openRowMenu(user, rowNamed(canvasElement, alpha.title));
-
-    await user.click(
-      within(menu).getByRole('menuitem', { name: `Move to ${third.title}` }),
-    );
+    await moveVia(user, rowNamed(canvasElement, alpha.title), [
+      third.title,
+      'Top',
+    ]);
 
     await expect(onMove).toHaveBeenCalledWith({
       id: alpha.id,
       section: third.id,
       index: 0,
     });
+  },
+);
+
+export const PickedMoveShowsInItsLane = boardAt(
+  'wide',
+  async (canvasElement, { user }) => {
+    await moveVia(user, rowNamed(canvasElement, alpha.title), [
+      third.title,
+      'Top',
+    ]);
+
     await waitFor(() =>
       expect(
         rowNamed(laneNamed(canvasElement, third.title), alpha.title),
       ).toBeInTheDocument(),
     );
+  },
+);
+
+// The picker places a row after a chosen row.
+export const MoveAfterARowFromPicker = boardAt(
+  'wide',
+  async (canvasElement, { user, onMove }) => {
+    await moveVia(user, rowNamed(canvasElement, delta.title), [
+      first.title,
+      `After ${alpha.title}`,
+    ]);
+
+    await expect(onMove).toHaveBeenCalledWith({
+      id: delta.id,
+      section: first.id,
+      index: 1,
+    });
   },
 );
 
@@ -168,26 +205,37 @@ export const KeyboardMovesTheFocusedRow = boardAt(
   },
 );
 
-// A row moved to another lane from its menu keeps the focus, and a screen reader hears where it landed.
-export const MoveKeepsFocusAndIsAnnounced = boardAt(
+// A row moved to another lane from its menu keeps the focus.
+export const PickedMoveKeepsFocus = boardAt(
   'wide',
   async (canvasElement, { user }) => {
-    const menu = await openRowMenu(user, rowNamed(canvasElement, alpha.title));
-
-    await user.click(
-      within(menu).getByRole('menuitem', { name: `Move to ${third.title}` }),
-    );
+    await moveVia(user, rowNamed(canvasElement, alpha.title), [
+      third.title,
+      'Top',
+    ]);
 
     await waitFor(() =>
       expect(rowNamed(canvasElement, alpha.title)).toHaveFocus(),
     );
-    await expect(
-      within(canvasElement).getByText(`Moved to ${third.title}, position 1`),
-    ).toBeInTheDocument();
   },
 );
 
-// A row moved from the keyboard keeps the focus, and a screen reader hears its new place.
+// A screen reader hears the Section a picked move lands in.
+export const PickedMoveIsAnnounced = boardAt(
+  'wide',
+  async (canvasElement, { user }) => {
+    await moveVia(user, rowNamed(canvasElement, alpha.title), [
+      third.title,
+      'Top',
+    ]);
+
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
+      third.title,
+    );
+  },
+);
+
+// A row moved from the keyboard keeps the focus.
 export const KeyboardMoveKeepsFocus = boardAt(
   'wide',
   async (canvasElement, { user }) => {
@@ -197,9 +245,19 @@ export const KeyboardMoveKeepsFocus = boardAt(
     await waitFor(() =>
       expect(rowNamed(canvasElement, alpha.title)).toHaveFocus(),
     );
-    await expect(
-      within(canvasElement).getByText(`Moved to ${first.title}, position 2`),
-    ).toBeInTheDocument();
+  },
+);
+
+// A screen reader hears the Section a keyboard move lands in.
+export const KeyboardMoveIsAnnounced = boardAt(
+  'wide',
+  async (canvasElement, { user }) => {
+    rowNamed(canvasElement, alpha.title).focus();
+    await user.keyboard(moveDown);
+
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
+      first.title,
+    );
   },
 );
 
@@ -264,15 +322,14 @@ export const PhoneStacksLanes = boardAt('phone', async (canvasElement) => {
   ).toEqual(boardLanes.map((lane) => lane.title));
 });
 
-// On a phone a row still moves from its menu.
-export const PhoneMovesFromRowMenu = boardAt(
+// On a phone a row still moves from its menu's picker.
+export const PhoneMovesFromPicker = boardAt(
   'phone',
   async (canvasElement, { user, onMove }) => {
-    const menu = await openRowMenu(user, rowNamed(canvasElement, gamma.title));
-
-    await user.click(
-      within(menu).getByRole('menuitem', { name: `Move to ${second.title}` }),
-    );
+    await moveVia(user, rowNamed(canvasElement, gamma.title), [
+      second.title,
+      'End',
+    ]);
 
     await expect(onMove).toHaveBeenCalledWith({
       id: gamma.id,
@@ -302,34 +359,42 @@ export const DragUpAColumn: Story = {
       section: first.id,
       index: 0,
     });
-    await expect(
-      within(canvasElement).getByText(`Moved to ${first.title}, position 1`),
-    ).toBeInTheDocument();
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
+      first.title,
+    );
   },
 };
 
 const moveRefused = "Couldn't move the row";
 
-// An owner that refuses a move: the row goes back, and the List shows one error toast.
-export const RefusedMoveGoesBackWithOneToast: Story = {
+const refused = (
+  play: (canvasElement: HTMLElement) => Promise<void>,
+): Story => ({
   beforeEach: async () => {
     dismissToasts();
     await settleLayout('wide');
   },
   render: () => <RefusedMovesExample />,
   play: async ({ canvasElement, userEvent: user }) => {
-    const menu = await openRowMenu(user, rowNamed(canvasElement, alpha.title));
-
-    await user.click(
-      within(menu).getByRole('menuitem', { name: `Move to ${third.title}` }),
-    );
-
-    await expect(await findToast(moveRefused)).toBeVisible();
-    await expect(await allToasts(moveRefused)).toHaveLength(1);
-    await waitFor(() =>
-      expect(
-        rowNamed(laneNamed(canvasElement, first.title), alpha.title),
-      ).toBeInTheDocument(),
-    );
+    await moveVia(user, rowNamed(canvasElement, alpha.title), [
+      third.title,
+      'Top',
+    ]);
+    await play(canvasElement);
   },
-};
+});
+
+// An owner that refuses a move: the List shows one error toast.
+export const RefusedMoveShowsOneToast = refused(async () => {
+  await expect(await findToast(moveRefused)).toBeVisible();
+  await expect(await allToasts(moveRefused)).toHaveLength(1);
+});
+
+// An owner that refuses a move: the row goes back.
+export const RefusedMoveGoesBack = refused(async (canvasElement) => {
+  await waitFor(() =>
+    expect(
+      rowNamed(laneNamed(canvasElement, first.title), alpha.title),
+    ).toBeInTheDocument(),
+  );
+});
