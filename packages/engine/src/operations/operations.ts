@@ -96,7 +96,10 @@ export class Operations {
     params: Json,
   ): Promise<OperationResult> {
     if (caller.kind === 'session')
-      return runSessionOperation(this.implementations, caller, { id, params });
+      return runSessionOperation(
+        { implementations: this.implementations, caller, deps: this.deps },
+        { id, params },
+      );
 
     return operations[id].result.parseAsync(
       await runOperation(this.implementations, id, params),

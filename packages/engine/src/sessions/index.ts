@@ -31,7 +31,10 @@ export {
   pendingInputRequest,
 } from './pending-input';
 
-export { createSessionSnapshotWatcher } from './snapshot';
+export {
+  createSessionSnapshotWatcher,
+  createSessionSnapshotReader,
+} from './snapshot';
 
 export { watchTurnActivity } from './turn-activity';
 
@@ -86,11 +89,7 @@ export { configureSession } from './session-configuration';
 
 export { stopShell } from './shells/stop';
 
-export {
-  createSessionAgentReader,
-  createSessionSnapshotReader,
-  listSessionBranches,
-} from './readers';
+export { createSessionAgentReader, listSessionBranches } from './readers';
 
 export { listSessionShells } from './shells/list';
 

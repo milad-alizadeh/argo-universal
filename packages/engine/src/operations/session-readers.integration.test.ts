@@ -15,6 +15,7 @@ async function changedFilesHost(): Promise<
 > {
   const host = await startSessionJourney();
   const created = await host.caller.session.new(emptySessionInput);
+
   const project = (await host.caller.project.list()).find(
     ({ id }) => id === 'project-1',
   );
@@ -69,10 +70,12 @@ it('reads a stored Session snapshot without opening its Agent', async () => {
   );
   expect(host.agent.processes).toHaveLength(0);
 });
+
 it('pages changed files through the user-token Operation while retaining comparison totals', async () => {
   const host = await changedFilesHost();
   const launches = host.agent.processes.length;
   const caller = await operationCaller(host);
+
   const first = SessionChangesOutput.parse(
     await caller.operations.run.mutate({
       id: 'session.changes',
@@ -103,6 +106,7 @@ it('pages a changed file diff by lines through the user-token Operation', async 
   const host = await changedFilesHost();
   await writeFile(join(host.checkout, 'first.txt'), 'one\ntwo\nthree\n');
   const caller = await operationCaller(host);
+
   const first = SessionDiffOutput.parse(
     await caller.operations.run.mutate({
       id: 'session.diff',
