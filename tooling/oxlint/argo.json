@@ -1349,6 +1349,7 @@
                   "../blob/**",
                   "../feed/**",
                   "../projects/**",
+                  "../operations/**",
                   "../sessions/**",
                   "../system/**",
                   "!../blob/index",
@@ -1356,7 +1357,9 @@
                   "!../feed/index",
                   "!../feed/index.ts",
                   "!../projects/index",
+                  "!../operations/index",
                   "!../projects/index.ts",
+                  "!../operations/index.ts",
                   "!../sessions/index",
                   "!../sessions/index.ts",
                   "!../system/index",
@@ -1404,6 +1407,7 @@
                   "../../blob/**",
                   "../../feed/**",
                   "../../projects/**",
+                  "../../operations/**",
                   "../../sessions/**",
                   "../../system/**",
                   "!../../blob/index",
@@ -1411,7 +1415,9 @@
                   "!../../feed/index",
                   "!../../feed/index.ts",
                   "!../../projects/index",
+                  "!../../operations/index",
                   "!../../projects/index.ts",
+                  "!../../operations/index.ts",
                   "!../../sessions/index",
                   "!../../sessions/index.ts",
                   "!../../system/index",
@@ -1460,6 +1466,7 @@
                   "../agents/**",
                   "../feed/**",
                   "../projects/**",
+                  "../operations/**",
                   "../sessions/**",
                   "../system/**",
                   "!../acp/index",
@@ -1469,7 +1476,9 @@
                   "!../feed/index",
                   "!../feed/index.ts",
                   "!../projects/index",
+                  "!../operations/index",
                   "!../projects/index.ts",
+                  "!../operations/index.ts",
                   "!../sessions/index",
                   "!../sessions/index.ts",
                   "!../system/index",
@@ -1514,6 +1523,7 @@
                   "../../agents/**",
                   "../../feed/**",
                   "../../projects/**",
+                  "../../operations/**",
                   "../../sessions/**",
                   "../../system/**",
                   "!../../acp/index",
@@ -1523,7 +1533,9 @@
                   "!../../feed/index",
                   "!../../feed/index.ts",
                   "!../../projects/index",
+                  "!../../operations/index",
                   "!../../projects/index.ts",
+                  "!../../operations/index.ts",
                   "!../../sessions/index",
                   "!../../sessions/index.ts",
                   "!../../system/index",
@@ -1568,6 +1580,7 @@
                   "../agents/**",
                   "../blob/**",
                   "../projects/**",
+                  "../operations/**",
                   "../sessions/**",
                   "../system/**",
                   "!../acp/index",
@@ -1577,7 +1590,9 @@
                   "!../blob/index",
                   "!../blob/index.ts",
                   "!../projects/index",
+                  "!../operations/index",
                   "!../projects/index.ts",
+                  "!../operations/index.ts",
                   "!../sessions/index",
                   "!../sessions/index.ts",
                   "!../system/index",
@@ -1622,6 +1637,7 @@
                   "../../agents/**",
                   "../../blob/**",
                   "../../projects/**",
+                  "../../operations/**",
                   "../../sessions/**",
                   "../../system/**",
                   "!../../acp/index",
@@ -1631,7 +1647,9 @@
                   "!../../blob/index",
                   "!../../blob/index.ts",
                   "!../../projects/index",
+                  "!../../operations/index",
                   "!../../projects/index.ts",
+                  "!../../operations/index.ts",
                   "!../../sessions/index",
                   "!../../sessions/index.ts",
                   "!../../system/index",
@@ -1785,6 +1803,7 @@
                   "../blob/**",
                   "../feed/**",
                   "../projects/**",
+                  "../operations/**",
                   "../system/**",
                   "!../acp/index",
                   "!../acp/index.ts",
@@ -1795,7 +1814,9 @@
                   "!../feed/index",
                   "!../feed/index.ts",
                   "!../projects/index",
+                  "!../operations/index",
                   "!../projects/index.ts",
+                  "!../operations/index.ts",
                   "!../system/index",
                   "!../system/index.ts"
                 ],
@@ -1839,6 +1860,7 @@
                   "../../blob/**",
                   "../../feed/**",
                   "../../projects/**",
+                  "../../operations/**",
                   "../../system/**",
                   "!../../acp/index",
                   "!../../acp/index.ts",
@@ -1849,7 +1871,9 @@
                   "!../../feed/index",
                   "!../../feed/index.ts",
                   "!../../projects/index",
+                  "!../../operations/index",
                   "!../../projects/index.ts",
+                  "!../../operations/index.ts",
                   "!../../system/index",
                   "!../../system/index.ts"
                 ],
@@ -1893,6 +1917,7 @@
                   "../blob/**",
                   "../feed/**",
                   "../projects/**",
+                  "../operations/**",
                   "../sessions/**",
                   "!../acp/index",
                   "!../acp/index.ts",
@@ -1903,7 +1928,9 @@
                   "!../feed/index",
                   "!../feed/index.ts",
                   "!../projects/index",
+                  "!../operations/index",
                   "!../projects/index.ts",
+                  "!../operations/index.ts",
                   "!../sessions/index",
                   "!../sessions/index.ts"
                 ],
@@ -1947,6 +1974,7 @@
                   "../../blob/**",
                   "../../feed/**",
                   "../../projects/**",
+                  "../../operations/**",
                   "../../sessions/**",
                   "!../../acp/index",
                   "!../../acp/index.ts",
@@ -1957,7 +1985,9 @@
                   "!../../feed/index",
                   "!../../feed/index.ts",
                   "!../../projects/index",
+                  "!../../operations/index",
                   "!../../projects/index.ts",
+                  "!../../operations/index.ts",
                   "!../../sessions/index",
                   "!../../sessions/index.ts"
                 ],
@@ -1979,6 +2009,42 @@
           "error",
           {
             "patterns": [
+              {
+                "group": ["../*/**", "!../*/index", "!../*/index.ts"],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/operations/*"],
+      "excludeFiles": ["**/*.test.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
               {
                 "group": ["../*/**", "!../*/index", "!../*/index.ts"],
                 "message": "Import another Engine domain through its index.ts face."
@@ -2064,6 +2130,7 @@
         "packages/engine/src/blob/**",
         "packages/engine/src/feed/**",
         "packages/engine/src/projects/**",
+        "packages/engine/src/operations/**",
         "packages/engine/src/sessions/**",
         "packages/engine/src/system/**"
       ],
@@ -2094,6 +2161,7 @@
                   "**/src/blob/**",
                   "**/src/feed/**",
                   "**/src/projects/**",
+                  "**/src/operations/**",
                   "**/src/sessions/**",
                   "**/src/system/**",
                   "!**/src/*/index",
@@ -2103,6 +2171,7 @@
                   "../blob/**",
                   "../feed/**",
                   "../projects/**",
+                  "../operations/**",
                   "../sessions/**",
                   "../system/**",
                   "!../*/index",
@@ -2112,6 +2181,7 @@
                   "./blob/**",
                   "./feed/**",
                   "./projects/**",
+                  "./operations/**",
                   "./sessions/**",
                   "./system/**",
                   "!./*/index",
@@ -2294,6 +2364,7 @@
                   "../../blob/**",
                   "../../feed/**",
                   "../../projects/**",
+                  "../../operations/**",
                   "../../sessions/**",
                   "../../system/**"
                 ],
@@ -2346,6 +2417,7 @@
                   "../../../blob/**",
                   "../../../feed/**",
                   "../../../projects/**",
+                  "../../../operations/**",
                   "../../../sessions/**",
                   "../../../system/**"
                 ],

@@ -77,3 +77,5 @@ export {
 export { mapSupportedContentBlock } from './acp/content';
 
 export { toolCallEvent } from './tool-call-event';
+
+export { nativePermissionOutcomeEvent } from './native-permission-outcome';

@@ -19,7 +19,7 @@ import type { AcpResourceInput } from './resource-types';
 export class AcpConnections {
   private readonly entries = new Map<string, Entry>();
   private readonly connections = new Set<Entry>();
-  public stopped = false;
+  private stopped = false;
   public constructor(
     private readonly input: AcpResourceInput,
     private readonly authChanges: AuthChanges,
@@ -33,7 +33,7 @@ export class AcpConnections {
       this.entries.get(JSON.stringify([agent, projectId]))
     );
   }
-  private readonly isStopped = (): boolean => this.stopped;
+  public readonly isStopped = (): boolean => this.stopped;
   // A newer Registry version starts a new connection; Sessions on the older one keep it until they end.
   public entry(launch: DeferredAgentLaunch, sessionId?: string): Entry {
     const own = this.entries.get(sessionResourceKey(launch, sessionId));

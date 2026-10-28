@@ -1,16 +1,32 @@
-import { OperationExecution } from '@repo/contracts/operations';
+import type {
+  OperationExecution,
+  OperationId,
+  operations,
+} from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import type { z } from 'zod';
 import { readControlBlob } from './control-blob';
 
-export async function completeExecutionResult<Result>(
-  value: Result,
+type OperationResult = z.output<(typeof operations)[OperationId]['result']>;
+
+type OperationResponse = OperationResult | OperationExecution;
+
+const isExecution = (value: OperationResponse): value is OperationExecution =>
+  value !== null && 'kind' in value && value.kind === 'operation_execution';
+
+export function completeExecutionResult(
+  value: OperationExecution,
   deadline: number,
-): Promise<Result | OperationExecution> {
-  const execution = OperationExecution.safeParse(value);
-
-  if (!execution.success) return value;
-
-  return fullExecutionResult(execution.data, deadline);
+): Promise<OperationExecution>;
+export function completeExecutionResult(
+  value: OperationResponse,
+  deadline: number,
+): Promise<OperationResponse>;
+export async function completeExecutionResult(
+  value: OperationResponse,
+  deadline: number,
+): Promise<OperationResponse> {
+  return isExecution(value) ? fullExecutionResult(value, deadline) : value;
 }
 
 async function fullExecutionResult(
@@ -23,10 +39,8 @@ async function fullExecutionResult(
   return { ...value, result };
 }
 
-export function operationExitCode<Result>(value: Result): number {
-  const execution = OperationExecution.safeParse(value);
-
-  return execution.success ? executionExitCode(execution.data) : 0;
+export function operationExitCode(value: OperationResponse): number {
+  return isExecution(value) ? executionExitCode(value) : 0;
 }
 
 export function executionExitCode(result: OperationExecution): number {

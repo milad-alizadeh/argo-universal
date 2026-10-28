@@ -1,6 +1,6 @@
 import type { RequestPermissionResponse } from '@agentclientprotocol/sdk';
 import { permissionOptions, type PendingPermission } from '@repo/contracts';
-import { expect } from 'vitest';
+import { expect, onTestFinished } from 'vitest';
 import { waitForAcpSnapshot } from './acp-feed';
 import { hookRecords } from './hook-plugins';
 import type { PermissionJourney } from './native-permission';
@@ -48,6 +48,12 @@ export async function probeAutoAllow(
     ],
     'permission-session',
   );
+
+  void completion.catch(() => {});
+  onTestFinished(async () => {
+    await host.stop();
+    await Promise.allSettled([completion]);
+  });
 
   await expect
     .poll(() => hookRecords(host.home, 'auto-allow'))

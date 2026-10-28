@@ -1,4 +1,11 @@
+import identities from './identities.json' with { type: 'json' };
 import type { ScriptedStep } from './scripted-types.ts';
+
+const callerAgent = process.env.ARGO_E2E_AGENT_ID ?? identities[0]?.agent;
+
+const delegatedAgent = identities.find(
+  ({ agent }) => agent !== callerAgent,
+)?.agent;
 
 export const delegatedTitle = 'Review delegated work';
 
@@ -23,7 +30,7 @@ const project = run('project.list', {}).find(project => project.inScope);
 if (!project) throw new Error('No calling Project');
 console.log(JSON.stringify(run('session.new', {
   projectId: project.id,
-  agent: 'codex-acp',
+  agent: ${JSON.stringify(delegatedAgent)},
   checkout: {type:'main'},
   configOptions: [],
   prompt: [{type:'text',text:${JSON.stringify(delegatedTitle)}}]

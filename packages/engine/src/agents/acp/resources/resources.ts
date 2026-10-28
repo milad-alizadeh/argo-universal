@@ -37,13 +37,15 @@ class EngineAcpResources implements AcpResources {
     }
   }
   private assertOpening(input: AcpOpenInput): void {
-    if (this.connections.stopped) throw new Error('ACP resources are stopped');
+    if (this.connections.isStopped())
+      throw new Error('ACP resources are stopped');
     input.signal?.throwIfAborted();
   }
   public async authentication(
     launch: DeferredAgentLaunch,
   ): Promise<ConnectionAuthentication> {
-    if (this.connections.stopped) throw new Error('ACP resources are stopped');
+    if (this.connections.isStopped())
+      throw new Error('ACP resources are stopped');
 
     return await (this.findAuthentication(launch.agentId, launch.projectId) ??
       entryAuthentication(this.connections.entry(launch), this.isStopped));
@@ -56,7 +58,7 @@ class EngineAcpResources implements AcpResources {
 
     return entry ? entryAuthentication(entry, this.isStopped) : undefined;
   }
-  private readonly isStopped = (): boolean => this.connections.stopped;
+  private readonly isStopped = (): boolean => this.connections.isStopped();
   public dropAgentConnections = (agentId: string): void =>
     this.connections.dropAgentConnections(agentId);
   public isDirectoryInUse = (directory: string): boolean =>

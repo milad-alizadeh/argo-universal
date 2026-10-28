@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { sessionColumns } from '../columns';
 
 export const NonUserPromptSender = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('session'),
-    sessionId: z.string(),
+    sessionId: sessionColumns.shape.id,
     title: z.string().min(1),
   }),
   z.strictObject({

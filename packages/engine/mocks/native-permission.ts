@@ -8,6 +8,8 @@ import { hookRecords, recordingSource, writeHookPlugins } from './hook-plugins';
 import { beginHeldTurn } from './operation-race';
 import { openAccessSession, sessionIdentityStep } from './session-access';
 
+const autoAllowPlugin = 'auto-allow';
+
 export async function permissionJourney(
   operationWaitClock?: OperationWaitClock,
 ): Promise<PermissionJourney> {
@@ -37,7 +39,7 @@ export async function permissionJourney(
     installPlugins: (home) =>
       writeHookPlugins(home, [
         {
-          id: 'auto-allow',
+          id: autoAllowPlugin,
           source: recordingSource(
             "await on('tool.check', () => ({ decision: 'allow' }));",
           ),
@@ -45,6 +47,10 @@ export async function permissionJourney(
         },
       ]),
   });
+
+  expect(
+    await host.caller.plugin.activate({ pluginId: autoAllowPlugin }),
+  ).toMatchObject({ state: 'running', error: null });
 
   const session = await openAccessSession({ host, outputs }, 'Caller');
 
@@ -96,7 +102,7 @@ export async function askArchive(
   expect(configOptions).toContainEqual(
     expect.objectContaining({ configId: 'mode', currentValue: 'bypass' }),
   );
-  expect(await hookRecords(host.home, 'auto-allow')).toEqual([]);
+  expect(await hookRecords(host.home, autoAllowPlugin)).toEqual([]);
 
   return { request, outcome };
 }
