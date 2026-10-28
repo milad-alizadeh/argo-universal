@@ -1,7 +1,10 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Label } from '@repo/kit/primitives/content/label';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import {
+  ListItem,
+  type ListItemProps,
+} from '@repo/kit/primitives/lists/list-item';
 import {
   Popover,
   PopoverContent,
@@ -9,6 +12,7 @@ import {
   PopoverTrigger,
   usePopoverClose,
 } from '@repo/kit/primitives/overlays/popover';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { Pressable } from 'react-native';
 import { pluginSymbol } from '../../../../lib/product/plugin-symbol';
@@ -99,17 +103,25 @@ const itemIcon = ({
 }: SessionRowPluginItem['item']): React.ReactNode =>
   icon && <Icon name={pluginSymbol(icon)} tone={tone} />;
 
-function MoreRow({
-  plugin: { item, pluginName },
+const moreRow = ({
+  plugin: { item },
   onOpen,
-}: MoreRowProps): React.JSX.Element {
+}: MoreRowProps): Omit<ListItemProps, 'subtitle' | 'value'> => ({
+  title: item.text,
+  leading: itemIcon(item),
+  onPress: onOpen,
+  disclosure: onOpen !== undefined,
+});
+
+// A desktop popover ends the row with the Plugin's name; a phone sheet puts it under the text.
+function MoreRow(props: MoreRowProps): React.JSX.Element {
+  const row = moreRow(props);
+  const { pluginName } = props.plugin;
+
   return (
-    <ListItem
-      title={item.text}
-      subtitle={pluginName}
-      leading={itemIcon(item)}
-      onPress={onOpen}
-      disclosure={onOpen !== undefined}
+    <SizeClass
+      compact={<ListItem {...row} subtitle={pluginName} />}
+      wide={<ListItem {...row} value={pluginName} />}
     />
   );
 }
