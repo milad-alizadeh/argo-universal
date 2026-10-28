@@ -1,5 +1,5 @@
 import { OperationExecution } from '@repo/contracts/operations';
-import { startPermissionWaitHost } from '@repo/engine/mocks/operation-waits';
+import { startPermissionWaitHost, openingWaitHost } from '@repo/engine/mocks/operation-waits';
 import { expect, it } from 'vitest';
 import { runCli } from '../mocks/cli-process';
 import { startMalformedControlHost } from '../mocks/malformed-control';
@@ -96,4 +96,22 @@ it('caps run --wait at ninety seconds with exit75, then waits on the same native
     status: 'settled',
     result: {},
   });
+}, 30_000);
+
+
+it('resumes an actual CLI Session opening from exit75 to its exact settled first Turn with exit0', async () => {
+  const host = await openingWaitHost();
+  const running = runCli(host.home, ['run', 'session.new', '--params', JSON.stringify({projectId: 'project-1', agent: 'mock', checkout: {type: 'main'}, configOptions: [], prompt: [{type: 'text', text: 'CLI opening resume'}]}), '--wait']);
+  await host.opening;
+  await host.clock.waitUntilScheduled();
+  host.clock.advance(90_000);
+  const capped = await running;
+  expect(capped.code).toBe(75);
+  const pending = OperationExecution.parse(JSON.parse(capped.stdout));
+  expect(pending).toMatchObject({status: 'still_running', id: expect.stringMatching(/^creation:/)});
+  host.release.resolve();
+  const resumed = await runCli(host.home, ['wait', pending.id]);
+  expect(resumed.code).toBe(0);
+  expect(OperationExecution.parse(JSON.parse(resumed.stdout))).toMatchObject({status: 'settled', turn: {stopReason: 'end_turn'}});
+  expect(host.agent.processes).toHaveLength(1);
 }, 30_000);

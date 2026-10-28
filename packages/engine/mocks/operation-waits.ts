@@ -46,3 +46,5 @@ export async function startPermissionWaitHost(): Promise<{
     },
   };
 }
+
+export { openingWaitHost } from './operation-opening';
