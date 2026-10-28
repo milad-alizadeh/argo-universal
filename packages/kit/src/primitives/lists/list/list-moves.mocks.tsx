@@ -6,6 +6,7 @@ import { List } from './list';
 import {
   board,
   boardLanes,
+  type BoardCard,
   type BoardLane,
   type MovesProps,
 } from './list-moves-fixtures';
@@ -75,28 +76,48 @@ export function RefusedMovesExample(): ReactElement {
 }
 
 // FieldGroup's own rows in a grouped List: the phones draw it natively, and a row's long-press menu moves it.
-const groupedSection =
+const groupedRow =
   (onPress: ExampleProps['onPress']) =>
+  (card: BoardCard): ReactElement => (
+    <FieldGroup.Link
+      key={card.id}
+      id={card.id}
+      title={card.title}
+      onPress={onPress ?? open}
+    />
+  );
+
+// Rows without a press: a value row moves from its long-press menu too.
+const valueRow = (card: BoardCard): ReactElement => (
+  <FieldGroup.Value
+    key={card.id}
+    id={card.id}
+    title={card.title}
+    value="Read only"
+  />
+);
+
+const groupedSection =
+  (row: (card: BoardCard) => ReactElement) =>
   (lane: BoardLane): ReactElement => (
     <List.Section key={lane.id} id={lane.id} title={lane.title}>
-      {lane.rows.map((card) => (
-        <FieldGroup.Link
-          key={card.id}
-          id={card.id}
-          title={card.title}
-          onPress={onPress ?? open}
-        />
-      ))}
+      {lane.rows.map(row)}
     </List.Section>
   );
 
-export function GroupedMovesExample(example: ExampleProps): ReactElement {
-  const { lanes: initial = boardLanes, onMove, onPress } = example;
+type GroupedProps = ExampleProps & {
+  // The rows have no press of their own.
+  readOnly?: boolean;
+};
+
+export function GroupedMovesExample(example: GroupedProps): ReactElement {
+  const { lanes: initial = boardLanes, onMove, onPress, readOnly } = example;
   const [lanes, move] = useMovedLanes(initial, onMove);
+  const row = readOnly ? valueRow : groupedRow(onPress);
 
   return (
     <List appearance="grouped" onMove={move}>
-      {lanes.map(groupedSection(onPress))}
+      {lanes.map(groupedSection(row))}
     </List>
   );
 }

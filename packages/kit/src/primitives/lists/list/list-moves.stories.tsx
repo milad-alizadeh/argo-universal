@@ -33,3 +33,8 @@ export const Column: Story = {
 export const Grouped: Story = {
   render: () => <GroupedMovesExample />,
 };
+
+// Value rows have no press of their own: they move from their long-press menu, and a tap does nothing.
+export const GroupedReadOnly: Story = {
+  render: () => <GroupedMovesExample readOnly />,
+};
