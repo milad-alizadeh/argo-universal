@@ -1,5 +1,6 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { scenarios } from '@repo/mocks/agent/scenarios';
+import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
 
@@ -15,11 +16,26 @@ async function collectFeed(
   }
 }
 
+function resumedChildScenario(): ScriptedScenario {
+  const scenario = scenarios['subagent-more-work'];
+  const [first, followup] = scenario.responses?.['session/prompt'] ?? [];
+
+  if (!first?.steps || !followup?.steps)
+    throw new Error('Missing child scenario steps');
+
+  return {
+    ...scenario,
+    responses: undefined,
+    steps: first.steps,
+    resumedSteps: followup.steps,
+  };
+}
+
 it.each(['open', 'closed'] as const)(
   'reattaches a child subscription started while its parent was %s',
   async (state) => {
     const { host, sessionId } = await openAcpFeedSession(
-      scenarios['subagent-more-work'],
+      resumedChildScenario(),
     );
 
     const [child] = await host.caller.session.listAgents({ sessionId });

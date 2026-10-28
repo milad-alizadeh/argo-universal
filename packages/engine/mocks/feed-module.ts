@@ -103,6 +103,7 @@ const feedModuleRouterInput = (
   signal: AbortSignal,
 ): AppRouterInput => ({
   controlToken: 'feed-module-test-token',
+  sessionTokens: host.engine.getSnapshot().context.sessionTokens,
   database: host.database,
   hooks: coreOnlyHooks,
   plugins: new Plugins({

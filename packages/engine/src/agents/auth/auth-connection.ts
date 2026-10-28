@@ -6,7 +6,10 @@ import type {
   AgentAuthTerminalInput,
 } from '@repo/contracts';
 import type { AgentsRouterDeps } from '../router';
-import { authenticationLaunch } from './auth-launch';
+import {
+  authenticationLaunch,
+  sharedSessionAuthentication,
+} from './auth-launch';
 import {
   authenticationFailed,
   type ConnectionAuthentication,
@@ -40,7 +43,7 @@ export const authentication = async (
   subject: Subject,
 ): Promise<ConnectionAuthentication> => {
   if (subject.sessionId)
-    return requireSessionAuthentication(deps, subject, subject.sessionId);
+    return sessionAuthentication(deps, subject, subject.sessionId);
 
   return (
     (await existingAuthentication(deps, subject)) ??
@@ -100,3 +103,20 @@ export const writeAuthTerminal = async (
 ): Promise<void> => {
   (await existingAuthentication(deps, subject))?.inputTerminal(input);
 };
+
+async function sessionAuthentication(
+  deps: AgentsRouterDeps,
+  subject: Subject,
+  sessionId: string,
+): Promise<ConnectionAuthentication> {
+  const found = requireSessionAuthentication(deps, subject, sessionId);
+  const launch = deps.sessionConnections.launch(sessionId, subject);
+
+  if (!launch?.argo) return found;
+
+  const shared = await sharedSessionAuthentication(deps, launch);
+
+  shared.inheritRequired(found.state().description);
+
+  return shared;
+}

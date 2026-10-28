@@ -10,6 +10,7 @@ export type AgentLaunch = {
   cwd: string;
   env: Readonly<Record<string, string>>;
   authContext: string;
+  argo?: { token: string; home: string; cliDirectory: string };
   release?: () => void;
 };
 

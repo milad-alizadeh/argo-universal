@@ -62,6 +62,7 @@ export type FeedEvent =
       change: FeedChange;
       turnId: string | null;
       committed?: WriterCommit;
+      blobs?: OutputBlob[];
     }
   | {
       type: 'feed.acpUpdate';

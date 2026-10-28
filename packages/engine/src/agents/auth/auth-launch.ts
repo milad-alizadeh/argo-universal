@@ -1,5 +1,5 @@
 import type { AgentAuthSubject } from '@repo/contracts';
-import type { DeferredAgentLaunch } from '../agent-launch';
+import type { AgentLaunch, DeferredAgentLaunch } from '../agent-launch';
 import type { AgentsRouterDeps } from '../router';
 import { requireInstalledAgent } from '../servers/installed-agents';
 import type { ConnectionAuthentication } from './authenticate';
@@ -22,3 +22,15 @@ const installedLaunch = (
     subject.projectId,
     { signal: deps.sessionCommandSignal ?? new AbortController().signal },
   );
+
+export function sharedSessionAuthentication(
+  deps: AgentsRouterDeps,
+  launch: AgentLaunch,
+): Promise<ConnectionAuthentication> {
+  return deps.sessionConnections.acpResources().authentication({
+    agentId: launch.agentId,
+    projectId: launch.projectId,
+    version: launch.version,
+    resolve: async () => ({ ...launch, argo: undefined, release: undefined }),
+  });
+}

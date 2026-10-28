@@ -2,10 +2,12 @@ import { expect, it, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+import { withoutSessionAccess } from '#mocks/session-access';
 
-it('Engine owns shared empty Sessions across App disconnection and waits for observed process exit', async () => {
+it('without Agent access, Engine owns shared empty Sessions across App disconnection and waits for observed process exit', async () => {
   const host = await startAcpEngine({
     autoExit: false,
+    sessionAccess: withoutSessionAccess,
     steps: [],
   });
 
@@ -42,7 +44,7 @@ it('Engine owns shared empty Sessions across App disconnection and waits for obs
   expect(host.engine.getSnapshot().output).toEqual({ exitCode: 0 });
 });
 
-it('a failed Session close releases without killing the process, and Engine shutdown observes exit', async () => {
+it('a failed private Session close stops its process, and Engine shutdown observes exit', async () => {
   const closes: object[] = [];
 
   const host = await startAcpEngine({
@@ -57,7 +59,7 @@ it('a failed Session close releases without killing the process, and Engine shut
   await expect(host.caller.session.close(created)).resolves.toEqual({});
   expect(closes).toHaveLength(1);
   const process = requireScriptedProcessAt(host.agent.processes);
-  expect(process.terminations).toBe(0);
+  expect(process.terminations).toBe(1);
   host.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
   await vi.waitFor(() => expect(process.terminations).toBe(1));
   expect(host.engine.getSnapshot().status).toBe('active');
