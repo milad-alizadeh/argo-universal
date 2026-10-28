@@ -2,6 +2,7 @@ import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { z } from 'zod';
 import { readSessionCloseTarget } from '../sessions';
+import { isNativeStartOperation, type NativeStartId } from './native-start';
 import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
 import type { SessionCaller } from './session-tokens';
@@ -12,10 +13,7 @@ type ActOperationId = {
     : never;
 }[OperationId];
 
-type SessionActOperationId = Exclude<
-  ActOperationId,
-  'session.new' | 'session.prompt'
->;
+type SessionActOperationId = Exclude<ActOperationId, NativeStartId>;
 
 type ActTarget = {
   sessionId: string;
@@ -24,11 +22,7 @@ type ActTarget = {
 };
 
 export function isActOperation(id: OperationId): id is SessionActOperationId {
-  return (
-    operations[id].tier === 'act' &&
-    id !== 'session.new' &&
-    id !== 'session.prompt'
-  );
+  return operations[id].tier === 'act' && !isNativeStartOperation(id);
 }
 
 const sessionParams = {

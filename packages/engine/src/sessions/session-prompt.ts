@@ -1,10 +1,7 @@
-import type {
-  SessionPromptInput,
-  SessionPromptOutput,
-  PromptSender,
-} from '@repo/contracts';
+import type { SessionPromptInput, PromptSender } from '@repo/contracts';
 import { requireInstalledAgent } from '../agents';
 import { promptMessageId } from '../feed';
+import type { NativeStart, SessionOrigin } from './prompt-sender';
 import type { SessionRouterDeps } from './router-deps';
 import {
   submitSessionPrompt,
@@ -12,19 +9,42 @@ import {
 } from './session-command';
 import { openReadySession } from './session-opening';
 
-export const promptSessionAccepted = async (
-  deps: Pick<
-    SessionRouterDeps,
-    | 'sessions'
-    | 'readSession'
-    | 'createId'
-    | 'sessionCommandSignal'
-    | 'installedAgents'
-    | 'hooks'
-  >,
+type PromptDeps = Pick<
+  SessionRouterDeps,
+  | 'sessions'
+  | 'readSession'
+  | 'createId'
+  | 'sessionCommandSignal'
+  | 'installedAgents'
+  | 'hooks'
+>;
+
+type PromptTurn = { turnId: string; sender: PromptSender };
+
+export type AcceptedSessionPrompt =
+  | { messageId: string; turnId: string }
+  | { messageId: null; drop: string };
+
+// The Turn id is allocated before admission, so a caller that stops waiting can still follow the Turn.
+export function startSessionPrompt(
+  deps: PromptDeps,
+  input: SessionPromptInput,
+  { sender }: Pick<SessionOrigin, 'sender'>,
+): NativeStart<AcceptedSessionPrompt> {
+  const turnId = deps.createId();
+
+  return {
+    sessionId: input.sessionId,
+    turnId,
+    accepted: admitPrompt(deps, input, { turnId, sender }),
+  };
+}
+
+async function admitPrompt(
+  deps: PromptDeps,
   { sessionId, prompt }: SessionPromptInput,
-  sender: PromptSender = { type: 'user' },
-): Promise<AcceptedSessionPrompt> => {
+  { turnId, sender }: PromptTurn,
+): Promise<AcceptedSessionPrompt> {
   requireInstalledAgent(
     deps.installedAgents,
     deps.readSession(sessionId).agent,
@@ -39,7 +59,6 @@ export const promptSessionAccepted = async (
   });
 
   if ('drop' in answer) return { messageId: null, drop: answer.drop };
-  const turnId = deps.createId();
   validateSessionCommandAdmission(deps);
   await submitSessionPrompt(sessionActor, {
     turnId,
@@ -48,19 +67,4 @@ export const promptSessionAccepted = async (
   });
 
   return { messageId: promptMessageId(turnId, sender), turnId };
-};
-
-export type AcceptedSessionPrompt =
-  | { messageId: string; turnId: string }
-  | { messageId: null; drop: string };
-
-export async function promptSession(
-  deps: Parameters<typeof promptSessionAccepted>[0],
-  input: SessionPromptInput,
-): Promise<SessionPromptOutput> {
-  const accepted = await promptSessionAccepted(deps, input);
-
-  return accepted.messageId === null
-    ? accepted
-    : { messageId: accepted.messageId };
 }

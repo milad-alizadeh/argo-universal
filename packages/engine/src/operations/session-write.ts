@@ -2,13 +2,9 @@ import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { z } from 'zod';
 import type { SessionOperationCall } from '../sessions';
-import type {
-  OperationImplementations,
-  OperationResult,
-  OperationsDeps,
-} from './operations';
+import type { OperationResult, SessionInvoke } from './implementations';
+import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
-import { runOperation } from './router.gen';
 import { runSessionPrompt } from './session-prompt';
 import { runSessionStart } from './session-start';
 import type { SessionStarts } from './session-starts';
@@ -24,24 +20,24 @@ type SessionWrite = {
 
 export async function runSessionWrite(
   deps: OperationsDeps,
-  implementations: OperationImplementations,
+  invoke: SessionInvoke,
   context: SessionWrite,
 ): Promise<OperationResult> {
   const { caller, operation, call, starts } = context;
-  const { id } = operation;
+  const start = { deps, caller, call, starts, invoke };
 
-  if (id === 'session.new')
-    return runSessionStart({ deps, caller, call, starts }, operation.params);
+  if (operation.id === 'session.new')
+    return runSessionStart(start, operation.params);
 
-  if (id === 'session.prompt')
-    return runSessionPrompt({ deps, caller, call, starts }, operation.params);
+  if (operation.id === 'session.prompt')
+    return runSessionPrompt(start, operation.params);
 
-  return runScopedWrite(deps, implementations, context);
+  return runScopedWrite(deps, invoke, context);
 }
 
 async function runScopedWrite(
   deps: OperationsDeps,
-  implementations: OperationImplementations,
+  invoke: SessionInvoke,
   { caller, operation, call }: SessionWrite,
 ): Promise<OperationResult> {
   const { id } = operation;
@@ -50,9 +46,7 @@ async function runScopedWrite(
   if (requiresConfirmation(deps, caller, { id, params }))
     await call.confirm(operations[id].description);
 
-  return operations[id].result.parseAsync(
-    await runOperation(implementations, id, params),
-  );
+  return invoke({ id, params });
 }
 
 function requiresConfirmation(

@@ -53,8 +53,6 @@ export { sessionActorId } from './session-system';
 export { createSessionRouter } from './router';
 
 export {
-  createSession,
-  createSessionAccepted,
   startSessionCreation,
   type SessionCreation,
   type AcceptedSessionStart,
@@ -131,9 +129,13 @@ export {
 } from './work-watcher';
 
 export {
-  promptSession,
-  promptSessionAccepted,
+  startSessionPrompt,
   type AcceptedSessionPrompt,
 } from './session-prompt';
 
-export { sessionPromptSender } from './prompt-sender';
+export {
+  sessionOrigin,
+  userOrigin,
+  type NativeStart,
+  type SessionOrigin,
+} from './prompt-sender';

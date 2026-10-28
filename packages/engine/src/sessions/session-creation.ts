@@ -1,8 +1,4 @@
-import type {
-  SessionNewInput,
-  SessionNewOutput,
-  PromptSender,
-} from '@repo/contracts';
+import type { SessionNewInput, PromptSender } from '@repo/contracts';
 import { SessionOpenFailure } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import { listBranches } from '@repo/git';
@@ -15,6 +11,7 @@ import {
   observeSessionCreation,
   type AcceptedSessionStart,
 } from './creation-receipt';
+import type { NativeStart, SessionOrigin } from './prompt-sender';
 import type { SessionRouterDeps } from './router-deps';
 import {
   submitSessionPrompt,
@@ -100,46 +97,18 @@ type SessionCreationDeps = Pick<
   | 'hooks'
 >;
 
-export type SessionCreationOrigin = {
-  sessionId: string;
-  startedBySessionId?: string;
-  sender?: PromptSender;
-};
+// A Session's own id may be allocated first, so a delegation limit can hold its place before it opens.
+export type SessionCreationOrigin = SessionOrigin & { sessionId?: string };
 
 export type { AcceptedSessionStart } from './creation-receipt';
 
-export type SessionCreation = {
-  sessionId: string;
-  turnId: string;
-  accepted: Promise<AcceptedSessionStart>;
-};
-
-export async function createSession(
-  deps: SessionCreationDeps,
-  newSession: SessionNewInput,
-  origin?: SessionCreationOrigin,
-): Promise<SessionNewOutput> {
-  const { sessionId } = await createSessionAccepted(deps, newSession, origin);
-
-  return { sessionId };
-}
-
-// Only an actually committed first prompt returns a Turn id; an empty or Hook-dropped prompt has none.
-export async function createSessionAccepted(
-  deps: SessionCreationDeps,
-  newSession: SessionNewInput,
-  origin?: SessionCreationOrigin,
-): Promise<AcceptedSessionStart> {
-  const creation = await startSessionCreation(deps, newSession, origin);
-
-  return creation.accepted;
-}
+export type SessionCreation = NativeStart<AcceptedSessionStart>;
 
 // Allocate native identity before waiting for the Agent or the first prompt's admission.
 export async function startSessionCreation(
   deps: SessionCreationDeps,
   newSession: SessionNewInput,
-  origin?: SessionCreationOrigin,
+  origin: SessionCreationOrigin,
 ): Promise<SessionCreation> {
   // The open Sessions machine checks again as the last word (ADR-0003); this check gives the typed failure.
   requireInstalledAgent(deps.installedAgents, newSession.agent);
@@ -150,14 +119,14 @@ export async function startSessionCreation(
   );
 
   validateSessionCommandAdmission(deps);
-  const sessionId = origin?.sessionId ?? deps.createId();
+  const sessionId = origin.sessionId ?? deps.createId();
   const turnId = deps.createId();
   sendCheckedOpenSessionsCommand(deps.sessions, {
     type: 'sessions.create',
     sessionId,
     turnId,
     ...newSession,
-    startedBySessionId: origin?.startedBySessionId,
+    startedBySessionId: origin.startedBySessionId ?? undefined,
     projectPath,
   });
   const session = requireOpenSessionActor(deps.sessions, sessionId);
@@ -166,7 +135,7 @@ export async function startSessionCreation(
     session,
     completeCreation(deps, session, {
       input: newSession,
-      sender: origin?.sender,
+      sender: origin.sender,
     }),
   );
 
@@ -176,7 +145,7 @@ export async function startSessionCreation(
 async function completeCreation(
   deps: SessionCreationDeps,
   session: SessionActorRef,
-  initial: { input: SessionNewInput; sender?: PromptSender },
+  initial: { input: SessionNewInput; sender: PromptSender },
 ): Promise<AcceptedSessionStart> {
   await waitForSessionStored(session);
   await waitForSessionInsertCommitted(session);
@@ -189,7 +158,7 @@ async function completeCreation(
 async function startSession(
   deps: Pick<SessionRouterDeps, 'hooks'>,
   session: SessionActorRef,
-  { input, sender }: { input: SessionNewInput; sender?: PromptSender },
+  { input, sender }: { input: SessionNewInput; sender: PromptSender },
 ): Promise<string | undefined> {
   await applyInitialConfiguration(session, input);
 
@@ -200,7 +169,7 @@ async function startSession(
 const submitInitialAcpPrompt = async (
   session: SessionActorRef,
   hooks: CoreHooks,
-  sender?: PromptSender,
+  sender: PromptSender,
 ): Promise<string | undefined> => {
   const { input, acpLease, sessionId } = session.getSnapshot().context;
 

@@ -1,4 +1,3 @@
-import type { ProjectsListOutput } from '@repo/contracts';
 import {
   operations,
   type OperationId,
@@ -6,11 +5,9 @@ import {
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { SessionOperationCall } from '../sessions';
-import type { OperationImplementations, OperationResult } from './operations';
+import type { OperationResult, SessionInvoke } from './implementations';
 import type { OperationsDeps } from './operations';
-import { operationParams } from './params';
 import { resolveReadTarget, type ResolvedReadOperation } from './read-target';
-import { runOperation } from './router.gen';
 import type { SessionStarts } from './session-starts';
 import type { SessionCaller } from './session-tokens';
 import { runSessionWrite } from './session-write';
@@ -18,7 +15,7 @@ import { runSessionWrite } from './session-write';
 const needsTurn = 'A Permission request requires an active Turn';
 
 type SessionAccess = {
-  implementations: OperationImplementations;
+  invoke: SessionInvoke;
   caller: SessionCaller;
   deps: OperationsDeps;
   call: SessionOperationCall;
@@ -41,13 +38,13 @@ export function scopedOperations(
 }
 
 export async function runSessionOperation(
-  { implementations, caller, deps, call, starts }: SessionAccess,
+  { invoke, caller, deps, call, starts }: SessionAccess,
   operation: { id: OperationId; params: Json },
 ): Promise<OperationResult> {
   const read = resolveReadTarget(deps, caller, operation);
 
   if (!read)
-    return runSessionWrite(deps, implementations, {
+    return runSessionWrite(deps, invoke, {
       caller,
       operation,
       call,
@@ -56,7 +53,7 @@ export async function runSessionOperation(
 
   await confirmReadScope({ caller, call }, read);
 
-  return runSessionRead(implementations, caller, read);
+  return runSessionRead(invoke, caller, read);
 }
 
 async function confirmReadScope(
@@ -72,31 +69,16 @@ async function confirmReadScope(
 
 // Executes an authorized read while preserving its Project scope metadata.
 export async function runSessionRead(
-  implementations: OperationImplementations,
+  invoke: SessionInvoke,
   caller: SessionCaller,
   { id, params }: ResolvedReadOperation,
 ): Promise<OperationResult> {
-  if (id === 'project.list') {
-    const projects = await implementations[id](
-      operationParams(operations[id].params, params),
-    );
+  if (id !== 'project.list') return invoke({ id, params });
 
-    return projectScope(caller, projects);
-  }
+  const projects = await invoke({ id, params });
 
-  return operations[id].result.parseAsync(
-    await runOperation(implementations, id, params),
-  );
-}
-
-function projectScope(
-  caller: SessionCaller,
-  projects: ProjectsListOutput,
-): Promise<OperationResult<'project.list'>> {
-  return operations['project.list'].result.parseAsync(
-    projects.map((project) => ({
-      ...project,
-      inScope: project.id === caller.projectId,
-    })),
-  );
+  return projects.map((project) => ({
+    ...project,
+    inScope: project.id === caller.projectId,
+  }));
 }

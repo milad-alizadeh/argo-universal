@@ -1,17 +1,14 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { createSessionWorkWatcher } from '../sessions';
 import { requireOperationCall, type StartedOperation } from './call-recording';
-import {
-  isNativeStartOperation,
-  startUserNativeWork,
-  type NativeUserStart,
-} from './native-user-starts';
+import { isNativeStartOperation } from './native-start';
 import type { OperationRunResult, OperationsDeps } from './operations';
 import type { OperationCaller } from './session-tokens';
 import { waitForNativeWork, type WaitOptions } from './wait';
 import { WaitBudget } from './wait-budget';
 import { WaitIds } from './wait-id';
 import { observationSignal, stoppingSignal } from './wait-signals';
+import { admitUserWork, type BeginWork } from './work-admission';
 import type { WorkObservation } from './work-observation';
 import { readOperationWork } from './work-reader';
 import {
@@ -49,14 +46,11 @@ export class OperationWork {
       ? this.runUser(context, started.result)
       : this.runRecorded(context, started);
   }
-  public startUser(
-    operation: NativeUserStart,
+  public admitUser<Result>(
+    begin: BeginWork<Result>,
     budget: WaitBudget,
-  ): Promise<OperationRunResult> {
-    return startUserNativeWork(
-      { deps: this.deps, ids: this.ids, budget },
-      operation,
-    );
+  ): Promise<Result | OperationExecution> {
+    return admitUserWork({ deps: this.deps, ids: this.ids, budget }, begin);
   }
   public wait(
     id: string,

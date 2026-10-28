@@ -1,11 +1,7 @@
 import { SessionPromptInput, type SessionPromptOutput } from '@repo/contracts';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import {
-  promptSessionAccepted,
-  sessionPromptSender,
-  type AcceptedSessionPrompt,
-  type SessionOperationCall,
-} from '../sessions';
+import type { SessionOperationCall } from '../sessions';
+import type { SessionInvoke } from './implementations';
 import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
 import type { SessionStartAdmission, SessionStarts } from './session-starts';
@@ -16,6 +12,7 @@ type SessionPrompt = {
   caller: SessionCaller;
   call: SessionOperationCall;
   starts: SessionStarts;
+  invoke: SessionInvoke;
 };
 
 export async function runSessionPrompt(
@@ -30,7 +27,7 @@ export async function runSessionPrompt(
   });
 
   try {
-    return await confirmedPrompt(context, input, admission);
+    return await confirmedPrompt(context, { input, params }, admission);
   } finally {
     admission.release();
   }
@@ -38,16 +35,15 @@ export async function runSessionPrompt(
 
 async function confirmedPrompt(
   context: SessionPrompt,
-  input: SessionPromptInput,
+  { input, params }: { input: SessionPromptInput; params: Json },
   admission: SessionStartAdmission,
 ): Promise<SessionPromptOutput> {
   if (requiresConfirmation(context, input.sessionId, admission))
     await context.call.confirm(
       'Send a prompt outside the calling Session’s Agents or delegation limits.',
     );
-  const accepted = await submitPrompt(context, input);
 
-  return promptOutput(context.call, input, accepted);
+  return context.invoke({ id: 'session.prompt', params });
 }
 
 function requiresConfirmation(
@@ -62,30 +58,4 @@ function requiresConfirmation(
     target.startedBySessionId === caller.sessionId;
 
   return !owned || admission.needsConfirmation;
-}
-
-function promptOutput(
-  call: SessionOperationCall,
-  input: SessionPromptInput,
-  accepted: AcceptedSessionPrompt,
-): SessionPromptOutput {
-  if (accepted.messageId === null) return accepted;
-  call.started({
-    kind: 'turn',
-    sessionId: input.sessionId,
-    turnId: accepted.turnId,
-  });
-
-  return { messageId: accepted.messageId };
-}
-
-function submitPrompt(
-  { deps, caller }: SessionPrompt,
-  input: SessionPromptInput,
-): Promise<AcceptedSessionPrompt> {
-  return promptSessionAccepted(
-    deps,
-    input,
-    sessionPromptSender(deps.readSession, caller.sessionId),
-  );
 }
