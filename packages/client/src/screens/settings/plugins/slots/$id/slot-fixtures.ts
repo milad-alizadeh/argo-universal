@@ -84,13 +84,21 @@ export const sessionBarPreviewData: SessionBarPreviewData = {
     items: [
       {
         pluginId: issueTracker.pluginId,
-        item: { text: issueTrackerBar, action: { path: '/issues/412' } },
+        item: {
+          icon: { sf: 'ticket', material: 'confirmation_number' },
+          text: issueTrackerBar,
+          action: { path: '/issues/412' },
+        },
       },
     ],
     overflow: [
       {
         pluginId: deploys.pluginId,
-        item: { text: previewReady, action: { path: '/deploys/latest' } },
+        item: {
+          icon: { sf: 'checkmark.circle', material: 'check_circle' },
+          text: previewReady,
+          action: { path: '/deploys/latest' },
+        },
       },
       { pluginId: coverage.pluginId, item: { text: coverageBar } },
     ],

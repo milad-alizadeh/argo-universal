@@ -6,6 +6,7 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
+import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { ElicitationPreview } from './session-detail-view-elicitation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
@@ -46,25 +47,7 @@ export const SessionBar: Story = {
   args: {
     state: 'open',
     ...longSession,
-    bar: {
-      shown: {
-        pluginId: 'issue-tracker',
-        pluginName: 'Issue tracker',
-        icon: { sf: 'ticket', material: 'confirmation_number' },
-        text: '#412 · In review',
-        path: '/issues/412',
-      },
-      hidden: [
-        {
-          pluginId: 'deploys',
-          pluginName: 'Deploys',
-          text: 'Preview ready',
-          path: '/deploys/latest',
-        },
-        { pluginId: 'coverage', pluginName: 'Coverage', text: '78% covered' },
-      ],
-      onOpen: (): void => undefined,
-    },
+    bar: sessionPageBar,
   },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };

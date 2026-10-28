@@ -2,7 +2,6 @@ import type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
-import { Surface } from '@repo/kit/primitives/layout/surface';
 import { Menu, type MenuAction } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -27,18 +26,17 @@ export interface SessionBarProps {
 }
 
 /*
- * One full-width strip under the Session header: one Plugin's summary, such as "#412 · In review", "+N" for the
- * others, and Open for the shown line's page (ADR-0035). Argo draws it; a Plugin only sends the icon, text and page.
+ * The line on the Session bar: one Plugin's summary, such as "#412 · In review", "+N" for the others, and Open for
+ * the shown line's page (ADR-0035). Argo draws it; a Plugin only sends the icon, text and page. The page puts it on
+ * the bar's tinted strip.
  */
 export function SessionBar(props: SessionBarProps): React.JSX.Element {
   return (
-    <Surface kind="muted" padding={2}>
-      <View className="flex-row items-center gap-2">
-        <LineContent entry={props.shown} />
-        <HiddenLines hidden={props.hidden} onOpen={props.onOpen} />
-        <OpenButton entry={props.shown} onOpen={props.onOpen} />
-      </View>
-    </Surface>
+    <View className="flex-row items-center gap-2">
+      <LineContent entry={props.shown} />
+      <HiddenLines hidden={props.hidden} onOpen={props.onOpen} />
+      <OpenButton entry={props.shown} onOpen={props.onOpen} />
+    </View>
   );
 }
 

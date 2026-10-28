@@ -3,6 +3,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { SessionBar } from '#features/sessions';
 import type { Merged, SlotVisibility } from '#features/settings';
+import { SessionBarStrip } from '#lib/product/session-bar-row';
 import { sessionBarLines } from '../../../../plugins/session-bar-lines';
 import {
   usePluginName,
@@ -33,9 +34,14 @@ export function SessionBarPreview({
 
   if (!lines) return <Text role="secondary">{noBarLine}</Text>;
 
-  return <SessionBar {...lines} onOpen={ignore} />;
+  return (
+    <SessionBarStrip inset>
+      <SessionBar {...lines} onOpen={ignore} />
+    </SessionBarStrip>
+  );
 }
 
+// The preview shows the bar only; Open does nothing here.
 const ignore = (): void => undefined;
 
 // The preview on the App: the bar the Server's Plugins send for the latest Session.

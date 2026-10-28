@@ -2,6 +2,7 @@ import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, within } from 'storybook/test';
+import { SessionBarStrip } from '#lib/product/session-bar-row';
 import { SessionColumn } from '#lib/product/session-column';
 import { openLabel, SessionBar } from './session-bar';
 import {
@@ -15,12 +16,14 @@ import {
 const meta = {
   title: 'Tests/Sessions/SessionBar',
   component: SessionBar,
-  // In the Session's column, as the page draws it.
+  // On the bar's strip, as the page draws it.
   decorators: [
     (Story): React.JSX.Element => (
-      <SessionColumn>
-        <Story />
-      </SessionColumn>
+      <SessionBarStrip>
+        <SessionColumn>
+          <Story />
+        </SessionColumn>
+      </SessionBarStrip>
     ),
   ],
   args: { ...threePlugins, onOpen: fn() },

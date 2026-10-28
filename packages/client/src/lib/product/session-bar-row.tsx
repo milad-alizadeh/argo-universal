@@ -1,5 +1,6 @@
 import { hasLiquidGlass } from '@repo/kit/native-header';
 import { useWide } from '@repo/kit/use-wide/use-wide';
+import { cn } from '@repo/kit/utils';
 import { HeaderHeightContext } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactNode, useContext } from 'react';
@@ -19,7 +20,22 @@ function useFloatingHeaderHeight(): number {
   return headerFloats(useWide()) ? (headerHeight ?? 0) : 0;
 }
 
-// One line under the Session's header, in the Session's column; nothing while there is none.
+/*
+ * The bar's tinted strip, edge to edge. On the Session page the Session column sets the line's sides; the Settings
+ * preview, with no column, asks for its own `inset`.
+ */
+export function SessionBarStrip(props: {
+  children: ReactNode;
+  inset?: boolean;
+}): React.JSX.Element {
+  return (
+    <View className={cn('w-full bg-muted py-2', props.inset && 'px-4')}>
+      {props.children}
+    </View>
+  );
+}
+
+// One tinted strip under the Session's header, its line on the Session column's leading edge; nothing while there is none.
 export function SessionBarRow(props: { children: ReactNode }): React.ReactNode {
   const top = useFloatingHeaderHeight();
 
@@ -27,7 +43,9 @@ export function SessionBarRow(props: { children: ReactNode }): React.ReactNode {
 
   return (
     <View style={{ paddingTop: top }}>
-      <SessionColumn className="pt-2">{props.children}</SessionColumn>
+      <SessionBarStrip>
+        <SessionColumn>{props.children}</SessionColumn>
+      </SessionBarStrip>
     </View>
   );
 }
