@@ -4,8 +4,10 @@ import { usePressRipple } from '#primitives/native/material-palette';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
+import { BesidePress } from './list-item-beside-press';
 import { useContentItemPress } from './list-item-content-selection';
 import { linkPress } from './list-item-link-press';
+import { hasAccessories } from './list-item-pass-through';
 import { interactive, usePressClass } from './list-item-press-class';
 import type { ListItemProps } from './list-item-props';
 import { RadioRow } from './list-item-radio';
@@ -131,17 +133,17 @@ const useRadioRow = (props: DrawingProps): boolean =>
 
 export function ItemPress(props: DrawingProps): ReactElement {
   const press = usePressProps(props);
-  const focus = useRowFocus();
+  const focused = { ...press, ...useRowFocus() };
+  const className = cn(press.className, focused.className);
 
   if (useRadioRow(props))
     return <RadioRow row={props} className={press.className} />;
 
+  if (hasAccessories(props))
+    return <BesidePress props={props} press={{ ...focused, className }} />;
+
   return (
-    <Pressable
-      {...press}
-      {...focus}
-      className={cn(press.className, focus.className)}
-    >
+    <Pressable {...focused} className={className}>
       <ItemContentSlots {...props} />
     </Pressable>
   );

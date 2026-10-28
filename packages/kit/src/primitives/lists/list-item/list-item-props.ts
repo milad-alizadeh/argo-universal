@@ -49,6 +49,13 @@ export type ListItemProps = KitProps<'ListItem'> & {
   subtitleTone?: Tone;
   // A subtitle that wraps onto a second line rather than truncating, such as a Mode's description.
   subtitleLines?: 2;
+  /*
+   * Items with presses of their own, such as a Plugin's links: after the meta line's items, or after the trailing
+   * items. They sit beside the row's press rather than inside it, so pressing one never presses the row and a screen
+   * reader reaches each after the row. A part among them that should press the row instead is a `ListItemInert`.
+   */
+  metaAccessories?: ReactNode;
+  trailingAccessories?: ReactNode;
   // A glyph leading the subtitle in its tone, such as the Plugin that wrote a Session row's Activity line.
   subtitleIcon?: KitProps<'Icon'>['name'];
   // De-emphasized secondary text on a completed row.

@@ -45,7 +45,8 @@ function rowLayout(press: PressDrawing): PressLayout {
 const layoutOf = (press: PressDrawing): PressLayout =>
   press.look.menu ? 'menu' : rowLayout(press);
 
-function pressLayout(press: PressDrawing): string {
+// The row's lanes alone, for content drawn beside its press rather than inside it.
+export function pressLayout(press: PressDrawing): string {
   const layout = layoutOf(press);
 
   return cn(pressLayouts[layout], press.control && controlLines[layout]);

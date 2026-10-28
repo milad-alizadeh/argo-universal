@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { Pressable } from 'react-native';
+import { expect, fn, within } from 'storybook/test';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
 import { ListItem } from './index';
@@ -73,6 +74,55 @@ export const Value: Story = {
   args: { title: 'Version', value: '1.2', onPress: undefined },
   play: async ({ canvas }) => {
     await expect(canvas.getByLabelText('Version, 1.2')).toBeVisible();
+  },
+};
+
+const openIssue = fn();
+
+const issueLink = (
+  <Pressable role="link" accessibilityLabel="Open issue" onPress={openIssue}>
+    <Text>Issue</Text>
+  </Pressable>
+);
+
+// An accessory is its own press beside the row's, never inside it: pressing it leaves the row alone.
+function accessoryPress(args: Story['args']): Story {
+  return {
+    args: { subtitle: 'main', ...args },
+    play: async ({ args: { onPress }, canvas, userEvent }) => {
+      openIssue.mockClear();
+      const row = canvas.getByRole('button', { name: title });
+      const link = canvas.getByRole('link', { name: 'Open issue' });
+
+      await expect(within(row).queryByRole('link')).toBeNull();
+      await userEvent.click(link);
+      await expect(openIssue).toHaveBeenCalledOnce();
+      await expect(onPress).not.toHaveBeenCalled();
+      await userEvent.click(row);
+      await expect(onPress).toHaveBeenCalledOnce();
+    },
+  };
+}
+
+export const MetaAccessory = accessoryPress({
+  meta: <Pill text="Meta" />,
+  metaAccessories: issueLink,
+});
+
+export const TrailingAccessory = accessoryPress({
+  trailing: <Text>now</Text>,
+  trailingAccessories: issueLink,
+});
+
+// A glyph leads the subtitle, in its tone, without changing what the row is called.
+export const SubtitleIcon: Story = {
+  args: {
+    subtitle: 'Awaiting review',
+    subtitleIcon: { sf: 'ticket', material: 'confirmation_number' },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: title })).toBeVisible();
+    await expect(canvas.getByTestId('icon-confirmation_number')).toBeVisible();
   },
 };
 
