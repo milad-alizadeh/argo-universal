@@ -1,6 +1,7 @@
 import type { DeferredAgentLaunch } from '../..';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import type { AcpConnection } from '../connection/connection';
+import type { SessionProcessAccess } from './resource-types';
 
 export type Entry = {
   agentId: string;
@@ -11,22 +12,24 @@ export type Entry = {
   connection: AcpConnection;
   pending: number;
   dropped: boolean;
+  access?: SessionProcessAccess;
   resolving: AbortController;
 };
+
+type EntryConnection = Pick<Entry, 'connecting' | 'access'>;
 
 export const createEntry = (
   launch: DeferredAgentLaunch,
   connection: AcpConnection,
-  connecting: Promise<AcpConnection>,
+  { connecting, access }: EntryConnection,
 ): Entry => ({
+  access,
   agentId: launch.agentId,
   projectId: launch.projectId,
   version: launch.version,
   connecting,
   connection,
-  pending: 0,
-  dropped: false,
-  resolving: new AbortController(),
+  ...entryLifetime(),
 });
 
 export const entryInUse = (entry: Entry): boolean =>
@@ -56,5 +59,13 @@ export const pendingAuthentication = (
 ): Entry | undefined =>
   [...entries].find(
     (entry) =>
-      sameProject(entry, agent, project) && entry.connection.authenticating,
+      !entry.access &&
+      sameProject(entry, agent, project) &&
+      entry.connection.authenticating,
   );
+
+const entryLifetime = (): Pick<Entry, 'pending' | 'dropped' | 'resolving'> => ({
+  pending: 0,
+  dropped: false,
+  resolving: new AbortController(),
+});

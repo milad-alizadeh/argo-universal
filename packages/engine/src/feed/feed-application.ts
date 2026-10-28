@@ -64,6 +64,7 @@ const acceptedFeedApplication = (
     activityAt: context.now(),
     changedRowIds: changedRowIds(context, changedRowId(event.change)),
     streamEvents: [...context.streamEvents, result.streamEvent],
+    outputBlobs: [...context.outputBlobs, ...(event.blobs ?? [])],
   },
   events: [appliedChangeEvent(result.feed, event)],
 });

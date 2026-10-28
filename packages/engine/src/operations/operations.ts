@@ -11,17 +11,21 @@ import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
 import type { SessionList, SessionRouterDeps } from '../sessions';
+import { recordOperation } from './call-recording';
 import { createPluginOperations } from './plugins';
 import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
+import { scopedOperations, runSessionOperation } from './session-scope';
+import { type OperationCaller, type SessionTokens } from './session-tokens';
 import { sessionImplementations } from './sessions';
-import { requireUserToken } from './tokens';
+import { tokensMatch } from './tokens';
 
 export type OperationsDeps = SessionRouterDeps &
   RegistryDeps & {
     controlToken: string;
+    sessionTokens: SessionTokens;
     blobsFolder: string;
     plugins: PluginsRouterDeps;
   };
@@ -60,21 +64,49 @@ export class Operations {
   ) {
     this.implementations = createImplementations(deps, sessionList);
   }
-  public list(token: string | undefined, filter = ''): OperationRow[] {
-    requireUserToken(this.deps.controlToken, token);
+  public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
+    const caller = this.caller(token);
 
-    return listOperations(filter);
+    return recordOperation(
+      { deps: this.deps, caller },
+      {
+        name: 'operations.list',
+        label: 'Discover Operations',
+        input: { filter },
+      },
+      async () => scopedOperations(caller, listOperations(filter)),
+    );
   }
-  public async run(
+  public run(
     token: string | undefined,
     id: OperationId,
     params: Json,
   ): Promise<OperationResult> {
-    requireUserToken(this.deps.controlToken, token);
+    const caller = this.caller(token);
+
+    return recordOperation(
+      { deps: this.deps, caller },
+      { name: id, label: operations[id].label, input: params },
+      () => this.authorized(caller, id, params),
+    );
+  }
+  private async authorized(
+    caller: OperationCaller,
+    id: OperationId,
+    params: Json,
+  ): Promise<OperationResult> {
+    if (caller.kind === 'session')
+      return runSessionOperation(this.implementations, caller, { id, params });
 
     return operations[id].result.parseAsync(
       await runOperation(this.implementations, id, params),
     );
+  }
+  private caller(token: string | undefined): OperationCaller {
+    if (token && tokensMatch(this.deps.controlToken, token))
+      return { kind: 'user' };
+
+    return this.deps.sessionTokens.require(token);
   }
   public runApp<Id extends OperationId>(
     id: Id,

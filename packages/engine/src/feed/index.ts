@@ -68,3 +68,5 @@ export {
 } from './stored-turn-settlement';
 
 export { mapSupportedContentBlock } from './acp/content';
+
+export { toolCallEvent } from './tool-call-event';

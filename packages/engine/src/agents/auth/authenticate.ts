@@ -1,3 +1,7 @@
+import { authenticationFailed } from './auth-failure';
+
+export { authenticationFailed } from './auth-failure';
+
 import type {
   AgentAuthChange,
   AgentAuthenticateOutput,
@@ -31,13 +35,6 @@ type Attempt = {
   terminal: boolean;
 };
 
-export const authenticationFailed = (
-  cause: unknown,
-): AgentAuthenticateOutput => ({
-  status: 'failed',
-  message: cause instanceof Error ? cause.message : String(cause),
-});
-
 export class ConnectionAuthentication {
   private pending?: Attempt;
   private outcome: AgentAuthenticateOutput | null = null;
@@ -60,6 +57,9 @@ export class ConnectionAuthentication {
     if (!isAuthRequired(cause)) return;
     this.description = authenticationDescription(cause);
     this.publish();
+  }
+  public inheritRequired(description: string | undefined): void {
+    if (description !== undefined) this.description = description;
   }
   private publish(): void {
     this.input.changed({ ...this.state(), outcome: this.outcome });

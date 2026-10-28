@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
-it('a refused session/new discards its unstored Checkout without killing the shared process', async () => {
+it('a refused session/new discards its unstored Checkout and stops its private process', async () => {
   const requested = Promise.withResolvers<NewSessionRequest>();
 
   const host = await startAcpEngine({
@@ -25,5 +25,5 @@ it('a refused session/new discards its unstored Checkout without killing the sha
     message: expect.stringContaining('open refused'),
   });
   expect(existsSync(checkout)).toBe(false);
-  expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(0);
+  expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(1);
 });
