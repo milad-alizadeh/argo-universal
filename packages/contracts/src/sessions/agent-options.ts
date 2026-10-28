@@ -22,8 +22,17 @@ export type SessionAgentOptionsOutput = z.infer<
   typeof SessionAgentOptionsOutput
 >;
 
+export const SlashCommand = z.strictObject({
+  name: z.string(),
+  description: z.string(),
+  hint: z.string().optional(),
+});
+
+export type SlashCommand = z.infer<typeof SlashCommand>;
+
 export const AgentConfiguration = AgentOptionsOwner.extend({
   configOptions: SessionAgentOptionsOutput,
+  commands: z.array(SlashCommand).nullable(),
 });
 
 export type AgentConfiguration = z.infer<typeof AgentConfiguration>;
@@ -32,6 +41,7 @@ export type AgentConfiguration = z.infer<typeof AgentConfiguration>;
 export const AgentOptionsUpdate = z.strictObject({
   ...AgentOptionsOwner.shape,
   configOptions: SessionAgentOptionsOutput.nullable(),
+  commands: z.array(SlashCommand).nullable(),
   stage: z.enum(['installing', 'loading', 'ready']).optional(),
   progress: z.number().min(0).max(1).optional(),
 });

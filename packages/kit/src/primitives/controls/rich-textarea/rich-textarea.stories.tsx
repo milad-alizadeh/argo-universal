@@ -15,6 +15,7 @@ import {
   quoteRichTextarea,
   strikethroughRichTextarea,
   threeLinesRichTextarea,
+  suggestionsRichTextarea,
 } from './rich-textarea-fixtures';
 
 const meta = {
@@ -26,6 +27,7 @@ const meta = {
     onChangeText: { control: false },
     onSubmit: { control: false },
     references: { control: false },
+    suggestions: { control: false },
   },
   // The editor is controlled, so every story draws through a wrapper that keeps the draft.
   render: ({ value, ...props }): React.JSX.Element => (
@@ -65,3 +67,5 @@ export const LongDraft: Story = {
     docs: { description: { story: 'A draft at the editor’s maximum height.' } },
   },
 };
+
+export const Suggestions: Story = { args: suggestionsRichTextarea };

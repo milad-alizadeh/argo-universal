@@ -1,4 +1,4 @@
-import type { Plan, SessionSnapshot } from '@repo/contracts';
+import type { Plan, SessionSnapshot, SlashCommand } from '@repo/contracts';
 import { type InstalledAgents, loadedAgents } from '#features/agents';
 import type {
   ComposerConfigurationProps,
@@ -35,6 +35,7 @@ export interface OpenSession {
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;
+    commands?: SlashCommand[] | null;
   };
   // The Feed's end came on screen or left it.
   onAtEndChange: (atEnd: boolean) => void;
@@ -134,12 +135,16 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
   onSend: (sent) => void commands.sendDraft(sent),
 });
 
+const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>
+  open.options?.commands ?? undefined;
+
 // The Composer of an open Session: its draft, its commands and its configuration.
 export function sessionComposerProps(open: OpenSession): ComposerProps {
   const { commands, sessionId, snapshot, view } = open;
 
   return {
     ...draftProps(commands),
+    slashCommands: slashCommandsOf(open),
     onStop: () => commands.cancelTurn.mutate({ sessionId }),
     sending: isSending(open),
     sendable: isSendable(open),

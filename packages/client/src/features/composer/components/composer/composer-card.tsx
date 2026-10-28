@@ -1,7 +1,9 @@
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
 import { RichTextarea } from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
+import { useMemo } from 'react';
 import { View, ScrollView } from 'react-native';
+import { slashCommandSource } from '../../utils/slash-command-suggestions';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,
@@ -90,7 +92,14 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
 }
 
 function ComposerText(layout: TextLayout): React.JSX.Element {
-  return <RichTextarea {...textInputProps(layout)} />;
+  const commands = layout.props.slashCommands;
+
+  const suggestions = useMemo(
+    () => (commands?.length ? [slashCommandSource(commands)] : []),
+    [commands],
+  );
+
+  return <RichTextarea {...textInputProps(layout)} suggestions={suggestions} />;
 }
 
 // The padding sits on the field, so a press anywhere in the white area focuses it.

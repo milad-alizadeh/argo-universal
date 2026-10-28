@@ -1,0 +1,53 @@
+import type { SlashCommand } from '@repo/contracts';
+import type {
+  ComposerSuggestion,
+  SuggestionSource,
+} from '@repo/kit/primitives/controls/rich-textarea';
+
+const resultLimit = 8;
+
+const nameStartsWith = (command: SlashCommand, needle: string): boolean =>
+  command.name.toLowerCase().startsWith(needle);
+
+function matchingCommands(
+  commands: readonly SlashCommand[],
+  query: string,
+): SlashCommand[] {
+  const needle = query.toLowerCase();
+
+  const prefixes = commands.filter((command) =>
+    nameStartsWith(command, needle),
+  );
+
+  const descriptions = commands.filter(
+    (command) =>
+      !nameStartsWith(command, needle) &&
+      command.description.toLowerCase().includes(needle),
+  );
+
+  return [...prefixes, ...descriptions].slice(0, resultLimit);
+}
+
+function commandSuggestion(command: SlashCommand): ComposerSuggestion {
+  const result: ComposerSuggestion = {
+    id: command.name,
+    label: `/${command.name}`,
+    detail: command.description,
+    insert: `/${command.name} `,
+  };
+
+  if (command.hint !== undefined) result.hint = command.hint;
+
+  return result;
+}
+
+// Name prefixes outrank description matches; the Agent's order breaks ties.
+export function slashCommandSource(
+  commands: readonly SlashCommand[],
+): SuggestionSource {
+  return {
+    id: 'agent-slash-commands',
+    title: 'Slash commands',
+    query: (query) => matchingCommands(commands, query).map(commandSuggestion),
+  };
+}

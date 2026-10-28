@@ -23,6 +23,7 @@ import { useConnectionDropped } from './use-connection-dropped';
 
 export interface OptionsDiscovery extends SessionOptions {
   stage?: AgentOptionsUpdate['stage'];
+  commands?: AgentOptionsUpdate['commands'];
   progress?: number;
   error?: SessionOpenError;
   retry: () => void;
@@ -141,6 +142,9 @@ function isOpening(read: DiscoveryRead, chosen: boolean): boolean {
   return read.data.configOptions === null;
 }
 
+const commandsOf = (read: DiscoveryRead): OptionsDiscovery['commands'] =>
+  read.data?.commands;
+
 // The Server owns both the saved snapshot and discovery; the screen keeps only picks.
 export function useSessionOptions(choice: Choice): OptionsDiscovery {
   const read = useDiscovery(choice);
@@ -149,6 +153,7 @@ export function useSessionOptions(choice: Choice): OptionsDiscovery {
 
   return {
     ...options,
+    commands: commandsOf(read),
     stage: read.data?.stage,
     progress: read.data?.progress,
     error,

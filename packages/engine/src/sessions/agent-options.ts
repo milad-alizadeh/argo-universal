@@ -26,6 +26,7 @@ import {
   readAgentConfiguration,
 } from './agent-options-storage';
 import { configureOptionsSession } from './configure-options-session';
+import { liveAgentOptions } from './live-agent-options';
 import type { SessionRouterDeps } from './router-deps';
 import { validateSessionCommandAdmission } from './session-command';
 import { readSessionRow } from './session-record';
@@ -191,6 +192,19 @@ export async function* agentOptionsUpdates(
   const input = sessionOptionsInput(deps, request);
   requireInstalledAgent(deps.installedAgents, input.agent);
 
+  if (
+    input.sessionId &&
+    deps.sessions.getSnapshot().context.sessions[input.sessionId]
+  ) {
+    yield* liveAgentOptions(
+      deps,
+      { ...input, sessionId: input.sessionId },
+      signal,
+    );
+
+    return;
+  }
+
   const saved = readAgentConfiguration(
     { database: deps.database, writer: deps.findWriter() },
     input,
@@ -199,6 +213,7 @@ export async function* agentOptionsUpdates(
   const owner = { agent: input.agent, projectId: input.projectId };
   yield {
     ...owner,
+    commands: saved?.commands ?? null,
     configOptions: saved
       ? saved.configOptions.map((option) => {
           const value = input.picks?.[option.configId];
@@ -315,13 +330,32 @@ function publishDiscovery(
     signal,
     progress: (stage, progress) =>
       events.emit('update', {
-        update: { ...owner, configOptions: cached, stage, progress },
+        update: {
+          ...owner,
+          commands:
+            readAgentConfiguration(
+              { database: deps.database, writer: deps.findWriter() },
+              input,
+            )?.commands ?? null,
+          configOptions: cached,
+          stage,
+          progress,
+        },
       }),
   })
     .then(
       (configOptions) =>
         events.emit('update', {
-          update: { ...owner, configOptions, stage: 'ready' },
+          update: {
+            ...owner,
+            commands:
+              readAgentConfiguration(
+                { database: deps.database, writer: deps.findWriter() },
+                input,
+              )?.commands ?? null,
+            configOptions,
+            stage: 'ready',
+          },
         }),
       (error) => events.emit('update', { error }),
     )

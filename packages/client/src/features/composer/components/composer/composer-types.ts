@@ -1,3 +1,4 @@
+import type { SlashCommand } from '@repo/contracts';
 import type { ReactNode } from 'react';
 import type { PermissionRequestProps } from '#features/requests';
 import type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
@@ -12,6 +13,7 @@ export interface ComposerDraft {
 
 export interface ComposerProps {
   draft: ComposerDraft;
+  slashCommands?: readonly SlashCommand[];
   permissionRequest?: PermissionRequestProps;
   // A Session's sign-in or launch callout, in the request's tray; a request takes its place while one is open.
   callout?: ReactNode;

@@ -275,6 +275,30 @@ const sessionSetup = setup({
     }),
     releaseHeldConfig: assign(({ context }) => releaseHeldConfig(context)),
     takeAcpConfig: assign(({ context }) => takeConfigChoice(context)),
+    saveAcpCommands: enqueueActions(({ context, event, enqueue }) => {
+      assertEvent(event, acpUpdateEvent);
+      const update = event.notification.update;
+
+      if (update.sessionUpdate !== 'available_commands_update') return;
+      enqueueWrites(enqueue, context, [
+        {
+          job: new AgentOptionsJob(
+            { agent: context.agent, projectId: context.projectId },
+            undefined,
+            {
+              authoritative: true,
+              commands: update.availableCommands.map(
+                ({ name, description, input }) => ({
+                  name,
+                  description,
+                  hint: input?.hint,
+                }),
+              ),
+            },
+          ),
+        },
+      ]);
+    }),
     applyAcpConfig: enqueueActions(
       ({ context, event, enqueue }, options?: SessionConfigOption[]) => {
         const nextOptions = options ?? readConfigurationUpdate(context, event);
@@ -704,6 +728,9 @@ const sessionSetup = setup({
 
       return ownsSubagentUpdate(context.subagents, event.notification);
     },
+    isCommandsUpdate: ({ event }): boolean =>
+      event.type === acpUpdateEvent &&
+      event.notification.update.sessionUpdate === 'available_commands_update',
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&
       event.notification.update.sessionUpdate === 'config_option_update',
@@ -958,6 +985,7 @@ export const sessionMachine = sessionSetup.createMachine({
             'acp.update': [
               { guard: 'isSubagentUpdate', actions: 'routeSubagentUpdate' },
               { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
+              { guard: 'isCommandsUpdate', actions: 'saveAcpCommands' },
               {
                 guard: ({ event }): boolean =>
                   event.notification.update.sessionUpdate === 'usage_update',
@@ -1285,6 +1313,7 @@ export const sessionMachine = sessionSetup.createMachine({
                         actions: 'routeSubagentUpdate',
                       },
                       { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
+                      { guard: 'isCommandsUpdate', actions: 'saveAcpCommands' },
                       { guard: 'isTitleUpdate', actions: 'applyAcpTitle' },
                       {},
                     ],
