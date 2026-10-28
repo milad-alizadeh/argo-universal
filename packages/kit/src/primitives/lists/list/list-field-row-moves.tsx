@@ -27,16 +27,16 @@ function MovableFieldRow({
   );
 }
 
+const isFieldRow = (content: ReactNode): boolean =>
+  isValidElement(content) && isNativeRow(content);
+
 /*
  * A FieldGroup row that moves in a List drawn on LegendList, as the web draws a grouped List: its context menu offers
  * the Move Section a ListItem's does, and its Move to… picker opens over it, so every move a drag makes can be made
  * from the keyboard too. A ListItem draws its own; any other row draws as it is.
  */
-export function FieldRowMoves(props: FieldRowMovesProps): ReactNode {
-  const { id, content } = props;
-  const fieldRow = isValidElement(content) && isNativeRow(content);
-
-  if (!fieldRow || id === undefined) return content;
+export function FieldRowMoves({ id, content }: FieldRowMovesProps): ReactNode {
+  if (id === undefined || !isFieldRow(content)) return content;
 
   return <MovableFieldRow id={id} content={content} />;
 }

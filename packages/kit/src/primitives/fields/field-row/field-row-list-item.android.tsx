@@ -1,9 +1,6 @@
 import { Icon, ListItem, useMaterialColors } from '@expo/ui/jetpack-compose';
 import {
-  alpha,
-  clickable,
   clip,
-  combinedClickable,
   fillMaxWidth,
   Shapes,
   toggleable,
@@ -17,10 +14,10 @@ import { nativeIconName } from '../../../symbols/native-icon-name';
 import { RowLogo } from './field-row-logo';
 import {
   cornerRadii,
-  GroupDisabledContext,
   PositionContext,
   RowLongPressContext,
 } from './field-row-position';
+import { dimming, pressing, useDisabled } from './field-row-pressing.android';
 import type { RowTextProps } from './field-row-text';
 
 export type RowListItemProps = Pick<
@@ -36,9 +33,6 @@ export type RowListItemProps = Pick<
   disabled?: boolean;
   modifiers?: ModifierConfig[];
 };
-
-// Material's disabled content opacity (38%); ListItem has no disabled colours of its own.
-const disabledContentAlpha = 0.38;
 
 /*
  * One FieldGroup row as itself: a Material 3 ListItem with headline, supporting, leading and trailing content,
@@ -83,37 +77,6 @@ function useRowModifiers(props: RowListItemProps): ModifierConfig[] {
     ...pressing(props, off, longPress),
     ...(props.modifiers ?? []),
   ];
-}
-
-function useDisabled(own: boolean | undefined): boolean {
-  const group = useContext(GroupDisabledContext);
-
-  return own === true || group;
-}
-
-const dimming = (off: boolean): ModifierConfig[] =>
-  off ? [alpha(disabledContentAlpha)] : [];
-
-const tapped = (
-  props: RowListItemProps,
-  off: boolean,
-): (() => void) | undefined => (off ? undefined : props.onPress);
-
-/*
- * A tap runs the row's press; with a long press, Compose's `combinedClickable` takes both, as one clickable a nested
- * one would shadow.
- */
-function pressing(
-  props: RowListItemProps,
-  off: boolean,
-  longPress: (() => void) | undefined,
-): ModifierConfig[] {
-  const onClick = tapped(props, off);
-
-  if (longPress)
-    return [combinedClickable({ onClick, onLongClick: longPress })];
-
-  return onClick ? [clickable(onClick)] : [];
 }
 
 function SupportingSlot(

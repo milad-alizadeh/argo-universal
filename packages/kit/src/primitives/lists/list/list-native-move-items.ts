@@ -30,11 +30,11 @@ export function useNativeMoveItems(
   const order = useListMoveOrder();
   const menu = useMoveOrder(order, (each) => each.menuOf(id));
 
+  // A row with a menu is in a List with `onMove`, under a move id.
+  const moves = menu === undefined ? undefined : order;
+
   return useMemo(
-    () =>
-      menu === undefined || order === undefined || id === undefined
-        ? undefined
-        : moveItems(order, id),
-    [menu, order, id],
+    () => (moves && id !== undefined ? moveItems(moves, id) : undefined),
+    [moves, id],
   );
 }

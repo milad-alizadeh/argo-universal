@@ -6,7 +6,11 @@ import { ListEmpty } from './list-data';
 import { useMovableReading } from './list-movable-reading';
 import { MoveAnnouncer } from './list-move-announcer';
 import { ListMoveOrderContext } from './list-move-context';
-import { useMoveOrder, type MoveAnswer } from './list-move-order';
+import {
+  useMoveOrder,
+  type MoveAnswer,
+  type MoveOrder,
+} from './list-move-order';
 import { ListMovePicker } from './list-move-picker-drawing';
 import type { NativeGroupedProps } from './list-native-props';
 import {
@@ -53,20 +57,46 @@ function Drawn(props: DrawnProps): ReactNode {
 
 type MovingProps = NativeGroupedFrameProps & { onMove: MoveAnswer };
 
-/*
- * A native grouped List with `onMove`: its rows draw in the order it shows, and each movable row's Move menu moves it
- * in that order. The Move to… picker and a screen reader's notice of where a row landed draw over the platform's list.
- */
-function MovingFrame({ list, onMove, children }: MovingProps): ReactElement {
+// A moving List's order, and its native sections in the order it shows.
+interface ShownSections {
+  order: MoveOrder;
+  sections: NativeSection[];
+}
+
+function useShownSections(
+  list: NativeGroupedProps,
+  onMove: MoveAnswer,
+): ShownSections {
   const { order } = useMovableReading({ children: list.children }, onMove);
   const shown = useMoveOrder(order, (each) => each.sections);
-  const picking = useMoveOrder(order, (each) => each.picking);
-  const notice = useMoveOrder(order, (each) => each.notice);
 
   const sections = useMemo(
     () => shownNativeSections(list.children, shown ?? []),
     [list.children, shown],
   );
+
+  return { order, sections };
+}
+
+// The Move to… picker while a row's is open, and a screen reader's notice of where a row landed.
+function MoveOverlays({ order }: { order: MoveOrder }): ReactElement {
+  const picking = useMoveOrder(order, (each) => each.picking);
+  const notice = useMoveOrder(order, (each) => each.notice);
+
+  return (
+    <>
+      <ListMovePicker id={picking} />
+      <MoveAnnouncer notice={notice ?? null} />
+    </>
+  );
+}
+
+/*
+ * A native grouped List with `onMove`: its rows draw in the order it shows, and each movable row's Move menu moves it
+ * in that order. The Move to… picker and a screen reader's notice of where a row landed draw over the platform's list.
+ */
+function MovingFrame({ list, onMove, children }: MovingProps): ReactElement {
+  const { order, sections } = useShownSections(list, onMove);
 
   return (
     <ListMoveOrderContext value={order}>
@@ -74,8 +104,7 @@ function MovingFrame({ list, onMove, children }: MovingProps): ReactElement {
         <Drawn sections={sections} empty={list.empty}>
           {children}
         </Drawn>
-        <ListMovePicker id={picking} />
-        <MoveAnnouncer notice={notice ?? null} />
+        <MoveOverlays order={order} />
       </View>
     </ListMoveOrderContext>
   );

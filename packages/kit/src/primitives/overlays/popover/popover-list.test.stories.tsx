@@ -25,6 +25,7 @@ function drawsItsRows(layout: LayoutName): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: 'Choose a fruit' }),
       );
+
       const popover = await within(document.body).findByRole('dialog', {
         name: 'Fruit',
       });

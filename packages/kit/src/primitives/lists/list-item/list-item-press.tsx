@@ -1,5 +1,6 @@
 import { type ReactElement, type ComponentProps } from 'react';
 import { Pressable, type KeyDownEvent } from 'react-native';
+import type { ContextActions } from '#primitives/actions/action';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
@@ -160,9 +161,14 @@ function focusProps(props: DrawingProps): RowPressProps {
   };
 }
 
-// The name a row is read by: its own label, or its title and subtitle; a row with custom content names its parts.
-export function spokenRowLabel(props: DrawingProps): string | undefined {
+function spokenRowLabel(props: DrawingProps): string | undefined {
   return props.content === undefined
     ? (props.accessibilityLabel ?? rowLabel(props))
     : undefined;
 }
+
+type RowMenu = ComponentProps<typeof ContextActions>['menu'];
+
+// The row's context menu meta, with the row's name, which iOS reads when a page preview hides the row's own text.
+export const rowMenu = (props: DrawingProps): RowMenu =>
+  props.contextMenu && { ...props.contextMenu, label: spokenRowLabel(props) };

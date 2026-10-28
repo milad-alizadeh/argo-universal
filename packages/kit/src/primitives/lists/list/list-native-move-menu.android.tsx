@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { RowLongPressContext } from '#primitives/fields/field-row';
-import { MenuDropdownItems } from '#primitives/overlays/menu';
-import { MenuDropdownShell } from '../../overlays/menu/menu-dropdown-shell.android';
+import { MenuDropdown } from '#primitives/overlays/menu';
 import { useNativeMoveItems } from './list-native-move-items';
 import type { NativeMoveMenuProps } from './list-native-move-menu';
 
@@ -16,11 +15,11 @@ export function NativeMoveMenu(props: NativeMoveMenuProps): ReactElement {
   if (!items) return props.children;
 
   return (
-    <MenuDropdownShell
+    <MenuDropdown
+      items={items}
       trigger={(open) => (
         <RowLongPressContext value={open}>{props.children}</RowLongPressContext>
       )}
-      items={(close) => <MenuDropdownItems items={items} onChosen={close} />}
     />
   );
 }

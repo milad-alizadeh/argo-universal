@@ -34,9 +34,7 @@ function LiftMenu(props: ContextMenuProps): ReactElement {
     <Host matchContents={heightOnly} ignoreSafeArea="all">
       <SwiftContextMenu>
         <SwiftContextMenu.Trigger>
-          <RNHostView matchContents={heightOnly}>
-            <View>{props.children}</View>
-          </RNHostView>
+          {hosted(props.children)}
         </SwiftContextMenu.Trigger>
         <SwiftContextMenu.Items>
           {swiftMenuSections(contextMenuSections(props))}
@@ -47,6 +45,13 @@ function LiftMenu(props: ContextMenuProps): ReactElement {
 }
 
 const heightOnly = { vertical: true };
+
+// The element as SwiftUI hosts it: as wide as the Host, as tall as itself.
+const hosted = (element: ReactElement): ReactElement => (
+  <RNHostView matchContents={heightOnly}>
+    <View>{element}</View>
+  </RNHostView>
+);
 
 type PreviewMenuProps = ContextMenuProps & { href: Href };
 

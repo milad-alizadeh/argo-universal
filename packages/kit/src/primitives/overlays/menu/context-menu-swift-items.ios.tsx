@@ -13,12 +13,16 @@ import { menuSymbol } from './menu-view-actions.ios';
 export function swiftMenuSections(
   sections: NativeMenuSection[],
 ): ReactElement[] {
-  return sections.map((section, index) => (
-    <Section key={`section.${index}`} title={section.title ?? ''}>
+  return sections.map((section) => (
+    <Section key={sectionKey(section)} title={section.title ?? ''}>
       {section.items.map(swiftMenuItem)}
     </Section>
   ));
 }
+
+// A section is keyed by its rows' ids, which are unique within the menu.
+const sectionKey = (section: NativeMenuSection): string =>
+  section.items.map((item) => item.id).join();
 
 // A disabled row greys out and cannot be chosen.
 const off = (
@@ -26,38 +30,43 @@ const off = (
 ): ReturnType<typeof disabled>[] | undefined =>
   item.disabled ? [disabled(true)] : undefined;
 
+const submenu = (
+  item: NativeMenuItem,
+  sections: NativeMenuSection[],
+): ReactElement => (
+  <Menu
+    key={item.id}
+    label={countedTitle(item.title, item.count)}
+    systemImage={menuSymbol(item.icon)}
+  >
+    {swiftMenuSections(sections)}
+  </Menu>
+);
+
+const toggle = (item: NativeMenuItem, isOn: boolean): ReactElement => (
+  <Toggle
+    key={item.id}
+    label={item.title}
+    systemImage={menuSymbol(item.icon)}
+    isOn={isOn}
+    onIsOnChange={item.choose}
+    modifiers={off(item)}
+  />
+);
+
+const button = (item: NativeMenuItem): ReactElement => (
+  <Button
+    key={item.id}
+    label={item.title}
+    systemImage={menuSymbol(item.icon)}
+    role={item.tone === 'danger' ? 'destructive' : undefined}
+    onPress={item.choose}
+    modifiers={off(item)}
+  />
+);
+
 function swiftMenuItem(item: NativeMenuItem): ReactElement {
-  if (item.submenu)
-    return (
-      <Menu
-        key={item.id}
-        label={countedTitle(item.title, item.count)}
-        systemImage={menuSymbol(item.icon)}
-      >
-        {swiftMenuSections(item.submenu)}
-      </Menu>
-    );
+  if (item.submenu) return submenu(item, item.submenu);
 
-  if (item.checked !== undefined)
-    return (
-      <Toggle
-        key={item.id}
-        label={item.title}
-        systemImage={menuSymbol(item.icon)}
-        isOn={item.checked}
-        onIsOnChange={item.choose}
-        modifiers={off(item)}
-      />
-    );
-
-  return (
-    <Button
-      key={item.id}
-      label={item.title}
-      systemImage={menuSymbol(item.icon)}
-      role={item.tone === 'danger' ? 'destructive' : undefined}
-      onPress={item.choose}
-      modifiers={off(item)}
-    />
-  );
+  return item.checked === undefined ? button(item) : toggle(item, item.checked);
 }

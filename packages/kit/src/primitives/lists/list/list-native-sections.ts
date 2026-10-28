@@ -105,6 +105,18 @@ const placed = (refill: Refill, id: string): NativeRow[] => {
   return row ? [{ ...row, moveId: id }] : [];
 };
 
+const isMovable = (refill: Refill, row: NativeRow): boolean =>
+  row.id !== undefined && refill.movable.has(row.id);
+
+// A slot the List can move takes the next row its move Section shows; any other row keeps its place.
+function slotRows(refill: Refill, row: NativeRow, left: string[]): NativeRow[] {
+  if (!isMovable(refill, row)) return [row];
+
+  const id = left.shift();
+
+  return id === undefined ? [] : placed(refill, id);
+}
+
 // A native section's movable slots take the next of its move Section's rows; its last native section takes the rest.
 function refilled(
   section: NativeSection,
@@ -112,21 +124,42 @@ function refilled(
   { refill, last }: { refill: Refill; last: boolean },
 ): NativeSection {
   const left = refill.left.get(move) ?? [];
-  const isMovable = (row: NativeRow): boolean =>
-    row.id !== undefined && refill.movable.has(row.id);
 
-  const rows = section.rows.flatMap((row) => {
-    if (!isMovable(row)) return [row];
-
-    const id = left.shift();
-
-    return id === undefined ? [] : placed(refill, id);
-  });
+  const rows = section.rows.flatMap((row) => slotRows(refill, row, left));
 
   const rest = last ? left.splice(0).flatMap((id) => placed(refill, id)) : [];
 
   return { ...section, rows: [...rows, ...rest] };
 }
+
+const rowEntries = (row: NativeRow): (readonly [string, NativeRow])[] =>
+  row.id === undefined ? [] : [[row.id, row]];
+
+function refillOf(
+  sections: NativeSection[],
+  moves: readonly MoveSection[],
+): Refill {
+  const rows = sections.flatMap((section) => section.rows);
+
+  return {
+    movable: new Set(moves.flatMap((move) => move.rows)),
+    rows: new Map(rows.flatMap(rowEntries)),
+    left: new Map(moves.map((move) => [move, [...move.rows]])),
+  };
+}
+
+// Each native section as shown: refilled from the move Section it maps to, the last one for it taking the rest.
+const shownBy =
+  (refill: Refill, targets: (MoveSection | undefined)[]) =>
+  (section: NativeSection, index: number): NativeSection => {
+    const move = targets[index];
+
+    if (move === undefined) return section;
+
+    const last = targets.lastIndexOf(move) === index;
+
+    return refilled(section, move, { refill, last });
+  };
 
 /*
  * A List with `onMove` draws its native sections in the order it shows (`moves`, its owner's or a held move's): each
@@ -138,26 +171,11 @@ export function shownNativeSections(
   moves: readonly MoveSection[],
 ): NativeSection[] {
   const sections = allSections(children);
-  const movable = new Set(moves.flatMap((move) => move.rows));
-  const rows = new Map(
-    sections
-      .flatMap((section) => section.rows)
-      .flatMap((row) => (row.id === undefined ? [] : [[row.id, row] as const])),
-  );
-  const refill = {
-    movable,
-    rows,
-    left: new Map(moves.map((move) => [move, [...move.rows]])),
-  };
+
   const targets = sections.map((section) => movedIn(section, moves));
 
   return sections
-    .map((section, index) => {
-      const move = targets[index];
-      const last = move !== undefined && targets.lastIndexOf(move) === index;
-
-      return move ? refilled(section, move, { refill, last }) : section;
-    })
+    .map(shownBy(refillOf(sections, moves), targets))
     .filter(hasRows);
 }
 

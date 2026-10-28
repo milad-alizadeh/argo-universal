@@ -2,7 +2,12 @@ import type { ComponentType, ReactNode } from 'react';
 
 type PickerDrawing = ComponentType<{ id: string }>;
 
-const picker: { Drawing?: PickerDrawing } = {};
+// The drawing ListItem hands in, once its module loads.
+interface PickerRegistry {
+  Drawing?: PickerDrawing;
+}
+
+const picker: PickerRegistry = {};
 
 /*
  * The Move to… picker lists its places as ListItems, and ListItem draws it over a row it opens from. A native grouped
