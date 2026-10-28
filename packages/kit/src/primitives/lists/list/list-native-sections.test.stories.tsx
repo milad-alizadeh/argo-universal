@@ -23,13 +23,16 @@ const Row = (props: { id?: string; title: string }): ReactElement => (
   <Text>{props.title}</Text>
 );
 
-// An App's rows written in a map without keys of their own, so each Section's rows key by their index.
+// An App's rows keyed by their index, as a map writes them, so the same keys repeat in each Section.
 const children = [
   <List.Section key="first" id="first" title="First">
-    {[<Row id="alpha" title="Alpha" />, <Row id="beta" title="Beta" />]}
+    {[
+      <Row key={0} id="alpha" title="Alpha" />,
+      <Row key={1} id="beta" title="Beta" />,
+    ]}
   </List.Section>,
   <List.Section key="second" id="second" title="Second">
-    {[<Row id="gamma" title="Gamma" />, <Row title="Note" />]}
+    {[<Row key={0} id="gamma" title="Gamma" />, <Row key={1} title="Note" />]}
   </List.Section>,
 ];
 
@@ -65,7 +68,10 @@ export const RowsKeyByTheirIds: Story = {
 
 const repeated = [
   <List.Section key="first" id="first" title="First">
-    {[<Row id="alpha" title="Alpha" />, <Row id="alpha" title="Copy" />]}
+    {[
+      <Row key={0} id="alpha" title="Alpha" />,
+      <Row key={1} id="alpha" title="Copy" />,
+    ]}
   </List.Section>,
 ];
 
