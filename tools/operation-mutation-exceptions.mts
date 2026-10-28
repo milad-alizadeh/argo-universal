@@ -15,18 +15,10 @@ const retained = new Map<string, readonly string[]>([
   ['operations/router.ts', ['run', 'wait']],
 ]);
 
-// Spec 0022 #1314 removes this separate migration list as these become Operations.
-const notYetMoved = new Map<string, readonly string[]>([
-  ['sessions/router.ts', ['new', 'prompt']],
-]);
-
 export function permittedMutation(file: string, name: string): boolean {
   const relative = file.replace(/^packages\/engine\/src\//, '');
 
-  const names = [
-    ...(retained.get(relative) ?? []),
-    ...(notYetMoved.get(relative) ?? []),
-  ];
+  const names = retained.get(relative) ?? [];
 
   return names.includes(name);
 }

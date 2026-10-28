@@ -1,6 +1,10 @@
 import { SessionNewInput, type SessionNewOutput } from '@repo/contracts';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { startSessionCreation, type SessionOperationCall } from '../sessions';
+import {
+  startSessionCreation,
+  sessionPromptSender,
+  type SessionOperationCall,
+} from '../sessions';
 import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
 import type { SessionStartAdmission, SessionStarts } from './session-starts';
@@ -42,6 +46,7 @@ async function confirmedStart(
   const creation = await startSessionCreation(deps, input, {
     sessionId,
     startedBySessionId: caller.sessionId,
+    sender: sessionPromptSender(deps.readSession, caller.sessionId),
   });
 
   call.started({ kind: 'creation', sessionId, turnId: creation.turnId });

@@ -127,3 +127,10 @@ export {
   createSessionWorkWatcher,
   type SessionWorkWatcher,
 } from './work-watcher';
+export {
+  promptSession,
+  promptSessionAccepted,
+  type AcceptedSessionPrompt,
+} from './session-prompt';
+
+export { sessionPromptSender } from './prompt-sender';
