@@ -52,6 +52,16 @@ _Avoid_: Remote Device, guest, client
 A work item in an Issue tracker that a Plugin draws, such as Linear or GitHub Issues. Argo has no Issues of its own.
 _Avoid_: Ticket, task
 
+## Operations
+
+**Operation**:
+A named thing Argo can do, such as listing Projects or starting a Session, defined once with typed arguments and a tier. Agents, the command line and Apps all call the same Operation.
+_Avoid_: Command (a Slash command or a shell command), tool, action, capability
+
+**Operation tier**:
+How far an Operation may go without asking the user: `read` never asks, `act` stays within the caller's own scope and never asks, and `confirm` always asks first, whatever mode the Agent is in.
+_Avoid_: Permission level, risk level
+
 ## Plugins
 
 **Plugin**:
@@ -164,8 +174,12 @@ _Avoid_: Command (alone), shortcut, action
 An Issue named in a prompt as `#` and its number.
 _Avoid_: Mention, issue link, tag
 
+**Prompt**:
+What is sent to a Session's Agent to start a Turn. It comes from the user, from another Session or from a Plugin, and the Feed shows which; only the user's is the user's own message.
+_Avoid_: Message (alone), input, instruction
+
 **Turn**:
-A stretch of Agent work started by a prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
+A stretch of Agent work started by a Prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
 
 **Agent session**:
@@ -231,7 +245,7 @@ A resource the Agent names in its content by URI, with a name and optionally a d
 _Avoid_: Link, attachment
 
 **Permission request**:
-A question from the Agent to let a Tool call run, with options to allow or reject. The answer is only the chosen option. An Agent's request to leave plan mode is one: its Tool call carries the plan.
+A question from the Agent, or from Argo about an Operation the Agent called, to let a Tool call run, with options to allow or reject. The answer is only the chosen option. An Agent's request to leave plan mode is one: its Tool call carries the plan.
 _Avoid_: Approval, prompt, Plan proposal
 
 **Elicitation**:
