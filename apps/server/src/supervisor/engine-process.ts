@@ -84,11 +84,18 @@ export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
       else child.once('exit', (): void => resolve());
     });
 
-    // Without a pid nothing was spawned, so no group exists.
-    const release = async (): Promise<'released' | 'unresolved'> =>
-      child.pid === undefined
-        ? 'released'
-        : releaseEngineGroups(child.pid, home);
+    // Without a pid nothing was spawned, so no group exists. The kill timer and the Engine's exit both release; they share one run, because two at once race over the same Shell records.
+    let releasing: Promise<'released' | 'unresolved'> | undefined;
+
+    const release = (): Promise<'released' | 'unresolved'> => {
+      if (child.pid === undefined) return Promise.resolve('released');
+
+      releasing ??= releaseEngineGroups(child.pid, home).finally((): void => {
+        releasing = undefined;
+      });
+
+      return releasing;
+    };
 
     // Asks the Engine to stop, kills its group after the timeout, then proves the whole group is gone.
     const terminate = async (): Promise<'released' | 'unresolved'> => {
