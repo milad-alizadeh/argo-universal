@@ -57,7 +57,7 @@ export async function runWithHooks(
   await writeHookPlugins(home, [calling, ...plugins]);
   const { caller } = await startEngineTestHost({ home });
 
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   return {
     results: await probeResult(

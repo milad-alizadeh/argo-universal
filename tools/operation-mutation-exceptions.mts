@@ -35,7 +35,6 @@ const notYetMoved = new Map<string, readonly string[]>([
     'agents/registry/registry-router.ts',
     ['refreshRegistry', 'syncRegistry', 'remove', 'addRegistry'],
   ],
-  ['plugins/router.ts', ['activate', 'setEnabled', 'setSetting']],
 ]);
 
 export function permittedMutation(file: string, name: string): boolean {

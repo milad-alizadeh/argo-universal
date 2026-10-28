@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ProjectsListOutput } from '../projects/list';
 import type { OperationTier } from './metadata';
+import { pluginOperations } from './plugins';
 
 export { OperationRow, OperationTier } from './metadata';
 
@@ -15,6 +16,7 @@ export interface OperationDefinition {
 }
 
 export const operations = {
+  ...pluginOperations,
   'project.list': {
     id: 'project.list',
     label: 'List Projects',

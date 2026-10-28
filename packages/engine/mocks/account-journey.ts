@@ -81,6 +81,6 @@ async function prepareProvider(
   host: EngineHost,
   prepare: ((host: EngineHost) => Promise<void>) | undefined,
 ): Promise<void> {
-  await host.caller.plugins.activate({ pluginId: 'probe' });
+  await host.caller.plugin.activate({ pluginId: 'probe' });
   await prepare?.(host);
 }

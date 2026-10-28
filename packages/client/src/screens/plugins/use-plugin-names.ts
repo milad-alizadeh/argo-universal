@@ -13,7 +13,7 @@ const unknownPlugin = (pluginId: string): RowPlugin => ({
 // Each Plugin's name and glyph from the connected Server's list; the id and a generic glyph until the list arrives.
 export function usePluginOf(): PluginOf {
   const trpc = useTRPC();
-  const { data } = useQuery(trpc.plugins.list.queryOptions());
+  const { data } = useQuery(trpc.plugin.list.queryOptions());
 
   return useMemo(() => {
     const plugins = new Map(

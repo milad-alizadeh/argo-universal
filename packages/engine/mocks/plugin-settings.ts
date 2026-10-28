@@ -33,8 +33,8 @@ type Caller = Awaited<ReturnType<typeof startEngineTestHost>>['caller'];
 export const probeEntry = async (
   caller: Caller,
 ): Promise<
-  Awaited<ReturnType<Caller['plugins']['list']>>['plugins'][number] | undefined
+  Awaited<ReturnType<Caller['plugin']['list']>>['plugins'][number] | undefined
 > =>
-  (await caller.plugins.list()).plugins.find(
+  (await caller.plugin.list()).plugins.find(
     ({ manifest }) => manifest.id === 'probe',
   );

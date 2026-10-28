@@ -27,7 +27,7 @@ it.each([
     const { caller } = await startEngineTestHost({ home });
 
     await expect(
-      caller.plugins.activate({ pluginId: plugin.id }),
+      caller.plugin.activate({ pluginId: plugin.id }),
     ).resolves.toMatchObject({
       state: 'crashed',
       error: expect.stringContaining(reason),
@@ -57,12 +57,12 @@ it(
     const { caller } = await startEngineTestHost({ home });
 
     const status = async (): Promise<string | undefined> =>
-      (await caller.plugins.list()).plugins.find(
+      (await caller.plugin.list()).plugins.find(
         (plugin) => plugin.manifest.id === 'lazy',
       )?.state;
 
     expect(await status()).toBe('not-started');
-    await caller.plugins.activate({ pluginId: 'probe' });
+    await caller.plugin.activate({ pluginId: 'probe' });
     expect(await status()).toBe('running');
   },
   journeyMs,

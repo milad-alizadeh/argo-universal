@@ -128,7 +128,7 @@ it.each([
 
   const { caller } = await startEngineTestHost({ home: probe.home });
 
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   expect(await probeResult(probe.data)).toEqual({ refused: refusal(reason) });
   expect(await readFile(join(project, 'README.md'), 'utf8')).toBe('original');
