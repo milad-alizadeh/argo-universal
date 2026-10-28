@@ -2,12 +2,22 @@ import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { Given, Then, When } from './fixtures';
 import { sessionRow } from './live-session';
+import { sessionOpenTimeout } from './new-session';
 
 const parentTitle = 'Delegate the investigation';
 
 const childTitle = 'Review delegated work';
 
 Given('Agent {int} delegates work through the argo CLI', expectListedAgent);
+
+// The fixture replies only after the supplied CLI has returned a successful settled result.
+Then('the supplied CLI has started the delegated Session', async ({ page }) => {
+  await expect(
+    page
+      .getByTestId('feed-scroll')
+      .getByText('The delegated Session has started.', { exact: true }),
+  ).toBeVisible(sessionOpenTimeout);
+});
 
 When('I return from the Session detail', async ({ page }) => {
   await page.getByRole('link', { name: 'Sessions, back' }).click();

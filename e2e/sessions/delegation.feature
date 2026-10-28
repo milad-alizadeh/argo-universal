@@ -4,7 +4,8 @@ Feature: Session delegation
     And Agent <agent> delegates work through the argo CLI
     And a New Session with Agent <agent>
     When I send the prompt "Delegate the investigation"
-    Then the delegated Session appears under its calling Session
+    Then the supplied CLI has started the delegated Session
+    And the delegated Session appears under its calling Session
     When the Frame becomes a phone Frame
     And I return from the Session detail
     Then the phone list preserves the delegated Session after its caller
