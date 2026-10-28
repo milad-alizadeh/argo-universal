@@ -4,15 +4,14 @@ import { useClock } from '@repo/kit/use-clock';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
-import { SessionRow } from '#features/sessions';
+import { type PluginLookup, SessionRow } from '#features/sessions';
+import type { SlotVisibility } from '#features/settings';
 import {
-  type PluginOf,
+  rowDrawing,
   type SessionRowAnswer,
-  sessionRowPlugins,
-  type SlotVisibility,
-} from '#features/settings';
-import { usePluginOf } from '../../../../plugins/use-plugin-names';
-import { useSessionRowAnswers } from '../../../../plugins/use-session-row-plugins';
+} from '../../../../plugins/session-row-answers';
+import { usePluginLookup } from '../../../../plugins/use-plugin-names';
+import { useSessionRowAnswer } from '../../../../plugins/use-session-row-answers';
 import type { SlotPreviewProps } from './slot-detail';
 
 // What the preview draws: a Session and the Plugins' answers for it, before this page's choices apply.
@@ -20,14 +19,14 @@ export interface SessionRowPreviewData {
   session: SessionInfo;
   age: string;
   answer: SessionRowAnswer;
-  pluginOf: PluginOf;
+  lookup: PluginLookup;
 }
 
 type PreviewProps = { data: SessionRowPreviewData; visibility: SlotVisibility };
 
 /*
  * The Sessions list's own row, under the page's choices, drawn by the same rules as the list: the Plugins left on fill
- * its items, and the chosen Plugin writes its Activity line.
+ * its items, and the chosen Plugin writes its Activity line. It is a preview, so pressing it, or an item, does nothing.
  */
 export const SessionRowPreview = ({
   data,
@@ -37,14 +36,12 @@ export const SessionRowPreview = ({
     session={data.session}
     logo=""
     age={data.age}
-    plugins={sessionRowPlugins(data.answer, visibility, data.pluginOf)}
+    plugins={rowDrawing(visibility, data.lookup)(data.answer)}
     onSelect={ignore}
   />
 );
 
 const ignore = (): void => undefined;
-
-const noSessions: SessionInfo[] = [];
 
 /*
  * The latest Session with what the Server's Plugins answer for it, so the preview is a real row; `fallback` stands in,
@@ -54,19 +51,19 @@ function usePreviewData(
   latest: SessionInfo | undefined,
   fallback: SessionInfo,
 ): SessionRowPreviewData {
-  const { answerOf } = useSessionRowAnswers(latest ? [latest] : noSessions);
   const session = latest ?? fallback;
 
   return {
     session,
     age: formatAge(useClock(true) - session.activityAt),
-    // The stand-in was never asked about, so it has no answers.
-    answer: answerOf(session.sessionId),
-    pluginOf: usePluginOf(),
+    // The stand-in is never asked about, so it has no answers.
+    answer: useSessionRowAnswer(latest),
+    lookup: usePluginLookup(),
   };
 }
 
-function useLatestSession(): SessionInfo | undefined {
+// The newest Session not archived, which a Slot's preview draws for real.
+export function useLatestSession(): SessionInfo | undefined {
   const trpc = useTRPC();
 
   const { data } = useQuery(

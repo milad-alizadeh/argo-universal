@@ -3,6 +3,12 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
+import { CompactMeta, Meta } from './list-item-meta';
+import {
+  hasAccessories,
+  InertLane,
+  useOpenLane,
+} from './list-item-pass-through';
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
 import { TreeLane } from './list-item-tree';
@@ -46,16 +52,6 @@ function SubtitleText(props: SubtitleProps): ReactElement {
   );
 }
 
-// Paper "SessionsList": a sidebar row's meta line sits 2 under its subtitle.
-const metaClassName = (sidebar: boolean): string =>
-  cn('min-w-0 flex-row items-center gap-3', sidebar ? 'pt-0.5' : 'pt-1');
-
-function Meta(props: { children?: ReactNode; sidebar: boolean }): ReactNode {
-  if (!props.children) return null;
-
-  return <View className={metaClassName(props.sidebar)}>{props.children}</View>;
-}
-
 // A sidebar row's title is medium, or semibold while it holds news for its reader.
 function titleWeight(
   props: Pick<ListItemProps, 'sidebar' | 'emphasized'>,
@@ -95,9 +91,12 @@ function TitleLine(props: ListItemProps): ReactElement {
   );
 }
 
+// Trailing accessories keep the trailing lane, so a row with them never moves its trailing item onto the title line.
 export const trailsTitle = (
-  props: Pick<ListItemProps, 'sidebar' | 'value'>,
-): boolean => props.sidebar === true && props.value === undefined;
+  props: Pick<ListItemProps, 'sidebar' | 'value' | 'trailingAccessories'>,
+): boolean =>
+  props.sidebar === true &&
+  [props.value, props.trailingAccessories].every((part) => part === undefined);
 
 // A row's subtitle shows every line when a description, Android's placed value or the caller asks for it.
 const subtitleWraps = (props: PlacedContentProps): boolean =>
@@ -114,10 +113,16 @@ const subtitleOf = (props: PlacedContentProps): SubtitleProps => ({
 
 export function ItemContent(props: PlacedContentProps): ReactElement {
   return (
-    <View className="min-w-0 flex-1 gap-0.5">
-      <TitleLine {...props} />
-      <Subtitle {...subtitleOf(props)} />
-      <Meta sidebar={props.sidebar === true}>{props.meta}</Meta>
+    <View {...useOpenLane()} className="min-w-0 flex-1 gap-0.5">
+      <InertLane className="min-w-0 gap-0.5">
+        <TitleLine {...props} />
+        <Subtitle {...subtitleOf(props)} />
+      </InertLane>
+      <Meta
+        sidebar={props.sidebar === true}
+        meta={props.meta}
+        metaAccessories={props.metaAccessories}
+      />
     </View>
   );
 }
@@ -147,18 +152,21 @@ function InlineSubtitle(props: PlacedContentProps): ReactNode {
 export function CompactContent(props: PlacedContentProps): ReactElement {
   return (
     <>
-      <View className="min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch">
+      <View {...useOpenLane()} className={compactTitleClass(props)}>
         <TreeLane title={props.title} compact />
-        <InlineSubtitle {...props} />
-        <Title {...props} multiline={false} inLine />
+        <InertLane className="min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch">
+          <InlineSubtitle {...props} />
+          <Title {...props} multiline={false} inLine />
+        </InertLane>
       </View>
-      <CompactMeta meta={props.meta} />
+      <CompactMeta meta={props.meta} metaAccessories={props.metaAccessories} />
     </>
   );
 }
 
-function CompactMeta({ meta }: Pick<PlacedContentProps, 'meta'>): ReactNode {
-  if (!meta) return null;
-
-  return <View className="shrink-0 flex-row items-center gap-1">{meta}</View>;
-}
+// Beside accessories the title keeps at least half the line; they give up their width first.
+const compactTitleClass = (props: PlacedContentProps): string =>
+  cn(
+    'min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch',
+    hasAccessories(props) && 'min-w-1/2',
+  );

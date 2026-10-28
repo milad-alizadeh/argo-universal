@@ -226,6 +226,21 @@
       }
     },
     {
+      // The app's Hermes has no Array.prototype.toSorted, so code the app loads sorts a copy. Tests run in Node and may keep it.
+      "files": [
+        "apps/universal-app/**",
+        "packages/client/src/**",
+        "packages/contracts/src/**",
+        "packages/kit/src/**",
+        "packages/kit/mocks/**"
+      ],
+      "rules": { "argo/hermes-array-methods": "error" }
+    },
+    {
+      "files": ["**/*.test.*"],
+      "rules": { "argo/hermes-array-methods": "off" }
+    },
+    {
       // Icons take a role, so where an icon sits decides its size on every platform; only the kit's symbols folder turns roles into pixels.
       "files": ["packages/client/src/**", "packages/kit/src/**"],
       "rules": { "argo/icon-size": "error" }

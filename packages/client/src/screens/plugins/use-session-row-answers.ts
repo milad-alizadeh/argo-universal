@@ -1,0 +1,67 @@
+import type { SessionInfo } from '@repo/contracts';
+import {
+  sessionActivitySlotId,
+  sessionRowSlotId,
+  type SlotItemsInput,
+} from '@repo/contracts/plugins/wire';
+import { useState } from 'react';
+import { rowAnswer, type SessionRowAnswer } from './session-row-answers';
+import { type SlotItemsSnapshot, useSlotItems } from './use-slot-items';
+
+export type RowSession = Pick<SessionInfo, 'sessionId' | 'projectId'>;
+
+export type RowContexts = SlotItemsInput['contexts'];
+
+// Both Session row Slots' latest snapshots for the same contexts.
+export interface RowSnapshots {
+  items: SlotItemsSnapshot;
+  lines: SlotItemsSnapshot;
+}
+
+const inputOf = (
+  slotId: SlotItemsInput['slotId'],
+  contexts: RowContexts | undefined,
+): SlotItemsInput | undefined => contexts && { slotId, contexts };
+
+// One batched call per Slot for the contexts, live from the Server; none while there are none to ask about.
+export function useRowSnapshots(
+  contexts: RowContexts | undefined,
+): RowSnapshots {
+  return {
+    items: useSlotItems(inputOf(sessionRowSlotId, contexts)),
+    lines: useSlotItems(inputOf(sessionActivitySlotId, contexts)),
+  };
+}
+
+/*
+ * The value from the first render with this key, so the contexts a subscription asks with change only when the
+ * Sessions it asks about do, however the list orders or redraws them.
+ */
+export function useKeyed<Value>(key: string, value: Value): Value {
+  const [held, setHeld] = useState({ key, value });
+
+  if (held.key === key) return held.value;
+
+  setHeld({ key, value });
+
+  return value;
+}
+
+const contextsOf = (session: RowSession | undefined): RowContexts | undefined =>
+  session && [{ sessionId: session.sessionId, projectId: session.projectId }];
+
+const idOf = (session: RowSession | undefined): string =>
+  session?.sessionId ?? '';
+
+/*
+ * Both Session row Slots' answers for one Session, live from the Server, for the Settings preview; none while there is
+ * no Session to ask about.
+ */
+export function useSessionRowAnswer(
+  session: RowSession | undefined,
+): SessionRowAnswer {
+  const id = idOf(session);
+  const { items, lines } = useRowSnapshots(useKeyed(id, contextsOf(session)));
+
+  return rowAnswer(items.items[id], lines.items[id]);
+}

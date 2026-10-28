@@ -6,6 +6,7 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
+import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { ElicitationPreview } from './session-detail-view-elicitation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
@@ -43,6 +44,16 @@ export const LongFeed: Story = { args: { state: 'open', ...longSession } };
 // A long Feed in the Frame: the rail's toggle collapses and expands the sidebar while the Feed keeps its layout and only slides.
 export const LongFeedInFrame: Story = {
   args: { state: 'open', ...longSession },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// The Plugins' Session bar under the header: the first Plugin in Slot order shows; two more wait behind "+2".
+export const SessionBar: Story = {
+  args: {
+    state: 'open',
+    ...longSession,
+    bar: sessionPageBar,
+  },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 

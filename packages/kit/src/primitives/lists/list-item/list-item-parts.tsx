@@ -5,16 +5,11 @@ import {
   IconSizeContext,
   type IconSizing,
 } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import { useCompactRows, useListLook } from '../../../list-look-context';
-import {
-  hasBadge,
-  ItemBadge,
-  sidebarStatus,
-  useLeadingBadge,
-} from '../../../row-badge';
+import { hasBadge, ItemBadge, useLeadingBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { cn } from '../../../utils';
+import { useInertLane } from './list-item-pass-through';
 import type { ListItemProps } from './list-item-props';
 
 export function hasLeading(
@@ -58,6 +53,14 @@ function useLeadingLane(sidebar: boolean | undefined): LeadingLane {
   return leadingLane(useListLook().menu, sidebar === true || compact);
 }
 
+// The leading lane holds no accessory, so a row with accessories lets its presses through.
+function LeadingFrame(props: {
+  className: string;
+  children: ReactNode;
+}): ReactElement {
+  return <View {...useInertLane()} {...props} />;
+}
+
 export function Leading(props: LeadingProps): ReactNode {
   const lane = useLeadingLane(props.sidebar);
   const badge = useLeadingBadge(props.badge);
@@ -65,62 +68,25 @@ export function Leading(props: LeadingProps): ReactNode {
   if (!hasLeading(props)) return null;
 
   return (
-    <View className={leadingClass(lane, props.leadingSize)}>
+    <LeadingFrame className={leadingClass(lane, props.leadingSize)}>
       <IconSizeContext value={leadingIconSizes[lane]}>
         <StatusMarkHidden value={hasBadge(props.badge)}>
           {props.leading}
         </StatusMarkHidden>
       </IconSizeContext>
       <ItemBadge badge={badge} />
-    </View>
-  );
-}
-
-type TrailingProps = Pick<
-  ListItemProps,
-  'trailing' | 'value' | 'badge' | 'valueTone'
->;
-
-function trailingContent(props: TrailingProps): ReactNode {
-  return props.value === undefined ? (
-    props.trailing
-  ) : (
-    <View className="flex-row items-center gap-1.5">
-      <Text role="row" tone={props.valueTone ?? 'muted'}>
-        {props.value}
-      </Text>
-      {props.trailing}
-    </View>
-  );
-}
-
-function useTrailingContent(props: TrailingProps): ReactNode {
-  const content = trailingContent(props);
-  const status = useListLook().sidebar ? sidebarStatus(props.badge) : undefined;
-
-  if (status === undefined) return content;
-
-  return (
-    <View className="flex-row items-center gap-3">
-      {content}
-      {status}
-    </View>
-  );
-}
-
-export function Trailing(props: TrailingProps): ReactNode {
-  const content = useTrailingContent(props);
-
-  return content === undefined ? null : (
-    <View className="h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end gap-1">
-      {content}
-    </View>
+    </LeadingFrame>
   );
 }
 
 export function Accessory({ children }: { children?: ReactNode }): ReactNode {
+  const inert = useInertLane();
+
   return children ? (
-    <View className="h-6 min-w-6 wide-type:h-5 wide-type:min-w-5 shrink-0 items-center justify-center self-center">
+    <View
+      {...inert}
+      className="h-6 min-w-6 wide-type:h-5 wide-type:min-w-5 shrink-0 items-center justify-center self-center"
+    >
       {children}
     </View>
   ) : null;

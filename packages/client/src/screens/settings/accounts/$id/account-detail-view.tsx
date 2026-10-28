@@ -132,7 +132,7 @@ const pluginAccess = (account: LoadedAccount): PluginAccess[] =>
   [
     ...account.borrowers.map((plugin) => ({ plugin, allowed: true })),
     ...account.refused.map((plugin) => ({ plugin, allowed: false })),
-  ].toSorted((a, b) => a.plugin.name.localeCompare(b.plugin.name));
+  ].sort((a, b) => a.plugin.name.localeCompare(b.plugin.name));
 
 function accessRows(
   props: LoadedProps,

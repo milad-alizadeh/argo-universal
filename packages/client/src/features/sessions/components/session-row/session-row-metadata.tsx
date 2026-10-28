@@ -5,10 +5,6 @@ import { View } from 'react-native';
 import { ChangeStage } from '../change-stage/change-stage';
 import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
-import {
-  hasPluginItems,
-  SessionRowPluginItems,
-} from './session-row-plugin-items';
 import { sidebarRows } from './session-row-sidebar';
 
 export type { SessionRowMetadataProps } from './session-row-metadata-props';
@@ -42,11 +38,9 @@ function hasMetadata({
   session,
   pullRequest,
   age,
-  plugins,
 }: SessionRowMetadataProps): boolean {
   return [
     age !== undefined,
-    hasPluginItems(plugins),
     session.subagents.total > 0,
     sidebarRows && session.shells.total > 0,
     session.archivedAt !== null,
@@ -54,7 +48,7 @@ function hasMetadata({
   ].some(Boolean);
 }
 
-// The time, the Change, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList"), then the Plugins' items.
+// The time, the Change, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList"); the Plugins' items follow as the row's accessories.
 export function sessionMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {
@@ -67,7 +61,6 @@ export function sessionMetadata(
       <ShellsCount {...props} />
       <SubagentsCount {...props} />
       {archivedContent(props)}
-      <SessionRowPluginItems {...props} />
     </View>
   );
 }
