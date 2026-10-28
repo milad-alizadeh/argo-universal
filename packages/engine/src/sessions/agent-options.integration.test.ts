@@ -32,6 +32,16 @@ async function collectOptions(
   return result ?? [];
 }
 
+// A Session reader stays subscribed after discovery, so browsing stops at its ready snapshot.
+async function readySessionOptions(
+  stream: Promise<AsyncIterable<AgentOptionsUpdate>>,
+): Promise<SessionConfigOption[]> {
+  for await (const update of await stream)
+    if (update.stage === 'ready') return update.configOptions ?? [];
+
+  throw new Error('Session options ended before becoming ready');
+}
+
 const optionsSessionId = 'options-session';
 
 const optionsInput = (
@@ -457,7 +467,7 @@ it('reads a closed Session configuration without resuming it or replacing New Se
     }),
   );
 
-  const restored = await collectOptions(
+  const restored = await readySessionOptions(
     host.caller.session.agentOptions({
       ...optionsInput(),
       sessionId: created.sessionId,
