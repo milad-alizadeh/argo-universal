@@ -1,10 +1,14 @@
-import type { ListMove } from '@repo/contracts/kit-moves';
 import type { ReactNode } from 'react';
 import type { Measured } from './list-drag-measure';
 import { slideOffset, type Slide } from './list-drag-rules';
 import { aimAt, type DropAim, type InsertionLine } from './list-drop-aim';
 import type { Point, Rect } from './list-geometry';
-import { landing, type DropPlace } from './list-move-model';
+import {
+  resolveMove,
+  type DropPlace,
+  type MoveSection,
+  type ResolvedMove,
+} from './list-move-model';
 import type { MoveOrder } from './list-move-order';
 
 // What a List's drag works on: the order the List shows, read as the drag aims and drops, and how a drop moves.
@@ -137,9 +141,11 @@ const sameParts = (a: DragFrame, b: DragFrame): boolean =>
 export const sameFrame = (a: DragFrame | undefined, b: DragFrame): boolean =>
   a !== undefined && sameParts(a, b);
 
-// The move a drop reports where the lifted row aims, by the order the List shows.
+// The move a drop makes where the lifted row aims, by the order the List shows.
 export const landedMove = (
-  order: DragOrder,
+  sections: readonly MoveSection[],
   frame: DragFrame | undefined,
-): ListMove | undefined =>
-  frame?.place ? landing(order.sections, frame.id, frame.place) : undefined;
+): ResolvedMove | undefined =>
+  frame?.place
+    ? resolveMove(sections, frame.id, { kind: 'drop', place: frame.place })
+    : undefined;

@@ -2,47 +2,46 @@ import { useMemo, type ReactElement, type ReactNode } from 'react';
 import { Action } from '#primitives/actions/action';
 import type { ActionShortcut } from '#primitives/content/kbd';
 import { useListMoves, type ListMoves } from './list-move-context';
-import { rowMoves } from './list-move-model';
+import { menuMoves, type MenuMove } from './list-move-menu';
+import { resolveMove, type MoveIntent } from './list-move-model';
 import { useMoveOrder } from './list-move-order';
 
 // Alt with an arrow moves the focused row a place, as a desktop list reorders from the keyboard.
 const stepShortcuts = new Map<string, ActionShortcut>([
-  ['Move up', { modifiers: ['alt'], key: 'ArrowUp' }],
-  ['Move down', { modifiers: ['alt'], key: 'ArrowDown' }],
+  ['up', { modifiers: ['alt'], key: 'ArrowUp' }],
+  ['down', { modifiers: ['alt'], key: 'ArrowDown' }],
 ]);
 
 // The move an entry makes in the order as it is when pressed, so "to the end" counts the rows there now.
-function pressed({ order }: ListMoves, id: string, label: string): void {
-  const now = rowMoves(order.sections, id).find(
-    (entry) => entry.label === label,
-  );
+function pressed({ order }: ListMoves, id: string, intent: MoveIntent): void {
+  const now = resolveMove(order.sections, id, intent);
 
-  if (now) order.move(now.move);
+  if (now) order.move(now);
 }
 
 const moveActions = (
   moves: ListMoves,
   id: string,
-  labels: string[],
+  entries: MenuMove[],
 ): ReactElement[] =>
-  labels.map((label) => (
+  entries.map(({ key, label, intent }) => (
     <Action
-      key={label}
+      key={key}
       label={label}
-      shortcut={stepShortcuts.get(label)}
-      onPress={() => pressed(moves, id, label)}
+      shortcut={stepShortcuts.get(key)}
+      onPress={() => pressed(moves, id, intent)}
     />
   ));
 
 // The Move Section a row's menu ends with, when it can move at all; an element, so the menu reads it as one of its Sections.
 function moveSection(moves: ListMoves, id: string): ReactElement | null {
-  const labels = rowMoves(moves.order.sections, id).map(({ label }) => label);
+  const entries = menuMoves(moves.order.sections, id);
 
-  if (labels.length === 0) return null;
+  if (entries.length === 0) return null;
 
   return (
     <Action.Section key="list-move" title="Move">
-      {moveActions(moves, id, labels)}
+      {moveActions(moves, id, entries)}
     </Action.Section>
   );
 }

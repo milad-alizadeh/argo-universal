@@ -44,7 +44,7 @@ export function rigFor(sections: readonly MoveSection[], lanes: boolean): Rig {
 
   const drag = new ListDrag(
     async () => layer,
-    { sections, lanes, move },
+    { sections, lanes, move: (resolved): void => move(resolved.move) },
     {
       ghostAt: (point): number => ghost.push(point),
       slides: true,

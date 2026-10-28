@@ -1,6 +1,5 @@
-import type { ListMove } from '@repo/contracts/kit-moves';
 import { describe, expect, it, vi } from 'vitest';
-import type { MoveSection } from './list-move-model';
+import type { MoveSection, ResolvedMove } from './list-move-model';
 import { MoveOrder, type MoveAnswer } from './list-move-order';
 
 const board: MoveSection[] = [
@@ -8,9 +7,17 @@ const board: MoveSection[] = [
   { key: 'b', id: 'done', title: 'Done', rows: [] },
 ];
 
-const toDone: ListMove = { id: 'login', section: 'done', index: 0 };
+const toDoneFirst = 'Moved to Done, position 1';
 
-const docsToDone: ListMove = { id: 'docs', section: 'done', index: 0 };
+const toDone: ResolvedMove = {
+  move: { id: 'login', section: 'done', index: 0 },
+  notice: toDoneFirst,
+};
+
+const docsToDone: ResolvedMove = {
+  move: { id: 'docs', section: 'done', index: 0 },
+  notice: toDoneFirst,
+};
 
 interface Harness {
   order: MoveOrder;
@@ -59,7 +66,7 @@ describe('MoveOrder', () => {
 
     expect(rowsOf(order)).toEqual([['docs'], ['login']]);
     expect(order.notice).toEqual({
-      text: 'Moved to Done, position 1',
+      text: toDoneFirst,
       count: 1,
     });
   });
@@ -99,7 +106,7 @@ describe('MoveOrder', () => {
     first.resolve();
     await run.nextFrame();
 
-    expect(run.order.held?.move).toBe(docsToDone);
+    expect(run.order.held?.move).toBe(docsToDone.move);
     expect(rowsOf(run.order)).toEqual([['login'], ['docs']]);
   });
 });

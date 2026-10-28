@@ -28,10 +28,10 @@ export const boardLanes: readonly BoardLane[] = [
   { id: 'third', title: 'Third', rows: [] },
 ];
 
-// What the examples vary: a List of Sections draws as a board or a column.
+// What the examples vary: a List of Sections draws as a board or a column, and may search its rows.
 export type MovesProps = Pick<
   ListProps<never>,
-  'layout' | 'appearance' | 'accessibilityLabel'
+  'layout' | 'appearance' | 'accessibilityLabel' | 'searchMode'
 >;
 
 export const board = {

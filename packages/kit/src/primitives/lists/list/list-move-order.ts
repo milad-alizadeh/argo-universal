@@ -1,8 +1,12 @@
 import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
 import { useSyncExternalStore } from 'react';
 import { listenerSet } from '../../../listener-set';
-import { moveNotice, RowFocus, type MoveNotice } from './list-move-feedback';
-import { placeOf, type MoveSection } from './list-move-model';
+import { RowFocus, type MoveNotice } from './list-move-feedback';
+import {
+  placeOf,
+  type MoveSection,
+  type ResolvedMove,
+} from './list-move-model';
 
 // A Plugin's `onMove` answers once its dispatch settles; an App owner's answers at once.
 export type MoveAnswer = (move: ListMove) => void | Promise<void>;
@@ -112,10 +116,10 @@ export class MoveOrder {
     if (rebased) this.redraw();
   }
 
-  public readonly move = (next: ListMove): void => {
+  public readonly move = ({ move: next, notice }: ResolvedMove): void => {
     // Before the move, which may draw at once.
     this.focus.after(next.id);
-    this.told = nextNotice(this.told, moveNotice(this.shown, next));
+    this.told = nextNotice(this.told, notice);
     this.current = { move: next, base: this.owner.base };
     this.redraw();
 

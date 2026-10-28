@@ -1,6 +1,3 @@
-import type { ListMove } from '@repo/contracts/kit-moves';
-import type { MoveSection } from './list-move-model';
-
 // Focuses a row; with `ifLost`, only while nothing else holds the focus.
 export type FocusRow = (ifLost: boolean) => void;
 
@@ -43,15 +40,4 @@ export class RowFocus {
 export interface MoveNotice {
   text: string;
   count: number;
-}
-
-// Where the row landed: its Section, by title, and its position there, counted from one.
-export function moveNotice(
-  sections: readonly MoveSection[],
-  move: ListMove,
-): string {
-  const title = sections.find((section) => section.id === move.section)?.title;
-  const position = `position ${move.index + 1}`;
-
-  return title ? `Moved to ${title}, ${position}` : `Moved to ${position}`;
 }

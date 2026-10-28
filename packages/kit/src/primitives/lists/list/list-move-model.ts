@@ -23,15 +23,35 @@ export interface DropPlace {
   insertion: number;
 }
 
-export interface RowMove {
-  label: string;
+/*
+ * What a menu entry, its shortcut or a drop asks of a row: a place up or down its Section, to the end of the Section
+ * `sectionKey`, or where it is dropped. Each resolves against the order the List shows when it is made.
+ */
+export type MoveIntent =
+  | { kind: 'step'; by: -1 | 1 }
+  | { kind: 'end'; sectionKey: string }
+  | { kind: 'drop'; place: DropPlace };
+
+// A move and what a screen reader hears once it is made.
+export interface ResolvedMove {
   move: ListMove;
+  notice: string;
 }
 
 // Where a row sits: its Section's position and the Section itself, and its index there.
 export interface HeldPlace extends RowPlace {
   own: MoveSection;
 }
+
+interface Landing {
+  target: MoveSection;
+  index: number;
+}
+
+type Lander = (
+  sections: readonly MoveSection[],
+  place: HeldPlace,
+) => Landing | undefined;
 
 // Every row's place, read once for each order rather than searched for each row.
 const placesBy = new WeakMap<readonly MoveSection[], Map<string, HeldPlace>>();
@@ -54,74 +74,36 @@ export const placeOf = (
 ): HeldPlace | undefined =>
   (placesBy.get(sections) ?? placesOf(sections)).get(id);
 
-const moveIn = (
-  section: MoveSection | undefined,
-  id: string,
-  index: number,
-): ListMove =>
-  section?.id === undefined
-    ? { id, index }
-    : { id, section: section.id, index };
-
-// The rows outside any Section have no title; a Section without one is named by its place.
-function targetLabel(section: MoveSection, sectionIndex: number): string {
-  if (section.id === undefined) return 'Move out of Section';
-
-  const name = section.title ?? `Section ${sectionIndex + 1}`;
-
-  return `Move to ${name}`;
-}
-
-// To the end of every other Section, so every move a drag makes can be made from the menu too.
-const sectionMoves = (
+const sectionAt = (
   sections: readonly MoveSection[],
-  own: MoveSection,
-  id: string,
-): RowMove[] =>
-  sections.flatMap((section, sectionIndex) =>
-    section === own
-      ? []
-      : [
-          {
-            label: targetLabel(section, sectionIndex),
-            move: moveIn(section, id, section.rows.length),
-          },
-        ],
-  );
+  key: string,
+): MoveSection | undefined => sections.find((section) => section.key === key);
 
-// The Move Actions of a row: up and down within its Section, then to the end of each other Section, as a context menu lists them.
-export function rowMoves(
-  sections: readonly MoveSection[],
-  id: string,
-): RowMove[] {
-  const place = placeOf(sections, id);
+const stepped =
+  (by: -1 | 1): Lander =>
+  (_sections, { own, index }) => {
+    const next = index + by;
 
-  if (!place) return [];
+    return next >= 0 && next < own.rows.length
+      ? { target: own, index: next }
+      : undefined;
+  };
 
-  return [
-    ...stepMoves(place.own, id, place.index),
-    ...sectionMoves(sections, place.own, id),
-  ];
-}
+const toEnd =
+  (key: string): Lander =>
+  (sections, { own }) => {
+    const target = sectionAt(sections, key);
 
-function stepMoves(own: MoveSection, id: string, index: number): RowMove[] {
-  const steps: RowMove[] = [];
+    return target && target !== own
+      ? { target, index: target.rows.length }
+      : undefined;
+  };
 
-  if (index > 0)
-    steps.push({ label: 'Move up', move: moveIn(own, id, index - 1) });
-
-  if (index < own.rows.length - 1)
-    steps.push({ label: 'Move down', move: moveIn(own, id, index + 1) });
-
-  return steps;
-}
-
-// Leaving its slot moves every later row of its own Section up by one.
 const shifted = ({ index }: RowPlace, insertion: number): number =>
   insertion > index ? insertion - 1 : insertion;
 
-// Where a dropped row lands in the drop's Section, or none when that is its own slot.
-function landedIndex(place: RowPlace, drop: DropPlace): number | undefined {
+// Leaving its slot moves every later row of its own Section up by one; landing back on that slot moves nothing.
+function dropIndex(place: RowPlace, drop: DropPlace): number | undefined {
   if (place.sectionKey !== drop.sectionKey) return drop.insertion;
 
   const index = shifted(place, drop.insertion);
@@ -129,25 +111,45 @@ function landedIndex(place: RowPlace, drop: DropPlace): number | undefined {
   return index === place.index ? undefined : index;
 }
 
-const landedIn = (
-  target: MoveSection,
-  id: string,
-  index: number | undefined,
-): ListMove | undefined =>
-  index === undefined
-    ? undefined
-    : moveIn(target, id, Math.min(index, target.rows.length));
+const dropped =
+  (drop: DropPlace): Lander =>
+  (sections, place) => {
+    const target = sectionAt(sections, drop.sectionKey);
+    const index = dropIndex(place, drop);
 
-// The move a drop makes, or none when the row lands back on its own slot.
-export function landing(
+    return target && index !== undefined
+      ? { target, index: Math.min(index, target.rows.length) }
+      : undefined;
+  };
+
+function landerOf(intent: MoveIntent): Lander {
+  if (intent.kind === 'step') return stepped(intent.by);
+
+  if (intent.kind === 'end') return toEnd(intent.sectionKey);
+
+  return dropped(intent.place);
+}
+
+const moveIn = ({ target, index }: Landing, id: string): ListMove =>
+  target.id === undefined ? { id, index } : { id, section: target.id, index };
+
+// Where the row landed: its Section, by title, and its position there, counted from one.
+function noticeOf({ target, index }: Landing): string {
+  const position = `position ${index + 1}`;
+
+  return target.title
+    ? `Moved to ${target.title}, ${position}`
+    : `Moved to ${position}`;
+}
+
+// The move an intent makes in `sections`, or none when the row is not there or would not move.
+export function resolveMove(
   sections: readonly MoveSection[],
   id: string,
-  drop: DropPlace,
-): ListMove | undefined {
+  intent: MoveIntent,
+): ResolvedMove | undefined {
   const place = placeOf(sections, id);
-  const target = sections.find((section) => section.key === drop.sectionKey);
+  const landing = place && landerOf(intent)(sections, place);
 
-  if (!place || !target) return undefined;
-
-  return landedIn(target, id, landedIndex(place, drop));
+  return landing && { move: moveIn(landing, id), notice: noticeOf(landing) };
 }

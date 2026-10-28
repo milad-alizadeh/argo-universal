@@ -93,7 +93,7 @@ export class ListDrag extends DragRegistry {
   }
 
   private drop(): void {
-    const move = landedMove(this.order, this.frame);
+    const move = landedMove(this.order.sections, this.frame);
 
     this.end();
 
