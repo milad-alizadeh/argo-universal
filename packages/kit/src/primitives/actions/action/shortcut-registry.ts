@@ -1,3 +1,4 @@
+import { listenerSet } from '../../../listener-set';
 import type { DeclaredAction } from './action-declarations';
 import { ShortcutAllocation } from './shortcut-allocation';
 
@@ -11,18 +12,12 @@ export interface ShortcutRegistration {
 
 export class ShortcutRegistry {
   private readonly entries = new Map<string, ShortcutRegistration>();
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = listenerSet();
   private revision = 0;
   private allocated = new ShortcutAllocation();
   private pending = false;
 
-  public subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => {
-      this.listeners.delete(listener);
-    };
-  };
+  public readonly subscribe = this.listeners.subscribe;
 
   public snapshot = (): number => this.revision;
 
@@ -52,8 +47,7 @@ export class ShortcutRegistry {
     this.pending = false;
     this.allocated = allocatedActions([...this.entries.values()]);
     this.revision++;
-
-    for (const listener of this.listeners) listener();
+    this.listeners.notify();
   };
 }
 
