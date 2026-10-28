@@ -1,7 +1,11 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
-import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
+import {
+  drawsMovePicker,
+  useListItemGroup,
+  useMoveActions,
+} from '#primitives/lists/list';
 import {
   ListSelectionContext,
   ListTileContext,
@@ -11,7 +15,6 @@ import { useCompactRows, useListLook } from '../../../list-look-context';
 import { loadingLanes } from '../../../list-skeleton-lanes';
 import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useSeparatorCovered } from '../../../row-highlights';
-import { drawsMovePicker } from '../list/list-move-picker-drawing';
 import {
   useContentItemDrawing,
   useContentItemActions,
@@ -126,6 +129,12 @@ nestsChildren(ListItem);
 // A native grouped List's FieldGroup rows open the same Move to… picker, its places listed as ListItems.
 drawsMovePicker(({ id }) => <RowMovePicker id={id} Row={ListItem} />);
 
+// A row's props, and whether it draws as a tile.
+interface RowParts {
+  props: DrawingProps;
+  tile: boolean;
+}
+
 // A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
@@ -141,13 +150,7 @@ function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   return <ListItemFrame {...drawing} />;
 }
 
-function RowDetails({
-  tile,
-  props,
-}: {
-  tile: boolean;
-  props: DrawingProps;
-}): ReactNode {
+function RowDetails({ tile, props }: RowParts): ReactNode {
   if (tile) return null;
 
   return (
@@ -158,10 +161,8 @@ function RowDetails({
   );
 }
 
-interface PressedProps {
-  props: DrawingProps;
+interface PressedProps extends RowParts {
   drawing: ItemDrawing;
-  tile: boolean;
 }
 
 function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
