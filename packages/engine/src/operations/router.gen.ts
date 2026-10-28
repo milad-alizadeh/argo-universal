@@ -33,6 +33,26 @@ export async function runOperation(
       return implementations['agent.installInstructions'](
         operationParams(operations['agent.installInstructions'].params, params),
       );
+    case 'session.diff':
+      return implementations['session.diff'](
+        operationParams(operations['session.diff'].params, params),
+      );
+    case 'session.changes':
+      return implementations['session.changes'](
+        operationParams(operations['session.changes'].params, params),
+      );
+    case 'session.feed':
+      return implementations['session.feed'](
+        operationParams(operations['session.feed'].params, params),
+      );
+    case 'session.get':
+      return implementations['session.get'](
+        operationParams(operations['session.get'].params, params),
+      );
+    case 'session.list':
+      return implementations['session.list'](
+        operationParams(operations['session.list'].params, params),
+      );
     case 'session.listAgents':
       return implementations['session.listAgents'](
         operationParams(operations['session.listAgents'].params, params),
@@ -165,6 +185,26 @@ export function generatedOperations(engine: Operations) {
         .mutation(({ input }) => engine.runApp('agent.remove', input)),
     }),
     session: router({
+      diff: publicProcedure
+        .input(operations['session.diff'].params)
+        .output(operations['session.diff'].result)
+        .query(({ input }) => engine.runApp('session.diff', input)),
+      changes: publicProcedure
+        .input(operations['session.changes'].params)
+        .output(operations['session.changes'].result)
+        .query(({ input }) => engine.runApp('session.changes', input)),
+      feed: publicProcedure
+        .input(operations['session.feed'].params)
+        .output(operations['session.feed'].result)
+        .query(({ input }) => engine.runApp('session.feed', input)),
+      get: publicProcedure
+        .input(operations['session.get'].params)
+        .output(operations['session.get'].result)
+        .query(({ input }) => engine.runApp('session.get', input)),
+      list: publicProcedure
+        .input(operations['session.list'].params)
+        .output(operations['session.list'].result)
+        .query(({ input }) => engine.runApp('session.list', input)),
       listAgents: publicProcedure
         .input(operations['session.listAgents'].params)
         .output(operations['session.listAgents'].result)

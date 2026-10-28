@@ -10,7 +10,11 @@ import type { z } from 'zod';
 import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
-import type { SessionOperationCall, SessionRouterDeps } from '../sessions';
+import type {
+  SessionOperationCall,
+  SessionList,
+  SessionRouterDeps,
+} from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { recordOperation } from './call-recording';
 import { createPluginOperations } from './plugins';
@@ -43,13 +47,16 @@ export type OperationImplementations = {
   ) => Promise<z.output<(typeof operations)[Id]['result']>>;
 };
 
-function createImplementations(deps: OperationsDeps): OperationImplementations {
+function createImplementations(
+  deps: OperationsDeps,
+  sessionList: SessionList,
+): OperationImplementations {
   const rejections = createRejectionCounter('projects');
 
   return {
     ...createAgentAccessOperations(deps),
     ...sessionImplementations(deps),
-    ...createReadOperations(deps),
+    ...createReadOperations(deps, sessionList),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     'project.list': (): Promise<ProjectsListOutput> =>
@@ -59,8 +66,11 @@ function createImplementations(deps: OperationsDeps): OperationImplementations {
 
 export class Operations {
   private readonly implementations: OperationImplementations;
-  public constructor(private readonly deps: OperationsDeps) {
-    this.implementations = createImplementations(deps);
+  public constructor(
+    private readonly deps: OperationsDeps,
+    sessionList: SessionList,
+  ) {
+    this.implementations = createImplementations(deps, sessionList);
   }
   public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
     const caller = this.caller(token);
@@ -102,7 +112,10 @@ export class Operations {
         call,
       });
 
-    return runSessionOperation(this.implementations, caller, operation);
+    return runSessionOperation(
+      { implementations: this.implementations, caller, deps: this.deps },
+      operation,
+    );
   }
   private async runUser({
     id,
