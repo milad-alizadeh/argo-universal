@@ -704,9 +704,9 @@ type MetadataLinkHints = {
   title: unknown;
   /** Override the spoken field name and value. */
   accessibilityLabel: unknown;
-  /** The displayed link text; drawn as plain text until kit Link lands. */
+  /** The displayed link text. */
   text: unknown;
-  /** The link destination. */
+  /** An http, https or mailto URL, or an absolute route within the App. */
   href: unknown;
 };
 

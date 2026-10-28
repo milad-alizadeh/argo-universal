@@ -2,10 +2,12 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { ListItemFrame } from '#primitives/lists/list-item';
+import { groupProps } from './metadata-group';
 
 export type FieldLayoutProps = {
   title: string;
   label: string;
+  grouped?: boolean;
   children: React.ReactNode;
 };
 
@@ -32,9 +34,7 @@ function BesideTitle({ title }: { title: string }): ReactElement {
 function BesideContent(props: FieldLayoutProps): ReactElement {
   return (
     <View
-      accessible
-      role="group"
-      accessibilityLabel={props.label}
+      {...groupProps(props)}
       className="min-w-0 flex-1 flex-row items-center gap-4"
     >
       <BesideTitle title={props.title} />

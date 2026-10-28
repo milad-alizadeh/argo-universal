@@ -25,12 +25,12 @@ export const metadataLabelProps = field.extend({
 });
 
 export const metadataLinkProps = field.extend({
-  text: z
+  text: z.string().describe('The displayed link text.'),
+  href: z
     .string()
     .describe(
-      'The displayed link text; drawn as plain text until kit Link lands.',
+      'An http, https or mailto URL, or an absolute route within the App.',
     ),
-  href: z.string().describe('The link destination.'),
 });
 
 export const metadataPillsProps = field;
