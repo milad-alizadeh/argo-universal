@@ -39,3 +39,24 @@ it('round-trips the result schema for an empty Project list', () => {
 
   expect(z.fromJSONSchema(schema).parse([])).toEqual([]);
 });
+
+it('describes Session configuration categories as strings in the result schema', () => {
+  const description = describeOperation(operations['session.setConfigOption']);
+
+  expect(description.result).toMatchObject({
+    properties: {
+      configOptions: {
+        type: 'array',
+        items: {
+          oneOf: expect.arrayContaining([
+            expect.objectContaining({
+              properties: expect.objectContaining({
+                category: { type: 'string' },
+              }),
+            }),
+          ]),
+        },
+      },
+    },
+  });
+});

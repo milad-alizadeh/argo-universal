@@ -53,7 +53,7 @@ it.each([
       `descendant:${pid}\n`,
     );
     await expect(
-      host.caller.session.stopShell({ ...created, shellId }),
+      host.caller.shell.stop({ ...created, shellId }),
     ).rejects.toThrow(/Shell cannot be stopped|No Session/);
     expect(host.agent.processes).toHaveLength(1);
   },
@@ -70,7 +70,7 @@ const finishShell = async (
 
   const actions = {
     stop: async (): Promise<void> => {
-      await host.caller.session.stopShell(input);
+      await host.caller.shell.stop(input);
     },
     close: async (): Promise<void> => {
       await host.caller.session.close(scope);

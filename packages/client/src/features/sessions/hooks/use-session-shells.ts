@@ -101,7 +101,7 @@ export function useSessionShells(
 
 function useStopShell(sessionId: string): ShellPanelProps['onStop'] {
   const trpc = useTRPC();
-  const stop = useMutation(trpc.session.stopShell.mutationOptions());
+  const stop = useMutation(trpc.shell.stop.mutationOptions());
   useShellFailure("Couldn't stop Shell", stop.error);
 
   return (shell) => stop.mutate({ sessionId, shellId: shell.id });

@@ -82,7 +82,7 @@ it('keeps Shells running beyond their Turn and stops only the selected Shell', a
   expect(
     (await host.caller.session.list({ archived: false })).sessions,
   ).toMatchObject([{ shells: { total: 2, running: 2 } }]);
-  await host.caller.session.stopShell({ ...created, shellId: selected });
+  await host.caller.shell.stop({ ...created, shellId: selected });
 
   const stopped = await waitForAcpSnapshot(host, created.sessionId, (value) =>
     value.shells.some(
@@ -98,7 +98,7 @@ it('keeps Shells running beyond their Turn and stops only the selected Shell', a
     { status: 'running', canStop: true },
   );
   await expect(
-    host.caller.session.stopShell({ ...created, shellId: selected }),
+    host.caller.shell.stop({ ...created, shellId: selected }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
   await host.caller.session.close(created);
 });

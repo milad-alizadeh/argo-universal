@@ -10,19 +10,23 @@ import type { z } from 'zod';
 import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
+import type { SessionRouterDeps } from '../sessions';
 import { createPluginOperations } from './plugins';
 import { createRegistryOperations } from './registry';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
+import { sessionImplementations } from './sessions';
 import { requireUserToken } from './tokens';
 
-export type OperationsDeps = RegistryDeps & {
-  controlToken: string;
-  plugins: PluginsRouterDeps;
-};
+export type OperationsDeps = SessionRouterDeps &
+  RegistryDeps & {
+    controlToken: string;
+    blobsFolder: string;
+    plugins: PluginsRouterDeps;
+  };
 
-export type OperationResult = z.output<
-  (typeof operations)[OperationId]['result']
+export type OperationResult<Id extends OperationId = OperationId> = z.output<
+  (typeof operations)[Id]['result']
 >;
 
 export type OperationImplementations = {
@@ -35,6 +39,7 @@ function createImplementations(deps: OperationsDeps): OperationImplementations {
   const rejections = createRejectionCounter('projects');
 
   return {
+    ...sessionImplementations(deps),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     'project.list': (): Promise<ProjectsListOutput> =>
@@ -52,19 +57,21 @@ export class Operations {
 
     return listOperations(filter);
   }
-  public run(
+  public async run(
     token: string | undefined,
     id: OperationId,
     params: Json,
   ): Promise<OperationResult> {
     requireUserToken(this.deps.controlToken, token);
 
-    return runOperation(this.implementations, id, params);
+    return operations[id].result.parseAsync(
+      await runOperation(this.implementations, id, params),
+    );
   }
-  public runApp(
-    id: OperationId,
+  public runApp<Id extends OperationId>(
+    id: Id,
     params: Json | undefined,
-  ): Promise<OperationResult> {
+  ): Promise<OperationResult<Id>> {
     return runOperation(this.implementations, id, params);
   }
 }
