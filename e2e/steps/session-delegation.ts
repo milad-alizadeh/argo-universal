@@ -27,16 +27,15 @@ When(
 );
 
 Then('the delegated Session accepts a new prompt', async ({ page }) => {
+  const message = page.getByRole('textbox', { name: 'Message', exact: true });
+
   await expect(
     page.getByRole('heading', { name: childTitle, exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('textbox', { name: 'Message', exact: true }),
-  ).toBeEditable();
-  await page
-    .getByRole('textbox', { name: 'Message', exact: true })
-    .fill('Continue the delegated review');
+  await expect(message).toBeEditable();
+  await message.fill('Continue the delegated review');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await expect(message).toHaveText('');
   await expect(
     page.getByText('Continue the delegated review', { exact: true }),
   ).toBeVisible();
