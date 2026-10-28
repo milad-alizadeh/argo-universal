@@ -10,7 +10,10 @@ export function holdsNativeRows(children: ReactNode): boolean {
   return rows.length > 0 && rows.every((row) => isNativeRow(row.render()));
 }
 
-// What NativeGroupedList cannot draw: a List that sets any of these stays on LegendList rather than lose them.
+/*
+ * What NativeGroupedList cannot draw: a List that sets any of these stays on LegendList rather than lose them.
+ * `onMove` is not one: only ListItem rows move, and a native List holds none, so it keeps its native look.
+ */
 const unhonouredProps = [
   'header',
   'startContent',
@@ -21,7 +24,6 @@ const unhonouredProps = [
   'accessibilityLabel',
   'padding',
   'maxHeight',
-  'onMove',
 ] as const satisfies (keyof ListProps<never>)[];
 
 export const asksNothingNativeLacks = (props: ListProps<never>): boolean =>

@@ -124,6 +124,18 @@ it('drops a row released before its List is measured once it is', async () => {
   expect(drag.current()).toBeUndefined();
 });
 
+it('draws a row lifted from a measured press from its first move', async () => {
+  const { drag, ghost } = rig();
+
+  drag.prepare('login');
+  await settle();
+  drag.begin('login', null, { x: 30, y: 70 });
+  drag.follow({ x: 260, y: 200 });
+
+  expect(ghost.at(-1)).toEqual({ x: 260 - 20 - 10, y: 200 - 10 - 20 });
+  expect(drag.current()).toMatchObject({ id: 'login' });
+});
+
 it('reports nothing for a drag cancelled before its List is measured', async () => {
   const { drag, move } = rig();
 

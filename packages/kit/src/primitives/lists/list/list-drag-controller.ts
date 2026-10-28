@@ -71,13 +71,17 @@ export class ListDrag extends DragRegistry {
 
   current = (): DragFrame | undefined => this.frame;
 
-  // Lifts row `id` under the pointer; it draws once its List is measured.
+  // Lifts row `id` under the pointer; it draws at once when its press was measured, else once its List is.
   begin(id: string, ghost: ReactNode, point: Point): void {
+    const ready = this.measuredPress(id);
+
     this.end();
     this.generation += 1;
     this.lift = { id, ghost, start: point, grab: point, released: false };
     this.point = point;
-    void this.measure(this.generation, true);
+
+    if (ready) this.measuredAs(this.lift, ready, true);
+    else void this.measure(this.generation, true);
   }
 
   follow(point: Point): void {

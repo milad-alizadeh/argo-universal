@@ -3,6 +3,7 @@ import type { ViewInstance } from 'react-native';
 import type { ListDrag } from './list-drag-controller';
 import type { DragLook } from './list-drag-look';
 import type { Rect } from './list-drop-aim';
+import type { RowFocus } from './list-move-feedback';
 import type { ListMove, MoveSection } from './list-move-model';
 
 export interface ListMoves {
@@ -10,6 +11,7 @@ export interface ListMoves {
   lanes: boolean;
   look: DragLook;
   drag: ListDrag;
+  focus: RowFocus;
   move: (move: ListMove) => void;
 }
 

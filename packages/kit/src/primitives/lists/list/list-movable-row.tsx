@@ -7,23 +7,25 @@ import {
 } from 'react';
 import type { ViewInstance } from 'react-native';
 import { useLiftedRowMark } from '../../../row-highlights';
-import type { ListDrag } from './list-drag-controller';
+import { cn } from '../../../utils';
 import type { DragFrame } from './list-drag-frame';
 import { useDragFrame } from './list-drag-layer';
 import type { DragLook } from './list-drag-look';
 import { measureView, useListMoves, type ListMoves } from './list-move-context';
 import { placeOf } from './list-move-model';
 import { RowDrag } from './list-row-drag';
+import { focusView } from './list-row-focus';
 import { slideOf, Sliding } from './list-sliding';
 
-// The outer view never moves, so the drag measures the row's resting slot.
+// The outer view never moves, so the drag measures the row's resting slot; a move focuses the row it draws.
 function useRegisteredRow(
-  drag: ListDrag,
+  { drag, focus }: ListMoves,
   id: string,
 ): RefObject<ViewInstance | null> {
   const outer = useRef<ViewInstance>(null);
 
   useEffect(() => drag.registerRow(id, () => measureView(outer)), [drag, id]);
+  useEffect(() => focus.register(id, () => focusView(outer)), [focus, id]);
 
   return outer;
 }
@@ -31,12 +33,16 @@ function useRegisteredRow(
 const liftedIn = (frame: DragFrame | undefined, id: string): boolean =>
   frame?.id === id;
 
-const liftedClass = (look: DragLook, lifted: boolean): string | undefined =>
-  lifted ? look.lifted : undefined;
+// The row's pointer: grab at rest, grabbing while any row is dragged; and its own slot's look while it is the one lifted.
+const poseClass = (
+  look: DragLook,
+  frame: DragFrame | undefined,
+  lifted: boolean,
+): string => cn(frame ? look.grabbing : look.grab, lifted && look.lifted);
 
 interface RowPose {
   offset: number;
-  className: string | undefined;
+  className: string;
 }
 
 // Where the row draws while a row is dragged: aside, or dimmed in its own slot while it is the one lifted.
@@ -48,7 +54,7 @@ function useRowPose({ drag, look }: ListMoves, id: string): RowPose {
 
   return {
     offset: look.slides ? slideOf(frame?.rowSlides, id) : 0,
-    className: liftedClass(look, lifted),
+    className: poseClass(look, frame, lifted),
   };
 }
 
@@ -65,7 +71,7 @@ function DraggedRow({
   ghost,
   children,
 }: DraggedRowProps): ReactElement {
-  const outer = useRegisteredRow(moves.drag, id);
+  const outer = useRegisteredRow(moves, id);
   const pose = useRowPose(moves, id);
 
   return (

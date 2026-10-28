@@ -7,4 +7,7 @@ export const dragLook: DragLook = {
   slides: true,
   line: false,
   lifted: 'opacity-0',
+  // A finger has no pointer to show.
+  grab: '',
+  grabbing: '',
 };

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ListDrag } from './list-drag-controller';
-import { startAt, type PressStart } from './list-drag-rules';
+import { holdToLift, startAt, type PressStart } from './list-drag-rules';
 import type { Point } from './list-drop-aim';
 
 export interface PressTarget {
@@ -35,9 +35,18 @@ function swallowReleaseClick(): void {
   setTimeout(() => window.removeEventListener('click', swallow, true));
 }
 
+// A `touchmove` listener that may cancel the page's scroll must say it is not passive.
+const blocking = { passive: false } as const;
+
 /*
  * One press on a row, followed on the window, so the drag keeps the pointer once it leaves the row: it lifts the row
- * once `dragStart` says so, then follows it, and drops it on release.
+ * once `dragStart` says so, then follows it, and drops it on release. The List is measured as the press begins, so a
+ * lifted row follows the pointer from its first move.
+ *
+ * A finger works as on the phones: a swipe before the hold ends is the page's scroll, which cancels the press, and
+ * once the hold ends its moves no longer scroll, so they lift the row. The rows keep the browser's own `touch-action`,
+ * which the browser reads as the touch begins, so a quick swipe still scrolls; a held finger's `touchmove` is
+ * cancelled instead (https://developer.mozilla.org/docs/Web/API/Touch_events/Using_Touch_Events).
  */
 export class RowPress {
   private lifted = false;
@@ -46,9 +55,11 @@ export class RowPress {
     private readonly target: PressTarget,
     private readonly press: WebPressStart,
   ) {
+    target.drag.prepare(target.id);
     window.addEventListener('pointermove', this.onMove);
     window.addEventListener('pointerup', this.onUp);
     window.addEventListener('pointercancel', this.onCancel);
+    window.addEventListener('touchmove', this.onTouchMove, blocking);
     // A drag across rows would otherwise select their text.
     window.addEventListener('selectstart', prevent);
   }
@@ -72,6 +83,15 @@ export class RowPress {
     if (this.ours(event)) this.cancel();
   };
 
+  private readonly onTouchMove = (event: TouchEvent): void => {
+    if (this.holds()) event.preventDefault();
+  };
+
+  // A lifted row, or a finger that has held it long enough to lift it, keeps its moves from the page's scroll.
+  private holds(): boolean {
+    return this.lifted || Date.now() - this.press.at >= holdToLift;
+  }
+
   private ours(event: PointerEvent): boolean {
     return event.pointerId === this.press.pointerId;
   }
@@ -92,6 +112,8 @@ export class RowPress {
     const { drag, id, ghost } = this.target;
 
     this.lifted = true;
+    // A held finger would otherwise open the row's context menu under the lifted row.
+    window.addEventListener('contextmenu', swallow, true);
     drag.begin(id, ghost, this.press.start);
     drag.follow(at);
   }
@@ -110,6 +132,8 @@ export class RowPress {
     window.removeEventListener('pointermove', this.onMove);
     window.removeEventListener('pointerup', this.onUp);
     window.removeEventListener('pointercancel', this.onCancel);
+    window.removeEventListener('touchmove', this.onTouchMove);
+    window.removeEventListener('contextmenu', swallow, true);
     window.removeEventListener('selectstart', prevent);
   }
 }

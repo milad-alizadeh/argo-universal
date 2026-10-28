@@ -37,6 +37,8 @@ const press = '[MouseLeft>]';
 
 const release = '[/MouseLeft]';
 
+const moveDown = '{Alt>}{ArrowDown}{/Alt}';
+
 interface Point {
   x: number;
   y: number;
@@ -154,13 +156,48 @@ export const MoveDownFromKeyboard = boardAt(
   'wide',
   async (canvasElement, { user, onMove }) => {
     rowNamed(canvasElement, alpha.title).focus();
-    await user.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await user.keyboard(moveDown);
 
     await expect(onMove).toHaveBeenCalledWith({
       id: alpha.id,
       section: first.id,
       index: 1,
     });
+  },
+);
+
+// A row moved to another lane from its menu keeps the focus, and a screen reader hears where it landed.
+export const MoveKeepsFocusAndIsAnnounced = boardAt(
+  'wide',
+  async (canvasElement, { user }) => {
+    const menu = await openRowMenu(user, rowNamed(canvasElement, alpha.title));
+
+    await user.click(
+      within(menu).getByRole('menuitem', { name: `Move to ${third.title}` }),
+    );
+
+    await waitFor(() =>
+      expect(rowNamed(canvasElement, alpha.title)).toHaveFocus(),
+    );
+    await expect(
+      within(canvasElement).getByText(`Moved to ${third.title}, position 1`),
+    ).toBeInTheDocument();
+  },
+);
+
+// A row moved from the keyboard keeps the focus, and a screen reader hears its new place.
+export const KeyboardMoveKeepsFocus = boardAt(
+  'wide',
+  async (canvasElement, { user }) => {
+    rowNamed(canvasElement, alpha.title).focus();
+    await user.keyboard(moveDown);
+
+    await waitFor(() =>
+      expect(rowNamed(canvasElement, alpha.title)).toHaveFocus(),
+    );
+    await expect(
+      within(canvasElement).getByText(`Moved to ${first.title}, position 2`),
+    ).toBeInTheDocument();
   },
 );
 

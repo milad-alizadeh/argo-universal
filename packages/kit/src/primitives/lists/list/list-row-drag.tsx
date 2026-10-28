@@ -58,8 +58,15 @@ class TrackedPress {
   };
 }
 
-const pressHandlers = (press: TrackedPress): PanConfig => ({
-  onTouchesDown: press.down,
+// The List is measured as the press begins, so a lifted row follows the finger from its first move.
+const pressHandlers = (
+  press: TrackedPress,
+  { drag, id }: RowDragProps,
+): PanConfig => ({
+  onTouchesDown: (event) => {
+    press.down(event);
+    drag.prepare(id);
+  },
   onTouchesMove: press.move,
   onFinalize: press.end,
 });
@@ -87,7 +94,7 @@ function useRowDrag(props: RowDragProps): PanGesture {
   return usePanGesture({
     runOnJS: true,
     manualActivation: true,
-    ...pressHandlers(press),
+    ...pressHandlers(press, props),
     ...dragHandlers(props),
   });
 }
