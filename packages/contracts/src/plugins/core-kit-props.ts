@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { iconName } from '../kit-symbols/icon-schema';
+import { iconSymbol } from '../kit-symbols/icon-schema';
 import {
   buttonDefaults,
   buttonSizes,
@@ -44,7 +44,11 @@ export const buttonProps = z.object({
     .describe('The button size.'),
   disabled: z.boolean().optional().describe('Whether activation is disabled.'),
   onPress: pressHandler.optional().describe('The action run on activation.'),
-  icon: iconName.optional().describe('An Argo icon before the label.'),
+  icon: iconSymbol
+    .optional()
+    .describe(
+      'An icon before the label: one of Argo’s, or an SF Symbol and Material Symbol pair.',
+    ),
   fullWidth: z
     .union([z.boolean(), z.literal('narrow')])
     .optional()

@@ -12,6 +12,7 @@ function content({ context: ctx }) {
     children: JSON.stringify({
       ...ctx.surface,
       projectId: ctx.projectId,
+      sessionId: ctx.sessionId,
       frozen: Object.isFrozen(ctx) && frozenSurface(ctx.surface),
     }),
   });

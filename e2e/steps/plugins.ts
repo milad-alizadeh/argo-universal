@@ -59,9 +59,10 @@ Then(
 
 const pluginPage = 'plugin-page';
 
+// A page opened for a Session carries it in the query.
 const pluginUrl = (name: string): RegExp =>
   name === 'Counter'
-    ? /\/plugins\/counter\/counter$/
+    ? /\/plugins\/counter\/counter(\?sessionId=[^&]+)?$/
     : /\/plugins\/lists\/lists\/lists$/;
 
 const pluginHeading = (page: Page, name: string): Locator =>

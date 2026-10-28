@@ -1,4 +1,5 @@
 import type { ChangesSummary, SessionStatus } from '@repo/contracts';
+import type { SessionPluginActions } from '../utils/session-header-actions';
 import type { SessionMenu } from './session-actions';
 import type { SessionPullRequest } from './session-pull-request';
 import type { SessionWorkbench } from './session-workbench';
@@ -23,6 +24,8 @@ export interface SessionHeaderProps {
   pullRequests?: SessionPullRequest[];
   // Rename and Archive under ⋯, as the Session's row offers them; absent where the page offers neither.
   menu?: SessionMenu;
+  // Plugins' actions, placed beside the ⋯ or inside it after Rename and Archive.
+  pluginActions?: SessionPluginActions;
   // The Session's Sections as Workbench cards; absent where the page has none.
   workbench?: SessionWorkbench;
   changes?: SessionChanges;

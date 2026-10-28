@@ -35,7 +35,7 @@ export function usePluginsLoad(): PluginsLoad {
   return isError ? { status: 'error' } : { status: 'loading' };
 }
 
-// Refetches the Plugin list, and each Plugin's settings, after the Server changes them.
+// Refetches the Plugin list, each Plugin's settings and the declared Slots' items, after the Server changes them.
 export function usePluginsInvalidation(): () => Promise<void> {
   const trpc = useTRPC(),
     cache = useQueryClient();
@@ -44,6 +44,7 @@ export function usePluginsInvalidation(): () => Promise<void> {
     await Promise.all([
       cache.invalidateQueries(trpc.plugin.list.queryFilter()),
       cache.invalidateQueries(trpc.plugin.getSettings.queryFilter()),
+      cache.invalidateQueries(trpc.plugins.declared.queryFilter()),
     ]);
   };
 }

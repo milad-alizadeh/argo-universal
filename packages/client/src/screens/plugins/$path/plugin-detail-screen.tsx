@@ -19,6 +19,8 @@ import {
 interface PluginDetailScreenProps {
   // The catch-all route's segments: Plugin id, nav id, then the page's own path.
   path: readonly string[];
+  // The Session the page opened for, such as from a Session header action.
+  sessionId: string | undefined;
 }
 
 const unavailable = { title: 'This Plugin is not available' };
@@ -26,10 +28,12 @@ const unavailable = { title: 'This Plugin is not available' };
 // A Plugin page from the connected Server's list: blank until the list arrives; a Plugin the Server no longer lists says so and returns to Sessions.
 export function PluginDetailScreen({
   path,
+  sessionId,
 }: PluginDetailScreenProps): React.JSX.Element {
   const { section, loaded } = usePluginAt(pluginPath(path));
 
-  if (section) return <PluginPage section={section} path={path} />;
+  if (section)
+    return <PluginPage section={section} path={path} sessionId={sessionId} />;
 
   return loaded ? <PluginUnavailable /> : <PluginLoading />;
 }
@@ -48,10 +52,16 @@ function PluginLoading(): React.JSX.Element {
 function PluginPage({
   section,
   path,
+  sessionId,
 }: PluginDetailScreenProps & {
   section: PluginSection;
 }): React.JSX.Element {
-  const view = usePluginView(section.pluginId, pluginPagePath(path));
+  const view = usePluginView({
+    pluginId: section.pluginId,
+    path: pluginPagePath(path),
+    sessionId,
+  });
+
   const onOpenPage = usePluginOpener()(section.pluginId);
 
   return <PluginDetailView {...pluginPageProps(section, view, onOpenPage)} />;

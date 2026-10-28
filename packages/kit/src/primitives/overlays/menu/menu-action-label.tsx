@@ -6,11 +6,11 @@ import {
   type ActionShortcut,
 } from '#primitives/content/kbd';
 import { Text } from '#primitives/content/text';
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 
 interface LabelProps {
   label: string;
-  icon?: IconName;
+  icon?: IconSymbol;
   content?: ReactNode;
   shortcut?: ActionShortcut;
 }
