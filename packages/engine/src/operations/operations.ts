@@ -10,9 +10,13 @@ import type { z } from 'zod';
 import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
-import type { SessionList, SessionRouterDeps } from '../sessions';
+import type {
+  SessionOperationCall,
+  SessionList,
+  SessionRouterDeps,
+} from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
-import { recordOperation } from './call-recording';
+import { recordOperation, requireOperationCall } from './call-recording';
 import { createPluginOperations } from './plugins';
 import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
@@ -77,7 +81,7 @@ export class Operations {
         label: 'Discover Operations',
         input: { filter },
       },
-      async () => scopedOperations(caller, listOperations(filter)),
+      async (call) => scopedOperations(listOperations(filter), call),
     );
   }
   public run(
@@ -90,20 +94,33 @@ export class Operations {
     return recordOperation(
       { deps: this.deps, caller },
       { name: id, label: operations[id].label, input: params },
-      () => this.authorized(caller, id, params),
+      (call) => this.authorized(caller, { id, params }, call),
     );
   }
   private async authorized(
     caller: OperationCaller,
-    id: OperationId,
-    params: Json,
+    operation: { id: OperationId; params: Json },
+    call?: SessionOperationCall,
   ): Promise<OperationResult> {
-    if (caller.kind === 'session')
-      return runSessionOperation(
-        { implementations: this.implementations, caller, deps: this.deps },
-        { id, params },
-      );
+    if (caller.kind === 'user') return this.runUser(operation);
 
+    const access = {
+      implementations: this.implementations,
+      caller,
+      deps: this.deps,
+      call: requireOperationCall(call),
+    };
+
+    return runSessionOperation(access, operation);
+  }
+
+  private async runUser({
+    id,
+    params,
+  }: {
+    id: OperationId;
+    params: Json;
+  }): Promise<OperationResult> {
     return operations[id].result.parseAsync(
       await runOperation(this.implementations, id, params),
     );

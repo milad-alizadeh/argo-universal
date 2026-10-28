@@ -71,17 +71,25 @@ function answering(answers: PermissionAnswers): Answering {
 }
 
 function PermissionBody(props: PermissionRequestProps): ReactNode {
+  const input = permissionInput(props);
+
   return (
     <View className="gap-4 px-4 pt-1 wide:gap-3 wide:px-0 wide:pt-0">
       <RequestHeading
         icon="hand"
         title={props.request.title}
-        hint={props.reason}
+        hint={permissionReason(props)}
       />
-      {props.input && <PermissionInput input={props.input} />}
+      {input && <PermissionInput input={input} />}
     </View>
   );
 }
+
+const permissionInput = (props: PermissionRequestProps): string | undefined =>
+  props.input ?? props.request.operation?.input;
+
+const permissionReason = (props: PermissionRequestProps): string | undefined =>
+  props.reason ?? props.request.operation?.description;
 
 function PermissionInput({ input }: { input: string }): ReactNode {
   return (

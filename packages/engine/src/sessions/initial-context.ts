@@ -1,6 +1,7 @@
 import { createRejectionCounter } from '@repo/machine-log';
 import { createAcpResponseReaders } from '../agents';
 import { AcpSessionLifetime } from './acp/acp-lifetime';
+import { NativePermissions } from './native-permissions';
 import {
   storageFailingEvent,
   type SessionContext,
@@ -42,6 +43,7 @@ export const initialSessionContext = (
     activeTurnStartedAt: null,
     usage: null,
     permissionQueue: [],
+    nativePermissions: new NativePermissions(),
     hookedPermissions: {},
     elicitationQueue: [],
     configOptions: [],

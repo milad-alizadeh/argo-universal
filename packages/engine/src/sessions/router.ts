@@ -5,8 +5,6 @@ import {
   SessionAnswerElicitationOutput,
   SessionAnswerPermissionInput,
   SessionAnswerPermissionOutput,
-  SessionCancelInput,
-  SessionCancelOutput,
   SessionCounts,
   SessionListUpdate,
   SessionMarkSeenInput,
@@ -26,14 +24,12 @@ import {
   zAsyncIterable,
 } from '../rpc';
 import { agentOptionsUpdates } from './agent-options';
-import { createArchiveRouter } from './archive/archive-router';
 import type { SessionList } from './list/session-list';
 import type { SessionRouterDeps } from './router-deps';
 import {
   answerSessionElicitation,
   answerSessionPermission,
 } from './session-answers';
-import { cancelSession } from './session-closure';
 import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
@@ -95,15 +91,6 @@ const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
   }),
 );
 
-const createStopRouter = routerFactory((deps: SessionRouterDeps) =>
-  router({
-    cancel: publicProcedure
-      .input(SessionCancelInput)
-      .output(SessionCancelOutput)
-      .mutation(({ input }) => cancelSession(deps, input.sessionId)),
-  }),
-);
-
 const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
   router({
     answerPermission: publicProcedure
@@ -126,8 +113,6 @@ export const createSessionRouter = routerFactory(
       createCountsRouter(sessionList),
       createSeenRouter(deps),
       createStartRouter(deps),
-      createStopRouter(deps),
-      createArchiveRouter(deps),
       createAnswerRouter(deps),
     );
   },

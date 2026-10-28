@@ -69,6 +69,14 @@ export async function runOperation(
       return implementations['project.listBranches'](
         operationParams(operations['project.listBranches'].params, params),
       );
+    case 'session.cancel':
+      return implementations['session.cancel'](
+        operationParams(operations['session.cancel'].params, params),
+      );
+    case 'session.archive':
+      return implementations['session.archive'](
+        operationParams(operations['session.archive'].params, params),
+      );
     case 'session.unarchive':
       return implementations['session.unarchive'](
         operationParams(operations['session.unarchive'].params, params),
@@ -209,6 +217,14 @@ export function generatedOperations(engine: Operations) {
         .input(operations['session.listBranches'].params)
         .output(operations['session.listBranches'].result)
         .query(({ input }) => engine.runApp('session.listBranches', input)),
+      cancel: publicProcedure
+        .input(operations['session.cancel'].params)
+        .output(operations['session.cancel'].result)
+        .mutation(({ input }) => engine.runApp('session.cancel', input)),
+      archive: publicProcedure
+        .input(operations['session.archive'].params)
+        .output(operations['session.archive'].result)
+        .mutation(({ input }) => engine.runApp('session.archive', input)),
       unarchive: publicProcedure
         .input(operations['session.unarchive'].params)
         .output(operations['session.unarchive'].result)
