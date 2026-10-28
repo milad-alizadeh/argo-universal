@@ -45,17 +45,12 @@ export function LaneRows({
   scroll,
 }: LaneRowsProps): ReactElement {
   const renderItem = useMemo(() => laneRenderer(lane), [lane]);
+  const rows = { ...scroll, ...laneList, data: lane.items, renderItem };
 
   return (
     <ListGrouping>
       <RowHighlightProvider>
-        <ScrollFadeList
-          ref={listRef}
-          {...scroll}
-          {...laneList}
-          data={lane.items}
-          renderItem={renderItem}
-        />
+        <ScrollFadeList ref={listRef} {...rows} />
       </RowHighlightProvider>
     </ListGrouping>
   );
