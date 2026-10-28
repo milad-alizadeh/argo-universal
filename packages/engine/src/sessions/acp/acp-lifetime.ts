@@ -107,6 +107,7 @@ export class AcpSessionLifetime {
   ): Promise<AcpSessionLease> {
     return this.requireDependencies().resources.open({
       launch,
+      sessionId: session.sessionId,
       opening: selectSessionOpening(session),
       destination,
       signal: this.controller.signal,

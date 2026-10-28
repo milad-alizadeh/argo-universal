@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ProjectsListOutput } from '../projects/list';
+import { ProjectInfo } from '../projects/list';
 import type { OperationTier } from './metadata';
 import { pluginOperations } from './plugins';
 import { readerOperations } from './readers';
@@ -33,7 +33,7 @@ export const operations = {
     label: 'List Projects',
     description: 'List registered Projects and their available Checkouts.',
     params: z.strictObject({}).default({}),
-    result: ProjectsListOutput,
+    result: z.array(ProjectInfo.extend({ inScope: z.boolean().optional() })),
     tier: 'read',
     keywords: ['repositories', 'folders', 'workspaces'],
   },

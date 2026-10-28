@@ -42,7 +42,13 @@ export type AcpSessionLease = {
   readonly released: Promise<void>;
 };
 
+export type SessionProcessAccess = {
+  environment: NonNullable<AgentLaunch['argo']>;
+  release: () => void;
+};
+
 export type AcpOpenInput = {
+  sessionId?: string;
   launch: DeferredAgentLaunch;
   opening: AcpSessionOpening;
   destination: AcpSessionDestination;
@@ -57,6 +63,10 @@ export type AcpProcess = {
 };
 
 export type AcpResourceInput = {
+  sessionAccess?: (
+    sessionId: string,
+    projectId: string,
+  ) => SessionProcessAccess | undefined;
   launchLoginTerminal?: LaunchLoginTerminal;
   launchProcess?: (launch: AgentLaunch) => Promise<AcpProcess>;
   closeTimeoutMs?: number;

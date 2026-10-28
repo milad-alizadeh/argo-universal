@@ -60,5 +60,5 @@ it('Stop ends an ignored cancel immediately, queues the next Send until the old 
   await host.caller.session.cancel(session);
   await host.caller.session.close(session);
   expect(host.agent.processes).toHaveLength(1);
-  expect(host.agent.processes[0]?.terminations).toBe(0);
+  expect(host.agent.processes[0]?.terminations).toBe(1);
 });

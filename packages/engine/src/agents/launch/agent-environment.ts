@@ -1,3 +1,4 @@
+import { delimiter } from 'node:path';
 import type { AgentLaunch } from '../agent-launch';
 import { vendorEnvironment } from '../vendor';
 import { shellEnvironment } from './shell-env';
@@ -12,13 +13,32 @@ export const definedEnvironment = (
     ),
   );
 
-// Every Agent program, its ACP process or its sign-in terminal, sees the Project's login-shell env; the Registry vendor row goes last.
+// Session identity is authoritative; discovery and sign-in never inherit Argo credentials.
+export function applyArgoEnvironment(
+  launch: AgentLaunch,
+  environment: NodeJS.ProcessEnv,
+): NodeJS.ProcessEnv {
+  delete environment.ARGO_TOKEN;
+  delete environment.ARGO_HOME;
+
+  if (launch.argo) {
+    environment.ARGO_TOKEN = launch.argo.token;
+    environment.ARGO_HOME = launch.argo.home;
+    environment.PATH = [launch.argo.cliDirectory, environment.PATH]
+      .filter(Boolean)
+      .join(delimiter);
+  }
+
+  return environment;
+}
+
 export const agentEnvironment = async (
   launch: AgentLaunch,
   defaults: Readonly<Record<string, string>> = {},
-): Promise<NodeJS.ProcessEnv> => ({
-  ...(await shellEnvironment(launch.cwd)),
-  ...defaults,
-  ...launch.env,
-  ...vendorEnvironment(launch),
-});
+): Promise<NodeJS.ProcessEnv> =>
+  applyArgoEnvironment(launch, {
+    ...(await shellEnvironment(launch.cwd)),
+    ...defaults,
+    ...launch.env,
+    ...vendorEnvironment(launch),
+  });

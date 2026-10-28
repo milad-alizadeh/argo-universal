@@ -325,7 +325,11 @@ it.each([undefined, 'large'])(
     )[Symbol.asyncIterator]();
 
     expect((await stream.next()).value?.configOptions).not.toBeNull();
-    const refreshing = stream.next();
+
+    const refreshing = collectOptions(
+      Promise.resolve({ [Symbol.asyncIterator]: () => stream }),
+    );
+
     await received.promise;
 
     const applied = await host.caller.session.setConfigOption({
@@ -336,7 +340,7 @@ it.each([undefined, 'large'])(
     });
 
     release.resolve();
-    const refreshed = (await refreshing).value?.configOptions;
+    const refreshed = await refreshing;
     expect(
       refreshed?.find((option) => option.category === 'model')?.currentValue,
     ).toBe(model ?? 'small');

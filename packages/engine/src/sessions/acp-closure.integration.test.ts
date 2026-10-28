@@ -8,17 +8,19 @@ import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+import { withoutSessionAccess } from '#mocks/session-access';
 
 describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   const sessionInput = { ...emptySessionInput, agent: agentId };
   const prompt = [{ type: 'text' as const, text: 'Start' }];
 
-  it('a close timeout releases the Session, keeps its Checkout, and lets its sibling and next Send use the connection', async () => {
+  it('without Agent access, a close timeout releases the Session, keeps its Checkout, and lets its sibling and next Send use the connection', async () => {
     const openings: NewSessionRequest[] = [];
 
     const host = await startAcpEngine(
       {
         steps: [],
+        sessionAccess: withoutSessionAccess,
         closeTimeoutMs: 50,
         responses: {
           'session/new': [{ requests: openings }],
