@@ -1,11 +1,12 @@
 import { OperationExecution } from '@repo/contracts/operations';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { openingWaitHost } from '#mocks/operation-opening';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
-const opening = (text: string): typeof emptySessionInput => ({
+const opening = (text: string): Json => ({
   ...emptySessionInput,
   prompt: [{ type: 'text', text }],
 });
