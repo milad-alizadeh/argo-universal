@@ -1,3 +1,5 @@
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import { expect, it } from 'vitest';
 import { z } from 'zod';
 import { operations, describeOperation } from './operations';
@@ -60,3 +62,24 @@ it('describes Session configuration categories as strings in the result schema',
     },
   });
 });
+
+it('gives every Operation a unique id that matches its registry key', () => {
+  const ids = Object.values(operations).map(({ id }) => id);
+
+  expect(new Set(ids).size).toBe(ids.length);
+
+  for (const [key, operation] of Object.entries(operations)) {
+    expect(operation.id).toBe(key);
+  }
+});
+
+it.each(Object.values(operations))(
+  'exports valid argument and result JSON schemas for $id',
+  (operation) => {
+    const description = describeOperation(operation);
+    const compiler = addFormats(new Ajv({ strict: false }));
+
+    expect(() => compiler.compile(description.params)).not.toThrow();
+    expect(() => compiler.compile(description.result)).not.toThrow();
+  },
+);
