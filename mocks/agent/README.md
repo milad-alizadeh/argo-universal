@@ -12,6 +12,8 @@
 - `responses` supplies typed response data, errors, observations and timing controls for specific ACP methods. Response sequences advance per Session and repeat the last entry.
 - `notifications` records cancellation requests.
 - `sessionIds` supplies explicit identities. The in-memory launcher otherwise uses sequential identities.
+- `sessionProcess` supplies a separate scenario for App fixtures launched with a Session token; discovery keeps the default scenario.
+- `relaunched` supplies the next process's scenario after a failed opening or exit. App fixtures retain that failure across private processes.
 
 Response records inherit the prompt steps unless they supply their own steps. Held responses can use a promise or a `waitFor` gate. A `rawResult` bypasses response encoding for rejection tests.
 
@@ -28,6 +30,8 @@ Steps can send updates, request Permission or Elicitation, wait for cancellation
 App E2E launches append every ACP request and notification the Agent receives, and each answer it sends, to the request log in the test's Server directory. Writing the release marker beside that log (`request-log.ts`) releases every `wait-for-release` step, so a test decides when a held prompt answers.
 
 App fixtures use the Registry ids `claude-acp` and `codex-acp`. Their options choose a scenario and whether the Agent starts installed. The Registry serves the scripted Agent as a compressed binary. The download port supplies files, timing and failures. The Engine, App, tRPC, Session, Feed, Writer, SQLite and Git remain real.
+
+App sign-in scenarios share a credential store per Engine generation, Agent and Project. Restarting the fixture Engine expires that store. In-memory journeys share their supplied credential object.
 
 Structural machine tests use symbolic actor results to walk transitions. These graph tests do not replace public integration journeys.
 
