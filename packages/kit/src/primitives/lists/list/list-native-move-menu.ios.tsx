@@ -1,12 +1,9 @@
-import { Button, ContextMenu, Section } from '@expo/ui/swift-ui';
+import { ContextMenu } from '@expo/ui/swift-ui';
 import type { ReactElement } from 'react';
-import type { NativeMenuItem } from '#primitives/overlays/menu';
+import { swiftMenuSections } from '#primitives/overlays/menu';
+import { moveMenuTitle } from './list-move-entries';
 import { useNativeMoveItems } from './list-native-move-items';
 import type { NativeMoveMenuProps } from './list-native-move-menu';
-
-const moveButton = (item: NativeMenuItem): ReactElement => (
-  <Button key={item.id} label={item.title} onPress={item.choose} />
-);
 
 /*
  * A movable row of a native grouped List opens its Move menu on a long press: Expo UI's ContextMenu, SwiftUI's
@@ -21,7 +18,7 @@ export function NativeMoveMenu(props: NativeMoveMenuProps): ReactElement {
   return (
     <ContextMenu>
       <ContextMenu.Items>
-        <Section title="Move">{items.map(moveButton)}</Section>
+        {swiftMenuSections([{ title: moveMenuTitle, items }])}
       </ContextMenu.Items>
       <ContextMenu.Trigger>{props.children}</ContextMenu.Trigger>
     </ContextMenu>

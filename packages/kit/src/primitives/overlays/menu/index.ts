@@ -2,6 +2,8 @@ export { Menu } from './menu';
 
 export { ContextMenu } from './context-menu';
 
+export { swiftMenuSections } from './context-menu-swift-items';
+
 export { contextMenuGroup } from './context-menu-group';
 
 export {

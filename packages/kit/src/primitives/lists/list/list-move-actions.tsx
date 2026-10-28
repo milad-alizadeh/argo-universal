@@ -2,7 +2,11 @@ import { useMemo, type ReactElement, type ReactNode } from 'react';
 import { Action } from '#primitives/actions/action';
 import type { ActionShortcut } from '#primitives/content/kbd';
 import { useListMoveOrder } from './list-move-context';
-import { stepMoves, type MenuMove } from './list-move-menu';
+import {
+  moveEntries,
+  moveMenuTitle,
+  type MoveEntry,
+} from './list-move-entries';
 import { rowIdOf, type RowId } from './list-move-model';
 import { useMoveOrder, type MoveOrder } from './list-move-order';
 
@@ -12,31 +16,21 @@ const stepShortcuts = new Map<string, ActionShortcut>([
   ['down', { modifiers: ['alt'], key: 'ArrowDown' }],
 ]);
 
-const stepActions = (
-  order: MoveOrder,
-  id: RowId,
-  entries: MenuMove[],
-): ReactElement[] =>
-  entries.map(({ key, label, intent }) => (
-    <Action
-      key={key}
-      label={label}
-      shortcut={stepShortcuts.get(key)}
-      onPress={() => order.moveBy(id, intent)}
-    />
-  ));
+const moveAction = ({ key, label, choose }: MoveEntry): ReactElement => (
+  <Action
+    key={key}
+    label={label}
+    shortcut={stepShortcuts.get(key)}
+    onPress={choose}
+  />
+);
 
 // The Move Section a row's menu ends with; an element, so the menu reads it as one of its Sections.
-function moveSection(order: MoveOrder, id: RowId): ReactElement {
-  const entries = stepMoves(order.sections, id);
-
-  return (
-    <Action.Section key="list-move" title="Move">
-      {stepActions(order, id, entries)}
-      <Action key="to" label="Move to…" onPress={() => order.pick(id)} />
-    </Action.Section>
-  );
-}
+const moveSection = (order: MoveOrder, id: RowId): ReactElement => (
+  <Action.Section key="list-move" title={moveMenuTitle}>
+    {moveEntries(order, id).map(moveAction)}
+  </Action.Section>
+);
 
 const rowSection = (
   order: MoveOrder | undefined,

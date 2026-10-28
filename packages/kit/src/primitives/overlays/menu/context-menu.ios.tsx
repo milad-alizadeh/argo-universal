@@ -6,7 +6,11 @@ import { Host } from '#primitives/native/host';
 import { contextMenuSections } from './context-menu-native-items';
 import type { ContextMenuProps, SpokenElement } from './context-menu-props';
 import { swiftMenuSections } from './context-menu-swift-items.ios';
-import type { NativeMenuItem, NativeMenuSection } from './menu-native-items';
+import {
+  nativeSectionKey,
+  type NativeMenuItem,
+  type NativeMenuSection,
+} from './menu-native-items';
 import { menuSymbol } from './menu-view-actions.ios';
 
 /*
@@ -102,7 +106,7 @@ const spokenProps = (spoken: SpokenElement = {}): ViewProps => ({
 
 // Link.Menu keeps only Link.Menu and Link.MenuAction elements among its children, so these build elements rather than components.
 const previewMenuGroup = (section: NativeMenuSection): ReactElement => (
-  <Link.Menu key={section.items.map((item) => item.id).join()} inline>
+  <Link.Menu key={nativeSectionKey(section)} inline>
     {section.items.map(previewMenuAction)}
   </Link.Menu>
 );

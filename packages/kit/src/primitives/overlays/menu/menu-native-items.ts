@@ -36,6 +36,10 @@ export interface NativeMenuSection {
   items: NativeMenuItem[];
 }
 
+// A section is keyed by its rows' ids, which are unique within the menu.
+export const nativeSectionKey = (section: NativeMenuSection): string =>
+  section.items.map((item) => item.id).join();
+
 // What a menu lists: its options with the chosen value, its groups, or its actions, and whether they are still loading.
 export type MenuRows<Value extends string = string> = (
   | MenuChoiceRows<Value>

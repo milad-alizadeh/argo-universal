@@ -1,7 +1,11 @@
 import { Button, Menu, Section, Toggle } from '@expo/ui/swift-ui';
 import { disabled } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
-import type { NativeMenuItem, NativeMenuSection } from './menu-native-items';
+import {
+  nativeSectionKey,
+  type NativeMenuItem,
+  type NativeMenuSection,
+} from './menu-native-items';
 import { countedTitle } from './menu-props';
 import { menuSymbol } from './menu-view-actions.ios';
 
@@ -14,15 +18,11 @@ export function swiftMenuSections(
   sections: NativeMenuSection[],
 ): ReactElement[] {
   return sections.map((section) => (
-    <Section key={sectionKey(section)} title={section.title ?? ''}>
+    <Section key={nativeSectionKey(section)} title={section.title ?? ''}>
       {section.items.map(swiftMenuItem)}
     </Section>
   ));
 }
-
-// A section is keyed by its rows' ids, which are unique within the menu.
-const sectionKey = (section: NativeMenuSection): string =>
-  section.items.map((item) => item.id).join();
 
 // A disabled row greys out and cannot be chosen.
 const off = (
