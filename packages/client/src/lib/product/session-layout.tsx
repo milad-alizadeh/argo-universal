@@ -1,14 +1,7 @@
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState } from 'react';
-import {
-  type ViewProps,
-  type ViewStyle,
-  View,
-  type ViewInstance,
-} from 'react-native';
-import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   GlassCoverProvider,
@@ -18,7 +11,9 @@ import {
   useGlassCover,
 } from './composer-cover';
 import { type DroppedFiles, FileDropPane } from './file-drop/file-drop-pane';
+import { GlassComposer } from './glass-composer';
 import { KeyboardAvoidingContent, Screen } from './screen/screen';
+import { SessionBarRow } from './session-bar-row';
 import { ComposerColumn, sessionSurface } from './session-column';
 import {
   filledClass,
@@ -29,6 +24,8 @@ import {
 export interface SessionLayoutProps {
   // Draws nothing itself: the Session's Screen header is the band's on a wide window and the stack's on a phone, and what this holds only claims the band's Workbench.
   header: ReactNode;
+  // One line under the header, such as the Plugins' Session bar; it stays put while the Feed scrolls. Argo's own banners go above it.
+  bar?: ReactNode;
   // Full pane width, so it scrolls from anywhere in the pane; its rows sit in SessionColumns.
   feed: ReactNode;
   composer: ReactNode;
@@ -63,6 +60,7 @@ function OverlapComposerLayout(props: SessionLayoutProps): React.JSX.Element {
       className={overlapSurface}
     >
       {props.header}
+      <SessionBarRow>{props.bar}</SessionBarRow>
       <OverlapContent {...props} />
     </Screen>
   );
@@ -128,6 +126,7 @@ function GlassComposerLayout(props: SessionLayoutProps): React.JSX.Element {
   return (
     <Screen testID="session-layout" edges={[]} className={sessionSurface}>
       {props.header}
+      <SessionBarRow>{props.bar}</SessionBarRow>
       <KeyboardAvoidingContent>
         <GlassComposerStage feed={props.feed} composer={props.composer} />
         {props.panel}
@@ -152,38 +151,5 @@ function GlassComposerStage(props: SessionStageProps): React.JSX.Element {
         </GlassComposer>
       </GlassCoverProvider>
     </View>
-  );
-}
-
-interface GlassComposerProps extends Pick<ViewProps, 'onLayout' | 'children'> {
-  measure: (view: ViewInstance | null) => void;
-}
-
-// The Composer column is measured without the home indicator's space, which follows the keyboard frame by frame.
-function GlassComposer({
-  measure,
-  ...props
-}: GlassComposerProps): React.JSX.Element {
-  const homeIndicatorSpace = useHomeIndicatorSpace();
-
-  return (
-    <Animated.View
-      className="absolute bottom-0 left-0 right-0 z-10"
-      style={homeIndicatorSpace}
-    >
-      <ComposerColumn {...props} ref={measure} />
-    </Animated.View>
-  );
-}
-
-function useHomeIndicatorSpace(): ReturnType<
-  typeof useAnimatedStyle<ViewStyle>
-> {
-  const bottom = useGlassBarSpace();
-  const { progress } = useReanimatedKeyboardAnimation();
-
-  return useAnimatedStyle(
-    () => ({ paddingBottom: bottom * (1 - progress.get()) }),
-    [bottom, progress],
   );
 }

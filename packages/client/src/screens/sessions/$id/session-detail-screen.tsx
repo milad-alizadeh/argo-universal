@@ -30,6 +30,7 @@ import {
   useSessionCommands,
 } from './use-session-commands';
 import { useSessionReadOptions } from './use-session-read-options';
+import { useWithSessionBar } from './use-with-session-bar';
 
 export interface SessionDetailScreenProps {
   id: string;
@@ -146,7 +147,9 @@ function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
     ...reads,
   });
 
-  return withAgentFeed(useChangedSession(sessionId, props, sources.feed));
+  const changed = useChangedSession(sessionId, props, sources.feed);
+
+  return withAgentFeed(useWithSessionBar(sessionId, sources.feed, changed));
 }
 
 function usePageCallout(

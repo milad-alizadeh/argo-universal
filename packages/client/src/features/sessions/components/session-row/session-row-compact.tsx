@@ -7,8 +7,8 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
-  ChangeStageIcon,
   ChangeStageModifier,
+  SecondaryChangeStageIcon,
 } from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
 import { SessionMark } from './session-row-mark';
@@ -37,7 +37,7 @@ function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
   if (pullRequest)
     return (
       <>
-        <ChangeStageIcon {...pullRequest} />
+        <SecondaryChangeStageIcon {...pullRequest} />
         <ChangeStageModifier {...pullRequest} />
       </>
     );

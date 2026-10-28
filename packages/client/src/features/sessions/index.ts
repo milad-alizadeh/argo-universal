@@ -238,3 +238,9 @@ export {
 } from './components/session-row/session-row-plugins';
 
 export { NewSessionQuestion } from './components/new-session-question/new-session-question';
+
+export {
+  SessionBar,
+  type SessionBarEntry,
+  type SessionBarProps,
+} from './components/session-bar/session-bar';
