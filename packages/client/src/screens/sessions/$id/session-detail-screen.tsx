@@ -70,7 +70,7 @@ function ConnectedSession({
 
   return (
     <>
-      <ConnectedSessionHeader {...props} />
+      <ConnectedSessionHeader sessionId={sessionId} {...props} />
       <SessionDetailView {...props} />
       {dialogs}
     </>

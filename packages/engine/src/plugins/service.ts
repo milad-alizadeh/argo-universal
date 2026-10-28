@@ -123,7 +123,7 @@ export class PluginService {
   }
 
   async *view(
-    { pluginId, path, projectId }: PluginViewInput,
+    { pluginId, path, projectId, sessionId }: PluginViewInput,
     connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
     const status = await this.activate(pluginId);
@@ -133,7 +133,7 @@ export class PluginService {
 
     yield* this.deps.pluginRuntime.views.watch(
       pluginId,
-      { path, projectId },
+      { path, projectId, sessionId },
       connection,
     );
   }

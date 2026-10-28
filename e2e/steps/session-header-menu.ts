@@ -50,6 +50,19 @@ When(
   },
 );
 
+// The page was opened from a Session's header, so the Plugin read that Session's id from its context.
+Then(
+  'the Plugin page opened for that Session',
+  async ({ page }): Promise<void> => {
+    const sessionId = new URL(page.url()).searchParams.get('sessionId');
+
+    expect(sessionId).toBeTruthy();
+    await expect(
+      page.getByText(`Opened for Session ${sessionId}`, { exact: true }),
+    ).toBeVisible();
+  },
+);
+
 // A phone goes back to its list; a wide Frame shows the list beside New Session.
 Then('no Session page is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions(\/new)?$/);

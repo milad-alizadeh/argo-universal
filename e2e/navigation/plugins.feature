@@ -106,6 +106,7 @@ Feature: Plugin navigation
     Given a Session named "Check the live list"
     When I press "Open Counter" in the Session header
     Then the Plugin page shows Counter
+    And the Plugin page opened for that Session
 
   Scenario: A Plugin ListDetail drills into the opened row on a phone Frame
     Given a phone Frame

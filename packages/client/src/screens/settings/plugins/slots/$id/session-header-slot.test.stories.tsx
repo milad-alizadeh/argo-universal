@@ -64,6 +64,25 @@ export const PreviewsTheHeaderWithArgosActionsFirst: Story = {
   },
 };
 
+// A compact window, narrow web included, keeps every Plugin action in "…".
+export const PreviewsACompactWindowWithAllInMore: Story = {
+  beforeEach: (): Promise<void> => settleLayout('phone'),
+  play: async ({ canvas, userEvent }) => {
+    await expect(
+      canvas.queryByRole('button', { name: issueAction }),
+    ).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'More' }));
+
+    const labels = menuLabels(within(await screen.findByRole('menu')));
+
+    await expect(labels.slice(0, 3)).toEqual([
+      'Rename',
+      'Archive',
+      issueAction,
+    ]);
+  },
+};
+
 // A switch takes a Plugin's actions out of the header, and the next one moves up beside "…".
 export const ASwitchTakesAPluginOutOfTheHeader: Story = {
   render: () => <Live plugins={slotPlugins} />,

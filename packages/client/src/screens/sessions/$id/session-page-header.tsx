@@ -1,4 +1,5 @@
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import {
   type SessionHeaderProps,
@@ -10,7 +11,10 @@ import {
   sessionPageTitle,
 } from './session-detail-view';
 import { sessionHeaderActions } from './session-header-actions';
-import { usePluginHeaderActions } from './use-plugin-header-actions';
+import {
+  type HeaderPlacement,
+  usePluginHeaderActions,
+} from './use-plugin-header-actions';
 
 function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
   if (props.state !== 'open' || !props.header.menu) return undefined;
@@ -59,9 +63,23 @@ const withPluginActions = (
 
 // The header on the App: the enabled Plugins' actions, read from their manifests, join Argo's.
 export function ConnectedSessionHeader(
-  props: SessionDetailViewProps,
+  props: SessionDetailViewProps & { sessionId: string },
 ): React.JSX.Element {
-  const pluginActions = usePluginHeaderActions();
+  return (
+    <SizeClass
+      compact={<PlacedSessionHeader {...props} compact />}
+      wide={<PlacedSessionHeader {...props} compact={false} />}
+    />
+  );
+}
+
+// One size class's header: a compact window keeps every Plugin action in "…", a wide one gives the first an icon.
+function PlacedSessionHeader({
+  sessionId,
+  compact,
+  ...props
+}: SessionDetailViewProps & HeaderPlacement): React.JSX.Element {
+  const pluginActions = usePluginHeaderActions({ sessionId, compact });
 
   return <SessionPageHeader {...withPluginActions(props, pluginActions)} />;
 }

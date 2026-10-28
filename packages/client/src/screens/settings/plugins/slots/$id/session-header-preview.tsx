@@ -2,6 +2,7 @@ import { ActionButtons } from '@repo/kit/primitives/actions/action';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Spacer } from '@repo/kit/primitives/layout/spacer';
 import { Stack } from '@repo/kit/primitives/layout/stack';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { useState } from 'react';
 import {
@@ -13,10 +14,7 @@ import {
 } from '#features/sessions';
 import type { SlotVisibility } from '#features/settings';
 import { sessionHeaderActions } from '../../../../sessions/$id/session-header-actions';
-import {
-  onPhone,
-  useDeclaredHeaderActions,
-} from '../../../../sessions/$id/use-plugin-header-actions';
+import { useDeclaredHeaderActions } from '../../../../sessions/$id/use-plugin-header-actions';
 import type { SlotPreviewProps } from './slot-detail';
 
 export const previewSessionTitle = 'Fix login redirect';
@@ -36,37 +34,47 @@ const withoutPress = (declared: DeclaredHeaderAction): SessionPluginAction => ({
   onPress: doNothing,
 });
 
-const placedForPreview = (
-  declared: readonly DeclaredHeaderAction[],
-  { shows }: SlotVisibility,
-): SessionPluginActions =>
-  placeSessionHeaderActions(declared.map(withoutPress), {
-    phone: onPhone,
-    shows,
-  });
-
 interface SessionHeaderPreviewProps {
   declared: readonly DeclaredHeaderAction[];
   visibility: SlotVisibility;
 }
 
-/*
- * The Session header's trailing Actions under the page's switches, placed as this platform places them: on a desktop
- * the first header actions sit beside "…", and "…" opens to show the rest after Argo's own.
- */
-export function SessionHeaderPreview({
-  declared,
-  visibility,
-}: SessionHeaderPreviewProps): React.JSX.Element {
-  const placed = placedForPreview(declared, visibility);
+const placedForPreview = (
+  { declared, visibility: { shows } }: SessionHeaderPreviewProps,
+  compact: boolean,
+): SessionPluginActions =>
+  placeSessionHeaderActions(declared.map(withoutPress), {
+    phone: compact,
+    shows,
+  });
 
+/*
+ * The Session header's trailing Actions under the page's switches, placed as this window's size class places them: on
+ * a wide window the first header actions sit beside "…", and "…" opens to show the rest after Argo's own.
+ */
+export function SessionHeaderPreview(
+  props: SessionHeaderPreviewProps,
+): React.JSX.Element {
   return (
     <Stack direction="row" align="center">
       <Text role="title">{previewSessionTitle}</Text>
       <Spacer />
-      <PlacedButtons key={placementKey(placed)} placed={placed} />
+      <SizeClass
+        compact={<PreviewButtons {...props} compact />}
+        wide={<PreviewButtons {...props} compact={false} />}
+      />
     </Stack>
   );
+}
+
+// One size class's trailing Actions: a compact window keeps every Plugin action in "…".
+function PreviewButtons({
+  compact,
+  ...props
+}: SessionHeaderPreviewProps & { compact: boolean }): React.JSX.Element {
+  const placed = placedForPreview(props, compact);
+
+  return <PlacedButtons key={placementKey(placed)} placed={placed} />;
 }
 
 /*

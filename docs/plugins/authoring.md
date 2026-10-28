@@ -233,7 +233,14 @@ A Plugin lists its Session header actions in `plugin.json` under `contributes.de
 ```
 
 An action is `{ id, label, icon, placement, target }`: `label` is at most 40 characters, `placement` is `header` or `menu`, and the only target is `{ type: "page", path }`, one of the Plugin's own pages under one of its nav items. A Plugin lists at most 4 actions, each id once.
-Argo's own actions come first. On a desktop or the web the first `header` action, in Slot order, is an icon before Argo's "…"; every other action goes inside "…" after Argo's entries. iOS and Android keep every Plugin action in "…". Settings › Plugins › Session header turns each Plugin's actions off on that Device.
+Argo's own actions come first. On a wide window the first `header` action, in Slot order, is an icon before Argo's "…"; every other action goes inside "…" after Argo's entries. A compact or medium window (phones, and narrow web) keeps every Plugin action in "…". Settings › Plugins › Session header turns each Plugin's actions off on that Device.
+The page opens for the Session whose header it was pressed in: it reads the Session's id from `context.sessionId`.
+
+```tsx
+argo.pages.register('/issues', ({ context }) => <Issues sessionId={context.sessionId} />);
+```
+
+A page opened any other way has no `sessionId`.
 
 ## Background pages and badges
 

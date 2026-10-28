@@ -26,5 +26,6 @@ export const drawsPluginWire = (surface: PluginSurface | undefined): boolean =>
 export type PluginRenderContext = Readonly<{
   serverDevice: boolean;
   projectId?: string;
+  sessionId?: string;
   surface?: Readonly<PluginSurface>;
 }>;
