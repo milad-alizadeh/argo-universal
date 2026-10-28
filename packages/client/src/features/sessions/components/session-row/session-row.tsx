@@ -19,16 +19,29 @@ type RowIdentity = Pick<
   ListItemProps,
   | 'title'
   | 'subtitle'
+  | 'subtitleIcon'
   | 'accessibilityLabel'
   | 'onPress'
   | 'selected'
   | 'finished'
 >;
 
+// The chosen Plugin's Activity line, led by its glyph, when it has one for this Session; Argo's own, bare, otherwise.
+function activityLine({
+  plugins,
+  session,
+}: SessionRowProps): Pick<ListItemProps, 'subtitle' | 'subtitleIcon'> {
+  const activity = plugins?.activity;
+
+  if (!activity) return { subtitle: session.activity };
+
+  return { subtitle: activity.text, subtitleIcon: activity.icon };
+}
+
 function rowIdentity(props: SessionRowProps): RowIdentity {
   return {
     title: props.session.title,
-    subtitle: props.session.activity,
+    ...activityLine(props),
     accessibilityLabel: sessionRowLabel(props.session),
     onPress: () => props.onSelect(props.session.sessionId),
     selected: props.selected,

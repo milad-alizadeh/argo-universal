@@ -27,7 +27,11 @@ export const ownerOfOption = (value: string): SlotOwner =>
     ? value.slice(pluginOptionPrefix.length)
     : null;
 
-// Only the Plugins that ask for the Single-owner Slot are listed for it.
+// Every Plugin on the Slot is listed for its Single-owner Slot, so one that does not ask can say so.
+const listedPlugins = (plugins: readonly SlotPlugin[]): SlotPlugin[] =>
+  plugins.filter((plugin) => plugin.fills || plugin.asks);
+
+// Only the Plugins that ask for the Single-owner Slot can write it.
 export const askingPlugins = (plugins: readonly SlotPlugin[]): SlotPlugin[] =>
   plugins.filter((plugin) => plugin.asks);
 
@@ -79,14 +83,24 @@ const optionOf = (
   ...pluginSubtitle(plugin, holder),
 });
 
-function pluginSubtitle(
+const pluginSubtitle = (
   plugin: SlotPlugin,
   holder: SlotPlugin | undefined,
-): Subtitle {
+): Subtitle =>
+  unavailableSubtitle(plugin) ??
+  conflictSubtitle(plugin, holder) ??
+  writesSubtitle;
+
+export const noActivityLine = 'Sends no Activity line.';
+
+// A Plugin that sends no line, or is turned off, is listed but cannot be chosen.
+function unavailableSubtitle(plugin: SlotPlugin): Subtitle | undefined {
+  if (!plugin.asks) return { subtitle: noActivityLine, disabled: true };
+
   if (!plugin.shown)
     return { subtitle: 'Off. Turn it on to choose it.', disabled: true };
 
-  return conflictSubtitle(plugin, holder) ?? writesSubtitle;
+  return undefined;
 }
 
 // A Plugin that asks while another holds the line warns whom it would replace.
@@ -103,7 +117,7 @@ const conflictSubtitle = (
 
 const writesSubtitle: Subtitle = { subtitle: 'Writes it in place of Argo’s.' };
 
-// Argo's own, then each Plugin that asks for the Single-owner Slot.
+// Default, Argo's own line, then every Plugin on the Slot; only those that ask can be chosen.
 export function ownerOptions(
   ownerSlot: OwnerSlot,
   plugins: readonly SlotPlugin[],
@@ -114,9 +128,9 @@ export function ownerOptions(
   return [
     {
       value: argoOptionValue,
-      label: 'Argo’s own',
+      label: 'Default',
       subtitle: ownerSlot.argoSubtitle,
     },
-    ...askingPlugins(plugins).map((plugin) => optionOf(plugin, holder)),
+    ...listedPlugins(plugins).map((plugin) => optionOf(plugin, holder)),
   ];
 }

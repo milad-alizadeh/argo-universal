@@ -1,12 +1,14 @@
-import type { SessionRowItem as Item } from '@repo/contracts/plugins/wire';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ChangeStage } from '../change-stage/change-stage';
-import { SessionRowItem } from './session-row-item';
 import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
+import {
+  hasPluginItems,
+  SessionRowPluginItems,
+} from './session-row-plugin-items';
 import { sidebarRows } from './session-row-sidebar';
 
 export type { SessionRowMetadataProps } from './session-row-metadata-props';
@@ -36,35 +38,15 @@ function ageContent({ age }: SessionRowMetadataProps): React.ReactNode {
   );
 }
 
-// Two Plugins may send the same text, so each repeat is counted into its key.
-const pluginItems = ({
-  items = [],
-}: SessionRowMetadataProps): React.ReactNode =>
-  withKeys(items).map(({ key, item }) => (
-    <SessionRowItem key={key} item={item} />
-  ));
-
-function withKeys(items: readonly Item[]): { key: string; item: Item }[] {
-  const seen = new Map<string, number>();
-
-  return items.map((item) => {
-    const repeat = seen.get(item.text) ?? 0;
-
-    seen.set(item.text, repeat + 1);
-
-    return { key: `${item.text}:${repeat}`, item };
-  });
-}
-
 function hasMetadata({
   session,
   pullRequest,
   age,
-  items = [],
+  plugins,
 }: SessionRowMetadataProps): boolean {
   return [
     age !== undefined,
-    items.length > 0,
+    hasPluginItems(plugins),
     session.subagents.total > 0,
     sidebarRows && session.shells.total > 0,
     session.archivedAt !== null,
@@ -85,7 +67,7 @@ export function sessionMetadata(
       <ShellsCount {...props} />
       <SubagentsCount {...props} />
       {archivedContent(props)}
-      {pluginItems(props)}
+      <SessionRowPluginItems {...props} />
     </View>
   );
 }

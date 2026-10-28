@@ -20,6 +20,8 @@ import {
   sessionHref,
   useNavigate,
 } from '#lib/product/navigation/navigation';
+import { useOpenPluginPage } from '../plugins/use-plugin-opener';
+import { useSessionRowPlugins } from '../plugins/use-session-row-plugins';
 import {
   SessionListView,
   type SessionListViewProps,
@@ -91,6 +93,16 @@ function useSessionsNavigation(): Pick<
   };
 }
 
+// What the Plugins add to the loaded rows, asked for once per list, and the page an item opens.
+function useRowPlugins(
+  sessions: SessionListViewProps['sessions'],
+): Pick<SessionListViewProps, 'rowPlugins' | 'onOpenPluginPage'> {
+  return {
+    rowPlugins: useSessionRowPlugins(sessions),
+    onOpenPluginPage: useOpenPluginPage(),
+  };
+}
+
 function useSessionsViewProps(
   props: LiveSessionListProps,
 ): SessionListViewProps {
@@ -101,6 +113,7 @@ function useSessionsViewProps(
     ...props,
     ...lookups,
     ...pages,
+    ...useRowPlugins(pages.sessions),
     ...useLiveUpdatesStatus(),
     ...useSessionsNavigation(),
     loadState: sessionsLoadState([...lookupProgress, pageProgress]),

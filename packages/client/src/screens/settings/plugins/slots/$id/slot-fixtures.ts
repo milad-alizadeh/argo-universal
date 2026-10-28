@@ -1,3 +1,4 @@
+import { pluginSymbol } from '../../../../../lib/product/plugin-symbol';
 import type { SessionRowPreviewData } from './session-row-preview';
 import { previewSession } from './session-row-slot';
 import type { SlotPlugin } from './slot-detail-model';
@@ -47,24 +48,32 @@ export const deploysLine = 'Deploying preview';
 export const sessionRowPreviewData: SessionRowPreviewData = {
   session: previewSession,
   age: '2m',
-  items: {
-    items: [
-      {
-        pluginId: issueTracker.pluginId,
-        item: { text: issueRef(412), tone: 'info' },
-      },
-      {
-        pluginId: deploys.pluginId,
-        item: { text: previewReady, tone: 'success' },
-      },
-      { pluginId: coverage.pluginId, item: { text: '78%' } },
-    ],
-    overflow: [],
-  },
-  lines: {
-    items: [
-      { pluginId: issueTracker.pluginId, item: { text: issueTrackerLine } },
-    ],
-    overflow: [{ pluginId: deploys.pluginId, item: { text: deploysLine } }],
+  pluginOf: (pluginId) => ({
+    name:
+      slotPlugins.find((plugin) => plugin.pluginId === pluginId)?.name ??
+      pluginId,
+    icon: pluginSymbol({}),
+  }),
+  answer: {
+    items: {
+      items: [
+        {
+          pluginId: issueTracker.pluginId,
+          item: { text: issueRef(412), tone: 'info' },
+        },
+        {
+          pluginId: deploys.pluginId,
+          item: { text: previewReady, tone: 'success' },
+        },
+        { pluginId: coverage.pluginId, item: { text: '78%' } },
+      ],
+      overflow: [],
+    },
+    lines: {
+      items: [
+        { pluginId: issueTracker.pluginId, item: { text: issueTrackerLine } },
+      ],
+      overflow: [{ pluginId: deploys.pluginId, item: { text: deploysLine } }],
+    },
   },
 };

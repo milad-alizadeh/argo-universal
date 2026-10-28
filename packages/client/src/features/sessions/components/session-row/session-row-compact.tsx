@@ -12,11 +12,18 @@ import {
 import { changeDescription } from '../change-stage/change-stage-model';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
+import {
+  hasPluginItems,
+  SessionRowPluginItems,
+} from './session-row-plugin-items';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { sidebarDrawing } from './session-row-sidebar';
 import { compactStatusDot } from './session-row-status';
 
-type CompactEndProps = Pick<SessionRowProps, 'session' | 'pullRequest' | 'age'>;
+type CompactEndProps = Pick<
+  SessionRowProps,
+  'session' | 'pullRequest' | 'age' | 'plugins' | 'onOpenPluginPage'
+>;
 
 // Its Change's glyph, without the number; with no Change, how long ago the Session was active.
 function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
@@ -31,16 +38,21 @@ function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
   return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
 }
 
-// A Compact row's end: its detail, then the status dot; a phone draws no dot while the Session is idle, a sidebar row a muted one.
+/*
+ * A Compact row's end: its detail, the Plugins' items after it as on a Regular row, then the status dot; a phone draws
+ * no dot while the Session is idle, a sidebar row a muted one.
+ */
 function compactTrailing(props: CompactEndProps): React.ReactNode {
   const detail = compactDetail(props);
   const status = compactStatusDot(props.session.status);
+  const hasEnd = [detail, status].some((part) => part !== undefined);
 
-  if (detail === undefined && status === undefined) return undefined;
+  if (!hasEnd && !hasPluginItems(props.plugins)) return undefined;
 
   return (
     <View className="flex-row items-center gap-1.5">
       {detail}
+      <SessionRowPluginItems {...props} />
       {status}
     </View>
   );

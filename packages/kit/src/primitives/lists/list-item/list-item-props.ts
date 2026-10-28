@@ -49,6 +49,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   subtitleTone?: Tone;
   // A subtitle that wraps onto a second line rather than truncating, such as a Mode's description.
   subtitleLines?: 2;
+  // A glyph leading the subtitle in its tone, such as the Plugin that wrote a Session row's Activity line.
+  subtitleIcon?: KitProps<'Icon'>['name'];
   // De-emphasized secondary text on a completed row.
   subtitleDimmed?: boolean;
   // A role avatar occupies its own 36px lane instead of the icon lane.
