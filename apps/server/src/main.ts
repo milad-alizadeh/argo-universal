@@ -1,9 +1,22 @@
 import { parseArgs } from 'node:util';
 import { startSupervisor } from './supervisor';
 
-// `--watch` restarts the Engine on a file change (the dev script).
-const { values } = parseArgs({
-  options: { watch: { type: 'boolean', default: false } },
-});
+type ServerArguments = { watch: boolean };
 
-startSupervisor({ watch: values.watch });
+// `--watch` restarts the Engine on a file change (the dev script).
+function readServerArguments(): ServerArguments | undefined {
+  try {
+    return parseArgs({
+      options: { watch: { type: 'boolean', default: false } },
+    }).values;
+  } catch (cause) {
+    process.stderr.write(`${String(cause)}\n`);
+    process.exitCode = 2;
+
+    return undefined;
+  }
+}
+
+const options = readServerArguments();
+
+if (options) startSupervisor(options);

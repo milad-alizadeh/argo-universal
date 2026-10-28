@@ -12,12 +12,15 @@
   },
   "dependencies": {
     "@argo/plugin-kit": "workspace:*",
-    "@repo/server": "workspace:*",
-    "tsx": "catalog:"
-  },
-  "devDependencies": {
     "@repo/contracts": "workspace:*",
     "@repo/engine": "workspace:*",
+    "@repo/machine-log": "workspace:*",
+    "@repo/server": "workspace:*",
+    "@trpc/client": "catalog:",
+    "tsx": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
