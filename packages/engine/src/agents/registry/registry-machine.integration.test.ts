@@ -30,7 +30,7 @@ it.each([
   const home = await row.arrange(fetchAgents);
   const host = await startSettledRegistryHost({ ...home, fetchAgents });
   expect(fetchAgents).toHaveBeenCalledTimes(1);
-  expect((await host.caller.agents.registry()).agents).toHaveLength(4);
+  expect((await host.caller.registry.get()).agents).toHaveLength(4);
 });
 
 it('skips the start fetch when a Registry row is stored', async () => {
@@ -89,7 +89,7 @@ it('refetches on a launch check an hour after the last attempt', async () => {
 it('fetches every time the Agents page refreshes', async () => {
   const fetchAgents = publishedFetch();
   const host = await startSettledRegistryHost({ now: () => 0, fetchAgents });
-  const registry = await host.caller.agents.refreshRegistry();
+  const registry = await host.caller.registry.refresh();
   expect(fetchAgents).toHaveBeenCalledTimes(2);
   expect(registry).toMatchObject({
     error: null,

@@ -70,8 +70,8 @@ export const startLaunchHost = async (
     storage.remove();
     rmSync(projectPath, { recursive: true, force: true });
   });
-  await host.caller.agents.refreshRegistry();
-  await host.caller.agents.addRegistry({ id });
+  await host.caller.registry.refresh();
+  await host.caller.agent.install({ id });
 
   return { host, projectPath };
 };

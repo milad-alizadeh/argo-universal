@@ -12,7 +12,7 @@ it('keeps concurrently resolved versions usable until their commands are release
       JSON.stringify({ version: '1.0.0', agents: [entry] }),
   });
 
-  await host.caller.agents.refreshRegistry();
+  await host.caller.registry.refresh();
   const started = Promise.withResolvers<void>();
   const resume = Promise.withResolvers<void>();
   let downloads = 0;
@@ -45,7 +45,7 @@ it('keeps concurrently resolved versions usable until their commands are release
   const old = getCommand(input);
   await started.promise;
   entry = { ...entry, version: '2.0.0' };
-  await host.caller.agents.refreshRegistry();
+  await host.caller.registry.refresh();
   const newer = getCommand(input);
   resume.resolve();
   const commands = await Promise.all([old, newer]);

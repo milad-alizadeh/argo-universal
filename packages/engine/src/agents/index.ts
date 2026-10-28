@@ -37,3 +37,14 @@ export {
   type InstalledAgent,
   type InstalledAgents,
 } from './servers/installed-agents';
+
+export { readAgentServers } from './servers/agent-servers-sql';
+
+export { readRegistry } from './registry/registry-cache';
+
+export {
+  changeAgentServer,
+  refreshRegistry,
+  syncRegistry,
+  type RegistryDeps,
+} from './registry/registry-operations';

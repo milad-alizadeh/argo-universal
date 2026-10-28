@@ -5,18 +5,18 @@ import {
   type OperationRow,
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import type { Database } from '@repo/db';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { z } from 'zod';
+import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
 import { createPluginOperations } from './plugins';
+import { createRegistryOperations } from './registry';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
 import { requireUserToken } from './tokens';
 
-export type OperationsDeps = {
-  database: Database;
+export type OperationsDeps = RegistryDeps & {
   controlToken: string;
   plugins: PluginsRouterDeps;
 };
@@ -36,6 +36,7 @@ function createImplementations(deps: OperationsDeps): OperationImplementations {
 
   return {
     ...createPluginOperations(deps.plugins.plugins),
+    ...createRegistryOperations(deps),
     'project.list': (): Promise<ProjectsListOutput> =>
       readProjects(deps.database, rejections),
   };
