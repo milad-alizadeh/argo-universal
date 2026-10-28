@@ -2,12 +2,22 @@ import { useCallback, useMemo, useState } from 'react';
 import type { ListMove, MoveSection } from './list-move-model';
 import { moveNotice, type MoveNotice } from './list-move-notice';
 
-// The rows of one List that take focus, by id: a row registers as it draws.
-export class RowFocus {
-  private readonly rows = new Map<string, () => void>();
+// Focuses a row; with `ifLost`, only while nothing else holds the focus.
+export type FocusRow = (ifLost: boolean) => void;
 
-  public register(id: string, focus: () => void): () => void {
+/*
+ * The rows of one List that take focus, by id: a row registers as it draws. A row moved to another Section can draw
+ * there a commit after the frame that focused it where it was, so when the last moved row draws anew, it takes back
+ * the focus its old copy lost.
+ */
+export class RowFocus {
+  private readonly rows = new Map<string, FocusRow>();
+  private moved: string | undefined;
+
+  public register(id: string, focus: FocusRow): () => void {
     this.rows.set(id, focus);
+
+    if (this.moved === id) requestAnimationFrame(() => focus(true));
 
     return (): void => {
       if (this.rows.get(id) === focus) this.rows.delete(id);
@@ -16,7 +26,8 @@ export class RowFocus {
 
   // Focuses row `id` a frame after a move, once it has drawn where it landed.
   public after(id: string): void {
-    requestAnimationFrame(() => this.rows.get(id)?.());
+    this.moved = id;
+    requestAnimationFrame(() => this.rows.get(id)?.(false));
   }
 }
 
@@ -51,8 +62,9 @@ function useToldMove(
 ): Move {
   return useCallback(
     (next: ListMove) => {
-      move(next);
+      // Before the move, which may draw at once.
       focus.after(next.id);
+      move(next);
       tell(moveNotice(sections, next));
     },
     [move, focus, tell, sections],
