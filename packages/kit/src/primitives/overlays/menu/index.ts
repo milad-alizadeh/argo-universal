@@ -5,6 +5,11 @@ export { ContextMenu } from './context-menu';
 export { contextMenuGroup } from './context-menu-group';
 
 export {
+  ContextMenuPeerContext,
+  type ContextMenuPeer,
+} from './context-menu-peer';
+
+export {
   type ContextMenuItem,
   type ContextMenuProps,
   type ContextMenuTriggerProps,

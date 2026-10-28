@@ -13,9 +13,12 @@ import {
   GestureDetector,
   useLongPressGesture,
 } from 'react-native-gesture-handler';
-import { RowMenuDragContext, type RowMenuDrag } from '#kit/row-menu-drag';
 import { Host } from '#primitives/native/host';
 import { contextMenuSections } from './context-menu-native-items';
+import {
+  ContextMenuPeerContext,
+  type ContextMenuPeer,
+} from './context-menu-peer';
 import type { ContextMenuProps } from './context-menu-props';
 import { MenuDropdownItems } from './menu-dropdown-items';
 import { dividedItems } from './menu-native-items';
@@ -31,36 +34,41 @@ const anchorFrame = [fillMaxSize()];
  */
 export function ContextMenu(props: ContextMenuProps): ReactElement {
   const menu = useOpenableMenu();
-  const drag = use(RowMenuDragContext);
+  const peer = use(ContextMenuPeerContext);
 
-  // On a movable row, the drag's lift closes the menu, so a long press then a move drags as on iOS's own lists.
-  useEffect(() => drag?.onLift(menu.close), [drag, menu.close]);
+  // On a movable row the peer is its drag: the lift closes the menu, so a long press then a move drags as on iOS.
+  useEffect(() => peer?.onTakeOver(menu.close), [peer, menu.close]);
 
   return (
     <View>
       <Host style={StyleSheet.absoluteFill}>
         <AnchoredDropdown {...props} menu={menu} />
       </Host>
-      <LongPressTrigger onActivate={menu.open} simultaneousWith={drag?.gesture}>
+      <LongPressTrigger onActivate={menu.open} simultaneousWith={peer?.gesture}>
         {props.children}
       </LongPressTrigger>
     </View>
   );
 }
 
-// Beside a row's drag, the long press runs with its Pan, so the Pan keeps the touch once the menu opens.
+// Beside a peer gesture, the long press runs with it, so the peer keeps the touch once the menu opens.
 interface TriggerProps {
   children: ReactElement;
   onActivate: () => void;
-  simultaneousWith: RowMenuDrag['gesture'] | undefined;
+  simultaneousWith: ContextMenuPeer['gesture'] | undefined;
 }
 
-function LongPressTrigger({ children, ...config }: TriggerProps): ReactElement {
-  const gesture = useLongPressGesture({ runOnJS: true, ...config });
+function LongPressTrigger(props: TriggerProps): ReactElement {
+  // One object literal: the Worklets Babel plugin cannot read a spread config.
+  const gesture = useLongPressGesture({
+    runOnJS: true,
+    onActivate: props.onActivate,
+    simultaneousWith: props.simultaneousWith,
+  });
 
   return (
     <GestureDetector gesture={gesture}>
-      <View collapsable={false}>{children}</View>
+      <View collapsable={false}>{props.children}</View>
     </GestureDetector>
   );
 }
