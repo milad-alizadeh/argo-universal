@@ -35,20 +35,21 @@ export function runCli(
     timeout: 20_000,
   };
 
-  return executeCli(args, options);
+  return executeCli(bin, args, options);
 }
 
-function executeCli(
+export function executeCli(
+  entry: string,
   args: string[],
   options: CliProcessOptions,
 ): Promise<CliResult> {
   return new Promise((resolve) => {
     execFile(
       process.execPath,
-      [bin, ...args],
+      [entry, ...args],
       options,
       (error, stdout, stderr) =>
-        resolve({ code: error?.code ?? 0, stdout, stderr }),
+        resolve({ code: error ? (error.code ?? 1) : 0, stdout, stderr }),
     );
   });
 }
