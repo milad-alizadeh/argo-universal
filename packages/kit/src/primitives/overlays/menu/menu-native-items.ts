@@ -1,4 +1,4 @@
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import {
   type MenuAction,
   type MenuChoiceGroup,
@@ -22,7 +22,7 @@ export interface NativeMenuItem {
   choose: () => void;
   // True on the first row of a later section: Android's flat list sets it apart with a divider.
   divided?: boolean;
-  icon?: IconName;
+  icon?: IconSymbol;
   tone?: 'danger';
   // A row that opens a nested menu: its own sections, and no `choose` of its own.
   submenu?: NativeMenuSection[];

@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import type { ActionShortcut } from '#primitives/content/kbd';
 import type { TextProps } from '#primitives/content/text';
 import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
 
@@ -24,7 +25,7 @@ export interface MenuSubmenu {
   label: string;
   // The row's spoken name when it says more than the label, such as the count.
   accessibilityLabel?: string;
-  icon?: IconName;
+  icon?: IconSymbol;
   // A count badge's text, shown after the label.
   count?: string;
   section?: { title?: string };

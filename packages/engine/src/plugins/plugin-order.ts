@@ -1,3 +1,4 @@
+import type { PluginList } from '@repo/contracts/plugins';
 import {
   startSortedPlugins,
   type LocatedPlugin,
@@ -5,14 +6,19 @@ import {
   type StartedPlugins,
 } from './located-plugins';
 
-const declaredOrder = ({ plugin }: LocatedPlugin): number =>
+type PluginDescriptor = PluginList['plugins'][number];
+
+const declaredOrder = (plugin: PluginDescriptor): number =>
   plugin.manifest.contributes.order ?? 0;
 
 // A Slot's contributors and a Replaceable Slot's `ui.render` chain: first-party Plugins first, then lower declared `order`, then by Plugin id (ADR-0035).
-const pluginOrder = (a: LocatedPlugin, b: LocatedPlugin): number =>
-  Number(b.plugin.firstParty) - Number(a.plugin.firstParty) ||
+export const slotOrder = (a: PluginDescriptor, b: PluginDescriptor): number =>
+  Number(b.firstParty) - Number(a.firstParty) ||
   declaredOrder(a) - declaredOrder(b) ||
-  a.plugin.manifest.id.localeCompare(b.plugin.manifest.id, 'en');
+  a.manifest.id.localeCompare(b.manifest.id, 'en');
+
+const pluginOrder = (a: LocatedPlugin, b: LocatedPlugin): number =>
+  slotOrder(a.plugin, b.plugin);
 
 export const startOrderedPlugins = (
   deps: PluginServiceDeps,

@@ -22,6 +22,17 @@
       "argo/project/details/v1",
       "argo/session/row/v1",
       "argo/session/activity/v1"
-    ]
+    ],
+    "declared": {
+      "argo/session/header/v1": [
+        {
+          "id": "open-counter",
+          "label": "Open Counter",
+          "icon": { "sf": "plus.circle", "material": "add_circle" },
+          "placement": "header",
+          "target": { "type": "page", "path": "/" }
+        }
+      ]
+    }
   }
 }

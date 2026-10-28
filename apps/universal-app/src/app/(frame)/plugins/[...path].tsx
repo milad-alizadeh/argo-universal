@@ -3,7 +3,10 @@ import type * as React from 'react';
 import { PluginRoot } from '@/navigation/plugin-route';
 
 export default function PluginRoute(): React.JSX.Element {
-  const { path = [] } = useLocalSearchParams<{ path?: string[] }>();
+  const { path = [], sessionId } = useLocalSearchParams<{
+    path?: string[];
+    sessionId?: string;
+  }>();
 
-  return <PluginRoot path={path} />;
+  return <PluginRoot path={path} sessionId={sessionId} />;
 }

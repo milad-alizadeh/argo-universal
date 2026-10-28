@@ -102,6 +102,12 @@ Feature: Plugin navigation
     Then the Plugin page heading reads "Add CSV export"
     And the Plugin list shows "Sync fails on large repos" in the sidebar
 
+  Scenario: A Plugin's Session header action opens its page
+    Given a Session named "Check the live list"
+    When I press "Open Counter" in the Session header
+    Then the Plugin page shows Counter
+    And the Plugin page opened for that Session
+
   Scenario: A Plugin ListDetail drills into the opened row on a phone Frame
     Given a phone Frame
     When I open the Issues Plugin

@@ -1,18 +1,29 @@
-import type { AddOnlySlotId } from '@repo/contracts/plugins/wire';
+import { DeclaredSlotId } from '@repo/contracts/plugins/declared-slots';
 import type { PluginEntry } from '../../use-plugins';
-import type { SlotDetail } from './slot-detail';
+import type { SlotDetail, SlotDetailId } from './slot-detail';
 import type { SlotPlugin } from './slot-detail-model';
 
-// A Plugin that is on and declares the Slot: the Server asks it for the Slot's content.
+type Contributes = PluginEntry['manifest']['contributes'];
+
+// A Plugin that is on and declares the Slot: the Server asks it for the Slot's content, or lists its manifest's items.
 const declares = (
   { enabled, manifest }: PluginEntry,
-  slotId: AddOnlySlotId | undefined,
-): boolean => enabled && lists(manifest.contributes.slots, slotId);
+  slotId: SlotDetailId | undefined,
+): boolean =>
+  enabled && slotId !== undefined && lists(manifest.contributes, slotId);
 
-const lists = (
-  slots: readonly string[] | undefined,
-  slotId: AddOnlySlotId | undefined,
-): boolean => slotId !== undefined && (slots ?? []).includes(slotId);
+const isDeclared = (slotId: SlotDetailId): slotId is DeclaredSlotId =>
+  DeclaredSlotId.safeParse(slotId).success;
+
+const declaredItems = (
+  declared: Contributes['declared'],
+  slotId: DeclaredSlotId,
+): readonly unknown[] => declared?.[slotId] ?? [];
+
+const lists = (contributes: Contributes, slotId: SlotDetailId): boolean =>
+  isDeclared(slotId)
+    ? declaredItems(contributes.declared, slotId).length > 0
+    : (contributes.slots ?? []).includes(slotId);
 
 // The Plugins that fill the Slot or ask for its owner Slot, each with its switch from what this Device shows.
 export function toSlotPlugins(

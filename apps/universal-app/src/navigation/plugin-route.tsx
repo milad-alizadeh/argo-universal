@@ -37,18 +37,23 @@ export function PluginLayout(): React.JSX.Element {
 
 interface PluginRootProps {
   path: readonly string[];
+  // The Session the page opened for, from the route's params.
+  sessionId: string | undefined;
 }
 
 /*
  * A Plugin page with, at a narrow root, ☰ in its Screen's header, as a section root has. A ListDetail page puts its
  * list in the Frame's sidebar on a wide window.
  */
-export function PluginRoot({ path }: PluginRootProps): React.JSX.Element {
+export function PluginRoot({
+  path,
+  sessionId,
+}: PluginRootProps): React.JSX.Element {
   return (
     <NarrowRoot root={useNarrowRoot(path)}>
       <SectionListDetail>
         <PluginRowDetails>
-          <PluginDetailScreen path={path} />
+          <PluginDetailScreen path={path} sessionId={sessionId} />
         </PluginRowDetails>
       </SectionListDetail>
     </NarrowRoot>

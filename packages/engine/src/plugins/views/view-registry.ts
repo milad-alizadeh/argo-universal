@@ -13,7 +13,10 @@ import {
 } from './open-view';
 import { openingKey } from './opening-key';
 
-type ViewIdentity = Pick<PluginViewInput, 'pluginId' | 'path' | 'projectId'>;
+type ViewIdentity = Pick<
+  PluginViewInput,
+  'pluginId' | 'path' | 'projectId' | 'sessionId'
+>;
 
 type ViewTarget = Pick<PluginDispatchInput, 'pluginId' | 'path' | 'viewId'>;
 
@@ -79,6 +82,7 @@ export class ViewRegistry {
         pluginId,
         path: opening.path,
         projectId: projectOfOpening(opening),
+        sessionId: opening.sessionId,
       }) ?? this.open(pluginId, opening, connectionId);
 
     view.watchers += 1;
@@ -132,7 +136,8 @@ function samePage(
 ): boolean {
   return (
     matches(view, connectionId, identity) &&
-    view.projectId === identity.projectId
+    view.projectId === identity.projectId &&
+    view.opening.sessionId === identity.sessionId
   );
 }
 

@@ -2,6 +2,7 @@ import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   ViewMessage,
   PluginDispatchInput,
+  PluginViewInput,
 } from '@repo/contracts/plugins/wire';
 import {
   createTRPCClient,
@@ -22,7 +23,7 @@ const currentSurface = currentPluginSurface('web');
 
 export function connectPluginApp(
   url: string,
-  page: { pluginId: string; path: string },
+  page: PluginViewInput,
 ): PluginApp {
   const socket = createWSClient({
     url: url.replace('http:', 'ws:'),

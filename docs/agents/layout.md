@@ -21,7 +21,7 @@ Size classes are `compact` (below `--breakpoint-medium`, 600, and every phone), 
 
 The desktop frame reserves a 44px band (`--spacing-frame-control`). The band has no fill, border, or hairline. Panes start directly below it.
 
-The leading group holds the platform controls and sidebar toggle. The trailing group always holds More, Workbench, Inspector expand, and Inspector toggle, in that order. Each trailing control keeps its position as panes change.
+The leading group holds the platform controls and sidebar toggle. The trailing group always holds More, Workbench, Inspector expand, and Inspector toggle, in that order. Each trailing control keeps its position as panes change. A Plugin's first Session header action sits just before More; phones keep every Plugin action inside More.
 
 The title uses the content column's leading edge and stops before the trailing controls. Its spacer is `max(0, platformConstant - (frameInset + navigationWidth))`. The platform constant is 124 on macOS and 44 elsewhere.
 
