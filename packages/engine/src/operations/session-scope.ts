@@ -11,6 +11,7 @@ import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
 import { resolveReadTarget, type ResolvedReadOperation } from './read-target';
 import { runOperation } from './router.gen';
+import type { SessionStarts } from './session-starts';
 import type { SessionCaller } from './session-tokens';
 import { runSessionWrite } from './session-write';
 
@@ -19,8 +20,9 @@ const needsTurn = 'A Permission request requires an active Turn';
 type SessionAccess = {
   implementations: OperationImplementations;
   caller: SessionCaller;
-  deps: Pick<OperationsDeps, 'readSession'>;
+  deps: OperationsDeps;
   call: SessionOperationCall;
+  starts: SessionStarts;
 };
 
 export function scopedOperations(
@@ -39,13 +41,18 @@ export function scopedOperations(
 }
 
 export async function runSessionOperation(
-  { implementations, caller, deps, call }: SessionAccess,
+  { implementations, caller, deps, call, starts }: SessionAccess,
   operation: { id: OperationId; params: Json },
 ): Promise<OperationResult> {
   const read = resolveReadTarget(deps, caller, operation);
 
   if (!read)
-    return runSessionWrite(deps, implementations, { caller, operation, call });
+    return runSessionWrite(deps, implementations, {
+      caller,
+      operation,
+      call,
+      starts,
+    });
 
   await confirmReadScope({ caller, call }, read);
 

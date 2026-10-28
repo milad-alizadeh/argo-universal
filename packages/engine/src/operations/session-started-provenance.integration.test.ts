@@ -35,6 +35,11 @@ it('keeps an Operation-started Session writable and lists its distinct provenanc
   expect(
     await host.caller.session.listAgents({ sessionId: 'session-1' }),
   ).toMatchObject([
-    { sessionId: 'started', parentSessionId: 'session-1', state: 'idle' },
+    {
+      sessionId: 'started',
+      parentSessionId: 'session-1',
+      state: 'idle',
+      readOnly: false,
+    },
   ]);
 });

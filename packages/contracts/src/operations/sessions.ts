@@ -26,7 +26,8 @@ export const sessionOperations = {
   'session.new': {
     id: 'session.new',
     label: 'Start Session',
-    description: 'Start a Session with an Agent, Checkout and optional first prompt.',
+    description:
+      'Start a Session with an Agent, Checkout and optional first prompt.',
     params: SessionNewInput,
     result: SessionNewOutput,
     tier: 'act',

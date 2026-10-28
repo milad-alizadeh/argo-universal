@@ -74,11 +74,12 @@ function childIdentity(
   parentSessionId: string,
 ): Pick<
   Subagent,
-  'sessionId' | 'parentSessionId' | 'toolCallId' | 'title' | 'role'
+  'sessionId' | 'parentSessionId' | 'readOnly' | 'toolCallId' | 'title' | 'role'
 > {
   return {
     sessionId: child.id,
     parentSessionId,
+    readOnly: child.parentSessionId !== null,
     toolCallId: null,
     title: child.title,
     role: null,

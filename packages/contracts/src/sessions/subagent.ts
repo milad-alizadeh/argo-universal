@@ -7,6 +7,7 @@ import { TurnUsage } from './turn';
 export const Subagent = z.strictObject({
   sessionId: sessionColumns.shape.id,
   parentSessionId: sessionColumns.shape.parentSessionId.unwrap(),
+  readOnly: z.boolean().default(true),
   toolCallId: z.string().nullable(),
   title: sessionColumns.shape.title,
   role: z.string().nullable(),

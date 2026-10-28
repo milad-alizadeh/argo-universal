@@ -23,5 +23,7 @@ it('keeps an Operation-started Session visible when its parent is archived or fi
   expect(active.sessions).toMatchObject([
     { sessionId: 'started', startedBySessionId: 'session-1', archivedAt: null },
   ]);
-  expect(await host.caller.session.list({ query: 'Independent' })).toEqual(active);
+  expect(await host.caller.session.list({ query: 'Independent' })).toEqual(
+    active,
+  );
 });

@@ -1,6 +1,7 @@
 import { expect } from '../fixtures';
-import { Given, Then } from './fixtures';
+import { Given, Then, When } from './fixtures';
 import { sessionRow } from './live-session';
+import { sendPrompt } from './new-session';
 
 const parentTitle = 'Delegate the investigation';
 
@@ -8,6 +9,35 @@ const childTitle = 'Review delegated work';
 
 Given('Agent 1 delegates work through the argo CLI', () => {
   // scenarioAgents supplies the external fixture Agent before the App starts.
+});
+
+When('I return from the Session detail', async ({ page }) => {
+  await page.getByRole('link', { name: 'Sessions, back' }).click();
+});
+
+When(
+  "I open the delegated Agent from its caller's Agents card",
+  async ({ page }) => {
+    await sessionRow(page, parentTitle).click();
+    await page.getByRole('button', { name: 'Agents: 1', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: 'Agents', exact: true })
+      .getByText(childTitle, { exact: true })
+      .click();
+  },
+);
+
+Then('the delegated Session accepts a new prompt', async ({ page }) => {
+  await expect(
+    page.getByRole('heading', { name: childTitle, exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('textbox', { name: 'Message', exact: true }),
+  ).toBeEditable();
+  await sendPrompt(page, 'Continue the delegated review');
+  await expect(
+    page.getByText('Continue the delegated review', { exact: true }),
+  ).toBeVisible();
 });
 
 Then(

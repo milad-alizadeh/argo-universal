@@ -1,5 +1,5 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import {
   meta as sessionsMeta,
   type Story,
@@ -23,15 +23,17 @@ export const FoldDelegatedWork: Story = {
       name: 'Investigate the regression',
     });
 
-    await expect(await canvas.findByText(childTitle)).toBeVisible();
-    await expect(canvas.getByText('Check the edge cases')).toBeVisible();
+    await waitFor(() => expect(canvas.getByText(childTitle)).toBeVisible());
+    await waitFor(() =>
+      expect(canvas.getByText('Check the edge cases')).toBeVisible(),
+    );
     await userEvent.click(fold);
     await expect(canvas.queryByText(childTitle)).not.toBeInTheDocument();
     await expect(
       canvas.queryByText('Check the edge cases'),
     ).not.toBeInTheDocument();
     await userEvent.click(fold);
-    await expect(await canvas.findByText(childTitle)).toBeVisible();
+    await waitFor(() => expect(canvas.getByText(childTitle)).toBeVisible());
   },
 };
 
@@ -52,7 +54,7 @@ export const PhoneDelegatedWork: Story = {
 export const FilteredParent: Story = {
   args: orphanSessions,
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText(childTitle)).toBeVisible();
+    await waitFor(() => expect(canvas.getByText(childTitle)).toBeVisible());
     await expect(
       canvas.queryByText('Investigate the regression'),
     ).not.toBeInTheDocument();
