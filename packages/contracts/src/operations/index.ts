@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { ProjectInfo } from '../projects/list';
 import { agentAccessOperations } from './agent-access';
 import type { OperationTier } from './metadata';
 import { pluginOperations } from './plugins';
+import { projectOperations } from './projects';
 import { readerOperations } from './readers';
 import { registryOperations } from './registry';
 import { operationJsonSchema } from './schema-json';
@@ -20,6 +20,8 @@ export { readerOperations } from './readers';
 
 export { sessionOperations } from './sessions';
 
+export { projectOperations } from './projects';
+
 export interface OperationDefinition {
   id: string;
   label: string;
@@ -36,15 +38,7 @@ export const operations = {
   ...sessionOperations,
   ...pluginOperations,
   ...registryOperations,
-  'project.list': {
-    id: 'project.list',
-    label: 'List Projects',
-    description: 'List registered Projects and their available Checkouts.',
-    params: z.strictObject({}).default({}),
-    result: z.array(ProjectInfo.extend({ inScope: z.boolean().optional() })),
-    tier: 'read',
-    keywords: ['repositories', 'folders', 'workspaces'],
-  },
+  ...projectOperations,
 } as const satisfies Record<string, OperationDefinition>;
 
 export const OperationId = z.enum(

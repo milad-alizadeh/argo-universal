@@ -64,10 +64,6 @@ export async function runOperation(
       return implementations['session.listBranches'](
         operationParams(operations['session.listBranches'].params, params),
       );
-    case 'project.listBranches':
-      return implementations['project.listBranches'](
-        operationParams(operations['project.listBranches'].params, params),
-      );
     case 'session.new':
       return implementations['session.new'](
         operationParams(operations['session.new'].params, params),
@@ -155,6 +151,10 @@ export async function runOperation(
     case 'project.list':
       return implementations['project.list'](
         operationParams(operations['project.list'].params, params),
+      );
+    case 'project.listBranches':
+      return implementations['project.listBranches'](
+        operationParams(operations['project.listBranches'].params, params),
       );
     default:
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Unknown Operation' });
@@ -263,16 +263,6 @@ export function generatedOperations(engine: Operations) {
         .output(operations['session.rename'].result)
         .mutation(({ input }) => engine.runApp('session.rename')(input)),
     }),
-    project: router({
-      listBranches: publicProcedure
-        .input(operations['project.listBranches'].params)
-        .output(operations['project.listBranches'].result)
-        .query(({ input }) => engine.runApp('project.listBranches')(input)),
-      list: publicProcedure
-        .input(operations['project.list'].params)
-        .output(operations['project.list'].result)
-        .query(({ input }) => engine.runApp('project.list')(input)),
-    }),
     shell: router({
       stop: publicProcedure
         .input(operations['shell.stop'].params)
@@ -314,6 +304,16 @@ export function generatedOperations(engine: Operations) {
         .input(operations['registry.sync'].params)
         .output(operations['registry.sync'].result)
         .mutation(({ input }) => engine.runApp('registry.sync')(input)),
+    }),
+    project: router({
+      list: publicProcedure
+        .input(operations['project.list'].params)
+        .output(operations['project.list'].result)
+        .query(({ input }) => engine.runApp('project.list')(input)),
+      listBranches: publicProcedure
+        .input(operations['project.listBranches'].params)
+        .output(operations['project.listBranches'].result)
+        .query(({ input }) => engine.runApp('project.listBranches')(input)),
     }),
   };
 }

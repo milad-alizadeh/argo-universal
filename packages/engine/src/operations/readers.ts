@@ -1,6 +1,5 @@
 import type { readerOperations } from '@repo/contracts/operations';
 import { createAgentMessageReader } from '../feed';
-import { listProjectBranches } from '../projects';
 import {
   createSessionAgentReader,
   createSessionSnapshotReader,
@@ -59,7 +58,5 @@ function discoveryReads(deps: SessionRouterDeps): DiscoveryReads {
     'session.listShells': async (input) =>
       listSessionShells(deps, input.sessionId),
     'session.listBranches': (input) => listSessionBranches(deps, input),
-    'project.listBranches': (input) =>
-      listProjectBranches(deps.database, input),
   };
 }
