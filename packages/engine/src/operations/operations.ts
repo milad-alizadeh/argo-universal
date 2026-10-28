@@ -24,9 +24,11 @@ import {
   type OperationImplementations,
   type OperationResult,
 } from './implementations';
+import type { OperationInput } from './params';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
 import { scopedOperations, runSessionOperation } from './session-scope';
+import { SessionStarts } from './session-starts';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
 import { tokensMatch } from './tokens';
 import type { OperationWaitClock } from './wait-clock';
@@ -55,12 +57,14 @@ type OperationCallInput = { name: OperationId; label: string; input: Json };
 export class Operations {
   private readonly implementations: OperationImplementations;
   private readonly work: OperationWork;
+  private readonly starts: SessionStarts;
   public constructor(
     private readonly deps: OperationsDeps,
     sessionList: SessionList,
   ) {
     this.implementations = createImplementations(deps, sessionList);
     this.work = new OperationWork(deps, (token) => this.caller(token));
+    this.starts = new SessionStarts(deps);
   }
   public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
     const caller = this.caller(token);
@@ -114,6 +118,7 @@ export class Operations {
       implementations: this.implementations,
       caller,
       deps: this.deps,
+      starts: this.starts,
       call: requireOperationCall(call),
     };
 
@@ -138,7 +143,7 @@ export class Operations {
   }
   public runApp<Id extends OperationId>(
     id: Id,
-    params: Json | undefined,
+    params: OperationInput,
   ): Promise<OperationResult<Id>> {
     return runOperation(this.implementations, id, params);
   }

@@ -6,7 +6,7 @@ import { waitForAcpSnapshot } from './acp-feed';
 import type { PermissionJourney } from './native-permission';
 
 export async function askOperation(
-  { host, session }: PermissionJourney,
+  { host, session }: Pick<PermissionJourney, 'host' | 'session'>,
   operation: { id: OperationId; params: Json },
 ): Promise<AskedOperation> {
   const outcome = Promise.allSettled([

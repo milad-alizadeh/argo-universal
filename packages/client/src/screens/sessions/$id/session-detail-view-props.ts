@@ -8,6 +8,7 @@ import {
   type SessionPanels,
 } from '#features/sessions';
 import type { SessionCallouts } from '#features/sessions';
+import { sessionHref } from '#lib/product/navigation/navigation';
 import {
   type OpenSession,
   sessionComposerProps,
@@ -97,9 +98,7 @@ const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   header: sessionHeaderProps(open),
   feed: sessionFeedProps(open),
   composer: sessionComposerProps(open),
-  subagents: {
-    subagents: open.snapshot.subagents,
-  },
+  subagents: sessionAgents(open),
   shells: open.shells,
   inspectorPanels: open.inspectorPanels,
   onDropFiles: (dropped) => void open.commands.attachDroppedFiles(dropped),
@@ -118,4 +117,15 @@ export function toSessionViewProps(
       ? { state: 'open', ...openSessionProps({ ...sources, ...opened }) }
       : { state: 'opening' })
   );
+}
+
+function sessionAgents(
+  open: OpenSessionSources,
+): NonNullable<OpenSessionViewProps['subagents']> {
+  return {
+    subagents: open.snapshot.subagents,
+    onSelect: (one) => {
+      if (!one.readOnly) open.navigate(sessionHref(one.sessionId));
+    },
+  };
 }

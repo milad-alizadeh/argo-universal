@@ -101,7 +101,10 @@ function useSubagentWork(
   props: WorkProps,
   panels: SessionPanels,
 ): SubagentParts {
-  const selection = useSubagentSelection(props);
+  const selection = useSubagentSelection(props, () =>
+    panels.close('subagents'),
+  );
+
   const plain = workHome(props.composer, panels, 'subagents');
   const home = closingFeed(plain, selection.close);
   const sheet = useWorkSheet(subagentsPanel, listWithFeed(selection), home);

@@ -9,8 +9,6 @@ import {
   SessionListUpdate,
   SessionMarkSeenInput,
   SessionMarkSeenOutput,
-  SessionNewInput,
-  SessionNewOutput,
   SessionOpenInput,
   SessionOpenOutput,
   SessionPromptInput,
@@ -30,7 +28,6 @@ import {
   answerSessionElicitation,
   answerSessionPermission,
 } from './session-answers';
-import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
 import { markSessionSeen } from './session-seen';
@@ -70,10 +67,6 @@ const createSeenRouter = routerFactory((deps: SessionRouterDeps) =>
 
 const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
   router({
-    new: publicProcedure
-      .input(SessionNewInput)
-      .output(SessionNewOutput)
-      .mutation(({ input }) => createSession(deps, input)),
     prompt: publicProcedure
       .input(SessionPromptInput)
       .output(SessionPromptOutput)

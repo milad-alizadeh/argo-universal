@@ -5,7 +5,10 @@ import type {
   Turn,
 } from '@repo/contracts';
 
-type ChildSession = Pick<SessionRecord, 'id' | 'parentSessionId' | 'title'>;
+type ChildSession = Pick<
+  SessionRecord,
+  'id' | 'parentSessionId' | 'startedBySessionId' | 'title'
+>;
 
 // A child Session with its latest Turn; a Session without a parent is no Subagent.
 export function toSubagent(
@@ -13,11 +16,13 @@ export function toSubagent(
   latest: Turn | undefined,
   updates: readonly SubagentUpdate[],
 ): Subagent[] {
-  if (child.parentSessionId === null) return [];
+  const parentId = child.parentSessionId ?? child.startedBySessionId;
+
+  if (parentId === null) return [];
 
   return [
     {
-      ...childIdentity(child, child.parentSessionId),
+      ...childIdentity(child, parentId),
       ...turnDetails(latest),
       state: subagentState(latest, updateState(child.id, updates)),
     },
@@ -64,16 +69,19 @@ function knownTurnDetails(latest: Turn): ReturnType<typeof turnDetails> {
   };
 }
 
+type ChildIdentity = Pick<
+  Subagent,
+  'sessionId' | 'parentSessionId' | 'readOnly' | 'toolCallId' | 'title' | 'role'
+>;
+
 function childIdentity(
   child: ChildSession,
   parentSessionId: string,
-): Pick<
-  Subagent,
-  'sessionId' | 'parentSessionId' | 'toolCallId' | 'title' | 'role'
-> {
+): ChildIdentity {
   return {
     sessionId: child.id,
     parentSessionId,
+    readOnly: child.parentSessionId !== null,
     toolCallId: null,
     title: child.title,
     role: null,

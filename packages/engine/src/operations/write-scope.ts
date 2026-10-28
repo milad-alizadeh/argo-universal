@@ -11,10 +11,16 @@ type ActOperationId = {
     : never;
 }[OperationId];
 
-type ActTarget = { sessionId: string; projectId: string };
+type SessionActOperationId = Exclude<ActOperationId, 'session.new'>;
 
-export function isActOperation(id: OperationId): id is ActOperationId {
-  return operations[id].tier === 'act';
+type ActTarget = {
+  sessionId: string;
+  projectId: string;
+  startedBySessionId: string | null;
+};
+
+export function isActOperation(id: OperationId): id is SessionActOperationId {
+  return operations[id].tier === 'act' && id !== 'session.new';
 }
 
 const sessionParams = {
@@ -24,27 +30,39 @@ const sessionParams = {
   'session.setConfigOption': operations['session.setConfigOption'].params,
   'session.savePlan': operations['session.savePlan'].params,
   'shell.stop': operations['shell.stop'].params,
-} satisfies Record<ActOperationId, z.ZodType<{ sessionId: string }>>;
+} satisfies Record<SessionActOperationId, z.ZodType<{ sessionId: string }>>;
 
 export function actTarget(
   deps: Pick<OperationsDeps, 'readSession'>,
-  operation: { id: ActOperationId; params: Json },
+  operation: { id: SessionActOperationId; params: Json },
 ): ActTarget {
   const { sessionId } = operationParams(
     sessionParams[operation.id],
     operation.params,
   );
 
-  return { sessionId, projectId: deps.readSession(sessionId).projectId };
+  const target = deps.readSession(sessionId);
+
+  return {
+    sessionId,
+    projectId: target.projectId,
+    startedBySessionId: target.startedBySessionId,
+  };
 }
 
-// Operation-started Sessions extend this scope when delegation provenance is added.
+// Only Operation provenance grants act scope; ACP's read-only parent relationship grants none.
 export function ownsActTarget(
   caller: SessionCaller,
   target: ActTarget,
 ): boolean {
   return (
-    caller.sessionId === target.sessionId &&
+    ownsSession(caller.sessionId, target) &&
     caller.projectId === target.projectId
+  );
+}
+
+function ownsSession(callerId: string, target: ActTarget): boolean {
+  return (
+    callerId === target.sessionId || callerId === target.startedBySessionId
   );
 }

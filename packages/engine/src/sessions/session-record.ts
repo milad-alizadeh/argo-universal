@@ -46,6 +46,7 @@ const sessionSnapshotFields = SessionInfo.pick({
   titleSource: true,
   agent: true,
   parentSessionId: true,
+  startedBySessionId: true,
 }).extend(
   SessionSnapshot.pick({
     epoch: true,
@@ -78,6 +79,7 @@ type SessionFieldsRow = Pick<
   | 'titleSource'
   | 'agent'
   | 'parentSessionId'
+  | 'startedBySessionId'
   | 'epoch'
   | 'maxRevision'
   | 'checkoutPath'
@@ -96,6 +98,7 @@ export function createSessionReader(
         titleSource: session.titleSource,
         agent: session.agent,
         parentSessionId: session.parentSessionId,
+        startedBySessionId: session.startedBySessionId,
         epoch: session.epoch,
         maxRevision: session.maxRevision,
         id: session.id,
@@ -177,6 +180,7 @@ function createFieldsReader(
       titleSource: stored.titleSource,
       agent: stored.agent,
       parentSessionId: stored.parentSessionId,
+      startedBySessionId: stored.startedBySessionId,
       epoch: stored.epoch,
       maxRevision: stored.maxRevision,
       checkout: toSessionCheckout(stored),
