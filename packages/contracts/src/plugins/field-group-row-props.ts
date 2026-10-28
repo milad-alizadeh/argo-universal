@@ -11,7 +11,7 @@ export const fieldGroupFieldProps = z.object({
     .string()
     .optional()
     .describe(
-      'The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it.',
+      'The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it.',
     ),
   title: z.string().describe('The row’s label.'),
   disabled: z.boolean().optional().describe('Whether the row is disabled.'),

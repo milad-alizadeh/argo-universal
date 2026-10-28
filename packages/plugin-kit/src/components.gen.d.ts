@@ -284,7 +284,7 @@ type FieldGroupSectionHints = {
 };
 
 type FieldGroupValueHints = {
-  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
   id: unknown;
   /** The row’s label. */
   title: unknown;
@@ -299,7 +299,7 @@ type FieldGroupValueHints = {
 };
 
 type FieldGroupLinkHints = {
-  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
   id: unknown;
   /** The row’s label. */
   title: unknown;
@@ -314,7 +314,7 @@ type FieldGroupLinkHints = {
 };
 
 type FieldGroupToggleHints = {
-  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
   id: unknown;
   /** The row’s label. */
   title: unknown;
@@ -327,7 +327,7 @@ type FieldGroupToggleHints = {
 };
 
 type FieldGroupPickerHints = {
-  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
   id: unknown;
   /** The row’s label. */
   title: unknown;
@@ -360,7 +360,7 @@ type FieldGroupPickerHints = {
 };
 
 type FieldGroupDatePickerHints = {
-  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
   id: unknown;
   /** The row’s label. */
   title: unknown;
@@ -377,7 +377,7 @@ type FieldGroupDatePickerHints = {
 };
 
 type FieldGroupSliderHints = {
-  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
   id: unknown;
   /** The row’s label. */
   title: unknown;
@@ -398,7 +398,7 @@ type FieldGroupSliderHints = {
 };
 
 type FieldGroupTextFieldHints = {
-  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
   id: unknown;
   /** The row’s label. */
   title: unknown;
@@ -433,7 +433,7 @@ type FieldGroupTextFieldHints = {
 };
 
 type FieldGroupSecretFieldHints = {
-  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
   id: unknown;
   /** The row’s label. */
   title: unknown;

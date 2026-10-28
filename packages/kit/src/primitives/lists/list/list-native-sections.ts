@@ -18,7 +18,7 @@ import { refilledSections } from './list-native-refill';
  */
 export type NativeRow = {
   key: string;
-  // The row's own `id`.
+  // The row's own `id`: the key it keeps wherever it moves (list-native-keys), and the id a move reports.
   id?: RowId;
   moveId?: RowId;
   render: () => ReactElement;
