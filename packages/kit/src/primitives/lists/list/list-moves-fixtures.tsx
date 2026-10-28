@@ -39,6 +39,8 @@ export type MovesProps = Pick<
   | 'footer'
   | 'pagination'
   | 'ref'
+  | 'testID'
+  | 'onScroll'
 >;
 
 export const board = {
