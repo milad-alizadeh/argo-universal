@@ -10,14 +10,6 @@ export interface HeldMove {
   base: readonly MoveSection[];
 }
 
-export const held = (
-  move: ListMove,
-  base: readonly MoveSection[],
-): HeldMove => ({
-  move,
-  base,
-});
-
 const sameRows = (a: readonly string[], b: readonly string[]): boolean =>
   a.length === b.length && a.every((id, index) => id === b[index]);
 

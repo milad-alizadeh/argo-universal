@@ -54,7 +54,11 @@ export class RowPress {
   }
 
   public move(at: Point, now: number): PressStep {
-    if (this.lifted) return this.follow(at);
+    if (this.lifted) {
+      this.target.drag.follow(at);
+
+      return 'follow';
+    }
 
     return this.state === 'ended' ? 'wait' : this.decide(at, now);
   }
@@ -70,17 +74,10 @@ export class RowPress {
     return lifted;
   }
 
-  // Puts a lifted row back.
   public cancel(): void {
     if (this.lifted) this.target.drag.cancel();
 
     this.state = 'ended';
-  }
-
-  private follow(at: Point): PressStep {
-    this.target.drag.follow(at);
-
-    return 'follow';
   }
 
   private decide(at: Point, now: number): PressStep {

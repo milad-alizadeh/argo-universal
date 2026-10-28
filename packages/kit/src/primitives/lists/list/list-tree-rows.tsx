@@ -142,12 +142,7 @@ function treeContent(
 function nextLevel(parent: TreeRow, key: string): Level {
   const { depth, through } = childTree(parent, false);
 
-  return {
-    prefix: key,
-    depth,
-    through,
-    passes: () => false,
-  };
+  return { prefix: key, depth, through, passes: () => false };
 }
 
 export const topLevel = (

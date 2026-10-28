@@ -1,7 +1,11 @@
-import type { MeasuredRow, Point, Rect } from './list-geometry';
-import { bottom, middle } from './list-geometry';
-import type { DropPlace, MoveSection } from './list-move-model';
-import { placedRows, rowsIn, type PlacedRow } from './list-placed-rows';
+import {
+  bottom,
+  middle,
+  type MeasuredRow,
+  type Point,
+  type Rect,
+} from './list-geometry';
+import { placeOf, type DropPlace, type MoveSection } from './list-move-model';
 
 // Where a Section starts: a lane's column on a board, or a Section's header in one column. `start` is where its first row goes.
 export interface MeasuredZone {
@@ -34,6 +38,64 @@ export interface AimInput extends MoveLayout {
   point: Point;
 }
 
+interface PlacedRow {
+  sectionKey: string;
+  index: number;
+  rect: Rect;
+}
+
+// The measured rows each in its place, and each Section's in order: read once per measurement, not per pointer move.
+interface Placed {
+  sections: readonly MoveSection[];
+  rows: PlacedRow[];
+  bySection: Map<string, PlacedRow[]>;
+}
+
+const placedBy = new WeakMap<readonly MeasuredRow[], Placed>();
+
+function bySectionOf(rows: readonly PlacedRow[]): Map<string, PlacedRow[]> {
+  const bySection = new Map<string, PlacedRow[]>();
+
+  for (const row of rows)
+    bySection.set(row.sectionKey, [
+      ...(bySection.get(row.sectionKey) ?? []),
+      row,
+    ]);
+
+  return bySection;
+}
+
+function placeRows(
+  measured: readonly MeasuredRow[],
+  sections: readonly MoveSection[],
+): Placed {
+  const rows = measured.flatMap(({ id, rect }) => {
+    const place = placeOf(sections, id);
+
+    return place ? [{ ...place, rect }] : [];
+  });
+
+  rows.sort((a, b) => a.index - b.index);
+
+  const placed = { sections, rows, bySection: bySectionOf(rows) };
+
+  placedBy.set(measured, placed);
+
+  return placed;
+}
+
+function placedRows(
+  measured: readonly MeasuredRow[],
+  sections: readonly MoveSection[],
+): Placed {
+  const placed = placedBy.get(measured);
+
+  return placed?.sections === sections ? placed : placeRows(measured, sections);
+}
+
+const rowsIn = (placed: Placed, sectionKey: string): PlacedRow[] =>
+  placed.bySection.get(sectionKey) ?? [];
+
 const horizontalDistance = (rect: Rect, x: number): number =>
   Math.max(rect.x - x, 0, x - (rect.x + rect.width));
 
@@ -42,11 +104,9 @@ function laneAt(
   zones: readonly MeasuredZone[],
   { x }: Point,
 ): string | undefined {
-  const nearest = [...zones].sort(
+  return [...zones].sort(
     (a, b) => horizontalDistance(a.rect, x) - horizontalDistance(b.rect, x),
-  )[0];
-
-  return nearest?.sectionKey;
+  )[0]?.sectionKey;
 }
 
 // In one column, the Section of the last header or row that starts above the pointer, else the first.
@@ -83,19 +143,15 @@ const bottomAfter = (previous: PlacedRow, next?: PlacedRow): number =>
 const lineBetween = ({ previous, next }: Neighbours): number | undefined =>
   previous ? bottomAfter(previous, next) : next?.rect.y;
 
-const rectOf = (drawn?: { rect: Rect }): Rect | undefined => drawn?.rect;
-
-const startOf = (zone?: MeasuredZone): number | undefined => zone?.start;
-
-const nearest = ({ previous, next }: Neighbours): PlacedRow | undefined =>
-  next ?? previous;
+const nearestRect = ({ previous, next }: Neighbours): Rect | undefined =>
+  (next ?? previous)?.rect;
 
 // An empty Section draws its line where its first row would go, across the Section.
 const lineY = (near: Neighbours, zone?: MeasuredZone): number | undefined =>
-  lineBetween(near) ?? startOf(zone);
+  lineBetween(near) ?? zone?.start;
 
 const lineAcross = (near: Neighbours, zone?: MeasuredZone): Rect | undefined =>
-  rectOf(nearest(near)) ?? rectOf(zone);
+  nearestRect(near) ?? zone?.rect;
 
 function lineIn(
   near: Neighbours,

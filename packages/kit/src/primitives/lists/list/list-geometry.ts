@@ -32,7 +32,6 @@ export const inside = (rect: Rect, { x, y }: Point): boolean =>
 
 type Measured = [x: number, y: number, width: number, height: number];
 
-// The drag hit-tests and draws in window coordinates.
 export async function measureView(
   view: RefObject<Pick<ViewInstance, 'measureInWindow'> | null>,
 ): Promise<Rect | undefined> {

@@ -19,12 +19,14 @@ import { ListDrag } from './list-drag-controller';
 import { ListDragLayer, useDragValue } from './list-drag-layer';
 import { dragLook } from './list-drag-look';
 import type { MoveLayout } from './list-drop-aim';
-import type { Point } from './list-geometry';
-import { measureView } from './list-geometry';
+import { measureView, type Point } from './list-geometry';
 import { MoveAnnouncer } from './list-move-announcer';
 import { ListMoveContext, type ListMoves } from './list-move-context';
-import { useMoveFeedback, type MoveFeedback } from './list-move-feedback';
-import type { MoveNotice } from './list-move-feedback';
+import {
+  useMoveFeedback,
+  type MoveFeedback,
+  type MoveNotice,
+} from './list-move-feedback';
 import type { MoveSection } from './list-move-model';
 import { MoveOrder } from './list-move-order';
 
@@ -53,14 +55,9 @@ function useListDrag(
   return drag;
 }
 
-interface Configured {
-  order: MoveOrder;
-  lanes: boolean;
-}
-
 function useConfiguredMoves(
   drag: ListDrag,
-  { order, lanes }: Configured,
+  { order, lanes }: Pick<ListMoves, 'order' | 'lanes'>,
   { move, focus }: MoveFeedback,
 ): ListMoves {
   useEffect(

@@ -14,8 +14,6 @@ import type { ListSectionProps } from './list-props';
 import { prepareSection, type SectionState } from './list-section-state';
 import { holdsTree, type TreeFolding } from './list-tree-rows';
 
-export type { ListTree };
-
 export type ListBlock = ItemBlock | SectionBlock;
 
 interface ItemBlock {

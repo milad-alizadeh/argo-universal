@@ -18,5 +18,4 @@ export interface ListMoves {
 
 export const ListMoveContext = createContext<ListMoves | null>(null);
 
-// The moves of the List around a row, when it has `onMove`.
 export const useListMoves = (): ListMoves | null => useContext(ListMoveContext);

@@ -4,19 +4,19 @@ import {
   dragFrame,
   ghostPoint,
   grabOf,
+  landedMove,
   sameFrame,
   type DragFrame,
+  type DragSetup,
   type LiftedRow,
 } from './list-drag-frame';
-import type { Measure, Measured, MeasuredScroller } from './list-drag-measure';
-import { DragRegistry } from './list-drag-registry';
-import { FrameLoop, scrollEdges, type Schedule } from './list-drag-scroll';
 import {
-  frameSetup,
-  idleSetup,
-  landedMove,
-  type DragSetup,
-} from './list-drag-setup';
+  DragRegistry,
+  type Measure,
+  type Measured,
+  type MeasuredScroller,
+} from './list-drag-measure';
+import { FrameLoop, scrollEdges, type Schedule } from './list-drag-rules';
 import type { Point, Rect } from './list-geometry';
 
 interface Lift extends LiftedRow {
@@ -36,7 +36,13 @@ const sourceOf = (measured?: Measured): Rect | undefined => measured?.source;
 export class ListDrag extends DragRegistry {
   private readonly listeners = listenerSet();
   public readonly subscribe = this.listeners.subscribe;
-  private setup: DragSetup = idleSetup;
+  // Before its List configures it, a drag has nowhere to land.
+  private setup: DragSetup = {
+    order: { sections: [] },
+    lanes: false,
+    slides: false,
+    move: () => {},
+  };
   private lift: Lift | undefined;
   private measured: Measured | undefined;
   private point: Point = { x: 0, y: 0 };
@@ -148,12 +154,7 @@ export class ListDrag extends DragRegistry {
 
     this.ghostAt(ghostPoint(point, lift, measured.layer));
 
-    const next = dragFrame({
-      lift,
-      measured,
-      point,
-      ...frameSetup(setup),
-    });
+    const next = dragFrame({ lift, measured, point, setup });
 
     if (remeasured || !sameFrame(this.frame, next)) this.draw(next);
   }

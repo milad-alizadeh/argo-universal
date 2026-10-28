@@ -13,10 +13,10 @@ import type { ListDrag } from './list-drag-controller';
 import type { MeasureZone } from './list-drag-measure';
 import { DragScrollView } from './list-drag-scroll-view';
 import { measureView } from './list-geometry';
-import { lanesOf, type Lane } from './list-lane-model';
 import { LaneRows } from './list-lane-rows';
 import { useListMoves } from './list-move-context';
 import { useMoveOrder } from './list-move-order';
+import { lanesOf, type Lane } from './list-section-entries';
 import type { ListBlock } from './list-section-model';
 
 interface LaneViews {

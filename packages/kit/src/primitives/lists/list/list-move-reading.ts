@@ -10,14 +10,6 @@ export interface HeldOrder {
   rows: ReadonlyMap<string, ReactNode>;
 }
 
-export const heldOrder = (
-  sections: readonly MoveSection[],
-  rows: ReadonlyMap<string, ReactNode>,
-): HeldOrder => ({
-  order: new Map(sections.map((section) => [section.key, section.rows])),
-  rows,
-});
-
 // One level's movable rows in a held move's order.
 interface LevelOrder {
   order: readonly string[];

@@ -9,7 +9,6 @@ import type { ViewInstance } from 'react-native';
 import { useLiftedRowMark } from '../../../row-highlights';
 import { cn } from '../../../utils';
 import { useDragValue } from './list-drag-layer';
-import type { DragLook } from './list-drag-look';
 import { measureView } from './list-geometry';
 import { useListMoves, type ListMoves } from './list-move-context';
 import { slideOf, Sliding } from './list-move-zone';
@@ -32,19 +31,15 @@ function useRegisteredRow(
   return outer;
 }
 
-// The row's pointer: grab at rest, grabbing while any row is dragged; and its own slot's look while it is the one lifted.
-const poseClass = (
-  look: DragLook,
-  dragging: boolean,
-  lifted: boolean,
-): string => cn(dragging ? look.grabbing : look.grab, lifted && look.lifted);
-
 interface RowPose {
   offset: number;
   className: string;
 }
 
-// Where the row draws while a row is dragged: aside, or dimmed in its own slot while it is the one lifted.
+/*
+ * Where the row draws while a row is dragged: aside, or dimmed in its own slot while it is the one lifted. Its pointer
+ * grabs at rest, and shows grabbing while any row is dragged.
+ */
 function useRowPose({ drag, look }: ListMoves, id: string): RowPose {
   const offset = useDragValue(drag, (frame) => slideOf(frame?.rowSlides, id));
   const lifted = useDragValue(drag, (frame) => frame?.id === id);
@@ -52,7 +47,10 @@ function useRowPose({ drag, look }: ListMoves, id: string): RowPose {
 
   useLiftedRowMark(lifted);
 
-  return { offset, className: poseClass(look, dragging, lifted) };
+  return {
+    offset,
+    className: cn(dragging ? look.grabbing : look.grab, lifted && look.lifted),
+  };
 }
 
 interface DraggedRowProps {

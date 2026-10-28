@@ -3,13 +3,9 @@ import type { ListPosition, ListSelection } from '../../../list-context';
 import type { ListLook } from '../../../list-look';
 import { useListLook } from '../../../list-look-context';
 import type { ChildrenOptions } from './list-children-options';
+import type { ListTree } from './list-level-entries';
 import { sectionEntries, menuEntries } from './list-section-entries';
-import {
-  listTree,
-  readList,
-  type ListBlock,
-  type ListTree,
-} from './list-section-model';
+import { listTree, readList, type ListBlock } from './list-section-model';
 import type { TreeFolding } from './list-tree-rows';
 
 export interface ListChild extends ListSelection {

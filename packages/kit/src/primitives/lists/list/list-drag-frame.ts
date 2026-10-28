@@ -1,14 +1,20 @@
+import type { ListMove } from '@repo/contracts/kit-moves';
 import type { ReactNode } from 'react';
 import type { Measured } from './list-drag-measure';
 import { slideOffset, type Slide } from './list-drag-rules';
-import {
-  aimAt,
-  type DropAim,
-  type InsertionLine,
-  type MoveLayout,
-} from './list-drop-aim';
+import { aimAt, type DropAim, type InsertionLine } from './list-drop-aim';
 import type { Point, Rect } from './list-geometry';
-import type { DropPlace } from './list-move-model';
+import { landing, type DropPlace } from './list-move-model';
+import type { MoveOrder } from './list-move-order';
+
+// What a List's drag works on: the order the List shows, read as the drag aims and drops, and how a drop moves.
+export interface DragSetup {
+  order: Pick<MoveOrder, 'sections'>;
+  lanes: boolean;
+  // The rows beside the lifted one slide apart, so a frame says how far.
+  slides: boolean;
+  move: (move: ListMove) => void;
+}
 
 // A lifted row, in the drag layer's own coordinates, and where it would land.
 export interface DragFrame {
@@ -29,13 +35,11 @@ export interface LiftedRow {
   grab: Point;
 }
 
-export interface FrameInput {
+interface FrameInput {
   lift: LiftedRow;
   measured: Measured;
-  layout: MoveLayout;
   point: Point;
-  // The rows slide apart: only then does a frame say how far each one moves.
-  slides: boolean;
+  setup: DragSetup;
 }
 
 const shifted = <At extends Point>(at: At, by: Point): At => ({
@@ -44,7 +48,6 @@ const shifted = <At extends Point>(at: At, by: Point): At => ({
   y: at.y - by.y,
 });
 
-// Where the pointer holds a row it took at `start`, from the row's top left.
 export const grabOf = (start: Point, source: Rect): Point =>
   shifted(start, source);
 
@@ -92,15 +95,23 @@ const slidesFor = (
   input: FrameInput,
   aim: DropAim | undefined,
 ): Pick<DragFrame, 'rowSlides' | 'zoneSlides'> =>
-  input.slides
+  input.setup.slides
     ? slides(input.measured, slideFor(input.measured.source, aim))
     : still;
+
+const aimFor = ({ measured, setup, point }: FrameInput): DropAim | undefined =>
+  aimAt({
+    ...measured,
+    sections: setup.order.sections,
+    lanes: setup.lanes,
+    point,
+  });
 
 // What a drag draws for the pointer at `point`: the lifted row, its insertion line, and the rows moved aside.
 export function dragFrame(input: FrameInput): DragFrame {
   const { lift, measured } = input;
   const { source, layer } = measured;
-  const aim = aimAt({ ...input.layout, ...measured, point: input.point });
+  const aim = aimFor(input);
 
   return {
     id: lift.id,
@@ -134,3 +145,10 @@ const sameParts = (a: DragFrame, b: DragFrame): boolean =>
 // The same lifted row aiming at the same place draws the same frame.
 export const sameFrame = (a: DragFrame | undefined, b: DragFrame): boolean =>
   a !== undefined && sameParts(a, b);
+
+// The move a drop reports where the lifted row aims, by the order the List shows.
+export const landedMove = (
+  { order }: DragSetup,
+  frame: DragFrame | undefined,
+): ListMove | undefined =>
+  frame?.place ? landing(order.sections, frame.id, frame.place) : undefined;

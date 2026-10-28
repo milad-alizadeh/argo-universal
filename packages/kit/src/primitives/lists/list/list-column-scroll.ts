@@ -12,7 +12,6 @@ import type { ListDrag } from './list-drag-controller';
 import type { DragScroller } from './list-drag-measure';
 import { measureView } from './list-geometry';
 
-// Scrolls a LegendList by `delta` from where it is.
 export function scrolledBy(list: LegendListRef | null, delta: number): void {
   if (!list) return;
 

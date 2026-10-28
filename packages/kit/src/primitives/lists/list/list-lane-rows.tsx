@@ -5,7 +5,7 @@ import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import { childIdentity } from './list-child-identity';
 import type { ListChild } from './list-children';
 import { childRenderer, ListGrouping, SectionListRow } from './list-grouping';
-import type { Lane } from './list-lane-model';
+import type { Lane } from './list-section-entries';
 
 const laneRenderer =
   (lane: Lane) =>

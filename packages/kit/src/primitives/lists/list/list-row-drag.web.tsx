@@ -1,7 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { View, type PointerEvent } from 'react-native';
-import type { RowDragProps } from './list-row-press';
-import { pressStart } from './list-row-press';
+import { pressStart, type RowDragProps } from './list-row-press';
 import { pointOf, WindowPress, type WebPressStart } from './list-window-press';
 
 type DownEvent = PointerEvent['nativeEvent'];

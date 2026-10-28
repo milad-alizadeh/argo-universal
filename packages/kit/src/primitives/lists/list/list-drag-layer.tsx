@@ -10,9 +10,6 @@ import type { DragFrame } from './list-drag-frame';
 import type { DragLook } from './list-drag-look';
 import type { InsertionLine as InsertionLineAt } from './list-drop-aim';
 
-export const useDragFrame = (drag: ListDrag): DragFrame | undefined =>
-  useSyncExternalStore(drag.subscribe, drag.current, drag.current);
-
 // One value of the drag, drawing again only when it changes, as a row's own offset does while another row aims elsewhere.
 export function useDragValue<Value>(
   drag: ListDrag,
@@ -30,10 +27,8 @@ interface LayerProps {
   y: SharedValue<number>;
 }
 
-interface LiftedRowProps {
+interface LiftedRowProps extends Pick<LayerProps, 'x' | 'y'> {
   width: number;
-  x: SharedValue<number>;
-  y: SharedValue<number>;
   children: ReactNode;
 }
 
@@ -66,11 +61,6 @@ function InsertionLine({ line }: { line: InsertionLineAt }): ReactNode {
   );
 }
 
-const lineOf = (
-  look: DragLook,
-  frame: DragFrame,
-): InsertionLineAt | undefined => (look.slides ? undefined : frame.line);
-
 // Over the rows, for the eye only: it takes no presses and hides from assistive technology.
 const overlay = {
   pointerEvents: 'none',
@@ -84,7 +74,7 @@ interface FrameProps extends Omit<LayerProps, 'drag'> {
 }
 
 function DraggedFrame({ frame, look, x, y }: FrameProps): ReactNode {
-  const line = lineOf(look, frame);
+  const line = look.slides ? undefined : frame.line;
 
   return (
     <View {...overlay}>
@@ -102,7 +92,7 @@ function DraggedFrame({ frame, look, x, y }: FrameProps): ReactNode {
  * accessibility tree, and its context menu moves it for assistive technology.
  */
 export function ListDragLayer({ drag, ...layer }: LayerProps): ReactNode {
-  const frame = useDragFrame(drag);
+  const frame = useDragValue(drag, (current) => current);
   const cancel = useCallback(() => drag.cancel(), [drag]);
 
   useDragEscape(cancel, frame !== undefined);
