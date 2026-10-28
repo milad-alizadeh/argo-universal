@@ -1,6 +1,6 @@
 import type { SessionInfo } from '@repo/contracts';
-import type { SessionRowItem } from '@repo/contracts/plugins/wire';
 import type { ChangeStageProps } from '../change-stage/change-stage';
+import type { OpenPluginPage, SessionRowPlugins } from './session-row-props';
 
 export interface SessionRowMetadataProps {
   session: SessionInfo;
@@ -9,5 +9,6 @@ export interface SessionRowMetadataProps {
   pullRequest?: ChangeStageProps;
   age?: string;
   // The Plugins' items, after Argo's own, in the Plugins' order.
-  items?: readonly SessionRowItem[];
+  plugins?: SessionRowPlugins;
+  onOpenPluginPage?: OpenPluginPage;
 }

@@ -1,6 +1,4 @@
 import type { PluginSlotInput } from '@repo/contracts/plugins/wire';
-import { useQuery } from '@tanstack/react-query';
-import { useTRPC } from '#features/connection';
 import {
   emptyPluginSlot,
   reducePluginSlot,
@@ -9,21 +7,8 @@ import {
   type ContributedView,
 } from '../../lib/product/plugin-registry';
 import { usePluginBinding, type PluginBinding } from './use-plugin-binding';
+import { type NameOf, usePluginNames } from './use-plugin-names';
 import { usePluginStream } from './use-plugin-stream';
-
-type NameOf = (pluginId: string) => string;
-
-// Each Plugin's name from the connected Server's list; the id until the list arrives.
-function useNames(): NameOf {
-  const trpc = useTRPC();
-  const { data } = useQuery(trpc.plugins.list.queryOptions());
-
-  const names = new Map(
-    (data?.plugins ?? []).map(({ manifest }) => [manifest.id, manifest.name]),
-  );
-
-  return (pluginId) => names.get(pluginId) ?? pluginId;
-}
 
 type Wiring = {
   nameOf: NameOf;
@@ -39,7 +24,7 @@ export function usePluginSlot(slot: PluginSlotInput): PluginSlotContribution[] {
     { initial: emptyPluginSlot, reduce: reducePluginSlot },
   );
 
-  return drawn(state, { nameOf: useNames(), bind: usePluginBinding() });
+  return drawn(state, { nameOf: usePluginNames(), bind: usePluginBinding() });
 }
 
 // Only a contribution with a tree is drawn.

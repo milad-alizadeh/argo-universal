@@ -85,19 +85,33 @@ export interface ListRows {
     closing: ReadonlySet<string>;
     selectedSessionId?: string;
     layout: SessionsLayout;
+    rowPlugins?: SessionsListProps['rowPlugins'];
   };
   renderItem: (item: SessionsListEntry, index: number) => React.JSX.Element;
 }
 
-function useExtraData(
-  { agents, selectedSessionId, view }: SessionsListProps,
-  { collapsed, closing }: CollapsedProjects,
-): ListRows['extraData'] {
-  const { layout } = view;
+type RowsData = Omit<ListRows['extraData'], 'collapsed' | 'closing'>;
+
+// What every row draws from the list's props; a change to any redraws the rows.
+function useRowsData(props: SessionsListProps): RowsData {
+  const { agents, selectedSessionId, rowPlugins } = props;
+  const { layout } = props.view;
 
   return useMemo(
-    () => ({ agents, collapsed, closing, selectedSessionId, layout }),
-    [agents, collapsed, closing, selectedSessionId, layout],
+    () => ({ agents, selectedSessionId, layout, rowPlugins }),
+    [agents, selectedSessionId, layout, rowPlugins],
+  );
+}
+
+function useExtraData(
+  props: SessionsListProps,
+  { collapsed, closing }: CollapsedProjects,
+): ListRows['extraData'] {
+  const rows = useRowsData(props);
+
+  return useMemo(
+    () => ({ ...rows, collapsed, closing }),
+    [rows, collapsed, closing],
   );
 }
 

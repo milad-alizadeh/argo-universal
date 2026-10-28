@@ -215,4 +215,11 @@ export {
   type SessionRowProps,
 } from './components/session-row/session-row';
 
+export {
+  type OpenPluginPage,
+  type SessionRowActivity,
+  type SessionRowPluginItem,
+  type SessionRowPlugins,
+} from './components/session-row/session-row-props';
+
 export { NewSessionQuestion } from './components/new-session-question/new-session-question';

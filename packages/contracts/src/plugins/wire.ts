@@ -20,6 +20,7 @@ export {
   sessionActivitySlotId,
   SessionActivityItem,
   sessionRowSlotId,
+  slotItemsListLimit,
   slotPath,
   slotRegistry,
   type AnyItemsSlot,

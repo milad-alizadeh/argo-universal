@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ownerItem, slotVisibility, visibleItems } from './slot-visibility';
+import { ownerItem, shownItems, slotVisibility } from './slot-visibility';
 
 const merged = {
   items: [
@@ -13,17 +13,20 @@ describe('what a Slot shows on this Device', () => {
   it('shows every Plugin and Argo’s line until the Device chooses', () => {
     const visibility = slotVisibility({ hidden: [], owner: null });
 
-    expect(visibleItems(merged, visibility)).toEqual([
-      'Issue 412',
-      'Preview ready',
-    ]);
+    expect(shownItems(merged, visibility)).toEqual(merged);
     expect(ownerItem(merged, visibility)).toBeUndefined();
   });
 
   it('lets the next Plugin in line take a hidden Plugin’s place', () => {
     const visibility = slotVisibility({ hidden: ['deploys'], owner: null });
 
-    expect(visibleItems(merged, visibility)).toEqual(['Issue 412', '78%']);
+    expect(shownItems(merged, visibility)).toEqual({
+      items: [
+        { pluginId: 'issues', item: 'Issue 412' },
+        { pluginId: 'coverage', item: '78%' },
+      ],
+      overflow: [],
+    });
   });
 
   it('shows the chosen owner’s answer, even past what fits', () => {

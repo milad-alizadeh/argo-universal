@@ -18,6 +18,7 @@ export {
   SessionActivityItem,
   sessionRowSlotId,
   SessionRowItem,
+  slotItemsListLimit,
   toolCallSlotId,
   type ItemsSlot,
   type SlotLimit,
