@@ -1,6 +1,6 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   expandInspectorLabel,
   inspectorId,
@@ -63,7 +63,7 @@ async function widenSidebarByDragging({
 export const DividersResizeAndRememberWidths: ScaffoldStory = {
   play: controlledPlay(async (context, controlled) => {
     const { canvas, userEvent } = context;
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     const list = canvas.getByTestId(sessionListId);
     const listWidth = list.getBoundingClientRect().width;
     await widenSidebarByDragging(context);
@@ -100,7 +100,7 @@ export const DividersResizeAndRememberWidths: ScaffoldStory = {
 export const ExpandedInspectorKeepsBothDividerEdgesUsable: ScaffoldStory = {
   args: { inspectorState: 'expanded' },
   play: controlledPlay(async ({ canvas, userEvent }) => {
-    await page.viewport(1920, 844);
+    await settleLayout(1920);
 
     const listWidth = (): number =>
       canvas.getByTestId(sessionListId).getBoundingClientRect().width;

@@ -1,7 +1,7 @@
 import type { FeedActorRef, FeedEvent, FeedTurnEnding } from '../../feed';
 import { TurnUpdateJob } from '../session-storage';
 import type { ChildFeed } from './child-feed';
-import type { Subagents } from './subagent-feeds';
+import type { Subagents } from './routing';
 
 type CrashEnding = Extract<FeedTurnEnding, { kind: 'agent_crash' }>;
 

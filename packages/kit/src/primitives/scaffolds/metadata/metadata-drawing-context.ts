@@ -1,42 +1,39 @@
-import { createContext, use } from 'react';
-import { Platform } from 'react-native';
-import { useInList } from '../../../list-look-context';
+import { createContext, use, useMemo } from 'react';
+import { useListLook } from '../../../list-look-context';
 import {
   metadataDrawing,
   type MetadataDrawing,
-  type MetadataFacts,
-  type MetadataPlatform,
   type MetadataWidth,
 } from './metadata-drawing';
 
-export const currentPlatform: MetadataPlatform =
-  Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web';
-
 /*
- * What Metadata is told from outside and what it tells its fields. A Detail's columns set the width; the Metadata
- * root resolves its drawing from it and passes both on to its fields.
+ * How much room a Detail gives its Metadata. List look knows the window's width, not this container's: only the
+ * Detail's measured columns know whether the Metadata has a column of its own.
  */
-interface MetadataScene {
-  width: MetadataWidth;
-  drawing?: MetadataDrawing;
-}
+export const MetadataWidthContext = createContext<MetadataWidth>('column');
 
-export const MetadataSceneContext = createContext<MetadataScene>({
-  width: 'column',
-});
+// The one place a Metadata drawing is resolved: from the List look it sits in and the room it has.
+export function useResolvedMetadataDrawing(
+  width: MetadataWidth,
+): MetadataDrawing {
+  const { fieldRows, inList } = useListLook();
 
-export function useMetadataFacts(): MetadataFacts {
-  const { width } = use(MetadataSceneContext);
-
-  return { platform: currentPlatform, inList: useInList(), width };
-}
-
-// The drawing of the Metadata a field sits in; a field outside any draws as Metadata alone in its column does.
-export function useMetadataDrawing(): MetadataDrawing {
-  const { drawing, width } = use(MetadataSceneContext);
-
-  return (
-    drawing ??
-    metadataDrawing({ platform: currentPlatform, inList: false, width })
+  return useMemo(
+    () => metadataDrawing({ platform: fieldRows, inList, width }),
+    [fieldRows, inList, width],
   );
+}
+
+// The drawing a Metadata root resolved, handed to its fields.
+export const MetadataDrawingContext = createContext<MetadataDrawing | null>(
+  null,
+);
+
+// A field draws in its Metadata's drawing; outside a Metadata it has none to draw in.
+export function useMetadataDrawing(): MetadataDrawing {
+  const drawing = use(MetadataDrawingContext);
+
+  if (!drawing) throw new Error('A Metadata field draws only inside Metadata.');
+
+  return drawing;
 }

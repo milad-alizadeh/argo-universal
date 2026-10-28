@@ -5,7 +5,7 @@ import type {
 import type { ShellRecord } from '@repo/contracts';
 import type { AcpSessionDestination, AgentLaunch } from '../../agents';
 import type { WriterActorRef } from '../../storage';
-import type { SessionData } from '../session-data';
+import type { SessionData, SessionInput } from '../session-data';
 import { shellOutputPath } from './files';
 import { attachShellRuntime } from './shell-acp';
 import type { ShellCaptureInput } from './shell-capture';
@@ -14,17 +14,25 @@ import { launchShellCommand } from './shell-launch';
 import { ShellTerminal } from './shell-terminal';
 import type { Shells } from './shells';
 
-export type ShellRuntimeInput = {
-  sessionId: string;
-  home: string;
+// The Session the Shells belong to, as its machine input names it.
+export type ShellSession = Pick<
+  SessionInput,
+  'sessionId' | 'runtimeDirectory'
+> & {
   writer: WriterActorRef;
   now: () => number;
   createId: () => string;
+};
+
+// How the Shells report back to their Session.
+export type ShellReports = {
   changed: (record: ShellRecord) => void;
   failed: (error: Error) => void;
   // How a command starts; tests substitute one that runs nothing.
   launch?: ShellLauncher;
 };
+
+export type ShellRuntimeInput = ShellSession & ShellReports;
 
 export class ShellRuntime implements Shells {
   private readonly terminals = new Map<string, ShellTerminal>();
@@ -72,7 +80,7 @@ export class ShellRuntime implements Shells {
   ): ShellTerminal {
     return new ShellTerminal({
       ...this.captureInput(id, request),
-      home: this.input.home,
+      home: this.input.runtimeDirectory,
       launch: this.requireLaunch(),
       launchCommand: this.input.launch ?? launchShellCommand,
     });
@@ -90,7 +98,11 @@ export class ShellRuntime implements Shells {
     };
   }
   private outputPath(id: string): string {
-    return shellOutputPath(this.input.home, this.input.sessionId, id);
+    return shellOutputPath(
+      this.input.runtimeDirectory,
+      this.input.sessionId,
+      id,
+    );
   }
   private requireLaunch(): AgentLaunch {
     if (this.closed || !this.launch)

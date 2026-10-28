@@ -1,3 +1,4 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
 import { Text } from '@repo/kit/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -5,7 +6,6 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { expect } from 'storybook/test';
-import { page } from 'vitest/browser';
 import { pluginSectionId } from '../../../lib/product/navigation/sections';
 import {
   FrameListDetailPendingOffer,
@@ -93,7 +93,7 @@ const meta = {
   component: PluginSidebarPages,
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
   },
 } satisfies Meta<typeof PluginSidebarPages>;
 

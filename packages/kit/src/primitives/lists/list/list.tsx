@@ -21,7 +21,7 @@ import { ListMenuRows } from './list-menu-rows';
 import { NativeGroupedList } from './list-native-grouped';
 import { asksNothingNativeLacks, holdsNativeRows } from './list-native-rows';
 import type { ListProps } from './list-props';
-import { scrollProps } from './list-scroll-props';
+import { useScrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
 import type { ListBlock } from './list-section-model';
 import { SectionShelves, type ChildDataProps } from './list-section-shelves';
@@ -35,7 +35,7 @@ function useDataListProps<Item>(
   const contentContainerStyle = useListPadding(props);
 
   return {
-    ...scrollProps(props),
+    ...useScrollProps(props),
     data: props.items ?? [],
     renderItem,
     contentContainerStyle,

@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import type { ContentSelection } from './list-content-selection';
 import {
   selectWebRow,
@@ -26,6 +25,8 @@ export interface SelectionSetup {
   mode: SelectingState;
   close: () => void;
   parts: SelectionParts;
+  // The List look's pointerSelection: the web's clicks and modifier keys, with no selecting mode.
+  pointer: boolean;
 }
 
 // What a change of `selected` or of the ids needs once, so each row asks in constant time.
@@ -91,11 +92,11 @@ function selectionInput(setup: Chosen): SelectionInput {
 
 // A phone toggles the pressed row; the web adds modifier keys, ranges and activation.
 function selectRow(
+  setup: Chosen,
   input: SelectionInput,
-  range: SelectionRange,
   press: RowPress,
 ): void {
-  if (Platform.OS === 'web') selectWebRow(input, range, press);
+  if (setup.pointer) selectWebRow(input, setup.parts.range, press);
   else toggleSelected(input, press.id);
 }
 
@@ -104,10 +105,10 @@ function rowControls(
   input: SelectionInput,
   found: Lookup,
 ): Pick<ContentSelection, 'press' | 'longPress' | 'all' | 'coversSeparator'> {
-  const { parts, mode } = setup;
+  const { mode } = setup;
 
   return {
-    press: (press) => selectRow(input, parts.range, press),
+    press: (press) => selectRow(setup, input, press),
     longPress: (id) => beginSelection(input, mode, id),
     all: () => input.change(input.ids),
     coversSeparator: (id) => coversNext(found, id),
@@ -139,7 +140,7 @@ function valueOf(setup: Chosen): ContentSelection {
     allSelected: allSelected(setup, found),
     change: input.change,
     close: setup.close,
-    active: Platform.OS === 'web' || setup.mode.selecting,
+    active: setup.pointer || setup.mode.selecting,
     isSelected: (id) => found.chosen.has(id),
     lock: (id) => lockRow(setup.parts.locked, id),
     ...rowControls(setup, input, found),

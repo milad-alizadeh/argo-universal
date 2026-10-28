@@ -99,7 +99,7 @@ function routeUpdate(
 }
 
 // Only explicit ACP associations establish parentage; an unknown id never becomes a Subagent.
-export function routeSubagentFeeds(
+export function routeSubagents(
   input: SubagentRouting,
   previous: Subagents,
   notification: SessionNotification,
@@ -118,7 +118,7 @@ export function routeSubagentFeeds(
   };
 }
 
-export function flushSubagentFeeds(subagents: Subagents): void {
+export function flushSubagents(subagents: Subagents): void {
   for (const child of subagents.children.values())
     child.feed.send({ type: 'feed.flush' });
 }

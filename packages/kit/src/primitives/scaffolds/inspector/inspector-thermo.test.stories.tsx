@@ -7,7 +7,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/Scaffolds/Inspector/Thermo',
   component: LoadingScreen,
   parameters: { screenPreview: true },
-  beforeEach: (): Promise<void> => settleLayout(1440),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof LoadingScreen>;
 
 export default meta;

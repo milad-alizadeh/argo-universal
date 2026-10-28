@@ -1,7 +1,6 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   currentAttribute,
   detailContentId,
@@ -106,7 +105,7 @@ export const SectionsAndSidebarWide = sectionsAndSidebar(layoutWidths.wide);
 export const RailListsOnlySections: ScaffoldStory = {
   args: { selectedSection: 'settings' },
   play: controlledPlay(async ({ canvas }) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     const rail = within(canvas.getByTestId(railId));
     await expect(
       rail

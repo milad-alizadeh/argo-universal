@@ -20,7 +20,7 @@ const toggleLabel = 'Toggle Workbench';
 export const FloatingKeepsTheFeedInPlace: Story = {
   args: { inspectorOpen: true },
   play: async ({ canvas, userEvent }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     const feed = await canvas.findByTestId('workbench-feed');
     const bounds = feed.getBoundingClientRect();
     await waitFor(() =>
@@ -54,7 +54,7 @@ export const NarrowingAutoHidesTheDockedWorkbench: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout(1768);
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
-    await settleLayout(1440);
+    await settleLayout('wide');
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );

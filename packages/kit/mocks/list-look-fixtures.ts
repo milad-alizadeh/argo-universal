@@ -18,6 +18,8 @@ export const everyPlatform = [
   'ios',
   'android',
   'macos',
+  'windows',
+  'native',
 ] satisfies Platform[];
 
 export const places = [
@@ -25,6 +27,7 @@ export const places = [
   'popover',
   'choice',
   'sidebar',
+  'sidebar-menu',
   'sidebar-end',
 ] satisfies ListLookInput['place'][];
 
@@ -43,5 +46,6 @@ export const look = (
     platform: 'web',
     place: 'page',
     wide: false,
+    inList: true,
     ...input,
   });

@@ -88,7 +88,7 @@ export const TextFieldWide = textField(1440);
 export const SubmitWithEnter: Story = {
   args: { request: configurationRequest, initialValues: validPort },
   play: async ({ canvas, userEvent, args }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await userEvent.click(canvas.getByRole('textbox', { name: /^Name/ }));
     await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -114,7 +114,7 @@ export const SkipDeclinesWide = skip(1440);
 export const DismissWide: Story = {
   args: { request: configurationRequest },
   play: async ({ canvas, userEvent, args }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });
   },
@@ -123,7 +123,7 @@ export const DismissWide: Story = {
 export const InvalidSchema: Story = {
   args: { request: invalidSchemaRequest },
   play: async ({ canvas, userEvent, args }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await expect(canvas.getByRole('button', { name: 'Submit' })).toBeDisabled();
     await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });

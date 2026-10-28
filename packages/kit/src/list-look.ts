@@ -19,6 +19,8 @@ export type {
   DisclosureGlyph,
   PhoneDrawing,
   RowHighlight,
+  SelectionBar,
+  SelectionMark,
   ValuePlacement,
 } from './list-look-platform';
 
@@ -47,11 +49,11 @@ export function resolveListLook(input: ListLookInput): ListLook {
   const phone = form.phone !== undefined;
 
   return {
-    ...placeLook(input.place, place),
+    ...placeLook(input, place),
     ...form,
     ...rows,
     ...insetLook(drawing, input, { ...form, menu: place.menu }),
-    ...platformLook(drawing, input, place.menu),
+    ...platformLook(input, place.menu),
     section: sectionDrawing({ ...place, ...rows, ...form, phone }),
   };
 }

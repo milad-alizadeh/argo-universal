@@ -3,7 +3,6 @@ import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Platform } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
-import { page } from 'vitest/browser';
 import { SessionRow } from '../../src/features/sessions/components/session-row/session-row';
 import type { SessionsLayout } from '../../src/features/sessions/stores/sessions-view';
 
@@ -112,7 +111,7 @@ export const statusParity: Story = {
   ),
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
 
       for (const name of parityRowNames) {
         await expect(canvas.getByRole('button', { name })).toBeVisible();

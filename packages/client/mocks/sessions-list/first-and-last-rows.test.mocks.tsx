@@ -18,7 +18,7 @@ export const firstAndLastRowsReachable: Story = {
   ),
   play: async ({ canvas }) => {
     // At a phone's size twelve Sessions overflow the list, so it can scroll.
-    if ('__vitest_browser__' in globalThis) await settleLayout(390);
+    if ('__vitest_browser__' in globalThis) await settleLayout('phone');
     const scroll = canvas.getByTestId(sessionsScrollId);
 
     const heading = await canvas.findByRole('button', {

@@ -15,7 +15,7 @@ const meta = {
   title: 'Tests/Requests/ElicitationSheet',
   component: ElicitationSheet,
   beforeEach: async (): Promise<void> => {
-    await settleLayout(390);
+    await settleLayout('phone');
   },
   args: { ...elicitationProps({ mock: elicitationMock }), onAnswer: fn() },
 } satisfies Meta<typeof ElicitationSheet>;
@@ -88,7 +88,7 @@ export const RetainFieldAnswersAcrossTrayTransition: Story = {
     const name = sheet.getByRole('textbox', { name: /^Name/ });
     await userEvent.clear(name);
     await userEvent.type(name, retainedDraft);
-    await settleLayout(1440);
+    await settleLayout('wide');
 
     const tray = within(
       await page.findByRole('region', { name: 'Elicitation questions' }),

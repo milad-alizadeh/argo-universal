@@ -1,6 +1,6 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   acceptInspector,
   closeInspectorLabel,
@@ -26,7 +26,7 @@ export default meta;
 export const TogglesPreserveContent: ScaffoldStory = {
   play: controlledPlay(async (context, controlled) => {
     const { canvas, userEvent } = context;
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     const content = canvas.getByTestId(detailContentId);
 
     for (const shown of [false, true]) {
@@ -55,7 +55,7 @@ export const TogglesPreserveContent: ScaffoldStory = {
 
 export const ReversingAToggleRestoresTheSidebar: ScaffoldStory = {
   play: controlledPlay(async (context, controlled) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     await toggleSidebar(context, controlled, false);
     await toggleSidebar(context, controlled, true);
     await waitFor(() =>
@@ -66,7 +66,7 @@ export const ReversingAToggleRestoresTheSidebar: ScaffoldStory = {
 
 export const ContentUpdatesDuringPanelToggle: ScaffoldStory = {
   play: controlledPlay(async ({ canvas }, controlled) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     await controlled.render({ inspectorState: 'open' });
     await controlled.render({ attentionCount: 2 });
     await expect(

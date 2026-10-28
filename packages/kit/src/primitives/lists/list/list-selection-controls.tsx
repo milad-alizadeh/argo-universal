@@ -1,20 +1,20 @@
 import type { ReactElement } from 'react';
-import { Platform } from 'react-native';
+import type { SelectionBar } from '#kit/list-look';
 import { Button } from '#primitives/actions/button';
 import type { ContentSelection } from './list-content-selection';
 
-export function CloseSelection({
-  selection,
-}: {
+// The web's bar has no close button: clearing the selection hides it.
+export function CloseSelection(props: {
   selection: ContentSelection;
+  bar: SelectionBar;
 }): ReactElement | null {
-  if (Platform.OS === 'web') return null;
+  if (props.bar === 'selected-rows') return null;
 
   return (
     <Button
-      label={Platform.OS === 'ios' ? 'Done' : 'Close selection'}
+      label={props.bar === 'edit-mode' ? 'Done' : 'Close selection'}
       variant="text"
-      onPress={selection.close}
+      onPress={props.selection.close}
     />
   );
 }

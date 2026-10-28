@@ -72,7 +72,7 @@ function usePressProps(
     ...pressHandlers(props),
     role: 'button',
     testID: props.testID,
-    className: rowClasses(useListLook().pressedTint),
+    className: rowClasses(useListLook().ripple),
   };
 }
 

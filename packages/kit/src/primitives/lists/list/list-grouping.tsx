@@ -94,15 +94,20 @@ function useDataRow(index: number, part?: boolean): DataRow {
   return { value, cell: cell && !part, position };
 }
 
+// A data row chooses nothing a section or List around its List chose: its List's own selection reaches it by row id.
+const noSelection: ListSelection = {};
+
 export function DataListRow(props: DataRowProps): ReactElement {
   const { value, cell, position } = useDataRow(props.index, props.part);
 
   return (
-    <RowPositionContext value={value}>
-      <GroupedCells cell={cell} position={position}>
-        {props.children}
-      </GroupedCells>
-    </RowPositionContext>
+    <ListSelectionContext value={noSelection}>
+      <RowPositionContext value={value}>
+        <GroupedCells cell={cell} position={position}>
+          {props.children}
+        </GroupedCells>
+      </RowPositionContext>
+    </ListSelectionContext>
   );
 }
 

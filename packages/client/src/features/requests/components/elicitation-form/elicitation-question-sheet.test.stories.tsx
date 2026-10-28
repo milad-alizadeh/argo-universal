@@ -30,7 +30,7 @@ export const RetainAnswersAcrossSheetTransition: Story = {
     </RequestFrame>
   ),
   beforeEach: async (): Promise<void> => {
-    await settleLayout(1440);
+    await settleLayout('wide');
   },
   play: async ({ canvas, userEvent }) => {
     await userEvent.type(
@@ -39,7 +39,7 @@ export const RetainAnswersAcrossSheetTransition: Story = {
     );
     await userEvent.click(canvas.getByRole('button', { name: nextQuestion }));
     await userEvent.click(option(canvas, buildFeature));
-    await settleLayout(390);
+    await settleLayout('phone');
     const sheet = within(await within(document.body).findByRole('dialog'));
     await expect(option(sheet, buildFeature)).toHaveAttribute(
       'aria-checked',

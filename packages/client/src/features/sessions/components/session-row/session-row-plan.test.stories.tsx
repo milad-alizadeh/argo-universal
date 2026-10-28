@@ -1,6 +1,6 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import { expect } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   meta as sessionRowTestMeta,
   type Story,
@@ -18,7 +18,7 @@ export const FailedPlanStill: Story = {
   },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       await expect(
         canvas.getByLabelText('Plan: 2 of 3 complete'),
       ).toBeVisible();

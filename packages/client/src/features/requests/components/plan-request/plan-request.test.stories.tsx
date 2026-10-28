@@ -76,7 +76,7 @@ export const KeepPlanningWide = keepsPlanning(1440);
 // Each of the chevron's rows runs at once.
 export const BuildAutoAcceptWide: Story = {
   play: async ({ userEvent, args }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await userEvent.click(button(buildOptions));
     await userEvent.click(await menuItem('Build, auto-accept edits'));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -89,7 +89,7 @@ export const BuildAutoAcceptWide: Story = {
 // A new Session builds the plan; this one keeps planning.
 export const BuildInNewSessionWide: Story = {
   play: async ({ userEvent, args }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await userEvent.click(button(buildOptions));
     await userEvent.click(await menuItem('Build in new Session'));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -103,7 +103,7 @@ export const BuildInNewSessionWide: Story = {
 // Show plan reads the plan in the card, its title drawn once in the header.
 export const ShowPlanWide: Story = {
   play: async ({ userEvent }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await expect(canvas().queryByText(planStep)).not.toBeInTheDocument();
     await userEvent.click(button('Show plan'));
     await expect(await canvas().findByText(planStep)).toBeVisible();
@@ -116,7 +116,7 @@ export const ShowPlanWide: Story = {
 // Expand opens the plan full page; Restore brings the card back.
 export const ExpandPlanWide: Story = {
   play: async ({ userEvent }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await userEvent.click(button('Expand plan'));
     await expect(await canvas().findByText(planStep)).toBeVisible();
     await expect(button('Restore plan')).toBeVisible();
@@ -125,7 +125,7 @@ export const ExpandPlanWide: Story = {
 
 export const SaveToWorkspaceWide: Story = {
   play: async ({ userEvent, args }) => {
-    await settleLayout(1440);
+    await settleLayout('wide');
     await userEvent.click(button(buildOptions));
     await userEvent.click(await menuItem('Save to workspace'));
     await expect(args.onSavePlan).toHaveBeenCalledTimes(1);
@@ -136,7 +136,7 @@ export const SaveToWorkspaceWide: Story = {
 // A phone opens the plan as the request sheet's next page.
 export const ShowPlanPhone: Story = {
   play: async ({ userEvent }) => {
-    await settleLayout(390);
+    await settleLayout('phone');
     await userEvent.click(button('Show plan'));
     await expect(await canvas().findByText(planStep)).toBeVisible();
   },

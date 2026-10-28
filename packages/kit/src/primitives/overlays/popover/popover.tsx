@@ -3,7 +3,7 @@ import * as WebPopover from '@radix-ui/react-popover';
 import * as React from 'react';
 import { View } from 'react-native';
 import { OutsideColumn } from '#kit/content-column/content-column';
-import { ListPlaceContext } from '#kit/list-place';
+import { ListPlaceContext, popoverPlace, useListPlace } from '#kit/list-place';
 import { menuSurfaceClassName } from '#kit/menu-surface';
 import { cn } from '#kit/utils';
 import { TextClassContext } from '#primitives/content/text';
@@ -163,10 +163,12 @@ function PopoverSurface(
  * their own.
  */
 function PopoverRows(props: { children: React.ReactNode }): React.JSX.Element {
+  const place = popoverPlace(useListPlace());
+
   return (
     <InsideHostContext.Provider value={false}>
       <OutsideColumn>
-        <ListPlaceContext value="popover">{props.children}</ListPlaceContext>
+        <ListPlaceContext value={place}>{props.children}</ListPlaceContext>
       </OutsideColumn>
     </InsideHostContext.Provider>
   );

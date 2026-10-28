@@ -39,7 +39,7 @@ export const FoldedSidebarCanBeShown: Story = {
 };
 
 export const WideningSidebarDoesNotHideIt: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1440),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   args: { inspectorOpen: false },
   play: async ({ canvas, userEvent }) => {
     await expect(
@@ -63,7 +63,7 @@ export const UnavailableSidebarWaitsForSpaceBesideTheInspector: Story = {
     await expect(
       await canvas.findByRole('button', { name: showSidebar }),
     ).toBeDisabled();
-    await settleLayout(1440);
+    await settleLayout('wide');
     // The sidebar re-enables on the next layout pass, which a slow runner reaches after the resize.
     await waitFor(() =>
       expect(canvas.getByRole('button', { name: showSidebar })).toBeEnabled(),
