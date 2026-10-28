@@ -15,6 +15,11 @@ type Recording = {
 
 type Call = { name: string; label: string; input: Json };
 
+export type StartedOperation<Result> = {
+  call?: SessionOperationCall;
+  result: Promise<Result>;
+};
+
 function completed<Result>(call: SessionOperationCall, result: Result): Result {
   call.finish({ output: z.json().parse(result) });
 
@@ -40,7 +45,7 @@ export function startRecordedOperation<Result>(
   { deps, caller }: Recording,
   operation: Call,
   run: (call?: SessionOperationCall) => Promise<Result>,
-): { call?: SessionOperationCall; result: Promise<Result> } {
+): StartedOperation<Result> {
   if (caller.kind === 'user') return { result: run() };
 
   const call = beginSessionOperation(
@@ -48,6 +53,7 @@ export function startRecordedOperation<Result>(
     caller.sessionId,
     operation,
   );
+
   return { call, result: runRecorded(call, run) };
 }
 

@@ -1,3 +1,4 @@
+import type { PendingPermission } from '@repo/contracts';
 import { waitForAcpSnapshot } from './acp-feed';
 import { permissionJourney, answerPermission } from './native-permission';
 import { beginHeldTurn } from './operation-race';
@@ -18,15 +19,19 @@ export async function startPermissionWaitHost(): Promise<{
   const journey = await permissionJourney(clock);
   await beginHeldTurn(journey.host, journey.session.sessionId);
   publishControlAddress(journey.host);
-  const pending = async () => {
+
+  const pending = async (): Promise<PendingPermission> => {
     const snapshot = await waitForAcpSnapshot(
       journey.host,
       journey.session.sessionId,
       (value) => value.pendingPermission !== null,
     );
+
     if (!snapshot.pendingPermission) throw new Error('No Permission request');
+
     return snapshot.pendingPermission;
   };
+
   return {
     home: journey.host.home,
     token: journey.session.token,

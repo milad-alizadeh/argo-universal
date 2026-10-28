@@ -15,11 +15,13 @@ it('waits for a short Operation and exits with its validated result', async () =
 
 it('returns exit75 without --wait, caps a resumed wait with exit75, and reports refusal with exit1', async () => {
   const host = await startPermissionWaitHost();
+
   const run = await runCli(
     host.home,
     ['run', 'session.archive', '--params', JSON.stringify(host.target)],
     host.token,
   );
+
   expect(run.code).toBe(75);
   const pending = OperationExecution.parse(JSON.parse(run.stdout));
   const waiting = runCli(host.home, ['wait', pending.id], host.token);
@@ -42,11 +44,13 @@ it('returns exit75 without --wait, caps a resumed wait with exit75, and reports 
 
 it('refuses a malformed native wait result instead of reporting exit75', async () => {
   const id = `call:WyJ1c2VyIiwiYSIsImIiXQ:${'0'.repeat(64)}`;
+
   const home = await startMalformedControlHost({
     kind: 'operation_execution',
     id,
     status: 'unknown',
   });
+
   const result = await runCli(home, ['wait', id]);
   expect(result).toMatchObject({
     code: 1,
@@ -58,6 +62,7 @@ it('refuses a malformed native wait result instead of reporting exit75', async (
 it('caps run --wait at ninety seconds with exit75, then waits on the same native id with exit0', async () => {
   const host = await startPermissionWaitHost();
   let exited = false;
+
   const running = runCli(
     host.home,
     [
@@ -70,8 +75,10 @@ it('caps run --wait at ninety seconds with exit75, then waits on the same native
     host.token,
   ).then((result) => {
     exited = true;
+
     return result;
   });
+
   await host.permission();
   host.advance(89_999);
   await Promise.resolve();

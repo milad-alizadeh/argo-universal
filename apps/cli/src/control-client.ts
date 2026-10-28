@@ -10,7 +10,7 @@ import { createTRPCClient, httpLink } from '@trpc/client';
 const requestTimeoutMs = 30_000;
 
 export async function connectControl(
-  timeoutMs = requestTimeoutMs,
+  timeoutMs?: number,
 ): Promise<ReturnType<typeof createTRPCClient<AppRouter>>> {
   const home = resolveRuntimeDirectory();
   const address = readServerAddress(home);
@@ -27,19 +27,38 @@ export async function connectControl(
 function createClient(
   port: number,
   token: string,
-  timeoutMs: number,
+  timeoutMs: number | undefined,
 ): ReturnType<typeof createTRPCClient<AppRouter>> {
-  const link = httpLink<AppRouter>({
-    url: `http://127.0.0.1:${port}/trpc`,
-    headers: { authorization: `Bearer ${token}` },
-    fetch: (url, options) => {
-      const timeout = AbortSignal.timeout(timeoutMs);
-      const signal = options?.signal
-        ? AbortSignal.any([options.signal, timeout])
-        : timeout;
-      return fetch(url, { ...options, signal });
-    },
-  });
+  const link = controlLink(port, token, timeoutMs);
 
   return createTRPCClient<AppRouter>({ links: [link] });
+}
+
+function controlLink(
+  port: number,
+  token: string,
+  timeoutMs: number | undefined,
+): ReturnType<typeof httpLink<AppRouter>> {
+  return httpLink<AppRouter>({
+    url: `http://127.0.0.1:${port}/trpc`,
+    headers: { authorization: `Bearer ${token}` },
+    fetch: timedFetch(timeoutMs),
+  });
+}
+
+function timedFetch(timeoutMs: number | undefined): typeof globalThis.fetch {
+  return (url, options) =>
+    fetch(url, {
+      ...options,
+      signal: requestSignal(options?.signal, timeoutMs),
+    });
+}
+
+function requestSignal(
+  signal: RequestInit['signal'],
+  timeoutMs: number | undefined,
+): AbortSignal {
+  const timeout = AbortSignal.timeout(timeoutMs ?? requestTimeoutMs);
+
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
 }

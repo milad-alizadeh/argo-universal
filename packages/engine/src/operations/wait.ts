@@ -1,6 +1,5 @@
 import type { OperationExecution } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
-import type { Subscription } from 'xstate';
 import type { FeedDeps } from '../feed';
 import {
   operationWaitClock,
@@ -8,7 +7,7 @@ import {
   type OperationWaitClock,
 } from './wait-clock';
 
-type WaitOptions = {
+export type WaitOptions = {
   read: () => OperationExecution;
   sessionId: string;
   watch: FeedDeps['watchSessionSnapshot'];
@@ -17,69 +16,109 @@ type WaitOptions = {
   stopOnInput?: boolean;
 };
 
+type WorkFailure = { cause: unknown };
+
 // Detaching this observer never cancels the native Session work.
 export function waitForNativeWork(
   options: WaitOptions,
 ): Promise<OperationExecution> {
-  const initial = options.read();
-  if (
-    initial.status === 'settled' ||
-    (options.stopOnInput && initial.status === 'waiting_for_user')
-  )
-    return Promise.resolve(initial);
-  return new Promise((resolve, reject) => {
-    let finished = false;
-    let subscription: Subscription | undefined;
-    let cancelDeadline: (() => void) | undefined;
-    const finish = (read: () => OperationExecution): void => {
-      if (finished) return;
-      finished = true;
-      subscription?.unsubscribe();
-      cancelDeadline?.();
-      options.signal?.removeEventListener('abort', aborted);
-      try {
-        resolve(read());
-      } catch (error) {
-        reject(error);
-      }
-    };
-    const aborted = (): void =>
-      finish(() => {
-        throw new TRPCError({
-          code: 'CLIENT_CLOSED_REQUEST',
-          message: 'The wait was disconnected',
-        });
-      });
-    const changed = (): void => {
-      if (finished) return;
-      try {
-        const value = options.read();
-        if (
-          value.status === 'settled' ||
-          (options.stopOnInput && value.status === 'waiting_for_user')
-        )
-          finish(() => value);
-      } catch (error) {
-        finish(() => {
-          throw error;
-        });
-      }
-    };
-    if (options.signal?.aborted) return aborted();
-    options.signal?.addEventListener('abort', aborted, { once: true });
-    cancelDeadline = (options.clock ?? operationWaitClock).schedule(
-      () => finish(options.read),
-      operationWaitLimitMs,
+  return new NativeWorkObserver(options).start();
+}
+
+class NativeWorkObserver {
+  private finished = false;
+  private readonly pending = Promise.withResolvers<OperationExecution>();
+  private readonly cleanup = new Set<() => void>();
+  private readonly signal: AbortSignal;
+  public constructor(private readonly options: WaitOptions) {
+    this.signal = options.signal ?? AbortSignal.any([]);
+  }
+  public start(): Promise<OperationExecution> {
+    const initial = this.options.read();
+
+    if (this.shouldReturn(initial)) return Promise.resolve(initial);
+    this.arm();
+
+    return this.pending.promise;
+  }
+  private shouldReturn(value: OperationExecution): boolean {
+    if (value.status === 'settled') return true;
+
+    return Boolean(
+      this.options.stopOnInput && value.status === 'waiting_for_user',
     );
-    // Actor publication can precede getSnapshot(); read after the current event commits.
-    subscription = options.watch(options.sessionId, {
-      next: () => queueMicrotask(changed),
-      error: (error) =>
-        finish(() => {
-          throw error;
-        }),
-      complete: () => queueMicrotask(changed),
+  }
+  private arm(): void {
+    if (this.signal.aborted) return this.aborted();
+    this.signal.addEventListener('abort', this.aborted, { once: true });
+    this.cleanup.add(() =>
+      this.signal.removeEventListener('abort', this.aborted),
+    );
+    this.armDeadline();
+    this.watch();
+  }
+  private armDeadline(): void {
+    const clock = this.options.clock ?? operationWaitClock;
+    this.cleanup.add(
+      clock.schedule(
+        () => this.finish(this.options.read),
+        operationWaitLimitMs,
+      ),
+    );
+  }
+  private watch(): void {
+    const subscription = this.options.watch(this.options.sessionId, {
+      next: this.changed,
+      error: (cause) => this.failed({ cause }),
+      complete: this.changed,
     });
-    if (finished) subscription.unsubscribe();
-  });
+
+    this.cleanup.add(() => subscription.unsubscribe());
+
+    if (this.finished) this.detach();
+  }
+  // Let actor publication and its command receipts settle before reading again.
+  private readonly changed = (): void => {
+    setImmediate(() => this.readChanged());
+  };
+  private readChanged(): void {
+    if (this.finished) return;
+
+    this.readSafely();
+  }
+  private readSafely(): void {
+    try {
+      const value = this.options.read();
+
+      if (this.shouldReturn(value)) this.finish(() => value);
+    } catch (error) {
+      this.failed({ cause: error });
+    }
+  }
+  private readonly failed = ({ cause }: WorkFailure): void =>
+    this.finish(() => {
+      throw cause;
+    });
+  private readonly aborted = (): void =>
+    this.failed({
+      cause: new TRPCError({
+        code: 'CLIENT_CLOSED_REQUEST',
+        message: 'The wait was disconnected',
+      }),
+    });
+  private finish(read: () => OperationExecution): void {
+    if (this.finished) return;
+    this.finished = true;
+    this.detach();
+
+    try {
+      this.pending.resolve(read());
+    } catch (error) {
+      this.pending.reject(error);
+    }
+  }
+  private detach(): void {
+    for (const cleanup of this.cleanup) cleanup();
+    this.cleanup.clear();
+  }
 }

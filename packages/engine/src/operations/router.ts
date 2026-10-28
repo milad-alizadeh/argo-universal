@@ -4,7 +4,7 @@ import {
   OperationWaitId,
 } from '@repo/contracts/operations';
 import { z } from 'zod';
-import { publicProcedure, routerFactory, router } from '../rpc';
+import { publicProcedure, routerFactory, router, mergeRouters } from '../rpc';
 import type { Operations } from './operations';
 
 const DiscoveryInput = z
@@ -17,16 +17,26 @@ const RunInput = z.strictObject({
   wait: z.boolean().default(false),
 });
 
-export const createOperationsRouter = routerFactory((engine: Operations) =>
+const discoveryRouter = routerFactory((engine: Operations) =>
   router({
     list: publicProcedure
       .input(DiscoveryInput)
       .query(({ ctx, input }) => engine.list(ctx.token, input?.filter)),
+  }),
+);
+
+const executionRouter = routerFactory((engine: Operations) =>
+  router({
     run: publicProcedure
       .input(RunInput)
       .mutation(({ ctx, input, signal }) =>
-        engine.run(ctx.token, input.id, input.params, input.wait, signal),
+        engine.run(ctx.token, input, signal),
       ),
+  }),
+);
+
+const waitingRouter = routerFactory((engine: Operations) =>
+  router({
     wait: publicProcedure
       .input(z.strictObject({ id: OperationWaitId }))
       .output(OperationExecution)
@@ -34,4 +44,12 @@ export const createOperationsRouter = routerFactory((engine: Operations) =>
         engine.wait(input.id, ctx.token, signal),
       ),
   }),
+);
+
+export const createOperationsRouter = routerFactory((engine: Operations) =>
+  mergeRouters(
+    discoveryRouter(engine),
+    executionRouter(engine),
+    waitingRouter(engine),
+  ),
 );

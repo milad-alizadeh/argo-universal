@@ -15,6 +15,7 @@ export const OperationExecution = z.strictObject({
   status: z.enum(['settled', 'still_running', 'waiting_for_user']),
   result: z.json().optional(),
   turn: Turn.optional(),
+  cancelled: z.literal(true).optional(),
 });
 
 export type OperationExecution = z.infer<typeof OperationExecution>;

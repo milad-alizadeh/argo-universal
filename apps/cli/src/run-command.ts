@@ -18,14 +18,16 @@ const RunInput = z.strictObject({
 
 type RunArguments = z.infer<typeof RunInput>;
 
+const runOptions = {
+  params: { type: 'string', default: '{}' },
+  wait: { type: 'boolean', default: false },
+} as const;
+
 function runArguments(args: string[]): RunArguments {
   const { positionals, values } = parseArgs({
     args,
     allowPositionals: true,
-    options: {
-      params: { type: 'string', default: '{}' },
-      wait: { type: 'boolean', default: false },
-    },
+    options: runOptions,
   });
 
   const [id] = z.tuple([z.string()]).parse(positionals);
@@ -52,5 +54,6 @@ export async function runOperation(
   write(JSON.stringify(result, null, 2));
 
   const execution = OperationExecution.safeParse(result);
+
   return execution.success ? executionExitCode(execution.data) : 0;
 }

@@ -20,9 +20,13 @@ export class TestOperationWaitClock implements OperationWaitClock {
   public waitUntilScheduled(): Promise<void> {
     return this.timers.size > 0 ? Promise.resolve() : this.scheduled.promise;
   }
+  public activeDeadlines(): number {
+    return this.timers.size;
+  }
   public advance(milliseconds: number): void {
     this.now += milliseconds;
-    for (const timer of [...this.timers]) {
+
+    for (const timer of this.timers) {
       if (timer.at > this.now) continue;
       this.timers.delete(timer);
       timer.callback();
