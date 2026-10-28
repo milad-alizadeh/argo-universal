@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 import { Writable } from 'node:stream';
 import { z } from 'zod';
+import { processCredentials } from './process-credentials.ts';
 import { type LoggedMessage, MessageId, releaseMarker } from './request-log.ts';
 import { isScenarioName, scenarios } from './scenarios.ts';
 import { createScriptedAgent } from './scripted-agent.ts';
@@ -19,18 +20,29 @@ const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
 
 const named: ScriptedScenario = scenarios[name];
 
-// A scenario with a relaunch marks its failed exit, so the Agent a Retry starts again plays the relaunch.
-const exitedMarker = requestLog && `${requestLog}.${name}.exited`;
+// A failed opening or exit marks the scenario consumed before Retry starts a new process.
+const failedMarker = requestLog && `${requestLog}.${name}.failed`;
 
-const scenario: ScriptedScenario =
-  named.relaunched && exitedMarker && existsSync(exitedMarker)
-    ? named.relaunched
-    : named;
+const privateScenario = process.env.ARGO_TOKEN
+  ? named.sessionProcess
+  : undefined;
 
-if (named.relaunched && exitedMarker)
-  process.on('exit', (code) => {
-    if (code !== 0) writeFileSync(exitedMarker, '');
-  });
+const relaunched = existsSync(failedMarker ?? '')
+  ? named.relaunched
+  : undefined;
+
+const scenario = processCredentials(
+  relaunched ?? privateScenario ?? named,
+  requestLog,
+);
+
+function markFailed(): void {
+  if (named.relaunched && failedMarker) writeFileSync(failedMarker, '');
+}
+
+process.on('exit', (code) => {
+  if (code !== 0) markFailed();
+});
 
 const initialization = scenario.initialize ?? scriptedInitialization;
 
@@ -44,9 +56,30 @@ const Frame = z.object({
   id: MessageId.optional(),
   params: z.unknown().optional(),
   result: z.unknown().optional(),
+  error: z.unknown().optional(),
 });
 
 type Frame = z.infer<typeof Frame>;
+
+const openingRequests = new Set<NonNullable<Frame['id']>>();
+
+function trackOpening(method: string, id: Frame['id']): void {
+  if (
+    id !== undefined &&
+    ['session/new', 'session/load', 'session/resume'].includes(method)
+  )
+    openingRequests.add(id);
+}
+
+function markFailedOpening(
+  id: NonNullable<Frame['id']>,
+  failed: boolean,
+): void {
+  const opening = openingRequests.delete(id);
+
+  if (!opening || !failed) return;
+  markFailed();
+}
 
 // A malformed frame a scenario writes on purpose is not logged.
 const readFrame = (line: string): Frame | undefined => {
@@ -85,12 +118,16 @@ const logFrames = (
 };
 
 const received = logFrames(({ method, id, params, result }) => {
-  if (method) log({ agent: process.pid, method, id, params });
-  else if (id !== undefined) log({ agent: process.pid, replied: id, result });
+  if (method) {
+    trackOpening(method, id);
+    log({ agent: process.pid, method, id, params });
+  } else if (id !== undefined) log({ agent: process.pid, replied: id, result });
 });
 
-const answered = logFrames(({ method, id }) => {
-  if (!method && id !== undefined) log({ agent: process.pid, answered: id });
+const answered = logFrames(({ method, id, error }) => {
+  if (method || id === undefined) return;
+  markFailedOpening(id, error !== undefined);
+  log({ agent: process.pid, answered: id });
 });
 
 const readStandardInput = (): ReadableStream<Uint8Array> =>
