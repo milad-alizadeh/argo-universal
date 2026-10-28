@@ -1,11 +1,13 @@
 import type * as React from 'react';
 import { declaredHeaderActions } from '../../../../sessions/$id/session-header-actions.mocks';
+import { SessionBarPreview } from './session-bar-preview';
+import { sessionBarSlot } from './session-bar-slot';
 import { SessionHeaderPreview } from './session-header-preview';
 import { sessionHeaderSlot } from './session-header-slot';
 import { SessionRowPreview } from './session-row-preview';
 import { sessionRowSlot } from './session-row-slot';
 import type { SlotPreviewProps, SlotDetail } from './slot-detail';
-import { sessionRowPreviewData } from './slot-fixtures';
+import { sessionBarPreviewData, sessionRowPreviewData } from './slot-fixtures';
 
 const FixturePreview = ({
   visibility,
@@ -17,6 +19,18 @@ const FixturePreview = ({
 export const fixtureSessionRowSlot: SlotDetail = {
   ...sessionRowSlot,
   Preview: FixturePreview,
+};
+
+const FixtureBarPreview = ({
+  visibility,
+}: SlotPreviewProps): React.JSX.Element => (
+  <SessionBarPreview data={sessionBarPreviewData} visibility={visibility} />
+);
+
+// The Session bar page with the fixture Plugins' answers in place of the Server's.
+export const fixtureSessionBarSlot: SlotDetail = {
+  ...sessionBarSlot,
+  Preview: FixtureBarPreview,
 };
 
 const FixtureHeaderPreview = ({

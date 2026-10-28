@@ -5,6 +5,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import {
   ChangeStageIcon,
+  SecondaryChangeStageIcon,
   ChangeStageModifier,
 } from './change-stage/change-stage';
 import {
@@ -65,7 +66,7 @@ export function SessionPullRequestLabel(
       {...labelRow}
       accessibilityLabel={`Change #${props.number}, ${label}`}
     >
-      <ChangeStageIcon {...props} />
+      <SecondaryChangeStageIcon {...props} />
       <SecondaryPair {...numberPair(props)} />
       <ChangeStageModifier {...props} />
     </View>

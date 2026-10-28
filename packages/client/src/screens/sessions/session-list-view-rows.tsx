@@ -15,7 +15,7 @@ type ListData = Pick<
   | 'query'
   | 'view'
   | 'selectedSessionId'
-  | 'rowPlugins'
+  | 'plugins'
 >;
 
 function listData(props: SessionListViewProps): ListData {
@@ -26,7 +26,7 @@ function listData(props: SessionListViewProps): ListData {
     query: props.query,
     view: props.view,
     selectedSessionId: props.selectedSessionId,
-    rowPlugins: props.rowPlugins,
+    plugins: props.plugins,
   };
 }
 
@@ -36,7 +36,6 @@ type ListActions = Pick<
   | 'onStartSession'
   | 'onProjectSettings'
   | 'onSelect'
-  | 'onOpenPluginPage'
   | 'onRename'
   | 'onArchive'
   | 'onArchiveMany'
@@ -50,7 +49,6 @@ function listActions(props: SessionListViewProps): ListActions {
     onStartSession: props.onNewSession,
     onProjectSettings: props.onProjectSettings,
     onSelect: props.onSelect,
-    onOpenPluginPage: props.onOpenPluginPage,
     onRename: props.onRename,
     onArchive: props.onArchive,
     onArchiveMany: props.onArchiveMany,

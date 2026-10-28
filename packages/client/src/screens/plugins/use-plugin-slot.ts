@@ -7,11 +7,11 @@ import {
   type ContributedView,
 } from '../../lib/product/plugin-registry';
 import { usePluginBinding, type PluginBinding } from './use-plugin-binding';
-import { type NameOf, usePluginNames } from './use-plugin-names';
+import { type PluginNameLookup, usePluginNames } from './use-plugin-names';
 import { usePluginStream } from './use-plugin-stream';
 
 type Wiring = {
-  nameOf: NameOf;
+  nameOf: PluginNameLookup;
   bind: (drawn: ContributedView) => PluginBinding;
 };
 

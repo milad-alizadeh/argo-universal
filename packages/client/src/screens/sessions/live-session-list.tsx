@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
+import { useMemo } from 'react';
 import {
   type InstalledAgents,
   loadedAgents,
@@ -93,13 +94,18 @@ function useSessionsNavigation(): Pick<
   };
 }
 
-// What the Plugins add to the loaded rows, asked for once per list, and the page an item opens.
+// What the Plugins add to the drawn rows, and the page an item opens.
 function useRowPlugins(
   sessions: SessionListViewProps['sessions'],
-): Pick<SessionListViewProps, 'rowPlugins' | 'onOpenPluginPage'> {
+): Pick<SessionListViewProps, 'plugins'> {
+  const rowPlugins = useSessionRowPlugins(sessions);
+  const openPage = useOpenPluginPage();
+
   return {
-    rowPlugins: useSessionRowPlugins(sessions),
-    onOpenPluginPage: useOpenPluginPage(),
+    plugins: useMemo(
+      () => ({ ...rowPlugins, openPage }),
+      [rowPlugins, openPage],
+    ),
   };
 }
 
