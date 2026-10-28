@@ -144,5 +144,5 @@ it('answers no items and starts no Plugin when none declares the Slot', async ()
   });
 
   for await (const answer of items) expect(answer).toEqual({});
-  expect((await app.plugins.list()).plugins[0]?.state).not.toBe('running');
+  expect((await app.plugin.list()).plugins[0]?.state).not.toBe('running');
 });

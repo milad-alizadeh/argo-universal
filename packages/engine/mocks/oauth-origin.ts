@@ -28,7 +28,7 @@ export async function viewlessOAuth(): Promise<{
     pluginOAuth: browser.oauth,
   });
 
-  await host.caller.plugins.activate({ pluginId: 'probe' });
+  await host.caller.plugin.activate({ pluginId: 'probe' });
 
   return { opened: browser.opened, result: await probeResult(fixture.data) };
 }

@@ -31,7 +31,6 @@ const notYetMoved = new Map<string, readonly string[]>([
   ],
   ['sessions/archive/archive-router.ts', ['archive', 'unarchive']],
   ['sessions/shells/router.ts', ['stopShell']],
-  ['plugins/router.ts', ['activate', 'setEnabled', 'setSetting']],
 ]);
 
 export function permittedMutation(file: string, name: string): boolean {

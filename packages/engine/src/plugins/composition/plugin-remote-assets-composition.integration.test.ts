@@ -51,7 +51,7 @@ it.each([
       pluginNetwork: await fixtureNetwork(),
     });
 
-    await caller.plugins.activate({ pluginId: 'probe' });
+    await caller.plugin.activate({ pluginId: 'probe' });
 
     expect(await probeResult(probe.data)).toEqual({
       image: {
@@ -101,11 +101,11 @@ it('resolves remote media again after a Plugin is turned off and on', async () =
     pluginNetwork: await fixtureNetwork(),
   });
 
-  await caller.plugins.activate({ pluginId: 'probe' });
-  await caller.plugins.setEnabled({ pluginId: 'probe', enabled: false });
-  await caller.plugins.setEnabled({ pluginId: 'probe', enabled: true });
+  await caller.plugin.activate({ pluginId: 'probe' });
+  await caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
+  await caller.plugin.setEnabled({ pluginId: 'probe', enabled: true });
 
-  expect(await caller.plugins.activate({ pluginId: 'probe' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'probe' })).toMatchObject({
     state: 'running',
     error: null,
   });

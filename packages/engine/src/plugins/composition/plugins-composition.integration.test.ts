@@ -32,7 +32,7 @@ it('lists first-party Plugin manifests without starting their code, and reports 
     ).pathname,
   });
 
-  expect(await caller.plugins.list()).toMatchObject({
+  expect(await caller.plugin.list()).toMatchObject({
     plugins: [
       {
         manifest: {
@@ -87,7 +87,7 @@ it('reports malformed and incompatible manifests while keeping them out of Plugi
     firstPartyPluginsDirectory: join(directory, 'missing'),
   });
 
-  const result = await caller.plugins.list();
+  const result = await caller.plugin.list();
   expect(result.plugins).toEqual([]);
   expect(result.errors).toHaveLength(rejectedManifests.length + 1);
 
@@ -124,7 +124,7 @@ it('admits Plugins in a root and one collection below it, follows symlinks, and 
     firstPartyPluginsDirectory: shipped,
   });
 
-  const result = await caller.plugins.list();
+  const result = await caller.plugin.list();
 
   expect(
     result.plugins.map(({ manifest, firstParty }) => ({

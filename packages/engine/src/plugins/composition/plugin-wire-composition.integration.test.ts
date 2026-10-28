@@ -99,7 +99,7 @@ it.each([
     expect((await failures.next()).value).toMatchObject([
       { pluginId: 'list', kind: 'drawing', message: error },
     ]);
-    expect(await caller.plugins.list()).toMatchObject({
+    expect(await caller.plugin.list()).toMatchObject({
       plugins: [{ state: 'running', error: null }],
     });
     const log = await readFile(join(home, 'logs/plugins.log'), 'utf8');

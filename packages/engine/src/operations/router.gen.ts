@@ -12,6 +12,36 @@ export async function runOperation(
   params: Json | undefined,
 ) {
   switch (id) {
+    case 'plugin.list':
+      return operations['plugin.list'].result.parseAsync(
+        await implementations['plugin.list'](
+          operationParams(operations['plugin.list'].params, params),
+        ),
+      );
+    case 'plugin.activate':
+      return operations['plugin.activate'].result.parseAsync(
+        await implementations['plugin.activate'](
+          operationParams(operations['plugin.activate'].params, params),
+        ),
+      );
+    case 'plugin.setEnabled':
+      return operations['plugin.setEnabled'].result.parseAsync(
+        await implementations['plugin.setEnabled'](
+          operationParams(operations['plugin.setEnabled'].params, params),
+        ),
+      );
+    case 'plugin.getSettings':
+      return operations['plugin.getSettings'].result.parseAsync(
+        await implementations['plugin.getSettings'](
+          operationParams(operations['plugin.getSettings'].params, params),
+        ),
+      );
+    case 'plugin.setSetting':
+      return operations['plugin.setSetting'].result.parseAsync(
+        await implementations['plugin.setSetting'](
+          operationParams(operations['plugin.setSetting'].params, params),
+        ),
+      );
     case 'registry.get':
       return operations['registry.get'].result.parseAsync(
         await implementations['registry.get'](
@@ -61,6 +91,48 @@ export async function runOperation(
 
 export function generatedOperations(engine: Operations) {
   return {
+    plugin: router({
+      list: publicProcedure
+        .input(operations['plugin.list'].params)
+        .output(operations['plugin.list'].result)
+        .query(async ({ input }) =>
+          operations['plugin.list'].result.parseAsync(
+            await engine.runApp('plugin.list', input),
+          ),
+        ),
+      activate: publicProcedure
+        .input(operations['plugin.activate'].params)
+        .output(operations['plugin.activate'].result)
+        .mutation(async ({ input }) =>
+          operations['plugin.activate'].result.parseAsync(
+            await engine.runApp('plugin.activate', input),
+          ),
+        ),
+      setEnabled: publicProcedure
+        .input(operations['plugin.setEnabled'].params)
+        .output(operations['plugin.setEnabled'].result)
+        .mutation(async ({ input }) =>
+          operations['plugin.setEnabled'].result.parseAsync(
+            await engine.runApp('plugin.setEnabled', input),
+          ),
+        ),
+      getSettings: publicProcedure
+        .input(operations['plugin.getSettings'].params)
+        .output(operations['plugin.getSettings'].result)
+        .query(async ({ input }) =>
+          operations['plugin.getSettings'].result.parseAsync(
+            await engine.runApp('plugin.getSettings', input),
+          ),
+        ),
+      setSetting: publicProcedure
+        .input(operations['plugin.setSetting'].params)
+        .output(operations['plugin.setSetting'].result)
+        .mutation(async ({ input }) =>
+          operations['plugin.setSetting'].result.parseAsync(
+            await engine.runApp('plugin.setSetting', input),
+          ),
+        ),
+    }),
     registry: router({
       get: publicProcedure
         .input(operations['registry.get'].params)

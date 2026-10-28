@@ -22,12 +22,12 @@ it('answers the default for a saved value a Plugin update no longer takes', asyn
   const home = await createRuntimePlugins([settingsProbe]);
   const first = await startEngineTestHost({ home });
 
-  await first.caller.plugins.setSetting({
+  await first.caller.plugin.setSetting({
     pluginId: 'probe',
     key: showClosed,
     value: true,
   });
-  await first.caller.plugins.setSetting({
+  await first.caller.plugin.setSetting({
     pluginId: 'probe',
     key: 'sort',
     value: 'created',
@@ -37,7 +37,7 @@ it('answers the default for a saved value a Plugin update no longer takes', asyn
 
   const { caller } = await startEngineTestHost({ home });
 
-  expect(await caller.plugins.settings({ pluginId: 'probe' })).toEqual({
+  expect(await caller.plugin.getSettings({ pluginId: 'probe' })).toEqual({
     values: { host: defaultHost, sort: 'updated' },
     secretsSet: [],
   });
@@ -53,7 +53,7 @@ it('answers the default for a setting named like an object property', async () =
 
   const { caller } = await startEngineTestHost({ home });
 
-  expect(await caller.plugins.settings({ pluginId: 'probe' })).toEqual({
+  expect(await caller.plugin.getSettings({ pluginId: 'probe' })).toEqual({
     values: {},
     secretsSet: [],
   });

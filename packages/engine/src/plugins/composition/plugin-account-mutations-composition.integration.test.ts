@@ -24,8 +24,8 @@ it('refuses a Grant for an unavailable Account without blocking later writes', a
   expect(await Promise.race([result, setTimeout(1500, 'pending')])).toBe(
     'Account is unavailable',
   );
-  await host.caller.plugins.setEnabled({ pluginId: 'probe', enabled: false });
-  expect((await host.caller.plugins.list()).plugins[0]?.enabled).toBe(false);
+  await host.caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
+  expect((await host.caller.plugin.list()).plugins[0]?.enabled).toBe(false);
 }, 30_000);
 
 it('refuses an Account choice for an unavailable Project without blocking later writes', async () => {
@@ -44,7 +44,7 @@ it('refuses an Account choice for an unavailable Project without blocking later 
   expect(await Promise.race([result, setTimeout(1500, 'pending')])).toBe(
     'Project is unavailable',
   );
-  await host.caller.plugins.setEnabled({ pluginId: 'probe', enabled: false });
+  await host.caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
 }, 30_000);
 
 it('keeps writes available when sign-out races a Grant and Project choice', async () => {
@@ -81,7 +81,7 @@ it('keeps writes available when sign-out races a Grant and Project choice', asyn
   expect(await host.caller.plugins.accounts.grants({ id: account.id })).toEqual(
     [],
   );
-  await host.caller.plugins.setEnabled({ pluginId: 'probe', enabled: false });
+  await host.caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
 }, 30_000);
 
 async function accountProvider(): Promise<
@@ -100,7 +100,7 @@ async function accountProvider(): Promise<
 
   const host = await startEngineTestHost({ home });
   expect(
-    await host.caller.plugins.activate({ pluginId: 'probe' }),
+    await host.caller.plugin.activate({ pluginId: 'probe' }),
   ).toMatchObject({ state: 'running' });
 
   return host;
