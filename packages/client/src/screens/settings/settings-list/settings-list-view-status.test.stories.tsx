@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -52,7 +51,7 @@ function unavailable(status: Unavailable, width: number): Story {
   return {
     args: { status },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       for (const title of serverPages(width)) {
         const row = canvas.getByRole('link', {
@@ -100,7 +99,7 @@ export const DisconnectedWide = unavailable('disconnected', layoutWidths.wide);
 export const CountsBeforeTheServerAnswers: Story = {
   args: { status: 'ready', projectCount: undefined, agentCount: undefined },
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     for (const title of ['Projects', 'Agents'])
       await expect(
@@ -116,7 +115,7 @@ export const DisconnectedBeforeTheServerAnswers: Story = {
     agentCount: undefined,
   },
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     for (const title of ['Projects', 'Agents'])
       await expect(
@@ -128,7 +127,7 @@ export const DisconnectedBeforeTheServerAnswers: Story = {
 export const DisconnectedKeepsLastCounts: Story = {
   args: { status: 'disconnected' },
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expect(
       canvas.getByRole('link', { name: 'Projects, 1' }),
     ).toBeInTheDocument();

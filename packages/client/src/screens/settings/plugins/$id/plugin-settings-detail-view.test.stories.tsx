@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import {
@@ -33,7 +32,7 @@ const meta = {
     onSettingChange: fn(),
     onBack: fn(),
   },
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof PluginSettingsDetailView>;
 
 export default meta;

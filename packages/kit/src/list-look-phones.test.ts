@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rowsAreCompact } from './list-look';
-import { look, phones } from './list-look-fixtures';
+import { look, phones } from '../mocks/list-look-fixtures';
 
 describe('onPhones', () => {
   const onPhones = { appearance: 'cards', padding: 0 } as const;
@@ -37,25 +36,34 @@ describe('density', () => {
   );
 });
 
-describe('rowsAreCompact', () => {
-  const place = { menu: false, wide: true, sidebar: false };
+describe('compact rows', () => {
+  const compact = { density: 'compact', wide: true } as const;
 
-  it('draws a content List compact on a wide window only', () => {
-    expect(rowsAreCompact('compact', place)).toBe(true);
-    expect(rowsAreCompact('compact', { ...place, wide: false })).toBe(false);
+  it('draw a content List compact on a wide window only', () => {
+    expect(look(compact).compact).toBe(true);
+    expect(look({ ...compact, wide: false }).compact).toBe(false);
   });
 
-  it('keeps a sidebar List compact at every width', () => {
+  it('keep a sidebar List compact at every width', () => {
+    expect(look({ ...compact, wide: false, place: 'sidebar' }).compact).toBe(
+      true,
+    );
+  });
+
+  it('draw a regular List regular, sidebar or not', () => {
     expect(
-      rowsAreCompact('compact', { ...place, wide: false, sidebar: true }),
-    ).toBe(true);
+      look({ ...compact, density: 'regular', place: 'sidebar' }).compact,
+    ).toBe(false);
   });
 
-  it('draws a regular List regular, sidebar or not', () => {
-    expect(rowsAreCompact('regular', { ...place, sidebar: true })).toBe(false);
+  it('never draw a popover compact', () => {
+    expect(look({ ...compact, place: 'popover' }).compact).toBe(false);
+    expect(look({ ...compact, place: 'popover' }).compactSidebarRows).toBe(
+      false,
+    );
   });
 
-  it('never draws a popover compact', () => {
-    expect(rowsAreCompact('compact', { ...place, menu: true })).toBe(false);
+  it('lets a row ask for the sidebar drawing at any width', () => {
+    expect(look({ ...compact, wide: false }).compactSidebarRows).toBe(true);
   });
 });

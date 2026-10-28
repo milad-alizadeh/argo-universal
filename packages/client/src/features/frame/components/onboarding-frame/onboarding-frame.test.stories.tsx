@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Text } from '@repo/kit/primitives/content/text';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -12,7 +11,7 @@ const meta = {
   title: 'Tests/Frame/OnboardingFrame',
   component: OnboardingFrame,
   args: { children: null },
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: (args): React.JSX.Element => (
     // The story's own window, so the page can be measured against it.
     <View testID="window" className="h-150 w-full">

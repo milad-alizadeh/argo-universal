@@ -1,4 +1,5 @@
 import { createContext, type ReactElement } from 'react';
+import { useListLook } from '#kit/list-look-context';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
@@ -52,13 +53,15 @@ interface DetailItemProps {
 
 // The cell is the row's value: trailing on iOS and the web, under the title on Android; a Pill stays a Pill.
 function DetailItem({ column, cell }: DetailItemProps): ReactElement {
+  const { valuePlacement } = useListLook();
+
   if (!cell.content) return <ListItem title={column.title} value={cell.text} />;
 
   return (
     <ListItem
       title={column.title}
       accessibilityLabel={`${column.title}, ${cell.text}`}
-      {...nodeValue(cell.content)}
+      {...nodeValue(cell.content, valuePlacement)}
     />
   );
 }

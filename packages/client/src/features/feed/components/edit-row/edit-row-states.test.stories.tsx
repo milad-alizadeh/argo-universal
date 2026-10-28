@@ -1,4 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { recordedEdit } from '../../../../../mocks/feed-edit-mock';

@@ -1,100 +1,104 @@
-import type {
-  SessionRecord,
-  Subagent,
-  SubagentUpdate,
-  Turn,
-} from '@repo/contracts';
+import type { SessionNotification } from '@agentclientprotocol/sdk';
+import type { FeedActorRef, FeedInput } from '../../feed';
+import type { SessionData } from '../session-data';
+import { flushSubagents, routeSubagents, type Subagents } from './routing';
+import type { SubagentRouting } from './routing-types';
 
-type ChildSession = Pick<SessionRecord, 'id' | 'parentSessionId' | 'title'>;
+export { crashedSubagentTurns } from './crash';
 
-// A child Session with its latest Turn; a Session without a parent is no Subagent.
-export function toSubagent(
-  child: ChildSession,
-  latest: Turn | undefined,
-  updates: readonly SubagentUpdate[],
-): Subagent[] {
-  if (child.parentSessionId === null) return [];
+export { flushSubagents, type Subagents };
 
-  return [
-    {
-      ...childIdentity(child, child.parentSessionId),
-      ...turnDetails(latest),
-      state: subagentState(latest, updateState(child.id, updates)),
-    },
-  ];
-}
+// The Session a Subagent update arrives on: its data and the machine input it was opened with, its own Feed, how a child's Feed starts, and how failing storage is reported.
+export type SubagentSession = {
+  parent: SessionData & {
+    input: Pick<SubagentRouting, 'database' | 'now' | 'createId' | 'writer'>;
+  };
+  // The Session's own Feed, started with its open state; a Subagent update cannot arrive without it.
+  parentFeed: FeedActorRef | undefined;
+  spawn: SubagentRouting['spawn'];
+  storageFailing: () => void;
+};
 
-function updateState(
-  id: string,
-  updates: readonly SubagentUpdate[],
-): SubagentUpdate['subagentState'] {
-  return updates
-    .filter((update): boolean => update.subagentSessionId === id)
-    .toSorted((first, second): number => second.position - first.position)
-    .find((update): boolean => update.subagentState !== undefined)
-    ?.subagentState;
-}
+// What the Session spawns a Subagent's Feed with: a child actor id per Subagent Session, and a system id to find it by.
+export type SubagentFeedOptions = {
+  id: `subagent:${string}`;
+  systemId: string;
+  input: FeedInput;
+};
 
-type TurnDetails = Pick<
-  Subagent,
-  'model' | 'stopReason' | 'startedAt' | 'endedAt' | 'durationMs' | 'tokens'
+export const subagentFeed = (input: FeedInput): SubagentFeedOptions => ({
+  id: `subagent:${input.sessionId}`,
+  systemId: `subagent-feed:${input.sessionId}`,
+  input,
+});
+
+export const noSubagents: Subagents = {
+  children: new Map(),
+  pendingMessages: [],
+};
+
+// Updates whose names say they concern a Subagent, and anything sent under the id of one already known.
+const subagentUpdates = new Set<string>([
+  'subagent_update',
+  'session_message',
+  'session_message_chunk',
+]);
+
+export const ownsSubagentUpdate = (
+  subagents: Subagents,
+  notification: SessionNotification,
+): boolean =>
+  subagentUpdates.has(notification.update.sessionUpdate) ||
+  subagents.children.has(notification.sessionId);
+
+export const hasRunningSubagentTurn = (subagents: Subagents): boolean =>
+  [...subagents.children.values()].some((child) => child.turnId !== null);
+
+type SessionStorage = Pick<
+  SubagentRouting,
+  'database' | 'now' | 'createId' | 'writer' | 'write'
 >;
 
-function turnDetails(latest: Turn | undefined): TurnDetails {
-  return latest
-    ? knownTurnDetails(latest)
-    : {
-        model: null,
-        stopReason: null,
-        startedAt: null,
-        endedAt: null,
-        durationMs: null,
-        tokens: null,
-      };
-}
+// Only the fields routing uses; the Session's machine input carries more.
+const sessionStorage = ({
+  database,
+  now,
+  createId,
+  writer,
+}: SubagentSession['parent']['input']): SessionStorage => ({
+  database,
+  now,
+  createId,
+  writer,
+  write: (job) => writer.send({ type: 'writer.write', job }),
+});
 
-function knownTurnDetails(latest: Turn): ReturnType<typeof turnDetails> {
-  return {
-    model: latest.model,
-    stopReason: latest.stopReason,
-    startedAt: latest.startedAt,
-    endedAt: latest.endedAt,
-    durationMs: durationMs(latest),
-    tokens: latest.usage?.totalTokens ?? null,
-  };
-}
+const routing = (
+  { parent, spawn, storageFailing }: SubagentSession,
+  parentFeed: FeedActorRef,
+): SubagentRouting => ({
+  ...sessionStorage(parent.input),
+  parent,
+  parentId: parent.sessionId,
+  spawn,
+  parentFeed,
+  storageFailing,
+});
 
-function childIdentity(
-  child: ChildSession,
-  parentSessionId: string,
-): Pick<
-  Subagent,
-  'sessionId' | 'parentSessionId' | 'toolCallId' | 'title' | 'role'
-> {
-  return {
-    sessionId: child.id,
-    parentSessionId,
-    toolCallId: null,
-    title: child.title,
-    role: null,
-  };
-}
+// Throws rather than drop the update when the Session has no Feed to attach the Subagent to.
+export const routeSubagentUpdate = (
+  session: SubagentSession,
+  subagents: Subagents,
+  notification: SessionNotification,
+): Subagents => {
+  if (!session.parentFeed)
+    throw new Error(
+      `Session ${session.parent.sessionId} has no Feed to route a Subagent update to`,
+    );
 
-function subagentState(
-  latest: Turn | undefined,
-  state: SubagentUpdate['subagentState'],
-): Subagent['state'] {
-  if (interruptedChild(latest)) return 'idle';
-
-  return state ?? childTurnState(latest);
-}
-
-const interruptedChild = (latest: Turn | undefined): boolean =>
-  latest?.error?.code === 'interrupted';
-
-const childTurnState = (latest: Turn | undefined): Subagent['state'] =>
-  latest?.status === 'running' ? 'running' : 'idle';
-
-function durationMs(latest: Turn): number | null {
-  return latest.endedAt === null ? null : latest.endedAt - latest.startedAt;
-}
+  return routeSubagents(
+    routing(session, session.parentFeed),
+    subagents,
+    notification,
+  );
+};

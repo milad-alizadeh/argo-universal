@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { Link } from '#primitives/content/link';
 import { LinkPreviewCard } from './link-preview-card';
 import { LinkPreviewContext } from './link-preview-context';
@@ -43,7 +42,7 @@ function DelayedPreview(): ReactElement {
 export const TooltipBecomesCardWhenReadyWide: Story = {
   render: () => <DelayedPreview />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const page = within(document.body);
     await userEvent.hover(canvas.getByRole('link'));
     await expect(page.queryByRole('tooltip')).not.toBeInTheDocument();
@@ -72,7 +71,7 @@ export const MissingPreviewKeepsUrlTooltipWide: Story = {
     </LinkPreviewContext>
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const page = within(document.body);
     await userEvent.hover(canvas.getByRole('link'));
     await expect(await page.findByRole('tooltip')).toHaveTextContent(href);
@@ -94,7 +93,7 @@ export const KeyboardFocusKeepsNavigationWide: Story = {
     </LinkPreviewContext>
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const link = canvas.getByRole('link');
 

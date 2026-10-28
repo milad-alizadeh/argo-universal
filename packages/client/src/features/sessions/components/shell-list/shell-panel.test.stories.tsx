@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { endedShells, runningShell } from './shell-list.mocks';
@@ -20,7 +19,7 @@ const openWide = async (
   userEvent: Parameters<NonNullable<Story['play']>>[0]['userEvent'],
   name: RegExp,
 ): Promise<void> => {
-  await settleViewport(layoutWidths.wide);
+  await settleLayout('wide');
   await userEvent.click(canvas.getByRole('button', { name }));
 };
 

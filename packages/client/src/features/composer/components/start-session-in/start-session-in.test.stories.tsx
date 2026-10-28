@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import { withStack } from '@repo/kit/story-stack';
 import { newSessionProjects, serverInfo } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -107,7 +106,7 @@ function switchProject(width: number): Story {
   return {
     decorators: onPageInStack,
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const overlay = within(document.body);
       await userEvent.click(
         canvas.getByRole('button', {

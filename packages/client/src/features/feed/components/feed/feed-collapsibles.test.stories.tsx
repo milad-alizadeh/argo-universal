@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { Feed } from './feed';
@@ -79,7 +78,7 @@ async function fullyOpenedRow(row: HTMLElement): Promise<void> {
 // At the end, closing a row draws the rows above down into its place, while the rows below it hold still on every frame.
 export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
 
@@ -113,7 +112,7 @@ export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
 export const KeepsPlaceWhenRowOpens: Story = {
   render: (args) => <PagedFeed {...args} rows={longRows} />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
 

@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
@@ -24,7 +23,7 @@ type Story = StoryObj<typeof meta>;
 export const EscapeClosesModelsThenConfigure: Story = {
   args: { configuration: { ...configuration, onConfigChange: fn() } },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const overlay = within(document.body);
     const trigger = canvas.getByRole('button', { name: agentModelLabel });
     await userEvent.click(trigger);
@@ -59,7 +58,7 @@ export const EscapeClosesModelsThenConfigure: Story = {
 
 export const ClickOpensModelPicker: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const overlay = within(document.body);
     const trigger = canvas.getByRole('button', { name: agentModelLabel });
     await userEvent.hover(trigger);
@@ -103,7 +102,7 @@ export const ClickOpensModelPicker: Story = {
 // A real pointer: the browser reports the picker's enter before the row's leave.
 export const PointerMovesIntoPicker: Story = {
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const overlay = within(document.body);
     await browserUserEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
@@ -139,7 +138,7 @@ export const RunningTurnWithoutTuning: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );

@@ -1,6 +1,6 @@
 import type { SessionConfigOption } from '@repo/contracts';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { PortalProvider } from '@repo/kit/primitives/overlays/portal';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -95,7 +95,7 @@ async function openDefaultEffort(
   { canvas, userEvent }: PlayContext,
   width: number,
 ): Promise<{ trigger: HTMLElement; slider: HTMLElement }> {
-  await settleViewport(width);
+  await settleLayout(width);
   const trigger = await canvas.findByRole('button', { name: agentModelLabel });
   await userEvent.click(trigger);
 

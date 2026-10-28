@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fireEvent, waitFor, within } from 'storybook/test';
@@ -9,7 +8,7 @@ import { OverflowingInspector } from './session-inspector.test.mocks';
 const meta = {
   title: 'Tests/Screens/Sessions/Session/InspectorTabs',
   render: (): JSX.Element => <OverflowingInspector />,
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta;
 
 export default meta;

@@ -1,5 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { shownText } from '@repo/kit/mocks/shown-text';
+import { layoutWidths } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import { closeWrittenPlan, openWrittenPlan } from './written-plan-open-checks';

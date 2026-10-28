@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { canPointAt, centreOf, topmostAt } from '@repo/kit/mocks/point-hit';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, type within } from 'storybook/test';
 import { splitGroupHeader } from './feed.mocks';
 
@@ -180,7 +179,7 @@ interface SplitGroupAtTop {
 export async function readBackToSplitGroup(
   canvas: ReturnType<typeof within>,
 ): Promise<SplitGroupAtTop> {
-  await settleViewport(layoutWidths.phone);
+  await settleLayout('phone');
   const scroll = await canvas.findByTestId(feedScrollId);
   await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
   await scrollToTop(scroll);

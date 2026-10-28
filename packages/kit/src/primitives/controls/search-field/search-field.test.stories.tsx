@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { SearchFieldExample } from './search-field-example.mocks';
 
 const label = 'Search Agents';
@@ -27,7 +26,7 @@ export const PutsSearchLast: Story = {
 function opensFocusesAndClears(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
-      if ('__vitest_browser__' in globalThis) await settleViewport(width);
+      if ('__vitest_browser__' in globalThis) await settleLayout(width);
       await expect(canvas.queryByRole('textbox')).toBeNull();
       await userEvent.click(canvas.getByRole('button', { name: label }));
       const field = canvas.getByRole('textbox', { name: label });

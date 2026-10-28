@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, within } from 'storybook/test';
@@ -91,7 +90,7 @@ export const FailedEdit: Story = {
     if (process.env.NODE_ENV !== 'test') return;
 
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
-      await settleViewport(width);
+      await settleLayout(width);
       const feed = within(canvas.getByTestId('edit-feed'));
       await expect(feed.getByText("Couldn't edit")).toBeVisible();
       await expect(feed.getByText('file.txt')).toBeVisible();

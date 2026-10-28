@@ -1,5 +1,5 @@
 import type { StoryObj } from '@storybook/react-native-web-vite';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import type { ListDetail } from './list-detail';
 
 export type Story = StoryObj<typeof ListDetail>;
@@ -15,5 +15,5 @@ export const heading = (canvas: Canvas, name: string): Promise<HTMLElement> =>
 // The story at one viewport width, settled before it renders.
 export const at = (width: number, story: Story): Story => ({
   ...story,
-  beforeEach: () => settleViewport(width),
+  beforeEach: () => settleLayout(width),
 });

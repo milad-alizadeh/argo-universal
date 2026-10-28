@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { useInMenu } from '#kit/menu-rows-context';
+import { useInMenu } from '#kit/list-place';
 import { RowTitle } from '#primitives/fields/field-row';
 import { OptionRow } from './field-picker-inline-row';
 import type { PickerDrawing, PickerRowProps } from './field-picker-kind';

@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
+import { settleLayout, type LayoutName } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
-import { settleViewport } from '../../../settle-viewport';
 import { ListItem } from '../list-item';
 import { List } from './list';
 import { Recycling } from './list-recycling.stories';
@@ -54,11 +54,11 @@ function ReorderedSelection(): React.JSX.Element {
   );
 }
 
-function reordering(width: number): Story {
+function reordering(layout: LayoutName): Story {
   return {
     render: () => <ReorderedSelection />,
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(layout);
       await userEvent.click(
         await canvas.findByRole('button', { name: 'Reverse rows' }),
       );
@@ -78,14 +78,14 @@ function reordering(width: number): Story {
   };
 }
 
-export const ReorderAndRemoveWide = reordering(1440);
+export const ReorderAndRemoveWide = reordering('wide');
 
-export const ReorderAndRemovePhone = reordering(390);
+export const ReorderAndRemovePhone = reordering('phone');
 
 export const RecycleDescribedRows: Story = {
   ...Recycling,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(390);
+    await settleLayout('phone');
     await expect(await canvas.findByText(rowDescription)).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Last rows' }));
     await expect(await canvas.findByText('Row 80')).toBeVisible();
@@ -104,6 +104,8 @@ export const RecycleDescribedRows: Story = {
     await expect(await canvas.findByText('Row 2')).toBeVisible();
   },
 };
+
+const firstSelected = 'Selected: first';
 
 function InheritedSection(): React.JSX.Element {
   const [selection, onSelectionChange] = useState<readonly string[]>(['first']);
@@ -128,12 +130,59 @@ function InheritedSection(): React.JSX.Element {
 export const StandaloneSelectionInheritance: Story = {
   render: () => <InheritedSection />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(1440);
-    await expect(canvas.getByText('Selected: first')).toBeVisible();
+    await settleLayout('wide');
+    await expect(canvas.getByText(firstSelected)).toBeVisible();
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Second choice' }),
     );
     await expect(canvas.getByText('Selected: second')).toBeVisible();
-    await expect(canvas.queryByText('Selected: first')).toBeNull();
+    await expect(canvas.queryByText(firstSelected)).toBeNull();
+  },
+};
+
+const dataRows = ['first', 'second'];
+
+// A List of data rows inside a choosing section chooses nothing for that section: its rows keep their own presses.
+function DataRowsInChoosingSection(): React.JSX.Element {
+  const [selection, onSelectionChange] = useState<readonly string[]>(['first']);
+  const [pressed, press] = useState<string>();
+
+  return (
+    <View className="flex-1">
+      <List.Section
+        selectionMode="single"
+        selection={selection}
+        onSelectionChange={onSelectionChange}
+      >
+        <View className="h-40">
+          <List
+            items={dataRows}
+            keyExtractor={(id) => id}
+            renderItem={(id) => (
+              <ListItem
+                id={id}
+                title={`Data ${id}`}
+                onPress={() => press(id)}
+              />
+            )}
+          />
+        </View>
+      </List.Section>
+      <Text>{`Selected: ${selection.join(',')}`}</Text>
+      <Text>{`Pressed: ${pressed ?? 'none'}`}</Text>
+    </View>
+  );
+}
+
+export const DataRowsClearInheritedSelection: Story = {
+  render: () => <DataRowsInChoosingSection />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Data second' }),
+    );
+    await expect(canvas.getByText('Pressed: second')).toBeVisible();
+    await expect(canvas.getByText(firstSelected)).toBeVisible();
+    await expect(canvas.queryByText('Selected: second')).toBeNull();
   },
 };

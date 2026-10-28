@@ -1,6 +1,9 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
+import {
+  eachLayout,
+  layoutWidths,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type JSX } from 'react';
 import { expect, waitFor } from 'storybook/test';
@@ -55,7 +58,7 @@ async function scrollAway(canvas: Canvas): Promise<void> {
 const jumpsBackToTheEnd = (width: number): Story => ({
   args: { output: longRunningOutput },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(width);
+    await settleLayout(width);
     await scrollAway(canvas);
     await userEvent.click(canvas.getByRole('button', { name: jumpName }));
     await waitFor(() =>
@@ -88,7 +91,7 @@ export const JumpsToNewOutputWhileAway: Story = {
   args: { output: longRunningOutput },
   render: (args) => <GrowingOutput {...args} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await scrollAway(canvas);
     await userEvent.click(canvas.getByRole('button', { name: 'Output more' }));
     await expect(

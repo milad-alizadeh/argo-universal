@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
+import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { shownText } from '../../../../mocks/shown-text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { RichTextarea } from './rich-textarea';
 import {
   exampleLabel as label,
@@ -55,7 +54,7 @@ const meta = {
   component: DraftField,
   args: { initialValue: '', onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
 } satisfies Meta<typeof DraftField>;
 

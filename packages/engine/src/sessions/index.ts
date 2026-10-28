@@ -6,6 +6,23 @@ export {
 
 export { type SessionData } from './session-data';
 
+export {
+  createShells,
+  type ShellCommand,
+  type ShellCommandInput,
+  type ShellLauncher,
+  type Shells,
+} from './shells';
+
+export {
+  flushSubagents,
+  noSubagents,
+  ownsSubagentUpdate,
+  routeSubagentUpdate,
+  type SubagentSession,
+  type Subagents,
+} from './subagents';
+
 export { type SessionActorRef, sessionMachine } from './session-machine';
 
 export {
@@ -52,3 +69,5 @@ export { recoverArchivedCheckouts } from './archive/archive-operations';
 export { findSessionFeed } from './session-system';
 
 export { recoverShells } from './shells/recovery';
+
+export { releaseShellGroups } from './shells/shell-record';

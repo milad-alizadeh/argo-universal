@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { AuthCallout } from './auth-callout';
@@ -27,7 +26,7 @@ const { chatGpt, apiKey, openAiKey } = codexMethods;
 function methodOrder(width: number): Story {
   return {
     play: async ({ canvasElement, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       // A phone draws the callout in a sheet outside the canvas.
       const page = within(canvasElement.ownerDocument.body);
       await expect(
@@ -63,7 +62,7 @@ export const PhoneMethodOrder = methodOrder(layoutWidths.phone);
 export const OneMethod: Story = {
   args: authCallouts.oneMethod,
   play: async ({ canvasElement, userEvent, args }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const page = within(canvasElement.ownerDocument.body);
 
     const method = await page.findByRole('button', {
@@ -81,7 +80,7 @@ export const OneMethod: Story = {
 export const PendingCancels: Story = {
   args: authCallouts.pending,
   play: async ({ canvasElement, userEvent, args }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const page = within(canvasElement.ownerDocument.body);
     await expect(
       await page.findByText('Authenticating to Codex…'),
@@ -98,7 +97,7 @@ function terminalRuns(width: number, callout: boolean): Story {
   return {
     args: { ...authCallouts.pending, terminal: true },
     play: async ({ canvasElement }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const page = within(canvasElement.ownerDocument.body);
       await waitFor(() =>
         expect(page.queryAllByRole('button', { name: 'Cancel' })).toHaveLength(

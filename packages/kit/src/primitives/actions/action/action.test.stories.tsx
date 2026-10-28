@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { Action, ActionButtons, ContextActions } from './index';
 
 const choose = fn();
@@ -56,7 +55,7 @@ function header(width: number): Story {
     ),
     play: async ({ canvas, canvasElement, userEvent }) => {
       choose.mockClear();
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Add Project' }),
       );
@@ -120,7 +119,7 @@ function context(width: number): Story {
     ),
     play: async ({ canvas, canvasElement, userEvent }) => {
       choose.mockClear();
-      await settleViewport(width);
+      await settleLayout(width);
       const trigger = canvas.getByRole('button', { name: 'Deploy web' });
       await userEvent.pointer({ keys: '[MouseRight]', target: trigger });
       const page = within(canvasElement.ownerDocument.body);

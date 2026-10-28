@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -43,7 +42,7 @@ function markdownPlay(heading: string, firstHeader: string) {
     canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'];
   }): Promise<void> => {
     for (const width of widths) {
-      await settleViewport(width);
+      await settleLayout(width);
 
       for (const text of [heading, 'feed.rows', '1.', 'tsx', firstHeader]) {
         await expect(canvas.getAllByText(text)[0]).toBeVisible();
@@ -70,7 +69,7 @@ export const FirstAgentStreaming: Story = {
   args: { row: streamingAgentMessage('agent-1', markdownAnswerId) },
   play: async ({ canvas }) => {
     for (const width of widths) {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByTestId(streamingCaretId)).toBeVisible();
     }
   },
@@ -80,7 +79,7 @@ export const SecondAgentStreaming: Story = {
   args: { row: streamingAgentMessage('agent-2', markdownAnswerId) },
   play: async ({ canvas }) => {
     for (const width of widths) {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByTestId(streamingCaretId)).toBeVisible();
     }
   },
@@ -88,7 +87,7 @@ export const SecondAgentStreaming: Story = {
 
 export const CopyCodeRevealsOnHover: Story = {
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const copy = canvas.getByRole('button', { name: 'Copy code' });
     await page.elementLocator(copy).unhover();
     await expect(copy).not.toBeVisible();
@@ -108,7 +107,7 @@ function copyCode(width: number): Story {
       ).mockImplementation(async (text: string) => void copied.push(text));
 
       try {
-        await settleViewport(width);
+        await settleLayout(width);
         const copy = canvas.getByRole('button', { name: 'Copy code' });
         await expect(
           canvas.queryByRole('button', { name: 'Copied' }),
@@ -149,7 +148,7 @@ function horizontalScroller(element: HTMLElement | null): HTMLElement {
 export const TableScrollsSideways: Story = {
   args: { row: recordedAgentMessage('agent-2', markdownAnswerId) },
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     const scroller = horizontalScroller(
       canvas.getByText('Result').parentElement,

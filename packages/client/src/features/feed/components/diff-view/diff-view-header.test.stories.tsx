@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -32,7 +31,7 @@ function headerWithoutCopy(width: number): Story {
     play: async ({ canvas }) => {
       if (process.env.NODE_ENV !== 'test') return;
 
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByRole('button', largeHeader)).toBeVisible();
       await expect(
         canvas.queryByRole('button', { name: 'Copy path' }),

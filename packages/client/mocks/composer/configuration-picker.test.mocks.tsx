@@ -1,5 +1,5 @@
 import { type AgentServer } from '@repo/contracts';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -31,7 +31,7 @@ export function pickers(width: number, agentIndex: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       const overlay = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(
         await canvas.findByRole('button', { name: agentModelLabel }),
       );

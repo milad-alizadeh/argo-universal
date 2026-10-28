@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUser } from 'vitest/browser';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { Menu } from './menu';
 
 const actions = [
@@ -41,7 +40,7 @@ function actionSelection(width: number): Story {
   return {
     play: async ({ canvas, canvasElement, userEvent }) => {
       onAction.mockClear();
-      await settleViewport(width);
+      await settleLayout(width);
       const page = within(canvasElement.ownerDocument.body);
       const trigger = canvas.getByRole('button', { name: 'Options' });
       await expect(trigger).toHaveTextContent('Options');
@@ -122,7 +121,7 @@ function longMenuScrolls(width: number): Story {
   return {
     render: () => <LongMenu />,
     play: async ({ canvas, canvasElement, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const page = within(canvasElement.ownerDocument.body);
       await userEvent.click(canvas.getByRole('button', { name: 'Branches' }));
       const menu = await page.findByRole('menu');

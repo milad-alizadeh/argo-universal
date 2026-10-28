@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { canPointAt, centreOf } from '@repo/kit/mocks/point-hit';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -86,7 +85,7 @@ function rendersMarkdown(agent: MockAgent, width: number): Story {
   return {
     args: { row: recordedPrompt(agent, markdownPrompt) },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const code = canvas.getByTestId('code-text');
       await expect(code).toHaveTextContent(fence.text);
       await expect(isUncovered(code)).toBe(false);

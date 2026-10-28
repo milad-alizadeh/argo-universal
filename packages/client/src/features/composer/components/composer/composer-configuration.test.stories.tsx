@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
@@ -58,7 +57,7 @@ function settingsInConfigure(width: number): Story {
       },
     },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.queryByRole('button', { name: /settings/i }),
       ).not.toBeInTheDocument();

@@ -1,7 +1,6 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { findToast } from '@repo/kit/mocks/find-toast';
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
@@ -39,7 +38,7 @@ export const ImageTooLarge: Story = {
       root.render(imageComposer(props));
 
       for (const width of [layoutWidths.phone, layoutWidths.wide]) {
-        await settleViewport(width);
+        await settleLayout(width);
         await expect(
           await findToast('Attachment exceeds 20 MB.'),
         ).toBeVisible();

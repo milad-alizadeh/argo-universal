@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Screen } from '#primitives/scaffolds/screen';
@@ -195,7 +194,7 @@ const sameEdge = (a: number, b: number): boolean => Math.abs(a - b) <= 1;
 const onWide = (story: Story): Story => ({
   ...story,
   parameters: { screenPreview: true },
-  beforeEach: () => settleViewport(layoutWidths.wide),
+  beforeEach: () => settleLayout('wide'),
 });
 
 /*
@@ -220,7 +219,7 @@ export const MetadataWidensTheColumnNotTheText: Story = onWide({
 // A phone-wide web window is inside the reading width, so the widened column changes nothing and the Metadata draws inline.
 export const PhoneWidthDrawsMetadataInline: Story = {
   parameters: { screenPreview: true },
-  beforeEach: () => settleViewport(layoutWidths.phone),
+  beforeEach: () => settleLayout('phone'),
   play: async ({ canvas }) => {
     await expectMetadata(canvas);
     await waitFor(() => expect(metadataPlace(canvas)).toBe('above'));

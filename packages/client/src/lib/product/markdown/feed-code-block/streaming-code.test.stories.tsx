@@ -1,8 +1,7 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -43,7 +42,7 @@ type Story = StoryObj<typeof meta>;
 
 export const FollowsCodeAsItArrives: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const code = canvas.getByTestId('code-text');
 
     await expect(code).toHaveTextContent(firstLine);

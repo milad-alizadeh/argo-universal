@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
 import { nestedList } from './list-nested-fixtures';
@@ -46,7 +45,7 @@ async function expectGone(canvas: Canvas, titles: string[]): Promise<void> {
 export const FoldsWide: Story = {
   args: nestedList,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expectShown(canvas, [...children, grandchild]);
 
     await userEvent.click(canvas.getByRole('button', chevron(true)));
@@ -65,7 +64,7 @@ export const FoldsWide: Story = {
 export const FoldsOneLevel: Story = {
   args: nestedList,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       await canvas.findByRole('button', chevron(true, 'Selected child item')),
     );
@@ -79,7 +78,7 @@ export const FoldsOneLevel: Story = {
 export const FoldsFromTheKeyboard: Story = {
   args: nestedList,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const toggle = await canvas.findByRole('button', chevron(true));
 
@@ -99,7 +98,7 @@ export const FoldsFromTheKeyboard: Story = {
 export const RowPressKeepsChildren: Story = {
   args: nestedList,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(await canvas.findByText(parent));
 
     await expectShown(canvas, [child]);
@@ -111,7 +110,7 @@ export const RowPressKeepsChildren: Story = {
 export const FlatOnPhone: Story = {
   args: nestedList,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expectShown(canvas, [...children, grandchild, onlyChild]);
 
     await expect(
@@ -135,7 +134,7 @@ export const FoldsInASection: Story = {
     </List>
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expectShown(canvas, [child]);
     await userEvent.click(canvas.getByRole('button', chevron(true)));
     await expectGone(canvas, [child]);
@@ -164,7 +163,7 @@ export const FoldsARenderedRow: Story = {
     />
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expectShown(canvas, [child]);
     await userEvent.click(canvas.getByRole('button', chevron(true)));
     await expectGone(canvas, [child]);

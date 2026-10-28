@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { Component, type ReactNode } from 'react';
 import { expect } from 'storybook/test';
+import { Text } from '#primitives/content/text';
 import { Metadata } from './metadata';
 import { fields } from './metadata.mocks';
 
@@ -94,5 +96,40 @@ export const PreservesSpokenPath: Story = {
     await expect(
       canvas.queryByRole('group', { name: 'Path, ~/Developer/argo' }),
     ).not.toBeInTheDocument();
+  },
+};
+
+interface Raised {
+  message?: string;
+}
+
+// Shows what a field raised instead of the field.
+class RaisedError extends Component<{ children: ReactNode }, Raised> {
+  override state: Raised = {};
+
+  static getDerivedStateFromError(error: Error): Raised {
+    return { message: error.message };
+  }
+
+  override render(): ReactNode {
+    return this.state.message === undefined ? (
+      this.props.children
+    ) : (
+      <Text>{this.state.message}</Text>
+    );
+  }
+}
+
+export const FieldOutsideMetadataRaises: Story = {
+  render: () => (
+    <RaisedError>
+      <Metadata.Label title="Path" text={path} />
+    </RaisedError>
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText('A Metadata field draws only inside Metadata.'),
+    ).toBeVisible();
+    await expect(canvas.queryByText(path)).not.toBeInTheDocument();
   },
 };

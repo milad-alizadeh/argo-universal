@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import {
@@ -44,7 +43,7 @@ function opensAgentImage(viewportWidth: number, agent: MockAgent): Story {
       imageUrl: recordedImageUrl,
     },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(viewportWidth);
+      await settleLayout(viewportWidth);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Open image, 32×32' }),
       );

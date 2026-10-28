@@ -1,6 +1,5 @@
 import { type AgentServer } from '@repo/contracts';
-import { layoutWidths, wideBreakpoint } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
 import { composerPlan } from '../composer-mock';
@@ -31,7 +30,7 @@ export function phoneStatusControls(agent: AgentServer): Story {
       },
     },
     play: async ({ canvas }) => {
-      await settleViewport(layoutWidths.phone);
+      await settleLayout('phone');
       await expect(
         canvas.queryByRole('button', { name: 'Checkout' }),
       ).not.toBeInTheDocument();
@@ -63,7 +62,7 @@ export function createdCheckoutIsReadOnly(width: number): Story {
     },
     play: async ({ canvas, userEvent, args }) => {
       const overlay = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
 
       if (width < wideBreakpoint()) {
         await expect(

@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useListLook } from '#kit/list-look-context';
 import { Text } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
 import type {
@@ -71,7 +72,7 @@ function usePressProps(
     ...pressHandlers(props),
     role: 'button',
     testID: props.testID,
-    className: rowClasses,
+    className: rowClasses(useListLook().ripple),
   };
 }
 

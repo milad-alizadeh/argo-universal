@@ -25,7 +25,6 @@ import type {
   AcpSessionDestination,
   AcpSessionLease,
 } from '../resources/resource-types';
-import { routeTerminalRequests } from '../shell-commands/terminal-requests';
 import { createAgentClient, awaitAcpOpening } from './client';
 import { createDraftSubagentTranslator } from './draft-subagent-updates';
 import { negotiateAcpInitialize } from './initialize';
@@ -33,6 +32,7 @@ import { sessionCapabilities, openProtocolSession } from './open-session';
 import { cancelledElicitation, cancelledPermission } from './refusals';
 import { createAcpResponseReaders } from './response-readers';
 import { SubagentRoutes } from './subagent-routing';
+import { routeTerminalRequests } from './terminal-requests';
 import { vendorInitialization } from './vendor-initialization';
 
 type AgentSession = {

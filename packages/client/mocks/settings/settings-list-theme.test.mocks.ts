@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, within } from 'storybook/test';
 import type { PlayContext, Story } from './settings-list-story.test.mocks';
 
@@ -15,7 +14,7 @@ const optionRole = (width: number): 'menuitemradio' | 'option' =>
 export function themeChoosesInPlace(width: number): Story {
   return {
     play: async ({ canvas, canvasElement, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(appearanceRow(canvas));
       await userEvent.click(
         await within(canvasElement.ownerDocument.body).findByRole(
@@ -34,7 +33,7 @@ export function searchFindsAppearance(width: number): Story {
   return {
     args: { query: 'appear' },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(appearanceRow(canvas)).toBeVisible();
       await expect(canvas.queryByRole('link')).toBeNull();
       await expect(

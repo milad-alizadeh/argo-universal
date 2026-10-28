@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
@@ -69,7 +68,7 @@ async function expectEvenPitch(): Promise<void> {
 function opensExpanded(width: number): Story {
   return {
     play: async () => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(await findFileHeader(largeFile)).toHaveAttribute(
         expanded,
         'true',
@@ -92,7 +91,7 @@ export const OpensExpandedWide = opensExpanded(layoutWidths.wide);
 function viewedFolds(width: number): Story {
   return {
     play: async ({ userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await findFileHeader(largeFile);
 
       const mark = await viewedMark(0);
@@ -125,7 +124,7 @@ export const ViewedFoldsWide = viewedFolds(layoutWidths.wide);
 function foldLeavesNoGap(width: number): Story {
   return {
     play: async ({ userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(await findFileHeader(largeFile));
       await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
       await expect(screen.queryByText(lastAddedLine)).toBeNull();
@@ -174,11 +173,11 @@ async function headerInsets(path: string): Promise<Insets> {
 // A file row runs the list's full width with its own inset inside, the same at a phone's width and a wide window's.
 export const FileRowsShareOneInset: Story = {
   play: async () => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     const phone = await headerInsets(largeFile);
 
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const wide = await headerInsets(largeFile);
 
@@ -196,10 +195,10 @@ export const FileRowsShareOneInset: Story = {
 // Only a wider window labels the mark: a phone keeps the bare circle.
 export const ViewedLabelOnlyWhenWide: Story = {
   play: async () => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await findFileHeader(largeFile);
     await expect(screen.queryByText('Viewed')).toBeNull();
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(await screen.findAllByText('Viewed')).not.toHaveLength(0);
   },
 };

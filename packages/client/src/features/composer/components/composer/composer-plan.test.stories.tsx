@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
@@ -57,7 +56,7 @@ export const NoPlan: Story = {
   ),
   play: async ({ canvas }) => {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toBeVisible();
@@ -76,7 +75,7 @@ export const PlanOpensAndCloses: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const toggle = canvas.getByRole('button', { name: 'Plan' });
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute(expandedAttribute, 'true');

@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fn, within } from 'storybook/test';
 import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import type { Story } from './session-view-story.test.mocks';
@@ -16,7 +15,7 @@ export const authenticationRequired: Story = {
     },
   },
   play: async ({ canvas, canvasElement, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const page = within(canvasElement.ownerDocument.body);
     await expect(
       await page.findByText('Authentication Required'),

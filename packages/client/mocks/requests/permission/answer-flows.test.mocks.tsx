@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, fn, within } from 'storybook/test';
 import { permissionProps } from '../../../src/features/requests/components/request.mocks';
@@ -11,7 +11,7 @@ export function deny(width: number): Story {
   return {
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
@@ -27,7 +27,7 @@ export function allow(width: number, mock?: RequestMock): Story {
     args: permissionProps({ mock, onAnswer: fn() }),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       await userEvent.click(
@@ -49,7 +49,7 @@ export function submitting(width: number, mock?: RequestMock): Story {
     },
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       const sending = canvas.getByRole('button', { name: 'Sending…' });
       await expect(sending).toBeDisabled();
       await userEvent.keyboard('{Enter}');
@@ -68,7 +68,7 @@ export function responseError(width: number, mock?: RequestMock): Story {
     },
     play: async () => {
       const canvas = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByRole('alert')).toHaveTextContent(
         'Could not send the answer. Try again.',
       );

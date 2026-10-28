@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { phonesGrouped } from './list-look';
 import {
   appearances,
   look,
   phones,
   platforms,
   platformsAndAppearances,
-} from './list-look-fixtures';
+} from '../mocks/list-look-fixtures';
+import { phonesGrouped } from './list-look';
 
 describe('who draws the grouped section', () => {
   it.each(appearances)(

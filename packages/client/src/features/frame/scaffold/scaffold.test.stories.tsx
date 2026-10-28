@@ -1,8 +1,6 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   currentAttribute,
   detailContentId,
@@ -86,7 +84,7 @@ function sectionsAndSidebar(width: number): ScaffoldStory {
   return {
     play: controlledPlay(async (context, controlled) => {
       const { canvas } = context;
-      await settleViewport(width);
+      await settleLayout(width);
       await expectSidebarInsideScaffold(context);
       await openEachSection(context, controlled);
       await toggleSidebar(context, controlled, false);
@@ -107,7 +105,7 @@ export const SectionsAndSidebarWide = sectionsAndSidebar(layoutWidths.wide);
 export const RailListsOnlySections: ScaffoldStory = {
   args: { selectedSection: 'settings' },
   play: controlledPlay(async ({ canvas }) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     const rail = within(canvas.getByTestId(railId));
     await expect(
       rail
@@ -131,7 +129,7 @@ function attention(
   return {
     args: { attentionCount },
     play: controlledPlay(async ({ canvas }) => {
-      await settleViewport(layoutWidths.wide);
+      await settleLayout('wide');
       await check(canvas);
     }),
   };

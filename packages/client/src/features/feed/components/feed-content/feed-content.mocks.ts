@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';
 import {
@@ -32,7 +32,7 @@ export function supportedContent(
   return {
     args: { items: toFeedView(rows, snapshot).items },
     play: async (context) => {
-      await settleViewport(viewportWidth);
+      await settleLayout(viewportWidth);
       await check(context);
     },
   };

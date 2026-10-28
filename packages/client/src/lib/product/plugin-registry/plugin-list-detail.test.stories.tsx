@@ -1,6 +1,5 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
@@ -66,7 +65,7 @@ const onEvent = fn();
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/ListDetail',
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta;
 
 export default meta;

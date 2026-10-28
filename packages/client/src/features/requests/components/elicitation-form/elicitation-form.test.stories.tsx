@@ -1,5 +1,4 @@
-import { wideBreakpoint } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, fn } from 'storybook/test';
 import {
@@ -27,7 +26,7 @@ function choice(width: number, mock: RequestMock = elicitationMock): Story {
   return {
     args: elicitationProps({ mock, onAnswer: fn() }),
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
       await userEvent.click(canvas.getByRole('radio', { name: /^Blue/ }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
@@ -55,7 +54,7 @@ function submitting(width: number, mock: RequestMock = elicitationMock): Story {
       initialValues: recordedValues(mock),
     },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const sending = canvas.getByRole('button', { name: 'Sending…' });
       await expect(sending).toBeDisabled();
       await userEvent.keyboard('{Enter}');
@@ -85,7 +84,7 @@ function responseError(
       initialValues: recordedValues(mock),
     },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByRole('alert')).toHaveTextContent(
         'Could not send the answer. Try again.',
       );
@@ -116,7 +115,7 @@ function conflict(width: number, mock?: RequestMock): Story {
       state: { kind: 'answered', reason: 'Already answered on another device' },
     },
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByRole('status')).toHaveTextContent(
         'Already answered on another device',
       );

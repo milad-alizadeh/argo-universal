@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, screen, within } from 'storybook/test';
 import {
   meta as sessionDetailViewTestMeta,
@@ -32,7 +31,7 @@ async function openHeaderMenu({
 function renamesAndArchivesAt(layout: Layout): Story {
   return {
     args: { view: { state: 'open', ...idleSession } },
-    beforeEach: () => settleViewport(layoutWidths[layout]),
+    beforeEach: () => settleLayout(layout),
     play: async (context) => {
       const { onRename, onArchive } =
         openProps(context.args.view).header.menu ?? {};

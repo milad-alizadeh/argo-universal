@@ -14,7 +14,7 @@ import type { AgentLaunch, DeferredAgentLaunch } from '../..';
 import type { LaunchLoginTerminal } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
-import type { TerminalRequests } from '../shell-commands/terminal-requests';
+import type { TerminalRequests } from '../connection/terminal-requests';
 
 export type AcpSessionOpening =
   | { method: 'session/new'; params: NewSessionRequest }

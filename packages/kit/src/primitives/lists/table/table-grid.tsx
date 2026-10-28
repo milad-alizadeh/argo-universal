@@ -1,11 +1,10 @@
-import {
-  use,
-  type ContextType,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { ListContext, listPosition } from '../../../list-context';
+import {
+  RowPositionContext,
+  listPosition,
+  type RowPosition,
+} from '../../../list-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { trayCardClassName, trayClassName } from '../../../tray-surface';
 import { GridRow, type GridProps } from './table-grid-row';
@@ -27,30 +26,21 @@ export function TableGrid(props: GridProps): ReactElement {
   );
 }
 
-type ListContextValue = ContextType<typeof ListContext>;
-
-const rowContext = (
-  list: ListContextValue,
-  index: number,
-  count: number,
-): ListContextValue => ({
-  ...list,
+const rowPosition = (index: number, count: number): RowPosition => ({
   index,
   position: listPosition(index === 0, index === count - 1),
 });
 
 function GridRows(props: GridProps): ReactNode {
-  const list = use(ListContext);
-
   return (
     <RowHighlightProvider>
       {props.rows.map((row, index) => (
-        <ListContext
+        <RowPositionContext
           key={row.key}
-          value={rowContext(list, index, props.rows.length)}
+          value={rowPosition(index, props.rows.length)}
         >
           <GridRow {...props} row={row} />
-        </ListContext>
+        </RowPositionContext>
       ))}
     </RowHighlightProvider>
   );

@@ -3,15 +3,16 @@ import {
   useContext,
   useMemo,
   useState,
-  type ContextType,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import {
-  ListContext,
+  ListSelectionContext,
+  RowPositionContext,
   listSelection,
   type ListSelection,
   type ListPosition,
+  type RowPosition,
 } from '../../../list-context';
 import type { ListChild } from './list-children';
 import { ListGroupEnds, ListGroupEndsContext } from './list-group-ends';
@@ -78,7 +79,7 @@ type SectionRowProps = {
 };
 
 type DataRow = {
-  value: ContextType<typeof ListContext>;
+  value: RowPosition;
   cell: boolean;
   position: ListPosition;
 };
@@ -93,37 +94,44 @@ function useDataRow(index: number, part?: boolean): DataRow {
   return { value, cell: cell && !part, position };
 }
 
+// A data row chooses nothing a section or List around its List chose: its List's own selection reaches it by row id.
+const noSelection: ListSelection = {};
+
 export function DataListRow(props: DataRowProps): ReactElement {
   const { value, cell, position } = useDataRow(props.index, props.part);
 
   return (
-    <ListContext value={value}>
-      <GroupedCells cell={cell} position={position}>
-        {props.children}
-      </GroupedCells>
-    </ListContext>
+    <ListSelectionContext value={noSelection}>
+      <RowPositionContext value={value}>
+        <GroupedCells cell={cell} position={position}>
+          {props.children}
+        </GroupedCells>
+      </RowPositionContext>
+    </ListSelectionContext>
   );
 }
 
-const fixedValue = (
-  parent: ContextType<typeof ListContext>,
-  { item }: FixedRowProps,
-): ContextType<typeof ListContext> => ({
-  ...parent,
-  position: item.position,
-  inList: true,
-  ...listSelection(item),
-});
+function useFixedPosition({ position }: ListChild): RowPosition {
+  const { index } = useContext(RowPositionContext);
 
-export function FixedListRow(props: FixedRowProps): ReactElement {
-  const value = fixedValue(useContext(ListContext), props);
+  return useMemo(() => ({ index, position }), [index, position]);
+}
+
+const FixedCell = ({ item }: FixedRowProps): ReactElement => (
+  <GroupedCells cell={!item.fullSpan} position={item.position}>
+    {item.content}
+  </GroupedCells>
+);
+
+export function FixedListRow({ item }: FixedRowProps): ReactElement {
+  const position = useFixedPosition(item);
 
   return (
-    <ListContext value={value}>
-      <GroupedCells cell={!props.item.fullSpan} position={props.item.position}>
-        {props.item.content}
-      </GroupedCells>
-    </ListContext>
+    <ListSelectionContext value={listSelection(item)}>
+      <RowPositionContext value={position}>
+        <FixedCell item={item} />
+      </RowPositionContext>
+    </ListSelectionContext>
   );
 }
 
@@ -134,15 +142,13 @@ export const childRenderer = (item: ListChild): ReactElement => (
 
 export function SectionListRow(props: SectionRowProps): ReactElement {
   const { section, index, count, children } = props;
-  const parent = useContext(ListContext);
+  const parent = useContext(ListSelectionContext);
   const selection = section.selectionMode ? listSelection(section) : parent;
+  const position = { index, position: rowPosition(index, count) };
 
-  const value = {
-    ...parent,
-    ...selection,
-    index,
-    position: rowPosition(index, count),
-  };
-
-  return <ListContext value={value}>{children}</ListContext>;
+  return (
+    <ListSelectionContext value={selection}>
+      <RowPositionContext value={position}>{children}</RowPositionContext>
+    </ListSelectionContext>
+  );
 }

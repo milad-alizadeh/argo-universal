@@ -1,5 +1,4 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, within } from 'storybook/test';
 import { configuration } from '../../../../mocks/session-view/session-view-agent.test.mocks';
 import { archivedIsReadOnly } from '../../../../mocks/session-view/session-view-archived.test.mocks';
@@ -62,7 +61,7 @@ export const RunningTurn: Story = {
 
 export const StopsTheTurn: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await userEvent.click(await canvas.findByRole('button', { name: 'Stop' }));
     await expect(openProps(args.view).composer.onStop).toHaveBeenCalledOnce();
   },
@@ -92,7 +91,7 @@ export const Idle: Story = {
 // The band owns identity; the Feed and Composer keep the Session layout surface.
 export const BandOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const layout = within(await canvas.findByTestId('session-layout'));
 
     const title = await canvas.findByRole('heading', {

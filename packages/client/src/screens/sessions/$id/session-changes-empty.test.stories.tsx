@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { allToasts, findToast } from '@repo/kit/mocks/find-toast';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen } from 'storybook/test';
@@ -35,7 +34,7 @@ export const NoChangesSinceMain: Story = {
     if (process.env.NODE_ENV !== 'test') return;
 
     for (const width of widths) {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(await screen.findByText(nothingChanged)).toBeVisible();
       await expect(screen.getByText(/branched from main/)).toBeVisible();
       await expect(screen.queryByText(/viewed$/)).toBeNull();
@@ -49,7 +48,7 @@ export const LoadingShowsSpinner: Story = {
     if (process.env.NODE_ENV !== 'test') return;
 
     for (const width of widths) {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         await screen.findByRole('progressbar', { name: 'Loading changes' }),
       ).toBeVisible();
@@ -63,7 +62,7 @@ function loadErrorToastsOnce(width: number): Story {
   return {
     args: { catalog: unloadableChanges },
     // Set before the first draw: a phone draws its sheet afresh, which would toast again.
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     play: async () => {
       await findToast(loadErrorTitle);
       await expect(await allToasts(loadErrorTitle)).toHaveLength(1);
@@ -84,7 +83,7 @@ function loadErrorKeepsFiles(width: number): Story {
   return {
     args: { catalog: staleChanges },
     // Set before the first draw: a phone draws its sheet afresh, which would toast again.
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     play: async () => {
       await findToast(loadErrorTitle);
       await expect(await findFileHeader(largeFile)).toBeVisible();

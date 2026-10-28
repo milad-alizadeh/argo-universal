@@ -1,8 +1,7 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { Text } from '@repo/kit/primitives/content/text';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -49,7 +48,7 @@ function transitions(width: number): StoryObj<typeof meta> {
       callbackDuringAnimation = false;
     },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const trigger = canvas.getByRole('button', { name: 'Settings' });
       await userEvent.click(trigger);
       const overlay = within(document.body);

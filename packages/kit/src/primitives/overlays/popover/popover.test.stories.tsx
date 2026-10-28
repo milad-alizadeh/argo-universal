@@ -3,14 +3,13 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { action } from 'storybook/actions';
 import { expect, fireEvent, within } from 'storybook/test';
+import { settleLayout } from '#mocks/story-layout';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
 import { Slider } from '#primitives/controls/slider';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 const meta = {
@@ -103,7 +102,7 @@ const openMenu = async ({
   canvas,
   userEvent,
 }: Parameters<NonNullable<Story['play']>>[0]): Promise<HTMLElement> => {
-  await settleViewport(layoutWidths.wide);
+  await settleLayout('wide');
   await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
 
   return within(document.body).findByRole('dialog', { name: 'Model' });
@@ -183,7 +182,7 @@ export const ButtonsOutsideAListKeepTheirKeysWide: Story = {
     </Popover>
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
 
     const actions = within(

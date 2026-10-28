@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
 import { within } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
@@ -41,7 +40,7 @@ export const ResponsiveLayoutNarrowPhone: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   play: async ({ canvas }) => {
-    await settleViewport(320);
+    await settleLayout(320);
     const compact = canvas.getByRole('button', { name: agentModelLabel });
     await expect(within(compact).getByText('Opus 5.5')).toBeVisible();
     await expect(within(compact).queryByText('Medium')).not.toBeInTheDocument();

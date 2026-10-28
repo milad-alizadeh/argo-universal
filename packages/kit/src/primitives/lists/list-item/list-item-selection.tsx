@@ -1,8 +1,12 @@
-import { useContext, type ReactNode } from 'react';
+import { useContext, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { Spinner } from '#primitives/status/spinner';
-import { ListContext, type ListSelection } from '../../../list-context';
+import {
+  ListSelectionContext,
+  type ListSelection,
+} from '../../../list-context';
 import { ChoiceMark } from './list-item-choice-mark';
+import { LinkAccessory } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
 
 function toggleSelection(id: string, current: readonly string[]): string[] {
@@ -36,7 +40,7 @@ function controlledSelection(
 }
 
 export function useItemSelection(props: ListItemProps): ListItemProps {
-  const context = useContext(ListContext);
+  const context = useContext(ListSelectionContext);
 
   return props.id === undefined
     ? props
@@ -44,7 +48,7 @@ export function useItemSelection(props: ListItemProps): ListItemProps {
 }
 
 export function ChoiceAccessory(props: ListItemProps): ReactNode {
-  const { selectionMode } = useContext(ListContext);
+  const { selectionMode } = useContext(ListSelectionContext);
 
   if (!selectionMode) return null;
 
@@ -66,7 +70,7 @@ function choiceMark(
 
 // Paper's Combobox master: a menu row in a choice list keeps a leading slot for its check, so labels align.
 export function ChoiceSlot(props: ListItemProps): ReactNode {
-  const { selectionMode } = useContext(ListContext);
+  const { selectionMode } = useContext(ListSelectionContext);
 
   if (!selectionMode) return null;
 
@@ -75,4 +79,21 @@ export function ChoiceSlot(props: ListItemProps): ReactNode {
       {pendingMark(props) ?? <ChoiceMark {...props} />}
     </View>
   );
+}
+
+// A row that pushes a page outside a choosing List shows the disclosure chevron.
+export const disclosureAccessory = (
+  disclosure?: boolean,
+): ReactElement | undefined => (disclosure ? <LinkAccessory /> : undefined);
+
+// An empty trailing choice would hold the trailing lane off the row's edge.
+export function useTrailingChoice(
+  menu: boolean,
+  selected: ListItemProps,
+): ReactElement | undefined {
+  const { selectionMode } = useContext(ListSelectionContext);
+
+  if (menu || !selectionMode) return undefined;
+
+  return <ChoiceAccessory {...selected} />;
 }

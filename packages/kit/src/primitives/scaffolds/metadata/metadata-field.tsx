@@ -1,9 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
+import type { MetadataFieldLayout } from './metadata-drawing';
+import { useMetadataDrawing } from './metadata-drawing-context';
 import { BesideField } from './metadata-field-beside';
-import { useMetadataInline } from './metadata-inline';
 
 export interface MetadataFieldProps {
   title: string;
@@ -16,17 +17,20 @@ export interface MetadataFieldProps {
 
 type FieldProps = MetadataFieldProps & { label: string };
 
-const Field = Platform.select({
-  web: StackedField,
-  android: UnderField,
-  default: BesideField,
-});
+const layouts = {
+  stacked: StackedField,
+  under: UnderField,
+  beside: BesideField,
+  inline: InlineField,
+} satisfies Record<MetadataFieldLayout, (props: FieldProps) => ReactElement>;
 
 /*
- * A read-only label/value field of a detail view's Metadata. Web stacks the label above the value; iOS sets them
- * side by side (LabeledContent), and Android puts the value under the label.
+ * A read-only label/value field of a detail view's Metadata, drawn in the layout its Metadata's drawing names: stacked
+ * (label above the value), beside (iOS's LabeledContent), under (Android's one-line row) or inline (the value alone).
  */
 export function MetadataField(props: MetadataFieldProps): ReactElement {
+  const Field = layouts[useMetadataDrawing().field];
+
   return (
     <Field
       {...props}
@@ -37,10 +41,8 @@ export function MetadataField(props: MetadataFieldProps): ReactElement {
 
 const stackedClass = 'mb-4 w-full gap-1 select-none';
 
-// A stacked label/value pair, not a row: no press, hover, separator or lanes. Inline, the value stands alone.
+// A stacked label/value pair, not a row: no press, hover, separator or lanes.
 function StackedField(props: FieldProps): ReactElement {
-  if (useMetadataInline()) return <InlineField {...props} />;
-
   return (
     <TextClassContext value={undefined}>
       <StackedGroup {...props} />
@@ -62,6 +64,7 @@ function StackedGroup(props: FieldProps): ReactElement {
   );
 }
 
+// Inline, the value stands alone; the label stays its spoken name.
 function InlineField(props: FieldProps): ReactElement {
   return (
     <View

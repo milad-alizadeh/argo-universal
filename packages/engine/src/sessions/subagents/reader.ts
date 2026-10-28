@@ -16,7 +16,7 @@ import {
 } from '../../feed';
 import { readLatestTurns, type RowSources } from '../session-storage';
 import { readChildSessions } from './children';
-import { toSubagent } from './subagents';
+import { toSubagent } from './subagent-view';
 
 type SubagentDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
 

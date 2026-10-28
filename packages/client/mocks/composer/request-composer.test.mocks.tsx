@@ -1,7 +1,6 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { canPointAt } from '@repo/kit/mocks/point-hit';
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { newSessionCatalogs, recordedRequestMocks } from '@repo/mocks/app';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
@@ -74,7 +73,7 @@ export function preservesComposer(
       permissionRequest,
     },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(layoutWidths.wide);
+      await settleLayout('wide');
       const message = canvas.getByRole('textbox', { name: 'Message' });
       await expect(shownText(message)).toBe(keptDraft);
 

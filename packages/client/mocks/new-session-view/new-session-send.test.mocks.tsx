@@ -1,5 +1,4 @@
-import { eachLayout, layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
 import type { ReadySessionNewViewProps } from '../../src/screens/sessions/$id/session-new-view';
 import {
@@ -20,7 +19,7 @@ export function readyArgs(
 export const sendsTheFirstPrompt: Story = {
   args: readyArgs({ draft: typedDraft }),
   play: async ({ args, canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await userEvent.click(
       await canvas.findByRole('button', { name: sendLabel }),
     );

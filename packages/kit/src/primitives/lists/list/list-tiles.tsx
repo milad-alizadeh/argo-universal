@@ -7,7 +7,7 @@ import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { useRenderedRows, ListEmpty } from './list-data';
 import { ListGrouping } from './list-grouping';
-import { scrollProps } from './list-scroll-props';
+import { useScrollProps } from './list-scroll-props';
 import { ShelfHeader, useShelf } from './list-shelf';
 import { tileStart } from './list-tile-header';
 import type { TileListProps } from './list-tile-props';
@@ -44,10 +44,12 @@ interface ScrollProps<Item> {
 function TileScroll<Item>(input: ScrollProps<Item>): ReactElement {
   const renderItem = useTileRenderer(input);
   const visibility = useTileVisibility<Item>();
+  const scroll = useScrollProps(input.props);
 
   return (
     <TileViewportVisibility indices={visibility.indices}>
       <ScrollFadeList
+        {...scroll}
         {...tileScrollProps(input)}
         renderItem={renderItem}
         onViewableItemsChanged={visibility.update}
@@ -120,7 +122,6 @@ function tileScrollProps<Item>(
   const { props, geometry, shelf } = input;
 
   return {
-    ...scrollProps(props),
     ...geometry.scroll,
     ref: shelf.ref,
     onScroll: shelf.onScroll,

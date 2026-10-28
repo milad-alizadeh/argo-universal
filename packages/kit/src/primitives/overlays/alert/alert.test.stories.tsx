@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { type LayoutName, settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { Alert } from './alert';
 import type { AlertAction } from './alert-props';
 
@@ -77,7 +76,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-type Layout = keyof typeof layoutWidths;
+type Layout = LayoutName;
 
 const body = within(document.body);
 
@@ -88,7 +87,7 @@ const trigger = { name: 'Remove Agent' };
 // An alert is the same centred dialog at every width: it has no sheet and no close button.
 function answers(layout: Layout, answer: string, removes: boolean): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', trigger));
       const alert = await body.findByRole('dialog', alertName);
@@ -116,7 +115,7 @@ export const CancelsOnPhone: Story = answers('phone', 'Cancel', false);
 export const RemovesOnDesktop: Story = answers('wide', 'Remove', true);
 
 export const ClosesOnEscape: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', trigger));
     await body.findByRole('dialog', alertName);
@@ -130,7 +129,7 @@ export const ClosesOnEscape: Story = {
 
 // A disabled answer is announced as disabled and takes no focus; the others still answer.
 export const DisabledAnswer: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => <UpdateAgent />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Update Agent' }));
@@ -153,7 +152,7 @@ export const DisabledAnswer: Story = {
 
 // A running answer disables every answer, and Escape leaves the alert up while the work runs.
 export const RunningAnswer: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => <RemovingAgent />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', trigger));

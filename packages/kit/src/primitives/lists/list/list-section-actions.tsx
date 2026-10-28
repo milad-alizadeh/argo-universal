@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ActionButtons, actionGroups } from '#primitives/actions/action';
+import type { ListSectionProps } from './list-props';
 import type { HeaderProps } from './list-section-parts';
 
 /*
@@ -43,3 +44,14 @@ export function HeaderActions({
 
 export const hasActions = (actions: ReactNode): boolean =>
   actionGroups(actions).length > 0;
+
+export function hasSectionHeader(props: ListSectionProps): boolean {
+  return [
+    props.title,
+    props.leading,
+    props.trailing,
+    hasActions(props.actions),
+    props.onExpandedChange,
+    props.isLoading,
+  ].some(Boolean);
+}

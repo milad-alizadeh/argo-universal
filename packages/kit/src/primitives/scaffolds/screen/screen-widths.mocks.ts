@@ -1,6 +1,5 @@
 import type { StoryObj } from '@storybook/react-native-web-vite';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import type { Screen } from './screen';
 
 type ScreenStory = StoryObj<typeof Screen>;
@@ -14,5 +13,5 @@ export const screenWidths = {
 
 // The story at one viewport width, settled before it renders.
 export function atWidth(width: number, story: ScreenStory): ScreenStory {
-  return { ...story, beforeEach: () => settleViewport(width) };
+  return { ...story, beforeEach: () => settleLayout(width) };
 }

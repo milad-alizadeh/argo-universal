@@ -1,6 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, spyOn, waitFor } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
@@ -60,7 +59,7 @@ export const DrawsProse: Story = {
 export const CopiesInTheApp: Story = {
   render: () => <PluginTree root={root} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const clipboard = spyOn(
       navigator.clipboard,

@@ -1,3 +1,4 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import {
   Inspector,
   InspectorPlaceOffer,
@@ -8,7 +9,6 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   SessionBandClaim,
   useSessionPanels,
@@ -94,7 +94,7 @@ const meta = {
   parameters: { screenPreview: true },
   args: { content: null },
   beforeEach: async (): Promise<void> => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
   },
 } satisfies Meta<typeof FrameStatePage>;
 

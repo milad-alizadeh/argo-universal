@@ -1,5 +1,3 @@
-import { groupedRowInset } from '../list-look';
-
 // The one measure of a side column beside the content: a Detail's Metadata, and the gap between them.
 export const sideColumn = { width: 280, gap: 24 } as const;
 
@@ -89,7 +87,3 @@ function offeredColumn(
 
   return state.claimed ? offer.column : undefined;
 }
-
-// Only a narrow web heading moves: native headers are the platform's, and a wide one already keeps to the cards' column.
-export const headingInset = (grouped: boolean, narrowWeb: boolean): number =>
-  grouped && narrowWeb ? groupedRowInset : 0;

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
+import type { ListLook } from '../../../list-look';
+import { useListLook } from '../../../list-look-context';
 import {
   useContentRowSelection,
   type ContentSelection,
@@ -8,14 +9,17 @@ import { ContentSelectionMark } from '../list/list-selection-mark';
 import { ChoiceMark } from './list-item-choice-mark';
 import type { DrawingProps, RowPressProps } from './list-item-press-props';
 
-function contentMark(props: DrawingProps): Partial<DrawingProps> {
-  if (Platform.OS === 'ios')
+function contentMark(
+  props: DrawingProps,
+  { selectionMark }: ListLook,
+): Partial<DrawingProps> {
+  if (selectionMark === 'leading')
     return {
       choice: <ContentSelectionMark selected={props.selected} />,
       accessory: undefined,
     };
 
-  if (Platform.OS === 'android')
+  if (selectionMark === 'trailing')
     return { accessory: <ChoiceMark {...props} multiple /> };
 
   return {};
@@ -35,27 +39,33 @@ function useLockedRow(
 
 export function useContentItemDrawing(props: DrawingProps): DrawingProps {
   const { selection, id } = useContentRowSelection(props.id);
+  const look = useListLook();
   useLockedRow(selection, id, props.disabled);
 
   if (!selection) return props;
 
-  return selectedDrawing(props, selection, id);
+  return selectedDrawing(props, { selection, look, id });
+}
+
+interface Selecting {
+  selection: ContentSelection;
+  look: ListLook;
+  id?: string;
 }
 
 function selectedDrawing(
   props: DrawingProps,
-  selection: ContentSelection,
-  id?: string,
+  { selection, look, id }: Selecting,
 ): DrawingProps {
   if (!selection.active || id === undefined) return props;
 
   const selected: DrawingProps = {
     ...props,
     role: 'button',
-    selected: selectedContent(props, selection, id),
+    selected: selectedContent(props, { selection, look, id }),
   };
 
-  return { ...selected, ...contentMark(selected) };
+  return { ...selected, ...contentMark(selected, look) };
 }
 
 // A selected row acts on the whole selection; any other row keeps its own Actions, as Finder's menu on an unselected row does.
@@ -63,36 +73,36 @@ export function useContentItemActions(
   props: DrawingProps,
 ): DrawingProps['actions'] {
   const { selection, id } = useContentRowSelection(props.id);
+  const look = useListLook();
 
   if (!selection) return props.actions;
 
   return actsOnSelection(selection, id)
     ? selection.actions
-    : fallbackActions(props);
+    : fallbackActions(props, look);
 }
 
 function contentHandlers(
-  selection: ContentSelection,
-  id: string,
+  { selection, look, id }: Required<Selecting>,
   props: DrawingProps,
 ): RowPressProps {
   return {
     onPress: selection.active
       ? rowSelectionPress(selection, id, props)
       : props.onPress,
-    onLongPress:
-      Platform.OS === 'android'
-        ? () => selection.longPress(id)
-        : props.onLongPress,
+    onLongPress: look.longPressSelects
+      ? () => selection.longPress(id)
+      : props.onLongPress,
   };
 }
 
 export function useContentItemPress(props: DrawingProps): RowPressProps {
   const { selection, id } = useContentRowSelection(props.id);
+  const look = useListLook();
 
   if (!selection || id === undefined) return {};
 
-  return contentHandlers(selection, id, props);
+  return contentHandlers({ selection, look, id }, props);
 }
 
 export function useSelectedSeparator(id?: string): boolean {
@@ -111,20 +121,24 @@ function actsOnSelection(
   return selection.active && id !== undefined && selection.isSelected(id);
 }
 
-function fallbackActions(props: DrawingProps): DrawingProps['actions'] {
-  return Platform.OS === 'android' ? undefined : props.actions;
+function fallbackActions(
+  props: DrawingProps,
+  look: ListLook,
+): DrawingProps['actions'] {
+  return look.selectingDropsRowActions ? undefined : props.actions;
 }
 
-function keepsPrimarySelection(selection: ContentSelection): boolean {
-  return Platform.OS === 'web' && selection.selected.length === 0;
+function keepsPrimarySelection({ selection, look }: Selecting): boolean {
+  return look.primarySelectionStands && selection.selected.length === 0;
 }
 
 function selectedContent(
   props: DrawingProps,
-  selection: ContentSelection,
-  id: string,
+  selecting: Required<Selecting>,
 ): boolean {
-  if (keepsPrimarySelection(selection)) return props.selected ?? false;
+  const { selection, id } = selecting;
+
+  if (keepsPrimarySelection(selecting)) return props.selected ?? false;
 
   return selection.isSelected(id);
 }

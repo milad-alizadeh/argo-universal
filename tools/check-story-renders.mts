@@ -5,9 +5,8 @@
  * (docs/agents/hooks.md).
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { lockBrowserSuite } from '../tooling/browser-suite-lock/browser-suite-lock.ts';
 import {
   childStateProblems,
@@ -17,6 +16,7 @@ import {
   type FixturePair,
   type StoryRender,
 } from './story-render-rules.mts';
+import { root, trackedFiles } from './tracked-files.mts';
 
 type PlannedFile = { file: string; pairs: FixturePair[] };
 
@@ -25,8 +25,6 @@ type Fingerprints = {
   childPairs: ChildStatePair[];
   failures: string[];
 };
-
-const root = fileURLToPath(new URL('..', import.meta.url));
 
 const storybook = resolve(root, 'apps/storybook');
 
@@ -37,25 +35,9 @@ const fingerprintPath = resolve(storybook, 'story-render-fingerprints.json');
 const storyExport = /^export const \w+\s*:/gm;
 
 const presentationFiles = (): string[] =>
-  execFileSync(
-    'git',
-    [
-      'ls-files',
-      '--cached',
-      '--others',
-      '--exclude-standard',
-      '--',
-      'packages/*/src/**/*.stories.tsx',
-    ],
-    { cwd: root, encoding: 'utf8' },
-  )
-    .split('\n')
-    .filter(
-      (file): boolean =>
-        file !== '' &&
-        !file.endsWith('.test.stories.tsx') &&
-        existsSync(resolve(root, file)),
-    );
+  trackedFiles(['packages/*/src/**/*.stories.tsx'], {
+    untracked: true,
+  }).filter((file): boolean => !file.endsWith('.test.stories.tsx'));
 
 const planFor = (file: string): PlannedFile[] => {
   const source = readFileSync(resolve(root, file), 'utf8');

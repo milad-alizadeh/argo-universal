@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { Feed } from './feed';
@@ -67,7 +66,7 @@ function streamRows(): Promise<void> {
 export const KeepsFollowingEndWhenRowOpensAsRowsStream: Story = {
   render: (args) => <PagedFeed {...args} rows={longRows} />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const scroll = await canvas.findByTestId(feedScrollId);
     await scrollToEnd(scroll);
     // Rows at the end are still measuring after the scroll: pick one once the view holds still.

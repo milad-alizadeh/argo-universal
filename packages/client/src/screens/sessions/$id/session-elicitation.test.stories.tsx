@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import {
@@ -40,7 +40,7 @@ function anchoredSession(agent: Agent): Story {
   return {
     args: pendingSession(agent, onAnswer),
     beforeEach: async (): Promise<void> => {
-      await settleViewport(1440);
+      await settleLayout('wide');
     },
     play: async (context) => {
       await resizeAndDismiss(context);
@@ -107,7 +107,7 @@ async function resizeAnswer(
   const title = sheet.getByRole('textbox', { name: 'Custom answer' });
   await userEvent.clear(title);
   await userEvent.type(title, 'Keep this answer while resizing');
-  await settleViewport(1120);
+  await settleLayout(1120);
   await expect(title).toHaveValue('Keep this answer while resizing');
 
   return title;

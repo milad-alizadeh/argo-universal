@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
+import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { Sheet } from './sheet';
 import { useSheet } from './sheet-screens';
 
@@ -52,7 +51,7 @@ type Story = StoryObj<typeof meta>;
 // An untitled root page draws no header; a page pushed over it does, with Back to the root.
 export const UntitledRootPushesAScreen: Story = {
   play: async ({ userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await screen.findByRole('dialog', { name: 'Inspector' });
     await expect(screen.queryByRole('heading')).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Show details' }));

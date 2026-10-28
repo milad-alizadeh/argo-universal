@@ -1,5 +1,4 @@
-import { wideBreakpoint } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import type { RequestMock } from '@repo/mocks/app';
 import { expect, fn, within } from 'storybook/test';
 import {
@@ -64,7 +63,7 @@ function conflict(width: number, mock?: RequestMock): Story {
     },
     play: async ({ args }) => {
       const canvas = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByRole('status')).toHaveTextContent(
         'Already answered on another device',
       );

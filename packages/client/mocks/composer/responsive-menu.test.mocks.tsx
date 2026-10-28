@@ -1,4 +1,4 @@
-import { wideBreakpoint } from '@repo/kit/each-layout';
+import { wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, within } from 'storybook/test';
 import type { PlayContext } from './composer-story-context.test.mocks';
 import {

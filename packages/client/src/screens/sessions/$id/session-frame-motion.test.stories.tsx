@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect } from 'storybook/test';
@@ -58,7 +57,7 @@ async function reflowedRows(): Promise<string[]> {
 // FLIP: the page takes its new width at once, so each Feed row lays out once and only slides while the sidebar collapses and expands.
 export const FeedLaysOutOnceWhileTheSidebarMoves: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await canvas.findAllByTestId('feed-column');
 
     for (const name of ['Hide sidebar', 'Show sidebar']) {

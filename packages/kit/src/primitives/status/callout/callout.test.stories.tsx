@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { Callout } from './callout';
 
 const meta = {
@@ -20,7 +19,7 @@ const heading = { name: 'Failed to Launch' };
 
 // A phone's callout sheet closes with a swipe or Escape, so the page under it stays reachable.
 export const PhoneSheetDismisses: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+  beforeEach: (): Promise<void> => settleLayout('phone'),
   play: async ({ userEvent }) => {
     await expect(await body.findByRole('heading', heading)).toBeVisible();
     await userEvent.keyboard('{Escape}');

@@ -8,7 +8,6 @@ import { unstartedWriter } from '#mocks/unstarted-writer';
 import { createAcpResources } from '../agents';
 import type { SessionData, SessionInput } from './session-data';
 import { sessionMachine, type SessionMachineInput } from './session-machine';
-import { routeSubagentNotification } from './subagent-routing';
 
 const { database, directory, remove } = openTestDatabase();
 
@@ -112,33 +111,4 @@ it('a new Session whose Agent cannot open discards through the writer it was giv
 
   await expect(discarded.promise).resolves.toBe(writer);
   await toPromise(session);
-});
-
-it('fails loudly instead of dropping a Subagent update when the Session has no Feed', (): void => {
-  const { context } = createActor(sessionMachine, {
-    input: {
-      ...dependencies({
-        kind: 'existing',
-        database,
-        runtimeDirectory: directory,
-        sessionId: 'session-1',
-      }),
-      writer: unstartedWriter(database),
-    },
-  }).getSnapshot();
-
-  expect(() =>
-    routeSubagentNotification({
-      context,
-      notification: {
-        sessionId: 'vendor-session',
-        update: { sessionUpdate: 'subagent_update', sessionId: 'subagent-1' },
-      },
-      parentFeed: undefined,
-      spawn: () => {
-        throw new Error('No Subagent Feed should start');
-      },
-      storageFailing: () => {},
-    }),
-  ).toThrow('Session session-1 has no Feed to route a Subagent update to');
 });

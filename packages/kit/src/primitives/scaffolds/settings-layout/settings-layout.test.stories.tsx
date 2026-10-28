@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { SettingsLayout } from './settings-layout';
 import {
   deviceGroup,
@@ -30,7 +29,7 @@ type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
 const at = (width: number, story: Story): Story => ({
   ...story,
-  beforeEach: () => settleViewport(width),
+  beforeEach: () => settleLayout(width),
 });
 
 const row = (canvas: Canvas, title: string): HTMLElement =>

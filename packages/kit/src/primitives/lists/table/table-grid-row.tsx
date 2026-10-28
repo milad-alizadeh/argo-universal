@@ -1,9 +1,11 @@
 import { use, type ReactElement, type ReactNode } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Pressable, View, type PressableProps } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
 import { ContextActions } from '#primitives/actions/action';
-import { ListContext, type ListPosition } from '../../../list-context';
+import { RowPositionContext, type ListPosition } from '../../../list-context';
+import type { ListLook } from '../../../list-look';
+import { useListLook } from '../../../list-look-context';
 import { useRowHighlight, useSeparatorCovered } from '../../../row-highlights';
 import { GridCell } from './table-cell';
 import type { TableProps } from './table-props';
@@ -43,15 +45,26 @@ function SelectedTint(): ReactElement {
   );
 }
 
-const rowClass = cn(
-  'flex-row items-center gap-4 p-3 web:select-none web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2',
-  Platform.OS !== 'android' && 'active:bg-pressed',
-  tintTransitionClassName,
-);
+const rowClass = (look: ListLook): string =>
+  cn(
+    'flex-row items-center gap-4 p-3 web:select-none web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2',
+    !look.ripple && 'active:bg-pressed',
+    tintTransitionClassName,
+  );
+
+function usePressProps(props: RowProps): PressableProps {
+  const onPress = rowPress(props, props.row);
+
+  return {
+    onPress,
+    disabled: !onPress,
+    className: rowClass(useListLook()),
+    ...useRowHighlight(),
+  };
+}
 
 function RowPress(props: RowProps & { selected?: boolean }): ReactElement {
-  const onPress = rowPress(props, props.row);
-  const press = { onPress, disabled: !onPress, ...useRowHighlight() };
+  const press = usePressProps(props);
 
   return (
     <Pressable
@@ -59,7 +72,6 @@ function RowPress(props: RowProps & { selected?: boolean }): ReactElement {
       accessibilityLabel={props.row.accessibilityLabel}
       aria-selected={props.selected}
       {...press}
-      className={rowClass}
     >
       <RowCells {...props} />
     </Pressable>
@@ -82,7 +94,7 @@ const isLast = (position: ListPosition): boolean =>
 
 // Inset with the cells, and hidden beside an iOS press, as List's are.
 function RowSeparator(): ReactNode {
-  const { position, index } = use(ListContext);
+  const { position, index } = use(RowPositionContext);
   const covered = useSeparatorCovered(index);
 
   return isLast(position) || covered ? null : (

@@ -1,6 +1,5 @@
 import type { SessionConfigOption } from '@repo/contracts';
 import { countRejection } from '@repo/machine-log';
-import { createRejectionCounter } from '@repo/machine-log';
 import {
   type ActorRefFrom,
   assertEvent,
@@ -17,17 +16,15 @@ import {
   and,
   type InputFrom,
 } from 'xstate';
-import { createAcpResponseReaders } from '../agents';
 import { sessionOpenError } from '../agents';
 import {
   messageRejectedEvent,
   turnEndingEvent,
-  readQueuedFeedRow,
   type FeedEvent,
+  type FeedInput,
   type FeedTurnEnding,
 } from '../feed';
 import { feedMachine } from '../feed';
-import { readWrittenRow, readUnaddressedPlan } from '../feed';
 import type { WriterActorRef, WriterEvent } from '../storage';
 import {
   cancelAcp,
@@ -40,14 +37,13 @@ import {
   type AcpOperationInput,
   type OpenedAcpSession,
 } from './acp-operations';
-import { AcpSessionLifetime, type AcpLifetimeEvent } from './acp/acp-lifetime';
+import type { AcpLifetimeEvent, AcpSessionLifetime } from './acp/acp-lifetime';
 import { promptFailureOutcome } from './acp/prompts/prompt-outcome';
 import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
 } from './acp/prompts/prompt-types';
 import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
-import { flushSubagentFeeds } from './acp/subagents/subagent-feeds';
 import {
   admitsPermissionAnswer,
   answeredRequest,
@@ -59,7 +55,6 @@ import {
   saveSessionArchive,
   removeSessionCheckout,
 } from './archive/archive-operations';
-import { readDefaultChangesSummary } from './changes-summary';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import {
   acknowledgeConfigChoice,
@@ -73,6 +68,7 @@ import {
   takeConfigChoice,
 } from './config-queue';
 import { toConfigValues } from './configuration/config-choices';
+import { initialSessionContext } from './initial-context';
 import { pendingInputRequest } from './pending-input';
 import {
   permissionHookedEvent,
@@ -107,13 +103,15 @@ import {
   type SessionInput,
   toSessionInsert,
 } from './session-data';
-import { createShellRuntime, withShell } from './session-shells';
+import { sessionFeedInput } from './session-feed';
 import { SessionRowUpdateJob, SessionTitleJob } from './session-storage';
-import { readShellRecords } from './shells/reader';
+import { withShell } from './shells';
 import {
-  isSubagentUpdate,
-  routeSubagentNotification,
-} from './subagent-routing';
+  flushSubagents,
+  ownsSubagentUpdate,
+  routeSubagentUpdate,
+  subagentFeed,
+} from './subagents';
 import {
   connectionLostDuringTurn,
   endTurn,
@@ -248,22 +246,19 @@ const sessionSetup = setup({
       assertEvent(event, acpUpdateEvent);
 
       return {
-        subagentFeeds: routeSubagentNotification({
-          context,
-          notification: event.notification,
-          parentFeed: self.getSnapshot().children.feed,
-          spawn: (input) =>
-            spawn('feed', {
-              id: `subagent:${input.sessionId}`,
-              systemId: `subagent-feed:${input.sessionId}`,
-              input,
-            }),
-          storageFailing: () => self.send({ type: storageFailingEvent }),
-        }),
+        subagents: routeSubagentUpdate(
+          {
+            parent: context,
+            parentFeed: self.getSnapshot().children.feed,
+            spawn: (input) => spawn('feed', subagentFeed(input)),
+            storageFailing: () => self.send({ type: storageFailingEvent }),
+          },
+          context.subagents,
+          event.notification,
+        ),
       };
     }),
-    flushSubagentFeeds: ({ context }) =>
-      flushSubagentFeeds(context.subagentFeeds),
+    flushSubagents: ({ context }) => flushSubagents(context.subagents),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
     queueAcpConfig: assign(({ context, event }) => {
@@ -704,7 +699,11 @@ const sessionSetup = setup({
         stateIn({ open: { acp: { activeTurn: 'cancelling' } } }),
       ]),
     ]),
-    isSubagentUpdate: ({ context, event }) => isSubagentUpdate(context, event),
+    isSubagentUpdate: ({ context, event }): boolean => {
+      assertEvent(event, acpUpdateEvent);
+
+      return ownsSubagentUpdate(context.subagents, event.notification);
+    },
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&
       event.notification.update.sessionUpdate === 'config_option_update',
@@ -848,62 +847,8 @@ const archiveOperationOutcome = {
 
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
-  context: ({ input, self }): SessionContext => {
-    const shellRuntime = createShellRuntime(input, self);
-
-    return {
-      input,
-      archiveRequested: input.archive ?? false,
-      sessionId: input.sessionId,
-      projectId: input.kind === 'new' ? input.projectId : '',
-      agent: input.kind === 'new' ? input.agent : '',
-      vendorSessionId: null,
-      checkout: { path: '', branch: null },
-      configValues: [],
-      epoch: 0,
-      maxRevision: 0,
-      activityAt: 0,
-      nextPosition: 0,
-      kept: false,
-      undisclosedInterruptedTurnId: null,
-      activeTurnId: null,
-      activeTurnStartedAt: null,
-      usage: null,
-      permissionQueue: [],
-      hookedPermissions: {},
-      elicitationQueue: [],
-      configOptions: [],
-      rejectedMessages: 0,
-      failure: null,
-      openError: null,
-      stored: input.kind === 'existing',
-      sessionInsertCommitted: null,
-      acpLifetime: new AcpSessionLifetime(
-        input.acp,
-        input.createId,
-        shellRuntime,
-      ),
-      shellRuntime,
-      shells: readShellRecords(input.database, input.sessionId),
-      acpLease: null,
-      pendingSubmission: null,
-      feedEnded: false,
-      subagentFeeds: { children: new Map(), pendingMessages: [] },
-      acpPrompt: null,
-      acpResponseReaders: createAcpResponseReaders(
-        createRejectionCounter(`ACP Session ${input.sessionId}`),
-      ),
-      acpConfigurationRejections: createRejectionCounter(
-        `ACP configuration ${input.sessionId}`,
-      ),
-      acpTurnOutcome: null,
-      turnEnding: { kind: 'completion' },
-      configQueue: [],
-      heldConfig: [],
-      applyingConfig: null,
-      storageFailedTurn: false,
-    };
-  },
+  context: ({ input, self }): SessionContext =>
+    initialSessionContext(input, (event) => self.send(event)),
   on: {
     // Outside a Turn a hooked answer has nothing to settle; its Hooks still end.
     [permissionHookedEvent]: { actions: 'forgetPermissionHooks' },
@@ -957,41 +902,10 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'feed',
         src: 'feed',
-        input: ({ context, self }): InputFrom<typeof feedMachine> => ({
-          sessionId: context.sessionId,
-          epoch: context.epoch,
-          maxRevision: context.maxRevision,
-          activityAt: context.activityAt,
-          nextPosition: context.nextPosition,
-          now: context.input.now,
-          createId: context.input.createId,
-          refreshChanges: () =>
-            readDefaultChangesSummary(
-              context.input.database,
-              context.projectId,
-              context.checkout.path,
-            ),
-          findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
-            readWrittenRow({
-              database: context.input.database,
-              pending: readQueuedFeedRow(context.input.writer, {
-                sessionId: context.sessionId,
-                id,
-              }),
-              sessionId: context.sessionId,
-              id,
-            }),
-          storageFailing: (): void => self.send({ type: storageFailingEvent }),
-          findUnaddressedPlan: (
-            acpSessionId,
-          ): ReturnType<typeof readUnaddressedPlan> =>
-            readUnaddressedPlan({
-              database: context.input.database,
-              writer: context.input.writer,
-              sessionId: context.sessionId,
-              acpSessionId,
-            }),
-        }),
+        input: ({ context, self }): FeedInput =>
+          sessionFeedInput(context, () =>
+            self.send({ type: storageFailingEvent }),
+          ),
         onDone: [
           { guard: 'agentAlreadyDrained', target: 'finishing' },
           {
@@ -1508,7 +1422,7 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             flushing: {
               on: { 'session.close': {} },
-              entry: ['flushSubagentFeeds', 'flushFeed'],
+              entry: ['flushSubagents', 'flushFeed'],
               after: {
                 feedFlushLimit: {
                   target: closedSessionTarget,

@@ -32,14 +32,21 @@ interface SectionBlock {
 export interface ListTree {
   folding: TreeFolding;
   holds: boolean;
+  // A section's footer is drawn; Android puts the description on the row instead.
+  footerShown: boolean;
 }
 
 const sectionChildren = (child: ReactNode): ReactNode[] | undefined =>
   isSection(child) ? flattenedChildren(child.props.children) : undefined;
 
-export function listTree(children: ReactNode, folding: TreeFolding): ListTree {
+export function listTree(
+  children: ReactNode,
+  folding: TreeFolding,
+  footerShown: boolean,
+): ListTree {
   return {
     folding,
+    footerShown,
     holds: holdsTree(flattenedChildren(children), sectionChildren),
   };
 }
@@ -100,7 +107,7 @@ function sectionBlock(
   key: string,
   tree: ListTree,
 ): SectionBlock {
-  const section = prepareSection(child.props, key);
+  const section = prepareSection(child.props, key, tree.footerShown);
 
   return {
     key,

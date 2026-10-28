@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { fadedEdges } from '../../../../../mocks/scroll-fade';
@@ -38,7 +37,7 @@ export const MemoizedRows: Story = {
 
 // A wide window's heading draws its Actions as buttons, always shown in the sidebar.
 export const ProjectActions: Story = {
-  beforeEach: () => settleViewport(layoutWidths.wide),
+  beforeEach: () => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
@@ -160,7 +159,7 @@ export const ScrollFade: Story = {
     </View>
   ),
   play: async ({ canvas }) => {
-    if ('__vitest_browser__' in globalThis) await settleViewport(390);
+    if ('__vitest_browser__' in globalThis) await settleLayout('phone');
     const scroll = await canvas.findByTestId(sessionsScrollId);
     scroll.scrollTop = 0;
     // The last rows always sink into the bottom edge; the top fades once rows scroll under it.

@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { ControlledPicker } from './field-picker-controlled';
 import { inStackedScreen } from './field-picker-decorators';
 import { pill, pillLoadError, pillLoading } from './field-picker-fixtures';
@@ -32,7 +31,7 @@ const page = (): ReturnType<typeof within> => within(document.body);
 // Choosing a row reports it, closes the page and names it on the pill.
 function choosing(width: number): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', pillName));
       await userEvent.click(await page().findByRole('radio', { name: 'Elm' }));
@@ -54,7 +53,7 @@ export const ChoosesOnPushedScreen = choosing(layoutWidths.phone);
 
 // The search field has focus as the popover opens; typing narrows the rows, and nothing is reported until a choice.
 export const SearchFilters: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', pillName));
 
@@ -69,7 +68,7 @@ export const SearchFilters: Story = {
 };
 
 export const EmptyState: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', pillName));
     await userEvent.type(
@@ -84,7 +83,7 @@ export const EmptyState: Story = {
 };
 
 export const ArrowKeysAndEnterChoose: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', pillName));
     await userEvent.type(
@@ -101,7 +100,7 @@ export const LoadingSaysSo: Story = {
   render: (): React.JSX.Element => (
     <ControlledPicker {...pillLoading} onValueChange={changed} />
   ),
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', pillName));
     await expect(await page().findByRole('status')).toHaveTextContent(
@@ -114,7 +113,7 @@ export const LoadErrorIsAnnounced: Story = {
   render: (): React.JSX.Element => (
     <ControlledPicker {...pillLoadError} onValueChange={changed} />
   ),
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', pillName));
     await expect(await page().findByRole('alert')).toHaveTextContent(

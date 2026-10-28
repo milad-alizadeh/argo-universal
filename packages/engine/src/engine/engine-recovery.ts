@@ -1,5 +1,4 @@
 import type { Database } from '@repo/db';
-import { releaseShellGroups } from '../agents';
 import {
   attachmentsFolderIn,
   removeOrphanAttachments,
@@ -9,6 +8,7 @@ import {
   recoverAfterRestart,
   recoverArchivedCheckouts,
   recoverShells,
+  releaseShellGroups,
 } from '../sessions';
 
 export type RecoveryInput = {

@@ -1,7 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { useSectionDrawing } from '../../../list-look-context';
-import { useInMenu } from '../../../menu-rows-context';
+import { useListLook } from '../../../list-look-context';
 import type { ListChild } from './list-children';
 import type { ListBlock } from './list-section-model';
 import type { SectionState } from './list-section-state';
@@ -39,9 +38,9 @@ function partEntry(content: ReactNode, key: string): ListChild[] {
 
 // Paper's Combobox groups sit 8px apart; other lists use their section drawing.
 function SectionGap(): ReactElement {
-  const { below } = useSectionDrawing();
+  const { menu, section } = useListLook();
 
-  return <View className={useInMenu() ? 'h-2' : below} />;
+  return <View className={menu ? 'h-2' : section.below} />;
 }
 
 // The last popover group ends at the popover's own inset.

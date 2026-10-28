@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Platform } from 'react-native';
+import { useListLook } from '../../../list-look-context';
 
 /*
  * Capture how focus arrived. Chromium can turn :focus-visible on later when
@@ -13,8 +13,9 @@ interface RowFocus {
 
 export function useRowFocus(): RowFocus {
   const [visible, setVisible] = useState(false);
+  const { domRows } = useListLook();
 
-  if (Platform.OS !== 'web') return {};
+  if (!domRows) return {};
 
   return {
     onFocus: (event: { currentTarget: unknown }): void => {

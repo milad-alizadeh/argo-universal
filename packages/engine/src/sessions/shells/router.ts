@@ -14,13 +14,13 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../../rpc';
-import { toShell } from '../acp/shells/shells';
 import type { SessionRouterDeps } from '../router-deps';
 import { validateSessionCommandAdmission } from '../session-command';
 import { requireLiveSessionActor } from '../session-system';
 import { watchShellOutput } from './output';
 import { requireShell } from './output-reader';
 import { readShellRecords } from './reader';
+import { toShell } from './shell-data';
 
 const listShells = (
   deps: SessionRouterDeps,

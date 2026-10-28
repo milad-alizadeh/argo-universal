@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { router } from 'expo-router';
 import { expect, spyOn, waitFor } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { canPointAt } from '../../../../mocks/point-hit';
 import { Markdown } from './index';
 
@@ -40,7 +39,7 @@ export const WrappedCellsRemainReadable: Story = {
     text: `| Name | Value |\n| --- | --- |\n| First | ${longCell} [Read more](/settings) |\n| Second | Next row |`,
   },
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const link = canvas.getByRole('link', { name: 'Read more' });
     await waitFor(() => expect(canPointAt(link)).toBe(true));
     await expect(canvas.getByText('Next row')).toBeVisible();
@@ -52,7 +51,7 @@ export const CompactCellLinksWorkFromTheKeyboard: Story = {
     text: '| Name | Info |\n| --- | --- |\n| [First link](/settings) | [Later link](/settings) |',
   },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const first = canvas.getByRole('link', { name: 'First link' });
     const later = canvas.getByRole('link', { name: 'Later link' });
     const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
@@ -85,7 +84,7 @@ export const WideTablesKeepEveryColumnReachable: Story = {
     text: '| A | B | C | D | E | F | G |\n| --- | --- | --- | --- | --- | --- | --- |\n| First | Two | Three | Four | Five | Six | Last column |',
   },
   play: async ({ canvas }) => {
-    await settleViewport(1024);
+    await settleLayout('tablet');
     const last = canvas.getByText('Last column');
     const scroller = horizontalScroller(last);
     scroller.scrollLeft = scroller.scrollWidth;

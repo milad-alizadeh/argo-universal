@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -48,7 +47,7 @@ function first(elements: HTMLElement[], missing: string): HTMLElement {
 export const InlineCode: Story = {
   play: async ({ canvas }) => {
     for (const width of widths) {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const codeElement = first(
         canvas.getAllByText('sleep 20 && echo done', { exact: true }),
@@ -79,7 +78,7 @@ function opensImage(agent: MockAgent, width: number): Story {
   return {
     args: { row: recordedUserMessage(agent, 'image-prompt') },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(within(document.body).queryByRole('dialog')).toBeNull();
 
       const thumbnail = canvas.getByRole('button', {
@@ -127,7 +126,7 @@ function showsMore(agent: MockAgent, width: number): Story {
   return {
     args: { row: recordedPrompt(agent, 'markdown-prompt') },
     play: async ({ canvas, canvasElement, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const showMore = await canvas.findByRole('button', { name: 'Show more' });
       await waitFor(() =>
         expect(lineViews(canvasElement)).not.toContain('cut'),
@@ -170,11 +169,11 @@ export const SecondAgentShowMoreWide = showsMore('agent-2', layoutWidths.wide);
 export const ClampsAgainWhenNarrowed: Story = {
   args: { row: recordedUserMessage('agent-2', 'edit-states') },
   play: async ({ canvas, canvasElement }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await waitFor(() =>
       expect(canvas.queryByRole('button', { name: 'Show more' })).toBeNull(),
     );
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await canvas.findByRole('button', { name: 'Show more' });
     await waitFor(() => expect(lineViews(canvasElement)).not.toContain('cut'));
     await expect(lineViews(canvasElement)).toContain('hidden');

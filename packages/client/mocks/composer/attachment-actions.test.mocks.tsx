@@ -1,5 +1,4 @@
-import { wideBreakpoint } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { fn, expect, waitFor, within } from 'storybook/test';
@@ -10,7 +9,7 @@ export function withImages(width: number): Story {
   return {
     render: () => <View testID="controlled-images" />,
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const root = createRoot(canvas.getByTestId('controlled-images'));
       const onDraftChange = fn();
 
@@ -64,7 +63,7 @@ export function attachmentMenus(width: number): Story {
     },
     play: async ({ canvas, userEvent, args }) => {
       const overlay = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
 
       const choices =
         width < wideBreakpoint()

@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { Menu } from './menu';
 
 const askLabel = 'Ask before changes';
@@ -62,7 +61,7 @@ type Story = StoryObj<typeof meta>;
 function keyboardSelection(width: number): Story {
   return {
     play: async ({ canvas, canvasElement, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const page = within(canvasElement.ownerDocument.body);
       const trigger = canvas.getByRole('button', { name: 'Permissions' });
       trigger.focus();
@@ -116,7 +115,7 @@ export const KeyboardSelectionPhone = keyboardSelection(layoutWidths.phone);
 function pointerSelection(width: number): Story {
   return {
     play: async ({ canvas, canvasElement, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const page = within(canvasElement.ownerDocument.body);
       const trigger = canvas.getByRole('button', { name: 'Permissions' });
       await userEvent.click(trigger);
@@ -141,7 +140,7 @@ function disabledTrigger(width: number): Story {
   return {
     args: { disabled: true },
     play: async ({ canvas, canvasElement, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const page = within(canvasElement.ownerDocument.body);
       const trigger = canvas.getByRole('button', { name: 'Permissions' });
       await expect(trigger).toBeDisabled();

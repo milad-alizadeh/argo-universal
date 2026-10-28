@@ -1,27 +1,16 @@
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { gateProblems, type Sources } from './story-gate-rules.mts';
+import { root, trackedFiles } from './tracked-files.mts';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
-
-const tracked = (...globs: string[]): string[] =>
-  execFileSync('git', ['ls-files', '--', ...globs], {
-    cwd: root,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter((file) => file && existsSync(resolve(root, file)));
-
-const files = tracked('*.stories.tsx');
+const files = trackedFiles(['*.stories.tsx']);
 
 /*
  * A gate that reads a component's props needs the component beside its story, and the `*-props.ts`
  * the component may take them from, so every TypeScript source is on hand before a story is read.
  */
 const sources: Sources = new Map(
-  tracked('*.ts', '*.tsx', '*.mts').map((file): [string, string] => [
+  trackedFiles(['*.ts', '*.tsx', '*.mts']).map((file): [string, string] => [
     file,
     readFileSync(resolve(root, file), 'utf8'),
   ]),

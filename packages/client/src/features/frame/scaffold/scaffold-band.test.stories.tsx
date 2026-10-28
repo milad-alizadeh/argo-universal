@@ -1,7 +1,7 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, within } from 'storybook/test';
-import { page } from 'vitest/browser';
 import {
   controlledPlay,
   scaffoldMeta,
@@ -18,7 +18,7 @@ export default meta;
 
 export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
   play: controlledPlay(async ({ canvas }, controlled) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     await controlled.render({});
     const band = canvas.getByTestId('window-band');
     const toggle = canvas.getByRole('button', { name: 'Hide sidebar' });
@@ -32,7 +32,7 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
 function trailingControls(width: number): ScaffoldStory {
   return {
     play: controlledPlay(async ({ canvas }, controlled) => {
-      await page.viewport(width, 844);
+      await settleLayout(width);
       const group = canvas.getByTestId('window-band-trailing');
       const controls = within(group).getAllByRole('button');
       const positions = controls.map(position);
@@ -82,7 +82,7 @@ export const LongTitleStopsAtTheTrailingControls: ScaffoldStory = {
     },
   },
   play: controlledPlay(async ({ canvas }) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     const title = canvas.getByTestId('band-title');
     const group = canvas.getByTestId('window-band-trailing');
     const text = within(title).getByRole('heading');
@@ -96,7 +96,7 @@ export const LongTitleStopsAtTheTrailingControls: ScaffoldStory = {
 // Compact drill-in belongs to the page; desktop navigation and pane controls do not survive on a phone.
 export const CompactShowsThePageWithoutDesktopChrome: ScaffoldStory = {
   play: controlledPlay(async ({ canvas }, controlled) => {
-    await page.viewport(390, 844);
+    await settleLayout('phone');
     await controlled.render({ sizeClass: 'compact' });
     await expect(canvas.getByTestId('compact-frame')).toBeVisible();
     await expect(canvas.getByTestId('detail-content')).toBeVisible();

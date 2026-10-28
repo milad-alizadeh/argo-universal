@@ -1,30 +1,14 @@
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   duplicateTitleProblems,
   presentationTitles,
   type StoryFile,
   storyTitleProblems,
 } from './story-title-rules.mts';
+import { root, trackedFiles } from './tracked-files.mts';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
-
-const files = execFileSync(
-  'git',
-  [
-    'ls-files',
-    '--cached',
-    '--others',
-    '--exclude-standard',
-    '--',
-    '*.stories.tsx',
-  ],
-  { cwd: root, encoding: 'utf8' },
-)
-  .split('\n')
-  .filter((file): boolean => file !== '' && existsSync(resolve(root, file)));
+const files = trackedFiles(['*.stories.tsx'], { untracked: true });
 
 const stories: StoryFile[] = files.map((file): StoryFile => ({
   file,

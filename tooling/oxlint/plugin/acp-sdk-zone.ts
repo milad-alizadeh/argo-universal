@@ -8,7 +8,7 @@ export const acpSdkZone = defineRule({
     type: 'problem',
     messages: {
       acpSdkZone:
-        'Only acp/ and the feed/acp and sessions/acp translators import the ACP SDK (Spec 0011); elsewhere, take the type from the translator that owns it.',
+        'Only acp/, the feed/acp and sessions/acp translators, and the Shells and Subagents modules import the ACP SDK (Spec 0011); elsewhere, take the type from the translator that owns it.',
     },
   },
   create: (context): Visitor =>

@@ -1,5 +1,5 @@
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { fn, waitFor, expect } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import {
@@ -13,7 +13,7 @@ export function editorScrollsAfterTenLines(width: number): Story {
   return {
     render: () => <SendingComposer onSend={fn()} />,
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
       await browserUserEvent.type(input, 'Line 1');
       const oneLineHeight = input.clientHeight;

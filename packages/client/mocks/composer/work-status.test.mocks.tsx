@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { canPointAt } from '@repo/kit/mocks/point-hit';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
 import {
@@ -38,7 +37,7 @@ export function workStatusCounts(
       },
     },
     play: async ({ canvas }) => {
-      await settleViewport(layoutWidths.phone);
+      await settleLayout('phone');
 
       const subagents = canvas.getByRole('button', {
         name: subagentCountLabel,

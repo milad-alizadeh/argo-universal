@@ -2,11 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { Dialog, DialogContent } from '#primitives/overlays/dialog';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { ContextMenu } from './context-menu';
 
 // The Dialog's field takes focus as it opens.
@@ -48,7 +47,7 @@ const rightClick = (user: UserEvent, target: Element): Promise<void> =>
 async function opensWide(): Promise<void> {
   onRename.mockClear();
   onArchive.mockClear();
-  await settleViewport(layoutWidths.wide);
+  await settleLayout('wide');
 }
 
 // A right-click opens the menu with its actions in one list, no separator; choosing an action runs it and closes the menu.
@@ -109,7 +108,7 @@ function RenameInDialog(): ReactElement {
 // The action runs once the menu has let go of focus, so the dialog it opens, a sheet or centred, keeps focus in its field.
 function opensDialogAt(layout: 'phone' | 'wide'): Story {
   return {
-    beforeEach: () => settleViewport(layoutWidths[layout]),
+    beforeEach: () => settleLayout(layout),
     render: () => <RenameInDialog />,
     play: async ({ canvas, userEvent }) => {
       await userEvent.pointer({

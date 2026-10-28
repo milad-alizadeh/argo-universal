@@ -9,7 +9,7 @@ import type {
   SessionWrite,
 } from './session-context';
 import { TurnInsertJob, TurnUpdateJob } from './session-storage';
-import { crashedSubagentTurns } from './subagents/crash';
+import { crashedSubagentTurns } from './subagents';
 
 export type StartTurnParameters = { turnId: string; content: ContentBlock[] };
 
@@ -158,10 +158,7 @@ export const recordCrash = (
         : undefined,
   };
 
-  const subagents = crashedSubagentTurns(
-    context.subagentFeeds.children,
-    ending,
-  );
+  const subagents = crashedSubagentTurns(context.subagents, ending);
 
   if (duringTurn && context.activeTurnId)
     return { subagents, turnEnding: { ...context.turnEnding, ...ending } };

@@ -1,4 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths } from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';

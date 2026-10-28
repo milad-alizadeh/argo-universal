@@ -1,5 +1,4 @@
-import { wideBreakpoint } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { fn, within, expect, waitFor } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
 import { composerProps } from '../composer-mock';
@@ -36,7 +35,7 @@ export function sessionControls(width: number): Story {
     args: { onStop: fn() },
     play: async ({ canvas, userEvent, args }) => {
       const overlay = within(document.body);
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(
         canvas.queryByRole('button', { name: 'Checkout' }),
       ).not.toBeInTheDocument();

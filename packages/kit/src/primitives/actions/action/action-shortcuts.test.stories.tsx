@@ -2,9 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { TextInput } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
 import { PluginTreeContext } from '#kit/plugin-tree-context';
+import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import {
   Action,
   ActionButtons,
@@ -69,7 +68,7 @@ export const ShortcutConflicts: Story = {
   ),
   play: async ({ canvas, canvasElement, userEvent }) => {
     choose.mockClear();
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.keyboard('{Alt>}i{/Alt}');
     await expect(choose).toHaveBeenCalledTimes(1);
     await expect(choose).toHaveBeenLastCalledWith('first');

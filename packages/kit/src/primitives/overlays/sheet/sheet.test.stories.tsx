@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import { Sheet } from './sheet';
 import { PagedSheet } from './sheet.stories';
 
@@ -25,7 +24,7 @@ const fruitScreen = { name: 'Select Fruit' };
 // A link pushes its page, Back returns to the page below, and a pick on the pushed page goes back with the new value.
 function screensAt(width: number): Story {
   return {
-    beforeEach: (): Promise<void> => settleViewport(width),
+    beforeEach: (): Promise<void> => settleLayout(width),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));
       await userEvent.click(await body.findByRole('link', { name: /Fruit/ }));
@@ -85,7 +84,7 @@ function isDrawer(dialog: HTMLElement): boolean {
 function triggerlessAt(layout: keyof typeof layoutWidths): Story {
   return {
     render: () => <TriggerlessSheet />,
-    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    beforeEach: (): Promise<void> => settleLayout(layout),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
       const dialog = await body.findByRole('dialog', answerSheet);
@@ -106,7 +105,7 @@ export const TriggerlessModalOnDesktop: Story = triggerlessAt('wide');
 // While the modal holds unsaved input, neither a press on the backdrop nor Escape closes it.
 export const TriggerlessModalKeepsInput: Story = {
   render: () => <TriggerlessSheet dismissible={false} />,
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.tablet),
+  beforeEach: (): Promise<void> => settleLayout('tablet'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
     const dialog = await body.findByRole('dialog', answerSheet);

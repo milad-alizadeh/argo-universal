@@ -7,7 +7,6 @@ import {
   useDeclaredListLook,
   useListLook,
 } from '../../../list-look-context';
-import { useInMenu } from '../../../menu-rows-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
@@ -22,7 +21,7 @@ import { ListMenuRows } from './list-menu-rows';
 import { NativeGroupedList } from './list-native-grouped';
 import { asksNothingNativeLacks, holdsNativeRows } from './list-native-rows';
 import type { ListProps } from './list-props';
-import { scrollProps } from './list-scroll-props';
+import { useScrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
 import type { ListBlock } from './list-section-model';
 import { SectionShelves, type ChildDataProps } from './list-section-shelves';
@@ -36,7 +35,7 @@ function useDataListProps<Item>(
   const contentContainerStyle = useListPadding(props);
 
   return {
-    ...scrollProps(props),
+    ...useScrollProps(props),
     data: props.items ?? [],
     renderItem,
     contentContainerStyle,
@@ -65,7 +64,7 @@ function RowList<Item>(props: ListProps<Item>): ReactElement {
     <ListGrouping list={props}>
       <RowHighlightProvider>
         <ScrollFadeList
-          surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
+          surfaceClassName={useListLook().menu ? 'bg-card' : 'bg-content'}
           style={fill}
           {...useDataListProps(props)}
         />

@@ -1,11 +1,6 @@
-import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { kitComponentSchemas } from '@repo/contracts/plugins/kit-prop-descriptors';
 import { pairingProblems, type SchemaEntry } from './kit-pairing-rules.mts';
-
-const root = fileURLToPath(new URL('..', import.meta.url));
+import { trackedFiles } from './tracked-files.mts';
 
 const primitives = 'packages/kit/src/primitives/';
 
@@ -16,23 +11,7 @@ const schemas: SchemaEntry[] = Object.entries(kitComponentSchemas).map(
 // A drawing folder is `<group>/<folder>/` holding at least one tracked file.
 const folders = [
   ...new Set(
-    execFileSync(
-      'git',
-      [
-        'ls-files',
-        '--cached',
-        '--others',
-        '--exclude-standard',
-        '--',
-        primitives,
-      ],
-      {
-        cwd: root,
-        encoding: 'utf8',
-      },
-    )
-      .split('\n')
-      .filter((file): boolean => file !== '' && existsSync(resolve(root, file)))
+    trackedFiles([primitives], { untracked: true })
       .map((file): string[] => file.slice(primitives.length).split('/'))
       .filter((parts): boolean => parts.length > 2)
       .map((parts): string => parts.slice(0, 2).join('/')),

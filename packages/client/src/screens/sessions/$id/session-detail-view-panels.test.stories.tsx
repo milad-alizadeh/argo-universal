@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, within } from 'storybook/test';
@@ -13,7 +13,7 @@ const meta = {
   parameters: { screenPreview: true },
   args: { view: panelsSession },
   render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,
-  beforeEach: (): Promise<void> => settleViewport(desktopWithInspector),
+  beforeEach: (): Promise<void> => settleLayout(desktopWithInspector),
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export default meta;

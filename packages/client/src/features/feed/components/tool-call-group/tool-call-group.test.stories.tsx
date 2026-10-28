@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { toolCallGroupMock, toolCallGroupMocks } from '../tool-call.mocks';
@@ -29,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 function settled(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const group = canvas.getByRole('button', {
         name: commandAndFileSummary,
@@ -67,7 +66,7 @@ function running(width: number): Story {
   return {
     args: { group: toolCallGroupMock.running },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const group = canvas.getByRole('button', {
         name: commandTitle,
@@ -129,7 +128,7 @@ function agentParity(width: number): Story {
       </>
     ),
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const groups = canvas.getAllByRole('button', {
         name: commandAndFileSummary,

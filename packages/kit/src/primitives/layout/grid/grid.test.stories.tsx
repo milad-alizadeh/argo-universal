@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect } from 'storybook/test';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Grid } from './grid';
@@ -32,10 +32,10 @@ export const ReflowPreservesChildState: Story = {
     </Grid>
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(1440);
+    await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Count 0' }));
     await expect(canvas.getByRole('button', { name: 'Count 1' })).toBeVisible();
-    await settleViewport(390);
+    await settleLayout('phone');
     await expect(canvas.getByRole('button', { name: 'Count 1' })).toBeVisible();
     await expect(canvas.getByText('Final item')).toBeVisible();
   },

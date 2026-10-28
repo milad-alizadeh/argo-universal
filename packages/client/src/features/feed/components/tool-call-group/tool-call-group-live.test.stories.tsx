@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { runningRead, toolCallGroupMock } from '../tool-call.mocks';
@@ -32,7 +31,7 @@ function parallelCalls(width: number, agentIndex: number): Story {
   return {
     args: { group: recorded.parallel, now: recorded.now },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const header = canvas.getByRole('button', { name: expectedTitle });
       await expect(header).toBeVisible();
       await expect(header).toHaveTextContent('23s');
@@ -74,7 +73,7 @@ function runningReadGroup(width: number): Story {
       now: runningReadNow,
     },
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const header = canvas.getByRole('button', {
         name: readFileTitle,

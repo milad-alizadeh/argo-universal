@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
+import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { shownText } from '../../../../mocks/shown-text';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import {
   exampleLabel as label,
   RichTextareaExample,
@@ -18,7 +17,7 @@ const meta = {
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
   beforeEach: async (): Promise<void> => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
   },
   render: (args): React.JSX.Element => (
     <>

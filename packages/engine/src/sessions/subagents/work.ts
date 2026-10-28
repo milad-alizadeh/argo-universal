@@ -27,7 +27,7 @@ function startWork(input: SubagentRouting, child: ChildFeed): ChildFeed {
   return { ...child, turnId };
 }
 
-export function endSubagentWork(
+function endSubagentWork(
   input: SubagentRouting,
   child: ChildFeed,
   outcome: SubagentWorkState,

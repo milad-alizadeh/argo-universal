@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { type AgentsFilter, agentsPage } from '#features/agents';
@@ -26,7 +25,7 @@ type Story = StoryObj<typeof meta>;
 
 function filtering(width: number): Story {
   return {
-    beforeEach: () => settleViewport(width),
+    beforeEach: () => settleLayout(width),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', { name: 'Installed' }));
       await expect(
@@ -54,7 +53,7 @@ export const FiltersPhone = filtering(layoutWidths.phone);
 
 function searching(width: number): Story {
   return {
-    beforeEach: () => settleViewport(width),
+    beforeEach: () => settleLayout(width),
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(
         canvas.getByRole('button', { name: 'Search Agents' }),
@@ -145,7 +144,7 @@ export const Retry: Story = {
 
 // The last Agent must fit inside the window when the catalog is scrolled to its end.
 export const CatalogEndReachable: Story = {
-  beforeEach: () => settleViewport(layoutWidths.wide),
+  beforeEach: () => settleLayout('wide'),
   args: { agents: pageRows([], { status: 'loaded', registry: longCatalog }) },
   play: async ({ canvas }) => {
     const scroll = await canvas.findByTestId('agents-catalog');

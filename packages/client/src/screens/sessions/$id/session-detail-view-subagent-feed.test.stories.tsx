@@ -1,6 +1,5 @@
 import type { Subagent } from '@repo/contracts';
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -83,7 +82,7 @@ const incomingMessage = /^Use apply_patch to change beta to gamma/;
 // Tapping a Subagent row in the Feed opens where its Subagents list row opens.
 function feedRowOpens(width: number): Story {
   return {
-    beforeEach: () => settleViewport(width),
+    beforeEach: () => settleLayout(width),
     args: { view: sessionWithSubagentFeed() },
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(
@@ -103,7 +102,7 @@ function listRowOpensFeed(width: number): Story {
   const wide = width === layoutWidths.wide;
 
   return {
-    beforeEach: () => settleViewport(width),
+    beforeEach: () => settleLayout(width),
     args: { view: sessionWithSubagentFeed() },
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(

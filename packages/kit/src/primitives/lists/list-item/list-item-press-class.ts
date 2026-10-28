@@ -1,8 +1,7 @@
 import { use } from 'react';
 import { ListTileContext } from '../../../list-context';
-import { useCompactRows } from '../../../list-look-context';
-import { useInMenu } from '../../../menu-rows-context';
-import { useRowDrawing } from '../../../row-drawing-context';
+import type { ListLook } from '../../../list-look';
+import { useCompactRows, useListLook } from '../../../list-look-context';
 import { cn } from '../../../utils';
 import type { DrawingProps } from './list-item-press-props';
 import { itemPress } from './list-item-press-styles';
@@ -35,14 +34,13 @@ const rowPress = (
 // The row's press lanes and tints, by where it sits: a menu, a sidebar, or its List's appearance.
 export function usePressClass(props: DrawingProps): string {
   const place = {
-    menu: useInMenu(),
-    rows: useRowDrawing(),
+    look: useListLook(),
     compact: useCompactRows(props.sidebar),
   };
 
   const tile = use(ListTileContext);
 
-  if (tile) return tilePress(props);
+  if (tile) return tilePress(props, place.look);
 
   return regularPress(props, { ...place, ...rowPress(props) });
 }
@@ -59,11 +57,10 @@ function regularPress(
   );
 }
 
-function tilePress(props: DrawingProps): string {
+function tilePress(props: DrawingProps, look: ListLook): string {
   return cn(
     'w-full flex-col items-stretch overflow-hidden rounded-3xl web:select-none',
-    interactive(props) &&
-      'web:hover:bg-hover web:active:bg-pressed ios:active:bg-pressed',
+    interactive(props) && ['web:hover:bg-hover', look.pressedTint],
     props.disabled && 'opacity-50',
   );
 }

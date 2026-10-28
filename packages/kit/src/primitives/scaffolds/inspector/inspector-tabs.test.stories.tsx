@@ -1,13 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { ExampleTabsPane } from './inspector.mocks';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Scaffolds/Inspector/Tabs',
   component: ExampleTabsPane,
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof ExampleTabsPane>;
 
 export default meta;

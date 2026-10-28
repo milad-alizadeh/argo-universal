@@ -2,20 +2,17 @@ import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { Text, TextClassContext } from '#primitives/content/text';
-import { useListLook, useSectionDrawing } from '../../../list-look-context';
+import { useSectionDrawing } from '../../../list-look-context';
 import type { SectionDrawing } from '../../../list-look-section';
 import { SkeletonBar } from '../../../list-skeleton';
 import { SizeClass } from '../../../size-class/size-class';
 import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
-import { HeaderActions, hasActions } from './list-section-actions';
+import { HeaderActions } from './list-section-actions';
 import { HeaderLeading } from './list-section-leading';
 import { HeaderTitleLine } from './list-section-title-line';
 
-/*
- * Kit-only, a data List's header: a desktop sidebar's section (Paper "SessionsList") draws a muted title after a 16
- * glyph 6 before it, its actions always shown 24 wide and 4 apart, 12 in from the rows' edge; its caller spaces it.
- */
+// Kit-only, a data List's header: a desktop sidebar's section draws a muted title after a glyph; its caller spaces it.
 export type HeaderProps = Omit<ListSectionProps, 'children'> & {
   sidebar?: boolean;
 };
@@ -111,11 +108,14 @@ function HeaderButton(props: DrawnHeaderProps): ReactElement {
 const headerClassName = (
   props: HeaderProps,
   drawing: SectionDrawing,
-  edge: string,
 ): string =>
   props.sidebar
     ? 'group min-h-6 flex-row items-center gap-1 px-3'
-    : cn('group flex-row items-start gap-1', drawing.inset, edge);
+    : cn(
+        'group flex-row items-start gap-1',
+        drawing.inset,
+        drawing.headingBelow,
+      );
 
 interface HeaderDrawing {
   drawing: SectionDrawing;
@@ -124,9 +124,8 @@ interface HeaderDrawing {
 
 function useHeaderDrawing(props: HeaderProps): HeaderDrawing {
   const drawing = useSectionDrawing();
-  const { edges } = useListLook();
 
-  return { drawing, className: headerClassName(props, drawing, edges.heading) };
+  return { drawing, className: headerClassName(props, drawing) };
 }
 
 function HeaderRow(props: HeaderProps & { wide: boolean }): ReactElement {
@@ -168,15 +167,4 @@ export function ListSectionHeader(props: HeaderProps): ReactNode {
       <SectionHeader {...props} />
     </View>
   );
-}
-
-export function hasSectionHeader(props: ListSectionProps): boolean {
-  return [
-    props.title,
-    props.leading,
-    props.trailing,
-    hasActions(props.actions),
-    props.onExpandedChange,
-    props.isLoading,
-  ].some(Boolean);
 }

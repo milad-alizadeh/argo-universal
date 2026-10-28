@@ -1,9 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { Platform } from 'react-native';
 import { useScrollEndGap } from '#kit/scroll-surface';
 import { Icon } from '#primitives/content/icon';
 import { ListFooter } from '../../../list-footer';
+import type { ListLook } from '../../../list-look';
+import { useListLook } from '../../../list-look-context';
 import { listTestIdProps } from '../../../list-test-id';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { ListHeader } from './list-header';
@@ -33,9 +34,10 @@ function testProps(
 
 function scrollBounds<Item>(
   props: ListProps<Item>,
+  look: ListLook,
 ): Partial<ScrollFadeListProps<Item>> {
   return {
-    edges: props.edges ?? nativeEdges,
+    edges: props.edges ?? (look.edgeFades ? undefined : noEdgeFades),
     ref: props.ref,
     maxHeight: props.maxHeight,
   };
@@ -71,9 +73,12 @@ function listContents<Item>(
   };
 }
 
-export function scrollProps<Item>(
+// What a List hands its scroll view, by its props and its List look.
+export function useScrollProps<Item>(
   props: ListProps<Item>,
 ): Partial<ScrollFadeListProps<Item>> {
+  const look = useListLook();
+
   return {
     ...scrollEvents(props),
     ...streamProps(props),
@@ -81,16 +86,17 @@ export function scrollProps<Item>(
     extraData: props.extraData,
     recycleItems: props.recycleItems ?? false,
 
-    ...accessibilityProps(props),
+    ...accessibilityProps(props, look),
     ...testProps(props.testID),
-    ...scrollBounds(props),
+    ...scrollBounds(props, look),
   };
 }
 
 function accessibilityProps<Item>(
   props: ListProps<Item>,
+  { domRows }: ListLook,
 ): Partial<ScrollFadeListProps<Item>> {
-  if (Platform.OS === 'web')
+  if (domRows)
     return {
       role: props.accessibilityRole,
       'aria-label': props.accessibilityLabel,
@@ -113,11 +119,13 @@ function ScrollEndGap(): ReactElement | null {
 
 // ListFooter takes its section's inset; only Android's info icon needs one of its own.
 function ScreenFooter({ text }: { text?: string }): ReactNode {
+  const { footerIcon } = useListLook();
+
   if (!text) return null;
 
   return (
     <View className="flex-row items-center android:px-4">
-      {Platform.OS === 'android' ? <Icon name="info" /> : null}
+      {footerIcon ? <Icon name="info" /> : null}
       <ListFooter text={text} />
     </View>
   );
@@ -135,10 +143,7 @@ export function ListEnd(
   );
 }
 
-const nativeEdges =
-  Platform.OS === 'ios'
-    ? ({ top: 'never', bottom: 'never' } as const)
-    : undefined;
+const noEdgeFades = { top: 'never', bottom: 'never' } as const;
 
 const listHeader = <Item,>(props: ListProps<Item>): ReactElement | undefined =>
   props.header == null ? undefined : <ListHeader list={props} />;

@@ -7,14 +7,13 @@ import type {
 import type { DeferredAgentLaunch, InstalledAgents } from '../../agents';
 import { requireInstalledAgent } from '../../agents';
 import type { SessionData } from '../session-data';
+import type { Shells } from '../shells';
 import {
   createLifetimeDestination,
   type AcpLifetimeEvent,
 } from './acp-session-destination';
 import { selectSessionOpening } from './acp-session-opening';
 import { AcpSessionRequests } from './requests/acp-session-requests';
-import { withShellDestination } from './shells/shell-destination';
-import type { ShellRuntime } from './shells/shell-runtime';
 
 export type { AcpLifetimeEvent } from './acp-session-destination';
 
@@ -40,7 +39,7 @@ export class AcpSessionLifetime {
   public constructor(
     private readonly dependencies: AcpSessionDependencies | undefined,
     createId: () => string,
-    private readonly shells?: ShellRuntime,
+    private readonly shells?: Shells,
   ) {
     this.requests = new AcpSessionRequests(createId);
   }
@@ -70,9 +69,7 @@ export class AcpSessionLifetime {
   private attachShells(
     destination: AcpSessionDestination,
   ): AcpSessionDestination {
-    return this.shells
-      ? withShellDestination(destination, this.shells)
-      : destination;
+    return this.shells ? this.shells.attach(destination) : destination;
   }
   public finishRegistration(): void {
     this.registration.resolve();

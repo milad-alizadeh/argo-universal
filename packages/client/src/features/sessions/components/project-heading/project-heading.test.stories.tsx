@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { ProjectHeading } from './project-heading';
@@ -43,7 +42,7 @@ async function openMenu(target: HTMLElement): Promise<void> {
 
 // A wide window draws both Actions as buttons beside the name, each running its own.
 export const Buttons: Story = {
-  beforeEach: () => settleViewport(layoutWidths.wide),
+  beforeEach: () => settleLayout('wide'),
   play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole('button', button(newSession)),
@@ -56,7 +55,7 @@ export const Buttons: Story = {
 
 // Below a wide window there are no buttons: the heading's context menu holds the same Actions, in order.
 export const ContextMenu: Story = {
-  beforeEach: () => settleViewport(layoutWidths.phone),
+  beforeEach: () => settleLayout('phone'),
   play: async ({ canvas }) => {
     const target = await canvas.findByRole('button', heading);
 
@@ -83,14 +82,14 @@ export const ContextMenu: Story = {
 // An Action is offered only when its handler is given: without either, the heading has no buttons and no menu.
 export const WithoutHandlers: Story = {
   args: { onAdd: undefined, onProjectSettings: undefined },
-  beforeEach: () => settleViewport(layoutWidths.wide),
+  beforeEach: () => settleLayout('wide'),
   play: async ({ canvas }) => {
     const target = await canvas.findByRole('button', heading);
 
     await expect(
       canvas.queryByRole('button', button(projectSettings)),
     ).toBeNull();
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await openMenu(target);
     await expect(body.queryByRole('menu')).toBeNull();
   },

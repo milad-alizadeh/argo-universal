@@ -1,10 +1,8 @@
-import { eachLayout } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Platform } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
-import { page } from 'vitest/browser';
 import { SessionRow } from '../../src/features/sessions/components/session-row/session-row';
 import type { SessionsLayout } from '../../src/features/sessions/stores/sessions-view';
 
@@ -25,7 +23,7 @@ export const dark = { globals: { mode: 'dark' } };
 export function running(width: number): Story {
   return {
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByText('Running the tests')).toBeVisible();
 
       const row = canvas.getByRole('button', {
@@ -56,7 +54,7 @@ export function metadata(width: number): Story {
       </>
     ),
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       for (const stage of ['Working', 'Branch', 'Open', 'Merged', 'Closed']) {
         const label = `${stage} Change #45`;
@@ -113,7 +111,7 @@ export const statusParity: Story = {
   ),
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleLayout(width);
 
       for (const name of parityRowNames) {
         await expect(canvas.getByRole('button', { name })).toBeVisible();

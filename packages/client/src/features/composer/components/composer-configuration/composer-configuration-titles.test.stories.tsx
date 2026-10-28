@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { ComposerAgentModelControl } from './composer-configuration';
@@ -22,7 +21,7 @@ type Story = StoryObj<typeof meta>;
 // Paper's Configure: the desktop popover is a flat menu with no title and no section titles.
 export const ConfigureHasNoTitlesWide: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
@@ -45,7 +44,7 @@ export const ConfigureHasNoTitlesWide: Story = {
 // Paper's drilled row: the models open beside Configure with no title and no search, the current one checked.
 export const ModelPickerHasNoTitleOrSearchWide: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
@@ -80,7 +79,7 @@ export const ModelPickerHasNoTitleOrSearchWide: Story = {
 // Below wide, Configure is a sheet (centred as a modal on the web) whose Model row pushes its choices as a page.
 export const ConfigureIsASheetBelowWide: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.tablet);
+    await settleLayout('tablet');
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
@@ -104,7 +103,7 @@ export const ConfigureIsASheetBelowWide: Story = {
 // A phone keeps its sheet and the existing Session's Agent remains read-only.
 export const ConfigureKeepsItsSheetPhone: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );

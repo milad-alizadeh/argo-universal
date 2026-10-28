@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
@@ -20,7 +20,7 @@ const toggleLabel = 'Toggle Workbench';
 export const FloatingKeepsTheFeedInPlace: Story = {
   args: { inspectorOpen: true },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(1440);
+    await settleLayout('wide');
     const feed = await canvas.findByTestId('workbench-feed');
     const bounds = feed.getBoundingClientRect();
     await waitFor(() =>
@@ -52,9 +52,9 @@ export const FloatingKeepsTheFeedInPlace: Story = {
 export const NarrowingAutoHidesTheDockedWorkbench: Story = {
   args: { inspectorOpen: true },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(1768);
+    await settleLayout(1768);
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
-    await settleViewport(1440);
+    await settleLayout('wide');
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );
@@ -68,7 +68,7 @@ export const NarrowingAutoHidesTheDockedWorkbench: Story = {
 
 export const CardOpensTheInspectorWithoutClosingTheOverview: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(1920);
+    await settleLayout(1920);
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
     await userEvent.click(canvas.getByRole('button', { name: 'Changes' }));
     await expect(await canvas.findByText('Branch files')).toBeVisible();

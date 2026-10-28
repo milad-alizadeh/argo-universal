@@ -1,5 +1,5 @@
 import { shownText } from '@repo/kit/mocks/shown-text';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
@@ -49,7 +49,7 @@ export const ComposerKeepsDesktopControlsAtTheInspectorResizeLimit: ScaffoldStor
     },
     play: controlledPlay(async (context, controlled) => {
       const { canvas, userEvent } = context;
-      await settleViewport(narrowDesktopWidth);
+      await settleLayout(narrowDesktopWidth);
       await waitFor(() =>
         expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible(),
       );

@@ -1,4 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { layoutWidths } from '@repo/kit/mocks/story-layout';
 import { type JSX, useState } from 'react';
 import { View } from 'react-native';
 import { expect, screen, waitFor } from 'storybook/test';

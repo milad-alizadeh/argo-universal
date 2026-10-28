@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, spyOn, waitFor } from 'storybook/test';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Code } from './index';
 
 const meta = {
@@ -17,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 function copies(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
 
       const clipboard = spyOn(
         navigator.clipboard,
@@ -81,7 +80,7 @@ export const ExpandsDiff: Story = {
     ],
   },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(canvas.queryByText('six')).not.toBeInTheDocument();
 
     const clipboard = spyOn(
@@ -120,7 +119,7 @@ function endInterval(end: TimerHandler | undefined): void {
 // The feedback interval belongs to the latest successful copy: a second copy clears the first interval, and only the second one ends the feedback.
 export const RepeatedCopyRestartsFeedback: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const clipboard = spyOn(
       navigator.clipboard,

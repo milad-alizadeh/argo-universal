@@ -1,13 +1,11 @@
 import { session, turn } from '@repo/db/schema';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
-import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi, onTestFinished } from 'vitest';
 import { startAcpEngine, emptySessionInput } from '#mocks/acp-engine';
 import {
   openAcpFeedSession,
-  parentSubagentUpdates,
   waitForAcpSessionIdle,
   waitForAcpSnapshot,
 } from '#mocks/acp-feed';
@@ -166,130 +164,6 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
   expect(await restarted.caller.session.subagents({ sessionId })).toMatchObject(
     [{ sessionId: child.sessionId, state: 'idle' }],
   );
-});
-
-// The parent revises its delegation by patch and chunk, then the child ends its Turn.
-const revisedDelegation: ScriptedScenario = {
-  sessionIds: ['parent'],
-  steps: [
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: 'session_message',
-        messageId: 'unrelated',
-        recipientSessionId: 'unassociated',
-        content: [{ type: 'text', text: 'No parentage' }],
-      },
-    },
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: 'subagent_update',
-        sessionId: 'review',
-        state: { state: 'running' },
-      },
-    },
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: 'session_message',
-        messageId: 'delegation',
-        senderSessionId: 'parent',
-        recipientSessionId: 'review',
-        content: [{ type: 'text', text: 'Original' }],
-      },
-    },
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: 'session_message',
-        messageId: 'delegation',
-        content: [{ type: 'text', text: 'Revised' }],
-      },
-    },
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: 'session_message',
-        messageId: 'delegation',
-        recipientSessionId: 'review',
-      },
-    },
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: 'session_message_chunk',
-        messageId: 'delegation',
-        content: { type: 'text', text: ' instruction' },
-      },
-    },
-    {
-      type: 'update',
-      sessionId: 'review',
-      update: {
-        sessionUpdate: 'agent_message_chunk',
-        content: { type: 'text', text: 'Done' },
-      },
-    },
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: 'subagent_update',
-        sessionId: 'review',
-        state: {
-          state: 'idle',
-          stopReason: 'end_turn',
-          usage: {
-            totalTokens: 12,
-            inputTokens: 8,
-            outputTokens: 4,
-            thoughtTokens: null,
-          },
-        },
-      },
-    },
-  ],
-};
-
-it.each([
-  { claim: 'its patches and chunks', scenario: revisedDelegation },
-  {
-    claim: 'the Agent reports no incoming view',
-    scenario: scenarios['subagent-outgoing-only'],
-  },
-])(
-  "keeps the parent's outgoing message out of the child Feed when $claim",
-  async ({ scenario }) => {
-    const { host, sessionId } = await openAcpFeedSession(scenario);
-
-    const [child] = await host.caller.session.subagents({ sessionId });
-
-    if (!child) throw new Error(missingSubagent);
-
-    const page = await host.caller.feed.page({
-      sessionId: child.sessionId,
-      direction: 'tail',
-    });
-
-    expect(page.rows.map((row) => row.sessionUpdate)).toEqual([
-      'agent_message',
-    ]);
-  },
-);
-
-it("revises one parent prompt from patches and chunks of the parent's outgoing message", async () => {
-  const { host, sessionId } = await openAcpFeedSession(revisedDelegation);
-
-  expect(
-    (await parentSubagentUpdates(host, sessionId)).flatMap((row) =>
-      row._meta?.argo?.action === 'message' ? [row._meta.argo.prompt] : [],
-    ),
-  ).toEqual([
-    [
-      { type: 'text', text: 'Revised' },
-      { type: 'text', text: ' instruction' },
-    ],
-  ]);
 });
 
 it.each(['idle', 'cancelled'] as const)(

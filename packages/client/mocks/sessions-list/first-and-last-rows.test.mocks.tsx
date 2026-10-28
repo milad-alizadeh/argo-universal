@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
@@ -18,7 +18,7 @@ export const firstAndLastRowsReachable: Story = {
   ),
   play: async ({ canvas }) => {
     // At a phone's size twelve Sessions overflow the list, so it can scroll.
-    if ('__vitest_browser__' in globalThis) await settleViewport(390);
+    if ('__vitest_browser__' in globalThis) await settleLayout('phone');
     const scroll = canvas.getByTestId(sessionsScrollId);
 
     const heading = await canvas.findByRole('button', {

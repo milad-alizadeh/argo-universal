@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -87,7 +86,7 @@ function subagentsAt(width: number, state: State): Story {
   const absentTrigger = wide ? agentsOverview : /^Subagents/;
 
   return {
-    beforeEach: () => settleViewport(width),
+    beforeEach: () => settleLayout(width),
     args: {
       view: {
         state: 'open',

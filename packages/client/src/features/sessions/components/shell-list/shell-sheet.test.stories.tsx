@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { runningShell } from './shell-list.mocks';
@@ -25,7 +24,7 @@ const shellRow = (command: string): Promise<HTMLElement> =>
 
 export const ListsTheSessionsShells: Story = {
   play: async () => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expect(
       await screen.findByText('1 running · 3 in this Session'),
     ).toBeVisible();
@@ -45,7 +44,7 @@ const openShell = async (
   command: string,
   userEvent: { click: (element: Element) => Promise<void> },
 ): Promise<void> => {
-  await settleViewport(layoutWidths.phone);
+  await settleLayout('phone');
   await userEvent.click(await shellRow(command));
 };
 

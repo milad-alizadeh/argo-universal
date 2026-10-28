@@ -1,6 +1,6 @@
-import { eachLayout } from '@repo/kit/each-layout';
 import { findToast } from '@repo/kit/mocks/find-toast';
 import { shownText } from '@repo/kit/mocks/shown-text';
+import { eachLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fn } from 'storybook/test';
 import {
   checkoutChoice,

@@ -1,8 +1,7 @@
-import { layoutWidths } from '@repo/kit/each-layout';
 import { allToasts, findToast } from '@repo/kit/mocks/find-toast';
 import { shownText } from '@repo/kit/mocks/shown-text';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { dismissToasts } from '@repo/kit/primitives/overlays/toast';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
@@ -35,7 +34,7 @@ export default meta;
 export const RepeatedFailuresToastWithoutRepeatingOnDraftEdits: Story = {
   render: () => <View testID="controlled-errors" />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const root = createRoot(canvas.getByTestId('controlled-errors'));
 
     const props = composerProps({
@@ -84,7 +83,7 @@ export const RepeatedFailuresToastWithoutRepeatingOnDraftEdits: Story = {
       await waitFor(() =>
         expect(shownText(canvas.getByRole('textbox'))).toBe(keptText),
       );
-      await settleViewport(layoutWidths.phone);
+      await settleLayout('phone');
       await expect(
         await allToasts(attachmentSelectionFailureMessage),
       ).toHaveLength(0);
@@ -132,7 +131,7 @@ export const ANewOversizedAttachmentToastsAlongsideTheOtherError: Story = {
       await waitFor(() =>
         expect(shownText(canvas.getByRole('textbox'))).toBe(keptText),
       );
-      await settleViewport(layoutWidths.phone);
+      await settleLayout('phone');
       await expect(await allToasts(oversizedMessage)).toHaveLength(0);
       root.render(
         imageComposer({

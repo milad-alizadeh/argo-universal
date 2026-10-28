@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
@@ -7,7 +7,7 @@ const meta = {
   title: 'Tests/Frame/Scaffold/SidebarIntent',
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
-  beforeEach: (): Promise<void> => settleViewport(1180),
+  beforeEach: (): Promise<void> => settleLayout(1180),
 } satisfies Meta<typeof WorkbenchScaffold>;
 
 export default meta;
@@ -39,7 +39,7 @@ export const FoldedSidebarCanBeShown: Story = {
 };
 
 export const WideningSidebarDoesNotHideIt: Story = {
-  beforeEach: (): Promise<void> => settleViewport(1440),
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   args: { inspectorOpen: false },
   play: async ({ canvas, userEvent }) => {
     await expect(
@@ -63,7 +63,7 @@ export const UnavailableSidebarWaitsForSpaceBesideTheInspector: Story = {
     await expect(
       await canvas.findByRole('button', { name: showSidebar }),
     ).toBeDisabled();
-    await settleViewport(1440);
+    await settleLayout('wide');
     // The sidebar re-enables on the next layout pass, which a slow runner reaches after the resize.
     await waitFor(() =>
       expect(canvas.getByRole('button', { name: showSidebar })).toBeEnabled(),

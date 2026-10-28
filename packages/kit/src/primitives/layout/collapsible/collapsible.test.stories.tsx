@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
 import {
   Collapsible,
   CollapsibleContent,
@@ -39,7 +38,7 @@ function disclosure(width: number): Story {
       </Collapsible>
     ),
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const trigger = canvas.getByRole('button', { name: toggleLabel });
       await expect(
         canvas.queryByTestId(animatedDetailId),
@@ -99,7 +98,7 @@ export const RowBelowRestsOnce: Story = {
     </View>
   ),
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const trigger = canvas.getByRole('button', { name: toggleLabel });
     const below = canvas.getByText('Next row');
 
@@ -128,7 +127,7 @@ export const DisabledStaysClosed: Story = {
     </Collapsible>
   ),
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const trigger = canvas.getByRole('button', { name: toggleLabel });
     trigger.click();
     await expect(trigger).toHaveAttribute(expanded, 'false');

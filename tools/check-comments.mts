@@ -1,10 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { commentProblems } from './comment-rules.mts';
-
-const root = fileURLToPath(new URL('..', import.meta.url));
+import { root, trackedFiles } from './tracked-files.mts';
 
 // The checker and its tests spell out the comments it reports.
 const own = new Set(
@@ -12,14 +9,6 @@ const own = new Set(
     (name): string => resolve(root, 'tools', name),
   ),
 );
-
-const trackedSources = (): string[] =>
-  execFileSync('git', ['ls-files', '--', '*.ts', '*.tsx', '*.mts', '*.mjs'], {
-    cwd: root,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter(Boolean);
 
 const fileProblems = (file: string): string[] =>
   readFileSync(file, 'utf8')
@@ -32,7 +21,11 @@ const fileProblems = (file: string): string[] =>
 
 const requested = process.argv.slice(2);
 
-const files = (requested.length > 0 ? requested : trackedSources())
+const files = (
+  requested.length > 0
+    ? requested
+    : trackedFiles(['*.ts', '*.tsx', '*.mts', '*.mjs'])
+)
   .map((file): string => resolve(root, file))
   .filter(
     (file): boolean =>

@@ -1,8 +1,6 @@
-import { layoutWidths, wideBreakpoint } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, screen, waitFor } from 'storybook/test';
-import { page } from 'vitest/browser';
 import { fadedEdges } from '../../../../mocks/scroll-fade';
 import { InspectorFilesMock } from './inspector-files.mocks';
 import {
@@ -49,7 +47,7 @@ function inspectorTakesTheDetailAreaAndRestoresIt(
   return {
     play: controlledPlay(async (context, controlled) => {
       const { canvas } = context;
-      await settleViewport(roomyDesktop);
+      await settleLayout(roomyDesktop);
       const pageAction = canvas.getByRole('button', { name: moreActionsLabel });
       await controlled.render({ inspectorState: 'open' });
       await expect(canvas.getByRole('button', { name: moreActionsLabel })).toBe(
@@ -76,7 +74,7 @@ function inspectorTakesTheDetailAreaAndRestoresIt(
       await expect(canvas.getByTestId(listContentId)).toBeVisible();
       await pressInspectorButton(context, controlled, 'open');
       await expect(canvas.getByTestId(detailContentId)).toBeVisible();
-      await settleViewport(width());
+      await settleLayout(width());
       await expect(canvas.getByTestId(detailContentId)).toBeVisible();
       await expect(canvas.getByTestId(inspectorContentId)).toBeVisible();
       await expect(
@@ -86,7 +84,7 @@ function inspectorTakesTheDetailAreaAndRestoresIt(
       await expectHidden(context, inspectorId);
       await controlled.render({ inspectorState: 'open' });
       await expect(canvas.getByTestId(inspectorContentId)).toBeVisible();
-      await settleViewport(roomyDesktop);
+      await settleLayout(roomyDesktop);
       await waitFor(() =>
         expect(canvas.getByTestId(detailContentId)).toBeVisible(),
       );
@@ -104,12 +102,12 @@ export const InspectorTakesTheDetailAreaAndRestoresItTablet =
 // Below wide the page owns its Sheet; no desktop Inspector or band is drawn by the Scaffold.
 export const CompactLeavesInspectorToThePageSheet: ScaffoldStory = {
   play: controlledPlay(async ({ canvas }, controlled) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await controlled.render({ sizeClass: 'compact', inspectorState: 'open' });
     await expect(canvas.getByTestId(detailContentId)).toBeVisible();
     await expect(canvas.queryByTestId(inspectorId)).toBeNull();
     await expect(canvas.queryByTestId('window-band')).toBeNull();
-    await settleViewport(roomyDesktop);
+    await settleLayout(roomyDesktop);
     await controlled.render({ sizeClass: 'wide' });
     await expect(canvas.getByTestId(inspectorContentId)).toBeVisible();
     await expect(
@@ -141,7 +139,7 @@ export const InspectorScrollKeepsHeaderReachable: ScaffoldStory = {
     inspector: <InspectorFilesMock />,
   },
   play: controlledPlay(async ({ canvas }) => {
-    await page.viewport(1440, 844);
+    await settleLayout('wide');
     const inspector = await canvas.findByTestId('desktop-inspector-scroll');
     await waitFor(() =>
       expect(inspector.scrollHeight).toBeGreaterThan(inspector.clientHeight),

@@ -1,6 +1,5 @@
-import { layoutWidths } from '@repo/kit/each-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { scrollFadeLayer } from '@repo/kit/scroll-fade/scroll-fade-options';
-import { settleViewport } from '@repo/kit/settle-viewport';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { Feed } from './feed';
@@ -27,7 +26,7 @@ type Story = StoryObj<typeof meta>;
 export const JumpsToLatest: Story = {
   render: (args) => <PagedFeed {...args} rows={longRows} />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const scroll = await canvas.findByTestId(feedScrollId);
     const feed = within(scroll);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
@@ -63,7 +62,7 @@ export const ReportsWhetherItsEndIsShown: Story = {
   args: { onAtEndChange: fn() },
   render: (args) => <PagedFeed {...args} rows={longRows} />,
   play: async ({ args, canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     await expect(args.onAtEndChange).toHaveBeenLastCalledWith(true);
@@ -96,7 +95,7 @@ function overlayOf(button: HTMLElement): HTMLElement {
 export const StacksAboveTheFeedFades: Story = {
   render: (args) => <PagedFeed {...args} rows={longRows} />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     await scrollAwayFromEnd(canvas, scroll);

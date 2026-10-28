@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { ChangeStage } from './change-stage';
@@ -23,7 +22,7 @@ function modifiers(width: number): Story {
       </>
     ),
     play: async ({ canvas }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       await expect(canvas.getByLabelText('Open, Draft Change')).toBeVisible();
       await expect(
         canvas.getByLabelText('Open, Conflict Change'),

@@ -14,17 +14,11 @@ export type {
   AcpProcess,
 } from './resources/resource-types';
 
-export { launchShellCommand } from './process';
+export type { TerminalRequests } from './connection/terminal-requests';
 
-export type { ShellCommand } from './shell-commands/shell-command';
-
-export type { TerminalRequests } from './shell-commands/terminal-requests';
-
-export { awaitAcpOpening } from './connection/client';
+export { awaitAcpOpening, createAgentClient } from './connection/client';
 
 export {
   cancelledElicitation,
   cancelledPermission,
 } from './connection/refusals';
-
-export { releaseShellGroups } from './shell-commands/shell-record';

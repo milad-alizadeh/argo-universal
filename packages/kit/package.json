@@ -38,6 +38,7 @@
       "default": "./src/primitives/*/index.ts"
     },
     "#kit/*": "./src/*.ts",
+    "#mocks/*": "./mocks/*.ts",
     "#pushed-screen": "./src/pushed-screen/index.ts",
     "#story-stack": "./src/story-stack/index.ts"
   },

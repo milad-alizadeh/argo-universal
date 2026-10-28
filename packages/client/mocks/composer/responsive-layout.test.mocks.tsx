@@ -1,4 +1,4 @@
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
@@ -37,7 +37,7 @@ export function responsiveLayout(width: number, agentIndex: number): Story {
       <Composer {...composerProps({ ...args, sessionStarted: true })} />
     ),
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
+      await settleLayout(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
       const card = composerCard(input);
 

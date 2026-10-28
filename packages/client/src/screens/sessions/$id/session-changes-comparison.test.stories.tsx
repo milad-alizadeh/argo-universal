@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen, waitFor, within } from 'storybook/test';
@@ -48,7 +47,7 @@ async function markFirstViewed(
  */
 export const PicksUncommitted: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await markFirstViewed(canvas, userEvent);
     await userEvent.click(await picker(allChanges));
     await userEvent.click(
@@ -61,7 +60,7 @@ export const PicksUncommitted: Story = {
       await screen.findByRole('radio', { name: allChanges }),
     );
     await expect(await canvas.findByText('0/4 viewed')).toBeVisible();
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expect(
       screen.queryByRole('button', { name: /^Comparison/ }),
     ).toBeNull();
@@ -71,7 +70,7 @@ export const PicksUncommitted: Story = {
 // Wide, the branches are listed under Compare Against in a popover by the picker, and a search narrows them.
 export const SearchesBranchesInAPopover: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(await picker(allChanges));
 
     const popover = await screen.findByRole('dialog', comparisonPopover);
@@ -105,7 +104,7 @@ export const SearchesBranchesInAPopover: Story = {
 export const PhoneHasTheGitHeader: Story = {
   args: { catalog: manyChanges },
   play: async () => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expect(
       await screen.findByRole('button', { name: 'Files', pressed: true }),
     ).toBeVisible();

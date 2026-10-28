@@ -9,7 +9,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { Platform } from 'react-native';
+import { useCardHeadingInset } from '#kit/list-look-context';
 import { useWide } from '#kit/use-wide/use-wide';
 import {
   type ClaimState,
@@ -17,7 +17,6 @@ import {
   claimState,
   type ContentColumn,
   counted,
-  headingInset,
   noClaims,
   type PartLayout,
   partLayout,
@@ -146,7 +145,5 @@ export const useSideColumn = (): boolean =>
 export function useHeadingInset(): number {
   const grouped = use(ColumnContext).scope?.state.grouped ?? false;
 
-  return headingInset(grouped, useNarrowWeb());
+  return useCardHeadingInset(grouped);
 }
-
-const useNarrowWeb = (): boolean => !useWide() && Platform.OS === 'web';

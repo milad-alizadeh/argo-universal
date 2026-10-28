@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { Action, ActionShortcutScope } from '#primitives/actions/action';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
@@ -43,7 +42,7 @@ type Story = StoryObj<typeof meta>;
 // A wide header draws its Actions as buttons, each spoken with the section's title, and runs their shortcuts while it is shown.
 export const WideButtons: Story = {
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Add build, Builds' }),
     );
@@ -56,7 +55,7 @@ export const WideButtons: Story = {
 // Below a wide window the header draws no buttons: its context menu holds the Actions.
 export const CompactContextMenu: Story = {
   play: async ({ canvas, canvasElement, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     const title = await canvas.findByRole('heading', { name: 'Builds' });
 
     await waitFor(() =>

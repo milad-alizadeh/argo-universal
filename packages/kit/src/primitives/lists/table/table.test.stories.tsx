@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '#kit/each-layout';
-import { settleViewport } from '#kit/settle-viewport';
+import { settleLayout } from '#mocks/story-layout';
 import { PlatformsTable } from './table-platforms.mocks';
 import {
   InPlaceRowDetail,
@@ -32,7 +31,7 @@ const rowNames = (rows: HTMLElement[]): string[] =>
 export const SortsFromTheHeader: Story = {
   render: () => <RunsTable onSortChange={onSortChange} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const table = await canvas.findByRole('table', { name: 'CI runs' });
 
@@ -72,7 +71,7 @@ export const SortsFromTheHeader: Story = {
 export const RowPressRunsItsAction: Story = {
   render: () => <RunsTable onRowPress={onRowPress} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     await userEvent.click(
       await canvas.findByRole('row', { name: /^Build iOS/ }),
@@ -85,7 +84,7 @@ export const RowPressRunsItsAction: Story = {
 export const RowPressTogglesSelection: Story = {
   render: () => <SelectingRunsTable onRowPress={onRowPress} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
 
     const row = await canvas.findByRole('row', { name: /^Lint/ });
 
@@ -105,7 +104,7 @@ export const CompactRowOpensRowDetail: Story = {
     </InPlaceRowDetail>
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     await expect(canvas.queryByRole('table')).toBeNull();
 
@@ -127,7 +126,7 @@ export const CompactRowOpensRowDetail: Story = {
 export const CompactSortsFromTheMenu: Story = {
   render: () => <RunsTable onSortChange={onSortChange} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Sort by' }),
@@ -144,7 +143,7 @@ export const CompactSortsFromTheMenu: Story = {
 export const CompactSelectsRows: Story = {
   render: () => <SelectingRunsTable onRowPress={onRowPress} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     const lint = await canvas.findByRole('button', { name: /^Lint/ });
 
@@ -158,7 +157,7 @@ export const CompactSelectsRows: Story = {
 export const ScrollKeepsTheGridAtCompactWidths: Story = {
   render: () => <PlatformsTable />,
   play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
 
     await expect(
       await canvas.findByRole('table', { name: 'Platforms' }),

@@ -1,5 +1,4 @@
-import { layoutWidths } from '@repo/kit/each-layout';
-import { settleViewport } from '@repo/kit/settle-viewport';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
@@ -58,7 +57,7 @@ async function expectOpen(): Promise<void> {
 // The Inspector's toolbar names the comparison and counts the files and their lines; a phone's sheet shows the files alone.
 export const ShowsFilesAndTotalsWide: Story = {
   play: async () => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(await picker(allChanges)).toBeVisible();
     await expect(screen.getByText('0/4 viewed')).toBeVisible();
     await expect(screen.getByText('+65')).toBeVisible();
@@ -69,7 +68,7 @@ export const ShowsFilesAndTotalsWide: Story = {
 
 export const ShowsFilesPhone: Story = {
   play: async () => {
-    await settleViewport(layoutWidths.phone);
+    await settleLayout('phone');
     await expectOpen();
     await expect(screen.queryByText('+65')).toBeNull();
   },
@@ -80,7 +79,7 @@ function manyFilesScroll(width: number): Story {
   return {
     args: { catalog: manyChanges },
     play: async () => {
-      await settleViewport(width);
+      await settleLayout(width);
       await findFileHeader('/repo/src/module-1/index.ts');
       const last = await scrollToFile('/repo/src/module-60/index.ts');
       await waitFor(() => expect(last).toBeVisible());
@@ -95,7 +94,7 @@ export const ManyFilesScrollWide = manyFilesScroll(layoutWidths.wide);
 // A file folds and opens again under its header, in the list: the toolbar and the other files stay, and nothing offers Back.
 export const FilesFoldInPlace: Story = {
   play: async ({ userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await expect(await findFileHeader(largeFile)).toHaveAttribute(
       expanded,
       'true',
@@ -116,7 +115,7 @@ export const FilesFoldInPlace: Story = {
 export const CountsEachPathOnce: Story = {
   args: { catalog: repeatedChanges },
   play: async ({ userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     const mark = await viewedMark(0);
     await userEvent.click(mark);
     await expect(screen.getByText('1/4 viewed')).toBeVisible();
@@ -131,7 +130,7 @@ export const CountsEachPathOnce: Story = {
 // A Viewed file is folded and opens again on its header.
 export const ViewedFileOpensItsDiff: Story = {
   play: async ({ userEvent }) => {
-    await settleViewport(layoutWidths.wide);
+    await settleLayout('wide');
     await findFileHeader(shortFile);
 
     const mark = await viewedMark(1);

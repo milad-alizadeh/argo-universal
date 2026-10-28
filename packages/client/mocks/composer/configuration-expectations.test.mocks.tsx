@@ -1,5 +1,5 @@
 import { type SessionConfigSelectOption } from '@repo/contracts';
-import { wideBreakpoint } from '@repo/kit/each-layout';
+import { wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { within, expect, waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import {

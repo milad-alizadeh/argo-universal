@@ -1,4 +1,4 @@
-import { eachLayout } from '@repo/kit/each-layout';
+import { eachLayout } from '@repo/kit/mocks/story-layout';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';

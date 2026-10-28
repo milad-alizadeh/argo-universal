@@ -1,13 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform } from 'react-native';
-import { InMenu } from '#kit/menu-rows-context';
+import { ListPlaceContext } from '#kit/list-place';
 import { useSizeClassValue } from '#kit/use-size-class/use-size-class-value';
 import { useWide } from '#kit/use-wide/use-wide';
 import { Icon } from '#primitives/content/icon';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { SectionEndContext } from '../../../section-end-context';
 import { SidebarRows } from '../list-detail/sidebar-rows';
 import { SettingsFieldGroup } from './settings-field-group';
 import type {
@@ -91,11 +90,9 @@ const afterGroups = (choices: ReactNode, lastSection: ReactNode): ReactNode =>
 
 // The last section's rows are tiles flat on the glass, as the groups' rows above it are, with no card of their own.
 const LastSection = (props: { children: ReactNode }): ReactElement => (
-  <SectionEndContext value>
-    <InMenu value>
-      <FieldGroup>{props.children}</FieldGroup>
-    </InMenu>
-  </SectionEndContext>
+  <ListPlaceContext value="sidebar-end">
+    <FieldGroup>{props.children}</FieldGroup>
+  </ListPlaceContext>
 );
 
 const settingsGroups = (
