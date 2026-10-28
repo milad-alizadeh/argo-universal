@@ -3,7 +3,7 @@ import { errorToast } from '@repo/kit/error-toast';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { pluginSymbol } from '../../plugins/plugin-symbol';
+import { pluginSymbol } from '../../../lib/product/plugin-symbol';
 import type { PluginRow, PluginsLoad } from './plugin-list-view';
 
 export type PluginEntry = PluginList['plugins'][number];

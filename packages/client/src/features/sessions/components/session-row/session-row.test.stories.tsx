@@ -1,6 +1,6 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
-import { expect, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import {
   dark,
   metadata,
@@ -10,6 +10,13 @@ import {
   statusParity,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
+import {
+  moreIssue,
+  pluginActivitySession,
+  pluginItemsCompactSession,
+  pluginItemsSession,
+  rowIssue,
+} from './session-row-fixtures';
 import { sessionRowMocks } from './session-row.mocks';
 
 const meta = { ...sessionRowTestMeta, title: 'Tests/Sessions/SessionRow' };
@@ -31,16 +38,135 @@ export const Archived: Story = {
 };
 
 export const PluginItemTooltipWide: Story = {
-  args: {
-    session: sessionRows.idle,
-    items: [{ text: 'Issue 412', tooltip: 'Issue 412: In review' }],
-  },
+  args: pluginItemsSession,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await userEvent.hover(canvas.getByText('Issue 412'));
+    await userEvent.hover(canvas.getByText(rowIssue));
     await expect(
       await within(document.body).findByRole('tooltip'),
-    ).toHaveTextContent('Issue 412: In review');
+    ).toHaveTextContent('Issue #412: Sync fails on large repos');
+  },
+};
+
+const issueLink = new RegExp(`^${rowIssue},`);
+
+const issueTracker = 'issue-tracker';
+
+const idleRowName = `${pluginItemsSession.session.title}, Idle`;
+
+function pluginItems(width: number): Story {
+  return {
+    args: { ...pluginItemsSession, onOpenPluginPage: fn() },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleLayout(width);
+      // Argo's own items and the row's identity stay as they were.
+      await expect(
+        canvas.getByRole('button', { name: idleRowName }),
+      ).toBeVisible();
+      await expect(canvas.getByLabelText('Merged Change #44')).toBeVisible();
+
+      for (const text of [rowIssue, 'Preview ready', '78%'])
+        await expect(canvas.getByText(text)).toBeVisible();
+
+      // Only an item with a page is a link, and pressing it opens that page, not the Session.
+      await expect(canvas.getAllByRole('link')).toHaveLength(1);
+      await userEvent.click(canvas.getByRole('link', { name: issueLink }));
+      await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
+        issueTracker,
+        '/issues/412',
+      );
+      await expect(args.onSelect).not.toHaveBeenCalled();
+    },
+  };
+}
+
+export const PluginItemsPhone = pluginItems(layoutWidths.phone);
+
+export const PluginItemsWide = pluginItems(layoutWidths.wide);
+
+// "+2" lists each item that did not fit with its Plugin's name; one with a page opens it.
+function moreItems(width: number): Story {
+  return {
+    args: { ...pluginItemsSession, onOpenPluginPage: fn() },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleLayout(width);
+      await expect(canvas.queryByText('Lint passed')).not.toBeInTheDocument();
+      await userEvent.click(
+        canvas.getByRole('button', { name: '2 more items from Plugins' }),
+      );
+
+      const more = await within(document.body).findByRole('dialog', {
+        name: '2 more on this Session',
+      });
+
+      // The popover fades in before its rows are visible.
+      await waitFor(() =>
+        expect(within(more).getByText('Issue tracker')).toBeVisible(),
+      );
+
+      await expect(within(more).getByText('Lint passed')).toBeVisible();
+      await expect(within(more).getByText('Checks')).toBeVisible();
+      await expect(within(more).getByText(moreIssue)).toBeVisible();
+      await expect(within(more).getByText('Issue tracker')).toBeVisible();
+      await userEvent.click(within(more).getByText(moreIssue));
+      await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
+        issueTracker,
+        '/issues/398',
+      );
+      await expect(args.onSelect).not.toHaveBeenCalled();
+    },
+  };
+}
+
+export const MorePluginItemsPhone = moreItems(layoutWidths.phone);
+
+export const MorePluginItemsWide = moreItems(layoutWidths.wide);
+
+export const PluginActivityLine: Story = {
+  args: pluginActivitySession,
+  play: async ({ canvas }) => {
+    for (const width of [390, 1440]) {
+      await settleLayout(width);
+      await expect(
+        canvas.getByText(pluginActivitySession.plugins.activity.text),
+      ).toBeVisible();
+      await expect(
+        canvas.queryByText(pluginActivitySession.session.activity),
+      ).not.toBeInTheDocument();
+      // The status and title stay Argo's.
+      await expect(
+        canvas.getByRole('button', {
+          name: `${pluginActivitySession.session.title}, Running`,
+        }),
+      ).toBeVisible();
+    }
+  },
+};
+
+export const ArgosActivityLineWithoutAPluginLine: Story = {
+  args: pluginItemsSession,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(
+      canvas.getByText(pluginItemsSession.session.activity),
+    ).toBeVisible();
+  },
+};
+
+export const PluginItemsCompact: Story = {
+  args: { ...pluginItemsCompactSession, onOpenPluginPage: fn() },
+  play: async ({ canvas, userEvent, args }) => {
+    await settleLayout('wide');
+    await expect(canvas.getByText(rowIssue)).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: '2 more items from Plugins' }),
+    ).toBeVisible();
+    await userEvent.click(canvas.getByRole('link', { name: issueLink }));
+    await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
+      issueTracker,
+      '/issues/412',
+    );
+    await expect(args.onSelect).not.toHaveBeenCalled();
   },
 };
 

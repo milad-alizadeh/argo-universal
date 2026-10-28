@@ -1,36 +1,105 @@
-import type { SessionRowItem as Item } from '@repo/contracts/plugins/wire';
-import { Text } from '@repo/kit/primitives/content/text';
+import { Label } from '@repo/kit/primitives/content/label';
 import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, type PressableProps } from 'react-native';
+import { pluginSymbol } from '../../../../lib/product/plugin-symbol';
+import type { OpenPluginPage, SessionRowPluginItem } from './session-row-props';
+import { sidebarRows } from './session-row-sidebar';
 
-// One Plugin item as Argo draws it: its text in its tone, with its tooltip on hover where there is a pointer.
-export function SessionRowItem({ item }: { item: Item }): React.ReactNode {
-  const text = <ItemText item={item} />;
+export interface SessionRowItemProps {
+  plugin: SessionRowPluginItem;
+  onOpenPluginPage?: OpenPluginPage;
+}
 
-  if (item.tooltip === undefined) return text;
+/*
+ * One Plugin item as Argo draws its own meta items: its icon and text in its tone. Its tooltip shows on hover where
+ * there is a pointer, and pressing an item with an action opens that Plugin's page instead of the row's Session.
+ */
+export function SessionRowItem(props: SessionRowItemProps): React.ReactNode {
+  const onPress = pageOpener(props.plugin, props.onOpenPluginPage);
+  const { tooltip } = props.plugin.item;
+
+  if (!onPress && tooltip === undefined) return <ItemLabel {...props} />;
+
+  return withTooltip(tooltip, itemPress(props, onPress));
+}
+
+// A wide window shows the item's tooltip on hover; a phone has no pointer to hover with.
+function withTooltip(
+  tooltip: string | undefined,
+  pressable: React.JSX.Element,
+): React.JSX.Element {
+  if (tooltip === undefined) return pressable;
 
   return (
     <SizeClass
-      compact={text}
-      wide={
-        <Tooltip label={item.tooltip}>
-          <Pressable accessibilityHint={item.tooltip}>{text}</Pressable>
-        </Tooltip>
-      }
+      compact={pressable}
+      wide={<Tooltip label={tooltip}>{pressable}</Tooltip>}
     />
   );
 }
 
-function ItemText({ item }: { item: Item }): React.JSX.Element {
+const pagePath = ({ item }: SessionRowPluginItem): string | undefined =>
+  item.action?.path;
+
+// The Plugin page an item opens, when it has one and the row can open it.
+export function pageOpener(
+  plugin: SessionRowPluginItem,
+  onOpenPluginPage: OpenPluginPage | undefined,
+): (() => void) | undefined {
+  const path = pagePath(plugin);
+
+  if (path === undefined || !onOpenPluginPage) return;
+
+  return () => onOpenPluginPage(plugin.pluginId, path);
+}
+
+/*
+ * The item as its own part of the row: the tooltip's hover target, and the link to its Plugin's page when it has one.
+ * An element, not a component, since the Tooltip hands its handlers to the Pressable it is given.
+ */
+function itemPress(
+  props: SessionRowItemProps,
+  onPress: (() => void) | undefined,
+): React.JSX.Element {
   return (
-    <Text
-      role="secondary"
-      tone={item.tone ?? 'muted'}
-      accessibilityHint={item.tooltip}
+    <Pressable
+      {...itemSpeech(props.plugin, onPress)}
+      onPress={onPress}
+      className={itemPressClass}
     >
-      {item.text}
-    </Text>
+      <ItemLabel {...props} />
+    </Pressable>
+  );
+}
+
+// A link names its text and Plugin, and its tooltip as the hint, since a phone has no hover to show it.
+const itemSpeech = (
+  { item, pluginName }: SessionRowPluginItem,
+  onPress: (() => void) | undefined,
+): Pick<
+  PressableProps,
+  'role' | 'accessibilityLabel' | 'accessibilityHint'
+> => ({
+  role: onPress && 'link',
+  accessibilityLabel: `${item.text}, ${pluginName}`,
+  accessibilityHint: item.tooltip,
+});
+
+// A pressable meta item: its tint on hover and keyboard focus, in the row's control radius.
+export const itemPressClass =
+  'shrink-0 rounded-control web:hover:bg-hover web:focus-visible:bg-hover';
+
+function ItemLabel({
+  plugin: { item },
+}: SessionRowItemProps): React.JSX.Element {
+  return (
+    <Label
+      icon={item.icon && pluginSymbol(item.icon)}
+      text={item.text}
+      tone={item.tone}
+      sidebar={sidebarRows}
+    />
   );
 }

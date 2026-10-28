@@ -2,6 +2,10 @@ import type { AgentServer } from '@repo/contracts';
 import { useClock } from '@repo/kit/use-clock';
 import { useMemo } from 'react';
 import type { SessionsLayout } from '../../stores/sessions-view';
+import type {
+  OpenPluginPage,
+  SessionRowPlugins,
+} from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { sessionAge } from './session-age';
 import type { SessionsListProps } from './sessions-list-props';
@@ -17,6 +21,8 @@ export interface SessionRowContext {
   animating: boolean;
   // Projects whose rows are fading out.
   closing: ReadonlySet<string>;
+  rowPlugins?: ReadonlyMap<string, SessionRowPlugins>;
+  onOpenPluginPage?: OpenPluginPage;
   onSelect: (id: string) => void;
   onRename?: (id: string) => void;
   onArchive?: (id: string) => void;
@@ -33,21 +39,27 @@ type RowInputs = Omit<SessionRowContext, 'animating' | 'closing'>;
 
 type RowActions = Pick<
   SessionRowContext,
-  'onSelect' | 'onRename' | 'onArchive'
+  'onSelect' | 'onRename' | 'onArchive' | 'onOpenPluginPage'
 >;
 
 const rowActions = ({
   onSelect,
   onRename,
   onArchive,
-}: RowActions): RowActions => ({ onSelect, onRename, onArchive });
+  onOpenPluginPage,
+}: RowActions): RowActions => ({
+  onSelect,
+  onRename,
+  onArchive,
+  onOpenPluginPage,
+});
 
 function useRowActions(props: SessionsListProps): RowActions {
-  const { onSelect, onRename, onArchive } = props;
+  const { onSelect, onRename, onArchive, onOpenPluginPage } = props;
 
   return useMemo(
-    () => rowActions({ onSelect, onRename, onArchive }),
-    [onSelect, onRename, onArchive],
+    () => rowActions({ onSelect, onRename, onArchive, onOpenPluginPage }),
+    [onSelect, onRename, onArchive, onOpenPluginPage],
   );
 }
 
@@ -58,17 +70,29 @@ function useRowAge(): Pick<SessionRowContext, 'ageFrom'> {
   return useMemo(() => ({ ageFrom }), [ageFrom]);
 }
 
-function useRowInputs(props: SessionsListProps): RowInputs {
-  const { selectedSessionId } = props;
+type RowData = Pick<
+  RowInputs,
+  'agentLogos' | 'layout' | 'selectedSessionId' | 'rowPlugins'
+>;
+
+// What every row reads from the list: Agent logos, the layout, the open Session and the Plugins' content.
+function useRowData(props: SessionsListProps): RowData {
+  const { selectedSessionId, rowPlugins } = props;
   const { layout } = props.view;
   const agentLogos = useAgentLogos(props.agents);
+
+  return useMemo(
+    () => ({ agentLogos, layout, selectedSessionId, rowPlugins }),
+    [agentLogos, layout, selectedSessionId, rowPlugins],
+  );
+}
+
+function useRowInputs(props: SessionsListProps): RowInputs {
+  const data = useRowData(props);
   const age = useRowAge();
   const actions = useRowActions(props);
 
-  return useMemo(
-    () => ({ agentLogos, layout, selectedSessionId, ...age, ...actions }),
-    [agentLogos, layout, selectedSessionId, age, actions],
-  );
+  return useMemo(() => ({ ...data, ...age, ...actions }), [data, age, actions]);
 }
 
 export function useSessionRowContext(
@@ -104,6 +128,7 @@ export function sessionRowProps(
     selected: context.selectedSessionId === item.id,
     age: sessionAge(item.session, context.ageFrom),
     layout: context.layout,
+    plugins: context.rowPlugins?.get(item.session.sessionId),
     ...rowMotion(item.session.projectId, context),
     ...rowActions(context),
   };
