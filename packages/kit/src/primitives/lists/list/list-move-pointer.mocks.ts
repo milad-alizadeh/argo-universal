@@ -55,14 +55,22 @@ export async function openRowMenu(
   return menu;
 }
 
-// The glyphs of a shortcut a menu item shows after its label, such as ⌥↓; no label holds one.
-const shortcut = /[⌃⌥⇧⌘↑↓←→]/gu;
+/*
+ * A menu item's label, without the shortcut it shows after it: ⌥↓ on a Mac, Alt ↓ elsewhere. The shortcut is a
+ * Kbd, the one element in the item named by its keys.
+ */
+const textOf = (node: Node | null): string => node?.textContent ?? '';
+
+function labelOf(item: HTMLElement): string {
+  const text = textOf(item);
+  const hint = textOf(item.querySelector('[aria-label]'));
+
+  return text.slice(0, text.length - hint.length);
+}
 
 // A menu's items by label, without the shortcuts they show.
 export const itemNames = (menu: HTMLElement): string[] =>
-  within(menu)
-    .getAllByRole('menuitem')
-    .map((item) => (item.textContent ?? '').replace(shortcut, ''));
+  within(menu).getAllByRole('menuitem').map(labelOf);
 
 // Presses a row and moves past the mouse's slop, then waits for the lifted copy to draw beside it.
 async function lift(user: User, row: HTMLElement): Promise<void> {

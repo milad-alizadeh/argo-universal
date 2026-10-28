@@ -1,11 +1,12 @@
-import { primaryModifier } from '#primitives/content/kbd';
 import type { DeclaredAction } from './action-declarations';
-import { resolveShortcuts } from './action-shortcuts';
+import { allocationKey, ShortcutAllocation } from './shortcut-allocation';
 
 export interface ShortcutRegistration {
   id: string;
   actions: DeclaredAction[];
   plugin: boolean;
+  // Its shortcuts run only while focus is inside the node carrying its id.
+  context: boolean;
 }
 
 export class ShortcutRegistry {
@@ -46,16 +47,6 @@ export class ShortcutRegistry {
   }
 }
 
-function registeredActions(
-  entry: ShortcutRegistration,
-): (DeclaredAction & { plugin: boolean; owner: string })[] {
-  return entry.actions.map((action) => ({
-    ...action,
-    plugin: entry.plugin,
-    owner: entry.id,
-  }));
-}
-
 function declarationOrder(
   left: ShortcutRegistration,
   right: ShortcutRegistration,
@@ -85,20 +76,10 @@ function comparePosition(position: number): number {
     : 1;
 }
 
-function allocationKey(owner: string, action: string): string {
-  return `${owner}/${action}`;
-}
-
 function allocatedActions(entries: ShortcutRegistration[]): Set<string> {
-  const declarations = entries
-    .sort(declarationOrder)
-    .flatMap(registeredActions);
+  const allocation = new ShortcutAllocation();
 
-  const shortcuts = resolveShortcuts(declarations, false, primaryModifier());
+  for (const entry of entries.sort(declarationOrder)) allocation.add(entry);
 
-  return new Set(
-    declarations.flatMap((action, index) =>
-      shortcuts[index] ? [allocationKey(action.owner, action.id)] : [],
-    ),
-  );
+  return allocation.owned;
 }

@@ -155,6 +155,19 @@ export const MoveDownFromKeyboard = boardAt(
   },
 );
 
+// Every row declares the same Alt+↑/↓: the focused row's declaration answers, not the first row's.
+export const KeyboardMovesTheFocusedRow = boardAt(
+  'wide',
+  async (canvasElement, { user, onMove }) => {
+    rowNamed(canvasElement, gamma.title).focus();
+    await user.keyboard('{Alt>}{ArrowUp}{/Alt}');
+
+    await expect(onMove.mock.calls).toEqual([
+      [{ id: gamma.id, section: first.id, index: 1 }],
+    ]);
+  },
+);
+
 // A row moved to another lane from its menu keeps the focus, and a screen reader hears where it landed.
 export const MoveKeepsFocusAndIsAnnounced = boardAt(
   'wide',

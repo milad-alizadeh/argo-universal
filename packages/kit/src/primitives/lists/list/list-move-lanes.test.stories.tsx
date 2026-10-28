@@ -19,7 +19,7 @@ import {
 } from './list-move-pointer.mocks';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Lists/List/Move Lanes',
+  title: 'Tests/Design System/Primitives/Lists/List/MoveLanes',
   parameters: { screenPreview: true },
 } satisfies Meta;
 
