@@ -5,6 +5,7 @@ import type {
 } from './settings-list-props';
 import {
   accountsRow,
+  agentAccessRow,
   agentsRow,
   connectionRow,
   devicesRow,
@@ -39,7 +40,12 @@ function pageGroups(
   return [
     {
       title: 'Workspace',
-      rows: [projectsRow(props), agentsRow(props), pluginsRow(props)],
+      rows: [
+        projectsRow(props),
+        agentsRow(props),
+        agentAccessRow(props),
+        pluginsRow(props),
+      ],
     },
     { title: 'Account', rows: [accountsRow(props)] },
     { title: 'Connection', rows: connectionRows(props, wide) },

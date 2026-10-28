@@ -70,6 +70,7 @@ export interface EngineInput extends Pick<
   'now' | 'createId'
 > {
   home: string;
+  userHome?: string;
   port: number;
   version: string;
   firstPartyPluginsDirectory?: string;

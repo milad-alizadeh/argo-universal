@@ -11,6 +11,7 @@ import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
 import type { SessionRouterDeps } from '../sessions';
+import { createAgentAccessOperations } from './agent-access';
 import { createPluginOperations } from './plugins';
 import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
@@ -22,6 +23,7 @@ import { requireUserToken } from './tokens';
 export type OperationsDeps = SessionRouterDeps &
   RegistryDeps & {
     controlToken: string;
+    userHome: string;
     blobsFolder: string;
     plugins: PluginsRouterDeps;
   };
@@ -40,6 +42,7 @@ function createImplementations(deps: OperationsDeps): OperationImplementations {
   const rejections = createRejectionCounter('projects');
 
   return {
+    ...createAgentAccessOperations(deps),
     ...sessionImplementations(deps),
     ...createReadOperations(deps),
     ...createPluginOperations(deps.plugins.plugins),

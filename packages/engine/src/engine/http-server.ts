@@ -1,3 +1,4 @@
+import { homedir } from 'node:os';
 import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
@@ -24,6 +25,7 @@ import { createAppRouterDeps, type AppRouterInput } from './router-deps';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
+  userHome?: string;
   registry: RegistryActor;
   createId: () => string;
   port: number;
@@ -129,6 +131,7 @@ function httpRouterInput(
 ): AppRouterInput {
   return {
     ...options,
+    userHome: options.userHome ?? homedir(),
     controlToken,
     blobsFolder: setup.blobsFolder,
     sessionCommandSignal: setup.commandAdmission.signal,
