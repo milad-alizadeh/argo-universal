@@ -11,7 +11,10 @@ type ActOperationId = {
     : never;
 }[OperationId];
 
-type SessionActOperationId = Exclude<ActOperationId, 'session.new'>;
+type SessionActOperationId = Exclude<
+  ActOperationId,
+  'session.new' | 'session.prompt'
+>;
 
 type ActTarget = {
   sessionId: string;
@@ -20,7 +23,11 @@ type ActTarget = {
 };
 
 export function isActOperation(id: OperationId): id is SessionActOperationId {
-  return operations[id].tier === 'act' && id !== 'session.new';
+  return (
+    operations[id].tier === 'act' &&
+    id !== 'session.new' &&
+    id !== 'session.prompt'
+  );
 }
 
 const sessionParams = {

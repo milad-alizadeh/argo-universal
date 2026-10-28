@@ -74,3 +74,19 @@ it('does not exempt a different generated-looking file', () => {
     'packages/engine/src/new/router.gen.ts:1: Add an Operation instead of the hand-written mutation erase.',
   ]);
 });
+
+it.each(['new', 'prompt'])(
+  'refuses the migrated Session %s as a hand-written mutation',
+  (name) => {
+    const source = `const routes = router({ ${name}: publicProcedure.mutation(() => run()) });`;
+
+    expect(
+      operationMutationProblems(
+        'packages/engine/src/sessions/router.ts',
+        source,
+      ),
+    ).toEqual([
+      `packages/engine/src/sessions/router.ts:1: Add an Operation instead of the hand-written mutation ${name}.`,
+    ]);
+  },
+);

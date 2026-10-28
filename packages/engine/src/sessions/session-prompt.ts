@@ -1,6 +1,10 @@
-import type { SessionPromptInput, SessionPromptOutput } from '@repo/contracts';
+import type {
+  SessionPromptInput,
+  SessionPromptOutput,
+  PromptSender,
+} from '@repo/contracts';
 import { requireInstalledAgent } from '../agents';
-import { userMessageId } from '../feed';
+import { promptMessageId } from '../feed';
 import type { SessionRouterDeps } from './router-deps';
 import {
   submitSessionPrompt,
@@ -8,7 +12,7 @@ import {
 } from './session-command';
 import { openReadySession } from './session-opening';
 
-export const promptSession = async (
+export const promptSessionAccepted = async (
   deps: Pick<
     SessionRouterDeps,
     | 'sessions'
@@ -19,7 +23,8 @@ export const promptSession = async (
     | 'hooks'
   >,
   { sessionId, prompt }: SessionPromptInput,
-): Promise<SessionPromptOutput> => {
+  sender: PromptSender = { type: 'user' },
+): Promise<AcceptedSessionPrompt> => {
   requireInstalledAgent(
     deps.installedAgents,
     deps.readSession(sessionId).agent,
@@ -35,7 +40,26 @@ export const promptSession = async (
   if ('drop' in answer) return { messageId: null, drop: answer.drop };
   const turnId = deps.createId();
   validateSessionCommandAdmission(deps);
-  await submitSessionPrompt(sessionActor, { turnId, content: answer.prompt });
+  await submitSessionPrompt(sessionActor, {
+    turnId,
+    content: answer.prompt,
+    sender,
+  });
 
-  return { messageId: userMessageId(turnId) };
+  return { messageId: promptMessageId(turnId, sender), turnId };
 };
+
+export type AcceptedSessionPrompt =
+  | { messageId: string; turnId: string }
+  | { messageId: null; drop: string };
+
+export async function promptSession(
+  deps: Parameters<typeof promptSessionAccepted>[0],
+  input: SessionPromptInput,
+): Promise<SessionPromptOutput> {
+  const accepted = await promptSessionAccepted(deps, input);
+
+  return accepted.messageId === null
+    ? accepted
+    : { messageId: accepted.messageId };
+}

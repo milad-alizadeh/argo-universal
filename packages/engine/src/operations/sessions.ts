@@ -3,6 +3,7 @@ import {
   archiveSession,
   cancelSession,
   createSession,
+  promptSession,
   stopShell,
   unarchiveSession,
   closeSession,
@@ -17,6 +18,7 @@ export const sessionImplementations = (
   deps: SessionRouterDeps,
 ): Pick<OperationImplementations, keyof typeof sessionOperations> => ({
   'session.new': (input) => createSession(deps, input),
+  'session.prompt': (input) => promptSession(deps, input),
   'session.cancel': async (input) => cancelSession(deps, input.sessionId),
   'session.archive': (input) => archiveSession(deps, input.sessionId),
   'session.unarchive': (input) => unarchiveSession(deps, input.sessionId),

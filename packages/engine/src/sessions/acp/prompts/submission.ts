@@ -1,15 +1,16 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import type { ContentBlock } from '@repo/contracts';
+import type { ContentBlock, PromptSender } from '@repo/contracts';
 import type { Subscription } from 'xstate';
 import type { AcpSessionLease } from '../../../agents';
 import type { AttachmentStorage } from '../../../blob';
-import { userMessageChange, type FeedActorRef } from '../../../feed';
+import { promptMessageChange, type FeedActorRef } from '../../../feed';
 import type { WriterCommit } from '../../../storage';
 import { readAcpPromptContent } from './prompt-content';
 
 export type LocalSubmission = {
   turnId: string;
   content: ContentBlock[];
+  sender?: PromptSender;
   committed?: WriterCommit;
 };
 
@@ -70,10 +71,19 @@ const enqueuePromptRow = (
   feed.send({
     type: 'feed.change',
     turnId: submission.turnId,
-    change: userMessageChange(submission.turnId, submission.content),
+    change: submissionChange(submission),
     committed,
   });
 };
+
+const submissionChange = (
+  submission: LocalSubmission,
+): ReturnType<typeof promptMessageChange> =>
+  promptMessageChange(
+    submission.turnId,
+    submission.content,
+    submission.sender ?? { type: 'user' },
+  );
 
 const enqueuePromptAndWaitForCommit = (
   input: PromptCommitInput,

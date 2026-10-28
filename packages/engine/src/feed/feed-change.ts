@@ -1,5 +1,7 @@
 import type {
   ContentBlock,
+  PromptSender,
+  NonUserPromptSender,
   FeedChange,
   FeedUpsert,
   RowAppend,
@@ -43,6 +45,39 @@ export const userMessageChange = (
     messageId: userMessageId(turnId),
     state: 'settled',
     content,
+    _meta: { argo: { sender: { type: 'user' } } },
+  },
+});
+
+export const promptMessageId = (
+  turnId: string,
+  sender: PromptSender,
+): string =>
+  sender.type === 'user' ? userMessageId(turnId) : `${turnId}:prompt`;
+
+export function promptMessageChange(
+  turnId: string,
+  content: ContentBlock[],
+  sender: PromptSender,
+): FeedUpsert {
+  if (sender.type === 'user') return userMessageChange(turnId, content);
+
+  return nonUserPromptChange(promptMessageId(turnId, sender), content, sender);
+}
+
+const nonUserPromptChange = (
+  messageId: string,
+  content: ContentBlock[],
+  sender: NonUserPromptSender,
+): FeedUpsert => ({
+  type: 'upsert',
+  update: {
+    id: messageId,
+    messageId,
+    sessionUpdate: 'prompt_message',
+    state: 'settled',
+    content,
+    _meta: { argo: { sender } },
   },
 });
 

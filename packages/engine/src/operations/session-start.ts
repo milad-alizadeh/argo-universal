@@ -1,6 +1,10 @@
 import { SessionNewInput, type SessionNewOutput } from '@repo/contracts';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { createSession, type SessionOperationCall } from '../sessions';
+import {
+  createSession,
+  sessionPromptSender,
+  type SessionOperationCall,
+} from '../sessions';
 import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
 import type { SessionStartAdmission, SessionStarts } from './session-starts';
@@ -42,5 +46,6 @@ async function confirmedStart(
   return createSession(deps, input, {
     sessionId,
     startedBySessionId: caller.sessionId,
+    sender: sessionPromptSender(deps.readSession, caller.sessionId),
   });
 }

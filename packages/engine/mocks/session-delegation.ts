@@ -1,4 +1,7 @@
-import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
+import type {
+  TerminalOutputResponse,
+  PromptRequest,
+} from '@agentclientprotocol/sdk';
 import { SessionNewOutput } from '@repo/contracts';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
@@ -10,16 +13,24 @@ import {
   sessionIdentityStep,
 } from './session-access';
 
-export async function delegationJourney(): Promise<DelegationJourney> {
+export async function delegationJourney(
+  options: {
+    requests?: PromptRequest[];
+    installPlugins?: NonNullable<
+      Parameters<typeof startAcpEngine>[0]
+    >['installPlugins'];
+  } = {},
+): Promise<DelegationJourney> {
   const outputs: TerminalOutputResponse[] = [];
   const firstTurnSteps: ScriptedStep[] = [sessionIdentityStep(outputs)];
 
   const host = await startAcpEngine({
     steps: [],
+    installPlugins: options.installPlugins,
     responses: {
       'session/prompt': [
-        { steps: firstTurnSteps },
-        { steps: [{ type: 'wait-for-cancel' }] },
+        { steps: firstTurnSteps, requests: options.requests },
+        { steps: [{ type: 'wait-for-cancel' }], requests: options.requests },
       ],
     },
   });

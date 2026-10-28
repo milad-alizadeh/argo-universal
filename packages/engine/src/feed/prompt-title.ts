@@ -15,7 +15,10 @@ export function titleFromPrompt(prompt: ContentBlock[]): string {
 export function titleFromRows(rows: SessionUpdate[]): string {
   return titleFromPrompt(
     rows.flatMap((row): ContentBlock[] =>
-      row.sessionUpdate === 'user_message' ? row.content : [],
+      row.sessionUpdate === 'user_message' ||
+      row.sessionUpdate === 'prompt_message'
+        ? row.content
+        : [],
     ),
   );
 }
