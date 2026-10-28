@@ -23,6 +23,7 @@ it.each([
   'refuses operations.$procedure without a token',
   async ({ procedure, options }) => {
     const host = await startProjectTestHost();
+
     const response = await fetch(
       `${host.url}/trpc/operations.${procedure}`,
       options,
