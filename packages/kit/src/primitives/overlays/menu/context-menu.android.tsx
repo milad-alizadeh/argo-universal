@@ -41,7 +41,7 @@ export function ContextMenu(props: ContextMenuProps): ReactElement {
       <Host style={StyleSheet.absoluteFill}>
         <AnchoredDropdown {...props} menu={menu} />
       </Host>
-      <LongPressTrigger onOpen={menu.open} drag={drag?.gesture}>
+      <LongPressTrigger onActivate={menu.open} simultaneousWith={drag?.gesture}>
         {props.children}
       </LongPressTrigger>
     </View>
@@ -49,20 +49,14 @@ export function ContextMenu(props: ContextMenuProps): ReactElement {
 }
 
 // Beside a row's drag, the long press runs with its Pan, so the Pan keeps the touch once the menu opens.
-function LongPressTrigger({
-  children,
-  onOpen,
-  drag,
-}: {
+interface TriggerProps {
   children: ReactElement;
-  onOpen: () => void;
-  drag: RowMenuDrag['gesture'] | undefined;
-}): ReactElement {
-  const gesture = useLongPressGesture({
-    runOnJS: true,
-    onActivate: onOpen,
-    simultaneousWith: drag,
-  });
+  onActivate: () => void;
+  simultaneousWith: RowMenuDrag['gesture'] | undefined;
+}
+
+function LongPressTrigger({ children, ...config }: TriggerProps): ReactElement {
+  const gesture = useLongPressGesture({ runOnJS: true, ...config });
 
   return (
     <GestureDetector gesture={gesture}>
@@ -96,7 +90,7 @@ interface OpenableMenu {
 // Opening plays the long-press haptic; `onDismissRequest` closes the menu on an outside tap, back, or a choice.
 function useOpenableMenu(): OpenableMenu {
   const [expanded, setExpanded] = useState(false);
-  const [close] = useState(() => () => setExpanded(false));
+  const [close] = useState(() => (): void => setExpanded(false));
 
   return {
     state: { expanded, onDismissRequest: close },

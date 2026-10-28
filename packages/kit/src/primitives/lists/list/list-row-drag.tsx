@@ -10,12 +10,12 @@ import {
 import { listenerSet } from '../../../listener-set';
 import { RowMenuDragContext, type RowMenuDrag } from '../../../row-menu-drag';
 import type { Point } from './list-geometry';
-import type { RowDragProps } from './list-row-press';
 import {
   pressStart,
   RowPress,
   type PressStep,
   type PressTarget,
+  type RowDragProps,
 } from './list-row-press';
 
 const firstTouch = (event: GestureTouchEvent): Point | undefined => {
@@ -23,12 +23,6 @@ const firstTouch = (event: GestureTouchEvent): Point | undefined => {
 
   return touch && { x: touch.absoluteX, y: touch.absoluteY };
 };
-
-// Activates the Pan when the press lifts the row, and fails it when the press scrolls the List instead.
-function settle(step: PressStep, handlerTag: number): void {
-  if (step === 'lift') GestureStateManager.activate(handlerTag);
-  else if (step === 'scroll') GestureStateManager.fail(handlerTag);
-}
 
 // The native adapter for a RowPress: the press a Pan follows, from its first touch until the Pan ends.
 class PanPress {
@@ -53,9 +47,16 @@ class PanPress {
 
     const step = this.press.move(at, Date.now());
 
-    if (step === 'lift') this.lifts.notify();
-    settle(step, event.handlerTag);
+    this.settle(step, event.handlerTag);
   };
+
+  // Activates the Pan when the press lifts the row, and fails it when the press scrolls the List instead.
+  private settle(step: PressStep, handlerTag: number): void {
+    if (step === 'lift') {
+      GestureStateManager.activate(handlerTag);
+      this.lifts.notify();
+    } else if (step === 'scroll') GestureStateManager.fail(handlerTag);
+  }
 
   public readonly drop = (canceled: boolean): void => {
     if (!this.press) return;
