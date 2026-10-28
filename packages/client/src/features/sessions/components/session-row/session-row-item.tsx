@@ -22,7 +22,7 @@ export function SessionRowItem(props: SessionRowItemProps): React.ReactNode {
 
   if (!onPress && tooltip === undefined) return <ItemLabel {...props} />;
 
-  return withTooltip(tooltip, itemPress(props, onPress));
+  return withTooltip(tooltip, pressableItem(props, onPress));
 }
 
 // A wide window shows the item's tooltip on hover; a phone has no pointer to hover with.
@@ -59,7 +59,7 @@ export function pageOpener(
  * The item as its own part of the row: the tooltip's hover target, and the link to its Plugin's page when it has one.
  * An element, not a component, since the Tooltip hands its handlers to the Pressable it is given.
  */
-function itemPress(
+function pressableItem(
   props: SessionRowItemProps,
   onPress: (() => void) | undefined,
 ): React.JSX.Element {

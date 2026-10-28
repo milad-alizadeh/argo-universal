@@ -109,6 +109,7 @@ function MoreRow({
       subtitle={pluginName}
       leading={itemIcon(item)}
       onPress={onOpen}
+      disclosure={onOpen !== undefined}
     />
   );
 }

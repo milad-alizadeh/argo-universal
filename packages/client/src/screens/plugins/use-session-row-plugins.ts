@@ -98,7 +98,7 @@ function useRowVisibility(): SlotVisibility {
   return useMemo(() => slotVisibility(choices), [choices]);
 }
 
-const plugged = (
+const rowPluginsBySession = (
   { sessionIds, answerOf }: SessionRowAnswers,
   visibility: SlotVisibility,
   pluginOf: PluginOf,
@@ -127,7 +127,7 @@ export function useSessionRowPlugins(
   const pluginOf = usePluginOf();
 
   return useMemo(
-    () => plugged(answers, visibility, pluginOf),
+    () => rowPluginsBySession(answers, visibility, pluginOf),
     [answers, visibility, pluginOf],
   );
 }

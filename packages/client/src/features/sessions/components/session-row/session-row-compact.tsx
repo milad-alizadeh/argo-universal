@@ -45,9 +45,9 @@ function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
 function compactTrailing(props: CompactEndProps): React.ReactNode {
   const detail = compactDetail(props);
   const status = compactStatusDot(props.session.status);
-  const drawn = [detail, status].some((part) => part !== undefined);
+  const hasEnd = [detail, status].some((part) => part !== undefined);
 
-  if (!drawn && !hasPluginItems(props.plugins)) return undefined;
+  if (!hasEnd && !hasPluginItems(props.plugins)) return undefined;
 
   return (
     <View className="flex-row items-center gap-1.5">

@@ -8,15 +8,16 @@ export interface SessionRowPluginItemsProps {
   onOpenPluginPage?: OpenPluginPage;
 }
 
-export const hasPluginItems = (plugins?: SessionRowPlugins): boolean =>
-  Boolean(plugins?.items.length);
+export const hasPluginItems = (
+  plugins?: SessionRowPlugins,
+): plugins is SessionRowPlugins => Boolean(plugins?.items.length);
 
 // The Plugins' items after Argo's own, in the Plugins' order, then "+N" for the rest; both row layouts draw them.
 export function SessionRowPluginItems({
   plugins,
   onOpenPluginPage,
 }: SessionRowPluginItemsProps): React.ReactNode {
-  if (!plugins || !hasPluginItems(plugins)) return null;
+  if (!hasPluginItems(plugins)) return null;
 
   return (
     <>

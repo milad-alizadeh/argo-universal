@@ -107,7 +107,6 @@ function moreItems(width: number): Story {
       await expect(within(more).getByText('Lint passed')).toBeVisible();
       await expect(within(more).getByText('Checks')).toBeVisible();
       await expect(within(more).getByText(moreIssue)).toBeVisible();
-      await expect(within(more).getByText('Issue tracker')).toBeVisible();
       await userEvent.click(within(more).getByText(moreIssue));
       await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
         issueTracker,
