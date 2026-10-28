@@ -661,19 +661,28 @@ importers:
       '@argo/plugin-kit':
         specifier: workspace:*
         version: link:../../packages/plugin-kit
-      '@repo/server':
-        specifier: workspace:*
-        version: link:../server
-      tsx:
-        specifier: 'catalog:'
-        version: 4.23.15
-    devDependencies:
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
       '@repo/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@repo/machine-log':
+        specifier: workspace:*
+        version: link:../../packages/machine-log
+      '@repo/server':
+        specifier: workspace:*
+        version: link:../server
+      '@trpc/client':
+        specifier: 'catalog:'
+        version: 11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
       '@repo/typescript':
         specifier: workspace:*
         version: link:../../tooling/typescript

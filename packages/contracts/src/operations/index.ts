@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { ProjectsListOutput } from '../projects/list';
+import type { OperationTier } from './metadata';
 import { registryOperations } from './registry';
 import { operationJsonSchema } from './schema-json';
 
-export type OperationTier = 'read' | 'act' | 'confirm';
+export { OperationRow, OperationTier } from './metadata';
 
 export interface OperationDefinition {
   id: string;
