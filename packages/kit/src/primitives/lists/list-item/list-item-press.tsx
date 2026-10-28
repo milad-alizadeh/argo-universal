@@ -160,7 +160,8 @@ function focusProps(props: DrawingProps): RowPressProps {
   };
 }
 
-function spokenRowLabel(props: DrawingProps): string | undefined {
+// The name a row is read by: its own label, or its title and subtitle; a row with custom content names its parts.
+export function spokenRowLabel(props: DrawingProps): string | undefined {
   return props.content === undefined
     ? (props.accessibilityLabel ?? rowLabel(props))
     : undefined;

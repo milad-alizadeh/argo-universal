@@ -21,7 +21,11 @@ import { drawingContent } from './list-item-drawing-content';
 import { RowMovePicker } from './list-item-move-picker';
 import { NestingItem } from './list-item-nesting';
 import { hasLeading, separatorClass } from './list-item-parts';
-import { ItemPress, type DrawingProps } from './list-item-press';
+import {
+  ItemPress,
+  spokenRowLabel,
+  type DrawingProps,
+} from './list-item-press';
 import { ItemProgress } from './list-item-progress';
 import type { ListItemProps } from './list-item-props';
 import {
@@ -80,7 +84,16 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   const moves = useMoveActions(props.id);
 
   return (
-    <ContextActions actions={actions} builtIn={moves} menu={props.contextMenu}>
+    <ContextActions
+      actions={actions}
+      builtIn={moves}
+      menu={
+        props.contextMenu && {
+          ...props.contextMenu,
+          label: spokenRowLabel(props),
+        }
+      }
+    >
       <>
         <RowPositionContext value={context}>
           <ItemSurface {...props} />

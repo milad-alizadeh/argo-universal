@@ -28,6 +28,8 @@ export interface ContextMenuProps {
   groupTitles?: readonly (string | undefined)[];
   // iOS draws this page above the menu as the element's preview, and a tap on it opens the page; without one the element itself lifts.
   preview?: Href;
+  // The element's name. iOS reads it for an element with a `preview`, whose trigger hides the element's own text from accessibility.
+  label?: string;
   // A double-click on the element runs its main edit, such as renaming a row; phones have none.
   onDoubleClick?: () => void;
   // The element the menu opens on, at the pointer.

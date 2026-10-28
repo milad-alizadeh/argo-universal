@@ -67,18 +67,23 @@ const previewSize = {
  * Link `asChild` hands its press to the View, which takes none: a tap reaches the element's own press, so the element
  * keeps its navigation; only a tap on the preview opens `href`. The root Link.Menu's `title` heads the menu, and each
  * group is an `inline` Link.Menu, which the system parts with a separator.
+ *
+ * Link.Trigger's native view exposes none of the element's accessibility to iOS, so a View around the Link is the
+ * one element VoiceOver and XCUITest read, named by `label`; a double tap presses the element's centre.
  */
 function PreviewMenu(props: PreviewMenuProps): ReactElement {
   return (
-    <Link href={props.href} asChild>
-      <Link.Trigger>
-        <View>{props.children}</View>
-      </Link.Trigger>
-      <Link.Preview style={previewSize} />
-      <Link.Menu title={props.title}>
-        {contextMenuSections(props).map(previewMenuGroup)}
-      </Link.Menu>
-    </Link>
+    <View accessible role="button" accessibilityLabel={props.label}>
+      <Link href={props.href} asChild>
+        <Link.Trigger>
+          <View>{props.children}</View>
+        </Link.Trigger>
+        <Link.Preview style={previewSize} />
+        <Link.Menu title={props.title}>
+          {contextMenuSections(props).map(previewMenuGroup)}
+        </Link.Menu>
+      </Link>
+    </View>
   );
 }
 

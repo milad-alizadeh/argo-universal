@@ -3,10 +3,9 @@ name: The Sessions list draws its Project and scrolls its rows
 ---
 - openLink: "argo://storybook?STORYBOOK_STORY_ID=screens-sessions-sessions--sessions"
 - assertVisible: "^Example Project$"
-# iOS reads a Session row as one label of its title, summary and time; Android keeps them apart.
-- assertVisible: ".*Fix the failing build.*"
+# iOS reads a Session row as one element named by its title and status; Android keeps its texts apart.
+- assertVisible: "^Fix the failing build(, Failed)?$"
 # The rows below the fold scroll into view inside the List.
 - scrollUntilVisible:
-    element: ".*Build the settings screen.*"
+    element: "^Build the settings screen(, Running)?$"
     direction: DOWN
-- assertVisible: ".*Running the tests.*"
