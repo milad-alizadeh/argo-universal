@@ -39,14 +39,28 @@ const completedRow = (row: Tool, result: Result): Tool => ({
   rawOutput: 'error' in result ? { error: result.error } : result.output,
 });
 
-function stillOwnsTurn(
+function canSettleOperation(
   session: SessionActorRef,
+  feed: FeedActorRef,
   turnId: string | null,
 ): boolean {
   const snapshot = session.getSnapshot();
 
+  if (snapshot.status !== 'active') return false;
+
+  if (turnId === null) return true;
+
+  return ownsLiveTurn(session, feed, turnId);
+}
+
+function ownsLiveTurn(
+  session: SessionActorRef,
+  feed: FeedActorRef,
+  turnId: string,
+): boolean {
   return (
-    snapshot.status === 'active' && snapshot.context.activeTurnId === turnId
+    session.getSnapshot().context.activeTurnId === turnId &&
+    feed.getSnapshot().context.lastSettledTurnId !== turnId
   );
 }
 
@@ -56,6 +70,7 @@ class OperationCall implements SessionOperationCall {
   public readonly turnId: string | null;
   private readonly row: Tool;
   private finished = false;
+  private readonly closing: AbortSignal;
   public constructor(
     private readonly session: SessionActorRef,
     private readonly feed: FeedActorRef,
@@ -66,17 +81,25 @@ class OperationCall implements SessionOperationCall {
     this.turnId = context.activeTurnId;
     this.row = toolRow(this.toolCallId, operation);
     this.rowId = this.row.id;
+    this.closing = context.acpLifetime.signal;
+    this.closing.addEventListener('abort', this.cancel, { once: true });
     this.publish(this.row);
   }
   private publish(row: Tool): void {
     this.feed.send(toolCallEvent(row, this.turnId));
   }
+  private readonly cancel = (): void =>
+    this.settle({ ...this.row, state: 'settled', status: 'cancelled' });
   public finish(result: Result): void {
+    this.settle(completedRow(this.row, result));
+  }
+  private settle(row: Tool): void {
     if (this.finished) return;
     this.finished = true;
+    this.closing.removeEventListener('abort', this.cancel);
 
-    if (!stillOwnsTurn(this.session, this.turnId)) return;
-    this.publish(completedRow(this.row, result));
+    if (!canSettleOperation(this.session, this.feed, this.turnId)) return;
+    this.publish(row);
   }
 }
 

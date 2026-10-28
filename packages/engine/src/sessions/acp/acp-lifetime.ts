@@ -71,6 +71,9 @@ export class AcpSessionLifetime {
   ): AcpSessionDestination {
     return this.shells ? this.shells.attach(destination) : destination;
   }
+  public get signal(): AbortSignal {
+    return this.controller.signal;
+  }
   public finishRegistration(): void {
     this.registration.resolve();
   }

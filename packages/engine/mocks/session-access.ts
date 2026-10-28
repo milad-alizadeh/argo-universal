@@ -9,7 +9,9 @@ import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle } from './acp-feed';
 import { operationCaller } from './operations';
 
-const identityStep = (outputs: TerminalOutputResponse[]): ScriptedStep => ({
+export const sessionIdentityStep = (
+  outputs: TerminalOutputResponse[],
+): ScriptedStep => ({
   type: 'terminal',
   toolCallId: 'environment',
   request: {
@@ -25,7 +27,7 @@ const identityStep = (outputs: TerminalOutputResponse[]): ScriptedStep => ({
 
 export async function sessionAccessHost(): Promise<AccessHost> {
   const outputs: TerminalOutputResponse[] = [];
-  const host = await startAcpEngine({ steps: [identityStep(outputs)] });
+  const host = await startAcpEngine({ steps: [sessionIdentityStep(outputs)] });
 
   return { host, outputs };
 }
