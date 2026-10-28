@@ -2,7 +2,6 @@ import type { OperationWaitClock } from '../src/operations';
 
 export class TestOperationWaitClock implements OperationWaitClock {
   private elapsed = 0;
-  public now = (): number => this.elapsed;
   private readonly timers = new Set<{ at: number; callback: () => void }>();
   private scheduled = Promise.withResolvers<void>();
   public schedule = (

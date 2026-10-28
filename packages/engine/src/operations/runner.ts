@@ -31,13 +31,13 @@ import type { OperationsDeps } from './operations';
 import { parseResult, validateParams } from './params';
 import type { SessionScope } from './session-scope';
 import type { OperationCaller, SessionCaller } from './session-tokens';
-import type { OperationWork, WaitBudget } from './work';
+import type { OperationWork, WorkAdmission } from './work';
 
 type Operation = { id: OperationId; params: Json };
 
 export type RunContext = {
   caller: OperationCaller;
-  budget: WaitBudget;
+  admission: WorkAdmission;
   call?: SessionOperationCall;
 };
 
@@ -71,10 +71,10 @@ export class OperationRunner {
   }
   // The user token has no scope step; a Session token's scope may ask the user first.
   public run(
-    { caller, budget, call }: RunContext,
+    { caller, admission, call }: RunContext,
     operation: Operation,
   ): Promise<OperationRunResult> {
-    if (caller.kind === 'user') return this.runUser(budget, operation);
+    if (caller.kind === 'user') return this.runUser(admission, operation);
 
     return this.runSession(
       { caller, call: requireOperationCall(call) },
@@ -82,14 +82,14 @@ export class OperationRunner {
     );
   }
   private runUser(
-    budget: WaitBudget,
+    admission: WorkAdmission,
     { id, params }: Operation,
   ): Promise<OperationRunResult> {
     if (!isNativeStartOperation(id)) return this.invoke(id, params);
 
     return this.ports.work.admitUser(
       (signal) => this.begin(id, params, { ...userOrigin, signal }),
-      budget,
+      admission,
     );
   }
   private runSession(

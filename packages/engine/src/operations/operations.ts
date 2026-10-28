@@ -10,7 +10,6 @@ import type { PluginsRouterDeps } from '../plugins';
 import {
   createOperationCalls,
   createSessionDirectory,
-  createSessionWorkSource,
   type OperationCalls,
   type SessionList,
   type SessionRouterDeps,
@@ -31,7 +30,7 @@ import { listOperations } from './search';
 import { scopedOperations, SessionScope } from './session-scope';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
 import { tokensMatch } from './tokens';
-import { OperationWork, type OperationWaitClock } from './work';
+import { liveWorkDeps, OperationWork, type OperationWaitClock } from './work';
 
 export type {
   OperationImplementations,
@@ -62,10 +61,8 @@ export class Operations {
     sessionList: SessionList,
   ) {
     this.calls = createOperationCalls(deps);
-    this.work = new OperationWork(
-      deps,
-      (token) => this.caller(token),
-      createSessionWorkSource(deps),
+    this.work = new OperationWork(liveWorkDeps(deps), (token) =>
+      this.caller(token),
     );
     this.runner = createRunner(deps, { sessionList, work: this.work });
   }
@@ -91,7 +88,7 @@ export class Operations {
 
     return this.work.run(
       { caller, token, wait: input.wait, signal, id: input.id },
-      (budget) => this.start({ caller, budget }, input),
+      (admission) => this.start({ caller, admission }, input),
     );
   }
   private start(

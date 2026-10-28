@@ -1,13 +1,10 @@
-import type {
-  OperationExecution,
-  OperationId,
-} from '@repo/contracts/operations';
+import type { OperationId } from '@repo/contracts/operations';
 import type { StartedOperation } from '../call-recording';
+import type { OperationRunResult } from '../implementations';
 import { isNativeStartOperation } from '../native-start';
-import type { OperationRunResult } from '../operations';
 import type { OperationCaller } from '../session-tokens';
-import type { WaitBudget } from './budget';
 import type { WorkObservation } from './observation';
+import type { WorkAdmission } from './wait.machine';
 
 export type RunObservation = {
   caller: OperationCaller;
@@ -17,22 +14,16 @@ export type RunObservation = {
   id: OperationId;
 };
 
-export type RunContext = { input: RunObservation; budget: WaitBudget };
-
-export type ObserveOptions = {
-  signal?: AbortSignal;
-  stopOnInput?: boolean;
-  limitMs?: number;
-};
-
+// Starts the Operation; a user's start is admitted under the run's deadline.
 export type StartOperation = (
-  budget: WaitBudget,
+  admission: WorkAdmission,
 ) => StartedOperation<OperationRunResult>;
 
+// A Session caller gets its Operation's result, or what its Tool call observed first.
 export function operationResponse(
   id: OperationId,
   result: Promise<OperationRunResult>,
-  observed: Promise<OperationExecution>,
+  observed: Promise<WorkObservation>,
 ): Promise<OperationRunResult> {
   const completed = observed.then((value) => completedOrPending(value, result));
 
@@ -44,21 +35,22 @@ export function operationResponse(
 }
 
 async function completedOrPending(
-  value: OperationExecution,
+  value: WorkObservation,
   result: Promise<OperationRunResult>,
 ): Promise<OperationRunResult> {
-  if (value.status !== 'settled') return value;
+  if (value.execution.status !== 'settled') return value.execution;
 
   return nativeOrOriginal(value, result);
 }
 
+// A settled Tool call answers with the Operation's own result; native work answers with its execution.
 async function nativeOrOriginal(
-  value: OperationExecution,
+  { execution, work }: WorkObservation,
   result: Promise<OperationRunResult>,
 ): Promise<OperationRunResult> {
-  if (value.cancelled) return value;
+  if (execution.cancelled) return execution;
 
-  return value.id.startsWith('call:') ? result : value;
+  return work.kind === 'call' ? result : execution;
 }
 
 // A cancelled in-flight Tool call may return only its native cancellation after the caller closes.

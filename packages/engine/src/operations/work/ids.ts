@@ -2,6 +2,7 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { OperationWaitId } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import type { SessionWork } from '../../sessions';
 import type { OperationCaller } from '../session-tokens';
 import { tokensMatch } from '../tokens';
 
@@ -20,16 +21,11 @@ const Parts = z.tuple([
 
 type WaitParts = z.infer<typeof Parts>;
 
-export type NativeWork = {
-  kind: 'creation' | 'turn' | 'call';
-  sessionId: string;
-  entityId: string;
-};
-
+// A wait id names one caller's native Session work, signed with the control token; a Session opening's id also names this Engine.
 export class WaitIds {
   private readonly epoch = randomUUID();
   public constructor(private readonly secret: string) {}
-  public issue(caller: OperationCaller, work: NativeWork): string {
+  public issue(caller: OperationCaller, work: SessionWork): string {
     const owner = caller.kind === 'user' ? 'user' : caller.sessionId;
 
     const identity = [owner, work.sessionId, work.entityId];
@@ -41,7 +37,7 @@ export class WaitIds {
 
     return `${payload}:${this.signature(payload)}`;
   }
-  public require(caller: OperationCaller, value: string): NativeWork {
+  public require(caller: OperationCaller, value: string): SessionWork {
     const parts = Parts.parse(OperationWaitId.parse(value).split(':'));
     this.requireSignature(parts);
     const [owner, sessionId, entityId, epoch] = decodeIdentity(parts[1]);
@@ -55,7 +51,7 @@ export class WaitIds {
       invalidWaitId();
   }
   private requireEpoch(
-    kind: NativeWork['kind'],
+    kind: SessionWork['kind'],
     epoch: string | undefined,
   ): void {
     if (kind !== 'creation') return;

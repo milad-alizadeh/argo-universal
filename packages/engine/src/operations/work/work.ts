@@ -1,150 +1,141 @@
-import { OperationExecution } from '@repo/contracts/operations';
+import type { OperationExecution } from '@repo/contracts/operations';
 import type { SessionWorkSource } from '../../sessions';
 import { requireOperationCall, type StartedOperation } from '../call-recording';
-import { isNativeStartOperation } from '../native-start';
-import type { OperationRunResult, OperationsDeps } from '../operations';
+import type { OperationRunResult } from '../implementations';
 import type { OperationCaller } from '../session-tokens';
 import { admitUserWork, type BeginWork } from './admission';
-import { WaitBudget } from './budget';
-import { watchOperationWork } from './caller-watch';
+import { operationWaitClock, type OperationWaitClock } from './clock';
 import { WaitIds } from './ids';
-import type { WorkObservation } from './observation';
-import { readOperationWork } from './reader';
+import { answered, observed, unadmitted, userAdmission } from './outcome';
+import { WorkReading } from './reading';
 import {
   operationResponse,
   recordedCaller,
   type RunObservation,
-  type RunContext,
-  type ObserveOptions,
   type StartOperation,
 } from './response';
 import { observationSignal, stoppingSignal } from './signals';
-import { waitForNativeWork } from './wait';
+import { waitForWork } from './wait';
+import type { WaitInput, WaitOutcome, WorkAdmission } from './wait.machine';
 
+export type WorkDeps = {
+  // Signs wait ids, so only this Engine's callers resume them.
+  controlToken: string;
+  source: SessionWorkSource;
+  clock?: OperationWaitClock;
+  // The Engine's Session command signal: stopping ends every wait.
+  stopping?: AbortSignal;
+};
+
+type Following = { caller: () => OperationCaller; signal?: AbortSignal };
+
+// Runs an Operation for one call and waits up to ninety seconds for the work it started; leaving never cancels that work.
 export class OperationWork {
   private readonly ids: WaitIds;
+  private readonly reading: WorkReading;
+  private readonly clock: OperationWaitClock;
   public constructor(
-    private readonly deps: OperationsDeps,
+    private readonly deps: WorkDeps,
     private readonly caller: (token: string | undefined) => OperationCaller,
-    private readonly source: SessionWorkSource,
   ) {
     this.ids = new WaitIds(deps.controlToken);
+    this.reading = new WorkReading(deps.source, this.ids);
+    this.clock = deps.clock ?? operationWaitClock;
   }
   public run(
     input: RunObservation,
     start: StartOperation,
   ): Promise<OperationRunResult> {
-    const budget = new WaitBudget(this.deps.operationWaitClock);
-    const started = start(budget);
-    const context = { input, budget };
-
     return input.caller.kind === 'user'
-      ? this.runUser(context, started.result)
-      : this.runRecorded(context, started);
+      ? this.runUser(input, start)
+      : this.runRecorded(input, start(unadmitted));
   }
+  // A user's native start, admitted under its run's deadline.
   public admitUser<Result>(
     begin: BeginWork<Result>,
-    budget: WaitBudget,
+    admission: WorkAdmission,
   ): Promise<Result | OperationExecution> {
-    return admitUserWork({ source: this.source, ids: this.ids, budget }, begin);
+    const context = { source: this.deps.source, ids: this.ids };
+
+    return admitUserWork(context, begin, admission);
   }
-  public wait(
+  public async wait(
     id: string,
     token: string | undefined,
     signal?: AbortSignal,
   ): Promise<OperationExecution> {
-    return this.observe(id, () => this.caller(token), { signal });
+    const following: Following = { caller: () => this.caller(token), signal };
+
+    return observed(await this.observe(id, following, false)).execution;
+  }
+  private async runUser(
+    input: RunObservation,
+    start: StartOperation,
+  ): Promise<OperationRunResult> {
+    const caller = (): OperationCaller => this.caller(input.token);
+
+    const outcome = await this.follow({
+      start: userAdmission(start, input.wait),
+      reader: (id) => this.reading.reader(id, caller),
+      stopOnInput: false,
+      signal: input.signal,
+    });
+
+    return answered(outcome);
   }
   private runRecorded(
-    context: RunContext,
+    input: RunObservation,
     started: StartedOperation<OperationRunResult>,
   ): Promise<OperationRunResult> {
+    const id = this.callId(input, started);
+    const detached = new AbortController();
+
+    const following: Following = {
+      caller: () => this.recordedCaller(input, id),
+      signal: observationSignal(input.signal, detached.signal),
+    };
+
+    const work = this.observe(id, following, !input.wait).then(observed);
+
+    return operationResponse(input.id, started.result, work).finally(() =>
+      detached.abort(),
+    );
+  }
+  private callId(
+    { caller }: RunObservation,
+    started: StartedOperation<OperationRunResult>,
+  ): string {
     const call = requireOperationCall(started.call);
 
-    if (context.input.caller.kind !== 'session')
+    if (caller.kind !== 'session')
       throw new Error('An Operation Tool call needs a Session caller');
 
-    const id = this.ids.issue(context.input.caller, {
-      kind: 'call',
-      sessionId: context.input.caller.sessionId,
-      entityId: call.toolCallId,
-    });
+    const work = { sessionId: caller.sessionId, entityId: call.toolCallId };
 
-    return this.observeStarted(context, { ...started, id });
+    return this.ids.issue(caller, { kind: 'call', ...work });
   }
-  private runUser(
-    context: RunContext,
-    result: Promise<OperationRunResult>,
-  ): Promise<OperationRunResult> {
-    const admitted = isNativeStartOperation(context.input.id)
-      ? result
-      : context.budget.guard(() => result);
-
-    return admitted.then((value) => this.userResult(context, value));
-  }
-  private userResult(
-    { input, budget }: RunContext,
-    result: OperationRunResult,
-  ): Promise<OperationRunResult> {
-    const execution = OperationExecution.safeParse(result);
-
-    if (!input.wait || !execution.success) return Promise.resolve(result);
-
-    return this.observe(execution.data.id, () => this.caller(input.token), {
-      signal: input.signal,
-      limitMs: budget.remaining(),
-    });
-  }
-  private observeStarted(
-    context: RunContext,
-    started: StartedOperation<OperationRunResult> & { id: string },
-  ): Promise<OperationRunResult> {
-    const detached = new AbortController();
-    const observed = this.observeRecorded(context, started.id, detached.signal);
-
-    return operationResponse(
-      context.input.id,
-      started.result,
-      observed,
-    ).finally(() => detached.abort());
-  }
-  private observeRecorded(
-    { input, budget }: RunContext,
+  private observe(
     id: string,
-    detached: AbortSignal,
-  ): Promise<OperationExecution> {
-    return this.observe(id, () => this.recordedCaller(input, id), {
-      signal: observationSignal(input.signal, detached),
-      stopOnInput: !input.wait,
-      limitMs: budget.remaining(),
+    { caller, signal }: Following,
+    stopOnInput: boolean,
+  ): Promise<WaitOutcome> {
+    return this.follow({
+      start: { observe: id },
+      reader: () => this.reading.reader(id, caller),
+      stopOnInput,
+      signal,
     });
+  }
+  private follow(input: WaitInput): Promise<WaitOutcome> {
+    const signal = stoppingSignal(input.signal, this.deps.stopping);
+
+    return waitForWork({ ...input, signal }, this.clock);
   }
   private recordedCaller(input: RunObservation, id: string): OperationCaller {
     return recordedCaller(
       input.caller,
       () => this.caller(input.token),
-      () => this.read(id, input.caller),
-    );
-  }
-  private observe(
-    id: string,
-    caller: () => OperationCaller,
-    options: ObserveOptions,
-  ): Promise<OperationExecution> {
-    const read = (): WorkObservation => this.read(id, caller());
-
-    return waitForNativeWork({
-      ...options,
-      signal: stoppingSignal(options.signal, this.deps.sessionCommandSignal),
-      read,
-      clock: this.deps.operationWaitClock,
-      watch: watchOperationWork(this.source.watch, caller()),
-    });
-  }
-  private read(id: string, caller: OperationCaller): WorkObservation {
-    return readOperationWork(
-      { source: this.source, ids: this.ids, caller },
-      { id, work: this.ids.require(caller, id) },
+      () => this.reading.read(id, input.caller),
     );
   }
 }

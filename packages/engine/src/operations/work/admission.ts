@@ -2,39 +2,29 @@ import type { OperationExecution } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 import type { SessionWorkSource } from '../../sessions';
 import type { StartedWork } from '../native-start';
-import { admissionTimedOut, type WaitBudget } from './budget';
+import { admissionTimedOut } from './clock';
 import type { WaitIds } from './ids';
 import { readOperationWork } from './reader';
+import type { WorkAdmission } from './wait.machine';
 
-type AdmissionContext = {
-  source: SessionWorkSource;
-  ids: WaitIds;
-  budget: WaitBudget;
-};
+type AdmissionContext = { source: SessionWorkSource; ids: WaitIds };
 
 export type BeginWork<Result> = (
   signal: AbortSignal,
 ) => Promise<StartedWork<Result>>;
 
-type Admission<Result> = { started?: StartedWork<Result> };
-
 const user = { kind: 'user' as const };
 
-// The user gets a wait id at once for a new Session, and for a Turn once it is admitted within the budget.
-export function admitUserWork<Result>(
+// The user gets a wait id at once for a new Session, and for a Turn once it is admitted within the deadline.
+export async function admitUserWork<Result>(
   context: AdmissionContext,
   begin: BeginWork<Result>,
+  admission: WorkAdmission,
 ): Promise<Result | OperationExecution> {
-  const admission: Admission<Result> = {};
+  const started = await begin(admission.signal);
+  admission.started(() => expired(context, started));
 
-  return context.budget.guard(
-    async (signal) => {
-      admission.started = await begin(signal);
-
-      return admitted(context, admission.started);
-    },
-    () => expired(context, admission),
-  );
+  return admitted(context, started);
 }
 
 async function admitted<Result>(
@@ -50,13 +40,11 @@ async function admitted<Result>(
     : execution(context, started);
 }
 
-// A Turn still being admitted when the budget ends is followed by its wait id, once it exists.
+// A Turn still being admitted when the deadline passes is followed by its wait id, once it exists.
 function expired<Result>(
   context: AdmissionContext,
-  { started }: Admission<Result>,
+  started: StartedWork<Result>,
 ): OperationExecution {
-  if (!started) return admissionTimedOut();
-
   try {
     return execution(context, started);
   } catch (cause) {

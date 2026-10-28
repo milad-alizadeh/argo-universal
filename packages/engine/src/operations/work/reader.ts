@@ -5,12 +5,13 @@ import type {
 } from '@repo/contracts/operations';
 import type {
   OperationCallRead,
+  SessionWork,
   SessionWorkRead,
   SessionWorkSource,
 } from '../../sessions';
 import type { OperationCaller } from '../session-tokens';
 import { operationExecution } from './call-result';
-import type { NativeWork, WaitIds } from './ids';
+import type { WaitIds } from './ids';
 import type { WorkObservation } from './observation';
 
 type Context = {
@@ -19,7 +20,7 @@ type Context = {
   caller: OperationCaller;
 };
 
-type Target = { id: string; work: NativeWork };
+type Target = { id: string; work: SessionWork };
 
 type TurnRead = Extract<SessionWorkRead, { kind: 'turn' }>;
 
@@ -128,7 +129,7 @@ function linkedTarget(
   { ids, caller }: Context,
   link: OperationWorkTarget,
 ): Target {
-  const work: NativeWork = {
+  const work: SessionWork = {
     kind: link.kind,
     sessionId: link.sessionId,
     entityId: link.turnId,
@@ -139,11 +140,7 @@ function linkedTarget(
 
 function observation(
   execution: OperationExecution,
-  work: NativeWork,
+  work: SessionWork,
 ): WorkObservation {
-  return {
-    execution,
-    sessionId: work.sessionId,
-    started: work.kind !== 'call',
-  };
+  return { execution, work };
 }
