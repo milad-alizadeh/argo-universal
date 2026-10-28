@@ -176,6 +176,7 @@ export const SessionSnapshot = z.strictObject({
     archivedAt: true,
     checkout: true,
   }).shape,
+  startedBySessionId: sessionColumns.shape.startedBySessionId.default(null),
   state: SessionState,
   liveHeader: LiveHeader.nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),

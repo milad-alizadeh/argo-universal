@@ -6,6 +6,7 @@ import {
 } from './acp-configuration.ts';
 import { changedFilesSteps } from './changed-files-scenario.ts';
 import { contextUsageScenarios } from './context-usage.ts';
+import { delegationSteps } from './delegation-scenario.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
   feedWorkSteps,
@@ -70,6 +71,7 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 // Shared named scenarios; tests reuse them instead of scripting their own peer.
 export const scenarios = {
   reply: scenario([reply]),
+  'session-delegation': scenario(delegationSteps),
   ...notificationScenarios,
   ...shellScenarios,
   ...subagentScenarios,

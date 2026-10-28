@@ -13,6 +13,7 @@ import { readProjects } from '../projects';
 import type { SessionList, SessionRouterDeps } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { recordOperation } from './call-recording';
+import type { OperationInput } from './params';
 import { createPluginOperations } from './plugins';
 import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
@@ -116,7 +117,7 @@ export class Operations {
   }
   public runApp<Id extends OperationId>(
     id: Id,
-    params: Json | undefined,
+    params: OperationInput,
   ): Promise<OperationResult<Id>> {
     return runOperation(this.implementations, id, params);
   }

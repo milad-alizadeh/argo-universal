@@ -3,6 +3,7 @@ import {
   SessionUnarchiveOutput,
 } from '../sessions/archive';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
+import { SessionNewInput, SessionNewOutput } from '../sessions/new';
 import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
 import {
   SessionSavePlanInput,
@@ -19,6 +20,16 @@ import {
 import type { OperationDefinition } from './index';
 
 export const sessionOperations = {
+  'session.new': {
+    id: 'session.new',
+    label: 'Start Session',
+    description:
+      'Start a Session with an Agent, Checkout and optional first prompt.',
+    params: SessionNewInput,
+    result: SessionNewOutput,
+    tier: 'act',
+    keywords: ['create', 'delegate', 'agent', 'parallel'],
+  },
   'session.unarchive': {
     id: 'session.unarchive',
     label: 'Undo Session archive',

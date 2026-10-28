@@ -1,3 +1,4 @@
+import { ListTreeContext, type TreeRow } from '@repo/kit/list-tree';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import { memo, useCallback } from 'react';
@@ -36,6 +37,7 @@ export type SessionListRowProps = Pick<
   | 'onRename'
   | 'onArchive'
 > & {
+  tree?: TreeRow;
   // Fades the row in as it mounts.
   animate?: boolean;
   // Fades the row out before its Project collapses.
@@ -54,7 +56,7 @@ export const SessionListRow = memo(function SessionListRow({
       {...rowFade(animate)}
       className={useRowClassName(closing)}
     >
-      <SessionRow {...props} />
+      <SessionTreeRow {...props} />
     </Animated.View>
   );
 });
@@ -109,3 +111,14 @@ export const ProjectListHeading = memo(function ProjectListHeading(
     </View>
   );
 });
+
+function SessionTreeRow({
+  tree,
+  ...props
+}: SessionListRowProps): React.JSX.Element {
+  return (
+    <ListTreeContext value={tree ?? null}>
+      <SessionRow {...props} />
+    </ListTreeContext>
+  );
+}

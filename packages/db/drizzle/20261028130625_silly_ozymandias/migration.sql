@@ -1,0 +1,1 @@
+ALTER TABLE `session` ADD `started_by_session_id` text REFERENCES session(id) ON DELETE SET NULL;

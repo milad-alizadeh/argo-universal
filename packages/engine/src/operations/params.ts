@@ -1,10 +1,15 @@
+import type { operations, OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
+export type OperationInput =
+  | z.input<(typeof operations)[OperationId]['params']>
+  | Json;
+
 export function operationParams<Schema extends z.ZodType>(
   schema: Schema,
-  params: Json | undefined,
+  params: OperationInput,
 ): z.output<Schema> {
   try {
     return schema.parse(params);

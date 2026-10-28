@@ -7,7 +7,6 @@ import {
   type CollapsedProjects,
   useCollapsedProjects,
 } from './sessions-list-collapsed';
-import { useListEntries } from './sessions-list-entries-state';
 import type { SessionsListProps } from './sessions-list-props';
 import { useAnimateReorder } from './sessions-list-reorder';
 import {
@@ -21,6 +20,12 @@ import {
   type ProjectListHeadingProps,
   SessionListRow,
 } from './sessions-list-rows';
+import {
+  sessionTree,
+  useSessionNesting,
+  useNestedEntries,
+  type SessionNesting,
+} from './sessions-list-tree';
 
 type HeadingContext = Pick<
   ProjectListHeadingProps,
@@ -60,15 +65,25 @@ function projectHeading(
   );
 }
 
+type EntryContext = {
+  sessionContext: SessionRowContext;
+  headingContext: HeadingContext;
+  nesting: SessionNesting;
+};
+
 function renderEntry(
   item: SessionsListEntry,
-  sessionContext: SessionRowContext,
-  headingContext: HeadingContext,
+  { sessionContext, headingContext, nesting }: EntryContext,
 ): React.JSX.Element {
   if (item.kind === 'empty') return <NoSessionsYet />;
 
   if (item.kind === 'session')
-    return <SessionListRow {...sessionRowProps(item, sessionContext)} />;
+    return (
+      <SessionListRow
+        {...sessionRowProps(item, sessionContext)}
+        tree={sessionTree(item, nesting)}
+      />
+    );
 
   return projectHeading(item, headingContext);
 }
@@ -118,7 +133,7 @@ function useExtraData(
 function useRenderItem(
   props: SessionsListProps,
   collapsedProjects: CollapsedProjects,
-  animating: boolean,
+  { animating, nesting }: { animating: boolean; nesting: SessionNesting },
 ): ListRows['renderItem'] {
   const { closing } = collapsedProjects;
   const sessionContext = useSessionRowContext(props, animating, closing);
@@ -126,20 +141,27 @@ function useRenderItem(
 
   return useCallback(
     (item: SessionsListEntry) =>
-      renderEntry(item, sessionContext, headingContext),
-    [sessionContext, headingContext],
+      renderEntry(item, { sessionContext, headingContext, nesting }),
+    [sessionContext, headingContext, nesting],
   );
 }
 
-export function useListRows(props: SessionsListProps): ListRows {
+export function useListRows(
+  props: SessionsListProps,
+  treeDrawn: boolean,
+): ListRows {
   const collapsedProjects = useCollapsedProjects();
-  const entries = useListEntries(props, collapsedProjects.collapsed);
+
+  const nesting = useSessionNesting(treeDrawn);
+
+  const entries = useNestedEntries(props, collapsedProjects.collapsed, nesting);
+
   const animating = useAnimateReorder(entries);
 
   return {
     animating,
     items: props.placeholder ? noEntries : entries,
     extraData: useExtraData(props, collapsedProjects),
-    renderItem: useRenderItem(props, collapsedProjects, animating),
+    renderItem: useRenderItem(props, collapsedProjects, { animating, nesting }),
   };
 }

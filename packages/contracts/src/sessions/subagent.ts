@@ -3,7 +3,7 @@ import { sessionColumns, turnColumns } from '../columns';
 import { SubagentState } from '../feed/session-update';
 import { TurnUsage } from './turn';
 
-// A read-only child Session; metrics describe its latest Turn, never a sum with its parent's tokens.
+// An Agent started through ACP or an Operation; metrics describe its latest Turn, never a sum with its parent's tokens.
 export const Subagent = z.strictObject({
   sessionId: sessionColumns.shape.id,
   parentSessionId: sessionColumns.shape.parentSessionId.unwrap(),

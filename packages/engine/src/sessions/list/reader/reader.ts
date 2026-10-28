@@ -105,7 +105,8 @@ class ListReader {
     rows: SessionRecord[],
   ): SessionListState {
     const children = rows.filter(
-      (child): boolean => child.parentSessionId === row.id,
+      (child): boolean =>
+        child.parentSessionId === row.id || child.startedBySessionId === row.id,
     );
 
     const turns = familyTurns(input, row.id, children);

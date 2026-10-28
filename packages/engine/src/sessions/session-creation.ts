@@ -93,6 +93,7 @@ export async function createSession(
     | 'hooks'
   >,
   newSession: SessionNewInput,
+  startedBySessionId?: string,
 ): Promise<SessionNewOutput> {
   // The open Sessions machine checks again as the last word (ADR-0003); this check gives the typed failure.
   requireInstalledAgent(deps.installedAgents, newSession.agent);
@@ -109,6 +110,7 @@ export async function createSession(
     sessionId,
     turnId: deps.createId(),
     ...newSession,
+    startedBySessionId,
     projectPath,
   });
   await waitForSessionStored(requireOpenSessionActor(deps.sessions, sessionId));
