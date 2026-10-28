@@ -69,13 +69,15 @@ function knownTurnDetails(latest: Turn): ReturnType<typeof turnDetails> {
   };
 }
 
+type ChildIdentity = Pick<
+  Subagent,
+  'sessionId' | 'parentSessionId' | 'readOnly' | 'toolCallId' | 'title' | 'role'
+>;
+
 function childIdentity(
   child: ChildSession,
   parentSessionId: string,
-): Pick<
-  Subagent,
-  'sessionId' | 'parentSessionId' | 'readOnly' | 'toolCallId' | 'title' | 'role'
-> {
+): ChildIdentity {
   return {
     sessionId: child.id,
     parentSessionId,
