@@ -1,5 +1,7 @@
 # Only human-typed text becomes a user message
 
+[ADR-0044](0044-argo-is-driven-through-one-operation-registry-and-the-argo-cli.md) (owner, 2026-10-28) amends this: a Prompt has a sender, the user, another Session or a Plugin. The Feed stores the sender and draws a Session's or a Plugin's Prompt as "From ‹title›"; only the user's is the user's own message.
+
 For ACP Sessions, the local submitted prompt is the human provenance boundary. Session persists that exact prompt as the Turn's first row before dispatch. ACP user-message echoes do not create another human row. Text arriving while idle remains Turn-null: the pinned SDK 1.7 baseline supplies no verified autonomous-start signal, so text alone cannot create a Turn (owner, 2026-10-09, Spec 0009 #349).
 
 Agents put their own text into the user's side of the transcript: system reminders, slash-command echoes, hook output, local command output, and injected AGENTS.md or environment blocks. Paseo shows most of it as user text; Argo trusts the vendor's origin flag instead. Only text the vendor marks as human-typed becomes a `user_message`, shown as written.

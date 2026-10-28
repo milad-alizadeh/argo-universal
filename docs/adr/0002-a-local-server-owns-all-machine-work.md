@@ -18,6 +18,8 @@ The Writer commits every live Registry, Session, Feed and Blob metadata write. F
 
 For now the Server binds to `127.0.0.1` only, without authentication. It checks `Host` on every request, and `Origin` on the WebSocket and on tRPC over HTTP, so a website in a browser on the same machine cannot call it (owner, 2026-10-03). Pairing a real phone and authentication come later, with their own ADR.
 
+[ADR-0044](0044-argo-is-driven-through-one-operation-registry-and-the-argo-cli.md) (owner, 2026-10-28) amends this: the `argo` CLI calls `operations.list` and `operations.run` through tRPC over HTTP, and those two refuse a call without a token, either a Session's own or the user's from `~/.argo/control.token`. The rest of tRPC stays open until Pairing.
+
 ## Considered Options
 
 - Run the Server inside the Electron main process. Rejected: the phone cannot use it when desktop is closed, and Argo's current tRPC-over-IPC bridge is the code we want to remove.
