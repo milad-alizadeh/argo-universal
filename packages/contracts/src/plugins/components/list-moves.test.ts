@@ -19,20 +19,30 @@ it('refuses a layout the List does not declare', () => {
   });
 });
 
-it('checks the move payload: the row, the section it lands in and its index there', () => {
-  const event = kitComponent('List')?.events.onMove;
+const onMove = kitComponent('List')?.events.onMove;
 
-  expect(
-    componentEventPayload(event, { id: 'login', section: 'done', index: 0 }),
-  ).toEqual({ id: 'login', section: 'done', index: 0 });
-  expect(componentEventPayload(event, { id: 'login', index: 2 })).toEqual({
-    id: 'login',
-    index: 2,
-  });
+it('accepts a move into a Section', () => {
+  const move = { id: 'login', section: 'done', index: 0 };
+
+  expect(componentEventPayload(onMove, move)).toEqual(move);
+});
+
+it('accepts a move to the rows outside any Section', () => {
+  const move = { id: 'login', index: 2 };
+
+  expect(componentEventPayload(onMove, move)).toEqual(move);
+});
+
+it('refuses a move to a negative index', () => {
+  const move = { id: 'login', section: 'done', index: -1 };
+
+  expect(() => componentEventPayload(onMove, move)).toThrow(
+    'Invalid Plugin event payload',
+  );
+});
+
+it('refuses a move without the moved row', () => {
   expect(() =>
-    componentEventPayload(event, { id: 'login', section: 'done', index: -1 }),
-  ).toThrow('Invalid Plugin event payload');
-  expect(() =>
-    componentEventPayload(event, { section: 'done', index: 0 }),
+    componentEventPayload(onMove, { section: 'done', index: 0 }),
   ).toThrow('Invalid Plugin event payload');
 });
