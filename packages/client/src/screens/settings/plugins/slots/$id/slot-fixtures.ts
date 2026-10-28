@@ -37,6 +37,12 @@ export const deploysOff: SlotPlugin[] = [
   coverage,
 ];
 
+export const issueTrackerOff: SlotPlugin[] = [
+  { ...issueTracker, shown: false },
+  deploys,
+  coverage,
+];
+
 export const previewReady = 'Preview ready';
 
 export const issueTrackerLine = 'Awaiting review · 1 of 2';

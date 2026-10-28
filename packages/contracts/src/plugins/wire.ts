@@ -28,6 +28,22 @@ export {
   type SlotLimit,
 } from '#plugin-wire-slot';
 
+export {
+  DeclaredContributions,
+  DeclaredItems,
+  DeclaredItemsInput,
+  DeclaredSlotId,
+  declaredSlot,
+} from '#plugin-declared-slots';
+
+export { sessionHeaderSlot } from '#plugin-slot-registry';
+
+export {
+  SessionHeaderAction,
+  sessionHeaderSlotId,
+  SessionHeaderTarget,
+} from '#plugin-session-header-action';
+
 import { WireJson } from '#plugin-wire-json';
 
 export { WireJson } from '#plugin-wire-json';

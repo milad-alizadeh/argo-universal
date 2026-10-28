@@ -11,6 +11,8 @@ import {
 } from '@repo/contracts/plugins/replaceable';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import {
+  DeclaredItems,
+  DeclaredItemsInput,
   PluginDispatchInput,
   PluginSlotInput,
   PluginViewInput,
@@ -66,6 +68,11 @@ function connectionOf({
 const createLifecycleRouter = routerFactory((plugins: PluginService) =>
   router({
     list: publicProcedure.output(PluginList).query(() => plugins.list()),
+    // A declared Slot's items, read from the manifests: no Plugin starts to answer it (ADR-0025, ADR-0035).
+    declared: publicProcedure
+      .input(DeclaredItemsInput)
+      .output(DeclaredItems)
+      .query(({ input }) => plugins.declared(input)),
     failures: publicProcedure.subscription(({ signal }) =>
       plugins.failures(requireSignal(signal)),
     ),

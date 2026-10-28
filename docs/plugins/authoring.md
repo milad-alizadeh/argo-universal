@@ -214,6 +214,27 @@ A Plugin that throws, answers off-schema, or takes over two seconds is left out 
 A Session row's Activity line is a Single-owner Slot, `argo/session/activity/v1`. It is asked like the row items, with the same `{ sessionId, projectId }` contexts, and a Plugin answers at most one `{ text }` per Session id, of at most 40 characters.
 A Plugin can declare it with or without the row items Slot. Every Plugin that declares it answers, but a row shows only the line of the Plugin the user chose under Settings › Plugins › Session rows on that Device. While no Plugin is chosen, the chosen Plugin is turned off on Session rows, or it has no line for a Session, the row shows Argo's own activity.
 
+## Session header actions
+
+A Plugin lists its Session header actions in `plugin.json` under `contributes.declared`, keyed by the Slot `argo/session/header/v1`. Argo draws them from the manifest without starting the Plugin (ADR-0025); pressing one opens the page, which starts it:
+
+```json
+"declared": {
+  "argo/session/header/v1": [
+    {
+      "id": "open-issue",
+      "label": "Open issue",
+      "icon": { "sf": "link", "material": "link" },
+      "placement": "header",
+      "target": { "type": "page", "path": "/issues" }
+    }
+  ]
+}
+```
+
+An action is `{ id, label, icon, placement, target }`: `label` is at most 40 characters, `placement` is `header` or `menu`, and the only target is `{ type: "page", path }`, one of the Plugin's own pages under one of its nav items. A Plugin lists at most 4 actions, each id once.
+Argo's own actions come first. On a desktop or the web the first `header` action, in Slot order, is an icon before Argo's "…"; every other action goes inside "…" after Argo's entries. iOS and Android keep every Plugin action in "…". Settings › Plugins › Session header turns each Plugin's actions off on that Device.
+
 ## Background pages and badges
 
 Declare `contributes.background: { path, interval }` in `plugin.json`, and register that path as a page.
@@ -244,7 +265,7 @@ List the Replaceable Slots it draws in `contributes.renders`, which needs `ui.re
 Order a Plugin with `contributes.order` in `plugin.json`, an integer that defaults to 0 (ADR-0035).
 A Slot's contributors and a Feed row's `ui.render` chain both run first-party Plugins first, then lower `order` first, then by Plugin id; folder names do not change it.
 The order is the Plugin's, so it covers all of its Slots and `ui.render` Hooks. The other Hook events keep worker order (ADR-0038).
-Declaring `order` without a Slot in `contributes.slots` or `contributes.renders` is a manifest error.
+Declaring `order` without a Slot in `contributes.slots`, `contributes.renders` or `contributes.declared` is a manifest error.
 The Server logs, once per Plugin and Slot, each Plugin that changed a row's props, and each Plugin shadowed because a Hook before it answered with a tree:
 
 ```text

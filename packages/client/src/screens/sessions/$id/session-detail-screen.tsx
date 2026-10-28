@@ -3,7 +3,11 @@ import type * as React from 'react';
 import { useInstalledAgents } from '#features/agents';
 import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
-import { useConnectionDropped, useSessionWork } from '#features/sessions';
+import {
+  type SessionPluginActions,
+  useConnectionDropped,
+  useSessionWork,
+} from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
@@ -23,6 +27,7 @@ import { SessionPageHeader } from './session-page-header';
 import { useSessionPageMenu } from './session-page-menu';
 import { useFeedRequests } from './use-feed-requests';
 import { useMarkSeen } from './use-mark-seen';
+import { usePluginHeaderActions } from './use-plugin-header-actions';
 import { useSessionCallout } from './use-session-callout';
 import { useChangedSession } from './use-session-changes';
 import {
@@ -65,17 +70,26 @@ function ConnectedSession({
   const preview = useIsPreview();
   const opened = useSessionViewProps({ sessionId, preview });
   const { props, dialogs } = useSessionPageMenu(sessionId, opened);
+  const pluginActions = usePluginHeaderActions();
 
   if (preview) return <SessionDetailView {...previewed(props)} />;
 
   return (
     <>
-      <SessionPageHeader {...props} />
+      <SessionPageHeader {...withPluginActions(props, pluginActions)} />
       <SessionDetailView {...props} />
       {dialogs}
     </>
   );
 }
+
+const withPluginActions = (
+  props: SessionDetailViewProps,
+  pluginActions: SessionPluginActions,
+): SessionDetailViewProps =>
+  props.state === 'open'
+    ? { ...props, header: { ...props.header, pluginActions } }
+    : props;
 
 const previewed = (props: SessionDetailViewProps): SessionDetailViewProps =>
   props.state === 'open' ? { ...props, preview: true } : props;

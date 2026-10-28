@@ -8,6 +8,8 @@
     "#plugin-identifier": "./src/plugins/plugin-identifier.ts",
     "#plugin-assets": "./src/plugins/assets.ts",
     "#plugin-slot-registry": "./src/plugins/slot-registry.ts",
+    "#plugin-declared-slots": "./src/plugins/declared-slots.ts",
+    "#plugin-session-header-action": "./src/plugins/session-header-action.ts",
     "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
     "#plugin-wire-events": "./src/plugins/wire-events.ts",
     "#plugin-kit-component-events": "./src/plugins/kit-component-events.ts",

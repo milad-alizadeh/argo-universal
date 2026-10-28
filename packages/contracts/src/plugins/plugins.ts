@@ -5,7 +5,11 @@ import { HookEventName } from './hooks';
 import { PluginIcon, PluginPath } from './manifest-fields';
 import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
-import { AddOnlySlotId, ReplaceableSlotId } from './wire';
+import {
+  AddOnlySlotId,
+  DeclaredContributions,
+  ReplaceableSlotId,
+} from './wire';
 
 export { PluginProjectInfo } from './argo-calls';
 
@@ -23,14 +27,28 @@ type Contributions = Partial<{
   slots: readonly string[] | undefined;
   renders: readonly string[] | undefined;
   hooks: readonly string[] | undefined;
+  declared:
+    | Readonly<Record<string, readonly unknown[] | undefined>>
+    | undefined;
 }>;
 
-const declares = (ids: readonly string[] | undefined): boolean =>
+const declares = (ids: readonly unknown[] | undefined): boolean =>
   (ids ?? []).length > 0;
 
+const declaresContent = (declared: Contributions['declared']): boolean =>
+  Object.values(declared ?? {}).some(declares);
+
 // `order` places the Plugin among a Slot's contributors, so it needs a Slot to place it in.
-const orderHasSlot = ({ order, slots, renders }: Contributions): boolean =>
-  order === undefined || declares(slots) || declares(renders);
+const orderHasSlot = ({
+  order,
+  slots,
+  renders,
+  declared,
+}: Contributions): boolean =>
+  order === undefined ||
+  declares(slots) ||
+  declares(renders) ||
+  declaresContent(declared);
 
 // Core runs a Replaceable Slot's chain through the `ui.render` Hook, so `renders` needs it.
 const rendersHasHook = ({ renders, hooks }: Contributions): boolean =>
@@ -86,6 +104,8 @@ export const PluginManifest = z
           .optional(),
         // The add-only Slots the Plugin fills; core asks only these Plugins for a Slot's content.
         slots: uniqueIds(AddOnlySlotId, 'Slot ids must be unique').optional(),
+        // What the Plugin adds to a declared Slot, such as Session header actions, by Slot id; the App draws it without starting the Plugin (ADR-0035).
+        declared: DeclaredContributions.optional(),
         // The Replaceable Slots the Plugin's `ui.render` Hook draws; core runs its chain only for these (ADR-0035).
         renders: uniqueIds(
           ReplaceableSlotId,

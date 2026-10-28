@@ -1,15 +1,15 @@
-import { Action } from '@repo/kit/primitives/actions/action';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import {
   type SessionHeaderProps,
   type SessionMenu,
-  sessionActions,
+  type SessionPluginActions,
 } from '#features/sessions';
 import {
   type SessionDetailViewProps,
   sessionPageTitle,
 } from './session-detail-view';
+import { sessionHeaderActions } from './session-header-actions';
 
 function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
   if (props.state !== 'open' || !props.header.menu) return undefined;
@@ -28,31 +28,22 @@ function menuChanges(
   };
 }
 
-// The Session's ⋯: one header Action whose menu holds changed files, Rename and Archive, declared as a Plugin page declares its Screen's Actions.
-function moreAction(
-  menu: SessionMenu | undefined,
-): React.JSX.Element | undefined {
-  const actions = menu
-    ? sessionActions(menu, { changesIcon: 'changed-files' })
-    : [];
+const noPluginActions: SessionPluginActions = { beside: [], menu: [] };
 
-  if (!actions.length) return undefined;
+const pluginActionsOf = (props: SessionDetailViewProps): SessionPluginActions =>
+  (props.state === 'open' && props.header.pluginActions) || noPluginActions;
 
-  return (
-    <Action label="More" icon="more">
-      {actions}
-    </Action>
-  );
-}
-
-// A narrow window's header: the Session's title and its ⋯ menu. The page's body is the Session's own, so only the header is a Screen's.
+// A narrow window's header: the Session's title, the Plugins' actions and its ⋯ menu. The page's body is the Session's own, so only the header is a Screen's.
 export function SessionPageHeader(
   props: SessionDetailViewProps,
 ): React.JSX.Element {
   return (
     <ScreenStackHeader
       title={sessionPageTitle(props)}
-      actions={moreAction(headerMenuOf(props))}
+      actions={sessionHeaderActions(
+        headerMenuOf(props),
+        pluginActionsOf(props),
+      )}
     />
   );
 }

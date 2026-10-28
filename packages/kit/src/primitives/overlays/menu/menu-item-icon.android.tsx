@@ -3,10 +3,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { ButtonIcon } from '#primitives/native/button-icon';
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 
 interface LeadingProps {
-  icon?: IconName;
+  icon?: IconSymbol;
   tone?: 'danger';
   disabled?: boolean;
   // The row's press, which an icon hosted from React Native runs itself.
@@ -31,7 +31,7 @@ export function ItemLeadingIcon(props: LeadingProps): React.JSX.Element | null {
 }
 
 function HostedIcon(
-  props: LeadingProps & { icon: IconName },
+  props: LeadingProps & { icon: IconSymbol },
 ): React.JSX.Element {
   return (
     <View className={props.disabled ? 'opacity-38' : undefined}>

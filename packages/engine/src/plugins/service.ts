@@ -16,6 +16,8 @@ import type {
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
 import {
+  type DeclaredItems,
+  type DeclaredItemsInput,
   type PluginDispatchInput,
   type PluginViewInput,
   type PluginSlotInput,
@@ -41,6 +43,7 @@ import {
   type PluginServiceDeps,
 } from './located-plugins';
 import { startOrderedPlugins } from './plugin-order';
+import { declaredItems } from './slots/declared-items';
 import { renderSlot } from './slots/render-slot';
 import { slotFor, slotItemsFor } from './slots/slot-streams';
 
@@ -61,6 +64,10 @@ export class PluginService {
     applyStatus(result, this.deps.pluginRuntime);
 
     return result;
+  }
+
+  async declared(input: DeclaredItemsInput): Promise<DeclaredItems> {
+    return declaredItems(await this.list(), input);
   }
 
   async activate(pluginId: string): Promise<PluginStatus> {
