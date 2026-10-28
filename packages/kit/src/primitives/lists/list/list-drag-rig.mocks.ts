@@ -4,11 +4,13 @@ import { ListDrag } from './list-drag-controller';
 import type { DragFrame } from './list-drag-frame';
 import type { Point, Rect } from './list-geometry';
 import {
+  rowId,
   sectionKey,
   type DropPlace,
   type MoveSection,
   type SectionKey,
 } from './list-move-model';
+import { moveSection } from './list-move-sections.mocks';
 import type { Schedule } from './list-next-frame';
 
 export const todoKey = sectionKey('todo-lane');
@@ -18,9 +20,14 @@ export const doingKey = sectionKey('doing-lane');
 export const doneKey = sectionKey('done-lane');
 
 export const board: MoveSection[] = [
-  { key: todoKey, id: 'todo', title: 'To do', rows: ['login', 'docs'] },
-  { key: doingKey, id: 'doing', title: 'Doing', rows: ['search'] },
-  { key: doneKey, id: 'done', title: 'Done', rows: [] },
+  moveSection({
+    key: todoKey,
+    id: 'todo',
+    title: 'To do',
+    rows: ['login', 'docs'],
+  }),
+  moveSection({ key: doingKey, id: 'doing', title: 'Doing', rows: ['search'] }),
+  moveSection({ key: doneKey, id: 'done', title: 'Done', rows: [] }),
 ];
 
 // The drag layer sits at (10, 20); everything the drag draws is relative to it.
@@ -120,7 +127,7 @@ export function columnRig(): Rig {
     }));
 
   for (const [id, y] of columnRows)
-    rig.drag.registry.registerRow(id, async () => across(y, 50));
+    rig.drag.registry.registerRow(rowId(id), async () => across(y, 50));
 
   return rig;
 }
@@ -136,7 +143,7 @@ export async function lifted(
   id: string,
   start: Point,
 ): Promise<ListDrag> {
-  rig.drag.begin(id, null, start);
+  rig.drag.begin(rowId(id), null, start);
   await settle();
 
   return rig.drag;

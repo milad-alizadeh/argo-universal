@@ -2,6 +2,7 @@ import type { ReactNode, RefObject } from 'react';
 import type { ViewInstance } from 'react-native';
 import type { ListDrag } from './list-drag-controller';
 import type { Point } from './list-geometry';
+import type { RowId } from './list-move-model';
 import { holdToLift, startAt, type PressStart } from './list-press-rules';
 
 // The part of a List's drag a press drives.
@@ -13,7 +14,7 @@ export type PressDrag = Pick<
 // What a press drags: row `id` of a List's drag, drawn as `ghost` once lifted.
 export interface PressTarget {
   drag: PressDrag;
-  id: string;
+  id: RowId;
   ghost: ReactNode;
 }
 

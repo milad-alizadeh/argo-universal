@@ -9,7 +9,7 @@ import {
   type ListTree,
   type PlacedChild,
 } from './list-level-entries';
-import type { MoveSection } from './list-move-model';
+import type { MoveSection, RowId } from './list-move-model';
 import { moveSectionsOf, rowTitles } from './list-move-reading';
 import type { ListSectionProps } from './list-props';
 import { prepareSection, type SectionState } from './list-section-state';
@@ -63,7 +63,7 @@ export interface ListReading {
   blocks: ListBlock[];
   // The movable rows, Section by Section, in the owner's order, and their titles by id; none without `onMove`.
   sections: MoveSection[];
-  titles: ReadonlyMap<string, string>;
+  titles: ReadonlyMap<RowId, string>;
 }
 
 // The order a List with `onMove` shows over its owner's: the owner's own, or a held move's.
@@ -74,7 +74,7 @@ interface Pass {
   // Each movable Section's rows in the order they show, and every movable row found by the owner's reading.
   held?: {
     sections: readonly MoveSection[];
-    rows: ReadonlyMap<string, ReactNode>;
+    rows: ReadonlyMap<RowId, ReactNode>;
   };
 }
 

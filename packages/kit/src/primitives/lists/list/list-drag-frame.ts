@@ -7,6 +7,7 @@ import {
   type DropPlace,
   type MoveSection,
   type ResolvedMove,
+  type RowId,
 } from './list-move-model';
 import type { MoveOrder } from './list-move-order';
 import { slideOffset, type Slide } from './list-slide';
@@ -16,7 +17,7 @@ export type DragOrder = Pick<MoveOrder, 'sections' | 'lanes' | 'move'>;
 
 // A lifted row, in the drag layer's own coordinates, and where it would land.
 export interface DragFrame {
-  id: string;
+  id: RowId;
   ghost: ReactNode;
   source: Rect;
   line?: InsertionLine;
@@ -27,7 +28,7 @@ export interface DragFrame {
 }
 
 export interface LiftedRow {
-  id: string;
+  id: RowId;
   ghost: ReactNode;
   // Where the pointer holds the row, from its top left.
   grab: Point;

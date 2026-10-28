@@ -6,6 +6,8 @@ import {
   placeOf,
   type MoveSection,
   type ResolvedMove,
+  type RowId,
+  type RowMove,
   type SectionKey,
 } from './list-move-model';
 
@@ -17,7 +19,7 @@ export interface MoveOwner {
   base: readonly MoveSection[];
   onMove: MoveAnswer;
   lanes: boolean;
-  titles: ReadonlyMap<string, string>;
+  titles: ReadonlyMap<RowId, string>;
 }
 
 // Which steps a row's Move menu offers: up, down, both or neither. Its Move to… entry is always there.
@@ -38,11 +40,11 @@ export interface MoveEffects {
 
 // A move the List shows before its owner answers it, and the owner's order it was made on.
 export interface HeldMove {
-  move: ListMove;
+  move: RowMove;
   base: readonly MoveSection[];
 }
 
-const sameRows = (a: readonly string[], b: readonly string[]): boolean =>
+const sameRows = (a: readonly RowId[], b: readonly RowId[]): boolean =>
   a.length === b.length && a.every((id, index) => id === b[index]);
 
 const sameSection = (a: MoveSection, b: MoveSection | undefined): boolean =>
@@ -82,7 +84,7 @@ export class MoveOrder {
   public readonly subscribe = this.listeners.subscribe;
   private readonly focus: RowFocus;
   private shown: readonly MoveSection[];
-  private picked: string | undefined;
+  private picked: RowId | undefined;
   private current: HeldMove | null = null;
   private told: MoveNotice | null = null;
 
@@ -111,22 +113,22 @@ export class MoveOrder {
   }
 
   // The row the Move to… picker is open for, if any.
-  public get picking(): string | undefined {
+  public get picking(): RowId | undefined {
     return this.picked;
   }
 
   // Row `id`'s title, as its owner drew it.
-  public titleOf(id: string): string | undefined {
+  public titleOf(id: RowId): string | undefined {
     return this.owner.titles.get(id);
   }
 
   // Row `id` takes focus through `focus` while it is drawn, as a move lands it; returns what lets it go.
-  public registerFocus(id: string, focus: FocusRow): () => void {
+  public registerFocus(id: RowId, focus: FocusRow): () => void {
     return this.focus.register(id, focus);
   }
 
   // Opens the Move to… picker for row `id`.
-  public pick(id: string): void {
+  public pick(id: RowId): void {
     this.picked = id;
     this.listeners.notify();
   }
@@ -162,14 +164,14 @@ export class MoveOrder {
   }
 
   // Which steps row `id`'s Move menu offers; none while the List does not hold the row.
-  public menuOf(id: string | undefined): MenuSteps | undefined {
+  public menuOf(id: RowId | undefined): MenuSteps | undefined {
     const place = id === undefined ? undefined : placeOf(this.shown, id);
 
     return place && stepsOf(place.index, place.own.rows.length);
   }
 
   // Lets go of a move once its answer settles, unless a later move has replaced it.
-  private settle(answered: ListMove): void {
+  private settle(answered: RowMove): void {
     if (this.current?.move !== answered) return;
 
     this.current = null;

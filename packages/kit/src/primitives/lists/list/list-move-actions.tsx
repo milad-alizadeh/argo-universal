@@ -3,7 +3,12 @@ import { Action } from '#primitives/actions/action';
 import type { ActionShortcut } from '#primitives/content/kbd';
 import { useListMoveOrder } from './list-move-context';
 import { stepMoves, type MenuMove } from './list-move-menu';
-import { resolveMove, type MoveIntent } from './list-move-model';
+import {
+  resolveMove,
+  rowIdOf,
+  type MoveIntent,
+  type RowId,
+} from './list-move-model';
 import { useMoveOrder, type MoveOrder } from './list-move-order';
 
 // Alt with an arrow moves the focused row a place, as a desktop list reorders from the keyboard.
@@ -13,11 +18,7 @@ const stepShortcuts = new Map<string, ActionShortcut>([
 ]);
 
 // The move an entry makes in the order as it is when pressed.
-export function pressed(
-  order: MoveOrder,
-  id: string,
-  intent: MoveIntent,
-): void {
+export function pressed(order: MoveOrder, id: RowId, intent: MoveIntent): void {
   const now = resolveMove(order.sections, id, intent);
 
   if (now) order.move(now);
@@ -25,7 +26,7 @@ export function pressed(
 
 const stepActions = (
   order: MoveOrder,
-  id: string,
+  id: RowId,
   entries: MenuMove[],
 ): ReactElement[] =>
   entries.map(({ key, label, intent }) => (
@@ -38,7 +39,7 @@ const stepActions = (
   ));
 
 // The Move Section a row's menu ends with; an element, so the menu reads it as one of its Sections.
-function moveSection(order: MoveOrder, id: string): ReactElement {
+function moveSection(order: MoveOrder, id: RowId): ReactElement {
   const entries = stepMoves(order.sections, id);
 
   return (
@@ -51,7 +52,7 @@ function moveSection(order: MoveOrder, id: string): ReactElement {
 
 const rowSection = (
   order: MoveOrder | undefined,
-  id: string | undefined,
+  id: RowId | undefined,
 ): ReactElement | null =>
   order && id !== undefined ? moveSection(order, id) : null;
 
@@ -62,7 +63,8 @@ const rowSection = (
  * Plugin's List too. It is drawn again only when the steps it offers change, so a move does not declare every row's
  * Actions again.
  */
-export function useMoveActions(id: string | undefined): ReactNode {
+export function useMoveActions(ownId: string | undefined): ReactNode {
+  const id = rowIdOf(ownId);
   const order = useListMoveOrder();
   const menu = useMoveOrder(order, (each) => each.menuOf(id));
 

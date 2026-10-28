@@ -12,6 +12,7 @@ import {
   settle,
   todoKey,
 } from './list-drag-rig.mocks';
+import { rowId } from './list-move-model';
 
 const toDone = { id: 'login', section: 'done', index: 0 };
 
@@ -126,7 +127,7 @@ describe('dragging a row on a board', () => {
   it('drops nothing where no Section is measured', async () => {
     const rig = rigFor(board, true);
 
-    rig.drag.registry.registerRow('login', async () => cardRect(0, 0));
+    rig.drag.registry.registerRow(rowId('login'), async () => cardRect(0, 0));
     const drag = await lifted(rig, 'login', fromLogin);
 
     drag.follow({ x: 500, y: 100 });
@@ -140,7 +141,7 @@ describe('a drag before its List is measured', () => {
   it('drops a row released before its List is measured once it is', async () => {
     const { drag, move } = boardRig();
 
-    drag.begin('login', null, fromLogin);
+    drag.begin(rowId('login'), null, fromLogin);
     drag.follow({ x: 500, y: 100 });
     drag.finish();
     await settle();
@@ -151,9 +152,9 @@ describe('a drag before its List is measured', () => {
   it('draws a row lifted from a measured press from its first move', async () => {
     const { drag, ghost } = boardRig();
 
-    drag.prepare('login');
+    drag.prepare(rowId('login'));
     await settle();
-    drag.begin('login', null, fromLogin);
+    drag.begin(rowId('login'), null, fromLogin);
     drag.follow({ x: 260, y: 200 });
 
     expect(ghost.at(-1)).toEqual({ x: 260 - 20 - 10, y: 200 - 10 - 20 });
@@ -162,7 +163,7 @@ describe('a drag before its List is measured', () => {
   it('reports nothing for a drag cancelled before its List is measured', async () => {
     const { drag, move } = boardRig();
 
-    drag.begin('login', null, fromLogin);
+    drag.begin(rowId('login'), null, fromLogin);
     drag.follow({ x: 500, y: 100 });
     drag.cancel();
     await settle();

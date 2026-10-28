@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Point } from './list-geometry';
+import { rowId } from './list-move-model';
 import { holdToLift, type PressStart } from './list-press-rules';
 import { RowPress, type PressDrag } from './list-row-press';
 
@@ -25,7 +26,7 @@ function pressWith(pointer: PressStart['pointer']): Recorded {
     cancel: () => calls.push(['cancel']),
   };
 
-  const target = { drag, id: 'login', ghost: null };
+  const target = { drag, id: rowId('login'), ghost: null };
 
   return { press: new RowPress(target, { start, at: 0, pointer }), calls };
 }

@@ -4,7 +4,8 @@ import type { ReactElement } from 'react';
 import { Text } from 'react-native';
 import { expect } from 'storybook/test';
 import { List } from './list';
-import { sectionKey, type MoveSection } from './list-move-model';
+import type { MoveSection } from './list-move-model';
+import { moveSection } from './list-move-sections.mocks';
 import {
   shownNativeSections,
   type NativeSection,
@@ -33,8 +34,8 @@ const children = [
 ];
 
 const owners: MoveSection[] = [
-  { key: sectionKey('first'), id: 'first', rows: ['alpha', 'beta'] },
-  { key: sectionKey('second'), id: 'second', rows: ['gamma'] },
+  moveSection({ key: 'first', id: 'first', rows: ['alpha', 'beta'] }),
+  moveSection({ key: 'second', id: 'second', rows: ['gamma'] }),
 ];
 
 const keysOf = (sections: NativeSection[]): string[] =>
@@ -73,7 +74,7 @@ export const RepeatedIdKeepsItsPlaceKey: Story = {
   play: async () => {
     const keys = keysOf(
       shownNativeSections(repeated, [
-        { key: sectionKey('first'), id: 'first', rows: ['alpha'] },
+        moveSection({ key: 'first', id: 'first', rows: ['alpha'] }),
       ]),
     );
 

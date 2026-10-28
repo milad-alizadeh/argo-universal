@@ -1,8 +1,9 @@
 import type { ReactElement } from 'react';
+import type { RowId } from './list-move-model';
 
 export interface NativeMoveMenuProps {
   // The row's move id; a row without one has no Move menu.
-  id: string | undefined;
+  id: RowId | undefined;
   children: ReactElement;
 }
 

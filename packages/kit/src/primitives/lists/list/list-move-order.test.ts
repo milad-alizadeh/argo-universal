@@ -1,26 +1,28 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  sectionKey,
-  type MoveSection,
-  type ResolvedMove,
-} from './list-move-model';
+import { rowId, type MoveSection, type ResolvedMove } from './list-move-model';
 import { MoveOrder, type MoveAnswer } from './list-move-order';
+import { moveSection, rowMove } from './list-move-sections.mocks';
 
 const board: MoveSection[] = [
-  { key: sectionKey('a'), id: 'todo', title: 'To do', rows: ['login', 'docs'] },
-  { key: sectionKey('b'), id: 'done', title: 'Done', rows: [] },
+  moveSection({
+    key: 'a',
+    id: 'todo',
+    title: 'To do',
+    rows: ['login', 'docs'],
+  }),
+  moveSection({ key: 'b', id: 'done', title: 'Done', rows: [] }),
 ];
 
 // The order shows a resolved move's notice as it is given.
 const toDoneFirst = 'Notice of the move to Done';
 
 const toDone: ResolvedMove = {
-  move: { id: 'login', section: 'done', index: 0 },
+  move: rowMove({ id: 'login', section: 'done', index: 0 }),
   notice: toDoneFirst,
 };
 
 const docsToDone: ResolvedMove = {
-  move: { id: 'docs', section: 'done', index: 0 },
+  move: rowMove({ id: 'docs', section: 'done', index: 0 }),
   notice: toDoneFirst,
 };
 
@@ -102,8 +104,8 @@ describe('MoveOrder', () => {
     const run = harness(answers());
 
     const answered: MoveSection[] = [
-      { key: sectionKey('a'), id: 'todo', rows: ['docs'] },
-      { key: sectionKey('b'), id: 'done', rows: ['login'] },
+      moveSection({ key: 'a', id: 'todo', rows: ['docs'] }),
+      moveSection({ key: 'b', id: 'done', rows: ['login'] }),
     ];
 
     run.order.move(toDone);
@@ -133,17 +135,17 @@ describe('MoveOrder', () => {
   });
 
   it('offers the first row of a Section only a step down', () => {
-    expect(harness(answers()).order.menuOf('login')).toBe('down');
+    expect(harness(answers()).order.menuOf(rowId('login'))).toBe('down');
   });
 
   it('offers no menu for a row it does not hold', () => {
-    expect(harness(answers()).order.menuOf('nowhere')).toBeUndefined();
+    expect(harness(answers()).order.menuOf(rowId('nowhere'))).toBeUndefined();
   });
 
   it('opens the Move to… picker for one row', () => {
     const { order } = harness(answers());
 
-    order.pick('docs');
+    order.pick(rowId('docs'));
 
     expect(order.picking).toBe('docs');
   });
@@ -151,7 +153,7 @@ describe('MoveOrder', () => {
   it('closes the Move to… picker', () => {
     const { order } = harness(answers());
 
-    order.pick('docs');
+    order.pick(rowId('docs'));
     order.closePicker();
 
     expect(order.picking).toBeUndefined();

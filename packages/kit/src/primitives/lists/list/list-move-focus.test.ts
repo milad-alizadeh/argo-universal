@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RowFocus, type FocusRow } from './list-move-feedback';
+import { rowId } from './list-move-model';
+
+const alpha = rowId('alpha');
+
+const beta = rowId('beta');
 
 const frames: FrameRequestCallback[] = [];
 
@@ -24,8 +29,8 @@ describe('RowFocus', () => {
     const focus = new RowFocus();
     const row = vi.fn<FocusRow>();
 
-    focus.register('alpha', row);
-    focus.after('alpha');
+    focus.register(alpha, row);
+    focus.after(alpha);
     nextFrame();
 
     expect(row.mock.calls).toEqual([[false]]);
@@ -36,12 +41,12 @@ describe('RowFocus', () => {
     const focus = new RowFocus();
     const left = vi.fn<FocusRow>();
     const landed = vi.fn<FocusRow>();
-    const unregister = focus.register('alpha', left);
+    const unregister = focus.register(alpha, left);
 
-    focus.after('alpha');
+    focus.after(alpha);
     nextFrame();
     unregister();
-    focus.register('alpha', landed);
+    focus.register(alpha, landed);
     nextFrame();
 
     expect(landed.mock.calls).toEqual([[true]]);
@@ -53,11 +58,11 @@ describe('RowFocus', () => {
     const landed = vi.fn<FocusRow>();
     const later = vi.fn<FocusRow>();
 
-    focus.after('alpha');
+    focus.after(alpha);
     nextFrame();
-    focus.register('alpha', landed)();
+    focus.register(alpha, landed)();
     nextFrame();
-    focus.register('alpha', later);
+    focus.register(alpha, later);
     nextFrame();
 
     expect(later.mock.calls).toEqual([]);
@@ -67,8 +72,8 @@ describe('RowFocus', () => {
     const focus = new RowFocus();
     const other = vi.fn<FocusRow>();
 
-    focus.after('alpha');
-    focus.register('beta', other);
+    focus.after(alpha);
+    focus.register(beta, other);
     nextFrame();
 
     expect(other).not.toHaveBeenCalled();

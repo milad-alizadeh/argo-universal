@@ -19,6 +19,7 @@ import {
 import { scrollEdges } from './list-edge-scroll';
 import { FrameLoop } from './list-frame-loop';
 import type { Point, Rect } from './list-geometry';
+import type { RowId } from './list-move-model';
 import type { Schedule } from './list-next-frame';
 
 interface Lift extends LiftedRow {
@@ -67,12 +68,12 @@ export class ListDrag {
   public readonly current = (): DragFrame | undefined => this.frame;
 
   // Measures the List around row `id` as a press on it begins.
-  public prepare(id: string): void {
+  public prepare(id: RowId): void {
     this.registry.prepare(id);
   }
 
   // Lifts row `id` under the pointer; it draws at once when its press was measured, else once its List is.
-  public begin(id: string, ghost: ReactNode, point: Point): void {
+  public begin(id: RowId, ghost: ReactNode, point: Point): void {
     const ready = this.registry.measuredPress(id);
 
     this.end();

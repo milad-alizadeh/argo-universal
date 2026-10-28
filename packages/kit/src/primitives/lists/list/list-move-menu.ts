@@ -3,6 +3,7 @@ import {
   type DropPlace,
   type MoveIntent,
   type MoveSection,
+  type RowId,
   type SectionKey,
 } from './list-move-model';
 
@@ -21,7 +22,7 @@ const steps: MenuMove[] = [
 // Up and down a place within the row's Section: only the steps that would move it.
 export const stepMoves = (
   sections: readonly MoveSection[],
-  id: string,
+  id: RowId,
 ): MenuMove[] =>
   steps.filter(
     (entry) => resolveMove(sections, id, entry.intent) !== undefined,
@@ -42,7 +43,7 @@ export interface PickSection {
 }
 
 // A row's name in the picker: its title, else its place in its Section.
-export type RowTitle = (id: string, index: number) => string;
+export type RowTitle = (id: RowId, index: number) => string;
 
 const spotAt =
   (sectionKey: SectionKey) =>
@@ -87,7 +88,7 @@ const sectionTitle = (
  */
 export function pickSections(
   sections: readonly MoveSection[],
-  id: string,
+  id: RowId,
   titleOf: RowTitle,
 ): PickSection[] {
   const moves = ({ place }: PickSpot): boolean =>

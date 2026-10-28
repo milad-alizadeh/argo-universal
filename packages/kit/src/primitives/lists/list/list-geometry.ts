@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 import type { ViewInstance } from 'react-native';
+import type { RowId } from './list-move-model';
 
 // A drag hit-tests and draws in window coordinates.
 export interface Rect {
@@ -16,7 +17,7 @@ export interface Point {
 
 // A drawn row, measured in the window.
 export interface MeasuredRow {
-  id: string;
+  id: RowId;
   rect: Rect;
 }
 

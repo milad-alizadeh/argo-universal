@@ -1,6 +1,6 @@
 import type { MeasuredZone } from './list-drop-aim';
 import type { MeasuredRow, Rect } from './list-geometry';
-import type { SectionKey } from './list-move-model';
+import type { RowId, SectionKey } from './list-move-model';
 import { registered } from './list-registered';
 
 export type Measure = () => Promise<Rect | undefined>;
@@ -32,7 +32,7 @@ export interface Measured {
 
 interface Registered {
   layer: Measure;
-  rows: ReadonlyMap<string, Measure>;
+  rows: ReadonlyMap<RowId, Measure>;
   zones: ReadonlyMap<SectionKey, MeasureZone>;
   scrollers: ReadonlySet<DragScroller>;
 }
@@ -54,8 +54,8 @@ async function measuredEach<Key, Value>(
 
 // A row scrolled out of a virtualised List is no longer drawn, so the lift keeps where it was last measured.
 async function measureRow(
-  rows: ReadonlyMap<string, Measure>,
-  id: string,
+  rows: ReadonlyMap<RowId, Measure>,
+  id: RowId,
   before: Rect | undefined,
 ): Promise<Rect | undefined> {
   return (await rows.get(id)?.()) ?? before;
@@ -67,7 +67,7 @@ type Zone = NonNullable<Awaited<ReturnType<MeasureZone>>>;
 interface Parts {
   layer: Rect | undefined;
   source: Rect | undefined;
-  rows: [string, Rect][];
+  rows: [RowId, Rect][];
   zones: [SectionKey, Zone][];
   scrollers: [DragScroller, Rect][];
 }
@@ -79,7 +79,7 @@ const scrollerMeasures = (
 
 async function measuredParts(
   registry: Registered,
-  id: string,
+  id: RowId,
   before: Rect | undefined,
 ): Promise<Parts> {
   const [layer, source, rows, zones, scrollers] = await Promise.all([
@@ -110,7 +110,7 @@ function assembled(
 // Measures the List around lifted row `id`, last measured at `before`; nothing while the drag layer or the row is not drawn.
 async function measureList(
   registry: Registered,
-  id: string,
+  id: RowId,
   before: Rect | undefined,
 ): Promise<Measured | undefined> {
   const parts = await measuredParts(registry, id, before);
@@ -123,20 +123,20 @@ async function measureList(
 
 // A press on a row, and the List measured around it once the measurement lands.
 interface Pressed {
-  id: string;
+  id: RowId;
   measured?: Measured;
 }
 
 // What draws in one List and measures itself for a drag: its drag layer, rows, Section zones and scrollers.
 export class DragRegistry {
-  private readonly rows = new Map<string, Measure>();
+  private readonly rows = new Map<RowId, Measure>();
   private readonly zones = new Map<SectionKey, MeasureZone>();
   private readonly scrollers = new Set<DragScroller>();
   private pressed: Pressed | undefined;
 
   public constructor(private readonly layer: Measure) {}
 
-  public registerRow(id: string, measure: Measure): () => void {
+  public registerRow(id: RowId, measure: Measure): () => void {
     return registered(this.rows, id, measure);
   }
 
@@ -154,7 +154,7 @@ export class DragRegistry {
   }
 
   // Measures the List around row `id` as a press on it begins, so a lift from that press draws from its first move.
-  public prepare(id: string): void {
+  public prepare(id: RowId): void {
     const pressed: Pressed = { id };
 
     this.pressed = pressed;
@@ -164,7 +164,7 @@ export class DragRegistry {
   }
 
   // The List as the press on row `id` measured it, once; none while that measurement is still on its way.
-  public measuredPress(id: string): Measured | undefined {
+  public measuredPress(id: RowId): Measured | undefined {
     const pressed = this.pressed;
 
     this.pressed = undefined;
@@ -173,7 +173,7 @@ export class DragRegistry {
   }
 
   public measureAround(
-    id: string,
+    id: RowId,
     before?: Rect,
   ): Promise<Measured | undefined> {
     const { layer, rows, zones, scrollers } = this;

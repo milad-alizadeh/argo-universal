@@ -4,6 +4,7 @@ import type { ListLook } from '../../../list-look';
 import { useListLook } from '../../../list-look-context';
 import type { ChildrenOptions } from './list-children-options';
 import type { ListTree } from './list-level-entries';
+import type { RowId } from './list-move-model';
 import { sectionEntries, menuEntries } from './list-section-entries';
 import { listTree, readList, type ListBlock } from './list-section-model';
 import type { TreeFolding } from './list-tree-rows';
@@ -11,7 +12,7 @@ import type { TreeFolding } from './list-tree-rows';
 export interface ListChild extends ListSelection {
   key: string;
   // The row's own `id`, which a move reports; only a row the List can move carries it.
-  moveId?: string;
+  moveId?: RowId;
   fullSpan?: boolean;
   content: ReactNode;
   position: ListPosition;

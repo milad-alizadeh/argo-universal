@@ -1,20 +1,21 @@
 import { expect, it } from 'vitest';
-import { sectionKey, type MoveSection } from './list-move-model';
+import type { MoveSection } from './list-move-model';
+import { moveSection } from './list-move-sections.mocks';
 import { unfilteredMove } from './list-search-moves';
 
 const full: MoveSection[] = [
-  {
-    key: sectionKey('a'),
+  moveSection({
+    key: 'a',
     id: 'todo',
     rows: ['login', 'logout', 'docs', 'log'],
-  },
-  { key: sectionKey('b'), id: 'done', rows: ['blog', 'tests', 'catalog'] },
+  }),
+  moveSection({ key: 'b', id: 'done', rows: ['blog', 'tests', 'catalog'] }),
 ];
 
 // What a search for "log" shows.
 const shown: MoveSection[] = [
-  { key: sectionKey('a'), id: 'todo', rows: ['login', 'logout', 'log'] },
-  { key: sectionKey('b'), id: 'done', rows: ['blog', 'catalog'] },
+  moveSection({ key: 'a', id: 'todo', rows: ['login', 'logout', 'log'] }),
+  moveSection({ key: 'b', id: 'done', rows: ['blog', 'catalog'] }),
 ];
 
 it('moves a row before the same row in the full order', () => {

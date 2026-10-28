@@ -9,6 +9,34 @@ export type SectionKey = z.infer<typeof sectionKeys>;
 
 export const sectionKey = (raw: string): SectionKey => sectionKeys.parse(raw);
 
+const rowIds = z.string().brand<'ListRowId'>();
+
+// A movable row's `id`, read from the row its owner wrote; the wire's ListMove carries it as a plain string.
+export type RowId = z.infer<typeof rowIds>;
+
+export const rowId = (raw: string): RowId => rowIds.parse(raw);
+
+// A row's own `id`, as a ListItem or FieldGroup row takes it, read as a RowId.
+export const rowIdOf = (raw: string | undefined): RowId | undefined =>
+  raw === undefined ? undefined : rowId(raw);
+
+const sectionIds = z.string().brand<'ListSectionId'>();
+
+// A List.Section's `id`, read from the Section its owner wrote; never its place in the List (SectionKey).
+export type SectionId = z.infer<typeof sectionIds>;
+
+export const sectionId = (raw: string): SectionId => sectionIds.parse(raw);
+
+// A List.Section's own `id`, as its owner writes it, read as a SectionId.
+export const sectionIdOf = (raw: string | undefined): SectionId | undefined =>
+  raw === undefined ? undefined : sectionId(raw);
+
+// A move as the List makes it, its ids branded; the owner's `onMove` reads it as the wire's ListMove.
+export interface RowMove extends ListMove {
+  id: RowId;
+  section?: SectionId;
+}
+
 /*
  * A List's movable rows, Section by Section, in the order it draws them. `key` is the Section's place in the List as
  * the List reads its children: rows, zones and lanes all name their Section by it. The rows outside any Section are one
@@ -16,9 +44,9 @@ export const sectionKey = (raw: string): SectionKey => sectionKeys.parse(raw);
  */
 export interface MoveSection {
   key: SectionKey;
-  id?: string;
+  id?: SectionId;
   title?: string;
-  rows: readonly string[];
+  rows: readonly RowId[];
 }
 
 export interface RowPlace {
@@ -42,7 +70,7 @@ export type MoveIntent =
 
 // A move and what a screen reader hears once it is made.
 export interface ResolvedMove {
-  move: ListMove;
+  move: RowMove;
   notice: string;
 }
 
@@ -62,10 +90,10 @@ type Lander = (
 ) => Landing | undefined;
 
 // Every row's place, read once for each order rather than searched for each row.
-const placesBy = new WeakMap<readonly MoveSection[], Map<string, HeldPlace>>();
+const placesBy = new WeakMap<readonly MoveSection[], Map<RowId, HeldPlace>>();
 
-function placesOf(sections: readonly MoveSection[]): Map<string, HeldPlace> {
-  const places = new Map<string, HeldPlace>();
+function placesOf(sections: readonly MoveSection[]): Map<RowId, HeldPlace> {
+  const places = new Map<RowId, HeldPlace>();
 
   for (const own of sections)
     for (const [index, id] of own.rows.entries())
@@ -78,7 +106,7 @@ function placesOf(sections: readonly MoveSection[]): Map<string, HeldPlace> {
 
 export const placeOf = (
   sections: readonly MoveSection[],
-  id: string,
+  id: RowId,
 ): HeldPlace | undefined =>
   (placesBy.get(sections) ?? placesOf(sections)).get(id);
 
@@ -131,7 +159,7 @@ function landerOf(intent: MoveIntent): Lander {
   }
 }
 
-const moveIn = ({ target, index }: Landing, id: string): ListMove =>
+const moveIn = ({ target, index }: Landing, id: RowId): RowMove =>
   target.id === undefined ? { id, index } : { id, section: target.id, index };
 
 // Where the row landed: its Section, by title, and its position there, counted from one.
@@ -146,7 +174,7 @@ function noticeOf({ target, index }: Landing): string {
 // The move an intent makes in `sections`, or none when the row is not there or would not move.
 export function resolveMove(
   sections: readonly MoveSection[],
-  id: string,
+  id: RowId,
   intent: MoveIntent,
 ): ResolvedMove | undefined {
   const place = placeOf(sections, id);

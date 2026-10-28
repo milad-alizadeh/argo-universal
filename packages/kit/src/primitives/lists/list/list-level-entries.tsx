@@ -2,6 +2,7 @@ import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import { listPosition } from '../../../list-context';
 import type { ListChild } from './list-children';
+import { rowIdOf, type RowId } from './list-move-model';
 import { refilled, type HeldOrder } from './list-move-reading';
 import type { ListSectionProps } from './list-props';
 import { renderedId } from './list-row-identity';
@@ -33,7 +34,7 @@ export interface Level {
   moves: boolean;
   movable: boolean;
   // Every movable row's element, by id, as the reading finds it.
-  rows: Map<string, ReactNode>;
+  rows: Map<RowId, ReactNode>;
   // Every key a Section or row took by its id, so a repeated id falls back to its place.
   keys: Set<string>;
 }
@@ -47,8 +48,8 @@ export function isSection(
 // A row moves when it is a ListItem with an `id`, among the List's own rows or a Section's that has an id.
 const movableId =
   (movable: boolean) =>
-  (child: ReactNode): string | undefined =>
-    movable && !isSection(child) ? renderedId(child) : undefined;
+  (child: ReactNode): RowId | undefined =>
+    movable && !isSection(child) ? rowIdOf(renderedId(child)) : undefined;
 
 // The first child to take `key` keeps it; a later one keeps its place key.
 function unique(
@@ -67,14 +68,14 @@ function unique(
  * draws them anew. Any other child is keyed by its place.
  */
 function ownKey(level: Level): (child: ReactNode) => string | undefined {
-  const rowId = movableId(level.movable);
+  const idOf = movableId(level.movable);
 
   return (child) =>
     unique(
       level.keys,
       isSection(child)
         ? sectionKey(level, child)
-        : rowKey(level.list, rowId(child)),
+        : rowKey(level.list, idOf(child)),
     );
 }
 
@@ -133,7 +134,7 @@ export interface Placing {
 function foundRow(
   { child, nested }: TreeChild,
   level: Level,
-): string | undefined {
+): RowId | undefined {
   const id = nested ? undefined : movableId(level.movable)(child);
 
   if (id !== undefined) level.rows.set(id, child);

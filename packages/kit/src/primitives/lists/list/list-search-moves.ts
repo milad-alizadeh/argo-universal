@@ -1,11 +1,11 @@
 import type { ListMove } from '@repo/contracts/kit-moves';
-import type { MoveSection } from './list-move-model';
+import type { MoveSection, RowId } from './list-move-model';
 
 // The rows of the move's Section, without the moved row.
 const othersIn = (
   sections: readonly MoveSection[],
   { id, section }: ListMove,
-): readonly string[] =>
+): readonly RowId[] =>
   sections
     .find((each) => each.id === section)
     ?.rows.filter((row) => row !== id) ?? [];

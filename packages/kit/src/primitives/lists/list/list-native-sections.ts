@@ -1,7 +1,13 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import { isSection } from './list-level-entries';
-import type { MoveSection } from './list-move-model';
+import {
+  rowId,
+  sectionIdOf,
+  type MoveSection,
+  type RowId,
+  type SectionId,
+} from './list-move-model';
 
 /*
  * What a native grouped List draws: sections of FieldGroup rows (list-native-props). A row is only a function
@@ -11,15 +17,15 @@ import type { MoveSection } from './list-move-model';
 export type NativeRow = {
   key: string;
   // The row's own `id`.
-  id?: string;
-  moveId?: string;
+  id?: RowId;
+  moveId?: RowId;
   render: () => ReactElement;
 };
 
 export type NativeSection = {
   key: string;
   // The List.Section's own `id`; a run of rows outside any Section is `loose` instead.
-  id?: string;
+  id?: SectionId;
   loose?: true;
   title?: string;
   footer?: string;
@@ -30,8 +36,8 @@ type RowElement = ReactElement<{ id?: unknown }>;
 
 const isRow = (node: ReactNode): node is RowElement => isValidElement(node);
 
-const ownId = ({ props }: RowElement): string | undefined =>
-  typeof props.id === 'string' ? props.id : undefined;
+const ownId = ({ props }: RowElement): RowId | undefined =>
+  typeof props.id === 'string' ? rowId(props.id) : undefined;
 
 const elementRow = (element: RowElement, index: number): NativeRow => ({
   key: String(element.key ?? index),
@@ -65,7 +71,7 @@ function toSection(run: ReactNode[], index: number): NativeSection {
 
   return {
     key: String(first.key ?? index),
-    id,
+    id: sectionIdOf(id),
     title,
     footer,
     rows: rowsOf(children),
@@ -93,13 +99,13 @@ const movedIn = (
     : undefined;
 
 interface Refill {
-  movable: ReadonlySet<string>;
-  rows: ReadonlyMap<string, NativeRow>;
+  movable: ReadonlySet<RowId>;
+  rows: ReadonlyMap<RowId, NativeRow>;
   // Each move Section's rows not yet placed, in the order shown.
-  left: Map<MoveSection, string[]>;
+  left: Map<MoveSection, RowId[]>;
 }
 
-const placed = (refill: Refill, id: string): NativeRow[] => {
+const placed = (refill: Refill, id: RowId): NativeRow[] => {
   const row = refill.rows.get(id);
 
   return row ? [{ ...row, moveId: id }] : [];
@@ -109,7 +115,7 @@ const isMovable = (refill: Refill, row: NativeRow): boolean =>
   row.id !== undefined && refill.movable.has(row.id);
 
 // A slot the List can move takes the next row its move Section shows; any other row keeps its place.
-function slotRows(refill: Refill, row: NativeRow, left: string[]): NativeRow[] {
+function slotRows(refill: Refill, row: NativeRow, left: RowId[]): NativeRow[] {
   if (!isMovable(refill, row)) return [row];
 
   const id = left.shift();
@@ -132,7 +138,7 @@ function refilled(
   return { ...section, rows: [...rows, ...rest] };
 }
 
-const rowEntries = (row: NativeRow): (readonly [string, NativeRow])[] =>
+const rowEntries = (row: NativeRow): (readonly [RowId, NativeRow])[] =>
   row.id === undefined ? [] : [[row.id, row]];
 
 function refillOf(
@@ -162,7 +168,7 @@ const shownBy =
   };
 
 // The first row to carry each id, which keeps that id as its key.
-const firstById = (sections: NativeSection[]): Map<string, NativeRow> =>
+const firstById = (sections: NativeSection[]): Map<RowId, NativeRow> =>
   sections
     .flatMap((section) => section.rows)
     .reduce(
@@ -170,14 +176,14 @@ const firstById = (sections: NativeSection[]): Map<string, NativeRow> =>
         row.id === undefined || first.has(row.id)
           ? first
           : new Map(first).set(row.id, row),
-      new Map<string, NativeRow>(),
+      new Map<RowId, NativeRow>(),
     );
 
-const ownsId = (first: Map<string, NativeRow>, row: NativeRow): boolean =>
+const ownsId = (first: Map<RowId, NativeRow>, row: NativeRow): boolean =>
   row.id !== undefined && first.get(row.id) === row;
 
 const keyedBy =
-  (first: Map<string, NativeRow>) =>
+  (first: Map<RowId, NativeRow>) =>
   (section: NativeSection): NativeSection => ({
     ...section,
     rows: section.rows.map((row) => ({

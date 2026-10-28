@@ -3,9 +3,10 @@ import type { NativeMenuItem } from '#primitives/overlays/menu';
 import { pressed } from './list-move-actions';
 import { useListMoveOrder } from './list-move-context';
 import { stepMoves } from './list-move-menu';
+import type { RowId } from './list-move-model';
 import { useMoveOrder, type MoveOrder } from './list-move-order';
 
-const moveItems = (order: MoveOrder, id: string): NativeMenuItem[] => [
+const moveItems = (order: MoveOrder, id: RowId): NativeMenuItem[] => [
   ...stepMoves(order.sections, id).map(({ key, label, intent }) => ({
     id: key,
     title: label,
@@ -25,7 +26,7 @@ const moveItems = (order: MoveOrder, id: string): NativeMenuItem[] => [
  * Move to…. Nothing for a row the List cannot move, or outside a List with `onMove`.
  */
 export function useNativeMoveItems(
-  id: string | undefined,
+  id: RowId | undefined,
 ): NativeMenuItem[] | undefined {
   const order = useListMoveOrder();
   const menu = useMoveOrder(order, (each) => each.menuOf(id));

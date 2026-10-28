@@ -1,22 +1,27 @@
 import { isValidElement, type ReactNode } from 'react';
 import type { ListChild } from './list-children';
-import { sectionKey, type MoveSection } from './list-move-model';
+import {
+  sectionId,
+  sectionKey,
+  type MoveSection,
+  type RowId,
+} from './list-move-model';
 import { gatherLoose } from './list-section-entries';
 import type { ListBlock } from './list-section-model';
 
 // A move the List shows before its owner answers: each movable Section's rows in the moved order, and every movable row.
 export interface HeldOrder {
-  order: ReadonlyMap<string, readonly string[]>;
-  rows: ReadonlyMap<string, ReactNode>;
+  order: ReadonlyMap<string, readonly RowId[]>;
+  rows: ReadonlyMap<RowId, ReactNode>;
 }
 
 // One level's movable rows in a held move's order.
 interface LevelOrder {
-  order: readonly string[];
-  rows: ReadonlyMap<string, ReactNode>;
+  order: readonly RowId[];
+  rows: ReadonlyMap<RowId, ReactNode>;
 }
 
-type MovableId = (child: ReactNode) => string | undefined;
+type MovableId = (child: ReactNode) => RowId | undefined;
 
 // Each movable child's slot takes the next of `next`; slots past its end are dropped.
 function slotted(
@@ -61,31 +66,33 @@ function titleOf(row: ReactNode): string[] {
 
 // Every movable row's title, by id, for the Move to… picker to name the rows it places after.
 export const rowTitles = (
-  rows: ReadonlyMap<string, ReactNode>,
-): ReadonlyMap<string, string> =>
+  rows: ReadonlyMap<RowId, ReactNode>,
+): ReadonlyMap<RowId, string> =>
   new Map(
     [...rows].flatMap(([id, row]) =>
-      titleOf(row).map((title): [string, string] => [id, title]),
+      titleOf(row).map((title): [RowId, string] => [id, title]),
     ),
   );
 
-const movableIds = (items: readonly ListChild[]): string[] =>
+const movableIds = (items: readonly ListChild[]): RowId[] =>
   items.flatMap((item) => item.moveId ?? []);
 
-const sectionRows = (blocks: readonly ListBlock[]): string[] =>
+const sectionRows = (blocks: readonly ListBlock[]): RowId[] =>
   blocks.flatMap((block) =>
     block.kind === 'items' ? movableIds(block.items) : [],
   );
 
 function sectionOf(block: ListBlock): MoveSection[] {
-  if (block.kind === 'items' || block.section.id === undefined) return [];
+  if (block.kind === 'items') return [];
 
   const { key, section } = block;
+
+  if (section.id === undefined) return [];
 
   return [
     {
       key: sectionKey(key),
-      id: section.id,
+      id: sectionId(section.id),
       title: section.title,
       rows: sectionRows(block.blocks),
     },

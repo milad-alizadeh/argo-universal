@@ -1,3 +1,4 @@
+import type { RowId } from './list-move-model';
 import { nextFrame } from './list-next-frame';
 import { registered } from './list-registered';
 
@@ -12,12 +13,12 @@ type Frame = (step: () => void) => void;
  * focus its old copy lost, once.
  */
 export class RowFocus {
-  private readonly rows = new Map<string, FocusRow>();
-  private pending: string | undefined;
+  private readonly rows = new Map<RowId, FocusRow>();
+  private pending: RowId | undefined;
 
   public constructor(private readonly frame: Frame = nextFrame) {}
 
-  public register(id: string, focus: FocusRow): () => void {
+  public register(id: RowId, focus: FocusRow): () => void {
     if (this.pending === id) {
       this.pending = undefined;
       this.frame(() => focus(true));
@@ -27,7 +28,7 @@ export class RowFocus {
   }
 
   // Focuses row `id` a frame after a move, once it has drawn where it landed.
-  public after(id: string): void {
+  public after(id: RowId): void {
     this.pending = id;
     this.frame(() => this.rows.get(id)?.(false));
   }

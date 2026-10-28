@@ -2,27 +2,29 @@ import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
 import { expect, it } from 'vitest';
 import {
   resolveMove,
+  rowId,
   sectionKey,
   type DropPlace,
   type MoveSection,
 } from './list-move-model';
+import { moveSection } from './list-move-sections.mocks';
 
 const board: MoveSection[] = [
-  {
-    key: sectionKey('a'),
+  moveSection({
+    key: 'a',
     id: 'todo',
     title: 'To do',
     rows: ['login', 'docs', 'tests'],
-  },
-  { key: sectionKey('b'), id: 'doing', title: 'Doing', rows: ['search'] },
-  { key: sectionKey('c'), id: 'done', title: 'Done', rows: [] },
+  }),
+  moveSection({ key: 'b', id: 'doing', title: 'Doing', rows: ['search'] }),
+  moveSection({ key: 'c', id: 'done', title: 'Done', rows: [] }),
 ];
 
 const placed = (id: string, place: DropPlace): ListMove | undefined =>
-  resolveMove(board, id, { kind: 'place', place })?.move;
+  resolveMove(board, rowId(id), { kind: 'place', place })?.move;
 
 const stepped = (id: string, by: -1 | 1): ListMove | undefined =>
-  resolveMove(board, id, { kind: 'step', by })?.move;
+  resolveMove(board, rowId(id), { kind: 'step', by })?.move;
 
 it('moves a row up by one', () => {
   expect(stepped('docs', -1)).toEqual({
@@ -88,7 +90,7 @@ it('lands nothing when a row is placed just after itself', () => {
 });
 
 const toDoingSecond = (): string | undefined =>
-  resolveMove(board, 'login', {
+  resolveMove(board, rowId('login'), {
     kind: 'place',
     place: { sectionKey: sectionKey('b'), insertion: 1 },
   })?.notice;

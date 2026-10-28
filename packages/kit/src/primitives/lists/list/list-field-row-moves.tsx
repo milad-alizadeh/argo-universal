@@ -2,19 +2,20 @@ import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { useMoveActions } from './list-move-actions';
+import type { RowId } from './list-move-model';
 import { ListMovePicker } from './list-move-picker-drawing';
 import { isNativeRow } from './list-native-row-mark';
 
 interface FieldRowMovesProps {
   // The row's move id; a row the List cannot move has none.
-  id: string | undefined;
+  id: RowId | undefined;
   content: ReactNode;
 }
 
 function MovableFieldRow({
   id,
   content,
-}: FieldRowMovesProps & { id: string }): ReactElement {
+}: FieldRowMovesProps & { id: RowId }): ReactElement {
   const moves = useMoveActions(id);
 
   return (
