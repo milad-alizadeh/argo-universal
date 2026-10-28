@@ -23,7 +23,17 @@ function StartSession({ argo }) {
   );
 }
 
-function Counter({ argo }) {
+// A page opened from a Session's header names that Session.
+function Heading({ sessionId }) {
+  return (
+    <>
+      <Text>Counter fixture</Text>
+      {sessionId ? <Text>{`Opened for Session ${sessionId}`}</Text> : null}
+    </>
+  );
+}
+
+function Counter({ argo, sessionId }) {
   const [taps, setTaps] = useState(0);
   const [view, setView] = useState('counter');
 
@@ -33,7 +43,7 @@ function Counter({ argo }) {
 
   return (
     <Stack direction="column">
-      <Text>Counter fixture</Text>
+      <Heading sessionId={sessionId} />
       <Text>{`Tapped ${taps} times`}</Text>
       <Button label="Tap me" onPress={() => setTaps(taps + 1)} />
       <Views setView={setView} />
@@ -64,18 +74,21 @@ function Details({ onBack }) {
   );
 }
 
+// One item on every Session row, which opens the Counter page.
+const rowItems = ({ contexts }) =>
+  Object.fromEntries(
+    contexts.map(({ sessionId }) => [
+      sessionId,
+      [{ text: 'Counter item', action: { path: '/' } }],
+    ]),
+  );
+
 export function register(argo) {
-  argo.pages.register('/', () => <Counter argo={argo} />);
+  argo.pages.register('/', ({ context }) => (
+    <Counter argo={argo} sessionId={context.sessionId} />
+  ));
   argo.slots.register('argo/project/details/v1', ({ context }) => (
     <Text>{`Fixture Slot for ${context.projectId}`}</Text>
   ));
-  // One item on every Session row, which opens the Counter page.
-  argo.slots.register('argo/session/row/v1', ({ contexts }) =>
-    Object.fromEntries(
-      contexts.map(({ sessionId }) => [
-        sessionId,
-        [{ text: 'Counter item', action: { path: '/' } }],
-      ]),
-    ),
-  );
+  argo.slots.register('argo/session/row/v1', rowItems);
 }

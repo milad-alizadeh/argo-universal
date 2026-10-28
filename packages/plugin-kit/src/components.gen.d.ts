@@ -117,7 +117,7 @@ type ButtonHints = {
   disabled: unknown;
   /** The action run on activation. */
   onPress: unknown;
-  /** An Argo icon before the label. */
+  /** An icon before the label: one of Argo’s, or an SF Symbol and Material Symbol pair. */
   icon: unknown;
   /** Fill the row always, or only in a narrow window. */
   fullWidth: unknown;

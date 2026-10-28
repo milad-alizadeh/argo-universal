@@ -4,6 +4,10 @@ import type {
   PluginSettings as PluginSettingsOutput,
   PluginSettingValue,
 } from '@repo/contracts/plugins';
+import {
+  type DeclaredItems,
+  type DeclaredItemsInput,
+} from '@repo/contracts/plugins/declared-slots';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import {
   ReplaceableInput,
@@ -41,6 +45,7 @@ import {
   type PluginServiceDeps,
 } from './located-plugins';
 import { startOrderedPlugins } from './plugin-order';
+import { declaredItems } from './slots/declared-items';
 import { renderSlot } from './slots/render-slot';
 import { slotFor, slotItemsFor } from './slots/slot-streams';
 
@@ -61,6 +66,10 @@ export class PluginService {
     applyStatus(result, this.deps.pluginRuntime);
 
     return result;
+  }
+
+  async declared(input: DeclaredItemsInput): Promise<DeclaredItems> {
+    return declaredItems(await this.list(), input);
   }
 
   async activate(pluginId: string): Promise<PluginStatus> {
@@ -114,7 +123,7 @@ export class PluginService {
   }
 
   async *view(
-    { pluginId, path, projectId }: PluginViewInput,
+    { pluginId, path, projectId, sessionId }: PluginViewInput,
     connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
     const status = await this.activate(pluginId);
@@ -124,7 +133,7 @@ export class PluginService {
 
     yield* this.deps.pluginRuntime.views.watch(
       pluginId,
-      { path, projectId },
+      { path, projectId, sessionId },
       connection,
     );
   }
