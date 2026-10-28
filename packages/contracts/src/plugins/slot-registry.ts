@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { tones } from '#kit-tokens';
 import { PluginIcon, PluginPath } from '#plugin-manifest-fields';
+import { SessionBarItem } from '#plugin-session-bar-item';
 
 // A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
 export const projectDetailsSlotId = 'argo/project/details/v1';
@@ -8,6 +9,8 @@ export const projectDetailsSlotId = 'argo/project/details/v1';
 export const sessionRowSlotId = 'argo/session/row/v1';
 
 export const sessionActivitySlotId = 'argo/session/activity/v1';
+
+export const sessionBarSlotId = 'argo/session/bar/v1';
 
 export const toolCallSlotId = 'argo/feed/tool-call/v1';
 
@@ -192,6 +195,12 @@ export const addOnlySlots = [
     item: SessionActivityItem,
     limit: { phone: 1, desktop: 1, perPlugin: 1 },
     owners: 'one',
+  }),
+  // One line under the Session header: the first Plugin in Slot order shows, the rest wait behind "+N" (ADR-0035).
+  itemsSlotEntry(sessionBarSlotId, SessionRowContext, {
+    key: 'sessionId',
+    item: SessionBarItem,
+    limit: { phone: 1, desktop: 1, perPlugin: 1 },
   }),
 ] as const;
 

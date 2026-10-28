@@ -66,7 +66,8 @@ function usePreviewData(
   };
 }
 
-function useLatestSession(): SessionInfo | undefined {
+// The newest Session not archived, which a Slot's preview draws for real.
+export function useLatestSession(): SessionInfo | undefined {
   const trpc = useTRPC();
 
   const { data } = useQuery(

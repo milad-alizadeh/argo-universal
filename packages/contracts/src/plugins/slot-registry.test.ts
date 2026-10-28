@@ -6,8 +6,8 @@ import {
   PluginSlotInput,
   projectDetailsSlotId,
   ReplaceableSlotId,
-  SessionActivityItem,
   sessionActivitySlotId,
+  sessionBarSlotId,
   SessionRowItem,
   sessionRowSlotId,
   SlotId,
@@ -37,6 +37,7 @@ it('keeps every Slot id with its kind', () => {
     [projectDetailsSlotId, 'add-only'],
     [sessionRowSlotId, 'add-only'],
     [sessionActivitySlotId, 'add-only'],
+    [sessionBarSlotId, 'add-only'],
     [toolCallSlotId, 'replaceable'],
     [messageSlotId, 'replaceable'],
   ]);
@@ -155,20 +156,4 @@ it('refuses the Composer tray as a Slot', () => {
     }).success,
   ).toBe(false);
   expect(manifestWith({ slots: [slotId] }).success).toBe(false);
-});
-
-it('asks the Activity line for one line per Session, as a Single-owner Slot', () => {
-  const input = { slotId: sessionActivitySlotId, contexts: [rowContext] };
-
-  expect(SlotItemsInput.parse(input)).toEqual(input);
-  expect(
-    slotRegistry.find(({ id }) => id === sessionActivitySlotId),
-  ).toMatchObject({ content: { owners: 'one' } });
-});
-
-it.each([
-  ['no text', { text: '' }],
-  ['an icon', { text: 'Awaiting review', icon: { material: 'flag' } }],
-])('refuses an Activity line with %s', (_name, item) => {
-  expect(SessionActivityItem.safeParse(item).success).toBe(false);
 });
