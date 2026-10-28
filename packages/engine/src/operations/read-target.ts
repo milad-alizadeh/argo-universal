@@ -81,6 +81,7 @@ const readTargets = {
   'project.list': globalTarget('project.list'),
   'registry.get': globalTarget('registry.get'),
   'agent.list': globalTarget('agent.list'),
+  'agent.getAccess': globalTarget('agent.getAccess'),
   'plugin.list': globalTarget('plugin.list'),
   'plugin.getSettings': globalTarget('plugin.getSettings'),
 } satisfies Record<ReadOperationId, ResolveTarget>;

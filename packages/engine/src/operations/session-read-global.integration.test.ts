@@ -9,7 +9,12 @@ it('allows discovery and global reads while retaining Plugin secret masking', as
     value: 'fixture-private-read-secret',
   });
 
-  for (const id of ['registry.get', 'agent.list', 'plugin.list'] as const)
+  for (const id of [
+    'registry.get',
+    'agent.list',
+    'plugin.list',
+    'agent.getAccess',
+  ] as const)
     expect(
       await calling.caller.operations.run.mutate({ id, params: {} }),
     ).toEqual(await user.operations.run.mutate({ id, params: {} }));
@@ -39,6 +44,7 @@ it('allows discovery and global reads while retaining Plugin secret masking', as
     'project.listBranches',
     'registry.get',
     'agent.list',
+    'agent.getAccess',
     'plugin.list',
     'plugin.getSettings',
   ])

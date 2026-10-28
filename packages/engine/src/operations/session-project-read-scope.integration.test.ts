@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { operationCaller } from '#mocks/operations';
 import {
   addOtherProject,
   openAccessSession,
@@ -50,6 +51,17 @@ it('limits a Session list to its caller Project and refuses an explicit foreign 
   expect((await fixture.host.caller.session.list({})).sessions).toContainEqual(
     expect.objectContaining({ sessionId: foreign.sessionId }),
   );
+  const user = await operationCaller(fixture.host);
+
+  expect(
+    await user.operations.run.mutate({
+      id: listOperationId,
+      params: { projectId: otherId },
+    }),
+  ).toMatchObject({
+    sessions: [expect.objectContaining({ sessionId: foreign.sessionId })],
+    nextCursor: null,
+  });
 }, 30_000);
 
 it('scopes Project branch reads while keeping user access to another Project', async () => {
