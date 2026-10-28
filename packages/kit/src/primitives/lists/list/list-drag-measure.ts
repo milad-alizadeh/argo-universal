@@ -121,6 +121,10 @@ async function measureList(
   return assembled(layer, source, parts);
 }
 
+// Where the lifted row was last measured, if it was.
+export const sourceOf = (measured?: Measured): Rect | undefined =>
+  measured?.source;
+
 // A press on a row, and the List measured around it once the measurement lands.
 interface Pressed {
   id: RowId;

@@ -86,13 +86,13 @@ export function boardRig(): Rig {
   const rig = rigFor(board, true);
 
   for (const [lane, section] of board.entries()) {
-    rig.drag.registry.registerZone(section.key, async () => ({
+    rig.drag.registerZone(section.key, async () => ({
       rect: laneRect(lane),
       start: 60,
     }));
 
     for (const [index, id] of section.rows.entries())
-      rig.drag.registry.registerRow(id, async () => cardRect(lane, index));
+      rig.drag.registerRow(id, async () => cardRect(lane, index));
   }
 
   return rig;
@@ -121,13 +121,13 @@ export function columnRig(): Rig {
   const rig = rigFor(board.slice(0, 2), false);
 
   for (const [key, y] of headers)
-    rig.drag.registry.registerZone(key, async () => ({
+    rig.drag.registerZone(key, async () => ({
       rect: across(y, 30),
       start: y + 30,
     }));
 
   for (const [id, y] of columnRows)
-    rig.drag.registry.registerRow(rowId(id), async () => across(y, 50));
+    rig.drag.registerRow(rowId(id), async () => across(y, 50));
 
   return rig;
 }

@@ -23,10 +23,7 @@ function useRegisteredRow(
 ): RefObject<ViewInstance | null> {
   const outer = useRef<ViewInstance>(null);
 
-  useEffect(
-    () => drag.registry.registerRow(id, () => measureView(outer)),
-    [drag, id],
-  );
+  useEffect(() => drag.registerRow(id, () => measureView(outer)), [drag, id]);
   useEffect(
     () => order.registerFocus(id, (ifLost) => focusView(outer, ifLost)),
     [order, id],

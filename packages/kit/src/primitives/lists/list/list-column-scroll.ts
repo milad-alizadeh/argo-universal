@@ -48,7 +48,7 @@ function useColumnScroller(
   useEffect(() => {
     if (lanes) return;
 
-    return drag.registry.registerScroller(legendScroller(frame, list));
+    return drag.registerScroller(legendScroller(frame, list));
   }, [drag, frame, lanes, list]);
 }
 

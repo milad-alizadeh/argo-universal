@@ -27,7 +27,7 @@ function scrolling(): Scrolling {
     scrollBy: (delta) => deltas.push(delta),
   };
 
-  rig.drag.registry.registerScroller(scroller);
+  rig.drag.registerScroller(scroller);
 
   return { rig, deltas };
 }

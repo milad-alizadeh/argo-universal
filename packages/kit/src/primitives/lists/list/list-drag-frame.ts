@@ -10,6 +10,7 @@ import {
   type RowId,
 } from './list-move-model';
 import type { MoveOrder } from './list-move-order';
+import type { Schedule } from './list-next-frame';
 import { slideOffset, type Slide } from './list-slide';
 
 // What a List's drag works on: the order the List shows, read as the drag aims and drops, and how a drop moves.
@@ -27,11 +28,26 @@ export interface DragFrame {
   zoneSlides: ReadonlyMap<string, number>;
 }
 
+// How a drag draws: where its lifted copy goes, whether rows slide apart, and when its frames run.
+export interface DragDrawing {
+  ghostAt: (point: Point) => void;
+  slides: boolean;
+  schedule?: Schedule;
+}
+
 export interface LiftedRow {
   id: RowId;
   ghost: ReactNode;
   // Where the pointer holds the row, from its top left.
   grab: Point;
+}
+
+// A row a drag holds.
+export interface Lift extends LiftedRow {
+  // Where the pointer took the row, in the window.
+  start: Point;
+  // Released before the List was measured: it drops as soon as it is.
+  released: boolean;
 }
 
 interface FrameInput {

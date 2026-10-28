@@ -6,37 +6,24 @@ import {
   grabOf,
   landedMove,
   sameFrame,
+  type DragDrawing,
   type DragFrame,
   type DragOrder,
-  type LiftedRow,
+  type Lift,
 } from './list-drag-frame';
 import {
   DragRegistry,
+  type DragScroller,
   type Measure,
   type Measured,
   type MeasuredScroller,
+  type MeasureZone,
+  sourceOf,
 } from './list-drag-measure';
 import { scrollEdges } from './list-edge-scroll';
 import { FrameLoop } from './list-frame-loop';
-import type { Point, Rect } from './list-geometry';
-import type { RowId } from './list-move-model';
-import type { Schedule } from './list-next-frame';
-
-interface Lift extends LiftedRow {
-  // Where the pointer took the row, in the window.
-  start: Point;
-  // Released before the List was measured: it drops as soon as it is.
-  released: boolean;
-}
-
-const sourceOf = (measured?: Measured): Rect | undefined => measured?.source;
-
-// How a drag draws: where its lifted copy goes, whether rows slide apart, and when its frames run.
-export interface DragDrawing {
-  ghostAt: (point: Point) => void;
-  slides: boolean;
-  schedule?: Schedule;
-}
+import type { Point } from './list-geometry';
+import type { RowId, SectionKey } from './list-move-model';
 
 /*
  * One List's drag: rows, Section zones and scrollers register as they draw. A lift measures them all in the window,
@@ -44,8 +31,7 @@ export interface DragDrawing {
  * the move. Everything it draws is in the drag layer's coordinates.
  */
 export class ListDrag {
-  // Where its rows, Section zones and scrollers register as they draw.
-  public readonly registry: DragRegistry;
+  private readonly registry: DragRegistry;
   private readonly listeners = listenerSet();
   public readonly subscribe = this.listeners.subscribe;
   private lift: Lift | undefined;
@@ -66,6 +52,22 @@ export class ListDrag {
   }
 
   public readonly current = (): DragFrame | undefined => this.frame;
+
+  // Rows, Section zones (a header or a lane) and edge scrollers register as they draw; each returns its unregister.
+  public registerRow(id: RowId, measure: Measure): () => void {
+    return this.registry.registerRow(id, measure);
+  }
+
+  public registerZone(
+    sectionKey: SectionKey,
+    measure: MeasureZone,
+  ): () => void {
+    return this.registry.registerZone(sectionKey, measure);
+  }
+
+  public registerScroller(scroller: DragScroller): () => void {
+    return this.registry.registerScroller(scroller);
+  }
 
   // Measures the List around row `id` as a press on it begins.
   public prepare(id: RowId): void {
