@@ -70,7 +70,7 @@ it('keeps the last successful Query data when a refreshed Borrow is refused', as
     pluginClock: clock,
   });
 
-  await host.caller.plugins.activate({ pluginId: 'probe' });
+  await host.caller.plugin.activate({ pluginId: 'probe' });
   const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Missing fixture Project');

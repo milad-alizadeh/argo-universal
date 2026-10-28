@@ -16,7 +16,7 @@ export interface PluginEntries {
 
 // The connected Server's Plugins.
 export function usePluginEntries(): PluginEntries {
-  const { data, isError } = useQuery(useTRPC().plugins.list.queryOptions());
+  const { data, isError } = useQuery(useTRPC().plugin.list.queryOptions());
 
   return { plugins: data?.plugins, isError };
 }
@@ -42,8 +42,8 @@ export function usePluginsInvalidation(): () => Promise<void> {
 
   return async () => {
     await Promise.all([
-      cache.invalidateQueries(trpc.plugins.list.queryFilter()),
-      cache.invalidateQueries(trpc.plugins.settings.queryFilter()),
+      cache.invalidateQueries(trpc.plugin.list.queryFilter()),
+      cache.invalidateQueries(trpc.plugin.getSettings.queryFilter()),
     ]);
   };
 }
@@ -55,7 +55,7 @@ export function usePluginEnabledChange(
   const onSuccess = usePluginsInvalidation();
 
   const change = useMutation(
-    useTRPC().plugins.setEnabled.mutationOptions({ onSuccess }),
+    useTRPC().plugin.setEnabled.mutationOptions({ onSuccess }),
   );
 
   useErrorToast(
@@ -72,7 +72,7 @@ export function usePluginSettingChange(
   const onSuccess = usePluginsInvalidation();
 
   const change = useMutation(
-    useTRPC().plugins.setSetting.mutationOptions({ onSuccess }),
+    useTRPC().plugin.setSetting.mutationOptions({ onSuccess }),
   );
 
   useErrorToast(errorToast('Could not save the setting', change.error));

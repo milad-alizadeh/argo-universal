@@ -14,7 +14,7 @@ it.each(['index.mjs', 'index.cjs'])(
 
     const { caller } = await startEngineTestHost({ home });
 
-    expect((await caller.plugins.list()).plugins).toMatchObject([
+    expect((await caller.plugin.list()).plugins).toMatchObject([
       {
         manifest: { id: 'healthy' },
         state: 'not-started',
@@ -24,8 +24,8 @@ it.each(['index.mjs', 'index.cjs'])(
     ]);
     expect(
       await Promise.all([
-        caller.plugins.activate({ pluginId: 'healthy' }),
-        caller.plugins.activate({ pluginId: 'healthy' }),
+        caller.plugin.activate({ pluginId: 'healthy' }),
+        caller.plugin.activate({ pluginId: 'healthy' }),
       ]),
     ).toEqual([
       { state: 'running', hanging: false, error: null },
@@ -37,13 +37,13 @@ it.each(['index.mjs', 'index.cjs'])(
       'throw Error("Changed entry")',
     );
     await expect
-      .poll(() => caller.plugins.list(), processWait)
+      .poll(() => caller.plugin.list(), processWait)
       .toMatchObject({
         plugins: [{ state: 'crashed', error: 'Changed entry' }],
       });
-    expect(
-      await caller.plugins.activate({ pluginId: 'healthy' }),
-    ).toMatchObject({ state: 'crashed', error: 'Changed entry' });
+    expect(await caller.plugin.activate({ pluginId: 'healthy' })).toMatchObject(
+      { state: 'crashed', error: 'Changed entry' },
+    );
   },
   20_000,
 );
@@ -63,20 +63,20 @@ it.each([
     ]);
 
     const { caller } = await startEngineTestHost({ home });
-    await caller.plugins.activate({ pluginId: 'healthy' });
+    await caller.plugin.activate({ pluginId: 'healthy' });
 
-    expect(await caller.plugins.activate({ pluginId: 'bad' })).toMatchObject({
+    expect(await caller.plugin.activate({ pluginId: 'bad' })).toMatchObject({
       state: 'crashed',
       hanging: false,
       error: expect.stringContaining(error),
     });
-    expect((await caller.plugins.list()).plugins).toMatchObject([
+    expect((await caller.plugin.list()).plugins).toMatchObject([
       { manifest: { id: 'bad' }, state: 'crashed' },
       { manifest: { id: 'healthy' }, state: 'running', error: null },
     ]);
-    expect(
-      await caller.plugins.activate({ pluginId: 'healthy' }),
-    ).toMatchObject({ state: 'running' });
+    expect(await caller.plugin.activate({ pluginId: 'healthy' })).toMatchObject(
+      { state: 'running' },
+    );
     expect(await readFile(join(home, 'logs/plugins.log'), 'utf8')).toContain(
       error,
     );
@@ -90,13 +90,13 @@ it.each(['hanging', 'pending'])(
     const { caller } = await startEngineTestHost({ home });
     const started = Date.now();
 
-    expect(await caller.plugins.activate({ pluginId: 'bad' })).toEqual({
+    expect(await caller.plugin.activate({ pluginId: 'bad' })).toEqual({
       state: 'crashed',
       hanging: true,
       error: 'Plugin did not answer within 3 seconds',
     });
     expect(Date.now() - started).toBeGreaterThanOrEqual(3000);
-    expect((await caller.plugins.list()).plugins).toMatchObject([
+    expect((await caller.plugin.list()).plugins).toMatchObject([
       { state: 'crashed', hanging: true },
     ]);
   },
@@ -107,8 +107,8 @@ it('refuses an unknown Plugin without starting arbitrary code', async () => {
   const home = await createRuntimePlugins([]);
   const { caller } = await startEngineTestHost({ home });
 
-  await expect(
-    caller.plugins.activate({ pluginId: 'missing' }),
-  ).rejects.toThrow('Unknown Plugin: missing');
-  expect(await caller.plugins.list()).toEqual({ plugins: [], errors: [] });
+  await expect(caller.plugin.activate({ pluginId: 'missing' })).rejects.toThrow(
+    'Unknown Plugin: missing',
+  );
+  expect(await caller.plugin.list()).toEqual({ plugins: [], errors: [] });
 });

@@ -65,7 +65,7 @@ it(
     await expect(
       app.client.plugins.dispatch.mutate(tap(app.messages[0], '0/fail')),
     ).rejects.toThrow('Handler refused');
-    expect((await caller.plugins.list()).plugins[0]).toMatchObject({
+    expect((await caller.plugin.list()).plugins[0]).toMatchObject({
       state: 'running',
       error: null,
     });
@@ -147,7 +147,7 @@ it(
       .catch((error: Error) => error);
 
     await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(2);
-    await caller.plugins.setEnabled({
+    await caller.plugin.setEnabled({
       pluginId: page.pluginId,
       enabled: false,
     });

@@ -40,7 +40,7 @@ export async function runProbe({
     pluginNetwork,
   });
 
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   return {
     results: await probeResult(probe.data),

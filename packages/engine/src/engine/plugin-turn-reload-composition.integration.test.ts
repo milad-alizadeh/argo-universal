@@ -23,7 +23,7 @@ it('keeps a dev Plugin alive until all active Turns end and loads only its final
 
   const { sessionId } = await host.caller.session.new(emptySessionInput);
   const second = await host.caller.session.new(emptySessionInput);
-  await host.caller.plugins.activate({ pluginId: 'dev' });
+  await host.caller.plugin.activate({ pluginId: 'dev' });
   const loaded = join(host.home, 'plugin-data/dev/loaded');
   expect(await readFile(loaded, 'utf8')).toBe('initial\n');
   await host.caller.session.prompt({
@@ -47,7 +47,7 @@ it('keeps a dev Plugin alive until all active Turns end and loads only its final
   const entry = join(host.home, shippedFolder, 'dev/index.mjs');
   await writeFile(entry, 'invalid intermediate source }');
   await expect.poll(() => deferredBuilds(host.home), processWait).toBe(1);
-  expect((await host.caller.plugins.list()).plugins[0]?.state).toBe('running');
+  expect((await host.caller.plugin.list()).plugins[0]?.state).toBe('running');
   await writeFile(
     entry,
     source('final').replace('$DATA', join(host.home, 'plugin-data/dev')),

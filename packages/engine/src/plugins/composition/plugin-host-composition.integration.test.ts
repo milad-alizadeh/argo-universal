@@ -16,27 +16,27 @@ it('restarts the real Plugin host three times, logs the running Plugins and then
   ]);
 
   const { caller } = await startEngineTestHost({ home });
-  await caller.plugins.activate({ pluginId: 'healthy' });
+  await caller.plugin.activate({ pluginId: 'healthy' });
 
   for (const restart of [1, 2, 3]) {
     await killPluginHost(home);
     await expect
       .poll(() => pluginHostPids(home), processWait)
       .toHaveLength(restart + 1);
-    expect(
-      await caller.plugins.activate({ pluginId: 'healthy' }),
-    ).toMatchObject({ state: 'running' });
+    expect(await caller.plugin.activate({ pluginId: 'healthy' })).toMatchObject(
+      { state: 'running' },
+    );
   }
 
   await killPluginHost(home);
   await expect
-    .poll(() => caller.plugins.list())
+    .poll(() => caller.plugin.list())
     .toMatchObject({
       errors: [
         { message: 'Plugin host restart budget exhausted (3 in 5 minutes)' },
       ],
     });
-  expect(await caller.plugins.activate({ pluginId: 'healthy' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'healthy' })).toMatchObject({
     state: 'crashed',
     error: 'Plugin host restart budget exhausted (3 in 5 minutes)',
   });
@@ -52,7 +52,7 @@ it('closes the host and its workers when the composed Engine stops, without cons
   ]);
 
   const host = await startEngineTestHost({ home });
-  await host.caller.plugins.activate({ pluginId: 'healthy' });
+  await host.caller.plugin.activate({ pluginId: 'healthy' });
   const [pid] = await pluginHostPids(home);
 
   expect(pid).toBeGreaterThan(0);
@@ -71,7 +71,7 @@ it('runs a Plugin under a watching Engine, whose watch reports never reach the P
 
   const { caller } = await startEngineTestHost({ home });
 
-  expect(await caller.plugins.activate({ pluginId: 'healthy' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'healthy' })).toMatchObject({
     state: 'running',
   });
   expect(await readFile(join(home, 'logs/plugins.log'), 'utf8')).not.toContain(

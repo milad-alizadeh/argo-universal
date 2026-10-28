@@ -128,7 +128,7 @@ it.each(['clean', 'third-party'])(
     }
 
     await rm(run.code, { recursive: true });
-    await run.caller.plugins.list();
+    await run.caller.plugin.list();
     expect(await run.caller.plugins.accounts.list()).toEqual([]);
     expect(
       await run.caller.plugins.accounts.grants({ id: account.id }),
@@ -148,7 +148,7 @@ it(
   'returns nothing when the providing Plugin is disabled',
   async () => {
     const run = await borrow(fetchAccount, async (engine) => {
-      await engine.caller.plugins.setEnabled({
+      await engine.caller.plugin.setEnabled({
         pluginId: 'probe',
         enabled: false,
       });

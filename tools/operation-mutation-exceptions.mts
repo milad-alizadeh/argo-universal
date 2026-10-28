@@ -19,8 +19,6 @@ const retained = new Map<string, readonly string[]>([
 const notYetMoved = new Map<string, readonly string[]>([
   ['sessions/router.ts', ['new', 'prompt', 'cancel']],
   ['sessions/archive/archive-router.ts', ['archive', 'unarchive']],
-
-  ['plugins/router.ts', ['activate', 'setEnabled', 'setSetting']],
 ]);
 
 export function permittedMutation(file: string, name: string): boolean {

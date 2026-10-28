@@ -8,8 +8,10 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { z } from 'zod';
 import type { RegistryDeps } from '../agents';
+import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
 import type { SessionRouterDeps } from '../sessions';
+import { createPluginOperations } from './plugins';
 import { createRegistryOperations } from './registry';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
@@ -20,6 +22,7 @@ export type OperationsDeps = SessionRouterDeps &
   RegistryDeps & {
     controlToken: string;
     blobsFolder: string;
+    plugins: PluginsRouterDeps;
   };
 
 export type OperationResult = z.output<
@@ -37,6 +40,7 @@ function createImplementations(deps: OperationsDeps): OperationImplementations {
 
   return {
     ...sessionImplementations(deps),
+    ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     'project.list': (): Promise<ProjectsListOutput> =>
       readProjects(deps.database, rejections),

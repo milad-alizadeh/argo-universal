@@ -67,7 +67,7 @@ function useSettingsQuery(
   found: boolean,
 ): { data: PluginSettings | undefined } {
   const settings = useQuery(
-    useTRPC().plugins.settings.queryOptions({ pluginId }),
+    useTRPC().plugin.getSettings.queryOptions({ pluginId }),
   );
 
   useErrorToast(

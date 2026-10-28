@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ProjectsListOutput } from '../projects/list';
 import type { OperationTier } from './metadata';
+import { pluginOperations } from './plugins';
 import { registryOperations } from './registry';
 import { operationJsonSchema } from './schema-json';
 import { sessionOperations } from './sessions';
@@ -21,6 +22,7 @@ export interface OperationDefinition {
 
 export const operations = {
   ...sessionOperations,
+  ...pluginOperations,
   ...registryOperations,
   'project.list': {
     id: 'project.list',

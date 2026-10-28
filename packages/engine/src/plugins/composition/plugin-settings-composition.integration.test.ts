@@ -17,7 +17,7 @@ it('answers each setting with its default until the user changes it', async () =
   const home = await createRuntimePlugins([settingsProbe]);
   const { caller } = await startEngineTestHost({ home });
 
-  expect(await caller.plugins.settings({ pluginId: 'probe' })).toEqual({
+  expect(await caller.plugin.getSettings({ pluginId: 'probe' })).toEqual({
     values: { host: defaultHost, [showClosed]: false, sort: 'updated' },
     secretsSet: [],
   });
@@ -27,12 +27,12 @@ it('keeps changed settings across Engine restarts', async () => {
   const home = await createRuntimePlugins([settingsProbe]);
   const first = await startEngineTestHost({ home });
 
-  await first.caller.plugins.setSetting({
+  await first.caller.plugin.setSetting({
     pluginId: 'probe',
     key: 'host',
     value: 'github.example.com',
   });
-  await first.caller.plugins.setSetting({
+  await first.caller.plugin.setSetting({
     pluginId: 'probe',
     key: showClosed,
     value: true,
@@ -41,7 +41,7 @@ it('keeps changed settings across Engine restarts', async () => {
 
   const { caller } = await startEngineTestHost({ home });
 
-  expect(await caller.plugins.settings({ pluginId: 'probe' })).toEqual({
+  expect(await caller.plugin.getSettings({ pluginId: 'probe' })).toEqual({
     values: {
       host: 'github.example.com',
       [showClosed]: true,
@@ -56,18 +56,18 @@ it('keeps a secret setting in the Keychain and tells the App only that it is set
   const home = await createRuntimePlugins([settingsProbe]);
   const { caller } = await startEngineTestHost({ home, keychain });
 
-  await caller.plugins.setSetting({
+  await caller.plugin.setSetting({
     pluginId: 'probe',
     key: 'token',
     value: 'ghp_fixture',
   });
 
   expect([...keychain.entries.values()]).toEqual(['ghp_fixture']);
-  expect(await caller.plugins.settings({ pluginId: 'probe' })).toMatchObject({
+  expect(await caller.plugin.getSettings({ pluginId: 'probe' })).toMatchObject({
     secretsSet: ['token'],
   });
   expect(
-    JSON.stringify(await caller.plugins.settings({ pluginId: 'probe' })),
+    JSON.stringify(await caller.plugin.getSettings({ pluginId: 'probe' })),
   ).not.toContain('ghp_fixture');
 });
 
@@ -77,11 +77,11 @@ it('clears a secret setting when it is set to empty', async () => {
   const { caller } = await startEngineTestHost({ home, keychain });
   const token = { pluginId: 'probe', key: 'token' };
 
-  await caller.plugins.setSetting({ ...token, value: 'ghp_fixture' });
-  await caller.plugins.setSetting({ ...token, value: '' });
+  await caller.plugin.setSetting({ ...token, value: 'ghp_fixture' });
+  await caller.plugin.setSetting({ ...token, value: '' });
 
   expect(keychain.entries.size).toBe(0);
-  expect(await caller.plugins.settings({ pluginId: 'probe' })).toMatchObject({
+  expect(await caller.plugin.getSettings({ pluginId: 'probe' })).toMatchObject({
     secretsSet: [],
   });
 });
@@ -104,7 +104,7 @@ it.each([
     const { caller } = await startEngineTestHost({ home });
 
     await expect(
-      caller.plugins.setSetting({ pluginId: 'probe', ...change }),
+      caller.plugin.setSetting({ pluginId: 'probe', ...change }),
     ).rejects.toThrow(error);
   },
 );
@@ -125,17 +125,17 @@ it('lets the Plugin read its settings, secrets included', async () => {
 
   const { caller } = await startEngineTestHost({ home, keychain });
 
-  await caller.plugins.setSetting({
+  await caller.plugin.setSetting({
     pluginId: 'probe',
     key: 'token',
     value: 'ghp_fixture',
   });
-  await caller.plugins.setSetting({
+  await caller.plugin.setSetting({
     pluginId: 'probe',
     key: 'sort',
     value: 'created',
   });
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   await expect
     .poll(() => probeResult(data).catch(() => null), pollOptions)

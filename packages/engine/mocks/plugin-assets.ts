@@ -30,7 +30,7 @@ export async function assetProbe(): Promise<AssetProbe> {
 
   await writeFile(join(probe.code, 'avatar.png'), image);
   const started = await startEngineTestHost({ home: probe.home });
-  const status = await started.caller.plugins.activate({ pluginId: 'probe' });
+  const status = await started.caller.plugin.activate({ pluginId: 'probe' });
 
   if (status.state !== 'running')
     throw new Error(status.error ?? 'Plugin failed to start');

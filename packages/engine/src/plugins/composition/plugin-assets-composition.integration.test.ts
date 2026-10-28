@@ -27,7 +27,7 @@ it('keeps an old hash immutable after the file changes and the Server restarts',
   await stop();
   await writeFile(join(probe.code, 'avatar.png'), Buffer.from([0, 128, 255]));
   const { caller, url } = await startEngineTestHost({ home: probe.home });
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   expect(await probeResult(probe.data)).toEqual({
     image: {

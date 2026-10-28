@@ -23,7 +23,7 @@ it.each([
     expect((await failures.next()).value).toEqual([]);
     const changed = failures.next();
 
-    await caller.plugins.activate({ pluginId: 'bad' });
+    await caller.plugin.activate({ pluginId: 'bad' });
     const failure = (await changed).value;
     expect(failure).toEqual([
       {
@@ -58,8 +58,8 @@ it('preserves an existing Plugin failure when the host exits with another Plugin
   const watching = createCaller({ signal: controller.signal });
   const failures = (await watching.plugins.failures())[Symbol.asyncIterator]();
   expect((await failures.next()).value).toEqual([]);
-  await caller.plugins.activate({ pluginId: 'healthy' });
-  await caller.plugins.activate({ pluginId: 'bad' });
+  await caller.plugin.activate({ pluginId: 'healthy' });
+  await caller.plugin.activate({ pluginId: 'bad' });
   const initial = (await failures.next()).value;
   expect(initial).toMatchObject([{ pluginId: 'bad' }]);
   await killPluginHost(home);
@@ -90,14 +90,14 @@ it('clears a recovered dev Plugin failure and gives a repeated crash a new ident
   const failures = (await watching.plugins.failures())[Symbol.asyncIterator]();
   await failures.next();
 
-  await caller.plugins.activate({ pluginId: 'dev' });
+  await caller.plugin.activate({ pluginId: 'dev' });
   const initial = (await failures.next()).value;
   const source = join(home, 'shipped/dev/check.ts');
 
   await writeFile(source, 'export function check(): void {}');
   expect((await failures.next()).value).toEqual([]);
   await expect
-    .poll(() => caller.plugins.list(), { timeout: 5000 })
+    .poll(() => caller.plugin.list(), { timeout: 5000 })
     .toMatchObject({ plugins: [{ state: 'running' }] });
   await writeFile(
     source,

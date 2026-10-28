@@ -96,7 +96,7 @@ it.each([
     expect(
       log.split('\n').filter((line) => line.includes('core fallback')),
     ).toHaveLength(fallbacks);
-    expect((await caller.plugins.list()).plugins[0]?.state).toBe('running');
+    expect((await caller.plugin.list()).plugins[0]?.state).toBe('running');
   },
   20_000,
 );

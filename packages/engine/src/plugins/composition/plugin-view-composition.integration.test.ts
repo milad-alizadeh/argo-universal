@@ -126,7 +126,7 @@ it('refuses className on a Plugin component with a local drawing failure', async
       message: 'Text: className is not allowed on Plugin components',
     },
   ]);
-  expect(await caller.plugins.list()).toMatchObject({
+  expect(await caller.plugin.list()).toMatchObject({
     plugins: [{ state: 'running', error: null }],
   });
   controller.abort();
