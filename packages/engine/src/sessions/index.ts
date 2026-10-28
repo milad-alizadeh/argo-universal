@@ -103,3 +103,5 @@ export {
 export { cancelSession } from './session-closure';
 
 export { archiveSession } from './archive/archive-commands';
+
+export { readSessionTurn, readSessionOperation } from './operation-work';

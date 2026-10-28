@@ -22,6 +22,7 @@ it('queues Argo requests in order and exposes only the next request after the fi
     session.caller.operations.run.mutate({
       id: 'session.archive',
       params: target,
+      wait: true,
     }),
   ]);
 

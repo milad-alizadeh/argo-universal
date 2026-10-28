@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
-import type { SessionTokens } from '../operations';
+import type { OperationWaitClock, SessionTokens } from '../operations';
 import { readControlToken } from '../operations';
 import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
@@ -38,6 +38,7 @@ export interface HttpServerOptions extends PluginServerOptions {
   commandAdmission?: AbortController;
   acp?: AcpResourceInput;
   notificationOptions?: NotificationOptions;
+  operationWaitClock?: OperationWaitClock;
   // Where Sessions reach Plugin Hooks; the Plugin runtime attaches to it while the server runs.
   hookPort?: HookPort;
 }

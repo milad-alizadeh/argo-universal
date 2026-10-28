@@ -28,6 +28,7 @@ type ServerSource = {
     | 'startedAt'
     | 'database'
     | 'hookPort'
+    | 'operationWaitClock'
   >;
   self: Pick<AnyActorRef, 'system'>;
 };
@@ -44,6 +45,7 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   acp: context.acp,
   userHome: context.userHome,
   hookPort: context.hookPort,
+  operationWaitClock: context.operationWaitClock,
   ...serverConfiguration(context),
   database: openDatabaseOf(context),
 });

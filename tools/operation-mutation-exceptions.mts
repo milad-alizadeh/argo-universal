@@ -12,7 +12,7 @@ const retained = new Map<string, readonly string[]>([
   ['plugins/router.ts', ['dispatch', 'renderFailed']],
   ['notifications/router.ts', ['attention', 'acknowledge']],
   ['blob/router.ts', ['upload']],
-  ['operations/router.ts', ['run']],
+  ['operations/router.ts', ['run', 'wait']],
 ]);
 
 // Spec 0022 #1314 removes this separate migration list as these become Operations.

@@ -10,7 +10,7 @@ export async function askOperation(
   operation: { id: OperationId; params: Json },
 ): Promise<AskedOperation> {
   const outcome = Promise.allSettled([
-    session.caller.operations.run.mutate(operation),
+    session.caller.operations.run.mutate({ ...operation, wait: true }),
   ]);
 
   const pending = waitForAcpSnapshot(

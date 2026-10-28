@@ -9,7 +9,7 @@ import {
 } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import type { NotificationOptions } from '../notifications';
-import type { SessionTokens } from '../operations';
+import type { OperationWaitClock, SessionTokens } from '../operations';
 import {
   HookPort,
   type Keychain,
@@ -77,6 +77,7 @@ export interface EngineInput extends Pick<
   pluginNetwork?: PluginNetwork;
   pluginOAuth?: OAuthOptions;
   pluginClock?: PluginClock;
+  operationWaitClock?: OperationWaitClock;
   startedAt: string;
   acp?: AcpResourceInput;
   fetchAgents?: FetchAgents;

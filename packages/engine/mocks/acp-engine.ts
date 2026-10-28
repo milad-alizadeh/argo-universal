@@ -22,7 +22,7 @@ export const emptySessionInput = {
 
 export const startAcpEngine = async (
   scenario: ScriptedScenario & { autoExit?: boolean } & Partial<
-      Pick<EngineInput, 'fetchAgents' | 'caffeinate'>
+      Pick<EngineInput, 'fetchAgents' | 'caffeinate' | 'operationWaitClock'>
     > &
     Pick<
       AcpResourceInput,
@@ -53,6 +53,7 @@ export const startAcpEngine = async (
     database: storage.database,
     createId,
     caffeinate: scenario.caffeinate,
+    operationWaitClock: scenario.operationWaitClock,
     fixtureAgents: [createAgentMetadata(agentId)],
     acp: {
       ...agent,

@@ -20,6 +20,8 @@ export {
 
 export type { FeedDeps } from './feed';
 
+export { readFeedRow } from './feed';
+
 export { readFeedRows } from './merged-rows';
 
 export {

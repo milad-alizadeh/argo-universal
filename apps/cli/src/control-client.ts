@@ -9,9 +9,9 @@ import { createTRPCClient, httpLink } from '@trpc/client';
 
 const requestTimeoutMs = 30_000;
 
-export async function connectControl(): Promise<
-  ReturnType<typeof createTRPCClient<AppRouter>>
-> {
+export async function connectControl(
+  timeoutMs = requestTimeoutMs,
+): Promise<ReturnType<typeof createTRPCClient<AppRouter>>> {
   const home = resolveRuntimeDirectory();
   const address = readServerAddress(home);
 
@@ -21,18 +21,24 @@ export async function connectControl(): Promise<
     process.env.ARGO_TOKEN ??
     (await readFile(join(home, 'control.token'), 'utf8')).trim();
 
-  return createClient(address.port, token);
+  return createClient(address.port, token, timeoutMs);
 }
 
 function createClient(
   port: number,
   token: string,
+  timeoutMs: number,
 ): ReturnType<typeof createTRPCClient<AppRouter>> {
   const link = httpLink<AppRouter>({
     url: `http://127.0.0.1:${port}/trpc`,
     headers: { authorization: `Bearer ${token}` },
-    fetch: (url, options) =>
-      fetch(url, { ...options, signal: AbortSignal.timeout(requestTimeoutMs) }),
+    fetch: (url, options) => {
+      const timeout = AbortSignal.timeout(timeoutMs);
+      const signal = options?.signal
+        ? AbortSignal.any([options.signal, timeout])
+        : timeout;
+      return fetch(url, { ...options, signal });
+    },
   });
 
   return createTRPCClient<AppRouter>({ links: [link] });

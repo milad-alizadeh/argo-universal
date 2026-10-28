@@ -33,12 +33,22 @@ export function recordOperation<Result>(
   operation: Call,
   run: (call?: SessionOperationCall) => Promise<Result>,
 ): Promise<Result> {
-  if (caller.kind === 'user') return run();
+  return startRecordedOperation({ deps, caller }, operation, run).result;
+}
 
-  return runRecorded(
-    beginSessionOperation(deps.sessions, caller.sessionId, operation),
-    run,
+export function startRecordedOperation<Result>(
+  { deps, caller }: Recording,
+  operation: Call,
+  run: (call?: SessionOperationCall) => Promise<Result>,
+): { call?: SessionOperationCall; result: Promise<Result> } {
+  if (caller.kind === 'user') return { result: run() };
+
+  const call = beginSessionOperation(
+    deps.sessions,
+    caller.sessionId,
+    operation,
   );
+  return { call, result: runRecorded(call, run) };
 }
 
 function runRecorded<Result>(
