@@ -96,7 +96,7 @@ export const scaffoldsComponents = {
     },
   ),
   'Metadata.Link': defineKitComponent(
-    'A link Metadata field, currently drawn as plain text.',
+    'A Metadata field whose value is a Link.',
     metadataLinkProps,
     { group: 'scaffolds' },
   ),
