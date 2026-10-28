@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "argo": "node --experimental-vm-modules --import tsx apps/server/src/main.ts",
+    "argo": "node apps/cli/bin/argo.mjs",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "db:generate": "pnpm --filter @repo/db db:generate",

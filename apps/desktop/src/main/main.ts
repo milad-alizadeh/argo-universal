@@ -34,7 +34,7 @@ const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
 
 const appDirectory = app.getAppPath();
 
-const serverDirectory = path.join(appDirectory, '../server');
+const cliDirectory = path.join(appDirectory, '../cli');
 
 const webExportDirectory = path.join(appDirectory, '../universal-app/dist');
 
@@ -72,7 +72,7 @@ const home = resolveHome();
 const server = createActor(serverConnectionMachine, {
   input: {
     home,
-    serverDirectory,
+    cliDirectory,
     askToKeepSessions: async (running): Promise<boolean> => {
       const { response } = await dialog.showMessageBox({
         type: 'question',

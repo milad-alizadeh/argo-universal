@@ -151,7 +151,7 @@ type ServerSnapshot = SnapshotFrom<typeof machine>;
 
 const input: ServerInput = {
   home: '/unused',
-  serverDirectory: '/unused',
+  cliDirectory: '/unused',
   askToKeepSessions: async () => false,
 };
 

@@ -2200,7 +2200,6 @@
       "excludeFiles": [
         "**/*.test.*",
         "**/mocks/**",
-        "apps/server/bin/argo.mjs",
         "apps/server/src/supervisor/engine-process.ts",
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
