@@ -18,7 +18,7 @@ The Agent runs through `$SHELL -c` in the Engine process group. Its environment 
 
 A process exit ends each active Turn using that process with `error` and an exit Notice containing the final contiguous stderr block. The Server collects stderr for up to 250 ms after exit. It closes those Sessions and forgets the connection. An open that fails shows Failed to Launch with Retry, which opens the Session again without a Turn. An open that never reached the Server, because the Connection dropped, shows the "Couldn't open the Session" toast instead, and opens again when the Connection reopens. The next Send uses `session/resume`; there is no automatic reopen, retry delay or crash budget.
 
-The Server accepts protocol version 1 or newer. `session/close` is optional. Close sends it when advertised, then drains under the five-second deadline. Error or timeout logs and releases without killing the process. Missing authenticated upstream checks remain explicit gates under #360. Scripted tests prove Argo's supplied scenarios, not authenticated upstream compatibility or descendant containment across Engine death.
+The Server accepts protocol version 1 or newer. `session/close` is optional. Close sends it when advertised, then drains under the five-second deadline. Error or timeout logs and releases the Agent session. Closing one Session does not kill a shared process. A process owned by one Session stops when that Session closes, including a failed or cancelled open. Missing authenticated upstream checks remain explicit gates under #360. Scripted tests prove Argo's supplied scenarios, not authenticated upstream compatibility or descendant containment across Engine death.
 
 ## Considered Options
 
