@@ -1,19 +1,12 @@
 import { SessionNewInput, type SessionNewOutput } from '@repo/contracts';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import type { SessionOperationCall } from '../sessions';
-import type { SessionInvoke } from './implementations';
-import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
-import type { SessionStartAdmission, SessionStarts } from './session-starts';
-import type { SessionCaller } from './session-tokens';
+import type {
+  SessionStartAdmission,
+  SessionStartContext,
+} from './session-starts';
 
-type SessionStart = {
-  deps: OperationsDeps;
-  caller: SessionCaller;
-  call: SessionOperationCall;
-  starts: SessionStarts;
-  invoke: SessionInvoke;
-};
+type SessionStart = SessionStartContext;
 
 type NewSession = SessionStart & { sessionId: string; params: Json };
 

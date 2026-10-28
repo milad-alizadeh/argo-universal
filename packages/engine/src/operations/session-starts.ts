@@ -1,7 +1,17 @@
 import type { SessionNewInput } from '@repo/contracts';
-import { runningStartedSessions } from '../sessions';
+import { runningStartedSessions, type SessionOperationCall } from '../sessions';
+import type { SessionInvoke } from './implementations';
 import type { OperationsDeps } from './operations';
 import type { SessionCaller } from './session-tokens';
+
+// What a Session caller's start or Prompt needs: its Tool call, the delegation limits, and the runner.
+export type SessionStartContext = {
+  deps: OperationsDeps;
+  caller: SessionCaller;
+  call: SessionOperationCall;
+  starts: SessionStarts;
+  invoke: SessionInvoke;
+};
 
 export type SessionStartTarget =
   | { kind: 'new'; input: SessionNewInput; sessionId: string }
