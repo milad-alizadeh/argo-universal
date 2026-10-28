@@ -1,4 +1,5 @@
 import {
+  agentAccess,
   agentServers,
   registryCache,
   blob,
@@ -38,3 +39,5 @@ export const pluginAccountColumns = createSelectSchema(pluginAccount);
 export const pluginAccountGrantColumns = createSelectSchema(pluginAccountGrant);
 
 export const projectAccountColumns = createSelectSchema(projectAccount);
+
+export const agentAccessColumns = createSelectSchema(agentAccess);

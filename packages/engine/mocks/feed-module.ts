@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import type { Database } from '@repo/db';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { createActor } from 'xstate';
@@ -103,6 +104,7 @@ const feedModuleRouterInput = (
   signal: AbortSignal,
 ): AppRouterInput => ({
   controlToken: 'feed-module-test-token',
+  userHome: join(host.home, 'user-home'),
   sessionTokens: host.engine.getSnapshot().context.sessionTokens,
   database: host.database,
   hooks: coreOnlyHooks,

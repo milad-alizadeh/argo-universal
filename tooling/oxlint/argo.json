@@ -1958,6 +1958,26 @@
       }
     },
     {
+      "files": ["packages/engine/src/agent-access/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*/**", "!../*/index", "!../*/index.ts"],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["packages/engine/src/rpc/**"],
       "rules": {
         "no-restricted-imports": [

@@ -95,3 +95,12 @@ export function devicesRow(props: SettingsListViewProps): SettingsRow {
     disabled: serverDisabled(props),
   };
 }
+
+export function agentAccessRow(props: SettingsListViewProps): SettingsRow {
+  return {
+    label: 'Agent access',
+    icon: 'agent',
+    href: '/settings/agent-access',
+    disabled: serverDisabled(props),
+  };
+}
