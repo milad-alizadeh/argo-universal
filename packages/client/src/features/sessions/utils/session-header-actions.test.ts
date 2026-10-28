@@ -1,4 +1,4 @@
-import type { SessionHeaderAction } from '@repo/contracts/plugins/wire';
+import type { SessionHeaderAction } from '@repo/contracts/plugins/declared-slots';
 import { describe, expect, it } from 'vitest';
 import { placeSessionHeaderActions } from './session-header-actions';
 

@@ -1,7 +1,5 @@
-import type {
-  AddOnlySlotId,
-  DeclaredSlotId,
-} from '@repo/contracts/plugins/wire';
+import type { DeclaredSlotId } from '@repo/contracts/plugins/declared-slots';
+import type { AddOnlySlotId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import type { SlotVisibility } from '#features/settings';
 

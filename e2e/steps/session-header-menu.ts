@@ -42,6 +42,14 @@ When(
   },
 );
 
+// A Plugin's first header action: a button beside ⋯ on the web.
+When(
+  'I press {string} in the Session header',
+  async ({ page }, name: string): Promise<void> => {
+    await page.getByRole('button', { name, exact: true }).click();
+  },
+);
+
 // A phone goes back to its list; a wide Frame shows the list beside New Session.
 Then('no Session page is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions(\/new)?$/);

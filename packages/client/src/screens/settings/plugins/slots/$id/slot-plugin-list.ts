@@ -1,4 +1,4 @@
-import { DeclaredSlotId } from '@repo/contracts/plugins/wire';
+import { DeclaredSlotId } from '@repo/contracts/plugins/declared-slots';
 import type { PluginEntry } from '../../use-plugins';
 import type { SlotDetail, SlotDetailId } from './slot-detail';
 import type { SlotPlugin } from './slot-detail-model';
@@ -15,13 +15,15 @@ const declares = (
 const isDeclared = (slotId: SlotDetailId): slotId is DeclaredSlotId =>
   DeclaredSlotId.safeParse(slotId).success;
 
-const lists = (
-  { slots = [], declared }: Contributes,
-  slotId: SlotDetailId,
-): boolean =>
+const declaredItems = (
+  declared: Contributes['declared'],
+  slotId: DeclaredSlotId,
+): readonly unknown[] => declared?.[slotId] ?? [];
+
+const lists = (contributes: Contributes, slotId: SlotDetailId): boolean =>
   isDeclared(slotId)
-    ? Boolean(declared?.[slotId]?.length)
-    : slots.includes(slotId);
+    ? declaredItems(contributes.declared, slotId).length > 0
+    : (contributes.slots ?? []).includes(slotId);
 
 // The Plugins that fill the Slot or ask for its owner Slot, each with its switch from what this Device shows.
 export function toSlotPlugins(

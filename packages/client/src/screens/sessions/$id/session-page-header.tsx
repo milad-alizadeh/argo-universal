@@ -10,6 +10,7 @@ import {
   sessionPageTitle,
 } from './session-detail-view';
 import { sessionHeaderActions } from './session-header-actions';
+import { usePluginHeaderActions } from './use-plugin-header-actions';
 
 function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
   if (props.state !== 'open' || !props.header.menu) return undefined;
@@ -46,4 +47,21 @@ export function SessionPageHeader(
       )}
     />
   );
+}
+
+const withPluginActions = (
+  props: SessionDetailViewProps,
+  pluginActions: SessionPluginActions,
+): SessionDetailViewProps =>
+  props.state === 'open'
+    ? { ...props, header: { ...props.header, pluginActions } }
+    : props;
+
+// The header on the App: the enabled Plugins' actions, read from their manifests, join Argo's.
+export function ConnectedSessionHeader(
+  props: SessionDetailViewProps,
+): React.JSX.Element {
+  const pluginActions = usePluginHeaderActions();
+
+  return <SessionPageHeader {...withPluginActions(props, pluginActions)} />;
 }

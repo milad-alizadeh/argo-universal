@@ -9,6 +9,7 @@ import {
 import { idleSession } from './session-detail-view.mocks';
 import {
   desktopPluginActions,
+  menuLabels,
   phonePluginActions,
   pluginActionsSession,
 } from './session-header-actions.mocks';
@@ -21,6 +22,10 @@ const meta = {
 export default meta;
 
 type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
+const openPreview = 'Open preview';
+
+const coverageReport = 'Coverage report';
 
 const withPluginActions = (
   ...session: Parameters<typeof pluginActionsSession>
@@ -43,14 +48,6 @@ async function openMore({
   return within(await screen.findByRole('menu'));
 }
 
-const menuLabels = (menu: ReturnType<typeof within>): string[] =>
-  menu
-    .getAllByRole('menuitem')
-    .map(
-      (item: HTMLElement) =>
-        item.getAttribute('aria-label') ?? item.textContent ?? '',
-    );
-
 // A desktop shows the first Plugin action as a button; "…" holds Argo's Rename and Archive first, then the Plugins' rest.
 export const DesktopOverflowsIntoMore: Story = {
   args: withPluginActions(desktopPluginActions()),
@@ -64,20 +61,18 @@ export const DesktopOverflowsIntoMore: Story = {
     );
     await expect(beside[0]?.onPress).toHaveBeenCalled();
     await expect(
-      canvas.queryByRole('button', { name: 'Open preview' }),
+      canvas.queryByRole('button', { name: openPreview }),
     ).toBeNull();
 
     const more = await openMore(context);
     await expect(menuLabels(more)).toEqual([
       'Rename',
       'Archive',
-      'Open preview',
-      'Coverage report',
+      openPreview,
+      coverageReport,
     ]);
 
-    await userEvent.click(
-      more.getByRole('menuitem', { name: 'Coverage report' }),
-    );
+    await userEvent.click(more.getByRole('menuitem', { name: coverageReport }));
     await expect(menu[1]?.onPress).toHaveBeenCalled();
   },
 };
@@ -96,8 +91,8 @@ export const PhoneKeepsAllInMore: Story = {
       'Rename',
       'Archive',
       'Open #412',
-      'Open preview',
-      'Coverage report',
+      openPreview,
+      coverageReport,
     ]);
   },
 };
@@ -112,6 +107,6 @@ export const MoreOpensForPluginsAlone: Story = {
   play: async (context) => {
     const more = await openMore(context);
 
-    await expect(menuLabels(more)).toEqual(['Open preview', 'Coverage report']);
+    await expect(menuLabels(more)).toEqual([openPreview, coverageReport]);
   },
 };

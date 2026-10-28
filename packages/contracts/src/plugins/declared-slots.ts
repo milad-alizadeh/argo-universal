@@ -1,10 +1,47 @@
 import { z } from 'zod';
 import { PluginIdentifier } from '#plugin-identifier';
 import {
-  type DeclaredSlot,
-  declaredSlots,
-  sessionHeaderSlot,
-} from '#plugin-slot-registry';
+  SessionHeaderAction,
+  sessionHeaderSlotId,
+} from '#plugin-session-header-action';
+import type { SlotLimit } from '#plugin-slot-registry';
+
+export {
+  SessionHeaderAction,
+  sessionHeaderSlotId,
+  SessionHeaderTarget,
+} from '#plugin-session-header-action';
+
+/*
+ * Items a Plugin lists in its manifest under `contributes.declared`, so the App draws them without starting the
+ * Plugin (ADR-0025 lazy start, ADR-0035). On a desktop up to `limit.desktop` of the items `shown` sit beside Argo's
+ * own; the rest, and every item on a phone, go behind Argo's "…".
+ */
+export type DeclaredContent<Item extends z.ZodObject> = {
+  item: Item;
+  limit: SlotLimit;
+  shown: (item: z.output<Item>) => boolean;
+};
+
+export type DeclaredSlot<Id extends string, Item extends z.ZodObject> = {
+  id: Id;
+  kind: 'add-only';
+  content: DeclaredContent<Item>;
+};
+
+// The first Plugin header action sits as an icon before Argo’s "…" on a desktop; the rest, and all of them on a phone, go in "…" (#1122, option A).
+export const sessionHeaderSlot = {
+  id: sessionHeaderSlotId,
+  kind: 'add-only',
+  content: {
+    item: SessionHeaderAction,
+    limit: { phone: 0, desktop: 1, perPlugin: 4 },
+    shown: (action) => action.placement === 'header',
+  },
+} as const satisfies DeclaredSlot<
+  typeof sessionHeaderSlotId,
+  typeof SessionHeaderAction
+>;
 
 const uniqueIds = (items: readonly { id?: unknown }[]): boolean =>
   new Set(items.map(({ id }) => id)).size === items.length;
@@ -12,7 +49,7 @@ const uniqueIds = (items: readonly { id?: unknown }[]): boolean =>
 // One Plugin's items for one declared Slot: at most its per-Plugin limit, each id once.
 const contribution = <Item extends z.ZodObject>({
   content,
-}: DeclaredSlot<string, Item>) =>
+}: DeclaredSlot<string, Item>): z.ZodArray<Item> =>
   z
     .array(content.item)
     .max(content.limit.perPlugin)
@@ -42,6 +79,8 @@ export const DeclaredItems = z.array(
 );
 
 export type DeclaredItems = z.infer<typeof DeclaredItems>;
+
+const declaredSlots = [sessionHeaderSlot] as const;
 
 export const declaredSlot = (
   slotId: string,

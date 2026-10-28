@@ -1,7 +1,7 @@
+import { sessionHeaderSlotId } from '@repo/contracts/plugins/declared-slots';
 import {
   projectDetailsSlotId,
   sessionActivitySlotId,
-  sessionHeaderSlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
 import { sessionHeaderSlot } from './session-header-slot';

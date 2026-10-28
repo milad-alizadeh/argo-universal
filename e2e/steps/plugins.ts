@@ -175,14 +175,6 @@ Then(
   },
 );
 
-// A Plugin's header action: a button beside ⋯ on a wide Frame.
-When(
-  'I press {string} in the Session header',
-  async ({ page }, name: string): Promise<void> => {
-    await page.getByRole('button', { name, exact: true }).click();
-  },
-);
-
 Then('New Session opens with this draft:', async ({ page }, draft: string) => {
   await expect(page).toHaveURL(/\/sessions\/new\?/);
   await expectMessage(page, draft);

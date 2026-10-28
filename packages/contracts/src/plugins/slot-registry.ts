@@ -1,10 +1,6 @@
 import { z } from 'zod';
 import { tones } from '#kit-tokens';
 import { PluginIcon, PluginPath } from '#plugin-manifest-fields';
-import {
-  SessionHeaderAction,
-  sessionHeaderSlotId,
-} from '#plugin-session-header-action';
 
 // A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
 export const projectDetailsSlotId = 'argo/project/details/v1';
@@ -204,40 +200,3 @@ export const replaceableSlots = [
   replaceable(toolCallSlotId),
   replaceable(messageSlotId),
 ] as const;
-
-/*
- * Items a Plugin lists in its manifest under `contributes.declared`, so the App draws them without starting the
- * Plugin (ADR-0025 lazy start, ADR-0035). On a desktop up to `limit.desktop` of the items `shown` sit beside Argo's
- * own; the rest, and every item on a phone, go behind Argo's "…".
- */
-export type DeclaredContent<Item extends z.ZodObject> = {
-  type: 'declared';
-  item: Item;
-  limit: SlotLimit;
-  shown: (item: z.output<Item>) => boolean;
-};
-
-export type DeclaredSlot<Id extends string, Item extends z.ZodObject> = {
-  id: Id;
-  kind: 'add-only';
-  content: DeclaredContent<Item>;
-};
-
-export const declaredSlotEntry = <Id extends string, Item extends z.ZodObject>(
-  id: Id,
-  content: Omit<DeclaredContent<Item>, 'type'>,
-): DeclaredSlot<Id, Item> => ({
-  id,
-  kind: 'add-only',
-  content: { type: 'declared', ...content },
-});
-
-// The first Plugin header action sits as an icon before Argo’s "…" on a desktop; the rest, and all of them on a phone, go in "…" (#1122, option A).
-export const sessionHeaderSlot = declaredSlotEntry(sessionHeaderSlotId, {
-  item: SessionHeaderAction,
-  limit: { phone: 0, desktop: 1, perPlugin: 4 },
-  shown: (action) => action.placement === 'header',
-});
-
-// Add-only Slots filled from the manifest alone: the Plugin answers nothing for them at run time.
-export const declaredSlots = [sessionHeaderSlot] as const;

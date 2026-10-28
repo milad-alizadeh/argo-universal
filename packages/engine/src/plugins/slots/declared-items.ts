@@ -2,7 +2,7 @@ import type { PluginList } from '@repo/contracts/plugins';
 import type {
   DeclaredItems,
   DeclaredItemsInput,
-} from '@repo/contracts/plugins/wire';
+} from '@repo/contracts/plugins/declared-slots';
 import { slotOrder } from '../plugin-order';
 
 /*

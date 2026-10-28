@@ -1,15 +1,12 @@
 import { z } from 'zod';
 import { validateAccountCapabilities } from './account-manifest';
 import { AccountHost, PluginCapability } from './capabilities';
+import { DeclaredContributions } from './declared-slots';
 import { HookEventName } from './hooks';
 import { PluginIcon, PluginPath } from './manifest-fields';
 import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
-import {
-  AddOnlySlotId,
-  DeclaredContributions,
-  ReplaceableSlotId,
-} from './wire';
+import { AddOnlySlotId, ReplaceableSlotId } from './wire';
 
 export { PluginProjectInfo } from './argo-calls';
 
@@ -35,20 +32,16 @@ type Contributions = Partial<{
 const declares = (ids: readonly unknown[] | undefined): boolean =>
   (ids ?? []).length > 0;
 
-const declaresContent = (declared: Contributions['declared']): boolean =>
-  Object.values(declared ?? {}).some(declares);
-
-// `order` places the Plugin among a Slot's contributors, so it needs a Slot to place it in.
-const orderHasSlot = ({
-  order,
+const fillsASlot = ({
   slots,
   renders,
-  declared,
+  declared = {},
 }: Contributions): boolean =>
-  order === undefined ||
-  declares(slots) ||
-  declares(renders) ||
-  declaresContent(declared);
+  [slots, renders, ...Object.values(declared)].some(declares);
+
+// `order` places the Plugin among a Slot's contributors, so it needs a Slot to place it in.
+const orderHasSlot = (contributions: Contributions): boolean =>
+  contributions.order === undefined || fillsASlot(contributions);
 
 // Core runs a Replaceable Slot's chain through the `ui.render` Hook, so `renders` needs it.
 const rendersHasHook = ({ renders, hooks }: Contributions): boolean =>

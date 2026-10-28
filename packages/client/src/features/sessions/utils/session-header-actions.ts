@@ -1,7 +1,7 @@
 import {
   type SessionHeaderAction,
   sessionHeaderSlot,
-} from '@repo/contracts/plugins/wire';
+} from '@repo/contracts/plugins/declared-slots';
 
 // One Plugin's header action, as the Server lists the Slot.
 export interface DeclaredHeaderAction {

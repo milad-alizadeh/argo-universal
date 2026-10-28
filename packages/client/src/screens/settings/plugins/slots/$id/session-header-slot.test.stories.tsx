@@ -2,6 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, screen, within } from 'storybook/test';
+import { menuLabels } from '../../../../sessions/$id/session-header-actions.mocks';
 import type { SlotPlugin } from './slot-detail-model';
 import { SlotDetailView } from './slot-detail-view';
 import { fixtureSessionHeaderSlot } from './slot-fixture-detail';
@@ -56,13 +57,7 @@ export const PreviewsTheHeaderWithArgosActionsFirst: Story = {
     ).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'More' }));
 
-    const menu = within(await screen.findByRole('menu'));
-    const labels = menu
-      .getAllByRole('menuitem')
-      .map(
-        (item: HTMLElement) =>
-          item.getAttribute('aria-label') ?? item.textContent ?? '',
-      );
+    const labels = menuLabels(within(await screen.findByRole('menu')));
 
     await expect(labels.slice(0, 2)).toEqual(['Rename', 'Archive']);
     await expect(labels).toContain('Coverage report');

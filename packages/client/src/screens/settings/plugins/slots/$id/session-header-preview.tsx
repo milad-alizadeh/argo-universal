@@ -1,8 +1,9 @@
 import { ActionButtons } from '@repo/kit/primitives/actions/action';
 import { Text } from '@repo/kit/primitives/content/text';
+import { Spacer } from '@repo/kit/primitives/layout/spacer';
+import { Stack } from '@repo/kit/primitives/layout/stack';
 import type * as React from 'react';
 import { useState } from 'react';
-import { View } from 'react-native';
 import {
   type DeclaredHeaderAction,
   placeSessionHeaderActions,
@@ -35,6 +36,15 @@ const withoutPress = (declared: DeclaredHeaderAction): SessionPluginAction => ({
   onPress: doNothing,
 });
 
+const placedForPreview = (
+  declared: readonly DeclaredHeaderAction[],
+  { shows }: SlotVisibility,
+): SessionPluginActions =>
+  placeSessionHeaderActions(declared.map(withoutPress), {
+    phone: onPhone,
+    shows,
+  });
+
 interface SessionHeaderPreviewProps {
   declared: readonly DeclaredHeaderAction[];
   visibility: SlotVisibility;
@@ -48,18 +58,14 @@ export function SessionHeaderPreview({
   declared,
   visibility,
 }: SessionHeaderPreviewProps): React.JSX.Element {
-  const placed = placeSessionHeaderActions(declared.map(withoutPress), {
-    phone: onPhone,
-    shows: visibility.shows,
-  });
+  const placed = placedForPreview(declared, visibility);
 
   return (
-    <View className="flex-row items-center gap-2">
-      <Text role="heading" className="flex-1" numberOfLines={1}>
-        {previewSessionTitle}
-      </Text>
+    <Stack direction="row" align="center">
+      <Text role="title">{previewSessionTitle}</Text>
+      <Spacer />
       <PlacedButtons key={placementKey(placed)} placed={placed} />
-    </View>
+    </Stack>
   );
 }
 

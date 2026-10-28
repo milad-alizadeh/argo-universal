@@ -1,7 +1,9 @@
 import {
   type SessionHeaderAction,
-  sessionActivitySlotId,
   sessionHeaderSlotId,
+} from '@repo/contracts/plugins/declared-slots';
+import {
+  sessionActivitySlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
 import { describe, expect, it } from 'vitest';

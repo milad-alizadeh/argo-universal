@@ -1,4 +1,4 @@
-import { sessionHeaderSlotId } from '@repo/contracts/plugins/wire';
+import { sessionHeaderSlotId } from '@repo/contracts/plugins/declared-slots';
 import { LiveSessionHeaderPreview } from './session-header-preview';
 import type { SlotDetail } from './slot-detail';
 

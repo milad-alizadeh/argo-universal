@@ -1,7 +1,7 @@
 import {
   type SessionHeaderAction,
   sessionHeaderSlotId,
-} from '@repo/contracts/plugins/wire';
+} from '@repo/contracts/plugins/declared-slots';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
@@ -52,9 +52,6 @@ it('serves Session header actions in Plugin order, without starting a Plugin, an
 
   const { plugins } = await caller.plugins.list();
 
-  expect(plugins.map(({ state }) => state)).toEqual([
-    'not-started',
-    'not-started',
-    'not-started',
-  ]);
+  expect(plugins.every(({ state }) => state === 'not-started')).toBe(true);
+  expect(plugins).toHaveLength(3);
 });

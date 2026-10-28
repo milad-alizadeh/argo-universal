@@ -6,13 +6,15 @@ import {
   PluginSettings,
 } from '@repo/contracts/plugins';
 import {
+  DeclaredItems,
+  DeclaredItemsInput,
+} from '@repo/contracts/plugins/declared-slots';
+import {
   ReplaceableInput,
   RenderFailureInput,
 } from '@repo/contracts/plugins/replaceable';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import {
-  DeclaredItems,
-  DeclaredItemsInput,
   PluginDispatchInput,
   PluginSlotInput,
   PluginViewInput,
@@ -68,11 +70,6 @@ function connectionOf({
 const createLifecycleRouter = routerFactory((plugins: PluginService) =>
   router({
     list: publicProcedure.output(PluginList).query(() => plugins.list()),
-    // A declared Slot's items, read from the manifests: no Plugin starts to answer it (ADR-0025, ADR-0035).
-    declared: publicProcedure
-      .input(DeclaredItemsInput)
-      .output(DeclaredItems)
-      .query(({ input }) => plugins.declared(input)),
     failures: publicProcedure.subscription(({ signal }) =>
       plugins.failures(requireSignal(signal)),
     ),
@@ -120,7 +117,10 @@ const createViewsRouter = routerFactory((plugins: PluginService) =>
   }),
 );
 
-// One batched call per list: each context's Plugin items, by its key (ADR-0035).
+/*
+ * One batched call per list: each context's Plugin items, by its key (ADR-0035). A declared Slot's items come from the
+ * manifests, so no Plugin starts to answer them (ADR-0025).
+ */
 const createSlotItemsRouter = routerFactory((plugins: PluginService) =>
   router({
     slotItems: publicProcedure
@@ -128,6 +128,10 @@ const createSlotItemsRouter = routerFactory((plugins: PluginService) =>
       .subscription((call) =>
         plugins.slotItems(call.input, connectionOf(call)),
       ),
+    declared: publicProcedure
+      .input(DeclaredItemsInput)
+      .output(DeclaredItems)
+      .query(({ input }) => plugins.declared(input)),
   }),
 );
 

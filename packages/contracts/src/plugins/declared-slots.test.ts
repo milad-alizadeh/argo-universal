@@ -1,12 +1,12 @@
 import { expect, it } from 'vitest';
-import { PluginManifest } from './plugins';
 import {
   DeclaredItems,
   DeclaredItemsInput,
   DeclaredSlotId,
   sessionHeaderSlotId,
-  sessionRowSlotId,
-} from './wire';
+} from './declared-slots';
+import { PluginManifest } from './plugins';
+import { sessionRowSlotId } from './wire';
 
 const openIssue = {
   id: 'open-issue',
@@ -16,8 +16,11 @@ const openIssue = {
   target: { type: 'page', path: '/issues' },
 };
 
+// A manifest's `contributes.declared` as an author writes it, before Argo checks it.
+type AuthoredDeclared = Record<string, readonly object[]>;
+
 const manifestDeclaring = (
-  declared: unknown,
+  declared: AuthoredDeclared,
 ): ReturnType<typeof PluginManifest.safeParse> =>
   PluginManifest.safeParse({
     id: 'tracker',
@@ -29,7 +32,9 @@ const manifestDeclaring = (
     contributes: { nav: [], declared },
   });
 
-const headerActions = (actions: unknown[]): unknown => ({
+const headerActions = (
+  actions: readonly object[],
+): Record<DeclaredSlotId, readonly object[]> => ({
   [sessionHeaderSlotId]: actions,
 });
 
@@ -95,7 +100,7 @@ it('places a Plugin that only declares header actions by its order', () => {
 
 it('refuses declared content for a Slot whose Plugin answers it at run time', () => {
   expect(
-    manifestDeclaring({ [sessionRowSlotId]: [{ text: '#412' }] }).success,
+    manifestDeclaring({ [sessionRowSlotId]: [{ text: 'Issue 412' }] }).success,
   ).toBe(false);
 });
 

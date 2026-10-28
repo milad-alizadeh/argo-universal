@@ -4,6 +4,10 @@ import type {
   PluginSettings as PluginSettingsOutput,
   PluginSettingValue,
 } from '@repo/contracts/plugins';
+import {
+  type DeclaredItems,
+  type DeclaredItemsInput,
+} from '@repo/contracts/plugins/declared-slots';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import {
   ReplaceableInput,
@@ -16,8 +20,6 @@ import type {
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
 import {
-  type DeclaredItems,
-  type DeclaredItemsInput,
   type PluginDispatchInput,
   type PluginViewInput,
   type PluginSlotInput,

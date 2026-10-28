@@ -1,4 +1,4 @@
-import { fn } from 'storybook/test';
+import { fn, type within } from 'storybook/test';
 import {
   type DeclaredHeaderAction,
   placeSessionHeaderActions,
@@ -75,3 +75,12 @@ export const pluginActionsSession = (
   ...idleSession,
   header: { ...header, pluginActions },
 });
+
+// The rows of an open menu as a reader hears them, in order.
+export const menuLabels = (menu: ReturnType<typeof within>): string[] =>
+  menu
+    .getAllByRole('menuitem')
+    .map(
+      (item: HTMLElement) =>
+        item.getAttribute('aria-label') ?? item.textContent ?? '',
+    );

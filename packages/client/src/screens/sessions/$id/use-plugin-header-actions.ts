@@ -1,4 +1,4 @@
-import { sessionHeaderSlotId } from '@repo/contracts/plugins/wire';
+import { sessionHeaderSlotId } from '@repo/contracts/plugins/declared-slots';
 import { useQuery } from '@tanstack/react-query';
 import { Platform } from 'react-native';
 import { useTRPC } from '#features/connection';
@@ -29,20 +29,14 @@ export function useDeclaredHeaderActions(): DeclaredHeaderAction[] {
   return data;
 }
 
-// What pressing an action does, by its target; opening a page starts the Plugin when it is not running.
-const pressOf = (
-  open: PageOpener,
-  { pluginId, item: { target } }: DeclaredHeaderAction,
-): (() => void) => {
-  switch (target.type) {
-    case 'page': {
-      const { path } = target;
-
-      return () => open(pluginId)(path);
-    }
-    // No default: a new target type leaves this function without a return, which TypeScript rejects.
-  }
-};
+/*
+ * What pressing an action does: open its target page, which starts the Plugin when it is not running. A page is the
+ * only target today; the target is a tagged union so #1130 can add a Workbench card beside it.
+ */
+const pressOf =
+  (open: PageOpener, { pluginId, item: { target } }: DeclaredHeaderAction) =>
+  (): void =>
+    open(pluginId)(target.path);
 
 const withPress =
   (open: PageOpener) =>
