@@ -66,6 +66,20 @@ export const RowsKeyByTheirIds: Story = {
   },
 };
 
+const rowIdsOf = (section: NativeSection | undefined): (string | undefined)[] =>
+  section?.rows.map((row) => row.moveId ?? row.id) ?? [];
+
+// The moved row takes its new Section's first movable slot; the row it pushes on draws after the rows that stay put.
+export const MovedRowTakesTheFirstSlotOfItsNewSection: Story = {
+  render: () => <Text>{keysOf(shown()).join(', ')}</Text>,
+  play: async () => {
+    const [first, second] = shown();
+
+    await expect(rowIdsOf(first)).toEqual(['beta']);
+    await expect(rowIdsOf(second)).toEqual(['alpha', undefined, 'gamma']);
+  },
+};
+
 const repeated = [
   <List.Section key="first" id="first" title="First">
     {[
