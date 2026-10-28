@@ -4,6 +4,7 @@ import { action } from 'storybook/actions';
 import { PermissionPreview } from '../../../../../mocks/requests/permission/permission-gallery';
 import { PermissionRequest } from './permission-request';
 import {
+  argoPermission,
   answeredPermission,
   severalAllowOptionsPermission,
   severalRejectOptionsPermission,
@@ -62,3 +63,5 @@ export const SeveralRejectOptions: Story = {
 };
 
 export const AlreadyAnswered: Story = { args: answeredPermission };
+
+export const ArgoOperation: Story = { args: argoPermission };

@@ -10,7 +10,7 @@ import type { z } from 'zod';
 import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
-import type { SessionRouterDeps } from '../sessions';
+import type { SessionOperationCall, SessionRouterDeps } from '../sessions';
 import { recordOperation } from './call-recording';
 import { createPluginOperations } from './plugins';
 import { createReadOperations } from './readers';
@@ -19,6 +19,7 @@ import { runOperation } from './router.gen';
 import { listOperations } from './search';
 import { scopedOperations, runSessionOperation } from './session-scope';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
+import { runSessionWrite } from './session-write';
 import { sessionImplementations } from './sessions';
 import { tokensMatch } from './tokens';
 
@@ -81,17 +82,32 @@ export class Operations {
     return recordOperation(
       { deps: this.deps, caller },
       { name: id, label: operations[id].label, input: params },
-      () => this.authorized(caller, id, params),
+      (call) => this.authorized(caller, { id, params }, call),
     );
   }
   private async authorized(
     caller: OperationCaller,
-    id: OperationId,
-    params: Json,
+    operation: { id: OperationId; params: Json },
+    call?: SessionOperationCall,
   ): Promise<OperationResult> {
-    if (caller.kind === 'session')
-      return runSessionOperation(this.implementations, caller, { id, params });
+    if (caller.kind === 'user') return this.runUser(operation);
 
+    if (operations[operation.id].tier !== 'read')
+      return runSessionWrite(this.deps, this.implementations, {
+        caller,
+        operation,
+        call,
+      });
+
+    return runSessionOperation(this.implementations, caller, operation);
+  }
+  private async runUser({
+    id,
+    params,
+  }: {
+    id: OperationId;
+    params: Json;
+  }): Promise<OperationResult> {
     return operations[id].result.parseAsync(
       await runOperation(this.implementations, id, params),
     );

@@ -1,7 +1,10 @@
 import {
+  SessionArchiveInput,
+  SessionArchiveOutput,
   SessionUnarchiveInput,
   SessionUnarchiveOutput,
 } from '../sessions/archive';
+import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
 import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
 import {
@@ -19,6 +22,25 @@ import {
 import type { OperationDefinition } from './index';
 
 export const sessionOperations = {
+  'session.cancel': {
+    id: 'session.cancel',
+    label: 'Cancel Session',
+    description: 'Cancel the selected Session’s running Turn.',
+    params: SessionCancelInput,
+    result: SessionCancelOutput,
+    tier: 'act',
+    keywords: ['stop', 'interrupt', 'turn'],
+  },
+  'session.archive': {
+    id: 'session.archive',
+    label: 'Archive Session',
+    description:
+      'Archive an idle Session and remove its Checkout after the Undo window.',
+    params: SessionArchiveInput,
+    result: SessionArchiveOutput,
+    tier: 'confirm',
+    keywords: ['archive', 'remove', 'checkout'],
+  },
   'session.unarchive': {
     id: 'session.unarchive',
     label: 'Undo Session archive',

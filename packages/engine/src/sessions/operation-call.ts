@@ -3,6 +3,7 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { toolCallEvent, type FeedActorRef } from '../feed';
 import type { OpenSessionsActorRef } from './open-sessions-machine';
+import { confirmOperation } from './operation-permission';
 import type { SessionActorRef } from './session-machine';
 import { findSessionFeed, requireLiveSessionActor } from './session-system';
 
@@ -17,6 +18,7 @@ export type SessionOperationCall = {
   rowId: string;
   turnId: string | null;
   finish: (result: Result) => void;
+  confirm: (description: string) => Promise<void>;
 };
 
 const toolRow = (id: string, operation: Operation): Tool => ({
@@ -74,7 +76,7 @@ class OperationCall implements SessionOperationCall {
   public constructor(
     private readonly session: SessionActorRef,
     private readonly feed: FeedActorRef,
-    operation: Operation,
+    private readonly operation: Operation,
   ) {
     const context = session.getSnapshot().context;
     this.toolCallId = context.input.createId();
@@ -90,6 +92,13 @@ class OperationCall implements SessionOperationCall {
   }
   private readonly cancel = (): void =>
     this.settle({ ...this.row, state: 'settled', status: 'cancelled' });
+  public confirm(description: string): Promise<void> {
+    return confirmOperation({ session: this.session, feed: this.feed }, this, {
+      ...this.operation,
+      description,
+      input: JSON.stringify(this.operation.input),
+    });
+  }
   public finish(result: Result): void {
     this.settle(completedRow(this.row, result));
   }

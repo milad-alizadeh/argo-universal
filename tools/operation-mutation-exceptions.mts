@@ -17,8 +17,7 @@ const retained = new Map<string, readonly string[]>([
 
 // Spec 0022 #1314 removes this separate migration list as these become Operations.
 const notYetMoved = new Map<string, readonly string[]>([
-  ['sessions/router.ts', ['new', 'prompt', 'cancel']],
-  ['sessions/archive/archive-router.ts', ['archive']],
+  ['sessions/router.ts', ['new', 'prompt']],
 ]);
 
 export function permittedMutation(file: string, name: string): boolean {
