@@ -6,7 +6,7 @@ import { board, type BoardLane } from './list-moves-fixtures';
 import { MovesExample } from './list-moves.mocks';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Lists/List/Lanes Props',
+  title: 'Tests/Design System/Primitives/Lists/List/LanesProps',
   parameters: { screenPreview: true },
 } satisfies Meta;
 

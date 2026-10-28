@@ -6,7 +6,7 @@ import { column, type BoardLane } from './list-moves-fixtures';
 import { MovesExample } from './list-moves.mocks';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Lists/List/Search Moves',
+  title: 'Tests/Design System/Primitives/Lists/List/SearchMoves',
   parameters: { screenPreview: true },
 } satisfies Meta;
 
