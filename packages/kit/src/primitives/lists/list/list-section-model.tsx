@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
-import type { ListChild } from './list-children';
+import type { ListChild, ListReader } from './list-children';
 import {
   isSection,
   levelEntries,
@@ -9,7 +9,8 @@ import {
   type ListTree,
   type PlacedChild,
 } from './list-level-entries';
-import type { HeldOrder } from './list-move-reading';
+import type { MoveSection } from './list-move-model';
+import { moveSectionsOf } from './list-move-reading';
 import type { ListSectionProps } from './list-props';
 import { prepareSection, type SectionState } from './list-section-state';
 import { holdsTree, type TreeFolding } from './list-tree-rows';
@@ -60,28 +61,83 @@ function readLevel(children: ReactNode, level: Level): ListBlock[] {
 
 export interface ListReading {
   blocks: ListBlock[];
-  rows: ReadonlyMap<string, ReactNode>;
+  // The movable rows, Section by Section, in the owner's order; none in a List without `onMove`.
+  sections: MoveSection[];
 }
 
-interface Reader {
-  prefix: string;
-  tree: ListTree;
-  held: HeldOrder | undefined;
+// The order a List with `onMove` shows over its owner's: the owner's own, or a held move's.
+export type ShownOrder = (owners: MoveSection[]) => readonly MoveSection[];
+
+interface Pass {
+  moves: boolean;
+  // Each movable Section's rows in the order they show, and every movable row found by the owner's reading.
+  held?: {
+    sections: readonly MoveSection[];
+    rows: ReadonlyMap<string, ReactNode>;
+  };
+}
+
+type Read = Pick<ListReading, 'blocks'> & Pick<Level, 'rows'>;
+
+const heldOrder = (held: Pass['held']): Level['held'] =>
+  held && {
+    order: new Map(held.sections.map((section) => [section.key, section.rows])),
+    rows: held.rows,
+  };
+
+const topLevelOf = ({ prefix, tree }: ListReader, pass: Pass): Level => ({
+  list: prefix,
+  prefix,
+  tree,
+  held: heldOrder(pass.held),
+  moves: pass.moves,
+  movable: pass.moves,
+  rows: new Map(),
+  keys: new Set(),
+});
+
+function readOnce(children: ReactNode, reader: ListReader, pass: Pass): Read {
+  const level = topLevelOf(reader, pass);
+
+  return { blocks: readLevel(children, level), rows: level.rows };
+}
+
+// The owner's order, then the blocks again in the order shown when it differs.
+function readMoving(
+  children: ReactNode,
+  reader: ListReader,
+  shown: ShownOrder,
+): ListReading {
+  const owner = readOnce(children, reader, { moves: true });
+  const sections = moveSectionsOf(owner.blocks, reader.prefix);
+  const order = shown(sections);
+
+  if (order === sections) return { blocks: owner.blocks, sections };
+
+  const held = { sections: order, rows: owner.rows };
+
+  return {
+    blocks: readOnce(children, reader, { moves: true, held }).blocks,
+    sections,
+  };
 }
 
 /*
- * The one reader of a List's children: its rows, its Sections and every row's move identity, keyed by where it sits.
- * A move the List holds is read into the order: each movable Section's rows in the moved order.
+ * The one reader of a List's children: its rows and its Sections, keyed by where they sit. With `shown`, the List has
+ * `onMove`: it reads every row's move identity and its owner's order, Section by Section, and draws the movable rows
+ * in the order `shown` gives for it. A movable Section's key, its block's key and its rows' level are one and the same.
  */
-export function readList(
+export const readList = (
   children: ReactNode,
-  { prefix, tree, held }: Reader,
-): ListReading {
-  const rows = new Map<string, ReactNode>();
-  const level = { list: prefix, prefix, tree, held, movable: true, rows };
-
-  return { blocks: readLevel(children, level), rows };
-}
+  reader: ListReader,
+  shown?: ShownOrder,
+): ListReading =>
+  shown
+    ? readMoving(children, reader, shown)
+    : {
+        blocks: readOnce(children, reader, { moves: false }).blocks,
+        sections: [],
+      };
 
 function appendChild(
   blocks: ListBlock[],
@@ -98,7 +154,7 @@ function sectionLevel(level: Level, key: string, section: SectionState): Level {
   return {
     ...level,
     prefix: key,
-    movable,
+    movable: level.moves && movable,
     held: movable ? level.held : undefined,
   };
 }

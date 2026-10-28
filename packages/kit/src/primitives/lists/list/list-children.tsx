@@ -56,7 +56,7 @@ export function usePreparedChildren(props: ChildrenOptions): PreparedChildren {
   const reader = useListReader(children);
 
   const { blocks } = useMemo(
-    () => readList(children, { ...reader, held: undefined }),
+    () => readList(children, reader),
     [children, reader],
   );
 

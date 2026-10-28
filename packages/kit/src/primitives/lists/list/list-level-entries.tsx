@@ -29,9 +29,13 @@ export interface Level {
   prefix: string;
   tree: ListTree;
   held: HeldOrder | undefined;
+  // The List has `onMove`.
+  moves: boolean;
   movable: boolean;
   // Every movable row's element, by id, as the reading finds it.
   rows: Map<string, ReactNode>;
+  // Every key a Section or row took by its id, so a repeated id falls back to its place.
+  keys: Set<string>;
 }
 
 export function isSection(
@@ -46,23 +50,41 @@ const movableId =
   (child: ReactNode): string | undefined =>
     movable && !isSection(child) ? renderedId(child) : undefined;
 
-// A Section with an id, and a row that moves, keep one key wherever they draw, so a move never draws them anew.
+// The first child to take `key` keeps it; a later one keeps its place key.
+function unique(
+  keys: Set<string>,
+  key: string | undefined,
+): string | undefined {
+  if (key === undefined || keys.has(key)) return undefined;
+
+  keys.add(key);
+
+  return key;
+}
+
+/*
+ * In a List with `onMove`, a Section with an id and a row that moves keep one key wherever they draw, so a move never
+ * draws them anew. Any other child is keyed by its place.
+ */
 function ownKey(level: Level): (child: ReactNode) => string | undefined {
   const rowId = movableId(level.movable);
 
   return (child) =>
-    isSection(child)
-      ? sectionKey(level.list, child)
-      : rowKey(level.list, rowId(child));
+    unique(
+      level.keys,
+      isSection(child)
+        ? sectionKey(level, child)
+        : rowKey(level.list, rowId(child)),
+    );
 }
 
 const sectionKey = (
-  list: string,
+  { list, moves }: Level,
   section: ReactElement<ListSectionProps>,
 ): string | undefined =>
-  section.props.id === undefined
-    ? undefined
-    : `${list}/section/${section.props.id}`;
+  moves && section.props.id !== undefined
+    ? `${list}/section/${section.props.id}`
+    : undefined;
 
 const rowKey = (list: string, id: string | undefined): string | undefined =>
   id === undefined ? undefined : `${list}/row/${id}`;
