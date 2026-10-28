@@ -38,7 +38,17 @@ function mergeBase(): string {
 }
 
 function staticChecks(changed: string[]): Result[] {
-  return [checkFormat(changed), ...checkChanged(changed)];
+  return [
+    checkFormat(changed),
+    ...checkChanged(changed),
+    run(process.execPath, ['tools/check-operation-mutations.mts']),
+    run(process.execPath, [
+      '--import',
+      'tsx',
+      'tools/generate-operations.mts',
+      '--check',
+    ]),
+  ];
 }
 
 type Listing =
