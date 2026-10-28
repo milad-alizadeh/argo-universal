@@ -11,7 +11,8 @@ const board: MoveSection[] = [
   { key: sectionKey('b'), id: 'done', title: 'Done', rows: [] },
 ];
 
-const toDoneFirst = 'Moved to Done, position 1';
+// The order shows a resolved move's notice as it is given.
+const toDoneFirst = 'Notice of the move to Done';
 
 const toDone: ResolvedMove = {
   move: { id: 'login', section: 'done', index: 0 },

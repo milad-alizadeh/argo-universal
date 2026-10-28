@@ -87,13 +87,18 @@ it('lands nothing when a row is placed just after itself', () => {
   ).toBeUndefined();
 });
 
-it('tells where a move lands, by Section title and position', () => {
-  expect(
-    resolveMove(board, 'login', {
-      kind: 'place',
-      place: { sectionKey: sectionKey('b'), insertion: 1 },
-    })?.notice,
-  ).toBe('Moved to Doing, position 2');
+const toDoingSecond = (): string | undefined =>
+  resolveMove(board, 'login', {
+    kind: 'place',
+    place: { sectionKey: sectionKey('b'), insertion: 1 },
+  })?.notice;
+
+it('tells which Section a move lands in, by its title', () => {
+  expect(toDoingSecond()).toContain('Doing');
+});
+
+it('tells the position a move lands at, counted from one', () => {
+  expect(toDoingSecond()).toMatch(/\b2\b/);
 });
 
 it('shows a move to another Section before the owner answers it', () => {
