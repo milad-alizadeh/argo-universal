@@ -40,6 +40,7 @@ it('preserves official Registry rules and references in discovery JSON Schema', 
 it('describes Installed Agents with the same schema that checks their results', () => {
   const schema = describeOperation(registryOperations['agent.list']).result;
   const accepts = addFormats(new Ajv({ strict: false })).compile(schema);
+
   const valid = [
     {
       id: 'example-agent',
