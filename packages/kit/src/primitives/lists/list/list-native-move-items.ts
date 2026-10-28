@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import type { NativeMenuItem } from '#primitives/overlays/menu';
-import { pressed } from './list-move-actions';
 import { useListMoveOrder } from './list-move-context';
 import { stepMoves } from './list-move-menu';
 import type { RowId } from './list-move-model';
@@ -11,7 +10,7 @@ const moveItems = (order: MoveOrder, id: RowId): NativeMenuItem[] => [
     id: key,
     title: label,
     disabled: false,
-    choose: () => pressed(order, id, intent),
+    choose: () => order.moveBy(id, intent),
   })),
   {
     id: 'to',

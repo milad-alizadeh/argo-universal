@@ -5,7 +5,7 @@ import {
   type PickSection,
   type PickSpot,
 } from './list-move-menu';
-import { resolveMove, rowIdOf, type RowId } from './list-move-model';
+import { rowIdOf, type RowId } from './list-move-model';
 import { useMoveOrder, type MoveOrder } from './list-move-order';
 
 // The Move to… picker open for one row: what it lists, and what picking a place or closing it does.
@@ -29,11 +29,8 @@ function pickerOf(order: MoveOrder, id: RowId): MovePicker {
     close,
     // Resolved against the order as it is when picked, like every other move.
     choose: ({ place }) => {
-      const now = resolveMove(order.sections, id, { kind: 'place', place });
-
       close();
-
-      if (now) order.move(now);
+      order.moveBy(id, { kind: 'place', place });
     },
   };
 }

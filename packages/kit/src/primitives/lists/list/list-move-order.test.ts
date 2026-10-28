@@ -74,6 +74,23 @@ describe('MoveOrder', () => {
     expect(rowsOf(order)).toEqual([['docs'], ['login']]);
   });
 
+  it('moves a row by a step against the order it shows', () => {
+    const { order } = harness(answers());
+
+    order.moveBy(rowId('login'), { kind: 'step', by: 1 });
+
+    expect(rowsOf(order)).toEqual([['docs', 'login'], []]);
+  });
+
+  it('moves nothing for a step that would leave its Section', () => {
+    const onMove = answers();
+    const { order } = harness(onMove);
+
+    order.moveBy(rowId('docs'), { kind: 'step', by: 1 });
+
+    expect(onMove).not.toHaveBeenCalled();
+  });
+
   it('tells where a move landed', () => {
     const { order } = harness(answers());
 

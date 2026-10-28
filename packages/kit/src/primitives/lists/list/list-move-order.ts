@@ -4,6 +4,8 @@ import { listenerSet } from '../../../listener-set';
 import { RowFocus, type FocusRow, type MoveNotice } from './list-move-feedback';
 import {
   placeOf,
+  resolveMove,
+  type MoveIntent,
   type MoveSection,
   type ResolvedMove,
   type RowId,
@@ -158,6 +160,13 @@ export class MoveOrder {
       .report(() => this.owner.onMove(next))
       .then(() => this.effects.frame(() => this.settle(next)));
   };
+
+  // Moves row `id` as `intent` asks, resolved against the order as it is now; nothing when the row would not move.
+  public moveBy(id: RowId, intent: MoveIntent): void {
+    const now = resolveMove(this.shown, id, intent);
+
+    if (now) this.move(now);
+  }
 
   public holds(sectionKey: SectionKey): boolean {
     return this.shown.some((section) => section.key === sectionKey);

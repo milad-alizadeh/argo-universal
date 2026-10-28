@@ -3,12 +3,7 @@ import { Action } from '#primitives/actions/action';
 import type { ActionShortcut } from '#primitives/content/kbd';
 import { useListMoveOrder } from './list-move-context';
 import { stepMoves, type MenuMove } from './list-move-menu';
-import {
-  resolveMove,
-  rowIdOf,
-  type MoveIntent,
-  type RowId,
-} from './list-move-model';
+import { rowIdOf, type RowId } from './list-move-model';
 import { useMoveOrder, type MoveOrder } from './list-move-order';
 
 // Alt with an arrow moves the focused row a place, as a desktop list reorders from the keyboard.
@@ -16,13 +11,6 @@ const stepShortcuts = new Map<string, ActionShortcut>([
   ['up', { modifiers: ['alt'], key: 'ArrowUp' }],
   ['down', { modifiers: ['alt'], key: 'ArrowDown' }],
 ]);
-
-// The move an entry makes in the order as it is when pressed.
-export function pressed(order: MoveOrder, id: RowId, intent: MoveIntent): void {
-  const now = resolveMove(order.sections, id, intent);
-
-  if (now) order.move(now);
-}
 
 const stepActions = (
   order: MoveOrder,
@@ -34,7 +22,7 @@ const stepActions = (
       key={key}
       label={label}
       shortcut={stepShortcuts.get(key)}
-      onPress={() => pressed(order, id, intent)}
+      onPress={() => order.moveBy(id, intent)}
     />
   ));
 
