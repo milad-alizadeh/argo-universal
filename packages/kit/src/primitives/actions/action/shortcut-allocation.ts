@@ -24,9 +24,8 @@ export class ShortcutAllocation {
   private readonly global = new Set<string>();
   private open: OpenContext[] = [];
 
-  public add(entry: ShortcutRegistration): void {
-    const root = document.getElementById(entry.id);
-
+  // `root` is the declaration's node, found once for the whole pass.
+  public add(entry: ShortcutRegistration, root: HTMLElement | null): void {
     this.open = this.open.filter((context) => context.root?.contains(root));
 
     const claimed = this.claim(entry, this.taken(entry));
