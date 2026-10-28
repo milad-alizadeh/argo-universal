@@ -7,10 +7,10 @@ it('rejects malformed saved Agent row columns rather than silently hiding the Ag
     fetchAgents: async () => JSON.stringify(publishedRegistry),
   });
 
-  await host.caller.agents.refreshRegistry();
-  await host.caller.agents.addRegistry({ id: 'example-agent' });
+  await host.caller.registry.refresh();
+  await host.caller.agent.install({ id: 'example-agent' });
   host.database.$client.exec('UPDATE agent_servers SET id = NULL');
-  await expect(host.caller.agents.servers()).rejects.toThrow(
+  await expect(host.caller.agent.list()).rejects.toThrow(
     'Stored saved Agent row is malformed',
   );
 });

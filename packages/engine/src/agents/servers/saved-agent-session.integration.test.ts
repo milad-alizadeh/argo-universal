@@ -18,7 +18,7 @@ it('an Installed Agent launches lazily and sends a prompt through the Engine', a
 
   expect(session.sessionId).toEqual(expect.any(String));
   expect(host.agent.processes).toHaveLength(1);
-  expect(await host.caller.agents.servers()).toMatchObject([{ id: 'mock' }]);
+  expect(await host.caller.agent.list()).toMatchObject([{ id: 'mock' }]);
 });
 
 it('Remove preserves Session history and Send reports the removed Agent', async () => {
@@ -29,8 +29,8 @@ it('Remove preserves Session history and Send reports the removed Agent', async 
     prompt: [{ type: 'text', text: 'Keep this history' }],
   });
 
-  await host.caller.agents.remove({ id: 'mock' });
-  expect(await host.caller.agents.servers()).toEqual([]);
+  await host.caller.agent.remove({ id: 'mock' });
+  expect(await host.caller.agent.list()).toEqual([]);
   expect(
     (await host.caller.session.list({ archived: false })).sessions,
   ).toContainEqual(
@@ -55,7 +55,7 @@ it.each(['Open', 'Retry'])(
     });
 
     await host.caller.session.close({ sessionId });
-    await host.caller.agents.remove({ id: 'mock' });
+    await host.caller.agent.remove({ id: 'mock' });
 
     if (attempt === 'Retry')
       await host.caller.session.open({ sessionId }).catch(() => {});

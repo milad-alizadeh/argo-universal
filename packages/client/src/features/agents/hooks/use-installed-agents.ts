@@ -28,7 +28,7 @@ export const registryError =
 export const installedError = 'Failed to load installed Agents.';
 
 function useInstalledQuery(): UseQueryResult<AgentServer[], ClientError> {
-  return useQuery(useTRPC().agents.servers.queryOptions());
+  return useQuery(useTRPC().agent.list.queryOptions());
 }
 
 // The Server's Installed Agents, in name order; loading is a status, never an empty list.
@@ -39,7 +39,7 @@ export function useInstalledAgents(): InstalledAgents {
 type RegistryRefresh = UseMutationResult<
   AgentsRegistryOutput,
   ClientError,
-  void
+  void | Record<string, never> | undefined
 >;
 
 /*
@@ -47,7 +47,7 @@ type RegistryRefresh = UseMutationResult<
  * Opening a surface syncs, so a reader who opens the Agents page twice in a minute waits for the CDN once;
  * Retry refreshes, because a reader who presses it is saying the copy is the thing that is wrong.
  */
-type RegistryCall = 'syncRegistry' | 'refreshRegistry';
+type RegistryCall = 'sync' | 'refresh';
 
 // A refreshed Registry can change which Installed Agents the Server lists.
 function useRegistryCall(call: RegistryCall): RegistryRefresh {
@@ -56,11 +56,11 @@ function useRegistryCall(call: RegistryCall): RegistryRefresh {
     invalidate = useInstalledInvalidation();
 
   const onSuccess = (data: AgentsRegistryOutput): void => {
-    cache.setQueryData(trpc.agents.registry.queryKey(), data);
+    cache.setQueryData(trpc.registry.get.queryKey(), data);
     void invalidate();
   };
 
-  return useMutation(trpc.agents[call].mutationOptions({ onSuccess }));
+  return useMutation(trpc.registry[call].mutationOptions({ onSuccess }));
 }
 
 interface Registry {
@@ -78,9 +78,9 @@ const registryCalls = (
 
 // The Registry copy the Server keeps, synced once on mount.
 function useRegistry(): Registry {
-  const query = useQuery(useTRPC().agents.registry.queryOptions());
-  const sync = useRegistryCall('syncRegistry');
-  const refresh = useRegistryCall('refreshRegistry');
+  const query = useQuery(useTRPC().registry.get.queryOptions());
+  const sync = useRegistryCall('sync');
+  const refresh = useRegistryCall('refresh');
   const { mutate } = sync;
   useEffect(() => mutate(), [mutate]);
 
