@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { View } from 'react-native';
 import { RichTextarea } from './rich-textarea';
 import { RichTextareaExample } from './rich-textarea-example.mocks';
 import {
@@ -68,4 +69,12 @@ export const LongDraft: Story = {
   },
 };
 
-export const Suggestions: Story = { args: suggestionsRichTextarea };
+export const Suggestions: Story = {
+  args: suggestionsRichTextarea,
+  parameters: { screenPreview: true },
+  render: ({ value, ...props }) => (
+    <View className="flex-1 justify-center">
+      <RichTextareaExample initialValue={value} {...props} />
+    </View>
+  ),
+};

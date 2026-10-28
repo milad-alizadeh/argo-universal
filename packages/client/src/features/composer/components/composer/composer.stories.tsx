@@ -171,9 +171,12 @@ export const ImageSelectionFailed: Story = {
 
 export const Suggestions: Story = {
   args: slashSuggestionsComposer,
+  parameters: { screenPreview: true },
   render: (args) => (
-    <SessionColumn>
-      <SuggestionComposer {...composerProps(args)} />
-    </SessionColumn>
+    <SessionLayout
+      header={null}
+      feed={null}
+      composer={<SuggestionComposer {...composerProps(args)} />}
+    />
   ),
 };
