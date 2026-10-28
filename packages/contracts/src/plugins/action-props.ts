@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { iconName } from '../kit-symbols/icon-schema';
+import { iconName, iconSymbol } from '../kit-symbols/icon-schema';
 import { pressHandler } from './kit-event-props';
 import { rowBadgeProps } from './status-kit-props';
 
@@ -14,10 +14,10 @@ export const shortcutProps = z.object({
 // An Alert answer has no icon; UIAlertAction.Style and Raycast's Alert.ActionStyle mark its role.
 export const actionProps = z.object({
   label: z.string().min(1).describe('The Action label and accessible name.'),
-  icon: iconName
+  icon: iconSymbol
     .optional()
     .describe(
-      'The leading Argo icon; a Screen header shows only Actions with one as buttons.',
+      'The leading icon: one of Argo’s, or an SF Symbol and Material Symbol pair, such as a Plugin’s own; a Screen header shows only Actions with one as buttons.',
     ),
   shortcut: shortcutProps
     .optional()

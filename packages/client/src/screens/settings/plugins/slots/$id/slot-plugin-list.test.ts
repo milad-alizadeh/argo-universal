@@ -1,4 +1,8 @@
 import {
+  type SessionHeaderAction,
+  sessionHeaderSlotId,
+} from '@repo/contracts/plugins/declared-slots';
+import {
   sessionActivitySlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
@@ -36,6 +40,14 @@ const settings: Pick<SlotDetail, 'slotId' | 'ownerSlot'> = {
   },
 };
 
+const headerAction: SessionHeaderAction = {
+  id: 'issue',
+  label: 'Open linked issue',
+  icon: { sf: 'ticket' },
+  placement: 'header',
+  target: { type: 'page', path: '/issues' },
+};
+
 const allShown = (): boolean => true;
 
 describe('the Plugins on a Slot page', () => {
@@ -61,6 +73,35 @@ describe('the Plugins on a Slot page', () => {
       {
         pluginId: 'coverage',
         name: 'coverage',
+        fills: true,
+        shown: true,
+        asks: false,
+      },
+    ]);
+  });
+
+  it('lists a Plugin that declares Session header actions on the header page', () => {
+    const tracker = {
+      ...entry('tracker', []),
+      manifest: {
+        ...entry('tracker', []).manifest,
+        contributes: {
+          nav: [],
+          declared: { [sessionHeaderSlotId]: [headerAction] },
+        },
+      },
+    };
+
+    expect(
+      toSlotPlugins(
+        { slotId: sessionHeaderSlotId },
+        [tracker, entry('coverage', [sessionRowSlotId])],
+        allShown,
+      ),
+    ).toEqual([
+      {
+        pluginId: 'tracker',
+        name: 'tracker',
         fills: true,
         shown: true,
         asks: false,

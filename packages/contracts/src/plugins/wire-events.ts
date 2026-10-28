@@ -20,6 +20,8 @@ export const PluginViewInput = z.object({
   pluginId: z.string(),
   path: z.string(),
   projectId: z.string().min(1).optional(),
+  // The Session a page opens for, such as from a Session header action; the page reads it from its context.
+  sessionId: z.string().min(1).optional(),
 });
 
 export type PluginViewInput = z.infer<typeof PluginViewInput>;
@@ -103,6 +105,7 @@ export const PluginEvent = z.union([
     viewId: PluginViewId,
     path: z.string(),
     projectId: z.string().min(1).optional(),
+    sessionId: z.string().min(1).optional(),
     slot: PluginSlotInput.optional(),
     renderSlot: ReplaceableSlotId.optional(),
     surface: PluginSurface.optional(),

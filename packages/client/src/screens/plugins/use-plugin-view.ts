@@ -1,3 +1,4 @@
+import type { PluginViewInput } from '@repo/contracts/plugins/wire';
 import {
   emptyPluginView,
   reducePluginView,
@@ -11,10 +12,8 @@ interface PluginView extends PluginViewState {
   dispatch: PluginOnEvent;
 }
 
-// Watches one Plugin page on the connected Server; its events dispatch to the view they came from.
-export function usePluginView(pluginId: string, path: string): PluginView {
-  const page = { pluginId, path };
-
+// Watches one Plugin page on the connected Server, for a Session when it opened for one; its events dispatch to the view they came from.
+export function usePluginView(page: PluginViewInput): PluginView {
   const { state } = usePluginStream(
     page,
     (trpc, input, onData) =>

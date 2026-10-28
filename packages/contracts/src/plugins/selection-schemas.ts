@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { iconName } from '../kit-symbols/icon-schema';
+import { iconName, iconSymbol } from '../kit-symbols/icon-schema';
 import { buttonDefaults } from '../kit-tokens';
 import { echoes, handler } from './kit-component-props';
 import { selectionValue } from './selection-value';
@@ -9,7 +9,7 @@ const disabledDescription = 'Disable activation.';
 export const menuAction = z.object({
   label: z.string().describe('Action label.'),
   onPress: handler('onPress').describe('Action to run.'),
-  icon: iconName.optional().describe('Leading icon.'),
+  icon: iconSymbol.optional().describe('Leading icon.'),
   selected: z.boolean().optional().describe('Mark the current action.'),
   disabled: z.boolean().optional().describe(disabledDescription),
 });
