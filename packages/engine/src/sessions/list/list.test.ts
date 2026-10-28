@@ -31,6 +31,7 @@ function listedSession(index: number): SessionInfo {
     projectId: 'project-1',
     agent: 'mock',
     parentSessionId: null,
+    startedBySessionId: null,
     createdAt: index,
     updatedAt: index,
     cwd: '/project',

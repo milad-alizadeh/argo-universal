@@ -17,12 +17,14 @@ import type {
 } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { recordOperation, requireOperationCall } from './call-recording';
+import type { OperationInput } from './params';
 import { createPluginOperations } from './plugins';
 import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
 import { scopedOperations, runSessionOperation } from './session-scope';
+import { SessionStarts } from './session-starts';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
 import { sessionImplementations } from './sessions';
 import { tokensMatch } from './tokens';
@@ -65,11 +67,13 @@ function createImplementations(
 
 export class Operations {
   private readonly implementations: OperationImplementations;
+  private readonly starts: SessionStarts;
   public constructor(
     private readonly deps: OperationsDeps,
     sessionList: SessionList,
   ) {
     this.implementations = createImplementations(deps, sessionList);
+    this.starts = new SessionStarts(deps);
   }
   public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
     const caller = this.caller(token);
@@ -108,6 +112,7 @@ export class Operations {
       implementations: this.implementations,
       caller,
       deps: this.deps,
+      starts: this.starts,
       call: requireOperationCall(call),
     };
 
@@ -133,7 +138,7 @@ export class Operations {
   }
   public runApp<Id extends OperationId>(
     id: Id,
-    params: Json | undefined,
+    params: OperationInput,
   ): Promise<OperationResult<Id>> {
     return runOperation(this.implementations, id, params);
   }

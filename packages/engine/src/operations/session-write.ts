@@ -9,6 +9,8 @@ import type {
 } from './operations';
 import { operationParams } from './params';
 import { runOperation } from './router.gen';
+import { runSessionStart } from './session-start';
+import type { SessionStarts } from './session-starts';
 import type { SessionCaller } from './session-tokens';
 import { actTarget, isActOperation, ownsActTarget } from './write-scope';
 
@@ -16,20 +18,22 @@ type SessionWrite = {
   caller: SessionCaller;
   operation: { id: OperationId; params: Json };
   call: SessionOperationCall;
+  starts: SessionStarts;
 };
 
 export async function runSessionWrite(
-  deps: Pick<OperationsDeps, 'readSession'>,
+  deps: OperationsDeps,
   implementations: OperationImplementations,
-  { caller, operation, call }: SessionWrite,
+  { caller, operation, call, starts }: SessionWrite,
 ): Promise<OperationResult> {
   const { id } = operation;
 
+  if (id === 'session.new')
+    return runSessionStart({ deps, caller, call, starts }, operation.params);
+
   const params = parsedParams(operation);
 
-  const parsed = { id, params };
-
-  if (requiresConfirmation(deps, caller, parsed))
+  if (requiresConfirmation(deps, caller, { id, params }))
     await call.confirm(operations[id].description);
 
   return operations[id].result.parseAsync(

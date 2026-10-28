@@ -113,7 +113,9 @@ class SessionInformationRead {
 
   private children(): SessionRecord[] {
     return this.input.rows.filter(
-      (child): boolean => child.parentSessionId === this.input.row.id,
+      (child): boolean =>
+        child.parentSessionId === this.input.row.id ||
+        child.startedBySessionId === this.input.row.id,
     );
   }
 

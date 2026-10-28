@@ -29,6 +29,7 @@ const baseSession: SessionInfo = {
   projectId: 'project-1',
   agent: 'agent-one',
   parentSessionId: null,
+  startedBySessionId: null,
   cwd: exampleProjectPath,
   status: 'idle',
   title: 'Finished work',

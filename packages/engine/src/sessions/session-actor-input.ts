@@ -31,6 +31,7 @@ const createSessionCreationInput = (
   configOptions: event.configOptions,
   prompt: event.prompt,
   turnId: event.turnId,
+  startedBySessionId: event.startedBySessionId,
 });
 
 export const createSessionActorInput = ({

@@ -50,21 +50,23 @@ export class SessionListParents {
     const added = new Set<string>();
 
     for (const row of rows) {
-      this.parents.set(row.id, row.parentSessionId);
+      this.parents.set(row.id, displayParent(row));
 
-      if (this.needsParent(row, ids)) added.add(row.parentSessionId);
+      const parent = this.parentToRead(row, ids);
+
+      if (parent) added.add(parent);
     }
 
     return added;
   }
 
-  private needsParent(
+  private parentToRead(
     row: SessionRecord,
     ids: Set<string> | undefined,
-  ): row is SessionRecord & { parentSessionId: string } {
-    if (!ids) return false;
+  ): string | undefined {
+    if (!ids) return undefined;
 
-    return ids.has(row.id) && missingParent(row.parentSessionId, ids);
+    return listedParentToRead(row, ids);
   }
 
   private readAddedParents(
@@ -88,6 +90,24 @@ function optionalIds(ids: Set<string> | undefined): string[] | undefined {
   return ids && [...ids];
 }
 
-function missingParent(parent: string | null, ids: Set<string>): boolean {
-  return Boolean(parent) && !ids.has(parent ?? '');
+function displayParent(row: SessionRecord): string | null {
+  return row.parentSessionId ?? row.startedBySessionId;
+}
+
+function listedParentToRead(
+  row: SessionRecord,
+  ids: Set<string>,
+): string | undefined {
+  if (!ids.has(row.id)) return undefined;
+
+  return unseenParent(displayParent(row), ids);
+}
+
+function unseenParent(
+  parent: string | null,
+  ids: Set<string>,
+): string | undefined {
+  if (parent === null) return undefined;
+
+  return ids.has(parent) ? undefined : parent;
 }

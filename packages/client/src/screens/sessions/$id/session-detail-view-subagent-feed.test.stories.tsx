@@ -85,11 +85,11 @@ function feedRowOpens(width: number): Story {
     beforeEach: () => settleLayout(width),
     args: { view: sessionWithSubagentFeed() },
     play: async ({ canvas, userEvent }) => {
-      await userEvent.click(
-        await canvas.findByRole('button', {
-          name: new RegExp(`^Started ${runningSubagent.title}`),
-        }),
-      );
+      const started = await canvas.findByRole('button', {
+        name: new RegExp(`^Started ${runningSubagent.title}`),
+      });
+
+      await waitFor(() => userEvent.click(started));
 
       await assertOpened(canvas, width === layoutWidths.wide);
       await assertFeedShown(canvas, width === layoutWidths.wide);

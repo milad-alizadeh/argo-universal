@@ -37,11 +37,13 @@ const openOne = (
 const selectable = (
   list: SubagentListProps | undefined,
   select: (sessionId: string) => void,
+  leave: () => void,
 ): SubagentListProps | undefined =>
   list && {
     ...list,
     onSelect: (one) => {
-      select(one.sessionId);
+      if (one.readOnly) select(one.sessionId);
+      else leave();
       list.onSelect?.(one);
     },
   };
@@ -62,15 +64,18 @@ const useFeedPage = (
  */
 export function useSubagentSelection(
   source: SubagentSource,
+  leave: () => void = stay,
 ): SubagentSelection {
   const [selected, select] = useState<string | null>(null);
   const subagent = openOne(source.subagents, selected);
   const close = useCallback(() => select(null), []);
 
   return {
-    list: selectable(source.subagents, select),
+    list: selectable(source.subagents, select, leave),
     open: subagent && { sessionId: subagent.sessionId, onBack: close },
     page: useFeedPage(subagent, source.renderSubagentFeed, close),
     close,
   };
 }
+
+function stay(): void {}

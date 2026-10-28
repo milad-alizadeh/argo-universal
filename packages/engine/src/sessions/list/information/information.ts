@@ -106,6 +106,7 @@ type SessionIdentity = Pick<
   | 'projectId'
   | 'agent'
   | 'parentSessionId'
+  | 'startedBySessionId'
   | 'cwd'
   | 'createdAt'
   | 'updatedAt'
@@ -119,6 +120,7 @@ function sessionIdentity(row: SessionRecord): SessionIdentity {
     projectId: row.projectId,
     agent: row.agent,
     parentSessionId: row.parentSessionId,
+    startedBySessionId: row.startedBySessionId,
     cwd: row.checkoutPath,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

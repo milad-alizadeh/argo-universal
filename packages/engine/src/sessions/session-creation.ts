@@ -82,18 +82,39 @@ async function waitForSessionInsertCommitted(
     });
 }
 
+type SessionCreationDeps = Pick<
+  SessionRouterDeps,
+  | 'database'
+  | 'sessions'
+  | 'createId'
+  | 'sessionCommandSignal'
+  | 'installedAgents'
+  | 'hooks'
+>;
+
+export type SessionCreationOrigin = {
+  sessionId: string;
+  startedBySessionId?: string;
+};
+
+export type AcceptedSessionStart = { sessionId: string; turnId?: string };
+
 export async function createSession(
-  deps: Pick<
-    SessionRouterDeps,
-    | 'database'
-    | 'sessions'
-    | 'createId'
-    | 'sessionCommandSignal'
-    | 'installedAgents'
-    | 'hooks'
-  >,
+  deps: SessionCreationDeps,
   newSession: SessionNewInput,
+  origin?: SessionCreationOrigin,
 ): Promise<SessionNewOutput> {
+  const { sessionId } = await createSessionAccepted(deps, newSession, origin);
+
+  return { sessionId };
+}
+
+// Only an actually committed first prompt returns a Turn id; an empty or Hook-dropped prompt has none.
+export async function createSessionAccepted(
+  deps: SessionCreationDeps,
+  newSession: SessionNewInput,
+  origin?: SessionCreationOrigin,
+): Promise<AcceptedSessionStart> {
   // The open Sessions machine checks again as the last word (ADR-0003); this check gives the typed failure.
   requireInstalledAgent(deps.installedAgents, newSession.agent);
 
@@ -103,25 +124,27 @@ export async function createSession(
   );
 
   validateSessionCommandAdmission(deps);
-  const sessionId = deps.createId();
+  const sessionId = origin?.sessionId ?? deps.createId();
   sendCheckedOpenSessionsCommand(deps.sessions, {
     type: 'sessions.create',
     sessionId,
     turnId: deps.createId(),
     ...newSession,
+    startedBySessionId: origin?.startedBySessionId,
     projectPath,
   });
   await waitForSessionStored(requireOpenSessionActor(deps.sessions, sessionId));
   await waitForSessionInsertCommitted(
     requireOpenSessionActor(deps.sessions, sessionId),
   );
-  await startSession(
+
+  const turnId = await startSession(
     deps,
     requireOpenSessionActor(deps.sessions, sessionId),
     newSession,
   );
 
-  return { sessionId };
+  return { sessionId, turnId };
 }
 
 // Once stored, the Session applies its first choices, then submits its first prompt.
@@ -129,16 +152,17 @@ async function startSession(
   deps: Pick<SessionRouterDeps, 'hooks'>,
   session: SessionActorRef,
   newSession: SessionNewInput,
-): Promise<void> {
+): Promise<string | undefined> {
   await applyInitialConfiguration(session, newSession);
-  await submitInitialAcpPrompt(session, deps.hooks);
+
+  return submitInitialAcpPrompt(session, deps.hooks);
 }
 
 // The first prompt passes `prompt.submit` Hooks like any other; a dropped one leaves the Session waiting.
 const submitInitialAcpPrompt = async (
   session: SessionActorRef,
   hooks: CoreHooks,
-): Promise<void> => {
+): Promise<string | undefined> => {
   const { input, acpLease, sessionId } = session.getSnapshot().context;
 
   if (!acpLease || input.kind !== 'new' || input.prompt.length === 0) return;
@@ -155,6 +179,8 @@ const submitInitialAcpPrompt = async (
     turnId: input.turnId,
     content: answer.prompt,
   });
+
+  return input.turnId;
 };
 
 const applyInitialConfiguration = async (

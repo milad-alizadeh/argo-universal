@@ -11,6 +11,7 @@ import {
   projectWithoutSessions,
   sessionsByProject,
 } from './sessions-list-fixtures';
+import { nestedSessions } from './sessions-list-nested-fixtures';
 
 const meta = {
   title: 'Sessions/SessionsList',
@@ -69,6 +70,8 @@ type Story = StoryObj<typeof meta>;
 
 // Each Project's Sessions under its heading, most recently active first.
 export const ByProject: Story = { args: sessionsByProject };
+
+export const DelegatedWork: Story = { args: nestedSessions };
 
 export const ProjectWithoutSessions: Story = { args: projectWithoutSessions };
 

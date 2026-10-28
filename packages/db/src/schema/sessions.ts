@@ -40,6 +40,10 @@ export const session = snakeCase.table('session', {
   parentSessionId: text().references((): AnySQLiteColumn => session.id, {
     onDelete: 'set null',
   }),
+  // Operation provenance is writable; ACP's parentSessionId remains read-only.
+  startedBySessionId: text().references((): AnySQLiteColumn => session.id, {
+    onDelete: 'set null',
+  }),
   checkoutPath: text().notNull(),
   checkoutBranch: text(),
   vendorRef: text({ mode: 'json' }),
