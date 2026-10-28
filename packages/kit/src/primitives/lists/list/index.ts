@@ -6,8 +6,6 @@ export { useMoveActions } from './list-move-actions';
 
 export { useMovePicker, type MovePicker } from './list-move-picker';
 
-export { drawsMovePicker } from './list-move-picker-drawing';
-
 export { NativeGroupedList } from './list-native-grouped';
 
 export { ListSection } from './list-section';

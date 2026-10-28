@@ -11,8 +11,10 @@ const picker: PickerRegistry = {};
 
 /*
  * The Move to… picker lists its places as ListItems, and ListItem draws it over a row it opens from. A native grouped
- * List's rows are FieldGroup rows, so it draws the picker itself; ListItem hands its drawing in through this folder's
- * index, as it hands nestsChildren its rows, since this folder cannot import ListItem, which imports it.
+ * List's rows are FieldGroup rows, so it draws the picker itself; ListItem hands its drawing in, as it hands
+ * nestsChildren its rows, since this folder cannot import ListItem, which imports it. ListItem imports this file
+ * directly: through the folder's index, Android loads ListItem while the index is still loading, and the hand-in
+ * reads undefined.
  */
 export function drawsMovePicker(component: PickerDrawing): void {
   picker.Drawing = component;

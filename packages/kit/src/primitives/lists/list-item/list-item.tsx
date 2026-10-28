@@ -1,11 +1,7 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
-import {
-  drawsMovePicker,
-  useListItemGroup,
-  useMoveActions,
-} from '#primitives/lists/list';
+import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
 import {
   ListSelectionContext,
   ListTileContext,
@@ -15,6 +11,7 @@ import { useCompactRows, useListLook } from '../../../list-look-context';
 import { loadingLanes } from '../../../list-skeleton-lanes';
 import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useSeparatorCovered } from '../../../row-highlights';
+import { drawsMovePicker } from '../list/list-move-picker-drawing';
 import {
   useContentItemDrawing,
   useContentItemActions,
