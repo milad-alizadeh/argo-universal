@@ -54,8 +54,6 @@ export { createSessionRouter } from './router';
 
 export { startSessionCreation } from './session-creation';
 
-export { runningStartedSessions } from './delegation';
-
 export { createSessionList, type SessionList } from './list/session-list';
 
 export type { SessionRouterDeps } from './router-deps';
@@ -88,8 +86,6 @@ export { renameSession } from './session-rename';
 export { saveSessionPlan } from './session-save-plan';
 
 export { closeSession } from './session-closure';
-
-export { readSessionCloseTarget } from './close-target';
 
 export { configureSession } from './session-configuration';
 

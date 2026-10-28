@@ -7,10 +7,9 @@ import {
   listSessionBranches,
   readSessionChanges,
   readSessionDiff,
-  type SessionRouterDeps,
   type SessionList,
 } from '../sessions';
-import type { OperationImplementations } from './operations';
+import type { OperationImplementations, OperationsDeps } from './operations';
 
 type HistoryId =
   | 'session.list'
@@ -25,7 +24,7 @@ type DiscoveryReads = Pick<
 >;
 
 export function createReadOperations(
-  deps: SessionRouterDeps,
+  deps: OperationsDeps,
   sessionList: SessionList,
 ): Pick<OperationImplementations, keyof typeof readerOperations> {
   return {
@@ -35,7 +34,7 @@ export function createReadOperations(
 }
 
 function historyReads(
-  deps: SessionRouterDeps,
+  deps: OperationsDeps,
   sessionList: SessionList,
 ): Pick<OperationImplementations, HistoryId> {
   const readSnapshot = createSessionSnapshotReader(deps);
@@ -50,7 +49,7 @@ function historyReads(
   };
 }
 
-function discoveryReads(deps: SessionRouterDeps): DiscoveryReads {
+function discoveryReads(deps: OperationsDeps): DiscoveryReads {
   const listAgents = createSessionAgentReader(deps);
 
   return {

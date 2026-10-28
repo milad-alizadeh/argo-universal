@@ -9,6 +9,7 @@ import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
 import {
   createOperationCalls,
+  createSessionDirectory,
   createSessionWorkSource,
   type OperationCalls,
   type SessionList,
@@ -27,8 +28,7 @@ import {
 } from './implementations';
 import { OperationRunner, type RunContext } from './runner';
 import { listOperations } from './search';
-import { scopedOperations } from './session-scope';
-import { SessionStarts } from './session-starts';
+import { scopedOperations, SessionScope } from './session-scope';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
 import { tokensMatch } from './tokens';
 import type { OperationWaitClock } from './wait-clock';
@@ -130,10 +130,12 @@ function createRunner(
   deps: OperationsDeps,
   { sessionList, work }: { sessionList: SessionList; work: OperationWork },
 ): OperationRunner {
+  const directory = createSessionDirectory(deps);
+
   return new OperationRunner(createImplementations(deps, sessionList), {
     deps,
     work,
-    starts: new SessionStarts(deps),
+    scope: new SessionScope({ directory, createId: deps.createId }),
   });
 }
 

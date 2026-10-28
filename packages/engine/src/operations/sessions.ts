@@ -17,7 +17,6 @@ import {
   renameSession,
   saveSessionPlan,
   type AcceptedSessionPrompt,
-  type SessionRouterDeps,
 } from '../sessions';
 import {
   startedWork,
@@ -25,10 +24,10 @@ import {
   type NativeStartRequest,
   type StartedWork,
 } from './native-start';
-import type { OperationImplementations } from './operations';
+import type { OperationImplementations, OperationsDeps } from './operations';
 
 export const sessionImplementations = (
-  deps: SessionRouterDeps,
+  deps: OperationsDeps,
 ): Pick<OperationImplementations, keyof typeof sessionOperations> => ({
   'session.new': (input, request) => startCreation(deps, input, request),
   'session.prompt': async (input, request) => startPrompt(deps, input, request),
@@ -43,7 +42,7 @@ export const sessionImplementations = (
 });
 
 async function startCreation(
-  deps: SessionRouterDeps,
+  deps: OperationsDeps,
   input: SessionNewInput,
   request: NativeStartRequest,
 ): Promise<StartedWork<SessionNewOutput>> {
@@ -60,7 +59,7 @@ async function startCreation(
 }
 
 function startPrompt(
-  deps: SessionRouterDeps,
+  deps: OperationsDeps,
   input: SessionPromptInput,
   request: NativeStartRequest,
 ): StartedWork<SessionPromptOutput> {
@@ -86,9 +85,9 @@ function acceptedPrompt(
 
 // A user caller's ninety-second budget also stops the Session command it is waiting to admit.
 function admissionDeps(
-  deps: SessionRouterDeps,
+  deps: OperationsDeps,
   signal: AbortSignal | undefined,
-): SessionRouterDeps {
+): OperationsDeps {
   if (!signal) return deps;
 
   const sessionCommandSignal = deps.sessionCommandSignal

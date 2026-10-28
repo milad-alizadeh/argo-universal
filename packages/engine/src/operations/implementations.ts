@@ -3,7 +3,6 @@ import type {
   OperationId,
   OperationExecution,
 } from '@repo/contracts/operations';
-import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { z } from 'zod';
 import { userOrigin, type SessionList } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
@@ -72,11 +71,22 @@ export function createImplementations(
   };
 }
 
-// A Session caller's Operation, after its scope allows it; a new Session may bring its pre-allocated id.
+// A new Session's id, allocated before its start so its delegation reservation can name it.
+export type NewSessionId = { sessionId?: string };
+
+// A Session caller's Operation, with the params its scope parsed, after its scope allows it.
 export type SessionInvoke = <Id extends OperationId>(
-  operation: { id: Id; params: Json },
-  start?: { sessionId?: string },
+  operation: { id: Id; params: ParamsById[Id] },
+  start?: NewSessionId,
 ) => Promise<OperationResult<Id>>;
+
+// Every Operation as a Session caller runs it: native starts follow the caller's Tool call.
+export type SessionImplementations = {
+  [Id in OperationId]: (
+    params: ParamsById[Id],
+    start: NewSessionId,
+  ) => Promise<ResultsById[Id]>;
+};
 
 // The App's own Session starts answer once admitted, as the user, with neither a wait id nor a Tool call.
 export function appImplementations(
