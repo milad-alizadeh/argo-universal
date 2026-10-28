@@ -41,7 +41,11 @@ function destination(href: string): Pick<LinkProps, 'href' | 'route'> {
 
 export function MetadataLink(props: MetadataLinkProps): ReactElement {
   return (
-    <MetadataField {...fieldProps(props)} valueLabel={props.text}>
+    <MetadataField
+      {...fieldProps(props)}
+      valueLabel={props.text}
+      grouped={false}
+    >
       <MetadataText
         text={<Link label={props.text} {...destination(props.href)} />}
       />
