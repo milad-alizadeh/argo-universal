@@ -55,7 +55,10 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
       id: 'session.close',
       params: { sessionId: second.sessionId },
     }),
-  ).rejects.toMatchObject({ data: { code: 'FORBIDDEN' } });
+  ).rejects.toMatchObject({
+    message: 'A Permission request requires an active Turn',
+    data: { code: 'CONFLICT' },
+  });
 
   const events = await fixture.host.caller.feed.subscribe({
     sessionId: second.sessionId,

@@ -585,7 +585,7 @@ const sessionSetup = setup({
           enqueue.sendTo('feed', permissionOutcome(context, event.optionId));
       },
     ),
-    answerAcpPermission: ({ context, event }): void => {
+    answerPermission: ({ context, event }): void => {
       assertEvent(event, answerPermissionEvent);
 
       if (context.permissionQueue[0]?.operation)
@@ -630,7 +630,7 @@ const sessionSetup = setup({
           ),
       },
     })),
-    cancelAcpRequests: enqueueActions(({ context, enqueue }): void => {
+    cancelSessionRequests: enqueueActions(({ context, enqueue }): void => {
       context.nativePermissions.cancelAll();
       context.acpLifetime.cancelRequests();
       enqueue.assign(cancelRequests(context));
@@ -1211,7 +1211,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   ],
                 },
               },
-              exit: 'cancelAcpRequests',
+              exit: 'cancelSessionRequests',
               on: {
                 'acp.failed': {
                   target: 'interrupting',
@@ -1223,7 +1223,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: '.cancelling',
                   actions: [
                     'rememberCancellation',
-                    'cancelAcpRequests',
+                    'cancelSessionRequests',
                     'publishCancellation',
                     { type: 'endTurn', params: { stopReason: 'cancelled' } },
                   ],
@@ -1258,7 +1258,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: '.working',
                   actions: [
                     'publishPermissionOutcome',
-                    'answerAcpPermission',
+                    'answerPermission',
                     'removePermission',
                   ],
                 },
@@ -1272,7 +1272,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   actions: [
                     'rememberStorageFailure',
                     'rememberCancellation',
-                    'cancelAcpRequests',
+                    'cancelSessionRequests',
                     'publishCancellation',
                     { type: 'endTurn', params: { stopReason: 'error' } },
                   ],
