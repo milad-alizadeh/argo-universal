@@ -1,7 +1,7 @@
 import { vi, type Mock } from 'vitest';
 import { ListDrag } from './list-drag-controller';
 import type { DragFrame } from './list-drag-frame';
-import type { Point, Rect } from './list-drop-aim';
+import type { Point, Rect } from './list-geometry';
 import type { DropPlace, ListMove, MoveSection } from './list-move-model';
 
 export const todoKey = 'todo-lane';
@@ -42,7 +42,7 @@ export function rigFor(sections: readonly MoveSection[], lanes: boolean): Rig {
 
   const move = vi.fn<(move: ListMove) => void>();
 
-  drag.configure({ order: { sections }, lanes, move });
+  drag.configure({ order: { sections }, lanes, slides: true, move });
 
   return { drag, move, ghost, frames };
 }

@@ -11,8 +11,8 @@ import {
 import type { Measure, Measured, MeasuredScroller } from './list-drag-measure';
 import { DragRegistry } from './list-drag-registry';
 import { FrameLoop, scrollEdges, type Schedule } from './list-drag-scroll';
-import { idleSetup, layoutOf, type DragSetup } from './list-drag-setup';
-import type { Point, Rect } from './list-drop-aim';
+import { frameSetup, idleSetup, type DragSetup } from './list-drag-setup';
+import type { Point, Rect } from './list-geometry';
 import { landing, type DropPlace, type ListMove } from './list-move-model';
 
 interface Lift extends LiftedRow {
@@ -162,7 +162,12 @@ export class ListDrag {
 
     this.ghostAt(ghostPoint(point, lift, measured.layer));
 
-    const next = dragFrame({ lift, measured, point, layout: layoutOf(setup) });
+    const next = dragFrame({
+      lift,
+      measured,
+      point,
+      ...frameSetup(setup),
+    });
 
     if (remeasured || !sameFrame(this.frame, next)) this.draw(next);
   }

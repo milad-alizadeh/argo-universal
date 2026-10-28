@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { View, type ViewInstance } from 'react-native';
 import type { ListDrag } from './list-drag-controller';
-import { useDragFrame } from './list-drag-layer';
+import { useDragValue } from './list-drag-layer';
 import type { MeasureZone } from './list-drag-measure';
 import { measureView } from './list-measure-view';
 import { useListMoves, type ListMoves } from './list-move-context';
@@ -46,9 +46,10 @@ interface ZoneProps {
 // A Section's header in one column: a row dragged over it lands first in its Section.
 function HeaderZone({ moves, sectionKey, children }: ZoneProps): ReactElement {
   const view = useHeaderZone(moves.drag, sectionKey);
-  const frame = useDragFrame(moves.drag);
-  const slides = frame?.zoneSlides;
-  const offset = moves.look.slides ? slideOf(slides, sectionKey) : 0;
+
+  const offset = useDragValue(moves.drag, (frame) =>
+    slideOf(frame?.zoneSlides, sectionKey),
+  );
 
   return (
     <View ref={view} collapsable={false}>

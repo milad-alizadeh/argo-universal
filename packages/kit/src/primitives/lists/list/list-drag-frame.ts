@@ -6,9 +6,8 @@ import {
   type DropAim,
   type InsertionLine,
   type MoveLayout,
-  type Point,
-  type Rect,
 } from './list-drop-aim';
+import type { Point, Rect } from './list-geometry';
 import type { DropPlace } from './list-move-model';
 
 // A lifted row, in the drag layer's own coordinates, and where it would land.
@@ -35,6 +34,8 @@ export interface FrameInput {
   measured: Measured;
   layout: MoveLayout;
   point: Point;
+  // The rows slide apart: only then does a frame say how far each one moves.
+  slides: boolean;
 }
 
 const shifted = <At extends Point>(at: At, by: Point): At => ({
@@ -74,6 +75,11 @@ const offsetsOf = <Item extends { rect: Rect }>(
 ): Map<string, number> =>
   new Map(items.map((item) => [keyOf(item), slideOffset(slide, item.rect.y)]));
 
+const still: Pick<DragFrame, 'rowSlides' | 'zoneSlides'> = {
+  rowSlides: new Map(),
+  zoneSlides: new Map(),
+};
+
 const slides = (
   { rows, zones }: Measured,
   slide: Slide,
@@ -81,6 +87,14 @@ const slides = (
   rowSlides: offsetsOf(rows, (row) => row.id, slide),
   zoneSlides: offsetsOf(zones, (zone) => zone.sectionKey, slide),
 });
+
+const slidesFor = (
+  input: FrameInput,
+  aim: DropAim | undefined,
+): Pick<DragFrame, 'rowSlides' | 'zoneSlides'> =>
+  input.slides
+    ? slides(input.measured, slideFor(input.measured.source, aim))
+    : still;
 
 // What a drag draws for the pointer at `point`: the lifted row, its insertion line, and the rows moved aside.
 export function dragFrame(input: FrameInput): DragFrame {
@@ -93,7 +107,7 @@ export function dragFrame(input: FrameInput): DragFrame {
     ghost: lift.ghost,
     source: shifted(source, layer),
     ...aimed(aim, layer),
-    ...slides(measured, slideFor(source, aim)),
+    ...slidesFor(input, aim),
   };
 }
 

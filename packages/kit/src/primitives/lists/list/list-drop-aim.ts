@@ -1,22 +1,7 @@
-import { placeOf, type DropPlace, type MoveSection } from './list-move-model';
-
-export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface Point {
-  x: number;
-  y: number;
-}
-
-// A drawn row, measured in the window.
-export interface MeasuredRow {
-  id: string;
-  rect: Rect;
-}
+import type { MeasuredRow, Point, Rect } from './list-geometry';
+import { bottom, middle } from './list-geometry';
+import type { DropPlace, MoveSection } from './list-move-model';
+import { placedRows, rowsIn, type PlacedRow } from './list-placed-rows';
 
 // Where a Section starts: a lane's column on a board, or a Section's header in one column. `start` is where its first row goes.
 export interface MeasuredZone {
@@ -47,26 +32,6 @@ export interface AimInput extends MoveLayout {
   zones: readonly MeasuredZone[];
   rows: readonly MeasuredRow[];
   point: Point;
-}
-
-interface PlacedRow {
-  sectionKey: string;
-  index: number;
-  rect: Rect;
-}
-
-const bottom = (rect: Rect): number => rect.y + rect.height;
-
-const middle = (rect: Rect): number => rect.y + rect.height / 2;
-
-function placedRows(input: AimInput): PlacedRow[] {
-  return input.rows.flatMap(({ id, rect }) => {
-    const place = placeOf(input.sections, id);
-
-    return place
-      ? [{ sectionKey: place.sectionKey, index: place.index, rect }]
-      : [];
-  });
 }
 
 const horizontalDistance = (rect: Rect, x: number): number =>
@@ -151,15 +116,11 @@ const insertionAt = ({ previous, next }: Neighbours): number =>
 
 interface SectionAim {
   sectionKey: string;
+  // The Section's rows, in order.
   rows: readonly PlacedRow[];
   zone: MeasuredZone | undefined;
   point: Point;
 }
-
-const rowsOf = (rows: readonly PlacedRow[], sectionKey: string): PlacedRow[] =>
-  rows
-    .filter((row) => row.sectionKey === sectionKey)
-    .toSorted((a, b) => a.index - b.index);
 
 function aimInSection({
   sectionKey,
@@ -167,7 +128,7 @@ function aimInSection({
   zone,
   point,
 }: SectionAim): DropAim | undefined {
-  const near = neighboursAt(rowsOf(rows, sectionKey), point.y);
+  const near = neighboursAt(rows, point.y);
   const line = lineIn(near, zone);
 
   if (!line) return;
@@ -177,15 +138,16 @@ function aimInSection({
 
 // Where a row dragged to `point` would land, and where its insertion line draws; nothing while nothing is measured.
 export function aimAt(input: AimInput): DropAim | undefined {
-  const rows = placedRows(input);
+  const placed = placedRows(input.rows, input.sections);
 
   const sectionKey = input.lanes
     ? laneAt(input.zones, input.point)
-    : sectionAt(input.zones, rows, input.point);
+    : sectionAt(input.zones, placed.rows, input.point);
 
   if (sectionKey === undefined) return undefined;
 
   const zone = input.zones.find((each) => each.sectionKey === sectionKey);
+  const rows = rowsIn(placed, sectionKey);
 
   return aimInSection({ sectionKey, rows, zone, point: input.point });
 }

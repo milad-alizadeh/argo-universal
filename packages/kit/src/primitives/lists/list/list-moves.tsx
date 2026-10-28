@@ -15,9 +15,10 @@ import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { cn } from '../../../utils';
 import { useColumnScroll } from './list-column-scroll';
 import { ListDrag } from './list-drag-controller';
-import { ListDragLayer, useDragFrame } from './list-drag-layer';
+import { ListDragLayer, useDragValue } from './list-drag-layer';
 import { dragLook } from './list-drag-look';
-import type { MoveLayout, Point } from './list-drop-aim';
+import type { MoveLayout } from './list-drop-aim';
+import type { Point } from './list-geometry';
 import { measureView } from './list-measure-view';
 import { MoveAnnouncer } from './list-move-announcer';
 import { ListMoveContext, type ListMoves } from './list-move-context';
@@ -62,7 +63,7 @@ function useConfiguredMoves(
   { move, focus }: MoveFeedback,
 ): ListMoves {
   useEffect(
-    () => drag.configure({ order, lanes, move }),
+    () => drag.configure({ order, lanes, slides: dragLook.slides, move }),
     [drag, order, lanes, move],
   );
 
@@ -119,7 +120,7 @@ interface SurfaceProps {
 
 // The List's frame and the drag layer's coordinates; the pointer grabs over all of it while a row is dragged.
 function DragSurface({ drag, viewRef, children }: SurfaceProps): ReactElement {
-  const dragging = useDragFrame(drag) !== undefined;
+  const dragging = useDragValue(drag, (frame) => frame !== undefined);
   const className = cn('min-h-0 shrink grow', dragging && dragLook.grabbing);
 
   return (

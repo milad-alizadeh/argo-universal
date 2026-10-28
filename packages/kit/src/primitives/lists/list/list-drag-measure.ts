@@ -1,4 +1,5 @@
-import type { MeasuredRow, MeasuredZone, Rect } from './list-drop-aim';
+import type { MeasuredZone } from './list-drop-aim';
+import type { MeasuredRow, Rect } from './list-geometry';
 
 export type Measure = () => Promise<Rect | undefined>;
 

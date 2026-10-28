@@ -1,5 +1,5 @@
 import type { PressStart } from './list-drag-rules';
-import type { Point } from './list-drop-aim';
+import type { Point } from './list-geometry';
 import { RowPress, type PressTarget } from './list-row-press';
 
 export interface WebPressStart extends PressStart {

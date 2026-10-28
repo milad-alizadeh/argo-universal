@@ -1,4 +1,4 @@
-import type { Point } from './list-drop-aim';
+import type { Point } from './list-geometry';
 
 // How far a press may wander before it is a drag or a scroll, and how long a finger holds a row to lift it.
 export const mouseSlop = 4;

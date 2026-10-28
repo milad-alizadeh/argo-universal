@@ -1,12 +1,8 @@
 import { expect, waitFor, within, type userEvent } from 'storybook/test';
+import type { Point } from './list-geometry';
 
 // A story's own user: one pointer, so a press in one call is released by the next.
 export type User = ReturnType<typeof userEvent.setup>;
-
-export interface Point {
-  x: number;
-  y: number;
-}
 
 // Where the pointer goes: a drag aims by where it is, so the stories drive it to points on the screen.
 export const centre = (element: Element): Point => {

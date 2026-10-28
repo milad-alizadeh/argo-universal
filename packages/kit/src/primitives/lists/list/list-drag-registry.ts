@@ -5,7 +5,7 @@ import {
   type Measured,
   type MeasureZone,
 } from './list-drag-measure';
-import type { Rect } from './list-drop-aim';
+import type { Rect } from './list-geometry';
 
 // Removes `value` from `map` when it is still the one registered under `key`.
 const unregister =

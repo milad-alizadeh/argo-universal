@@ -8,16 +8,12 @@ import {
 } from 'react';
 import { View, type ViewInstance } from 'react-native';
 import { OutsideColumn } from '../../../content-column/content-column';
-import { RowHighlightProvider } from '../../../row-highlights';
-import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
-import { childIdentity } from './list-child-identity';
-import type { ListChild } from './list-children';
 import { scrolledBy } from './list-column-scroll';
 import type { ListDrag } from './list-drag-controller';
 import type { DragScroller, MeasureZone } from './list-drag-measure';
 import { DragScrollView } from './list-drag-scroll-view';
-import { childRenderer, ListGrouping, SectionListRow } from './list-grouping';
 import { lanesOf, type Lane } from './list-lane-model';
+import { LaneRows } from './list-lane-rows';
 import { measureView } from './list-measure-view';
 import { useListMoves } from './list-move-context';
 import { useMoveOrder } from './list-move-order';
@@ -76,40 +72,6 @@ function useLaneDrag(key: string, views: LaneViews): void {
   }, [drag, moving, key, views]);
 }
 
-const laneRenderer =
-  (lane: Lane) =>
-  ({ item, index }: { item: ListChild; index: number }): ReactElement => (
-    <SectionListRow
-      section={lane.selection}
-      index={index}
-      count={lane.items.length}
-    >
-      {childRenderer(item)}
-    </SectionListRow>
-  );
-
-const fill = { flex: 1 } as const;
-
-interface LaneRowsProps {
-  lane: Lane;
-  listRef: RefObject<LegendListRef | null>;
-}
-
-// A lane's rows on their own LegendList, which scrolls up and down.
-const LaneRows = ({ lane, listRef }: LaneRowsProps): ReactElement => (
-  <ListGrouping>
-    <RowHighlightProvider>
-      <ScrollFadeList
-        ref={listRef}
-        style={fill}
-        data={lane.items}
-        keyExtractor={childIdentity.keyExtractor}
-        renderItem={laneRenderer(lane)}
-      />
-    </RowHighlightProvider>
-  </ListGrouping>
-);
-
 interface LaneBodyProps {
   lane: Lane;
   laneRef: RefObject<ViewInstance | null>;
@@ -154,6 +116,10 @@ function BoardLane({ lane }: { lane: Lane }): ReactElement {
   );
 }
 
+const boardLane = (lane: Lane): ReactElement => (
+  <BoardLane key={lane.key} lane={lane} />
+);
+
 interface LanesProps {
   blocks: ListBlock[];
   // The key of the rows outside any Section.
@@ -165,17 +131,15 @@ interface LanesProps {
  * down on its own LegendList (ADR-0032). Rows outside any Section form one lane of their own, without a header.
  */
 export function SectionLanes({ blocks, looseKey }: LanesProps): ReactElement {
+  const lanes = useMemo(() => lanesOf(blocks, looseKey), [blocks, looseKey]);
+
   return (
     <DragScrollView
       horizontal
       className="min-h-0 grow"
       contentContainerClassName="gap-4 px-4"
     >
-      <OutsideColumn>
-        {lanesOf(blocks, looseKey).map((lane) => (
-          <BoardLane key={lane.key} lane={lane} />
-        ))}
-      </OutsideColumn>
+      <OutsideColumn>{lanes.map(boardLane)}</OutsideColumn>
     </DragScrollView>
   );
 }

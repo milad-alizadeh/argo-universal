@@ -8,7 +8,7 @@ import {
   slidesIn,
   todoKey,
 } from './list-drag-rig.mocks';
-import type { Point } from './list-drop-aim';
+import type { Point } from './list-geometry';
 
 const fromSearch: Point = { x: 30, y: 210 };
 

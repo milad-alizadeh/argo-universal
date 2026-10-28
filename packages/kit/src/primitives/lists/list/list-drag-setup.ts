@@ -1,3 +1,4 @@
+import type { FrameInput } from './list-drag-frame';
 import type { MoveLayout } from './list-drop-aim';
 import type { ListMove } from './list-move-model';
 import type { MoveOrder } from './list-move-order';
@@ -6,6 +7,8 @@ import type { MoveOrder } from './list-move-order';
 export interface DragSetup {
   order: Pick<MoveOrder, 'sections'>;
   lanes: boolean;
+  // The rows beside the lifted one slide apart, so a frame says how far.
+  slides: boolean;
   move: (move: ListMove) => void;
 }
 
@@ -13,10 +16,19 @@ export interface DragSetup {
 export const idleSetup: DragSetup = {
   order: { sections: [] },
   lanes: false,
+  slides: false,
   move: () => {},
 };
 
-export const layoutOf = ({ order, lanes }: DragSetup): MoveLayout => ({
+const layoutOf = ({ order, lanes }: DragSetup): MoveLayout => ({
   sections: order.sections,
   lanes,
+});
+
+// What a drag frame reads from the setup.
+export const frameSetup = (
+  setup: DragSetup,
+): Pick<FrameInput, 'layout' | 'slides'> => ({
+  layout: layoutOf(setup),
+  slides: setup.slides,
 });

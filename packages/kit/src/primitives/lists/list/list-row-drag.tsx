@@ -8,7 +8,7 @@ import {
   type GestureTouchEvent,
   type PanGesture,
 } from 'react-native-gesture-handler';
-import type { Point } from './list-drop-aim';
+import type { Point } from './list-geometry';
 import type { RowDragProps } from './list-row-drag-props';
 import {
   pressStart,

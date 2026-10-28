@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { holdToLift, type PressStart } from './list-drag-rules';
-import type { Point } from './list-drop-aim';
+import type { Point } from './list-geometry';
 import { RowPress, type PressDrag } from './list-row-press';
 
 type Call = [name: string, ...args: unknown[]];

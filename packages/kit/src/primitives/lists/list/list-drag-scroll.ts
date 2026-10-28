@@ -1,6 +1,6 @@
 import type { MeasuredScroller } from './list-drag-measure';
 import { edgeScroll } from './list-drag-rules';
-import type { Point, Rect } from './list-drop-aim';
+import { inside, type Point } from './list-geometry';
 
 // Runs `step` on a later frame, returning what cancels it.
 export type Schedule = (step: () => void) => () => void;
@@ -33,12 +33,6 @@ export class FrameLoop {
     this.cancelNext = undefined;
   }
 }
-
-const within = (at: number, start: number, size: number): boolean =>
-  at >= start && at <= start + size;
-
-const inside = (rect: Rect, { x, y }: Point): boolean =>
-  within(x, rect.x, rect.width) && within(y, rect.y, rect.height);
 
 const deltaFor = (
   { scroller, rect }: MeasuredScroller,

@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore, type ReactNode } from 'react';
+import { memo, useCallback, useSyncExternalStore, type ReactNode } from 'react';
 import { StyleSheet, View, type ViewProps } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -12,6 +12,16 @@ import type { InsertionLine as InsertionLineAt } from './list-drop-aim';
 
 export const useDragFrame = (drag: ListDrag): DragFrame | undefined =>
   useSyncExternalStore(drag.subscribe, drag.current, drag.current);
+
+// One value of the drag, drawing again only when it changes, as a row's own offset does while another row aims elsewhere.
+export function useDragValue<Value>(
+  drag: ListDrag,
+  read: (frame: DragFrame | undefined) => Value,
+): Value {
+  const snapshot = (): Value => read(drag.current());
+
+  return useSyncExternalStore(drag.subscribe, snapshot, snapshot);
+}
 
 interface LayerProps {
   drag: ListDrag;
@@ -27,7 +37,7 @@ interface LiftedRowProps {
   children: ReactNode;
 }
 
-function LiftedRow({ width, x, y, children }: LiftedRowProps): ReactNode {
+function LiftedCopy({ width, x, y, children }: LiftedRowProps): ReactNode {
   const follow = useAnimatedStyle(() => ({
     transform: [{ translateX: x.value }, { translateY: y.value }],
   }));
@@ -41,6 +51,9 @@ function LiftedRow({ width, x, y, children }: LiftedRowProps): ReactNode {
     </Animated.View>
   );
 }
+
+// Drawn once per drag: the frame changes as the pointer moves, but the lifted copy and its width do not.
+const LiftedRow = memo(LiftedCopy);
 
 function InsertionLine({ line }: { line: InsertionLineAt }): ReactNode {
   return (

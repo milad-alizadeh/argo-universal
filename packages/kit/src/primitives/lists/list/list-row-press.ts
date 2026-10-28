@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ListDrag } from './list-drag-controller';
 import { holdToLift, startAt, type PressStart } from './list-drag-rules';
-import type { Point } from './list-drop-aim';
+import type { Point } from './list-geometry';
 
 // The part of a List's drag a press drives.
 export type PressDrag = Pick<

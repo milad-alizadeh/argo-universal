@@ -8,8 +8,7 @@ import {
 import type { ViewInstance } from 'react-native';
 import { useLiftedRowMark } from '../../../row-highlights';
 import { cn } from '../../../utils';
-import type { DragFrame } from './list-drag-frame';
-import { useDragFrame } from './list-drag-layer';
+import { useDragValue } from './list-drag-layer';
 import type { DragLook } from './list-drag-look';
 import { measureView } from './list-measure-view';
 import { useListMoves, type ListMoves } from './list-move-context';
@@ -33,15 +32,12 @@ function useRegisteredRow(
   return outer;
 }
 
-const liftedIn = (frame: DragFrame | undefined, id: string): boolean =>
-  frame?.id === id;
-
 // The row's pointer: grab at rest, grabbing while any row is dragged; and its own slot's look while it is the one lifted.
 const poseClass = (
   look: DragLook,
-  frame: DragFrame | undefined,
+  dragging: boolean,
   lifted: boolean,
-): string => cn(frame ? look.grabbing : look.grab, lifted && look.lifted);
+): string => cn(dragging ? look.grabbing : look.grab, lifted && look.lifted);
 
 interface RowPose {
   offset: number;
@@ -50,15 +46,13 @@ interface RowPose {
 
 // Where the row draws while a row is dragged: aside, or dimmed in its own slot while it is the one lifted.
 function useRowPose({ drag, look }: ListMoves, id: string): RowPose {
-  const frame = useDragFrame(drag);
-  const lifted = liftedIn(frame, id);
+  const offset = useDragValue(drag, (frame) => slideOf(frame?.rowSlides, id));
+  const lifted = useDragValue(drag, (frame) => frame?.id === id);
+  const dragging = useDragValue(drag, (frame) => frame !== undefined);
 
   useLiftedRowMark(lifted);
 
-  return {
-    offset: look.slides ? slideOf(frame?.rowSlides, id) : 0,
-    className: poseClass(look, frame, lifted),
-  };
+  return { offset, className: poseClass(look, dragging, lifted) };
 }
 
 interface DraggedRowProps {

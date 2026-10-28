@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 import type { ViewInstance } from 'react-native';
-import type { Rect } from './list-drop-aim';
+import type { Rect } from './list-geometry';
 
 type Measured = [x: number, y: number, width: number, height: number];
 
