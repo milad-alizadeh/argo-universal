@@ -8,13 +8,7 @@ import { landing, type DropPlace } from './list-move-model';
 import type { MoveOrder } from './list-move-order';
 
 // What a List's drag works on: the order the List shows, read as the drag aims and drops, and how a drop moves.
-export interface DragSetup {
-  order: Pick<MoveOrder, 'sections'>;
-  lanes: boolean;
-  // The rows beside the lifted one slide apart, so a frame says how far.
-  slides: boolean;
-  move: (move: ListMove) => void;
-}
+export type DragOrder = Pick<MoveOrder, 'sections' | 'lanes' | 'move'>;
 
 // A lifted row, in the drag layer's own coordinates, and where it would land.
 export interface DragFrame {
@@ -39,7 +33,9 @@ interface FrameInput {
   lift: LiftedRow;
   measured: Measured;
   point: Point;
-  setup: DragSetup;
+  order: DragOrder;
+  // The rows beside the lifted one slide apart, so a frame says how far.
+  slides: boolean;
 }
 
 const shifted = <At extends Point>(at: At, by: Point): At => ({
@@ -95,17 +91,12 @@ const slidesFor = (
   input: FrameInput,
   aim: DropAim | undefined,
 ): Pick<DragFrame, 'rowSlides' | 'zoneSlides'> =>
-  input.setup.slides
+  input.slides
     ? slides(input.measured, slideFor(input.measured.source, aim))
     : still;
 
-const aimFor = ({ measured, setup, point }: FrameInput): DropAim | undefined =>
-  aimAt({
-    ...measured,
-    sections: setup.order.sections,
-    lanes: setup.lanes,
-    point,
-  });
+const aimFor = ({ measured, order, point }: FrameInput): DropAim | undefined =>
+  aimAt({ ...measured, sections: order.sections, lanes: order.lanes, point });
 
 // What a drag draws for the pointer at `point`: the lifted row, its insertion line, and the rows moved aside.
 export function dragFrame(input: FrameInput): DragFrame {
@@ -148,7 +139,7 @@ export const sameFrame = (a: DragFrame | undefined, b: DragFrame): boolean =>
 
 // The move a drop reports where the lifted row aims, by the order the List shows.
 export const landedMove = (
-  { order }: DragSetup,
+  order: DragOrder,
   frame: DragFrame | undefined,
 ): ListMove | undefined =>
   frame?.place ? landing(order.sections, frame.id, frame.place) : undefined;

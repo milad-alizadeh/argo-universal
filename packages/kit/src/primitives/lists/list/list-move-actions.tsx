@@ -12,12 +12,12 @@ const stepShortcuts = new Map<string, ActionShortcut>([
 ]);
 
 // The move an entry makes in the order as it is when pressed, so "to the end" counts the rows there now.
-function pressed({ order, move }: ListMoves, id: string, label: string): void {
+function pressed({ order }: ListMoves, id: string, label: string): void {
   const now = rowMoves(order.sections, id).find(
     (entry) => entry.label === label,
   );
 
-  if (now) move(now.move);
+  if (now) order.move(now.move);
 }
 
 const moveActions = (

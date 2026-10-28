@@ -1,10 +1,8 @@
-import type { ListMove } from '@repo/contracts/kit-moves';
 import {
-  useCallback,
   useLayoutEffect,
   useMemo,
-  useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
 import {
@@ -15,6 +13,12 @@ import {
 } from './list-children';
 import type { ChildrenOptions } from './list-children-options';
 import type { MoveSection } from './list-move-model';
+import {
+  MoveOrder,
+  shownSections,
+  type MoveAnswer,
+  type MoveOwner,
+} from './list-move-order';
 import { moveSectionsOf } from './list-move-reading';
 import { useListRequest } from './list-request';
 import {
@@ -22,79 +26,30 @@ import {
   type ListBlock,
   type ListReading,
 } from './list-section-model';
-import {
-  settled,
-  shownSections,
-  type HeldMove,
-  type MoveAnswer,
-} from './list-shown-order';
 
 const failure = {
   title: "Couldn't move the row",
   message: 'It went back to where it was.',
 };
 
-interface ShownOrder {
-  // The moved order the List shows; none while it shows its owner's.
-  sections: MoveSection[] | undefined;
-  move: (move: ListMove) => void;
-}
-
-interface Owner {
-  base: readonly MoveSection[];
-  onMove: MoveAnswer;
-}
-
-/*
- * Holds each move in the shown order, then asks the owner; a refusal shows one error toast. It reads the owner's order
- * and answer as last drawn, so a move stays one function while they change.
- */
-function useHeldMove(owner: Owner, setCurrent: SetHeld): ShownOrder['move'] {
-  const { report } = useListRequest(failure);
-  const latest = useRef(owner);
-
-  useLayoutEffect(() => {
-    latest.current = owner;
-  });
-
-  return useCallback(
-    (next: ListMove) => {
-      const { base, onMove } = latest.current;
-
-      setCurrent(() => ({ move: next, base }));
-      void report(() => onMove(next)).then(letGo(setCurrent, next));
-    },
-    [latest, report, setCurrent],
-  );
-}
-
-/*
- * A move shows at once: the List draws its rows in the moved order until its owner draws another order, or a frame
- * after its `onMove` settles. A refused move goes back, and the List reports it with one error toast (ADR-0031).
- */
-function useShownOrder(
-  base: readonly MoveSection[],
-  onMove: MoveAnswer,
-): ShownOrder {
-  const [current, setCurrent] = useState<HeldMove | null>(null);
-  const move = useHeldMove({ base, onMove }, setCurrent);
-  const sections = useMemo(() => shownSections(current, base), [current, base]);
-
-  return { sections, move };
-}
-
-type SetHeld = (update: (current: HeldMove | null) => HeldMove | null) => void;
-
-// A frame after the answer, so the owner's redraw lands before the held order goes.
-const letGo = (setCurrent: SetHeld, answered: ListMove) => (): void => {
-  requestAnimationFrame(() => setCurrent(settled(answered)));
+const nextFrame = (step: () => void): void => {
+  requestAnimationFrame(step);
 };
+
+// The List's one MoveOrder; what its owner last drew reaches it before the List paints.
+function useOwnedOrder(owner: MoveOwner): MoveOrder {
+  const { report } = useListRequest(failure);
+
+  const [order] = useState(
+    () => new MoveOrder(owner, { report, frame: nextFrame }),
+  );
+
+  return order;
+}
 
 export interface MovableReading {
   prepared: PreparedChildren;
-  // The movable rows, Section by Section, in the order they show.
-  sections: readonly MoveSection[];
-  move: (move: ListMove) => void;
+  order: MoveOrder;
 }
 
 interface OwnerReading {
@@ -124,17 +79,27 @@ function useOwnerReading(children: ReactNode): OwnerReading {
 // The blocks as they show: the owner's, or read again in the moved order while a move waits.
 function useShownBlocks(
   children: ReactNode,
-  { reader, base }: OwnerReading,
-  shown: MoveSection[] | undefined,
+  { reader, base, owners }: OwnerReading,
+  shown: readonly MoveSection[],
 ): ListBlock[] {
   return useMemo(() => {
-    if (!shown) return base.blocks;
+    if (shown === owners) return base.blocks;
 
     const order = new Map(shown.map((section) => [section.key, section.rows]));
 
     return readList(children, { ...reader, held: { order, rows: base.rows } })
       .blocks;
-  }, [children, reader, base, shown]);
+  }, [children, reader, base, owners, shown]);
+}
+
+// The order the List shows over its owner's, drawing again as a move is held or let go.
+function useShownSections(
+  order: MoveOrder,
+  owners: readonly MoveSection[],
+): readonly MoveSection[] {
+  const held = useSyncExternalStore(order.subscribe, () => order.held);
+
+  return useMemo(() => shownSections(held, owners), [held, owners]);
 }
 
 /*
@@ -146,13 +111,14 @@ export function useMovableReading(
   onMove: MoveAnswer,
 ): MovableReading {
   const owner = useOwnerReading(options.children);
-  const shown = useShownOrder(owner.owners, onMove);
-  const blocks = useShownBlocks(options.children, owner, shown.sections);
+  const base = owner.owners;
+  const order = useOwnedOrder({ base, onMove, lanes: false });
+  const shown = useShownSections(order, base);
+  const blocks = useShownBlocks(options.children, owner, shown);
   const prepared = usePrepared(options, blocks, owner.reader.prefix);
+  const { lanes } = prepared;
 
-  return {
-    prepared,
-    sections: shown.sections ?? owner.owners,
-    move: shown.move,
-  };
+  useLayoutEffect(() => order.own({ base, onMove, lanes }));
+
+  return { prepared, order };
 }

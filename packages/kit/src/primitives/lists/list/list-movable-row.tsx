@@ -17,7 +17,7 @@ import { focusView } from './list-row-focus';
 
 // The outer view never moves, so the drag measures the row's resting slot; a move focuses the row it draws.
 function useRegisteredRow(
-  { drag, focus }: ListMoves,
+  { drag, order: { focus } }: ListMoves,
   id: string,
 ): RefObject<ViewInstance | null> {
   const outer = useRef<ViewInstance>(null);

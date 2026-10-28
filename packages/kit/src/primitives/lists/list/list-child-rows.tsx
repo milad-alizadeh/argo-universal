@@ -10,10 +10,10 @@ import { childRenderer } from './list-grouping';
 import { ListKeyboard } from './list-keyboard';
 import { SectionLanes } from './list-lanes';
 import { useMovableReading } from './list-movable-reading';
+import type { MoveAnswer } from './list-move-order';
 import { MovableList } from './list-moves';
 import type { ListProps } from './list-props';
 import { SectionShelves, type ChildDataProps } from './list-section-shelves';
-import type { MoveAnswer } from './list-shown-order';
 
 const drawsNothing = ({ items, shelves, lanes }: PreparedChildren): boolean =>
   items.length === 0 && !shelves && !lanes;
@@ -101,13 +101,12 @@ interface MovableProps<Item> {
 
 function MovableRows<Item>(props: MovableProps<Item>): ReactElement {
   const options = childrenOptions(props.list);
-  const { prepared, sections, move } = useMovableReading(options, props.onMove);
-  const layout = { sections, lanes: prepared.lanes };
+  const { prepared, order } = useMovableReading(options, props.onMove);
 
   return (
     <MovableList
-      layout={layout}
-      move={move}
+      order={order}
+      lanes={prepared.lanes}
       listRef={props.listRef}
       render={rowsIn(options, prepared)}
     />

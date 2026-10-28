@@ -7,7 +7,7 @@ import {
   landedMove,
   sameFrame,
   type DragFrame,
-  type DragSetup,
+  type DragOrder,
   type LiftedRow,
 } from './list-drag-frame';
 import {
@@ -28,6 +28,13 @@ interface Lift extends LiftedRow {
 
 const sourceOf = (measured?: Measured): Rect | undefined => measured?.source;
 
+// How a drag draws: where its lifted copy goes, whether rows slide apart, and when its frames run.
+export interface DragDrawing {
+  ghostAt: (point: Point) => void;
+  slides: boolean;
+  schedule?: Schedule;
+}
+
 /*
  * One List's drag: rows, Section zones and scrollers register as they draw. A lift measures them all in the window,
  * the pointer aims at a Section and an index there, scrollers under the pointer's edge scroll, and the drop reports
@@ -36,13 +43,6 @@ const sourceOf = (measured?: Measured): Rect | undefined => measured?.source;
 export class ListDrag extends DragRegistry {
   private readonly listeners = listenerSet();
   public readonly subscribe = this.listeners.subscribe;
-  // Before its List configures it, a drag has nowhere to land.
-  private setup: DragSetup = {
-    order: { sections: [] },
-    lanes: false,
-    slides: false,
-    move: () => {},
-  };
   private lift: Lift | undefined;
   private measured: Measured | undefined;
   private point: Point = { x: 0, y: 0 };
@@ -53,15 +53,11 @@ export class ListDrag extends DragRegistry {
 
   public constructor(
     layer: Measure,
-    private readonly ghostAt: (point: Point) => void,
-    schedule?: Schedule,
+    private readonly order: DragOrder,
+    private readonly drawing: DragDrawing,
   ) {
     super(layer);
-    this.scrolling = new FrameLoop(schedule);
-  }
-
-  public configure(setup: DragSetup): void {
-    this.setup = setup;
+    this.scrolling = new FrameLoop(drawing.schedule);
   }
 
   public readonly current = (): DragFrame | undefined => this.frame;
@@ -97,11 +93,11 @@ export class ListDrag extends DragRegistry {
   }
 
   private drop(): void {
-    const move = landedMove(this.setup, this.frame);
+    const move = landedMove(this.order, this.frame);
 
     this.end();
 
-    if (move) this.setup.move(move);
+    if (move) this.order.move(move);
   }
 
   private end(): void {
@@ -150,11 +146,12 @@ export class ListDrag extends DragRegistry {
   }
 
   private drawAt(lift: Lift, measured: Measured, remeasured: boolean): void {
-    const { point, setup } = this;
+    const { point, order } = this;
+    const { ghostAt, slides } = this.drawing;
 
-    this.ghostAt(ghostPoint(point, lift, measured.layer));
+    ghostAt(ghostPoint(point, lift, measured.layer));
 
-    const next = dragFrame({ lift, measured, point, setup });
+    const next = dragFrame({ lift, measured, point, order, slides });
 
     if (remeasured || !sameFrame(this.frame, next)) this.draw(next);
   }

@@ -2,6 +2,7 @@ import type { ListMove } from '@repo/contracts/kit-moves';
 import { vi, type Mock } from 'vitest';
 import { ListDrag } from './list-drag-controller';
 import type { DragFrame } from './list-drag-frame';
+import type { Schedule } from './list-drag-rules';
 import type { Point, Rect } from './list-geometry';
 import type { DropPlace, MoveSection } from './list-move-model';
 
@@ -27,23 +28,29 @@ export interface Rig {
   frames: (() => void)[];
 }
 
+// Queues each frame the drag asks for, for a test to run.
+const queued =
+  (frames: (() => void)[]): Schedule =>
+  (step) => {
+    frames.push(step);
+
+    return (): void => {};
+  };
+
 export function rigFor(sections: readonly MoveSection[], lanes: boolean): Rig {
   const ghost: Point[] = [];
   const frames: (() => void)[] = [];
+  const move = vi.fn<(move: ListMove) => void>();
 
   const drag = new ListDrag(
     async () => layer,
-    (point) => ghost.push(point),
-    (step) => {
-      frames.push(step);
-
-      return (): void => {};
+    { sections, lanes, move },
+    {
+      ghostAt: (point): number => ghost.push(point),
+      slides: true,
+      schedule: queued(frames),
     },
   );
-
-  const move = vi.fn<(move: ListMove) => void>();
-
-  drag.configure({ order: { sections }, lanes, slides: true, move });
 
   return { drag, move, ghost, frames };
 }

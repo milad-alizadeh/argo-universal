@@ -1,8 +1,6 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
-import type { ListMove } from '@repo/contracts/kit-moves';
 import {
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,17 +16,10 @@ import { useColumnScroll } from './list-column-scroll';
 import { ListDrag } from './list-drag-controller';
 import { ListDragLayer, useDragValue } from './list-drag-layer';
 import { dragLook } from './list-drag-look';
-import type { MoveLayout } from './list-drop-aim';
 import { measureView, type Point } from './list-geometry';
 import { MoveAnnouncer } from './list-move-announcer';
 import { ListMoveContext, type ListMoves } from './list-move-context';
-import {
-  useMoveFeedback,
-  type MoveFeedback,
-  type MoveNotice,
-} from './list-move-feedback';
-import type { MoveSection } from './list-move-model';
-import { MoveOrder } from './list-move-order';
+import { useMoveOrder, type MoveOrder } from './list-move-order';
 
 interface GhostPoint {
   x: SharedValue<number>;
@@ -44,45 +35,24 @@ const ghostMover =
 
 function useListDrag(
   layer: RefObject<ViewInstance | null>,
+  order: MoveOrder,
   ghost: GhostPoint,
 ): ListDrag {
-  const [drag] = useState(
-    () => new ListDrag(() => measureView(layer), ghostMover(ghost)),
-  );
+  const [drag] = useState(() => {
+    const drawing = { ghostAt: ghostMover(ghost), slides: dragLook.slides };
+
+    return new ListDrag(() => measureView(layer), order, drawing);
+  });
 
   useEffect((): (() => void) => () => drag.cancel(), [drag]);
 
   return drag;
 }
 
-function useConfiguredMoves(
-  drag: ListDrag,
-  { order, lanes }: Pick<ListMoves, 'order' | 'lanes'>,
-  { move, focus }: MoveFeedback,
-): ListMoves {
-  useEffect(
-    () => drag.configure({ order, lanes, slides: dragLook.slides, move }),
-    [drag, order, lanes, move],
-  );
-
-  return useMemo(
-    () => ({ look: dragLook, drag, focus, move, order, lanes }),
-    [drag, focus, move, order, lanes],
-  );
-}
-
-// The order the List shows, as a store its rows read; it changes before the List paints.
-function useShownOrder(sections: readonly MoveSection[]): MoveOrder {
-  const [order] = useState(() => new MoveOrder(sections));
-
-  useLayoutEffect(() => order.show(sections), [order, sections]);
-
-  return order;
-}
-
 interface MovableListProps {
-  layout: MoveLayout;
-  move: (move: ListMove) => void;
+  order: MoveOrder;
+  // The List's Sections draw as lanes side by side.
+  lanes: boolean;
   // The List's own ref, kept on its scroll view.
   listRef: Ref<LegendListRef> | undefined;
   // Draws the List's rows, in the order they show, on a scroll view taking `ref`.
@@ -94,20 +64,20 @@ interface MoveHost {
   layer: RefObject<ViewInstance | null>;
   ghost: GhostPoint;
   scrollTo: Ref<LegendListRef>;
-  notice: MoveNotice | null;
 }
 
-function useMoveHost({ layout, move, listRef }: MovableListProps): MoveHost {
-  const { sections, lanes } = layout;
-  const order = useShownOrder(sections);
-  const feedback = useMoveFeedback(order, move);
+function useMoveHost({ order, lanes, listRef }: MovableListProps): MoveHost {
   const layer = useRef<ViewInstance>(null);
   const ghost = { x: useSharedValue(0), y: useSharedValue(0) };
-  const drag = useListDrag(layer, ghost);
+  const drag = useListDrag(layer, order, ghost);
   const scrollTo = useColumnScroll({ drag, frame: layer, own: listRef, lanes });
-  const moves = useConfiguredMoves(drag, { order, lanes }, feedback);
 
-  return { moves, layer, ghost, scrollTo, notice: feedback.notice };
+  const moves = useMemo(
+    () => ({ look: dragLook, drag, order, lanes }),
+    [drag, order, lanes],
+  );
+
+  return { moves, layer, ghost, scrollTo };
 }
 
 interface SurfaceProps {
@@ -134,15 +104,14 @@ function DragSurface({ drag, viewRef, children }: SurfaceProps): ReactElement {
  * After a move, focus stays on the moved row and a screen reader hears where it landed.
  */
 export function MovableList(props: MovableListProps): ReactElement {
-  const { moves, layer, ghost, ...host } = useMoveHost(props);
+  const { moves, layer, ghost, scrollTo } = useMoveHost(props);
+  const notice = useMoveOrder(props.order, (order) => order.notice);
 
   return (
     <DragSurface drag={moves.drag} viewRef={layer}>
-      <ListMoveContext value={moves}>
-        {props.render(host.scrollTo)}
-      </ListMoveContext>
+      <ListMoveContext value={moves}>{props.render(scrollTo)}</ListMoveContext>
       <ListDragLayer drag={moves.drag} look={dragLook} {...ghost} />
-      <MoveAnnouncer notice={host.notice} />
+      <MoveAnnouncer notice={notice ?? null} />
     </DragSurface>
   );
 }
