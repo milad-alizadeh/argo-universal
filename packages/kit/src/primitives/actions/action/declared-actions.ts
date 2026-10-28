@@ -22,18 +22,24 @@ export interface DeclaredActions {
   actions: DeclaredAction[];
 }
 
+export interface DeclarationOptions {
+  // Its shortcuts run only while focus is inside the node carrying the declaration's `id`.
+  context?: boolean;
+  // Argo itself declared these Actions, as a List's refresh and Move Section are, so they keep Argo's reserved keys.
+  builtIn?: boolean;
+}
+
 /*
- * Reads an `actions` Slot's Actions and Sections, and claims their shortcuts in the enclosing scope. A `context`
- * declaration's shortcuts run only while focus is inside the node carrying its `id`. Inside a Plugin's tree they
- * cannot claim Argo's reserved keys, unless `builtIn` says Argo itself declared them, as a List's refresh does.
+ * Reads an `actions` Slot's Actions and Sections, and claims their shortcuts in the enclosing scope. Inside a Plugin's
+ * tree they cannot claim Argo's reserved keys, unless Argo itself declared them.
  */
 export function useDeclaredActions(
   declared: ReactNode,
-  context = false,
-  builtIn = false,
+  options: DeclarationOptions = {},
 ): DeclaredActions {
   const groups = useMemo(() => actionGroups(declared), [declared]);
-  const plugin = useIsPlugin(builtIn);
+  const plugin = useIsPlugin(options.builtIn === true);
+  const context = options.context === true;
   const { id, actions } = useGroupShortcuts(groups, { context, plugin });
 
   const owned = ownedShortcuts(actions);

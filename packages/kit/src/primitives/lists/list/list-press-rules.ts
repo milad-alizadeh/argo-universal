@@ -1,7 +1,7 @@
 import type { Point } from './list-geometry';
-import { holdToLift } from './list-press-hold';
+import { holdToLiftMs } from './list-press-hold';
 
-export { holdToLift };
+export { holdToLiftMs };
 
 // How far a press may wander before it is a drag or a scroll.
 export const mouseSlop = 4;
@@ -24,7 +24,7 @@ const mouseStart = (distance: number): DragStart =>
 function touchStart(heldFor: number, distance: number): DragStart {
   if (distance <= touchSlop) return 'wait';
 
-  return heldFor >= holdToLift ? 'lift' : 'scroll';
+  return heldFor >= holdToLiftMs ? 'lift' : 'scroll';
 }
 
 /*

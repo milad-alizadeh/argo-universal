@@ -21,7 +21,7 @@ const titled =
   (id: RowId, index: number): string =>
     order.titleOf(id) ?? `row ${index + 1}`;
 
-function pickerOf(order: MoveOrder, id: RowId): MovePicker {
+function rowPicker(order: MoveOrder, id: RowId): MovePicker {
   const close = (): void => order.closePicker();
 
   return {
@@ -35,11 +35,11 @@ function pickerOf(order: MoveOrder, id: RowId): MovePicker {
   };
 }
 
-const pickerFor = (
+const listPicker = (
   order: MoveOrder | undefined,
   id: RowId | undefined,
 ): MovePicker | undefined =>
-  order && id !== undefined ? pickerOf(order, id) : undefined;
+  order && id !== undefined ? rowPicker(order, id) : undefined;
 
 // The Move to… picker while it is open for row `id`; nothing otherwise, or outside a List with `onMove`.
 export function useMovePicker(
@@ -54,7 +54,7 @@ export function useMovePicker(
   );
 
   return useMemo(
-    () => (open ? pickerFor(order, id) : undefined),
+    () => (open ? listPicker(order, id) : undefined),
     [open, order, id],
   );
 }

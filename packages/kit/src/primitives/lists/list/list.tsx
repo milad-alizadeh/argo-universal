@@ -50,7 +50,7 @@ const renderRows = <Item,>(prepared: ListProps<Item>): ReactElement => (
 );
 
 // A Plugin's List, whose props its wire checked: plugin-kit's types keep `onMove` off a List of `items` there.
-export function WireList<Item>(props: ListProps<Item>): ReactElement {
+export function PluginList<Item>(props: ListProps<Item>): ReactElement {
   return (
     <ListLookContext value={useLook(props)}>
       <ListBehaviours list={props} render={renderRows} />
@@ -62,7 +62,7 @@ export function WireList<Item>(props: ListProps<Item>): ReactElement {
 export function List<Item>(
   props: ListProps<Item> & MovesOrItems,
 ): ReactElement {
-  return <WireList {...props} />;
+  return <PluginList {...props} />;
 }
 
 List.Section = ListSection;

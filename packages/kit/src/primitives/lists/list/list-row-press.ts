@@ -3,7 +3,7 @@ import type { ViewInstance } from 'react-native';
 import type { ListDrag } from './list-drag-controller';
 import type { Point } from './list-geometry';
 import type { RowId } from './list-move-model';
-import { holdToLift, startAt, type PressStart } from './list-press-rules';
+import { holdToLiftMs, startAt, type PressStart } from './list-press-rules';
 
 // The part of a List's drag a press drives.
 export type PressDrag = Pick<
@@ -51,7 +51,7 @@ export class RowPress {
 
   // A lifted row, or a finger held long enough to lift it, keeps its moves from the page's scroll.
   public holds(now: number): boolean {
-    return this.lifted || now - this.press.at >= holdToLift;
+    return this.lifted || now - this.press.at >= holdToLiftMs;
   }
 
   public move(at: Point, now: number): PressStep {

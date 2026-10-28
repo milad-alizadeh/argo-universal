@@ -21,14 +21,19 @@ export interface ContextActionsProps {
   children: ContextMenuProps['children'];
 }
 
+// The owner's Actions and Argo's run their shortcuts inside the trigger; only Argo's keep its reserved keys.
+const ownDeclaration = { context: true } as const;
+
+const argosDeclaration = { context: true, builtIn: true } as const;
+
 /*
  * Opens the Actions on right-click and long press, and runs their shortcuts while focus is inside the trigger; with no
  * Actions, the trigger draws alone. A context menu is one level on every platform, so it lists press Actions only and
  * leaves submenus out. The owner's Actions and Argo's are declared apart, each claiming shortcuts as its own.
  */
 export function ContextActions(props: ContextActionsProps): ReactElement {
-  const own = useDeclaredActions(props.actions, true);
-  const added = useDeclaredActions(props.builtIn, true, true);
+  const own = useDeclaredActions(props.actions, ownDeclaration);
+  const added = useDeclaredActions(props.builtIn, argosDeclaration);
   const groups = pressGroups([...own.groups, ...added.groups]);
 
   // Actions that are all submenus leave a context menu with nothing to show, so it never opens.

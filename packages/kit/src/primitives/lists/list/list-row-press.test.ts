@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Point } from './list-geometry';
 import { rowId } from './list-move-model';
-import { holdToLift, type PressStart } from './list-press-rules';
+import { holdToLiftMs, type PressStart } from './list-press-rules';
 import { RowPress, type PressDrag } from './list-row-press';
 
 type Call = [name: string, ...args: unknown[]];
@@ -58,14 +58,14 @@ describe('a press on a movable row', () => {
   it('leaves a finger that moves before the hold ends to the scroll', () => {
     const { press } = pressWith('touch');
 
-    expect(press.move(away, holdToLift - 1)).toBe('scroll');
+    expect(press.move(away, holdToLiftMs - 1)).toBe('scroll');
   });
 
   it('never lifts a row once its finger went to the scroll', () => {
     const { press, calls } = pressWith('touch');
 
-    press.move(away, holdToLift - 1);
-    press.move(away, holdToLift + 1);
+    press.move(away, holdToLiftMs - 1);
+    press.move(away, holdToLiftMs + 1);
 
     expect(calls).toEqual([['prepare', 'login']]);
   });
@@ -73,7 +73,7 @@ describe('a press on a movable row', () => {
   it('lifts the row for a finger that held it, from where it pressed', () => {
     const { press, calls } = pressWith('touch');
 
-    press.move(away, holdToLift);
+    press.move(away, holdToLiftMs);
 
     expect(calls[1]).toEqual(['begin', 'login', start]);
   });
@@ -113,6 +113,6 @@ describe('a press on a movable row', () => {
   it('keeps a finger held long enough from the page’s scroll', () => {
     const { press } = pressWith('touch');
 
-    expect(press.holds(holdToLift)).toBe(true);
+    expect(press.holds(holdToLiftMs)).toBe(true);
   });
 });

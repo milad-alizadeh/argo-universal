@@ -26,7 +26,7 @@ interface FrameProps {
 function BehaviourFrame(props: FrameProps): ReactNode {
   useSelectionBack(props.selection);
   const actions = useSelectionActions(props.selection);
-  const declared = useDeclaredActions(actions, true);
+  const declared = useDeclaredActions(actions, { context: true });
   const toolbar = { selection: props.selection, groups: declared.groups };
 
   return <BehaviourDrawing {...props} id={declared.id} toolbar={toolbar} />;
