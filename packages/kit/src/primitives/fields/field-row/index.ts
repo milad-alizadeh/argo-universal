@@ -3,6 +3,7 @@ export { RowTitle, type RowTextProps } from './field-row-text';
 export {
   GroupDisabledContext,
   PositionContext,
+  RowLongPressContext,
   cornerRadii,
 } from './field-row-position';
 

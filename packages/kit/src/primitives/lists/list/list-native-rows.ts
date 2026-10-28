@@ -10,11 +10,7 @@ export function holdsNativeRows(children: ReactNode): boolean {
   return rows.length > 0 && rows.every((row) => isNativeRow(row.render()));
 }
 
-/*
- * What NativeGroupedList cannot draw: a List that sets any of these stays on LegendList rather than lose them.
- * `onMove` is not one: only a ListItem with an `id` moves, and a native List holds none. Its FieldGroup rows are SwiftUI
- * and Compose views with no `id` in their contract, so there is no row to name in a ListMove, by drag or by menu.
- */
+// What NativeGroupedList cannot draw: a List that sets any of these stays on LegendList rather than lose them.
 const unhonouredProps = [
   'header',
   'startContent',

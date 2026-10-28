@@ -3,6 +3,7 @@ import {
   alpha,
   clickable,
   clip,
+  combinedClickable,
   fillMaxWidth,
   Shapes,
   toggleable,
@@ -18,6 +19,7 @@ import {
   cornerRadii,
   GroupDisabledContext,
   PositionContext,
+  RowLongPressContext,
 } from './field-row-position';
 import type { RowTextProps } from './field-row-text';
 
@@ -72,12 +74,13 @@ function Headline(props: RowListItemProps): ReactNode {
 function useRowModifiers(props: RowListItemProps): ModifierConfig[] {
   const corner = Shapes.RoundedCorner(cornerRadii(useContext(PositionContext)));
   const off = useDisabled(props.disabled);
+  const longPress = useContext(RowLongPressContext);
 
   return [
     fillMaxWidth(),
     clip(corner),
     ...dimming(off),
-    ...pressing(props, off),
+    ...pressing(props, off, longPress),
     ...(props.modifiers ?? []),
   ];
 }
@@ -91,8 +94,27 @@ function useDisabled(own: boolean | undefined): boolean {
 const dimming = (off: boolean): ModifierConfig[] =>
   off ? [alpha(disabledContentAlpha)] : [];
 
-const pressing = (props: RowListItemProps, off: boolean): ModifierConfig[] =>
-  props.onPress && !off ? [clickable(props.onPress)] : [];
+const tapped = (
+  props: RowListItemProps,
+  off: boolean,
+): (() => void) | undefined => (off ? undefined : props.onPress);
+
+/*
+ * A tap runs the row's press; with a long press, Compose's `combinedClickable` takes both, as one clickable a nested
+ * one would shadow.
+ */
+function pressing(
+  props: RowListItemProps,
+  off: boolean,
+  longPress: (() => void) | undefined,
+): ModifierConfig[] {
+  const onClick = tapped(props, off);
+
+  if (longPress)
+    return [combinedClickable({ onClick, onLongClick: longPress })];
+
+  return onClick ? [clickable(onClick)] : [];
+}
 
 function SupportingSlot(
   props: Pick<RowListItemProps, 'supporting'>,

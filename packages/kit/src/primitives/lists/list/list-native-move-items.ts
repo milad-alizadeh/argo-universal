@@ -1,0 +1,40 @@
+import { useMemo } from 'react';
+import type { NativeMenuItem } from '#primitives/overlays/menu';
+import { pressed } from './list-move-actions';
+import { useListMoveOrder } from './list-move-context';
+import { stepMoves } from './list-move-menu';
+import { useMoveOrder, type MoveOrder } from './list-move-order';
+
+const moveItems = (order: MoveOrder, id: string): NativeMenuItem[] => [
+  ...stepMoves(order.sections, id).map(({ key, label, intent }) => ({
+    id: key,
+    title: label,
+    disabled: false,
+    choose: () => pressed(order, id, intent),
+  })),
+  {
+    id: 'to',
+    title: 'Move to…',
+    disabled: false,
+    choose: () => order.pick(id),
+  },
+];
+
+/*
+ * The Move menu of a native grouped List's row, as a ListItem's Move Section offers it: up and down a place, and
+ * Move to…. Nothing for a row the List cannot move, or outside a List with `onMove`.
+ */
+export function useNativeMoveItems(
+  id: string | undefined,
+): NativeMenuItem[] | undefined {
+  const order = useListMoveOrder();
+  const menu = useMoveOrder(order, (each) => each.menuOf(id));
+
+  return useMemo(
+    () =>
+      menu === undefined || order === undefined || id === undefined
+        ? undefined
+        : moveItems(order, id),
+    [menu, order, id],
+  );
+}

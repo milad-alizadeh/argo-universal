@@ -11,6 +11,7 @@ import { useCompactRows, useListLook } from '../../../list-look-context';
 import { loadingLanes } from '../../../list-skeleton-lanes';
 import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useSeparatorCovered } from '../../../row-highlights';
+import { drawsMovePicker } from '../list/list-move-picker-drawing';
 import {
   useContentItemDrawing,
   useContentItemActions,
@@ -121,6 +122,13 @@ export function ListItem({ children, ...props }: ListItemProps): ReactElement {
 
 // A List lifts child ListItems to rows of their own; it hands them on to this row's tree lane instead.
 nestsChildren(ListItem);
+
+// A native grouped List's FieldGroup rows open the same Move to… picker, its places listed as ListItems.
+function ListItemMovePicker({ id }: { id: string }): ReactNode {
+  return <RowMovePicker id={id} Row={ListItem} />;
+}
+
+drawsMovePicker(ListItemMovePicker);
 
 // A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {

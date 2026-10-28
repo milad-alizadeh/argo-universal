@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from './list';
 import { board, column } from './list-moves-fixtures';
-import { MovesExample } from './list-moves.mocks';
+import { GroupedMovesExample, MovesExample } from './list-moves.mocks';
 
 /*
  * Rows a List moves: dragged on every platform, or chosen from a row's context menu. On a wide desktop or web window
@@ -27,4 +27,9 @@ export const Board: Story = {
 export const Column: Story = {
   args: column,
   render: (args) => <MovesExample {...args} />,
+};
+
+// FieldGroup rows, which iOS and Android draw as their own grouped list: a row moves from its long-press menu.
+export const Grouped: Story = {
+  render: () => <GroupedMovesExample />,
 };

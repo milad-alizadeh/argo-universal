@@ -284,6 +284,8 @@ type FieldGroupSectionHints = {
 };
 
 type FieldGroupValueHints = {
+  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -297,6 +299,8 @@ type FieldGroupValueHints = {
 };
 
 type FieldGroupLinkHints = {
+  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -310,6 +314,8 @@ type FieldGroupLinkHints = {
 };
 
 type FieldGroupToggleHints = {
+  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -321,6 +327,8 @@ type FieldGroupToggleHints = {
 };
 
 type FieldGroupPickerHints = {
+  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -352,6 +360,8 @@ type FieldGroupPickerHints = {
 };
 
 type FieldGroupDatePickerHints = {
+  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -367,6 +377,8 @@ type FieldGroupDatePickerHints = {
 };
 
 type FieldGroupSliderHints = {
+  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -386,6 +398,8 @@ type FieldGroupSliderHints = {
 };
 
 type FieldGroupTextFieldHints = {
+  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -419,6 +433,8 @@ type FieldGroupTextFieldHints = {
 };
 
 type FieldGroupSecretFieldHints = {
+  /** The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */

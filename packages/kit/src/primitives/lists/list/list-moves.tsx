@@ -18,7 +18,11 @@ import { ListDragLayer, useDragValue } from './list-drag-layer';
 import { dragLook } from './list-drag-look';
 import { measureView, type Point } from './list-geometry';
 import { MoveAnnouncer } from './list-move-announcer';
-import { ListMoveContext, type ListMoves } from './list-move-context';
+import {
+  ListMoveContext,
+  ListMoveOrderContext,
+  type ListMoves,
+} from './list-move-context';
 import { useMoveOrder, type MoveOrder } from './list-move-order';
 
 interface GhostPoint {
@@ -109,7 +113,11 @@ export function MovableList(props: MovableListProps): ReactElement {
 
   return (
     <DragSurface drag={moves.drag} viewRef={layer}>
-      <ListMoveContext value={moves}>{props.render(scrollTo)}</ListMoveContext>
+      <ListMoveOrderContext value={props.order}>
+        <ListMoveContext value={moves}>
+          {props.render(scrollTo)}
+        </ListMoveContext>
+      </ListMoveOrderContext>
       <ListDragLayer drag={moves.drag} look={dragLook} {...ghost} />
       <MoveAnnouncer notice={notice ?? null} />
     </DragSurface>

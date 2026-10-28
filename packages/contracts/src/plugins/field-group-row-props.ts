@@ -7,6 +7,12 @@ import { stockIcon } from '../kit-symbols/stock-icon-schema';
  * what sits at the end (`trailing` is each control's own value). A row has no free Slots.
  */
 export const fieldGroupFieldProps = z.object({
+  id: z
+    .string()
+    .optional()
+    .describe(
+      'The row identity a move reports, in a grouped List with onMove; a FieldGroup ignores it.',
+    ),
   title: z.string().describe('The row’s label.'),
   disabled: z.boolean().optional().describe('Whether the row is disabled.'),
 });

@@ -15,6 +15,7 @@ import {
   type RowPosition,
 } from '../../../list-context';
 import type { ListChild } from './list-children';
+import { FieldRowMoves } from './list-field-row-moves';
 import { ListGroupEnds, ListGroupEndsContext } from './list-group-ends';
 import { GroupedCells } from './list-grouped-cell';
 import { MovableRow } from './list-movable-row';
@@ -121,7 +122,7 @@ function useFixedPosition({ position }: ListChild): RowPosition {
 const FixedCell = ({ item }: FixedRowProps): ReactElement => (
   <MovableRow id={item.moveId} ghost={item.content}>
     <GroupedCells cell={!item.fullSpan} position={item.position}>
-      {item.content}
+      <FieldRowMoves id={item.moveId} content={item.content} />
     </GroupedCells>
   </MovableRow>
 );

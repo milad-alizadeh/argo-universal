@@ -1,5 +1,6 @@
 import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
 import { useState, type ReactElement } from 'react';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { ListItem } from '../list-item';
 import { List } from './list';
 import {
@@ -69,6 +70,33 @@ export function RefusedMovesExample(): ReactElement {
   return (
     <List {...board} onMove={refuse}>
       {boardLanes.map(laneSection(open))}
+    </List>
+  );
+}
+
+// FieldGroup's own rows in a grouped List: the phones draw it natively, and a row's long-press menu moves it.
+const groupedSection =
+  (onPress: ExampleProps['onPress']) =>
+  (lane: BoardLane): ReactElement => (
+    <List.Section key={lane.id} id={lane.id} title={lane.title}>
+      {lane.rows.map((card) => (
+        <FieldGroup.Link
+          key={card.id}
+          id={card.id}
+          title={card.title}
+          onPress={onPress ?? open}
+        />
+      ))}
+    </List.Section>
+  );
+
+export function GroupedMovesExample(example: ExampleProps): ReactElement {
+  const { lanes: initial = boardLanes, onMove, onPress } = example;
+  const [lanes, move] = useMovedLanes(initial, onMove);
+
+  return (
+    <List appearance="grouped" onMove={move}>
+      {lanes.map(groupedSection(onPress))}
     </List>
   );
 }

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useListMoves } from './list-move-context';
+import { useListMoveOrder } from './list-move-context';
 import {
   pickSections,
   type PickSection,
@@ -46,7 +46,7 @@ const pickerFor = (
 
 // The Move to… picker while it is open for row `id`; nothing otherwise, or outside a List with `onMove`.
 export function useMovePicker(id: string | undefined): MovePicker | undefined {
-  const order = useListMoves()?.order;
+  const order = useListMoveOrder();
 
   const open = useMoveOrder(
     order,
