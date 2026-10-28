@@ -108,3 +108,9 @@ Feature: Plugin navigation
     And I open the Plugin row "Add CSV export"
     Then the Plugin page heading reads "Add CSV export"
     And the Plugin row "Sync fails on large repos" is hidden
+
+  Scenario: A Plugin item on a Session row opens its Plugin page
+    Given a Session named "Check the live list"
+    Then the Session row "Check the live list" shows the Plugin item "Counter item"
+    When I press the Plugin item "Counter item" on the Session row "Check the live list"
+    Then the Plugin page shows Counter

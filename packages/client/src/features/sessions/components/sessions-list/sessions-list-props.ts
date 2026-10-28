@@ -5,6 +5,10 @@ import type {
 } from '@repo/contracts';
 import type { ReactElement } from 'react';
 import type { SessionsView } from '../../stores/sessions-view';
+import type {
+  OpenPluginPage,
+  SessionRowPlugins,
+} from '../session-row/session-row-props';
 
 export interface SessionsListProps {
   projects: ProjectsListOutput;
@@ -14,6 +18,10 @@ export interface SessionsListProps {
   // How the list groups, filters and lays out its rows.
   view: SessionsView;
   selectedSessionId?: string;
+  // What the Plugins add to each row, by Session id; a row not listed is Argo's own.
+  rowPlugins?: ReadonlyMap<string, SessionRowPlugins>;
+  // Opens a Plugin's page from one of its row items.
+  onOpenPluginPage?: OpenPluginPage;
   onSelect: (id: string) => void;
   onStartSession?: () => void;
   // Desktop and the web: renaming from a row's double-click or context menu.
