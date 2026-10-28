@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn } from '../../../utils';
-import { PassThroughContext } from './list-item-pass-through';
+import { PassThroughContext, RowPressContext } from './list-item-pass-through';
 import { usePressLanes } from './list-item-press-class';
 import type { DrawingProps, RowPressProps } from './list-item-press-props';
 import { ItemContentSlots } from './list-item-slots';
@@ -23,17 +23,19 @@ export function BesidePress({ props, press }: BesidePressProps): ReactElement {
         {...press}
         className={cn(press.className, 'absolute inset-0')}
       />
-      <PassThroughLanes {...props} />
+      <PassThroughLanes props={props} press={press} />
     </View>
   );
 }
 
-function PassThroughLanes(props: DrawingProps): ReactElement {
+function PassThroughLanes({ props, press }: BesidePressProps): ReactElement {
   return (
     <View pointerEvents="box-none" className={usePressLanes(props)}>
-      <PassThroughContext value>
-        <ItemContentSlots {...props} />
-      </PassThroughContext>
+      <RowPressContext value={press}>
+        <PassThroughContext value>
+          <ItemContentSlots {...props} />
+        </PassThroughContext>
+      </RowPressContext>
     </View>
   );
 }

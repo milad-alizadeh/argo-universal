@@ -22,19 +22,12 @@ export {
 } from './stores/slot-choices';
 
 export {
-  type Merged,
+  type SplitItems,
   ownerItem,
   shownItems,
   slotVisibility,
   type SlotVisibility,
   useSlotVisibility,
 } from './stores/slot-visibility';
-
-export {
-  type PluginOf,
-  type RowPlugin,
-  type SessionRowAnswer,
-  sessionRowPlugins,
-} from './stores/session-row-plugins';
 
 export { SettingsLoading } from './components/settings-loading/settings-loading';

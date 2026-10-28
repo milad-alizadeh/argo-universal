@@ -78,4 +78,10 @@ export function register(argo) {
       ]),
     ),
   );
+  // An Activity line for every Session, shown only on a Device that picks Counter to write it.
+  argo.slots.register('argo/session/activity/v1', ({ contexts }) =>
+    Object.fromEntries(
+      contexts.map(({ sessionId }) => [sessionId, [{ text: 'Counter line' }]]),
+    ),
+  );
 }

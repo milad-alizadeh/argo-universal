@@ -4,7 +4,11 @@ import { Text } from '#primitives/content/text';
 import { useListLook } from '../../../list-look-context';
 import { sidebarStatus } from '../../../row-badge';
 import { cn } from '../../../utils';
-import { InertLane, useOpenLane } from './list-item-pass-through';
+import {
+  AccessoryLane,
+  InertLane,
+  useOpenLane,
+} from './list-item-pass-through';
 import type { ListItemProps } from './list-item-props';
 
 type TrailingProps = Pick<
@@ -58,7 +62,7 @@ export function Trailing(props: TrailingProps): ReactNode {
       <InertLane className="shrink-0 flex-row items-center gap-1">
         {content}
       </InertLane>
-      {accessories}
+      <AccessoryLane>{accessories}</AccessoryLane>
     </View>
   );
 }

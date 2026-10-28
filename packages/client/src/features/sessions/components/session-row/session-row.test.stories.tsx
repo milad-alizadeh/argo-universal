@@ -1,3 +1,4 @@
+import { pressTarget } from '@repo/kit/mocks/press-target';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -11,12 +12,19 @@ import {
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import {
+  coverageItem,
+  issueItem,
+  lintItem,
+  longPluginItemsCompactSession,
   moreIssue,
+  moreIssueItem,
   pluginActivitySession,
   pluginItemsCompactSession,
   pluginItemsSession,
+  previewItem,
   rowIssue,
 } from './session-row-fixtures';
+import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { sessionRowMocks } from './session-row.mocks';
 
 const meta = { ...sessionRowTestMeta, title: 'Tests/Sessions/SessionRow' };
@@ -27,15 +35,19 @@ export const RunningPhone = running(layoutWidths.phone);
 
 export const RunningWide = running(layoutWidths.wide);
 
-export const Archived: Story = {
-  args: { session: sessionRows.archived },
-  play: async ({ canvas }) => {
-    for (const width of [390, 1440]) {
+function archived(width: number): Story {
+  return {
+    args: { session: sessionRows.archived },
+    play: async ({ canvas }) => {
       await settleLayout(width);
       await expect(canvas.getByText('Archived', { exact: true })).toBeVisible();
-    }
-  },
-};
+    },
+  };
+}
+
+export const ArchivedPhone = archived(layoutWidths.phone);
+
+export const ArchivedWide = archived(layoutWidths.wide);
 
 export const PluginItemTooltipWide: Story = {
   args: pluginItemsSession,
@@ -44,15 +56,24 @@ export const PluginItemTooltipWide: Story = {
     await userEvent.hover(canvas.getByText(rowIssue));
     await expect(
       await within(document.body).findByRole('tooltip'),
-    ).toHaveTextContent('Issue #412: Sync fails on large repos');
+    ).toHaveTextContent(issueItem.item.tooltip);
   },
 };
 
-const issueLink = new RegExp(`^${rowIssue},`);
+// The link names its text and its Plugin.
+const issueLink = { name: new RegExp(`^${rowIssue}, ${issueItem.pluginName}`) };
 
-const issueTracker = 'issue-tracker';
+interface RowName {
+  name: string;
+}
 
-const idleRowName = `${pluginItemsSession.session.title}, Idle`;
+const rowName = (session: SessionRowProps['session']): RowName => ({
+  name: sessionRowLabel(session),
+});
+
+const idleRow = rowName(pluginItemsSession.session);
+
+const morePluginItems = { name: /^\d+ more items? from Plugins$/ };
 
 function pluginItems(width: number): Story {
   return {
@@ -60,20 +81,18 @@ function pluginItems(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
       // Argo's own items and the row's identity stay as they were.
-      await expect(
-        canvas.getByRole('button', { name: idleRowName }),
-      ).toBeVisible();
-      await expect(canvas.getByLabelText('Merged Change #44')).toBeVisible();
+      await expect(canvas.getByRole('button', idleRow)).toBeVisible();
+      await expect(canvas.getByLabelText(/Change #44$/)).toBeVisible();
 
-      for (const text of [rowIssue, 'Preview ready', '78%'])
-        await expect(canvas.getByText(text)).toBeVisible();
+      for (const { item } of pluginItemsSession.plugins.items)
+        await expect(canvas.getByText(item.text)).toBeVisible();
 
       // Only an item with a page is a link, and pressing it opens that page, not the Session.
       await expect(canvas.getAllByRole('link')).toHaveLength(1);
-      await userEvent.click(canvas.getByRole('link', { name: issueLink }));
+      await userEvent.click(canvas.getByRole('link', issueLink));
       await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
-        issueTracker,
-        '/issues/412',
+        issueItem.pluginId,
+        issueItem.item.action.path,
       );
       await expect(args.onSelect).not.toHaveBeenCalled();
     },
@@ -84,33 +103,53 @@ export const PluginItemsPhone = pluginItems(layoutWidths.phone);
 
 export const PluginItemsWide = pluginItems(layoutWidths.wide);
 
-// "+2" lists each item that did not fit with its Plugin's name; one with a page opens it.
+// An item with no page has no press of its own: pressing it, tooltip or not, opens the Session.
+function plainItems(width: number): Story {
+  return {
+    args: { ...pluginItemsSession, onOpenPluginPage: fn() },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleLayout(width);
+
+      for (const { item } of [previewItem, coverageItem])
+        await userEvent.click(pressTarget(canvas.getByText(item.text)));
+
+      await expect(args.onSelect).toHaveBeenCalledTimes(2);
+      await expect(args.onSelect).toHaveBeenCalledWith(
+        pluginItemsSession.session.sessionId,
+      );
+      await expect(args.onOpenPluginPage).not.toHaveBeenCalled();
+    },
+  };
+}
+
+export const PlainItemsOpenTheSessionPhone = plainItems(layoutWidths.phone);
+
+export const PlainItemsOpenTheSessionWide = plainItems(layoutWidths.wide);
+
+// "+N" lists each item that did not fit with its Plugin's name; one with a page opens it.
 function moreItems(width: number): Story {
   return {
     args: { ...pluginItemsSession, onOpenPluginPage: fn() },
     play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
-      await expect(canvas.queryByText('Lint passed')).not.toBeInTheDocument();
-      await userEvent.click(
-        canvas.getByRole('button', { name: '2 more items from Plugins' }),
-      );
+      await expect(
+        canvas.queryByText(lintItem.item.text),
+      ).not.toBeInTheDocument();
+      await userEvent.click(canvas.getByRole('button', morePluginItems));
 
-      const more = await within(document.body).findByRole('dialog', {
-        name: '2 more on this Session',
-      });
+      const more = await within(document.body).findByRole('dialog');
 
       // The popover fades in before its rows are visible.
       await waitFor(() =>
-        expect(within(more).getByText('Issue tracker')).toBeVisible(),
+        expect(within(more).getByText(moreIssueItem.pluginName)).toBeVisible(),
       );
 
-      await expect(within(more).getByText('Lint passed')).toBeVisible();
-      await expect(within(more).getByText('Checks')).toBeVisible();
-      await expect(within(more).getByText(moreIssue)).toBeVisible();
+      await expect(within(more).getByText(lintItem.item.text)).toBeVisible();
+      await expect(within(more).getByText(lintItem.pluginName)).toBeVisible();
       await userEvent.click(within(more).getByText(moreIssue));
       await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
-        issueTracker,
-        '/issues/398',
+        moreIssueItem.pluginId,
+        moreIssueItem.item.action.path,
       );
       await expect(args.onSelect).not.toHaveBeenCalled();
     },
@@ -121,10 +160,11 @@ export const MorePluginItemsPhone = moreItems(layoutWidths.phone);
 
 export const MorePluginItemsWide = moreItems(layoutWidths.wide);
 
-export const PluginActivityLine: Story = {
-  args: pluginActivitySession,
-  play: async ({ canvas }) => {
-    for (const width of [390, 1440]) {
+// The chosen Plugin's line takes the place of Argo's; the status and title stay Argo's.
+function pluginActivityLine(width: number): Story {
+  return {
+    args: pluginActivitySession,
+    play: async ({ canvas }) => {
       await settleLayout(width);
       await expect(
         canvas.getByText(pluginActivitySession.plugins.activity.text),
@@ -132,15 +172,16 @@ export const PluginActivityLine: Story = {
       await expect(
         canvas.queryByText(pluginActivitySession.session.activity),
       ).not.toBeInTheDocument();
-      // The status and title stay Argo's.
       await expect(
-        canvas.getByRole('button', {
-          name: `${pluginActivitySession.session.title}, Running`,
-        }),
+        canvas.getByRole('button', rowName(pluginActivitySession.session)),
       ).toBeVisible();
-    }
-  },
-};
+    },
+  };
+}
+
+export const PluginActivityLinePhone = pluginActivityLine(layoutWidths.phone);
+
+export const PluginActivityLineWide = pluginActivityLine(layoutWidths.wide);
 
 export const ArgosActivityLineWithoutAPluginLine: Story = {
   args: pluginItemsSession,
@@ -152,22 +193,44 @@ export const ArgosActivityLineWithoutAPluginLine: Story = {
   },
 };
 
+// A Compact row draws one item; the rest join "+N".
 export const PluginItemsCompact: Story = {
   args: { ...pluginItemsCompactSession, onOpenPluginPage: fn() },
   play: async ({ canvas, userEvent, args }) => {
     await settleLayout('wide');
-    await expect(canvas.getByText(rowIssue)).toBeVisible();
+    await expect(canvas.getByRole('link', issueLink)).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: '2 more items from Plugins' }),
-    ).toBeVisible();
-    await userEvent.click(canvas.getByRole('link', { name: issueLink }));
+      canvas.queryByText(previewItem.item.text),
+    ).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', morePluginItems)).toBeVisible();
+    await userEvent.click(canvas.getByRole('link', issueLink));
     await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
-      issueTracker,
-      '/issues/412',
+      issueItem.pluginId,
+      issueItem.item.action.path,
     );
     await expect(args.onSelect).not.toHaveBeenCalled();
   },
 };
+
+// Long items never squeeze a Compact row's title: it stays whole while the item truncates.
+function longItemsCompact(width: number): Story {
+  return {
+    args: longPluginItemsCompactSession,
+    play: async ({ canvas, userEvent, args }) => {
+      const { session } = longPluginItemsCompactSession;
+
+      await settleLayout(width);
+      await expect(canvas.getByText(session.title)).toBeVisible();
+      await expect(canvas.getByRole('button', morePluginItems)).toBeVisible();
+      await userEvent.click(pressTarget(canvas.getByText(session.title)));
+      await expect(args.onSelect).toHaveBeenCalledWith(session.sessionId);
+    },
+  };
+}
+
+export const LongPluginItemsCompactPhone = longItemsCompact(layoutWidths.phone);
+
+export const LongPluginItemsCompactWide = longItemsCompact(layoutWidths.wide);
 
 export const MetadataPhone = metadata(layoutWidths.phone);
 
@@ -302,7 +365,9 @@ export const LongTitleSelectedWideDark: Story = {
   ...dark,
 };
 
-export const ArchivedDark: Story = { ...Archived, ...dark };
+export const ArchivedPhoneDark: Story = { ...ArchivedPhone, ...dark };
+
+export const ArchivedWideDark: Story = { ...ArchivedWide, ...dark };
 
 export const MetadataPhoneDark: Story = { ...MetadataPhone, ...dark };
 

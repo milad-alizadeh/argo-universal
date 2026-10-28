@@ -1,133 +1,134 @@
-import type { SessionInfo } from '@repo/contracts';
 import {
-  mergedItems,
-  SessionActivityItem,
-  SessionRowItem,
-  type SlotItems,
-  type SlotItemsInput,
-  sessionActivitySlotId,
   sessionRowSlotId,
   slotItemsListLimit,
 } from '@repo/contracts/plugins/wire';
-import { useMemo } from 'react';
-import { z } from 'zod';
-import type { SessionRowPlugins } from '#features/sessions';
+import { useMemo, useState } from 'react';
+import type {
+  SessionRowPlugins,
+  SessionsListPlugins,
+} from '#features/sessions';
+import { useSlotChoices } from '#features/settings';
+import { sentDrawing } from './session-row-answers';
 import {
-  type PluginOf,
-  type SessionRowAnswer,
-  sessionRowPlugins,
-  slotVisibility,
-  type SlotVisibility,
-  useSlotChoices,
-} from '#features/settings';
-import { usePluginOf } from './use-plugin-names';
-import { useSlotItems } from './use-slot-items';
+  cachedRows,
+  type DrawFromSent,
+  keptAnswers,
+  type KeptRowAnswers,
+  noKeptAnswers,
+  redrawnRows,
+  type RowCache,
+} from './session-row-cache';
+import { useDrawnSessions } from './use-drawn-sessions';
+import { usePluginLookup } from './use-plugin-names';
+import {
+  type RowContexts,
+  type RowSession,
+  type RowSnapshots,
+  useKeyed,
+  useRowSnapshots,
+} from './use-session-row-answers';
+import type { SlotItemsSnapshot } from './use-slot-items';
 
-type RowSession = Pick<SessionInfo, 'sessionId' | 'projectId'>;
-
-type Contexts = SlotItemsInput['contexts'];
-
-const Contexts = z.array(
-  z.object({ sessionId: z.string(), projectId: z.string() }),
-);
-
-// A Server that sent no answer for a Session, or something else, gives none.
-const noAnswer = { items: [], overflow: [] };
-
-const RowItems = mergedItems(SessionRowItem).catch(noAnswer);
-
-const ActivityLines = mergedItems(SessionActivityItem).catch(noAnswer);
-
-const contextKey = ({ sessionId, projectId }: RowSession): string =>
-  JSON.stringify({ sessionId, projectId });
+const bySessionId = (a: RowSession, b: RowSession): number =>
+  a.sessionId.localeCompare(b.sessionId);
 
 /*
- * The list's contexts for one batched call, in one order whatever order the rows take, so a row moving up asks nothing
- * again. A list longer than one call takes asks for its first rows, the ones on screen first.
+ * The drawn rows' Sessions for one batched call per Slot, in one order whatever order the rows take, so a row moving
+ * up asks nothing again; one call names at most `slotItemsListLimit` of them.
  */
-function useContexts(sessions: readonly RowSession[]): Contexts | undefined {
-  const keys = sessions
-    .slice(0, slotItemsListLimit)
-    .map(contextKey)
-    .toSorted()
-    .join(',');
-
-  return useMemo(
-    () => (keys ? Contexts.parse(JSON.parse(`[${keys}]`)) : undefined),
-    [keys],
-  );
-}
-
-const inputOf = (
-  slotId: SlotItemsInput['slotId'],
-  contexts: Contexts | undefined,
-): SlotItemsInput | undefined => contexts && { slotId, contexts };
-
-// Both Slots' answers for the list: the Sessions any Plugin answered for, and one Session's answers.
-export interface SessionRowAnswers {
-  sessionIds: readonly string[];
-  answerOf: (sessionId: string) => SessionRowAnswer;
-}
-
-/*
- * Both Session row Slots' answers for a list of Sessions: one batched call per Slot for the whole list, live from the
- * Server. The Sessions list and the Settings preview both ask through this.
- */
-export function useSessionRowAnswers(
+function useWindowContexts(
   sessions: readonly RowSession[],
-): SessionRowAnswers {
-  const contexts = useContexts(sessions);
-  const items = useSlotItems(inputOf(sessionRowSlotId, contexts));
-  const lines = useSlotItems(inputOf(sessionActivitySlotId, contexts));
+  drawn: ReadonlySet<string>,
+): RowContexts | undefined {
+  const asked = sessions
+    .filter(({ sessionId }) => drawn.has(sessionId))
+    .toSorted(bySessionId)
+    .slice(0, slotItemsListLimit)
+    .map(({ sessionId, projectId }) => ({ sessionId, projectId }));
 
-  return useMemo(() => answersOf(items, lines), [items, lines]);
+  const key = asked.map(({ sessionId }) => sessionId).join(',');
+
+  return useKeyed(key, asked.length ? asked : undefined);
 }
 
-const answersOf = (items: SlotItems, lines: SlotItems): SessionRowAnswers => ({
-  sessionIds: [...new Set([...Object.keys(items), ...Object.keys(lines)])],
-  answerOf: (sessionId) => ({
-    items: RowItems.parse(items[sessionId]),
-    lines: ActivityLines.parse(lines[sessionId]),
-  }),
+// Folds each new input into the value held from the last, the way a reducer folds actions.
+function useFolded<Input, Value>(
+  input: Input,
+  fold: (held: Value, input: Input) => Value,
+  initial: Value,
+): Value {
+  const [held, setHeld] = useState(() => ({
+    input,
+    value: fold(initial, input),
+  }));
+
+  if (Object.is(held.input, input)) return held.value;
+
+  const next = { input, value: fold(held.value, input) };
+
+  setHeld(next);
+
+  return next.value;
+}
+
+const useKept = (snapshot: SlotItemsSnapshot): KeptRowAnswers['items'] =>
+  useFolded(snapshot, keptAnswers, noKeptAnswers);
+
+// This Device's choices and the Plugins' names: a change to either redraws every row.
+function useDraw(): DrawFromSent<SessionRowPlugins> {
+  const choices = useSlotChoices(sessionRowSlotId);
+  const lookup = usePluginLookup();
+
+  return useMemo(() => sentDrawing(choices, lookup), [choices, lookup]);
+}
+
+interface Drawing {
+  draw: DrawFromSent<SessionRowPlugins>;
+  cache: RowCache<SessionRowPlugins>;
+}
+
+// Draws nothing until this Device's choices are read.
+const drawNothing: DrawFromSent<SessionRowPlugins> = () => {};
+
+const noDrawing: Drawing = { draw: drawNothing, cache: new Map() };
+
+const redraw = (
+  held: Drawing,
+  input: KeptRowAnswers & Pick<Drawing, 'draw'>,
+): Drawing => ({
+  draw: input.draw,
+  cache: redrawnRows(
+    held.draw === input.draw ? held.cache : noDrawing.cache,
+    input,
+    input.draw,
+  ),
 });
 
-// This Device's choices for Session rows: the Plugins turned off, and who writes the Activity line.
-function useRowVisibility(): SlotVisibility {
-  const choices = useSlotChoices(sessionRowSlotId);
+// Each Session's row content, the same object until that Session's answers, the choices or the Plugins' names change.
+function useRows(
+  snapshots: RowSnapshots,
+): ReadonlyMap<string, SessionRowPlugins> {
+  const items = useKept(snapshots.items);
+  const lines = useKept(snapshots.lines);
+  const draw = useDraw();
+  const input = useMemo(() => ({ items, lines, draw }), [items, lines, draw]);
+  const { cache } = useFolded(input, redraw, noDrawing);
 
-  return useMemo(() => slotVisibility(choices), [choices]);
+  return useMemo(() => cachedRows(cache), [cache]);
 }
 
-const rowPluginsBySession = (
-  { sessionIds, answerOf }: SessionRowAnswers,
-  visibility: SlotVisibility,
-  pluginOf: PluginOf,
-): Map<string, SessionRowPlugins> =>
-  new Map(
-    sessionIds.flatMap((sessionId) => {
-      const plugins = sessionRowPlugins(
-        answerOf(sessionId),
-        visibility,
-        pluginOf,
-      );
-
-      return plugins ? [[sessionId, plugins] as const] : [];
-    }),
-  );
+type RowPlugins = Pick<SessionsListPlugins, 'rows' | 'onRowsDrawn'>;
 
 /*
- * What the Plugins add to each Session row, under this Device's choices; a row they leave alone is not listed. It
- * changes only when an answer, a choice or a Plugin's name or glyph does, so a Session's own updates redraw only its row.
+ * What the Plugins add to each Session row under this Device's choices (ADR-0035). Only the rows the list draws are
+ * asked about, once they settle; a row that scrolls away keeps its last answer until it is drawn and asked about again.
  */
 export function useSessionRowPlugins(
   sessions: readonly RowSession[],
-): ReadonlyMap<string, SessionRowPlugins> {
-  const answers = useSessionRowAnswers(sessions);
-  const visibility = useRowVisibility();
-  const pluginOf = usePluginOf();
+): RowPlugins {
+  const { drawn, onRowsDrawn } = useDrawnSessions();
+  const snapshots = useRowSnapshots(useWindowContexts(sessions, drawn));
+  const rows = useRows(snapshots);
 
-  return useMemo(
-    () => rowPluginsBySession(answers, visibility, pluginOf),
-    [answers, visibility, pluginOf],
-  );
+  return useMemo(() => ({ rows, onRowsDrawn }), [rows, onRowsDrawn]);
 }

@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '../../../utils';
-import { InertLane, useOpenLane } from './list-item-pass-through';
+import {
+  AccessoryLane,
+  InertLane,
+  useOpenLane,
+} from './list-item-pass-through';
 import type { PlacedContentProps } from './list-item-placement';
 
 // Paper "SessionsList": a sidebar row's meta line sits 2 under its subtitle.
@@ -20,7 +24,7 @@ function MetaItems(props: MetaProps): ReactNode {
       <InertLane className="min-w-0 shrink flex-row items-center gap-3">
         {props.meta}
       </InertLane>
-      {props.metaAccessories}
+      <AccessoryLane>{props.metaAccessories}</AccessoryLane>
     </>
   );
 }

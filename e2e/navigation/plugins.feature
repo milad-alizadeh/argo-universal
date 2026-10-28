@@ -114,3 +114,11 @@ Feature: Plugin navigation
     Then the Session row "Check the live list" shows the Plugin item "Counter item"
     When I press the Plugin item "Counter item" on the Session row "Check the live list"
     Then the Plugin page shows Counter
+
+  Scenario: The Plugin this Device picks writes a Session row's Activity line
+    Given a Session named "Check the Activity line"
+    Then the Session row "Check the Activity line" keeps Argo's Activity line
+    When I open Settings
+    And I pick the "Counter" Plugin to write the Activity line
+    And I return to Sessions
+    Then the Session row "Check the Activity line" shows the Activity line "Counter line"

@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
+import { pressTarget } from '#mocks/press-target';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
-import { ListItem } from './index';
+import { ListItem, ListItemInert, useListItemPress } from './index';
 
 const title = 'Item one';
 
@@ -113,6 +115,35 @@ export const TrailingAccessory = accessoryPress({
   trailing: <Text>now</Text>,
   trailingAccessories: issueLink,
 });
+
+// A hover target takes the pointer for its own reasons, but pressing it presses the row.
+function HoverTarget(): ReactElement {
+  return (
+    <Pressable focusable={false} onPress={useListItemPress()}>
+      <Text>Hover target</Text>
+    </Pressable>
+  );
+}
+
+// Plain text among the accessories and a hover target with nothing of its own to do both press the row.
+export const AccessoriesThatPressTheRow: Story = {
+  args: {
+    metaAccessories: (
+      <>
+        <ListItemInert>
+          <Text>Plain</Text>
+        </ListItemInert>
+        <HoverTarget />
+      </>
+    ),
+  },
+  play: async ({ args: { onPress }, canvas, userEvent }) => {
+    await userEvent.click(pressTarget(canvas.getByText('Plain')));
+    await expect(onPress).toHaveBeenCalledOnce();
+    await userEvent.click(pressTarget(canvas.getByText('Hover target')));
+    await expect(onPress).toHaveBeenCalledTimes(2);
+  },
+};
 
 // A glyph leads the subtitle, in its tone, without changing what the row is called.
 export const SubtitleIcon: Story = {

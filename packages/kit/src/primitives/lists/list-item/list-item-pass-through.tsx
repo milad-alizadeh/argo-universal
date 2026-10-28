@@ -1,5 +1,6 @@
 import { createContext, use, type ReactNode } from 'react';
 import { View } from 'react-native';
+import type { RowPressProps } from './list-item-press-props';
 import type { ListItemProps } from './list-item-props';
 
 /*
@@ -7,6 +8,28 @@ import type { ListItemProps } from './list-item-props';
  * through to the row's press, and only the accessories take presses of their own.
  */
 export const PassThroughContext = createContext(false);
+
+// The row's press, for its accessories.
+export const RowPressContext = createContext<RowPressProps | null>(null);
+
+/*
+ * The row's own press, for an accessory that must take the pointer, such as a tooltip's hover target, but has nothing
+ * of its own to do when pressed.
+ */
+export const useListItemPress = (): RowPressProps['onPress'] =>
+  use(RowPressContext)?.onPress;
+
+/*
+ * The accessories draw as they would anywhere else, so a List they open, such as a popover's, keeps its own presses;
+ * they can still reach the row's press.
+ */
+export function AccessoryLane({
+  children,
+}: {
+  children?: ReactNode;
+}): ReactNode {
+  return <PassThroughContext value={false}>{children}</PassThroughContext>;
+}
 
 export const hasAccessories = (
   props: Pick<ListItemProps, 'metaAccessories' | 'trailingAccessories'>,
@@ -52,16 +75,17 @@ export function InertLane({
   );
 }
 
-// A part among a row's accessories that presses the row rather than taking its own press, such as plain text.
+/*
+ * A part among a row's accessories that presses the row rather than taking its own press, such as plain text. It gives
+ * up its width before the row's title does.
+ */
 export function ListItemInert({
   children,
-  className,
 }: {
   children?: ReactNode;
-  className?: string;
 }): ReactNode {
   return (
-    <View {...inert} className={className}>
+    <View {...inert} className="min-w-0 shrink flex-row items-center">
       {children}
     </View>
   );

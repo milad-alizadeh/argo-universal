@@ -48,7 +48,7 @@ export const deploysLine = 'Deploying preview';
 export const sessionRowPreviewData: SessionRowPreviewData = {
   session: previewSession,
   age: '2m',
-  pluginOf: (pluginId) => ({
+  lookup: (pluginId) => ({
     name:
       slotPlugins.find((plugin) => plugin.pluginId === pluginId)?.name ??
       pluginId,

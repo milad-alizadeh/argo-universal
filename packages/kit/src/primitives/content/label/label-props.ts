@@ -8,4 +8,6 @@ export type LabelProps = KitProps<'Label'> & {
   testID?: string;
   sidebar?: boolean;
   emphasized?: boolean;
+  // Gives up its width to the items beside it, its text truncating, rather than keeping its whole width.
+  shrinks?: boolean;
 };
