@@ -62,6 +62,10 @@ _Avoid_: Command (a Slash command or a shell command), tool, action, capability
 How far an Operation may go without asking the user: `read` never asks, `act` stays within the caller's own scope and never asks, and `confirm` always asks first, whatever mode the Agent is in.
 _Avoid_: Permission level, risk level
 
+**Operation work**:
+What an Operation started that its caller can wait for by a wait id: a Session opening, a Turn, or the Operation's own Tool call. A wait gives up after ninety seconds and never stops the work.
+_Avoid_: Job, task
+
 ## Plugins
 
 **Plugin**:
