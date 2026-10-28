@@ -37,7 +37,7 @@ it('one authenticate tells every watching Device and lets an open waiting in a s
   await initTestRepository(directory);
   await seedProject(host.database, directory);
 
-  const secondProject = (await host.caller.projects.list()).find(
+  const secondProject = (await host.caller.project.list()).find(
     (project) => project.id !== emptySessionInput.projectId,
   );
 

@@ -6,5 +6,5 @@ import { useTRPC } from '#features/connection';
 export function useProjects(): UseQueryResult<ProjectInfo[], unknown> {
   const trpc = useTRPC();
 
-  return useQuery(trpc.projects.list.queryOptions());
+  return useQuery(trpc.project.list.queryOptions());
 }

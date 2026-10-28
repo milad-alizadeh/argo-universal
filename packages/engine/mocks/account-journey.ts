@@ -56,7 +56,7 @@ export async function borrow(
 }
 
 async function borrowProject(host: EngineHost): Promise<string> {
-  const [project] = await host.caller.projects.list();
+  const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Missing fixture Project');
 

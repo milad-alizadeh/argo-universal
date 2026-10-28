@@ -47,7 +47,7 @@ it('defaults the checkout choice to a worktree from the current branch, and the 
 
   const readCheckoutChoice = async (): Promise<
     { type: 'worktree'; baseBranch: string } | { type: 'main' } | undefined
-  > => (await caller.projects.list())[0]?.checkoutChoice;
+  > => (await caller.project.list())[0]?.checkoutChoice;
 
   expect(await readCheckoutChoice()).toEqual({
     type: 'worktree',

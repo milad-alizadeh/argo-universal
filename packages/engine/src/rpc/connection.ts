@@ -20,6 +20,7 @@ export interface RpcSocket {
 }
 
 export interface RpcContext {
+  token?: string;
   connection?: RpcConnection;
 }
 

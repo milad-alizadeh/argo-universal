@@ -26,7 +26,7 @@ export type AppRouterDeps = SessionRouterDeps &
   BlobUploadDeps &
   SystemDeps &
   FeedDeps &
-  NotificationsDeps & { plugins: PluginsRouterDeps };
+  NotificationsDeps & { controlToken: string; plugins: PluginsRouterDeps };
 
 // The Engine owns connection lifetimes and shared Feed sources.
 type EngineSupplied =

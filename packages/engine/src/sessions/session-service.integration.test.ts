@@ -49,9 +49,7 @@ it('creates the Checkout, starts the Agent with the chosen options and runs the 
     ).toEqual([expect.objectContaining({ status: 'running', model: 'large' })]),
   );
   expect(
-    (await caller.projects.list()).find(
-      (project) => project.id === 'project-1',
-    ),
+    (await caller.project.list()).find((project) => project.id === 'project-1'),
   ).toMatchObject({
     checkoutChoice: { type: 'worktree', baseBranch: 'feature' },
   });

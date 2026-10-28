@@ -27,7 +27,7 @@ it('reports an unavailable Borrow as a Query error', async () => {
   );
 
   const host = await startEngineTestHost({ home: fixture.home });
-  const [project] = await host.caller.projects.list();
+  const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Missing fixture Project');
 
@@ -71,7 +71,7 @@ it('keeps the last successful Query data when a refreshed Borrow is refused', as
   });
 
   await host.caller.plugins.activate({ pluginId: 'probe' });
-  const [project] = await host.caller.projects.list();
+  const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Missing fixture Project');
 

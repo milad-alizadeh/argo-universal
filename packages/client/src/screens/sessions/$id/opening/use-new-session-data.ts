@@ -90,7 +90,7 @@ type ListedData = Pick<NewSessionData, 'projects' | 'agents'> & {
 };
 
 function useListedData(): ListedData {
-  const projects = useQuery(useTRPC().projects.list.queryOptions());
+  const projects = useQuery(useTRPC().project.list.queryOptions());
   const agents = useInstalledAgents();
 
   const listed = {
