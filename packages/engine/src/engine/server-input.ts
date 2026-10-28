@@ -17,6 +17,7 @@ type ServerSource = {
     | 'acp'
     | 'notificationOptions'
     | 'home'
+    | 'userHome'
     | 'port'
     | 'firstPartyPluginsDirectory'
     | 'keychain'
@@ -41,6 +42,7 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   registry: requireRegistry(self.system),
   commandAdmission: context.commandAdmission,
   acp: context.acp,
+  userHome: context.userHome,
   hookPort: context.hookPort,
   ...serverConfiguration(context),
   database: openDatabaseOf(context),

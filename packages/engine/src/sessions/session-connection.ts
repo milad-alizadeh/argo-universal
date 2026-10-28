@@ -16,38 +16,30 @@ export type SessionConnections = {
   ) => AcpSessionLease['authentication'];
 };
 
-const sessionAuthentication =
-  (sessions: OpenSessionsActorRef): SessionConnections['authentication'] =>
-  (sessionId, subject) => {
-    const session = sessions
-      .getSnapshot()
-      .context.sessions[sessionId]?.getSnapshot().context;
+function findSessionLease(
+  sessions: OpenSessionsActorRef,
+  sessionId: string,
+  subject: ConnectionSubject,
+): AcpSessionLease | undefined {
+  const session = sessions
+    .getSnapshot()
+    .context.sessions[sessionId]?.getSnapshot().context;
 
-    if (
-      session?.agent !== subject.agent ||
-      session.projectId !== subject.projectId
-    )
-      return;
+  if (
+    session?.agent !== subject.agent ||
+    session.projectId !== subject.projectId
+  )
+    return;
 
-    return session.acpLease?.authentication;
-  };
+  return session.acpLease ?? undefined;
+}
 
 export const createSessionConnections = (
   sessions: OpenSessionsActorRef,
 ): SessionConnections => ({
   acpResources: () => sessions.getSnapshot().context.acpResources,
-  authentication: sessionAuthentication(sessions),
-  launch: (sessionId, subject) => {
-    const session = sessions
-      .getSnapshot()
-      .context.sessions[sessionId]?.getSnapshot().context;
-
-    if (
-      session?.agent !== subject.agent ||
-      session.projectId !== subject.projectId
-    )
-      return;
-
-    return session.acpLease?.launch;
-  },
+  authentication: (sessionId, subject) =>
+    findSessionLease(sessions, sessionId, subject)?.authentication,
+  launch: (sessionId, subject) =>
+    findSessionLease(sessions, sessionId, subject)?.launch,
 });

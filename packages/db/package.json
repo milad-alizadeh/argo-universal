@@ -32,6 +32,7 @@
     "#schema-server-identity": "./src/schema/server-identity.ts",
     "#schema-sessions": "./src/schema/sessions.ts",
     "#schema-shells": "./src/schema/shells.ts",
-    "#schema-timestamp": "./src/schema/timestamp.ts"
+    "#schema-timestamp": "./src/schema/timestamp.ts",
+    "#schema-agent-access": "./src/schema/agent-access.ts"
   }
 }

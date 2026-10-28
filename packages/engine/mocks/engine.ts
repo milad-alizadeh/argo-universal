@@ -86,6 +86,7 @@ export async function startEngineTestHost(
     firstPartyPluginsDirectory: join(home, shippedFolder),
     // Tests never reach the Mac's Keychain, which CI's Linux runners don't have.
     keychain: new MemoryKeychain(),
+    userHome: join(home, 'user-home'),
     ...options,
     home,
     port,

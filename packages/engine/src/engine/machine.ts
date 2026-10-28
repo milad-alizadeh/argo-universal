@@ -16,6 +16,7 @@ import {
 import { registryInput } from './registry-input';
 import {
   engineSetup,
+  openDatabaseOf,
   createEngineContext,
   stoppingLog,
   type EngineContext,
@@ -32,7 +33,10 @@ export type { EngineInput } from './setup.machine';
 
 export const engineMachine = engineSetup.createMachine({
   id: 'engine',
-  context: ({ input }): EngineContext => createEngineContext(input),
+  context: ({ input, self }): EngineContext =>
+    createEngineContext(input, () =>
+      openDatabaseOf(self.getSnapshot().context),
+    ),
   invoke: { id: 'processSignals', src: 'processSignals' },
   initial: 'openingDatabase',
   // `live` and `live.stopping` override this.

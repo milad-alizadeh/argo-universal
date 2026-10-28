@@ -25,6 +25,7 @@ import { createAppRouterDeps, type AppRouterInput } from './router-deps';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
+  userHome?: string;
   sessionTokens: SessionTokens;
   registry: RegistryActor;
   createId: () => string;
