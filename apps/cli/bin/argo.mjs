@@ -13,5 +13,7 @@ if (command === 'server') {
   const child = launch(join(directory, 'src/main.ts'), args);
 
   if (child.pid !== undefined)
-    process.send?.({ type: 'supervisor.spawned', pid: child.pid });
+    process.send?.({ type: 'supervisor.spawned', pid: child.pid }, (error) => {
+      if (error) process.stderr.write(`${error.message}\n`);
+    });
 } else launch(fileURLToPath(new URL('../src/main.ts', import.meta.url)));
