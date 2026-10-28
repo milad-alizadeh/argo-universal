@@ -2,8 +2,10 @@ import { sessionHeaderSlotId } from '@repo/contracts/plugins/declared-slots';
 import {
   projectDetailsSlotId,
   sessionActivitySlotId,
+  sessionBarSlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
+import { sessionBarSlot } from './session-bar-slot';
 import { sessionHeaderSlot } from './session-header-slot';
 import { sessionRowSlot } from './session-row-slot';
 import type { SlotDetail, SlotDetailId } from './slot-detail';
@@ -18,6 +20,7 @@ const declared = {
   [sessionRowSlotId]: sessionRowSlot,
   // Chosen on the Session rows page, as its Activity line.
   [sessionActivitySlotId]: null,
+  [sessionBarSlotId]: sessionBarSlot,
   [sessionHeaderSlotId]: sessionHeaderSlot,
 } satisfies Record<SlotDetailId, SlotDetail | null>;
 

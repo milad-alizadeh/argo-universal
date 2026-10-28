@@ -39,27 +39,24 @@ function lowestClosedRowInView(scroll: HTMLElement): HTMLElement {
   return row;
 }
 
-// Each streamed row a few frames after the one before, as an Agent writes.
-const framesBetweenRows = 6;
+/*
+ * Each streamed row this long after the one before, as an Agent writes. The Feed follows only rows that
+ * land while the row opens, and that opening takes a fixed time, so rows are paced in time: paced in
+ * frames, a loaded runner stretches the gap past the opening and every row lands after it.
+ */
+const msBetweenRows = 40;
 
 const streamedRows = 16;
 
-// Sends the streamed rows to the end, one every few frames, and resolves once the last has gone.
-function streamRows(): Promise<void> {
-  return new Promise((resolve) => {
-    let frame = 0;
+const pause = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
-    const step = (): void => {
-      if (frame % framesBetweenRows === 0)
-        sendRow(streamedRow(frame / framesBetweenRows));
-      frame += 1;
-
-      if (frame < streamedRows * framesBetweenRows) requestAnimationFrame(step);
-      else resolve();
-    };
-
-    requestAnimationFrame(step);
-  });
+// Sends the streamed rows to the end, one every few milliseconds, and resolves once the last has gone.
+async function streamRows(): Promise<void> {
+  for (let index = 0; index < streamedRows; index += 1) {
+    sendRow(streamedRow(index));
+    await pause(msBetweenRows);
+  }
 }
 
 // At the end while the Agent writes, the reader opens a row: once it has opened, the Feed still follows the rows that arrive.

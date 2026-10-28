@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTRPC } from '#features/connection';
-import type { PluginOf, RowPlugin } from '#features/settings';
+import type { PluginIdentity, PluginLookup } from '#features/sessions';
 import { pluginSymbol } from '../../lib/product/plugin-symbol';
 
 // A Plugin the list has not sent yet: its id, and the generic Plugin glyph.
-const unknownPlugin = (pluginId: string): RowPlugin => ({
+const unknownPlugin = (pluginId: string): PluginIdentity => ({
   name: pluginId,
   icon: pluginSymbol({}),
 });
 
 // Each Plugin's name and glyph from the connected Server's list; the id and a generic glyph until the list arrives.
-export function usePluginOf(): PluginOf {
+export function usePluginLookup(): PluginLookup {
   const trpc = useTRPC();
   const { data } = useQuery(trpc.plugin.list.queryOptions());
 
@@ -23,15 +23,15 @@ export function usePluginOf(): PluginOf {
       ]),
     );
 
-    return (pluginId: string): RowPlugin =>
+    return (pluginId: string): PluginIdentity =>
       plugins.get(pluginId) ?? unknownPlugin(pluginId);
   }, [data]);
 }
 
-export type NameOf = (pluginId: string) => string;
+export type PluginNameLookup = (pluginId: string) => string;
 
-export function usePluginNames(): NameOf {
-  const pluginOf = usePluginOf();
+export function usePluginNames(): PluginNameLookup {
+  const lookup = usePluginLookup();
 
-  return useMemo(() => (pluginId) => pluginOf(pluginId).name, [pluginOf]);
+  return useMemo(() => (pluginId) => lookup(pluginId).name, [lookup]);
 }

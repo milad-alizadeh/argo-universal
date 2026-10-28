@@ -109,6 +109,7 @@ export const scenarios = {
       'session/load': [{ error: refusedReopen }, {}],
       'session/resume': [{ error: refusedReopen }, {}],
     },
+    relaunched: scenario([reply]),
   },
   permission: scenario([
     update({

@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
+import { DrawnRows } from './sessions-list-drawn-rows';
 import { listsFlat, searchesAsOneList } from './sessions-list-entries-state';
 import { type ListRows, useListRows } from './sessions-list-entry-rows';
 import { sessionsListLook } from './sessions-list-look';
@@ -157,12 +158,12 @@ export function SessionsList(props: SessionsListProps): React.JSX.Element {
 
   return (
     <SessionsListSurface glide={rows.animating && !scrolling.scrolling}>
-      <SessionsLegendList
-        {...props}
-        rows={rows}
-        {...selection}
-        onScroll={scrolling.onScroll}
-      />
+      <DrawnRows onRowsDrawn={props.plugins?.onRowsDrawn}>
+        <SessionsLegendList
+          {...{ ...props, ...selection, rows }}
+          onScroll={scrolling.onScroll}
+        />
+      </DrawnRows>
     </SessionsListSurface>
   );
 }

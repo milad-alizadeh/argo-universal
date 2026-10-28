@@ -59,6 +59,12 @@ Feature: Plugin navigation
       | first | first name | second  | second name |
       | Lists | Lists      | Counter | Counter     |
 
+  Scenario: A Plugin's line on the Session bar opens its page
+    Given a Session named "Check the Session bar"
+    Then the Session bar reads "Counter bar"
+    When I press Open for the Counter Plugin on the Session bar
+    Then the Plugin page shows Counter
+
   Scenario Outline: A Plugin fills the Project details Slot on a <frame> Frame
     Given a <frame> Frame
     When I open Settings
@@ -120,3 +126,11 @@ Feature: Plugin navigation
     Then the Session row "Check the live list" shows the Plugin item "Counter item"
     When I press the Plugin item "Counter item" on the Session row "Check the live list"
     Then the Plugin page shows Counter
+
+  Scenario: The Plugin this Device picks writes a Session row's Activity line
+    Given a Session named "Check the Activity line"
+    Then the Session row "Check the Activity line" keeps Argo's Activity line
+    When I open Settings
+    And I pick the "Counter" Plugin to write the Activity line
+    And I return to Sessions
+    Then the Session row "Check the Activity line" shows the Activity line "Counter line"
