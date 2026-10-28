@@ -1,10 +1,10 @@
 import { ContextMenu as SwiftContextMenu, RNHostView } from '@expo/ui/swift-ui';
 import { type Href, Link } from 'expo-router';
 import type { ComponentType, ReactElement } from 'react';
-import { View } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 import { Host } from '#primitives/native/host';
 import { contextMenuSections } from './context-menu-native-items';
-import type { ContextMenuProps } from './context-menu-props';
+import type { ContextMenuProps, SpokenElement } from './context-menu-props';
 import { swiftMenuSections } from './context-menu-swift-items.ios';
 import type { NativeMenuItem, NativeMenuSection } from './menu-native-items';
 import { menuSymbol } from './menu-view-actions.ios';
@@ -74,11 +74,12 @@ const previewSize = {
  * group is an `inline` Link.Menu, which the system parts with a separator.
  *
  * Link.Trigger's native view exposes none of the element's accessibility to iOS, so a View around the Link is the
- * one element VoiceOver and XCUITest read, named by `label`; a double tap presses the element's centre.
+ * one element VoiceOver and XCUITest read, as `spoken` says the element reads: its name, role, hint and state, so an
+ * open Session's row still reads as selected. A double tap presses the element's centre.
  */
 function PreviewMenu(props: PreviewMenuProps): ReactElement {
   return (
-    <View accessible role="button" accessibilityLabel={props.label}>
+    <View accessible {...spokenProps(props.spoken)}>
       <Link href={props.href} asChild>
         <Link.Trigger>
           <View>{props.children}</View>
@@ -91,6 +92,13 @@ function PreviewMenu(props: PreviewMenuProps): ReactElement {
     </View>
   );
 }
+
+const spokenProps = (spoken: SpokenElement = {}): ViewProps => ({
+  role: spoken.role ?? 'button',
+  accessibilityLabel: spoken.label,
+  accessibilityHint: spoken.hint,
+  accessibilityState: spoken.state,
+});
 
 // Link.Menu keeps only Link.Menu and Link.MenuAction elements among its children, so these build elements rather than components.
 const previewMenuGroup = (section: NativeMenuSection): ReactElement => (

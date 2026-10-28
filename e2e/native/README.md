@@ -26,7 +26,7 @@ The "Markdown" prompt clamps to four lines. The flow taps its Show more and expe
 - `session-list-rows.yaml` checks the Sessions list draws its Project heading and rows, and scrolls the last row into view.
 - `settings-list-rows.yaml` checks the Settings list draws its root sections and scrolls to Appearance.
 
-On iOS a Session row is one element named by its title and status, such as `Fix the failing build, Failed`, since its preview's trigger hides the row's own text; Android keeps the texts apart. Every flow passes on both.
+On iOS a Session row is one element named by its title and status, such as `Fix the failing build, Failed`, with the row's role, hint and state, since its preview's trigger hides the row's own press. Android keeps the texts apart, so only there does `session-list-rows.yaml` also check a row's activity, `Running the tests`. Every flow passes on both.
 
 # Plugin page tap
 

@@ -12,6 +12,7 @@ export {
 export {
   type ContextMenuItem,
   type ContextMenuProps,
+  type SpokenElement,
   type ContextMenuTriggerProps,
 } from './context-menu-props';
 

@@ -16,7 +16,7 @@ export interface ContextActionsProps {
   // Kit-only: Actions Argo adds after them, such as a List row's Move Section. They claim their shortcuts as Argo's own, in a Plugin's tree too.
   builtIn?: ReactNode;
   // Kit-only: the menu's meta, with the element's name.
-  menu?: ContextMenuMeta & Pick<ContextMenuProps, 'label'>;
+  menu?: ContextMenuMeta & Pick<ContextMenuProps, 'spoken'>;
   // What the context menu opens on.
   children: ContextMenuProps['children'];
 }
