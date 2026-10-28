@@ -41,6 +41,34 @@ export const LongFeedInFrame: Story = {
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
+// The Plugins' Session bar under the header: the first Plugin in Slot order shows; two more wait behind "+2".
+export const SessionBar: Story = {
+  args: {
+    state: 'open',
+    ...longSession,
+    bar: {
+      shown: {
+        pluginId: 'issue-tracker',
+        pluginName: 'Issue tracker',
+        icon: { sf: 'ticket', material: 'confirmation_number' },
+        text: '#412 · In review',
+        path: '/issues/412',
+      },
+      hidden: [
+        {
+          pluginId: 'deploys',
+          pluginName: 'Deploys',
+          text: 'Preview ready',
+          path: '/deploys/latest',
+        },
+        { pluginId: 'coverage', pluginName: 'Coverage', text: '78% covered' },
+      ],
+      onOpen: (): void => undefined,
+    },
+  },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
 export const Empty: Story = {
   args: { state: 'open', ...emptySession },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,

@@ -24,6 +24,7 @@ export {
 export {
   ownerItem,
   slotVisibility,
+  type Merged,
   type SlotVisibility,
   useSlotVisibility,
   visibleItems,

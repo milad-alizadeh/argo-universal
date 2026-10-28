@@ -15,6 +15,8 @@ import {
   ArchivedBanner,
   serverSilentMessage,
   SessionBandClaim,
+  SessionBar,
+  type SessionBarProps,
   SessionCallout,
   type SessionCalloutProps,
   sessionOpenFailedTitle,
@@ -27,6 +29,7 @@ import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
+import { composerUnderQuestion } from './composer-under-question';
 import { sessionWorkbench } from './sections/session-sections';
 import {
   SessionInspector,
@@ -37,6 +40,7 @@ import { useInspectorPanels } from './use-inspector-panels';
 
 export interface OpenSessionViewProps extends SessionInspectorContent {
   header: SessionHeaderProps;
+  bar?: SessionBarProps;
   feed: FeedProps;
   composer: ComposerProps;
   inspectorPanels?: SessionPanels;
@@ -123,17 +127,27 @@ const sessionParts = (
   props: OpenSessionViewProps,
   panels: SessionPanels,
 ): React.ComponentProps<typeof SessionLayout> => ({
-  header: (
-    <SessionBandClaim
-      {...props.header}
-      workbench={sessionWorkbench(props, panels)}
-    />
-  ),
+  header: bandClaim(props, panels),
+  bar: sessionBar(props),
   feed: <Feed {...props.feed} />,
   composer: sessionBottom(props),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
   onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,
 });
+
+const bandClaim = (
+  props: OpenSessionViewProps,
+  panels: SessionPanels,
+): React.JSX.Element => (
+  <SessionBandClaim
+    {...props.header}
+    workbench={sessionWorkbench(props, panels)}
+  />
+);
+
+// The Plugins' line under the header; a preview is the Feed alone.
+const sessionBar = (props: OpenSessionViewProps): React.ReactNode =>
+  props.preview || !props.bar ? null : <SessionBar {...props.bar} />;
 
 // A preview or an archived Session has no draft to attach files to.
 const hasDraft = (props: OpenSessionViewProps): boolean =>
@@ -171,17 +185,4 @@ function SessionComposer(props: OpenSessionViewProps): React.JSX.Element {
       />
     </View>
   );
-}
-
-function composerUnderQuestion(
-  composer: ComposerProps,
-  question?: ElicitationFormProps,
-): ComposerProps {
-  if (!question) return composer;
-
-  return {
-    ...composer,
-    writtenPlan: undefined,
-    status: composer.status && { ...composer.status, plan: undefined },
-  };
 }

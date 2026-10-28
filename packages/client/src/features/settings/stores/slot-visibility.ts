@@ -18,7 +18,7 @@ export function slotVisibility({ hidden, owner }: SlotChoices): SlotVisibility {
 type Attributed<Item> = { pluginId: string; item: Item };
 
 // A context's merged items as the Server sends them: what fits, then the rest.
-type Merged<Item> = {
+export type Merged<Item> = {
   items: readonly Attributed<Item>[];
   overflow: readonly Attributed<Item>[];
 };

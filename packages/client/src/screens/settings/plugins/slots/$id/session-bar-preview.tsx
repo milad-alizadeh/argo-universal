@@ -1,0 +1,57 @@
+import type { SessionBarItem } from '@repo/contracts/plugins/wire';
+import { Text } from '@repo/kit/primitives/content/text';
+import type * as React from 'react';
+import { SessionBar } from '#features/sessions';
+import type { Merged, SlotVisibility } from '#features/settings';
+import { sessionBarLines } from '../../../../plugins/session-bar-lines';
+import {
+  usePluginName,
+  useSessionBarAnswer,
+} from '../../../../plugins/use-session-bar';
+import { useLatestSession } from './session-row-preview';
+import type { SlotPreviewProps } from './slot-detail';
+
+// What the preview draws: the Plugins' answers for a Session's bar, before this page's choices apply.
+export interface SessionBarPreviewData {
+  answer: Merged<SessionBarItem>;
+  pluginName: (pluginId: string) => string;
+}
+
+type PreviewProps = { data: SessionBarPreviewData; visibility: SlotVisibility };
+
+export const noBarLine = 'No Plugin left on sends a line for this Session.';
+
+/*
+ * The Session page's own bar, under the page's choices: the first Plugin left on shows, and the rest wait behind
+ * "+N". With none left on, the page says so, as the Session page draws no bar.
+ */
+export function SessionBarPreview({
+  data,
+  visibility,
+}: PreviewProps): React.JSX.Element {
+  const lines = sessionBarLines(data.answer, visibility, data.pluginName);
+
+  if (!lines) return <Text role="secondary">{noBarLine}</Text>;
+
+  return <SessionBar {...lines} onOpen={ignore} />;
+}
+
+const ignore = (): void => undefined;
+
+// The preview on the App: the bar the Server's Plugins send for the latest Session.
+export function LiveSessionBarPreview({
+  visibility,
+}: SlotPreviewProps): React.JSX.Element {
+  const latest = useLatestSession();
+
+  const answer = useSessionBarAnswer(
+    latest && { sessionId: latest.sessionId, projectId: latest.projectId },
+  );
+
+  return (
+    <SessionBarPreview
+      data={{ answer, pluginName: usePluginName() }}
+      visibility={visibility}
+    />
+  );
+}

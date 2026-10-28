@@ -16,12 +16,15 @@ export {
   projectDetailsSlotId,
   sessionActivitySlotId,
   SessionActivityItem,
+  sessionBarSlotId,
   sessionRowSlotId,
   SessionRowItem,
   toolCallSlotId,
   type ItemsSlot,
   type SlotLimit,
 } from '#plugin-slot-registry';
+
+export { SessionBarItem } from '#plugin-session-bar-item';
 
 type AnyTreeSlot = TreeSlot<string, z.ZodObject>;
 

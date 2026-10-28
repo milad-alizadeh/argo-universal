@@ -2,8 +2,10 @@ import {
   type AddOnlySlotId,
   projectDetailsSlotId,
   sessionActivitySlotId,
+  sessionBarSlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
+import { sessionBarSlot } from './session-bar-slot';
 import { sessionRowSlot } from './session-row-slot';
 import type { SlotDetail } from './slot-detail';
 
@@ -17,6 +19,7 @@ const declared = {
   [sessionRowSlotId]: sessionRowSlot,
   // Chosen on the Session rows page, as its Activity line.
   [sessionActivitySlotId]: null,
+  [sessionBarSlotId]: sessionBarSlot,
 } satisfies Record<AddOnlySlotId, SlotDetail | null>;
 
 export const slotDetails: readonly SlotDetail[] = Object.values(

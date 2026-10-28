@@ -1,3 +1,4 @@
+import type { SessionBarPreviewData } from './session-bar-preview';
 import type { SessionRowPreviewData } from './session-row-preview';
 import { previewSession } from './session-row-slot';
 import type { SlotPlugin } from './slot-detail-model';
@@ -67,4 +68,32 @@ export const sessionRowPreviewData: SessionRowPreviewData = {
     ],
     overflow: [{ pluginId: deploys.pluginId, item: { text: deploysLine } }],
   },
+};
+
+export const issueTrackerBar = `${issueRef(412)} · In review`;
+
+export const coverageBar = '78% covered';
+
+const pluginNames: Record<string, string> = Object.fromEntries(
+  slotPlugins.map(({ pluginId, name }) => [pluginId, name]),
+);
+
+// What the three Plugins answer for the preview's Session bar, as the Server sends it: one fits, the rest overflow.
+export const sessionBarPreviewData: SessionBarPreviewData = {
+  answer: {
+    items: [
+      {
+        pluginId: issueTracker.pluginId,
+        item: { text: issueTrackerBar, action: { path: '/issues/412' } },
+      },
+    ],
+    overflow: [
+      {
+        pluginId: deploys.pluginId,
+        item: { text: previewReady, action: { path: '/deploys/latest' } },
+      },
+      { pluginId: coverage.pluginId, item: { text: coverageBar } },
+    ],
+  },
+  pluginName: (pluginId) => pluginNames[pluginId] ?? pluginId,
 };

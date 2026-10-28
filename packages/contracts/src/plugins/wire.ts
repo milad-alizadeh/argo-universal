@@ -19,6 +19,8 @@ export {
   projectDetailsSlotId,
   sessionActivitySlotId,
   SessionActivityItem,
+  SessionBarItem,
+  sessionBarSlotId,
   sessionRowSlotId,
   slotPath,
   slotRegistry,

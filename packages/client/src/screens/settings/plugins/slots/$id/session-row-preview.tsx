@@ -20,8 +20,8 @@ import {
   type SlotVisibility,
   visibleItems,
 } from '#features/settings';
+import { useSlotItems } from '../../../../plugins/use-slot-items';
 import type { SlotPreviewProps } from './slot-detail';
-import { useSlotItems } from './use-slot-items';
 
 // A Server that sent no answer for the Session, or something else, gives none.
 const noAnswer = { items: [], overflow: [] };
@@ -106,7 +106,8 @@ function usePreviewData(
   };
 }
 
-function useLatestSession(): SessionInfo | undefined {
+// The newest Session not archived, which a Slot's preview draws for real.
+export function useLatestSession(): SessionInfo | undefined {
   const trpc = useTRPC();
 
   const { data } = useQuery(

@@ -214,6 +214,24 @@ A Plugin that throws, answers off-schema, or takes over two seconds is left out 
 A Session row's Activity line is a Single-owner Slot, `argo/session/activity/v1`. It is asked like the row items, with the same `{ sessionId, projectId }` contexts, and a Plugin answers at most one `{ text }` per Session id, of at most 40 characters.
 A Plugin can declare it with or without the row items Slot. Every Plugin that declares it answers, but a row shows only the line of the Plugin the user chose under Settings › Plugins › Session rows on that Device. While no Plugin is chosen, the chosen Plugin is turned off on Session rows, or it has no line for a Session, the row shows Argo's own activity.
 
+## Session bar
+
+The Session bar is one line under an open Session's header, `argo/session/bar/v1`. It is asked like the row items, with the same `{ sessionId, projectId }` contexts and an answer keyed by Session id, and a Plugin answers at most one item per Session:
+
+```tsx
+argo.slots.register('argo/session/bar/v1', ({ contexts }) =>
+  Object.fromEntries(
+    contexts.map(({ sessionId }) => [
+      sessionId,
+      [{ icon: { sf: 'ticket' }, text: '#412 · In review', action: { path: '/issues/412' } }],
+    ]),
+  ),
+);
+```
+
+An item is `{ icon?, text, action? }`: `text` is at most 80 characters, and `action.path` opens one of the Plugin's own pages. A tone, a tooltip, a kit tree or a second item fails the Slot's schema, and that Plugin is left out alone.
+The bar shows the first Plugin in Slot order that answers, after Argo's own banners, on phones and wide windows alike. The other Plugins' lines wait behind "+N", each named with its Plugin. A user can turn a Plugin off for the bar under Settings › Plugins › Session bar on that Device; the next Plugin in order then takes the line. With no answer, the Session draws no bar.
+
 ## Background pages and badges
 
 Declare `contributes.background: { path, interval }` in `plugin.json`, and register that path as a page.
