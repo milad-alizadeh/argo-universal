@@ -1,28 +1,40 @@
-// Runs `action`, then reads `measure` on each of the next `frames` animation frames, so a test can follow a motion frame by frame.
-export function sampleEachFrame(
+import { vi } from 'vitest';
+
+const animationClock = {
+  toFake: ['performance', 'requestAnimationFrame', 'cancelAnimationFrame'],
+} satisfies NonNullable<Parameters<typeof vi.useFakeTimers>[0]>;
+
+// Steps the animation clock at each browser paint, so a busy runner cannot skip the motion's middle.
+export async function sampleEachFrame(
   action: () => void,
   measure: () => number,
   frames: number,
 ): Promise<number[]> {
-  return new Promise((resolve) => {
+  const requestPaint = requestAnimationFrame;
+
+  vi.useFakeTimers(animationClock);
+
+  try {
     action();
-    collectFrames(measure, frames, resolve);
-  });
+
+    return await collectFrames(requestPaint, measure, frames);
+  } finally {
+    vi.useRealTimers();
+  }
 }
 
-function collectFrames(
+async function collectFrames(
+  requestPaint: typeof requestAnimationFrame,
   measure: () => number,
   frames: number,
-  resolve: (samples: number[]) => void,
-): void {
+): Promise<number[]> {
   const samples: number[] = [];
 
-  const step = (): void => {
-    samples.push(measure());
+  for (const frame of Array.from({ length: frames }).keys()) {
+    await new Promise<void>((resolve) => requestPaint(() => resolve()));
+    vi.advanceTimersToNextFrame();
+    samples[frame] = measure();
+  }
 
-    if (samples.length < frames) requestAnimationFrame(step);
-    else resolve(samples);
-  };
-
-  requestAnimationFrame(step);
+  return samples;
 }
