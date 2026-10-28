@@ -1,6 +1,7 @@
 import { isValidElement, type ReactElement } from 'react';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
+import { Link, isRoute, type LinkProps } from '#primitives/content/link';
 import type { PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
 import { flattenedChildren } from '../../../flattened-children';
@@ -33,10 +34,17 @@ export function MetadataLabel(props: MetadataLabelProps): ReactElement {
   );
 }
 
+// A Metadata link's one `href` is an App route or a URL; the kit Link takes them apart.
+function destination(href: string): Pick<LinkProps, 'href' | 'route'> {
+  return isRoute(href) ? { route: href } : { href };
+}
+
 export function MetadataLink(props: MetadataLinkProps): ReactElement {
   return (
     <MetadataField {...fieldProps(props)} valueLabel={props.text}>
-      <MetadataText text={props.text} />
+      <MetadataText
+        text={<Link label={props.text} {...destination(props.href)} />}
+      />
     </MetadataField>
   );
 }

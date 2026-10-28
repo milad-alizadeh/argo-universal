@@ -1,11 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { router } from 'expo-router';
 import { Component, type ReactNode } from 'react';
-import { expect } from 'storybook/test';
+import { expect, spyOn } from 'storybook/test';
 import { Text } from '#primitives/content/text';
 import { Metadata } from './metadata';
 import { fields } from './metadata.mocks';
 
 const path = '~/Developer/argo';
+
+const repoName = 'argo-universal';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Scaffolds/Metadata',
@@ -54,9 +57,58 @@ export const ReadsMixedValues: Story = {
     await expect(
       canvas.getByRole('group', { name: 'Reviewer, Alex Chen' }),
     ).toBeVisible();
-    await expect(canvas.getByText('argo-universal')).toBeVisible();
-    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+    await expect(canvas.getByRole('link', { name: repoName })).toBeVisible();
     await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
+  },
+};
+
+export const OpensLinkUrl: Story = {
+  args: {
+    children: (
+      <Metadata.Link
+        title="Repository"
+        text={repoName}
+        href="https://example.com/repo"
+      />
+    ),
+  },
+  play: async ({ canvas }) => {
+    const link = canvas.getByRole('link', { name: repoName });
+
+    await expect(link).toHaveAttribute('href', 'https://example.com/repo');
+    await expect(canvas.getByText('Repository')).toBeVisible();
+  },
+};
+
+export const NavigatesLinkRoute: Story = {
+  args: {
+    children: <Metadata.Link title="Page" text="Settings" href="/settings" />,
+  },
+  play: async ({ canvas, userEvent }) => {
+    const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
+
+    try {
+      await userEvent.click(canvas.getByRole('link', { name: 'Settings' }));
+      await expect(navigate).toHaveBeenCalledWith('/settings');
+    } finally {
+      navigate.mockRestore();
+    }
+  },
+};
+
+export const UnsupportedLinkStaysText: Story = {
+  args: {
+    children: (
+      <Metadata.Link
+        title="Repository"
+        text={repoName}
+        href="javascript:alert(1)"
+      />
+    ),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(repoName)).toBeVisible();
+    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
   },
 };
 
