@@ -1,16 +1,13 @@
-import { MenuView } from '@expo/ui/community/menu';
+import { ContextMenu as SwiftContextMenu, RNHostView } from '@expo/ui/swift-ui';
 import { type Href, Link } from 'expo-router';
-import type { ComponentProps, ComponentType, ReactElement } from 'react';
+import type { ComponentType, ReactElement } from 'react';
 import { View } from 'react-native';
-import { useNativeTheme } from '#kit/native-theme';
+import { Host } from '#primitives/native/host';
 import { contextMenuSections } from './context-menu-native-items';
 import type { ContextMenuProps } from './context-menu-props';
-import {
-  dividedItems,
-  type NativeMenuItem,
-  type NativeMenuSection,
-} from './menu-native-items';
-import { menuSymbol, runAction, sectionAction } from './menu-view-actions.ios';
+import { swiftMenuSections } from './context-menu-swift-items.ios';
+import type { NativeMenuItem, NativeMenuSection } from './menu-native-items';
+import { menuSymbol } from './menu-view-actions.ios';
 
 /*
  * The system context menu on a long press, with its haptic. With a page to preview, expo-router's Link draws it:
@@ -24,39 +21,32 @@ export function ContextMenu(props: ContextMenuProps): ReactElement {
 }
 
 /*
+ * Expo UI's ContextMenu around the element, hosted as MenuView `shouldOpenOnLongPress` hosts it but matching only the
+ * element's height: MenuView matches both axes, so a row drew only as wide as its content. `{ vertical: true }` on the
+ * Host and the RNHostView takes the width from the parent and the height from the element.
+ *
  * On a movable row, SwiftUI's .contextMenu takes the touch from the row's Pan once it opens, and Expo UI exposes no
  * draggable or onOpenMenu on iOS, so a row drags only when the finger moves before the menu opens; dragging on from
  * an open menu, as on Android, waits on upstream.
  */
 function LiftMenu(props: ContextMenuProps): ReactElement {
-  const { colorScheme } = useNativeTheme();
-
   return (
-    <MenuView
-      shouldOpenOnLongPress
-      colorScheme={colorScheme}
-      {...liftMenuActions(props)}
-    >
-      {props.children}
-    </MenuView>
+    <Host matchContents={heightOnly} ignoreSafeArea="all">
+      <SwiftContextMenu>
+        <SwiftContextMenu.Trigger>
+          <RNHostView matchContents={heightOnly}>
+            <View>{props.children}</View>
+          </RNHostView>
+        </SwiftContextMenu.Trigger>
+        <SwiftContextMenu.Items>
+          {swiftMenuSections(contextMenuSections(props))}
+        </SwiftContextMenu.Items>
+      </SwiftContextMenu>
+    </Host>
   );
 }
 
-type LiftMenuActions = Pick<
-  ComponentProps<typeof MenuView>,
-  'actions' | 'onPressAction'
->;
-
-// MenuView takes each group as an inline section, the first headed by the title, and reports the chosen row by id.
-function liftMenuActions(props: ContextMenuProps): LiftMenuActions {
-  const sections = contextMenuSections(props);
-  const items = dividedItems(sections);
-
-  return {
-    actions: sections.map(sectionAction),
-    onPressAction: (event) => runAction(items, event),
-  };
-}
+const heightOnly = { vertical: true };
 
 type PreviewMenuProps = ContextMenuProps & { href: Href };
 
