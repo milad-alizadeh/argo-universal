@@ -102,7 +102,10 @@ export { listSessionShells } from './shells/list';
 export { unarchiveSession } from './archive/archive-commands';
 
 export {
-  beginSessionOperation,
+  createOperationCalls,
+  type OperationCalls,
+  type OperationCard,
+  type OperationCallRead,
   type SessionOperationCall,
 } from './operation-call';
 
@@ -110,18 +113,15 @@ export { cancelSession } from './session-closure';
 
 export { archiveSession } from './archive/archive-commands';
 
-export {
-  readSessionTurn,
-  readSessionOperation,
-  sessionTurnRequiresInput,
-} from './operation-work';
+export { type SessionWorkWatcher } from './work-watcher';
 
-export { readSessionCreation } from './creation-reader';
+export { createSessionWorkSource, type SessionWorkSource } from './work-source';
 
 export {
-  createSessionWorkWatcher,
-  type SessionWorkWatcher,
-} from './work-watcher';
+  createSessionDirectory,
+  type DirectorySession,
+  type SessionDirectory,
+} from './session-directory';
 
 export {
   startSessionPrompt,

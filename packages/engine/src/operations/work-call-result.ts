@@ -1,9 +1,9 @@
 import type { OperationExecution } from '@repo/contracts/operations';
-import type { readSessionOperation } from '../sessions';
+import type { OperationCallRead } from '../sessions';
 
 export function operationExecution(
   id: string,
-  value: ReturnType<typeof readSessionOperation>,
+  value: OperationCallRead,
 ): OperationExecution {
   const execution: OperationExecution = {
     kind: 'operation_execution',
@@ -18,7 +18,7 @@ export function operationExecution(
 }
 
 function callOutput(
-  value: ReturnType<typeof readSessionOperation>,
+  value: OperationCallRead,
 ): Pick<OperationExecution, 'result' | 'fullResult'> {
   const output: Pick<OperationExecution, 'result' | 'fullResult'> = {};
 

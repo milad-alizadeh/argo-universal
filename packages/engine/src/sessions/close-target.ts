@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import type { SessionRouterDeps } from './router-deps';
 import { createQueuedSessionReader } from './session-record';
+import { readOpenSession } from './session-system';
 
 type Sources = Pick<SessionRouterDeps, 'database' | 'findWriter' | 'sessions'>;
 
@@ -28,9 +29,7 @@ function openingTarget(
 ): SessionCloseTarget {
   requireMissingSession(cause);
 
-  const context = deps.sessions
-    .getSnapshot()
-    .context.sessions[sessionId]?.getSnapshot().context;
+  const context = readOpenSession(deps.sessions, sessionId);
 
   if (!context || context.input.kind !== 'new') throw cause;
 

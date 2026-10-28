@@ -1,7 +1,7 @@
 import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { z } from 'zod';
-import type { SessionOperationCall } from '../sessions';
+import type { OperationCard, SessionOperationCall } from '../sessions';
 import type { OperationResult, SessionInvoke } from './implementations';
 import type { OperationsDeps } from './operations';
 import { operationParams } from './params';
@@ -44,7 +44,7 @@ async function runScopedWrite(
   const params = parsedParams(operation);
 
   if (requiresConfirmation(deps, caller, { id, params }))
-    await call.confirm(operations[id].description);
+    await call.confirm(operationCard(id));
 
   return invoke({ id, params });
 }
@@ -61,6 +61,14 @@ function requiresConfirmation(
     );
 
   return operations[operation.id].tier === 'confirm';
+}
+
+// The Permission request card of an Operation the caller's scope does not cover.
+export function operationCard(id: OperationId): OperationCard {
+  return {
+    title: operations[id].label,
+    description: operations[id].description,
+  };
 }
 
 function parsedParams({ id, params }: SessionWrite['operation']): Json {

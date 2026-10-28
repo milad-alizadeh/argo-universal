@@ -1,13 +1,13 @@
 import type { OperationExecution } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
+import type { SessionWorkSource } from '../sessions';
 import type { StartedWork } from './native-start';
-import type { OperationsDeps } from './operations';
 import { admissionTimedOut, type WaitBudget } from './wait-budget';
 import type { WaitIds } from './wait-id';
 import { readOperationWork } from './work-reader';
 
 type AdmissionContext = {
-  deps: OperationsDeps;
+  source: SessionWorkSource;
   ids: WaitIds;
   budget: WaitBudget;
 };
@@ -73,13 +73,13 @@ function missingAdmission(cause: unknown): never {
 }
 
 function execution(
-  { deps, ids }: AdmissionContext,
+  { source, ids }: AdmissionContext,
   { kind, sessionId, turnId }: StartedWork<unknown>,
 ): OperationExecution {
   const work = { kind, sessionId, entityId: turnId };
 
   return readOperationWork(
-    { deps, ids, caller: user },
+    { source, ids, caller: user },
     { id: ids.issue(user, work), work },
   ).execution;
 }

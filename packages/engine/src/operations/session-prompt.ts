@@ -1,4 +1,5 @@
 import { SessionPromptInput, type SessionPromptOutput } from '@repo/contracts';
+import { operations } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { operationParams } from './params';
 import type {
@@ -32,9 +33,11 @@ async function confirmedPrompt(
   admission: SessionStartAdmission,
 ): Promise<SessionPromptOutput> {
   if (requiresConfirmation(context, input.sessionId, admission))
-    await context.call.confirm(
-      'Send a prompt outside the calling Session’s Agents or delegation limits.',
-    );
+    await context.call.confirm({
+      title: operations['session.prompt'].label,
+      description:
+        'Send a prompt outside the calling Session’s Agents or delegation limits.',
+    });
 
   return context.invoke({ id: 'session.prompt', params });
 }

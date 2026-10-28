@@ -1,17 +1,10 @@
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import {
-  beginSessionOperation,
-  type SessionOperationCall,
-  type SessionRouterDeps,
-} from '../sessions';
+import type { OperationCalls, SessionOperationCall } from '../sessions';
 import type { OperationCaller } from './session-tokens';
 
-type Recording = {
-  deps: Pick<SessionRouterDeps, 'sessions'>;
-  caller: OperationCaller;
-};
+type Recording = { calls: OperationCalls; caller: OperationCaller };
 
 type Call = { name: string; label: string; input: Json };
 
@@ -34,25 +27,21 @@ function failed(call: SessionOperationCall, cause: unknown): never {
 }
 
 export function recordOperation<Result>(
-  { deps, caller }: Recording,
+  recording: Recording,
   operation: Call,
   run: (call?: SessionOperationCall) => Promise<Result>,
 ): Promise<Result> {
-  return startRecordedOperation({ deps, caller }, operation, run).result;
+  return startRecordedOperation(recording, operation, run).result;
 }
 
 export function startRecordedOperation<Result>(
-  { deps, caller }: Recording,
+  { calls, caller }: Recording,
   operation: Call,
   run: (call?: SessionOperationCall) => Promise<Result>,
 ): StartedOperation<Result> {
   if (caller.kind === 'user') return { result: run() };
 
-  const call = beginSessionOperation(
-    deps.sessions,
-    caller.sessionId,
-    operation,
-  );
+  const call = calls.begin(caller.sessionId, operation);
 
   return { call, result: runRecorded(call, run) };
 }

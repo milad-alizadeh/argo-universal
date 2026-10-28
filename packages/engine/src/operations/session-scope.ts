@@ -1,8 +1,4 @@
-import {
-  operations,
-  type OperationId,
-  type OperationRow,
-} from '@repo/contracts/operations';
+import type { OperationId, OperationRow } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { SessionOperationCall } from '../sessions';
 import type { OperationResult, SessionInvoke } from './implementations';
@@ -10,7 +6,7 @@ import type { OperationsDeps } from './operations';
 import { resolveReadTarget, type ResolvedReadOperation } from './read-target';
 import type { SessionStarts } from './session-starts';
 import type { SessionCaller } from './session-tokens';
-import { runSessionWrite } from './session-write';
+import { operationCard, runSessionWrite } from './session-write';
 
 const needsTurn = 'A Permission request requires an active Turn';
 
@@ -64,7 +60,7 @@ async function confirmReadScope(
 
   if (read.target.projectId === caller.projectId) return;
 
-  await call.confirm(operations[read.id].description);
+  await call.confirm(operationCard(read.id));
 }
 
 // Executes an authorized read while preserving its Project scope metadata.

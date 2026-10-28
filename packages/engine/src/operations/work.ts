@@ -1,10 +1,10 @@
 import { OperationExecution } from '@repo/contracts/operations';
-import { createSessionWorkWatcher } from '../sessions';
+import type { SessionWorkSource } from '../sessions';
 import { requireOperationCall, type StartedOperation } from './call-recording';
 import { isNativeStartOperation } from './native-start';
 import type { OperationRunResult, OperationsDeps } from './operations';
 import type { OperationCaller } from './session-tokens';
-import { waitForNativeWork, type WaitOptions } from './wait';
+import { waitForNativeWork } from './wait';
 import { WaitBudget } from './wait-budget';
 import { WaitIds } from './wait-id';
 import { observationSignal, stoppingSignal } from './wait-signals';
@@ -23,16 +23,12 @@ import { watchOperationWork } from './work-watch';
 
 export class OperationWork {
   private readonly ids: WaitIds;
-  private readonly observation: Pick<WaitOptions, 'watch' | 'clock'>;
   public constructor(
     private readonly deps: OperationsDeps,
     private readonly caller: (token: string | undefined) => OperationCaller,
+    private readonly source: SessionWorkSource,
   ) {
     this.ids = new WaitIds(deps.controlToken);
-    this.observation = {
-      watch: createSessionWorkWatcher(deps),
-      clock: deps.operationWaitClock,
-    };
   }
   public run(
     input: RunObservation,
@@ -50,7 +46,7 @@ export class OperationWork {
     begin: BeginWork<Result>,
     budget: WaitBudget,
   ): Promise<Result | OperationExecution> {
-    return admitUserWork({ deps: this.deps, ids: this.ids, budget }, begin);
+    return admitUserWork({ source: this.source, ids: this.ids, budget }, begin);
   }
   public wait(
     id: string,
@@ -141,13 +137,13 @@ export class OperationWork {
       ...options,
       signal: stoppingSignal(options.signal, this.deps.sessionCommandSignal),
       read,
-      ...this.observation,
-      watch: watchOperationWork(this.observation.watch, caller()),
+      clock: this.deps.operationWaitClock,
+      watch: watchOperationWork(this.source.watch, caller()),
     });
   }
   private read(id: string, caller: OperationCaller): WorkObservation {
     return readOperationWork(
-      { deps: this.deps, ids: this.ids, caller },
+      { source: this.source, ids: this.ids, caller },
       { id, work: this.ids.require(caller, id) },
     );
   }

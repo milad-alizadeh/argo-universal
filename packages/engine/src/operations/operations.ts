@@ -7,7 +7,13 @@ import {
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
-import type { SessionList, SessionRouterDeps } from '../sessions';
+import {
+  createOperationCalls,
+  createSessionWorkSource,
+  type OperationCalls,
+  type SessionList,
+  type SessionRouterDeps,
+} from '../sessions';
 import {
   recordOperation,
   startRecordedOperation,
@@ -51,25 +57,24 @@ type OperationCallInput = { name: OperationId; label: string; input: Json };
 export class Operations {
   private readonly runner: OperationRunner;
   private readonly work: OperationWork;
+  private readonly calls: OperationCalls;
   public constructor(
     private readonly deps: OperationsDeps,
     sessionList: SessionList,
   ) {
-    this.work = new OperationWork(deps, (token) => this.caller(token));
-    this.runner = new OperationRunner(
-      createImplementations(deps, sessionList),
-      {
-        deps,
-        work: this.work,
-        starts: new SessionStarts(deps),
-      },
+    this.calls = createOperationCalls(deps);
+    this.work = new OperationWork(
+      deps,
+      (token) => this.caller(token),
+      createSessionWorkSource(deps),
     );
+    this.runner = createRunner(deps, { sessionList, work: this.work });
   }
   public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
     const caller = this.caller(token);
 
     return recordOperation(
-      { deps: this.deps, caller },
+      { calls: this.calls, caller },
       {
         name: 'operations.list',
         label: 'Discover Operations',
@@ -95,7 +100,7 @@ export class Operations {
     input: RunInput,
   ): StartedOperation<OperationRunResult> {
     return startRecordedOperation(
-      { deps: this.deps, caller: context.caller },
+      { calls: this.calls, caller: context.caller },
       operationCall(input),
       (call) => this.runner.run({ ...context, call }, input),
     );
@@ -119,6 +124,17 @@ export class Operations {
   ): Promise<OperationResult<Id>> {
     return this.runner.runApp(id, params);
   }
+}
+
+function createRunner(
+  deps: OperationsDeps,
+  { sessionList, work }: { sessionList: SessionList; work: OperationWork },
+): OperationRunner {
+  return new OperationRunner(createImplementations(deps, sessionList), {
+    deps,
+    work,
+    starts: new SessionStarts(deps),
+  });
 }
 
 function operationCall({ id, params }: RunInput): OperationCallInput {

@@ -1,4 +1,5 @@
 import { SessionNewInput, type SessionNewOutput } from '@repo/contracts';
+import { operations } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { operationParams } from './params';
 import type {
@@ -33,9 +34,11 @@ async function confirmedStart(
   admission: SessionStartAdmission,
 ): Promise<SessionNewOutput> {
   if (input.projectId !== caller.projectId || admission.needsConfirmation)
-    await call.confirm(
-      'Start a Session outside the calling Session’s Project or delegation limits.',
-    );
+    await call.confirm({
+      title: operations['session.new'].label,
+      description:
+        'Start a Session outside the calling Session’s Project or delegation limits.',
+    });
 
   return invoke({ id: 'session.new', params }, { sessionId });
 }

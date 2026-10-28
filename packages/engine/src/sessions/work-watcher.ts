@@ -2,6 +2,7 @@ import type { Observer, Subscription } from 'xstate';
 import type { FeedActorRef } from '../feed';
 import type { SessionRouterDeps } from './router-deps';
 import type { SessionActorRef } from './session-machine';
+import { findOpenSession } from './session-system';
 import { onWriterChange } from './writer-changes';
 
 type Sources = Pick<SessionRouterDeps, 'sessions' | 'findFeed' | 'findWriter'>;
@@ -54,8 +55,7 @@ class WorkWatcher implements Subscription {
     this.listener.next?.();
   };
   private refresh(): void {
-    const session =
-      this.deps.sessions.getSnapshot().context.sessions[this.sessionId];
+    const session = findOpenSession(this.deps.sessions, this.sessionId);
 
     const feed = this.deps.findFeed(this.sessionId);
 
