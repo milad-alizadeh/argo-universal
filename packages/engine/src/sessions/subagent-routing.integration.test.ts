@@ -38,7 +38,7 @@ it.each(
       await waitForAcpSessionIdle(host, sessionId);
     }
 
-    const children = await host.caller.session.subagents({ sessionId });
+    const children = await host.caller.session.listAgents({ sessionId });
     expect(children).toHaveLength(1);
     const list = await host.caller.session.list({ archived: false });
     expect(list.sessions.map((row) => row.sessionId)).toEqual([sessionId]);
@@ -141,7 +141,7 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
     scenarios['subagent-foreground'],
   );
 
-  const [child] = await host.caller.session.subagents({ sessionId });
+  const [child] = await host.caller.session.listAgents({ sessionId });
 
   if (!child) throw new Error(missingSubagent);
   await host.stop();
@@ -161,9 +161,9 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
     'agent_message',
   ]);
   expect(host.agent.processes).toHaveLength(1);
-  expect(await restarted.caller.session.subagents({ sessionId })).toMatchObject(
-    [{ sessionId: child.sessionId, state: 'idle' }],
-  );
+  expect(
+    await restarted.caller.session.listAgents({ sessionId }),
+  ).toMatchObject([{ sessionId: child.sessionId, state: 'idle' }]);
 });
 
 it.each(['idle', 'cancelled'] as const)(
@@ -171,7 +171,7 @@ it.each(['idle', 'cancelled'] as const)(
   async (phase) => {
     const { host, sessionId } = await backgroundParent(phase);
 
-    const [child] = await host.caller.session.subagents({ sessionId });
+    const [child] = await host.caller.session.listAgents({ sessionId });
 
     if (!child) throw new Error(missingSubagent);
 

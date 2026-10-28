@@ -41,7 +41,7 @@ function useServerBranches(scope: ChangesScope): Loaded<SessionBranchesOutput> {
 
   return loaded(
     useQuery(
-      trpc.session.branches.queryOptions(
+      trpc.session.listBranches.queryOptions(
         { sessionId: scope.sessionId },
         { enabled: scope.open },
       ),

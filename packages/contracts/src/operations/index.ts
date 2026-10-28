@@ -2,11 +2,14 @@ import { z } from 'zod';
 import { ProjectsListOutput } from '../projects/list';
 import type { OperationTier } from './metadata';
 import { pluginOperations } from './plugins';
+import { readerOperations } from './readers';
 import { registryOperations } from './registry';
 import { operationJsonSchema } from './schema-json';
 import { sessionOperations } from './sessions';
 
 export { OperationRow, OperationTier } from './metadata';
+
+export { readerOperations } from './readers';
 
 export { sessionOperations } from './sessions';
 
@@ -21,6 +24,7 @@ export interface OperationDefinition {
 }
 
 export const operations = {
+  ...readerOperations,
   ...sessionOperations,
   ...pluginOperations,
   ...registryOperations,

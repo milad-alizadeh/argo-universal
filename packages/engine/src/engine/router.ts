@@ -5,7 +5,6 @@ import { createServerLinkPreviewRouter } from '../link-preview';
 import { createNotificationsRouter } from '../notifications';
 import { createOperationRouters } from '../operations';
 import { createPluginsRouter } from '../plugins';
-import { createProjectsRouter } from '../projects';
 import { mergeRouters, router, routerFactory } from '../rpc';
 import { createSystemRouter } from '../system';
 import type { AppRouterDeps } from './router-deps';
@@ -17,7 +16,6 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     linkPreview: createServerLinkPreviewRouter(deps),
     plugins: createPluginsRouter(deps.plugins),
     agents: createAgentsRouter(deps),
-    projects: createProjectsRouter(deps),
     system: createSystemRouter(deps),
     feed: createFeedRouter(deps),
     notifications: createNotificationsRouter(deps),

@@ -47,7 +47,7 @@ async function resumeBackgroundParent(): Promise<ResumedParent> {
     },
   });
 
-  const [child] = await host.caller.session.subagents({ sessionId });
+  const [child] = await host.caller.session.listAgents({ sessionId });
 
   if (!child) throw new Error(missingChild);
   await host.caller.session.close({ sessionId });
@@ -63,7 +63,7 @@ async function resumeBackgroundParent(): Promise<ResumedParent> {
 it('finishes the original child Turn when its resumed parent receives an idle outcome', async () => {
   const { host, sessionId, child } = await resumeBackgroundParent();
 
-  expect(await host.caller.session.subagents({ sessionId })).toMatchObject([
+  expect(await host.caller.session.listAgents({ sessionId })).toMatchObject([
     {
       state: 'idle',
       stopReason: 'end_turn',
@@ -110,7 +110,7 @@ it.each(appFixtureAgentIds)(
       agentId,
     );
 
-    const [child] = await host.caller.session.subagents({ sessionId });
+    const [child] = await host.caller.session.listAgents({ sessionId });
 
     if (!child) throw new Error(missingChild);
     const stream = await host.caller.feed.subscribe({ sessionId, after: null });
@@ -125,9 +125,9 @@ it.each(appFixtureAgentIds)(
     while (next.value?.type !== 'closed') next = await iterator.next();
     await iterator.return?.();
     await vi.waitFor(async () =>
-      expect(await host.caller.session.subagents({ sessionId })).toMatchObject([
-        { state: 'idle', stopReason: 'error' },
-      ]),
+      expect(await host.caller.session.listAgents({ sessionId })).toMatchObject(
+        [{ state: 'idle', stopReason: 'error' }],
+      ),
     );
 
     const turns = host.database
@@ -186,18 +186,18 @@ it('discards an Empty Session with all its Subagents instead of promoting them t
     'owned-1',
   );
   await vi.waitFor(async () =>
-    expect(await host.caller.session.subagents({ sessionId })).toHaveLength(1),
+    expect(await host.caller.session.listAgents({ sessionId })).toHaveLength(1),
   );
-  const [child] = await host.caller.session.subagents({ sessionId });
+  const [child] = await host.caller.session.listAgents({ sessionId });
 
   if (!child) throw new Error(missingChild);
   await vi.waitFor(async () =>
     expect(
-      await host.caller.session.subagents({ sessionId: child.sessionId }),
+      await host.caller.session.listAgents({ sessionId: child.sessionId }),
     ).toHaveLength(1),
   );
 
-  const [nested] = await host.caller.session.subagents({
+  const [nested] = await host.caller.session.listAgents({
     sessionId: child.sessionId,
   });
 

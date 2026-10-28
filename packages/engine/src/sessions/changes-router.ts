@@ -1,6 +1,4 @@
 import {
-  SessionBranchesInput,
-  SessionBranchesOutput,
   SessionChangesInput,
   SessionChangesOutput,
   SessionDiffInput,
@@ -10,7 +8,6 @@ import {
   type SessionComparison,
 } from '@repo/contracts';
 import {
-  listComparisonBranches,
   pagePatch,
   readCheckoutChanges,
   readCheckoutDiff,
@@ -35,16 +32,6 @@ const gitComparison = (
 
 export const createChangesRouter = routerFactory((deps: SessionRouterDeps) =>
   router({
-    branches: publicProcedure
-      .input(SessionBranchesInput)
-      .output(SessionBranchesOutput)
-      .query(async ({ input }) => {
-        const session = deps.readSession(input.sessionId);
-
-        return {
-          branches: await listComparisonBranches(session.checkout.path),
-        };
-      }),
     changes: publicProcedure
       .input(SessionChangesInput)
       .output(SessionChangesOutput)

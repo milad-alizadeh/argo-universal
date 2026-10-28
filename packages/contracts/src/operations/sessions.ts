@@ -1,3 +1,7 @@
+import {
+  SessionUnarchiveInput,
+  SessionUnarchiveOutput,
+} from '../sessions/archive';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
 import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
 import {
@@ -15,6 +19,16 @@ import {
 import type { OperationDefinition } from './index';
 
 export const sessionOperations = {
+  'session.unarchive': {
+    id: 'session.unarchive',
+    label: 'Undo Session archive',
+    description:
+      'Restore an archived Session during its Undo window, before its Checkout is removed.',
+    params: SessionUnarchiveInput,
+    result: SessionUnarchiveOutput,
+    tier: 'confirm',
+    keywords: ['restore', 'undo', 'archive'],
+  },
   'shell.stop': {
     id: 'shell.stop',
     label: 'Stop Shell',

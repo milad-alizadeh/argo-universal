@@ -52,7 +52,7 @@ it('reads Subagents with only their latest Turn metrics through the stored Feed 
     },
   ]);
   expect(
-    await host.caller.session.subagents({ sessionId: 'session-1' }),
+    await host.caller.session.listAgents({ sessionId: 'session-1' }),
   ).toEqual(snapshot.subagents);
   expect(host.agent.processes).toHaveLength(0);
 });
@@ -179,6 +179,6 @@ it('rejects Subagent queries for an unknown parent Session', async (): Promise<v
   const { caller } = await startAcpEngine();
 
   await expect(
-    caller.session.subagents({ sessionId: 'missing' }),
+    caller.session.listAgents({ sessionId: 'missing' }),
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
 });

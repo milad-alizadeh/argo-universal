@@ -100,7 +100,7 @@ it.each([
 it('preserves the exact missing Project error through its real branches procedure', async (): Promise<void> => {
   const { caller } = await startProjectTestHost();
   await expect(
-    caller.projects.branches({ projectId: 'missing' }),
+    caller.project.listBranches({ projectId: 'missing' }),
   ).rejects.toMatchObject({
     code: 'NOT_FOUND',
     message: 'No Project missing',
@@ -113,7 +113,7 @@ it.each([{ projectId: 42 }, { projectId: 'project-1', extra: true }])(
     const { url } = await startProjectTestHost();
     expect(
       await rejectedProcedureCode(url, {
-        path: 'projects.branches',
+        path: 'project.listBranches',
         type: 'query',
         input: JSON.stringify(input),
       }),
@@ -127,7 +127,7 @@ it.each([
   {
     procedure: 'branches',
     call: async (caller: ProjectCaller): Promise<void> => {
-      await caller.projects.branches({ projectId: 'project-1' });
+      await caller.project.listBranches({ projectId: 'project-1' });
     },
   },
   {
