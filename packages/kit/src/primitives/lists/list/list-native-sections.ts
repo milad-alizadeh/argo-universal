@@ -161,6 +161,39 @@ const shownBy =
     return refilled(section, move, { refill, last });
   };
 
+// The first row to carry each id, which keeps that id as its key.
+const firstById = (sections: NativeSection[]): Map<string, NativeRow> =>
+  sections
+    .flatMap((section) => section.rows)
+    .reduce(
+      (first, row) =>
+        row.id === undefined || first.has(row.id)
+          ? first
+          : new Map(first).set(row.id, row),
+      new Map<string, NativeRow>(),
+    );
+
+const ownsId = (first: Map<string, NativeRow>, row: NativeRow): boolean =>
+  row.id !== undefined && first.get(row.id) === row;
+
+const keyedBy =
+  (first: Map<string, NativeRow>) =>
+  (section: NativeSection): NativeSection => ({
+    ...section,
+    rows: section.rows.map((row) => ({
+      ...row,
+      key: ownsId(first, row) ? `row/${row.id}` : `${section.key}/${row.key}`,
+    })),
+  });
+
+/*
+ * In a List with `onMove` a row keeps one key wherever it draws, as a LegendList's rows do (list-level-entries): its id,
+ * or, without one or for a repeated id, its place in the Section it is written in. A moved row so never shares a key
+ * with the rows of the Section it lands in.
+ */
+const withMovingKeys = (sections: NativeSection[]): NativeSection[] =>
+  sections.map(keyedBy(firstById(sections)));
+
 /*
  * A List with `onMove` draws its native sections in the order it shows (`moves`, its owner's or a held move's): each
  * Section's movable rows in that order, a moved row in the Section it moved to. Rows the List cannot move keep their
@@ -170,7 +203,7 @@ export function shownNativeSections(
   children: ReactNode,
   moves: readonly MoveSection[],
 ): NativeSection[] {
-  const sections = allSections(children);
+  const sections = withMovingKeys(allSections(children));
 
   const targets = sections.map((section) => movedIn(section, moves));
 
