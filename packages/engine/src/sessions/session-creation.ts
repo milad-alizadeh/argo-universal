@@ -164,7 +164,10 @@ export async function startSessionCreation(
 
   const accepted = observeSessionCreation(
     session,
-    completeCreation(deps, session, { input: newSession, sender: origin?.sender }),
+    completeCreation(deps, session, {
+      input: newSession,
+      sender: origin?.sender,
+    }),
   );
 
   return { sessionId, turnId, accepted };

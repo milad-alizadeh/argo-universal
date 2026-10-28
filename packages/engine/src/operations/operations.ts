@@ -24,6 +24,7 @@ import {
   type OperationResult,
   type OperationRunResult,
 } from './implementations';
+import { isNativeStartOperation } from './native-user-starts';
 import type { OperationInput } from './params';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
@@ -31,10 +32,9 @@ import { scopedOperations, runSessionOperation } from './session-scope';
 import { SessionStarts } from './session-starts';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
 import { tokensMatch } from './tokens';
+import type { WaitBudget } from './wait-budget';
 import type { OperationWaitClock } from './wait-clock';
 import { OperationWork } from './work';
-import { isNativeStartOperation } from './native-user-starts';
-import type { WaitBudget } from './wait-budget';
 
 export type {
   OperationImplementations,
@@ -55,7 +55,12 @@ export type OperationsDeps = SessionRouterDeps &
 type RunInput = { id: OperationId; params: Json; wait: boolean };
 
 type OperationCallInput = { name: OperationId; label: string; input: Json };
-type CallContext = { caller: OperationCaller; budget: WaitBudget; call?: SessionOperationCall };
+
+type CallContext = {
+  caller: OperationCaller;
+  budget: WaitBudget;
+  call?: SessionOperationCall;
+};
 
 export class Operations {
   private readonly implementations: OperationImplementations;
@@ -89,7 +94,10 @@ export class Operations {
   ): Promise<OperationResult | OperationExecution> {
     const caller = this.caller(token);
 
-    return this.work.run({ caller, token, wait: input.wait, signal, id: input.id }, (budget) => this.start({ caller, budget }, input));
+    return this.work.run(
+      { caller, token, wait: input.wait, signal, id: input.id },
+      (budget) => this.start({ caller, budget }, input),
+    );
   }
   private start(
     context: CallContext,
@@ -124,8 +132,12 @@ export class Operations {
 
     return runSessionOperation(access, operation);
   }
-  private async runUser({ id, params }: { id: OperationId; params: Json }, budget: WaitBudget): Promise<OperationRunResult> {
-    if (isNativeStartOperation(id)) return this.work.startUser({ id, params }, budget);
+  private async runUser(
+    { id, params }: { id: OperationId; params: Json },
+    budget: WaitBudget,
+  ): Promise<OperationRunResult> {
+    if (isNativeStartOperation(id))
+      return this.work.startUser({ id, params }, budget);
 
     return operations[id].result.parseAsync(
       await runOperation(this.implementations, id, params),

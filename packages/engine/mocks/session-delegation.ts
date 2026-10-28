@@ -3,6 +3,7 @@ import type {
   PromptRequest,
 } from '@agentclientprotocol/sdk';
 import { SessionNewOutput } from '@repo/contracts';
+import { OperationExecution } from '@repo/contracts/operations';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle } from './acp-feed';
@@ -52,13 +53,16 @@ export async function startDelegated(
   caller = journey.caller,
 ): Promise<DelegationJourney['caller']> {
   const created = SessionNewOutput.parse(
-    await caller.caller.operations.run.mutate({
-      id: 'session.new',
-      params: {
-        ...emptySessionInput,
-        prompt: [{ type: 'text', text: 'Delegated work' }],
-      },
-    }),
+    OperationExecution.parse(
+      await caller.caller.operations.run.mutate({
+        wait: true,
+        id: 'session.new',
+        params: {
+          ...emptySessionInput,
+          prompt: [{ type: 'text', text: 'Delegated work' }],
+        },
+      }),
+    ).result,
   );
 
   await waitForAcpSessionIdle(journey.host, created.sessionId);

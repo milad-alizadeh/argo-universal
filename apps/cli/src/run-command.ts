@@ -8,7 +8,8 @@ import { z } from 'zod';
 import { parseUsage } from './command-error';
 import { connectControl } from './control-client';
 import { readControlResponse } from './control-response';
-import { executionExitCode, waitRequestTimeoutMs } from './wait-command';
+import { completeExecutionResult, operationExitCode } from './execution-result';
+import { waitRequestTimeoutMs } from './wait-command';
 
 const RunInput = z.strictObject({
   id: OperationId,
@@ -44,16 +45,16 @@ export async function runOperation(
   write: (line: string) => void,
 ): Promise<number> {
   const { id, params, wait } = parseUsage(() => runArguments(args));
+  const deadline = performance.now() + waitRequestTimeoutMs;
   const client = await connectControl(waitRequestTimeoutMs);
 
-  const result = readControlResponse(
+  const parsed = readControlResponse(
     z.union([operations[id].result, OperationExecution]),
     await client.operations.run.mutate({ id, params, wait }),
   );
 
+  const result = await completeExecutionResult(parsed, deadline);
   write(JSON.stringify(result, null, 2));
 
-  const execution = OperationExecution.safeParse(result);
-
-  return execution.success ? executionExitCode(execution.data) : 0;
+  return operationExitCode(result);
 }

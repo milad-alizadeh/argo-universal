@@ -1,5 +1,5 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import { SessionPromptOutput } from '@repo/contracts';
+import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
 import { delegationJourney, startDelegated } from '#mocks/session-delegation';
 
@@ -35,12 +35,24 @@ it('admits one concurrent Session-sent prompt to the same idle child with a matc
   const admitted = first.status === 'fulfilled' ? prompts[0] : prompts[1];
   const accepted = outcomes.find((result) => result.status === 'fulfilled');
   assert(accepted?.status === 'fulfilled');
-  const receipt = SessionPromptOutput.parse(accepted.value);
-  assert(receipt.messageId);
+  const receipt = OperationExecution.parse(accepted.value);
+  assert(receipt.turn);
+
+  const admittedPage = await journey.host.caller.feed.page({
+    sessionId: target.sessionId,
+    direction: 'tail',
+  });
+
+  const message = admittedPage.rows.find(
+    (row) =>
+      row.turnId === receipt.turn?.id && row.sessionUpdate === 'prompt_message',
+  );
+
+  assert(message);
   expect(
     await journey.host.caller.feed.row({
       sessionId: target.sessionId,
-      id: receipt.messageId,
+      id: message.id,
     }),
   ).toMatchObject({ content: admitted });
 

@@ -43,12 +43,27 @@ it('caps an unstored ACP opening, then resumes its one actual first Prompt', asy
   expect(clock.activeDeadlines()).toBe(0);
 }, 30_000);
 
-
 it('shares one ninety-second deadline across branch validation and ACP opening', async () => {
   const host = await openingWaitHost();
   const gate = await holdBranchReads(host.home);
   let answered = false;
-  const running = host.user.operations.run.mutate({id: 'session.new', params: {...emptySessionInput, checkout: {type: 'worktree', baseBranch: 'main'}, prompt: [{type: 'text', text: 'One deadline'}]}, wait: true}).then(value => { answered = true; return value; });
+
+  const running = host.user.operations.run
+    .mutate({
+      id: 'session.new',
+      params: {
+        ...emptySessionInput,
+        checkout: { type: 'worktree', baseBranch: 'main' },
+        prompt: [{ type: 'text', text: 'One deadline' }],
+      },
+      wait: true,
+    })
+    .then((value) => {
+      answered = true;
+
+      return value;
+    });
+
   await gate.started();
   host.clock.advance(30_000);
   await gate.release();
@@ -60,6 +75,8 @@ it('shares one ninety-second deadline across branch validation and ACP opening',
   const pending = OperationExecution.parse(await running);
   expect(pending.status).toBe('still_running');
   host.release.resolve();
-  expect(await host.user.operations.wait.mutate({id: pending.id})).toMatchObject({status: 'settled', turn: {stopReason: 'end_turn'}});
+  expect(
+    await host.user.operations.wait.mutate({ id: pending.id }),
+  ).toMatchObject({ status: 'settled', turn: { stopReason: 'end_turn' } });
   expect(host.clock.activeDeadlines()).toBe(0);
 }, 30_000);

@@ -12,6 +12,7 @@ import {
 import type { OperationsDeps } from './operations';
 import type { OperationCaller } from './session-tokens';
 import type { NativeWork, WaitIds } from './wait-id';
+import { operationExecution } from './work-call-result';
 import type { WorkObservation } from './work-observation';
 
 type Context = { deps: OperationsDeps; ids: WaitIds; caller: OperationCaller };
@@ -22,14 +23,11 @@ export function readOperationWork(
   context: Context,
   target: Target,
 ): WorkObservation {
-  switch (target.work.kind) {
-    case 'turn':
-      return readTurn(context, target);
-    case 'creation':
-      return readCreation(context, target);
-    case 'call':
-      return readCall(context, target);
-  }
+  if (target.work.kind === 'turn') return readTurn(context, target);
+
+  if (target.work.kind === 'creation') return readCreation(context, target);
+
+  return readCall(context, target);
 }
 
 function readCall(context: Context, { id, work }: Target): WorkObservation {
@@ -39,29 +37,26 @@ function readCall(context: Context, { id, work }: Target): WorkObservation {
     work.entityId,
   );
 
-  if (value.error) throw new Error(value.error);
+  requireCallResult(value);
 
+  return linkedCall(context, { id, work }, value);
+}
+
+function requireCallResult(
+  value: ReturnType<typeof readSessionOperation>,
+): void {
+  if (value.error) throw new Error(value.error);
+}
+
+function linkedCall(
+  context: Context,
+  { id, work }: Target,
+  value: ReturnType<typeof readSessionOperation>,
+): WorkObservation {
   if (!value.cancelled && value.work)
     return readOperationWork(context, linkedTarget(context, value.work));
 
   return observation(operationExecution(id, value), work);
-}
-
-function operationExecution(
-  id: string,
-  value: ReturnType<typeof readSessionOperation>,
-): OperationExecution {
-  const execution: OperationExecution = {
-    kind: 'operation_execution',
-    id,
-    status: value.status,
-  };
-
-  if (value.result !== undefined) execution.result = value.result;
-
-  if (value.cancelled) execution.cancelled = true;
-
-  return execution;
 }
 
 function readTurn({ deps }: Context, { id, work }: Target): WorkObservation {
@@ -108,36 +103,29 @@ function readCreation(context: Context, target: Target): WorkObservation {
 
 function acceptedCreation(
   context: Context,
-  { id, work }: Target,
+  target: Target,
   turnId: string | undefined,
 ): WorkObservation {
-  if (turnId)
-    return readOperationWork(
-      context,
-      linkedTarget(context, {
-        kind: 'turn',
-        sessionId: work.sessionId,
-        turnId,
-      }),
-    );
+  if (!turnId) return opening(target, 'settled');
 
-  return observation(
-    {
-      kind: 'operation_execution',
-      id,
-      status: 'settled',
-      result: { sessionId: work.sessionId },
-    },
-    work,
-  );
+  const link: OperationWorkTarget = {
+    kind: 'turn',
+    sessionId: target.work.sessionId,
+    turnId,
+  };
+
+  return readTurn(context, linkedTarget(context, link));
 }
 
-function opening({ id, work }: Target): WorkObservation {
+function opening(
+  { id, work }: Target,
+  status: OperationExecution['status'] = 'still_running',
+): WorkObservation {
   return observation(
     {
       kind: 'operation_execution',
       id,
-      status: 'still_running',
+      status,
       result: { sessionId: work.sessionId },
     },
     work,

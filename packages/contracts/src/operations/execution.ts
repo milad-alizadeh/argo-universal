@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { BlobRef } from '../feed/content-block';
 import { Turn } from '../sessions/turn';
 
 // A Server-signed native Session/Turn or Session/Tool call identity.
@@ -14,6 +15,7 @@ export const OperationExecution = z.strictObject({
   id: OperationWaitId,
   status: z.enum(['settled', 'still_running', 'waiting_for_user']),
   result: z.json().optional(),
+  fullResult: BlobRef.optional(),
   turn: Turn.optional(),
   cancelled: z.literal(true).optional(),
 });

@@ -121,8 +121,12 @@ export function beginSessionOperation(
   operation: Operation,
 ): SessionOperationCall {
   const session = requireLiveSessionActor(sessions.system, sessionId);
+
   if (!session.getSnapshot().context.stored)
-    throw new TRPCError({ code: 'CONFLICT', message: 'The calling Session is still opening' });
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: 'The calling Session is still opening',
+    });
   const feed = findSessionFeed(sessions.system, sessionId);
 
   if (!feed || session.getSnapshot().status !== 'active')

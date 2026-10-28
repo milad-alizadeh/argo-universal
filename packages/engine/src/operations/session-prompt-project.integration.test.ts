@@ -1,4 +1,5 @@
 import { SessionNewOutput } from '@repo/contracts';
+import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
@@ -29,7 +30,9 @@ it('asks before prompting a direct child in another Project', async () => {
   const [result] = await start.outcome;
 
   const target = SessionNewOutput.parse(
-    result?.status === 'fulfilled' ? result.value : null,
+    OperationExecution.parse(
+      result?.status === 'fulfilled' ? result.value : null,
+    ).result,
   );
 
   await waitForAcpSessionIdle(journey.host, target.sessionId);

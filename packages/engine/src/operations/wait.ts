@@ -78,6 +78,9 @@ class NativeWorkObserver {
 
     const stop = (): void => subscription.unsubscribe();
     this.watching = { sessionId: value.sessionId, stop };
+    this.retainWatch(stop);
+  }
+  private retainWatch(stop: () => void): void {
     this.cleanup.add(stop);
 
     if (this.finished) this.detach();

@@ -1,14 +1,8 @@
-import { SessionPromptOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { askOperation } from '#mocks/operation-permissions';
-import { operationCaller } from '#mocks/operations';
-import {
-  delegationJourney,
-  holdSession,
-  startDelegated,
-} from '#mocks/session-delegation';
+import { delegationJourney, holdSession } from '#mocks/session-delegation';
 
 const promptOperation = 'session.prompt';
 
@@ -57,7 +51,14 @@ it('asks before prompting an unrelated Session, denies without a target Turn, th
     optionId: 'allow_once',
   });
   expect(await allowed.outcome).toMatchObject([
-    { status: 'fulfilled', value: { messageId: expect.any(String) } },
+    {
+      status: 'fulfilled',
+      value: {
+        kind: 'operation_execution',
+        status: 'settled',
+        turn: { sessionId: target.sessionId },
+      },
+    },
   ]);
   await waitForAcpSessionIdle(journey.host, target.sessionId);
   expect(
@@ -93,49 +94,3 @@ it('does not treat the calling Session itself as a Session it started', async ()
     message: 'A Permission request requires an active Turn',
   });
 });
-
-it.each(['App', 'user token'])(
-  'preserves the human %s output and rejects forged sender params before prompting a direct child',
-  async (origin) => {
-    const journey = await delegationJourney();
-    const child = await startDelegated(journey);
-    await expect(
-      journey.caller.caller.operations.run.mutate({
-        id: promptOperation,
-        params: {
-          sessionId: child.sessionId,
-          prompt: [{ type: 'text', text: 'Forged' }],
-          sender: { type: 'user' },
-        },
-      }),
-    ).rejects.toMatchObject({ data: { code: 'BAD_REQUEST' } });
-
-    const input = {
-      sessionId: child.sessionId,
-      prompt: [{ type: 'text' as const, text: 'Human follow-up' }],
-    };
-
-    const user = await operationCaller(journey.host);
-
-    const result =
-      origin === 'App'
-        ? await journey.host.caller.session.prompt(input)
-        : SessionPromptOutput.parse(
-            await user.operations.run.mutate({
-              id: promptOperation,
-              params: input,
-            }),
-          );
-
-    expect(Object.keys(result)).toEqual(['messageId']);
-    expect(
-      await journey.host.caller.feed.row({
-        sessionId: child.sessionId,
-        id: result.messageId ?? '',
-      }),
-    ).toMatchObject({
-      sessionUpdate: 'user_message',
-      _meta: { argo: { sender: { type: 'user' } } },
-    });
-  },
-);

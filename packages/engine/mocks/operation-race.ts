@@ -1,6 +1,7 @@
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
 import type { ToolCallUpdate } from '@repo/contracts';
 import { assert, vi } from 'vitest';
+import type { EngineInput } from '../src/engine/machine';
 import type { OperationWaitClock } from '../src/operations';
 import { startAcpEngine } from './acp-engine';
 import { waitForAcpSnapshot } from './acp-feed';
@@ -13,11 +14,13 @@ type RaceHost = {
 
 export async function operationRaceHost(
   operationWaitClock?: OperationWaitClock,
+  fetchAgents?: EngineInput['fetchAgents'],
 ): Promise<RaceHost> {
   const outputs: TerminalOutputResponse[] = [];
 
   const host = await startAcpEngine({
     operationWaitClock,
+    fetchAgents,
     steps: [],
     responses: {
       'session/prompt': [

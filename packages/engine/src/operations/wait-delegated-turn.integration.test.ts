@@ -1,25 +1,30 @@
-import type { PromptRequest, TerminalOutputResponse } from '@agentclientprotocol/sdk';
 import { OperationExecution } from '@repo/contracts/operations';
-import { expect, it, onTestFinished } from 'vitest';
-import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
-import { openAccessSession, sessionIdentityStep } from '#mocks/session-access';
-import { createScriptedAgentProcess } from '#mocks/scripted-agent';
+import { expect, it } from 'vitest';
+import { emptySessionInput } from '#mocks/acp-engine';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { delegatedTurnWaitHost } from '#mocks/delegated-turn-wait';
 
 it('keeps a Session caller waiting for its new Agent’s actual Turn instead of returning its admission result', async () => {
-  const clock = new TestOperationWaitClock();
-  const outputs: TerminalOutputResponse[] = [];
-  const prompted = Promise.withResolvers<PromptRequest>();
-  const release = Promise.withResolvers<void>();
-  onTestFinished(() => release.resolve());
-  const first = createScriptedAgentProcess({ steps: [sessionIdentityStep(outputs)] });
-  const delegated = createScriptedAgentProcess({ steps: [], responses: { 'session/prompt': [{ received: prompted, steps: [{ type: 'wait-for-cancel', until: release.promise }] }] } });
-  let launches = 0;
-  const host = await startAcpEngine({ steps: [], operationWaitClock: clock, launchProcess: (launch) => (launches++ === 0 ? first : delegated).launchProcess(launch) });
-  const caller = await openAccessSession({ host, outputs }, 'Delegating caller');
+  const { caller, clock, prompted, release } = await delegatedTurnWaitHost();
+
   let answered = false;
-  const running = caller.caller.operations.run.mutate({ id: 'session.new', params: { ...emptySessionInput, prompt: [{ type: 'text', text: 'Keep delegated work running' }] }, wait: true }).then((value) => { answered = true; return value; });
-  await prompted.promise;
+
+  const running = caller.caller.operations.run
+    .mutate({
+      id: 'session.new',
+      params: {
+        ...emptySessionInput,
+        prompt: [{ type: 'text', text: 'Keep delegated work running' }],
+      },
+      wait: true,
+    })
+    .then((value) => {
+      answered = true;
+
+      return value;
+    });
+
+  await prompted;
   clock.advance(89_999);
   await Promise.resolve();
   expect(answered).toBe(false);
@@ -27,5 +32,46 @@ it('keeps a Session caller waiting for its new Agent’s actual Turn instead of 
   const pending = OperationExecution.parse(await running);
   expect(pending.status).toBe('still_running');
   release.resolve();
-  expect(await caller.caller.operations.wait.mutate({ id: pending.id })).toMatchObject({ status: 'settled', turn: { stopReason: 'end_turn' } });
+  expect(
+    await caller.caller.operations.wait.mutate({ id: pending.id }),
+  ).toMatchObject({ status: 'settled', turn: { stopReason: 'end_turn' } });
+}, 30_000);
+
+it('reauthorizes an active native Turn wait when its calling Session closes, while the admitted Agent keeps running', async () => {
+  const { host, caller, clock, prompted, release } =
+    await delegatedTurnWaitHost();
+
+  const outcome = Promise.allSettled([
+    caller.caller.operations.run.mutate({
+      id: 'session.new',
+      params: {
+        ...emptySessionInput,
+        prompt: [{ type: 'text', text: 'Survive the caller' }],
+      },
+      wait: true,
+    }),
+  ]);
+
+  await prompted;
+
+  const child = (await host.caller.session.list({})).sessions.find(
+    (value) => value.title === 'Survive the caller',
+  );
+
+  expect(child).toMatchObject({ startedBySessionId: caller.sessionId });
+
+  if (!child) throw new Error('No admitted Agent');
+  await host.caller.session.close({ sessionId: caller.sessionId });
+  await expect.poll(() => clock.activeDeadlines()).toBe(0);
+  expect(await outcome).toMatchObject([
+    { status: 'rejected', reason: { data: { code: 'UNAUTHORIZED' } } },
+  ]);
+  expect(
+    await host.caller.session.get({ sessionId: child.sessionId }),
+  ).toMatchObject({ state: 'running' });
+  release.resolve();
+  await waitForAcpSessionIdle(host, child.sessionId);
+  expect(
+    await host.caller.session.get({ sessionId: child.sessionId }),
+  ).toMatchObject({ state: 'idle' });
 }, 30_000);

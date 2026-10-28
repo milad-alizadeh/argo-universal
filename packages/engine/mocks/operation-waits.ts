@@ -1,7 +1,9 @@
 import type { PendingPermission } from '@repo/contracts';
 import { waitForAcpSnapshot } from './acp-feed';
+import { fixtureRegistry } from './agent-fixtures';
 import { permissionJourney, answerPermission } from './native-permission';
 import { beginHeldTurn } from './operation-race';
+import { operationRaceHost } from './operation-race';
 import { TestOperationWaitClock } from './operation-wait-clock';
 import { publishControlAddress } from './operations';
 
@@ -48,3 +50,53 @@ export async function startPermissionWaitHost(): Promise<{
 }
 
 export { openingWaitHost } from './operation-opening';
+
+export async function startRegistryWaitHost(): Promise<{
+  home: string;
+  token: string;
+  calls: () => number;
+  answer: () => Promise<void>;
+  result: () => ReturnType<
+    Awaited<
+      ReturnType<typeof operationRaceHost>
+    >['host']['caller']['registry']['get']
+  >;
+}> {
+  let calls = 0;
+
+  const registry = fixtureRegistry([
+    { agent: 'mock', label: 'Registry '.repeat(10_000), logo: '' },
+  ]);
+
+  const { host, session } = await operationRaceHost(undefined, async () => {
+    calls++;
+
+    return JSON.stringify(registry);
+  });
+
+  await beginHeldTurn(host, session.sessionId);
+  publishControlAddress(host);
+  const initialCalls = calls;
+
+  return {
+    home: host.home,
+    token: session.token,
+    calls: () => calls - initialCalls,
+    result: () => host.caller.registry.get(),
+    answer: async () => {
+      const snapshot = await waitForAcpSnapshot(
+        host,
+        session.sessionId,
+        (value) => value.pendingPermission !== null,
+      );
+
+      if (!snapshot.pendingPermission)
+        throw new Error('No Registry Permission');
+      await host.caller.session.answerPermission({
+        sessionId: session.sessionId,
+        requestId: snapshot.pendingPermission.requestId,
+        optionId: 'allow_once',
+      });
+    },
+  };
+}

@@ -4,8 +4,21 @@ export const delegatedTitle = 'Review delegated work';
 
 // The fixture uses the supplied CLI and Session token, discovering its Project through the public Operation.
 const delegate = `
-const { execFileSync } = require('node:child_process');
-const run = (id, params) => JSON.parse(execFileSync('argo', ['run', id, '--params', JSON.stringify(params)], {encoding:'utf8'}));
+const { spawnSync } = require('node:child_process');
+const execute = args => {
+  const result = spawnSync('argo', args, {encoding:'utf8'});
+  if (result.status !== 0 && result.status !== 75) throw new Error('argo exited ' + result.status + ': ' + result.stderr);
+  const value = JSON.parse(result.stdout);
+  if (result.status === 75 && (value.kind !== 'operation_execution' || typeof value.id !== 'string' || !['still_running', 'waiting_for_user'].includes(value.status))) throw new Error('Invalid pending Operation');
+  return {result, value};
+};
+const run = (id, params) => {
+  let response = execute(['run', id, '--params', JSON.stringify(params)]);
+  while (response.result.status === 75) response = execute(['wait', response.value.id]);
+  if (response.value.kind !== 'operation_execution') return response.value;
+  if (response.value.status !== 'settled') throw new Error('Operation did not settle');
+  return response.value.result;
+};
 const project = run('project.list', {}).find(project => project.inScope);
 if (!project) throw new Error('No calling Project');
 console.log(JSON.stringify(run('session.new', {
@@ -23,6 +36,7 @@ export const delegationSteps: ScriptedStep[] = [
     toolCallId: 'start-session',
     request: { command: process.execPath, args: ['-e', delegate] },
     completion: 'wait-for-exit',
+    requiredExitCode: 0,
   },
   {
     type: 'update',

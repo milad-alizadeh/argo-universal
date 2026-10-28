@@ -1,4 +1,5 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
+import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { delegationJourney, startDelegated } from '#mocks/session-delegation';
@@ -37,7 +38,8 @@ it('stores the authenticated Session sender for initial and subsequent ordinary 
     },
   });
 
-  expect(result).toMatchObject({ messageId: expect.any(String) });
+  const execution = OperationExecution.parse(result);
+  expect(execution.turn).toMatchObject({ sessionId: target.sessionId });
 
   const page = await journey.host.caller.feed.page({
     sessionId: target.sessionId,
@@ -47,8 +49,8 @@ it('stores the authenticated Session sender for initial and subsequent ordinary 
   expect(page.rows).toContainEqual(
     expect.objectContaining({
       sessionUpdate: 'prompt_message',
+      turnId: execution.turn?.id,
       content: [{ type: 'text', text: followUp }],
-      turnId: expect.any(String),
       _meta: {
         argo: {
           sender: {

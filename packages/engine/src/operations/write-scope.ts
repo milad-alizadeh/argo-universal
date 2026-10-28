@@ -40,8 +40,13 @@ const sessionParams = {
   'shell.stop': operations['shell.stop'].params,
 } satisfies Record<SessionActOperationId, z.ZodType<{ sessionId: string }>>;
 
+type ActSources = Pick<
+  OperationsDeps,
+  'readSession' | 'database' | 'findWriter' | 'sessions'
+>;
+
 export function actTarget(
-  deps: Pick<OperationsDeps, 'readSession' | 'database' | 'findWriter' | 'sessions'>,
+  deps: ActSources,
   operation: { id: SessionActOperationId; params: Json },
 ): ActTarget {
   const { sessionId } = operationParams(
@@ -49,7 +54,7 @@ export function actTarget(
     operation.params,
   );
 
-  const target = operation.id === 'session.close' ? readSessionCloseTarget(deps, sessionId) : deps.readSession(sessionId);
+  const target = readActTarget(deps, { id: operation.id, sessionId });
 
   return {
     sessionId,
@@ -73,4 +78,13 @@ function ownsSession(callerId: string, target: ActTarget): boolean {
   return (
     callerId === target.sessionId || callerId === target.startedBySessionId
   );
+}
+
+function readActTarget(
+  deps: Parameters<typeof actTarget>[0],
+  { id, sessionId }: { id: SessionActOperationId; sessionId: string },
+): Omit<ActTarget, 'sessionId'> {
+  return id === 'session.close'
+    ? readSessionCloseTarget(deps, sessionId)
+    : deps.readSession(sessionId);
 }

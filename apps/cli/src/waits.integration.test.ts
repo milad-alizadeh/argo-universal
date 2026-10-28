@@ -1,5 +1,9 @@
 import { OperationExecution } from '@repo/contracts/operations';
-import { startPermissionWaitHost, openingWaitHost } from '@repo/engine/mocks/operation-waits';
+import {
+  startPermissionWaitHost,
+  openingWaitHost,
+  startRegistryWaitHost,
+} from '@repo/engine/mocks/operation-waits';
 import { expect, it } from 'vitest';
 import { runCli } from '../mocks/cli-process';
 import { startMalformedControlHost } from '../mocks/malformed-control';
@@ -98,20 +102,63 @@ it('caps run --wait at ninety seconds with exit75, then waits on the same native
   });
 }, 30_000);
 
-
 it('resumes an actual CLI Session opening from exit75 to its exact settled first Turn with exit0', async () => {
   const host = await openingWaitHost();
-  const running = runCli(host.home, ['run', 'session.new', '--params', JSON.stringify({projectId: 'project-1', agent: 'mock', checkout: {type: 'main'}, configOptions: [], prompt: [{type: 'text', text: 'CLI opening resume'}]}), '--wait']);
+
+  const running = runCli(host.home, [
+    'run',
+    'session.new',
+    '--params',
+    JSON.stringify({
+      projectId: 'project-1',
+      agent: 'mock',
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'CLI opening resume' }],
+    }),
+    '--wait',
+  ]);
+
   await host.opening;
   await host.clock.waitUntilScheduled();
   host.clock.advance(90_000);
   const capped = await running;
   expect(capped.code).toBe(75);
   const pending = OperationExecution.parse(JSON.parse(capped.stdout));
-  expect(pending).toMatchObject({status: 'still_running', id: expect.stringMatching(/^creation:/)});
+  expect(pending).toMatchObject({
+    status: 'still_running',
+    id: expect.stringMatching(/^creation:/),
+  });
   host.release.resolve();
   const resumed = await runCli(host.home, ['wait', pending.id]);
   expect(resumed.code).toBe(0);
-  expect(OperationExecution.parse(JSON.parse(resumed.stdout))).toMatchObject({status: 'settled', turn: {stopReason: 'end_turn'}});
+  expect(OperationExecution.parse(JSON.parse(resumed.stdout))).toMatchObject({
+    status: 'settled',
+    turn: { stopReason: 'end_turn' },
+  });
   expect(host.agent.processes).toHaveLength(1);
+}, 30_000);
+
+it('prints the complete resumed JSON through argo wait while retaining its native Blob reference and executing once', async () => {
+  const host = await startRegistryWaitHost();
+
+  const started = await runCli(
+    host.home,
+    ['run', 'registry.refresh'],
+    host.token,
+  );
+
+  expect(started.code).toBe(75);
+  expect(host.calls()).toBe(0);
+  const pending = OperationExecution.parse(JSON.parse(started.stdout));
+  await host.answer();
+  const completed = await runCli(host.home, ['wait', pending.id], host.token);
+  expect(completed.code).toBe(0);
+  const settled = OperationExecution.parse(JSON.parse(completed.stdout));
+  expect(settled.fullResult).toMatchObject({ mime: 'application/json' });
+  expect(settled.result).toEqual(await host.result());
+  expect(Buffer.byteLength(JSON.stringify(settled.result))).toBeGreaterThan(
+    64 * 1024,
+  );
+  expect(host.calls()).toBe(1);
 }, 30_000);

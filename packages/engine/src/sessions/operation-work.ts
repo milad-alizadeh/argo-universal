@@ -1,4 +1,4 @@
-import type { Turn, ToolCallUpdate } from '@repo/contracts';
+import type { Turn, ToolCallUpdate, BlobRef } from '@repo/contracts';
 import type { OperationWorkTarget } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { turn } from '@repo/db/schema';
@@ -20,6 +20,7 @@ type Sources = Pick<
 type SessionOperationWork = {
   status: 'settled' | 'still_running' | 'waiting_for_user';
   result?: Json;
+  fullResult?: BlobRef;
   error?: string;
   cancelled?: true;
   work?: OperationWorkTarget;
@@ -86,6 +87,7 @@ function operationRowState(
     return {
       status: 'settled',
       result: z.json().parse(row.rawOutput ?? null),
+      fullResult: row._meta?.argo?.fullOutput?.rawOutput,
     };
   }
 

@@ -64,9 +64,18 @@ function requiresConfirmation(
   return !owned || admission.needsConfirmation;
 }
 
-function promptOutput(call: SessionOperationCall, input: SessionPromptInput, accepted: AcceptedSessionPrompt): SessionPromptOutput {
+function promptOutput(
+  call: SessionOperationCall,
+  input: SessionPromptInput,
+  accepted: AcceptedSessionPrompt,
+): SessionPromptOutput {
   if (accepted.messageId === null) return accepted;
-  call.started({ kind: 'turn', sessionId: input.sessionId, turnId: accepted.turnId });
+  call.started({
+    kind: 'turn',
+    sessionId: input.sessionId,
+    turnId: accepted.turnId,
+  });
+
   return { messageId: accepted.messageId };
 }
 
