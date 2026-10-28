@@ -7,6 +7,7 @@ import type {
 import type { sessionOperations } from '@repo/contracts/operations';
 import {
   stopShell,
+  unarchiveSession,
   closeSession,
   configureSession,
   renameSession,
@@ -18,6 +19,7 @@ import type { OperationImplementations } from './operations';
 export const sessionImplementations = (
   deps: SessionRouterDeps,
 ): Pick<OperationImplementations, keyof typeof sessionOperations> => ({
+  'session.unarchive': (input) => unarchiveSession(deps, input.sessionId),
   'session.savePlan': saveSessionPlan.bind(null, deps),
   'session.close': (params: SessionCloseInput): Promise<SessionCloseOutput> =>
     closeSession(deps, params.sessionId),

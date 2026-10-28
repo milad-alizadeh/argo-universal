@@ -81,3 +81,9 @@ export { closeSession } from './session-closure';
 export { configureSession } from './session-configuration';
 
 export { stopShell } from './shells/stop';
+
+export { createSessionAgentReader, listSessionBranches } from './readers';
+
+export { listSessionShells } from './shells/list';
+
+export { unarchiveSession } from './archive/archive-commands';

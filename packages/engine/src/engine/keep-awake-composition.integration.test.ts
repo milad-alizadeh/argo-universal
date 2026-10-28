@@ -37,7 +37,7 @@ it.each(['completed', 'cancelled'] as const)(
 
     if (ending === 'cancelled') await host.caller.session.cancel(created);
     await waitForAcpSessionIdle(host, created.sessionId);
-    expect(await host.caller.session.subagents(created)).toEqual([
+    expect(await host.caller.session.listAgents(created)).toEqual([
       expect.objectContaining({ state: 'running' }),
     ]);
     expect(caffeinate).toHaveBeenCalledExactlyOnceWith(process.pid);

@@ -32,7 +32,7 @@ it('stores an exited ACP Shell and its complete output as a referenced Blob', as
       canStop: false,
     },
   ]);
-  expect(await host.caller.session.shells(created)).toMatchObject(
+  expect(await host.caller.session.listShells(created)).toMatchObject(
     snapshot.shells.map(({ durationMs: _duration, ...record }) => record),
   );
   const record = host.database.select().from(shell).get();

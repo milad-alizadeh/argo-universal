@@ -401,7 +401,7 @@ it.each([
 it('lists Compare Against branches through the Session procedure', async () => {
   const { host, sessionId, branch } = await committedWorktreeSession();
 
-  expect(await host.caller.session.branches({ sessionId })).toEqual({
+  expect(await host.caller.session.listBranches({ sessionId })).toEqual({
     branches: [
       { name: branch, ref: `refs/heads/${branch}` },
       { name: 'feature', ref: 'refs/heads/feature' },

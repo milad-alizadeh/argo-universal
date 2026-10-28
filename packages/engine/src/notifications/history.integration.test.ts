@@ -23,7 +23,7 @@ it('notifies for the parent Turn without a second notification for its Subagent'
     .poll(() => host.databaseWriter.getSnapshot().context.queue.length)
     .toBe(0);
   expect(
-    await app.client.session.subagents.query({ sessionId: 'session-1' }),
+    await app.client.session.listAgents.query({ sessionId: 'session-1' }),
   ).toHaveLength(1);
   await expect.poll(() => app.notifications).toHaveLength(1);
   expect(app.notifications[0]).toMatchObject({

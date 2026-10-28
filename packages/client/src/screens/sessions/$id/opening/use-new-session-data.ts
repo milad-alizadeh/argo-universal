@@ -47,7 +47,7 @@ function useProjectBranches(
   const trpc = useTRPC();
 
   return useQuery(
-    trpc.projects.branches.queryOptions(
+    trpc.project.listBranches.queryOptions(
       { projectId: project?.id ?? '' },
       { enabled: isMain(project) },
     ),

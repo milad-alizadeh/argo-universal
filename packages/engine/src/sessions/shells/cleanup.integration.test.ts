@@ -42,7 +42,7 @@ it.each([
     await finishShell(action, host, { ...created, shellId });
     await expect.poll(() => processIsRunning(pid)).toBe(false);
     await expect
-      .poll(() => host.caller.session.shells(created))
+      .poll(() => host.caller.session.listShells(created))
       .toMatchObject([{ id: shellId, status, canStop: false, exitCode: null }]);
 
     const output = await collectShellOutput(
@@ -116,7 +116,7 @@ it('reaps descendants after their launcher exits without affecting another Shell
   expect(finished).toMatchObject({ exitCode: 0, canStop: false });
   expect(sibling.canStop).toBe(true);
   await host.caller.session.close(created);
-  const shells = await host.caller.session.shells(created);
+  const shells = await host.caller.session.listShells(created);
 
   expect(shells).toHaveLength(2);
   expect(shells).toEqual(

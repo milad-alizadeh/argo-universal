@@ -28,17 +28,21 @@ it('refuses a New Session for an unknown Project, base branch or an Agent that i
 
 it('lists local branches with the current one, and null when HEAD is detached', async (): Promise<void> => {
   const { caller, git } = await startSessionJourney();
-  expect(await caller.projects.branches({ projectId: 'project-1' })).toEqual({
-    branches: ['feature', 'main'],
-    currentBranch: 'main',
-  });
+  expect(await caller.project.listBranches({ projectId: 'project-1' })).toEqual(
+    {
+      branches: ['feature', 'main'],
+      currentBranch: 'main',
+    },
+  );
   git('switch', '-q', '--detach', 'feature');
-  expect(await caller.projects.branches({ projectId: 'project-1' })).toEqual({
-    branches: ['feature', 'main'],
-    currentBranch: null,
-  });
+  expect(await caller.project.listBranches({ projectId: 'project-1' })).toEqual(
+    {
+      branches: ['feature', 'main'],
+      currentBranch: null,
+    },
+  );
   await expect(
-    caller.projects.branches({ projectId: 'missing' }),
+    caller.project.listBranches({ projectId: 'missing' }),
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
 });
 

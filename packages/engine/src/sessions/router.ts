@@ -19,8 +19,6 @@ import {
   SessionOpenOutput,
   SessionPromptInput,
   SessionPromptOutput,
-  SessionSubagentsInput,
-  SessionSubagentsOutput,
 } from '@repo/contracts';
 import {
   mergeRouters,
@@ -43,8 +41,6 @@ import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
 import { markSessionSeen } from './session-seen';
-import { createShellSessionRouter } from './shells/router';
-import { createSubagentsReader } from './subagents';
 
 type SessionList = ReturnType<typeof createSessionList>;
 
@@ -137,21 +133,6 @@ const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
   }),
 );
 
-const createSubagentsRouter = routerFactory((deps: SessionRouterDeps) => {
-  const readSubagents = createSubagentsReader(deps);
-
-  return router({
-    subagents: publicProcedure
-      .input(SessionSubagentsInput)
-      .output(SessionSubagentsOutput)
-      .query(({ input }): SessionSubagentsOutput => {
-        deps.readSession(input.sessionId);
-
-        return readSubagents(input.sessionId);
-      }),
-  });
-});
-
 export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
   const sessionList = createSessionList(deps);
 
@@ -164,8 +145,6 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createStopRouter(deps),
     createArchiveRouter(deps),
     createAnswerRouter(deps),
-    createSubagentsRouter(deps),
     createChangesRouter(deps),
-    createShellSessionRouter(deps),
   );
 });

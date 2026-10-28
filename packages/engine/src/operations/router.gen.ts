@@ -21,6 +21,26 @@ export async function runOperation(
   params: Json | undefined,
 ): Promise<OperationResult> {
   switch (id) {
+    case 'session.listAgents':
+      return implementations['session.listAgents'](
+        operationParams(operations['session.listAgents'].params, params),
+      );
+    case 'session.listShells':
+      return implementations['session.listShells'](
+        operationParams(operations['session.listShells'].params, params),
+      );
+    case 'session.listBranches':
+      return implementations['session.listBranches'](
+        operationParams(operations['session.listBranches'].params, params),
+      );
+    case 'project.listBranches':
+      return implementations['project.listBranches'](
+        operationParams(operations['project.listBranches'].params, params),
+      );
+    case 'session.unarchive':
+      return implementations['session.unarchive'](
+        operationParams(operations['session.unarchive'].params, params),
+      );
     case 'shell.stop':
       return implementations['shell.stop'](
         operationParams(operations['shell.stop'].params, params),
@@ -96,13 +116,23 @@ export async function runOperation(
 
 export function generatedOperations(engine: Operations) {
   return {
-    shell: router({
-      stop: publicProcedure
-        .input(operations['shell.stop'].params)
-        .output(operations['shell.stop'].result)
-        .mutation(({ input }) => engine.runApp('shell.stop', input)),
-    }),
     session: router({
+      listAgents: publicProcedure
+        .input(operations['session.listAgents'].params)
+        .output(operations['session.listAgents'].result)
+        .query(({ input }) => engine.runApp('session.listAgents', input)),
+      listShells: publicProcedure
+        .input(operations['session.listShells'].params)
+        .output(operations['session.listShells'].result)
+        .query(({ input }) => engine.runApp('session.listShells', input)),
+      listBranches: publicProcedure
+        .input(operations['session.listBranches'].params)
+        .output(operations['session.listBranches'].result)
+        .query(({ input }) => engine.runApp('session.listBranches', input)),
+      unarchive: publicProcedure
+        .input(operations['session.unarchive'].params)
+        .output(operations['session.unarchive'].result)
+        .mutation(({ input }) => engine.runApp('session.unarchive', input)),
       setConfigOption: publicProcedure
         .input(operations['session.setConfigOption'].params)
         .output(operations['session.setConfigOption'].result)
@@ -121,6 +151,22 @@ export function generatedOperations(engine: Operations) {
         .input(operations['session.rename'].params)
         .output(operations['session.rename'].result)
         .mutation(({ input }) => engine.runApp('session.rename', input)),
+    }),
+    project: router({
+      listBranches: publicProcedure
+        .input(operations['project.listBranches'].params)
+        .output(operations['project.listBranches'].result)
+        .query(({ input }) => engine.runApp('project.listBranches', input)),
+      list: publicProcedure
+        .input(operations['project.list'].params)
+        .output(operations['project.list'].result)
+        .query(({ input }) => engine.runApp('project.list', input)),
+    }),
+    shell: router({
+      stop: publicProcedure
+        .input(operations['shell.stop'].params)
+        .output(operations['shell.stop'].result)
+        .mutation(({ input }) => engine.runApp('shell.stop', input)),
     }),
     plugin: router({
       list: publicProcedure
@@ -171,12 +217,6 @@ export function generatedOperations(engine: Operations) {
         .input(operations['agent.remove'].params)
         .output(operations['agent.remove'].result)
         .mutation(({ input }) => engine.runApp('agent.remove', input)),
-    }),
-    project: router({
-      list: publicProcedure
-        .input(operations['project.list'].params)
-        .output(operations['project.list'].result)
-        .query(({ input }) => engine.runApp('project.list', input)),
     }),
   };
 }

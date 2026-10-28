@@ -22,7 +22,7 @@ it.each(['open', 'closed'] as const)(
       scenarios['subagent-more-work'],
     );
 
-    const [child] = await host.caller.session.subagents({ sessionId });
+    const [child] = await host.caller.session.listAgents({ sessionId });
 
     if (!child) throw new Error('No Subagent was persisted');
 

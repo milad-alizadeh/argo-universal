@@ -12,6 +12,7 @@ import type { PluginsRouterDeps } from '../plugins';
 import { readProjects } from '../projects';
 import type { SessionRouterDeps } from '../sessions';
 import { createPluginOperations } from './plugins';
+import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
@@ -40,6 +41,7 @@ function createImplementations(deps: OperationsDeps): OperationImplementations {
 
   return {
     ...sessionImplementations(deps),
+    ...createReadOperations(deps),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     'project.list': (): Promise<ProjectsListOutput> =>
