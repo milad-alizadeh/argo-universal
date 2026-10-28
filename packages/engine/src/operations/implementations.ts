@@ -1,13 +1,10 @@
-import type { ProjectsListOutput } from '@repo/contracts';
 import type {
   operations,
   OperationId,
   OperationExecution,
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { createRejectionCounter } from '@repo/machine-log';
 import type { z } from 'zod';
-import { readProjects } from '../projects';
 import { userOrigin, type SessionList } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import {
@@ -18,6 +15,7 @@ import {
 } from './native-start';
 import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
+import { createProjectOperations } from './projects';
 import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
 import { sessionImplementations } from './sessions';
@@ -64,16 +62,13 @@ export function createImplementations(
   deps: OperationsDeps,
   sessionList: SessionList,
 ): OperationImplementations {
-  const rejections = createRejectionCounter('projects');
-
   return {
     ...createAgentAccessOperations(deps),
     ...sessionImplementations(deps),
     ...createReadOperations(deps, sessionList),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
-    'project.list': (): Promise<ProjectsListOutput> =>
-      readProjects(deps.database, rejections),
+    ...createProjectOperations(deps),
   };
 }
 

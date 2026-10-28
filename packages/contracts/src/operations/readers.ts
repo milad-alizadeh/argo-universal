@@ -1,8 +1,4 @@
 import {
-  ProjectsBranchesInput,
-  ProjectsBranchesOutput,
-} from '../projects/branches';
-import {
   SessionBranchesInput,
   SessionBranchesOutput,
   SessionChangesInput,
@@ -100,15 +96,5 @@ export const readerOperations = {
     result: SessionBranchesOutput,
     tier: 'read',
     keywords: ['git', 'compare', 'diff'],
-  },
-  'project.listBranches': {
-    id: 'project.listBranches',
-    label: 'List Project branches',
-    description:
-      'List local branches in a Project and identify its current branch, or null for a detached HEAD.',
-    params: ProjectsBranchesInput,
-    result: ProjectsBranchesOutput,
-    tier: 'read',
-    keywords: ['git', 'checkout', 'branch'],
   },
 } as const satisfies Record<string, OperationDefinition>;

@@ -105,16 +105,6 @@ export function generatedOperations(engine: Operations) {
         .output(operations['session.rename'].result)
         .mutation(({ input }) => engine.runApp('session.rename', input)),
     }),
-    project: router({
-      listBranches: publicProcedure
-        .input(operations['project.listBranches'].params)
-        .output(operations['project.listBranches'].result)
-        .query(({ input }) => engine.runApp('project.listBranches', input)),
-      list: publicProcedure
-        .input(operations['project.list'].params)
-        .output(operations['project.list'].result)
-        .query(({ input }) => engine.runApp('project.list', input)),
-    }),
     shell: router({
       stop: publicProcedure
         .input(operations['shell.stop'].params)
@@ -156,6 +146,16 @@ export function generatedOperations(engine: Operations) {
         .input(operations['registry.sync'].params)
         .output(operations['registry.sync'].result)
         .mutation(({ input }) => engine.runApp('registry.sync', input)),
+    }),
+    project: router({
+      list: publicProcedure
+        .input(operations['project.list'].params)
+        .output(operations['project.list'].result)
+        .query(({ input }) => engine.runApp('project.list', input)),
+      listBranches: publicProcedure
+        .input(operations['project.listBranches'].params)
+        .output(operations['project.listBranches'].result)
+        .query(({ input }) => engine.runApp('project.listBranches', input)),
     }),
   };
 }
