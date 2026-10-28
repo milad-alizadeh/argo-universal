@@ -65,6 +65,6 @@ function holderOf(
 
   return (
     holders.find((section) => section.id === current) ??
-    holders.toSorted(deepestFirst)[0]
+    holders.sort(deepestFirst)[0]
   );
 }

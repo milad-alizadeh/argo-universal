@@ -155,7 +155,10 @@ export {
   type RenameSessionDialogProps,
 } from './components/rename-session-dialog/rename-session-dialog';
 
-export { type SessionsListProps } from './components/sessions-list/sessions-list-props';
+export {
+  type SessionsListPlugins,
+  type SessionsListProps,
+} from './components/sessions-list/sessions-list-props';
 
 export { SessionsLoading } from './components/sessions-loading/sessions-loading';
 
@@ -223,11 +226,16 @@ export {
 } from './components/session-row/session-row';
 
 export {
-  type OpenPluginPage,
-  type SessionRowActivity,
-  type SessionRowPluginItem,
+  type OpenPluginItemPage,
   type SessionRowPlugins,
 } from './components/session-row/session-row-props';
+
+export {
+  type PluginIdentity,
+  type PluginLookup,
+  sessionRowPlugins,
+  type ShownRowAnswer,
+} from './components/session-row/session-row-plugins';
 
 export { NewSessionQuestion } from './components/new-session-question/new-session-question';
 

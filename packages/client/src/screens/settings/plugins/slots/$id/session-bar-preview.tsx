@@ -2,7 +2,7 @@ import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { SessionBar } from '#features/sessions';
-import type { Merged, SlotVisibility } from '#features/settings';
+import type { SlotVisibility, SplitItems } from '#features/settings';
 import { SessionBarStrip } from '#lib/product/session-bar-row';
 import { sessionBarLines } from '../../../../plugins/session-bar-lines';
 import { usePluginNames } from '../../../../plugins/use-plugin-names';
@@ -12,7 +12,7 @@ import type { SlotPreviewProps } from './slot-detail';
 
 // What the preview draws: the Plugins' answers for a Session's bar, before this page's choices apply.
 export interface SessionBarPreviewData {
-  answer: Merged<SessionBarItem>;
+  answer: SplitItems<SessionBarItem>;
   pluginName: (pluginId: string) => string;
 }
 

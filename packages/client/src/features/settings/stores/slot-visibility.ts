@@ -17,8 +17,8 @@ export function slotVisibility({ hidden, owner }: SlotChoices): SlotVisibility {
 
 export type Attributed<Item> = { pluginId: string; item: Item };
 
-// A context's merged items as the Server sends them: what fits, then the rest.
-export type Merged<Item> = {
+// A context's merged items as the Server splits them: what fits, then the rest.
+export type SplitItems<Item> = {
   items: readonly Attributed<Item>[];
   overflow: readonly Attributed<Item>[];
 };
@@ -28,9 +28,9 @@ export type Merged<Item> = {
  * what the Server let fit, and the rest stay behind "+N".
  */
 export function shownItems<Item>(
-  { items, overflow }: Merged<Item>,
+  { items, overflow }: SplitItems<Item>,
   visibility: SlotVisibility,
-): Merged<Item> {
+): SplitItems<Item> {
   const shown = [...items, ...overflow].filter(({ pluginId }) =>
     visibility.shows(pluginId),
   );
@@ -43,7 +43,7 @@ export function shownItems<Item>(
 
 // The owner's answer in a Single-owner Slot; none while the line is Argo's or the owner has no answer.
 export const ownerItem = <Item>(
-  { items, overflow }: Merged<Item>,
+  { items, overflow }: SplitItems<Item>,
   visibility: SlotVisibility,
 ): Item | undefined =>
   [...items, ...overflow].find(({ pluginId }) => pluginId === visibility.owner)

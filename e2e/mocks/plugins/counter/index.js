@@ -74,17 +74,6 @@ function Details({ onBack }) {
   );
 }
 
-// An items Slot's answer: the same one item, opening the Counter page, for every Session asked about.
-const everySession =
-  (text) =>
-  ({ contexts }) =>
-    Object.fromEntries(
-      contexts.map(({ sessionId }) => [
-        sessionId,
-        [{ text, action: { path: '/' } }],
-      ]),
-    );
-
 export function register(argo) {
   argo.pages.register('/', ({ context }) => (
     <Counter argo={argo} sessionId={context.sessionId} />
@@ -92,8 +81,22 @@ export function register(argo) {
   argo.slots.register('argo/project/details/v1', ({ context }) => (
     <Text>{`Fixture Slot for ${context.projectId}`}</Text>
   ));
-  // One item on every Session row, which opens the Counter page.
-  argo.slots.register('argo/session/row/v1', everySession('Counter item'));
-  // Every open Session's bar carries one line that opens the Counter page.
-  argo.slots.register('argo/session/bar/v1', everySession('Counter bar'));
+  argo.slots.register('argo/session/row/v1', rowItems);
+  argo.slots.register('argo/session/activity/v1', activityLines);
+  argo.slots.register('argo/session/bar/v1', barLines);
 }
+
+// The same one item for every Session an items Slot asks about.
+const everySession =
+  (item) =>
+  ({ contexts }) =>
+    Object.fromEntries(contexts.map(({ sessionId }) => [sessionId, [item]]));
+
+// One item on every Session row, which opens the Counter page.
+const rowItems = everySession({ text: 'Counter item', action: { path: '/' } });
+
+// An Activity line for every Session, shown only on a Device that picks Counter to write it.
+const activityLines = everySession({ text: 'Counter line' });
+
+// Every open Session's bar carries one line that opens the Counter page.
+const barLines = everySession({ text: 'Counter bar', action: { path: '/' } });

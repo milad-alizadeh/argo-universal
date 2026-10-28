@@ -8,8 +8,7 @@ import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
-  type OpenPluginPage,
-  type SessionRowPlugins,
+  type SessionsListPlugins,
   type SessionsLoadState,
   type SessionsView,
   serverSilentMessage,
@@ -34,10 +33,8 @@ export interface SessionListViewProps {
   // How the list orders, groups, filters and lays out its rows.
   view: SessionsView;
   selectedSessionId?: string;
-  // What the Plugins add to each row, by Session id, under this Device's choices.
-  rowPlugins?: ReadonlyMap<string, SessionRowPlugins>;
-  // Opens a Plugin's page from one of its row items.
-  onOpenPluginPage?: OpenPluginPage;
+  // What the Plugins add to each row under this Device's choices, and the page an item opens.
+  plugins?: SessionsListPlugins;
   onSelect: (sessionId: string) => void;
   // Desktop and the web: a row's double-click or context menu asks to rename its Session.
   onRename?: (sessionId: string) => void;

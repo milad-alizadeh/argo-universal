@@ -4,7 +4,7 @@ import type { ListLook } from '../../../list-look';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { cn } from '../../../utils';
 import type { DrawingProps } from './list-item-press-props';
-import { itemPress } from './list-item-press-styles';
+import { itemPress, pressLayout } from './list-item-press-styles';
 
 // A menu trigger's row (a web Picker row) presses through its pointer handler and popup.
 export function interactive(props: DrawingProps): boolean {
@@ -31,26 +31,31 @@ const rowPress = (
   sidebar: props.sidebar,
 });
 
-// The row's press lanes and tints, by where it sits: a menu, a sidebar, or its List's appearance.
-export function usePressClass(props: DrawingProps): string {
-  const place = {
+function usePlace(props: DrawingProps): Parameters<typeof itemPress>[0] {
+  return {
     look: useListLook(),
     compact: useCompactRows(props.sidebar),
+    ...rowPress(props),
   };
+}
 
+// The row's press lanes and tints, by where it sits: a menu, a sidebar, or its List's appearance.
+export function usePressClass(props: DrawingProps): string {
+  const place = usePlace(props);
   const tile = use(ListTileContext);
 
   if (tile) return tilePress(props, place.look);
 
-  return regularPress(props, { ...place, ...rowPress(props) });
+  return cn(itemPress(place), rowLanes(props));
 }
 
-function regularPress(
-  props: DrawingProps,
-  place: Parameters<typeof itemPress>[0],
-): string {
+// The lanes of a row whose content sits beside its press, without the press's tints.
+export function usePressLanes(props: DrawingProps): string {
+  return cn(pressLayout(usePlace(props)), rowLanes(props));
+}
+
+function rowLanes(props: DrawingProps): string {
   return cn(
-    itemPress(place),
     props.leadingSize === 'avatar' &&
       'min-h-15 items-center gap-3 py-2.5 android:min-h-18 android:gap-4 android:py-2',
     props.disabled && 'opacity-50',

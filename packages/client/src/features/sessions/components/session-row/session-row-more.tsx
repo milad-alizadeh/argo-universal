@@ -16,13 +16,16 @@ import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { Pressable } from 'react-native';
 import { pluginSymbol } from '../../../../lib/product/plugin-symbol';
-import { itemPressClass, pageOpener } from './session-row-item';
-import type { OpenPluginPage, SessionRowPluginItem } from './session-row-props';
+import { pageOpener, pressTint } from './session-row-item';
+import type {
+  OpenPluginItemPage,
+  SessionRowPluginItem,
+} from './session-row-props';
 import { sidebarRows } from './session-row-sidebar';
 
 export interface SessionRowMoreProps {
   more: readonly SessionRowPluginItem[];
-  onOpenPluginPage?: OpenPluginPage;
+  onOpenPluginPage?: OpenPluginItemPage;
 }
 
 const moreTitle = (count: number): string => `${count} more on this Session`;
@@ -56,7 +59,7 @@ function MoreTrigger({ count }: { count: number }): React.JSX.Element {
       <Pressable
         accessibilityLabel={moreLabel(count)}
         aria-haspopup="dialog"
-        className={itemPressClass}
+        className={`shrink-0 ${pressTint}`}
       >
         <Label text={`+${count}`} sidebar={sidebarRows} />
       </Pressable>

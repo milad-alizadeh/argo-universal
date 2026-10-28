@@ -16,7 +16,7 @@ export interface SessionRowProps {
   // What the Plugins add to the row: meta-line items after Argo's own, the rest behind "+N", and the chosen Activity line.
   plugins?: SessionRowPlugins;
   // Opens a Plugin's page, when one of its items is pressed.
-  onOpenPluginPage?: OpenPluginPage;
+  onOpenPluginPage?: OpenPluginItemPage;
   // Regular: the activity, metadata and Plan bar. Compact: one line.
   layout?: SessionsLayout;
   onSelect: (sessionId: string) => void;
@@ -49,7 +49,7 @@ export interface SessionRowActivity {
   icon: SystemSymbolSource;
 }
 
-export type OpenPluginPage = (pluginId: string, path: string) => void;
+export type OpenPluginItemPage = (pluginId: string, path: string) => void;
 
 export const sessionRowLabel = (session: SessionInfo): string =>
   `${session.title}, ${sessionStatusLabels[session.status]}`;
