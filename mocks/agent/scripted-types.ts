@@ -32,6 +32,7 @@ export type ScriptedStep =
       request: Omit<CreateTerminalRequest, 'sessionId'>;
       toolCallId: string;
       completion: 'leave-running' | 'wait-for-exit' | 'kill';
+      requiredExitCode?: number;
       outputs?: TerminalOutputResponse[];
     }
   | { type: 'update'; update: SessionUpdate; sessionId?: string }
