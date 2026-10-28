@@ -1,4 +1,5 @@
 import type { FeedUpdate } from '@repo/contracts';
+import type { OperationWorkTarget } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { toolCallEvent, type FeedActorRef } from '../feed';
@@ -21,6 +22,7 @@ export type SessionOperationCall = {
   turnId: string | null;
   finish: (result: Result) => void;
   confirm: (description: string) => Promise<void>;
+  started: (work: OperationWorkTarget) => void;
 };
 
 const toolRow = (id: string, operation: Operation): Tool => ({
@@ -61,7 +63,7 @@ class OperationCall implements SessionOperationCall {
   public readonly toolCallId: string;
   public readonly rowId: string;
   public readonly turnId: string | null;
-  private readonly row: Tool;
+  private row: Tool;
   private finished = false;
   private readonly closing: AbortSignal;
   public constructor(
@@ -96,6 +98,13 @@ class OperationCall implements SessionOperationCall {
   public finish(result: Result): void {
     this.settle(completedRow(this.row, result));
   }
+  public started(work: OperationWorkTarget): void {
+    if (this.finished) return;
+
+    if (!canSettleOperation(this.session, this.feed, this.turnId)) return;
+    this.row = { ...this.row, _meta: { argo: { operationWork: work } } };
+    this.publish(this.row);
+  }
   private settle(row: Tool): void {
     if (this.finished) return;
     this.finished = true;
@@ -112,6 +121,12 @@ export function beginSessionOperation(
   operation: Operation,
 ): SessionOperationCall {
   const session = requireLiveSessionActor(sessions.system, sessionId);
+
+  if (!session.getSnapshot().context.stored)
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: 'The calling Session is still opening',
+    });
   const feed = findSessionFeed(sessions.system, sessionId);
 
   if (!feed || session.getSnapshot().status !== 'active')

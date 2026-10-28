@@ -29,6 +29,7 @@ it('asks before cancelling an unrelated Session in the same Project', async () =
     session.caller.operations.run.mutate({
       id: 'session.cancel',
       params: target,
+      wait: true,
     }),
   ]);
 

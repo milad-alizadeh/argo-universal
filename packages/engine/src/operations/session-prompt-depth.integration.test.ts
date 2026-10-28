@@ -1,4 +1,5 @@
 import { SessionNewOutput } from '@repo/contracts';
+import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { askOperation } from '#mocks/operation-permissions';
@@ -28,7 +29,9 @@ it('asks again when prompting an owned Agent beyond the delegation depth cap', a
   const [result] = await creation.outcome;
 
   const target = SessionNewOutput.parse(
-    result?.status === 'fulfilled' ? result.value : null,
+    OperationExecution.parse(
+      result?.status === 'fulfilled' ? result.value : null,
+    ).result,
   );
 
   const asked = await askOperation(calling, {

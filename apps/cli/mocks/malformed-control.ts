@@ -3,17 +3,18 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { writeServerAddress } from '@repo/engine/server-runtime';
 import { onTestFinished } from 'vitest';
 
-export async function startMalformedControlHost(): Promise<string> {
+export async function startMalformedControlHost(
+  data: Json = [{ id: 'project.list' }],
+): Promise<string> {
   const home = await mkdtemp(join(tmpdir(), 'cli-control-'));
 
   const server = createServer((_, response) => {
     response.setHeader('content-type', 'application/json');
-    response.end(
-      JSON.stringify({ result: { data: [{ id: 'project.list' }] } }),
-    );
+    response.end(JSON.stringify({ result: { data } }));
   });
 
   server.listen(0, '127.0.0.1');

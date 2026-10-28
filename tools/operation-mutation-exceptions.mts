@@ -12,7 +12,7 @@ const retained = new Map<string, readonly string[]>([
   ['plugins/router.ts', ['dispatch', 'renderFailed']],
   ['notifications/router.ts', ['attention', 'acknowledge']],
   ['blob/router.ts', ['upload']],
-  ['operations/router.ts', ['run']],
+  ['operations/router.ts', ['run', 'wait']],
 ]);
 
 export function permittedMutation(file: string, name: string): boolean {

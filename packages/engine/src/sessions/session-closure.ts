@@ -1,6 +1,7 @@
 import type { SessionCancelOutput, SessionCloseOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
+import { readSessionCloseTarget } from './close-target';
 import type { SessionRouterDeps } from './router-deps';
 import {
   sendSessionCommand,
@@ -23,13 +24,17 @@ const isClosing = (actor: SessionActorRef): boolean => {
 export const closeSession = async (
   deps: Pick<
     SessionRouterDeps,
-    'sessions' | 'readSession' | 'sessionCommandSignal'
+    | 'sessions'
+    | 'readSession'
+    | 'sessionCommandSignal'
+    | 'database'
+    | 'findWriter'
   >,
   sessionId: string,
 ): Promise<SessionCloseOutput> => {
   validateSessionCommandAdmission(deps);
 
-  if (deps.readSession(sessionId).parentSessionId !== null)
+  if (readSessionCloseTarget(deps, sessionId).parentSessionId !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Subagent is read-only',

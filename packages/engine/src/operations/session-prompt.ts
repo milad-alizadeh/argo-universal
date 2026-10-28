@@ -47,7 +47,7 @@ async function confirmedPrompt(
     );
   const accepted = await submitPrompt(context, input);
 
-  return promptOutput(accepted);
+  return promptOutput(context.call, input, accepted);
 }
 
 function requiresConfirmation(
@@ -64,10 +64,19 @@ function requiresConfirmation(
   return !owned || admission.needsConfirmation;
 }
 
-function promptOutput(accepted: AcceptedSessionPrompt): SessionPromptOutput {
-  return accepted.messageId === null
-    ? accepted
-    : { messageId: accepted.messageId };
+function promptOutput(
+  call: SessionOperationCall,
+  input: SessionPromptInput,
+  accepted: AcceptedSessionPrompt,
+): SessionPromptOutput {
+  if (accepted.messageId === null) return accepted;
+  call.started({
+    kind: 'turn',
+    sessionId: input.sessionId,
+    turnId: accepted.turnId,
+  });
+
+  return { messageId: accepted.messageId };
 }
 
 function submitPrompt(

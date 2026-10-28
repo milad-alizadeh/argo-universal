@@ -1,4 +1,5 @@
 import { SessionNewOutput } from '@repo/contracts';
+import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
@@ -43,7 +44,9 @@ it('asks for another Project even when the calling Session owns the started Agen
   const [result] = await allowed.outcome;
 
   const created = SessionNewOutput.parse(
-    result?.status === 'fulfilled' ? result.value : null,
+    OperationExecution.parse(
+      result?.status === 'fulfilled' ? result.value : null,
+    ).result,
   );
 
   expect(await journey.host.caller.session.get(created)).toMatchObject({

@@ -1,33 +1,46 @@
-import type { ProjectsListOutput } from '@repo/contracts';
 import {
   operations,
   type OperationId,
   type OperationRow,
+  type OperationExecution,
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { createRejectionCounter } from '@repo/machine-log';
-import type { z } from 'zod';
 import type { RegistryDeps } from '../agents';
 import type { PluginsRouterDeps } from '../plugins';
-import { readProjects } from '../projects';
 import type {
   SessionOperationCall,
   SessionList,
   SessionRouterDeps,
 } from '../sessions';
-import { createAgentAccessOperations } from './agent-access';
-import { recordOperation, requireOperationCall } from './call-recording';
+import {
+  recordOperation,
+  requireOperationCall,
+  startRecordedOperation,
+  type StartedOperation,
+} from './call-recording';
+import {
+  createImplementations,
+  type OperationImplementations,
+  type OperationResult,
+  type OperationRunResult,
+} from './implementations';
+import { isNativeStartOperation } from './native-user-starts';
 import type { OperationInput } from './params';
-import { createPluginOperations } from './plugins';
-import { createReadOperations } from './readers';
-import { createRegistryOperations } from './registry';
 import { runOperation } from './router.gen';
 import { listOperations } from './search';
 import { scopedOperations, runSessionOperation } from './session-scope';
 import { SessionStarts } from './session-starts';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
-import { sessionImplementations } from './sessions';
 import { tokensMatch } from './tokens';
+import type { WaitBudget } from './wait-budget';
+import type { OperationWaitClock } from './wait-clock';
+import { OperationWork } from './work';
+
+export type {
+  OperationImplementations,
+  OperationResult,
+  OperationRunResult,
+} from './implementations';
 
 export type OperationsDeps = SessionRouterDeps &
   RegistryDeps & {
@@ -36,43 +49,29 @@ export type OperationsDeps = SessionRouterDeps &
     sessionTokens: SessionTokens;
     blobsFolder: string;
     plugins: PluginsRouterDeps;
+    operationWaitClock?: OperationWaitClock;
   };
 
-export type OperationResult<Id extends OperationId = OperationId> = z.output<
-  (typeof operations)[Id]['result']
->;
+type RunInput = { id: OperationId; params: Json; wait: boolean };
 
-export type OperationImplementations = {
-  [Id in OperationId]: (
-    params: z.output<(typeof operations)[Id]['params']>,
-  ) => Promise<z.output<(typeof operations)[Id]['result']>>;
+type OperationCallInput = { name: OperationId; label: string; input: Json };
+
+type CallContext = {
+  caller: OperationCaller;
+  budget: WaitBudget;
+  call?: SessionOperationCall;
 };
-
-function createImplementations(
-  deps: OperationsDeps,
-  sessionList: SessionList,
-): OperationImplementations {
-  const rejections = createRejectionCounter('projects');
-
-  return {
-    ...createAgentAccessOperations(deps),
-    ...sessionImplementations(deps),
-    ...createReadOperations(deps, sessionList),
-    ...createPluginOperations(deps.plugins.plugins),
-    ...createRegistryOperations(deps),
-    'project.list': (): Promise<ProjectsListOutput> =>
-      readProjects(deps.database, rejections),
-  };
-}
 
 export class Operations {
   private readonly implementations: OperationImplementations;
+  private readonly work: OperationWork;
   private readonly starts: SessionStarts;
   public constructor(
     private readonly deps: OperationsDeps,
     sessionList: SessionList,
   ) {
     this.implementations = createImplementations(deps, sessionList);
+    this.work = new OperationWork(deps, (token) => this.caller(token));
     this.starts = new SessionStarts(deps);
   }
   public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
@@ -90,23 +89,38 @@ export class Operations {
   }
   public run(
     token: string | undefined,
-    id: OperationId,
-    params: Json,
-  ): Promise<OperationResult> {
+    input: RunInput,
+    signal?: AbortSignal,
+  ): Promise<OperationResult | OperationExecution> {
     const caller = this.caller(token);
 
-    return recordOperation(
-      { deps: this.deps, caller },
-      { name: id, label: operations[id].label, input: params },
-      (call) => this.authorized(caller, { id, params }, call),
+    return this.work.run(
+      { caller, token, wait: input.wait, signal, id: input.id },
+      (budget) => this.start({ caller, budget }, input),
     );
   }
+  private start(
+    context: CallContext,
+    input: RunInput,
+  ): StartedOperation<OperationRunResult> {
+    return startRecordedOperation(
+      { deps: this.deps, caller: context.caller },
+      operationCall(input),
+      (call) => this.authorized({ ...context, call }, input),
+    );
+  }
+  public wait(
+    id: string,
+    token: string | undefined,
+    signal?: AbortSignal,
+  ): Promise<OperationExecution> {
+    return this.work.wait(id, token, signal);
+  }
   private async authorized(
-    caller: OperationCaller,
+    { caller, call, budget }: CallContext,
     operation: { id: OperationId; params: Json },
-    call?: SessionOperationCall,
-  ): Promise<OperationResult> {
-    if (caller.kind === 'user') return this.runUser(operation);
+  ): Promise<OperationRunResult> {
+    if (caller.kind === 'user') return this.runUser(operation, budget);
 
     const access = {
       implementations: this.implementations,
@@ -118,14 +132,13 @@ export class Operations {
 
     return runSessionOperation(access, operation);
   }
+  private async runUser(
+    { id, params }: { id: OperationId; params: Json },
+    budget: WaitBudget,
+  ): Promise<OperationRunResult> {
+    if (isNativeStartOperation(id))
+      return this.work.startUser({ id, params }, budget);
 
-  private async runUser({
-    id,
-    params,
-  }: {
-    id: OperationId;
-    params: Json;
-  }): Promise<OperationResult> {
     return operations[id].result.parseAsync(
       await runOperation(this.implementations, id, params),
     );
@@ -142,4 +155,8 @@ export class Operations {
   ): Promise<OperationResult<Id>> {
     return runOperation(this.implementations, id, params);
   }
+}
+
+function operationCall({ id, params }: RunInput): OperationCallInput {
+  return { name: id, label: operations[id].label, input: params };
 }

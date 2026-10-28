@@ -30,6 +30,7 @@ export const promptSessionAccepted = async (
     deps.readSession(sessionId).agent,
   );
   const sessionActor = await openReadySession(deps, sessionId);
+  validateSessionCommandAdmission(deps);
 
   const answer = await deps.hooks['prompt.submit']({
     sessionId,

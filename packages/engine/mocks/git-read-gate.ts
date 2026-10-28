@@ -9,6 +9,14 @@ const execute = promisify(execFile);
 type Gate = { started: () => Promise<void>; release: () => Promise<void> };
 
 export async function holdProjectReads(home: string): Promise<Gate> {
+  return holdGitReads(home, 'get-url');
+}
+
+export async function holdBranchReads(home: string): Promise<Gate> {
+  return holdGitReads(home, 'for-each-ref');
+}
+
+async function holdGitReads(home: string, argument: string): Promise<Gate> {
   const { stdout } = await execute('which', ['git']);
   const directory = join(home, 'git-read-gate');
   await mkdir(directory);
@@ -16,7 +24,7 @@ export async function holdProjectReads(home: string): Promise<Gate> {
   const released = join(directory, 'released');
   await writeFile(
     join(directory, 'git'),
-    gitGateSource({ executable: stdout.trim(), entered, released }),
+    gitGateSource({ executable: stdout.trim(), entered, released, argument }),
     { mode: 0o755 },
   );
   const release = (): Promise<void> => writeFile(released, 'released');
@@ -38,6 +46,7 @@ function gitGateSource(input: {
   executable: string;
   entered: string;
   released: string;
+  argument: string;
 }): string {
   return `#!/usr/bin/env node
 const { spawn } = require('node:child_process');
@@ -48,7 +57,7 @@ const run = () => {
   child.once('error', () => process.exit(1));
   child.once('exit', (code) => process.exit(code ?? 1));
 };
-if (!process.argv.includes('get-url') || existsSync(input.released)) run();
+if (!process.argv.includes(input.argument) || existsSync(input.released)) run();
 else {
   writeFileSync(input.entered, 'reading');
   const timer = setInterval(() => { if (!existsSync(input.released)) return; clearInterval(timer); run(); }, 10);

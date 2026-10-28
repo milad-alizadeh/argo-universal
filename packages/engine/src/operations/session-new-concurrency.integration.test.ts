@@ -1,3 +1,4 @@
+import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
@@ -26,10 +27,17 @@ it('reserves the last running slot across concurrent Session starts before Agent
     },
   };
 
-  const outcomes = Promise.allSettled([
-    journey.caller.caller.operations.run.mutate(operation),
-    journey.caller.caller.operations.run.mutate(operation),
-  ]);
+  const run = async (): Promise<OperationExecution> => {
+    const value = OperationExecution.parse(
+      await journey.caller.caller.operations.run.mutate(operation),
+    );
+
+    return value.id.startsWith('call:')
+      ? journey.caller.caller.operations.wait.mutate({ id: value.id })
+      : value;
+  };
+
+  const outcomes = Promise.allSettled([run(), run()]);
 
   const pending = waitForAcpSnapshot(
     journey.host,

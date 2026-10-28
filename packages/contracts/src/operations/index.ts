@@ -10,6 +10,10 @@ import { sessionOperations } from './sessions';
 
 export { AgentAccess } from './agent-access';
 
+export { OperationExecution, OperationWaitId } from './execution';
+
+export { OperationWorkTarget } from './work';
+
 export { OperationRow, OperationTier } from './metadata';
 
 export { readerOperations } from './readers';

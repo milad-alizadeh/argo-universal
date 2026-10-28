@@ -1,4 +1,5 @@
 import { SessionNewOutput } from '@repo/contracts';
+import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { askOperation } from '#mocks/operation-permissions';
@@ -32,7 +33,10 @@ it('allows two levels of Sessions and asks separately for every deeper start', a
   const [result] = await allowed.outcome;
   assert(result?.status === 'fulfilled');
 
-  const created = SessionNewOutput.parse(result.value);
+  const created = SessionNewOutput.parse(
+    OperationExecution.parse(result.value).result,
+  );
+
   expect(await journey.host.caller.session.get(created)).toMatchObject({
     startedBySessionId: grandchild.sessionId,
   });

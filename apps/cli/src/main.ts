@@ -2,12 +2,14 @@ import { runPluginCommand } from '@argo/plugin-kit/cli';
 import { commandExitCode } from './command-error';
 import { runOperations } from './operations-command';
 import { runOperation } from './run-command';
+import { waitOperation } from './wait-command';
 
 const help = `Usage: argo <command>
 
 Commands:
   operations [filter] [--json]  Find available Operations
-  run <id> [--params '<json>']  Run an Operation
+  run <id> [--params '<json>'] [--wait]  Run an Operation
+  wait <id>                   Wait for native Session work
   server [--watch]            Start the Server
   plugin <validate|test> <dir>  Validate or test a Plugin`;
 
@@ -21,6 +23,7 @@ type Command = (
 const commands = new Map<string, Command>([
   ['operations', runOperations],
   ['run', runOperation],
+  ['wait', waitOperation],
   [
     'plugin',
     (args, output): Promise<number> =>

@@ -1,4 +1,5 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
+import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { recordingSource, writeHookPlugins } from '#mocks/hook-plugins';
@@ -57,7 +58,8 @@ it('keeps the authenticated sender through Hook rewrites and starts no Turn for 
     },
   });
 
-  expect(rewritten).toMatchObject({ messageId: expect.any(String) });
+  const execution = OperationExecution.parse(rewritten);
+  expect(execution.turn).toMatchObject({ sessionId: target.sessionId });
 
   const page = await journey.host.caller.feed.page({
     sessionId: target.sessionId,
@@ -67,6 +69,7 @@ it('keeps the authenticated sender through Hook rewrites and starts no Turn for 
   expect(page.rows).toContainEqual(
     expect.objectContaining({
       sessionUpdate: 'prompt_message',
+      turnId: execution.turn?.id,
       content: [{ type: 'text', text: 'Rewritten work' }],
       _meta: {
         argo: {

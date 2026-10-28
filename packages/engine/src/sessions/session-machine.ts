@@ -68,6 +68,7 @@ import {
   takeConfigChoice,
 } from './config-queue';
 import { toConfigValues } from './configuration/config-choices';
+import { creationSettledEvent } from './creation-receipt';
 import { initialSessionContext } from './initial-context';
 import { nativePermissionEvent } from './native-permissions';
 import { pendingInputRequest } from './pending-input';
@@ -856,6 +857,10 @@ export const sessionMachine = sessionSetup.createMachine({
   context: ({ input, self }): SessionContext =>
     initialSessionContext(input, (event) => self.send(event)),
   on: {
+    [creationSettledEvent]: {
+      guard: ({ context }) => context.input.kind === 'new',
+      actions: assign(({ event }) => ({ creationReceipt: event.receipt })),
+    },
     // Outside a Turn a hooked answer has nothing to settle; its Hooks still end.
     [permissionHookedEvent]: { actions: 'forgetPermissionHooks' },
     'agent.shellChanged': {

@@ -1,17 +1,21 @@
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
 import type { PendingPermission, ToolCallUpdate } from '@repo/contracts';
 import { assert, expect } from 'vitest';
+import type { OperationWaitClock } from '../src/operations';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from './acp-feed';
 import { hookRecords, recordingSource, writeHookPlugins } from './hook-plugins';
 import { beginHeldTurn } from './operation-race';
 import { openAccessSession, sessionIdentityStep } from './session-access';
 
-export async function permissionJourney(): Promise<PermissionJourney> {
+export async function permissionJourney(
+  operationWaitClock?: OperationWaitClock,
+): Promise<PermissionJourney> {
   const outputs: TerminalOutputResponse[] = [];
   const release = Promise.withResolvers<void>();
 
   const host = await startAcpEngine({
+    operationWaitClock,
     steps: [],
     sessionIds: ['permission-session'],
     configOptions: [
@@ -51,7 +55,7 @@ export async function permissionJourney(): Promise<PermissionJourney> {
 
   await waitForAcpSessionIdle(host, target.sessionId);
 
-  return { host, session, target, release };
+  return { host, session, target, release, outputs };
 }
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
@@ -61,6 +65,7 @@ export type PermissionJourney = {
   session: Awaited<ReturnType<typeof openAccessSession>>;
   target: { sessionId: string };
   release: PromiseWithResolvers<void>;
+  outputs: TerminalOutputResponse[];
 };
 
 export async function askArchive(
@@ -73,6 +78,7 @@ export async function askArchive(
     session.caller.operations.run.mutate({
       id: 'session.archive',
       params: target,
+      wait: true,
     }),
   ]);
 

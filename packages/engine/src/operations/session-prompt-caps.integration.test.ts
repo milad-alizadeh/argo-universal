@@ -1,4 +1,4 @@
-import { SessionPromptOutput } from '@repo/contracts';
+import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 import {
@@ -15,8 +15,8 @@ it('reserves the last running slot across concurrent child prompts and releases 
   const second = await startDelegated(journey);
   await holdSession(journey, journey.caller.sessionId);
 
-  const prompt = async (sessionId: string): Promise<SessionPromptOutput> =>
-    SessionPromptOutput.parse(
+  const prompt = async (sessionId: string): Promise<OperationExecution> => {
+    const value = OperationExecution.parse(
       await journey.caller.caller.operations.run.mutate({
         id: 'session.prompt',
         params: {
@@ -25,6 +25,11 @@ it('reserves the last running slot across concurrent child prompts and releases 
         },
       }),
     );
+
+    return value.id.startsWith('call:')
+      ? journey.caller.caller.operations.wait.mutate({ id: value.id })
+      : value;
+  };
 
   const outcomes = Promise.allSettled([
     prompt(first.sessionId),
@@ -62,7 +67,7 @@ it('reserves the last running slot across concurrent child prompts and releases 
   await waitForAcpSessionIdle(journey.host, stopped.sessionId);
   const retry = results[0]?.status === 'rejected' ? first : second;
   expect(await prompt(retry.sessionId)).toMatchObject({
-    messageId: expect.any(String),
+    turn: { sessionId: retry.sessionId, status: 'running' },
   });
 }, 30_000);
 
