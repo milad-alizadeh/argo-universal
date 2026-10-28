@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { ProjectsListOutput } from '../projects/list';
+import { registryOperations } from './registry';
+import { operationJsonSchema } from './schema-json';
 
 export type OperationTier = 'read' | 'act' | 'confirm';
 
@@ -14,6 +16,7 @@ export interface OperationDefinition {
 }
 
 export const operations = {
+  ...registryOperations,
   'project.list': {
     id: 'project.list',
     label: 'List Projects',
@@ -44,7 +47,7 @@ export function describeOperation(
 ): OperationDescription {
   return {
     ...operation,
-    params: z.toJSONSchema(operation.params),
-    result: z.toJSONSchema(operation.result),
+    params: operationJsonSchema(operation.params),
+    result: operationJsonSchema(operation.result),
   };
 }

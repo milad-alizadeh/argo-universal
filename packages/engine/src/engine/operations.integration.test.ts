@@ -23,6 +23,7 @@ it.each([
   'refuses operations.$procedure without a token',
   async ({ procedure, options }) => {
     const host = await startProjectTestHost();
+
     const response = await fetch(
       `${host.url}/trpc/operations.${procedure}`,
       options,
@@ -46,7 +47,13 @@ it('discovers and runs the same Project list as the App with its private user to
   const list = await fetch(`${host.url}/trpc/operations.list`, { headers });
   expect(await list.json()).toMatchObject({
     result: {
-      data: [{ id: projectListId, enabled: true, disabledReason: null }],
+      data: expect.arrayContaining([
+        expect.objectContaining({
+          id: projectListId,
+          enabled: true,
+          disabledReason: null,
+        }),
+      ]),
     },
   });
 

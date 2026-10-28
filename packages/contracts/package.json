@@ -27,6 +27,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./operations": "./src/operations/index.ts",
+    "./operations/registry": "./src/operations/registry.ts",
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",
     "./plugins/runtime": "./src/plugins/runtime.ts",
@@ -69,6 +70,8 @@
   "dependencies": {
     "@repo/db": "workspace:*",
     "drizzle-orm": "catalog:",
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -56,7 +56,7 @@ const upgradeWhileLeased = async (): Promise<Upgrade> => {
   const unused = join(dirname(first.directory), 'v_unused');
   await mkdir(unused);
   entry = { ...entry, version: '2.0.0' };
-  await host.caller.agents.refreshRegistry();
+  await host.caller.registry.refresh();
 
   return { input, resources, first, lease, unused };
 };
