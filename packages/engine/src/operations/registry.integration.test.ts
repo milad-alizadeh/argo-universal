@@ -1,9 +1,8 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { createTRPCClient, httpLink, type TRPCClient } from '@trpc/client';
+import type { TRPCClient } from '@trpc/client';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { operationCaller } from '#mocks/operations';
 import type { AppRouter } from '../engine/router';
 
 const exampleAgentId = 'example-agent';
@@ -19,16 +18,7 @@ async function operationHost(): Promise<{
     fetchAgents: async () => JSON.stringify(publishedRegistry),
   });
 
-  const token = await readFile(join(host.home, 'control.token'), 'utf8');
-
-  const caller = createTRPCClient<AppRouter>({
-    links: [
-      httpLink({
-        url: `${host.url}/trpc`,
-        headers: { authorization: `Bearer ${token.trim()}` },
-      }),
-    ],
-  });
+  const caller = await operationCaller(host);
 
   return { host, caller };
 }
