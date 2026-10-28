@@ -17,6 +17,7 @@ import { measureView } from './list-geometry';
 import { ListHeader } from './list-header';
 import { LaneRows } from './list-lane-rows';
 import { useListMoves } from './list-move-context';
+import { sectionKey, type SectionKey } from './list-move-model';
 import { useMoveOrder } from './list-move-order';
 import { ListEnd } from './list-scroll-props';
 import { lanesOf, type Lane } from './list-section-entries';
@@ -45,7 +46,7 @@ const measureLane = async ({
 // Registers a lane as the zone of Section `key` and its body as a scroller; returns the unregister.
 function registerLane(
   drag: ListDrag,
-  key: string,
+  key: SectionKey,
   views: LaneViews,
 ): () => void {
   const zone = drag.registry.registerZone(key, () => measureLane(views));
@@ -62,7 +63,7 @@ function registerLane(
 }
 
 // A row dragged anywhere over a lane lands in its Section, when its rows move; it scrolls near the lane's edges.
-function useLaneDrag(key: string, views: LaneViews): void {
+function useLaneDrag(key: SectionKey, views: LaneViews): void {
   const moves = useListMoves();
   const drag = moves?.drag;
   const moving = useMoveOrder(moves?.order, (order) => order.holds(key));
@@ -86,7 +87,7 @@ function LaneBody({ lane, laneRef }: LaneBodyProps): ReactElement {
     [laneRef],
   );
 
-  useLaneDrag(lane.key, views);
+  useLaneDrag(sectionKey(lane.key), views);
 
   return (
     <View ref={bodyRef} collapsable={false} className="min-h-0 grow">

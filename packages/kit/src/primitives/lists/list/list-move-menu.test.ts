@@ -1,11 +1,16 @@
 import { expect, it } from 'vitest';
 import { pickSections, stepMoves, type PickSection } from './list-move-menu';
-import type { MoveSection } from './list-move-model';
+import { sectionKey, type MoveSection } from './list-move-model';
 
 const board: MoveSection[] = [
-  { key: 'a', id: 'todo', title: 'To do', rows: ['login', 'docs', 'tests'] },
-  { key: 'b', id: 'doing', title: 'Doing', rows: ['search'] },
-  { key: 'c', id: 'done', title: 'Done', rows: [] },
+  {
+    key: sectionKey('a'),
+    id: 'todo',
+    title: 'To do',
+    rows: ['login', 'docs', 'tests'],
+  },
+  { key: sectionKey('b'), id: 'doing', title: 'Doing', rows: ['search'] },
+  { key: sectionKey('c'), id: 'done', title: 'Done', rows: [] },
 ];
 
 const titles = new Map([
@@ -67,15 +72,15 @@ it('leaves out a Section with nowhere to move to', () => {
 
 it('places a row after the row it names', () => {
   expect(picked(board, 'search')[0]?.spots[1]?.place).toEqual({
-    sectionKey: 'a',
+    sectionKey: sectionKey('a'),
     insertion: 1,
   });
 });
 
 it('names a row without a title by its place', () => {
   const untitled: MoveSection[] = [
-    { key: 'a', id: 'todo', rows: ['x', 'y', 'z'] },
-    { key: 'b', id: 'doing', rows: ['search'] },
+    { key: sectionKey('a'), id: 'todo', rows: ['x', 'y', 'z'] },
+    { key: sectionKey('b'), id: 'doing', rows: ['search'] },
   ];
 
   expect(labelsIn(picked(untitled, 'search'), 'a')).toContain('After row 2');
@@ -83,8 +88,8 @@ it('names a row without a title by its place', () => {
 
 it('titles a Section without a title by its place', () => {
   const untitled: MoveSection[] = [
-    { key: 'a', id: 'todo', rows: ['x'] },
-    { key: 'b', id: 'doing', rows: ['search'] },
+    { key: sectionKey('a'), id: 'todo', rows: ['x'] },
+    { key: sectionKey('b'), id: 'doing', rows: ['search'] },
   ];
 
   expect(picked(untitled, 'search')[0]?.title).toBe('Section 1');
@@ -92,17 +97,19 @@ it('titles a Section without a title by its place', () => {
 
 it('titles the rows outside any Section beside Sections', () => {
   const loose: MoveSection[] = [
-    { key: 'loose', rows: ['a', 'b'] },
-    { key: 'b', id: 'doing', title: 'Doing', rows: ['search'] },
+    { key: sectionKey('loose'), rows: ['a', 'b'] },
+    { key: sectionKey('b'), id: 'doing', title: 'Doing', rows: ['search'] },
   ];
 
   expect(picked(loose, 'search')[0]?.title).toBe('No Section');
 });
 
 it('lists one untitled Section for a List without Sections', () => {
-  const plain: MoveSection[] = [{ key: 'loose', rows: ['a', 'b', 'c'] }];
+  const plain: MoveSection[] = [
+    { key: sectionKey('loose'), rows: ['a', 'b', 'c'] },
+  ];
 
   expect(picked(plain, 'a')).toEqual([
-    expect.objectContaining({ title: undefined, key: 'loose' }),
+    expect.objectContaining({ title: undefined, key: sectionKey('loose') }),
   ]);
 });

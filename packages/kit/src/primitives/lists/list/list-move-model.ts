@@ -1,5 +1,13 @@
 import type { ListMove } from '@repo/contracts/kit-moves';
+import { z } from 'zod';
 import { assertNever } from '#kit/assert-never';
+
+const sectionKeys = z.string().brand<'ListSectionKey'>();
+
+// A Section's place in the List as the List reads its children: kit-internal, and never the Section's `id`.
+export type SectionKey = z.infer<typeof sectionKeys>;
+
+export const sectionKey = (raw: string): SectionKey => sectionKeys.parse(raw);
 
 /*
  * A List's movable rows, Section by Section, in the order it draws them. `key` is the Section's place in the List as
@@ -7,20 +15,20 @@ import { assertNever } from '#kit/assert-never';
  * Section of their own, without an id.
  */
 export interface MoveSection {
-  key: string;
+  key: SectionKey;
   id?: string;
   title?: string;
   rows: readonly string[];
 }
 
 export interface RowPlace {
-  sectionKey: string;
+  sectionKey: SectionKey;
   index: number;
 }
 
 // Where a row would go: before the row at `insertion` in the Section `sectionKey`, counted with the row still in place.
 export interface DropPlace {
-  sectionKey: string;
+  sectionKey: SectionKey;
   insertion: number;
 }
 
@@ -76,7 +84,7 @@ export const placeOf = (
 
 const sectionAt = (
   sections: readonly MoveSection[],
-  key: string,
+  key: SectionKey,
 ): MoveSection | undefined => sections.find((section) => section.key === key);
 
 const stepped =

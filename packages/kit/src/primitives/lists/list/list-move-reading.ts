@@ -1,6 +1,6 @@
 import { isValidElement, type ReactNode } from 'react';
 import type { ListChild } from './list-children';
-import type { MoveSection } from './list-move-model';
+import { sectionKey, type MoveSection } from './list-move-model';
 import { gatherLoose } from './list-section-entries';
 import type { ListBlock } from './list-section-model';
 
@@ -84,7 +84,7 @@ function sectionOf(block: ListBlock): MoveSection[] {
 
   return [
     {
-      key,
+      key: sectionKey(key),
       id: section.id,
       title: section.title,
       rows: sectionRows(block.blocks),
@@ -102,6 +102,6 @@ export const moveSectionsOf = (
 ): MoveSection[] =>
   gatherLoose(blocks, {
     holds: holdsLoose,
-    loose: { key: looseKey, rows: sectionRows(blocks) },
+    loose: { key: sectionKey(looseKey), rows: sectionRows(blocks) },
     each: sectionOf,
   });

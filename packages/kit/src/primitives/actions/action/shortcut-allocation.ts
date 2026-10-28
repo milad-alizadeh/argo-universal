@@ -8,7 +8,7 @@ interface OpenContext {
   claimed: Set<string>;
 }
 
-export const allocationKey = (owner: string, action: string): string =>
+const allocationKey = (owner: string, action: string): string =>
   `${owner}/${action}`;
 
 /*
@@ -18,11 +18,16 @@ export const allocationKey = (owner: string, action: string): string =>
  * declaration's claim.
  */
 export class ShortcutAllocation {
-  public readonly owned = new Set<string>();
+  private readonly owned = new Set<string>();
   private readonly primary = primaryModifier();
   private readonly any = new Set<string>();
   private readonly global = new Set<string>();
   private open: OpenContext[] = [];
+
+  // Whether declaration `owner` won the key of its Action `action`.
+  public owns(owner: string, action: string): boolean {
+    return this.owned.has(allocationKey(owner, action));
+  }
 
   // `root` is the declaration's node, found once for the whole pass.
   public add(entry: ShortcutRegistration, root: HTMLElement | null): void {

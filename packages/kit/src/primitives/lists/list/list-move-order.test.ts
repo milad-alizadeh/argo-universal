@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MoveSection, ResolvedMove } from './list-move-model';
+import {
+  sectionKey,
+  type MoveSection,
+  type ResolvedMove,
+} from './list-move-model';
 import { MoveOrder, type MoveAnswer } from './list-move-order';
 
 const board: MoveSection[] = [
-  { key: 'a', id: 'todo', title: 'To do', rows: ['login', 'docs'] },
-  { key: 'b', id: 'done', title: 'Done', rows: [] },
+  { key: sectionKey('a'), id: 'todo', title: 'To do', rows: ['login', 'docs'] },
+  { key: sectionKey('b'), id: 'done', title: 'Done', rows: [] },
 ];
 
 const toDoneFirst = 'Moved to Done, position 1';
@@ -97,8 +101,8 @@ describe('MoveOrder', () => {
     const run = harness(answers());
 
     const answered: MoveSection[] = [
-      { key: 'a', id: 'todo', rows: ['docs'] },
-      { key: 'b', id: 'done', rows: ['login'] },
+      { key: sectionKey('a'), id: 'todo', rows: ['docs'] },
+      { key: sectionKey('b'), id: 'done', rows: ['login'] },
     ];
 
     run.order.move(toDone);

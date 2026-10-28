@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ListSelection } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
+import { sectionKey } from './list-move-model';
 import { SectionMoveZone } from './list-move-zone';
 import type { ListSectionProps } from './list-props';
 import { hasSectionHeader } from './list-section-actions';
@@ -39,7 +40,7 @@ function sectionHeader(props: ListSectionProps, key: string): ReactNode {
   if (!hasSectionHeader(props)) return null;
 
   return (
-    <SectionMoveZone sectionKey={key}>
+    <SectionMoveZone sectionKey={sectionKey(key)}>
       <SectionHeader {...props} />
     </SectionMoveZone>
   );

@@ -3,6 +3,7 @@ import {
   type DropPlace,
   type MoveIntent,
   type MoveSection,
+  type SectionKey,
 } from './list-move-model';
 
 // One step entry of a row's Move menu, keyed by what it does rather than by what it says.
@@ -44,7 +45,7 @@ export interface PickSection {
 export type RowTitle = (id: string, index: number) => string;
 
 const spotAt =
-  (sectionKey: string) =>
+  (sectionKey: SectionKey) =>
   (label: string, insertion: number): PickSpot => ({
     key: `${insertion}`,
     label,

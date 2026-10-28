@@ -1,5 +1,5 @@
 import type { DeclaredAction } from './action-declarations';
-import { allocationKey, ShortcutAllocation } from './shortcut-allocation';
+import { ShortcutAllocation } from './shortcut-allocation';
 
 export interface ShortcutRegistration {
   id: string;
@@ -13,7 +13,7 @@ export class ShortcutRegistry {
   private readonly entries = new Map<string, ShortcutRegistration>();
   private readonly listeners = new Set<() => void>();
   private revision = 0;
-  private allocated = new Set<string>();
+  private allocated = new ShortcutAllocation();
   private pending = false;
 
   public subscribe = (listener: () => void): (() => void) => {
@@ -37,7 +37,7 @@ export class ShortcutRegistry {
   }
 
   public owns(id: string, action: DeclaredAction): boolean {
-    return this.allocated.has(allocationKey(id, action.id));
+    return this.allocated.owns(id, action.id);
   }
 
   // A List's rows register together as it draws, so the keys are handed out once for all of them.
@@ -82,7 +82,7 @@ function comparePosition(position: number): number {
 }
 
 // Each declaration's node is found once, then the declarations claim their keys in document order.
-function allocatedActions(entries: ShortcutRegistration[]): Set<string> {
+function allocatedActions(entries: ShortcutRegistration[]): ShortcutAllocation {
   const allocation = new ShortcutAllocation();
 
   const placed: Placed[] = entries.map((entry) => ({
@@ -94,5 +94,5 @@ function allocatedActions(entries: ShortcutRegistration[]): Set<string> {
 
   for (const { entry, root } of placed) allocation.add(entry, root);
 
-  return allocation.owned;
+  return allocation;
 }

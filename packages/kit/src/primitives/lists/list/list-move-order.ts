@@ -6,6 +6,7 @@ import {
   placeOf,
   type MoveSection,
   type ResolvedMove,
+  type SectionKey,
 } from './list-move-model';
 
 // A Plugin's `onMove` answers once its dispatch settles; an App owner's answers at once.
@@ -156,7 +157,7 @@ export class MoveOrder {
       .then(() => this.effects.frame(() => this.settle(next)));
   };
 
-  public holds(sectionKey: string): boolean {
+  public holds(sectionKey: SectionKey): boolean {
     return this.shown.some((section) => section.key === sectionKey);
   }
 

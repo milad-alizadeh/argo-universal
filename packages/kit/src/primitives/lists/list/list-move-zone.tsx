@@ -18,6 +18,7 @@ import { useDragValue } from './list-drag-layer';
 import type { MeasureZone } from './list-drag-measure';
 import { measureView } from './list-geometry';
 import { useListMoves, type ListMoves } from './list-move-context';
+import type { SectionKey } from './list-move-model';
 import { useMoveOrder } from './list-move-order';
 
 // A header's Section starts at its top, and its first row goes under it.
@@ -31,7 +32,7 @@ async function measureHeader(
 
 function useHeaderZone(
   drag: ListDrag,
-  sectionKey: string,
+  sectionKey: SectionKey,
 ): RefObject<ViewInstance | null> {
   const view = useRef<ViewInstance>(null);
 
@@ -45,7 +46,7 @@ function useHeaderZone(
 
 interface ZoneProps {
   moves: ListMoves;
-  sectionKey: string;
+  sectionKey: SectionKey;
   children: ReactNode;
 }
 
@@ -65,7 +66,7 @@ function HeaderZone({ moves, sectionKey, children }: ZoneProps): ReactElement {
 }
 
 // A board's lanes are their Sections' zones, so only one column's headers are; only a Section whose rows move has one.
-function useZoned(sectionKey: string): ListMoves | null {
+function useZoned(sectionKey: SectionKey): ListMoves | null {
   const moves = useListMoves();
 
   const zoned = useMoveOrder(
@@ -77,7 +78,7 @@ function useZoned(sectionKey: string): ListMoves | null {
 }
 
 interface SectionZoneProps {
-  sectionKey: string;
+  sectionKey: SectionKey;
   children: ReactNode;
 }
 

@@ -1,5 +1,6 @@
 import type { MeasuredZone } from './list-drop-aim';
 import type { MeasuredRow, Rect } from './list-geometry';
+import type { SectionKey } from './list-move-model';
 import { registered } from './list-registered';
 
 export type Measure = () => Promise<Rect | undefined>;
@@ -32,7 +33,7 @@ export interface Measured {
 interface Registered {
   layer: Measure;
   rows: ReadonlyMap<string, Measure>;
-  zones: ReadonlyMap<string, MeasureZone>;
+  zones: ReadonlyMap<SectionKey, MeasureZone>;
   scrollers: ReadonlySet<DragScroller>;
 }
 
@@ -67,7 +68,7 @@ interface Parts {
   layer: Rect | undefined;
   source: Rect | undefined;
   rows: [string, Rect][];
-  zones: [string, Zone][];
+  zones: [SectionKey, Zone][];
   scrollers: [DragScroller, Rect][];
 }
 
@@ -129,7 +130,7 @@ interface Pressed {
 // What draws in one List and measures itself for a drag: its drag layer, rows, Section zones and scrollers.
 export class DragRegistry {
   private readonly rows = new Map<string, Measure>();
-  private readonly zones = new Map<string, MeasureZone>();
+  private readonly zones = new Map<SectionKey, MeasureZone>();
   private readonly scrollers = new Set<DragScroller>();
   private pressed: Pressed | undefined;
 
@@ -139,7 +140,10 @@ export class DragRegistry {
     return registered(this.rows, id, measure);
   }
 
-  public registerZone(sectionKey: string, measure: MeasureZone): () => void {
+  public registerZone(
+    sectionKey: SectionKey,
+    measure: MeasureZone,
+  ): () => void {
     return registered(this.zones, sectionKey, measure);
   }
 

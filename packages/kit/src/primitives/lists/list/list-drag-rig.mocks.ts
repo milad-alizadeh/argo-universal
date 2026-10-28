@@ -3,14 +3,19 @@ import { vi, type Mock } from 'vitest';
 import { ListDrag } from './list-drag-controller';
 import type { DragFrame } from './list-drag-frame';
 import type { Point, Rect } from './list-geometry';
-import type { DropPlace, MoveSection } from './list-move-model';
+import {
+  sectionKey,
+  type DropPlace,
+  type MoveSection,
+  type SectionKey,
+} from './list-move-model';
 import type { Schedule } from './list-next-frame';
 
-export const todoKey = 'todo-lane';
+export const todoKey = sectionKey('todo-lane');
 
-export const doingKey = 'doing-lane';
+export const doingKey = sectionKey('doing-lane');
 
-export const doneKey = 'done-lane';
+export const doneKey = sectionKey('done-lane');
 
 export const board: MoveSection[] = [
   { key: todoKey, id: 'todo', title: 'To do', rows: ['login', 'docs'] },
@@ -93,7 +98,7 @@ const columnRows: [string, number][] = [
   ['search', 200],
 ];
 
-const headers: [string, number][] = [
+const headers: [SectionKey, number][] = [
   [todoKey, 20],
   [doingKey, 170],
 ];

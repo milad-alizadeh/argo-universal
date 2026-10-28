@@ -5,11 +5,16 @@ import {
   type Point,
   type Rect,
 } from './list-geometry';
-import { placeOf, type DropPlace, type MoveSection } from './list-move-model';
+import {
+  placeOf,
+  type DropPlace,
+  type MoveSection,
+  type SectionKey,
+} from './list-move-model';
 
 // Where a Section starts: a lane's column on a board, or a Section's header in one column. `start` is where its first row goes.
 export interface MeasuredZone {
-  sectionKey: string;
+  sectionKey: SectionKey;
   rect: Rect;
   start: number;
 }
@@ -39,7 +44,7 @@ export interface AimInput extends MoveLayout {
 }
 
 interface PlacedRow {
-  sectionKey: string;
+  sectionKey: SectionKey;
   index: number;
   rect: Rect;
 }
@@ -48,22 +53,10 @@ interface PlacedRow {
 interface Placed {
   sections: readonly MoveSection[];
   rows: PlacedRow[];
-  bySection: Map<string, PlacedRow[]>;
+  bySection: Map<SectionKey, PlacedRow[]>;
 }
 
 const placedBy = new WeakMap<readonly MeasuredRow[], Placed>();
-
-function bySectionOf(rows: readonly PlacedRow[]): Map<string, PlacedRow[]> {
-  const bySection = new Map<string, PlacedRow[]>();
-
-  for (const row of rows)
-    bySection.set(row.sectionKey, [
-      ...(bySection.get(row.sectionKey) ?? []),
-      row,
-    ]);
-
-  return bySection;
-}
 
 function placeRows(
   measured: readonly MeasuredRow[],
@@ -77,7 +70,8 @@ function placeRows(
 
   rows.sort((a, b) => a.index - b.index);
 
-  const placed = { sections, rows, bySection: bySectionOf(rows) };
+  const bySection = Map.groupBy(rows, (row) => row.sectionKey);
+  const placed = { sections, rows, bySection };
 
   placedBy.set(measured, placed);
 
@@ -93,7 +87,7 @@ function placedRows(
   return placed?.sections === sections ? placed : placeRows(measured, sections);
 }
 
-const rowsIn = (placed: Placed, sectionKey: string): PlacedRow[] =>
+const rowsIn = (placed: Placed, sectionKey: SectionKey): PlacedRow[] =>
   placed.bySection.get(sectionKey) ?? [];
 
 const horizontalDistance = (rect: Rect, x: number): number =>
@@ -103,7 +97,7 @@ const horizontalDistance = (rect: Rect, x: number): number =>
 function laneAt(
   zones: readonly MeasuredZone[],
   { x }: Point,
-): string | undefined {
+): SectionKey | undefined {
   return [...zones].sort(
     (a, b) => horizontalDistance(a.rect, x) - horizontalDistance(b.rect, x),
   )[0]?.sectionKey;
@@ -114,7 +108,7 @@ function sectionAt(
   zones: readonly MeasuredZone[],
   rows: readonly PlacedRow[],
   { y }: Point,
-): string | undefined {
+): SectionKey | undefined {
   const starts = [...zones, ...rows].sort((a, b) => a.rect.y - b.rect.y);
   const above = starts.filter((start) => start.rect.y <= y);
 
@@ -171,7 +165,7 @@ const insertionAt = ({ previous, next }: Neighbours): number =>
   next?.index ?? indexAfter(previous);
 
 interface SectionAim {
-  sectionKey: string;
+  sectionKey: SectionKey;
   // The Section's rows, in order.
   rows: readonly PlacedRow[];
   zone: MeasuredZone | undefined;
