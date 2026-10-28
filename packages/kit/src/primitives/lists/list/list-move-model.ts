@@ -1,7 +1,4 @@
-import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
-
-// What a move reports: the row, the Section it lands in (none for rows outside any Section) and its index there.
-export { applyListMove, type ListMove };
+import type { ListMove } from '@repo/contracts/kit-moves';
 
 /*
  * A List's movable rows, Section by Section, in the order it draws them. `key` is the Section's place in the List as
@@ -154,9 +151,3 @@ export function landing(
 
   return landedIn(target, id, landedIndex(place, drop));
 }
-
-// The rows as they read once a move is made, by the rule its owner applies too, so the List shows a drop at once.
-export const movedSections = (
-  sections: readonly MoveSection[],
-  move: ListMove,
-): MoveSection[] => applyListMove(sections, move);

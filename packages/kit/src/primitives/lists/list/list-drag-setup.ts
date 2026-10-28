@@ -1,6 +1,7 @@
-import type { FrameInput } from './list-drag-frame';
+import type { ListMove } from '@repo/contracts/kit-moves';
+import type { DragFrame, FrameInput } from './list-drag-frame';
 import type { MoveLayout } from './list-drop-aim';
-import type { ListMove } from './list-move-model';
+import { landing } from './list-move-model';
 import type { MoveOrder } from './list-move-order';
 
 // What a List's drag works on: the order the List shows, read as the drag aims and drops, and how a drop moves.
@@ -32,3 +33,12 @@ export const frameSetup = (
   layout: layoutOf(setup),
   slides: setup.slides,
 });
+
+// The move a drop reports where the lifted row aims, by the order the List shows.
+export const landedMove = (
+  setup: DragSetup,
+  frame: DragFrame | undefined,
+): ListMove | undefined =>
+  frame?.place
+    ? landing(setup.order.sections, frame.id, frame.place)
+    : undefined;

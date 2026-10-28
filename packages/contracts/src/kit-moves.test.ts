@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyListMove } from './list-move-props';
+import { applyListMove } from './kit-moves';
 
 interface Card {
   id: string;

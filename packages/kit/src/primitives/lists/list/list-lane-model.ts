@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ListSelection } from '../../../list-context';
 import type { ListChild } from './list-children';
-import { sectionItems } from './list-section-entries';
+import { gatherLoose, sectionItems } from './list-section-entries';
 import type { ListBlock } from './list-section-model';
 
 // A lane's `key` is its Section's key, as the List's moves name it.
@@ -39,20 +39,16 @@ const sectionLane = ({ key, section, blocks }: SectionBlock): Lane => ({
 const looseItems = (blocks: readonly ListBlock[]): ListChild[] =>
   blocks.flatMap((block) => (block.kind === 'items' ? block.items : []));
 
-/*
- * Each Section a lane, in order. The rows outside any Section are one lane, keyed `looseKey`, where the first of them
- * sits, however many Sections split them.
- */
-export function lanesOf(
+const laneOf = (block: ListBlock): Lane[] =>
+  block.kind === 'section' ? [sectionLane(block)] : [];
+
+// Each Section a lane, in order; the rows outside any Section are one lane, keyed `looseKey`.
+export const lanesOf = (
   blocks: readonly ListBlock[],
   looseKey: string,
-): Lane[] {
-  const loose = looseLane(looseKey, looseItems(blocks));
-  const first = blocks.findIndex((block) => block.kind === 'items');
-
-  return blocks.flatMap((block, index) => {
-    if (block.kind === 'section') return [sectionLane(block)];
-
-    return index === first ? [loose] : [];
+): Lane[] =>
+  gatherLoose(blocks, {
+    holds: (block) => block.kind === 'items',
+    loose: looseLane(looseKey, looseItems(blocks)),
+    each: laneOf,
   });
-}

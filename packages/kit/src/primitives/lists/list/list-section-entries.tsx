@@ -5,6 +5,30 @@ import type { ListChild } from './list-children';
 import type { ListBlock } from './list-section-model';
 import type { SectionState } from './list-section-state';
 
+interface Gathered<Entry> {
+  // Whether a block's rows count as the rows outside any Section.
+  holds: (block: ListBlock) => boolean;
+  // The rows outside any Section, as one entry.
+  loose: Entry;
+  // What each block reads as.
+  each: (block: ListBlock) => Entry[];
+}
+
+/*
+ * Each block's entries in order, with the rows outside any Section gathered into one entry where the first of them
+ * sits, however many Sections split them.
+ */
+export function gatherLoose<Entry>(
+  blocks: readonly ListBlock[],
+  { holds, loose, each }: Gathered<Entry>,
+): Entry[] {
+  const first = blocks.findIndex(holds);
+
+  return blocks.flatMap((block, index) =>
+    index === first ? [loose, ...each(block)] : each(block),
+  );
+}
+
 // Rows and grids flatten only at their drawing; shelves consume the blocks directly.
 export function sectionEntries(blocks: readonly ListBlock[]): ListChild[] {
   return blocks.flatMap(blockEntries);

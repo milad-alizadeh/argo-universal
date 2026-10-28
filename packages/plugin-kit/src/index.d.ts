@@ -134,7 +134,7 @@ export {
   type ListMove,
   type MovableRow,
   type MovableSection,
-} from '@repo/contracts/plugins/list-move-props';
+} from '@repo/contracts/kit-moves';
 
 export type {
   Hook,

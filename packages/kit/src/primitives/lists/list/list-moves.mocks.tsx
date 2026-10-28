@@ -1,7 +1,7 @@
+import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
 import { useState, type ReactElement } from 'react';
 import { ListItem } from '../list-item';
 import { List } from './list';
-import { applyListMove, type ListMove } from './list-move-model';
 import {
   board,
   boardLanes,

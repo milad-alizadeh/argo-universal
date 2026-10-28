@@ -1,8 +1,5 @@
-import {
-  movedSections,
-  type ListMove,
-  type MoveSection,
-} from './list-move-model';
+import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
+import { type MoveSection } from './list-move-model';
 
 // A Plugin's `onMove` answers once its dispatch settles; an App owner's answers at once.
 export type MoveAnswer = (move: ListMove) => void | Promise<void>;
@@ -42,7 +39,7 @@ export function shownSections(
 ): MoveSection[] | undefined {
   if (!move || !sameOrder(move.base, base)) return undefined;
 
-  return movedSections(base, move.move);
+  return applyListMove(base, move.move);
 }
 
 // Lets go of a move once its answer settles, unless a later move has replaced it.

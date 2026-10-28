@@ -1,5 +1,5 @@
+import type { ListMove } from '@repo/contracts/kit-moves';
 import { useCallback, useMemo, useState } from 'react';
-import type { ListMove } from './list-move-model';
 import { moveNotice, type MoveNotice } from './list-move-notice';
 import type { MoveOrder } from './list-move-order';
 

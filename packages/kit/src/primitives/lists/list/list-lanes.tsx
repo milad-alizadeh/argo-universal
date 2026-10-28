@@ -8,9 +8,9 @@ import {
 } from 'react';
 import { View, type ViewInstance } from 'react-native';
 import { OutsideColumn } from '../../../content-column/content-column';
-import { scrolledBy } from './list-column-scroll';
+import { legendScroller } from './list-column-scroll';
 import type { ListDrag } from './list-drag-controller';
-import type { DragScroller, MeasureZone } from './list-drag-measure';
+import type { MeasureZone } from './list-drag-measure';
 import { DragScrollView } from './list-drag-scroll-view';
 import { lanesOf, type Lane } from './list-lane-model';
 import { LaneRows } from './list-lane-rows';
@@ -38,13 +38,6 @@ const measureLane = async ({
   return rect && rows && { rect, start: rows.y };
 };
 
-// A lane's body scrolls up and down when a dragged row nears its top or bottom.
-const laneScroller = ({ body, list }: LaneViews): DragScroller => ({
-  axis: 'y',
-  measure: () => measureView(body),
-  scrollBy: (delta) => scrolledBy(list.current, delta),
-});
-
 // Registers a lane as the zone of Section `key` and its body as a scroller; returns the unregister.
 function registerLane(
   drag: ListDrag,
@@ -53,7 +46,10 @@ function registerLane(
 ): () => void {
   const zone = drag.registerZone(key, () => measureLane(views));
 
-  const scroller = drag.registerScroller(laneScroller(views));
+  // A lane's body scrolls up and down when a dragged row nears its top or bottom.
+  const scroller = drag.registerScroller(
+    legendScroller(views.body, views.list),
+  );
 
   return (): void => {
     zone();

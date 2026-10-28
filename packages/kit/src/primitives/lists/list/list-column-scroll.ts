@@ -9,6 +9,7 @@ import {
 import type { ViewInstance } from 'react-native';
 import { assignRef } from '../../../scroll-fade/legend-scroll-ref';
 import type { ListDrag } from './list-drag-controller';
+import type { DragScroller } from './list-drag-measure';
 import { measureView } from './list-measure-view';
 
 // Scrolls a LegendList by `delta` from where it is.
@@ -19,6 +20,16 @@ export function scrolledBy(list: LegendListRef | null, delta: number): void {
 
   void list.scrollToOffset({ offset, animated: false });
 }
+
+// A LegendList inside `view` scrolls up and down under a row dragged near the view's top or bottom edge.
+export const legendScroller = (
+  view: RefObject<ViewInstance | null>,
+  list: RefObject<LegendListRef | null>,
+): DragScroller => ({
+  axis: 'y',
+  measure: () => measureView(view),
+  scrollBy: (delta) => scrolledBy(list.current, delta),
+});
 
 // One column scrolls up and down under a row dragged near its top or bottom edge.
 export interface ColumnScroll {
@@ -37,11 +48,7 @@ function useColumnScroller(
   useEffect(() => {
     if (lanes) return;
 
-    return drag.registerScroller({
-      axis: 'y',
-      measure: () => measureView(frame),
-      scrollBy: (delta) => scrolledBy(list.current, delta),
-    });
+    return drag.registerScroller(legendScroller(frame, list));
   }, [drag, frame, lanes, list]);
 }
 

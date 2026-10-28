@@ -1,9 +1,9 @@
+import { applyListMove } from '@repo/contracts/kit-moves';
 import type { Argo } from '@repo/contracts/plugins/argo-api';
 import {
   pluginKitExports,
   type PluginKitExport,
 } from '@repo/contracts/plugins/kit';
-import { applyListMove } from '@repo/contracts/plugins/list-move-props';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';

@@ -100,6 +100,7 @@ const unselectable = <Item>(
   row: ReactNode,
 ): boolean => sectionPart(props, item, index) || disabledRow(row);
 
+// A rendered row's own `id`: the identity its selection and its move report, and a List.Section's.
 export function renderedId(row: ReactNode): string | undefined {
   return isValidElement<Row>(row) ? row.props.id : undefined;
 }

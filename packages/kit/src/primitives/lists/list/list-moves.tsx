@@ -1,4 +1,5 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
+import type { ListMove } from '@repo/contracts/kit-moves';
 import {
   useEffect,
   useLayoutEffect,
@@ -23,7 +24,7 @@ import { measureView } from './list-measure-view';
 import { MoveAnnouncer } from './list-move-announcer';
 import { ListMoveContext, type ListMoves } from './list-move-context';
 import { useMoveFeedback, type MoveFeedback } from './list-move-feedback';
-import type { ListMove, MoveSection } from './list-move-model';
+import type { MoveSection } from './list-move-model';
 import type { MoveNotice } from './list-move-notice';
 import { MoveOrder } from './list-move-order';
 

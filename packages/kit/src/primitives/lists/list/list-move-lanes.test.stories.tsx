@@ -1,3 +1,4 @@
+import type { ListMove } from '@repo/contracts/kit-moves';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn } from 'storybook/test';
@@ -7,7 +8,6 @@ import {
   LooseOnlyExample,
   SectionWithoutIdExample,
 } from './list-move-lanes.mocks';
-import type { ListMove } from './list-move-model';
 import {
   centre,
   dragTo,

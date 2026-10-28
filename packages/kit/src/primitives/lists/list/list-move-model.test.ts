@@ -1,10 +1,6 @@
+import { applyListMove } from '@repo/contracts/kit-moves';
 import { expect, it } from 'vitest';
-import {
-  landing,
-  movedSections,
-  rowMoves,
-  type MoveSection,
-} from './list-move-model';
+import { landing, rowMoves, type MoveSection } from './list-move-model';
 
 const doing: MoveSection = {
   key: 'b',
@@ -105,13 +101,13 @@ it('lands a row in another Section at the insertion point', () => {
 
 it('shows a move before the owner answers it', () => {
   expect(
-    movedSections(board, { id: 'login', section: 'done', index: 0 }),
+    applyListMove(board, { id: 'login', section: 'done', index: 0 }),
   ).toEqual([
     { key: 'a', id: 'todo', title: 'To do', rows: ['docs', 'tests'] },
     doing,
     { key: 'c', id: 'done', title: 'Done', rows: ['login'] },
   ]);
   expect(
-    movedSections(board, { id: 'tests', section: 'todo', index: 0 })[0]?.rows,
+    applyListMove(board, { id: 'tests', section: 'todo', index: 0 })[0]?.rows,
   ).toEqual(['tests', 'login', 'docs']);
 });

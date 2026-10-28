@@ -11,9 +11,13 @@ import {
 import type { Measure, Measured, MeasuredScroller } from './list-drag-measure';
 import { DragRegistry } from './list-drag-registry';
 import { FrameLoop, scrollEdges, type Schedule } from './list-drag-scroll';
-import { frameSetup, idleSetup, type DragSetup } from './list-drag-setup';
+import {
+  frameSetup,
+  idleSetup,
+  landedMove,
+  type DragSetup,
+} from './list-drag-setup';
 import type { Point, Rect } from './list-geometry';
-import { landing, type DropPlace, type ListMove } from './list-move-model';
 
 interface Lift extends LiftedRow {
   // Where the pointer took the row, in the window.
@@ -21,13 +25,6 @@ interface Lift extends LiftedRow {
   // Released before the List was measured: it drops as soon as it is.
   released: boolean;
 }
-
-const landedMove = (
-  setup: DragSetup,
-  lift: Lift | undefined,
-  place: DropPlace | undefined,
-): ListMove | undefined =>
-  lift && place ? landing(setup.order.sections, lift.id, place) : undefined;
 
 const sourceOf = (measured?: Measured): Rect | undefined => measured?.source;
 
@@ -105,7 +102,7 @@ export class ListDrag {
   }
 
   private drop(): void {
-    const move = landedMove(this.setup, this.lift, this.frame?.place);
+    const move = landedMove(this.setup, this.frame);
 
     this.end();
 

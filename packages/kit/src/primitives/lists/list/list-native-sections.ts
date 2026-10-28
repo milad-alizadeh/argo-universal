@@ -1,7 +1,6 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
-import type { ListSectionProps } from './list-props';
-import { ListSection } from './list-section';
+import { isSection } from './list-level-entries';
 
 /*
  * What a native grouped List draws: sections of FieldGroup rows (list-native-props). A row is only a function
@@ -23,9 +22,6 @@ const elementRow = (element: ReactElement, index: number): NativeRow => ({
 
 const rowsOf = (nodes: ReactNode): NativeRow[] =>
   flattenedChildren(nodes).filter(isValidElement).map(elementRow);
-
-const isSection = (child: ReactNode): child is ReactElement<ListSectionProps> =>
-  isValidElement(child) && child.type === ListSection;
 
 const startsRun = (child: ReactNode, last: ReactNode[] | undefined): boolean =>
   isSection(child) || last === undefined || isSection(last[0]);

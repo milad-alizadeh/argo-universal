@@ -4,7 +4,7 @@ import { listPosition } from '../../../list-context';
 import type { ListChild } from './list-children';
 import { refilled, type HeldOrder } from './list-move-reading';
 import type { ListSectionProps } from './list-props';
-import { rowIdOf } from './list-row-id';
+import { renderedId } from './list-row-identity';
 import { ListSection } from './list-section';
 import {
   childKey,
@@ -44,7 +44,7 @@ export function isSection(
 const movableId =
   (movable: boolean) =>
   (child: ReactNode): string | undefined =>
-    movable && !isSection(child) ? rowIdOf(child) : undefined;
+    movable && !isSection(child) ? renderedId(child) : undefined;
 
 // A Section with an id, and a row that moves, keep one key wherever they draw, so a move never draws them anew.
 function ownKey(level: Level): (child: ReactNode) => string | undefined {

@@ -1,8 +1,9 @@
+import type { ListMove } from '@repo/contracts/kit-moves';
 import { vi, type Mock } from 'vitest';
 import { ListDrag } from './list-drag-controller';
 import type { DragFrame } from './list-drag-frame';
 import type { Point, Rect } from './list-geometry';
-import type { DropPlace, ListMove, MoveSection } from './list-move-model';
+import type { DropPlace, MoveSection } from './list-move-model';
 
 export const todoKey = 'todo-lane';
 

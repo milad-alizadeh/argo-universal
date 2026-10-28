@@ -1,7 +1,7 @@
+import type { ListMove } from '@repo/contracts/kit-moves';
 import type { ReactElement } from 'react';
 import { ListItem } from '../list-item';
 import { List } from './list';
-import type { ListMove } from './list-move-model';
 import { board } from './list-moves-fixtures';
 
 interface LanesExampleProps {

@@ -1,5 +1,6 @@
+import type { ListMove } from '@repo/contracts/kit-moves';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { ListMove, MoveSection } from './list-move-model';
+import type { MoveSection } from './list-move-model';
 import { useListRequest } from './list-request';
 import {
   held,

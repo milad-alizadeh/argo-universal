@@ -17,10 +17,3 @@ export const listMoveProps = z.object({
 });
 
 export type ListMove = z.infer<typeof listMoveProps>;
-
-// The move rule lives where the UI kit may import it too.
-export {
-  applyListMove,
-  type MovableRow,
-  type MovableSection,
-} from '../kit-moves';

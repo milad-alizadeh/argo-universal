@@ -1,4 +1,5 @@
-import type { ListMove, MoveSection } from './list-move-model';
+import type { ListMove } from '@repo/contracts/kit-moves';
+import type { MoveSection } from './list-move-model';
 
 // What a screen reader hears once a row moves; `count` tells two equal moves apart, so each one is heard.
 export interface MoveNotice {

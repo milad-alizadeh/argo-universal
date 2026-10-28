@@ -1,3 +1,4 @@
+import type { ListMove } from '@repo/contracts/kit-moves';
 import { useMemo, type ReactNode } from 'react';
 import {
   useListReader,
@@ -6,7 +7,7 @@ import {
   type PreparedChildren,
 } from './list-children';
 import type { ChildrenOptions } from './list-children-options';
-import type { ListMove, MoveSection } from './list-move-model';
+import type { MoveSection } from './list-move-model';
 import { heldOrder, moveSectionsOf } from './list-move-reading';
 import {
   readList,

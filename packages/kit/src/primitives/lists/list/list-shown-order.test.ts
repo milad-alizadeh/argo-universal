@@ -1,5 +1,6 @@
+import type { ListMove } from '@repo/contracts/kit-moves';
 import { describe, expect, it } from 'vitest';
-import type { ListMove, MoveSection } from './list-move-model';
+import type { MoveSection } from './list-move-model';
 import { held, settled, shownSections } from './list-shown-order';
 
 const board: MoveSection[] = [

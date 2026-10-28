@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ListChild } from './list-children';
 import type { MoveSection } from './list-move-model';
+import { gatherLoose } from './list-section-entries';
 import type { ListBlock } from './list-section-model';
 
 // A move the List shows before its owner answers: each movable Section's rows in the moved order, and every movable row.
@@ -83,18 +84,13 @@ function sectionOf(block: ListBlock): MoveSection[] {
 const holdsLoose = (block: ListBlock): boolean =>
   block.kind === 'items' && movableIds(block.items).length > 0;
 
-/*
- * The List's movable rows, Section by Section, read from the blocks it draws. The rows outside any Section are one
- * Section, keyed `looseKey`, where the first of them sits, however many Sections split them.
- */
-export function moveSectionsOf(
+// The List's movable rows, Section by Section, read from the blocks it draws; the rows outside any Section are one Section, keyed `looseKey`.
+export const moveSectionsOf = (
   blocks: readonly ListBlock[],
   looseKey: string,
-): MoveSection[] {
-  const loose: MoveSection = { key: looseKey, rows: sectionRows(blocks) };
-  const first = blocks.findIndex(holdsLoose);
-
-  return blocks.flatMap((block, index) =>
-    index === first ? [loose, ...sectionOf(block)] : sectionOf(block),
-  );
-}
+): MoveSection[] =>
+  gatherLoose(blocks, {
+    holds: holdsLoose,
+    loose: { key: looseKey, rows: sectionRows(blocks) },
+    each: sectionOf,
+  });
