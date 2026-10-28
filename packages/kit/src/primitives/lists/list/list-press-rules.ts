@@ -1,11 +1,12 @@
 import type { Point } from './list-geometry';
+import { holdToLift } from './list-press-hold';
 
-// How far a press may wander before it is a drag or a scroll, and how long a finger holds a row to lift it.
+export { holdToLift };
+
+// How far a press may wander before it is a drag or a scroll.
 export const mouseSlop = 4;
 
 export const touchSlop = 8;
-
-export const holdToLift = 300;
 
 export interface PressTrack {
   pointer: 'mouse' | 'touch';
