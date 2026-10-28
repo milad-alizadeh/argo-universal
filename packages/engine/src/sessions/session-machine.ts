@@ -578,21 +578,19 @@ const sessionSetup = setup({
       enqueue.sendTo('feed', cancelled);
       enqueue.assign(queues);
     }),
-    publishPermissionOutcome: enqueueActions(
-      ({ context, event, enqueue }): void => {
-        assertEvent(event, answerPermissionEvent);
-
-        if (!context.permissionQueue[0]?.operation)
-          enqueue.sendTo('feed', permissionOutcome(context, event.optionId));
-      },
-    ),
-    answerPermission: ({ context, event }): void => {
+    publishPermissionOutcome: sendTo('feed', ({ context, event }) => {
       assertEvent(event, answerPermissionEvent);
 
-      if (context.permissionQueue[0]?.operation)
-        context.nativePermissions.answer(event.requestId, event.optionId);
-      else
-        context.acpLifetime.answerPermission(event.requestId, event.optionId);
+      return permissionOutcome(context, event.optionId);
+    }),
+    answerAcpPermission: ({ context, event }): void => {
+      assertEvent(event, answerPermissionEvent);
+      context.acpLifetime.answerPermission(event.requestId, event.optionId);
+    },
+    // An Operation's call publishes its own outcome on its Tool call.
+    answerOperationPermission: ({ context, event }): void => {
+      assertEvent(event, answerPermissionEvent);
+      context.nativePermissions.answer(event.requestId, event.optionId);
     },
     answerAcpElicitation: ({ context, event }): void => {
       assertEvent(event, answerElicitationEvent);
@@ -749,6 +747,9 @@ const sessionSetup = setup({
     isUnstored: ({ context }): boolean => !context.stored,
     closesBy: ({ context }, step: ClosureStep): boolean =>
       nextClosureStep(context) === step,
+    // Argo asks about an Operation the Agent called; the Agent asks about its own Tool call.
+    asksForOperation: ({ context }): boolean =>
+      context.permissionQueue[0]?.operation !== undefined,
     isPermissionHead: ({ context, event }): boolean =>
       event.type === answerPermissionEvent &&
       admitsPermissionAnswer(context.permissionQueue, event),
@@ -1258,15 +1259,22 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: '.working',
                   actions: 'forgetAcpRequest',
                 },
-                [answerPermissionEvent]: {
-                  guard: 'isPermissionHead',
-                  target: '.working',
-                  actions: [
-                    'publishPermissionOutcome',
-                    'answerPermission',
-                    'removePermission',
-                  ],
-                },
+                [answerPermissionEvent]: [
+                  {
+                    guard: and(['isPermissionHead', 'asksForOperation']),
+                    target: '.working',
+                    actions: ['answerOperationPermission', 'removePermission'],
+                  },
+                  {
+                    guard: 'isPermissionHead',
+                    target: '.working',
+                    actions: [
+                      'publishPermissionOutcome',
+                      'answerAcpPermission',
+                      'removePermission',
+                    ],
+                  },
+                ],
                 [answerElicitationEvent]: {
                   guard: 'isPendingElicitation',
                   target: '.working',
