@@ -199,9 +199,12 @@ export const stoppingLog = ({
   event: EngineStop;
 }): EngineLogParameters => ({ line: `stopping: ${event.reason}` });
 
-export const createEngineContext = (input: EngineInput): EngineContext => ({
+export const createEngineContext = (
+  input: EngineInput,
+  database: () => Database,
+): EngineContext => ({
   ...input,
-  ...sessionAccessServices(input),
+  ...sessionAccessServices(input, database),
   database: null,
   server: null,
   failure: null,

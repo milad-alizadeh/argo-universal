@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { homedir } from 'node:os';
 import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
@@ -38,13 +39,14 @@ export type AppRouterDeps = SessionRouterDeps &
 type EngineSupplied =
   | keyof FeedDeps
   | 'createId'
+  | 'userHome'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId'>> & {
+  Partial<Pick<AppRouterDeps, 'createId' | 'userHome'>> & {
     acp?: AcpResourceInput;
   };
 
@@ -82,7 +84,11 @@ function createStoredChangesReader(
 
 type AgentSetup = Pick<
   AppRouterDeps,
-  'createId' | 'dropAgentConnections' | 'sessionConnections' | 'installedAgents'
+  | 'createId'
+  | 'userHome'
+  | 'dropAgentConnections'
+  | 'sessionConnections'
+  | 'installedAgents'
 >;
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
@@ -95,5 +101,6 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
     sessionConnections,
     installedAgents: input.sessions.getSnapshot().context.installedAgents,
     createId: input.createId ?? randomUUID,
+    userHome: input.userHome ?? homedir(),
   };
 }

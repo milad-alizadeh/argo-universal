@@ -1,4 +1,3 @@
-import { homedir } from 'node:os';
 import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
@@ -133,7 +132,6 @@ function httpRouterInput(
 ): AppRouterInput {
   return {
     ...options,
-    userHome: options.userHome ?? homedir(),
     controlToken,
     blobsFolder: setup.blobsFolder,
     sessionCommandSignal: setup.commandAdmission.signal,

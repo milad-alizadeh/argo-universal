@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ProjectInfo } from '../projects/list';
-import type { OperationTier } from './metadata';
 import { agentAccessOperations } from './agent-access';
+import type { OperationTier } from './metadata';
 import { pluginOperations } from './plugins';
 import { readerOperations } from './readers';
 import { registryOperations } from './registry';
