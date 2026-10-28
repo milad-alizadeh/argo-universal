@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { ContextMenu, type ContextMenuProps } from '#primitives/overlays/menu';
 import { pressGroups } from './action-declarations';
-import { useDeclaredActions, type DeclaredActions } from './declared-actions';
+import { useDeclaredActions } from './declared-actions';
 
 // Kit-only: what the system menu shows around its Actions.
 export type ContextMenuMeta = Pick<
@@ -13,6 +13,8 @@ export type ContextMenuMeta = Pick<
 export interface ContextActionsProps {
   // A component's `actions` Slot: Actions and Sections, offered as one context menu.
   actions?: ReactNode;
+  // Kit-only: Actions Argo adds after them, such as a List row's Move Section. They claim their shortcuts as Argo's own, in a Plugin's tree too.
+  builtIn?: ReactNode;
   menu?: ContextMenuMeta;
   // What the context menu opens on.
   children: ContextMenuProps['children'];
@@ -21,31 +23,35 @@ export interface ContextActionsProps {
 /*
  * Opens the Actions on right-click and long press, and runs their shortcuts while focus is inside the trigger; with no
  * Actions, the trigger draws alone. A context menu is one level on every platform, so it lists press Actions only and
- * leaves submenus out.
+ * leaves submenus out. The owner's Actions and Argo's are declared apart, each claiming shortcuts as its own.
  */
 export function ContextActions(props: ContextActionsProps): ReactElement {
-  const declared = useDeclaredActions(props.actions, true);
-  const groups = pressGroups(declared.groups);
+  const own = useDeclaredActions(props.actions, true);
+  const added = useDeclaredActions(props.builtIn, true, true);
+  const groups = pressGroups([...own.groups, ...added.groups]);
 
   // Actions that are all submenus leave a context menu with nothing to show, so it never opens.
   if (!groups.length) return props.children;
 
-  return <AnchoredMenu {...props} declared={declared} groups={groups} />;
+  return <AnchoredMenu {...props} ids={[own.id, added.id]} groups={groups} />;
 }
 
-function AnchoredMenu(
-  props: ContextActionsProps & {
-    declared: DeclaredActions;
-    groups: ReturnType<typeof pressGroups>;
-  },
-): ReactElement {
-  const { groups } = props;
+interface AnchoredMenuProps extends ContextActionsProps {
+  // The nodes each declaration's shortcuts run inside: the owner's, then Argo's.
+  ids: [string, string];
+  groups: ReturnType<typeof pressGroups>;
+}
+
+function AnchoredMenu(props: AnchoredMenuProps): ReactElement {
+  const [own, added] = props.ids;
 
   return (
-    <View nativeID={props.declared.id}>
-      <ContextMenu {...props.menu} {...menuGroups(groups)}>
-        {props.children}
-      </ContextMenu>
+    <View nativeID={own}>
+      <View nativeID={added}>
+        <ContextMenu {...props.menu} {...menuGroups(props.groups)}>
+          {props.children}
+        </ContextMenu>
+      </View>
     </View>
   );
 }

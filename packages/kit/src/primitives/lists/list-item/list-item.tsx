@@ -74,10 +74,11 @@ function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
   const { context, footer } = useListItemGroup(props.description);
-  const actions = useMoveActions(props.id, useContentItemActions(props));
+  const actions = useContentItemActions(props);
+  const moves = useMoveActions(props.id);
 
   return (
-    <ContextActions actions={actions} menu={props.contextMenu}>
+    <ContextActions actions={actions} builtIn={moves} menu={props.contextMenu}>
       <>
         <RowPositionContext value={context}>
           <ItemSurface {...props} />

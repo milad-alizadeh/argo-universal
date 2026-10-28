@@ -66,6 +66,21 @@ export const boardListRoot: WireNode = {
   ],
 };
 
+// One lane of three cards, so the two lower cards each declare Move up.
+export const queueListRoot: WireNode = {
+  ...node('List', 'queue', {
+    accessibilityLabel: 'Queue',
+    onMove: { $event: 'onMove' },
+  }),
+  children: [
+    lane('queue', 'Queue', [
+      card('first', 'First card'),
+      card('second', 'Second card'),
+      card('third', 'Third card'),
+    ]),
+  ],
+};
+
 export const emptyRunListRoot: WireNode = {
   ...node('List', 'empty-runs'),
   slots: {

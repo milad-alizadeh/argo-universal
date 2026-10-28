@@ -31,22 +31,13 @@ const moveSection = (
 );
 
 /*
- * A row's own Actions, then a Move Section: up and down a place, and to the end of each other Section. Every move a
- * drag makes can be made here too, by keyboard, screen reader or switch control.
+ * A row's Move Section, which its menu lists after the row's own Actions: up and down a place, and to the end of each
+ * other Section. Every move a drag makes can be made here too, by keyboard, screen reader or switch control. Argo
+ * declares it, not the row's owner, so its Alt+↑/↓ belong to the focused row in a Plugin's List too.
  */
-export function useMoveActions(
-  id: string | undefined,
-  actions: ReactNode,
-): ReactNode {
+export function useMoveActions(id: string | undefined): ReactNode {
   const moves = useListMoves();
   const entries = moveEntries(moves, id);
 
-  if (!moves || entries.length === 0) return actions;
-
-  return (
-    <>
-      {actions}
-      {moveSection(entries, moves)}
-    </>
-  );
+  return moves && entries.length > 0 ? moveSection(entries, moves) : null;
 }

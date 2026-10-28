@@ -153,6 +153,7 @@ export const slottedRow: WireNode = {
 
 export {
   boardListRoot,
+  queueListRoot,
   runListRoot,
   emptyRunListRoot,
 } from './list-wire-fixtures';

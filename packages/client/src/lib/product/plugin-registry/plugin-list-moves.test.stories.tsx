@@ -1,5 +1,8 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { boardListRoot } from '@repo/contracts/plugins/wire-fixtures';
+import {
+  boardListRoot,
+  queueListRoot,
+} from '@repo/contracts/plugins/wire-fixtures';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
@@ -42,5 +45,32 @@ export const BoardRowMovesToAnotherLane: Story = {
       event: 'onMove',
       payload: { id: 'login', section: 'done', index: 0 },
     });
+  },
+};
+
+const queue: WireNode = JSON.parse(JSON.stringify(queueListRoot));
+
+// Every lower card declares Alt+↑: Argo declares the Move Actions, so the focused card answers, not the first.
+export const FocusedRowMovesFromKeyboard: Story = {
+  beforeEach: async () => {
+    onEvent.mockClear();
+    await settleLayout('wide');
+  },
+  render: () => <PluginTree root={queue} onEvent={onEvent} />,
+  play: async ({ canvas, userEvent }) => {
+    const row = await canvas.findByRole('button', { name: 'Third card' });
+
+    row.focus();
+    await userEvent.keyboard('{Alt>}{ArrowUp}{/Alt}');
+
+    await expect(onEvent.mock.calls).toEqual([
+      [
+        'queue',
+        {
+          event: 'onMove',
+          payload: { id: 'third', section: 'queue', index: 1 },
+        },
+      ],
+    ]);
   },
 };
