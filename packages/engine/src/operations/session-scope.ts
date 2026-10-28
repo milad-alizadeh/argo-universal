@@ -68,7 +68,7 @@ async function confirmReadScope(
 }
 
 // Executes an authorized read while preserving its Project scope metadata.
-export async function runSessionRead(
+async function runSessionRead(
   invoke: SessionInvoke,
   caller: SessionCaller,
   { id, params }: ResolvedReadOperation,

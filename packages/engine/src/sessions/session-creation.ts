@@ -98,11 +98,9 @@ type SessionCreationDeps = Pick<
 >;
 
 // A Session's own id may be allocated first, so a delegation limit can hold its place before it opens.
-export type SessionCreationOrigin = SessionOrigin & { sessionId?: string };
+type SessionCreationOrigin = SessionOrigin & { sessionId?: string };
 
-export type { AcceptedSessionStart } from './creation-receipt';
-
-export type SessionCreation = NativeStart<AcceptedSessionStart>;
+type SessionCreation = NativeStart<AcceptedSessionStart>;
 
 // Allocate native identity before waiting for the Agent or the first prompt's admission.
 export async function startSessionCreation(

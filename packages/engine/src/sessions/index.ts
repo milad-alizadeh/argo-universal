@@ -52,12 +52,7 @@ export { sessionActorId } from './session-system';
 
 export { createSessionRouter } from './router';
 
-export {
-  startSessionCreation,
-  type SessionCreation,
-  type AcceptedSessionStart,
-  type SessionCreationOrigin,
-} from './session-creation';
+export { startSessionCreation } from './session-creation';
 
 export { runningStartedSessions } from './delegation';
 
