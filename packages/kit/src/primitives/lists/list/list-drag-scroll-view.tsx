@@ -1,14 +1,11 @@
 import { useEffect, useRef, type ReactElement, type RefObject } from 'react';
 import {
+  ScrollView,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type ScrollViewInstance,
   type ScrollViewProps,
 } from 'react-native';
-import {
-  ScrollFadeView,
-  type ScrollFadeViewProps,
-} from '../../../scroll-fade/scroll-fade';
 import type { DragScroller } from './list-drag-measure';
 import { measureView } from './list-geometry';
 import { useListMoves } from './list-move-context';
@@ -57,17 +54,23 @@ const both =
   };
 
 /*
- * A scroll view a dragged row scrolls when it nears its edges: the board, sideways. It fades under the edges that hide
- * more of it, as every content scroll view does. The caller's own `onScroll` still hears every scroll.
+ * A scroll view a dragged row scrolls when it nears its edges: the board, sideways. It fills its parent, so each lane's
+ * LegendList has a height of its own; a horizontal ScrollFadeView fits its content's height, which a lane's list sets.
+ * The caller's own `onScroll` still hears every scroll.
  */
 export function DragScrollView({
   onScroll,
   ...props
-}: ScrollFadeViewProps): ReactElement {
+}: ScrollViewProps): ReactElement {
   const view = useRef<ScrollViewInstance>(null);
   const tracked = useDragScroll(props.horizontal ? 'x' : 'y', view);
 
   return (
-    <ScrollFadeView ref={view} {...props} onScroll={both(tracked, onScroll)} />
+    <ScrollView
+      ref={view}
+      scrollEventThrottle={16}
+      {...props}
+      onScroll={both(tracked, onScroll)}
+    />
   );
 }
