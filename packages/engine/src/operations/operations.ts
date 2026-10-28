@@ -16,7 +16,7 @@ import type {
   SessionRouterDeps,
 } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
-import { recordOperation } from './call-recording';
+import { recordOperation, requireOperationCall } from './call-recording';
 import { createPluginOperations } from './plugins';
 import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
@@ -24,7 +24,6 @@ import { runOperation } from './router.gen';
 import { listOperations } from './search';
 import { scopedOperations, runSessionOperation } from './session-scope';
 import { type OperationCaller, type SessionTokens } from './session-tokens';
-import { runSessionWrite } from './session-write';
 import { sessionImplementations } from './sessions';
 import { tokensMatch } from './tokens';
 
@@ -82,7 +81,7 @@ export class Operations {
         label: 'Discover Operations',
         input: { filter },
       },
-      async () => scopedOperations(caller, listOperations(filter)),
+      async (call) => scopedOperations(listOperations(filter), call),
     );
   }
   public run(
@@ -105,18 +104,16 @@ export class Operations {
   ): Promise<OperationResult> {
     if (caller.kind === 'user') return this.runUser(operation);
 
-    if (operations[operation.id].tier !== 'read')
-      return runSessionWrite(this.deps, this.implementations, {
-        caller,
-        operation,
-        call,
-      });
+    const access = {
+      implementations: this.implementations,
+      caller,
+      deps: this.deps,
+      call: requireOperationCall(call),
+    };
 
-    return runSessionOperation(
-      { implementations: this.implementations, caller, deps: this.deps },
-      operation,
-    );
+    return runSessionOperation(access, operation);
   }
+
   private async runUser({
     id,
     params,

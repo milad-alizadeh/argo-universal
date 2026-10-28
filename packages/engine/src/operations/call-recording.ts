@@ -1,4 +1,5 @@
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
   beginSessionOperation,
@@ -50,4 +51,15 @@ function runRecorded<Result>(
       (result) => completed(call, result),
       (cause: unknown) => failed(call, cause),
     );
+}
+
+export function requireOperationCall(
+  call: SessionOperationCall | undefined,
+): SessionOperationCall {
+  if (call) return call;
+
+  throw new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'The calling Session has no Operation Tool call',
+  });
 }

@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server';
 import { toolCallEvent, type FeedActorRef } from '../feed';
 import type { OpenSessionsActorRef } from './open-sessions-machine';
 import { confirmOperation } from './operation-permission';
+import { canConfirmOperation, ownsOperationTurn } from './operation-turn';
 import type { SessionActorRef } from './session-machine';
 import { findSessionFeed, requireLiveSessionActor } from './session-system';
 
@@ -14,6 +15,7 @@ type Result = { output: Json } | { error: string };
 type Tool = Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }>;
 
 export type SessionOperationCall = {
+  readonly canConfirm: boolean;
   toolCallId: string;
   rowId: string;
   turnId: string | null;
@@ -52,18 +54,7 @@ function canSettleOperation(
 
   if (turnId === null) return true;
 
-  return ownsLiveTurn(session, feed, turnId);
-}
-
-function ownsLiveTurn(
-  session: SessionActorRef,
-  feed: FeedActorRef,
-  turnId: string,
-): boolean {
-  return (
-    session.getSnapshot().context.activeTurnId === turnId &&
-    feed.getSnapshot().context.lastSettledTurnId !== turnId
-  );
+  return ownsOperationTurn(session, feed, turnId);
 }
 
 class OperationCall implements SessionOperationCall {
@@ -92,6 +83,9 @@ class OperationCall implements SessionOperationCall {
   }
   private readonly cancel = (): void =>
     this.settle({ ...this.row, state: 'settled', status: 'cancelled' });
+  public get canConfirm(): boolean {
+    return canConfirmOperation(this.session, this.feed, this.turnId);
+  }
   public confirm(description: string): Promise<void> {
     return confirmOperation({ session: this.session, feed: this.feed }, this, {
       ...this.operation,

@@ -46,8 +46,8 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
   expect(await first.caller.operations.list.query()).toContainEqual(
     expect.objectContaining({
       id: 'session.close',
-      enabled: false,
-      disabledReason: expect.any(String),
+      enabled: true,
+      disabledReason: null,
     }),
   );
   await expect(

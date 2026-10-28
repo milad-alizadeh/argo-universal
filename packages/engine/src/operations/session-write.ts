@@ -1,6 +1,5 @@
 import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import type { SessionOperationCall } from '../sessions';
 import type {
@@ -16,7 +15,7 @@ import { actTarget, isActOperation, ownsActTarget } from './write-scope';
 type SessionWrite = {
   caller: SessionCaller;
   operation: { id: OperationId; params: Json };
-  call: SessionOperationCall | undefined;
+  call: SessionOperationCall;
 };
 
 export async function runSessionWrite(
@@ -31,7 +30,7 @@ export async function runSessionWrite(
   const parsed = { id, params };
 
   if (requiresConfirmation(deps, caller, parsed))
-    await requireCall(call).confirm(operations[id].description);
+    await call.confirm(operations[id].description);
 
   return operations[id].result.parseAsync(
     await runOperation(implementations, id, params),
@@ -50,17 +49,6 @@ function requiresConfirmation(
     );
 
   return operations[operation.id].tier === 'confirm';
-}
-
-function requireCall(
-  call: SessionOperationCall | undefined,
-): SessionOperationCall {
-  if (call) return call;
-
-  throw new TRPCError({
-    code: 'INTERNAL_SERVER_ERROR',
-    message: 'The calling Session has no Operation Tool call',
-  });
 }
 
 function parsedParams({ id, params }: SessionWrite['operation']): Json {

@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import {
   answerPermission,
   askArchive,
@@ -74,4 +75,12 @@ it('refuses confirmation without an active Turn instead of leaving a waiting cal
     message: 'A Permission request requires an active Turn',
     data: { code: 'CONFLICT' },
   });
+
+  const snapshot = await waitForAcpSnapshot(
+    journey.host,
+    journey.session.sessionId,
+    () => true,
+  );
+
+  expect(snapshot.pendingPermission).toBeNull();
 }, 30_000);

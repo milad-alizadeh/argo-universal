@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server';
 import type { FeedActorRef } from '../feed';
 import { nativePermissionEvent } from './native-permissions';
 import type { SessionOperationCall } from './operation-call';
+import { canConfirmOperation } from './operation-turn';
 import type { SessionActorRef } from './session-machine';
 
 type Operation = {
@@ -44,12 +45,7 @@ function requireCallingTurn(
   feed: FeedActorRef,
   turnId: string | null,
 ): asserts turnId is string {
-  if (
-    !session.getSnapshot().matches({ open: { acp: 'activeTurn' } }) ||
-    turnId === null ||
-    session.getSnapshot().context.activeTurnId !== turnId ||
-    feed.getSnapshot().context.lastSettledTurnId === turnId
-  )
+  if (!canConfirmOperation(session, feed, turnId))
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Permission request requires an active Turn',
