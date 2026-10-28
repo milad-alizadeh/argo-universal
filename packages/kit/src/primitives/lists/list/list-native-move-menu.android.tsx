@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { RowLongPressContext } from '#primitives/fields/field-row';
-import { MenuDropdown } from '#primitives/overlays/menu';
-import { useNativeMoveItems } from './list-native-move-items';
+import { MenuDropdown, type NativeMenuItem } from '#primitives/overlays/menu';
+import { MoveMenuRow } from './list-native-move-items';
 import type { NativeMoveMenuProps } from './list-native-move-menu';
 
 /*
@@ -9,17 +9,18 @@ import type { NativeMoveMenuProps } from './list-native-move-menu';
  * opened by the row's own Compose `combinedClickable` `onLongClick`, which keeps its tap. Android's menus draw no
  * title.
  */
+const dropdownMenu = (
+  items: NativeMenuItem[],
+  row: ReactElement,
+): ReactElement => (
+  <MenuDropdown
+    items={items}
+    trigger={(open) => (
+      <RowLongPressContext value={open}>{row}</RowLongPressContext>
+    )}
+  />
+);
+
 export function NativeMoveMenu(props: NativeMoveMenuProps): ReactElement {
-  const items = useNativeMoveItems(props.id);
-
-  if (!items) return props.children;
-
-  return (
-    <MenuDropdown
-      items={items}
-      trigger={(open) => (
-        <RowLongPressContext value={open}>{props.children}</RowLongPressContext>
-      )}
-    />
-  );
+  return <MoveMenuRow {...props} menu={dropdownMenu} />;
 }
