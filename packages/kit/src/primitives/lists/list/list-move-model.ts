@@ -36,18 +36,26 @@ export interface HeldPlace extends RowPlace {
   own: MoveSection;
 }
 
-export function placeOf(
+// Every row's place, read once for each order rather than searched for each row.
+const placesBy = new WeakMap<readonly MoveSection[], Map<string, HeldPlace>>();
+
+function placesOf(sections: readonly MoveSection[]): Map<string, HeldPlace> {
+  const places = new Map<string, HeldPlace>();
+
+  for (const own of sections)
+    for (const [index, id] of own.rows.entries())
+      places.set(id, { sectionKey: own.key, index, own });
+
+  placesBy.set(sections, places);
+
+  return places;
+}
+
+export const placeOf = (
   sections: readonly MoveSection[],
   id: string,
-): HeldPlace | undefined {
-  for (const own of sections) {
-    const index = own.rows.indexOf(id);
-
-    if (index !== -1) return { sectionKey: own.key, index, own };
-  }
-
-  return undefined;
-}
+): HeldPlace | undefined =>
+  (placesBy.get(sections) ?? placesOf(sections)).get(id);
 
 const moveIn = (
   section: MoveSection | undefined,

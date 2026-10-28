@@ -42,7 +42,7 @@ export function rigFor(sections: readonly MoveSection[], lanes: boolean): Rig {
 
   const move = vi.fn<(move: ListMove) => void>();
 
-  drag.configure({ layout: { sections, lanes }, move });
+  drag.configure({ order: { sections }, lanes, move });
 
   return { drag, move, ghost, frames };
 }

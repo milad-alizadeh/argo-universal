@@ -20,6 +20,7 @@ import { childRenderer, ListGrouping, SectionListRow } from './list-grouping';
 import { lanesOf, type Lane } from './list-lane-model';
 import { measureView } from './list-measure-view';
 import { useListMoves } from './list-move-context';
+import { useMoveOrder } from './list-move-order';
 import type { ListBlock } from './list-section-model';
 
 interface LaneViews {
@@ -68,7 +69,7 @@ function registerLane(
 function useLaneDrag(key: string, views: LaneViews): void {
   const moves = useListMoves();
   const drag = moves?.drag;
-  const moving = moves?.sections.some((section) => section.key === key);
+  const moving = useMoveOrder(moves?.order, (order) => order.holds(key));
 
   useEffect(() => {
     return drag && moving ? registerLane(drag, key, views) : undefined;

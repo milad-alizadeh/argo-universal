@@ -11,15 +11,9 @@ import {
 import type { Measure, Measured, MeasuredScroller } from './list-drag-measure';
 import { DragRegistry } from './list-drag-registry';
 import { FrameLoop, scrollEdges, type Schedule } from './list-drag-scroll';
-import type { MoveLayout, Point, Rect } from './list-drop-aim';
+import { idleSetup, layoutOf, type DragSetup } from './list-drag-setup';
+import type { Point, Rect } from './list-drop-aim';
 import { landing, type DropPlace, type ListMove } from './list-move-model';
-
-export interface DragSetup {
-  layout: MoveLayout;
-  move: (move: ListMove) => void;
-}
-
-const noLayout: MoveLayout = { sections: [], lanes: false };
 
 interface Lift extends LiftedRow {
   // Where the pointer took the row, in the window.
@@ -33,7 +27,7 @@ const landedMove = (
   lift: Lift | undefined,
   place: DropPlace | undefined,
 ): ListMove | undefined =>
-  lift && place ? landing(setup.layout.sections, lift.id, place) : undefined;
+  lift && place ? landing(setup.order.sections, lift.id, place) : undefined;
 
 const sourceOf = (measured?: Measured): Rect | undefined => measured?.source;
 
@@ -50,7 +44,7 @@ export class ListDrag {
   public readonly registerZone: DragRegistry['registerZone'];
   public readonly registerScroller: DragRegistry['registerScroller'];
   public readonly prepare: DragRegistry['prepare'];
-  private setup: DragSetup = { layout: noLayout, move: () => {} };
+  private setup: DragSetup = idleSetup;
   private lift: Lift | undefined;
   private measured: Measured | undefined;
   private point: Point = { x: 0, y: 0 };
@@ -168,7 +162,7 @@ export class ListDrag {
 
     this.ghostAt(ghostPoint(point, lift, measured.layer));
 
-    const next = dragFrame({ lift, measured, point, layout: setup.layout });
+    const next = dragFrame({ lift, measured, point, layout: layoutOf(setup) });
 
     if (remeasured || !sameFrame(this.frame, next)) this.draw(next);
   }

@@ -1,15 +1,19 @@
 import { createContext, useContext } from 'react';
 import type { ListDrag } from './list-drag-controller';
 import type { DragLook } from './list-drag-look';
-import type { MoveLayout } from './list-drop-aim';
 import type { RowFocus } from './list-move-feedback';
 import type { ListMove } from './list-move-model';
+import type { MoveOrder } from './list-move-order';
 
-export interface ListMoves extends MoveLayout {
+// What every row, zone and lane of a List with `onMove` shares; a move changes none of it, only what `order` holds.
+export interface ListMoves {
   look: DragLook;
   drag: ListDrag;
   focus: RowFocus;
   move: (move: ListMove) => void;
+  order: MoveOrder;
+  // The List's Sections draw as lanes side by side.
+  lanes: boolean;
 }
 
 export const ListMoveContext = createContext<ListMoves | null>(null);

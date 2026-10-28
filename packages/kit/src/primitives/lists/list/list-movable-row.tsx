@@ -13,7 +13,6 @@ import { useDragFrame } from './list-drag-layer';
 import type { DragLook } from './list-drag-look';
 import { measureView } from './list-measure-view';
 import { useListMoves, type ListMoves } from './list-move-context';
-import { placeOf } from './list-move-model';
 import { RowDrag } from './list-row-drag';
 import { focusView } from './list-row-focus';
 import { slideOf, Sliding } from './list-sliding';
@@ -85,9 +84,6 @@ function DraggedRow({
   );
 }
 
-const movableIn = (moves: ListMoves, id: string | undefined): id is string =>
-  id !== undefined && placeOf(moves.sections, id) !== undefined;
-
 interface MovableRowProps {
   id: string | undefined;
   ghost: ReactNode;
@@ -96,7 +92,7 @@ interface MovableRowProps {
 
 /*
  * A row of a List with `onMove`, when it is one the List can move: a top-level ListItem with an `id`, in a Section
- * with an id or in none. Any other row draws as it is.
+ * with an id or in none, which is a row the List's reading gives a move `id`. Any other row draws as it is.
  */
 export function MovableRow({
   id,
@@ -105,7 +101,7 @@ export function MovableRow({
 }: MovableRowProps): ReactNode {
   const moves = useListMoves();
 
-  if (!moves || !movableIn(moves, id)) return children;
+  if (!moves || id === undefined) return children;
 
   return (
     <DraggedRow moves={moves} id={id} ghost={ghost}>

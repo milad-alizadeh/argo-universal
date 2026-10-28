@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ListMove, MoveSection } from './list-move-model';
 import { useListRequest } from './list-request';
 import {
@@ -20,20 +20,31 @@ export interface ShownOrder {
   move: (move: ListMove) => void;
 }
 
-// Holds each move in the shown order, then asks the owner; a refusal shows one error toast.
-function useHeldMove(
-  base: readonly MoveSection[],
-  onMove: MoveAnswer,
-  setCurrent: SetHeld,
-): ShownOrder['move'] {
+interface Owner {
+  base: readonly MoveSection[];
+  onMove: MoveAnswer;
+}
+
+/*
+ * Holds each move in the shown order, then asks the owner; a refusal shows one error toast. It reads the owner's order
+ * and answer as last drawn, so a move stays one function while they change.
+ */
+function useHeldMove(owner: Owner, setCurrent: SetHeld): ShownOrder['move'] {
   const { report } = useListRequest(failure);
+  const latest = useRef(owner);
+
+  useLayoutEffect(() => {
+    latest.current = owner;
+  });
 
   return useCallback(
     (next: ListMove) => {
+      const { base, onMove } = latest.current;
+
       setCurrent(() => held(next, base));
       void report(() => onMove(next)).then(letGo(setCurrent, next));
     },
-    [base, onMove, report, setCurrent],
+    [latest, report, setCurrent],
   );
 }
 
@@ -46,7 +57,7 @@ export function useShownOrder(
   onMove: MoveAnswer,
 ): ShownOrder {
   const [current, setCurrent] = useState<HeldMove | null>(null);
-  const move = useHeldMove(base, onMove, setCurrent);
+  const move = useHeldMove({ base, onMove }, setCurrent);
   const sections = useMemo(() => shownSections(current, base), [current, base]);
 
   return { sections, move };

@@ -1,6 +1,7 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -21,8 +22,9 @@ import { measureView } from './list-measure-view';
 import { MoveAnnouncer } from './list-move-announcer';
 import { ListMoveContext, type ListMoves } from './list-move-context';
 import { useMoveFeedback, type MoveFeedback } from './list-move-feedback';
-import type { ListMove } from './list-move-model';
+import type { ListMove, MoveSection } from './list-move-model';
 import type { MoveNotice } from './list-move-notice';
+import { MoveOrder } from './list-move-order';
 
 interface GhostPoint {
   x: SharedValue<number>;
@@ -49,17 +51,34 @@ function useListDrag(
   return drag;
 }
 
+interface Configured {
+  order: MoveOrder;
+  lanes: boolean;
+}
+
 function useConfiguredMoves(
   drag: ListDrag,
-  layout: MoveLayout,
+  { order, lanes }: Configured,
   { move, focus }: MoveFeedback,
 ): ListMoves {
-  useEffect(() => drag.configure({ layout, move }), [drag, layout, move]);
+  useEffect(
+    () => drag.configure({ order, lanes, move }),
+    [drag, order, lanes, move],
+  );
 
   return useMemo(
-    () => ({ ...layout, look: dragLook, drag, focus, move }),
-    [layout, drag, focus, move],
+    () => ({ look: dragLook, drag, focus, move, order, lanes }),
+    [drag, focus, move, order, lanes],
   );
+}
+
+// The order the List shows, as a store its rows read; it changes before the List paints.
+function useShownOrder(sections: readonly MoveSection[]): MoveOrder {
+  const [order] = useState(() => new MoveOrder(sections));
+
+  useLayoutEffect(() => order.show(sections), [order, sections]);
+
+  return order;
 }
 
 interface MovableListProps {
@@ -81,13 +100,13 @@ interface MoveHost {
 
 function useMoveHost({ layout, move, listRef }: MovableListProps): MoveHost {
   const { sections, lanes } = layout;
-  const stable = useMemo(() => ({ sections, lanes }), [sections, lanes]);
-  const feedback = useMoveFeedback(sections, move);
+  const order = useShownOrder(sections);
+  const feedback = useMoveFeedback(order, move);
   const layer = useRef<ViewInstance>(null);
   const ghost = { x: useSharedValue(0), y: useSharedValue(0) };
   const drag = useListDrag(layer, ghost);
   const scrollTo = useColumnScroll({ drag, frame: layer, own: listRef, lanes });
-  const moves = useConfiguredMoves(drag, stable, feedback);
+  const moves = useConfiguredMoves(drag, { order, lanes }, feedback);
 
   return { moves, layer, ghost, scrollTo, notice: feedback.notice };
 }

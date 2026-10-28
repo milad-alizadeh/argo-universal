@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
-import type { ListMove, MoveSection } from './list-move-model';
+import type { ListMove } from './list-move-model';
 import { moveNotice, type MoveNotice } from './list-move-notice';
+import type { MoveOrder } from './list-move-order';
 
 // Focuses a row; with `ifLost`, only while nothing else holds the focus.
 export type FocusRow = (ifLost: boolean) => void;
@@ -54,34 +55,37 @@ export interface MoveFeedback {
 type Move = (move: ListMove) => void;
 
 interface Told {
-  sections: readonly MoveSection[];
+  order: Pick<MoveOrder, 'sections'>;
   move: Move;
   focus: RowFocus;
 }
 
+// Reads the order as the move is made, so the move stays one function while the order changes.
 function useToldMove(
-  { sections, move, focus }: Told,
+  { order, move, focus }: Told,
   tell: (text: string) => void,
 ): Move {
   return useCallback(
     (next: ListMove) => {
+      const notice = moveNotice(order.sections, next);
+
       // Before the move, which may draw at once.
       focus.after(next.id);
       move(next);
-      tell(moveNotice(sections, next));
+      tell(notice);
     },
-    [move, focus, tell, sections],
+    [move, focus, tell, order],
   );
 }
 
 // After a move, focus stays on the moved row and a screen reader hears where it landed.
 export function useMoveFeedback(
-  sections: readonly MoveSection[],
+  order: Pick<MoveOrder, 'sections'>,
   move: Move,
 ): MoveFeedback {
   const [focus] = useState(() => new RowFocus());
   const [notice, tell] = useNotice();
-  const told = useToldMove({ sections, move, focus }, tell);
+  const told = useToldMove({ order, move, focus }, tell);
 
   return useMemo(() => ({ move: told, focus, notice }), [told, focus, notice]);
 }
