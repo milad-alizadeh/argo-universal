@@ -16,6 +16,10 @@ export * from './open';
 
 export * from './counts';
 
+export * from './get';
+
+export * from './feed';
+
 export * from './list';
 
 export * from './list-updates';
