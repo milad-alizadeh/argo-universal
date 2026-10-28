@@ -77,8 +77,9 @@ export const OpensLinkUrl: Story = {
 
     await expect(link).toHaveAttribute('href', 'https://example.com/repo');
     await expect(canvas.getByText('Repository')).toBeVisible();
-    // The Link stays its own element: no group merges it with its title.
-    await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
+    await expect(
+      canvas.getByRole('group', { name: 'Repository, argo-universal' }),
+    ).toBeVisible();
   },
 };
 
