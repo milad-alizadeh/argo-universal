@@ -31,7 +31,7 @@ const look = {
   paddingBottom: 0,
 } as const;
 
-function listProps(props: FieldPickerScreenProps): ListProps {
+function listProps(props: FieldPickerScreenProps): Omit<ListProps, 'onMove'> {
   return {
     ...look,
     accessibilityRole: props.multiple ? 'list' : 'radiogroup',

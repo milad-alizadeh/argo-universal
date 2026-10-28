@@ -121,11 +121,18 @@ function MovableRows<Item>(props: MovableProps<Item>): ReactElement {
   );
 }
 
+// Rows move in a column or lanes: a grid or shelf flows its rows where no drag measures them.
+const flows = ({
+  layout,
+  direction,
+}: Pick<ListProps<never>, 'layout' | 'direction'>): boolean =>
+  layout === 'grid' || direction === 'horizontal';
+
 // A List of children: with `onMove`, rows that move.
 export function ChildRows<Item>(props: ListProps<Item>): ReactElement {
   const { ref, onMove } = props;
 
-  if (!onMove) return <PlainRows {...props} />;
+  if (!onMove || flows(props)) return <PlainRows {...props} />;
 
   return <MovableRows list={props} listRef={ref} onMove={onMove} />;
 }

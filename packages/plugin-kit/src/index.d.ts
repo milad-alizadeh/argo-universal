@@ -85,9 +85,11 @@ type ListProps<Name extends ListComponentName, Item> = EventProps<Name, Item> &
   SlotProps<Name> &
   Children<Name>;
 
-// `onMove` moves rows passed as children, so a List of `items` cannot take it.
+// `onMove` moves rows passed as children in a column or lanes, so a List of `items`, a grid or a shelf cannot take it.
 type MovesOrItems<Name extends ListComponentName> = Name extends 'List'
-  ? { items?: undefined } | { onMove?: undefined }
+  ?
+      | { items?: undefined; layout?: 'list' | 'lanes'; direction?: 'vertical' }
+      | { onMove?: undefined }
   : unknown;
 
 type ListComponent<Name extends ListComponentName> = <Item>(

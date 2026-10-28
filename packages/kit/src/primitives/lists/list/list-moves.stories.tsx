@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from './list';
-import { board, column } from './list-moves-fixtures';
+import { board, column, type MovesProps } from './list-moves-fixtures';
 import { GroupedMovesExample, MovesExample } from './list-moves.mocks';
+import type { ListProps } from './list-props';
 
 /*
  * Rows a List moves: dragged on every platform, or chosen from a row's context menu. On a wide desktop or web window
@@ -19,14 +20,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// The controls offer every layout; a grid's rows do not move, so the example draws it as a column.
+const movable = (layout: ListProps<never>['layout']): MovesProps['layout'] =>
+  layout === 'grid' ? 'list' : layout;
+
 export const Board: Story = {
   args: board,
-  render: (args) => <MovesExample {...args} />,
+  render: (args) => <MovesExample {...args} layout={movable(args.layout)} />,
 };
 
 export const Column: Story = {
   args: column,
-  render: (args) => <MovesExample {...args} />,
+  render: (args) => <MovesExample {...args} layout={movable(args.layout)} />,
 };
 
 // FieldGroup rows, which iOS and Android draw as their own grouped list: a row moves from its long-press menu.

@@ -31,7 +31,6 @@ export const boardLanes: readonly BoardLane[] = [
 // What the examples vary: a List of Sections draws as a board or a column, may search its rows, and may page.
 export type MovesProps = Pick<
   ListProps<never>,
-  | 'layout'
   | 'appearance'
   | 'accessibilityLabel'
   | 'searchMode'
@@ -41,7 +40,7 @@ export type MovesProps = Pick<
   | 'ref'
   | 'testID'
   | 'onScroll'
->;
+> & { layout?: 'list' | 'lanes' };
 
 export const board = {
   layout: 'lanes',

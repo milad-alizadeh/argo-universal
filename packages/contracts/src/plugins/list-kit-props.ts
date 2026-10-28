@@ -53,7 +53,7 @@ export const contentListProps = z.object({
   onMove: handler('onMove')
     .optional()
     .describe(
-      'Turns moving on: a row with an id moves within and between Sections by drag, long press and drag on phones, or its Move Actions. Reports where it lands; the List redraws when the rows change.',
+      'Turns moving on in a column or lanes; a grid or horizontal shelf does not move. A row with an id moves within and between Sections by drag, long press and drag on phones, or its Move Actions. Reports where it lands; the List redraws when the rows change.',
     ),
   direction: z
     .enum(['vertical', 'horizontal'])

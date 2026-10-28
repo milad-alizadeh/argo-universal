@@ -543,7 +543,7 @@ type ListHints = {
   onSearchTextChange: unknown;
   /** Rows, media tiles, or lanes: each Section a column, side by side, on a wide desktop or web window; phones draw lanes as ordinary sections. */
   layout: unknown;
-  /** Turns moving on: a row with an id moves within and between Sections by drag, long press and drag on phones, or its Move Actions. Reports where it lands; the List redraws when the rows change. */
+  /** Turns moving on in a column or lanes; a grid or horizontal shelf does not move. A row with an id moves within and between Sections by drag, long press and drag on phones, or its Move Actions. Reports where it lands; the List redraws when the rows change. */
   onMove: unknown;
   /** Vertical content or a horizontal shelf. */
   direction: unknown;
