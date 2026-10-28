@@ -4,11 +4,11 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import type { OperationParams, OperationResult } from './implementations';
 
-export type OperationInput =
+type OperationInput =
   | z.input<(typeof operations)[OperationId]['params']>
   | Json;
 
-export function operationParams<Schema extends z.ZodType>(
+function operationParams<Schema extends z.ZodType>(
   schema: Schema,
   params: OperationInput,
 ): z.output<Schema> {
