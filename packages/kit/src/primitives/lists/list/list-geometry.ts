@@ -1,3 +1,6 @@
+import type { RefObject } from 'react';
+import type { ViewInstance } from 'react-native';
+
 // A drag hit-tests and draws in window coordinates.
 export interface Rect {
   x: number;
@@ -26,3 +29,20 @@ const within = (at: number, start: number, size: number): boolean =>
 
 export const inside = (rect: Rect, { x, y }: Point): boolean =>
   within(x, rect.x, rect.width) && within(y, rect.y, rect.height);
+
+type Measured = [x: number, y: number, width: number, height: number];
+
+// The drag hit-tests and draws in window coordinates.
+export async function measureView(
+  view: RefObject<Pick<ViewInstance, 'measureInWindow'> | null>,
+): Promise<Rect | undefined> {
+  const current = view.current;
+
+  if (!current) return;
+
+  return new Promise((resolve) => {
+    current.measureInWindow((...[x, y, width, height]: Measured) =>
+      resolve({ x, y, width, height }),
+    );
+  });
+}

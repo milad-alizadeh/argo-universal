@@ -69,7 +69,7 @@ function InsertionLine({ line }: { line: InsertionLineAt }): ReactNode {
 const lineOf = (
   look: DragLook,
   frame: DragFrame,
-): InsertionLineAt | undefined => (look.line ? frame.line : undefined);
+): InsertionLineAt | undefined => (look.slides ? undefined : frame.line);
 
 // Over the rows, for the eye only: it takes no presses and hides from assistive technology.
 const overlay = {

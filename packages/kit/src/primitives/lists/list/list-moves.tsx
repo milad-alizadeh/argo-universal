@@ -20,12 +20,12 @@ import { ListDragLayer, useDragValue } from './list-drag-layer';
 import { dragLook } from './list-drag-look';
 import type { MoveLayout } from './list-drop-aim';
 import type { Point } from './list-geometry';
-import { measureView } from './list-measure-view';
+import { measureView } from './list-geometry';
 import { MoveAnnouncer } from './list-move-announcer';
 import { ListMoveContext, type ListMoves } from './list-move-context';
 import { useMoveFeedback, type MoveFeedback } from './list-move-feedback';
+import type { MoveNotice } from './list-move-feedback';
 import type { MoveSection } from './list-move-model';
-import type { MoveNotice } from './list-move-notice';
 import { MoveOrder } from './list-move-order';
 
 interface GhostPoint {

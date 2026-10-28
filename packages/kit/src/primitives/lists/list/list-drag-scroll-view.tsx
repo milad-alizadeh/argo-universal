@@ -10,7 +10,7 @@ import {
   type ScrollFadeViewProps,
 } from '../../../scroll-fade/scroll-fade';
 import type { DragScroller } from './list-drag-measure';
-import { measureView } from './list-measure-view';
+import { measureView } from './list-geometry';
 import { useListMoves } from './list-move-context';
 
 type Axis = DragScroller['axis'];

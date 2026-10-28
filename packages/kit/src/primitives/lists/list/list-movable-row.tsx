@@ -10,11 +10,11 @@ import { useLiftedRowMark } from '../../../row-highlights';
 import { cn } from '../../../utils';
 import { useDragValue } from './list-drag-layer';
 import type { DragLook } from './list-drag-look';
-import { measureView } from './list-measure-view';
+import { measureView } from './list-geometry';
 import { useListMoves, type ListMoves } from './list-move-context';
+import { slideOf, Sliding } from './list-move-zone';
 import { RowDrag } from './list-row-drag';
 import { focusView } from './list-row-focus';
-import { slideOf, Sliding } from './list-sliding';
 
 // The outer view never moves, so the drag measures the row's resting slot; a move focuses the row it draws.
 function useRegisteredRow(

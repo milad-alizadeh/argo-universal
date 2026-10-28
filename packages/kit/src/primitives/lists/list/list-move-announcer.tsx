@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { AccessibilityInfo } from 'react-native';
-import type { MoveNotice } from './list-move-notice';
+import type { MoveNotice } from './list-move-feedback';
 
 interface AnnouncerProps {
   notice: MoveNotice | null;

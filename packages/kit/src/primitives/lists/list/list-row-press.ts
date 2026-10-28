@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
+import type { ViewInstance } from 'react-native';
 import type { ListDrag } from './list-drag-controller';
 import { holdToLift, startAt, type PressStart } from './list-drag-rules';
 import type { Point } from './list-geometry';
@@ -99,4 +100,11 @@ export class RowPress {
     drag.begin(id, ghost, this.press.start);
     drag.follow(at);
   }
+}
+
+// The view a movable row draws in, which turns a press on it into a drag of row `id`, drawn as `ghost` once lifted.
+export interface RowDragProps extends PressTarget {
+  // The row's resting view, which the drag measures.
+  viewRef: RefObject<ViewInstance | null>;
+  children: ReactNode;
 }

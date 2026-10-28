@@ -9,7 +9,7 @@ import {
   type PanGesture,
 } from 'react-native-gesture-handler';
 import type { Point } from './list-geometry';
-import type { RowDragProps } from './list-row-drag-props';
+import type { RowDragProps } from './list-row-press';
 import {
   pressStart,
   RowPress,

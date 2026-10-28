@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
-import type { MoveNotice } from './list-move-notice';
+import type { MoveNotice } from './list-move-feedback';
 
 interface AnnouncerProps {
   notice: MoveNotice | null;

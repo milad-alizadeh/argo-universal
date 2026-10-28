@@ -33,14 +33,9 @@ const sourceOf = (measured?: Measured): Rect | undefined => measured?.source;
  * the pointer aims at a Section and an index there, scrollers under the pointer's edge scroll, and the drop reports
  * the move. Everything it draws is in the drag layer's coordinates.
  */
-export class ListDrag {
+export class ListDrag extends DragRegistry {
   private readonly listeners = listenerSet();
   public readonly subscribe = this.listeners.subscribe;
-  private readonly registry: DragRegistry;
-  public readonly registerRow: DragRegistry['registerRow'];
-  public readonly registerZone: DragRegistry['registerZone'];
-  public readonly registerScroller: DragRegistry['registerScroller'];
-  public readonly prepare: DragRegistry['prepare'];
   private setup: DragSetup = idleSetup;
   private lift: Lift | undefined;
   private measured: Measured | undefined;
@@ -55,13 +50,7 @@ export class ListDrag {
     private readonly ghostAt: (point: Point) => void,
     schedule?: Schedule,
   ) {
-    const registry = new DragRegistry(layer);
-
-    this.registry = registry;
-    this.registerRow = registry.registerRow.bind(registry);
-    this.registerZone = registry.registerZone.bind(registry);
-    this.registerScroller = registry.registerScroller.bind(registry);
-    this.prepare = registry.prepare.bind(registry);
+    super(layer);
     this.scrolling = new FrameLoop(schedule);
   }
 
@@ -73,7 +62,7 @@ export class ListDrag {
 
   // Lifts row `id` under the pointer; it draws at once when its press was measured, else once its List is.
   public begin(id: string, ghost: ReactNode, point: Point): void {
-    const ready = this.registry.measuredPress(id);
+    const ready = this.measuredPress(id);
 
     this.end();
     this.generation += 1;
@@ -124,7 +113,7 @@ export class ListDrag {
     if (!lift) return;
 
     const last = sourceOf(this.measured);
-    const measured = await this.registry.measureAround(lift.id, last);
+    const measured = await this.measureAround(lift.id, last);
 
     if (generation === this.generation) this.measuredAs(lift, measured, first);
   }

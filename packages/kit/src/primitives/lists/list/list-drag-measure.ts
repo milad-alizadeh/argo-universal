@@ -62,34 +62,41 @@ async function measureRow(
 
 type Zone = NonNullable<Awaited<ReturnType<MeasureZone>>>;
 
-type Parts = [
-  layer: Rect | undefined,
-  source: Rect | undefined,
-  rows: [string, Rect][],
-  zones: [string, Zone][],
-  scrollers: [DragScroller, Rect][],
-];
+// What each registered view measured; the layer and the lifted row are missing while they are not drawn.
+interface Parts {
+  layer: Rect | undefined;
+  source: Rect | undefined;
+  rows: [string, Rect][];
+  zones: [string, Zone][];
+  scrollers: [DragScroller, Rect][];
+}
 
+const scrollerMeasures = (
+  scrollers: Iterable<DragScroller>,
+): [DragScroller, Measure][] =>
+  [...scrollers].map((scroller) => [scroller, scroller.measure]);
+
+// Everything measures at once.
 async function measuredParts(
   registry: Registered,
   id: string,
   before: Rect | undefined,
 ): Promise<Parts> {
-  return Promise.all([
+  const [layer, source, rows, zones, scrollers] = await Promise.all([
     registry.layer(),
     measureRow(registry.rows, id, before),
     measuredEach(registry.rows.entries()),
     measuredEach(registry.zones.entries()),
-    measuredEach(
-      [...registry.scrollers].map((scroller) => [scroller, scroller.measure]),
-    ),
+    measuredEach(scrollerMeasures(registry.scrollers)),
   ]);
+
+  return { layer, source, rows, zones, scrollers };
 }
 
 function assembled(
   layer: Rect,
   source: Rect,
-  [, , rows, zones, scrollers]: Parts,
+  { rows, zones, scrollers }: Parts,
 ): Measured {
   return {
     layer,
@@ -107,7 +114,7 @@ export async function measureList(
   before: Rect | undefined,
 ): Promise<Measured | undefined> {
   const parts = await measuredParts(registry, id, before);
-  const [layer, source] = parts;
+  const { layer, source } = parts;
 
   if (!layer || !source) return;
 
