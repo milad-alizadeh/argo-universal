@@ -8,7 +8,11 @@ export type AttachmentLayout = Pick<ComposerLayout, 'inactive'> & {
 export type TextLayout = Pick<ComposerLayout, 'inactive' | 'send' | 'field'> & {
   props: Pick<
     ComposerProps,
-    'draft' | 'onDraftChange' | 'placeholder' | 'slashCommands'
+    | 'draft'
+    | 'onDraftChange'
+    | 'placeholder'
+    | 'slashCommands'
+    | 'suggestionSources'
   >;
 };
 

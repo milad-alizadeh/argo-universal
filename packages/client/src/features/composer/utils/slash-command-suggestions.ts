@@ -42,6 +42,12 @@ const commandSuggestion = (command: SlashCommand): ComposerSuggestion => ({
 const commandEntry = ({ name, hint }: SlashCommand): SlashCommandEntry =>
   hint === undefined ? { name } : { name, hint };
 
+// The Agent's Slash commands as the first source, when it reports any.
+export const agentSources = (
+  commands: readonly SlashCommand[] | undefined,
+): SuggestionSource[] =>
+  commands?.length ? [slashCommandSource(commands)] : [];
+
 // Name prefixes outrank description matches; the Agent's order breaks ties. The list limits the results.
 export function slashCommandSource(
   commands: readonly SlashCommand[],

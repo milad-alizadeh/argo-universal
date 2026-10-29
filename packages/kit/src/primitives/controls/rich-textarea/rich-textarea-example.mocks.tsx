@@ -1,8 +1,12 @@
 import type * as React from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { RichTextarea } from './rich-textarea';
 import type { ReferenceOption } from './rich-textarea-references';
-import type { SuggestionSource } from './rich-textarea-suggestions';
+import type {
+  ComposerSuggestion,
+  SuggestionResource,
+  SuggestionSource,
+} from './rich-textarea-suggestions';
 
 interface ExampleProps {
   initialValue?: string;
@@ -10,6 +14,7 @@ interface ExampleProps {
   onSubmit?: () => void;
   references?: readonly ReferenceOption[];
   suggestions?: readonly SuggestionSource[];
+  onResourcesChange?: (resources: readonly SuggestionResource[]) => void;
 }
 
 export const exampleLabel = 'Message';
@@ -58,3 +63,74 @@ export function RichTextareaExample({
     />
   );
 }
+
+/*
+ * A host that loses the first empty report it hears, as one does when a draft made before the
+ * report landed is written over it. It holds whatever the later reports say.
+ */
+const forgetsFirstEmpty = (
+  forgot: { current: boolean },
+  resources: readonly SuggestionResource[],
+): boolean => {
+  if (resources.length > 0 || forgot.current) return false;
+  forgot.current = true;
+
+  return true;
+};
+
+export function ForgetfulHostExample({
+  onResourcesChange,
+  ...props
+}: ExampleProps): React.JSX.Element {
+  const forgot = useRef(false);
+
+  const hear = (resources: readonly SuggestionResource[]): void => {
+    if (!forgetsFirstEmpty(forgot, resources)) onResourcesChange?.(resources);
+  };
+
+  return <RichTextareaExample {...props} onResourcesChange={hear} />;
+}
+
+interface LateSource {
+  source: SuggestionSource;
+  // Settles the promise the source gave for this query, or the one it is given later; never silently dropped.
+  answer: (query: string, results: readonly ComposerSuggestion[]) => void;
+}
+
+// A result of a late source, and the name its row has.
+export const lateItem = (id: string): ComposerSuggestion => ({
+  id,
+  label: `Late ${id}`,
+  insert: `${id} `,
+});
+
+export const lateName = (id: string): string => `Late ${id}`;
+
+type Answer = PromiseWithResolvers<readonly ComposerSuggestion[]>;
+
+/*
+ * A source that answers with a promise the story settles by hand, so a play decides when each
+ * answer arrives and in what order. An answer given before its query is asked waits for it.
+ * Make one per story, so no answer outlives it.
+ */
+export function lateSource(title: string): LateSource {
+  const slots = new Map<string, Answer>();
+
+  const slot = (text: string): Answer => {
+    const found = slots.get(text) ?? Promise.withResolvers();
+    slots.set(text, found);
+
+    return found;
+  };
+
+  return {
+    source: { id: title, title, query: (text) => slot(text).promise },
+    answer: (text, results) => slot(text).resolve(results),
+  };
+}
+
+// True when `after` comes later in the document than `before`.
+export const follows = (before: Element, after: Element): boolean =>
+  Boolean(
+    before.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING,
+  );
