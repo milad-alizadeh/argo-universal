@@ -7,6 +7,7 @@ import { userEvent } from 'vitest/browser';
 import { exampleLabel } from './rich-textarea-example.mocks';
 import { suggestionsRichTextarea } from './rich-textarea-fixtures';
 import type { RichTextareaProps } from './rich-textarea-props';
+import { SuggestionListHost } from './rich-textarea-suggestion-list';
 import { RichTextarea } from './rich-textarea.native';
 
 // The phone drawing, drawn on the web preview: a controlled field that keeps its draft.
@@ -36,6 +37,7 @@ const meta = {
   // The Composer sits at the bottom, so the list opens upward into the room above the field.
   render: (args): React.JSX.Element => (
     <View className="flex-1 justify-end">
+      <SuggestionListHost />
       <NativeField {...args} />
     </View>
   ),
@@ -49,9 +51,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const firstOption = { name: '/first' };
+// Rows with an icon name the command without its slash.
+const firstOption = { name: 'first' };
 
-const secondOption = { name: '/second' };
+const secondOption = { name: 'second' };
 
 export const SlashShowsTheListAndTypingNarrowsIt: Story = {
   play: async ({ canvas }) => {

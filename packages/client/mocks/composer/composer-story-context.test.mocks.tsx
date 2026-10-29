@@ -1,5 +1,6 @@
 import { shownText } from '@repo/kit/mocks/shown-text';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { PortalProvider } from '@repo/kit/primitives/overlays/portal';
 import { type Meta, type StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -99,7 +100,9 @@ export function imageComposer(
   return (
     <SafeAreaProvider>
       <KeyboardProvider>
-        <Composer {...props} />
+        <PortalProvider>
+          <Composer {...props} />
+        </PortalProvider>
       </KeyboardProvider>
     </SafeAreaProvider>
   );
