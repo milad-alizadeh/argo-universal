@@ -36,18 +36,30 @@ const createArchive = async (
   await writeFile(join(source, 'agent'), installationExecutable);
 
   if (link) await symlink(join(directory, 'outside'), join(source, 'link'));
-  const archive = join(directory, 'download');
-  const bzip = extension.endsWith('bz2');
+
+  return buildArchive(source, join(directory, 'download'), { extension, link });
+};
+
+const buildArchive = async (
+  source: string,
+  archive: string,
+  options: { extension: string; link: boolean },
+): Promise<Uint8Array> => {
+  const bzip = options.extension.endsWith('bz2');
   await create(
     { file: archive, cwd: source, gzip: !bzip },
-    link ? ['agent', 'link'] : ['agent'],
+    archiveMembers(options.link),
   );
   const bytes = await readFile(archive);
 
-  return bzip
-    ? execFileSync('bzip2', ['--compress', '--stdout'], { input: bytes })
-    : bytes;
+  return bzip ? compressBzip(bytes) : bytes;
 };
+
+const archiveMembers = (link: boolean): string[] =>
+  link ? ['agent', 'link'] : ['agent'];
+
+const compressBzip = (bytes: Uint8Array): Uint8Array =>
+  execFileSync('/usr/bin/bzip2', ['--compress', '--stdout'], { input: bytes });
 
 export const binaryRejections = [
   {

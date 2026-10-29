@@ -14,20 +14,34 @@ export async function askOperation(
     runOperation(session.caller.operations, { ...operation, wait: true }),
   ]);
 
-  const pending = waitForAcpSnapshot(
-    host,
-    session.sessionId,
-    (value) => value.pendingPermission?.operation?.id === operation.id,
-  );
+  const pending = operationPermission(host, session.sessionId, operation.id);
 
-  expect(await Promise.race([pending.then(() => 'permission'), outcome])).toBe(
-    'permission',
-  );
+  await expectPermissionBeforeOutcome(pending, outcome);
   const { pendingPermission: request } = await pending;
   assert(request);
 
   return { request, outcome };
 }
+
+const operationPermission = (
+  host: PermissionJourney['host'],
+  sessionId: string,
+  id: OperationId,
+): ReturnType<typeof waitForAcpSnapshot> =>
+  waitForAcpSnapshot(
+    host,
+    sessionId,
+    (value) => value.pendingPermission?.operation?.id === id,
+  );
+
+const expectPermissionBeforeOutcome = async (
+  pending: Promise<unknown>,
+  outcome: Promise<PromiseSettledResult<unknown>[]>,
+): Promise<void> => {
+  expect(await Promise.race([pending.then(() => 'permission'), outcome])).toBe(
+    'permission',
+  );
+};
 
 type AskedOperation = {
   request: PendingPermission;

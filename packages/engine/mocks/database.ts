@@ -19,57 +19,63 @@ export function openTestDatabase(
 ): TestDatabase {
   const directory = mkdtempSync(join(tmpdir(), 'argo-server-'));
   const database = openDatabase(join(directory, 'argo.db'));
-  database
-    .insert(project)
-    .values({ id: 'project-1', path: projectPath, name: 'project' })
-    .run();
+  insertProject(database, projectPath);
   insertSession(database, sessionValues);
 
   return {
     database,
     directory,
-    remove: (): void => {
-      if (database.$client.isOpen) database.$client.close();
-      rmSync(directory, { recursive: true, force: true });
-    },
+    remove: (): void => removeDatabase(database, directory),
   };
 }
+
+const insertProject = (database: Database, path: string): void => {
+  database
+    .insert(project)
+    .values({ id: 'project-1', path, name: 'project' })
+    .run();
+};
+
+const removeDatabase = (database: Database, directory: string): void => {
+  if (database.$client.isOpen) database.$client.close();
+  rmSync(directory, { recursive: true, force: true });
+};
 
 // A Session of `project-1`, `session-1` unless `values` names another.
 export function insertSession(
   database: Database,
   values: Partial<typeof session.$inferInsert> = {},
 ): void {
-  database
-    .insert(session)
-    .values({
-      id: 'session-1',
-      projectId: 'project-1',
-      agent: 'mock',
-      checkoutPath: '/project',
-      projectionVersion: 1,
-      ...values,
-    })
-    .run();
+  database.insert(session).values(sessionRow(values)).run();
 }
+
+const sessionRow = (
+  values: Partial<typeof session.$inferInsert>,
+): typeof session.$inferInsert => ({
+  id: 'session-1',
+  projectId: 'project-1',
+  agent: 'mock',
+  checkoutPath: '/project',
+  projectionVersion: 1,
+  ...values,
+});
 
 // An ended first Turn of `session-1` unless `sessionId` names another; a Session is listed once a Turn started.
 export function insertEndedTurn(
   database: Database,
   sessionId = 'session-1',
 ): void {
-  database
-    .insert(turn)
-    .values({
-      id: `${sessionId}-first-turn`,
-      sessionId,
-      status: 'ended',
-      startedAt: 0,
-      endedAt: 0,
-      stopReason: 'end_turn',
-    })
-    .run();
+  database.insert(turn).values(endedTurnRow(sessionId)).run();
 }
+
+const endedTurnRow = (sessionId: string): typeof turn.$inferInsert => ({
+  id: `${sessionId}-first-turn`,
+  sessionId,
+  status: 'ended',
+  startedAt: 0,
+  endedAt: 0,
+  stopReason: 'end_turn',
+});
 
 interface ReadMetrics {
   queries: number;
@@ -111,7 +117,6 @@ function countStatementReads(
   fromSession: boolean,
 ): StatementSync {
   const all = statement.all.bind(statement);
-  const get = statement.get.bind(statement);
 
   vi.spyOn(statement, 'all').mockImplementation((...parameters) => {
     const rows = all(...parameters);
@@ -119,14 +124,23 @@ function countStatementReads(
 
     return rows;
   });
+  countGets(statement, metrics, fromSession);
+
+  return statement;
+}
+
+function countGets(
+  statement: StatementSync,
+  metrics: ReadMetrics,
+  fromSession: boolean,
+): void {
+  const get = statement.get.bind(statement);
   vi.spyOn(statement, 'get').mockImplementation((...parameters) => {
     const row = get(...parameters);
     recordRead(metrics, Number(row !== undefined), fromSession);
 
     return row;
   });
-
-  return statement;
 }
 
 function recordRead(

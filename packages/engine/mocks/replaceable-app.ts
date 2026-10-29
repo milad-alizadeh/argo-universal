@@ -18,15 +18,21 @@ interface RenderApp {
   stop: () => void;
 }
 
+const pluginSocket = (
+  url: string,
+  surface: Partial<PluginSurface>,
+): ReturnType<typeof createWSClient> =>
+  createWSClient({
+    url: url.replace('http:', 'ws:'),
+    connectionParams: { pluginSurface: JSON.stringify(surface) },
+  });
+
 export function renderApp(
   url: string,
   input: ReplaceableInput,
   surface: Partial<PluginSurface>,
 ): RenderApp {
-  const socket = createWSClient({
-    url: url.replace('http:', 'ws:'),
-    connectionParams: { pluginSurface: JSON.stringify(surface) },
-  });
+  const socket = pluginSocket(url, surface);
 
   const client = createTRPCClient<AppRouter>({
     links: [wsLink({ client: socket })],
@@ -34,8 +40,18 @@ export function renderApp(
 
   const messages: ReplaceableMessage[] = [];
 
-  const subscription = client.plugins.render.subscribe(input, {
-    onData: (message) => messages.push(message),
+  const stop = subscribe(client, socket, { input, messages });
+
+  return { client, messages, stop };
+}
+
+const subscribe = (
+  client: TRPCClient<AppRouter>,
+  socket: ReturnType<typeof createWSClient>,
+  data: { input: ReplaceableInput; messages: ReplaceableMessage[] },
+): (() => void) => {
+  const subscription = client.plugins.render.subscribe(data.input, {
+    onData: (message) => data.messages.push(message),
   });
 
   onTestFinished(async () => {
@@ -43,5 +59,5 @@ export function renderApp(
     await socket.close();
   });
 
-  return { client, messages, stop: (): void => subscription.unsubscribe() };
-}
+  return (): void => subscription.unsubscribe();
+};

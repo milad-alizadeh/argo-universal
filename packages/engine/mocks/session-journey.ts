@@ -78,7 +78,7 @@ const journeyScenario = (
 export const sessionJourneyGit =
   (directory: string): SessionJourney['git'] =>
   (...arguments_) =>
-    execFileSync('git', arguments_, {
+    execFileSync('/usr/bin/git', arguments_, {
       cwd: directory,
       encoding: 'utf8',
     }).trim();

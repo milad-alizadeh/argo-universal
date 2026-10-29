@@ -35,17 +35,17 @@ beforeEach(async (): Promise<void> => {
   uploadFile = caller.blob.upload;
 });
 
+const storeBlob = (id: string, createdAt: number): void => {
+  mkdirSync(blobsFolder, { recursive: true });
+  writeFileSync(join(blobsFolder, id), id);
+  database
+    .insert(blob)
+    .values({ id, mime: 'image/png', bytes: 2, createdAt })
+    .run();
+};
+
 describe('removeUnusedBlobs', (): void => {
   const now = Date.UTC(2026, 9, 5);
-
-  const storeBlob = (id: string, createdAt: number): void => {
-    mkdirSync(blobsFolder, { recursive: true });
-    writeFileSync(join(blobsFolder, id), id);
-    database
-      .insert(blob)
-      .values({ id, mime: 'image/png', bytes: 2, createdAt })
-      .run();
-  };
 
   it('deletes a blob no prompt refers to once it is over a day old', async (): Promise<void> => {
     storeBlob('old-unused', now - unusedBlobAge - 1);

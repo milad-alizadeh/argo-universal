@@ -44,17 +44,20 @@ const operatingSystem: GroupPort = {
         },
       );
 
-      return table.split('\n').some((line): boolean => {
-        const [pgid, state] = line.trim().split(/\s+/);
-
-        return Number(pgid) === group && !state?.startsWith('Z');
-      });
+      return tableHasLiveMember(table, group);
     } catch {
       // Not knowing is not a release.
       return true;
     }
   },
 };
+
+const tableHasLiveMember = (table: string, group: number): boolean =>
+  table.split('\n').some((line): boolean => {
+    const [pgid, state] = line.trim().split(/\s+/);
+
+    return Number(pgid) === group && !state?.startsWith('Z');
+  });
 
 /*
  * Kills every member of the group and waits until none can run, because a signal alone proves nothing.
@@ -63,24 +66,55 @@ export async function releaseProcessGroup(
   group: number,
   options: { deadlineMs?: number; port?: GroupPort } = {},
 ): Promise<GroupRelease> {
-  const port = options.port ?? operatingSystem;
-
   if (!supportsProcessGroups) return 'unresolved';
 
+  return releaseSupportedGroup(group, options);
+}
+
+const releaseSupportedGroup = async (
+  group: number,
+  options: { deadlineMs?: number; port?: GroupPort },
+): Promise<GroupRelease> => {
+  const port = options.port ?? operatingSystem;
+  const duration = options.deadlineMs ?? releaseDeadlineMs;
+
+  return releaseLiveGroup(group, port, duration);
+};
+
+const releaseLiveGroup = async (
+  group: number,
+  port: GroupPort,
+  duration: number,
+): Promise<GroupRelease> => {
   if (!port.hasLiveMember(group)) return 'released';
 
+  if (!killGroup(port, group)) return 'unresolved';
+
+  return waitForRelease(port, group, Date.now() + duration);
+};
+
+const killGroup = (port: GroupPort, group: number): boolean => {
   try {
     port.kill(group);
+
+    return true;
   } catch {
-    return 'unresolved';
+    return false;
   }
+};
 
-  const deadline = Date.now() + (options.deadlineMs ?? releaseDeadlineMs);
-
+const waitForRelease = async (
+  port: GroupPort,
+  group: number,
+  deadline: number,
+): Promise<GroupRelease> => {
   while (Date.now() < deadline) {
     if (!port.hasLiveMember(group)) return 'released';
     await sleep(releasePollMs);
   }
 
-  return port.hasLiveMember(group) ? 'unresolved' : 'released';
-}
+  return finalReleaseStatus(port, group);
+};
+
+const finalReleaseStatus = (port: GroupPort, group: number): GroupRelease =>
+  port.hasLiveMember(group) ? 'unresolved' : 'released';

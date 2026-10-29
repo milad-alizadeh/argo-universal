@@ -19,13 +19,7 @@ export function startPluginRuntime(
 
   const runtime = new PluginRuntime(
     log,
-    new PluginServices(new PluginStorage(home), new MemoryKeychain(), {
-      ...options,
-      log,
-      assets: new PluginAssets(home),
-      projects: async (): Promise<string[]> => [],
-      projectInfo: async (): Promise<PluginProjectInfo[]> => [],
-    }),
+    pluginServices(home, options, log),
     options.clock,
   );
 
@@ -33,3 +27,16 @@ export function startPluginRuntime(
 
   return runtime;
 }
+
+const pluginServices = (
+  home: string,
+  options: Pick<PluginServiceOptions, 'oauth' | 'clock'>,
+  log: (line: string) => void,
+): PluginServices =>
+  new PluginServices(new PluginStorage(home), new MemoryKeychain(), {
+    ...options,
+    log,
+    assets: new PluginAssets(home),
+    projects: async (): Promise<string[]> => [],
+    projectInfo: async (): Promise<PluginProjectInfo[]> => [],
+  });
