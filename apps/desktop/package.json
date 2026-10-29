@@ -18,6 +18,7 @@
     "@repo/contracts": "workspace:*",
     "@repo/engine": "workspace:*",
     "@repo/machine-log": "workspace:*",
+    "@repo/process": "workspace:*",
     "@trpc/client": "catalog:",
     "xstate": "catalog:",
     "zod": "catalog:"

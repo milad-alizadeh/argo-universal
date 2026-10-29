@@ -6,12 +6,11 @@ import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ServerAddress } from '@repo/contracts';
+import { isAlive, signalStop } from '@repo/process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  isRunning,
   readLiveServerAddress,
   resolveHome,
-  signalSupervisor,
   spawnSupervisor,
 } from './server-process';
 
@@ -83,7 +82,7 @@ describe('spawnSupervisor', (): void => {
     expect(reportsOnReturn).toEqual(['spawned number']);
     expect(reports).toEqual([
       'spawned number',
-      `The Supervisor exited while starting (1); see ${join(home, 'logs')}`,
+      `The Supervisor exited while starting (code 1); see ${join(home, 'logs')}`,
     ]);
   });
 
@@ -103,17 +102,9 @@ describe('spawnSupervisor', (): void => {
 
     stopListening();
 
-    await expect.poll((): boolean => isRunning(pid)).toBe(false);
+    await expect.poll((): boolean => isAlive(pid)).toBe(false);
 
     expect(reports).toEqual([]);
-  });
-});
-
-describe('signalSupervisor', (): void => {
-  it('does nothing for a pid that has exited', (): void => {
-    const exited = spawnSync(process.execPath, ['--version']).pid;
-
-    expect((): void => signalSupervisor(exited)).not.toThrow();
   });
 });
 
@@ -162,7 +153,7 @@ it('launches argo server and owns the pid published by its Supervisor', async ()
     expect(pids).toHaveLength(2);
     expect(readLiveServerAddress(home)?.pid).toBe(pids[1]);
   } finally {
-    for (const pid of pids) signalSupervisor(pid);
+    for (const pid of pids) signalStop(pid);
     await exited.promise;
     stopListening();
   }

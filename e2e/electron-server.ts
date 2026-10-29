@@ -1,20 +1,27 @@
-import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import {
-  ownedSupervisorEnvironment,
+  type ChildHandle,
+  childEnvironment,
+  isAlive,
+  pollUntil,
+  signalStop,
+} from '@repo/process';
+import {
   prepareSupervisorRuntime,
-} from './desktop/owned-supervisor';
-import { pollServer, startOwnServer } from './own-server';
-import { hasExited } from './server-process';
+  startSupervisor,
+  supervisorEnvironment,
+} from './desktop/supervisor';
+import { startOwnServer } from './own-server';
 
 interface DesktopServer {
   fixtureServer: Awaited<ReturnType<typeof startOwnServer>>;
   home: string;
   launchDirectory: string;
   environment: NodeJS.ProcessEnv;
-  externalSupervisor?: ChildProcess;
+  // A Supervisor the test started, which desktop reuses.
+  supervisor?: ChildHandle;
 }
 
 type DesktopServerInput = {
@@ -24,55 +31,26 @@ type DesktopServerInput = {
   usesSupervisor: boolean;
 };
 
-function desktopEnvironment(home: string): NodeJS.ProcessEnv {
-  const environment: NodeJS.ProcessEnv = { ...process.env, ARGO_HOME: home };
-  delete environment.ARGO_EXPO_WEB_URL;
-  delete environment.ELECTRON_RUN_AS_NODE;
-
-  return environment;
-}
-
-function setSupervisorEnvironment(
-  server: DesktopServer,
-  input: DesktopServerInput,
-): void {
-  Object.assign(
-    server.environment,
-    ownedSupervisorEnvironment({
-      directory: input.directory,
-      server: server.fixtureServer,
-      agents: input.agents,
-    }),
-  );
-}
-
-async function startExternalSupervisor(
-  server: DesktopServer,
-  cwd: string,
-): Promise<void> {
-  server.externalSupervisor = spawn(
-    process.execPath,
-    ['--import', 'tsx', 'src/main.ts'],
-    {
-      cwd,
-      env: server.environment,
-      stdio: 'ignore',
-    },
-  );
-  await waitForSupervisorAddress(server.home);
-}
-
 async function configureSupervisor(
   server: DesktopServer,
   input: DesktopServerInput,
 ): Promise<void> {
   await server.fixtureServer.stop();
   const runtime = await prepareSupervisorRuntime(input.directory);
-  setSupervisorEnvironment(server, input);
+  Object.assign(
+    server.environment,
+    supervisorEnvironment({ ...input, port: server.fixtureServer.port }),
+  );
 
   if (input.ownsSupervisor) server.launchDirectory = runtime.app;
-  else await startExternalSupervisor(server, runtime.server);
+  else server.supervisor = await startReusedSupervisor(server, runtime.cli);
 }
+
+const startReusedSupervisor = (
+  server: DesktopServer,
+  cli: string,
+): Promise<ChildHandle> =>
+  startSupervisor({ cli, home: server.home, env: server.environment });
 
 async function withSupervisor(
   server: DesktopServer,
@@ -83,8 +61,7 @@ async function withSupervisor(
 
     return server;
   } catch (error) {
-    await stopExternalSupervisor(server.externalSupervisor);
-    await server.fixtureServer.stop();
+    await stopDesktopServer(server, false);
     throw error;
   }
 }
@@ -93,63 +70,47 @@ export async function prepareDesktopServer(
   input: DesktopServerInput,
 ): Promise<DesktopServer> {
   const fixtureServer = await startOwnServer(input.directory, input.agents);
-  const home = path.join(input.directory, 'server-home');
-
-  const server: DesktopServer = {
-    fixtureServer,
-    home,
-    launchDirectory: path.resolve(import.meta.dirname, '../apps/desktop'),
-    environment: desktopEnvironment(home),
-  };
+  const server = desktopServer(fixtureServer, input.directory);
 
   return input.usesSupervisor ? withSupervisor(server, input) : server;
 }
 
-export function waitForSupervisorAddress(
-  home: string,
-): Promise<NonNullable<ReturnType<typeof readServerAddress>>> {
-  return pollServer(
-    async (): Promise<
-      NonNullable<ReturnType<typeof readServerAddress>> | undefined
-    > => readServerAddress(home) ?? undefined,
-    (seconds): string =>
-      `The Supervisor did not publish its address within ${seconds} s`,
+// Desktop launches from the repository and finds the fixture Server's home, without the Expo dev URL.
+function desktopServer(
+  fixtureServer: DesktopServer['fixtureServer'],
+  directory: string,
+): DesktopServer {
+  const home = path.join(directory, 'server-home');
+
+  return {
+    fixtureServer,
+    home,
+    launchDirectory: path.resolve(import.meta.dirname, '../apps/desktop'),
+    environment: childEnvironment({
+      ARGO_HOME: home,
+      ARGO_EXPO_WEB_URL: undefined,
+    }),
+  };
+}
+
+// A Supervisor that desktop started and left running, as Keep on quit does.
+async function stopLeftoverSupervisor(home: string): Promise<void> {
+  const leftover = readServerAddress(home);
+
+  if (!leftover) return;
+  signalStop(leftover.pid);
+  await pollUntil(
+    (): true | undefined => (isAlive(leftover.pid) ? undefined : true),
+    'The owned Supervisor did not stop',
   );
 }
 
-export async function stopExternalSupervisor(
-  child: ChildProcess | undefined,
+// Stops every Server process the test started, and one desktop started and kept.
+export async function stopDesktopServer(
+  server: DesktopServer,
+  ownsSupervisor: boolean,
 ): Promise<void> {
-  if (!child || hasExited(child)) return;
-
-  const exited = new Promise<void>((resolve): void => {
-    child.once('exit', (): void => resolve());
-  });
-
-  child.kill('SIGTERM');
-  await exited;
-}
-
-export async function stopOwnedSupervisor(pid: number): Promise<void> {
-  try {
-    process.kill(pid, 'SIGTERM');
-  } catch {
-    return;
-  }
-
-  await pollServer(
-    (): Promise<true | undefined> => ownedSupervisorExited(pid),
-    (seconds): string =>
-      `The owned Supervisor did not stop within ${seconds} s`,
-  );
-}
-
-async function ownedSupervisorExited(pid: number): Promise<true | undefined> {
-  try {
-    process.kill(pid, 0);
-
-    return undefined;
-  } catch {
-    return true;
-  }
+  if (ownsSupervisor) await stopLeftoverSupervisor(server.home);
+  await server.supervisor?.stop();
+  await server.fixtureServer.stop();
 }

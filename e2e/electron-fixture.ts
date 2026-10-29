@@ -4,14 +4,13 @@ import {
   _electron as electron,
   type ElectronApplication,
 } from '@playwright/test';
+import { readServerAddress } from '@repo/engine/server-runtime';
+import { pollUntil } from '@repo/process';
 import { z } from 'zod';
 import type { ElectronInput } from './electron-app';
-import {
-  prepareDesktopServer,
-  waitForSupervisorAddress,
-} from './electron-server';
+import type { prepareDesktopServer } from './electron-server';
 import type { App } from './fixtures';
-import { pollServer, serverFiles } from './own-server';
+import { serverFiles } from './own-server-setup';
 
 const desktopDirectory = path.resolve(import.meta.dirname, '../apps/desktop');
 
@@ -24,15 +23,20 @@ const electronPath = z
 
 // Polls system.info, so a test never calls a Server that is still starting.
 const waitForServer = (httpUrl: string): Promise<true> =>
-  pollServer(
-    async (): Promise<true | undefined> => {
-      const response = await fetch(`${httpUrl}/trpc/system.info`).catch(
-        (): null => null,
-      );
+  pollUntil(async (): Promise<true | undefined> => {
+    const response = await fetch(`${httpUrl}/trpc/system.info`).catch(
+      (): null => null,
+    );
 
-      return response?.ok ? true : undefined;
-    },
-    (seconds): string => `The Server did not answer within ${seconds} s`,
+    return response?.ok ? true : undefined;
+  }, 'The Server did not answer');
+
+const waitForSupervisorAddress = (
+  home: string,
+): Promise<NonNullable<ReturnType<typeof readServerAddress>>> =>
+  pollUntil(
+    () => readServerAddress(home) ?? undefined,
+    'The Supervisor did not publish its address',
   );
 
 type DesktopServer = Awaited<ReturnType<typeof prepareDesktopServer>>;

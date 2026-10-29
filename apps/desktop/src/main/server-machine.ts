@@ -1,5 +1,12 @@
 import type { ServerAddress } from '@repo/contracts';
 import {
+  isAlive,
+  pollIntervalMs,
+  signalStop,
+  startLimitMs,
+  stopLimitMs,
+} from '@repo/process';
+import {
   type ActorRef,
   assign,
   type EventObject,
@@ -10,10 +17,8 @@ import {
   setup,
 } from 'xstate';
 import {
-  isRunning,
   readLiveServerAddress,
   type SupervisorPaths,
-  signalSupervisor,
   spawnSupervisor,
 } from './server-process';
 import { type CountsReport, watchSessionCounts } from './session-counts';
@@ -75,12 +80,6 @@ export interface SpawnInput extends ServerInput {
 export interface CheckRunningInput {
   pid: number;
 }
-
-export const pollDelayMs = 200;
-
-export const startLimitMs = 30_000;
-
-export const stopLimitMs = 5000;
 
 const millisecondsPerSecond = 1000;
 
@@ -146,7 +145,7 @@ const serverSetup = setup({
         }),
     ),
     checkRunning: fromPromise<boolean, CheckRunningInput>(
-      async ({ input }): Promise<boolean> => isRunning(input.pid),
+      async ({ input }): Promise<boolean> => isAlive(input.pid),
     ),
   },
   actions: {
@@ -159,7 +158,7 @@ const serverSetup = setup({
       enqueue.emit({ type: 'server.failed', failure: context.failure });
     }),
     signalOwnedSupervisor: ({ context }): void => {
-      signalSupervisor(requireOwnedPid(context));
+      signalStop(requireOwnedPid(context));
     },
     forgetSupervisor: assign({ ownedPid: null, spawnedAt: null }),
     log: (_, params: ServerLogParameters): void => {
@@ -177,7 +176,7 @@ const serverSetup = setup({
       context.ownedPid !== null && context.running > 0,
   },
   delays: {
-    pollDelay: pollDelayMs,
+    pollDelay: pollIntervalMs,
     startLimit: startLimitMs,
     stopLimit: stopLimitMs,
   },

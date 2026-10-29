@@ -24,6 +24,7 @@
     "@repo/e2e": "workspace:*",
     "@repo/engine": "workspace:*",
     "@repo/mocks": "workspace:*",
+    "@repo/process": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@trpc/client": "catalog:",

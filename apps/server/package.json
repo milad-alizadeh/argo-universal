@@ -12,6 +12,7 @@
   "dependencies": {
     "@repo/engine": "workspace:*",
     "@repo/machine-log": "workspace:*",
+    "@repo/process": "workspace:*",
     "tsx": "catalog:",
     "xstate": "catalog:",
     "zod": "catalog:"

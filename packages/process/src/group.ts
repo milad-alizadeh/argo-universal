@@ -16,7 +16,7 @@ const releaseDeadlineMs = 5000;
 
 const releasePollMs = 25;
 
-// Only POSIX process groups are supported; the Engine leads its group, so its pid is the group id.
+// Only POSIX process groups are supported; a child started here leads its group, so its pid is the group id.
 export const supportsProcessGroups = process.platform !== 'win32';
 
 const goneGroupCodes = new Set<unknown>(['ESRCH', 'EPERM']);

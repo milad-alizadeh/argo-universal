@@ -1,5 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 import { readServerAddress } from '@repo/engine/server-runtime';
+import { isAlive } from '@repo/process';
 import { z } from 'zod';
 import { answerQuitDialog, requestQuit } from '../desktop/native-dialog';
 import { expect, type App } from '../fixtures';
@@ -10,16 +11,6 @@ function desktop(app: Pick<App, 'desktop'>): NonNullable<App['desktop']> {
   if (!app.desktop) throw new Error('This scenario needs the Electron App');
 
   return app.desktop;
-}
-
-function isRunning(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 Given(
@@ -92,7 +83,7 @@ Then(
     if (state === 'stopped') {
       await expect.poll(() => readServerAddress(home)).toBeNull();
       await expect
-        .poll(() => isRunning(supervisorPid), { timeout: 30_000 })
+        .poll(() => isAlive(supervisorPid), { timeout: 30_000 })
         .toBe(false);
 
       return;

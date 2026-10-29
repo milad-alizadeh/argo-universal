@@ -7,7 +7,8 @@ import type {
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { useElectronApp } from './electron-app';
 import type { App, AppOptions } from './fixtures';
-import { serverFiles, startOwnServer } from './own-server';
+import { startOwnServer } from './own-server';
+import { serverFiles } from './own-server-setup';
 
 // The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
 const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>

@@ -1,18 +1,8 @@
 import { spawn } from 'node:child_process';
 import { expect, it, onTestFinished } from 'vitest';
-import { releaseProcessGroup } from './process-group';
+import { isAlive, releaseProcessGroup } from './index';
 
-const isAlive = (pid: number): boolean => {
-  try {
-    process.kill(pid, 0);
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-// A group leader that launches a descendant and then dies without cleaning it up, like an abruptly killed Engine.
+// A group leader that launches a descendant and then dies without cleaning it up, as an abruptly killed process does.
 async function startOrphanedGroup(): Promise<{
   leader: number;
   child: number;
@@ -54,7 +44,7 @@ async function startOrphanedGroup(): Promise<{
   return { leader: leaderPid, child };
 }
 
-it('releasing a dead Engine group kills the descendants it left running', async () => {
+it('releasing the group of a dead leader kills the descendants it left running', async () => {
   const { leader, child } = await startOrphanedGroup();
   expect(isAlive(child)).toBe(true);
   await expect(releaseProcessGroup(leader)).resolves.toBe('released');

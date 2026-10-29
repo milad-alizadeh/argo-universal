@@ -1,5 +1,5 @@
+import { pollIntervalMs, startLimitMs, stopLimitMs } from '@repo/process';
 import { describe, expect, it, vi } from 'vitest';
-import { pollDelayMs, startLimitMs, stopLimitMs } from './server-machine';
 import {
   abandonStuckSupervisor,
   context,
@@ -23,9 +23,9 @@ describe('server connection', (): void => {
     await spawnSupervisor();
     await vi.advanceTimersByTimeAsync(startLimitMs);
 
-    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await vi.advanceTimersByTimeAsync(pollIntervalMs);
     await settle((): void => latest(checkRunningCalls).resolve(true));
-    await vi.advanceTimersByTimeAsync(stopLimitMs - pollDelayMs - 1);
+    await vi.advanceTimersByTimeAsync(stopLimitMs - pollIntervalMs - 1);
     expect(value()).toEqual({ abandoning: 'checking' });
     await vi.advanceTimersByTimeAsync(1);
 
@@ -38,7 +38,7 @@ describe('server connection', (): void => {
 
     server.send({ type: retryServerEvent });
     expect(signalledPids).toEqual([startedAddress.pid, startedAddress.pid]);
-    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await vi.advanceTimersByTimeAsync(pollIntervalMs);
     await settle((): void => latest(checkRunningCalls).resolve(false));
 
     expect(value()).toBe('locating');
@@ -63,9 +63,9 @@ describe('server connection', (): void => {
     server.send({ type: 'app.quit' });
     expect(signalledPids).toEqual([startedAddress.pid]);
 
-    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await vi.advanceTimersByTimeAsync(pollIntervalMs);
     await settle((): void => latest(checkRunningCalls).resolve(true));
-    await vi.advanceTimersByTimeAsync(stopLimitMs - pollDelayMs - 1);
+    await vi.advanceTimersByTimeAsync(stopLimitMs - pollIntervalMs - 1);
     expect(value()).toEqual({ stopping: 'checking' });
     await vi.advanceTimersByTimeAsync(1);
 
@@ -76,7 +76,7 @@ describe('server connection', (): void => {
     await startSupervisor();
     server.send({ type: 'app.quit' });
 
-    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await vi.advanceTimersByTimeAsync(pollIntervalMs);
     await settle((): void => latest(checkRunningCalls).resolve(false));
 
     expect(server.getSnapshot().status).toBe('done');

@@ -1,5 +1,5 @@
+import { pollIntervalMs, startLimitMs, stopLimitMs } from '@repo/process';
 import { expect, vi } from 'vitest';
-import { pollDelayMs, startLimitMs, stopLimitMs } from './server-machine';
 import {
   latest,
   readAddressCalls,
@@ -24,7 +24,7 @@ export const spawnSupervisor = async (): Promise<void> => {
 
 export const startSupervisor = async (): Promise<void> => {
   await spawnSupervisor();
-  await vi.advanceTimersByTimeAsync(pollDelayMs);
+  await vi.advanceTimersByTimeAsync(pollIntervalMs);
   await settle((): void => latest(readAddressCalls).resolve(startedAddress));
   expect(value()).toEqual({ ready: 'active' });
 };

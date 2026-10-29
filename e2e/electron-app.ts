@@ -2,12 +2,9 @@ import type { ChildProcess } from 'node:child_process';
 import { type ElectronApplication } from '@playwright/test';
 import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import { hasExited, signalStop } from '@repo/process';
 import { appForElectron, launchElectron } from './electron-fixture';
-import {
-  prepareDesktopServer,
-  stopExternalSupervisor,
-  stopOwnedSupervisor,
-} from './electron-server';
+import { prepareDesktopServer, stopDesktopServer } from './electron-server';
 import type { App } from './fixtures';
 
 export type ElectronInput = {
@@ -20,17 +17,6 @@ export type ElectronInput = {
 };
 
 type DesktopServer = Awaited<ReturnType<typeof prepareDesktopServer>>;
-
-async function cleanDesktopServer(
-  server: DesktopServer,
-  ownsSupervisor: boolean,
-): Promise<void> {
-  const leftover = readServerAddress(server.home);
-
-  if (ownsSupervisor && leftover) await stopOwnedSupervisor(leftover.pid);
-  await stopExternalSupervisor(server.externalSupervisor);
-  await server.fixtureServer.stop();
-}
 
 type ElectronProcess = {
   application: ElectronApplication | undefined;
@@ -45,7 +31,7 @@ async function cleanElectron(
   try {
     await closeElectron(process.application, process.child, ownsSupervisor);
   } finally {
-    await cleanDesktopServer(server, ownsSupervisor);
+    await stopDesktopServer(server, ownsSupervisor);
   }
 }
 
@@ -54,7 +40,7 @@ function assertSupervisorStopped(home: string, ownsSupervisor: boolean): void {
   const leftover = readServerAddress(home);
 
   if (!leftover) return;
-  process.kill(leftover.pid, 'SIGTERM');
+  signalStop(leftover.pid);
   throw new Error(
     `Desktop quit but left its Server (pid ${leftover.pid}) running`,
   );
@@ -97,7 +83,7 @@ async function closeElectron(
 }
 
 function isRunning(child: ChildProcess | undefined): boolean {
-  return child?.exitCode === null;
+  return child !== undefined && !hasExited(child);
 }
 
 async function exitElectron(application: ElectronApplication): Promise<void> {

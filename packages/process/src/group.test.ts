@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { type GroupPort, releaseProcessGroup } from './process-group';
+import { type GroupPort, releaseProcessGroup } from './index';
 
 const group = 4242;
 

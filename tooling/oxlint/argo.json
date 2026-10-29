@@ -1018,6 +1018,28 @@
       }
     },
     {
+      // The generic child-process lifecycle imports only the generic executable resolver (A2, ADR-0016 item 9).
+      "files": ["packages/process/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/executables",
+                  "!@repo/vitest",
+                  "!@repo/vitest/**"
+                ],
+                "message": "Generic process code imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // Generic tooling packages import only other tooling packages (A2, ADR-0016 item 9).
       "files": ["tooling/**"],
       "rules": {
@@ -1081,9 +1103,10 @@
                   "!@repo/mocks",
                   "!@repo/mocks/**",
                   "!@repo/engine/server-runtime",
-                  "!@repo/browser-suite-lock"
+                  "!@repo/browser-suite-lock",
+                  "!@repo/process"
                 ],
-                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018), reads server.json through the Engine server-runtime subpath, and queues through the browser-suite lock."
+                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018), reads server.json through the Engine server-runtime subpath, starts and stops processes through @repo/process, and queues through the browser-suite lock."
               }
             ]
           }
@@ -2211,10 +2234,11 @@
                   "!@repo/engine/server-runtime",
                   "!@repo/engine/router",
                   "!@repo/machine-log",
+                  "!@repo/process",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "desktop imports only contracts, machine-log and the Node-only Engine server-runtime subpath from the workspace."
+                "message": "desktop imports only contracts, machine-log, process and the Node-only Engine server-runtime subpath from the workspace."
               }
             ]
           }
@@ -2299,8 +2323,6 @@
       "excludeFiles": [
         "**/*.test.*",
         "**/mocks/**",
-        "apps/server/src/supervisor/engine-process.ts",
-        "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/engine/caffeinate.ts",
         "packages/engine/src/plugins/host/connection.ts",
@@ -2312,7 +2334,6 @@
         "packages/engine/src/agents/launch/processes/process.ts",
         "packages/engine/src/sessions/shells/shell-group-members.ts",
         "packages/engine/src/sessions/shells/shell-launch.ts",
-        "apps/desktop/src/main/server-process.ts",
         "apps/desktop/scripts/storybook-mac.mts"
       ],
       "rules": { "argo/child-process": "error" }
