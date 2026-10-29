@@ -1,7 +1,14 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
-import { expect, screen, within, waitFor } from 'storybook/test';
+import {
+  type MockInstance,
+  expect,
+  screen,
+  spyOn,
+  within,
+  waitFor,
+} from 'storybook/test';
 import { pullRequestMocks } from '../../../features/sessions/components/session-pull-request.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -48,7 +55,14 @@ async function expectPrDetails({
   await expect(await panel.findByLabelText(stageLabel)).toBeVisible();
 }
 
+let consoleErrors: MockInstance<typeof console.error>;
+
 export const BoundedPreview: Story = {
+  beforeEach: () => {
+    consoleErrors = spyOn(console, 'error');
+
+    return (): void => consoleErrors.mockRestore();
+  },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('button', firstChange)).toBeVisible();
     await expect(
@@ -73,6 +87,15 @@ export const BoundedPreview: Story = {
       canvas.getByLabelText('CI Checks 4/5, 1 failing'),
     ).toBeVisible();
     await expect(canvas.getByLabelText('CI Checks 5/5, passed')).toBeVisible();
+    await expect(
+      consoleErrors.mock.calls
+        .flat()
+        .filter(
+          (part) =>
+            typeof part === 'string' &&
+            part.includes('A props object containing a "key" prop'),
+        ),
+    ).toEqual([]);
   },
 };
 
