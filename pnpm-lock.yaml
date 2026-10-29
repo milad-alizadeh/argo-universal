@@ -1902,6 +1902,9 @@ importers:
       '@repo/contracts':
         specifier: workspace:*
         version: link:../packages/contracts
+      '@repo/e2e':
+        specifier: workspace:*
+        version: link:../e2e
       '@repo/typescript':
         specifier: workspace:*
         version: link:../tooling/typescript

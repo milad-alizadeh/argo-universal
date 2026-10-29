@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
-import { startOwnServer } from '../../e2e/own-server.ts';
+import { startOwnServer } from '@repo/e2e/own-server';
 import { type SeededFeed, seededFeed } from './seed-feed.mts';
 import { withTemplateSession } from './template-session.mts';
 
