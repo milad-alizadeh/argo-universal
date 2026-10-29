@@ -79,33 +79,26 @@ export const lateItem = (id: string): ComposerSuggestion => ({
 
 export const lateName = (id: string): string => `Late ${id}`;
 
-type Settle = (results: readonly ComposerSuggestion[]) => void;
+type Answer = PromiseWithResolvers<readonly ComposerSuggestion[]>;
 
 /*
  * A source that answers with a promise the story settles by hand, so a play decides when each
- * answer arrives and in what order. Make one per story, so no answer outlives it.
+ * answer arrives and in what order. An answer given before its query is asked waits for it.
+ * Make one per story, so no answer outlives it.
  */
 export function lateSource(title: string): LateSource {
-  const settlers = new Map<string, Settle>();
-  const answers = new Map<string, readonly ComposerSuggestion[]>();
+  const slots = new Map<string, Answer>();
 
-  // An answer given before its query is asked waits for it, so no answer is lost.
-  const query = (text: string): Promise<readonly ComposerSuggestion[]> =>
-    new Promise((settle) => {
-      const early = answers.get(text);
+  const slot = (text: string): Answer => {
+    const found = slots.get(text) ?? Promise.withResolvers();
+    slots.set(text, found);
 
-      if (early) settle(early);
-      else settlers.set(text, settle);
-    });
+    return found;
+  };
 
   return {
-    source: { id: title, title, query },
-    answer: (text, results) => {
-      const settle = settlers.get(text);
-
-      if (settle) settle(results);
-      else answers.set(text, results);
-    },
+    source: { id: title, title, query: (text) => slot(text).promise },
+    answer: (text, results) => slot(text).resolve(results),
   };
 }
 

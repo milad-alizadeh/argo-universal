@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type {
   ComposerSuggestion,
   SuggestionResource,
@@ -24,27 +24,18 @@ export function resourcesInText(
   );
 }
 
-const sameResources = (
-  first: readonly SuggestionResource[],
-  second: readonly SuggestionResource[],
-): boolean =>
-  first.length === second.length &&
-  first.every((resource, index) => resource.uri === second[index]?.uri);
-
-// Tells the host the resources the draft carries, each time that list differs from the one it last heard.
+/*
+ * Tells the host the resources the draft carries, each time the text changes once a result was
+ * chosen. The host may have written a draft made before an earlier report landed, so the list is
+ * told again rather than only when it differs; the host takes a list it already holds as no change.
+ */
 function useReportedResources(
   text: string,
   chosen: readonly ComposerSuggestion[],
   onResourcesChange: OnResourcesChange | undefined,
 ): void {
-  const reported = useRef<readonly SuggestionResource[]>([]);
-
   useEffect(() => {
-    const resources = resourcesInText(text, chosen);
-
-    if (sameResources(resources, reported.current)) return;
-    reported.current = resources;
-    onResourcesChange?.(resources);
+    if (chosen.length > 0) onResourcesChange?.(resourcesInText(text, chosen));
   }, [text, chosen, onResourcesChange]);
 }
 

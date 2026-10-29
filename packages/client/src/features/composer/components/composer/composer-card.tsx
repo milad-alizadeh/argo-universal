@@ -93,6 +93,13 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
   };
 }
 
+const sameUris = (
+  first: readonly SuggestionResource[],
+  second: readonly SuggestionResource[],
+): boolean =>
+  first.length === second.length &&
+  first.every(({ uri }, index) => uri === second[index]?.uri);
+
 // The draft with its resources, and no `resources` key when there are none.
 function withResources(
   { resources: _previous, ...draft }: ComposerDraft,
@@ -112,8 +119,10 @@ function draftChanges({
 }: TextLayout['props']): DraftChanges {
   return {
     onChangeText: (text) => onDraftChange({ ...draft, text }),
-    onResourcesChange: (resources) =>
-      onDraftChange(withResources(draft, resources)),
+    onResourcesChange: (resources) => {
+      if (!sameUris(draft.resources ?? [], resources))
+        onDraftChange(withResources(draft, resources));
+    },
   };
 }
 
