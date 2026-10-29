@@ -97,29 +97,40 @@ it('passes any Operation id, its params and --wait on to the Server', async () =
   ]);
 });
 
-it('prints native work still running with exit 75, and settled work with exit 0', async () => {
-  const pending = fakeClient({ run: async () => running });
-  const resumed = fakeClient({ wait: async () => settled });
+it('prints native work still running with exit 75', async () => {
+  const { client } = fakeClient({ run: async () => running });
 
-  const started = await argo(['run', 'session.new'], pending.client);
-  const waited = await argo(['wait', waitId], resumed.client);
+  const started = await argo(['run', 'session.new'], client);
 
   expect(started.code).toBe(75);
   expect(JSON.parse(started.stdout)).toEqual(running);
+});
+
+it('prints settled native work with exit 0', async () => {
+  const { client } = fakeClient({ wait: async () => settled });
+
+  const waited = await argo(['wait', waitId], client);
+
   expect(waited.code).toBe(0);
   expect(JSON.parse(waited.stdout)).toEqual(settled);
 });
 
-it('lists Operations as lines, or as JSON with --json', async () => {
+it('lists Operations as lines', async () => {
   const { client } = fakeClient({ list: async () => [row] });
 
   const lines = await argo(['operations', 'project'], client);
-  const json = await argo(['operations', '--json'], client);
 
   expect(lines).toMatchObject({
     code: 0,
     stdout: 'project.list [read] — Lists the Projects.',
   });
+});
+
+it('lists Operations as JSON with --json', async () => {
+  const { client } = fakeClient({ list: async () => [row] });
+
+  const json = await argo(['operations', '--json'], client);
+
   expect(JSON.parse(json.stdout)).toEqual([row]);
 });
 
