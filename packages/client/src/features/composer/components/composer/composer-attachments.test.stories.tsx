@@ -9,6 +9,7 @@ import { within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { composerFiles } from '../../../../../mocks/composer-mock';
+import { phoneAttachmentAction } from '../../../../../mocks/composer/attachment-actions.test.mocks';
 import { attachmentMenus } from '../../../../../mocks/composer/attachment-actions.test.mocks';
 import { withImages } from '../../../../../mocks/composer/attachment-actions.test.mocks';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -21,7 +22,11 @@ const meta = { ...composerTestMeta, title: 'Tests/Composer/Attachments' };
 
 export default meta;
 
-export const AttachmentMenusPhone = attachmentMenus(layoutWidths.phone);
+export const CameraClosesAndCalls = phoneAttachmentAction('Camera');
+
+export const PhotosClosesAndCalls = phoneAttachmentAction('Photos');
+
+export const FilesClosesAndCalls = phoneAttachmentAction('Files');
 
 export const AttachmentMenusWide = attachmentMenus(layoutWidths.wide);
 
