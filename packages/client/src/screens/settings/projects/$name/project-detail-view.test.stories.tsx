@@ -48,9 +48,12 @@ export const ShowsTheFolderAndCheckout: Story = {
 // The Server cannot change the archive setting or remove a Project yet.
 export const OffersNoUnbuiltChanges: Story = {
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('switch', { name: 'Delete the worktree on archive' }),
-    ).toBeDisabled();
+    const archive = canvas.getByRole('switch', {
+      name: 'Delete the worktree on archive',
+    });
+
+    await expect(archive).toBeDisabled();
+    await expect(archive).toBeChecked();
     await expect(
       canvas.getByRole('button', { name: 'Remove Project' }),
     ).toBeDisabled();
