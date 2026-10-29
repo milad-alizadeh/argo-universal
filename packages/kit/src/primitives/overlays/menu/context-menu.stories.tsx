@@ -43,3 +43,24 @@ type Story = StoryObj<typeof meta>;
 
 // A right-click opens the menu at the pointer, its actions in one list.
 export const RenameAndArchive: Story = {};
+
+const chip = (
+  props: Omit<ContextMenuProps, 'children'>,
+  label: string,
+): React.JSX.Element => (
+  <ContextMenu {...props}>
+    <View className="rounded-2xl bg-card px-4 py-2">
+      <Text>{label}</Text>
+    </View>
+  </ContextMenu>
+);
+
+// Side by side in a row, where no parent stretches them: each takes its own content's width.
+export const InARow: Story = {
+  render: (args) => (
+    <View className="flex-row items-start gap-2">
+      {chip(args, 'First')}
+      {chip(args, 'Second')}
+    </View>
+  ),
+};

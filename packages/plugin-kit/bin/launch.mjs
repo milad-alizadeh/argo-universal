@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
 // Runs a TypeScript entry under tsx with VM modules, which Node enables only at startup and Plugin tests need.
-export function launch(main) {
+export function launch(main, args = process.argv.slice(2)) {
   const child = spawn(
     process.execPath,
     [
@@ -12,12 +12,14 @@ export function launch(main) {
       '--import',
       require.resolve('tsx'),
       main,
-      ...process.argv.slice(2),
+      ...args,
     ],
     { stdio: 'inherit' },
   );
 
   forward(child);
+
+  return child;
 }
 
 // The launcher stops with its child and exits with its code.

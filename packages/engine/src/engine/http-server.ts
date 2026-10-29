@@ -3,6 +3,8 @@ import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
+import type { OperationWaitClock, SessionTokens } from '../operations';
+import { ensureControlToken } from '../operations';
 import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
@@ -19,10 +21,12 @@ import {
   type RequestListenerOptions,
 } from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
-import { createAppRouterDeps } from './router-deps';
+import { createAppRouterDeps, type AppRouterInput } from './router-deps';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
+  userHome?: string;
+  sessionTokens: SessionTokens;
   registry: RegistryActor;
   createId: () => string;
   port: number;
@@ -34,6 +38,7 @@ export interface HttpServerOptions extends PluginServerOptions {
   commandAdmission?: AbortController;
   acp?: AcpResourceInput;
   notificationOptions?: NotificationOptions;
+  operationWaitClock?: OperationWaitClock;
   // Where Sessions reach Plugin Hooks; the Plugin runtime attaches to it while the server runs.
   hookPort?: HookPort;
 }
@@ -99,7 +104,14 @@ async function prepareHttpServer(
   const serverId = await readServerId(options.database, options.databaseWriter);
   const setup = prepareHttpSetup(options, serverId);
 
-  return { ...setup, appRouter: createHttpRouter(options, setup) };
+  const controlToken = await ensureControlToken(options.home);
+
+  return {
+    ...setup,
+    appRouter: createAppRouter(
+      createAppRouterDeps(httpRouterInput(options, setup, controlToken)),
+    ),
+  };
 }
 
 function prepareHttpSetup(
@@ -114,20 +126,20 @@ function prepareHttpSetup(
   };
 }
 
-function createHttpRouter(
+function httpRouterInput(
   options: HttpServerOptions,
   setup: HttpSetup,
-): AppRouter {
-  return createAppRouter(
-    createAppRouterDeps({
-      ...options,
-      blobsFolder: setup.blobsFolder,
-      sessionCommandSignal: setup.commandAdmission.signal,
-      notifications: setup.notifications,
-      hooks: setup.plugins.hooks,
-      plugins: setup.plugins.router,
-    }),
-  );
+  controlToken: string,
+): AppRouterInput {
+  return {
+    ...options,
+    controlToken,
+    blobsFolder: setup.blobsFolder,
+    sessionCommandSignal: setup.commandAdmission.signal,
+    notifications: setup.notifications,
+    hooks: setup.plugins.hooks,
+    plugins: setup.plugins.router,
+  };
 }
 
 // Binding the port is all the Supervisor waits for, so a slow background Plugin delays no App.

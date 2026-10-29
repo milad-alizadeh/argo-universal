@@ -1,6 +1,8 @@
 import { type ReactElement, type ComponentProps } from 'react';
 import { Pressable, type KeyDownEvent } from 'react-native';
+import type { ContextActions } from '#primitives/actions/action';
 import { usePressRipple } from '#primitives/native/material-palette';
+import type { SpokenElement } from '#primitives/overlays/menu';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
@@ -165,3 +167,17 @@ function spokenRowLabel(props: DrawingProps): string | undefined {
     ? (props.accessibilityLabel ?? rowLabel(props))
     : undefined;
 }
+
+type RowMenu = ComponentProps<typeof ContextActions>['menu'];
+
+// The row as its press reads: its name, role, hint and state, such as selected.
+const spokenRow = (props: DrawingProps): SpokenElement => ({
+  label: spokenRowLabel(props),
+  role: rowRole(props),
+  hint: props.description,
+  state: rowState(props),
+});
+
+// The row's context menu meta, with how the row reads, which iOS needs when a page preview hides the row's own press.
+export const rowMenu = (props: DrawingProps): RowMenu =>
+  props.contextMenu && { ...props.contextMenu, spoken: spokenRow(props) };

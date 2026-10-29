@@ -41,10 +41,10 @@ it('creates a Plugin file only when the Plugin first uses storage', async () => 
     keychain: new MemoryKeychain(),
   });
 
-  await caller.plugins.activate({ pluginId: 'idle' });
+  await caller.plugin.activate({ pluginId: 'idle' });
 
   expect(existsSync(join(home, 'plugin-data'))).toBe(false);
-  expect(await caller.plugins.activate({ pluginId: 'hello' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'hello' })).toMatchObject({
     state: 'running',
     error: null,
   });
@@ -60,7 +60,7 @@ it('keeps Plugin storage across Engine restarts', async () => {
     keychain: new MemoryKeychain(),
   });
 
-  await first.caller.plugins.activate({ pluginId: 'hello' });
+  await first.caller.plugin.activate({ pluginId: 'hello' });
   await first.stop();
 
   const second = await startEngineTestHost({
@@ -68,7 +68,7 @@ it('keeps Plugin storage across Engine restarts', async () => {
     keychain: new MemoryKeychain(),
   });
 
-  await second.caller.plugins.activate({ pluginId: 'hello' });
+  await second.caller.plugin.activate({ pluginId: 'hello' });
 
   expect(notesIn(home, 'hello')).toEqual([
     { body: 'hello' },
@@ -83,7 +83,7 @@ it('stores secrets in the Keychain keyed by Plugin and account, and deletes them
   const keychain = new MemoryKeychain();
   const { caller } = await startEngineTestHost({ home, keychain });
 
-  await caller.plugins.activate({ pluginId: 'hello' });
+  await caller.plugin.activate({ pluginId: 'hello' });
 
   expect(await keychain.get('argo.plugin.hello', 'token')).toBe(
     'plugin-secret',
@@ -107,7 +107,7 @@ it('keeps Argo own database unchanged when a Plugin stores data', async () => {
 
   const before = schema();
 
-  await caller.plugins.activate({ pluginId: 'hello' });
+  await caller.plugin.activate({ pluginId: 'hello' });
 
   expect(schema()).toEqual(before);
 });
@@ -123,12 +123,12 @@ it('answers a malformed storage call with an error for that Plugin only, leaving
     keychain: new MemoryKeychain(),
   });
 
-  await caller.plugins.activate({ pluginId: 'healthy' });
+  await caller.plugin.activate({ pluginId: 'healthy' });
 
-  expect(await caller.plugins.activate({ pluginId: 'bad' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'bad' })).toMatchObject({
     state: 'crashed',
   });
-  expect(await caller.plugins.activate({ pluginId: 'healthy' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'healthy' })).toMatchObject({
     state: 'running',
   });
   expect(await pluginHostPids(home)).toHaveLength(1);
@@ -144,9 +144,9 @@ it('keeps argo, its results and its errors free of any way out of the Plugin con
     keychain: new MemoryKeychain(),
   });
 
-  expect(
-    await caller.plugins.activate({ pluginId: 'contained' }),
-  ).toMatchObject({ state: 'running', error: null });
+  expect(await caller.plugin.activate({ pluginId: 'contained' })).toMatchObject(
+    { state: 'running', error: null },
+  );
 });
 
 it('drops a reply that belongs to a reloaded Plugin worker', async () => {
@@ -156,7 +156,7 @@ it('drops a reply that belongs to a reloaded Plugin worker', async () => {
 
   const keychain = new GatedKeychain();
   const { caller } = await startEngineTestHost({ home, keychain });
-  void caller.plugins.activate({ pluginId: 'echo' });
+  void caller.plugin.activate({ pluginId: 'echo' });
   await expect.poll(() => keychain.waiting.length, pollOptions).toBe(1);
 
   await appendFile(join(home, 'shipped/echo/index.mjs'), '\n// reload\n');
@@ -167,7 +167,7 @@ it('drops a reply that belongs to a reloaded Plugin worker', async () => {
 
   await expect
     .poll(
-      async () => (await caller.plugins.list()).plugins[0]?.error,
+      async () => (await caller.plugin.list()).plugins[0]?.error,
       pollOptions,
     )
     .toBe('got fresh');

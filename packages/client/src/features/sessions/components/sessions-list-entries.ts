@@ -1,4 +1,8 @@
 import type { ProjectsListOutput, SessionInfo } from '@repo/contracts';
+import {
+  nestedSessionEntries,
+  type SessionTree,
+} from './sessions-list/sessions-list-nesting';
 
 export type SessionsListEntry =
   | { kind: 'project'; id: string; projectId: string; name: string }
@@ -6,6 +10,7 @@ export type SessionsListEntry =
       kind: 'session';
       id: string;
       session: SessionInfo;
+      tree?: SessionTree;
     }
   | { kind: 'empty'; id: string };
 
@@ -48,7 +53,7 @@ function projectBody(
   if (projectSessions.length === 0)
     return [{ kind: 'empty', id: `empty:${project.id}` }];
 
-  return projectSessions.map(sessionEntry);
+  return nestedSessionEntries(projectSessions);
 }
 
 function projectEntries(
@@ -70,14 +75,6 @@ function projectEntries(
   return [heading, ...projectBody(project, projectSessions)];
 }
 
-function sessionEntry(session: SessionInfo): SessionsListEntry {
-  return {
-    kind: 'session',
-    id: session.sessionId,
-    session,
-  };
-}
-
 // One list, or search results, most recently active first, with no Project headings; only listed Projects' Sessions show.
 export function flatEntries({
   projects,
@@ -85,10 +82,11 @@ export function flatEntries({
 }: Pick<ListEntriesInput, 'projects' | 'sessions'>): SessionsListEntry[] {
   const listed = new Set(projects.map((project) => project.id));
 
-  return sessions
-    .filter((session) => listed.has(session.projectId))
-    .sort(newestFirst)
-    .map(sessionEntry);
+  return nestedSessionEntries(
+    sessions
+      .filter((session) => listed.has(session.projectId))
+      .sort(newestFirst),
+  );
 }
 
 // The Sessions list's rows, in Project order: each Project's heading, then its Sessions, most recently active first, or an empty row.

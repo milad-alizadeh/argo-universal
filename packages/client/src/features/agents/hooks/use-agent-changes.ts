@@ -13,7 +13,7 @@ export function useInstalledInvalidation(): () => Promise<void> {
   const trpc = useTRPC(),
     cache = useQueryClient();
 
-  return () => cache.invalidateQueries(trpc.agents.servers.queryFilter());
+  return () => cache.invalidateQueries(trpc.agent.list.queryFilter());
 }
 
 export interface AgentChanges {
@@ -23,23 +23,21 @@ export interface AgentChanges {
 
 function useInstall(
   onInstalled?: (id: string) => void,
-): UseMutationResult<void, ClientError, { id: string }> {
+): UseMutationResult<null, ClientError, { id: string }> {
   const invalidate = useInstalledInvalidation();
 
-  const onSuccess = async (_: void, { id }: { id: string }): Promise<void> => {
+  const onSuccess = async (_: null, { id }: { id: string }): Promise<void> => {
     onInstalled?.(id);
     await invalidate();
   };
 
-  return useMutation(
-    useTRPC().agents.addRegistry.mutationOptions({ onSuccess }),
-  );
+  return useMutation(useTRPC().agent.install.mutationOptions({ onSuccess }));
 }
 
-function useRemove(): UseMutationResult<void, ClientError, RegistryAgentId> {
+function useRemove(): UseMutationResult<null, ClientError, RegistryAgentId> {
   const onSuccess = useInstalledInvalidation();
 
-  return useMutation(useTRPC().agents.remove.mutationOptions({ onSuccess }));
+  return useMutation(useTRPC().agent.remove.mutationOptions({ onSuccess }));
 }
 
 // Install saves a Registry Agent on the Server and Remove deletes it; a failure shows one toast.

@@ -12,6 +12,7 @@ export type FeedSnapshot = Pick<
 export type StoredSnapshot = Pick<
   SessionSnapshot,
   | 'projectId'
+  | 'startedBySessionId'
   | 'agent'
   | 'title'
   | 'titleSource'
@@ -33,6 +34,7 @@ type SessionDisplayContext = Pick<
 type StoredFields = Pick<
   SessionSnapshot,
   | 'projectId'
+  | 'startedBySessionId'
   | 'agent'
   | 'title'
   | 'titleSource'
@@ -73,6 +75,7 @@ export function toSessionSnapshot(
 function storedFields(stored: StoredSnapshot): StoredFields {
   return {
     projectId: stored.projectId,
+    startedBySessionId: stored.startedBySessionId,
     agent: stored.agent,
     title: stored.title,
     titleSource: stored.titleSource,

@@ -75,7 +75,11 @@ function projectedSession({
 
 function sessionFilter(ids: readonly string[] | undefined): SQL | undefined {
   return ids
-    ? or(inArray(session.id, ids), inArray(session.parentSessionId, ids))
+    ? or(
+        inArray(session.id, ids),
+        inArray(session.parentSessionId, ids),
+        inArray(session.startedBySessionId, ids),
+      )
     : undefined;
 }
 

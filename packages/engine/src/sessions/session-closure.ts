@@ -1,6 +1,7 @@
 import type { SessionCancelOutput, SessionCloseOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
+import { readSessionCloseTarget } from './close-target';
 import type { SessionRouterDeps } from './router-deps';
 import {
   sendSessionCommand,
@@ -8,6 +9,7 @@ import {
 } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import { readWritableSession } from './session-opening';
+import { createQueuedSessionReader } from './session-record';
 import { requireLiveSessionActor } from './session-system';
 
 const isClosing = (actor: SessionActorRef): boolean => {
@@ -23,13 +25,17 @@ const isClosing = (actor: SessionActorRef): boolean => {
 export const closeSession = async (
   deps: Pick<
     SessionRouterDeps,
-    'sessions' | 'readSession' | 'sessionCommandSignal'
+    | 'sessions'
+    | 'readSession'
+    | 'sessionCommandSignal'
+    | 'database'
+    | 'findWriter'
   >,
   sessionId: string,
 ): Promise<SessionCloseOutput> => {
   validateSessionCommandAdmission(deps);
 
-  if (deps.readSession(sessionId).parentSessionId !== null)
+  if (readSessionCloseTarget(deps, sessionId).parentSessionId !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Subagent is read-only',
@@ -54,15 +60,16 @@ export const closeSession = async (
   return {};
 };
 
+// Reads the Session as a Session caller's scope does, with the Writer's queued rows.
 export const cancelSession = (
   deps: Pick<
     SessionRouterDeps,
-    'sessions' | 'readSession' | 'sessionCommandSignal'
+    'sessions' | 'database' | 'findWriter' | 'sessionCommandSignal'
   >,
   sessionId: string,
 ): SessionCancelOutput => {
   validateSessionCommandAdmission(deps);
-  readWritableSession(deps.readSession, sessionId);
+  readWritableSession(createQueuedSessionReader(deps), sessionId);
   sendSessionCommand(requireLiveSessionActor(deps.sessions.system, sessionId), {
     type: 'session.cancel',
   });

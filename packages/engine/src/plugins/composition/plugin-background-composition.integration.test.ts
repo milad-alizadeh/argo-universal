@@ -59,12 +59,12 @@ it('starts Project background passes at Server startup and after Writer membersh
   await expect
     .poll(() => currentBadges(watching), { timeout: 10_000 })
     .toEqual([{ pluginId: dataPluginId, id: 'inbox', count: 3 }]);
-  await host.caller.plugins.setEnabled({
+  await host.caller.plugin.setEnabled({
     pluginId: dataPluginId,
     enabled: false,
   });
   expect(await currentBadges(watching)).toEqual([]);
-  await host.caller.plugins.setEnabled({
+  await host.caller.plugin.setEnabled({
     pluginId: dataPluginId,
     enabled: true,
   });
@@ -133,7 +133,7 @@ it('is ready while a background Plugin is still starting', async () => {
 async function fixtureState(
   caller: Caller,
 ): Promise<PluginStatus['state'] | undefined> {
-  const { plugins } = await caller.plugins.list();
+  const { plugins } = await caller.plugin.list();
 
   return plugins.find(({ manifest }) => manifest.id === dataPluginId)?.state;
 }

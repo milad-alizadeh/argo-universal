@@ -6,6 +6,7 @@ import {
 import type { ReactElement, ReactNode } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { NativeGroupedFrame } from './list-native-host';
+import { NativeMoveMenu } from './list-native-move-menu';
 import type { NativeGroupedProps } from './list-native-props';
 import {
   estimatedNativeRowHeight,
@@ -37,8 +38,15 @@ const groupedList = (sections: NativeSection[]): ReactElement => (
   </SwiftList>
 );
 
-const renderRow = ({ item }: { item: NativeRow }): ReactElement =>
-  item.render();
+/*
+ * A row the List can move opens its Move menu on a long press, and does not drag. `List.ForEach` takes SwiftUI's
+ * `onMove` (https://developer.apple.com/documentation/swiftui/dynamicviewcontent/onmove(perform:)), but in the
+ * simulator the long press the row's `.contextMenu` needs lifted a drag preview that dropped without calling it,
+ * and it moves a row only within its own ForEach, never to another Section.
+ */
+const renderRow = ({ item }: { item: NativeRow }): ReactElement => (
+  <NativeMoveMenu id={item.moveId}>{item.render()}</NativeMoveMenu>
+);
 
 function GroupedSection({ section }: { section: NativeSection }): ReactElement {
   return (

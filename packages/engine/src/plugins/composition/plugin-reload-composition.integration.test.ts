@@ -14,7 +14,7 @@ it('reports a dev Plugin outside the first-party root and never starts it', asyn
 
   const { caller } = await startEngineTestHost({ home });
 
-  expect(await caller.plugins.list()).toEqual({
+  expect(await caller.plugin.list()).toEqual({
     plugins: [],
     errors: [
       {
@@ -23,7 +23,7 @@ it('reports a dev Plugin outside the first-party root and never starts it', asyn
       },
     ],
   });
-  await expect(caller.plugins.activate({ pluginId: 'dev' })).rejects.toThrow(
+  await expect(caller.plugin.activate({ pluginId: 'dev' })).rejects.toThrow(
     'Unknown Plugin: dev',
   );
 });
@@ -39,29 +39,29 @@ it('bundles and reloads a first-party dev Plugin, recovering after runtime and b
 
   const source = join(directory, 'dev/check.ts');
 
-  expect(await caller.plugins.activate({ pluginId: 'dev' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'dev' })).toMatchObject({
     state: 'crashed',
     error: 'Initial dev Plugin',
   });
   await writeFile(source, 'export function check(): void {}');
   await expect
-    .poll(() => caller.plugins.list(), processWait)
+    .poll(() => caller.plugin.list(), processWait)
     .toMatchObject({ plugins: [{ state: 'running', error: null }] });
 
   await writeFile(source, 'not valid TypeScript }');
   await expect
-    .poll(() => caller.plugins.list(), processWait)
+    .poll(() => caller.plugin.list(), processWait)
     .toMatchObject({ plugins: [{ state: 'crashed' }] });
   await writeFile(
     source,
     'export function check(): void { throw Error("Reloaded dev Plugin"); }',
   );
   await expect
-    .poll(() => caller.plugins.list(), processWait)
+    .poll(() => caller.plugin.list(), processWait)
     .toMatchObject({
       plugins: [{ state: 'crashed', error: 'Reloaded dev Plugin' }],
     });
-  expect(await caller.plugins.activate({ pluginId: 'dev' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'dev' })).toMatchObject({
     error: 'Reloaded dev Plugin',
   });
   expect(await readFile(join(directory, 'dev/index.mjs'), 'utf8')).toContain(

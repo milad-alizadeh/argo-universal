@@ -34,6 +34,7 @@ describe('a FieldGroup props table', () => {
     const props = kitPropDescriptors('FieldGroup.Toggle');
 
     expect(props.map(({ name, required }) => [name, required])).toStrictEqual([
+      ['id', false],
       ['title', true],
       ['disabled', false],
       ['value', true],

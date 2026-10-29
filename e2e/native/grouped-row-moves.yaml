@@ -1,0 +1,10 @@
+appId: dev.argo.app
+name: A native grouped List's FieldGroup rows move from their long-press menu
+---
+- openLink: "argo://storybook?STORYBOOK_STORY_ID=design-system-primitives-lists-list-moves--grouped"
+- longPressOn: "^Beta$"
+- tapOn: "^Move down$"
+- assertVisible:
+    text: "^Beta$"
+    below: "^Gamma$"
+- runFlow: subflows/move-beta-to-end-of-second.yaml

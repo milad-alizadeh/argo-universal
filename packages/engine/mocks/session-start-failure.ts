@@ -18,7 +18,7 @@ type FailedJourney = Awaited<ReturnType<typeof startAcpEngine>> & {
 export const startFailedSessionJourney = async (): Promise<FailedJourney> => {
   const host = await startAcpEngine(failedStart, undefined, 'unavailable');
 
-  const project = (await host.caller.projects.list()).find(
+  const project = (await host.caller.project.list()).find(
     ({ id }) => id === 'project-1',
   );
 

@@ -30,7 +30,7 @@ it('closes a Shell whose descendant left its group and holds its output open', a
   });
   await host.caller.session.close(created);
 
-  expect(await host.caller.session.shells(created)).toMatchObject([
+  expect(await host.caller.session.listShells(created)).toMatchObject([
     { id: shellId, status: 'lost', canStop: false },
   ]);
   expect(processIsRunning(pid)).toBe(true);

@@ -68,7 +68,7 @@ it('refuses traversal, absolute paths and symlinks outside the Plugin folder', a
     join(probe.code, 'linked.png'),
   );
   const { caller } = await startEngineTestHost({ home: probe.home });
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   const refused = { error: expect.stringMatching(/^Refused: /) };
   expect(await probeResult(probe.data)).toEqual({

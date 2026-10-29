@@ -27,7 +27,7 @@ it('reports an unavailable Borrow as a Query error', async () => {
   );
 
   const host = await startEngineTestHost({ home: fixture.home });
-  const [project] = await host.caller.projects.list();
+  const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Missing fixture Project');
 
@@ -52,10 +52,14 @@ it('keeps the last successful Query data when a refreshed Borrow is refused', as
     import { useData, useEffect, Text } from '@argo/plugin-kit';
     import { jsx } from '@argo/plugin-kit/jsx-runtime';
     export function register(argo) {
+      let writing = Promise.resolve();
       argo.pages.register('/', function Page() {
         const {data, error, stale} = useData({api:'fetch', url:'https://api.github.com/done', account:'api.github.com'}, {every:10000});
         useEffect(() => {
-          if (data !== undefined || error) void argo.fs.write('${fixture.borrowerData}/out.json', JSON.stringify({status:data?.status ?? null,error:error ?? null,stale}));
+          if (data !== undefined || error) {
+            const snapshot = JSON.stringify({status:data?.status ?? null,error:error ?? null,stale});
+            writing = writing.then(() => argo.fs.write('${fixture.borrowerData}/out.json', snapshot));
+          }
         }, [data,error,stale]);
         return jsx(Text, {children:'Query'});
       });
@@ -70,8 +74,8 @@ it('keeps the last successful Query data when a refreshed Borrow is refused', as
     pluginClock: clock,
   });
 
-  await host.caller.plugins.activate({ pluginId: 'probe' });
-  const [project] = await host.caller.projects.list();
+  await host.caller.plugin.activate({ pluginId: 'probe' });
+  const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Missing fixture Project');
 

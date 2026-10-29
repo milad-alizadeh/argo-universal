@@ -85,8 +85,15 @@ type ListProps<Name extends ListComponentName, Item> = EventProps<Name, Item> &
   SlotProps<Name> &
   Children<Name>;
 
+// `onMove` moves rows passed as children in a column or lanes, so a List of `items`, a grid or a shelf cannot take it.
+type MovesOrItems<Name extends ListComponentName> = Name extends 'List'
+  ?
+      | { items?: undefined; layout?: 'list' | 'lanes'; direction?: 'vertical' }
+      | { onMove?: undefined }
+  : unknown;
+
 type ListComponent<Name extends ListComponentName> = <Item>(
-  props: ListProps<Name, Item>,
+  props: ListProps<Name, Item> & MovesOrItems<Name>,
 ) => ReactElement | null;
 
 // Inferred directly from Contracts; adding a schema prop updates Plugin JSX immediately.
@@ -122,6 +129,14 @@ declare global {
 
 // The Plugin API: the `argo` object a Plugin's `register` receives, inferred from the call schemas in Contracts.
 export type { Argo } from '@repo/contracts/plugins/argo-api';
+
+// The List's move rule: applies a move its `onMove` reports, so the board draws the order the List showed.
+export {
+  applyListMove,
+  type ListMove,
+  type MovableRow,
+  type MovableSection,
+} from '@repo/contracts/kit-moves';
 
 export type {
   Hook,

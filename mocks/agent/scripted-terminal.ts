@@ -1,6 +1,7 @@
 import type {
   KillTerminalRequest,
   SessionUpdate,
+  TerminalOutputResponse,
 } from '@agentclientprotocol/sdk';
 import type { ScriptedStep, ScriptedTurn } from './scripted-types.ts';
 
@@ -46,15 +47,35 @@ const completeTerminal = async (
     await turn.client.request('terminal/kill', scope);
 
   await turn.client.request('terminal/wait_for_exit', scope);
-  await recordOutput(step, scope, turn);
+  const output = await recordOutput(step, scope, turn);
   await turn.client.request('terminal/release', scope);
+  requireExitCode(step, output);
 };
 
 const recordOutput = async (
   step: TerminalStep,
   scope: KillTerminalRequest,
   turn: ScriptedTurn,
-): Promise<void> => {
+): Promise<TerminalOutputResponse> => {
   const output = await turn.client.request('terminal/output', scope);
   step.outputs?.push(output);
+
+  return output;
 };
+
+const requireExitCode = (
+  step: TerminalStep,
+  output: TerminalOutputResponse,
+): void => {
+  if (step.requiredExitCode === undefined) return;
+
+  if (receivedExitCode(output) === step.requiredExitCode) return;
+
+  throw new Error(
+    `Terminal ${step.toolCallId} expected exit ${step.requiredExitCode}, got ${JSON.stringify(output.exitStatus)}: ${output.output}`,
+  );
+};
+
+const receivedExitCode = (
+  output: TerminalOutputResponse,
+): number | null | undefined => output.exitStatus?.exitCode;

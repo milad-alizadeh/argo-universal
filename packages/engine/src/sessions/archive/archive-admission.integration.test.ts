@@ -59,7 +59,7 @@ it('accepts archive after immediate Stop even when the old ACP prompt has not an
   await host.caller.session.cancel(created);
   await expect(host.caller.session.archive(created)).resolves.toEqual({});
   await expect(host.caller.session.unarchive(created)).resolves.toEqual({});
-  expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(0);
+  expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(1);
 });
 
 it.each([
@@ -77,7 +77,7 @@ it.each([
     count: 1,
   },
 ])(
-  'archive uses $mode Session close without killing a sibling',
+  'archive uses $mode Session close and stops only its own process',
   async ({ capabilities, steps, count }) => {
     const closes: CloseSessionRequest[] = [];
 
@@ -104,7 +104,10 @@ it.each([
     const sibling = await host.caller.session.new(emptySessionInput);
     await host.caller.session.archive({ sessionId: created.sessionId });
     expect(closes).toHaveLength(count);
-    expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(0);
+    expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(1);
+    expect(requireScriptedProcessAt(host.agent.processes, 1).terminations).toBe(
+      0,
+    );
     await host.caller.session.prompt({
       ...sibling,
       prompt: [{ type: 'text', text: 'Sibling still works' }],

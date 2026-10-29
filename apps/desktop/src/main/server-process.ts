@@ -5,6 +5,8 @@ import {
   readServerAddress,
   resolveRuntimeDirectory,
 } from '@repo/engine/server-runtime';
+import { createRejectionCounter } from '@repo/machine-log';
+import { z } from 'zod';
 
 // One-shot I/O for the Server connection machine; the machine owns every wait.
 
@@ -37,10 +39,10 @@ export function signalSupervisor(pid: number): void {
   }
 }
 
-// Where the Supervisor keeps its state, and apps/server, which `spawnSupervisor` runs.
+// Where the Supervisor keeps its state, and apps/cli, which `spawnSupervisor` runs.
 export interface SupervisorPaths {
   home: string;
-  serverDirectory: string;
+  cliDirectory: string;
 }
 
 export interface SpawnReport {
@@ -48,7 +50,12 @@ export interface SpawnReport {
   exited: (reason: string) => void;
 }
 
-// Spawns the Supervisor with Node and tsx, detached so it outlives this app; utilityProcess has no `detached`. The returned function stops reporting.
+const SupervisorStarted = z.object({
+  type: z.literal('supervisor.spawned'),
+  pid: z.number().int().positive(),
+});
+
+// Spawns the CLI with Node, detached so it outlives this app; utilityProcess has no `detached`. The returned function stops reporting.
 export function spawnSupervisor(
   paths: SupervisorPaths,
   report: SpawnReport,
@@ -56,14 +63,32 @@ export function spawnSupervisor(
   let listening = true;
   const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
 
-  const child = spawn('node', ['--import', 'tsx', 'src/main.ts'], {
-    cwd: paths.serverDirectory,
-    detached: true,
-    stdio: 'ignore',
-    env: { ...environment, ARGO_HOME: paths.home },
-  });
+  const child = spawn(
+    'node',
+    [join(paths.cliDirectory, 'bin/argo.mjs'), 'server'],
+    {
+      cwd: paths.cliDirectory,
+      detached: true,
+      stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+      env: { ...environment, ARGO_HOME: paths.home },
+    },
+  );
 
   child.unref();
+  child.channel?.unref();
+  const rejections = createRejectionCounter('desktop');
+
+  child.on('message', (message): void => {
+    const reportPid = SupervisorStarted.safeParse(message);
+
+    if (!reportPid.success) {
+      rejections.report('unrecognised CLI message', message);
+
+      return;
+    }
+
+    if (listening) report.spawned(reportPid.data.pid);
+  });
   child.once('error', (error): void => {
     if (listening) report.exited(`The Supervisor could not start: ${error}`);
   });
@@ -74,7 +99,7 @@ export function spawnSupervisor(
       );
   });
 
-  // The pid exists once `spawn` returns; its `spawn` event only follows a tick later, too late for a quit in between.
+  // Report the CLI pid synchronously so quitting before its Supervisor starts still stops both.
   if (child.pid !== undefined) report.spawned(child.pid);
 
   return (): void => {

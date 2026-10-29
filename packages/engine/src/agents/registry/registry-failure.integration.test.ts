@@ -54,9 +54,9 @@ const startHeldRegistry = async (): Promise<
 it('keeps cached Registry entries after a failed refresh', async () => {
   const registry = switchableRegistry();
   const host = await startSettledRegistryHost(registry);
-  const cached = await host.caller.agents.registry();
+  const cached = await host.caller.registry.get();
   registry.offline.value = true;
-  expect(await host.caller.agents.refreshRegistry()).toEqual(cached);
+  expect(await host.caller.registry.refresh()).toEqual(cached);
 });
 
 it('reports a failed refresh when no Registry entries are stored', async () => {
@@ -66,7 +66,7 @@ it('reports a failed refresh when no Registry entries are stored', async () => {
     `UPDATE registry_cache SET json = '{"version":"1.0.0","agents":[]}'`,
   );
   registry.offline.value = true;
-  expect(await host.caller.agents.refreshRegistry()).toEqual({
+  expect(await host.caller.registry.refresh()).toEqual({
     agents: [],
     error: `Error: ${offlineMessage}`,
   });
@@ -77,7 +77,7 @@ it('gives up a held fetch after 30 seconds', async () => {
   vi.useFakeTimers();
 
   try {
-    const refresh = host.caller.agents.refreshRegistry();
+    const refresh = host.caller.registry.refresh();
     await vi.waitFor(() => expect(host.held).toHaveLength(1));
     await vi.advanceTimersByTimeAsync(fetchTimeoutMs);
     await refresh;
@@ -127,11 +127,11 @@ it.each(malformedColumns)(
   'serves an empty Registry offline from a malformed cache (%s)',
   async (columns) => {
     const host = await restartWithMalformedCache(columns);
-    expect(await host.caller.agents.registry()).toEqual({
+    expect(await host.caller.registry.get()).toEqual({
       agents: [],
       error: `Error: ${offlineMessage}`,
     });
-    expect(await host.caller.agents.servers()).toEqual([]);
+    expect(await host.caller.agent.list()).toEqual([]);
   },
 );
 
@@ -140,6 +140,6 @@ it.each(malformedColumns)(
   async (columns) => {
     const host = await restartWithMalformedCache(columns);
     host.offline.value = false;
-    expect((await host.caller.agents.refreshRegistry()).agents).toHaveLength(4);
+    expect((await host.caller.registry.refresh()).agents).toHaveLength(4);
   },
 );

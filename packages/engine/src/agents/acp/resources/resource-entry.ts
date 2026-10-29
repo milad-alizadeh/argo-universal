@@ -1,8 +1,9 @@
 import type { DeferredAgentLaunch } from '../..';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import type { AcpConnection } from '../connection/connection';
+import type { EntryKind } from './resource-types';
 
-export type Entry = {
+export type Entry = EntryKind & {
   agentId: string;
   projectId: string;
   version: string;
@@ -14,19 +15,20 @@ export type Entry = {
   resolving: AbortController;
 };
 
+export type PrivateEntry = Extract<Entry, { kind: 'private' }>;
+
 export const createEntry = (
   launch: DeferredAgentLaunch,
   connection: AcpConnection,
-  connecting: Promise<AcpConnection>,
+  { connecting, kind }: { connecting: Promise<AcpConnection>; kind: EntryKind },
 ): Entry => ({
+  ...kind,
   agentId: launch.agentId,
   projectId: launch.projectId,
   version: launch.version,
   connecting,
   connection,
-  pending: 0,
-  dropped: false,
-  resolving: new AbortController(),
+  ...entryLifetime(),
 });
 
 export const entryInUse = (entry: Entry): boolean =>
@@ -56,5 +58,13 @@ export const pendingAuthentication = (
 ): Entry | undefined =>
   [...entries].find(
     (entry) =>
-      sameProject(entry, agent, project) && entry.connection.authenticating,
+      entry.kind === 'shared' &&
+      sameProject(entry, agent, project) &&
+      entry.connection.authenticating,
   );
+
+const entryLifetime = (): Pick<Entry, 'pending' | 'dropped' | 'resolving'> => ({
+  pending: 0,
+  dropped: false,
+  resolving: new AbortController(),
+});

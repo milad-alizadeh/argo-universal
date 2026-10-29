@@ -26,7 +26,7 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
   });
 
   const caller = createCaller();
-  const projects = await caller.projects.list();
+  const projects = await caller.project.list();
   expect(projects).toHaveLength(1);
   // CI checks out a detached HEAD, which defaults to the main checkout.
   const { currentBranch } = await listBranches(process.cwd());

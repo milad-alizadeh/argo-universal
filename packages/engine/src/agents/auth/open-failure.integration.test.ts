@@ -12,7 +12,7 @@ const authRequiredError = { type: 'auth-required' } as const;
 
 it('an auth-required New worktree open at Send stores no Turn and discards the Checkout', async () => {
   const host = await startAcpEngine(protocolSessionLogin(agentCredentials()));
-  const [project] = await host.caller.projects.list();
+  const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Project is missing');
   const git = sessionJourneyGit(project.path);

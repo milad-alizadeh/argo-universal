@@ -20,11 +20,19 @@ async function expectOpened(
 }
 
 // A phone leaves out Devices and Notifications.
-const phonePages = ['Projects', 'Agents', 'Plugins', 'Accounts', 'Connection'];
+const phonePages = [
+  'Projects',
+  'Agents',
+  'Agent access',
+  'Plugins',
+  'Accounts',
+  'Connection',
+];
 
 const widePages = [
   'Projects',
   'Agents',
+  'Agent access',
   'Plugins',
   'Accounts',
   'Connection',
@@ -68,7 +76,10 @@ async function expectAnchor(
 ): Promise<void> {
   if (width === layoutWidths.phone) return;
 
-  await expect(row).toHaveAttribute('href', `/settings/${name.toLowerCase()}`);
+  await expect(row).toHaveAttribute(
+    'href',
+    `/settings/${name.toLowerCase().replaceAll(' ', '-')}`,
+  );
 }
 
 async function clickEveryWidthsPages(
@@ -113,7 +124,9 @@ export function allPagesNavigate(width: number): Story {
       await clickEveryWidthsPages({ canvas, userEvent }, width);
       await expectOpened(
         args.onSelect,
-        phonePages.map((name) => `/settings/${name.toLowerCase()}`),
+        phonePages.map(
+          (name) => `/settings/${name.toLowerCase().replaceAll(' ', '-')}`,
+        ),
       );
 
       if (width === layoutWidths.phone) return;

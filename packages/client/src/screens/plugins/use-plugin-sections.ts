@@ -38,7 +38,7 @@ interface PluginListState {
 // Manifest contributions retain their order; the connected Server owns this list.
 function usePluginList(): PluginListState {
   const trpc = useTRPC();
-  const { data, isSuccess } = useQuery(trpc.plugins.list.queryOptions());
+  const { data, isSuccess } = useQuery(trpc.plugin.list.queryOptions());
 
   const sections = (data?.plugins ?? noPlugins)
     .filter((plugin) => plugin.enabled)

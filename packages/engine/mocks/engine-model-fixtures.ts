@@ -55,6 +55,7 @@ export const input = {
   now: (): number => Date.now(),
   createId: randomUUID,
   home: '/unused',
+  cliEntry: '/unused/argo.mjs',
   port: 7337,
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',

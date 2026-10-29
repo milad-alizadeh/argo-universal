@@ -656,6 +656,49 @@ importers:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.6)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
+  apps/cli:
+    dependencies:
+      '@argo/plugin-kit':
+        specifier: workspace:*
+        version: link:../../packages/plugin-kit
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@repo/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@repo/machine-log':
+        specifier: workspace:*
+        version: link:../../packages/machine-log
+      '@repo/server':
+        specifier: workspace:*
+        version: link:../server
+      '@trpc/client':
+        specifier: 'catalog:'
+        version: 11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@repo/typescript':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.6)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+
   apps/desktop:
     dependencies:
       '@repo/contracts':
@@ -722,9 +765,6 @@ importers:
 
   apps/server:
     dependencies:
-      '@argo/plugin-kit':
-        specifier: workspace:*
-        version: link:../../packages/plugin-kit
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -1283,6 +1323,15 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
+      ajv-formats:
+        specifier: 'catalog:'
+        version: 3.0.1(ajv@8.20.0)
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       json-schema-to-typescript:
         specifier: 'catalog:'
         version: 16.0.0

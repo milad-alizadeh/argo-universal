@@ -13,6 +13,7 @@ import { timestamp } from '#schema-timestamp';
 
 export const sessionUpdateKinds = [
   'user_message',
+  'prompt_message',
   'session_message',
   'agent_message',
   'agent_thought',

@@ -1,7 +1,8 @@
 import type { SpacingStep } from '@repo/contracts/kit-tokens';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { ListSelection } from '../../../list-context';
 import type { PhoneOverrides } from '../../../list-look';
+import type { ListRef } from '../../../list-ref';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
@@ -23,7 +24,6 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'edges'
     | 'maxHeight'
     | 'testID'
-    | 'ref'
     | 'depth'
     | 'inset'
     | 'initialScrollIndex'
@@ -39,6 +39,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'keyboardDismissMode'
     | 'keyboardShouldPersistTaps'
   > & {
+    ref?: Ref<ListRef>;
     header?: ReactNode;
     endContent?: ReactNode;
     startContent?: ReactNode;
@@ -55,6 +56,11 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     getSelectionId?: (item: Item) => string | undefined;
     getSectionKey?: (item: Item) => string | undefined;
   };
+
+// Only a List of children in a column or lanes moves its rows: an `items` List's rows have no ids, and a grid or shelf flows its rows where no drag measures them.
+export type MovesOrItems =
+  | { items?: undefined; layout?: 'list' | 'lanes'; direction?: 'vertical' }
+  | { onMove?: undefined };
 
 // Kit-only: native selection, controlled section expansion and the loading header.
 export type ListSectionProps = KitProps<'List.Section'> &

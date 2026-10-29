@@ -30,7 +30,7 @@ async function firstProjectId(page: Page, httpUrl: string): Promise<string> {
   const [project] = await query({
     page,
     httpUrl,
-    procedure: 'projects.list',
+    procedure: 'project.list',
     input: {},
     output: Projects,
   });

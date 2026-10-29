@@ -1,6 +1,6 @@
 import { SessionRecord } from '@repo/contracts';
 import { session } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or, type SQL } from 'drizzle-orm';
 import { decodeStoredSession, storedSessionColumns } from '../session-record';
 import { readQueuedSessionRows, type RowSources } from '../session-storage';
 
@@ -33,7 +33,7 @@ const storedChildren = (
     database
       .select(storedSessionColumns)
       .from(session)
-      .where(eq(session.parentSessionId, parentId))
+      .where(childFilter(parentId))
       .all()
       .map((row): [string, StoredSession] => [row.id, row]),
   );
@@ -45,4 +45,17 @@ const childOf = (
   row: SessionRecord | undefined,
   parentId: string,
 ): SessionRecord | undefined =>
-  row?.parentSessionId === parentId ? row : undefined;
+  row && parentOf(row, parentId) ? row : undefined;
+
+function parentOf(row: SessionRecord, parentId: string): boolean {
+  return (
+    row.parentSessionId === parentId || row.startedBySessionId === parentId
+  );
+}
+
+function childFilter(parentId: string): SQL | undefined {
+  return or(
+    eq(session.parentSessionId, parentId),
+    eq(session.startedBySessionId, parentId),
+  );
+}

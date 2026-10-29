@@ -40,7 +40,7 @@ it('serves Session header actions in Plugin order, without starting a Plugin, an
 
   const { caller } = await startEngineTestHost({ home });
 
-  await caller.plugins.setEnabled({ pluginId: 'coverage', enabled: false });
+  await caller.plugin.setEnabled({ pluginId: 'coverage', enabled: false });
 
   expect(
     await caller.plugins.declared({ slotId: sessionHeaderSlotId }),
@@ -50,7 +50,7 @@ it('serves Session header actions in Plugin order, without starting a Plugin, an
     { pluginId: 'tracker', item: action('board', 'menu') },
   ]);
 
-  const { plugins } = await caller.plugins.list();
+  const { plugins } = await caller.plugin.list();
 
   expect(plugins.every(({ state }) => state === 'not-started')).toBe(true);
   expect(plugins).toHaveLength(3);

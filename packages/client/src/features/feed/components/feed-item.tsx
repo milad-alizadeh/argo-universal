@@ -11,6 +11,7 @@ import { SubagentRow } from './subagent-row/subagent-row';
 import { ToolCallGroup } from './tool-call-group/tool-call-group';
 import { ToolCallRow } from './tool-call-row/tool-call-row';
 import { TurnEndRow } from './turn-end/turn-end';
+import { UserMessage } from './user-message/user-message';
 
 export interface FeedItemProps {
   item: FeedViewItem;
@@ -125,6 +126,16 @@ function noticeRow(
 
 function renderRow(
   row: FeedRowItem,
+  imageUrl: FeedItemProps['imageUrl'],
+): React.JSX.Element | null {
+  if (row.sessionUpdate === 'prompt_message')
+    return <UserMessage row={row} imageUrl={imageUrl} />;
+
+  return renderStandardRow(row, imageUrl);
+}
+
+function renderStandardRow(
+  row: Exclude<FeedRowItem, { sessionUpdate: 'prompt_message' }>,
   imageUrl: FeedItemProps['imageUrl'],
 ): React.JSX.Element | null {
   if (

@@ -72,7 +72,7 @@ it.each(['exit', 'stop'] as const)(
 
     await (ending === 'exit'
       ? writeFile(gate, 'exit')
-      : host.caller.session.stopShell({ ...created, shellId: id }));
+      : host.caller.shell.stop({ ...created, shellId: id }));
     await waitForAcpSnapshot(
       host,
       created.sessionId,

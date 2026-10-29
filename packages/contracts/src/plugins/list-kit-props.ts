@@ -44,7 +44,17 @@ export const contentListProps = z.object({
       'App filters loaded rows; plugin receives throttled search text.',
     ),
   onSearchTextChange: handler('onSearchTextChange').optional(),
-  layout: z.enum(['list', 'grid']).optional().describe('Rows or media tiles.'),
+  layout: z
+    .enum(['list', 'grid', 'lanes'])
+    .optional()
+    .describe(
+      'Rows, media tiles, or lanes: each Section a column, side by side, on a wide desktop or web window; phones draw lanes as ordinary sections.',
+    ),
+  onMove: handler('onMove')
+    .optional()
+    .describe(
+      'Turns moving on in a column or lanes; a grid or horizontal shelf does not move. A row with an id moves within and between Sections by drag, long press and drag on phones, or its Move Actions. Reports where it lands; the List redraws when the rows change.',
+    ),
   direction: z
     .enum(['vertical', 'horizontal'])
     .optional()
@@ -87,6 +97,7 @@ export const contentListProps = z.object({
 export const rowPress = z.undefined().meta({ blocks: false });
 
 export const listSectionProps = z.object({
+  id: z.string().optional().describe('The Section identity a move reports.'),
   selectionMode: z
     .enum(['single', 'multiple'])
     .optional()

@@ -23,6 +23,7 @@ import type {
   AcpProcess,
   AcpResourceInput,
   AcpSessionDestination,
+  AcpConnectionLease,
   AcpSessionLease,
 } from '../resources/resource-types';
 import { createAgentClient, awaitAcpOpening } from './client';
@@ -173,6 +174,15 @@ export class AcpConnection {
       launch,
     };
     this.prepareAuthentication(launch);
+    this.inheritAuthentication(launch);
+  }
+  private inheritAuthentication(launch: AgentLaunch): void {
+    this.authentication?.inheritRequired(
+      this.hooks.authChanges.requiredDescription(
+        launch.agentId,
+        launch.projectId,
+      ),
+    );
   }
   // A stopping connection hands out no authentication, so nothing starts after shutdown.
   public getAuthentication(): ConnectionAuthentication | undefined {
@@ -401,7 +411,7 @@ export class AcpConnection {
 
     return opening.params.sessionId;
   }
-  public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
+  public async open(input: AcpOpenInput): Promise<AcpConnectionLease> {
     this.requireAvailable(input);
     const session = createAgentSession(input.destination);
     this.openings.push({ opening: input, session });
@@ -449,7 +459,7 @@ export class AcpConnection {
 
     return { connection: this.connection, ...this.initialized };
   }
-  private async lease(opening: LeaseOpening): Promise<AcpSessionLease> {
+  private async lease(opening: LeaseOpening): Promise<AcpConnectionLease> {
     await this.releaseAbandoned(opening);
     this.requireRegistered(opening);
     const { connection, initialization, launch } = this.requireReady();

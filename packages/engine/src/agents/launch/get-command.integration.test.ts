@@ -129,7 +129,7 @@ it.each(kinds)(
         JSON.stringify({ version: '1.0.0', agents: [entry] }),
     });
 
-    await host.caller.agents.refreshRegistry();
+    await host.caller.registry.refresh();
 
     const input = {
       database: host.database,

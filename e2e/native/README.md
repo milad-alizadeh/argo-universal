@@ -16,6 +16,19 @@ The slider row still exposes its headline "Effort" and value "Medium" as nodes b
 
 The "Markdown" prompt clamps to four lines. The flow taps its Show more and expects it to go, which holds only when the clipped markdown leaves Show more uncovered. Clipped lines still count as visible to Maestro, so the flow checks Show more rather than the hidden text.
 
+# Lists, Sessions and Settings
+
+`list-row-moves.yaml`, `grouped-row-moves.yaml`, `move-to-picker.yaml`, `session-list-rows.yaml` and `settings-list-rows.yaml` open their stories in the App's native Storybook through its `argo://storybook` link, so no Server runs. With Metro and the development client running, run `maestro --device <device-id> test e2e/native/<flow>.yaml`.
+
+- `list-row-moves.yaml` holds a row of **Lists → List → Moves → Column** until its menu opens, checks the menu offers Move to…, and expects Move down to draw the row under the next one.
+- `grouped-row-moves.yaml` holds Beta in **Lists → List → Moves → Grouped**, a native grouped List of FieldGroup rows: it expects Move down to draw Beta under Gamma, then picks the end of Second from Move to… and expects Beta under Delta.
+- `move-to-picker.yaml` holds Beta, opens Move to…, and expects the sheet to draw its places: it picks the end of Second and expects Beta under Delta. A fitted List in a phone sheet once drew only the sheet's title, which fails this flow.
+- Both move flows end with `subflows/move-beta-to-end-of-second.yaml`, the Move to… steps they share. Maestro runs only the top level of a folder, so the subflow never runs on its own.
+- `session-list-rows.yaml` checks the Sessions list draws its Project heading and rows, and scrolls the last row into view.
+- `settings-list-rows.yaml` checks the Settings list draws its root sections and scrolls to Appearance.
+
+On iOS a Session row is one element named by its title and status, such as `Fix the failing build, Failed`, with the row's role, hint and state, since its preview's trigger hides the row's own press. Android keeps the texts apart, so only there does `session-list-rows.yaml` also check a row's activity, `Running the tests`. Every flow passes on both.
+
 # Plugin page tap
 
 `plugin-hello-tap.yaml` runs on iOS or Android against a real Server that loads the first-party `hello` Plugin, with the App on the phone Sessions list. Start the Server and Metro, open the development client, then run `maestro --device <device-id> test e2e/native/plugin-hello-tap.yaml`.

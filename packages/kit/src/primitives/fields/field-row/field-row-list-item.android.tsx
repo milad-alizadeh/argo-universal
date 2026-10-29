@@ -1,7 +1,5 @@
 import { Icon, ListItem, useMaterialColors } from '@expo/ui/jetpack-compose';
 import {
-  alpha,
-  clickable,
   clip,
   fillMaxWidth,
   Shapes,
@@ -16,9 +14,10 @@ import { nativeIconName } from '../../../symbols/native-icon-name';
 import { RowLogo } from './field-row-logo';
 import {
   cornerRadii,
-  GroupDisabledContext,
   PositionContext,
+  RowLongPressContext,
 } from './field-row-position';
+import { dimming, pressing, useDisabled } from './field-row-pressing.android';
 import type { RowTextProps } from './field-row-text';
 
 export type RowListItemProps = Pick<
@@ -34,9 +33,6 @@ export type RowListItemProps = Pick<
   disabled?: boolean;
   modifiers?: ModifierConfig[];
 };
-
-// Material's disabled content opacity (38%); ListItem has no disabled colours of its own.
-const disabledContentAlpha = 0.38;
 
 /*
  * One FieldGroup row as itself: a Material 3 ListItem with headline, supporting, leading and trailing content,
@@ -72,27 +68,16 @@ function Headline(props: RowListItemProps): ReactNode {
 function useRowModifiers(props: RowListItemProps): ModifierConfig[] {
   const corner = Shapes.RoundedCorner(cornerRadii(useContext(PositionContext)));
   const off = useDisabled(props.disabled);
+  const longPress = useContext(RowLongPressContext);
 
   return [
     fillMaxWidth(),
     clip(corner),
     ...dimming(off),
-    ...pressing(props, off),
+    ...pressing(props, off, longPress),
     ...(props.modifiers ?? []),
   ];
 }
-
-function useDisabled(own: boolean | undefined): boolean {
-  const group = useContext(GroupDisabledContext);
-
-  return own === true || group;
-}
-
-const dimming = (off: boolean): ModifierConfig[] =>
-  off ? [alpha(disabledContentAlpha)] : [];
-
-const pressing = (props: RowListItemProps, off: boolean): ModifierConfig[] =>
-  props.onPress && !off ? [clickable(props.onPress)] : [];
 
 function SupportingSlot(
   props: Pick<RowListItemProps, 'supporting'>,

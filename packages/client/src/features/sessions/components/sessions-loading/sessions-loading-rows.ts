@@ -6,6 +6,7 @@ const placeholderSession = {
   projectId,
   agent: 'loading-agent',
   parentSessionId: null,
+  startedBySessionId: null,
   cwd: '',
   status: 'idle',
   titleSource: 'agent',

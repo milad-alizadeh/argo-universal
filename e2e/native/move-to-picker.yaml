@@ -1,0 +1,5 @@
+appId: dev.argo.app
+name: A held row's Move to… opens a sheet that draws its places
+---
+- openLink: "argo://storybook?STORYBOOK_STORY_ID=design-system-primitives-lists-list-moves--column"
+- runFlow: subflows/move-beta-to-end-of-second.yaml

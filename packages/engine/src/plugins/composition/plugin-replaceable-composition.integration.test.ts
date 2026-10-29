@@ -124,5 +124,5 @@ it('never starts a ui.render Plugin that did not declare the Slot', async () => 
     type: 'core',
     input: toolCallSlotFixture,
   });
-  expect((await app.plugins.list()).plugins[0]?.state).toBe('not-started');
+  expect((await app.plugin.list()).plugins[0]?.state).toBe('not-started');
 }, 20_000);

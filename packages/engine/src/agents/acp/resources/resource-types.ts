@@ -31,6 +31,7 @@ export type AcpSessionDestination = {
 
 export type AcpSessionLease = {
   launch: AgentLaunch;
+  connectionKind: EntryKind['kind'];
   authentication?: ConnectionAuthentication;
   agent: ClientContext;
   sessionId: SessionId;
@@ -42,7 +43,21 @@ export type AcpSessionLease = {
   readonly released: Promise<void>;
 };
 
+// What one connection opens; the resources add which kind of connection it runs on.
+export type AcpConnectionLease = Omit<AcpSessionLease, 'connectionKind'>;
+
+export type SessionProcessAccess = {
+  environment: NonNullable<AgentLaunch['argo']>;
+  release: () => void;
+};
+
+// A private connection is one Session's own Agent process, holding that Session's access; a shared one serves its Agent and Project.
+export type EntryKind =
+  | { kind: 'shared' }
+  | { kind: 'private'; access: SessionProcessAccess };
+
 export type AcpOpenInput = {
+  sessionId?: string;
   launch: DeferredAgentLaunch;
   opening: AcpSessionOpening;
   destination: AcpSessionDestination;
@@ -57,6 +72,10 @@ export type AcpProcess = {
 };
 
 export type AcpResourceInput = {
+  sessionAccess?: (
+    sessionId: string,
+    projectId: string,
+  ) => SessionProcessAccess | undefined;
   launchLoginTerminal?: LaunchLoginTerminal;
   launchProcess?: (launch: AgentLaunch) => Promise<AcpProcess>;
   closeTimeoutMs?: number;

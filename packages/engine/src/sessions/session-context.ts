@@ -21,6 +21,14 @@ import type { AcpTurnOutcome } from './acp/prompts/prompt-outcome';
 import type { AcpPromptRequest as PromptRequest } from './acp/prompts/prompt-types';
 import type { LocalSubmission } from './acp/prompts/submission';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
+import type {
+  SessionCreationReceipt,
+  SessionCreationSettled,
+} from './creation-receipt';
+import type {
+  NativePermissionEvent,
+  NativePermissions,
+} from './native-permissions';
 import type { PermissionHooked } from './permission-hooks';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';
@@ -86,7 +94,9 @@ export type SessionEvent =
   | { type: typeof storageFailingEvent }
   | { type: 'session.shutdown' }
   | { type: 'agent.shellChanged'; shell: ShellRecord }
-  | PermissionHooked;
+  | PermissionHooked
+  | NativePermissionEvent
+  | SessionCreationSettled;
 
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
@@ -96,6 +106,7 @@ export interface SessionContext extends SessionData {
   activeTurnStartedAt: number | null;
   usage: ContextUsage | null;
   permissionQueue: PendingPermission[];
+  nativePermissions: NativePermissions;
   // The option a `tool.check` Hook chose for a queued request, by request id; it answers once the request is first in the queue.
   hookedPermissions: Record<string, string | null>;
   elicitationQueue: PendingElicitation[];
@@ -107,6 +118,7 @@ export interface SessionContext extends SessionData {
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
   sessionInsertCommitted: Promise<'committed' | 'retrying' | 'failed'> | null;
+  creationReceipt: SessionCreationReceipt | null;
   acpLifetime: AcpSessionLifetime;
   acpLease: AcpSessionLease | null;
   pendingSubmission: LocalSubmission | null;

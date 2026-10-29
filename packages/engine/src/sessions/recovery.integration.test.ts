@@ -110,6 +110,7 @@ const startEngine = async (): Promise<
         now: (): number => Date.now(),
         createId: randomUUID,
         home,
+        cliEntry: '/unused/argo.mjs',
         port: 0,
         version: 'test',
         startedAt: new Date().toISOString(),

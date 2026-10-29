@@ -5,7 +5,6 @@ import {
   type CollapsedProjects,
   useCollapsedProjects,
 } from './sessions-list-collapsed';
-import { useListEntries } from './sessions-list-entries-state';
 import type { SessionsListProps } from './sessions-list-props';
 import { useAnimateReorder } from './sessions-list-reorder';
 import {
@@ -21,6 +20,12 @@ import {
   type ProjectListHeadingProps,
   SessionListRow,
 } from './sessions-list-rows';
+import {
+  sessionTree,
+  useSessionNesting,
+  useNestedEntries,
+  type SessionNesting,
+} from './sessions-list-tree';
 
 type HeadingContext = Pick<
   ProjectListHeadingProps,
@@ -60,15 +65,25 @@ function projectHeading(
   );
 }
 
+type EntryContext = {
+  sessionContext: SessionRowContext;
+  headingContext: HeadingContext;
+  nesting: SessionNesting;
+};
+
 function renderEntry(
   item: SessionsListEntry,
-  sessionContext: SessionRowContext,
-  headingContext: HeadingContext,
+  { sessionContext, headingContext, nesting }: EntryContext,
 ): React.JSX.Element {
   if (item.kind === 'empty') return <NoSessionsYet />;
 
   if (item.kind === 'session')
-    return <SessionListRow {...sessionRowProps(item, sessionContext)} />;
+    return (
+      <SessionListRow
+        {...sessionRowProps(item, sessionContext)}
+        tree={sessionTree(item, nesting)}
+      />
+    );
 
   return projectHeading(item, headingContext);
 }
@@ -101,11 +116,12 @@ interface RenderInputs {
   rows: ListRowData;
   collapsedProjects: CollapsedProjects;
   animating: boolean;
+  nesting: SessionNesting;
 }
 
 function useRenderItem(
   props: SessionsListProps,
-  { rows, collapsedProjects, animating }: RenderInputs,
+  { rows, collapsedProjects, animating, nesting }: RenderInputs,
 ): ListRows['renderItem'] {
   const { closing } = collapsedProjects;
   const motion = { animating, closing };
@@ -114,21 +130,33 @@ function useRenderItem(
 
   return useCallback(
     (item: SessionsListEntry) =>
-      renderEntry(item, sessionContext, headingContext),
-    [sessionContext, headingContext],
+      renderEntry(item, { sessionContext, headingContext, nesting }),
+    [sessionContext, headingContext, nesting],
   );
 }
 
-export function useListRows(props: SessionsListProps): ListRows {
+type RowInputs = RenderInputs & { entries: SessionsListEntry[] };
+
+function useRowInputs(props: SessionsListProps, treeDrawn: boolean): RowInputs {
   const collapsedProjects = useCollapsedProjects();
-  const entries = useListEntries(props, collapsedProjects.collapsed);
+  const nesting = useSessionNesting(treeDrawn);
+  const entries = useNestedEntries(props, collapsedProjects.collapsed, nesting);
   const animating = useAnimateReorder(entries);
   const rows = useListRowData(props);
 
+  return { collapsedProjects, nesting, entries, animating, rows };
+}
+
+export function useListRows(
+  props: SessionsListProps,
+  treeDrawn: boolean,
+): ListRows {
+  const input = useRowInputs(props, treeDrawn);
+
   return {
-    animating,
-    items: props.placeholder ? noEntries : entries,
-    extraData: useExtraData(rows, collapsedProjects),
-    renderItem: useRenderItem(props, { rows, collapsedProjects, animating }),
+    animating: input.animating,
+    items: props.placeholder ? noEntries : input.entries,
+    extraData: useExtraData(input.rows, input.collapsedProjects),
+    renderItem: useRenderItem(props, input),
   };
 }

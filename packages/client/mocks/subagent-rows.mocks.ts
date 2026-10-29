@@ -91,6 +91,7 @@ export const subagentRows: SubagentUpdate[] = [
 const explore: Subagent = {
   sessionId: exploreSessionId,
   parentSessionId,
+  readOnly: true,
   toolCallId: null,
   title: exploreTitle,
   role: 'Explore',

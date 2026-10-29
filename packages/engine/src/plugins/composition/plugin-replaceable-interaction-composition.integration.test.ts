@@ -66,7 +66,7 @@ it('retains a replacement handler and restores core when its Plugin is turned of
       type: 'replacement',
       message: { root: { type: 'Button', props: { label: 'Count 1' } } },
     });
-  await app.client.plugins.setEnabled.mutate({
+  await app.client.plugin.setEnabled.mutate({
     pluginId: 'counter',
     enabled: false,
   });

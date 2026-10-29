@@ -19,7 +19,7 @@ const PluginArguments = z.tuple([
 
 const commands = { validate, test: runTests };
 
-// `name` is how the caller is run: `argo-plugin` from the kit, `argo plugin` from the Server.
+// `name` is how the caller is run: `argo-plugin` from the kit, `argo plugin` from the CLI.
 export function runPluginCommand(
   args: string[],
   write: Write,

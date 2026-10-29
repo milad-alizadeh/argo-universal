@@ -56,7 +56,7 @@ it('kills a Plugin child process when the Plugin crashes', async () => {
 
   const { caller } = await startEngineTestHost({ home });
 
-  expect(await caller.plugins.activate({ pluginId: 'probe' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: 'probe' })).toMatchObject({
     state: 'crashed',
   });
 
@@ -73,7 +73,7 @@ it('kills a Plugin child process when the Plugin reloads', async () => {
 
   const { caller } = await startEngineTestHost({ home });
 
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   const pid = await childPid(data);
 
@@ -92,7 +92,7 @@ it('kills a command the Plugin is still running when the Plugin reloads', async 
 
   const { caller } = await startEngineTestHost({ home });
 
-  void caller.plugins.activate({ pluginId: 'probe' });
+  void caller.plugin.activate({ pluginId: 'probe' });
 
   const pid = await childPid(data);
 
@@ -117,7 +117,7 @@ it('kills a descendant of a Plugin child process when the Plugin crashes', async
 
   const { caller } = await startEngineTestHost({ home });
 
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   const pid = await childPid(data);
 
@@ -154,7 +154,7 @@ it('aborts a Plugin request that is still waiting when the Plugin reloads', asyn
     pluginNetwork: await fixtureNetwork(),
   });
 
-  void caller.plugins.activate({ pluginId: 'probe' });
+  void caller.plugin.activate({ pluginId: 'probe' });
   await expect.poll(() => received && !closed, pollOptions).toBe(true);
   await appendFile(entry, '\n// reload\n');
   await expect.poll(() => closed, pollOptions).toBe(true);
@@ -167,11 +167,11 @@ it('kills a Plugin child process when the Plugin is turned off', async () => {
 
   const { caller } = await startEngineTestHost({ home });
 
-  await caller.plugins.activate({ pluginId: 'probe' });
+  await caller.plugin.activate({ pluginId: 'probe' });
 
   const pid = await childPid(data);
 
   expect(alive(pid)).toBe(true);
-  await caller.plugins.setEnabled({ pluginId: 'probe', enabled: false });
+  await caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
   await expect.poll(() => alive(pid), pollOptions).toBe(false);
 });

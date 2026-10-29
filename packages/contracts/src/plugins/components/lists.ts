@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { actionSlot, defineKitComponent } from '../define-kit-component';
 import { echoes } from '../kit-component-props';
-import { acknowledgedEvent } from '../kit-event-props';
+import { acknowledgedEvent, acknowledgedPayload } from '../kit-event-props';
 import { listExpansion } from '../list-expansion';
 import {
   contentListProps,
@@ -10,6 +10,7 @@ import {
   rowPress,
 } from '../list-kit-props';
 import { listMediaComponents } from '../list-media-components';
+import { listMoveProps } from '../list-move-props';
 import {
   tableCellProps,
   tableProps,
@@ -21,7 +22,7 @@ const searchThrottleMs = 250;
 
 export const listsComponents = {
   List: defineKitComponent(
-    'A content list with rows, adaptive media grids or horizontal shelves.',
+    'A content list with rows, adaptive media grids, horizontal shelves or lanes, whose rows can move.',
     contentListProps,
     {
       group: 'lists',
@@ -34,6 +35,8 @@ export const listsComponents = {
       events: {
         onLoadMore: acknowledgedEvent('pagination'),
         onRefresh: acknowledgedEvent(),
+        // The List keeps the moved row where it was dropped until the Plugin answers.
+        onMove: acknowledgedPayload(listMoveProps),
         onChange: z
           .array(z.string())
           .readonly()

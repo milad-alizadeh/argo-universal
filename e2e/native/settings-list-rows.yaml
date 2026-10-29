@@ -1,0 +1,12 @@
+appId: dev.argo.app
+name: The Settings list draws each root section and its rows
+---
+- openLink: "argo://storybook?STORYBOOK_STORY_ID=screens-settings-settings--settings"
+- assertVisible: "^Workspace$"
+- assertVisible: "^Projects$"
+- assertVisible: "^Agents$"
+- assertVisible: "^Plugins$"
+- assertVisible: "^Accounts$"
+- scrollUntilVisible:
+    element: "^Appearance$"
+    direction: DOWN

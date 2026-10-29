@@ -7,7 +7,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { agentCredentials } from '#mocks/agent-credentials';
 
-it('authenticates on the rejected open connection and joins a pending attempt', async () => {
+it('authenticates through the shared sign-in connection after a rejected isolated open and joins a pending attempt', async () => {
   const entered = Promise.withResolvers<AuthenticateRequest>();
   const finish = Promise.withResolvers<void>();
 
@@ -53,7 +53,7 @@ it('authenticates on the rejected open connection and joins a pending attempt', 
   ]);
   expect((await host.caller.agents.authState(subject)).pending).toBeNull();
   await host.caller.session.new(emptySessionInput);
-  expect(host.agent.processes).toHaveLength(1);
+  expect(host.agent.processes).toHaveLength(3);
 });
 
 it('a failed protocol method clears pending and can be retried on the same process', async () => {
@@ -79,7 +79,7 @@ it('a failed protocol method clears pending and can be retried on the same proce
     await host.caller.agents.authenticate({ ...subject, methodId: 'login' }),
   ).toEqual({ status: 'ok' });
   await host.caller.session.new(emptySessionInput);
-  expect(host.agent.processes).toHaveLength(1);
+  expect(host.agent.processes).toHaveLength(3);
 });
 
 it('preserves supported methods in Agent order and the authentication error description', async () => {
@@ -157,5 +157,5 @@ it('cancelling an agent method drops its connection and fails the waiting attemp
   expect(await result).toMatchObject({ status: 'failed' });
   finish.resolve();
   expect((await host.caller.agents.authState(subject)).pending).toBeNull();
-  expect(host.agent.processes).toHaveLength(2);
+  expect(host.agent.processes).toHaveLength(3);
 });

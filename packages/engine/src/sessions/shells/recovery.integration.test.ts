@@ -33,7 +33,7 @@ it('an Agent exit loses running Shells, retains output and never restarts comman
   process.exited.resolve();
   process.connection.close();
   await expect
-    .poll(() => host.caller.session.shells(created))
+    .poll(() => host.caller.session.listShells(created))
     .toMatchObject([
       { id: shellId, status: 'lost', exitCode: null, canStop: false },
     ]);
@@ -94,7 +94,7 @@ it('Engine startup loses interrupted Shells before serving, retains files as Blo
     acp: host.agent,
   });
 
-  expect(await restarted.caller.session.shells(created)).toMatchObject([
+  expect(await restarted.caller.session.listShells(created)).toMatchObject([
     {
       id: 'finished',
       status: 'exited',

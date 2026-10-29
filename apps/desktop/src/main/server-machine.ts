@@ -86,7 +86,7 @@ const millisecondsPerSecond = 1000;
 
 const serverInput = ({ context }: { context: ServerContext }): ServerInput => ({
   home: context.home,
-  serverDirectory: context.serverDirectory,
+  cliDirectory: context.cliDirectory,
   askToKeepSessions: context.askToKeepSessions,
 });
 
@@ -283,7 +283,8 @@ export const serverConnectionMachine = serverSetup.createMachine({
           target: '.answering',
           actions: assign({
             ownedPid: ({ event }): number => event.pid,
-            spawnedAt: ({ event }): number => event.at,
+            spawnedAt: ({ context, event }): number =>
+              context.spawnedAt ?? event.at,
           }),
         },
         'server.exited': {

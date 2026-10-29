@@ -1,10 +1,12 @@
 import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
 import { feedRowColumns, shellColumns } from '../columns';
+import { OperationWorkTarget } from '../operations/work';
 import { TurnEnd } from '../sessions/turn';
 import { BlobRef, ContentBlock } from './content-block';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
+import { NonUserPromptSender } from './prompt-sender';
 import {
   CommandAction,
   PermissionOutcome,
@@ -51,7 +53,24 @@ export const UserMessage = z.strictObject({
   ...envelope,
   sessionUpdate: kind('user_message'),
   ...message,
+  _meta: createFeedMetadataSchema(
+    z.strictObject({
+      sender: z.strictObject({ type: z.literal('user') }).optional(),
+    }),
+  ),
 });
+
+// Argo-owned Prompt provenance is separate from ACP-reported Session messages (ADR-0044).
+export const PromptMessage = z.strictObject({
+  ...envelope,
+  sessionUpdate: kind('prompt_message'),
+  ...message,
+  _meta: z.strictObject({
+    argo: z.strictObject({ sender: NonUserPromptSender }),
+  }),
+});
+
+export type PromptMessage = z.infer<typeof PromptMessage>;
 
 export const SessionMessage = z.strictObject({
   ...envelope,
@@ -109,6 +128,7 @@ export const ToolCallUpdate = z.strictObject({
         })
         .optional(),
       permissionOutcome: PermissionOutcome.optional(),
+      operationWork: OperationWorkTarget.optional(),
       commandActions: z.array(CommandAction).optional(),
       startedAt: z.int().optional(),
       endedAt: z.int().optional(),
@@ -227,6 +247,7 @@ export type TaskUpdate = z.infer<typeof TaskUpdate>;
 // One Feed row. An unknown `sessionUpdate` kind or an unknown key fails to parse.
 export const SessionUpdate = z.discriminatedUnion('sessionUpdate', [
   UserMessage,
+  PromptMessage,
   SessionMessage,
   AgentMessage,
   AgentThought,

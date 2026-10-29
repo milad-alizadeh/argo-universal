@@ -1,5 +1,10 @@
 import type { FeedChange } from '@repo/contracts';
 import {
+  nativePermissionOutcomeEvent,
+  nativePermissionOutcome,
+  type NativePermissionOutcomeEvent,
+} from './native-permission-outcome';
+import {
   messageRejectedEvent,
   messageRejectedNotice,
   type MessageRejectedEvent,
@@ -16,12 +21,14 @@ import {
 
 // Events the Session sends for Feed to turn into rows (ADR-0006).
 export type SessionRowEvent =
+  | NativePermissionOutcomeEvent
   | TurnEndingEvent
   | PermissionSelectedEvent
   | MessageRejectedEvent;
 
 export const sessionRowEvents: readonly SessionRowEvent['type'][] = [
   turnEndingEvent,
+  nativePermissionOutcomeEvent,
   permissionsCancelledEvent,
   permissionSelectedEvent,
   messageRejectedEvent,
@@ -32,6 +39,7 @@ const writeSessionRows = { actions: 'writeSessionRows' } as const;
 // Feed's transitions for these events; the Record makes the list complete.
 export const sessionRowTransitions = {
   [turnEndingEvent]: writeSessionRows,
+  [nativePermissionOutcomeEvent]: writeSessionRows,
   [permissionsCancelledEvent]: writeSessionRows,
   [permissionSelectedEvent]: writeSessionRows,
   [messageRejectedEvent]: writeSessionRows,
@@ -47,7 +55,7 @@ type SessionRowChange = {
 
 const eventFeedChanges = (
   feed: RowSource,
-  event: SessionRowEvent,
+  event: Exclude<SessionRowEvent, NativePermissionOutcomeEvent>,
 ): FeedChange[] => {
   switch (event.type) {
     case permissionSelectedEvent:
@@ -63,7 +71,10 @@ export const sessionRowChanges = (
   feed: RowSource,
   event: SessionRowEvent,
 ): SessionRowChange[] =>
-  eventFeedChanges(feed, event).map((change) => ({
+  (event.type === nativePermissionOutcomeEvent
+    ? [nativePermissionOutcome(event)]
+    : eventFeedChanges(feed, event)
+  ).map((change) => ({
     type: 'feed.change',
     turnId: event.turnId,
     change,

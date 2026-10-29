@@ -1,8 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { flushSync } from 'react-dom';
 import { expect, waitFor } from 'storybook/test';
-import { vi } from 'vitest';
+import { sampleMotionFrames } from './scaffold-workbench-motion.test.mocks';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {
@@ -30,7 +29,11 @@ async function assertSliding(canvas: Canvas, action: string): Promise<void> {
   const left = (): number => workbench.getBoundingClientRect().left;
   const start = left();
 
-  const positions = await sampleMotion(button, left);
+  const positions = await sampleMotionFrames(
+    () => button.click(),
+    left,
+    motionFrames,
+  );
 
   await expect(positions.at(-1)).not.toBe(start);
   await expect(new Set(positions.map(Math.round)).size).toBeGreaterThan(2);
@@ -62,32 +65,3 @@ export const WorkbenchSlidesWhenTheExpandedInspectorRestores: Story = {
     await assertSliding(canvas, 'Restore Inspector');
   },
 };
-
-// Drive Reanimated's real frame callbacks and clock together, independent of the runner's frame rate.
-async function sampleMotion(
-  button: HTMLElement,
-  measure: () => number,
-): Promise<number[]> {
-  vi.useFakeTimers({
-    toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'],
-  });
-
-  try {
-    flushSync(() => button.click());
-
-    return await motionPositions(measure);
-  } finally {
-    vi.useRealTimers();
-  }
-}
-
-async function motionPositions(measure: () => number): Promise<number[]> {
-  const positions: number[] = [];
-
-  for (let frame = 0; frame < motionFrames; frame++) {
-    await vi.advanceTimersByTimeAsync(16);
-    positions.push(measure());
-  }
-
-  return positions;
-}

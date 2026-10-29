@@ -113,7 +113,7 @@ it(
   async () => {
     const host = await oauthPlugins();
     await host.started();
-    await host.caller.plugins.setEnabled({ pluginId: 'alice', enabled: false });
+    await host.caller.plugin.setEnabled({ pluginId: 'alice', enabled: false });
     await expect(fetch(redirectUri)).rejects.toThrow(networkFailure);
   },
   journeyMs,

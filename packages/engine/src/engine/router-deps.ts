@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
+import { homedir } from 'node:os';
 import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import { type FeedDeps } from '../feed';
 import type { NotificationsDeps } from '../notifications';
+import type { OperationWaitClock, SessionTokens } from '../operations';
 import type { PluginsRouterDeps } from '../plugins';
 import {
   createSessionConnections,
@@ -26,19 +28,26 @@ export type AppRouterDeps = SessionRouterDeps &
   BlobUploadDeps &
   SystemDeps &
   FeedDeps &
-  NotificationsDeps & { plugins: PluginsRouterDeps };
+  NotificationsDeps & {
+    userHome: string;
+    sessionTokens: SessionTokens;
+    controlToken: string;
+    plugins: PluginsRouterDeps;
+    operationWaitClock?: OperationWaitClock;
+  };
 
 // The Engine owns connection lifetimes and shared Feed sources.
 type EngineSupplied =
   | keyof FeedDeps
   | 'createId'
+  | 'userHome'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId'>> & {
+  Partial<Pick<AppRouterDeps, 'createId' | 'userHome'>> & {
     acp?: AcpResourceInput;
   };
 
@@ -76,7 +85,11 @@ function createStoredChangesReader(
 
 type AgentSetup = Pick<
   AppRouterDeps,
-  'createId' | 'dropAgentConnections' | 'sessionConnections' | 'installedAgents'
+  | 'createId'
+  | 'userHome'
+  | 'dropAgentConnections'
+  | 'sessionConnections'
+  | 'installedAgents'
 >;
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
@@ -89,5 +102,6 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
     sessionConnections,
     installedAgents: input.sessions.getSnapshot().context.installedAgents,
     createId: input.createId ?? randomUUID,
+    userHome: input.userHome ?? homedir(),
   };
 }

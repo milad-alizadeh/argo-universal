@@ -11,4 +11,5 @@ export const demos = [
   { path: 'views', title: 'Issue views', subtitle: 'A segmented switcher' },
   { path: 'posts', title: 'Remote posts', subtitle: 'A paged list from fetch' },
   { path: 'log', title: 'Log', subtitle: 'A list anchored to its end' },
+  { path: 'board', title: 'Board', subtitle: 'Cards that move between lanes' },
 ];

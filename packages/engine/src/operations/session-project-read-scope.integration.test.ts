@@ -1,0 +1,91 @@
+import { expect, it } from 'vitest';
+import { operationCaller, runOperation } from '#mocks/operations';
+import {
+  addOtherProject,
+  openAccessSession,
+  sessionAccessHost,
+} from '#mocks/session-access';
+import { sessionReadScope } from '#mocks/session-read-scope';
+
+const listOperationId = 'session.list';
+
+const projectBranchesId = 'project.listBranches';
+
+it('defaults a Session list to its caller Project and requires an active Turn to confirm a foreign Project', async () => {
+  const fixture = await sessionAccessHost();
+  const otherId = await addOtherProject(fixture.host);
+  const caller = await openAccessSession(fixture, 'Caller');
+  const sibling = await openAccessSession(fixture, 'Sibling');
+  const foreign = await openAccessSession(fixture, 'Foreign', otherId);
+
+  expect(
+    await runOperation(caller.caller.operations, {
+      id: listOperationId,
+      params: {},
+    }),
+  ).toMatchObject({
+    sessions: expect.arrayContaining([
+      expect.objectContaining({ sessionId: caller.sessionId }),
+      expect.objectContaining({ sessionId: sibling.sessionId }),
+    ]),
+  });
+  expect(
+    await runOperation(caller.caller.operations, {
+      id: listOperationId,
+      params: {},
+    }),
+  ).not.toMatchObject({
+    sessions: expect.arrayContaining([
+      expect.objectContaining({ sessionId: foreign.sessionId }),
+    ]),
+  });
+  await expect(
+    runOperation(caller.caller.operations, {
+      id: listOperationId,
+      params: { projectId: otherId },
+    }),
+  ).rejects.toMatchObject({
+    data: { code: 'CONFLICT' },
+    message: 'A Permission request requires an active Turn',
+  });
+  expect((await fixture.host.caller.session.list({})).sessions).toContainEqual(
+    expect.objectContaining({ sessionId: foreign.sessionId }),
+  );
+  const user = await operationCaller(fixture.host);
+
+  expect(
+    await runOperation(user.operations, {
+      id: listOperationId,
+      params: { projectId: otherId },
+    }),
+  ).toMatchObject({
+    sessions: [expect.objectContaining({ sessionId: foreign.sessionId })],
+    nextCursor: null,
+  });
+}, 30_000);
+
+it('scopes Project branch reads while keeping user access to another Project', async () => {
+  const { calling, otherId, user } = await sessionReadScope();
+
+  expect(
+    await runOperation(calling.caller.operations, {
+      id: projectBranchesId,
+      params: { projectId: 'project-1' },
+    }),
+  ).toMatchObject({ currentBranch: 'main' });
+  await expect(
+    runOperation(calling.caller.operations, {
+      id: projectBranchesId,
+      params: { projectId: otherId },
+    }),
+  ).rejects.toMatchObject({
+    data: { code: 'CONFLICT' },
+    message: 'A Permission request requires an active Turn',
+  });
+  expect(
+    await runOperation(user.operations, {
+      id: projectBranchesId,
+      params: { projectId: otherId },
+    }),
+  ).toMatchObject({ currentBranch: 'main' });
+}, 30_000);

@@ -51,7 +51,7 @@ pnpm validate
 pnpm test
 ```
 
-`argo-plugin <validate|test> <dir>` accepts an absolute or relative Plugin directory. The Server's `argo plugin <validate|test> <dir>` runs the same command.
+`argo-plugin <validate|test> <dir>` accepts an absolute or relative Plugin directory. The CLI's `argo plugin <validate|test> <dir>` runs the same command.
 
 ## Source validation
 

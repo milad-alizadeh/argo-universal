@@ -1,0 +1,53 @@
+import { randomUUID } from 'node:crypto';
+import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { AcpResourceInput } from '../agents';
+import type { SessionTokens } from './session-tokens';
+
+const quote = (argument: string): string =>
+  `'${argument.replaceAll("'", "'\\''")}'`;
+
+// The Server's Node can be bundled or absent from the Project login shell's PATH.
+const cliLauncher = (cliEntry: string): string => `#!/bin/sh
+exec ${quote(process.execPath)} ${quote(cliEntry)} "$@"
+`;
+
+function writeCliLauncher(home: string, cliEntry: string): string {
+  const directory = join(home, 'cli', 'bin');
+  mkdirSync(directory, { recursive: true });
+  const temporary = join(directory, `argo.${randomUUID()}`);
+
+  try {
+    writeFileSync(temporary, cliLauncher(cliEntry), { mode: 0o755 });
+    renameSync(temporary, join(directory, 'argo'));
+  } catch (error) {
+    rmSync(temporary, { force: true });
+    throw error;
+  }
+
+  return directory;
+}
+
+export function sessionLaunchPolicy(
+  home: string,
+  tokens: SessionTokens,
+  cliEntry: string,
+): NonNullable<AcpResourceInput['sessionAccess']> {
+  const launcher = cliLauncherOnce(home, cliEntry);
+
+  return (sessionId, projectId) => {
+    const grant = tokens.issue(sessionId, projectId);
+
+    return {
+      environment: { token: grant.token, home, cliDirectory: launcher() },
+      release: grant.release,
+    };
+  };
+}
+
+// Each Engine writes the launcher for its own CLI entry once, at its first private opening.
+function cliLauncherOnce(home: string, cliEntry: string): () => string {
+  let directory: string | undefined;
+
+  return () => (directory ??= writeCliLauncher(home, cliEntry));
+}

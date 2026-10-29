@@ -4,7 +4,9 @@ import type {
   ServerResponse,
 } from 'node:http';
 import { maxBlobUploadBytes } from '@repo/contracts';
+import type { CreateHTTPContextOptions } from '@trpc/server/adapters/standalone';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
+import type { RpcContext } from '../rpc/connection';
 import { handleAsset, type AssetReader } from './asset-response';
 import { streamBlob } from './blob-response';
 import { answerError, httpStatus, reportHttpFailure } from './http-response';
@@ -69,7 +71,7 @@ function dispatchCoreRequest(
 function createGuardedTrpc(options: RequestListenerOptions): RequestListener {
   const handleTRPC = createHTTPHandler({
     router: options.router,
-    createContext: () => ({}),
+    createContext: httpContext,
     basePath: '/trpc/',
     maxBodySize,
   });
@@ -103,4 +105,8 @@ function handleBlob(
 
 function matchedBlobId(match: RegExpExecArray): string {
   return match[1] ?? '';
+}
+
+function httpContext({ req }: CreateHTTPContextOptions): RpcContext {
+  return { token: req.headers.authorization?.replace(/^Bearer /, '') };
 }

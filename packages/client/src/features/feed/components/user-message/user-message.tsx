@@ -3,7 +3,9 @@ import type {
   ContentBlock,
   ImageContent,
   UserMessage as UserMessageRow,
+  PromptMessage,
 } from '@repo/contracts';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
@@ -12,7 +14,7 @@ import { type Reference, ReferenceChips } from './reference-chips';
 import { UserMessageBubble } from './user-message-bubble';
 
 export interface UserMessageProps {
-  row: UserMessageRow;
+  row: UserMessageRow | PromptMessage;
   // Where the App loads a stored image from.
   imageUrl: (blob: BlobRef) => string;
 }
@@ -49,7 +51,7 @@ function MessageImages({
   );
 }
 
-// A prompt as the person sent it: images and file chips above a right-aligned bubble.
+// A stored Prompt uses the existing bubble, with its sender when another Session or Plugin sent it.
 export const UserMessage = memo(function UserMessage({
   row,
   imageUrl,
@@ -58,9 +60,20 @@ export const UserMessage = memo(function UserMessage({
 
   return (
     <View className="items-end gap-1.5">
+      <PromptSenderCaption row={row} />
       <ReferenceChips references={references} />
       <MessageImages images={images} imageUrl={imageUrl} />
       {text.length > 0 && <UserMessageBubble text={text} />}
     </View>
   );
 });
+
+function PromptSenderCaption({
+  row,
+}: Pick<UserMessageProps, 'row'>): React.JSX.Element | null {
+  return row.sessionUpdate === 'prompt_message' ? (
+    <Text role="secondary" tone="muted">
+      From {row._meta.argo.sender.title}
+    </Text>
+  ) : null;
+}

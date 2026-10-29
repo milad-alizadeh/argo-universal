@@ -4,7 +4,8 @@ import type { OutputBlob } from './acp/tool-output';
 export const promptBlobIds = (rows: readonly SessionUpdate[]): string[] => [
   ...new Set(
     rows.flatMap((row): string[] =>
-      row.sessionUpdate === 'user_message'
+      row.sessionUpdate === 'user_message' ||
+      row.sessionUpdate === 'prompt_message'
         ? row.content.flatMap((block): string[] =>
             'blob' in block && block.blob ? [block.blob.blobId] : [],
           )

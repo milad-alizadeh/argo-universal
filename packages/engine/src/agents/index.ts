@@ -17,7 +17,10 @@ export { defaultInstallPorts } from './launch/default-ports';
 
 export { shellEnvironment } from './launch/shell-env';
 
-export { agentEnvironment } from './launch/agent-environment';
+export {
+  agentEnvironment,
+  applyArgoEnvironment,
+} from './launch/agent-environment';
 
 export type { InstallPorts } from './launch/ports';
 
@@ -37,3 +40,14 @@ export {
   type InstalledAgent,
   type InstalledAgents,
 } from './servers/installed-agents';
+
+export { readAgentServers } from './servers/agent-servers-sql';
+
+export { readRegistry } from './registry/registry-cache';
+
+export {
+  changeAgentServer,
+  refreshRegistry,
+  syncRegistry,
+  type RegistryDeps,
+} from './registry/registry-operations';

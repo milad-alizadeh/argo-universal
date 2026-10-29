@@ -1,5 +1,7 @@
 export * from './change';
 
+export * from './prompt-sender';
+
 export * from './content-block';
 
 export * from './page';

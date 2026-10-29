@@ -27,7 +27,7 @@ it('refuses a foreign Origin before serving an asset', async () => {
 
 it('stops serving a Plugin asset when the Plugin is turned off', async () => {
   const { caller, assetUrl } = await assetProbe();
-  await caller.plugins.setEnabled({ pluginId: 'probe', enabled: false });
+  await caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
   const response = await fetch(assetUrl);
 
   expect(response.status).toBe(404);

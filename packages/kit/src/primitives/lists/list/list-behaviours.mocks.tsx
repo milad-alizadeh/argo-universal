@@ -5,7 +5,8 @@ import { ListItem } from '../list-item';
 import { List } from './list';
 import type { ListProps } from './list-props';
 
-type ExampleProps = Omit<ListProps<string>, 'children'>;
+// Lists of `items`, which cannot move their rows.
+type ExampleProps = Omit<ListProps<string>, 'children' | 'onMove'>;
 
 type SetItems = (
   items:

@@ -47,7 +47,7 @@ function useProjectBranches(
   const trpc = useTRPC();
 
   return useQuery(
-    trpc.projects.branches.queryOptions(
+    trpc.project.listBranches.queryOptions(
       { projectId: project?.id ?? '' },
       { enabled: isMain(project) },
     ),
@@ -90,7 +90,7 @@ type ListedData = Pick<NewSessionData, 'projects' | 'agents'> & {
 };
 
 function useListedData(): ListedData {
-  const projects = useQuery(useTRPC().projects.list.queryOptions());
+  const projects = useQuery(useTRPC().project.list.queryOptions());
   const agents = useInstalledAgents();
 
   const listed = {

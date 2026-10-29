@@ -55,6 +55,10 @@ export class FeedRowsJob implements WriterJob {
     return this.input.sessionId === sessionId ? this.input : undefined;
   }
 
+  public holdsBlob(blobId: string): boolean {
+    return (this.input.blobs ?? []).some(({ blob }) => blob.blobId === blobId);
+  }
+
   public get sessionId(): string {
     return this.input.sessionId;
   }

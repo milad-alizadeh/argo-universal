@@ -30,7 +30,7 @@ const withMethods = (
   initialize: { ...scriptedInitialization, authMethods },
 });
 
-// `session/new` answers `auth_required` until this Agent process signs in.
+// `session/new` answers `auth_required` while the credential store is signed out.
 const signedOut = (): Pick<ScriptedScenario, 'authentication'> => ({
   authentication: { credentials: { signedIn: false } },
 });
@@ -93,6 +93,10 @@ const turnTerminalSignIn = (steps: Steps): ScriptedScenario => ({
 const openExitOnce = (steps: Steps): ScriptedScenario => ({
   ...base(steps),
   responses: { 'session/new': [{}, { steps: [agentExit] }] },
+  sessionProcess: {
+    ...base(steps),
+    responses: { 'session/new': [{ steps: [agentExit] }] },
+  },
   relaunched: base(steps),
 });
 
@@ -106,7 +110,7 @@ type SignInScenarioName =
   | 'open-exit-once'
   | 'configuration-exit-once';
 
-// Sign-in fixtures for the App's sign-in and launch callouts; each Agent process starts signed out.
+// Sign-in fixtures for the App's callouts, backed by the supplied credential store.
 export const signInScenarios = (
   steps: Steps,
 ): Record<SignInScenarioName, ScriptedScenario> => ({

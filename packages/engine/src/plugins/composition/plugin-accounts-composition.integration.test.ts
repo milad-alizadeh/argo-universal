@@ -24,7 +24,7 @@ it(
 
     const first = await startEngineTestHost({ home });
     expect(
-      await first.caller.plugins.activate({ pluginId: 'probe' }),
+      await first.caller.plugin.activate({ pluginId: 'probe' }),
     ).toMatchObject({ state: 'running' });
     const accounts = await first.caller.plugins.accounts.list();
     expect(accounts).toEqual([
