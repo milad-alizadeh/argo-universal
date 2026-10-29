@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import { turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { OpenSessionsActorRef } from '../../open-sessions-machine';
-import type { QueuedSessionRows } from '../../session-storage/session-storage';
+import type { QueuedSessionRows } from '../../session-storage';
 import type { ListReadInput } from './input';
 
 type OwnerInput = {

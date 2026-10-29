@@ -7,7 +7,7 @@ import {
   SessionRowUpdateJob,
   TurnInsertJob,
   TurnUpdateJob,
-} from '../session-storage/session-storage';
+} from '../session-storage';
 import { createSubagentsReader } from './reader';
 
 const runningTurn = {

@@ -92,10 +92,7 @@ import {
   toSessionInsert,
 } from './session-data';
 import { sessionFeedInput } from './session-feed';
-import {
-  SessionRowUpdateJob,
-  SessionTitleJob,
-} from './session-storage/session-storage';
+import { SessionRowUpdateJob, SessionTitleJob } from './session-storage';
 import { withShell } from './shells';
 import {
   flushSubagents,

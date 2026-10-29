@@ -9,7 +9,7 @@ import type {
   SessionData,
   SessionInput,
 } from './session-data';
-import { SessionDeleteJob } from './session-storage/session-storage';
+import { SessionDeleteJob } from './session-storage';
 
 export interface SessionDiscard {
   input: SessionInput;

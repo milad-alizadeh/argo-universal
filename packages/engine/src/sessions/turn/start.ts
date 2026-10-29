@@ -1,6 +1,6 @@
 import { currentModel } from '../configuration';
 import type { SessionContext, SessionWrite } from '../session-context';
-import { TurnInsertJob } from '../session-storage/session-storage';
+import { TurnInsertJob } from '../session-storage';
 import { turnStep, type TurnStep } from './step';
 
 type StartingSession = Pick<SessionContext, 'sessionId' | 'configOptions'> & {

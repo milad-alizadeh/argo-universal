@@ -38,21 +38,14 @@ export class TurnInsertJob implements WriterJob {
     transaction.insert(turn).values(this.insert.turn).run();
   }
 
-  public project(turns: Map<string, Turn>): void {
-    turns.set(
-      this.insert.turn.id,
-      Turn.parse({ ...turnDefaults, ...this.insert.turn }),
-    );
+  public turns(turns: ReadonlyMap<string, Turn>): ReadonlyMap<string, Turn> {
+    const inserted = Turn.parse({ ...turnDefaults, ...this.insert.turn });
+
+    return new Map(turns).set(inserted.id, inserted);
   }
 
   public changedSessionIds(): string[] {
     return [this.insert.turn.sessionId];
-  }
-
-  public sessionIdOf(turnId: string): string | undefined {
-    return this.insert.turn.id === turnId
-      ? this.insert.turn.sessionId
-      : undefined;
   }
 }
 
@@ -72,21 +65,22 @@ export class TurnUpdateJob implements WriterJob {
   }
 
   // An undefined column is left as it is, as the commit leaves it.
-  public project(turns: Map<string, Turn>): void {
+  public turns(turns: ReadonlyMap<string, Turn>): ReadonlyMap<string, Turn> {
     const row = turns.get(this.change.id);
+
+    if (!row) return turns;
 
     const set = Object.entries(this.change.set).filter(
       ([, value]): boolean => value !== undefined,
     );
 
-    if (row)
-      turns.set(
-        this.change.id,
-        Turn.parse({ ...row, ...Object.fromEntries(set) }),
-      );
+    return new Map(turns).set(
+      this.change.id,
+      Turn.parse({ ...row, ...Object.fromEntries(set) }),
+    );
   }
 
-  public turnId(): string {
-    return this.change.id;
+  public changedTurnIds(): string[] {
+    return [this.change.id];
   }
 }

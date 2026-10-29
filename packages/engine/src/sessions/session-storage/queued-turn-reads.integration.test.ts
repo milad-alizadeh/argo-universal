@@ -1,49 +1,26 @@
-import { type AgentMessage, SessionRecord, Turn } from '@repo/contracts';
+import { Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { session, turn } from '@repo/db/schema';
+import { turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, expect, it, onTestFinished } from 'vitest';
 import { createActor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
-import { FeedRowsJob } from '../../feed';
 import {
   type WriterActorRef,
   type WriterJob,
   writerMachine,
 } from '../../storage';
-import {
-  readQueuedSessionRows,
-  TurnUpdateJob,
-} from '../session-storage/session-storage';
+import { readQueuedSessionRows, TurnInsertJob, TurnUpdateJob } from '.';
 
 let database: Database;
 
 let removeDatabase: () => void;
-
-const reply: AgentMessage = {
-  sessionId: 'session-1',
-  id: 'row-1',
-  position: 0,
-  sessionUpdate: 'agent_message',
-  revision: 1,
-  turnId: 'turn-1',
-  state: 'open',
-  messageId: 'message-1',
-  content: [{ type: 'text', text: 'Complete' }],
-};
 
 const runningTurn = {
   id: 'turn-1',
   sessionId: 'session-1',
   status: 'running' as const,
 };
-
-const sessionData = SessionRecord.omit({ createdAt: true, updatedAt: true });
-
-const selectSession = (
-  id = 'session-1',
-): typeof session.$inferSelect | undefined =>
-  database.select().from(session).where(eq(session.id, id)).get();
 
 const selectTurn = (): typeof turn.$inferSelect | undefined =>
   database.select().from(turn).where(eq(turn.id, 'turn-1')).get();
@@ -105,19 +82,14 @@ it('reads a queued Turn update exactly as its commit', async (): Promise<void> =
   expect(before).toEqual(original);
 });
 
-it('reads the Session revision of queued Feed rows exactly as their commit', async (): Promise<void> => {
-  const before = SessionRecord.parse(selectSession());
-
+it('reads a queued Turn insert exactly as its commit', async (): Promise<void> => {
   const { writer, committed } = submitWrites([
-    new FeedRowsJob({
-      sessionId: 'session-1',
-      rows: [reply],
-      maxRevision: 1,
-      activityAt: 100,
-    }),
+    new TurnInsertJob({ turn: { ...runningTurn, startedAt: 12000 } }),
   ]);
 
-  const queued = readQueuedSessionRows(writer).session(before, 'session-1');
+  const queued = readQueuedSessionRows(writer);
+  expect(queued.turnSessionId('turn-1')).toBe('session-1');
+  const turns = queued.turns([]);
   await committed;
-  expect(sessionData.parse(queued)).toEqual(sessionData.parse(selectSession()));
+  expect(turns).toEqual([Turn.parse(selectTurn())]);
 });

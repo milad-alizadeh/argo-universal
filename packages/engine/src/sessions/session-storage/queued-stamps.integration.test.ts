@@ -11,11 +11,7 @@ import {
   type WriterJob,
   writerMachine,
 } from '../../storage';
-import {
-  readQueuedSessionRows,
-  SessionRowUpdateJob,
-  TurnInsertJob,
-} from '../session-storage/session-storage';
+import { readQueuedSessionRows, SessionRowUpdateJob, TurnInsertJob } from '.';
 
 let database: Database;
 

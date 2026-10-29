@@ -11,7 +11,7 @@ import { createAcpResources } from '../../agents';
 import { FeedRowsJob, toFeedRowWrite } from '../../feed';
 import { createSessionListReader } from '../list/reader';
 import { openSessionsMachine } from '../open-sessions-machine';
-import { TurnInsertJob } from '../session-storage/session-storage';
+import { TurnInsertJob } from '../session-storage';
 
 type SnapshotHost = ReturnType<typeof startSnapshotHost>;
 

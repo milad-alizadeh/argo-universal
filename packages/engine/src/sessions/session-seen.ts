@@ -30,7 +30,7 @@ export class SessionSeenJob implements WriterJob {
       .run();
   }
 
-  public project(
+  public session(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {

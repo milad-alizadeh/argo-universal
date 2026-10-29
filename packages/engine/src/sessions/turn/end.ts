@@ -1,7 +1,7 @@
 import type { TurnEnd } from '@repo/contracts';
 import type { FeedEvent } from '../../feed';
 import type { SessionContext } from '../session-context';
-import { TurnUpdateJob } from '../session-storage/session-storage';
+import { TurnUpdateJob } from '../session-storage';
 import { turnStep, type EndTurnParameters, type TurnStep } from './step';
 
 type EndingSession = Pick<

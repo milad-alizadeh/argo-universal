@@ -3,7 +3,7 @@ import { turn } from '@repo/db/schema';
 import { expect, it } from 'vitest';
 import { countDatabaseReads, insertSession } from '#mocks/database';
 import { startSnapshotHost } from '#mocks/session-snapshot';
-import { TurnInsertJob } from '../session-storage/session-storage';
+import { TurnInsertJob } from '../session-storage';
 import { createSubagentsReader } from './reader';
 
 type SnapshotHost = ReturnType<typeof startSnapshotHost>;

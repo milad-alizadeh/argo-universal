@@ -38,7 +38,7 @@ export class SessionRowUpdateJob implements WriterJob {
     transaction.update(session).set(values).where(eq(session.id, id)).run();
   }
 
-  public project(
+  public session(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {

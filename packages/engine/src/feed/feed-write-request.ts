@@ -2,7 +2,7 @@ import type { SessionUpdate } from '@repo/contracts';
 import { AtomicWriterJob, type WriterJob, type WriterEvent } from '../storage';
 import type { FeedContext, FeedEvent, FeedInternalEvent } from './feed-machine';
 import { outputBlobsOf, promptBlobIds } from './feed-row';
-import { FeedRowsJob } from './feed-storage';
+import { FeedRowsJob } from './feed-rows-job';
 
 export type WriterJobParameters = Pick<
   Extract<WriterEvent, { type: 'writer.write' }>,

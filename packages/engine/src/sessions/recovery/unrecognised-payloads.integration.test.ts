@@ -1,7 +1,7 @@
 import { feedRow } from '@repo/db/schema';
 import { describe, expect, it, vi } from 'vitest';
 import { writeJobs } from '../../storage';
-import { TurnInsertJob } from '../session-storage/session-storage';
+import { TurnInsertJob } from '../session-storage';
 import {
   runningTurnId,
   editedFilePath,

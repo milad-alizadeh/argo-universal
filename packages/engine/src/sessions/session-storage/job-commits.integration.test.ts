@@ -9,7 +9,7 @@ import {
   SessionRowUpdateJob,
   TurnInsertJob,
   TurnUpdateJob,
-} from '../session-storage/session-storage';
+} from '.';
 
 let database: Database;
 

@@ -1,7 +1,7 @@
 import type { SessionRecord, SessionInfo } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { createLiveHeaderReader } from '../../live-header';
-import { readQueuedSessionRows } from '../../session-storage/session-storage';
+import { readQueuedSessionRows } from '../../session-storage';
 import { latestTurnOf } from '../../stored-turn';
 import type { WriterChange } from '../observation';
 import type { SessionListState } from '../state';

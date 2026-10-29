@@ -2,7 +2,7 @@ import type { session } from '@repo/db/schema';
 import { createCheckout, type Checkout } from '@repo/git';
 import { titleFromPrompt } from '../../feed';
 import type { NewSessionInput, SessionData } from '../session-data';
-import { SessionInsertJob } from '../session-storage/session-storage';
+import { SessionInsertJob } from '../session-storage';
 
 type InitialProgress = Pick<
   SessionData,

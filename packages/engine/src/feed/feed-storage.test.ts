@@ -1,5 +1,6 @@
 import type { Notice } from '@repo/contracts';
 import { expect, it } from 'vitest';
+import type { WriterJob } from '../storage';
 import { FeedRowsJob } from './feed-rows-job';
 import { committedTurnEndings } from './feed-storage';
 
@@ -35,4 +36,22 @@ it('ignores a Notice that ends no Turn', () => {
   const crash = notice({ id: 'turn-1:crash', severity: 'warning' });
 
   expect(committedTurnEndings([liveRows([crash])])).toEqual([]);
+});
+
+it('reports a Turn ending from the Feed rows of a job of any module', () => {
+  const ending = notice({ _meta: { argo: { turnEnd: endedAt } } });
+
+  const job: WriterJob = {
+    describe: (): string => 'Feed rows of Session session-1',
+    commit: (): void => undefined,
+    feedRows: () => ({
+      sessionId: 'session-1',
+      rows: [ending],
+      maxRevision: 4,
+    }),
+  };
+
+  expect(committedTurnEndings([job])).toEqual([
+    { sessionId: 'session-1', turnId },
+  ]);
 });

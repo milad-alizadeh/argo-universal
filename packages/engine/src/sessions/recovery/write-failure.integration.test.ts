@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { writeJobs } from '../../storage';
-import { TurnInsertJob } from '../session-storage/session-storage';
+import { TurnInsertJob } from '../session-storage';
 import {
   runningTurnId,
   messageRow,

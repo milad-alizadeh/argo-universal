@@ -14,10 +14,7 @@ import { writerTurnCases } from '#mocks/session-list-writer-cases';
 import { createAcpResources } from '../../../agents';
 import { writerMachine } from '../../../storage';
 import { openSessionsMachine } from '../../open-sessions-machine';
-import {
-  TurnInsertJob,
-  TurnUpdateJob,
-} from '../../session-storage/session-storage';
+import { TurnInsertJob, TurnUpdateJob } from '../../session-storage';
 import { onWriterChange, type WriterChange } from '../observation';
 import type { SessionListState } from '../state';
 import { createSessionListReader } from './reader';

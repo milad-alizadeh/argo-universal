@@ -3,7 +3,7 @@ import { agentTitle } from '@repo/mocks/agent/title-scenarios';
 import { expect, it } from 'vitest';
 import { waitFor } from 'xstate';
 import { startSnapshotHost } from '#mocks/session-snapshot';
-import { SessionTitleJob } from '../session-storage/session-storage';
+import { SessionTitleJob } from '../session-storage';
 
 const userTitle = new SessionTitleJob({
   id: 'session-1',

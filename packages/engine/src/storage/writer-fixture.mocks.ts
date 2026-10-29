@@ -1,5 +1,5 @@
 import { type Database, openDatabase } from '@repo/db';
-import { afterEach, beforeEach, vi } from 'vitest';
+import { afterEach, beforeEach, expect, vi } from 'vitest';
 import {
   type Actor,
   createActor,
@@ -24,17 +24,27 @@ export interface WriteBatchCall {
   reject: (cause: unknown) => void;
 }
 
-export let writeBatchCalls: WriteBatchCall[];
+// What one test saw the Writer do; each list empties before the next test.
+export const writeBatchCalls: WriteBatchCall[] = [];
 
-export let logLines: string[];
+export const logLines: string[] = [];
 
-export let sentJobs: WriterJob[];
+export const sentJobs: WriterJob[] = [];
 
-export let refusedJobs: WriterJob[];
+export const refusedJobs: WriterJob[] = [];
 
-export let committedJobs: WriterJob[];
+export const committedJobs: WriterJob[] = [];
 
-export let writer: Actor<typeof machine>;
+let actor: Actor<typeof machine> | undefined;
+
+const started = (): Actor<typeof machine> =>
+  actor ?? expect.unreachable('the Writer actor has not started');
+
+// The Writer actor of the running test.
+export const writer: Pick<Actor<typeof machine>, 'send' | 'getSnapshot'> = {
+  send: (event): void => started().send(event),
+  getSnapshot: () => started().getSnapshot(),
+};
 
 export const mockDatabase = openDatabase(':memory:');
 
@@ -126,21 +136,26 @@ export const sendWrite = (refusable = false): void => {
 };
 
 export function startWriterActor(): void {
-  writer = createActor(machine, { input }).start();
+  actor = createActor(machine, { input }).start();
 }
 
 beforeEach((): void => {
   input.database = openDatabase(':memory:');
   vi.useFakeTimers();
-  writeBatchCalls = [];
-  logLines = [];
-  sentJobs = [];
-  refusedJobs = [];
-  committedJobs = [];
+
+  for (const recorded of [
+    writeBatchCalls,
+    logLines,
+    sentJobs,
+    refusedJobs,
+    committedJobs,
+  ])
+    recorded.length = 0;
 });
 
 afterEach((): void => {
-  writer.stop();
+  actor?.stop();
+  actor = undefined;
   input.database.$client.close();
   vi.useRealTimers();
 });

@@ -4,7 +4,7 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { pendingInputRequest } from './pending-input';
 import type { SessionRowSources } from './router-deps';
-import { readQueuedSessionRows } from './session-storage/session-storage';
+import { readQueuedSessionRows } from './session-storage';
 import { readOpenSession } from './session-system';
 import { decodeStoredTurn, storedTurnColumns } from './stored-turn';
 

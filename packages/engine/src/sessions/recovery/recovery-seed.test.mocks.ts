@@ -1,6 +1,6 @@
 import type { Database } from '@repo/db';
 import { writeJobs } from '../../storage';
-import { TurnInsertJob } from '../session-storage/session-storage';
+import { TurnInsertJob } from '../session-storage';
 import {
   runningTurnId,
   completedToolId,

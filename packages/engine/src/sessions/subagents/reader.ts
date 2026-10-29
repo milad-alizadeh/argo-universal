@@ -14,10 +14,7 @@ import {
   type FeedDeps,
   type FeedRowWrite,
 } from '../../feed';
-import {
-  readLatestTurns,
-  type RowSources,
-} from '../session-storage/session-storage';
+import { readLatestTurns, type RowSources } from '../session-storage';
 import { readChildSessions } from './children';
 import { toSubagent } from './subagent-view';
 

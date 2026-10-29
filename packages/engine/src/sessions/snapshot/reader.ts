@@ -8,7 +8,7 @@ import type { FeedDeps } from '../../feed';
 import { createLiveHeaderReader } from '../live-header';
 import type { SessionActorRef } from '../session-machine';
 import { createQueuedSessionReader } from '../session-record';
-import { readLatestTurn } from '../session-storage/session-storage';
+import { readLatestTurn } from '../session-storage';
 import { storedShells } from '../shells/reader';
 import { createSubagentsReader } from '../subagents';
 import {

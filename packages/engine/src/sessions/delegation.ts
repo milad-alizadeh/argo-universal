@@ -1,6 +1,6 @@
 import type { SessionRecord } from '@repo/contracts';
 import type { SessionRowSources } from './router-deps';
-import { readLatestTurns } from './session-storage/session-storage';
+import { readLatestTurns } from './session-storage';
 import { readOpenSession } from './session-system';
 import { readChildSessions } from './subagents/children';
 

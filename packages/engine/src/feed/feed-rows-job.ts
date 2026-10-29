@@ -1,5 +1,5 @@
 import type { SessionRecord, SessionUpdate } from '@repo/contracts';
-import { type StorageTransaction, type WriterJob } from '../storage';
+import type { QueuedFeedRows, StorageTransaction, WriterJob } from '../storage';
 import type { OutputBlob } from './acp/tool-output';
 import {
   insertOutputBlobs,
@@ -12,7 +12,6 @@ import {
   upsertFeedRows,
 } from './feed-rows-write';
 import { titleFromRows } from './prompt-title';
-import { turnEndingsOf, type CommittedTurnEnding } from './turn-settlement';
 
 type FeedRowsJobInput = FeedRowsWrite & {
   // The blobs the job's prompt rows show.
@@ -21,7 +20,10 @@ type FeedRowsJobInput = FeedRowsWrite & {
   blobs?: OutputBlob[];
 };
 
-export type QueuedFeedRows = { rows: SessionUpdate[]; maxRevision: number };
+const isRowOf = (
+  current: SessionRecord | undefined,
+  sessionId: string,
+): current is SessionRecord => current?.id === sessionId;
 
 // The live Feed's changed rows of one Session, queued on the Writer; borrows `blob`, `blob_ref` and the `session` revision, activity and prompt title in the same commit.
 export class FeedRowsJob implements WriterJob {
@@ -51,24 +53,32 @@ export class FeedRowsJob implements WriterJob {
     advanceFeedSession(transaction, this.input);
   }
 
-  public queuedRows(sessionId: string): QueuedFeedRows | undefined {
-    return this.input.sessionId === sessionId ? this.input : undefined;
+  public feedRows(): QueuedFeedRows {
+    const { sessionId, rows, maxRevision } = this.input;
+
+    return { sessionId, rows, maxRevision };
   }
 
   public holdsBlob(blobId: string): boolean {
     return (this.input.blobs ?? []).some(({ blob }) => blob.blobId === blobId);
   }
 
-  public get sessionId(): string {
-    return this.input.sessionId;
+  public changedSessionIds(): string[] {
+    return [this.input.sessionId];
   }
 
-  public turnEndings(): CommittedTurnEnding[] {
-    return turnEndingsOf(this.input.sessionId, this.input.rows);
+  public session(
+    current: SessionRecord | undefined,
+    sessionId: string,
+  ): SessionRecord | undefined {
+    if (this.input.sessionId !== sessionId || !isRowOf(current, sessionId))
+      return current;
+
+    return this.advanceSession(current);
   }
 
   // What the commit writes to its Session's row, as `advanceFeedSession` does.
-  public projectSession(current: SessionRecord): SessionRecord {
+  private advanceSession(current: SessionRecord): SessionRecord {
     const { maxRevision, activityAt, rows } = this.input;
 
     if (maxRevision <= current.maxRevision) return current;

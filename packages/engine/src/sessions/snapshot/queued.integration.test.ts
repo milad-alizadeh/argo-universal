@@ -5,10 +5,7 @@ import { waitFor } from 'xstate';
 import { insertSession } from '#mocks/database';
 import { startSnapshotHost } from '#mocks/session-snapshot';
 import { FeedRowsJob } from '../../feed';
-import {
-  SessionRowUpdateJob,
-  TurnUpdateJob,
-} from '../session-storage/session-storage';
+import { SessionRowUpdateJob, TurnUpdateJob } from '../session-storage';
 import { ShellWriteJob } from '../shells/storage';
 
 const prompt: UserMessage = {

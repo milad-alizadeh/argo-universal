@@ -53,7 +53,7 @@ export {
   SessionRowUpdateJob,
   TurnInsertJob,
   TurnUpdateJob,
-} from './session-storage/session-storage';
+} from './session-storage';
 
 export { createShellRouter } from './shells/router';
 

@@ -68,7 +68,7 @@ export class SessionInsertJob implements WriterJob {
         .run();
   }
 
-  public project(
+  public session(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {
@@ -84,7 +84,7 @@ export class SessionInsertJob implements WriterJob {
   }
 
   // The Session, when it or its parent is in scope; every queued Session without a scope.
-  public sessionIdIn(scope: readonly string[] | undefined): string[] {
+  public insertedSessionIds(scope: readonly string[] | undefined): string[] {
     const stored = this.insert.session;
 
     if (!scope) return [stored.id];

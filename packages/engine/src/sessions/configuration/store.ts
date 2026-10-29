@@ -1,7 +1,7 @@
 import type { SessionConfigOption, SlashCommand } from '@repo/contracts';
 import type { WriterJob } from '../../storage';
 import type { SessionContext, SessionWrite } from '../session-context';
-import { SessionRowUpdateJob } from '../session-storage/session-storage';
+import { SessionRowUpdateJob } from '../session-storage';
 import { AgentOptionsJob } from './agent-options-job';
 
 type Owner = Pick<SessionContext, 'agent' | 'projectId'>;

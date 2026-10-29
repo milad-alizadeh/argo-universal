@@ -1,15 +1,14 @@
 import type { Subscription } from 'xstate';
 import type { WriterActorRef, WriterJob } from '../storage';
-import {
-  changedSessionIds,
-  changedTurnIds,
-} from './session-storage/session-storage';
 
 export type WriterChange = { sessionIds: string[]; turnIds: string[] };
 
+const unique = (ids: string[]): string[] => [...new Set(ids)];
+
+// Each job names the rows it changes; a job that names none changes no Session or Turn reads.
 const describeWriterChanges = (jobs: readonly WriterJob[]): WriterChange => ({
-  sessionIds: [...new Set(jobs.flatMap(changedSessionIds))],
-  turnIds: changedTurnIds(jobs),
+  sessionIds: unique(jobs.flatMap((job) => job.changedSessionIds?.() ?? [])),
+  turnIds: unique(jobs.flatMap((job) => job.changedTurnIds?.() ?? [])),
 });
 
 // Calls `listener` when the Writer queues jobs and again when they commit.

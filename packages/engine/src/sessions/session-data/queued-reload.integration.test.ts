@@ -6,7 +6,7 @@ import { storedMessage } from '#mocks/feed';
 import { FeedRowsJob } from '../../feed';
 import { writerMachine } from '../../storage';
 import { loadSession, titleFromPrompt } from '../session-data';
-import { SessionRowUpdateJob } from '../session-storage/session-storage';
+import { SessionRowUpdateJob } from '../session-storage';
 
 const cleanups: (() => void)[] = [];
 

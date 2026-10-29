@@ -1,7 +1,7 @@
 import { Turn } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
 import { and, desc, eq, inArray, notInArray, or } from 'drizzle-orm';
-import { readQueuedSessionRows } from '../../session-storage/session-storage';
+import { readQueuedSessionRows } from '../../session-storage';
 import {
   decodeStoredTurn,
   readLatestTurnIds,

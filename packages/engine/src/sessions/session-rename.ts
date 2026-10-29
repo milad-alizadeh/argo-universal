@@ -8,7 +8,7 @@ import type { SessionRouterDeps } from './router-deps';
 import { validateSessionCommandAdmission } from './session-command';
 import { readWritableSession } from './session-opening';
 import { createQueuedSessionReader } from './session-record';
-import { SessionTitleJob } from './session-storage/session-storage';
+import { SessionTitleJob } from './session-storage';
 
 const shouldRename = (title: string, current: string): boolean =>
   title.length > 0 && title !== current;

@@ -1,7 +1,7 @@
 import { session } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { type FeedActorRef } from '../../feed';
-import { SessionInsertJob } from '../session-storage/session-storage';
+import { SessionInsertJob } from '../session-storage';
 import { activeChildTurn } from './active-turn';
 import { childFeedInput } from './feed-input';
 import type { SubagentRouting } from './routing-types';
