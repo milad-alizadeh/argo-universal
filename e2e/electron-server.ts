@@ -1,13 +1,8 @@
 import path from 'node:path';
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
-import {
-  type ChildHandle,
-  childEnvironment,
-  isAlive,
-  pollUntil,
-  signalStop,
-} from '@repo/process';
+import { type ChildHandle, childEnvironment, stopProcess } from '@repo/process';
 import {
   prepareSupervisorRuntime,
   startSupervisor,
@@ -15,102 +10,125 @@ import {
 } from './desktop/supervisor';
 import { startOwnServer } from './own-server';
 
-interface DesktopServer {
-  fixtureServer: Awaited<ReturnType<typeof startOwnServer>>;
+/*
+ * `fixture`: desktop finds the fixture Server. `reused`: the test starts a Supervisor that desktop finds and leaves running.
+ * `owned`: desktop starts its own Supervisor from the shipped app layout.
+ */
+export type SupervisorMode = 'fixture' | 'reused' | 'owned';
+
+type FixtureServer = Awaited<ReturnType<typeof startOwnServer>>;
+
+type ServerBase = {
+  fixtureServer: FixtureServer;
   home: string;
   launchDirectory: string;
   environment: NodeJS.ProcessEnv;
-  // A Supervisor the test started, which desktop reuses.
-  supervisor?: ChildHandle;
-}
+};
+
+export type DesktopServer =
+  | (ServerBase & { mode: 'fixture' | 'owned' })
+  | (ServerBase & { mode: 'reused'; supervisor: ChildHandle });
 
 type DesktopServerInput = {
   directory: string;
   agents: AppFixtureAgents;
-  ownsSupervisor: boolean;
-  usesSupervisor: boolean;
+  mode: SupervisorMode;
 };
 
-async function configureSupervisor(
-  server: DesktopServer,
-  input: DesktopServerInput,
-): Promise<void> {
-  await server.fixtureServer.stop();
+type SupervisedInput = DesktopServerInput & { mode: 'reused' | 'owned' };
+
+const desktopDirectory = path.resolve(import.meta.dirname, '../apps/desktop');
+
+// Desktop finds the Server's home, without the Expo dev URL.
+const desktopEnvironment = (
+  home: string,
+  supervisor: NodeJS.ProcessEnv = {},
+): NodeJS.ProcessEnv =>
+  childEnvironment({
+    ...supervisor,
+    ARGO_HOME: home,
+    ARGO_EXPO_WEB_URL: undefined,
+  });
+
+type SupervisedBase = Omit<ServerBase, 'launchDirectory'> & {
+  runtime: Awaited<ReturnType<typeof prepareSupervisorRuntime>>;
+};
+
+// The Supervisor's Engine takes the fixture Server's port, so the fixture Server stops first.
+async function supervisedBase(
+  input: SupervisedInput,
+  fixtureServer: FixtureServer,
+  home: string,
+): Promise<SupervisedBase> {
+  await fixtureServer.stop();
+
   const runtime = await prepareSupervisorRuntime(input.directory);
-  Object.assign(
-    server.environment,
-    supervisorEnvironment({ ...input, port: server.fixtureServer.port }),
+
+  const environment = desktopEnvironment(
+    home,
+    supervisorEnvironment({ ...input, port: fixtureServer.port }),
   );
 
-  if (input.ownsSupervisor) server.launchDirectory = runtime.app;
-  else server.supervisor = await startReusedSupervisor(server, runtime.cli);
+  return { fixtureServer, home, environment, runtime };
 }
 
-const startReusedSupervisor = (
-  server: DesktopServer,
-  cli: string,
-): Promise<ChildHandle> =>
-  startSupervisor({ cli, home: server.home, env: server.environment });
+async function reusedServer({
+  runtime,
+  ...base
+}: SupervisedBase): Promise<DesktopServer> {
+  const { home, environment: env } = base;
+  const supervisor = await startSupervisor({ cli: runtime.cli, home, env });
 
-async function withSupervisor(
-  server: DesktopServer,
-  input: DesktopServerInput,
+  return {
+    ...base,
+    mode: 'reused',
+    launchDirectory: desktopDirectory,
+    supervisor,
+  };
+}
+
+async function supervisedServer(
+  input: SupervisedInput,
+  fixtureServer: FixtureServer,
+  home: string,
 ): Promise<DesktopServer> {
-  try {
-    await configureSupervisor(server, input);
+  const { runtime, ...base } = await supervisedBase(input, fixtureServer, home);
 
-    return server;
-  } catch (error) {
-    await stopDesktopServer(server, false);
-    throw error;
-  }
+  if (input.mode === 'reused') return reusedServer({ runtime, ...base });
+
+  return { ...base, mode: 'owned', launchDirectory: runtime.app };
 }
 
 export async function prepareDesktopServer(
   input: DesktopServerInput,
 ): Promise<DesktopServer> {
   const fixtureServer = await startOwnServer(input.directory, input.agents);
-  const server = desktopServer(fixtureServer, input.directory);
+  const home = path.join(input.directory, 'server-home');
 
-  return input.usesSupervisor ? withSupervisor(server, input) : server;
-}
+  if (input.mode === 'fixture')
+    return {
+      mode: 'fixture',
+      fixtureServer,
+      home,
+      launchDirectory: desktopDirectory,
+      environment: desktopEnvironment(home),
+    };
 
-// Desktop launches from the repository and finds the fixture Server's home, without the Expo dev URL.
-function desktopServer(
-  fixtureServer: DesktopServer['fixtureServer'],
-  directory: string,
-): DesktopServer {
-  const home = path.join(directory, 'server-home');
-
-  return {
-    fixtureServer,
-    home,
-    launchDirectory: path.resolve(import.meta.dirname, '../apps/desktop'),
-    environment: childEnvironment({
-      ARGO_HOME: home,
-      ARGO_EXPO_WEB_URL: undefined,
-    }),
-  };
+  return supervisedServer({ ...input, mode: input.mode }, fixtureServer, home);
 }
 
 // A Supervisor that desktop started and left running, as Keep on quit does.
 async function stopLeftoverSupervisor(home: string): Promise<void> {
   const leftover = readServerAddress(home);
 
-  if (!leftover) return;
-  signalStop(leftover.pid);
-  await pollUntil(
-    (): true | undefined => (isAlive(leftover.pid) ? undefined : true),
-    'The owned Supervisor did not stop',
-  );
+  if (leftover) await stopProcess(leftover.pid, supervisorStopGraceMs);
 }
 
 // Stops every Server process the test started, and one desktop started and kept.
-export async function stopDesktopServer(
-  server: DesktopServer,
-  ownsSupervisor: boolean,
-): Promise<void> {
-  if (ownsSupervisor) await stopLeftoverSupervisor(server.home);
-  await server.supervisor?.stop();
+export async function stopDesktopServer(server: DesktopServer): Promise<void> {
+  if (server.mode === 'owned') await stopLeftoverSupervisor(server.home);
+
+  if (server.mode === 'reused')
+    await server.supervisor.stop(supervisorStopGraceMs);
   await server.fixtureServer.stop();
 }

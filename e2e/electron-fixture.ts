@@ -4,13 +4,13 @@ import {
   _electron as electron,
   type ElectronApplication,
 } from '@playwright/test';
-import { readServerAddress } from '@repo/engine/server-runtime';
 import { pollUntil } from '@repo/process';
 import { z } from 'zod';
 import type { ElectronInput } from './electron-app';
-import type { prepareDesktopServer } from './electron-server';
+import type { DesktopServer } from './electron-server';
 import type { App } from './fixtures';
 import { serverFiles } from './own-server-setup';
+import { publishedAddress } from './server-port';
 
 const desktopDirectory = path.resolve(import.meta.dirname, '../apps/desktop');
 
@@ -20,26 +20,6 @@ const electronPath = z
   .parse(
     createRequire(path.join(desktopDirectory, 'package.json'))('electron'),
   );
-
-// Polls system.info, so a test never calls a Server that is still starting.
-const waitForServer = (httpUrl: string): Promise<true> =>
-  pollUntil(async (): Promise<true | undefined> => {
-    const response = await fetch(`${httpUrl}/trpc/system.info`).catch(
-      (): null => null,
-    );
-
-    return response?.ok ? true : undefined;
-  }, 'The Server did not answer');
-
-const waitForSupervisorAddress = (
-  home: string,
-): Promise<NonNullable<ReturnType<typeof readServerAddress>>> =>
-  pollUntil(
-    () => readServerAddress(home) ?? undefined,
-    'The Supervisor did not publish its address',
-  );
-
-type DesktopServer = Awaited<ReturnType<typeof prepareDesktopServer>>;
 
 type ElectronEnvironment = {
   ARGO_HOME: string;
@@ -57,9 +37,10 @@ function electronEnvironment(
     ARGO_HOME: server.home,
     ARGO_USER_DATA_DIRECTORY: input.userDataDirectory,
     ARGO_BACKGROUND: process.env.CI ? '0' : '1',
-    PATH: input.ownsSupervisor
-      ? `${path.dirname(process.execPath)}:/usr/bin:/bin`
-      : '/usr/bin:/bin',
+    PATH:
+      server.mode === 'owned'
+        ? `${path.dirname(process.execPath)}:/usr/bin:/bin`
+        : '/usr/bin:/bin',
   };
 }
 
@@ -79,8 +60,11 @@ export async function appForElectron(
   server: DesktopServer,
   application: ElectronApplication,
 ): Promise<App> {
-  await waitForServer(server.fixtureServer.httpUrl);
-  const address = await waitForSupervisorAddress(server.home);
+  // A test never calls a Server that is still starting.
+  const address = await pollUntil(
+    publishedAddress(server.home),
+    'The Server did not publish its address',
+  );
 
   return electronFixture(input, server, { application, pid: address.pid });
 }

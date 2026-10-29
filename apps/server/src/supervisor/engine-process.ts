@@ -7,8 +7,8 @@ import {
   type ChildHandle,
   type ChildMessage,
   type GroupRelease,
+  once,
   startChild,
-  stopGraceMs,
 } from '@repo/process';
 import { fromCallback } from 'xstate';
 import {
@@ -20,6 +20,9 @@ import {
 const engineEntry = fileURLToPath(
   new URL('../engine/main.ts', import.meta.url),
 );
+
+// The Engine's HTTP close, Session stop and writer drain limits, plus five seconds; past this its group is killed.
+const engineStopGraceMs = 25_000;
 
 export interface EngineProcessInput {
   watch: boolean;
@@ -37,7 +40,11 @@ type ReleaseLimits = { home: string; graceMs: number };
 export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
   ({ input, sendBack, receive }): (() => void) => {
     const engine = startEngine(input);
-    const release = engineRelease(engine, input);
+
+    const release = once((): Promise<GroupRelease> =>
+      releaseEngine(engine, releaseLimits(input)),
+    );
+
     const detach = watchEngine(engine, sendBack);
 
     receive(
@@ -66,26 +73,12 @@ const startEngine = (input: EngineProcessInput): ChildHandle =>
     { messages: true },
   );
 
-// The Engine's group goes first, then its recorded Shell groups; one release serves every caller, since two would race on Shell records.
-const engineRelease = (
-  engine: ChildHandle,
-  input: EngineProcessInput,
-): (() => Promise<GroupRelease>) => {
-  const limits = {
-    home: resolveRuntimeDirectory(),
-    // The grace covers the Engine's HTTP close, Session stop and writer drain limits, plus five seconds.
-    graceMs: input.killTimeoutMs ?? stopGraceMs,
-  };
+const releaseLimits = (input: EngineProcessInput): ReleaseLimits => ({
+  home: resolveRuntimeDirectory(),
+  graceMs: input.killTimeoutMs ?? engineStopGraceMs,
+});
 
-  let releasing: Promise<GroupRelease> | undefined;
-
-  return (): Promise<GroupRelease> => {
-    releasing ??= releaseEngine(engine, limits);
-
-    return releasing;
-  };
-};
-
+// The Engine's group goes first, then its recorded Shell groups; the callback releases once for every caller, since two would race on Shell records.
 const releaseEngine = async (
   engine: ChildHandle,
   { home, graceMs }: ReleaseLimits,

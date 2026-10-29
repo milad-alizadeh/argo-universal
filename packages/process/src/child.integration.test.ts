@@ -3,13 +3,15 @@ import { fileURLToPath } from 'node:url';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { z } from 'zod';
 import {
+  type ChildCommand,
   type ChildHandle,
   describeExit,
   isAlive,
   pollUntil,
-  signalStop,
   startChild,
   startService,
+  stopLimitMs,
+  stopProcess,
 } from './index';
 
 const entry = fileURLToPath(
@@ -31,16 +33,17 @@ function firstMessage(child: ChildHandle): Promise<Serializable> {
   });
 }
 
+const graceMs = 100;
+
 async function serve(
   env: NodeJS.ProcessEnv = {},
+  start: (command: ChildCommand) => ChildHandle = (command) =>
+    startChild(command, { messages: true }),
 ): Promise<{ child: ChildHandle; descendant: number }> {
-  const child = startChild(
-    { label, entry, args: ['serve'], env },
-    { messages: true },
-  );
+  const child = start({ label, entry, args: ['serve'], env });
 
   onTestFinished(async (): Promise<void> => {
-    await child.stop(100);
+    await child.stop(graceMs);
   });
   const { descendant } = Descendant.parse(await firstMessage(child));
 
@@ -50,7 +53,7 @@ async function serve(
 it('a stopped child is released with the descendant it launched', async () => {
   const { child, descendant } = await serve();
 
-  await expect(child.stop()).resolves.toBe('released');
+  await expect(child.stop(stopLimitMs)).resolves.toBe('released');
   expect(describeExit(await child.exited)).toBe('signal SIGTERM');
   expect(isAlive(descendant)).toBe(false);
 });
@@ -58,7 +61,7 @@ it('a stopped child is released with the descendant it launched', async () => {
 it('a child that ignores SIGTERM is killed with its group after the grace', async () => {
   const { child, descendant } = await serve({ FIXTURE_IGNORE_TERM: '1' });
 
-  await expect(child.stop(100)).resolves.toBe('released');
+  await expect(child.stop(graceMs)).resolves.toBe('released');
   expect(describeExit(await child.exited)).toBe('signal SIGKILL');
   expect(isAlive(descendant)).toBe(false);
 });
@@ -70,20 +73,29 @@ it('stopping a child that has already exited only releases its group', async () 
   );
 
   expect(describeExit(await child.exited)).toBe('code 3');
-  await expect(child.stop()).resolves.toBe('released');
+  await expect(child.stop(graceMs)).resolves.toBe('released');
 });
 
-it('asking a process that has exited to stop does nothing', async () => {
-  const child = startChild(
-    { label, entry, args: ['fail'] },
-    { output: 'tail' },
-  );
-
-  await child.exited;
+it('a process stopped by its pid is released with the descendant in its group', async () => {
+  const { child, descendant } = await serve({}, startService);
   const pid = z.number().parse(child.pid);
 
-  expect((): void => signalStop(pid)).not.toThrow();
+  await expect(stopProcess(pid, stopLimitMs)).resolves.toBe('released');
   expect(isAlive(pid)).toBe(false);
+  expect(isAlive(descendant)).toBe(false);
+});
+
+it('a process stopped by its pid that ignores SIGTERM is killed with its group after the grace', async () => {
+  const { child, descendant } = await serve(
+    { FIXTURE_IGNORE_TERM: '1' },
+    startService,
+  );
+
+  const pid = z.number().parse(child.pid);
+
+  await expect(stopProcess(pid, graceMs)).resolves.toBe('released');
+  expect(describeExit(await child.exited)).toBe('signal SIGKILL');
+  expect(isAlive(descendant)).toBe(false);
 });
 
 it('waiting for a child that exits fails with its exit and the end of its stderr', async () => {

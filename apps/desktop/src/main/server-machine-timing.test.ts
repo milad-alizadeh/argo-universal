@@ -17,7 +17,7 @@ import {
   runningAddress,
   server,
   settle,
-  signalledPids,
+  stoppedPids,
   staleAddress,
   supervisorExitedEvent,
   supervisorSpawnedEvent,
@@ -79,7 +79,7 @@ describe('server connection', (): void => {
     await vi.advanceTimersByTimeAsync(1);
 
     expect(value()).toEqual({ abandoning: 'waiting' });
-    expect(signalledPids).toEqual([startedAddress.pid]);
+    expect(stoppedPids).toEqual([startedAddress.pid]);
   });
 
   it('reuses the Supervisor that won the race to start when its own exits', async (): Promise<void> => {
@@ -103,6 +103,6 @@ describe('server connection', (): void => {
 
     expect(value()).toBe('failed');
     expect(context().failure).toBe(exitReason);
-    expect(signalledPids).toEqual([]);
+    expect(stoppedPids).toEqual([]);
   });
 });

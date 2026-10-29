@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isAlive, stopGraceMs } from '@repo/process';
+import { isAlive } from '@repo/process';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { type AnyActorRef, createActor, setup } from 'xstate';
 import { z } from 'zod';
@@ -16,7 +16,7 @@ let folder: string;
 
 let events: { type: string }[];
 
-let killTimeoutMs = stopGraceMs;
+let killTimeoutMs: number | undefined;
 
 type StoppableActor = { stop: () => void };
 
@@ -71,7 +71,7 @@ const outcomes = (): string[] =>
 beforeEach((): void => {
   folder = mkdtempSync(join(tmpdir(), 'argo-engine-process-'));
   events = [];
-  killTimeoutMs = stopGraceMs;
+  killTimeoutMs = undefined;
   vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
   vi.stubEnv('ARGO_HOME', folder);
 });

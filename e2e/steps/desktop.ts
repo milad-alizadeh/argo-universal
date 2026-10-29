@@ -1,4 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import { readServerAddress } from '@repo/engine/server-runtime';
 import { isAlive } from '@repo/process';
 import { z } from 'zod';
@@ -83,7 +84,7 @@ Then(
     if (state === 'stopped') {
       await expect.poll(() => readServerAddress(home)).toBeNull();
       await expect
-        .poll(() => isAlive(supervisorPid), { timeout: 30_000 })
+        .poll(() => isAlive(supervisorPid), { timeout: supervisorStopGraceMs })
         .toBe(false);
 
       return;

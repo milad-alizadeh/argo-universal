@@ -1,5 +1,6 @@
 // One lifecycle for a Node child process: start it, wait until it is ready, stop it with everything it launched.
 export {
+  type ChildCommand,
   type ChildHandle,
   type ChildMessage,
   startChild,
@@ -8,13 +9,7 @@ export {
 
 export { childEnvironment } from './environment';
 
-export {
-  describeExit,
-  type Exit,
-  hasExited,
-  isAlive,
-  signalStop,
-} from './exit';
+export { describeExit, type Exit, hasExited, isAlive } from './exit';
 
 export {
   type GroupPort,
@@ -22,11 +17,15 @@ export {
   releaseProcessGroup,
 } from './group';
 
+export { once } from './once';
+
 export { pollUntil } from './poll';
 
+export { stopProcess } from './stop';
+
 export {
+  millisecondsPerSecond,
   pollIntervalMs,
   startLimitMs,
-  stopGraceMs,
   stopLimitMs,
 } from './timing';

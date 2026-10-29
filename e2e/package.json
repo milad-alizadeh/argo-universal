@@ -11,6 +11,7 @@
   "devDependencies": {
     "@playwright/test": "catalog:",
     "@repo/browser-suite-lock": "workspace:*",
+    "@repo/cli": "workspace:*",
     "@repo/desktop": "workspace:*",
     "@repo/engine": "workspace:*",
     "@repo/mocks": "workspace:*",

@@ -5,11 +5,11 @@ import {
   type StdioOptions,
 } from 'node:child_process';
 import { childEnvironment, nodeExecutable } from './environment';
-import { type Exit, exitOf } from './exit';
+import { type Exit, watchExit } from './exit';
 import { type GroupRelease, supportsProcessGroups } from './group';
 import type { Check } from './poll';
 import { recordStderrTail, waitUntilReady } from './ready';
-import { stopper } from './stop';
+import { stopChild } from './stop';
 
 // What a child sends over its IPC channel, before the receiver parses it.
 export type ChildMessage = Serializable;
@@ -44,7 +44,7 @@ export interface ChildHandle {
   waitUntil: <T>(check: Check<T>) => Promise<T>;
   stderrTail: () => string;
   // SIGTERM, the group killed after `graceMs`, then `released` once no member of the group is left.
-  stop: (graceMs?: number) => Promise<GroupRelease>;
+  stop: (graceMs: number) => Promise<GroupRelease>;
 }
 
 const nodeArguments = (command: ChildCommand): string[] => [
@@ -68,17 +68,27 @@ const listenTo =
     return (): void => void child.off('message', listener);
   };
 
+type Spawning = { detached: boolean; stdio: StdioOptions };
+
+const spawnNode = (command: ChildCommand, spawning: Spawning): ChildProcess =>
+  spawn(nodeExecutable(), nodeArguments(command), {
+    cwd: command.cwd,
+    env: childEnvironment(command.env),
+    ...spawning,
+  });
+
 function handleFor(label: string, child: ChildProcess): ChildHandle {
-  const exited = exitOf(child);
+  const exit = watchExit(child);
   const stderrTail = recordStderrTail(child);
 
   return {
     pid: child.pid,
-    exited,
+    exited: exit.exited,
     onMessage: listenTo(child),
-    waitUntil: (check) => waitUntilReady({ label, child, stderrTail }, check),
+    waitUntil: (check) =>
+      waitUntilReady({ label, ended: exit.ended, stderrTail }, check),
     stderrTail,
-    stop: stopper(child, exited),
+    stop: (graceMs) => stopChild(child, exit, graceMs),
   };
 }
 
@@ -87,9 +97,7 @@ export function startChild(
   command: ChildCommand,
   options: ChildOptions = {},
 ): ChildHandle {
-  const child = spawn(nodeExecutable(), nodeArguments(command), {
-    cwd: command.cwd,
-    env: childEnvironment(command.env),
+  const child = spawnNode(command, {
     detached: supportsProcessGroups,
     stdio: childStdio(options),
   });
@@ -102,9 +110,7 @@ export function startChild(
  * its output discarded so a closed parent cannot break its pipes, with an IPC channel that keeps neither process alive.
  */
 export function startService(command: ChildCommand): ChildHandle {
-  const child = spawn(nodeExecutable(), nodeArguments(command), {
-    cwd: command.cwd,
-    env: childEnvironment(command.env),
+  const child = spawnNode(command, {
     detached: true,
     stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
   });

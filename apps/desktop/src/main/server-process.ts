@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { supervisorCommand } from '@repo/cli/supervisor-command';
 import type { ServerAddress } from '@repo/contracts';
 import {
   readServerAddress,
@@ -42,15 +43,11 @@ const SupervisorStarted = z.object({
   pid: z.number().int().positive(),
 });
 
-// The CLI's `server` command starts the Supervisor, as a service that outlives this app; utilityProcess has no `detached`.
+// A service that outlives this app; utilityProcess has no `detached`.
 const launchSupervisor = (paths: SupervisorPaths): ChildHandle =>
-  startService({
-    label: 'Supervisor',
-    entry: join(paths.cliDirectory, 'bin/argo.mjs'),
-    args: ['server'],
-    cwd: paths.cliDirectory,
-    env: { ARGO_HOME: paths.home },
-  });
+  startService(
+    supervisorCommand(paths.cliDirectory, { ARGO_HOME: paths.home }),
+  );
 
 function reportMessages(
   child: ChildHandle,

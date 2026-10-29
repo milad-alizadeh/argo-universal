@@ -1,10 +1,12 @@
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import type { ServerAddress } from '@repo/contracts';
 import {
   isAlive,
+  millisecondsPerSecond,
   pollIntervalMs,
-  signalStop,
   startLimitMs,
   stopLimitMs,
+  stopProcess,
 } from '@repo/process';
 import {
   type ActorRef,
@@ -81,8 +83,6 @@ export interface CheckRunningInput {
   pid: number;
 }
 
-const millisecondsPerSecond = 1000;
-
 const serverInput = ({ context }: { context: ServerContext }): ServerInput => ({
   home: context.home,
   cliDirectory: context.cliDirectory,
@@ -157,8 +157,9 @@ const serverSetup = setup({
     announceFailure: enqueueActions(({ context, enqueue }): void => {
       enqueue.emit({ type: 'server.failed', failure: context.failure });
     }),
-    signalOwnedSupervisor: ({ context }): void => {
-      signalStop(requireOwnedPid(context));
+    // The ladder runs on past `stopLimit`, so a Supervisor that never stops has its group killed once its grace passes.
+    stopOwnedSupervisor: ({ context }): void => {
+      void stopProcess(requireOwnedPid(context), supervisorStopGraceMs);
     },
     forgetSupervisor: assign({ ownedPid: null, spawnedAt: null }),
     log: (_, params: ServerLogParameters): void => {
@@ -278,13 +279,13 @@ function stopTimeout(
   });
 }
 
-// Signals the Supervisor this app owns, then checks every `pollDelay` until it exits, for `stopLimit` at most.
+// Stops the Supervisor this app owns, then checks every `pollDelay` until it exits, for `stopLimit` at most.
 const waitingForSupervisorExit = (
   exitedTarget: string,
   stuckTarget = exitedTarget,
 ): WaitingForSupervisorExitState =>
   serverSetup.createStateConfig({
-    entry: 'signalOwnedSupervisor',
+    entry: 'stopOwnedSupervisor',
     initial: 'waiting',
     ...stopTimeout(stuckTarget),
     states: {

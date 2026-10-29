@@ -5,8 +5,9 @@ import { createServer } from 'node:net';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import type { ServerAddress } from '@repo/contracts';
-import { isAlive, signalStop } from '@repo/process';
+import { isAlive, startLimitMs, stopProcess } from '@repo/process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   readLiveServerAddress,
@@ -129,32 +130,41 @@ async function availablePort(): Promise<number> {
   return address.port;
 }
 
-it('launches argo server and owns the pid published by its Supervisor', async () => {
-  const port = await availablePort();
-  vi.stubEnv('ARGO_SERVER_PORT', String(port));
-  const pids: number[] = [];
-  const exited = Promise.withResolvers<void>();
-  const cliDirectory = fileURLToPath(new URL('../../../cli/', import.meta.url));
+it(
+  'launches argo server and owns the pid published by its Supervisor',
+  async () => {
+    const port = await availablePort();
+    vi.stubEnv('ARGO_SERVER_PORT', String(port));
+    const pids: number[] = [];
+    const exited = Promise.withResolvers<void>();
 
-  const stopListening = spawnSupervisor(
-    { home, cliDirectory },
-    {
-      spawned: (pid): void => {
-        pids.push(pid);
+    const cliDirectory = fileURLToPath(
+      new URL('../../../cli/', import.meta.url),
+    );
+
+    const stopListening = spawnSupervisor(
+      { home, cliDirectory },
+      {
+        spawned: (pid): void => {
+          pids.push(pid);
+        },
+        exited: (): void => exited.resolve(),
       },
-      exited: (): void => exited.resolve(),
-    },
-  );
+    );
 
-  try {
-    await expect
-      .poll(() => readLiveServerAddress(home), { timeout: 20_000 })
-      .toMatchObject({ port });
-    expect(pids).toHaveLength(2);
-    expect(readLiveServerAddress(home)?.pid).toBe(pids[1]);
-  } finally {
-    for (const pid of pids) signalStop(pid);
-    await exited.promise;
-    stopListening();
-  }
-}, 30_000);
+    try {
+      await expect
+        .poll(() => readLiveServerAddress(home), { timeout: 20_000 })
+        .toMatchObject({ port });
+      expect(pids).toHaveLength(2);
+      expect(readLiveServerAddress(home)?.pid).toBe(pids[1]);
+    } finally {
+      await Promise.all(
+        pids.map((pid) => stopProcess(pid, supervisorStopGraceMs)),
+      );
+      await exited.promise;
+      stopListening();
+    }
+  },
+  startLimitMs,
+);

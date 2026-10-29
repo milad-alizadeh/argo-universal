@@ -77,7 +77,7 @@ export const expectBadge = (attention: number): void => {
   expect(badges.at(-1)).toBe(attention);
 };
 
-export let signalledPids: (number | null)[];
+export let stoppedPids: (number | null)[];
 
 export let readyAddresses: ServerAddress[];
 
@@ -107,8 +107,8 @@ export const machine = serverConnectionMachine.provide({
     ),
   },
   actions: {
-    signalOwnedSupervisor: ({ context }): void => {
-      signalledPids.push(context.ownedPid);
+    stopOwnedSupervisor: ({ context }): void => {
+      stoppedPids.push(context.ownedPid);
     },
     log: (): void => {},
   },
@@ -168,7 +168,7 @@ beforeEach((): void => {
   spawnCalls = [];
   quitCalls = [];
   badges = [];
-  signalledPids = [];
+  stoppedPids = [];
   readyAddresses = [];
   failures = [];
 });

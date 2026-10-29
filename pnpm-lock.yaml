@@ -667,6 +667,9 @@ importers:
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../../packages/machine-log
+      '@repo/process':
+        specifier: workspace:*
+        version: link:../../packages/process
       '@repo/server':
         specifier: workspace:*
         version: link:../server
@@ -695,6 +698,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@repo/cli':
+        specifier: workspace:*
+        version: link:../cli
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -1086,6 +1092,9 @@ importers:
       '@repo/browser-suite-lock':
         specifier: workspace:*
         version: link:../tooling/browser-suite-lock
+      '@repo/cli':
+        specifier: workspace:*
+        version: link:../apps/cli
       '@repo/desktop':
         specifier: workspace:*
         version: link:../apps/desktop

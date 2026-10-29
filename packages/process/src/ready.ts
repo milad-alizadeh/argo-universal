@@ -1,16 +1,15 @@
 import type { ChildProcess } from 'node:child_process';
-import { describeExit, hasExited } from './exit';
+import { describeExit, type Exit } from './exit';
 import { type Check, pollUntil } from './poll';
 
 export const stderrTailLength = 2000;
 
 export type Watched = {
   label: string;
-  child: ChildProcess;
+  ended: () => Exit | undefined;
   stderrTail: () => string;
 };
 
-// Keeps the last stderrTailLength characters a piped stderr wrote.
 export function recordStderrTail(child: ChildProcess): () => string {
   let tail = '';
 
@@ -22,12 +21,11 @@ export function recordStderrTail(child: ChildProcess): () => string {
 }
 
 const whileRunning =
-  <T>({ label, child }: Watched, check: Check<T>): Check<T> =>
+  <T>({ label, ended }: Watched, check: Check<T>): Check<T> =>
   () => {
-    if (hasExited(child))
-      throw new Error(
-        `The ${label} exited (${describeExit({ code: child.exitCode, signal: child.signalCode })})`,
-      );
+    const exit = ended();
+
+    if (exit) throw new Error(`The ${label} exited (${describeExit(exit)})`);
 
     return check();
   };

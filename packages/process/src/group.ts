@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { releaseDeadlineMs, releasePollMs } from './timing';
 
 // `released`: no member of the group is left. `unresolved`: one may remain, so recovery must not overlap it.
 export type GroupRelease = 'released' | 'unresolved';
@@ -12,12 +13,21 @@ export interface GroupPort {
   hasLiveMember: (group: number) => boolean;
 }
 
-const releaseDeadlineMs = 5000;
-
-const releasePollMs = 25;
-
 // Only POSIX process groups are supported; a child started here leads its group, so its pid is the group id.
 export const supportsProcessGroups = process.platform !== 'win32';
+
+// The group a running process belongs to; undefined once it is gone.
+export function processGroupOf(pid: number): number | undefined {
+  try {
+    const group = execFileSync('/bin/ps', ['-o', 'pgid=', '-p', String(pid)], {
+      encoding: 'utf8',
+    });
+
+    return Number(group.trim());
+  } catch {
+    return undefined;
+  }
+}
 
 const goneGroupCodes = new Set<unknown>(['ESRCH', 'EPERM']);
 

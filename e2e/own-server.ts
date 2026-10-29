@@ -1,9 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { findFreePort } from '@repo/mocks/network/free-port';
-import { type ChildHandle, startChild } from '@repo/process';
+import {
+  type ChildHandle,
+  type GroupRelease,
+  startChild,
+  stopLimitMs,
+} from '@repo/process';
 import { engineBundlePath } from './engine-bundle';
 import {
   fixtureEnvironment,
@@ -11,7 +15,7 @@ import {
   prepareServer,
   type ServerPaths,
 } from './own-server-setup';
-import { serverHttpUrl, serverUrlFor } from './server-port';
+import { publishedAddress, serverHttpUrl, serverUrlFor } from './server-port';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
@@ -32,7 +36,7 @@ type OwnServer = {
   httpUrl: string;
   registryPath: string;
   installationPath: string;
-  stop: () => Promise<void>;
+  stop: () => Promise<GroupRelease>;
   restart: (whileStopped: () => Promise<void>) => Promise<void>;
 };
 
@@ -83,7 +87,7 @@ const launchServer = (launch: Launch): ChildHandle =>
 const publishesPort =
   ({ paths, port }: Launch) =>
   (): true | undefined =>
-    readServerAddress(paths.home)?.port === port ? true : undefined;
+    publishedAddress(paths.home)()?.port === port ? true : undefined;
 
 // The started Server, or undefined when another process took its port.
 async function startReady(launch: Launch): Promise<ChildHandle | undefined> {
@@ -94,20 +98,16 @@ async function startReady(launch: Launch): Promise<ChildHandle | undefined> {
 
     return engine;
   } catch (error) {
-    await engine.stop();
+    await engine.stop(stopLimitMs);
 
     if (portTakenPattern.test(engine.stderrTail())) return undefined;
     throw error;
   }
 }
 
-async function restartReady(launch: Launch): Promise<ChildHandle> {
-  const engine = await startReady(launch);
-
-  if (!engine) throw new Error(`Another process took port ${launch.port}`);
-
-  return engine;
-}
+const portTaken = ({ port }: Launch): never => {
+  throw new Error(`Another process took port ${port}`);
+};
 
 const serverAddresses = ({
   port,
@@ -125,13 +125,11 @@ function ownServer(launch: Launch, started: ChildHandle): OwnServer {
 
   return {
     ...serverAddresses(launch),
-    stop: async (): Promise<void> => {
-      await engine.stop();
-    },
+    stop: (): Promise<GroupRelease> => engine.stop(stopLimitMs),
     restart: async (whileStopped): Promise<void> => {
-      await engine.stop();
+      await engine.stop(stopLimitMs);
       await whileStopped();
-      engine = await restartReady(launch);
+      engine = (await startReady(launch)) ?? portTaken(launch);
     },
   };
 }

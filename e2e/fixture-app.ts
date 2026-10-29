@@ -6,6 +6,7 @@ import type {
 } from '@playwright/test';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { useElectronApp } from './electron-app';
+import type { SupervisorMode } from './electron-server';
 import type { App, AppOptions } from './fixtures';
 import { startOwnServer } from './own-server';
 import { serverFiles } from './own-server-setup';
@@ -91,6 +92,12 @@ export async function useApp(input: AppInput): Promise<void> {
   await useDesktopApp(input);
 }
 
+const supervisorMode = (tags: string[]): SupervisorMode => {
+  if (tags.includes('@owned-supervisor')) return 'owned';
+
+  return tags.includes('@supervisor') ? 'reused' : 'fixture';
+};
+
 async function useDesktopApp(input: AppInput): Promise<void> {
   const { testInfo, mockAgents, tags, use } = input;
 
@@ -98,8 +105,7 @@ async function useDesktopApp(input: AppInput): Promise<void> {
     directory: testInfo.outputPath(ownServerDirectory),
     userDataDirectory: testInfo.outputPath('user-data'),
     mockAgents,
-    ownsSupervisor: tags.includes('@owned-supervisor'),
-    usesSupervisor: tags.includes('@supervisor'),
+    mode: supervisorMode(tags),
     use,
   });
 }

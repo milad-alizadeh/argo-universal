@@ -9,7 +9,10 @@ export const startLimitMs = 30_000;
 // How long a starter waits for a process it asked to stop before it stops waiting.
 export const stopLimitMs = 5000;
 
-// How long a stopped child gets to exit before its group is killed: room for a long graceful shutdown.
-export const stopGraceMs = 25_000;
+// How long a group release waits for the members it killed to go.
+export const releaseDeadlineMs = 5000;
+
+// How often a group release looks for members that are left.
+export const releasePollMs = 25;
 
 export const millisecondsPerSecond = 1000;

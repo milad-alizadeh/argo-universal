@@ -5,7 +5,7 @@ import {
   runningAddress,
   server,
   type ServerSnapshot,
-  signalledPids,
+  stoppedPids,
   spawnCalls,
   staleAddress,
   startedAddress,
@@ -23,8 +23,8 @@ export const states = {
     expect(actual.context.failure === null).toBe(
       snapshot.context.failure === null,
     );
-    // A Supervisor that this app did not start is never signalled.
-    expect(signalledPids).not.toContain(runningAddress.pid);
+    // A Supervisor that this app did not start is never stopped.
+    expect(stoppedPids).not.toContain(runningAddress.pid);
     // Only `starting` listens to the Supervisor it spawned.
     expect(spawnCalls.filter((call): boolean => call.live)).toHaveLength(
       snapshot.matches('starting') ? 1 : 0,
@@ -40,13 +40,13 @@ export const states = {
     expect(readyAddresses).toEqual([]);
   },
   abandoning: (): void => {
-    expect(latest(signalledPids)).toBe(startedAddress.pid);
+    expect(latest(stoppedPids)).toBe(startedAddress.pid);
   },
   retrying: (): void => {
-    expect(latest(signalledPids)).toBe(startedAddress.pid);
+    expect(latest(stoppedPids)).toBe(startedAddress.pid);
   },
   stopping: (): void => {
-    expect(latest(signalledPids)).toBe(startedAddress.pid);
+    expect(latest(stoppedPids)).toBe(startedAddress.pid);
   },
   stopped: (): void => {
     expect(server.getSnapshot().status).toBe('done');

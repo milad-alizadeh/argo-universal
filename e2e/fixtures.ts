@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { type Page, type ElectronApplication } from '@playwright/test';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import type { GroupRelease } from '@repo/process';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
 import { useApp } from './fixture-app';
@@ -38,7 +39,7 @@ export type App = {
     application: ElectronApplication;
     home: string;
     supervisorPid: number;
-    disconnect: () => Promise<void>;
+    disconnect: () => Promise<GroupRelease>;
   };
 };
 

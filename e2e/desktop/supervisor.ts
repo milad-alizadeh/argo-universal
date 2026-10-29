@@ -1,11 +1,15 @@
 import { copyFile, mkdir, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { readServerAddress } from '@repo/engine/server-runtime';
+import {
+  supervisorCommand,
+  supervisorStopGraceMs,
+} from '@repo/cli/supervisor-command';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { type ChildHandle, startService } from '@repo/process';
 import { engineBundlePath } from '../engine-bundle';
 import { fixtureEnvironment, serverPaths } from '../own-server-setup';
+import { publishedAddress } from '../server-port';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../..');
 
@@ -101,27 +105,12 @@ export async function startSupervisor({
   home,
   env,
 }: SupervisorStart): Promise<ChildHandle> {
-  const supervisor = startService({
-    label: 'Supervisor',
-    entry: path.join(cli, 'bin/argo.mjs'),
-    args: ['server'],
-    cwd: cli,
-    env,
-  });
+  const supervisor = startService(supervisorCommand(cli, env));
 
-  return answering(supervisor, home);
-}
-
-async function answering(
-  supervisor: ChildHandle,
-  home: string,
-): Promise<ChildHandle> {
   try {
-    await supervisor.waitUntil((): true | undefined =>
-      readServerAddress(home) ? true : undefined,
-    );
+    await supervisor.waitUntil(publishedAddress(home));
   } catch (error) {
-    await supervisor.stop();
+    await supervisor.stop(supervisorStopGraceMs);
     throw error;
   }
 
