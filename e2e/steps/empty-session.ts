@@ -42,9 +42,14 @@ const worktreeOpens = (app: {
     (request) => openedIn(request) !== realpathSync(app.projectPath),
   );
 
+// Discovery holds its session open for a Slash command list up to the Engine's 10 s cap.
+const discoveryCloseMs = 15_000;
+
 // Reading a never-opened Agent's options may open an Agent session in the Project folder, but it closes it and leaves no Session or worktree.
 Then('no Session or worktree exists yet', async ({ app }): Promise<void> => {
-  await expect.poll(() => closeRequests(app)).toBe(openRequests(app).length);
+  await expect
+    .poll(() => closeRequests(app), { timeout: discoveryCloseMs })
+    .toBe(openRequests(app).length);
   expect(worktreeOpens(app)).toEqual([]);
   expect(await argoBranches(app.projectPath)).toEqual([]);
 });
