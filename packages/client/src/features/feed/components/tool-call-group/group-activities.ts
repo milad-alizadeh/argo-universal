@@ -1,3 +1,4 @@
+import type { LiveHeader } from '@repo/contracts';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
 
 type LiveToolCall = Extract<FeedGroup, { state: 'open' }>['live'];
@@ -7,12 +8,22 @@ type FeedExploration = Extract<FeedActivity, { type: 'exploration' }>;
 export const activityKey = (activity: FeedActivity): string =>
   activity.type === 'exploration' ? activity.id : activity.row.id;
 
-export const liveToolCall = (group: FeedGroup): LiveToolCall =>
+const openLive = (group: FeedGroup): LiveToolCall =>
   group.state === 'open' ? group.live : undefined;
 
-// The duration shows while the group runs, unless its live Tool call waits for approval.
+export const liveHeaderOf = (group: FeedGroup): LiveHeader | undefined =>
+  group.state === 'open' ? group.liveHeader : undefined;
+
+// A group titled by the live header lists its live Tool call like any other.
+export const liveToolCall = (group: FeedGroup): LiveToolCall =>
+  liveHeaderOf(group) ? undefined : openLive(group);
+
+const awaitsApproval = (group: FeedGroup): boolean =>
+  openLive(group)?.awaitingApproval === true;
+
+// The duration shows while the group runs, unless its live Tool call waits for approval or the live header carries the time.
 export const showsDuration = (group: FeedGroup): boolean =>
-  group.state === 'open' && group.live?.awaitingApproval !== true;
+  group.state === 'open' && !liveHeaderOf(group) && !awaitsApproval(group);
 
 function explorationWithout(
   activity: FeedExploration,

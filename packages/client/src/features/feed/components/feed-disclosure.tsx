@@ -18,7 +18,10 @@ export interface FeedDisclosureProps extends Omit<
   FeedDisclosureLabelProps,
   'hovered'
 > {
-  icon: IconName;
+  icon?: IconName;
+  // Draws the icon and the title in place of the label's, for a live header.
+  leading?: ReactNode;
+  title?: ReactNode;
   failed?: boolean;
   initialOpen?: boolean;
   children: ReactNode;
@@ -35,9 +38,11 @@ function AwaitingApprovalBadge(): React.JSX.Element {
 function FeedDisclosureTitle(
   props: Omit<FeedDisclosureProps, 'children'>,
 ): React.JSX.Element {
+  const hovered = useCollapsibleHovered();
+
   return (
     <>
-      <FeedDisclosureLabel {...props} hovered={useCollapsibleHovered()} />
+      {props.title ?? <FeedDisclosureLabel {...props} hovered={hovered} />}
       {props.awaitingApproval && <AwaitingApprovalBadge />}
     </>
   );
@@ -50,6 +55,7 @@ function FeedDisclosureHeader(
     <CollapsibleHeader
       label={props.label}
       icon={props.icon}
+      leading={props.leading}
       iconTone={props.failed ? 'danger' : undefined}
     >
       <FeedDisclosureTitle {...props} />
