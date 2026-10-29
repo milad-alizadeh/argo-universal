@@ -6,7 +6,8 @@
   "scripts": {
     "check-types": "tsc --noEmit && tsc --noEmit -p perf",
     "test": "vitest run",
-    "perf": "playwright test -c perf/playwright.config.mts"
+    "perf": "playwright test -c perf/playwright.config.mts",
+    "perf:runtime": "node --import tsx perf/runtime-run.mts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
@@ -17,10 +18,15 @@
     "@babel/parser": "catalog:",
     "@babel/types": "catalog:",
     "@playwright/test": "catalog:",
+    "@repo/browser-suite-lock": "workspace:*",
     "@repo/contracts": "workspace:*",
+    "@repo/engine": "workspace:*",
+    "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
+    "@trpc/client": "catalog:",
     "@types/node": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

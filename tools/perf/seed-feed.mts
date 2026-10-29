@@ -1,21 +1,6 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import type { feedRow, turn } from '@repo/db/schema';
-import { sessionUpdateKinds } from '@repo/db/schema';
-import { z } from 'zod';
+import { copyRow, recordings, type RecordedRow } from './recorded-feed.mts';
 
-// Copies of the recorded Feeds in `mocks/app/feed-recordings.json`, as rows of one long Session.
-const rowSchema = z.looseObject({
-  id: z.string(),
-  sessionUpdate: z.enum(sessionUpdateKinds),
-  turnId: z.string().nullable(),
-});
-
-type RecordedRow = z.infer<typeof rowSchema>;
-
-const recordingsSchema = z.array(z.looseObject({ rows: z.array(rowSchema) }));
-
-// Fields the row's columns hold; the rest is its payload.
 const columnFields = new Set([
   'id',
   'sessionId',
@@ -25,35 +10,6 @@ const columnFields = new Set([
   'state',
   'sessionUpdate',
 ]);
-
-const renamedIds = /"(id|toolCallId|messageId|turnId)":"([^"]+)"/gu;
-
-const recordingsPath = path.resolve(
-  import.meta.dirname,
-  '../../mocks/app/feed-recordings.json',
-);
-
-// Each recording's rows, without images whose blobs the seeded home does not hold.
-async function recordings(): Promise<RecordedRow[][]> {
-  const recorded = recordingsSchema.parse(
-    JSON.parse(await readFile(recordingsPath, 'utf8')),
-  );
-
-  return recorded.map((recording) =>
-    recording.rows.filter((row) => !JSON.stringify(row).includes('"blobId"')),
-  );
-}
-
-// Renames every id a copy carries, so copies never share a tool call, message or Turn.
-const copyRow = (row: RecordedRow, prefix: string): RecordedRow =>
-  rowSchema.parse(
-    JSON.parse(
-      JSON.stringify(row).replaceAll(
-        renamedIds,
-        (_match, key: string, value: string) => `"${key}":"${prefix}${value}"`,
-      ),
-    ),
-  );
 
 // A recorded row's fields that no column holds.
 type RecordedPayload = Omit<RecordedRow, 'id' | 'sessionUpdate' | 'turnId'>;
@@ -110,16 +66,60 @@ const copiedRows = (
     ),
   ).flat();
 
-// `copies` copies of every recorded row for `sessionId`, with the ended Turns they belong to.
+export type FeedSize = { copies: number } | { rows: number };
+
+function rowsOf(recorded: RecordedRow[][], size: FeedSize): RecordedRow[] {
+  const perCopy = recorded.reduce((count, rows) => count + rows.length, 0);
+
+  const copies =
+    'copies' in size ? size.copies : Math.ceil(size.rows / perCopy);
+
+  const copied = copiedRows(recorded, copies);
+
+  return 'rows' in size ? copied.slice(-size.rows) : copied;
+}
+
+// Exact tiers retain the catalog's final message, and every copied identity remains distinct.
 export async function seededFeed(
   sessionId: string,
-  copies: number,
+  size: FeedSize,
   now: number,
 ): Promise<SeededFeed> {
-  const copied = copiedRows(await recordings(), copies);
+  const copied = rowsOf(await recordings(), size);
 
   return {
     turns: endedTurns(sessionId, copied, now),
     rows: copied.map((row, index) => settledRow(sessionId, row, index + 1)),
   };
+}
+
+function oneRecordedFeed(
+  sessionId: string,
+  recorded: RecordedRow[],
+  now: number,
+): SeededFeed {
+  const rows = recorded.map((row) => copyRow(row, `${sessionId}-`));
+
+  return {
+    turns: endedTurns(sessionId, rows, now),
+    rows: rows.map((row, index) => settledRow(sessionId, row, index + 1)),
+  };
+}
+
+export function combineFeeds(feeds: SeededFeed[]): SeededFeed {
+  return {
+    turns: feeds.flatMap((feed) => feed.turns),
+    rows: feeds.flatMap((feed) => feed.rows),
+  };
+}
+
+export async function shortRecordedFeeds(
+  sessionIds: string[],
+  now: number,
+): Promise<SeededFeed> {
+  const [first] = await recordings();
+
+  if (!first) throw new Error('Recorded catalog needs a short Feed');
+
+  return combineFeeds(sessionIds.map((id) => oneRecordedFeed(id, first, now)));
 }

@@ -22,6 +22,7 @@ export type SettlementContext = Pick<
   | 'streamEvents'
   | 'changedRowIds'
   | 'messageStreams'
+  | 'toolContents'
 >;
 
 const settledRowId = (change: FeedStreamEvent): string =>
@@ -40,8 +41,28 @@ const settledFeedState = (
   changedRowIds: [
     ...new Set([...context.changedRowIds, ...result.events.map(settledRowId)]),
   ],
-  messageStreams: remainingMessageStreams(context, turnId),
+  ...remainingStreams(context, result.feed, turnId),
 });
+
+const remainingStreams = (
+  context: SettlementContext,
+  feed: Feed,
+  turnId: string,
+): Pick<FeedContext, 'messageStreams' | 'toolContents'> => ({
+  messageStreams: remainingMessageStreams(context, turnId),
+  toolContents: remainingToolContents(context, feed, turnId),
+});
+
+const remainingToolContents = (
+  context: SettlementContext,
+  feed: Feed,
+  turnId: string,
+): FeedContext['toolContents'] =>
+  Object.fromEntries(
+    Object.entries(context.toolContents ?? {}).filter(
+      ([id]) => feed.rows[id]?.turnId !== turnId,
+    ),
+  );
 
 const remainingMessageStreams = (
   context: SettlementContext,
