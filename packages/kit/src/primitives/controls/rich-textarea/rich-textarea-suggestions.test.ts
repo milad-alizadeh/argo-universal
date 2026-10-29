@@ -64,6 +64,8 @@ describe('suggestionsAtCaret', () => {
 
   it.each([
     ['src/app', 7],
+    ['a/b', 3],
+    ['/ later', 7],
     ['/ ', 2],
     ['/zzz', 4],
     ['/re later', 9],

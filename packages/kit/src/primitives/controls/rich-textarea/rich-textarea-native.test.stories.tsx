@@ -70,11 +70,12 @@ export const TappingAResultReplacesTheSlashWord: Story = {
   play: async ({ canvas, args }) => {
     await userEvent.type(
       canvas.getByRole('textbox', { name: exampleLabel }),
-      'Run /sec',
+      'Run /sec later',
     );
+    await userEvent.keyboard('{ArrowLeft>6/}');
     await userEvent.click(await canvas.findByRole('button', secondOption));
     await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith('Run /second '),
+      expect(args.onChangeText).toHaveBeenLastCalledWith('Run /second  later'),
     );
     await expect(
       canvas.getByRole<HTMLTextAreaElement>('textbox', { name: exampleLabel })
@@ -86,14 +87,11 @@ export const TappingAResultReplacesTheSlashWord: Story = {
 
 function plainText(text: string): Story {
   return {
-    play: async ({ canvas, args }) => {
-      await userEvent.type(
-        canvas.getByRole('textbox', { name: exampleLabel }),
-        text,
-      );
-      await waitFor(() =>
-        expect(args.onChangeText).toHaveBeenLastCalledWith(text),
-      );
+    play: async ({ canvas }) => {
+      const field = canvas.getByRole('textbox', { name: exampleLabel });
+
+      await userEvent.type(field, text);
+      await waitFor(() => expect(field).toHaveValue(text));
       await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
     },
   };
