@@ -70,25 +70,26 @@ interface LateSource {
   answer: (query: string, results: readonly ComposerSuggestion[]) => void;
 }
 
+type Settle = (results: readonly ComposerSuggestion[]) => void;
+
 /*
  * A source that answers with a promise the story settles by hand, so a play decides when each
  * answer arrives and in what order. Make one per story, so no answer outlives it.
  */
 export function lateSource(title: string): LateSource {
-  const settlers = new Map<
-    string,
-    (results: readonly ComposerSuggestion[]) => void
-  >();
+  const settlers = new Map<string, Settle>();
+
+  const query = (text: string): Promise<readonly ComposerSuggestion[]> =>
+    new Promise((settle) => settlers.set(text, settle));
 
   return {
-    source: {
-      id: title,
-      title,
-      query: (query) =>
-        new Promise((settle) => {
-          settlers.set(query, settle);
-        }),
-    },
-    answer: (query, results) => settlers.get(query)?.(results),
+    source: { id: title, title, query },
+    answer: (text, results) => settlers.get(text)?.(results),
   };
 }
+
+// True when `after` comes later in the document than `before`.
+export const follows = (before: Element, after: Element): boolean =>
+  Boolean(
+    before.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING,
+  );

@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import type { TextInputProps } from 'react-native';
+import type { RichTextareaProps } from './rich-textarea-props';
+import { useChosenResources } from './rich-textarea-resources';
+import { SuggestionRun } from './rich-textarea-suggestion-run';
 import {
   insertSuggestion,
   slashQueryAtCaret,
-  startSuggestionQuery,
   type ComposerSuggestion,
   type SuggestionGroup,
-  type SuggestionRun,
   type SuggestionSource,
 } from './rich-textarea-suggestions';
 
@@ -104,10 +105,7 @@ function fieldProps(
   };
 }
 
-interface Arrived {
-  run: SuggestionRun;
-  groups: SuggestionGroup[];
-}
+const asksNothing = new SuggestionRun([], '');
 
 /*
  * What the sources offer for a query, growing as their promises settle. A new query starts a new
@@ -118,41 +116,48 @@ function useSuggestionGroups(
   query: string | null,
 ): SuggestionGroup[] | null {
   const run = useMemo(
-    () => (query === null ? null : startSuggestionQuery(sources, query)),
+    () => (query === null ? asksNothing : new SuggestionRun(sources, query)),
     [sources, query],
   );
-  const [arrived, setArrived] = useState<Arrived | null>(null);
-
-  useEffect(() => {
-    if (!run) return undefined;
-    // An answer that settled before this subscribed is read now, not missed.
-    setArrived({ run, groups: run.groups() });
-
-    return run.subscribe(() => setArrived({ run, groups: run.groups() }));
-  }, [run]);
-
-  if (!run) return null;
-  const groups = arrived?.run === run ? arrived.groups : run.groups();
+  const groups = useSyncExternalStore(run.subscribe, run.groups);
 
   return groups.length > 0 ? groups : null;
 }
 
+// The text typed after the `/` word the caret is in, while the caret is one place and not a selection.
+function queryAt(value: string, caret: CaretState): string | null {
+  return caret.collapsed ? slashQueryAtCaret(value, caret.position) : null;
+}
+
+// A choice that also tells the draft's resources.
+const choosing =
+  (
+    choose: NativeSuggestions['choose'],
+    track: NativeSuggestions['choose'],
+  ): NativeSuggestions['choose'] =>
+  (suggestion) => {
+    choose(suggestion);
+    track(suggestion);
+  };
+
+type NativeSuggestionProps = Pick<
+  RichTextareaProps,
+  'value' | 'onChangeText' | 'suggestions' | 'onResourcesChange'
+>;
+
+const noSources: readonly SuggestionSource[] = [];
+
 // The `/` list of the phone's plain field: the text and the caret decide when it shows (ADR-0023).
 export function useNativeSuggestions(
-  value: string,
-  onChangeText: (value: string) => void,
-  sources: readonly SuggestionSource[],
+  props: NativeSuggestionProps,
 ): NativeSuggestions {
+  const { value, onChangeText, suggestions = noSources } = props;
   const caret = useCaret(value);
-
-  const query = caret.collapsed
-    ? slashQueryAtCaret(value, caret.position)
-    : null;
-  const groups = useSuggestionGroups(sources, query);
+  const track = useChosenResources(value, props.onResourcesChange);
 
   return {
-    groups,
+    groups: useSuggestionGroups(suggestions, queryAt(value, caret)),
     fieldProps: fieldProps(caret, onChangeText),
-    choose: chooser(value, caret, onChangeText),
+    choose: choosing(chooser(value, caret, onChangeText), track),
   };
 }

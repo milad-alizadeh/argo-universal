@@ -32,13 +32,16 @@ function matchingAdapter(
     .find((result) => hasOptions(adapters, result));
 }
 
+function canOffer(adapter: TypeaheadAdapter, query: string): boolean {
+  return adapter.options(query).length > 0 || Boolean(adapter.pending?.(query));
+}
+
 function hasOptions(adapters: TypeaheadAdapter[], result: Match): boolean {
-  if (!result.match) return false;
-
   const adapter = adapters[result.index];
-  const query = result.match.matchingString;
 
-  return Boolean(adapter?.options(query).length || adapter?.pending?.(query));
+  return result.match && adapter
+    ? canOffer(adapter, result.match.matchingString)
+    : false;
 }
 
 function sameQuery(
@@ -103,22 +106,13 @@ export function useTypeaheadQuery(
   adapters: TypeaheadAdapter[],
 ): TypeaheadQuery {
   const [query, setQuery] = useState<Query>(null);
-
   const receive = useQueryReceiver(setQuery);
-  const answered = useAnswers(adapters);
+  useLateAnswers(adapters, setQuery);
 
-  const handlers = useMemo(
-    () => queryHandlers(adapters, receive),
-    [adapters, receive],
-  );
-
-  const options = useMemo(
-    // `answered` changes when a late answer arrives, so the options are read again.
-    () => queryOptions(adapters, query),
-    [adapters, query, answered],
-  );
-
-  return { ...handlers, options };
+  return {
+    ...useMemo(() => queryHandlers(adapters, receive), [adapters, receive]),
+    options: useMemo(() => queryOptions(adapters, query), [adapters, query]),
+  };
 }
 
 function useQueryReceiver(
@@ -130,17 +124,22 @@ function useQueryReceiver(
   );
 }
 
-// A count that goes up whenever an adapter hears a late answer.
-function useAnswers(adapters: TypeaheadAdapter[]): number {
-  const [answered, setAnswered] = useState(0);
+// The same query again, as a new object, so the options are read once more.
+const asked = (query: Query): Query => query && { ...query };
 
+// A late answer to the query being asked makes the options be read again.
+function useLateAnswers(
+  adapters: TypeaheadAdapter[],
+  change: Dispatch<SetStateAction<Query>>,
+): void {
   useEffect(() => {
-    const stops = adapters.map((adapter) =>
-      adapter.subscribe?.(() => setAnswered((count) => count + 1)),
+    const refresh = (): void => change(asked);
+    const stops = adapters.flatMap((adapter) =>
+      adapter.subscribe ? [adapter.subscribe(refresh)] : [],
     );
 
-    return () => stops.forEach((stop) => stop?.());
-  }, [adapters]);
-
-  return answered;
+    return () => {
+      for (const stop of stops) stop();
+    };
+  }, [adapters, change]);
 }

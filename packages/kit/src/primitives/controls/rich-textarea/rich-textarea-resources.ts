@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   ComposerSuggestion,
   SuggestionResource,
@@ -31,29 +31,36 @@ const sameResources = (
   first.length === second.length &&
   first.every((resource, index) => resource.uri === second[index]?.uri);
 
-/*
- * Tells the host which resources the draft carries, whenever that list changes. Returns what the
- * drawing calls when a result is chosen. Both drawings use it, so the rule is written once.
- */
-export function useChosenResources(
+// Tells the host the resources the draft carries, each time that list differs from the one it last heard.
+function useReportedResources(
   text: string,
+  chosen: readonly ComposerSuggestion[],
   onResourcesChange: OnResourcesChange | undefined,
-): (suggestion: ComposerSuggestion) => void {
-  const [chosen, setChosen] = useState<readonly ComposerSuggestion[]>([]);
+): void {
   const reported = useRef<readonly SuggestionResource[]>([]);
-  const report = useRef(onResourcesChange);
-  report.current = onResourcesChange;
 
   useEffect(() => {
     const resources = resourcesInText(text, chosen);
 
     if (sameResources(resources, reported.current)) return;
     reported.current = resources;
-    report.current?.(resources);
-  }, [text, chosen]);
+    onResourcesChange?.(resources);
+  }, [text, chosen, onResourcesChange]);
+}
 
-  return (suggestion) =>
-    setChosen((previous) =>
-      suggestion.resource ? [...previous, suggestion] : previous,
-    );
+/*
+ * Returns what a drawing calls when a result is chosen, and tells the host which resources the
+ * draft carries. Both drawings use it, so the rule is written once.
+ */
+export function useChosenResources(
+  text: string,
+  onResourcesChange: OnResourcesChange | undefined,
+): (suggestion: ComposerSuggestion) => void {
+  const [chosen, setChosen] = useState<readonly ComposerSuggestion[]>([]);
+  useReportedResources(text, chosen, onResourcesChange);
+
+  return useCallback(
+    (suggestion) => setChosen((previous) => [...previous, suggestion]),
+    [],
+  );
 }

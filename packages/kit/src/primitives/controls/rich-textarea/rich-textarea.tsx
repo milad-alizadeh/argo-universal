@@ -111,21 +111,23 @@ type EditorParts = Omit<RichTextareaProps, 'disabled' | 'references'> & {
   references: readonly ReferenceOption[];
 };
 
-function EditorParts({
-  references,
+type TypeaheadParts = Omit<EditorParts, 'editable'>;
+
+// The `/` and `#` menus, and the resources the chosen `/` results carry.
+function EditorTypeahead({
   onResourcesChange,
   ...props
-}: EditorParts): React.JSX.Element {
+}: TypeaheadParts): React.JSX.Element {
   const choose = useChosenResources(props.value, onResourcesChange);
 
+  return <TypeaheadPlugin {...props} onChooseSuggestion={choose} />;
+}
+
+function EditorParts(props: EditorParts): React.JSX.Element {
   return (
     <>
       <MessageField {...props} />
-      <TypeaheadPlugin
-        {...props}
-        references={references}
-        onChooseSuggestion={choose}
-      />
+      <EditorTypeahead {...props} />
       <EditingPlugins />
       <KeyboardPlugin />
       <EditablePlugin editable={props.editable} />

@@ -9,16 +9,12 @@ import {
   plainFieldClassName,
   type RichTextareaProps,
 } from './rich-textarea-props';
-import { useChosenResources } from './rich-textarea-resources';
 import { SuggestionList } from './rich-textarea-suggestion-list';
-import type { SuggestionSource } from './rich-textarea-suggestions';
 
 // The phone drawing: a plain native text area that grows to 6 lines, then scrolls (no numberOfLines).
 const maximumVisibleLines = 6;
 
 const lineHeight = 20;
-
-const noSuggestions: readonly SuggestionSource[] = [];
 
 // What the text field takes: the drawing's own props stay out of it.
 function textFieldProps({
@@ -69,25 +65,11 @@ function PlainField({ props, fieldProps }: PlainFieldProps): React.JSX.Element {
 }
 
 function RichTextarea(props: RichTextareaProps): React.JSX.Element {
-  const { groups, choose, fieldProps } = useNativeSuggestions(
-    props.value,
-    props.onChangeText,
-    props.suggestions ?? noSuggestions,
-  );
-
-  const track = useChosenResources(props.value, props.onResourcesChange);
+  const { groups, choose, fieldProps } = useNativeSuggestions(props);
 
   return (
     <View className="w-full">
-      {groups ? (
-        <SuggestionList
-          groups={groups}
-          onChoose={(suggestion) => {
-            choose(suggestion);
-            track(suggestion);
-          }}
-        />
-      ) : null}
+      {groups ? <SuggestionList groups={groups} onChoose={choose} /> : null}
       <PlainField props={props} fieldProps={fieldProps} />
     </View>
   );

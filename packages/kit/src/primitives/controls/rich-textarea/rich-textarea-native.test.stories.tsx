@@ -3,14 +3,18 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
-import { exampleLabel, lateSource } from './rich-textarea-example.mocks';
+import {
+  exampleLabel,
+  follows,
+  lateSource,
+} from './rich-textarea-example.mocks';
+import { suggestionsRichTextarea } from './rich-textarea-fixtures';
+import type { RichTextareaProps } from './rich-textarea-props';
 import {
   exampleItem,
   optionsSource,
-  suggestionsRichTextarea,
   twoSourcesRichTextarea,
-} from './rich-textarea-fixtures';
-import type { RichTextareaProps } from './rich-textarea-props';
+} from './rich-textarea-sources-fixtures';
 import type { ComposerSuggestion } from './rich-textarea-suggestions';
 import { RichTextarea } from './rich-textarea.native';
 
@@ -135,12 +139,6 @@ export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
     );
     const first = await canvas.findByRole('button', firstOption);
     const item = canvas.getByRole('button', itemOption);
-    const follows = (before: Element, after: Element): boolean =>
-      Boolean(
-        before.compareDocumentPosition(after) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-      );
-
     await expect(follows(canvas.getByText('Suggestions'), first)).toBe(true);
     await expect(follows(first, canvas.getByText('Items'))).toBe(true);
     await expect(follows(canvas.getByText('Items'), item)).toBe(true);

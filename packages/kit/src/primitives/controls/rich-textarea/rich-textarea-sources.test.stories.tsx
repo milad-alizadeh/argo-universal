@@ -5,13 +5,14 @@ import { settleLayout } from '#mocks/story-layout';
 import {
   RichTextareaExample,
   exampleLabel,
+  follows,
   lateSource,
 } from './rich-textarea-example.mocks';
 import {
   exampleItem,
   optionsSource,
   twoSourcesRichTextarea,
-} from './rich-textarea-fixtures';
+} from './rich-textarea-sources-fixtures';
 import type { ComposerSuggestion } from './rich-textarea-suggestions';
 
 const firstOptionName = '/first First option';
@@ -58,12 +59,6 @@ export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
     const items = screen.getByText('Items');
     const first = screen.getByRole('option', { name: firstOptionName });
     const item = screen.getByRole('option', { name: itemName });
-    const follows = (before: Element, after: Element): boolean =>
-      Boolean(
-        before.compareDocumentPosition(after) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-      );
-
     await expect(follows(suggestions, first)).toBe(true);
     await expect(follows(first, items)).toBe(true);
     await expect(follows(items, item)).toBe(true);

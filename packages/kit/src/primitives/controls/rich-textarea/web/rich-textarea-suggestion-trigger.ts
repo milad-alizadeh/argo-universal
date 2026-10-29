@@ -3,10 +3,8 @@ import type {
   TriggerFn,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import { $getSelection, $isRangeSelection, type LexicalNode } from 'lexical';
-import {
-  matchSuggestionTrigger,
-  type SuggestionRun,
-} from '../rich-textarea-suggestions';
+import type { SuggestionRun } from '../rich-textarea-suggestion-run';
+import { matchSuggestionTrigger } from '../rich-textarea-suggestions';
 
 function $beforeInlineParent(node: LexicalNode): string {
   const parent = node.getParent();
@@ -45,7 +43,14 @@ function $validMatch(text: string): MenuTextMatch | null {
   return $startsSlashWord(match.leadOffset) ? match : null;
 }
 
-// The menu opens for a `/` word once a source has results, or may have them when its promise settles.
+// The match opens the menu once a source has results, or may have them when its promise settles.
+function openedBy(
+  match: MenuTextMatch,
+  run: SuggestionRun,
+): MenuTextMatch | null {
+  return run.groups().length > 0 || run.pending() ? match : null;
+}
+
 export function suggestionTrigger(
   ask: (query: string) => SuggestionRun,
   forget: () => void,
@@ -53,13 +58,9 @@ export function suggestionTrigger(
   return (text) => {
     const match = $validMatch(text);
 
-    if (!match) {
-      forget();
+    if (match) return openedBy(match, ask(match.matchingString));
+    forget();
 
-      return null;
-    }
-    const run = ask(match.matchingString);
-
-    return run.groups().length > 0 || run.pending() ? match : null;
+    return null;
   };
 }

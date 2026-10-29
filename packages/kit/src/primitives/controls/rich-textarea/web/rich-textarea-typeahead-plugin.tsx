@@ -4,7 +4,7 @@ import {
   useBasicTypeaheadTriggerMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import type { TextNode } from 'lexical';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type * as React from 'react';
 import type {
   ReferenceOption,
@@ -76,13 +76,9 @@ function useSuggestionAdapter(
     [editor, suggestions],
   );
 
-  // Read at choosing time, so a new callback never restarts the sources' queries.
-  const chosen = useRef(choose);
-  chosen.current = choose;
-
   return useMemo(
-    () => suggestionAdapter(suggestions, (result) => chosen.current?.(result)),
-    [suggestions],
+    () => suggestionAdapter(suggestions, choose),
+    [suggestions, choose],
   );
 }
 
@@ -106,15 +102,17 @@ function useSelectOption(): SelectOption {
   };
 }
 
+// The menu counts as open only while it shows options, and closes with the editor.
+function useMenuLifetime(menu: TypeaheadInteraction, options: number): void {
+  useEffect(() => menu.show(options), [menu, options]);
+  useEffect(() => (): void => menu.close(), [menu]);
+}
+
 function useTypeahead(props: Props): MenuProps {
   const query = useTypeaheadQuery(useAdapters(props));
   const [menuOpen] = useState(() => new TypeaheadInteraction());
   useTypeaheadKeyboard(menuOpen, props.onSubmit);
-  useEffect(
-    () => menuOpen.show(query.options.length),
-    [menuOpen, query.options],
-  );
-  useEffect(() => (): void => menuOpen.close(), [menuOpen]);
+  useMenuLifetime(menuOpen, query.options.length);
 
   return {
     ...query,
