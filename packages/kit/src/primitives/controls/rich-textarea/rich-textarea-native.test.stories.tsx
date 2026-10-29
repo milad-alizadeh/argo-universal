@@ -5,10 +5,8 @@ import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { exampleLabel } from './rich-textarea-example.mocks';
-import {
-  iconlessSuggestionsRichTextarea,
-  suggestionsRichTextarea,
-} from './rich-textarea-fixtures';
+import { suggestionsRichTextarea } from './rich-textarea-fixtures';
+import { iconlessSuggestionsRichTextarea } from './rich-textarea-iconless.mocks';
 import type { RichTextareaProps } from './rich-textarea-props';
 import { SuggestionListHost } from './rich-textarea-suggestion-list';
 import { RichTextarea } from './rich-textarea.native';

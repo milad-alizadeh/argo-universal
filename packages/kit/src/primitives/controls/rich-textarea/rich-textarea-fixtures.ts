@@ -154,23 +154,3 @@ export const scrollingSuggestionsRichTextarea = {
     },
   ],
 } satisfies RichTextareaFixture;
-
-// A command with no icon, so its row keeps the slash in its label.
-export const iconlessSuggestionsRichTextarea = {
-  value: '',
-  accessibilityLabel,
-  suggestions: [
-    {
-      id: 'iconless',
-      title: 'Suggestions',
-      query: (): ComposerSuggestion[] => [
-        {
-          id: 'plain',
-          label: '/plain',
-          detail: 'Plain option',
-          insert: '/plain ',
-        },
-      ],
-    },
-  ],
-} satisfies RichTextareaFixture;
