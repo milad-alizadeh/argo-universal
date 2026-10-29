@@ -15,8 +15,6 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   type AcpEngine = Awaited<ReturnType<typeof startAcpEngine>>;
 
-  const finalText = 'Final output after cancel';
-
   const startCancellableEngine = async (): Promise<{
     host: AcpEngine;
     cancels: CancelNotification[];
@@ -52,7 +50,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
                   sessionUpdate: 'agent_message_chunk' as const,
                   content: {
                     type: 'text' as const,
-                    text: `${finalText} ${sessionId}`,
+                    text: `Final output after cancel ${sessionId}`,
                   },
                 },
               },
