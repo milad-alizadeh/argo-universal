@@ -72,6 +72,7 @@ class AgentOptionsReader {
     this.unsubscribe = observeLiveAgentOptions({
       deps: this.deps,
       input: { ...this.input, sessionId },
+      savedCommands: () => savedAgentOptions(this.deps, this.input).commands,
       observer: {
         update: (update) => this.publish({ update }),
         done: () => {

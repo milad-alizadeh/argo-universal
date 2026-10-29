@@ -1,6 +1,7 @@
 import type {
   AgentOptionsUpdate,
   SessionAgentOptionsInput,
+  SlashCommand,
 } from '@repo/contracts';
 import type { Subscription } from 'xstate';
 import { withHeldConfiguration } from './configuration/held-configuration';
@@ -14,13 +15,20 @@ type Input = SessionAgentOptionsInput & { sessionId: string };
 type Observation = {
   deps: Deps;
   input: Input;
+  // The Agent and Project list, which stands in until this Session's Agent reports its own.
+  savedCommands: () => SlashCommand[] | null;
   observer: {
     update: (update: AgentOptionsUpdate) => void;
     done: () => void;
   };
 };
 
-function publication({ deps, input, observer }: Observation): () => void {
+function publication({
+  deps,
+  input,
+  savedCommands,
+  observer,
+}: Observation): () => void {
   return () => {
     const session =
       deps.sessions.getSnapshot().context.sessions[input.sessionId];
@@ -36,7 +44,7 @@ function publication({ deps, input, observer }: Observation): () => void {
         context.configOptions,
         context.heldConfig,
       ),
-      commands: context.slashCommands,
+      commands: context.slashCommands ?? savedCommands(),
       stage: 'ready',
     };
 

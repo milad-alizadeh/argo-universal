@@ -3,11 +3,16 @@ import type {
   ResumeSessionRequest,
 } from '@agentclientprotocol/sdk';
 import type { AgentOptionsUpdate, SlashCommand } from '@repo/contracts';
+import { slashCommandsUpdate } from '@repo/mocks/agent/slash-commands-update';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const reviewDescription = 'Review changes';
+
+const reviewCommandUpdate = [
+  slashCommandsUpdate([{ name: 'review', description: reviewDescription }]),
+];
 
 it('streams a live Session’s commands and replaces them after another update', async () => {
   const host = await startAcpEngine({ steps: [] });
@@ -71,6 +76,40 @@ it('streams a live Session’s commands and replaces them after another update',
     'owned-1',
   );
   expect(await replacement).toEqual([]);
+  reader.abort();
+  await stream.return?.();
+});
+
+it('streams the saved commands for a resumed Session before its Agent reports any', async () => {
+  const host = await startAcpEngine({ steps: [] });
+
+  const created = await host.caller.session.new({
+    ...emptySessionInput,
+    prompt: [{ type: 'text', text: 'Keep this Session' }],
+  });
+
+  await requireScriptedProcessAt(host.agent.processes).play(
+    reviewCommandUpdate,
+    'owned-1',
+  );
+  await host.caller.session.close(created);
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Resume this Session' }],
+  });
+  const reader = new AbortController();
+
+  const stream = (
+    await host.createCaller({ signal: reader.signal }).session.agentOptions({
+      agent: emptySessionInput.agent,
+      projectId: emptySessionInput.projectId,
+      ...created,
+    })
+  )[Symbol.asyncIterator]();
+
+  expect((await stream.next()).value).toMatchObject({
+    commands: [{ name: 'review', description: reviewDescription }],
+  });
   reader.abort();
   await stream.return?.();
 });

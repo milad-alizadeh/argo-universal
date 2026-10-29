@@ -1,5 +1,6 @@
 import { acpConfiguration } from './acp-configuration.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
+import { slashCommandsUpdate } from './slash-commands-update.ts';
 
 const question: ScriptedStep = {
   type: 'elicitation',
@@ -13,14 +14,6 @@ const question: ScriptedStep = {
   },
 };
 
-const commandsUpdate = (name: string, description: string): ScriptedStep => ({
-  type: 'update',
-  update: {
-    sessionUpdate: 'available_commands_update',
-    availableCommands: [{ name, description }],
-  },
-});
-
 // An Agent that offers one Slash command, sent once each new Session has opened.
 const offeringCommand = (
   name: string,
@@ -28,7 +21,7 @@ const offeringCommand = (
 ): ScriptedScenario => ({
   configOptions: acpConfiguration,
   steps: [],
-  afterOpening: [commandsUpdate(name, description)],
+  afterOpening: [slashCommandsUpdate([{ name, description }])],
 });
 
 export const notificationScenarios = {
