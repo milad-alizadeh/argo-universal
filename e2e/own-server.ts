@@ -1,13 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { findFreePort } from '@repo/mocks/network/free-port';
-import {
-  type ChildHandle,
-  type GroupRelease,
-  startChild,
-  stopLimitMs,
-} from '@repo/process';
+import { type ChildHandle, type GroupRelease, startChild } from '@repo/process';
 import { engineBundlePath } from './engine-bundle';
 import {
   fixtureEnvironment,
@@ -98,7 +94,7 @@ async function startReady(launch: Launch): Promise<ChildHandle | undefined> {
 
     return engine;
   } catch (error) {
-    await engine.stop(stopLimitMs);
+    await engine.stop(supervisorStopGraceMs);
 
     if (portTakenPattern.test(engine.stderrTail())) return undefined;
     throw error;
@@ -125,9 +121,9 @@ function ownServer(launch: Launch, started: ChildHandle): OwnServer {
 
   return {
     ...serverAddresses(launch),
-    stop: (): Promise<GroupRelease> => engine.stop(stopLimitMs),
+    stop: (): Promise<GroupRelease> => engine.stop(supervisorStopGraceMs),
     restart: async (whileStopped): Promise<void> => {
-      await engine.stop(stopLimitMs);
+      await engine.stop(supervisorStopGraceMs);
       await whileStopped();
       engine = (await startReady(launch)) ?? portTaken(launch);
     },

@@ -13,5 +13,5 @@ export const supervisorCommand = (
   env,
 });
 
-// A stopping Supervisor gives its Engine 25 s and the Engine's group 5 s to go; only past that is the Supervisor's own group killed.
+// Covers the Engine's 25 s stop grace in apps/server, which exports nothing (ADR-0016 §11), plus 5 s for its group release.
 export const supervisorStopGraceMs = 35_000;
