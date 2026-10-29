@@ -85,7 +85,7 @@ export const interruptEngine = async (): Promise<void> => {
   database?.$client.close();
 };
 
-export const fail = (message: string): never => {
+const fail = (message: string): never => {
   throw new Error(message);
 };
 

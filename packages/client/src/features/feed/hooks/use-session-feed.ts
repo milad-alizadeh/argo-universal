@@ -1,4 +1,7 @@
-import { findLiveToolCall } from '../view/live-tool-call';
+import {
+  findLiveToolCall,
+  findPermissionToolCall,
+} from '../view/live-tool-call';
 import { toFeedView } from '../view/to-feed-view';
 import type { SessionFeed } from './session-feed';
 import { useFeedHistory } from './use-feed-history';
@@ -20,10 +23,11 @@ export function useSessionFeed(
     convert,
   });
 
-  return feedResult({ store, history, live, view });
+  return feedResult({ store, history, live, view, sessionId });
 }
 
 type FeedResultInput = {
+  sessionId: string | undefined;
   store: FeedStore;
   history: ReturnType<typeof useFeedHistory>;
   live: ReturnType<typeof useLiveFeed>;
@@ -35,29 +39,45 @@ function feedResult({
   history,
   live,
   view,
+  sessionId,
 }: FeedResultInput): SessionFeed {
   return {
-    ...feedDisplay(store, view),
+    ...feedDisplay(store, view, sessionId),
     ...feedPaging(history),
     ...feedConnection(store, live),
   };
 }
 
+type FeedDisplay = Pick<
+  SessionFeed,
+  | 'view'
+  | 'revision'
+  | 'liveToolCall'
+  | 'permissionToolCall'
+  | 'snapshot'
+  | 'ready'
+>;
+
 function feedDisplay(
   store: FeedStore,
   view: ReturnType<typeof useFeedView>,
-): Pick<
-  SessionFeed,
-  'view' | 'revision' | 'liveToolCall' | 'snapshot' | 'ready'
-> {
+  sessionId: string | undefined,
+): FeedDisplay {
   return {
     view,
     revision: store.feed.revision,
     liveToolCall: findLiveToolCall(store.feed.rows, store.snapshot),
+    permissionToolCall: permissionToolCall(store, sessionId),
     snapshot: store.snapshot,
     ready: store.feed.epoch !== null && store.snapshot !== null,
   };
 }
+
+const permissionToolCall = (
+  store: FeedStore,
+  sessionId: string | undefined,
+): SessionFeed['permissionToolCall'] =>
+  findPermissionToolCall(store.feed.rows, store.snapshot, sessionId);
 
 function feedPaging(
   history: ReturnType<typeof useFeedHistory>,

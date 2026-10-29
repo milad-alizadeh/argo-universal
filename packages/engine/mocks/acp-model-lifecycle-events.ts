@@ -62,6 +62,16 @@ export const modelLifecycleEvents = [
     actorId: 'cancelAcp',
     error: new Error('cancel failed'),
   },
+  {
+    type: 'xstate.done.actor.restoreAcpConfiguration',
+    actorId: 'restoreAcpConfiguration',
+    output: [],
+  },
+  {
+    type: 'xstate.error.actor.restoreAcpConfiguration',
+    actorId: 'restoreAcpConfiguration',
+    error: new Error('Restoration failed'),
+  },
   { type: 'session.setConfigOption', configId: 'fast', value: true },
   {
     type: 'xstate.done.actor.configureAcp',

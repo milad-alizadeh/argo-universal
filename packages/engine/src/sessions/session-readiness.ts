@@ -33,6 +33,7 @@ function isInitialSessionStartup(
     'loading',
     'creating',
     { open: { acp: 'opening' } },
+    { open: { acp: 'restoring' } },
   ] as const;
 
   return initialStates.some((state): boolean => snapshot.matches(state));
@@ -90,7 +91,7 @@ function isSessionReady(
 ): boolean {
   return (
     session.matches({ open: 'acp' }) &&
-    !(['opening', 'closing', 'flushing'] as const).some((state) =>
+    !(['opening', 'restoring', 'closing', 'flushing'] as const).some((state) =>
       session.matches({ open: { acp: state } }),
     )
   );

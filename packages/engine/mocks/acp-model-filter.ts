@@ -23,6 +23,8 @@ const invoking = new Map(
     'xstate.error.actor.saveArchive': 'archiving',
     'xstate.done.actor.openAcp': 'opening',
     'xstate.error.actor.openAcp': 'opening',
+    'xstate.done.actor.restoreAcpConfiguration': 'restoring',
+    'xstate.error.actor.restoreAcpConfiguration': 'restoring',
     'xstate.done.actor.configureAcp': 'configuring',
     'xstate.error.actor.configureAcp': 'configuring',
     'xstate.done.actor.commitPrompt': 'committing',

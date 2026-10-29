@@ -54,7 +54,7 @@ export interface Measured {
 export type Scenario = (page: Page) => Promise<Measured>;
 
 // Opens the Session titled `title` from the list, on a page the App is already loaded on.
-const openSession = (page: Page, title: string): Promise<void> =>
+export const openSession = (page: Page, title: string): Promise<void> =>
   page.getByRole('button', { name: new RegExp(`^${title}, `, 'u') }).click();
 
 // Loads the App again and opens the same Session, so a scenario measures it from cold.
