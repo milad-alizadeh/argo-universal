@@ -21,13 +21,59 @@ type OpeningHost = Awaited<ReturnType<typeof startAcpEngine>> & {
 export async function openingWaitHost(
   options: Options = {},
 ): Promise<OpeningHost> {
-  const clock = new TestOperationWaitClock();
+  const setup = openingSetup(options);
+  const host = await startOpeningEngine(setup);
+  publishControlAddress(host);
+
+  return openedHost(host, setup);
+}
+
+const openedHost = async (
+  host: Awaited<ReturnType<typeof startAcpEngine>>,
+  setup: OpeningSetup,
+): Promise<OpeningHost> => {
+  return {
+    ...host,
+    agent: setup.peer,
+    user: await operationCaller(host),
+    clock: setup.clock,
+    opening: setup.opening.promise,
+    release: setup.release,
+    environment: setup.environment.promise,
+    environments: setup.environments,
+  };
+};
+
+type OpeningSetup = {
+  clock: TestOperationWaitClock;
+  opening: PromiseWithResolvers<NewSessionRequest>;
+  release: PromiseWithResolvers<void>;
+  environment: PromiseWithResolvers<NodeJS.ProcessEnv>;
+  environments: NodeJS.ProcessEnv[];
+  peer: ReturnType<typeof createScriptedAgentProcess>;
+};
+
+const openingSetup = (options: Options): OpeningSetup => {
   const opening = Promise.withResolvers<NewSessionRequest>();
   const release = Promise.withResolvers<void>();
-  const environment = Promise.withResolvers<NodeJS.ProcessEnv>();
   onTestFinished(() => release.resolve());
 
-  const peer = createScriptedAgentProcess({
+  return {
+    clock: new TestOperationWaitClock(),
+    opening,
+    release,
+    environment: Promise.withResolvers<NodeJS.ProcessEnv>(),
+    environments: [],
+    peer: openingPeer(options, opening, release),
+  };
+};
+
+const openingPeer = (
+  options: Options,
+  opening: OpeningSetup['opening'],
+  release: OpeningSetup['release'],
+): OpeningSetup['peer'] =>
+  createScriptedAgentProcess({
     steps: [],
     responses: {
       [options.resume ? 'session/resume' : 'session/new']: [
@@ -36,30 +82,22 @@ export async function openingWaitHost(
     },
   });
 
-  const environments: NodeJS.ProcessEnv[] = [];
-
-  const host = await startAcpEngine({
+const startOpeningEngine = (
+  setup: OpeningSetup,
+): Promise<Awaited<ReturnType<typeof startAcpEngine>>> =>
+  startAcpEngine({
     steps: [],
-    operationWaitClock: clock,
-    launchProcess: async (launch) => {
-      const env = await agentEnvironment(launch);
-      environment.resolve(env);
-      environments.push(env);
-
-      return peer.launchProcess(launch);
-    },
+    operationWaitClock: setup.clock,
+    launchProcess: (launch) => launchOpeningProcess(setup, launch),
   });
 
-  publishControlAddress(host);
+const launchOpeningProcess = async (
+  setup: OpeningSetup,
+  launch: Parameters<OpeningSetup['peer']['launchProcess']>[0],
+): ReturnType<OpeningSetup['peer']['launchProcess']> => {
+  const env = await agentEnvironment(launch);
+  setup.environment.resolve(env);
+  setup.environments.push(env);
 
-  return {
-    ...host,
-    agent: peer,
-    user: await operationCaller(host),
-    clock,
-    opening: opening.promise,
-    release,
-    environment: environment.promise,
-    environments,
-  };
-}
+  return setup.peer.launchProcess(launch);
+};
