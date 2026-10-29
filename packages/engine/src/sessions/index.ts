@@ -33,7 +33,7 @@ export { watchTurnActivity } from './turn-activity';
 
 export { createSessionReader, readSessionRow } from './session-record';
 
-export { readDefaultChangesSummary } from './changes-summary';
+export { sessionChangesSelection } from './changes-selection';
 
 export { createSessionActorInput } from './session-actor-input';
 

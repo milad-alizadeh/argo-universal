@@ -1,37 +1,33 @@
 import { posix } from 'node:path';
+import { bare, blockAfter, topLevelKeys } from './story-blocks.mts';
 import {
-  argsBlocks,
-  bare,
-  blockAfter,
-  group,
-  metaOf,
-  topLevelKeys,
   type ArgsBlock,
-  type Lookup,
-  type Sources,
-} from './story-gate-parse.mts';
+  declaresKey,
+  type NamedImport,
+  namedImports,
+  type StoryRead,
+} from './story-file.mts';
+
+export type Sources = ReadonlyMap<string, string>;
+
+// A component's own file, where its props type is read from.
+type Lookup = { file: string; source: string; sources: Sources };
+
+// A story file as read once, and the sources its component is found among.
+export type StoryLookup = { file: string; read: StoryRead; sources: Sources };
 
 type Component = { name: string; lookup: Lookup };
-
-const declaresComponent = /^[ \t]*component:[ \t]*(\w+)/m;
-
-const namedImport =
-  /import[ \t]+(?:type[ \t]+)?\{([^}]*)\}[ \t\n]*from[ \t]*['"]([^'"]+)['"]/g;
-
-const declaresRender = /^[ \t]*render:/m;
 
 // A props type the gate cannot read whole: an extension, an intersection, a union or a generic.
 const unreadableHead = /extends|[&|<]/;
 
 const moduleExtensions = ['.tsx', '.ts', '/index.tsx', '/index.ts'];
 
-const importedFrom = (source: string, name: string): string | undefined => {
-  const word = new RegExp(`\\b${name}\\b`);
-
-  return [...source.matchAll(namedImport)].find((match): boolean =>
-    word.test(group(match, 1)),
-  )?.[2];
-};
+const importedFrom = (
+  imports: readonly NamedImport[],
+  name: string,
+): string | undefined =>
+  imports.find(({ names }): boolean => names.includes(name))?.from;
 
 const resolveModule = (
   from: string,
@@ -47,6 +43,8 @@ const resolveModule = (
     .find((path): boolean => sources.has(path));
 };
 
+const clauseOf = (head: RegExpExecArray): string => head[1] ?? '';
+
 const propsBody = (text: string, name: string): string | undefined => {
   const head = new RegExp(
     `\\b(?:interface|type)[ \t]+${name}\\b([^{;]*)\\{`,
@@ -54,7 +52,7 @@ const propsBody = (text: string, name: string): string | undefined => {
 
   if (head === null) return undefined;
 
-  if (unreadableHead.test(group(head, 1))) return undefined;
+  if (unreadableHead.test(clauseOf(head))) return undefined;
 
   return blockAfter(text, head);
 };
@@ -72,7 +70,7 @@ const importedPropsKeys = (
 ): string[] | undefined => {
   const module = resolveModule(
     lookup.file,
-    importedFrom(lookup.source, name),
+    importedFrom(namedImports(lookup.source), name),
     lookup.sources,
   );
 
@@ -84,22 +82,19 @@ const importedPropsKeys = (
 const propsKeys = (lookup: Lookup, name: string): string[] | undefined =>
   localPropsKeys(lookup.source, name) ?? importedPropsKeys(lookup, name);
 
-const componentIn = (source: string): string | undefined =>
-  declaresComponent.exec(metaOf(source))?.[1];
-
-const lookupAt = (story: Lookup, module: string): Lookup => ({
+const lookupAt = (story: StoryLookup, module: string): Lookup => ({
   file: module,
   source: story.sources.get(module) ?? '',
   sources: story.sources,
 });
 
 const moduleComponent = (
-  story: Lookup,
+  story: StoryLookup,
   name: string,
 ): Component | undefined => {
   const module = resolveModule(
     story.file,
-    importedFrom(story.source, name),
+    importedFrom(story.read.imports, name),
     story.sources,
   );
 
@@ -108,8 +103,8 @@ const moduleComponent = (
     : { name, lookup: lookupAt(story, module) };
 };
 
-const componentOf = (story: Lookup): Component | undefined => {
-  const name = componentIn(story.source);
+const componentOf = (story: StoryLookup): Component | undefined => {
+  const { component: name } = story.read;
 
   return name === undefined ? undefined : moduleComponent(story, name);
 };
@@ -119,7 +114,7 @@ const componentOf = (story: Lookup): Component | undefined => {
  * an unresolved import, a kit component's mapped type, a props type written inline. A gate that
  * guesses here cries wolf on files that are already right, which is worse than the missing check.
  */
-const declaredPropNames = (story: Lookup): string[] => {
+const declaredPropNames = (story: StoryLookup): string[] => {
   const component = componentOf(story);
 
   if (component === undefined) return [];
@@ -132,7 +127,7 @@ const undeclaredIn = (
   block: ArgsBlock,
   known: ReadonlySet<string>,
 ): string[] =>
-  topLevelKeys(block.body).flatMap((key): string[] =>
+  block.keys.flatMap((key): string[] =>
     known.has(key)
       ? []
       : [
@@ -146,16 +141,14 @@ const undeclaredIn = (
  * the component, so the component's props are not the whole domain and a complaint here would be
  * a guess. Where there is no render, `satisfies Meta<typeof X>` and this gate agree on the domain.
  */
-export const undeclaredArgProblems = (story: Lookup): string[] => {
+export const undeclaredArgProblems = (story: StoryLookup): string[] => {
   const known = new Set(declaredPropNames(story));
 
-  if (known.size === 0 || declaresRender.test(metaOf(story.source))) return [];
-
-  const blocks = argsBlocks(bare(story.source));
+  if (known.size === 0 || declaresKey(story.read.meta, 'render')) return [];
 
   return [
     ...new Set(
-      blocks.flatMap((block): string[] =>
+      story.read.argsBlocks.flatMap((block): string[] =>
         undeclaredIn(story.file, block, known),
       ),
     ),

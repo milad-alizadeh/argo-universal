@@ -667,6 +667,9 @@ importers:
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../../packages/machine-log
+      '@repo/process':
+        specifier: workspace:*
+        version: link:../../packages/process
       '@repo/server':
         specifier: workspace:*
         version: link:../server
@@ -695,6 +698,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@repo/cli':
+        specifier: workspace:*
+        version: link:../cli
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -704,6 +710,9 @@ importers:
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../../packages/machine-log
+      '@repo/process':
+        specifier: workspace:*
+        version: link:../../packages/process
       '@trpc/client':
         specifier: 'catalog:'
         version: 11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2)
@@ -765,6 +774,9 @@ importers:
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../../packages/machine-log
+      '@repo/process':
+        specifier: workspace:*
+        version: link:../../packages/process
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -1080,6 +1092,9 @@ importers:
       '@repo/browser-suite-lock':
         specifier: workspace:*
         version: link:../tooling/browser-suite-lock
+      '@repo/cli':
+        specifier: workspace:*
+        version: link:../apps/cli
       '@repo/desktop':
         specifier: workspace:*
         version: link:../apps/desktop
@@ -1089,6 +1104,9 @@ importers:
       '@repo/mocks':
         specifier: workspace:*
         version: link:../mocks
+      '@repo/process':
+        specifier: workspace:*
+        version: link:../packages/process
       '@repo/server':
         specifier: workspace:*
         version: link:../apps/server
@@ -1128,6 +1146,9 @@ importers:
       '@repo/contracts':
         specifier: workspace:*
         version: link:../packages/contracts
+      '@repo/git':
+        specifier: workspace:*
+        version: link:../packages/git
       zod:
         specifier: 'catalog:'
         version: 4.6.5
@@ -1739,6 +1760,31 @@ importers:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.6)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
+  packages/process:
+    dependencies:
+      '@repo/executables':
+        specifier: workspace:*
+        version: link:../executables
+    devDependencies:
+      '@repo/typescript':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.6)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+
   plugins/code-map:
     devDependencies:
       '@argo/plugin-kit':
@@ -1904,6 +1950,9 @@ importers:
       '@repo/mocks':
         specifier: workspace:*
         version: link:../mocks
+      '@repo/process':
+        specifier: workspace:*
+        version: link:../packages/process
       '@repo/typescript':
         specifier: workspace:*
         version: link:../tooling/typescript

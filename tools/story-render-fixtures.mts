@@ -1,3 +1,12 @@
+import {
+  readStory,
+  storySuffix,
+  type NamedImport,
+  type StoryExport,
+  type StoryFile,
+} from './story-file.mts';
+import { pascal } from './story-title-path.mts';
+
 export type FixturePair = {
   file: string;
   first: string;
@@ -5,30 +14,7 @@ export type FixturePair = {
   fixture: string;
 };
 
-export type StoryFile = { file: string; source: string };
-
-const storyHeader = /^export const (\w+)\s*:/gm;
-
-const importClause = /^import\s*\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/gm;
-
-const identifier = /[\w$]+/g;
-
 const fixtureModule = /(?:-fixtures|\.mocks)(?:\.[a-z]+)?$|\/mocks\//;
-
-const metaComponent = /\bcomponent:\s*(\w+)/;
-
-const kebabPart = /-(\w)/g;
-
-const groupNumber = (match: readonly string[] | null, group: number): string =>
-  match?.[group] ?? '';
-
-const matchStart = (match: RegExpMatchArray): number => match.index ?? 0;
-
-const pascal = (stem: string): string =>
-  (stem.charAt(0).toUpperCase() + stem.slice(1)).replaceAll(
-    kebabPart,
-    (_match, letter: string): string => letter.toUpperCase(),
-  );
 
 const stemOf = (specifier: string): string =>
   (specifier.slice(specifier.lastIndexOf('/') + 1).split('.')[0] ?? '').replace(
@@ -40,9 +26,9 @@ const componentOf = (specifier: string): string => pascal(stemOf(specifier));
 
 type Subject = { component: string; stem: string };
 
-const subjectOf = ({ file, source }: StoryFile): Subject => ({
-  component: groupNumber(metaComponent.exec(source), 1),
-  stem: stemOf(file.replace('.stories.tsx', '')),
+const subjectOf = (story: StoryFile, component: string): Subject => ({
+  component,
+  stem: stemOf(story.file.replace(storySuffix, '')),
 });
 
 const ownFixture = (specifier: string, subject: Subject): boolean =>
@@ -59,48 +45,41 @@ const isFixtureName = (name: string): boolean =>
 
 const addNames = (
   names: Map<string, string>,
-  clause: RegExpMatchArray,
+  { names: imported, from }: NamedImport,
 ): void => {
-  for (const name of groupNumber(clause, 1).matchAll(identifier))
-    if (isFixtureName(groupNumber(name, 0)))
-      names.set(groupNumber(name, 0), groupNumber(clause, 2));
+  for (const name of imported) if (isFixtureName(name)) names.set(name, from);
 };
 
-const importedNames = (story: StoryFile): Map<string, string> => {
-  const subject = subjectOf(story);
+const importedNames = (
+  imports: readonly NamedImport[],
+  subject: Subject,
+): Map<string, string> => {
   const names = new Map<string, string>();
 
-  for (const clause of story.source.matchAll(importClause))
-    if (childFixture(groupNumber(clause, 2), subject)) addNames(names, clause);
+  for (const clause of imports)
+    if (childFixture(clause.from, subject)) addNames(names, clause);
 
   return names;
 };
 
 const blockEnd = (
-  headers: readonly RegExpMatchArray[],
+  headers: readonly StoryExport[],
   index: number,
   end: number,
-): number => {
-  const next = headers[index + 1];
+): number => headers[index + 1]?.start ?? end;
 
-  return next === undefined ? end : matchStart(next);
-};
-
-const storyBlocks = (source: string): [string, string][] => {
-  const headers = [...source.matchAll(storyHeader)];
-
-  return headers.map((header, index): [string, string] => [
-    groupNumber(header, 1),
-    source.slice(
-      matchStart(header) + groupNumber(header, 0).length,
-      blockEnd(headers, index, source.length),
-    ),
+const storyBlocks = (
+  source: string,
+  headers: readonly StoryExport[],
+): [string, string][] =>
+  headers.map((header, index): [string, string] => [
+    header.name,
+    source.slice(header.headerEnd, blockEnd(headers, index, source.length)),
   ]);
-};
 
 const members = (block: string, name: string): string[] =>
   [...block.matchAll(new RegExp(`\\b${name}\\.(\\w+)`, 'g'))].map(
-    (match): string => groupNumber(match, 1),
+    (match): string => match[1] ?? '',
   );
 
 const referenced = (
@@ -178,9 +157,11 @@ const pairOf = (
 
 /* The pairs worth rendering twice; rendering every pair in a file would cost a browser run of its own. */
 export const fixturePairs = (story: StoryFile): FixturePair[] => {
-  const names = importedNames(story);
+  const read = readStory(story);
+  const subject = subjectOf(story, read.component ?? '');
+  const names = importedNames(read.imports, subject);
 
-  const stories = storyBlocks(story.source).map(
+  const stories = storyBlocks(story.source, read.exports).map(
     ([name, block]): StoryReferences => [name, referenced(block, names)],
   );
 

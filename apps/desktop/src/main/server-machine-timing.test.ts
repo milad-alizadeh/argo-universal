@@ -1,5 +1,5 @@
+import { pollIntervalMs, startLimitMs, stopLimitMs } from '@repo/process';
 import { describe, expect, it, vi } from 'vitest';
-import { pollDelayMs, startLimitMs, stopLimitMs } from './server-machine';
 import {
   abandonStuckSupervisor,
   context,
@@ -17,7 +17,7 @@ import {
   runningAddress,
   server,
   settle,
-  signalledPids,
+  stoppedPids,
   staleAddress,
   supervisorExitedEvent,
   supervisorSpawnedEvent,
@@ -34,7 +34,7 @@ describe('server connection', (): void => {
       pid: address.pid,
       at: Date.parse('2026-10-03T10:01:00.000Z'),
     });
-    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await vi.advanceTimersByTimeAsync(pollIntervalMs);
     await settle((): void => latest(readAddressCalls).resolve(address));
     expect(readyAddresses).toEqual([address]);
   });
@@ -54,16 +54,16 @@ describe('server connection', (): void => {
     await spawnSupervisor();
     expect(readAddressCalls).toHaveLength(1);
 
-    await vi.advanceTimersByTimeAsync(pollDelayMs - 1);
+    await vi.advanceTimersByTimeAsync(pollIntervalMs - 1);
     expect(readAddressCalls).toHaveLength(1);
     await vi.advanceTimersByTimeAsync(1);
     expect(readAddressCalls).toHaveLength(2);
     // server.json still names an older Supervisor.
     await settle((): void => latest(readAddressCalls).resolve(runningAddress));
-    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await vi.advanceTimersByTimeAsync(pollIntervalMs);
     // server.json was written before the spawn, by a process whose pid the OS reused.
     await settle((): void => latest(readAddressCalls).resolve(staleAddress));
-    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await vi.advanceTimersByTimeAsync(pollIntervalMs);
     expect(readAddressCalls).toHaveLength(4);
     await settle((): void => latest(readAddressCalls).resolve(startedAddress));
 
@@ -79,7 +79,7 @@ describe('server connection', (): void => {
     await vi.advanceTimersByTimeAsync(1);
 
     expect(value()).toEqual({ abandoning: 'waiting' });
-    expect(signalledPids).toEqual([startedAddress.pid]);
+    expect(stoppedPids).toEqual([startedAddress.pid]);
   });
 
   it('reuses the Supervisor that won the race to start when its own exits', async (): Promise<void> => {
@@ -103,6 +103,6 @@ describe('server connection', (): void => {
 
     expect(value()).toBe('failed');
     expect(context().failure).toBe(exitReason);
-    expect(signalledPids).toEqual([]);
+    expect(stoppedPids).toEqual([]);
   });
 });

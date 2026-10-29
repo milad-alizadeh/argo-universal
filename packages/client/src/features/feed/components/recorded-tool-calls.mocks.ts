@@ -1,8 +1,8 @@
 import type { SessionSnapshot, ToolCallUpdate } from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
+import { toolCallFacts } from '../view/feed-row-facts';
 import type { FeedActivity, FeedGroup } from '../view/feed-view';
 import { toFeedView } from '../view/to-feed-view';
-import { argoMeta } from './tool-call-meta';
 
 export type RecordedFeedMock = (typeof recordedFeedMocks)[number];
 
@@ -30,14 +30,13 @@ export const toolCallRows = (rows: readonly RecordedRow[]): ToolCallUpdate[] =>
   rows.filter(isToolCallUpdate);
 
 const readsFiles = (row: ToolCallUpdate): boolean =>
-  argoMeta(row)?.commandActions?.some((action) => action.type === 'read') ===
-  true;
+  toolCallFacts(row).actions.some((action) => action.type === 'read');
 
 export const isCommand = (row: ToolCallUpdate): boolean =>
   row.kind === 'execute' && !readsFiles(row);
 
 export const startedAt = (row: ToolCallUpdate): number =>
-  argoMeta(row)?.startedAt ?? 0;
+  toolCallFacts(row).startedAt ?? 0;
 
 export const recordingRows = (recording: string): ToolCallUpdate[] =>
   toolCallRows(

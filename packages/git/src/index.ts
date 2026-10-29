@@ -1,6 +1,10 @@
 export * from './changes';
 
-export * from './checkout';
+export { createCheckout } from './checkout';
+
+export { discardCheckout, removeCheckout } from './checkout-removal';
+
+export { isSessionBranch, sessionBranch } from './session-branch';
 
 export {
   listBranches,

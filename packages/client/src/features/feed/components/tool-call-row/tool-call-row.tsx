@@ -2,12 +2,12 @@ import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { toolCallFacts } from '../../view/feed-row-facts';
 import {
   ToolCallDisclosure,
   toolCallDisclosureProps,
 } from '../tool-call-disclosure';
 import { toolCallIcon } from '../tool-call-icon';
-import { toolCallPath } from '../tool-call-meta';
 import { ToolOutput } from '../tool-output';
 
 export interface ToolCallRowProps {
@@ -44,7 +44,7 @@ function ToolCallRowOutput({
     <>
       <ToolOutput
         content={row.content}
-        fileName={toolCallPath(row)?.split('/').at(-1)}
+        fileName={toolCallFacts(row).path?.split('/').at(-1)}
       />
       <SettledStatus status={row.status} />
     </>

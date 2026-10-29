@@ -1,12 +1,14 @@
-import type { ChildProcess } from 'node:child_process';
 import { type ElectronApplication } from '@playwright/test';
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import { hasExited, stopProcess } from '@repo/process';
 import { appForElectron, launchElectron } from './electron-fixture';
 import {
+  type DesktopServer,
   prepareDesktopServer,
-  stopExternalSupervisor,
-  stopOwnedSupervisor,
+  stopDesktopServer,
+  type SupervisorMode,
 } from './electron-server';
 import type { App } from './fixtures';
 
@@ -14,101 +16,69 @@ export type ElectronInput = {
   directory: string;
   userDataDirectory: string;
   mockAgents: AppFixtureAgents;
-  ownsSupervisor: boolean;
-  usesSupervisor: boolean;
+  mode: SupervisorMode;
   use: (app: App) => Promise<void>;
-};
-
-type DesktopServer = Awaited<ReturnType<typeof prepareDesktopServer>>;
-
-async function cleanDesktopServer(
-  server: DesktopServer,
-  ownsSupervisor: boolean,
-): Promise<void> {
-  const leftover = readServerAddress(server.home);
-
-  if (ownsSupervisor && leftover) await stopOwnedSupervisor(leftover.pid);
-  await stopExternalSupervisor(server.externalSupervisor);
-  await server.fixtureServer.stop();
-}
-
-type ElectronProcess = {
-  application: ElectronApplication | undefined;
-  child: ChildProcess | undefined;
 };
 
 async function cleanElectron(
   server: DesktopServer,
-  process: ElectronProcess,
-  ownsSupervisor: boolean,
+  application: ElectronApplication | undefined,
 ): Promise<void> {
   try {
-    await closeElectron(process.application, process.child, ownsSupervisor);
+    await closeElectron(application, server.mode);
   } finally {
-    await cleanDesktopServer(server, ownsSupervisor);
+    await stopDesktopServer(server);
   }
 }
 
-function assertSupervisorStopped(home: string, ownsSupervisor: boolean): void {
-  if (ownsSupervisor) return;
-  const leftover = readServerAddress(home);
+// Only an owned Supervisor may outlive desktop; any other left running is stopped, then reported.
+async function assertSupervisorStopped(server: DesktopServer): Promise<void> {
+  const leftover = readServerAddress(server.home);
 
-  if (!leftover) return;
-  process.kill(leftover.pid, 'SIGTERM');
+  if (server.mode === 'owned' || !leftover) return;
+  await stopProcess(leftover.pid, supervisorStopGraceMs);
   throw new Error(
     `Desktop quit but left its Server (pid ${leftover.pid}) running`,
   );
 }
 
-function prepareServer(input: ElectronInput): Promise<DesktopServer> {
-  return prepareDesktopServer({
+export async function useElectronApp(input: ElectronInput): Promise<void> {
+  const server = await prepareDesktopServer({
     directory: input.directory,
     agents: input.mockAgents,
-    ownsSupervisor: input.ownsSupervisor,
-    usesSupervisor: input.usesSupervisor,
+    mode: input.mode,
   });
-}
-
-export async function useElectronApp(input: ElectronInput): Promise<void> {
-  const server = await prepareServer(input);
 
   let application: ElectronApplication | undefined;
-  let child: ChildProcess | undefined;
 
   try {
     application = await launchElectron(input, server);
-    child = application.process();
     await input.use(await appForElectron(input, server, application));
   } finally {
-    await cleanElectron(server, { application, child }, input.ownsSupervisor);
+    await cleanElectron(server, application);
   }
 
-  assertSupervisorStopped(server.home, input.ownsSupervisor);
+  await assertSupervisorStopped(server);
 }
 
 async function closeElectron(
   application: ElectronApplication | undefined,
-  child: ChildProcess | undefined,
-  ownsSupervisor: boolean,
+  mode: SupervisorMode,
 ): Promise<void> {
-  if (!application || !isRunning(child)) return;
+  if (!application || hasExited(application.process())) return;
 
-  await shutdownElectron(application, ownsSupervisor);
+  await shutdownElectron(application, mode);
 }
 
-function isRunning(child: ChildProcess | undefined): boolean {
-  return child?.exitCode === null;
+async function shutdownElectron(
+  application: ElectronApplication,
+  mode: SupervisorMode,
+): Promise<void> {
+  await (mode === 'owned' ? exitElectron(application) : application.close());
 }
 
 async function exitElectron(application: ElectronApplication): Promise<void> {
   await application.evaluate(({ app }): void => {
     app.exit();
   });
-}
-
-async function shutdownElectron(
-  application: ElectronApplication,
-  ownsSupervisor: boolean,
-): Promise<void> {
-  await (ownsSupervisor ? exitElectron(application) : application.close());
 }

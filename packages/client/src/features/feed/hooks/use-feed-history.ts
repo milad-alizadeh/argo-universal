@@ -9,14 +9,14 @@ import {
 import { useCallback } from 'react';
 import { useTRPC, useTRPCClient } from '#features/connection';
 import { type HistoryWindow, needsOlderHistory } from '../view/feed-history';
-import { revisitGraceMs } from './held-feed';
+import { revisitGraceMs } from './kept-feeds';
 
 type HistoryCursor = Pick<FeedPageInput, 'direction' | 'cursor' | 'epoch'>;
 
 type FeedHistory = Pick<
   UseInfiniteQueryResult<InfiniteData<FeedPageOutput>>,
   'data' | 'error' | 'refetch' | 'isFetchNextPageError' | 'isFetchingNextPage'
-> & { loadOlder: () => Promise<void>; resetHistory: () => Promise<void> };
+> & { loadOlder: () => Promise<void> };
 
 const initialPageParam: HistoryCursor = { direction: 'tail' };
 
@@ -33,9 +33,8 @@ export function useFeedHistory(
 ): FeedHistory {
   const history = useHistoryQuery(sessionId);
   const loadOlder = useLoadOlder(history, { epoch, startCursor });
-  const resetHistory = useResetHistory(sessionId);
 
-  return { ...history, loadOlder, resetHistory };
+  return { ...history, loadOlder };
 }
 
 function useHistoryQuery(
@@ -137,17 +136,17 @@ function useLoadOlder(
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, epoch, startCursor]);
 }
 
-function useResetHistory(sessionId: string | undefined): () => Promise<void> {
+// Drops the pages held, so the Session's history pages its tail again.
+export function useResetHistory(
+  sessionId: string | undefined,
+): () => Promise<void> {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   return useCallback(
     () =>
       queryClient.resetQueries({
-        queryKey: trpc.feed.page.infiniteQueryKey({
-          sessionId: sessionId ?? '',
-          limit: pageSize,
-        }),
+        queryKey: historyKey(trpc, sessionId),
         exact: true,
       }),
     [queryClient, trpc, sessionId],

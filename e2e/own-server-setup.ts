@@ -4,7 +4,6 @@ import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { offlineRegistry } from '@repo/mocks/registry/catalog';
 import { scriptedRegistry } from '@repo/mocks/registry/scripted';
-import { projectDirectoryName, requestLogName } from './own-server-files';
 
 export type InitialServerOptions = {
   noProjects?: boolean;
@@ -13,19 +12,46 @@ export type InitialServerOptions = {
 
 export type ServerPaths = {
   directory: string;
+  // initTestRepository makes the Server's one Project here.
   projectPath: string;
+  // The Agents append the ACP requests e2e steps check here, one JSON line each.
+  requestLogPath: string;
   home: string;
   registryPath: string;
   installationPath: string;
 };
 
-function serverPaths(directory: string): ServerPaths {
+export function serverPaths(directory: string): ServerPaths {
   return {
     directory,
-    projectPath: path.join(directory, projectDirectoryName),
+    projectPath: path.join(directory, 'project'),
+    requestLogPath: path.join(directory, 'agent-requests.jsonl'),
     home: path.join(directory, 'server-home'),
     registryPath: path.join(directory, 'registry.json'),
     installationPath: path.join(directory, 'installation.json'),
+  };
+}
+
+type ServerFiles = Pick<ServerPaths, 'projectPath' | 'requestLogPath'>;
+
+// The files App steps read beside the Server.
+export function serverFiles(directory: string): ServerFiles {
+  const { projectPath, requestLogPath } = serverPaths(directory);
+
+  return { projectPath, requestLogPath };
+}
+
+// The external Agent and Registry fixtures, for an Engine started alone or by a Supervisor.
+export function fixtureEnvironment(
+  paths: ServerPaths,
+  agents: AppFixtureAgents,
+): NodeJS.ProcessEnv {
+  return {
+    ARGO_PROJECT_PATH: paths.projectPath,
+    ARGO_E2E_AGENTS: JSON.stringify(agents),
+    ARGO_E2E_REGISTRY_PATH: paths.registryPath,
+    ARGO_E2E_INSTALLATION_PATH: paths.installationPath,
+    ARGO_E2E_REQUEST_LOG: paths.requestLogPath,
   };
 }
 
@@ -36,9 +62,7 @@ async function writeRegistry(
 ): Promise<void> {
   const registry = initial.registryOffline
     ? offlineRegistry
-    : scriptedRegistry(agents, {
-        ARGO_E2E_REQUEST_LOG: path.join(paths.directory, requestLogName),
-      });
+    : scriptedRegistry(agents, { ARGO_E2E_REQUEST_LOG: paths.requestLogPath });
 
   await writeFile(paths.registryPath, JSON.stringify(registry));
 }

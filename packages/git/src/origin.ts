@@ -1,5 +1,5 @@
+import { git } from './git';
 import { rejectResponse } from './reject-response';
-import { run } from './run';
 
 // `git remote get-url` exits with this code when the remote does not exist.
 const noSuchRemote = 2;
@@ -65,15 +65,13 @@ export async function readOriginUrl(
   projectPath: string,
 ): Promise<string | null> {
   try {
-    const { stdout } = await originUrl(projectPath);
-
-    return stdout.trim();
+    return (await originUrl(projectPath)).trim();
   } catch (error) {
     if (hasExitCode(error, noSuchRemote)) return null;
     throw error;
   }
 }
 
-function originUrl(projectPath: string): ReturnType<typeof run> {
-  return run(['-C', projectPath, 'remote', 'get-url', 'origin']);
+function originUrl(projectPath: string): Promise<string> {
+  return git(projectPath, ['remote', 'get-url', 'origin']);
 }

@@ -8,6 +8,7 @@ import {
 } from '@repo/contracts/plugins/kit-prop-descriptors';
 import { declaredProps, type Prop } from './new-story-props.mts';
 import { branchesIn, kitComponentIn, renderStory } from './new-story-rules.mts';
+import { storySuffix } from './story-file.mts';
 import { derivedStoryTitle } from './story-title-rules.mts';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -82,7 +83,7 @@ function storyFor(file: string): string {
 
 function write(argument: string): void {
   const file = path.resolve(process.cwd(), argument);
-  const target = file.replace(/\.tsx?$/, '.stories.tsx');
+  const target = file.replace(/\.tsx?$/, storySuffix);
 
   if (existsSync(target))
     throw new Error(`${path.relative(root, target)} already exists`);

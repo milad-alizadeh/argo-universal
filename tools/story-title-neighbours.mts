@@ -1,3 +1,4 @@
+import { storySuffix } from './story-file.mts';
 import { baseOf, dirOf, type StoryPath } from './story-title-path.mts';
 
 export type StoryTitles = ReadonlyMap<string, string>;
@@ -53,7 +54,7 @@ const extendedSubject = ({
 }: Neighbours): Subject | undefined => {
   for (let taken = parts.length; taken > 0; taken -= 1) {
     const base = parts.slice(0, taken).join('-');
-    const title = titles.get(`${dir}${base}.stories.tsx`);
+    const title = titles.get(`${dir}${base}${storySuffix}`);
 
     if (title !== undefined) return { title, aspect: parts.slice(taken) };
   }
@@ -75,7 +76,7 @@ const subjectIn = (
 
 // The folder's own story, which a test named for one part of it belongs under.
 const folderSubject = (neighbours: Neighbours): Subject | undefined =>
-  subjectIn(neighbours, `${neighbours.dir}${neighbours.folder}.stories.tsx`);
+  subjectIn(neighbours, `${neighbours.dir}${neighbours.folder}${storySuffix}`);
 
 const storiesIn = (titles: StoryTitles, dir: string): string[] =>
   [...titles.keys()].filter(

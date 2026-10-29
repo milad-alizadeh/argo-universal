@@ -2,6 +2,7 @@ import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isAlive } from '@repo/process';
 import { expect, it, vi, onTestFinished } from 'vitest';
 import { createActor, setup } from 'xstate';
 import { z } from 'zod';
@@ -16,16 +17,6 @@ const owners = [
     folderName: 'shell-processes',
   },
 ];
-
-const isAlive = (pid: number): boolean => {
-  try {
-    process.kill(pid, 0);
-
-    return true;
-  } catch {
-    return false;
-  }
-};
 
 const changeProcesses = (
   mode: string,

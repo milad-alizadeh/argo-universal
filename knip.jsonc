@@ -40,6 +40,10 @@
       // A shell builtin in the dev and start scripts, not an npm binary.
       "ignoreBinaries": ["unset"]
     },
+    "packages/process": {
+      // The lifecycle tests launch this child by path.
+      "entry": ["mocks/child-fixture.mjs"]
+    },
     "apps/server": {
       // The Supervisor and E2E launch these Engine entries by path in a separate process.
       "entry": [
