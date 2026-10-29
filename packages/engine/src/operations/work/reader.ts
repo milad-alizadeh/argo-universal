@@ -9,15 +9,15 @@ import type {
   SessionWorkRead,
   SessionWorkSource,
 } from '../../sessions';
-import type { OperationCaller } from '../session-tokens';
-import { callExecution, workExecution } from './execution';
+import type { TokenCaller } from '../session-tokens';
+import { callExecution, workExecution, type AnsweredCall } from './execution';
 import type { WaitIds } from './ids';
 import type { WorkObservation } from './observation';
 
 type Context = {
   source: SessionWorkSource;
   ids: WaitIds;
-  caller: OperationCaller;
+  caller: TokenCaller;
 };
 
 type Target = { id: string; work: SessionWork };
@@ -46,12 +46,16 @@ function readCall(
   value: OperationCallRead,
 ): WorkObservation {
   if (value.status === 'failed') throw new Error(value.error);
+  const link = linkedWork(value);
 
-  if (value.status !== 'cancelled' && value.work)
-    return readOperationWork(context, linkedTarget(context, value.work));
+  if (link) return readOperationWork(context, linkedTarget(context, link));
 
   return observation(callExecution(id, value), work);
 }
+
+// A cancelled Tool call answers for itself, even once it started native work.
+const linkedWork = (value: AnsweredCall): OperationWorkTarget | undefined =>
+  value.status === 'cancelled' ? undefined : value.work;
 
 function turnObservation(
   { id, work }: Target,

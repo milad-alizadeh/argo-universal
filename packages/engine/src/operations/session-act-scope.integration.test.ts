@@ -22,21 +22,19 @@ const Refusal = z.object({
   data: z.object({ code: z.string() }),
 });
 
-type Target = 'self' | 'started' | 'unrelated' | 'foreign';
-
-type Targets = Record<Target, string>;
+type Targets = Record<'self' | 'started' | 'unrelated' | 'foreign', string>;
 
 // Without a held Turn, a call its scope would ask about is refused before it runs.
 const asked = 'A Permission request requires an active Turn';
 
-// The implementation's own refusal still means the call ran past its scope.
-type ImplementationError = { code: string; message: string };
-
+// `ranWith` is the implementation's own refusal, `code: message`: the call still ran past its scope.
 type ActOperation = {
   id: OperationId;
   params: (sessionId: string) => Json;
-  ranWith?: ImplementationError;
+  ranWith?: string;
 };
+
+const configOption = { configId: 'mode', type: 'id', value: 'x' };
 
 // The caller's own Session comes last in each row, and session.close comes last, so closing it ends the table.
 const actOperations: ActOperation[] = [
@@ -46,13 +44,8 @@ const actOperations: ActOperation[] = [
   },
   {
     id: 'session.setConfigOption',
-    params: (sessionId) => ({
-      sessionId,
-      configId: 'mode',
-      type: 'id',
-      value: 'x',
-    }),
-    ranWith: { code: 'BAD_REQUEST', message: 'The Agent did not offer mode=x' },
+    params: (sessionId) => ({ sessionId, ...configOption }),
+    ranWith: 'BAD_REQUEST: The Agent did not offer mode=x',
   },
   {
     id: 'session.savePlan',
@@ -61,16 +54,12 @@ const actOperations: ActOperation[] = [
   {
     id: 'shell.stop',
     params: (sessionId) => ({ sessionId, shellId: 'no-shell' }),
-    ranWith: { code: 'NOT_FOUND', message: 'No Shell in this Session' },
+    ranWith: 'NOT_FOUND: No Shell in this Session',
   },
   {
     id: 'session.cancel',
     params: (sessionId) => ({ sessionId }),
-    ranWith: {
-      code: 'CONFLICT',
-      message:
-        'Session cannot accept session.cancel in {"open":{"acp":"idle"}}',
-    },
+    ranWith: `CONFLICT: Session cannot accept session.cancel in {"open":{"acp":"idle"}}`,
   },
   { id: 'session.close', params: (sessionId) => ({ sessionId }) },
 ];
@@ -172,28 +161,26 @@ async function scopeOf(
   { id, params, ranWith }: ActOperation,
   sessionId: string,
 ): Promise<string> {
-  return journey.caller.caller.operations.run
-    .mutate({ id, params: params(sessionId) })
-    .then(
-      () => 'ran',
-      (cause: unknown) => refusal(cause, ranWith),
-    );
+  const run = { id, params: params(sessionId) };
+
+  return journey.caller.caller.operations.run.mutate(run).then(
+    () => 'ran',
+    (cause: unknown) => refusal(cause, ranWith),
+  );
 }
 
-function refusal(cause: unknown, ranWith?: ImplementationError): string {
-  const { code, message } = refusalOf(cause);
+function refusal(cause: unknown, ranWith?: string): string {
+  const refused = describeRefusal(cause);
 
-  if (code === 'CONFLICT' && message === asked) return 'asked';
+  if (refused === `CONFLICT: ${asked}`) return 'asked';
 
-  if (code === ranWith?.code && message === ranWith.message) return 'ran';
-
-  return `unexpected ${code}: ${message}`;
+  return refused === ranWith ? 'ran' : `unexpected ${refused}`;
 }
 
-function refusalOf(cause: unknown): ImplementationError {
+function describeRefusal(cause: unknown): string {
   const parsed = Refusal.safeParse(cause);
 
   return parsed.success
-    ? { code: parsed.data.data.code, message: parsed.data.message }
-    : { code: 'unknown', message: String(cause) };
+    ? `${parsed.data.data.code}: ${parsed.data.message}`
+    : String(cause);
 }

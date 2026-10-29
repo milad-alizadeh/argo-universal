@@ -23,18 +23,18 @@ export function callExecution(
 }
 
 function callState(call: AnsweredCall): ExecutionState {
-  switch (call.status) {
-    case 'completed':
-      return call.fullResult
-        ? {
-            status: 'settled',
-            result: call.result,
-            fullResult: call.fullResult,
-          }
-        : { status: 'settled', result: call.result };
-    case 'cancelled':
-      return { status: 'settled', cancelled: true };
-    default:
-      return { status: call.status };
-  }
+  if (call.status === 'completed') return completedState(call);
+
+  return call.status === 'cancelled'
+    ? { status: 'settled', cancelled: true }
+    : { status: call.status };
+}
+
+function completedState({
+  result,
+  fullResult,
+}: Extract<AnsweredCall, { status: 'completed' }>): ExecutionState {
+  return fullResult
+    ? { status: 'settled', result, fullResult }
+    : { status: 'settled', result };
 }
