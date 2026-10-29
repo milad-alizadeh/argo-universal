@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { View } from 'react-native';
 import { RichTextarea } from './rich-textarea';
 import { RichTextareaExample } from './rich-textarea-example.mocks';
 import {
@@ -15,6 +16,8 @@ import {
   quoteRichTextarea,
   strikethroughRichTextarea,
   threeLinesRichTextarea,
+  suggestionsRichTextarea,
+  scrollingSuggestionsRichTextarea,
 } from './rich-textarea-fixtures';
 
 const meta = {
@@ -26,6 +29,7 @@ const meta = {
     onChangeText: { control: false },
     onSubmit: { control: false },
     references: { control: false },
+    suggestions: { control: false },
   },
   // The editor is controlled, so every story draws through a wrapper that keeps the draft.
   render: ({ value, ...props }): React.JSX.Element => (
@@ -64,4 +68,24 @@ export const LongDraft: Story = {
   parameters: {
     docs: { description: { story: 'A draft at the editor’s maximum height.' } },
   },
+};
+
+export const Suggestions: Story = {
+  args: suggestionsRichTextarea,
+  parameters: { screenPreview: true },
+  render: ({ value, ...props }) => (
+    <View className="flex-1 justify-center">
+      <RichTextareaExample initialValue={value} {...props} />
+    </View>
+  ),
+};
+
+export const ScrollingSuggestions: Story = {
+  args: scrollingSuggestionsRichTextarea,
+  parameters: { screenPreview: true },
+  render: ({ value, ...props }) => (
+    <View className="flex-1 justify-end">
+      <RichTextareaExample initialValue={value} {...props} />
+    </View>
+  ),
 };

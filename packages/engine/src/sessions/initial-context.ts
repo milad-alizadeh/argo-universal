@@ -47,6 +47,7 @@ export const initialSessionContext = (
     hookedPermissions: {},
     elicitationQueue: [],
     configOptions: [],
+    slashCommands: null,
     rejectedMessages: 0,
     failure: null,
     openError: null,

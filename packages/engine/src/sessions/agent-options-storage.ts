@@ -2,6 +2,7 @@ import {
   AgentConfiguration,
   type SessionAgentOptionsInput,
   SessionConfigOption,
+  type SlashCommand,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agentOptions, agentServers, project } from '@repo/db/schema';
@@ -29,6 +30,7 @@ const decode = (row: typeof agentOptions.$inferSelect): Stored => ({
     agent: row.agent,
     projectId: row.projectId,
     configOptions: row.configOptions,
+    commands: row.commands,
   }),
   revision: row.revision,
 });
@@ -56,10 +58,11 @@ export function readAgentConfiguration(
 export class AgentOptionsJob implements WriterJob {
   public constructor(
     public readonly owner: SessionAgentOptionsInput,
-    private readonly options: SessionConfigOption[],
+    private readonly options: SessionConfigOption[] | undefined,
     private readonly update: {
       authoritative: boolean;
       expectedRevision?: number;
+      commands?: SlashCommand[];
     },
   ) {}
 
@@ -83,23 +86,29 @@ export class AgentOptionsJob implements WriterJob {
 
     return {
       ...this.owner,
-      configOptions: this.update.authoritative
-        ? this.options
-        : this.options.map((option) => {
-            const value = previous?.configOptions.find(
-              (saved) => saved.configId === option.configId,
-            )?.currentValue;
-
-            return value !== undefined &&
-              isOfferedConfigChoice(this.options, {
-                configId: option.configId,
-                value,
-              })
-              ? SessionConfigOption.parse({ ...option, currentValue: value })
-              : option;
-          }),
+      commands: this.update.commands ?? previous?.commands ?? null,
+      configOptions: this.configuration(previous),
       revision: (previous?.revision ?? 0) + 1,
     };
+  }
+
+  private configuration(previous: Stored | undefined): SessionConfigOption[] {
+    const options = this.options;
+
+    if (options === undefined) return previous?.configOptions ?? [];
+
+    return this.update.authoritative
+      ? options
+      : options.map((option) => {
+          const value = previous?.configOptions.find(
+            (saved) => saved.configId === option.configId,
+          )?.currentValue;
+
+          return value !== undefined &&
+            isOfferedConfigChoice(options, { configId: option.configId, value })
+            ? SessionConfigOption.parse({ ...option, currentValue: value })
+            : option;
+        });
   }
 
   public commit(transaction: StorageTransaction): void {

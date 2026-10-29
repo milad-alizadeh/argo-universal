@@ -7,23 +7,16 @@ import {
   registerBlockShortcuts,
   registerListLines,
   registerMarkShortcuts,
-  registerReturnToSubmit,
 } from './rich-textarea-keys';
 import { registerLineMarkers } from './rich-textarea-line-markers';
 import { useMarkdownValue } from './rich-textarea-value';
 
-export function KeyboardPlugin({
-  onSubmit,
-}: Pick<RichTextareaProps, 'onSubmit'>): null {
+export function KeyboardPlugin(): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => registerMarkShortcuts(editor), [editor]);
   useEffect(() => registerBlockShortcuts(editor), [editor]);
   useEffect(() => registerListLines(editor), [editor]);
   useEffect(() => registerLineMarkers(editor), [editor]);
-  useEffect(
-    () => onSubmit && registerReturnToSubmit(editor, onSubmit),
-    [editor, onSubmit],
-  );
 
   return null;
 }

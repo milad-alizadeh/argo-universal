@@ -1,0 +1,1 @@
+ALTER TABLE `agent_options` ADD `commands` text;

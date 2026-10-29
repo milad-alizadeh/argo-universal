@@ -95,3 +95,11 @@ export const planlessSessionComposer = {
   sessionStarted: true,
   plan: [],
 } satisfies ComposerFixture;
+
+export const slashSuggestionsComposer = {
+  draft: { text: '/', attachments: [] },
+  slashCommands: [
+    { name: 'inspect', description: 'Review changes' },
+    { name: 'review', description: 'Review a file' },
+  ],
+} satisfies ComposerFixture;

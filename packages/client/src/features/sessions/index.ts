@@ -95,12 +95,6 @@ export type {
   EmptySessionState,
 } from './stores/empty-session-types';
 
-export {
-  chosenOptions,
-  type ConfigurationPicks,
-  initialConfigOptions,
-} from './utils/session-option-choices';
-
 export { useSessionOptions } from './hooks/use-session-options';
 
 export { useSessionWork } from './hooks/use-session-work';

@@ -1,5 +1,6 @@
 import { exampleLabel } from './rich-textarea-example.mocks';
 import type { RichTextareaProps } from './rich-textarea-props';
+import type { ComposerSuggestion } from './rich-textarea-suggestions';
 
 type RichTextareaFixture = Omit<RichTextareaProps, 'onChangeText'>;
 
@@ -69,4 +70,51 @@ export const codeBlockRichTextarea = {
 export const longDraftRichTextarea = {
   value: longDraft,
   accessibilityLabel,
+} satisfies RichTextareaFixture;
+
+export const suggestionsRichTextarea = {
+  value: '/',
+  accessibilityLabel,
+  autoFocus: true,
+  suggestions: [
+    {
+      id: 'example',
+      title: 'Suggestions',
+      query: (query: string): ComposerSuggestion[] =>
+        [
+          {
+            id: 'first',
+            label: '/first',
+            detail: 'First option',
+            insert: '/first ',
+          },
+          {
+            id: 'second',
+            label: '/second',
+            detail: 'Second option',
+            insert: '/second ',
+          },
+        ].filter(({ label }) => label.slice(1).startsWith(query)),
+    },
+  ],
+} satisfies RichTextareaFixture;
+
+export const scrollingSuggestionsRichTextarea = {
+  value: '/',
+  accessibilityLabel,
+  autoFocus: true,
+  suggestions: [
+    {
+      id: 'many',
+      title: 'Suggestions',
+      query: (): ComposerSuggestion[] =>
+        Array.from({ length: 8 }, (_, index) => ({
+          id: String(index),
+          label: `/option-${index + 1}`,
+          detail:
+            'Read the complete description, compare the available options, and choose the option that fits the text you want to write next.',
+          insert: `/option-${index + 1} `,
+        })),
+    },
+  ],
 } satisfies RichTextareaFixture;

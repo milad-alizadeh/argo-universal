@@ -194,6 +194,10 @@ _Avoid_: Preferences, defaults, config options (for the three alone)
 A command or skill the Agent offers, named in a prompt as `/name` with optional arguments.
 _Avoid_: Command (alone), shortcut, action
 
+**Composer suggestion**:
+An item offered in the Composer's `/` menu, from an Agent or a Plugin. An Agent's Composer suggestion represents a Slash command.
+_Avoid_: Slash command (for a Plugin result), autocomplete item
+
 **Issue reference**:
 An Issue named in a prompt as `#` and its number.
 _Avoid_: Mention, issue link, tag

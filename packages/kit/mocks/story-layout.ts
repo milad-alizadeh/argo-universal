@@ -9,10 +9,13 @@ export type LayoutName = keyof typeof layoutWidths;
 const viewportHeight = 844;
 
 // Sizes the viewport to a named layout, or to an exact width, and waits for fonts and two frames.
-export async function settleLayout(layout: LayoutName | number): Promise<void> {
+export async function settleLayout(
+  layout: LayoutName | number,
+  height = viewportHeight,
+): Promise<void> {
   const width = typeof layout === 'number' ? layout : layoutWidths[layout];
 
-  await page.viewport(width, viewportHeight);
+  await page.viewport(width, height);
   await document.fonts.ready;
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),

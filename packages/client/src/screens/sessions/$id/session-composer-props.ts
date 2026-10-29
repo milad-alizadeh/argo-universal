@@ -1,4 +1,4 @@
-import type { Plan, SessionSnapshot } from '@repo/contracts';
+import type { Plan, SessionSnapshot, SlashCommand } from '@repo/contracts';
 import { type InstalledAgents, loadedAgents } from '#features/agents';
 import type {
   ComposerConfigurationProps,
@@ -35,6 +35,7 @@ export interface OpenSession {
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;
+    commands?: SlashCommand[] | null;
   };
   // The Feed's end came on screen or left it.
   onAtEndChange: (atEnd: boolean) => void;
@@ -98,31 +99,10 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
   return {
     agent: sessionAgent(open),
     agentId: snapshot.agent,
-    ...optionsOf(open),
+    ...composerOptions(open),
     onConfigChange: open.commands.changeConfig,
     turnRunning: isTurnRunning(snapshot),
     checkout: checkoutProps(snapshot.checkout),
-  };
-}
-
-function optionsOf({
-  snapshot,
-  options,
-}: OpenSession): Pick<ComposerConfigurationProps, 'configOptions' | 'opening'> {
-  if (snapshot.configOptions.length)
-    return { configOptions: snapshot.configOptions, opening: false };
-
-  return discoveredOptions(options);
-}
-
-function discoveredOptions(
-  options: OpenSession['options'],
-): Pick<ComposerConfigurationProps, 'configOptions' | 'opening'> {
-  if (!options) return { configOptions: [], opening: undefined };
-
-  return {
-    configOptions: options.configOptions,
-    opening: options.loading,
   };
 }
 
@@ -134,12 +114,16 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
   onSend: (sent) => void commands.sendDraft(sent),
 });
 
+const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>
+  open.options?.commands ?? undefined;
+
 // The Composer of an open Session: its draft, its commands and its configuration.
 export function sessionComposerProps(open: OpenSession): ComposerProps {
   const { commands, sessionId, snapshot, view } = open;
 
   return {
     ...draftProps(commands),
+    slashCommands: slashCommandsOf(open),
     onStop: () => commands.cancelTurn.mutate({ sessionId }),
     sending: isSending(open),
     sendable: isSendable(open),
@@ -149,4 +133,13 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
     status: composerStatus(view.plan, snapshot.usage ?? undefined),
     configuration: configurationProps(open),
   };
+}
+
+function composerOptions({
+  options,
+  snapshot,
+}: OpenSession): Pick<ComposerConfigurationProps, 'configOptions' | 'opening'> {
+  if (!options) return { configOptions: snapshot.configOptions };
+
+  return { configOptions: options.configOptions, opening: options.loading };
 }

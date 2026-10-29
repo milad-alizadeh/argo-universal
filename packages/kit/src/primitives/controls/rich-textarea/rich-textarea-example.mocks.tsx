@@ -2,12 +2,14 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { RichTextarea } from './rich-textarea';
 import type { ReferenceOption } from './rich-textarea-references';
+import type { SuggestionSource } from './rich-textarea-suggestions';
 
 interface ExampleProps {
   initialValue?: string;
   onChangeText?: (value: string) => void;
   onSubmit?: () => void;
   references?: readonly ReferenceOption[];
+  suggestions?: readonly SuggestionSource[];
 }
 
 export const exampleLabel = 'Message';

@@ -1,6 +1,6 @@
 import { useSessionFeed } from '#features/feed';
+import { useSessionOptions } from '#features/sessions';
 import type { NewSessionWiring } from './new-session-wiring';
-import { useOptionChoices } from './opened-session-choices';
 import { useConfigureStore, useShowsPrompt } from './opened-session-effects';
 import type { EmptySession } from './use-empty-session';
 
@@ -24,18 +24,23 @@ export function useOpenedConfiguration(
   opened: OpenedSession,
 ): Pick<NewSessionWiring, 'configuration' | 'discovery'> {
   const { view } = useSessionFeed(opened.session.openSessionId);
-  const choices = useOptionChoices(opened);
+
+  const choices = useSessionOptions({
+    agent: opened.agent,
+    projectId: opened.projectId,
+  });
+
   useShowsPrompt(opened, view?.items.length);
   useConfigureStore(opened, choices.configuration);
 
   return {
-    discovery: choices.discovery,
+    discovery: choices,
     configuration: configurationOf(choices),
   };
 }
 
 const configurationOf = (
-  choices: ReturnType<typeof useOptionChoices>,
+  choices: ReturnType<typeof useSessionOptions>,
 ): NewSessionWiring['configuration'] => ({
   configOptions: choices.configOptions,
   opening: choices.loading,

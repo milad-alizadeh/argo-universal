@@ -12,6 +12,7 @@ export const agentOptions = snakeCase.table(
       .notNull()
       .references(() => project.id, { onDelete: 'cascade' }),
     configOptions: text({ mode: 'json' }).notNull(),
+    commands: text({ mode: 'json' }),
     revision: integer().notNull(),
   },
   (table) => [primaryKey({ columns: [table.agent, table.projectId] })],

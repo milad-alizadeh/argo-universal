@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
+import { SessionOpenError } from './new';
 import { SessionConfigOption } from './set-config-option';
 
 // Input of `session.agentOptions`: the Agent and Project the reader selected (ADR-0023).
@@ -22,8 +23,17 @@ export type SessionAgentOptionsOutput = z.infer<
   typeof SessionAgentOptionsOutput
 >;
 
+export const SlashCommand = z.strictObject({
+  name: z.string(),
+  description: z.string(),
+  hint: z.string().optional(),
+});
+
+export type SlashCommand = z.infer<typeof SlashCommand>;
+
 export const AgentConfiguration = AgentOptionsOwner.extend({
   configOptions: SessionAgentOptionsOutput,
+  commands: z.array(SlashCommand).nullable(),
 });
 
 export type AgentConfiguration = z.infer<typeof AgentConfiguration>;
@@ -32,8 +42,10 @@ export type AgentConfiguration = z.infer<typeof AgentConfiguration>;
 export const AgentOptionsUpdate = z.strictObject({
   ...AgentOptionsOwner.shape,
   configOptions: SessionAgentOptionsOutput.nullable(),
+  commands: z.array(SlashCommand).nullable(),
   stage: z.enum(['installing', 'loading', 'ready']).optional(),
   progress: z.number().min(0).max(1).optional(),
+  error: SessionOpenError.optional(),
 });
 
 export type AgentOptionsUpdate = z.infer<typeof AgentOptionsUpdate>;

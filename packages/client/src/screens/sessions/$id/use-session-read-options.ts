@@ -8,14 +8,13 @@ function optionsInput(
   sessionId: string,
   snapshot: SessionFeed['snapshot'],
 ): Parameters<typeof useSessionOptions>[0] {
-  if (!snapshot)
-    return { agent: undefined, projectId: undefined, sessionId, picks: {} };
+  if (!snapshot) return { agent: undefined, projectId: undefined, sessionId };
 
   return {
-    agent: snapshot.configOptions.length ? undefined : snapshot.agent,
+    agent: snapshot.agent,
     projectId: snapshot.projectId,
     sessionId,
-    picks: {},
+    liveConfigOptions: snapshot.configOptions,
   };
 }
 
