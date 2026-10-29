@@ -1,10 +1,9 @@
 import type { SlashCommand } from '@repo/contracts';
 import type {
   ComposerSuggestion,
+  SlashCommandEntry,
   SuggestionSource,
 } from '@repo/kit/primitives/controls/rich-textarea';
-
-const resultLimit = 8;
 
 const nameStartsWith = (command: SlashCommand, needle: string): boolean =>
   command.name.toLowerCase().startsWith(needle);
@@ -25,23 +24,21 @@ function matchingCommands(
       command.description.toLowerCase().includes(needle),
   );
 
-  return [...prefixes, ...descriptions].slice(0, resultLimit);
+  return [...prefixes, ...descriptions];
 }
 
-function commandSuggestion(command: SlashCommand): ComposerSuggestion {
-  const result: ComposerSuggestion = {
-    id: command.name,
-    label: `/${command.name}`,
-    detail: command.description,
-    insert: `/${command.name} `,
-  };
+const commandSuggestion = (command: SlashCommand): ComposerSuggestion => ({
+  id: command.name,
+  label: `/${command.name}`,
+  detail: command.description,
+  insert: `/${command.name} `,
+  command: command.name,
+});
 
-  if (command.hint !== undefined) result.hint = command.hint;
+const commandEntry = ({ name, hint }: SlashCommand): SlashCommandEntry =>
+  hint === undefined ? { name } : { name, hint };
 
-  return result;
-}
-
-// Name prefixes outrank description matches; the Agent's order breaks ties.
+// Name prefixes outrank description matches; the Agent's order breaks ties. The list limits the results.
 export function slashCommandSource(
   commands: readonly SlashCommand[],
 ): SuggestionSource {
@@ -49,5 +46,6 @@ export function slashCommandSource(
     id: 'agent-slash-commands',
     title: 'Slash commands',
     query: (query) => matchingCommands(commands, query).map(commandSuggestion),
+    commands: commands.map(commandEntry),
   };
 }

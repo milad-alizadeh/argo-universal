@@ -6,7 +6,8 @@ export interface ComposerSuggestion {
   detail?: string;
   icon?: IconName;
   insert: string;
-  hint?: string;
+  // Set only when the result is a Slash command: its name, which `commands` of the source lists.
+  command?: string;
   resource?: {
     type: 'resource_link';
     name: string;
@@ -18,10 +19,30 @@ export interface ComposerSuggestion {
   };
 }
 
+export interface SlashCommandEntry {
+  name: string;
+  // Shown after the token until an argument is typed.
+  hint?: string;
+}
+
 export interface SuggestionSource {
   id: string;
   title: string;
   query: (query: string) => readonly ComposerSuggestion[];
+  /*
+   * The Slash commands this source has, stated apart from `query` so a typed `/name` is decided at once.
+   * A result becomes a command token only through `command`, never by what it inserts.
+   */
+  commands?: readonly SlashCommandEntry[];
+}
+
+export function findCommand(
+  sources: readonly SuggestionSource[],
+  name: string,
+): SlashCommandEntry | undefined {
+  return sources
+    .flatMap((source) => source.commands ?? [])
+    .find((command) => command.name === name);
 }
 
 // The text before the caret ends in a `/` word at the start or after whitespace.
@@ -53,13 +74,19 @@ export interface InsertedText {
 
 const resultLimit = 8;
 
-function sourceGroups(
-  source: SuggestionSource,
+/*
+ * What the `/` list offers for a query: each source's first matches, in source order, empty sources
+ * left out. The web and native lists both ask here, once per change; promises and stale answers (#1326) land here.
+ */
+export function querySuggestions(
+  sources: readonly SuggestionSource[],
   query: string,
 ): SuggestionGroup[] {
-  const suggestions = source.query(query).slice(0, resultLimit);
+  return sources.flatMap((source) => {
+    const suggestions = source.query(query).slice(0, resultLimit);
 
-  return suggestions.length > 0 ? [{ source, suggestions }] : [];
+    return suggestions.length > 0 ? [{ source, suggestions }] : [];
+  });
 }
 
 // What the list offers while the caret is in a `/` word: each source's matches, or null when none match.
@@ -71,10 +98,7 @@ export function suggestionsAtCaret(
   const match = matchSuggestionTrigger(text.slice(0, caret));
 
   if (!match) return null;
-
-  const groups = sources.flatMap((source) =>
-    sourceGroups(source, match.matchingString),
-  );
+  const groups = querySuggestions(sources, match.matchingString);
 
   return groups.length > 0 ? groups : null;
 }
