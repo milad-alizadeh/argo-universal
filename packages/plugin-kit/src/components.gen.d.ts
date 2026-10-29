@@ -284,6 +284,8 @@ type FieldGroupSectionHints = {
 };
 
 type FieldGroupValueHints = {
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -297,6 +299,8 @@ type FieldGroupValueHints = {
 };
 
 type FieldGroupLinkHints = {
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -310,6 +314,8 @@ type FieldGroupLinkHints = {
 };
 
 type FieldGroupToggleHints = {
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -321,6 +327,8 @@ type FieldGroupToggleHints = {
 };
 
 type FieldGroupPickerHints = {
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -352,6 +360,8 @@ type FieldGroupPickerHints = {
 };
 
 type FieldGroupDatePickerHints = {
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -367,6 +377,8 @@ type FieldGroupDatePickerHints = {
 };
 
 type FieldGroupSliderHints = {
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -386,6 +398,8 @@ type FieldGroupSliderHints = {
 };
 
 type FieldGroupTextFieldHints = {
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -419,6 +433,8 @@ type FieldGroupTextFieldHints = {
 };
 
 type FieldGroupSecretFieldHints = {
+  /** The row’s identity for a grouped List with onMove: the List keys the row by it and reports it as a move’s id. A FieldGroup outside such a List draws nothing from it. */
+  id: unknown;
   /** The row’s label. */
   title: unknown;
   /** Whether the row is disabled. */
@@ -525,8 +541,10 @@ type ListHints = {
   searchMode: unknown;
   /** Action or Plugin event invoked by onSearchTextChange. */
   onSearchTextChange: unknown;
-  /** Rows or media tiles. */
+  /** Rows, media tiles, or lanes: each Section a column, side by side, on a wide desktop or web window; phones draw lanes as ordinary sections. */
   layout: unknown;
+  /** Turns moving on in a column or lanes; a grid or horizontal shelf does not move. A row with an id moves within and between Sections by drag, long press and drag on phones, or its Move Actions. Reports where it lands; the List redraws when the rows change. */
+  onMove: unknown;
   /** Vertical content or a horizontal shelf. */
   direction: unknown;
   /** Column count, capped at 2/4/6 by Size class; auto fits tileSize. */
@@ -550,6 +568,8 @@ type ListHints = {
 };
 
 type ListSectionHints = {
+  /** The Section identity a move reports. */
+  id: unknown;
   /** The section choice mode. */
   selectionMode: unknown;
   /** Selected row ids. */

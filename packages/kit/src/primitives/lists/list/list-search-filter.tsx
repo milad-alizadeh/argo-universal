@@ -1,6 +1,8 @@
 import { cloneElement, isValidElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import type { ListProps } from './list-props';
+import { unfilteredMove } from './list-search-moves';
+import { listTree, readList } from './list-section-model';
 
 type SearchRow = {
   title?: string;
@@ -47,16 +49,24 @@ export function filterList<Item>(
 
   if (!hasAppQuery(props.searchMode, query)) return props;
 
-  if (props.items === undefined)
-    return { ...props, children: filteredChildren(props.children, query) };
+  if (props.items === undefined) {
+    const children = filteredChildren(props.children, query);
+
+    return { ...props, children, onMove: searchedMove(props, children) };
+  }
 
   return {
     ...props,
-    items: props.items.filter((item, index) =>
-      matches(props.renderItem(item, index), query),
-    ),
+    items: matchingItems(props.items, props.renderItem, query),
   };
 }
+
+const matchingItems = <Item,>(
+  items: readonly Item[],
+  renderItem: (item: Item, index: number) => ReactNode,
+  query: string,
+): Item[] =>
+  items.filter((item, index) => matches(renderItem(item, index), query));
 
 function matchedChild(child: ReactNode, query: string): ReactNode[] {
   return matches(child, query) ? [child] : [];
@@ -68,3 +78,27 @@ function hasAppQuery(
 ): boolean {
   return mode === 'app' && query !== '';
 }
+
+const allOpen = {
+  folded: new Set<string>(),
+  toggle: (): void => {},
+  drawn: false,
+};
+
+// The movable rows of `children`, Section by Section, as a List with `onMove` reads them.
+const orderOf = (
+  children: ReactNode,
+): ReturnType<typeof readList>['sections'] =>
+  readList(
+    children,
+    { prefix: 'search', tree: listTree(children, allOpen, true) },
+    (owners) => owners,
+  ).sections;
+
+// A search shows some rows; a move among them reaches the owner counted in its full order.
+const searchedMove = (
+  { children, onMove }: ListProps<never>,
+  shown: ReactNode[],
+): ListProps<never>['onMove'] =>
+  onMove &&
+  ((move) => onMove(unfilteredMove(orderOf(children), orderOf(shown), move)));

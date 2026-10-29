@@ -1,26 +1,23 @@
-import { primaryModifier } from '#primitives/content/kbd';
+import { listenerSet } from '../../../listener-set';
 import type { DeclaredAction } from './action-declarations';
-import { resolveShortcuts } from './action-shortcuts';
+import { ShortcutAllocation } from './shortcut-allocation';
 
 export interface ShortcutRegistration {
   id: string;
   actions: DeclaredAction[];
   plugin: boolean;
+  // Its shortcuts run only while focus is inside the node carrying its id.
+  context: boolean;
 }
 
 export class ShortcutRegistry {
   private readonly entries = new Map<string, ShortcutRegistration>();
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = listenerSet();
   private revision = 0;
-  private allocated = new Set<string>();
+  private allocated = new ShortcutAllocation();
+  private pending = false;
 
-  public subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => {
-      this.listeners.delete(listener);
-    };
-  };
+  public readonly subscribe = this.listeners.subscribe;
 
   public snapshot = (): number => this.revision;
 
@@ -35,35 +32,28 @@ export class ShortcutRegistry {
   }
 
   public owns(id: string, action: DeclaredAction): boolean {
-    return this.allocated.has(allocationKey(id, action.id));
+    return this.allocated.owns(id, action.id);
   }
 
+  // A List's rows register together as it draws, so the keys are handed out once for all of them.
   private changed(): void {
+    if (this.pending) return;
+
+    this.pending = true;
+    queueMicrotask(this.allocate);
+  }
+
+  private readonly allocate = (): void => {
+    this.pending = false;
     this.allocated = allocatedActions([...this.entries.values()]);
     this.revision++;
-
-    for (const listener of this.listeners) listener();
-  }
+    this.listeners.notify();
+  };
 }
 
-function registeredActions(
-  entry: ShortcutRegistration,
-): (DeclaredAction & { plugin: boolean; owner: string })[] {
-  return entry.actions.map((action) => ({
-    ...action,
-    plugin: entry.plugin,
-    owner: entry.id,
-  }));
-}
-
-function declarationOrder(
-  left: ShortcutRegistration,
-  right: ShortcutRegistration,
-): number {
-  const first = document.getElementById(left.id);
-  const second = document.getElementById(right.id);
-
-  return compareElements(first, second);
+interface Placed {
+  entry: ShortcutRegistration;
+  root: HTMLElement | null;
 }
 
 function compareElements(
@@ -85,20 +75,18 @@ function comparePosition(position: number): number {
     : 1;
 }
 
-function allocationKey(owner: string, action: string): string {
-  return `${owner}/${action}`;
-}
+// Each declaration's node is found once, then the declarations claim their keys in document order.
+function allocatedActions(entries: ShortcutRegistration[]): ShortcutAllocation {
+  const allocation = new ShortcutAllocation();
 
-function allocatedActions(entries: ShortcutRegistration[]): Set<string> {
-  const declarations = entries
-    .sort(declarationOrder)
-    .flatMap(registeredActions);
+  const placed: Placed[] = entries.map((entry) => ({
+    entry,
+    root: document.getElementById(entry.id),
+  }));
 
-  const shortcuts = resolveShortcuts(declarations, false, primaryModifier());
+  placed.sort((left, right) => compareElements(left.root, right.root));
 
-  return new Set(
-    declarations.flatMap((action, index) =>
-      shortcuts[index] ? [allocationKey(action.owner, action.id)] : [],
-    ),
-  );
+  for (const { entry, root } of placed) allocation.add(entry, root);
+
+  return allocation;
 }

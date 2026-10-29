@@ -23,7 +23,7 @@ import { ScrollView } from '@repo/kit/primitives/layout/scroll-view';
 import { Spacer } from '@repo/kit/primitives/layout/spacer';
 import { Stack } from '@repo/kit/primitives/layout/stack';
 import { Surface } from '@repo/kit/primitives/layout/surface';
-import { List, ListSection } from '@repo/kit/primitives/lists/list';
+import { ListSection, PluginList } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { Table } from '@repo/kit/primitives/lists/table';
 import { Alert } from '@repo/kit/primitives/overlays/alert';
@@ -75,7 +75,7 @@ export const pluginEntries = {
   'FieldGroup.SecretField': FieldGroup.SecretField,
   IconButton,
   SplitButton,
-  List,
+  List: PluginList,
   'List.Section': ListSection,
   ListItem,
   Table,

@@ -1,11 +1,24 @@
 import { Box, DropdownMenu } from '@expo/ui/jetpack-compose';
 import { fillMaxSize } from '@expo/ui/jetpack-compose/modifiers';
 import { AndroidHaptics, performAndroidHapticsAsync } from 'expo-haptics';
-import { type ComponentType, type ReactElement, useState } from 'react';
+import {
+  type ComponentType,
+  type ReactElement,
+  use,
+  useEffect,
+  useState,
+} from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  GestureDetector,
+  useLongPressGesture,
+} from 'react-native-gesture-handler';
 import { Host } from '#primitives/native/host';
 import { contextMenuSections } from './context-menu-native-items';
+import {
+  ContextMenuPeerContext,
+  type ContextMenuPeer,
+} from './context-menu-peer';
 import type { ContextMenuProps } from './context-menu-props';
 import { MenuDropdownItems } from './menu-dropdown-items';
 import { dividedItems } from './menu-native-items';
@@ -21,29 +34,41 @@ const anchorFrame = [fillMaxSize()];
  */
 export function ContextMenu(props: ContextMenuProps): ReactElement {
   const menu = useOpenableMenu();
+  const peer = use(ContextMenuPeerContext);
+
+  // On a movable row the peer is its drag: the lift closes the menu, so a long press then a move drags as on iOS.
+  useEffect(() => peer?.onTakeOver(menu.close), [peer, menu.close]);
 
   return (
     <View>
       <Host style={StyleSheet.absoluteFill}>
         <AnchoredDropdown {...props} menu={menu} />
       </Host>
-      <LongPressTrigger onOpen={menu.open}>{props.children}</LongPressTrigger>
+      <LongPressTrigger onActivate={menu.open} simultaneousWith={peer?.gesture}>
+        {props.children}
+      </LongPressTrigger>
     </View>
   );
 }
 
-function LongPressTrigger({
-  children,
-  onOpen,
-}: {
+// Beside a peer gesture, the long press runs with it, so the peer keeps the touch once the menu opens.
+interface TriggerProps {
   children: ReactElement;
-  onOpen: () => void;
-}): ReactElement {
+  onActivate: () => void;
+  simultaneousWith: ContextMenuPeer['gesture'] | undefined;
+}
+
+function LongPressTrigger(props: TriggerProps): ReactElement {
+  // One object literal: the Worklets Babel plugin cannot read a spread config.
+  const gesture = useLongPressGesture({
+    runOnJS: true,
+    onActivate: props.onActivate,
+    simultaneousWith: props.simultaneousWith,
+  });
+
   return (
-    <GestureDetector
-      gesture={Gesture.LongPress().runOnJS(true).onStart(onOpen)}
-    >
-      <View collapsable={false}>{children}</View>
+    <GestureDetector gesture={gesture}>
+      <View collapsable={false}>{props.children}</View>
     </GestureDetector>
   );
 }
@@ -67,14 +92,17 @@ function AnchoredDropdown(props: AnchoredProps): ReactElement {
 interface OpenableMenu {
   state: { expanded: boolean; onDismissRequest: () => void };
   open: () => void;
+  close: () => void;
 }
 
 // Opening plays the long-press haptic; `onDismissRequest` closes the menu on an outside tap, back, or a choice.
 function useOpenableMenu(): OpenableMenu {
   const [expanded, setExpanded] = useState(false);
+  const [close] = useState(() => (): void => setExpanded(false));
 
   return {
-    state: { expanded, onDismissRequest: () => setExpanded(false) },
+    state: { expanded, onDismissRequest: close },
+    close,
     open: () => {
       void performAndroidHapticsAsync(AndroidHaptics.Long_Press);
       setExpanded(true);

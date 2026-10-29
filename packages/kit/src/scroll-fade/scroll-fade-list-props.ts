@@ -1,8 +1,6 @@
-import type {
-  LegendListProps,
-  LegendListRef,
-} from '@legendapp/list/react-native';
+import type { LegendListProps } from '@legendapp/list/react-native';
 import type { Ref } from 'react';
+import type { ListRef } from '../list-ref';
 import type { SizeClassValue } from '../use-size-class/size-class-value';
 import { useSizeClassValue } from '../use-size-class/use-size-class-value';
 import type { ScrollFadeOptions } from './scroll-fade-options';
@@ -12,7 +10,8 @@ export type ScrollFadeListProps<T> = Omit<
   'contentContainerStyle'
 > &
   ScrollFadeOptions & {
-    ref?: Ref<LegendListRef>;
+    // Receives the LegendList: typed as a List's ref, which a board of lanes also fills.
+    ref?: Ref<ListRef>;
     // One inset, or one per size class: a phone list insets its rows where a wide pane does not.
     contentContainerStyle?: SizeClassValue<
       LegendListProps<T>['contentContainerStyle']

@@ -1,0 +1,13 @@
+appId: dev.argo.app
+name: A movable List row moves from its long-press menu
+---
+- openLink: "argo://storybook?STORYBOOK_STORY_ID=design-system-primitives-lists-list-moves--column"
+- assertVisible: "^Alpha$"
+# A held row opens its menu: Move down, as Alpha is first in its Section, and Move to….
+- longPressOn: "^Alpha$"
+- assertVisible: "^Move to…$"
+- tapOn: "^Move down$"
+# The story answers the move at once, so Alpha now draws under Beta.
+- assertVisible:
+    text: "^Alpha$"
+    below: "^Beta$"

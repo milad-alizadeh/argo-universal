@@ -50,11 +50,10 @@ function useRefreshAction(refresh: ListLoad): ReactElement {
 function RefreshShortcut(
   props: RefreshProps & { refresh: ListLoad },
 ): ReactElement {
-  const declared = useDeclaredActions(
-    useRefreshAction(props.refresh),
-    true,
-    true,
-  );
+  const declared = useDeclaredActions(useRefreshAction(props.refresh), {
+    context: true,
+    builtIn: true,
+  });
 
   return (
     <View nativeID={declared.id} className="relative min-h-0 flex-1">

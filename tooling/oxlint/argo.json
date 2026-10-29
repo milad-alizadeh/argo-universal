@@ -963,7 +963,8 @@
                   "!@repo/uniwind",
                   "!@repo/uniwind/**",
                   "!@repo/contracts/kit-tokens",
-                  "!@repo/contracts/kit-symbols"
+                  "!@repo/contracts/kit-symbols",
+                  "!@repo/contracts/kit-moves"
                 ],
                 "message": "The UI kit cannot import feature or domain packages (A2)."
               }

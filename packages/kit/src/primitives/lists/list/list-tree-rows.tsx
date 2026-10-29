@@ -18,6 +18,8 @@ export interface TreeChild {
   child: ReactNode;
   key: string;
   content: ReactNode;
+  // Lifted out of a parent row: it moves with its parent, never on its own.
+  nested: boolean;
 }
 
 interface Level {
@@ -26,6 +28,8 @@ interface Level {
   through: readonly boolean[];
   // A List.Section among a List's own children stays as it is; its rows are flattened with its own children.
   passes: (child: ReactNode) => boolean;
+  // A child's own key, when it has one: a moving row keeps it wherever it moves.
+  keyed?: (child: ReactNode) => string | undefined;
 }
 
 // Where one child sits among its siblings.
@@ -35,8 +39,15 @@ interface Place {
   last: boolean;
 }
 
-const childKey = (child: ReactNode, prefix: string, index: number): string =>
+// Where it sits: its React key, or its index when it has none.
+const placeKey = (child: ReactNode, prefix: string, index: number): string =>
   `${prefix}/${isValidElement(child) ? child.key : index}`;
+
+export const childKey = (
+  child: ReactNode,
+  level: Level,
+  index: number,
+): string => level.keyed?.(child) ?? placeKey(child, level.prefix, index);
 
 // A List holds a tree once any of its rows, in any Section, holds child ListItems.
 export function holdsTree(
@@ -68,7 +79,7 @@ export function treeChildren(
   return children.flatMap((child, index) =>
     treeChild(child, folding, {
       level,
-      key: childKey(child, level.prefix, index),
+      key: childKey(child, level, index),
       last: index === children.length - 1,
     }),
   );
@@ -80,7 +91,7 @@ function treeChild(
   place: Place,
 ): TreeChild[] {
   if (place.level.passes(child))
-    return [{ child, key: place.key, content: child }];
+    return [{ child, key: place.key, content: child, nested: false }];
 
   return rowAndChildren(child, folding, place);
 }
@@ -92,12 +103,9 @@ function rowAndChildren(
 ): TreeChild[] {
   const rows = childRows(child);
   const tree = treeRow(rows, folding, place);
-
-  const row: TreeChild = {
-    child,
-    key: place.key,
-    content: treeContent(child, tree, rows),
-  };
+  const { key, level } = place;
+  const content = treeContent(child, tree, rows);
+  const row: TreeChild = { child, key, content, nested: level.depth > 0 };
 
   if (!tree.parent?.open) return [row];
 
@@ -139,5 +147,5 @@ function nextLevel(parent: TreeRow, key: string): Level {
 
 export const topLevel = (
   prefix: string,
-  passes: (child: ReactNode) => boolean,
-): Level => ({ prefix, depth: 0, through: [], passes });
+  { passes, keyed }: Required<Pick<Level, 'passes' | 'keyed'>>,
+): Level => ({ prefix, depth: 0, through: [], passes, keyed });

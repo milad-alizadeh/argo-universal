@@ -12,10 +12,10 @@ import {
 } from './menu-native-items';
 import { countedTitle } from './menu-props';
 
-// The rows of Expo UI's MenuView, shared by the Menu and the long-press ContextMenu.
+// The rows of Expo UI's MenuView, which draws the Menu.
 
 // MenuAction.displayInline draws `subactions` as a SwiftUI Section, its title as the Section's header; an empty title draws none.
-export function sectionAction(
+function sectionAction(
   section: NativeMenuSection,
   index: number,
 ): NativeMenuAction {

@@ -1,0 +1,26 @@
+import { createContext, useContext } from 'react';
+import type { ListDrag } from './list-drag-controller';
+import type { DragLook } from './list-drag-look';
+import type { MoveOrder } from './list-move-order';
+
+// What every row, zone and lane of a List with `onMove` shares; a move changes none of it, only what `order` holds.
+export interface ListMoves {
+  look: DragLook;
+  drag: ListDrag;
+  order: MoveOrder;
+  // The List's Sections draw as lanes side by side.
+  lanes: boolean;
+}
+
+export const ListMoveContext = createContext<ListMoves | null>(null);
+
+export const useListMoves = (): ListMoves | null => useContext(ListMoveContext);
+
+/*
+ * The order of a List with `onMove`, which a row's Move menu and its Move to… picker move it in. A native grouped
+ * List's rows move by their menus alone, so it shares only this.
+ */
+export const ListMoveOrderContext = createContext<MoveOrder | null>(null);
+
+export const useListMoveOrder = (): MoveOrder | undefined =>
+  useContext(ListMoveOrderContext) ?? undefined;

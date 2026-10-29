@@ -18,6 +18,7 @@ import {
 } from '#primitives/fields/field-group';
 import { PositionContext } from '#primitives/fields/field-row';
 import { NativeGroupedFrame } from './list-native-host';
+import { NativeMoveMenu } from './list-native-move-menu';
 import type { NativeGroupedProps } from './list-native-props';
 import {
   estimatedNativeRowHeight,
@@ -94,14 +95,18 @@ function GroupedSection({ section, last }: SectionProps): ReactElement {
   );
 }
 
-// Each row is told where it sits in its section, for the corners of Material's connected rows.
+/*
+ * Each row is told where it sits in its section, for the corners of Material's connected rows. A row the List can
+ * move opens its Move menu on a long press, and does not drag: Expo UI's LazyColumn exposes no reordering, nor any
+ * drag and drop, to hand a Compose row to.
+ */
 function usePositionedRow(
   count: number,
 ): (info: { item: NativeRow; index: number }) => ReactElement {
   return useCallback(
     ({ item, index }) => (
       <PositionContext.Provider value={getFieldItemPosition(index, count)}>
-        {item.render()}
+        <NativeMoveMenu id={item.moveId}>{item.render()}</NativeMoveMenu>
       </PositionContext.Provider>
     ),
     [count],

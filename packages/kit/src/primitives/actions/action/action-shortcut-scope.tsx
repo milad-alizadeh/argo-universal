@@ -59,13 +59,13 @@ export function useActionShortcuts(
 function useRegistration(
   scope: ShortcutRegistry,
   id: string,
-  { actions, plugin }: ShortcutOptions,
+  { actions, plugin, context }: ShortcutOptions,
 ): void {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
 
-    return scope.register({ id, actions, plugin });
-  }, [scope, id, actions, plugin]);
+    return scope.register({ id, actions, plugin, context });
+  }, [scope, id, actions, plugin, context]);
 }
 
 function hintedActions(

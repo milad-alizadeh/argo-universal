@@ -5,7 +5,10 @@ export type ListLoad = () => void | Promise<void>;
 
 export interface ListRequest {
   loading: boolean;
+  // Runs `load` unless one is already running.
   run: (load: ListLoad) => Promise<void>;
+  // Runs `load` each time, as a move does: each one's failure shows its own toast.
+  report: (load: ListLoad) => Promise<void>;
 }
 
 // The List is the one reporter of a rejected load: an awaited Plugin event does not toast on its own.
@@ -48,5 +51,10 @@ export function useListRequest(failure: ErrorToast): ListRequest {
     [failure],
   );
 
-  return { loading, run };
+  const report = useCallback(
+    (load: ListLoad) => loadOrReport(load, failure),
+    [failure],
+  );
+
+  return { loading, run, report };
 }

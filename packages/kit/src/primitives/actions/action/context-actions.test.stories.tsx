@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { createElement, Fragment, type ReactNode } from 'react';
+import { Pressable } from 'react-native';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import type { ActionShortcut } from '#primitives/content/kbd';
 import { Text } from '#primitives/content/text';
 import { Action, ContextActions } from './index';
 
@@ -97,5 +99,34 @@ export const OnlySubmenusDrawTriggerAlone: Story = {
     await expect(body.getByText(trigger)).toBeVisible();
     await expect(body.queryByRole('menu')).toBeNull();
     await expect(body.queryByRole('menuitem')).toBeNull();
+  },
+};
+
+const pin: ActionShortcut = { modifiers: ['alt'], key: 'p' };
+
+const pinned = [fn(), fn()];
+
+// A row of a list: its own Actions, and a focusable trigger.
+const pinnableRow = (onPress: () => void, index: number): ReactNode => (
+  <ContextActions
+    key={index}
+    actions={<Action label="Pin" shortcut={pin} onPress={onPress} />}
+  >
+    <Pressable accessibilityRole="button">
+      <Text>{`Row ${index + 1}`}</Text>
+    </Pressable>
+  </ContextActions>
+);
+
+// Side-by-side context declarations never run at once, so each claims the same key for while focus is inside it.
+export const SiblingsShareAShortcut: Story = {
+  args: { children: <Text>{trigger}</Text> },
+  render: () => <>{pinned.map(pinnableRow)}</>,
+  play: async ({ canvasElement }) => {
+    within(canvasElement).getByRole('button', { name: 'Row 2' }).focus();
+    await userEvent.keyboard('{Alt>}p{/Alt}');
+
+    await expect(pinned[1]).toHaveBeenCalledOnce();
+    await expect(pinned[0]).not.toHaveBeenCalled();
   },
 };
