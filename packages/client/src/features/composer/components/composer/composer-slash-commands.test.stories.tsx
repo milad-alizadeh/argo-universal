@@ -27,61 +27,42 @@ async function expectMenuAndFocus({ canvas }: PlayContext): Promise<void> {
   await expect(canvas.getByRole('textbox', { name: 'Message' })).toHaveFocus();
 }
 
-export const SlashCommandsOpensTheMenuInAnEmptyComposer: Story = {
-  args: { slashCommands: slashSuggestionsComposer.slashCommands },
-  render: (args) => <SuggestionComposer {...args} />,
-  play: async (context) => {
-    await settleLayout('wide');
-    await chooseSlashCommands(context);
-    await expectMenuAndFocus(context);
-    await waitFor(() =>
-      expect(context.args.onDraftChange).toHaveBeenLastCalledWith({
-        text: '/',
-        attachments: [],
-      }),
-    );
-  },
-};
+async function typeBeforeChoosing(
+  { canvas }: PlayContext,
+  typed: string,
+): Promise<void> {
+  if (!typed) return;
 
-export const SlashCommandsSpacesAfterText: Story = {
-  args: { slashCommands: slashSuggestionsComposer.slashCommands },
-  render: (args) => <SuggestionComposer {...args} />,
-  play: async (context) => {
-    await settleLayout('wide');
-    await userEvent.type(
-      context.canvas.getByRole('textbox', { name: 'Message' }),
-      'Run',
-    );
-    await chooseSlashCommands(context);
-    await expectMenuAndFocus(context);
-    await waitFor(() =>
-      expect(context.args.onDraftChange).toHaveBeenLastCalledWith({
-        text: 'Run /',
-        attachments: [],
-      }),
-    );
-  },
-};
+  await userEvent.type(canvas.getByRole('textbox', { name: 'Message' }), typed);
+}
 
-export const SlashCommandsKeepsAWhitespaceBeforeItsSlash: Story = {
-  args: { slashCommands: slashSuggestionsComposer.slashCommands },
-  render: (args) => <SuggestionComposer {...args} />,
-  play: async (context) => {
-    await settleLayout('wide');
-    await userEvent.type(
-      context.canvas.getByRole('textbox', { name: 'Message' }),
-      'Run ',
-    );
-    await chooseSlashCommands(context);
-    await expectMenuAndFocus(context);
-    await waitFor(() =>
-      expect(context.args.onDraftChange).toHaveBeenLastCalledWith({
-        text: 'Run /',
-        attachments: [],
-      }),
-    );
-  },
-};
+function chosenAfter(typed: string, expected: string): Story {
+  return {
+    args: { slashCommands: slashSuggestionsComposer.slashCommands },
+    render: (args) => <SuggestionComposer {...args} />,
+    play: async (context) => {
+      await settleLayout('wide');
+      await typeBeforeChoosing(context, typed);
+      await chooseSlashCommands(context);
+      await expectMenuAndFocus(context);
+      await waitFor(() =>
+        expect(context.args.onDraftChange).toHaveBeenLastCalledWith({
+          text: expected,
+          attachments: [],
+        }),
+      );
+    },
+  };
+}
+
+export const SlashCommandsOpensTheMenuInAnEmptyComposer = chosenAfter('', '/');
+
+export const SlashCommandsSpacesAfterText = chosenAfter('Run', 'Run /');
+
+export const SlashCommandsKeepsAWhitespaceBeforeItsSlash = chosenAfter(
+  'Run ',
+  'Run /',
+);
 
 export const SlashCommandsIsOffWithoutCommands: Story = {
   render: (args) => <SuggestionComposer {...args} />,

@@ -121,7 +121,7 @@ export const MovingTheCaretOutOfTheWordHidesTheList: Story = {
   },
 };
 
-function insertingWord(initial: string): Story {
+function insertingWord(initial: string, expected: string): Story {
   const handle: RefObject<RichTextareaHandle | null> = createRef();
 
   return {
@@ -134,11 +134,7 @@ function insertingWord(initial: string): Story {
       if (initial) await userEvent.type(field, initial);
       handle.current?.insertWord('/');
       await waitFor(() =>
-        expect(args.onChangeText).toHaveBeenLastCalledWith(
-          initial === '' || initial.endsWith(' ')
-            ? `${initial}/`
-            : `${initial} /`,
-        ),
+        expect(args.onChangeText).toHaveBeenLastCalledWith(expected),
       );
       await expect(field).toHaveFocus();
       await canvas.findByRole('button', firstOption);
@@ -146,6 +142,6 @@ function insertingWord(initial: string): Story {
   };
 }
 
-export const InsertWordOpensTheListInAnEmptyField = insertingWord('');
+export const InsertWordOpensTheListInAnEmptyField = insertingWord('', '/');
 
-export const InsertWordSpacesAfterText = insertingWord('Run');
+export const InsertWordSpacesAfterText = insertingWord('Run', 'Run /');

@@ -79,6 +79,11 @@ export function suggestionsAtCaret(
   return groups.length > 0 ? groups : null;
 }
 
+// The space a word needs before it: none at the start of the text or after whitespace.
+export function separatorBefore(before: string): string {
+  return /(?:^|\s)$/.test(before) ? '' : ' ';
+}
+
 // Puts a word at the caret, a space before it unless the text before is empty or ends in whitespace.
 export function insertWordAtCaret(
   text: string,
@@ -86,7 +91,7 @@ export function insertWordAtCaret(
   word: string,
 ): InsertedText {
   const before = text.slice(0, caret);
-  const inserted = (/(?:^|\s)$/.test(before) ? '' : ' ') + word;
+  const inserted = separatorBefore(before) + word;
 
   return {
     text: before + inserted + text.slice(caret),

@@ -12,6 +12,7 @@ import {
 import type * as React from 'react';
 import { useImperativeHandle } from 'react';
 import type { RichTextareaHandle } from '../rich-textarea-props';
+import { separatorBefore } from '../rich-textarea-suggestions';
 
 function textOf(node: LexicalNode | null): string {
   return node ? node.getTextContent() : '';
@@ -51,7 +52,7 @@ function $insertWord(word: string): void {
   if (!selection) return;
 
   const before = textBefore(startPoint(selection));
-  selection.insertText((/^$|\s$/.test(before) ? '' : ' ') + word);
+  selection.insertText(separatorBefore(before) + word);
 }
 
 function $focusedInsert(editor: LexicalEditor, word: string): void {
