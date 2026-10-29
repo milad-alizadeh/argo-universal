@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { readFeedRow } from '../../feed';
 import type { SessionWorkSources } from '../router-deps';
 import { requireLiveSessionActor } from '../session-system';
+import { CallingSession } from './calling-session';
 import { operationRowId } from './rows';
 
 // Where an Operation Tool call is: running, waiting for the user's answer, or settled one of three ways.
@@ -65,13 +66,11 @@ function rowState(
 ): CallState {
   if (row.state === 'settled') return settledState(row);
 
-  const session = requireLiveSessionActor(deps.sessions.system, sessionId);
+  const session = new CallingSession(
+    requireLiveSessionActor(deps.sessions.system, sessionId),
+  );
 
-  const waiting = session
-    .getSnapshot()
-    .context.permissionQueue.some(
-      (request) => request.toolCallId === row.toolCallId,
-    );
+  const waiting = session.awaitsAnswer(row.toolCallId);
 
   return { status: waiting ? 'waiting_for_user' : 'still_running' };
 }

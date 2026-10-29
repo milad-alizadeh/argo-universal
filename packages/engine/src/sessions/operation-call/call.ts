@@ -34,11 +34,10 @@ export class OperationCall implements SessionOperationCall {
     { session, feed }: OpenSite,
     private readonly operation: CalledOperation,
   ) {
-    const context = session.getSnapshot().context;
-    this.toolCallId = context.input.createId();
-    this.site = { session, feed, turnId: context.activeTurnId };
+    this.toolCallId = session.createId();
+    this.site = { session, feed, turnId: session.activeTurnId };
     this.row = openRow(this.toolCallId, operation);
-    this.closing = context.acpLifetime.signal;
+    this.closing = session.closing;
     this.closing.addEventListener('abort', this.cancel, { once: true });
     this.publish(this.row);
   }

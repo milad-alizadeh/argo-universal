@@ -1,9 +1,9 @@
 import { TRPCError } from '@trpc/server';
 import type { FeedActorRef } from '../../feed';
 import type { SessionWorkSources } from '../router-deps';
-import type { SessionActorRef } from '../session-machine';
 import { findSessionFeed, requireLiveSessionActor } from '../session-system';
 import { OperationCall, type SessionOperationCall } from './call';
+import { CallingSession } from './calling-session';
 import { readOperationCall, type OperationCallRead } from './read';
 import type { CalledOperation } from './rows';
 
@@ -37,9 +37,11 @@ function beginCall(
   sessionId: string,
   operation: CalledOperation,
 ): SessionOperationCall {
-  const session = requireLiveSessionActor(sessions.system, sessionId);
+  const session = new CallingSession(
+    requireLiveSessionActor(sessions.system, sessionId),
+  );
 
-  if (!session.getSnapshot().context.stored)
+  if (!session.stored)
     throw callerConflict('The calling Session is still opening');
 
   return new OperationCall(
@@ -50,12 +52,12 @@ function beginCall(
 
 function requireOpenFeed(
   sessions: SessionWorkSources['sessions'],
-  session: SessionActorRef,
+  session: CallingSession,
   sessionId: string,
 ): FeedActorRef {
   const feed = findSessionFeed(sessions.system, sessionId);
 
-  if (!feed || session.getSnapshot().status !== 'active')
+  if (!feed || !session.open)
     throw callerConflict('The calling Session is closed');
 
   return feed;

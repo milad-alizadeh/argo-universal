@@ -25,8 +25,7 @@ export async function confirmOperation(
 
 // Raises Argo's own Permission request in the calling Turn and waits for the user's option.
 function ask(call: TurnCall, operation: Confirmed): Promise<string | null> {
-  const { context } = call.session.getSnapshot();
-  const request = permissionRequest(context.input.createId(), call, operation);
+  const request = permissionRequest(call.session.createId(), call, operation);
   const answer = answered(call, request.requestId);
   call.session.send({
     type: nativePermissionEvent,
@@ -43,8 +42,7 @@ function answered(
   requestId: string,
 ): Promise<string | null> {
   const answer = Promise.withResolvers<string | null>();
-  const { nativePermissions } = call.session.getSnapshot().context;
-  nativePermissions.register(requestId, (optionId) => {
+  call.session.onAnswer(requestId, (optionId) => {
     publishOutcome(call, optionId);
     answer.resolve(optionId);
   });
