@@ -18,22 +18,33 @@ export async function operationRaceHost(
 ): Promise<RaceHost> {
   const outputs: TerminalOutputResponse[] = [];
 
-  const host = await startAcpEngine({
-    operationWaitClock,
-    fetchAgents,
-    steps: [],
-    responses: {
-      'session/prompt': [
-        { steps: [sessionIdentityStep(outputs)] },
-        { steps: [{ type: 'wait-for-cancel' }] },
-      ],
-    },
-  });
+  const host = await startAcpEngine(
+    raceScenario(outputs, { operationWaitClock, fetchAgents }),
+  );
 
   const session = await openAccessSession({ host, outputs }, 'First');
 
   return { host, session };
 }
+
+type RaceOptions = {
+  operationWaitClock?: OperationWaitClock;
+  fetchAgents?: EngineInput['fetchAgents'];
+};
+
+const raceScenario = (
+  outputs: TerminalOutputResponse[],
+  options: RaceOptions,
+): Parameters<typeof startAcpEngine>[0] => ({
+  ...options,
+  steps: [],
+  responses: {
+    'session/prompt': [
+      { steps: [sessionIdentityStep(outputs)] },
+      { steps: [{ type: 'wait-for-cancel' }] },
+    ],
+  },
+});
 
 type Host = Awaited<ReturnType<typeof operationRaceHost>>['host'];
 
@@ -59,11 +70,7 @@ export function pendingOperation(
   return vi.waitFor(async () => {
     const page = await host.caller.feed.page({ sessionId, direction: 'tail' });
 
-    const row = page.rows.find(
-      (item) =>
-        item.sessionUpdate === 'tool_call_update' &&
-        item.name === 'project.list',
-    );
+    const row = page.rows.find(isProjectListUpdate);
 
     assert(row?.sessionUpdate === 'tool_call_update');
     assert(row.status === 'in_progress');
@@ -71,3 +78,8 @@ export function pendingOperation(
     return row;
   });
 }
+
+const isProjectListUpdate = (
+  item: Awaited<ReturnType<Host['caller']['feed']['page']>>['rows'][number],
+): boolean =>
+  item.sessionUpdate === 'tool_call_update' && item.name === 'project.list';
