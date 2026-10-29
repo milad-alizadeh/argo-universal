@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
+import { pressTarget } from '#mocks/press-target';
 import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
@@ -99,10 +100,24 @@ export const RowPressKeepsChildren: Story = {
   args: nestedList,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await userEvent.click(await canvas.findByText(parent));
+    await userEvent.click(pressTarget(await canvas.findByText(parent)));
 
     await expectShown(canvas, [child]);
     await expect(canvas.getByRole('button', chevron(true))).toBeVisible();
+  },
+};
+
+// A parent's chevron sits beside its row's press, never inside it, so the web nests no button in another.
+export const ChevronIsNotInsideTheRowsButton: Story = {
+  args: nestedList,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    const toggle = await canvas.findByRole('button', chevron(true));
+
+    await expect(
+      toggle.parentElement?.closest('button, [role="button"]'),
+    ).toBeNull();
   },
 };
 
