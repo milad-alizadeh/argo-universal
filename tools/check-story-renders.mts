@@ -7,7 +7,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { lockBrowserSuite } from '../tooling/browser-suite-lock/browser-suite-lock.ts';
+import { lockBrowserSuite } from '@repo/browser-suite-lock';
 import {
   childStateProblems,
   duplicateRenderProblems,
