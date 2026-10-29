@@ -4,7 +4,7 @@ import {
 } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
-import { requireInstalledAgent } from '../agents';
+import { type AcpSessionLease, requireInstalledAgent } from '../agents';
 import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { readAcpConfiguration } from './acp/acp-configuration';
 import { openOptionsSession } from './agent-options-discovery-session';
@@ -13,6 +13,7 @@ import {
   readAgentConfiguration,
 } from './agent-options-storage';
 import { configureOptionsSession } from './configure-options-session';
+import { DiscoveredCommands } from './discovered-commands';
 import type { SessionRouterDeps } from './router-deps';
 
 const rejections = createRejectionCounter('Agent options');
@@ -23,12 +24,15 @@ export type OptionsDeps = Pick<
   | 'installedAgents'
   | 'sessions'
   | 'sessionCommandSignal'
+  | 'commandsWaitMs'
   | 'findWriter'
 >;
 
 export type Discovery = {
   signal: AbortSignal;
   progress: (stage: 'installing' | 'loading', fraction?: number) => void;
+  // The options are read; the Slash commands may still be on their way.
+  configured: (options: SessionAgentOptionsOutput) => void;
 };
 
 function availableWriter(
@@ -45,6 +49,73 @@ function availableWriter(
   return writer;
 }
 
+type Stored = ReturnType<typeof readAgentConfiguration>;
+
+type Discovered = {
+  lease: AcpSessionLease;
+  saved: Stored;
+  commands: DiscoveredCommands;
+};
+
+async function readOptions(
+  { lease, saved }: Discovered,
+  input: SessionAgentOptionsInput,
+  signal: AbortSignal,
+): Promise<SessionAgentOptionsOutput> {
+  return configureOptionsSession(
+    lease,
+    readAcpConfiguration(lease.response.configOptions, rejections),
+    {
+      saved: saved?.configOptions ?? [],
+      picks: input.picks ?? {},
+      signal,
+    },
+  );
+}
+
+type Save = {
+  deps: OptionsDeps;
+  writer: NonNullable<ReturnType<OptionsDeps['findWriter']>>;
+  input: SessionAgentOptionsInput;
+  options: SessionAgentOptionsOutput;
+};
+
+async function saveDiscovery(
+  { deps, writer, input, options }: Save,
+  discovery: Discovery,
+  { saved, commands }: Discovered,
+): Promise<SessionAgentOptionsOutput> {
+  const owner = { agent: input.agent, projectId: input.projectId };
+  const early = commands.commands;
+
+  const job = new AgentOptionsJob(owner, options, {
+    authoritative: true,
+    expectedRevision: saved?.revision ?? 0,
+    commands: early,
+  });
+
+  discovery.configured(options);
+  await writeDatabaseJobAndWaitForCommit(writer, job);
+  /*
+   * The options are saved at once. The Agent may send its Slash commands later, so the session
+   * stays open for them and they follow in a second write that only the revision it started from may take.
+   */
+  await commands.seen(discovery.signal, deps.commandsWaitMs);
+  const { committedRevision } = job;
+
+  if (commands.commands && commands.commands !== early && committedRevision)
+    await writeDatabaseJobAndWaitForCommit(
+      writer,
+      new AgentOptionsJob(owner, undefined, {
+        authoritative: false,
+        expectedRevision: committedRevision,
+        commands: commands.commands,
+      }),
+    );
+
+  return discoveryResult(deps, input, options);
+}
+
 // Discover in the Project folder and commit before publishing the refreshed snapshot.
 export async function refreshAgentOptions(
   deps: OptionsDeps,
@@ -59,30 +130,27 @@ export async function refreshAgentOptions(
     input,
   );
 
-  const lease = await openOptionsSession(deps, input, discovery);
+  const commands = new DiscoveredCommands();
+
+  const lease = await openOptionsSession(deps, input, {
+    ...discovery,
+    discovered: commands,
+  });
 
   try {
-    const options = await configureOptionsSession(
-      lease,
-      readAcpConfiguration(lease.response.configOptions, rejections),
-      {
-        saved: saved?.configOptions ?? [],
-        picks: input.picks ?? {},
-        signal: discovery.signal,
-      },
+    const options = await readOptions(
+      { lease, saved, commands },
+      input,
+      discovery.signal,
     );
 
     if (input.sessionId && saved) return options;
-    await writeDatabaseJobAndWaitForCommit(
-      writer,
-      new AgentOptionsJob(
-        { agent: input.agent, projectId: input.projectId },
-        options,
-        { authoritative: true, expectedRevision: saved?.revision ?? 0 },
-      ),
-    );
 
-    return discoveryResult(deps, input, options);
+    return await saveDiscovery({ deps, writer, input, options }, discovery, {
+      lease,
+      saved,
+      commands,
+    });
   } finally {
     await lease.close();
   }

@@ -64,6 +64,42 @@ export function RichTextareaExample({
   );
 }
 
+// Suggestions that arrive when the person presses a button, with the editor not in focus.
+export function ButtonSuggestionsExample(
+  props: ExampleProps,
+): React.JSX.Element {
+  const [arrived, setArrived] = useState(false);
+  const suggestions = arrived ? props.suggestions : [];
+
+  return (
+    <>
+      <button type="button" onClick={() => setArrived(true)}>
+        Deliver suggestions
+      </button>
+      <RichTextareaExample {...props} suggestions={suggestions} />
+    </>
+  );
+}
+
+// Suggestions that arrive once the person has typed a slash, as an Agent's Slash commands do.
+export function LateSuggestionsExample(props: ExampleProps): React.JSX.Element {
+  const [arrived, setArrived] = useState(false);
+
+  const changeText = (text: string): void => {
+    props.onChangeText?.(text);
+
+    if (text.includes('/')) setTimeout(() => setArrived(true));
+  };
+
+  return (
+    <RichTextareaExample
+      {...props}
+      onChangeText={changeText}
+      suggestions={arrived ? props.suggestions : []}
+    />
+  );
+}
+
 /*
  * A host that loses the first empty report it hears, as one does when a draft made before the
  * report landed is written over it. It holds whatever the later reports say.

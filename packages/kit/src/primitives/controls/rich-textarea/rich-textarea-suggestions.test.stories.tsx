@@ -3,6 +3,8 @@ import { expect, fn, screen, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { settleLayout } from '#mocks/story-layout';
 import {
+  ButtonSuggestionsExample,
+  LateSuggestionsExample,
   RichTextareaExample,
   exampleLabel,
 } from './rich-textarea-example.mocks';
@@ -50,6 +52,35 @@ export const ReturnChoosesAndLeavesTheCaretAfterTheSpace: Story = {
     );
     await userEvent.keyboard('{Enter}');
     await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const SuggestionsArrivingAfterTheSlashOpenTheMenu: Story = {
+  render: (args) => <LateSuggestionsExample {...args} />,
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await screen.findByRole('option', { name: firstOptionName });
+  },
+};
+
+export const SuggestionsArrivingElsewhereKeepFocusAndOpenNoMenu: Story = {
+  render: (args) => <ButtonSuggestionsExample {...args} />,
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    const deliver = canvas.getByRole('button', { name: 'Deliver suggestions' });
+
+    await userEvent.click(deliver);
+    await waitFor(() => expect(deliver).toHaveFocus());
+    await expect(
+      screen.queryByRole('option', { name: firstOptionName }),
+    ).not.toBeInTheDocument();
+    await expect(deliver).toHaveFocus();
   },
 };
 

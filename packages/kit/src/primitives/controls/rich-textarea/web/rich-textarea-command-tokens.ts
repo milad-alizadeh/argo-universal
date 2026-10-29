@@ -1,13 +1,10 @@
-import { $createTextNode, type LexicalEditor, type TextNode } from 'lexical';
+import { $createTextNode, type TextNode } from 'lexical';
 import {
   findCommand,
   type SuggestionSource,
 } from '../rich-textarea-suggestions';
 import { $createCommandNode } from './rich-textarea-command-node';
-import {
-  registerTypedTokens,
-  type TypedToken,
-} from './rich-textarea-typed-tokens';
+import type { TokenFinder, TypedToken } from './rich-textarea-typed-tokens';
 
 // `/name` at the start or after whitespace, and before whitespace or the end: the menu's own trigger rule.
 const typedCommand = /(?<!\S)\/(\S+)(?=\s|$)/g;
@@ -54,13 +51,10 @@ function foundIn(
  * A typed or pasted `/name` that names a command a source offers becomes a token, so a draft loaded
  * with `/name args` shows it too. The name is left alone while it is being typed.
  */
-export function registerCommandTokens(
-  editor: LexicalEditor,
+export function commandTokens(
   sources: readonly SuggestionSource[],
-): () => void {
-  return registerTypedTokens(editor, (text, previous) =>
-    foundIn(text, previous, sources),
-  );
+): TokenFinder {
+  return (text, previous) => foundIn(text, previous, sources);
 }
 
 // What choosing a command leaves: the token and a space after it, the caret past both.

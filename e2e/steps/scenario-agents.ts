@@ -84,6 +84,8 @@ const namedScenarioSteps = [
   [agentStep('asks for an Elicitation'), 'elicitation'],
   [agentStep('asks to leave plan mode'), 'leave-plan-mode'],
   [agentStep('asks permission to edit README.md'), 'permission'],
+  [agentStep('offers the review Slash command'), 'slash-commands'],
+  [agentStep('offers the deploy Slash command'), 'slash-commands-deploy'],
   [agentStep('asks permission to run a command'), 'permission-command'],
   [
     agentStep('asks permission before its command details arrive'),

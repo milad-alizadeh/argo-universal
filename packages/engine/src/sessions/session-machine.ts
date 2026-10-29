@@ -39,6 +39,7 @@ import {
   type OpenedAcpSession,
 } from './acp-operations';
 import type { AcpLifetimeEvent, AcpSessionLifetime } from './acp/acp-lifetime';
+import { toSlashCommands } from './acp/acp-slash-commands';
 import { promptFailureOutcome } from './acp/prompts/prompt-outcome';
 import type {
   AcpPromptRequest as PromptRequest,
@@ -287,13 +288,7 @@ const sessionSetup = setup({
 
       if (update.sessionUpdate !== 'available_commands_update') return;
 
-      const commands = update.availableCommands.map(
-        ({ name, description, input }) => ({
-          name,
-          description,
-          hint: input?.hint,
-        }),
-      );
+      const commands = toSlashCommands(update.availableCommands);
 
       enqueue.assign({ slashCommands: commands });
       enqueueWrites(enqueue, context, [
