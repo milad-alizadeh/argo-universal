@@ -7,6 +7,7 @@ import {
   submitSessionPrompt,
   validateSessionCommandAdmission,
 } from './session-command';
+import type { SessionActorRef } from './session-machine';
 import { openReadySession } from './session-opening';
 
 type PromptDeps = Pick<
@@ -21,9 +22,36 @@ type PromptDeps = Pick<
 
 type PromptTurn = { turnId: string; sender: PromptSender };
 
+const requirePromptAgent = (deps: PromptDeps, sessionId: string): void => {
+  requireInstalledAgent(
+    deps.installedAgents,
+    deps.readSession(sessionId).agent,
+  );
+};
+
+const runPromptHook = (
+  deps: PromptDeps,
+  { sessionId, prompt }: SessionPromptInput,
+): ReturnType<PromptDeps['hooks']['prompt.submit']> =>
+  deps.hooks['prompt.submit']({
+    sessionId,
+    projectId: deps.readSession(sessionId).projectId,
+    prompt,
+  });
+
 export type AcceptedSessionPrompt =
   | { messageId: string; turnId: string }
   | { messageId: null; drop: string };
+
+async function submitAcceptedPrompt(
+  sessionActor: SessionActorRef,
+  { turnId, sender }: PromptTurn,
+  content: SessionPromptInput['prompt'],
+): Promise<AcceptedSessionPrompt> {
+  await submitSessionPrompt(sessionActor, { turnId, content, sender });
+
+  return { messageId: promptMessageId(turnId, sender), turnId };
+}
 
 // The Turn id is allocated before admission, so a caller that stops waiting can still follow the Turn.
 export function startSessionPrompt(
@@ -45,26 +73,14 @@ async function admitPrompt(
   { sessionId, prompt }: SessionPromptInput,
   { turnId, sender }: PromptTurn,
 ): Promise<AcceptedSessionPrompt> {
-  requireInstalledAgent(
-    deps.installedAgents,
-    deps.readSession(sessionId).agent,
-  );
+  requirePromptAgent(deps, sessionId);
   const sessionActor = await openReadySession(deps, sessionId);
   validateSessionCommandAdmission(deps);
 
-  const answer = await deps.hooks['prompt.submit']({
-    sessionId,
-    projectId: deps.readSession(sessionId).projectId,
-    prompt,
-  });
+  const answer = await runPromptHook(deps, { sessionId, prompt });
 
   if ('drop' in answer) return { messageId: null, drop: answer.drop };
   validateSessionCommandAdmission(deps);
-  await submitSessionPrompt(sessionActor, {
-    turnId,
-    content: answer.prompt,
-    sender,
-  });
 
-  return { messageId: promptMessageId(turnId, sender), turnId };
+  return submitAcceptedPrompt(sessionActor, { turnId, sender }, answer.prompt);
 }

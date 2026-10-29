@@ -22,29 +22,24 @@ const isClosing = (actor: SessionActorRef): boolean => {
   );
 };
 
-export const closeSession = async (
-  deps: Pick<
-    SessionRouterDeps,
-    | 'sessions'
-    | 'readSession'
-    | 'sessionCommandSignal'
-    | 'database'
-    | 'findWriter'
-  >,
-  sessionId: string,
-): Promise<SessionCloseOutput> => {
-  validateSessionCommandAdmission(deps);
+type CloseDeps = Pick<
+  SessionRouterDeps,
+  | 'sessions'
+  | 'readSession'
+  | 'sessionCommandSignal'
+  | 'database'
+  | 'findWriter'
+>;
 
+function requireClosable(deps: CloseDeps, sessionId: string): void {
   if (readSessionCloseTarget(deps, sessionId).parentSessionId !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Subagent is read-only',
     });
+}
 
-  const actor = requireLiveSessionActor(deps.sessions.system, sessionId);
-
-  if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });
-
+async function awaitClosure(actor: SessionActorRef): Promise<void> {
   const outcome = await waitFor(
     actor,
     (snapshot) => snapshot.status !== 'active',
@@ -56,6 +51,19 @@ export const closeSession = async (
       code: 'INTERNAL_SERVER_ERROR',
       message: outcome.context.failure,
     });
+}
+
+export const closeSession = async (
+  deps: CloseDeps,
+  sessionId: string,
+): Promise<SessionCloseOutput> => {
+  validateSessionCommandAdmission(deps);
+  requireClosable(deps, sessionId);
+  const actor = requireLiveSessionActor(deps.sessions.system, sessionId);
+
+  if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });
+
+  await awaitClosure(actor);
 
   return {};
 };

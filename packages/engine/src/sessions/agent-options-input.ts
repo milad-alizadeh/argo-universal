@@ -3,11 +3,51 @@ import {
   SessionConfigOption,
   type SessionAgentOptionsInput,
   type AgentOptionsUpdate,
+  type SessionRecord,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { OptionsDeps } from './agent-options-discovery';
 import { readAgentConfiguration } from './agent-options-storage';
 import { readSessionRow } from './session-record';
+
+const matchingOwner = (
+  session: SessionRecord,
+  input: SessionAgentOptionsInput,
+): boolean =>
+  session.agent === input.agent && session.projectId === input.projectId;
+
+const missingOptionsSession = (): TRPCError =>
+  new TRPCError({
+    code: 'NOT_FOUND',
+    message: 'Session not found for this Agent and Project.',
+  });
+
+function requireOptionsSession(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+  sessionId: string,
+): SessionRecord {
+  const session = readSessionRow(
+    { database: deps.database, writer: deps.findWriter() },
+    sessionId,
+  );
+
+  if (!session) throw missingOptionsSession();
+
+  if (!matchingOwner(session, input)) throw missingOptionsSession();
+
+  return session;
+}
+
+const savedPicks = (
+  session: SessionRecord,
+): NonNullable<SessionAgentOptionsInput['picks']> =>
+  Object.fromEntries(
+    [
+      ...InitialConfigOption.array().parse(session.configValues),
+      ...InitialConfigOption.array().parse(session.heldConfig),
+    ].map(({ configId, value }) => [configId, value]),
+  );
 
 /*
  * Browsing keeps the Session closed. Discover using its own saved choices, not
@@ -19,29 +59,11 @@ export function sessionOptionsInput(
 ): SessionAgentOptionsInput {
   if (!input.sessionId) return input;
 
-  const session = readSessionRow(
-    { database: deps.database, writer: deps.findWriter() },
-    input.sessionId,
-  );
-
-  if (
-    !session ||
-    session.agent !== input.agent ||
-    session.projectId !== input.projectId
-  )
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: 'Session not found for this Agent and Project.',
-    });
+  const session = requireOptionsSession(deps, input, input.sessionId);
 
   return {
     ...input,
-    picks: Object.fromEntries(
-      [
-        ...InitialConfigOption.array().parse(session.configValues),
-        ...InitialConfigOption.array().parse(session.heldConfig),
-      ].map(({ configId, value }) => [configId, value]),
-    ),
+    picks: savedPicks(session),
   };
 }
 
@@ -58,10 +80,17 @@ export function savedAgentOptions(
     agent: input.agent,
     projectId: input.projectId,
     commands: saved?.commands ?? null,
-    configOptions: saved
-      ? saved.configOptions.map((option) => withPick(option, input))
-      : null,
+    configOptions: savedOptions(saved, input),
   };
+}
+
+function savedOptions(
+  saved: ReturnType<typeof readAgentConfiguration>,
+  input: SessionAgentOptionsInput,
+): AgentOptionsUpdate['configOptions'] {
+  return saved
+    ? saved.configOptions.map((option) => withPick(option, input))
+    : null;
 }
 
 function withPick(
