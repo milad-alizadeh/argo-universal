@@ -34,7 +34,7 @@ async function restart(home: string, cliEntry: string): Promise<Host> {
   return startEngineTestHost({ home, acp: agent, cliEntry });
 }
 
-it('rewrites the argo launcher for the current CLI entry when a Server starts', async () => {
+it('rewrites the argo launcher for the current CLI entry at the first private opening after a Server starts', async () => {
   const outputs: TerminalOutputResponse[] = [];
   const host = await startAcpEngine({ steps: [sessionIdentityStep(outputs)] });
   await openSession(host);
