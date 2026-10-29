@@ -83,9 +83,7 @@ const tokenClassName =
 
 const drawToken = (name: string, nodeKey: string): React.JSX.Element => (
   <>
-    <span role="img" aria-label={`Command /${name}`} className={tokenClassName}>
-      /{name}
-    </span>
+    <span className={tokenClassName}>/{name}</span>
     <AwaitingHint name={name} nodeKey={nodeKey} />
   </>
 );

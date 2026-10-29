@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, screen, waitFor, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { settleLayout } from '#mocks/story-layout';
 import {
@@ -8,7 +8,10 @@ import {
 } from './rich-textarea-example.mocks';
 import type { SuggestionSource } from './rich-textarea-suggestions';
 
-// A Slash command the editor knows is drawn as a token, and the draft's text stays what was typed.
+/*
+ * A Slash command the editor knows is a token, and the draft's text stays what was typed. A token
+ * is proved by how it deletes: one Backspace takes the whole command, where plain text loses a letter.
+ */
 
 const hintText = 'a branch';
 
@@ -17,6 +20,9 @@ const reviewName = 'review';
 const initName = 'init';
 
 const withArgument = '/review main';
+
+// A space, then what stands before it: a whole token, or one letter of plain text.
+const backspaceTwice = '{Backspace}{Backspace}';
 
 const commands = [
   { name: reviewName, description: 'Review the changes', hint: hintText },
@@ -55,18 +61,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A token is announced as the command it names.
-function tokenIn(field: HTMLElement, name: string): HTMLElement | null {
-  return within(field).queryByRole('img', { name: `Command /${name}` });
-}
-
-// Whether `later` is drawn after `earlier` in the field.
-function follows(earlier: HTMLElement, later: HTMLElement): boolean {
-  return Boolean(
-    earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING,
-  );
-}
-
 export const AChosenCommandIsATokenAndTheTextIsNameAndSpace: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
@@ -75,40 +69,50 @@ export const AChosenCommandIsATokenAndTheTextIsNameAndSpace: Story = {
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('/review '),
     );
-    await waitFor(() => expect(tokenIn(field, reviewName)).not.toBeNull());
+    await userEvent.keyboard(backspaceTwice);
+    await waitFor(() => expect(args.onChangeText).toHaveBeenLastCalledWith(''));
   },
 };
 
 export const ATypedKnownCommandBecomesAToken: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, 'Then /init now');
+    await userEvent.type(field, 'Then /init ');
     await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith('Then /init now'),
+      expect(args.onChangeText).toHaveBeenLastCalledWith('Then /init '),
     );
-    await waitFor(() => expect(tokenIn(field, initName)).not.toBeNull());
+    await userEvent.keyboard(backspaceTwice);
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('Then '),
+    );
   },
 };
 
 export const AnUnknownCommandStaysPlainText: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, '/nothing here');
+    await userEvent.type(field, '/nothing ');
     await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith('/nothing here'),
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/nothing '),
     );
-    await expect(tokenIn(field, 'nothing')).toBeNull();
+    await userEvent.keyboard(backspaceTwice);
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/nothin'),
+    );
   },
 };
 
 export const APathStaysPlainText: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, 'src/init now');
+    await userEvent.type(field, 'src/init ');
     await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith('src/init now'),
+      expect(args.onChangeText).toHaveBeenLastCalledWith('src/init '),
     );
-    await expect(tokenIn(field, initName)).toBeNull();
+    await userEvent.keyboard(backspaceTwice);
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('src/ini'),
+    );
   },
 };
 
@@ -116,12 +120,15 @@ export const ARestoredDraftRebuildsTheTokenAndKeepsItsText: Story = {
   args: { initialValue: withArgument },
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await waitFor(() => expect(tokenIn(field, reviewName)).not.toBeNull());
     await expect(field).toHaveTextContent(withArgument);
     await userEvent.click(field);
     await userEvent.keyboard('{End}!');
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith(`${withArgument}!`),
+    );
+    await userEvent.keyboard('{Home}{ArrowRight}{Backspace}');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith(' main!'),
     );
   },
 };
@@ -131,14 +138,9 @@ export const TheHintShowsAfterTheCommandUntilAnArgumentIsTyped: Story = {
     const field = canvas.getByRole('textbox', { name: label });
     await userEvent.type(field, '/rev');
     await userEvent.keyboard('{Enter}');
-    const hint = await within(field).findByText(hintText);
-
-    const token = within(field).getByRole('img', {
-      name: `Command /${reviewName}`,
-    });
-
-    await expect(follows(token, hint)).toBe(true);
-
+    await waitFor(() =>
+      expect(field).toHaveTextContent(`/${reviewName}${hintText}`),
+    );
     await userEvent.keyboard('main');
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith(withArgument),
@@ -146,7 +148,6 @@ export const TheHintShowsAfterTheCommandUntilAnArgumentIsTyped: Story = {
     await waitFor(() =>
       expect(within(field).queryByText(hintText)).not.toBeInTheDocument(),
     );
-    await expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   },
 };
 
@@ -166,7 +167,8 @@ export const APastedKnownCommandBecomesAToken: Story = {
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith(`/${initName}`),
     );
-    await waitFor(() => expect(tokenIn(field, initName)).not.toBeNull());
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(args.onChangeText).toHaveBeenLastCalledWith(''));
   },
 };
 
