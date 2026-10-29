@@ -22,8 +22,8 @@ export interface FeedListProps extends EntryDrawing {
   loadingOlder: boolean;
   onStartReached: () => void;
   onAtEndChange?: (atEnd: boolean) => void;
-  // Rows start at the top and the Feed opens on the first row, for a Feed read without a Composer.
-  alignAtTop?: boolean;
+  // The Feed opens on the first row and pins no prompt, for a Feed read without a Composer.
+  opensAtStart?: boolean;
 }
 
 function FeedBody(scroll: FeedScrollProps): React.JSX.Element {

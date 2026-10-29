@@ -28,14 +28,14 @@ function useScrollsToEndWhenShown(list: ListRef, enabled: boolean): void {
   }, [list, shown]);
 }
 
-// Opens on the newest row by estimated sizes, then at the very end; from there `followEnd` keeps it there as rows measure. A Feed that aligns at the top opens on its first row and does not scroll.
+// Opens on the newest row by estimated sizes, then at the very end, with the newest prompt pinned at the top. A Feed that opens at its start opens on its first row and does not scroll.
 function useOpensAtEnd(
   list: ListRef,
   lastIndex: number,
-  alignAtTop: boolean | undefined,
+  opensAtStart: boolean | undefined,
 ): number {
-  const [initialIndex] = useState(alignAtTop ? 0 : lastIndex);
-  useScrollsToEndWhenShown(list, !alignAtTop);
+  const [initialIndex] = useState(opensAtStart ? 0 : lastIndex);
+  useScrollsToEndWhenShown(list, !opensAtStart);
 
   return initialIndex;
 }
@@ -90,7 +90,7 @@ interface PositionInput {
   entries: FeedEntry[];
   newestKey: string;
   onStartReached: () => void;
-  alignAtTop?: boolean;
+  opensAtStart?: boolean;
 }
 
 // Where the reader is in the Feed: where it opened, and whether they left the end.
@@ -98,8 +98,8 @@ export function useFeedScrollPosition(
   list: ListRef,
   input: PositionInput,
 ): FeedScrollPosition {
-  const { entries, newestKey, alignAtTop } = input;
-  const initialIndex = useOpensAtEnd(list, entries.length - 1, alignAtTop);
+  const { entries, newestKey, opensAtStart } = input;
+  const initialIndex = useOpensAtEnd(list, entries.length - 1, opensAtStart);
   useRequestsOlderNearTop(list, keyOf(entries[0]), input.onStartReached);
 
   return positionAt(initialIndex, useNewestKeyWhenLeftEnd(list, newestKey));

@@ -50,6 +50,13 @@ function useLayoutContent(
     layoutMotionOptions(open, measurement, layoutSync),
   );
 
+  // Closed content unmounts, and the rows inside it close with it, so it measures again before it next opens.
+  const hidden = !open && progress === 0;
+  const { forget } = measurement;
+  useLayoutEffect(() => {
+    if (hidden) forget();
+  }, [hidden, forget]);
+
   const stillAt = progress === 0 || progress === 1 ? progress : null;
   const { syncLayout } = layoutSync;
   useLayoutEffect(() => {

@@ -50,6 +50,7 @@ function streamProps<Item>(
     initialScrollIndex: props.initialScrollIndex,
     initialScrollAtEnd: props.initialScrollAtEnd,
     alignItemsAtEnd: props.alignItemsAtEnd,
+    anchoredEndSpace: props.anchoredEndSpace,
     maintainScrollAtEnd: props.maintainScrollAtEnd,
     maintainScrollAtEndThreshold: props.maintainScrollAtEndThreshold,
     maintainVisibleContentPosition: props.maintainVisibleContentPosition,

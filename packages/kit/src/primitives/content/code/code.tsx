@@ -22,7 +22,12 @@ export function Code(props: CodeProps): ReactElement {
       testID={props.diff ? 'diff-view' : undefined}
       className={`${codeBlockGroup} ${trayClassName}`}
     >
-      <CodeBlockHeader title={codeTitle(props)} copyValue={copyValue(props)} />
+      {/* An inline patch sits under its edit row, which already shows the file's icon. */}
+      <CodeBlockHeader
+        title={codeTitle(props)}
+        copyValue={copyValue(props)}
+        icon={!props.diff}
+      />
       <CodeContent {...props} />
     </View>
   );

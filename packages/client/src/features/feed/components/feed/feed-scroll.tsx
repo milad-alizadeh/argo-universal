@@ -15,8 +15,9 @@ import {
 } from './feed-row-data';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
+import { usePinnedPrompt } from './use-pinned-prompt';
 
-// Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
+// Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, so the room kept below the pinned prompt counts it.
 function FeedEnd(): React.JSX.Element {
   const { endSpace } = useFeedEndClearance();
 
@@ -26,8 +27,15 @@ function FeedEnd(): React.JSX.Element {
 // Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.
 const keepPosition = { data: true };
 
-// In screens from the end: only a reader at the very end is followed.
+// In screens from the end: only a reader at the very end is at the end, and follows the Composer.
 const endThreshold = 0.02;
+
+/*
+ * The Feed follows its end only as the view and the Composer below it change size. Streamed text and
+ * new rows never scroll it: they grow into the room kept below the pinned prompt, then on below the
+ * view, where Jump to latest offers them.
+ */
+const followComposer = { on: { layout: true, footerLayout: true } };
 
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
@@ -111,8 +119,8 @@ export interface FeedScrollProps extends EntryDrawing {
   loadingOlder: boolean;
   // Whether the reader is at the Feed's end, where its bottom fade is shallower.
   atEnd: boolean;
-  // Rows start at the top and the Feed does not follow its end, for a Feed read without a Composer.
-  alignAtTop?: boolean;
+  // The Feed pins no prompt and does not follow its end, for a Feed read without a Composer.
+  opensAtStart?: boolean;
 }
 
 type FeedListProps = Pick<
@@ -122,6 +130,7 @@ type FeedListProps = Pick<
   | 'initialScrollIndex'
   | 'maintainScrollAtEnd'
   | 'alignItemsAtEnd'
+  | 'anchoredEndSpace'
   | 'onStartReached'
   | 'header'
 >;
@@ -130,16 +139,19 @@ function useFeedListProps(
   list: ListRef,
   { entries, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
 ): FeedListProps {
-  const { maintainScrollAtEnd, ...motion } = useCollapsibleMotion(list);
+  const motion = useCollapsibleMotion(list);
+  const items = useFeedRowData(entries);
+  const pinnedPrompt = usePinnedPrompt(list, items);
 
   return {
-    items: useFeedRowData(entries),
+    items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there. Aligned at the top, it stays where the reader is.
-    maintainScrollAtEnd: props.alignAtTop ? false : maintainScrollAtEnd,
-    // Rows rest against the Composer below them, or against the top when there is none.
-    alignItemsAtEnd: !props.alignAtTop,
+    // With no Composer below, it stays where the reader is.
+    maintainScrollAtEnd: props.opensAtStart ? false : followComposer,
+    // Rows start at the top of the view, never against the Composer.
+    alignItemsAtEnd: false,
+    anchoredEndSpace: props.opensAtStart ? undefined : pinnedPrompt,
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

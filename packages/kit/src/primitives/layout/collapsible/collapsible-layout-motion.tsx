@@ -26,6 +26,10 @@ interface FrameMotion {
   target: number;
   height: number;
   remainingDuration: number;
+  // The content's height as last measured, which can still change while it opens.
+  contentHeight: RefObject<number>;
+  // The height last reported to the list, so each step reports only what it adds.
+  latestDrawn: { current: number };
   latestProgress: RefObject<number>;
   setProgress: (progress: number) => void;
   grow: (height: number) => void;
@@ -35,10 +39,9 @@ interface FrameMotion {
 type StepMotion = Omit<FrameMotion, 'remainingDuration'>;
 
 function stepTo(motion: StepMotion, progress: number): void {
-  motion.grow(
-    drawnHeight(motion.height, progress) -
-      drawnHeight(motion.height, motion.latestProgress.current),
-  );
+  const drawn = drawnHeight(motion.contentHeight.current, progress);
+  motion.grow(drawn - motion.latestDrawn.current);
+  motion.latestDrawn.current = drawn;
   motion.latestProgress.current = progress;
   motion.setProgress(progress);
 }
@@ -119,10 +122,14 @@ interface MotionEffectOptions extends MotionOptions {
 function motionOf(options: MotionEffectOptions): StepMotion {
   const { latestProgress, setProgress, layoutSync } = options;
 
+  const height = options.contentHeight.current;
+
   return {
     from: latestProgress.current,
     target: options.open ? 1 : 0,
-    height: options.contentHeight.current,
+    height,
+    contentHeight: options.contentHeight,
+    latestDrawn: { current: drawnHeight(height, latestProgress.current) },
     latestProgress,
     setProgress,
     grow: layoutSync.grow,

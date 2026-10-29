@@ -169,3 +169,98 @@ export const KeepsPlaceWhenRowOpens: Story = {
     await expect(scrolledToEnd(scroll)).toBe(false);
   },
 };
+
+// Long enough for the slowest open and the frames after it.
+const openingFrames = 40;
+
+const groupName = 'Ran 1 command, Edited 2 files';
+
+// The newest group of a command and two edits, opened down to one file's patch inside its edits.
+async function openedEditsInGroup(
+  canvas: ReturnType<typeof within>,
+): Promise<HTMLElement> {
+  const group = (await canvas.findAllByRole('button', { name: groupName })).at(
+    -1,
+  );
+
+  if (!group?.parentElement) throw new Error('No command and edits group');
+  await openRow(group);
+  const inGroup = within(group.parentElement);
+  const edits = await inGroup.findByRole('button', { name: 'Edited 2 files' });
+  await openRow(edits);
+  const file = await inGroup.findByRole('button', {
+    name: /^Edited .*large\.txt$/,
+  });
+  await openRow(file);
+  await fullyOpenedRow(file);
+  await fullyOpenedRow(edits);
+
+  return edits;
+}
+
+const feedRowId = 'feed-column';
+
+// The Feed row holding an element, and how far below its top the next row starts.
+function rowAndNextRow(
+  element: HTMLElement,
+  scroll: HTMLElement,
+): () => { height: number; nextRowAt: number } {
+  return () => {
+    const row = element.closest<HTMLElement>(`[data-testid="${feedRowId}"]`);
+
+    if (!row) throw new Error('No Feed row around the element');
+    const { top, height } = row.getBoundingClientRect();
+
+    const nextTop = [...within(scroll).queryAllByTestId(feedRowId)]
+      .map((other) => other.getBoundingClientRect().top)
+      .filter((otherTop) => otherTop > top)
+      .sort((a, b) => a - b)[0];
+
+    return { height, nextRowAt: (nextTop ?? top + height) - top };
+  };
+}
+
+// Reads a row and the row below it on each frame of a press, until both have settled.
+async function rowsWhilePressing(
+  press: HTMLElement,
+  read: () => { height: number; nextRowAt: number },
+): Promise<{ height: number; nextRowAt: number }[]> {
+  const readings: { height: number; nextRowAt: number }[] = [];
+  await sampleEachFrame(
+    () => press.click(),
+    () => readings.push(read()),
+    openingFrames,
+  );
+
+  return readings;
+}
+
+const nextRowMisplaced = ({
+  height,
+  nextRowAt,
+}: {
+  height: number;
+  nextRowAt: number;
+}): boolean => Math.abs(nextRowAt - height) > 1;
+
+/*
+ * A nested row closed and opened again moves the rows below it with it on every frame. Its rows
+ * closed with it, so it opens straight to its new size, never to the size it had before.
+ */
+export const MovesRowsBelowWithNestedRowClosingAndOpeningAgain: Story = {
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    const edits = await openedEditsInGroup(canvas);
+    const read = rowAndNextRow(edits, scroll);
+
+    const closing = await rowsWhilePressing(edits, read);
+    const opening = await rowsWhilePressing(edits, read);
+
+    await expect(edits).toHaveAttribute(expandedAttribute, 'true');
+    await expect([...closing, ...opening].filter(nextRowMisplaced)).toEqual([]);
+    const heights = opening.map(({ height }) => height);
+    await expect(heights).toEqual(heights.toSorted((a, b) => a - b));
+  },
+};

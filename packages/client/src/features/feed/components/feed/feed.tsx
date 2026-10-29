@@ -33,8 +33,8 @@ export interface FeedProps {
   onOpenSubagent?: (subagentSessionId: string) => void;
   // Whether the reader can see the Feed's end; an empty Feed always shows it.
   onAtEndChange?: (atEnd: boolean) => void;
-  // A Feed read without a Composer, such as a Subagent's: its rows start at the top, it opens on the first row and does not follow the end, and nothing at its end clears a Composer.
-  alignAtTop?: boolean;
+  // A Feed read without a Composer, such as a Subagent's: it opens on the first row, pins no prompt and does not follow the end, and nothing at its end clears a Composer.
+  opensAtStart?: boolean;
 }
 
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
@@ -87,7 +87,7 @@ function useFeedEntries({
 // What a Feed read without a Composer leaves for one at its end.
 const noComposerCover = 0;
 
-// A Session's rows, oldest first: it opens at the newest, follows new rows while the reader is at the bottom, and keeps their place when older rows page in above.
+// A Session's rows, oldest first, from the top of the view: it opens at the newest, pins each new prompt to the top while its answer streams in below, and keeps the reader's place when older rows page in above.
 export function Feed({
   checkoutBranch,
   ...props
@@ -105,9 +105,9 @@ export function Feed({
   return <FeedWithCover {...props} {...feed} />;
 }
 
-// A Feed that aligns at the top has no Composer at its end, so it keeps no room for one.
+// A Feed that opens at its start has no Composer at its end, so it keeps no room for one.
 function FeedWithCover(props: FeedListProps & FeedProps): React.JSX.Element {
-  if (!props.alignAtTop) return <FeedList {...props} />;
+  if (!props.opensAtStart) return <FeedList {...props} />;
 
   return (
     <ComposerCover.Provider value={noComposerCover}>
