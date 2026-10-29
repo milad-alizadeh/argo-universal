@@ -23,7 +23,7 @@ export const OperationExecution = z.strictObject({
 export type OperationExecution = z.infer<typeof OperationExecution>;
 
 // An Operation's own result, answered at once.
-export const OperationAnswer = z.strictObject({
+const OperationAnswer = z.strictObject({
   kind: z.literal('result'),
   result: z.json(),
 });

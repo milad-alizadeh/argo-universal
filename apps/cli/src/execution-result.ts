@@ -7,7 +7,7 @@ type Write = (line: string) => void;
 
 const waitingExitCode = 75;
 
-export function executionExitCode(execution: OperationExecution): number {
+function executionExitCode(execution: OperationExecution): number {
   return execution.status === 'settled' ? 0 : waitingExitCode;
 }
 
