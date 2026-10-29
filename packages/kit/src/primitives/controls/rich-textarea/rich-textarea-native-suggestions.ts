@@ -41,6 +41,14 @@ const atEnd = (value: string): Selection => ({
   end: value.length,
 });
 
+const where = (
+  caret: Selection,
+  value: string,
+): Pick<CaretState, 'position' | 'collapsed'> => ({
+  position: Math.min(caret.end, value.length),
+  collapsed: caret.start === caret.end,
+});
+
 // The caret the field last reported, until a choice sets one; at the end of the text before either.
 function useCaret(value: string): CaretState {
   const [reported, setReported] = useState<Selection | null>(null);
@@ -49,10 +57,9 @@ function useCaret(value: string): CaretState {
 
   return {
     chosen,
-    release: () => setChosen(null),
     place: setChosen,
-    position: Math.min(caret.end, value.length),
-    collapsed: caret.start === caret.end,
+    release: () => setChosen(null),
+    ...where(caret, value),
     report: (event) => {
       setReported(event.nativeEvent.selection);
       setChosen(null);
