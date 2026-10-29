@@ -51,9 +51,9 @@ function fullViewport(width: number): Story {
         }
       });
       // A real wheel over the outer gutter must reach the pane's scroll viewport.
-      const view = scroll.getBoundingClientRect();
       await waitFor(async () => await expect(scrolledToEnd(scroll)).toBe(true));
       await markSettledMiddleOfView(scroll);
+      const view = scroll.getBoundingClientRect();
 
       for (const x of [view.left + 12, view.right - 12])
         await wheelInGutter(scroll, x);
