@@ -14,9 +14,9 @@ import type {
   ComposerSuggestion,
   SuggestionSource,
 } from '../rich-textarea-suggestions';
-import { registerCommandTokens } from './rich-textarea-command-tokens';
+import { commandTokens } from './rich-textarea-command-tokens';
 import { registerReturnToSubmit } from './rich-textarea-keys';
-import { registerReferenceTokens } from './rich-textarea-reference-tokens';
+import { referenceTokens } from './rich-textarea-reference-tokens';
 import { renderTypeaheadMenu } from './rich-textarea-typeahead-menu';
 import {
   type TypeaheadAdapter,
@@ -29,6 +29,7 @@ import {
 } from './rich-textarea-typeahead-query';
 import { referenceAdapter } from './rich-textarea-typeahead-references';
 import { suggestionAdapter } from './rich-textarea-typeahead-suggestions';
+import { useTypedTokens } from './rich-textarea-typed-tokens';
 
 type Props = Pick<RichTextareaProps, 'suggestions' | 'onSubmit'> & {
   references: readonly ReferenceOption[];
@@ -53,12 +54,8 @@ const noSuggestions: readonly SuggestionSource[] = [];
 function useReferenceAdapter(
   references: readonly ReferenceOption[],
 ): TypeaheadAdapter {
-  const [editor] = useLexicalComposerContext();
   const trigger = useBasicTypeaheadTriggerMatch('#', { minLength: 0 });
-  useEffect(
-    () => registerReferenceTokens(editor, references),
-    [editor, references],
-  );
+  useTypedTokens(useMemo(() => referenceTokens(references), [references]));
 
   return useMemo(
     () => referenceAdapter(references, trigger),
@@ -90,11 +87,7 @@ function useSuggestionAdapter(
   suggestions: readonly SuggestionSource[],
   choose: Props['onChooseSuggestion'],
 ): TypeaheadAdapter {
-  const [editor] = useLexicalComposerContext();
-  useEffect(
-    () => registerCommandTokens(editor, suggestions),
-    [editor, suggestions],
-  );
+  useTypedTokens(useMemo(() => commandTokens(suggestions), [suggestions]));
 
   return useMemo(
     () => suggestionAdapter(suggestions, choose),
