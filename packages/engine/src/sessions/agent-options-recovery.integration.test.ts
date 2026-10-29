@@ -2,9 +2,39 @@ import {
   RequestError,
   type ResumeSessionRequest,
 } from '@agentclientprotocol/sdk';
+import type { AgentOptionsUpdate } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+
+type OptionsStream = AsyncIterator<AgentOptionsUpdate>;
+
+async function nextUpdate(
+  stream: OptionsStream,
+  message: string,
+): Promise<AgentOptionsUpdate> {
+  const next = await stream.next();
+
+  if (next.done) throw new Error(message);
+
+  return next.value;
+}
+
+async function readUntil(
+  stream: OptionsStream,
+  matches: (update: AgentOptionsUpdate) => boolean,
+  message: string,
+): Promise<AgentOptionsUpdate> {
+  while (true) {
+    const update = await nextUpdate(stream, message);
+
+    if (matches(update)) return update;
+  }
+}
+
+async function closeStream(stream: OptionsStream): Promise<void> {
+  await stream.return?.();
+}
 
 it.each([
   {
@@ -48,21 +78,11 @@ it.each([
     )[Symbol.asyncIterator]();
 
     try {
-      let failureUpdate;
-
-      while (true) {
-        const next = await stream.next();
-
-        if (next.done)
-          throw new Error(
-            'Session reader ended before reporting discovery failure',
-          );
-
-        if ('error' in next.value) {
-          failureUpdate = next.value;
-          break;
-        }
-      }
+      const failureUpdate = await readUntil(
+        stream,
+        (update) => 'error' in update,
+        'Session reader ended before reporting discovery failure',
+      );
 
       expect(failureUpdate).toMatchObject({
         error: { type },
@@ -90,19 +110,12 @@ it.each([
         ],
         request.sessionId,
       );
-      let ready;
 
-      while (true) {
-        const next = await stream.next();
-
-        if (next.done)
-          throw new Error('Session reader ended before commands arrived');
-
-        if (next.value.commands?.length) {
-          ready = next.value;
-          break;
-        }
-      }
+      const ready = await readUntil(
+        stream,
+        (update) => Boolean(update.commands?.length),
+        'Session reader ended before commands arrived',
+      );
 
       expect(ready).toMatchObject({
         commands: [{ name: 'after-resume', description: 'Resumed command' }],
@@ -110,7 +123,7 @@ it.each([
       expect(ready).not.toHaveProperty('error');
     } finally {
       reader.abort();
-      await stream.return?.();
+      await closeStream(stream);
     }
   },
 );

@@ -7,6 +7,9 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { uploadBlob, blobsFolderIn } from '../blob';
 
+const imageOutcome = (accepts: boolean): string =>
+  accepts ? 'sent' : 'This Agent does not support image prompts';
+
 it.each(newSessionInputs)(
   'creates an image prompt Session from the $agent App mock through ACP',
   async (input): Promise<void> => {
@@ -148,11 +151,7 @@ it.each([
       (error: Error) => error.message,
     );
 
-    const expectedOutcome = accepts
-      ? 'sent'
-      : 'This Agent does not support image prompts';
-
-    expect(outcome).toBe(expectedOutcome);
+    expect(outcome).toBe(imageOutcome(accepts));
 
     if (accepts) await received.promise;
 

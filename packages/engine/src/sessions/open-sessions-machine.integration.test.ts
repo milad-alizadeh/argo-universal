@@ -1,128 +1,18 @@
-import { randomUUID } from 'node:crypto';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it } from 'vitest';
+import { createActor, type EventObject } from 'xstate';
 import {
-  createActor,
-  type EventFromLogic,
-  type EventObject,
-  type SnapshotFrom,
-} from 'xstate';
-import { TestModel } from 'xstate/graph';
-import { seedAgentFixtures } from '#mocks/agent-fixtures';
-import { coreOnlyHooks } from '#mocks/core-hooks';
-import { openTestDatabase } from '#mocks/database';
-import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
-import { createOpenSessionsModelMachine } from '#mocks/open-sessions';
-import { unstartedWriter } from '#mocks/unstarted-writer';
-import { createAcpResources } from '../agents';
-import type { OpenSessionsInput } from './open-sessions-machine';
-import { sessionMachine } from './session-machine';
-
-const openSessionsModelMachine = createOpenSessionsModelMachine(false);
-
-const openSessionsGraphMachine = createOpenSessionsModelMachine(true);
-
-const { database, directory: runtimeDirectory, remove } = openTestDatabase();
+  events,
+  input,
+  key,
+  model,
+  openSessionsModelMachine,
+  paths,
+  remove,
+  type OpenSessionsEvent,
+} from './open-sessions-model.test.mocks';
 
 afterAll(remove);
-
-seedAgentFixtures(database, [{ agent: 'mock', label: 'mock', logo: '' }]);
-
-const input: OpenSessionsInput = {
-  now: (): number => Date.now(),
-  createId: randomUUID,
-  hooks: coreOnlyHooks,
-  database,
-  runtimeDirectory,
-  acpResources: createAcpResources(),
-  installedAgents: unlaunchedInstalledAgents(database, runtimeDirectory),
-  writer: unstartedWriter(database),
-};
-
-// Two ids exercise duplicate opens, removal with another Session left, and the last Session stopping.
-type OpenSessionsEvent = EventFromLogic<typeof openSessionsModelMachine>;
-
-const events: OpenSessionsEvent[] = [
-  ...['one', 'two'].flatMap((sessionId): OpenSessionsEvent[] => [
-    {
-      type: 'sessions.create',
-      sessionId,
-      projectId: 'project-1',
-      projectPath: '/project',
-      agent: 'mock',
-      checkout: { type: 'main' },
-      configOptions: [],
-      prompt: [{ type: 'text', text: 'Build it' }],
-      turnId: `turn-${sessionId}`,
-    },
-    { type: 'sessions.open', sessionId, agent: 'mock' },
-    { type: 'sessions.archive', sessionId, agent: 'mock' },
-    {
-      type: `xstate.done.actor.session:${sessionId}`,
-      actorId: `session:${sessionId}`,
-      output: { failure: null },
-    },
-    {
-      type: `xstate.error.actor.session:${sessionId}`,
-      actorId: `session:${sessionId}`,
-      error: new Error('Session actor failed'),
-    },
-    {
-      type: `xstate.snapshot.session:${sessionId}`,
-      snapshot: createActor(sessionMachine, {
-        input: {
-          now: (): number => Date.now(),
-          createId: randomUUID,
-          hooks: coreOnlyHooks,
-          kind: 'existing',
-          database,
-          runtimeDirectory,
-          acp: {
-            resources: input.acpResources,
-            installedAgents: input.installedAgents,
-          },
-          writer: input.writer,
-          sessionId,
-        },
-      }).getSnapshot(),
-    },
-  ]),
-  { type: 'sessions.stopAll' },
-  {
-    type: 'xstate.error.actor.unrelated:worker',
-    actorId: 'unrelated:worker',
-    error: new Error('Unexpected actor failure'),
-  },
-];
-
-type OpenSessionsSnapshot = SnapshotFrom<typeof openSessionsModelMachine>;
-
-const key = (snapshot: OpenSessionsSnapshot): string =>
-  JSON.stringify({
-    value: snapshot.value,
-    sessions: Object.keys(snapshot.context.sessions).sort(),
-  });
-
-const model = new TestModel(openSessionsGraphMachine, {
-  input,
-  events,
-  // One pair of Sessions covers the branches; repeating an id adds no new lifecycle behavior.
-  filterEvents: (snapshot, event): boolean =>
-    snapshot.status === 'active' &&
-    snapshot.can(event) &&
-    (!('actorId' in event) ||
-      event.actorId === 'unrelated:worker' ||
-      Object.values(snapshot.context.sessions).some(
-        (session): boolean => session.id === event.actorId,
-      )),
-  serializeState: (snapshot, event, previous): string =>
-    JSON.stringify({
-      key: key(snapshot),
-      via: event && `${previous && key(previous)} ${event.type}`,
-    }),
-});
-
-const paths = model.getShortestPaths();
 
 let openSessions: ReturnType<
   typeof createActor<typeof openSessionsModelMachine>

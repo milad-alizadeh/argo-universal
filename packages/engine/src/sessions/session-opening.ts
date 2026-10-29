@@ -1,10 +1,5 @@
-import {
-  SessionOpenFailure,
-  type SessionOpenInput,
-  type SessionOpenOutput,
-} from '@repo/contracts';
+import { type SessionOpenInput, type SessionOpenOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import { waitFor } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
 import type {
   OpenSessionsActorRef,
@@ -13,13 +8,28 @@ import type {
 import type { SessionRouterDeps } from './router-deps';
 import {
   type ReadySessionCommandType,
-  rejectSessionCommand,
   rejectOpenSessionsCommand,
   validateSessionCommandAdmission,
 } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import { sessionMachine } from './session-machine';
+import { waitForSessionReady } from './session-readiness';
 import { sessionActorId } from './session-system';
+
+const openingFailure = (sessionId: string): TRPCError =>
+  new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: `Session ${sessionId} did not open`,
+  });
+
+const archivedSession = (): TRPCError =>
+  new TRPCError({
+    code: 'CONFLICT',
+    message: 'An archived Session is read-only',
+  });
+
+const subagentSession = (): TRPCError =>
+  new TRPCError({ code: 'CONFLICT', message: 'A Subagent is read-only' });
 
 export function sendCheckedOpenSessionsCommand(
   openSessions: OpenSessionsActorRef,
@@ -42,75 +52,9 @@ export function requireOpenSessionActor(
     sessionMachine,
   );
 
-  if (!sessionActor)
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: `Session ${sessionId} did not open`,
-    });
+  if (!sessionActor) throw openingFailure(sessionId);
 
   return sessionActor;
-}
-
-function isInitialSessionStartup(
-  snapshot: ReturnType<SessionActorRef['getSnapshot']>,
-): boolean {
-  const initialStates = [
-    'loading',
-    'creating',
-    { open: { acp: 'opening' } },
-  ] as const;
-
-  return initialStates.some((state): boolean => snapshot.matches(state));
-}
-
-async function waitForSessionReady(
-  sessionActor: SessionActorRef,
-  commandType: ReadySessionCommandType,
-): Promise<SessionActorRef> {
-  await waitFor(
-    sessionActor,
-    (sessionSnapshot): boolean =>
-      sessionSnapshot.status !== 'active' ||
-      (!isInitialSessionStartup(sessionSnapshot) &&
-        (commandType !== 'session.prompt' ||
-          (!sessionSnapshot.matches({ open: { acp: 'configuring' } }) &&
-            !sessionSnapshot.matches({
-              open: { acp: { activeTurn: 'cancelling' } },
-            })))),
-    { timeout: Infinity },
-  );
-
-  return requireReadySession(sessionActor, commandType);
-}
-
-function requireReadySession(
-  sessionActor: SessionActorRef,
-  commandType: ReadySessionCommandType,
-): SessionActorRef {
-  const sessionSnapshot = sessionActor.getSnapshot();
-
-  if (sessionSnapshot.context.openError) rejectClosedSession(sessionSnapshot);
-
-  if (sessionSnapshot.status !== 'active') rejectClosedSession(sessionSnapshot);
-
-  if (!isSessionReady(sessionSnapshot))
-    rejectSessionCommand(sessionActor, commandType);
-
-  return sessionActor;
-}
-
-function rejectClosedSession(
-  snapshot: ReturnType<SessionActorRef['getSnapshot']>,
-): never {
-  throw new TRPCError({
-    code: 'INTERNAL_SERVER_ERROR',
-    cause: snapshot.context.openError
-      ? new SessionOpenFailure(snapshot.context.openError)
-      : undefined,
-    message:
-      snapshot.context.failure ??
-      `Session ${snapshot.context.sessionId} closed`,
-  });
 }
 
 export async function openReadySession(
@@ -123,16 +67,18 @@ export async function openReadySession(
 ): Promise<SessionActorRef> {
   validateSessionCommandAdmission(deps);
 
-  const liveSession = findMachineActor(
-    deps.sessions.system,
-    sessionActorId(sessionId),
-    sessionMachine,
-  );
+  const liveSession = findOpenActor(deps.sessions, sessionId);
 
   if (liveSession) return waitForSessionReady(liveSession, commandType);
 
   return waitForSessionReady(openStoredSession(deps, sessionId), commandType);
 }
+
+const findOpenActor = (
+  sessions: OpenSessionsActorRef,
+  sessionId: string,
+): SessionActorRef | undefined =>
+  findMachineActor(sessions.system, sessionActorId(sessionId), sessionMachine);
 
 // Opens a Session, or waits for its open, without a Turn: Retry after a failed open never resends one.
 export const openSession = async (
@@ -167,28 +113,9 @@ export function readWritableSession(
 ): ReturnType<SessionRouterDeps['readSession']> {
   const sessionRecord = readSession(sessionId);
 
-  if (sessionRecord.archivedAt !== null)
-    throw new TRPCError({
-      code: 'CONFLICT',
-      message: 'An archived Session is read-only',
-    });
+  if (sessionRecord.archivedAt !== null) throw archivedSession();
 
-  if (sessionRecord.parentSessionId !== null)
-    throw new TRPCError({
-      code: 'CONFLICT',
-      message: 'A Subagent is read-only',
-    });
+  if (sessionRecord.parentSessionId !== null) throw subagentSession();
 
   return sessionRecord;
-}
-
-function isSessionReady(
-  session: ReturnType<SessionActorRef['getSnapshot']>,
-): boolean {
-  return (
-    session.matches({ open: 'acp' }) &&
-    !(['opening', 'closing', 'flushing'] as const).some((state) =>
-      session.matches({ open: { acp: state } }),
-    )
-  );
 }

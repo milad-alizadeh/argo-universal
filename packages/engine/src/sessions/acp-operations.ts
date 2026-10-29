@@ -8,7 +8,6 @@ import type {
   AcpPromptResponse as PromptResponse,
 } from './acp/prompts/prompt-types';
 import { commitLocalPrompt } from './acp/prompts/submission';
-import { validateConfigChoice } from './session-admission';
 import type { SessionContext } from './session-context';
 
 export type OpenedAcpSession = {
@@ -29,32 +28,7 @@ export const cancelAcp = (context: SessionContext): Promise<void> => {
   });
 };
 
-export const configureAcp = async (
-  context: SessionContext,
-): Promise<SessionConfigOption[]> => {
-  const { acpLease, applyingConfig } = context;
-
-  if (!acpLease || !applyingConfig)
-    throw new Error('No Session configuration operation');
-  const { configId, value } = applyingConfig;
-  validateConfigChoice(context.configOptions, applyingConfig);
-
-  const response = context.acpResponseReaders[
-    'session/set_config_option'
-  ].parse(
-    await acpLease.agent.request<unknown>('session/set_config_option', {
-      sessionId: acpLease.sessionId,
-      configId,
-      value,
-      ...(typeof value === 'boolean' && { type: 'boolean' }),
-    }),
-  );
-
-  return readAcpConfiguration(
-    response.configOptions,
-    context.acpConfigurationRejections,
-  );
-};
+export { configureAcp } from './acp-configuration-operation';
 
 export const publishTurn = (input: AcpOperationInput): Promise<void> => {
   const feed = input.findFeed();
@@ -68,30 +42,63 @@ export const publishTurn = (input: AcpOperationInput): Promise<void> => {
   );
 };
 
+const requireFeed = (input: AcpOperationInput): FeedActorRef => {
+  const feed = input.findFeed();
+
+  if (!feed) throw new Error('No Session submission destination');
+
+  return feed;
+};
+
+const promptStorage = (
+  input: SessionContext['input'],
+): Parameters<typeof commitLocalPrompt>[0]['storage'] => ({
+  database: input.database,
+  blobsFolder: blobsFolderIn(input.runtimeDirectory),
+  attachmentsFolder: attachmentsFolderIn(input.runtimeDirectory),
+});
+
+type PromptDestination = {
+  submission: NonNullable<SessionContext['pendingSubmission']>;
+  lease: AcpSessionLease;
+  feed: FeedActorRef;
+  input: SessionContext['input'];
+};
+
+const promptDestination = ({
+  submission,
+  lease,
+  feed,
+  input,
+}: PromptDestination): Parameters<typeof commitLocalPrompt>[0] => ({
+  submission,
+  lease,
+  feed,
+  storage: promptStorage(input),
+});
+
+const requireDestination = (
+  input: AcpOperationInput,
+): Parameters<typeof commitLocalPrompt>[0] => {
+  const { pendingSubmission, acpLease, input: sessionInput } = input.context;
+  const feed = requireFeed(input);
+
+  if (!pendingSubmission || !acpLease)
+    throw new Error('No Session submission destination');
+
+  return promptDestination({
+    submission: pendingSubmission,
+    lease: acpLease,
+    feed,
+    input: sessionInput,
+  });
+};
+
 export const commitPrompt = (
   input: AcpOperationInput,
   signal: AbortSignal,
-): Promise<PromptRequest> => {
-  const { pendingSubmission, acpLease, input: sessionInput } = input.context;
-  const feed = input.findFeed();
-
-  if (!pendingSubmission || !acpLease || !feed)
-    throw new Error('No Session submission destination');
-
-  return commitLocalPrompt(
-    {
-      submission: pendingSubmission,
-      lease: acpLease,
-      feed,
-      storage: {
-        database: sessionInput.database,
-        blobsFolder: blobsFolderIn(sessionInput.runtimeDirectory),
-        attachmentsFolder: attachmentsFolderIn(sessionInput.runtimeDirectory),
-      },
-    },
-    signal,
-  );
-};
+): Promise<PromptRequest> =>
+  commitLocalPrompt(requireDestination(input), signal);
 
 export const promptAcp = async (
   context: SessionContext,
@@ -134,7 +141,7 @@ const publishActiveTurnContent = (input: AcpOperationInput): Promise<void> => {
   if (!input.context.activeTurnId) return Promise.resolve();
   const feed = input.findFeed();
 
-  if (!feed || feed.getSnapshot().status !== 'active') return Promise.resolve();
+  if (!isActiveFeed(feed)) return Promise.resolve();
 
   return publishTurnContent(
     feed,
@@ -142,3 +149,6 @@ const publishActiveTurnContent = (input: AcpOperationInput): Promise<void> => {
     input.context.turnEnding,
   );
 };
+
+const isActiveFeed = (feed: FeedActorRef | undefined): feed is FeedActorRef =>
+  Boolean(feed && feed.getSnapshot().status === 'active');

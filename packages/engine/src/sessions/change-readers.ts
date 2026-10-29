@@ -18,15 +18,36 @@ import { pageItems, pageWindow } from '../lib/page-items';
 import { readProjectPath } from '../projects';
 import type { SessionRouterDeps } from './router-deps';
 
+const isMainComparison = (
+  comparison: SessionComparison | undefined,
+): comparison is 'main' | undefined =>
+  comparison === undefined || comparison === 'main';
+
 const gitComparison = (
   comparison: SessionComparison | undefined,
 ): ChangeComparison => {
-  if (comparison === undefined || comparison === 'main')
-    return { type: 'main' };
+  if (isMainComparison(comparison)) return { type: 'main' };
 
   if (comparison === 'uncommitted') return { type: 'uncommitted' };
 
   return { type: 'branch', branch: comparison.branch };
+};
+
+const changesPage = (
+  result: Awaited<ReturnType<typeof readCheckoutChanges>>,
+  input: SessionChangesInput,
+): SessionChangesOutput => {
+  const page = pageItems(
+    result.files,
+    pageWindow(input, sessionChangesPageFiles),
+  );
+
+  return {
+    mainBranch: result.mainBranch,
+    summary: result.summary,
+    files: page.items,
+    nextCursor: page.nextCursor,
+  };
 };
 
 export async function readSessionChanges(
@@ -41,18 +62,25 @@ export async function readSessionChanges(
     gitComparison(input.comparison),
   );
 
-  const page = pageItems(
-    result.files,
-    pageWindow(input, sessionChangesPageFiles),
-  );
+  return changesPage(result, input);
+}
+
+const missingDiff = (path: string): TRPCError =>
+  new TRPCError({ code: 'NOT_FOUND', message: `No changed file ${path}` });
+
+const diffPage = (
+  result: NonNullable<Awaited<ReturnType<typeof readCheckoutDiff>>>,
+  input: SessionDiffInput,
+): SessionDiffOutput => {
+  const window = pageWindow(input, sessionDiffPageLines);
+  const page = pagePatch(result.patch, window.cursor, window.limit);
 
   return {
-    mainBranch: result.mainBranch,
-    summary: result.summary,
-    files: page.items,
+    file: result.file,
+    patch: { format: 'git_patch', text: page.patch },
     nextCursor: page.nextCursor,
   };
-}
+};
 
 export async function readSessionDiff(
   deps: Pick<SessionRouterDeps, 'readSession' | 'database'>,
@@ -66,18 +94,7 @@ export async function readSessionDiff(
     { comparison: gitComparison(input.comparison), path: input.path },
   );
 
-  if (!result)
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: `No changed file ${input.path}`,
-    });
+  if (!result) throw missingDiff(input.path);
 
-  const window = pageWindow(input, sessionDiffPageLines);
-  const page = pagePatch(result.patch, window.cursor, window.limit);
-
-  return {
-    file: result.file,
-    patch: { format: 'git_patch', text: page.patch },
-    nextCursor: page.nextCursor,
-  };
+  return diffPage(result, input);
 }

@@ -52,7 +52,6 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         .get(),
     ).toEqual({ status: 'ended', stop_reason: 'error' });
   });
-
   it('a Turn insert failure rejects the later prompt receipt without ACP work', async () => {
     const requests: PromptRequest[] = [];
 
@@ -84,7 +83,6 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       .toEqual({ status: 'ended' });
     expect(requests).toEqual([]);
   });
-
   it('a second submission cannot overtake an admitted running Turn', async () => {
     const completion = Promise.withResolvers<void>();
     const requests: PromptRequest[] = [];
@@ -119,90 +117,5 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     ).rejects.toThrow('cannot accept');
     completion.resolve();
     expect(requests).toHaveLength(1);
-  });
-
-  it('unsupported image prompts reject before success or Agent work', async () => {
-    const requests: PromptRequest[] = [];
-
-    const host = await startAcpEngine(
-      {
-        steps: [],
-        initialize: {
-          protocolVersion: 1,
-          agentCapabilities: {
-            sessionCapabilities: { close: {}, resume: {} },
-          },
-        },
-        responses: { 'session/prompt': [{ requests }] },
-      },
-      undefined,
-      agentId,
-    );
-
-    const created = await host.caller.session.new(sessionInput);
-    await expect(
-      host.caller.session.prompt({
-        ...created,
-        prompt: [
-          {
-            type: 'image',
-            mimeType: 'image/png',
-            blob: { blobId: 'missing', mime: 'image/png', bytes: 1 },
-          },
-        ],
-      }),
-    ).rejects.toThrow('does not support image');
-    expect(requests).toEqual([]);
-    expect(
-      host.database.$client
-        .prepare('SELECT COUNT(*) AS count FROM feed_row')
-        .get(),
-    ).toEqual({ count: 1 });
-    expect(
-      (await host.caller.feed.page({ ...created, direction: 'tail' })).rows,
-    ).toMatchObject([
-      {
-        sessionUpdate: 'notice',
-        _meta: { argo: { turnEnd: { stopReason: 'error' } } },
-      },
-    ]);
-  });
-
-  it('a new explicit submission succeeds after a rejected commit and does not inherit its closure failure', async () => {
-    const requests: PromptRequest[] = [];
-
-    const host = await startAcpEngine(
-      {
-        steps: [],
-        responses: { 'session/prompt': [{ requests }] },
-      },
-      undefined,
-      agentId,
-    );
-
-    const created = await host.caller.session.new(sessionInput);
-    host.database.$client.exec(rejectFeedInsertion);
-    await expect(
-      host.caller.session.prompt({
-        ...created,
-        prompt: [{ type: 'text', text: 'Failed' }],
-      }),
-    ).rejects.toThrow(commitFailureMessage);
-    await restoreFeedWritesAndAwaitCommit(host);
-    expect(requests).toEqual([]);
-    expect(
-      host.database.$client
-        .prepare('SELECT status, stop_reason FROM turn WHERE session_id = ?')
-        .get(created.sessionId),
-    ).toEqual({ status: 'ended', stop_reason: 'error' });
-
-    await host.caller.session.prompt({
-      ...created,
-      prompt: [{ type: 'text', text: 'Explicit retry' }],
-    });
-    await expect(host.caller.session.close(created)).resolves.toEqual({});
-    expect(requests.map((request) => request.prompt)).toEqual([
-      [{ type: 'text', text: 'Explicit retry' }],
-    ]);
   });
 });

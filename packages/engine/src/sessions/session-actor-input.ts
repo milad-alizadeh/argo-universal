@@ -13,6 +13,13 @@ type OpenSession = Extract<
 
 type SessionSource = { context: OpenSessionsInput; event: OpenSession };
 
+type CreationInput = Omit<
+  NewSessionInput,
+  'database' | 'runtimeDirectory' | 'sessionId'
+>;
+
+type ExistingInput = { kind: 'existing'; archive: boolean };
+
 const createAcpSessionDependencies = (
   context: OpenSessionsInput,
 ): AcpSessionDependencies => ({
@@ -22,7 +29,7 @@ const createAcpSessionDependencies = (
 
 const createSessionCreationInput = (
   event: Extract<OpenSessionsCommand, { type: 'sessions.create' }>,
-): Omit<NewSessionInput, 'database' | 'runtimeDirectory' | 'sessionId'> => ({
+): CreationInput => ({
   kind: 'new',
   projectId: event.projectId,
   projectPath: event.projectPath,
@@ -33,6 +40,11 @@ const createSessionCreationInput = (
   turnId: event.turnId,
   startedBySessionId: event.startedBySessionId,
 });
+
+const sessionInput = (event: OpenSession): CreationInput | ExistingInput =>
+  event.type === 'sessions.create'
+    ? createSessionCreationInput(event)
+    : { kind: 'existing', archive: event.type === 'sessions.archive' };
 
 export const createSessionActorInput = ({
   context,
@@ -46,7 +58,5 @@ export const createSessionActorInput = ({
   hooks: context.hooks,
   writer: context.writer,
   sessionId: event.sessionId,
-  ...(event.type === 'sessions.create'
-    ? createSessionCreationInput(event)
-    : { kind: 'existing', archive: event.type === 'sessions.archive' }),
+  ...sessionInput(event),
 });
