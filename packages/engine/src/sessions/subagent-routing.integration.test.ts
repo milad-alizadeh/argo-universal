@@ -136,6 +136,7 @@ async function expectLiveChildMessage(
   throw new Error('No live Subagent message');
 }
 
+// The restart budget includes ACP's five-second close deadline and two Engine starts.
 it('reads the stored Subagent Feed after restart without launching an Agent', async () => {
   const { host, sessionId } = await openAcpFeedSession(
     scenarios['subagent-foreground'],
@@ -164,7 +165,7 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
   expect(
     await restarted.caller.session.listAgents({ sessionId }),
   ).toMatchObject([{ sessionId: child.sessionId, state: 'idle' }]);
-});
+}, 15_000);
 
 it.each(['idle', 'cancelled'] as const)(
   'streams new child content while the parent Turn is %s',
