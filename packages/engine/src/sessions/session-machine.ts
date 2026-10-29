@@ -834,6 +834,11 @@ const sessionEntryOutcome = {
   },
 } as const;
 
+const acpOpeningFailure = {
+  ...sessionEntryOutcome.onError,
+  target: 'closing',
+} as const;
+
 const acpTurnOutcome = ({
   context,
 }: {
@@ -1079,15 +1084,7 @@ export const sessionMachine = sessionSetup.createMachine({
                     'finishAcpRegistration',
                   ],
                 },
-                onError: {
-                  target: 'closing',
-                  actions: {
-                    type: 'rememberOpenFailure',
-                    params: ({ event }): FailureParameters => ({
-                      error: event.error,
-                    }),
-                  },
-                },
+                onError: acpOpeningFailure,
               },
               on: {
                 'session.close': { target: 'closing' },
@@ -1119,15 +1116,7 @@ export const sessionMachine = sessionSetup.createMachine({
                     'discloseInterruption',
                   ],
                 },
-                onError: {
-                  target: 'closing',
-                  actions: {
-                    type: 'rememberOpenFailure',
-                    params: ({ event }): FailureParameters => ({
-                      error: event.error,
-                    }),
-                  },
-                },
+                onError: acpOpeningFailure,
               },
               on: {
                 'session.close': { target: 'closing' },
