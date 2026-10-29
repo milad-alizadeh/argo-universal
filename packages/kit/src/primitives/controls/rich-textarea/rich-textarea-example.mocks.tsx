@@ -66,9 +66,18 @@ export function RichTextareaExample({
 
 interface LateSource {
   source: SuggestionSource;
-  // Settles the promise the source gave for this query.
+  // Settles the promise the source gave for this query, or the one it is given later; never silently dropped.
   answer: (query: string, results: readonly ComposerSuggestion[]) => void;
 }
+
+// A result of a late source, and the name its row has.
+export const lateItem = (id: string): ComposerSuggestion => ({
+  id,
+  label: `Late ${id}`,
+  insert: `${id} `,
+});
+
+export const lateName = (id: string): string => `Late ${id}`;
 
 type Settle = (results: readonly ComposerSuggestion[]) => void;
 
@@ -78,13 +87,25 @@ type Settle = (results: readonly ComposerSuggestion[]) => void;
  */
 export function lateSource(title: string): LateSource {
   const settlers = new Map<string, Settle>();
+  const answers = new Map<string, readonly ComposerSuggestion[]>();
 
+  // An answer given before its query is asked waits for it, so no answer is lost.
   const query = (text: string): Promise<readonly ComposerSuggestion[]> =>
-    new Promise((settle) => settlers.set(text, settle));
+    new Promise((settle) => {
+      const early = answers.get(text);
+
+      if (early) settle(early);
+      else settlers.set(text, settle);
+    });
 
   return {
     source: { id: title, title, query },
-    answer: (text, results) => settlers.get(text)?.(results),
+    answer: (text, results) => {
+      const settle = settlers.get(text);
+
+      if (settle) settle(results);
+      else answers.set(text, results);
+    },
   };
 }
 

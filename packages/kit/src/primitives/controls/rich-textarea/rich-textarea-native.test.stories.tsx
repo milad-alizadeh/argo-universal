@@ -7,6 +7,8 @@ import { userEvent } from 'vitest/browser';
 import {
   exampleLabel,
   follows,
+  lateItem,
+  lateName,
   lateSource,
 } from './rich-textarea-example.mocks';
 import { suggestionsRichTextarea } from './rich-textarea-fixtures';
@@ -18,7 +20,6 @@ import {
   twoSourcesRichTextarea,
 } from './rich-textarea-sources-fixtures';
 import { SuggestionListHost } from './rich-textarea-suggestion-list';
-import type { ComposerSuggestion } from './rich-textarea-suggestions';
 import { RichTextarea } from './rich-textarea.native';
 
 // The phone drawing, drawn on the web preview: a controlled field that keeps its draft.
@@ -173,12 +174,6 @@ export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
   },
 };
 
-const lateItem = (id: string): ComposerSuggestion => ({
-  id,
-  label: `Late ${id}`,
-  insert: `${id} `,
-});
-
 // Each story owns its late source, so no answer reaches another story.
 const joining = lateSource('Late');
 
@@ -191,10 +186,10 @@ export const ASourceThatAnswersLateJoinsWithoutHidingTheRest: Story = {
     );
     await canvas.findByRole('button', sourceFirstOption);
     await expect(
-      canvas.queryByRole('button', { name: 'Late late-1' }),
+      canvas.queryByRole('button', { name: lateName('late-1') }),
     ).not.toBeInTheDocument();
     joining.answer('', [lateItem('late-1')]);
-    await canvas.findByRole('button', { name: 'Late late-1' });
+    await canvas.findByRole('button', { name: lateName('late-1') });
     await expect(
       canvas.getByRole('button', sourceFirstOption),
     ).toBeInTheDocument();
@@ -213,9 +208,9 @@ export const AnAnswerForAQueryThatHasChangedIsIgnored: Story = {
     await userEvent.keyboard('b');
     changing.answer('a', [lateItem('stale')]);
     changing.answer('ab', [lateItem('fresh')]);
-    await canvas.findByRole('button', { name: 'Late fresh' });
+    await canvas.findByRole('button', { name: lateName('fresh') });
     await expect(
-      canvas.queryByRole('button', { name: 'Late stale' }),
+      canvas.queryByRole('button', { name: lateName('stale') }),
     ).not.toBeInTheDocument();
   },
 };

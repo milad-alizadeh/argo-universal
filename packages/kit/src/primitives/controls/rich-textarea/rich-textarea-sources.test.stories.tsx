@@ -6,6 +6,8 @@ import {
   RichTextareaExample,
   exampleLabel,
   follows,
+  lateItem,
+  lateName,
   lateSource,
 } from './rich-textarea-example.mocks';
 import {
@@ -13,7 +15,6 @@ import {
   optionsSource,
   twoSourcesRichTextarea,
 } from './rich-textarea-sources-fixtures';
-import type { ComposerSuggestion } from './rich-textarea-suggestions';
 
 const firstOptionName = '/first First option';
 
@@ -36,14 +37,6 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-const lateItem = (id: string): ComposerSuggestion => ({
-  id,
-  label: `Late ${id}`,
-  insert: `${id} `,
-});
-
-const lateName = (id: string): string => `Late ${id}`;
 
 const optionNames = (): (string | null)[] =>
   screen.getAllByRole('option').map((option) => option.textContent);
