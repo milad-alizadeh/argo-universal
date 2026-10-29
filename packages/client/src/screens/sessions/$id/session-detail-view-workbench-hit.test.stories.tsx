@@ -23,22 +23,30 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const VisibleWorkbenchLeavesBothFeedGuttersScrollable: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1920),
-  play: async ({ canvas }) => {
-    const scroll = await canvas.findByTestId('feed-scroll');
-    await waitFor(() =>
-      expect(canvas.getByTestId('desktop-workbench')).toBeVisible(),
-    );
-    // A real wheel over the outer gutter must reach the pane's scroll viewport.
-    const view = scroll.getBoundingClientRect();
-    await waitFor(async () => await expect(scrolledToEnd(scroll)).toBe(true));
-    await markSettledMiddleOfView(scroll);
+function gutterWheel(edge: 'left' | 'right'): Story {
+  return {
+    beforeEach: (): Promise<void> => settleLayout(1920),
+    play: async ({ canvas }) => {
+      const scroll = await canvas.findByTestId('feed-scroll');
+      await waitFor(() =>
+        expect(canvas.getByTestId('desktop-workbench')).toBeVisible(),
+      );
+      // A real wheel over the outer gutter must reach the pane's scroll viewport.
+      const view = scroll.getBoundingClientRect();
+      await waitFor(async () => await expect(scrolledToEnd(scroll)).toBe(true));
+      await markSettledMiddleOfView(scroll);
 
-    for (const x of [view.left + 12, view.right - 12])
-      await wheelInGutter(scroll, x);
-  },
-};
+      await wheelInGutter(
+        scroll,
+        edge === 'left' ? view.left + 12 : view.right - 12,
+      );
+    },
+  };
+}
+
+export const LeftFeedGutterStaysScrollable = gutterWheel('left');
+
+export const RightFeedGutterStaysScrollable = gutterWheel('right');
 
 // A short wheel gesture stops tail-follow, then reads older content from either outer gutter.
 async function wheelInGutter(scroll: HTMLElement, x: number): Promise<void> {
