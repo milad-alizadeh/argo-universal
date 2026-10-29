@@ -40,12 +40,10 @@ it('identifies a renamed file and its previous path', async () => {
 it('returns a unified patch for a renamed file', async () => {
   const { directory, checkout } = await renamedCheckout();
 
-  const diff = await readCheckoutDiff(
-    checkout,
-    directory,
-    { type: 'uncommitted' },
-    'new.txt',
-  );
+  const diff = await readCheckoutDiff(checkout, directory, {
+    comparison: { type: 'uncommitted' },
+    path: 'new.txt',
+  });
 
   expect(diff?.patch).toContain('rename to new.txt');
 });
@@ -54,11 +52,9 @@ it('refuses a path outside the changed file list', async () => {
   const { directory, checkout } = await renamedCheckout();
 
   expect(
-    await readCheckoutDiff(
-      checkout,
-      directory,
-      { type: 'uncommitted' },
-      '../old.txt',
-    ),
+    await readCheckoutDiff(checkout, directory, {
+      comparison: { type: 'uncommitted' },
+      path: '../old.txt',
+    }),
   ).toBeNull();
 });

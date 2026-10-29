@@ -60,12 +60,10 @@ it('shows the working file once when it was removed from the index', async () =>
   expect(changes.summary.files).toBe(1);
   expect(
     (
-      await readCheckoutDiff(
-        directory,
-        directory,
-        { type: 'uncommitted' },
-        'kept.txt',
-      )
+      await readCheckoutDiff(directory, directory, {
+        comparison: { type: 'uncommitted' },
+        path: 'kept.txt',
+      })
     )?.patch,
   ).toContain('+kept');
 });

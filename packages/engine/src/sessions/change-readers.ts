@@ -63,8 +63,7 @@ export async function readSessionDiff(
   const result = await readCheckoutDiff(
     session.checkout.path,
     readProjectPath(deps.database, session.projectId),
-    gitComparison(input.comparison),
-    input.path,
+    { comparison: gitComparison(input.comparison), path: input.path },
   );
 
   if (!result)
