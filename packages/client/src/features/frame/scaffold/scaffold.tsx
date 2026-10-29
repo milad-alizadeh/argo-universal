@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 import { contentFill, ContentWidthProvider } from '#lib/product/content-layout';
 import { FramePane } from '../components/frame-pane/frame-pane';
 import {
@@ -50,6 +50,13 @@ export function ScaffoldSidebar({
   );
 }
 
+// Replacing the primary view hides it immediately, before pane motion can cross the cards.
+function pageViewport({ framed, layout }: ScaffoldParts): ViewProps {
+  const hidden = framed && layout.workbench.state === 'dedicated';
+
+  return { className: 'flex-1 flex-row', style: { opacity: Number(!hidden) } };
+}
+
 export type ScaffoldPageProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
 // A page: beside the list on a wide window, the whole window on a compact or medium one; the tree is the same at each, so the page never remounts. Its content draws wide from the column the Frame placed.
@@ -60,7 +67,7 @@ export function ScaffoldPage({
   const contentWide = usePageContentWide(parts);
 
   return (
-    <View className="flex-1 flex-row">
+    <View {...pageViewport(parts)}>
       <FramePane testID="desktop-detail" {...pagePlacement(parts)}>
         <ContentWidthProvider wide={contentWide}>
           <View className={`${contentFill} overflow-hidden`}>{children}</View>
