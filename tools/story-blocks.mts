@@ -1,10 +1,24 @@
-import { group, startOf, storyExports } from './story-file.mts';
+/*
+ * The bracket-balancing the story reader and the props gate share: it reads a source as text, so
+ * a snippet that does not parse whole still has a top level. Only `story-file.mts` and
+ * `story-gate-props.mts` import it.
+ */
 
-export type Sources = ReadonlyMap<string, string>;
+// An object an args entry holds, and how many of its top-level keys carry data.
+export type ArgsObject = { key: string; dataKeys: number };
 
-export type ArgsBlock = { owner: string; body: string };
+export type ArgsBlock = {
+  owner: string;
+  keys: string[];
+  objects: ArgsObject[];
+};
 
-export type Lookup = { file: string; source: string; sources: Sources };
+type Owner = { name: string; start: number };
+
+const startOf = (match: RegExpMatchArray): number => match.index ?? 0;
+
+const group = (match: RegExpMatchArray, index: number): string =>
+  match[index] ?? '';
 
 const blockComment = /\/\*[\s\S]*?\*\//g;
 
@@ -24,6 +38,8 @@ const innermostGroup = /[{[(][^{}[\]()]*[}\])]/g;
  * a key, its colon and its opening brace together, so one optional space is all a match needs.
  */
 const keyToken = /\b([A-Za-z_$][\w$]*)\??:/g;
+
+const objectArg = /\b([A-Za-z_$][\w$]*): ?\{/g;
 
 const argsOpens = /\bargs: ?\{/g;
 
@@ -70,7 +86,7 @@ export const topLevelKeys = (body: string): string[] => keysIn(flattened(body));
  * The keys that carry data. ADR-0040 decision 10 keeps a fixture plain data and leaves callback
  * spies in the story file, so an object made only of spies is already where the ADR wants it.
  */
-export const dataKeys = (body: string): string[] =>
+const dataKeys = (body: string): string[] =>
   keysIn(flattened(body).replace(callbackEntry, ''));
 
 const blockStep = (char: string): number =>
@@ -92,13 +108,51 @@ const blockFrom = (text: string, opens: number): string => {
 export const blockAfter = (text: string, match: RegExpMatchArray): string =>
   blockFrom(text, startOf(match) + match[0].length - 1);
 
-// The story an args block belongs to, or the meta, whose args reach every story in the file.
-const ownerAt = (text: string, cursor: number): string =>
-  storyExports(text).findLast(({ start }): boolean => start < cursor)?.name ??
-  'meta';
+/*
+ * Only the outermost object of an args entry is read: a nested one moves with it when the entry
+ * becomes an import, so naming them all would send an author after the same fix three times.
+ */
+const outermostObjects = (body: string): ArgsObject[] => {
+  const found: ArgsObject[] = [];
+  let consumed = 0;
 
-export const argsBlocks = (text: string): ArgsBlock[] =>
-  [...text.matchAll(argsOpens)].map((match): ArgsBlock => ({
-    owner: ownerAt(text, startOf(match)),
-    body: blockAfter(text, match),
-  }));
+  for (const match of body.matchAll(objectArg)) {
+    if (startOf(match) < consumed) continue;
+
+    const inner = blockAfter(body, match);
+
+    found.push({ key: group(match, 1), dataKeys: dataKeys(inner).length });
+    consumed = startOf(match) + match[0].length + inner.length;
+  }
+
+  return found;
+};
+
+// The story an args block belongs to, or the meta, whose args reach every story in the file.
+const ownerAt = (owners: readonly Owner[], cursor: number): string =>
+  owners.findLast(({ start }): boolean => start < cursor)?.name ?? 'meta';
+
+const argsBlockAt = (
+  text: string,
+  match: RegExpMatchArray,
+  owners: readonly Owner[],
+): ArgsBlock => {
+  const body = blockAfter(text, match);
+
+  return {
+    owner: ownerAt(owners, startOf(match)),
+    keys: topLevelKeys(body),
+    objects: outermostObjects(body),
+  };
+};
+
+export const argsBlocks = (
+  source: string,
+  owners: readonly Owner[],
+): ArgsBlock[] => {
+  const text = bare(source);
+
+  return [...text.matchAll(argsOpens)].map((match): ArgsBlock =>
+    argsBlockAt(text, match, owners),
+  );
+};

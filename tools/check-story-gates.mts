@@ -1,4 +1,4 @@
-import { loadStoryFiles } from './story-file.mts';
+import { loadSources, loadStoryFiles } from './story-file.mts';
 import { gateProblems, type Sources } from './story-gate-rules.mts';
 
 const files = loadStoryFiles();
@@ -8,7 +8,7 @@ const files = loadStoryFiles();
  * the component may take them from, so every TypeScript source is on hand before a story is read.
  */
 const sources: Sources = new Map(
-  loadStoryFiles(['*.ts', '*.tsx', '*.mts']).map(
+  loadSources(['*.ts', '*.tsx', '*.mts']).map(
     ({ file, source }): [string, string] => [file, source],
   ),
 );

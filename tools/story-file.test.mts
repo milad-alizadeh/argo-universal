@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { namedImports, readStory } from './story-file.mts';
+import { declaresKey, namedImports, readStory } from './story-file.mts';
 
 const file = 'packages/kit/src/primitives/actions/button/button.stories.tsx';
 
@@ -65,6 +65,56 @@ describe('reading a story file', (): void => {
   it('reads the imports of a component file the same way', (): void => {
     expect(namedImports("import { A } from './a';")).toEqual([
       { names: ['A'], from: './a' },
+    ]);
+  });
+});
+
+describe('what a story file declares', (): void => {
+  it('reads a named import written across lines', (): void => {
+    const source =
+      "import {\n  loading,\n  idle,\n} from './button-fixtures';\n";
+
+    expect(read(source).imports).toEqual([
+      { names: ['loading', 'idle'], from: './button-fixtures' },
+    ]);
+  });
+
+  it('says whether the meta sets a key on a line of its own', (): void => {
+    const { meta } = read(
+      "const meta = {\n  title: 'A',\n  argTypes: {},\n  // render: nothing\n} satisfies Meta;",
+    );
+
+    expect([declaresKey(meta, 'argTypes'), declaresKey(meta, 'args')]).toEqual([
+      true,
+      false,
+    ]);
+  });
+});
+
+describe('the args blocks of a story file', (): void => {
+  const source = `const meta = {
+  args: { size: 'm', note: '}' },
+} satisfies Meta;
+
+export const Busy: Story = {
+  args: { onPress: fn(), state: { a: 1, b: 2, c: 3, d: { e: 1 } }, tone: 'x' },
+};
+`;
+
+  it('owns the meta args by the meta and the others by their story', (): void => {
+    expect(read(source).argsBlocks.map(({ owner }): string => owner)).toEqual([
+      'meta',
+      'Busy',
+    ]);
+  });
+
+  it('lists the top-level keys, ignoring braces inside strings', (): void => {
+    expect(read(source).argsBlocks[0]?.keys).toEqual(['size', 'note']);
+  });
+
+  it('counts the data keys of the outermost objects, not callbacks or nested ones', (): void => {
+    expect(read(source).argsBlocks[1]?.objects).toEqual([
+      { key: 'state', dataKeys: 4 },
     ]);
   });
 });

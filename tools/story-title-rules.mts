@@ -79,27 +79,21 @@ const expectedProblem = (
     : prefixProblem(file, title, expected);
 };
 
-// The meta's component says whether the file draws its folder's component or its own.
-const titleProblem = (
-  { file, source }: StoryFile,
-  title: string,
-  titles: StoryTitles,
-): string[] =>
-  expectedProblem(
-    file,
-    title,
-    expectedTitle(file, readStory({ file, source }).component, titles),
-  );
-
 const isPlacedStory = (file: string): boolean =>
   storyPath.test(file) && packageOf(file) !== undefined;
 
 const metaTitleProblem = (story: StoryFile, titles: StoryTitles): string[] => {
-  const title = readStory(story).title;
+  const read = readStory(story);
 
-  return title === undefined
-    ? [`${story.file}: the story meta needs a literal title`]
-    : titleProblem(story, title, titles);
+  if (read.title === undefined)
+    return [`${story.file}: the story meta needs a literal title`];
+
+  // The meta's component says whether the file draws its folder's component or its own.
+  return expectedProblem(
+    story.file,
+    read.title,
+    expectedTitle(story.file, read.component, titles),
+  );
 };
 
 /*

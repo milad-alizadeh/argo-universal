@@ -1,23 +1,14 @@
 import {
+  type ArgsBlock,
   declaresKey,
-  group,
   readStory,
-  startOf,
   type StoryRead,
   storyPath,
   testStory,
 } from './story-file.mts';
-import {
-  argsBlocks,
-  bare,
-  blockAfter,
-  dataKeys,
-  type ArgsBlock,
-  type Sources,
-} from './story-gate-parse.mts';
-import { undeclaredArgProblems } from './story-gate-props.mts';
+import { type Sources, undeclaredArgProblems } from './story-gate-props.mts';
 
-export type { Sources } from './story-gate-parse.mts';
+export type { Sources } from './story-gate-props.mts';
 
 const checkedPackage = /^packages\/(?:kit|client)\/src\//;
 
@@ -25,8 +16,6 @@ const optsOutOfDocs = /'!autodocs'/;
 
 // A story named for the prop that drives it, rather than for what the component then looks like.
 const namedForAProp = /^(?:With|Without)[A-Z]|(?:True|False)$/;
-
-const objectArg = /\b([A-Za-z_$][\w$]*): ?\{/g;
 
 /*
  * Three keys is where an object stops being a bundle of scalars a prop needs anyway — a size, a
@@ -65,38 +54,17 @@ const storyNameProblems = (file: string, read: StoryRead): string[] =>
 const inlineProblem = (file: string, block: ArgsBlock, key: string): string =>
   `${file}: story \`${block.owner}\` spells out \`${key}\` inline. Export that state from \`<child>-fixtures.ts\` beside the child, one export per story, and import it here, so the parent and the child keep one definition of the state.`;
 
-/*
- * Only the outermost object of an args entry is read: a nested one moves with it when the entry
- * becomes an import, so naming them all would send an author after the same fix three times.
- */
-const outermostObjects = (body: string): RegExpMatchArray[] => {
-  const found: RegExpMatchArray[] = [];
-  let consumed = 0;
-
-  for (const match of body.matchAll(objectArg)) {
-    if (startOf(match) < consumed) continue;
-
-    found.push(match);
-    consumed =
-      startOf(match) + match[0].length + blockAfter(body, match).length;
-  }
-
-  return found;
-};
-
 const inlineIn = (file: string, block: ArgsBlock): string[] =>
-  outermostObjects(block.body).flatMap((match): string[] =>
-    dataKeys(blockAfter(block.body, match)).length < fixtureKeyCount
-      ? []
-      : [inlineProblem(file, block, group(match, 1))],
+  block.objects.flatMap(({ key, dataKeys }): string[] =>
+    dataKeys < fixtureKeyCount ? [] : [inlineProblem(file, block, key)],
   );
 
 /*
  * ADR-0040 decision 5: a child's state arrives as the child's own exported fixture, so the two
  * cannot drift. Callbacks stay inline, which they do here for free: a spy is not an object literal.
  */
-const inlineFixtureProblems = (file: string, source: string): string[] =>
-  argsBlocks(bare(source)).flatMap((block): string[] => inlineIn(file, block));
+const inlineFixtureProblems = (file: string, read: StoryRead): string[] =>
+  read.argsBlocks.flatMap((block): string[] => inlineIn(file, block));
 
 export const gateProblems = (
   file: string,
@@ -110,7 +78,7 @@ export const gateProblems = (
   return [
     ...argTypesProblems(file, read),
     ...storyNameProblems(file, read),
-    ...undeclaredArgProblems({ file, source, sources }),
-    ...inlineFixtureProblems(file, source),
+    ...undeclaredArgProblems({ file, read, sources }),
+    ...inlineFixtureProblems(file, read),
   ];
 };

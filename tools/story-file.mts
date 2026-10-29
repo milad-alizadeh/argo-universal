@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { type ArgsBlock, argsBlocks, bare } from './story-blocks.mts';
 import { root, trackedFiles } from './tracked-files.mts';
 
 /*
@@ -14,6 +15,8 @@ export type StoryFile = { file: string; source: string };
 
 export type StoryExport = { name: string; start: number; headerEnd: number };
 
+export type { ArgsBlock } from './story-blocks.mts';
+
 export type NamedImport = { names: string[]; from: string };
 
 export type StoryRead = {
@@ -23,6 +26,8 @@ export type StoryRead = {
   component: string | undefined;
   exports: StoryExport[];
   imports: NamedImport[];
+  /* Each `args: {` in the file, with the story it belongs to ('meta' for the meta's own). */
+  argsBlocks: ArgsBlock[];
 };
 
 export const storySuffix = '.stories.tsx';
@@ -48,13 +53,13 @@ const namedImport =
 
 const identifier = /[\w$]+/g;
 
-export const startOf = (match: RegExpMatchArray): number => match.index ?? 0;
+const startOf = (match: RegExpMatchArray): number => match.index ?? 0;
 
-export const group = (match: RegExpMatchArray, index: number): string =>
+const group = (match: RegExpMatchArray, index: number): string =>
   match[index] ?? '';
 
 // Sliced rather than matched: a meta holds nested braces, which a regex pays for in backtracking.
-export const metaOf = (source: string): string => {
+const metaOf = (source: string): string => {
   const opens = source.indexOf(metaOpens);
 
   if (opens < 0) return '';
@@ -68,7 +73,7 @@ export const metaOf = (source: string): string => {
 export const declaresKey = (body: string, key: string): boolean =>
   new RegExp(`^[ \\t]*${key}:`, 'm').test(body);
 
-export const storyExports = (source: string): StoryExport[] =>
+const storyExports = (source: string): StoryExport[] =>
   [...source.matchAll(exportHeader)].map((match): StoryExport => ({
     name: group(match, 1),
     start: startOf(match),
@@ -85,24 +90,29 @@ export const namedImports = (source: string): NamedImport[] =>
 
 export const readStory = ({ source }: StoryFile): StoryRead => {
   const meta = metaOf(source);
+  const exports = storyExports(source);
 
   return {
     meta,
     title: metaTitle.exec(meta)?.[1],
     component: metaComponent.exec(meta)?.[1],
-    exports: storyExports(source),
+    exports,
     imports: namedImports(source),
+    argsBlocks: argsBlocks(source, storyExports(bare(source))),
   };
 };
 
 /*
- * Every story file in the working tree, tracked or not. A story written but not yet `git add`ed is
- * checked as the commit will hold it, so a gate cannot pass locally and fail once the file is added.
+ * Every file the pathspecs match in the working tree, tracked or not. A story written but not yet
+ * `git add`ed is checked as the commit will hold it, so a gate cannot pass locally and fail once
+ * the file is added.
  */
-export const loadStoryFiles = (
-  pathspecs: readonly string[] = [`*${storySuffix}`],
-): StoryFile[] =>
+export const loadSources = (pathspecs: readonly string[]): StoryFile[] =>
   trackedFiles(pathspecs, { untracked: true }).map((file): StoryFile => ({
     file,
     source: readFileSync(resolve(root, file), 'utf8'),
   }));
+
+export const loadStoryFiles = (
+  pathspecs: readonly string[] = [`*${storySuffix}`],
+): StoryFile[] => loadSources(pathspecs);
