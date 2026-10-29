@@ -1,6 +1,7 @@
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
 import {
   RichTextarea,
+  type SuggestionResource,
   SuggestionListHost,
 } from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
@@ -92,12 +93,23 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
   };
 }
 
+// The draft with its resources, and no `resources` key when there are none.
+function withResources(
+  { resources: _previous, ...draft }: ComposerDraft,
+  resources: readonly SuggestionResource[],
+): ComposerDraft {
+  return resources.length > 0 ? { ...draft, resources } : draft;
+}
+
 function ComposerText(layout: TextLayout): React.JSX.Element {
-  const commands = layout.props.slashCommands;
+  const { slashCommands, suggestionSources } = layout.props;
 
   const suggestions = useMemo(
-    () => (commands?.length ? [slashCommandSource(commands)] : []),
-    [commands],
+    () => [
+      ...(slashCommands?.length ? [slashCommandSource(slashCommands)] : []),
+      ...(suggestionSources ?? []),
+    ],
+    [slashCommands, suggestionSources],
   );
 
   return <RichTextarea {...textInputProps(layout)} suggestions={suggestions} />;
@@ -121,6 +133,8 @@ function textInputProps({
     value: props.draft.text,
     disabled: inactive,
     onChangeText: (text) => props.onDraftChange({ ...props.draft, text }),
+    onResourcesChange: (resources) =>
+      props.onDraftChange(withResources(props.draft, resources)),
     onSubmit: send,
   };
 }

@@ -164,7 +164,10 @@ async function uploadDraftAsPrompt(
         .catch((): undefined => undefined)
     : [];
 
-  return blobs && draftPrompt(sent.text, uploadedAttachments(uploads, blobs));
+  return (
+    blobs &&
+    draftPrompt(sent.text, uploadedAttachments(uploads, blobs), sent.resources)
+  );
 }
 
 function uploadedAttachments(

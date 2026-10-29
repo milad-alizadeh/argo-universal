@@ -18,6 +18,28 @@ const notes = {
 };
 
 describe('startingFeed', () => {
+  it('shows a chosen suggestion resource beside the text', () => {
+    const resource = {
+      type: 'resource_link' as const,
+      name: 'ITEM-7',
+      uri: 'example://items/7',
+    };
+
+    const feed = startingFeed(
+      { text: 'See ITEM-7 ', attachments: [], resources: [resource] },
+      1_000,
+    );
+
+    expect(feed.items).toEqual([
+      {
+        type: 'row',
+        row: expect.objectContaining({
+          content: [{ type: 'text', text: 'See ITEM-7 ' }, resource],
+        }),
+      },
+    ]);
+  });
+
   it('shows the sent prompt with Working since it was sent', () => {
     const feed = startingFeed(
       { text: 'Fix the flaky login test', attachments: [] },

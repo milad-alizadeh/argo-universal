@@ -1,4 +1,8 @@
 import type { SlashCommand } from '@repo/contracts';
+import type {
+  SuggestionResource,
+  SuggestionSource,
+} from '@repo/kit/primitives/controls/rich-textarea';
 import type { ReactNode } from 'react';
 import type { PermissionRequestProps } from '#features/requests';
 import type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
@@ -9,11 +13,15 @@ import type { WrittenPlanValue } from '../written-plan/written-plan';
 export interface ComposerDraft {
   text: string;
   attachments: ComposerAttachment[];
+  // The chosen suggestions' resources whose text is still written; left out when there are none.
+  resources?: readonly SuggestionResource[];
 }
 
 export interface ComposerProps {
   draft: ComposerDraft;
   slashCommands?: readonly SlashCommand[];
+  // Sources after the Agent's Slash commands, in the order their results are grouped.
+  suggestionSources?: readonly SuggestionSource[];
   permissionRequest?: PermissionRequestProps;
   // A Session's sign-in or launch callout, in the request's tray; a request takes its place while one is open.
   callout?: ReactNode;

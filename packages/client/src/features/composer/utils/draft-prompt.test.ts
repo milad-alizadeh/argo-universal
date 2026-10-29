@@ -24,6 +24,26 @@ describe('draftPrompt', () => {
     ]);
   });
 
+  it('sends each chosen suggestion resource after the text, before the uploads', () => {
+    const resource = {
+      type: 'resource_link' as const,
+      name: 'Item 7',
+      uri: 'example://items/7',
+    };
+
+    expect(
+      draftPrompt(
+        'See ITEM-7 ',
+        [{ name: 'screenshot.png', blob: screenshot }],
+        [resource],
+      ),
+    ).toEqual([
+      { type: 'text', text: 'See ITEM-7 ' },
+      resource,
+      { type: 'image', mimeType: 'image/png', blob: screenshot },
+    ]);
+  });
+
   it('leaves out blank text', () => {
     expect(
       draftPrompt(' \n', [{ name: 'screenshot.png', blob: screenshot }]),

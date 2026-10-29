@@ -13,9 +13,6 @@ it.each([
   { checkout: { type: 'worktree' } },
   { checkout: 'main' },
   { configOptions: [{ id: 'model', value: 'small' }] },
-  {
-    prompt: [{ type: 'resource_link', name: 'File', uri: 'file:///repo/file' }],
-  },
 ])(
   'rejects incomplete or obsolete New Session inputs: %j',
   (invalidFields): void => {
@@ -30,6 +27,21 @@ it('accepts an empty Session creation before its first prompt', (): void => {
   expect(
     SessionNewInput.parse({ ...validNewSessionInput, prompt: [] }).prompt,
   ).toEqual([]);
+});
+
+it('accepts a link with no uploaded file, as a chosen suggestion carries', (): void => {
+  const link = {
+    type: 'resource_link',
+    name: 'Item 7',
+    uri: 'example://items/7',
+  };
+
+  expect(
+    SessionNewInput.parse({
+      ...validNewSessionInput,
+      prompt: [{ type: 'text', text: 'ITEM-7 ' }, link],
+    }).prompt,
+  ).toEqual([{ type: 'text', text: 'ITEM-7 ' }, link]);
 });
 
 it('accepts a file uploaded from the device', (): void => {

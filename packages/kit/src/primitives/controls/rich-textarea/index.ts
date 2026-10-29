@@ -7,5 +7,6 @@ export { type RichTextareaProps } from './rich-textarea-props';
 export type {
   ComposerSuggestion,
   SlashCommandEntry,
+  SuggestionResource,
   SuggestionSource,
 } from './rich-textarea-suggestions';
