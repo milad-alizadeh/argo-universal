@@ -2,12 +2,8 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, waitFor } from 'storybook/test';
-import { cdp, userEvent as browserUser } from 'vitest/browser';
-import {
-  markMiddleOfView,
-  markSettledMiddleOfView,
-  scrolledToEnd,
-} from '../../../features/feed/components/feed/feed-reader.mocks';
+import { gesture } from '../../../../mocks/feed/gutter-wheel.test.mocks';
+import { scrolledToEnd } from '../../../features/feed/components/feed/feed-reader.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { longSession } from './session-detail-view.mocks';
 
@@ -23,7 +19,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function fullViewport(width: number): Story {
+function fullViewport(width: number, side: 'left' | 'right'): Story {
   return {
     play: async ({ canvas }) => {
       await settleLayout(width);
@@ -52,49 +48,15 @@ function fullViewport(width: number): Story {
       });
       // A real wheel over the outer gutter must reach the pane's scroll viewport.
       await waitFor(async () => await expect(scrolledToEnd(scroll)).toBe(true));
-      await markSettledMiddleOfView(scroll);
-      const view = scroll.getBoundingClientRect();
-
-      for (const x of [view.left + 12, view.right - 12])
-        await wheelInGutter(scroll, x);
+      await gesture(scroll, side);
     },
   };
 }
 
-// A short wheel gesture stops tail-follow, then reads older content from either outer gutter.
-async function wheelInGutter(scroll: HTMLElement, x: number): Promise<void> {
-  const view = scroll.getBoundingClientRect();
-  const before = scroll.scrollTop;
-  const marked = markMiddleOfView(scroll);
-  const point = { x, y: view.top + view.height / 2 };
-  await browserUser.hover(scroll, {
-    position: { x: x - view.left, y: view.height / 2 },
-  });
+export const PhoneLeftGutter = fullViewport(390, 'left');
 
-  for (let tick = 0; tick < 3; tick++) {
-    await cdp().send('Input.dispatchMouseEvent', {
-      type: 'mouseWheel',
-      modifiers: 0,
-      ...point,
-      deltaX: 0,
-      deltaY: -250,
-    });
-    await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => resolve()),
-    );
-  }
+export const PhoneRightGutter = fullViewport(390, 'right');
 
-  await waitFor(async () => {
-    await expect(scroll.scrollTop).toBeLessThan(before - 2);
-    const current = markMiddleOfView(scroll);
-    // Virtualization can unmount the earlier mark after the wheel reveals older rows.
-    await expect(
-      current.element !== marked.element ||
-        Math.abs(current.top - marked.top) > 2,
-    ).toBe(true);
-  });
-}
+export const DesktopLeftGutter = fullViewport(1920, 'left');
 
-export const PhoneViewport = fullViewport(390);
-
-export const WideViewport = fullViewport(1920);
+export const DesktopRightGutter = fullViewport(1920, 'right');
