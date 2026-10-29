@@ -32,7 +32,10 @@ export const startAcpEngine = async (
   scenario: ScriptedScenario & { autoExit?: boolean } & Partial<
       Pick<
         EngineInput,
-        'fetchAgents' | 'caffeinate' | 'operationWaitClock' | 'commandsWaitMs'
+        | 'fetchAgents'
+        | 'caffeinate'
+        | 'operationWaitClock'
+        | 'slashCommandsWaitMs'
       >
     > &
     Pick<
@@ -74,7 +77,7 @@ export const startAcpEngine = async (
     caffeinate: scenario.caffeinate,
     operationWaitClock: scenario.operationWaitClock,
     // Most tests have Agents that send no list; they must not wait for one.
-    commandsWaitMs: scenario.commandsWaitMs ?? 0,
+    slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
     fixtureAgents: [agentIds].flat().map(createAgentMetadata),
     acp: {
       ...agent,

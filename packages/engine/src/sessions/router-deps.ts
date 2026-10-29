@@ -17,7 +17,7 @@ export interface SessionRouterDeps extends Pick<
   createId: () => string;
   sessionCommandSignal?: AbortSignal;
   // Overrides how long New Session discovery waits for Slash commands (tests).
-  commandsWaitMs?: number;
+  slashCommandsWaitMs?: number;
   // Plugin Hooks on starting a Session and submitting a prompt (ADR-0027).
   hooks: CoreHooks;
 }

@@ -4,7 +4,7 @@ import { slashCommandsUpdate } from '@repo/mocks/agent/slash-commands-update';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
-import { commandsWaitMs } from './discovered-commands';
+import { slashCommandsWaitMs } from './discovered-slash-commands';
 
 const owner = {
   agent: emptySessionInput.agent,
@@ -70,7 +70,7 @@ async function discoverWith(
 }
 
 it('streams commands an Agent reports after New Session selects it', async () => {
-  const host = await startAcpEngine({ steps: [], commandsWaitMs });
+  const host = await startAcpEngine({ steps: [], slashCommandsWaitMs });
   const stream = await discoverWith(host, [review]);
 
   expect(await nextWithCommands(stream)).toMatchObject({ commands: [review] });
@@ -106,7 +106,7 @@ it('streams commands an Agent reports before its options are read with the optio
 });
 
 it('streams the saved commands first when New Session opens again', async () => {
-  const host = await startAcpEngine({ steps: [], commandsWaitMs });
+  const host = await startAcpEngine({ steps: [], slashCommandsWaitMs });
   const first = await discoverWith(host, [review]);
   await nextWithCommands(first);
   await first.return?.();
@@ -134,7 +134,7 @@ const commandsUpdate = (
 it('keeps a live Session’s commands when a discovery that started earlier reports others', async () => {
   const host = await startAcpEngine({
     steps: [],
-    commandsWaitMs,
+    slashCommandsWaitMs,
     responses: {
       'session/new': [
         { result: { sessionId: 'actual' } },
@@ -181,7 +181,7 @@ it('keeps a live Session’s commands when a discovery that started earlier repo
 });
 
 it('tells an Agent that reported nothing from an empty list', async () => {
-  const silent = await startAcpEngine({ steps: [], commandsWaitMs });
+  const silent = await startAcpEngine({ steps: [], slashCommandsWaitMs });
 
   const silentStream = (await silent.caller.session.agentOptions(owner))[
     Symbol.asyncIterator
@@ -190,7 +190,7 @@ it('tells an Agent that reported nothing from an empty list', async () => {
   expect(await nextReady(silentStream)).toMatchObject({ commands: null });
   await silentStream.return?.();
 
-  const empty = await startAcpEngine({ steps: [], commandsWaitMs });
+  const empty = await startAcpEngine({ steps: [], slashCommandsWaitMs });
   const emptyStream = await discoverWith(empty, []);
 
   expect(await nextWithCommands(emptyStream)).toMatchObject({ commands: [] });
@@ -198,7 +198,7 @@ it('tells an Agent that reported nothing from an empty list', async () => {
 });
 
 it('streams the saved commands first after the Engine restarts', async () => {
-  const before = await startAcpEngine({ steps: [], commandsWaitMs });
+  const before = await startAcpEngine({ steps: [], slashCommandsWaitMs });
   const stream = await discoverWith(before, [review]);
 
   await nextWithCommands(stream);
@@ -208,7 +208,7 @@ it('streams the saved commands first after the Engine restarts', async () => {
   const after = await startAcpEngine({
     steps: [],
     restartOver: before.home,
-    commandsWaitMs,
+    slashCommandsWaitMs,
   });
 
   const again = (await after.caller.session.agentOptions(owner))[
@@ -223,10 +223,11 @@ it('streams the saved commands first after the Engine restarts', async () => {
 });
 
 it('keeps each Agent’s commands apart in one Project', async () => {
-  const host = await startAcpEngine({ steps: [], commandsWaitMs }, undefined, [
-    'mock',
-    'other',
-  ]);
+  const host = await startAcpEngine(
+    { steps: [], slashCommandsWaitMs },
+    undefined,
+    ['mock', 'other'],
+  );
 
   const a = await discoverWith(host, [review]);
 
@@ -255,7 +256,7 @@ it('keeps each Agent’s commands apart in one Project', async () => {
 
 // Leaving waits for discovery to wind down, so a wait that ignored the reader would outlast the test's own timeout.
 it('stops waiting for a list when the reader leaves', async () => {
-  const host = await startAcpEngine({ steps: [], commandsWaitMs });
+  const host = await startAcpEngine({ steps: [], slashCommandsWaitMs });
 
   const stream = (await host.caller.session.agentOptions(owner))[
     Symbol.asyncIterator
@@ -268,7 +269,7 @@ it('stops waiting for a list when the reader leaves', async () => {
 });
 
 it('saves a list that arrives well after the options were read', async () => {
-  const host = await startAcpEngine({ steps: [], commandsWaitMs });
+  const host = await startAcpEngine({ steps: [], slashCommandsWaitMs });
   const stream = await discoverWith(host, [review], { delayMs: 2500 });
 
   expect(await nextWithCommands(stream)).toMatchObject({ commands: [review] });

@@ -80,7 +80,7 @@ export interface EngineInput extends Pick<
   pluginClock?: PluginClock;
   operationWaitClock?: OperationWaitClock;
   // How long New Session discovery waits for an Agent's Slash commands; the default suits real Agents.
-  commandsWaitMs?: number;
+  slashCommandsWaitMs?: number;
   startedAt: string;
   acp?: AcpResourceInput;
   fetchAgents?: FetchAgents;

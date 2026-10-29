@@ -34,7 +34,7 @@ export type AppRouterDeps = SessionRouterDeps &
     controlToken: string;
     plugins: PluginsRouterDeps;
     operationWaitClock?: OperationWaitClock;
-    commandsWaitMs?: number;
+    slashCommandsWaitMs?: number;
   };
 
 // The Engine owns connection lifetimes and shared Feed sources.
