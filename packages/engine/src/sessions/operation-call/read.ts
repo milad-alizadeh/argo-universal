@@ -13,15 +13,16 @@ export type CallSources = Pick<
   'database' | 'findWriter' | 'findFeed' | 'readSession' | 'sessions'
 >;
 
+// Where an Operation Tool call is: running, waiting for the user's answer, or settled one of three ways.
+type CallState =
+  | { status: 'still_running' }
+  | { status: 'waiting_for_user' }
+  | { status: 'completed'; result: Json; fullResult?: BlobRef }
+  | { status: 'failed'; error: string }
+  | { status: 'cancelled' };
+
 // An Operation Tool call read back from its Feed row, with the native work it started.
-export type OperationCallRead = {
-  status: 'settled' | 'still_running' | 'waiting_for_user';
-  result?: Json;
-  fullResult?: BlobRef;
-  error?: string;
-  cancelled?: true;
-  work?: OperationWorkTarget;
-};
+export type OperationCallRead = CallState & { work?: OperationWorkTarget };
 
 type ArgoMeta = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
@@ -38,9 +39,7 @@ export function readOperationCall(
   const state = rowState(deps, sessionId, row);
   const work = startedWork(row);
 
-  if (work) state.work = work;
-
-  return state;
+  return work ? { ...state, work } : state;
 }
 
 function requireCallRow(
@@ -68,7 +67,7 @@ function rowState(
   deps: CallSources,
   sessionId: string,
   row: ToolCallUpdate,
-): OperationCallRead {
+): CallState {
   if (row.state === 'settled') return settledState(row);
 
   const session = requireLiveSessionActor(deps.sessions.system, sessionId);
@@ -82,22 +81,22 @@ function rowState(
   return { status: waiting ? 'waiting_for_user' : 'still_running' };
 }
 
-function settledState(row: ToolCallUpdate): OperationCallRead {
-  if (row.status === 'cancelled') return { status: 'settled', cancelled: true };
+function settledState(row: ToolCallUpdate): CallState {
+  if (row.status === 'cancelled') return { status: 'cancelled' };
 
   if (row.status === 'failed')
-    return { status: 'settled', error: failedMessage(row) };
+    return { status: 'failed', error: failedMessage(row) };
 
-  return { status: 'settled', ...completedOutput(row) };
+  return completedState(row);
 }
 
-function completedOutput(
-  row: ToolCallUpdate,
-): Pick<OperationCallRead, 'result' | 'fullResult'> {
-  return {
-    result: z.json().parse(row.rawOutput ?? null),
-    fullResult: fullResult(row),
-  };
+function completedState(row: ToolCallUpdate): CallState {
+  const result = z.json().parse(row.rawOutput ?? null);
+  const blob = fullResult(row);
+
+  return blob
+    ? { status: 'completed', result, fullResult: blob }
+    : { status: 'completed', result };
 }
 
 function failedMessage(row: ToolCallUpdate): string {

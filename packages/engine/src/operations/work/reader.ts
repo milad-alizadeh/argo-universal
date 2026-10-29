@@ -10,7 +10,7 @@ import type {
   SessionWorkSource,
 } from '../../sessions';
 import type { OperationCaller } from '../session-tokens';
-import { operationExecution } from './call-result';
+import { callExecution, workExecution } from './execution';
 import type { WaitIds } from './ids';
 import type { WorkObservation } from './observation';
 
@@ -45,16 +45,12 @@ function readCall(
   { id, work }: Target,
   value: OperationCallRead,
 ): WorkObservation {
-  requireCallResult(value);
+  if (value.status === 'failed') throw new Error(value.error);
 
-  if (!value.cancelled && value.work)
+  if (value.status !== 'cancelled' && value.work)
     return readOperationWork(context, linkedTarget(context, value.work));
 
-  return observation(operationExecution(id, value), work);
-}
-
-function requireCallResult(value: OperationCallRead): void {
-  if (value.error) throw new Error(value.error);
+  return observation(callExecution(id, value), work);
 }
 
 function turnObservation(
@@ -62,13 +58,11 @@ function turnObservation(
   { turn, requiresInput }: TurnRead,
 ): WorkObservation {
   return observation(
-    {
-      kind: 'operation_execution',
-      id,
+    workExecution(id, {
       status: turnStatus(turn, requiresInput),
       turn,
       result: { sessionId: work.sessionId },
-    },
+    }),
     work,
   );
 }
@@ -115,12 +109,7 @@ function opening(
   status: OperationExecution['status'] = 'still_running',
 ): WorkObservation {
   return observation(
-    {
-      kind: 'operation_execution',
-      id,
-      status,
-      result: { sessionId: work.sessionId },
-    },
+    workExecution(id, { status, result: { sessionId: work.sessionId } }),
     work,
   );
 }

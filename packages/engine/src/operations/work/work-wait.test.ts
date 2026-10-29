@@ -96,7 +96,10 @@ it('settles a resumed wait when its Tool call settles', async () => {
   const waiting = host.work.wait(id, callerToken);
 
   await expect.poll(() => host.source.watching('caller')).toBeGreaterThan(0);
-  host.source.set(callWork, callRead({ status: 'settled', result: { ok: 1 } }));
+  host.source.set(
+    callWork,
+    callRead({ status: 'completed', result: { ok: 1 } }),
+  );
   expect(await waiting).toEqual({
     kind: 'operation_execution',
     id,

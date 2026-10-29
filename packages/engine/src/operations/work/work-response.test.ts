@@ -32,7 +32,7 @@ it('answers with the Operation result when it returns before its Tool call settl
 
 it('answers with the Operation result, not the Tool call, when the call settles first', async () => {
   const host = workHost();
-  host.source.set(callWork, callRead({ status: 'settled', result: listing }));
+  host.source.set(callWork, callRead({ status: 'completed', result: listing }));
   const result = Promise.withResolvers<OperationRunResult>();
   let answered = false;
 
@@ -54,7 +54,7 @@ it('answers with the Operation result, not the Tool call, when the call settles 
 
 it('answers with a cancelled Tool call at once, while its result never returns', async () => {
   const host = workHost();
-  host.source.set(callWork, callRead({ status: 'settled', cancelled: true }));
+  host.source.set(callWork, callRead({ status: 'cancelled' }));
 
   const result = OperationExecution.parse(
     await runFromSession(host, {
