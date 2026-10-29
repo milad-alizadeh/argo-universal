@@ -14,8 +14,8 @@ import {
   type AcpModelSnapshot,
 } from '#mocks/acp-session-model';
 import { findMachineActor } from '../lib/machine-actor';
+import { sessionActorId } from './open-sessions-machine';
 import { checkoutLimit, sessionMachine } from './session-machine';
-import { sessionActorId } from './session-system';
 
 const pathStates = (
   path: ReturnType<typeof createAcpSessionModel>['paths'][number],

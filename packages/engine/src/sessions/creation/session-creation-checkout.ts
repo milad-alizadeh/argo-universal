@@ -1,8 +1,8 @@
 import type { SessionNewInput } from '@repo/contracts';
+import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { readProjectPath } from '../../projects';
-import type { SessionRouterDeps } from '../router-deps';
 
 async function requireBranch(
   projectPath: string,
@@ -16,7 +16,7 @@ async function requireBranch(
 }
 
 export async function requireCheckoutProjectPath(
-  database: SessionRouterDeps['database'],
+  database: Database,
   newSession: Pick<SessionNewInput, 'projectId' | 'checkout'>,
 ): Promise<string> {
   const projectPath = readProjectPath(database, newSession.projectId);

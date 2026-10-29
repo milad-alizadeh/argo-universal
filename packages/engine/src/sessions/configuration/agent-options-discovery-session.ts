@@ -14,8 +14,8 @@ import {
   sessionOpenError,
 } from '../../agents';
 import { readProjectPath } from '../../projects';
-import { validateSessionCommandAdmission } from '../session-command';
-import type { OptionsDeps, Discovery } from './agent-options-discovery';
+import type { OpenSessions } from '../open-sessions';
+import type { Discovery } from './agent-options-discovery';
 
 // No prompt reaches this Agent session, so it asks nothing; anything it asks anyway is refused.
 const optionsDestination: AcpSessionDestination = {
@@ -63,11 +63,11 @@ const withLoadingProgress = (
 });
 
 const openDiscoverySession = (
-  deps: OptionsDeps,
+  deps: OpenSessions,
   { launch, cwd, signal }: DiscoveryOpening,
   progress: Discovery['progress'],
 ): Promise<AcpSessionLease> =>
-  deps.sessions.getSnapshot().context.acpResources.open({
+  deps.acpResources.open({
     launch: withLoadingProgress(launch, progress),
     opening: { method: 'session/new', params: { cwd, mcpServers: [] } },
     destination: optionsDestination,
@@ -75,18 +75,18 @@ const openDiscoverySession = (
   });
 
 function prepareDiscovery(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   { agent, projectId }: SessionAgentOptionsInput,
 ): DiscoverySetup {
   const installed = requireInstalledAgent(deps.installedAgents, agent);
   const cwd = readProjectPath(deps.database, projectId);
-  validateSessionCommandAdmission(deps);
+  deps.admit();
 
   return { installed, cwd, projectId };
 }
 
 async function startDiscovery(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   { installed, cwd, projectId }: DiscoverySetup,
   { signal, progress }: Discovery,
 ): Promise<AcpSessionLease> {
@@ -99,7 +99,7 @@ async function startDiscovery(
 }
 
 export async function openOptionsSession(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
   discovery: Discovery,
 ): Promise<AcpSessionLease> {

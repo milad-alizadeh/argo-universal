@@ -2,7 +2,6 @@ import type { SessionNewInput, PromptSender } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import { asRequestError } from '../admission/refused-choice';
 import { applyInitialConfiguration } from '../configuration';
-import type { SessionRouterDeps } from '../router-deps';
 import { submitSessionPrompt } from '../session-command';
 import type { SessionContext } from '../session-context';
 import type { NewSessionInput } from '../session-data';
@@ -38,7 +37,7 @@ async function submitInitialTurn(
 
 // Once stored, the Session applies its first choices, then submits its first prompt.
 export async function startSession(
-  deps: Pick<SessionRouterDeps, 'hooks'>,
+  hooks: CoreHooks,
   session: SessionActorRef,
   { input, sender }: { input: SessionNewInput; sender: PromptSender },
 ): Promise<string | undefined> {
@@ -46,7 +45,7 @@ export async function startSession(
     asRequestError,
   );
 
-  return submitInitialAcpPrompt(session, deps.hooks, sender);
+  return submitInitialAcpPrompt(session, hooks, sender);
 }
 
 // The first prompt passes `prompt.submit` Hooks like any other; a dropped one leaves the Session waiting.

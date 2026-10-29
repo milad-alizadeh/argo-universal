@@ -4,8 +4,7 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { readFeedRow } from '../../feed';
-import type { SessionWorkSources } from '../router-deps';
-import { requireLiveSessionActor } from '../session-system';
+import type { OpenSessions } from '../open-sessions';
 import { CallingSession } from './calling-session';
 import { operationRowId } from './rows';
 
@@ -23,16 +22,16 @@ export type OperationCallRead = CallState & { work?: OperationWorkTarget };
 type ArgoMeta = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
 export function readOperationCall(
-  deps: SessionWorkSources,
+  open: OpenSessions,
   sessionId: string,
   toolCallId: string,
 ): OperationCallRead {
   const row = requireCallRow(
-    readFeedRow(deps, { sessionId, id: operationRowId(toolCallId) }),
+    readFeedRow(open, { sessionId, id: operationRowId(toolCallId) }),
     toolCallId,
   );
 
-  const state = rowState(deps, sessionId, row);
+  const state = rowState(open, sessionId, row);
   const work = startedWork(row);
 
   return work ? { ...state, work } : state;
@@ -60,15 +59,13 @@ const startedWork = (row: ToolCallUpdate): OperationWorkTarget | undefined =>
   argoMeta(row)?.operationWork;
 
 function rowState(
-  deps: SessionWorkSources,
+  open: OpenSessions,
   sessionId: string,
   row: ToolCallUpdate,
 ): CallState {
   if (row.state === 'settled') return settledState(row);
 
-  const session = new CallingSession(
-    requireLiveSessionActor(deps.sessions.system, sessionId),
-  );
+  const session = new CallingSession(open.live(sessionId));
 
   const waiting = session.awaitsAnswer(row.toolCallId);
 

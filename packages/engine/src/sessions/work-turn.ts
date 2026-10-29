@@ -2,14 +2,13 @@ import type { Turn } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
+import type { OpenSessions } from './open-sessions';
 import { pendingInputRequest } from './pending-input';
-import type { SessionRowSources } from './router-deps';
 import { readQueuedSessionRows } from './session-storage';
-import { readOpenSession } from './session-system';
 import { decodeStoredTurn, storedTurnColumns } from './stored-turn';
 
 function readStoredTurn(
-  deps: SessionRowSources,
+  deps: OpenSessions,
   turnId: string,
 ): Parameters<typeof decodeStoredTurn>[0] | undefined {
   return deps.database
@@ -28,7 +27,7 @@ function missingTurn(): TRPCError {
 
 // Reads the exact admitted Turn, including updates the Writer has not committed yet.
 export function readSessionTurn(
-  deps: SessionRowSources,
+  deps: OpenSessions,
   sessionId: string,
   turnId: string,
 ): Turn {
@@ -45,11 +44,11 @@ export function readSessionTurn(
 }
 
 export function sessionTurnRequiresInput(
-  deps: SessionRowSources,
+  open: OpenSessions,
   sessionId: string,
   turnId: string,
 ): boolean {
-  const live = readOpenSession(deps.sessions, sessionId);
+  const live = open.context(sessionId);
 
   if (!live || live.activeTurnId !== turnId) return false;
 

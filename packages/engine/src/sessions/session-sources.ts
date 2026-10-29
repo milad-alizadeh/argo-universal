@@ -5,8 +5,8 @@ import type { FeedDeps } from '../feed';
 import type { OpenSessionsActorRef } from './open-sessions-machine';
 import type { createSessionReader } from './session-record';
 
-// What the Session procedures read, run and admit commands through.
-export interface SessionRouterDeps extends Pick<
+// What the Engine runs Sessions with; its composition hands them to `Sessions` once.
+export interface SessionSources extends Pick<
   FeedDeps,
   'findFeed' | 'findWriter'
 > {
@@ -15,17 +15,8 @@ export interface SessionRouterDeps extends Pick<
   installedAgents: InstalledAgents;
   readSession: ReturnType<typeof createSessionReader>;
   createId: () => string;
+  // Aborts when the Engine stops admitting Session commands.
   sessionCommandSignal?: AbortSignal;
   // Plugin Hooks on starting a Session and submitting a prompt (ADR-0027).
   hooks: CoreHooks;
 }
-
-// A Session's stored row with the Writer's queued jobs over it, and the open Sessions.
-export type SessionRowSources = Pick<
-  SessionRouterDeps,
-  'database' | 'findWriter' | 'sessions'
->;
-
-// Those, with each Session's Feed and stored record: where Operation work is read.
-export type SessionWorkSources = SessionRowSources &
-  Pick<SessionRouterDeps, 'findFeed' | 'readSession'>;

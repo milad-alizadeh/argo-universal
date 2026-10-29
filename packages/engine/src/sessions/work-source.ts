@@ -4,12 +4,8 @@ import {
   readSessionCreation,
   type CreationRead,
 } from './creation/creation-reader';
-import {
-  createOperationCalls,
-  type OperationCallRead,
-  type OperationCalls,
-} from './operation-call';
-import type { SessionWorkSources } from './router-deps';
+import type { OpenSessions } from './open-sessions';
+import { readOperationCall, type OperationCallRead } from './operation-call';
 import { readSessionTurn, sessionTurnRequiresInput } from './work-turn';
 import {
   createSessionWorkWatcher,
@@ -38,47 +34,41 @@ export type SessionWorkSource = {
   watch: SessionWorkWatcher;
 };
 
-export function createSessionWorkSource(
-  deps: SessionWorkSources,
-): SessionWorkSource {
-  const calls = createOperationCalls(deps);
-
+export function createSessionWorkSource(open: OpenSessions): SessionWorkSource {
   return {
-    read: (work) => readWork({ deps, calls }, work),
-    watch: createSessionWorkWatcher(deps),
+    read: (work) => readWork(open, work),
+    watch: createSessionWorkWatcher(open),
   };
 }
 
-type Readers = { deps: SessionWorkSources; calls: OperationCalls };
-
-function readWork(
-  { deps, calls }: Readers,
-  work: SessionWork,
-): SessionWorkRead {
+function readWork(open: OpenSessions, work: SessionWork): SessionWorkRead {
   const { kind, sessionId } = work;
 
   if (work.kind === 'call')
-    return { kind: 'call', call: calls.read(sessionId, work.toolCallId) };
+    return {
+      kind: 'call',
+      call: readOperationCall(open, sessionId, work.toolCallId),
+    };
 
   if (kind === 'creation')
     return {
       kind,
-      creation: readSessionCreation(deps, sessionId, work.turnId),
+      creation: readSessionCreation(open, sessionId, work.turnId),
     };
 
-  return { kind: 'turn', ...readTurn(deps, sessionId, work.turnId) };
+  return { kind: 'turn', ...readTurn(open, sessionId, work.turnId) };
 }
 
 function readTurn(
-  deps: SessionWorkSources,
+  open: OpenSessions,
   sessionId: string,
   turnId: string,
 ): TurnRead {
-  const turn = readSessionTurn(deps, sessionId, turnId);
+  const turn = readSessionTurn(open, sessionId, turnId);
 
   const requiresInput =
     turn.status !== 'ended' &&
-    sessionTurnRequiresInput(deps, sessionId, turnId);
+    sessionTurnRequiresInput(open, sessionId, turnId);
 
   return { turn, requiresInput };
 }

@@ -3,17 +3,15 @@ import type {
   SessionAgentOptionsInput,
 } from '@repo/contracts';
 import type { Subscription } from 'xstate';
-import type { SessionRouterDeps } from '../router-deps';
+import type { OpenSessions } from '../open-sessions';
 import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
 import { withHeldConfiguration } from './held-options';
 
-type Deps = Pick<SessionRouterDeps, 'sessions'>;
-
 type Input = SessionAgentOptionsInput & { sessionId: string };
 
 type Observation = {
-  deps: Deps;
+  deps: OpenSessions;
   input: Input;
   observer: {
     update: (update: AgentOptionsUpdate) => void;
@@ -37,8 +35,7 @@ const optionsUpdate = (
 
 function publication({ deps, input, observer }: Observation): () => void {
   return () => {
-    const session =
-      deps.sessions.getSnapshot().context.sessions[input.sessionId];
+    const session = deps.session(input.sessionId);
 
     if (!session) return;
 
@@ -66,10 +63,7 @@ function followCurrent(
   observation: Observation,
   publish: () => void,
 ): void {
-  const next =
-    observation.deps.sessions.getSnapshot().context.sessions[
-      observation.input.sessionId
-    ];
+  const next = observation.deps.session(observation.input.sessionId);
 
   if (next === state.current) return;
   replaceSession(state, next, publish);
@@ -88,7 +82,7 @@ function followSession(
   const state: FollowState = {};
   const follow = (): void => followCurrent(state, observation, publish);
 
-  const sessionsSubscription = observation.deps.sessions.subscribe({
+  const sessionsSubscription = observation.deps.subscribe({
     next: follow,
     complete: observation.observer.done,
   });

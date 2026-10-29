@@ -4,9 +4,8 @@ import type {
   SessionSavePlanInput,
   SessionSavePlanOutput,
 } from '@repo/contracts';
-import type { SessionRouterDeps } from './router-deps';
-import { readWritableSession } from './session-opening';
-import { createQueuedSessionReader } from './session-record';
+import type { OpenSessions } from './open-sessions';
+import { requireWritableSession } from './session-command';
 
 // Argo only: plans go under `.argo/plans` in the Session's Checkout.
 const savedPlansDirectory = join('.argo', 'plans');
@@ -68,13 +67,10 @@ async function writeNewFile(file: PlanFile, attempt = 1): Promise<string> {
 
 // Reads the Session as a Session caller's scope does, with the Writer's queued rows.
 export async function saveSessionPlan(
-  deps: Pick<SessionRouterDeps, 'database' | 'findWriter'>,
+  open: OpenSessions,
   input: SessionSavePlanInput,
 ): Promise<SessionSavePlanOutput> {
-  const session = readWritableSession(
-    createQueuedSessionReader(deps),
-    input.sessionId,
-  );
+  const session = requireWritableSession(open.queued(input.sessionId));
 
   const directory = join(session.checkout.path, savedPlansDirectory);
 

@@ -4,8 +4,9 @@ import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
 import { FeedRowsJob } from '../../feed';
+import { titleFromPrompt } from '../../feed';
 import { writerMachine } from '../../storage';
-import { loadSession, titleFromPrompt } from '../session-data';
+import { loadSession } from '../session-load';
 import { SessionRowUpdateJob } from '../session-storage';
 
 const cleanups: (() => void)[] = [];

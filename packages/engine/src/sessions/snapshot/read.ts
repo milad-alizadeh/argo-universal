@@ -4,20 +4,12 @@ import type {
   SessionGetOutput,
 } from '@repo/contracts';
 import { readChangesSummary } from '@repo/git';
-import { findMachineActor } from '../../lib/machine-actor';
 import { sessionChangesSelection } from '../changes-selection';
-import type { SessionRouterDeps } from '../router-deps';
-import { sessionMachine, type SessionActorRef } from '../session-machine';
-import { sessionActorId } from '../session-system';
+import type { OpenSessions } from '../open-sessions';
 import { SessionSnapshotReader } from './reader';
 
-type SnapshotSources = Pick<
-  SessionRouterDeps,
-  'database' | 'findFeed' | 'findWriter' | 'sessions'
->;
-
 export function createSessionSnapshotReader(
-  deps: SnapshotSources,
+  deps: OpenSessions,
 ): (input: SessionGetInput) => Promise<SessionGetOutput> {
   const reader = new SessionSnapshotReader(deps);
 
@@ -26,33 +18,19 @@ export function createSessionSnapshotReader(
 }
 
 async function readCurrentSnapshot(
-  deps: SnapshotSources,
+  deps: OpenSessions,
   reader: SessionSnapshotReader,
   sessionId: string,
 ): Promise<SessionGetOutput> {
-  const snapshot = reader.read(
-    sessionId,
-    findSession(deps, sessionId),
-  ).snapshot;
+  const snapshot = reader.read(sessionId, deps.session(sessionId)).snapshot;
 
   if (deps.findFeed(sessionId)) return snapshot;
 
   return withStoredChanges(deps, { sessionId, snapshot });
 }
 
-function findSession(
-  deps: SnapshotSources,
-  sessionId: string,
-): SessionActorRef | undefined {
-  return findMachineActor(
-    deps.sessions.system,
-    sessionActorId(sessionId),
-    sessionMachine,
-  );
-}
-
 async function withStoredChanges(
-  deps: SnapshotSources,
+  deps: OpenSessions,
   { sessionId, snapshot }: { sessionId: string; snapshot: SessionGetOutput },
 ): Promise<SessionGetOutput> {
   try {
@@ -67,7 +45,7 @@ async function withStoredChanges(
 }
 
 function storedChanges(
-  deps: SnapshotSources,
+  deps: OpenSessions,
   snapshot: SessionGetOutput,
 ): Promise<ChangesSummary> {
   return readChangesSummary(sessionChangesSelection(deps.database, snapshot));

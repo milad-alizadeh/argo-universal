@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { isReplayedHistory } from './update-admission';
+import { isReplayedHistory } from './replayed-history';
 
 it.each([
   'user_message_chunk',

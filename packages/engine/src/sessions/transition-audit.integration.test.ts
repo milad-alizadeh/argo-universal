@@ -5,8 +5,8 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createAcpSessionModel } from '#mocks/acp-session-model';
 import { unwalkedSessionTransitions } from '#mocks/acp-transition-audit';
 import { findMachineActor } from '../lib/machine-actor';
+import { sessionActorId } from './open-sessions-machine';
 import { sessionMachine } from './session-machine';
-import { sessionActorId } from './session-system';
 
 it('walks every declared Session event transition, including guarded branches', async () => {
   const agent = appFixtureAgentIds[0];

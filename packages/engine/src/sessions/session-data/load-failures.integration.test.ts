@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { resolveExecutable } from '@repo/executables';
 import { afterEach, expect, it, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
-import { createSessionCheckout, loadSession } from '../session-data';
+import { createSessionCheckout } from '../creation/session-create-data';
+import { loadSession } from '../session-load';
 
 const newSessionId = 'new-session';
 

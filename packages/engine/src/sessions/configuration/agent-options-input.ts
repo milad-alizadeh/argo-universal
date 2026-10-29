@@ -6,8 +6,8 @@ import {
   type SessionRecord,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import type { OpenSessions } from '../open-sessions';
 import { readSessionRow } from '../session-record';
-import type { OptionsDeps } from './agent-options-discovery';
 import { readAgentConfiguration } from './agent-options-read';
 
 const matchingOwner = (
@@ -23,7 +23,7 @@ const missingOptionsSession = (): TRPCError =>
   });
 
 function requireOptionsSession(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
   sessionId: string,
 ): SessionRecord {
@@ -54,7 +54,7 @@ const savedPicks = (
  * whichever choices another Session most recently wrote for this Agent.
  */
 export function sessionOptionsInput(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
 ): SessionAgentOptionsInput {
   if (!input.sessionId) return input;
@@ -68,7 +68,7 @@ export function sessionOptionsInput(
 }
 
 export function savedAgentOptions(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
 ): AgentOptionsUpdate {
   const saved = readAgentConfiguration(

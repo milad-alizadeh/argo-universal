@@ -44,11 +44,11 @@ import type {
   AcpPromptResponse as PromptResponse,
 } from './acp/prompts/prompt-types';
 import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
+import { isReplayedHistory } from './acp/replayed-history';
 import {
   admitsPermissionAnswer,
   answeredRequest,
 } from './admission/answer-admission';
-import { isReplayedHistory } from './admission/update-admission';
 import {
   saveSessionArchive,
   removeSessionCheckout,
@@ -56,6 +56,10 @@ import {
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { sessionConfiguration, type ConfigurationStep } from './configuration';
 import { creationSettledEvent } from './creation/creation-receipt';
+import {
+  createSessionCheckout,
+  toSessionInsert,
+} from './creation/session-create-data';
 import { initialSessionContext } from './initial-context';
 import { nativePermissionEvent } from './native-permissions';
 import { pendingInputRequest } from './pending-input';
@@ -81,17 +85,14 @@ import {
   type SessionMachineInput,
   type SessionWrite,
 } from './session-context';
-import {
-  createSessionCheckout,
-  discardSession,
-  loadSession,
-  type NewSessionInput,
-  type SessionData,
-  type SessionDiscard,
-  type SessionInput,
-  toSessionInsert,
+import type {
+  NewSessionInput,
+  SessionData,
+  SessionInput,
 } from './session-data';
+import { discardSession, type SessionDiscard } from './session-discard';
 import { sessionFeedInput } from './session-feed';
+import { loadSession } from './session-load';
 import { SessionRowUpdateJob, SessionTitleJob } from './session-storage';
 import { withShell } from './shells';
 import {
@@ -130,6 +131,22 @@ const acpRequestWithdrawnEvent = 'acp.requestWithdrawn';
 const answerElicitationEvent = 'session.answerElicitation';
 
 const configuringState = 'configuring';
+
+/*
+ * What a state means to the code outside this statechart, so a renamed state never changes admission:
+ * starting (the Session is creating, loading or opening its Agent), ready (it accepts Session commands),
+ * settling (a prompt waits for a choice or a cancellation), closing (it is on its way out), archived,
+ * turn (a Turn is active, cancelling included), running and requiresAction (as the Session snapshot shows it).
+ */
+type SessionTag =
+  | 'starting'
+  | 'ready'
+  | 'settling'
+  | 'closing'
+  | 'archived'
+  | 'turn'
+  | 'running'
+  | 'requiresAction';
 
 type SessionDataParameters = { data: SessionData };
 
@@ -259,6 +276,7 @@ const sessionSetup = setup({
     context: {} as SessionContext,
     events: {} as SessionEvent,
     output: {} as Pick<SessionContext, 'failure'>,
+    tags: {} as SessionTag,
   },
   actors: {
     toolCallHooks,
@@ -936,6 +954,7 @@ export const sessionMachine = sessionSetup.createMachine({
       always: [{ guard: 'isNew', target: 'creating' }, { target: 'loading' }],
     },
     creating: {
+      tags: ['starting'],
       after: {
         checkoutLimit: {
           target: 'closed',
@@ -957,6 +976,7 @@ export const sessionMachine = sessionSetup.createMachine({
       },
     },
     loading: {
+      tags: ['starting'],
       invoke: {
         id: 'loadSession',
         src: 'loadSession',
@@ -1062,6 +1082,7 @@ export const sessionMachine = sessionSetup.createMachine({
               ],
             },
             archiving: {
+              tags: ['ready', 'closing'],
               on: {
                 'session.close': {},
                 'acp.failed': { actions: 'recordCrash' },
@@ -1089,6 +1110,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             opening: {
+              tags: ['starting'],
               invoke: {
                 id: 'openAcp',
                 src: 'openAcp',
@@ -1111,6 +1133,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             restoring: {
+              tags: ['starting'],
               invoke: {
                 id: 'restoreAcpConfiguration',
                 src: 'restoreAcpConfiguration',
@@ -1135,6 +1158,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             idle: {
+              tags: ['ready'],
               always: [
                 { guard: 'hasAcpConfig', target: configuringState },
                 { guard: 'hasHeldSubmission', actions: 'releaseHeldConfig' },
@@ -1149,6 +1173,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             configuring: {
+              tags: ['ready', 'settling'],
               entry: 'takeAcpConfig',
               invoke: {
                 src: 'configureAcp',
@@ -1181,6 +1206,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             committing: {
+              tags: ['ready', 'running'],
               entry: { type: 'persistTurn', params: toPromptTurn },
               invoke: {
                 id: 'commitPrompt',
@@ -1237,6 +1263,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             activeTurn: {
+              tags: ['ready', 'turn'],
               invoke: {
                 id: 'promptAcp',
                 src: 'promptAcp',
@@ -1360,14 +1387,19 @@ export const sessionMachine = sessionSetup.createMachine({
               initial: 'working',
               states: {
                 working: {
+                  tags: ['running'],
                   always: [
                     { guard: 'hasPermission', target: 'awaitingPermission' },
                     { guard: 'hasElicitation', target: 'awaitingElicitation' },
                   ],
                 },
-                awaitingPermission: { entry: 'answerHookedPermission' },
-                awaitingElicitation: {},
+                awaitingPermission: {
+                  tags: ['running', 'requiresAction'],
+                  entry: 'answerHookedPermission',
+                },
+                awaitingElicitation: { tags: ['running', 'requiresAction'] },
                 cancelling: {
+                  tags: ['settling'],
                   on: {
                     // The parent Turn ended; Subagents still own their active Turns.
                     'acp.update': [
@@ -1414,6 +1446,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             publishing: {
+              tags: ['ready', 'running'],
               initial: 'connected',
               states: {
                 connected: {
@@ -1456,6 +1489,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             interrupting: {
+              tags: ['ready'],
               on: {
                 'acp.failed': {},
                 'session.close': {
@@ -1490,6 +1524,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             closing: {
+              tags: ['closing'],
               entry: [
                 'rejectPendingAcpConfig',
                 {
@@ -1517,6 +1552,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             flushing: {
+              tags: ['closing'],
               on: { 'session.close': {} },
               entry: ['flushSubagents', 'flushFeed'],
               after: {
@@ -1557,6 +1593,7 @@ export const sessionMachine = sessionSetup.createMachine({
       ],
     },
     archived: {
+      tags: ['archived'],
       after: { checkoutRemovalDelay: { target: 'removingCheckout' } },
       on: {
         'session.unarchive': { target: 'undoingArchive' },

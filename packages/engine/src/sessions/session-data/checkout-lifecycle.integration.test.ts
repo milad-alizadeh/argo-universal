@@ -9,10 +9,10 @@ import { openTestDatabase } from '#mocks/database';
 import { writeJobs } from '../../storage';
 import {
   createSessionCheckout,
-  discardSession,
-  loadSession,
   toSessionInsert,
-} from '../session-data';
+} from '../creation/session-create-data';
+import { discardSession } from '../session-discard';
+import { loadSession } from '../session-load';
 
 const newSessionId = 'new-session';
 

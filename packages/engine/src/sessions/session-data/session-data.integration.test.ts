@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { afterEach, expect, it } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
-import { createSessionCheckout } from '../session-data';
+import { createSessionCheckout } from '../creation/session-create-data';
 
 const newSessionId = 'new-session';
 

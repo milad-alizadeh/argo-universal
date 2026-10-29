@@ -3,15 +3,14 @@ import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
 import { insertSession } from '#mocks/database';
-import { createSessionReader } from '../session-record';
+import { sessionSources } from '#mocks/session-sources';
+import { OpenSessions } from '../open-sessions';
 import { archiveSession, unarchiveSession } from './archive-commands';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
-const operationDeps = (host: Host): Parameters<typeof archiveSession>[0] => ({
-  sessions: host.openSessions,
-  readSession: createSessionReader(host.database),
-});
+const operationDeps = (host: Host): OpenSessions =>
+  new OpenSessions(sessionSources(host.openSessions));
 
 it('refuses to archive a child Session', async () => {
   const host = await startAcpEngine({ steps: [] });

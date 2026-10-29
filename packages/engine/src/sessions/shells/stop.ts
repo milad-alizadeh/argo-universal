@@ -3,19 +3,16 @@ import type {
   SessionStopShellOutput,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import type { SessionRouterDeps } from '../router-deps';
-import { validateSessionCommandAdmission } from '../session-command';
-import { requireLiveSessionActor } from '../session-system';
+import type { OpenSessions } from '../open-sessions';
 import { requireShell } from './output-reader';
 
 export const stopShell = (
-  deps: SessionRouterDeps,
+  open: OpenSessions,
   input: SessionStopShellInput,
 ): SessionStopShellOutput => {
-  validateSessionCommandAdmission(deps);
-  const record = requireShell(deps.database, input);
-  const actor = requireLiveSessionActor(deps.sessions.system, input.sessionId);
-  const runtime = actor.getSnapshot().context.shellRuntime;
+  open.admit();
+  const record = requireShell(open.database, input);
+  const runtime = open.live(input.sessionId).getSnapshot().context.shellRuntime;
 
   requireStoppable(runtime.canStop(record.id));
   runtime.stop(input.shellId);

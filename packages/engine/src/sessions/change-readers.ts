@@ -11,12 +11,10 @@ import {
 } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { sessionChangesSelection } from './changes-selection';
-import type { SessionRouterDeps } from './router-deps';
-
-type ReaderDeps = Pick<SessionRouterDeps, 'readSession' | 'database'>;
+import type { OpenSessions } from './open-sessions';
 
 const selection = (
-  deps: ReaderDeps,
+  deps: OpenSessions,
   input: SessionChangesInput | SessionDiffInput,
 ): ChangesSelection =>
   sessionChangesSelection(
@@ -26,7 +24,7 @@ const selection = (
   );
 
 export const readSessionChanges = (
-  deps: ReaderDeps,
+  deps: OpenSessions,
   input: SessionChangesInput,
 ): Promise<SessionChangesOutput> =>
   readChangedFiles(selection(deps, input), input);
@@ -35,7 +33,7 @@ const missingDiff = (path: string): TRPCError =>
   new TRPCError({ code: 'NOT_FOUND', message: `No changed file ${path}` });
 
 export async function readSessionDiff(
-  deps: ReaderDeps,
+  deps: OpenSessions,
   input: SessionDiffInput,
 ): Promise<SessionDiffOutput> {
   const diff = await readFileDiff(

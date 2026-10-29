@@ -13,7 +13,12 @@ import type { WriterActorRef } from '../storage';
 import { createSessionActorInput } from './session-actor-input';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
-import { sessionActorId } from './session-system';
+
+// The open Sessions actor's system id, and each Session actor's.
+export const openSessionsId = 'sessions';
+
+export const sessionActorId = (sessionId: string): string =>
+  `session:${sessionId}`;
 
 const createSessionEvent = 'sessions.create';
 
@@ -22,7 +27,7 @@ const closeSessionEvent = 'session.close';
 type ClosureEvent = { type: 'session.close' | 'session.shutdown' };
 
 const closureEvent = (session: SessionActorRef): ClosureEvent => ({
-  type: session.getSnapshot().matches('archived')
+  type: session.getSnapshot().hasTag('archived')
     ? 'session.shutdown'
     : closeSessionEvent,
 });
@@ -54,10 +59,6 @@ const withSession = (
 
 type SessionSnapshot = ReturnType<SessionActorRef['getSnapshot']>;
 
-const closingOrArchiving = (snapshot: SessionSnapshot): boolean =>
-  snapshot.matches({ open: { acp: 'closing' } }) ||
-  snapshot.matches({ open: { acp: 'archiving' } });
-
 const canCloseSession = (
   session: SessionActorRef | undefined,
   snapshot: SessionSnapshot,
@@ -65,7 +66,7 @@ const canCloseSession = (
   Boolean(
     session &&
     snapshot.can(closureEvent(session)) &&
-    !closingOrArchiving(snapshot),
+    !snapshot.hasTag('closing'),
   );
 
 export type OpenSessionsCommand =
@@ -100,6 +101,8 @@ export const openSessionsMachine = setup({
     input: {} as OpenSessionsInput,
     context: {} as OpenSessionsContext,
     events: {} as OpenSessionsEvent,
+    // admitting: the machine admits Session commands until every Session stops.
+    tags: {} as 'admitting',
   },
   actors: { session: sessionMachine },
   actions: {
@@ -184,6 +187,7 @@ export const openSessionsMachine = setup({
   },
   states: {
     running: {
+      tags: ['admitting'],
       on: {
         'sessions.create': {
           guard: 'isRegisteredAgent',

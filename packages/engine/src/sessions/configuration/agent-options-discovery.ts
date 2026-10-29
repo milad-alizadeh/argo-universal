@@ -8,20 +8,11 @@ import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
-import type { SessionRouterDeps } from '../router-deps';
+import type { OpenSessions } from '../open-sessions';
 import { openOptionsSession } from './agent-options-discovery-session';
 import { AgentOptionsJob } from './agent-options-job';
 import { readAgentConfiguration } from './agent-options-read';
 import { discoverOptions } from './discovery';
-
-export type OptionsDeps = Pick<
-  SessionRouterDeps,
-  | 'database'
-  | 'installedAgents'
-  | 'sessions'
-  | 'sessionCommandSignal'
-  | 'findWriter'
->;
 
 export type Discovery = {
   signal: AbortSignal;
@@ -69,7 +60,7 @@ const discoveryJob = (
   );
 
 async function finishDiscovery(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
   state: DiscoveryState,
 ): Promise<SessionAgentOptionsOutput> {
@@ -86,8 +77,8 @@ async function finishDiscovery(
 }
 
 function availableWriter(
-  deps: OptionsDeps,
-): NonNullable<ReturnType<OptionsDeps['findWriter']>> {
+  deps: OpenSessions,
+): NonNullable<ReturnType<OpenSessions['findWriter']>> {
   const writer = deps.findWriter();
 
   if (!writer)
@@ -100,14 +91,14 @@ function availableWriter(
 }
 
 const readSavedOptions = (
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
   writer: WriterActorRef,
 ): SavedOptions =>
   readAgentConfiguration({ database: deps.database, writer }, input);
 
 async function prepareDiscovery(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
   discovery: Discovery,
 ): Promise<DiscoveryState> {
@@ -121,7 +112,7 @@ async function prepareDiscovery(
 
 // Discover in the Project folder and commit before publishing the refreshed snapshot.
 export async function refreshAgentOptions(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
   discovery: Discovery,
 ): Promise<SessionAgentOptionsOutput> {
@@ -138,7 +129,7 @@ const hasPicks = (input: SessionAgentOptionsInput): boolean =>
   Object.keys(inputPicks(input)).length > 0;
 
 const storedOptions = (
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
 ): SessionAgentOptionsOutput | undefined =>
   readAgentConfiguration(
@@ -148,7 +139,7 @@ const storedOptions = (
 
 // Explicit picks need their discovered schema even when a newer Session owns persistence.
 function discoveryResult(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   input: SessionAgentOptionsInput,
   options: SessionAgentOptionsOutput,
 ): SessionAgentOptionsOutput {

@@ -1,7 +1,6 @@
 import type { SessionRecord } from '@repo/contracts';
-import type { SessionRowSources } from './router-deps';
+import type { OpenSessions } from './open-sessions';
 import { readLatestTurns } from './session-storage';
-import { readOpenSession } from './session-system';
 import { readChildSessions } from './subagents/children';
 
 const startedChildren = (
@@ -15,11 +14,11 @@ const startedChildren = (
     );
 
 const isRunning = (
-  deps: SessionRowSources,
+  open: OpenSessions,
   latest: ReturnType<typeof readLatestTurns>,
   sessionId: string,
 ): boolean => {
-  const live = readOpenSession(deps.sessions, sessionId);
+  const live = open.context(sessionId);
 
   return live
     ? live.activeTurnId !== null
@@ -27,10 +26,10 @@ const isRunning = (
 };
 
 export function runningStartedSessions(
-  deps: SessionRowSources,
+  open: OpenSessions,
   callerId: string,
 ): string[] {
-  const sources = { database: deps.database, writer: deps.findWriter() };
+  const sources = { database: open.database, writer: open.findWriter() };
 
   const children = startedChildren(sources, callerId);
 
@@ -40,6 +39,6 @@ export function runningStartedSessions(
   );
 
   return children
-    .filter((child) => isRunning(deps, latest, child.id))
+    .filter((child) => isRunning(open, latest, child.id))
     .map((child) => child.id);
 }

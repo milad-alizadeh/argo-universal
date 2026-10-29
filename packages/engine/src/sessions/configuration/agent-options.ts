@@ -4,10 +4,8 @@ import type {
   SessionAgentOptionsInput,
 } from '@repo/contracts';
 import { requireInstalledAgent } from '../../agents';
-import {
-  refreshAgentOptions,
-  type OptionsDeps,
-} from './agent-options-discovery';
+import type { OpenSessions } from '../open-sessions';
+import { refreshAgentOptions } from './agent-options-discovery';
 import { discoveryFailure } from './agent-options-discovery-session';
 import { savedAgentOptions, sessionOptionsInput } from './agent-options-input';
 import { observeLiveAgentOptions } from './live-agent-options';
@@ -28,7 +26,7 @@ class AgentOptionsReader {
   private previous = '';
 
   constructor(
-    private readonly deps: OptionsDeps,
+    private readonly deps: OpenSessions,
     private readonly input: SessionAgentOptionsInput,
     signal?: AbortSignal,
   ) {
@@ -91,9 +89,7 @@ class AgentOptionsReader {
   private isLive(): boolean {
     const { sessionId } = this.input;
 
-    return Boolean(
-      sessionId && this.deps.sessions.getSnapshot().context.sessions[sessionId],
-    );
+    return Boolean(sessionId && this.deps.session(sessionId));
   }
 
   private publish(event: ReadEvent): void {
@@ -167,7 +163,7 @@ class AgentOptionsReader {
 
 // The public read keeps its saved snapshot through refresh and recoverable Session failures.
 export async function* agentOptionsUpdates(
-  deps: OptionsDeps,
+  deps: OpenSessions,
   request: SessionAgentOptionsInput,
   signal?: AbortSignal,
 ): AsyncGenerator<AgentOptionsUpdate, void> {

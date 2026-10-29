@@ -5,12 +5,8 @@ import type {
 } from '@repo/contracts';
 import { session } from '@repo/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import {
-  type StorageTransaction,
-  type WriterJob,
-  writeDatabaseJobAndWaitForCommit,
-} from '../storage';
-import type { SessionRouterDeps } from './router-deps';
+import type { StorageTransaction, WriterJob } from '../storage';
+import type { OpenSessions } from './open-sessions';
 import type { QueuedSessionChange } from './session-storage';
 import type { AnnouncedJob, WriterChange } from './writer-changes';
 
@@ -52,15 +48,11 @@ export class SessionSeenJob
 }
 
 export async function markSessionSeen(
-  deps: SessionRouterDeps,
+  open: OpenSessions,
   input: SessionMarkSeenInput,
 ): Promise<SessionMarkSeenOutput> {
-  deps.readSession(input.sessionId);
-  const writer = deps.findWriter();
-
-  if (!writer) throw new Error('Database Writer is unavailable');
-
-  await writeDatabaseJobAndWaitForCommit(writer, new SessionSeenJob(input));
+  open.readSession(input.sessionId);
+  await open.write(new SessionSeenJob(input));
 
   return {};
 }

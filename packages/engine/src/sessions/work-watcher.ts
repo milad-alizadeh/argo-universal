@@ -1,11 +1,8 @@
 import type { Observer, Subscription } from 'xstate';
 import type { FeedActorRef } from '../feed';
-import type { SessionRouterDeps } from './router-deps';
+import type { OpenSessions } from './open-sessions';
 import type { SessionActorRef } from './session-machine';
-import { findOpenSession } from './session-system';
 import { onWriterChange } from './writer-changes';
-
-type Sources = Pick<SessionRouterDeps, 'sessions' | 'findFeed' | 'findWriter'>;
 
 export type SessionWorkWatcher = (
   sessionId: string,
@@ -15,7 +12,9 @@ export type SessionWorkWatcher = (
 type WorkActor = { subscribe: (listener: Observer<unknown>) => Subscription };
 
 // Observes native Session work before storage exists, and through queued commits and close.
-export function createSessionWorkWatcher(deps: Sources): SessionWorkWatcher {
+export function createSessionWorkWatcher(
+  deps: OpenSessions,
+): SessionWorkWatcher {
   return (sessionId, listener) =>
     new WorkWatcher(deps, sessionId, listener).start();
 }
@@ -27,13 +26,13 @@ class WorkWatcher implements Subscription {
   private feedListener: Subscription | undefined;
   private readonly subscriptions = new Set<Subscription>();
   public constructor(
-    private readonly deps: Sources,
+    private readonly deps: OpenSessions,
     private readonly sessionId: string,
     private readonly listener: Observer<void>,
   ) {}
   public start(): Subscription {
     this.subscriptions.add(
-      this.deps.sessions.subscribe({
+      this.deps.subscribe({
         next: this.changed,
         error: this.listener.error,
         complete: this.listener.complete,
@@ -55,7 +54,7 @@ class WorkWatcher implements Subscription {
     this.listener.next?.();
   };
   private refresh(): void {
-    const session = findOpenSession(this.deps.sessions, this.sessionId);
+    const session = this.deps.session(this.sessionId);
 
     const feed = this.deps.findFeed(this.sessionId);
 

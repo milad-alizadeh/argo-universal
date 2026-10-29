@@ -1,8 +1,14 @@
 export {
   type OpenSessionsActorRef,
   type OpenSessionsInput,
+  openSessionsId,
   openSessionsMachine,
+  sessionActorId,
 } from './open-sessions-machine';
+
+export { Sessions } from './sessions';
+
+export type { SessionSources } from './session-sources';
 
 export { type SessionData } from './session-data';
 
@@ -37,16 +43,6 @@ export { sessionChangesSelection } from './changes-selection';
 
 export { createSessionActorInput } from './session-actor-input';
 
-export { openSessionsId } from './open-sessions-system';
-
-export { sessionActorId } from './session-system';
-
-export { createSessionRouter } from './router';
-
-export { createSessionList } from './list/session-list';
-
-export type { SessionRouterDeps } from './router-deps';
-
 export { recoverAfterRestart } from './recovery';
 
 export {
@@ -64,15 +60,12 @@ export {
 
 export { recoverArchivedCheckouts } from './archive/archive-operations';
 
-export { findSessionFeed } from './session-system';
-
 export { recoverShells } from './shells/recovery';
 
 export { releaseShellGroups } from './shells/shell-record';
 
 export {
   type CalledOperation,
-  type OperationCalls,
   type OperationCard,
   type OperationCallRead,
   type SessionOperationCall,
@@ -94,8 +87,9 @@ export {
 
 export { type AcceptedSessionPrompt } from './session-prompt';
 
-export { sessionOrigin, userOrigin, type NativeStart } from './prompt-sender';
-
-export { type NativeStartRequest } from './native-starts';
-
-export { createSessionPorts, type SessionPorts } from './session-ports';
+export {
+  sessionOrigin,
+  userOrigin,
+  type NativeStart,
+  type NativeStartRequest,
+} from './prompt-sender';

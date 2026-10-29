@@ -2,17 +2,6 @@ import type { InitialConfigOption, SessionNewInput } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import type { Checkout } from '@repo/git';
 
-export { titleFromPrompt } from '../feed';
-
-export {
-  createSessionCheckout,
-  toSessionInsert,
-} from './creation/session-create-data';
-
-export { discardSession, type SessionDiscard } from './session-discard';
-
-export { loadSession } from './session-load';
-
 // Prompted creation carries the first Turn's id.
 export type SessionCreationInput = SessionNewInput & {
   projectPath: string;

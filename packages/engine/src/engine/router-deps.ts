@@ -13,7 +13,7 @@ import {
   createSessionReader,
   createSessionSnapshotWatcher,
   sessionChangesSelection,
-  type SessionRouterDeps,
+  type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
 import {
@@ -24,7 +24,7 @@ import {
 
 export { createFeedSources } from './feed-sources';
 
-export type AppRouterDeps = SessionRouterDeps &
+export type AppRouterDeps = SessionSources &
   AgentsRouterDeps &
   BlobUploadDeps &
   SystemDeps &
