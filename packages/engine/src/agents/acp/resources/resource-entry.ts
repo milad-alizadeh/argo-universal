@@ -1,12 +1,7 @@
 import type { DeferredAgentLaunch } from '../..';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import type { AcpConnection } from '../connection/connection';
-import type { SessionProcessAccess } from './resource-types';
-
-// A private connection is one Session's own Agent process, holding that Session's access; a shared one serves its Agent and Project.
-export type EntryKind =
-  | { kind: 'shared' }
-  | { kind: 'private'; access: SessionProcessAccess };
+import type { EntryKind } from './resource-types';
 
 export type Entry = EntryKind & {
   agentId: string;

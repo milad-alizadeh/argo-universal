@@ -1,12 +1,11 @@
 import type { DeferredAgentLaunch } from '../..';
 import type { AcpConnection } from '../connection/connection';
-import {
-  entryInUse,
-  type Entry,
-  type EntryKind,
-  type PrivateEntry,
-} from './resource-entry';
-import type { AcpResourceInput, SessionProcessAccess } from './resource-types';
+import { entryInUse, type Entry, type PrivateEntry } from './resource-entry';
+import type {
+  AcpResourceInput,
+  EntryKind,
+  SessionProcessAccess,
+} from './resource-types';
 
 type LaunchPolicy = { key: string; kind: EntryKind };
 
