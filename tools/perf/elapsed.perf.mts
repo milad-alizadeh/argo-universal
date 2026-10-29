@@ -52,6 +52,9 @@ const dataset = (): BenchmarkMetadata['dataset'] => ({
   sessions: server.sessionCount,
   feedRows: server.feedRowCount,
   shortFeedRows: server.shortFeedRowCount,
+  requestedSessions: server.requested.sessions,
+  requestedFeedRows: server.requested.feedRows ?? null,
+  rowKinds: server.rowKinds,
   content:
     'Copies of mocks/app/feed-recordings.json excluding Blob rows; text, markdown and Tool calls',
   attachments: 'Excluded because the seeded Server does not hold their Blobs',
@@ -100,6 +103,14 @@ const scenarios = {
     typing(page, server),
 } satisfies Record<string, ScenarioFactory>;
 
+function datasetLimit(
+  interaction: string,
+): Pick<ElapsedResult, 'notApplicable'> {
+  return interaction === 'feed-page-ready' && server.requested.feedRows === 100
+    ? { notApplicable: 'The 100-row tier fits in the initial App history page' }
+    : {};
+}
+
 function resultFor(
   interaction: string,
   cpu: number,
@@ -112,6 +123,7 @@ function resultFor(
     boundary: scenario.boundary,
     warmups: [],
     samples: [],
+    ...datasetLimit(interaction),
   };
 }
 
@@ -124,9 +136,11 @@ for (const cpu of cpuRates)
 
       const result = resultFor(interaction, cpu, scenario);
       results.push(result);
+      // The 100-row tier fits in the initial page, so it cannot measure older-history pagination.
+      test.skip(result.notApplicable !== undefined, result.notApplicable);
       await runElapsed(page, scenario, result);
       expect(
         failedTrials(result),
-        'Functional readiness failures remain in the raw benchmark report',
+        'Readiness failures remain in the raw report',
       ).toEqual([]);
     });

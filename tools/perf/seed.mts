@@ -2,109 +2,114 @@ import path from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { startOwnServer } from '../../e2e/own-server.ts';
+import { writeBatches } from './seed-batches.mts';
 import {
   datasetCounts,
   type SeedCounts,
   seededDataset,
   type SeededDataset,
 } from './seed-dataset.mts';
-import { type SeededFeed, seededFeed } from './seed-feed.mts';
+import { type FeedSize, type SeededFeed, seededFeed } from './seed-feed.mts';
+import {
+  environmentSeedOptions,
+  seedConfiguration,
+  type SeedConfiguration,
+  type SeedOptions,
+} from './seed-options.mts';
+import {
+  benchmarkTitles,
+  longSessionId,
+  seedSessionRows,
+  type SessionRow,
+} from './seed-sessions.mts';
 import { withTemplateSession } from './template-session.mts';
 
 // A Server whose Project holds many Sessions, one of them with a long Feed, for the perf runs.
-export interface SeededServer {
+export interface SeededServer extends SeedCounts {
   serverUrl: string;
   longSessionTitle: string;
   shortSessionTitle: string;
   sessionCount: number;
-  feedRowCount: number;
-  shortFeedRowCount: number;
+  requested: SeedConfiguration;
   stop: () => Promise<void>;
 }
 
-const longSessionId = 'perf-long-feed';
-
-const titles = [
-  'Fix flaky reconnect in the Connection machine',
-  'Add search to the Sessions list',
-  'Refactor the Feed view model',
-  'Explain why the Inspector resizes',
-  'Bump Expo and check the native build',
-  'Write model-based tests for the drawer',
-  'Port the glass sidebar to Electron',
-  'Investigate slow catch-up after sleep',
-];
-
-const sessionCount = 240;
-
 const feedCopies = 14;
 
-const longSessionTitle = `${titles[0]} 0`;
+type SeedData = Pick<SeededDataset, 'sessions' | 'feed'>;
 
-const benchmarkTitles = {
-  longSessionTitle,
-  shortSessionTitle: `${titles[1]} 1`,
-};
-
-type SessionRow = typeof session.$inferSelect;
-
-const clone = (
-  template: SessionRow,
-  index: number,
-  now: number,
-): SessionRow => ({
-  ...template,
-  id: `perf-session-${index}`,
-  title: `${titles[index % titles.length]} ${index}`,
-  titleSource: 'user',
-  activityAt: now - index * 60_000,
-  vendorSessionId: null,
-});
-
-// The long Session, which holds `revision` Feed rows, then older copies of the template.
-const clones = (
-  template: SessionRow,
-  revision: number,
-  now: number,
-): SessionRow[] =>
-  Array.from({ length: sessionCount }, (_, index) =>
-    clone(template, index, now),
-  ).with(0, {
-    ...clone(template, 0, now),
-    id: longSessionId,
-    maxRevision: revision,
-    seenRevision: revision,
-  });
-
-function write(
-  database: Database,
-  sessions: SessionRow[],
-  feed: SeededFeed,
-): void {
+function write(database: Database, data: SeedData): void {
   database.transaction((transaction) => {
-    transaction.insert(session).values(sessions).run();
-    transaction.insert(turn).values(feed.turns).run();
-    transaction.insert(feedRow).values(feed.rows).run();
+    writeBatches(data.sessions, (rows) =>
+      transaction.insert(session).values(rows).run(),
+    );
+    writeBatches(data.feed.turns, (rows) =>
+      transaction.insert(turn).values(rows).run(),
+    );
+    writeBatches(data.feed.rows, (rows) =>
+      transaction.insert(feedRow).values(rows).run(),
+    );
   });
 }
 
-// Clones the template Session `sessionCount` times, the first holding the long Feed.
-async function prepareDataset(database: Database): Promise<SeededDataset> {
+interface DatasetContext {
+  template: SessionRow;
+  options: SeedConfiguration;
+  now: number;
+}
+
+function readTemplate(database: Database): SessionRow {
   const template = database.select().from(session).limit(1).get();
 
   if (!template) throw new Error('The template Session is missing');
-  const now = Date.now();
-  const feed = await seededFeed(longSessionId, feedCopies, now);
 
-  return seededDataset(clones(template, feed.rows.length, now), feed, now);
+  return template;
 }
 
-async function seedDatabase(databasePath: string): Promise<SeedCounts> {
+const feedSize = (options: SeedConfiguration): FeedSize =>
+  options.feedRows ? { rows: options.feedRows } : { copies: feedCopies };
+
+function datasetFrom(
+  context: DatasetContext,
+  feed: SeededFeed,
+): Promise<SeededDataset> {
+  const { template, options, now } = context;
+
+  const sessions = seedSessionRows({
+    template,
+    revision: feed.rows.length,
+    now,
+    count: options.sessions,
+  });
+
+  return seededDataset(sessions, feed, now);
+}
+
+// The requested Session total includes the original template; one clone holds the long Feed.
+async function prepareDataset(
+  database: Database,
+  options: SeedConfiguration,
+): Promise<SeededDataset> {
+  const context = {
+    template: readTemplate(database),
+    options,
+    now: Date.now(),
+  };
+
+  const feed = await seededFeed(longSessionId, feedSize(options), context.now);
+
+  return datasetFrom(context, feed);
+}
+
+async function seedDatabase(
+  databasePath: string,
+  options: SeedConfiguration,
+): Promise<SeedCounts> {
   const database = openDatabase(databasePath);
 
   try {
-    const dataset = await prepareDataset(database);
-    write(database, dataset.sessions, dataset.feed);
+    const dataset = await prepareDataset(database, options);
+    write(database, dataset);
 
     return datasetCounts(dataset);
   } finally {
@@ -112,20 +117,36 @@ async function seedDatabase(databasePath: string): Promise<SeedCounts> {
   }
 }
 
-// Starts a fixture Server, gives it one real Session, then clones it into many Sessions and copies of the recorded Feeds.
-export async function startSeededServer(
-  directory: string,
-): Promise<SeededServer> {
-  await withTemplateSession(directory);
-  const databasePath = path.join(directory, 'server-home', 'argo.db');
-  const counts = await seedDatabase(databasePath);
-  const server = await startOwnServer(directory, {});
+type ServerProcess = Pick<
+  Awaited<ReturnType<typeof startOwnServer>>,
+  'serverUrl' | 'stop'
+>;
 
+function serverView(
+  server: ServerProcess,
+  counts: SeedCounts,
+  requested: SeedConfiguration,
+): SeededServer {
   return {
     serverUrl: server.serverUrl,
     ...benchmarkTitles,
-    sessionCount: sessionCount + 1,
+    sessionCount: requested.sessions,
+    requested,
     ...counts,
     stop: server.stop,
   };
+}
+
+// Starts a fixture Server, gives it one real Session, then clones it into many Sessions and copies of the recorded Feeds.
+export async function startSeededServer(
+  directory: string,
+  options: SeedOptions = environmentSeedOptions(),
+): Promise<SeededServer> {
+  const requested = seedConfiguration(options);
+  await withTemplateSession(directory);
+  const databasePath = path.join(directory, 'server-home', 'argo.db');
+  const counts = await seedDatabase(databasePath, requested);
+  const server = await startOwnServer(directory, {});
+
+  return serverView(server, counts, requested);
 }

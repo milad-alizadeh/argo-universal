@@ -66,13 +66,26 @@ const copiedRows = (
     ),
   ).flat();
 
-// `copies` copies of every recorded row for `sessionId`, with the ended Turns they belong to.
+export type FeedSize = { copies: number } | { rows: number };
+
+function rowsOf(recorded: RecordedRow[][], size: FeedSize): RecordedRow[] {
+  const perCopy = recorded.reduce((count, rows) => count + rows.length, 0);
+
+  const copies =
+    'copies' in size ? size.copies : Math.ceil(size.rows / perCopy);
+
+  const copied = copiedRows(recorded, copies);
+
+  return 'rows' in size ? copied.slice(-size.rows) : copied;
+}
+
+// Exact tiers retain the catalog's final message, and every copied identity remains distinct.
 export async function seededFeed(
   sessionId: string,
-  copies: number,
+  size: FeedSize,
   now: number,
 ): Promise<SeededFeed> {
-  const copied = copiedRows(await recordings(), copies);
+  const copied = rowsOf(await recordings(), size);
 
   return {
     turns: endedTurns(sessionId, copied, now),
