@@ -16,7 +16,7 @@ export type NativeStart<Accepted> = {
 // The authenticated caller chooses the identity; Hooks and prompt JSON never do.
 function sessionPromptSender(
   sessionId: string,
-  { title }: { title: string },
+  title: string,
 ): NonUserPromptSender {
   return { type: 'session', sessionId, title: title.trim() || 'Session' };
 }
@@ -30,10 +30,10 @@ export const userOrigin: SessionOrigin = {
 // A calling Session is the new Session's started-by Session and its Prompts' sender.
 export function sessionOrigin(
   callerSessionId: string,
-  caller: { title: string },
+  title: string,
 ): SessionOrigin {
   return {
     startedBySessionId: callerSessionId,
-    sender: sessionPromptSender(callerSessionId, caller),
+    sender: sessionPromptSender(callerSessionId, title),
   };
 }

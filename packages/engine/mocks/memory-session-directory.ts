@@ -1,10 +1,11 @@
 import { TRPCError } from '@trpc/server';
 import type { DirectorySession, SessionDirectory } from '../src/sessions';
 
-// A Session the test names, which is also its title: still opening has no row yet, and running has a running Turn.
+// A Session the test names: still opening has no row yet, and running has a running Turn.
 export type MemorySession = DirectorySession & {
   opening?: true;
   running?: true;
+  title?: string;
 };
 
 const missing = (sessionId: string): TRPCError =>
@@ -33,9 +34,10 @@ export function memorySessionDirectory(
 
       if (found.opening) throw missing(sessionId);
 
-      return { ...fields(found), title: sessionId };
+      return fields(found);
     },
     opening: (sessionId) => fields(find(sessionId)),
+    title: (sessionId) => find(sessionId).title ?? sessionId,
     running: (callerId) =>
       Object.entries(sessions)
         .filter(([, item]) => item.startedBySessionId === callerId)

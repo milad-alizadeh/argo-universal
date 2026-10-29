@@ -130,7 +130,7 @@ export class OperationRunner {
   ): Promise<OperationResult<Id>> {
     const origin = sessionOrigin(
       caller.sessionId,
-      this.ports.directory.session(caller.sessionId),
+      this.ports.directory.title(caller.sessionId),
     );
 
     const started = await this.native[id](params, { ...origin, ...start });
