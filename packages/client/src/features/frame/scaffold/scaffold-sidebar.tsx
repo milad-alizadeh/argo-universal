@@ -1,9 +1,10 @@
 import { OfferColumn } from '@repo/kit/content-column/content-column';
 import { ScreenListColumn } from '@repo/kit/primitives/scaffolds/screen';
 import { SelectionModeScope } from '@repo/kit/selection-mode';
+import { SidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import {
   FramePane,
   type FramePaneProps,
@@ -39,11 +40,13 @@ function SidebarGlass(parts: SidebarLayout): React.JSX.Element {
 // The list's Screen draws its heading in the column's row under the window's band, so the heading slides with the list.
 function SidebarListContent({ list }: { list: ReactNode }): React.JSX.Element {
   return (
-    <ScreenListColumn underBand>
-      <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
-        <OfferColumn column={listColumn}>{list}</OfferColumn>
-      </View>
-    </ScreenListColumn>
+    <SidebarGutterHeld value={Platform.OS === 'web'}>
+      <ScreenListColumn underBand>
+        <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
+          <OfferColumn column={listColumn}>{list}</OfferColumn>
+        </View>
+      </ScreenListColumn>
+    </SidebarGutterHeld>
   );
 }
 

@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { createPlace, useClaimed, type Place } from '#kit/place';
+import { useSidebarGutterHeld } from '#kit/sidebar-gutter';
 import { ScreenNavigationEnabled } from './screen-navigation-context';
 
 /*
@@ -62,6 +63,8 @@ export function ScreenListColumn(props: ScreenListColumnProps): ReactElement {
 
 const startsOnRowText = 'pl-6';
 
+const startsOnFrameRowText = 'pl-4';
+
 const endsClearOfScrollbar = 'pr-3.5';
 
 const rowClassName = `h-frame-control flex-row items-center ${startsOnRowText} ${endsClearOfScrollbar}`;
@@ -72,8 +75,13 @@ const rowClassName = `h-frame-control flex-row items-center ${startsOnRowText} $
  */
 const bandRowClassName = `web:h-14 native:h-frame-control flex-row items-center ${startsOnRowText} ${endsClearOfScrollbar} native:mt-4 native:pt-1`;
 
-const rowClass = (underBand?: boolean): string =>
-  underBand ? bandRowClassName : rowClassName;
+const rowClass = (underBand: boolean | undefined, held: boolean): string => {
+  const original = underBand ? bandRowClassName : rowClassName;
+
+  return held
+    ? original.replace(startsOnRowText, startsOnFrameRowText)
+    : original;
+};
 
 // The row is there for a heading, or always under the band, where the list starts below it.
 const rowShown = (claimed: ReactNode, underBand?: boolean): boolean =>
@@ -84,12 +92,24 @@ function ColumnHeadingRow(props: {
   underBand?: boolean;
 }): ReactElement | null {
   const claimed = useClaimed(props.heading);
+  const held = useSidebarGutterHeld();
 
   if (!rowShown(claimed, props.underBand)) return null;
 
   return (
-    <View testID="list-column-heading" className={rowClass(props.underBand)}>
-      <View className="min-w-0 flex-1">{claimed}</View>
+    <HeadingRow className={rowClass(props.underBand, held)}>
+      {claimed}
+    </HeadingRow>
+  );
+}
+
+function HeadingRow(props: {
+  className: string;
+  children: ReactNode;
+}): ReactElement {
+  return (
+    <View testID="list-column-heading" className={props.className}>
+      <View className="min-w-0 flex-1">{props.children}</View>
     </View>
   );
 }
