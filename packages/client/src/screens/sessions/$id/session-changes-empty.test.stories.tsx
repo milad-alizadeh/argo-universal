@@ -59,6 +59,7 @@ function binaryFile(width: number): Story {
       await expect(header).toHaveAccessibleName(`Diff for ${binaryPath}`);
       await expect(mark).toBeVisible();
       await expect(headerBounds.right).toBeLessThanOrEqual(markBounds.left);
+
       if (width === layoutWidths.wide) {
         const basename = screen.getByText(binaryPath.split('/').at(-1) ?? '');
 
@@ -66,6 +67,7 @@ function binaryFile(width: number): Story {
           basename.clientWidth,
         );
       }
+
       await expect(await screen.findByText(noLines)).toBeVisible();
       await userEvent.click(mark);
       await expect(header).toHaveAttribute('aria-expanded', 'false');
