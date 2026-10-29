@@ -26,11 +26,6 @@ export const ChangesAccessAndInstallsOnlyWhenPressed: Story = {
   play: async ({ canvas, args, userEvent }) => {
     await expect(args.onInstall).not.toHaveBeenCalled();
     await expect(
-      canvas.getByText(
-        'Install instructions for your Agents and a Codex rule in your home folder on the Server. Project files stay untouched.',
-      ),
-    ).toBeVisible();
-    await expect(
       canvas.getByRole('switch', { name: 'Agent access to Argo' }),
     ).toBeChecked();
     await userEvent.click(

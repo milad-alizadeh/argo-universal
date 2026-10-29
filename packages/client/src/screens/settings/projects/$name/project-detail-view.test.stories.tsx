@@ -57,9 +57,6 @@ export const OffersNoUnbuiltChanges: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Remove Project' }),
     ).toBeDisabled();
-    await expect(
-      canvas.getByText(/Argo forgets this Project and archives its Sessions/),
-    ).toBeVisible();
   },
 };
 

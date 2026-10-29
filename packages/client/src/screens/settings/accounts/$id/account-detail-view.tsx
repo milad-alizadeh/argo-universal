@@ -1,10 +1,8 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { Text } from '@repo/kit/primitives/content/text';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
-import { View } from 'react-native';
 import { AccountSignOutAlert, signOutCopy } from './account-sign-out-alert';
 
 export interface AccountBorrower {
@@ -45,24 +43,18 @@ export interface AccountDetailViewProps {
 export function AccountDetailView(
   props: AccountDetailViewProps,
 ): React.JSX.Element {
-  const [open, onOpenChange] = useState(false);
-
   return (
     <Screen
       title={accountDetailTitle}
       caption={props.caption}
       onBack={props.onBack}
     >
-      {accountBody(props, open, onOpenChange)}
+      <AccountBody {...props} />
     </Screen>
   );
 }
 
-function accountBody(
-  props: AccountDetailViewProps,
-  open: boolean,
-  onOpenChange: (open: boolean) => void,
-): React.ReactNode {
+function AccountBody(props: AccountDetailViewProps): React.JSX.Element {
   const { account } = props;
 
   if (account.status === 'loading') return oneRow('Loading the Account…');
@@ -70,7 +62,7 @@ function accountBody(
   if (account.status === 'missing')
     return oneRow(`The Server has no Account named ${props.title}.`);
 
-  return loadedAccountBody(props, account, open, onOpenChange);
+  return <LoadedAccountBody {...props} account={account} />;
 }
 
 // While loading, or when the Account is gone, the page is one row saying so.
@@ -84,27 +76,28 @@ const oneRow = (title: string): React.JSX.Element => (
 
 type LoadedProps = AccountDetailViewProps & { account: LoadedAccount };
 
-function loadedAccountBody(
-  props: AccountDetailViewProps,
-  account: LoadedAccount,
-  open: boolean,
-  onOpenChange: (open: boolean) => void,
-): React.ReactNode {
-  const { onSignOut } = props;
+function LoadedAccountBody(props: LoadedProps): React.JSX.Element {
+  const [open, onOpenChange] = useState(false);
+  const { account, onSignOut } = props;
 
   return (
-    <View className="gap-2">
-      <FieldGroup>{accountSections({ ...props, account })}</FieldGroup>
-      {signOutSection(account, () => onOpenChange(true))}
+    <>
+      <FieldGroup>
+        {accountSections(props, () => onOpenChange(true))}
+      </FieldGroup>
       <AccountSignOutAlert {...{ account, onSignOut, open, onOpenChange }} />
-    </View>
+    </>
   );
 }
 
-const accountSections = (props: LoadedProps): React.JSX.Element => (
+const accountSections = (
+  props: LoadedProps,
+  onSignOutPress: () => void,
+): React.JSX.Element => (
   <>
     {detailsSection(props.title, props.account)}
     {accessSection(props)}
+    {signOutSection(props.account, onSignOutPress)}
   </>
 );
 
@@ -171,16 +164,9 @@ const signOutSection = (
   account: LoadedAccount,
   onPress: () => void,
 ): React.JSX.Element => (
-  <View className="gap-2">
-    <Button
-      label={signOutCopy.signOut}
-      variant="danger"
-      onPress={onPress}
-      fullWidth
-    />
-    <Text role="secondary" tone="muted">
-      Sign out also removes access for {account.provider} and every Plugin using
-      this Account.
-    </Text>
-  </View>
+  <FieldGroup.Section
+    footer={`Sign out also removes access for ${account.provider} and every Plugin using this Account.`}
+  >
+    <Button label={signOutCopy.signOut} variant="danger" onPress={onPress} />
+  </FieldGroup.Section>
 );

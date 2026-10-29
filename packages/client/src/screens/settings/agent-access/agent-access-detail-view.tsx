@@ -1,9 +1,7 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { Text } from '@repo/kit/primitives/content/text';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
-import { View } from 'react-native';
 
 export type AgentAccessLoad =
   | { status: 'loading' | 'error' | 'disconnected' }
@@ -27,11 +25,11 @@ export function AgentAccessDetailView(
 ): React.JSX.Element {
   return (
     <Screen title="Agent access" caption={props.caption} onBack={props.onBack}>
-      <View className="gap-2">
-        <FieldGroup>{accessSection(props)}</FieldGroup>
+      <FieldGroup>
+        {accessSection(props)}
         {instructionsSection(props)}
         {statusSection(props)}
-      </View>
+      </FieldGroup>
     </Screen>
   );
 }
@@ -55,19 +53,15 @@ function instructionsSection(
   props: AgentAccessDetailViewProps,
 ): React.JSX.Element {
   return (
-    <View className="gap-2">
+    <FieldGroup.Section footer="Install instructions for your Agents and a Codex rule in your home folder on the Server. Project files stay untouched.">
       <Button
         label="Add Argo to your Agents"
+        variant="text"
         onPress={props.onInstall}
         disabled={props.access.status !== 'loaded'}
         loading={props.installing}
-        fullWidth
       />
-      <Text role="secondary" tone="muted">
-        Install instructions for your Agents and a Codex rule in your home
-        folder on the Server. Project files stay untouched.
-      </Text>
-    </View>
+    </FieldGroup.Section>
   );
 }
 
@@ -88,12 +82,9 @@ function statusSection(
   if (!message) return null;
 
   return (
-    <View className="gap-2">
-      <Text role="secondary" tone="muted">
-        {message}
-      </Text>
+    <FieldGroup.Section footer={message}>
       {retryButton(status, props.onRetry)}
-    </View>
+    </FieldGroup.Section>
   );
 }
 
@@ -107,5 +98,7 @@ function retryButton(
   status: AgentAccessLoad['status'],
   onRetry: () => void,
 ): React.JSX.Element | null {
-  return status === 'error' ? <Button label="Retry" onPress={onRetry} /> : null;
+  return status === 'error' ? (
+    <Button label="Retry" variant="text" onPress={onRetry} />
+  ) : null;
 }

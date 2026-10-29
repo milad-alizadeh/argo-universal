@@ -2,7 +2,6 @@ import type { ProjectInfo } from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
-import { View } from 'react-native';
 import { homePath, SettingsLoading } from '#features/settings';
 import {
   accountsSection,
@@ -48,20 +47,20 @@ export function ProjectDetailView(
 ): React.JSX.Element {
   return (
     <Screen title={props.name} caption={props.caption} onBack={props.onBack}>
-      {projectBody(props)}
+      <ProjectBody {...props} />
     </Screen>
   );
 }
 
-function projectBody({
+function ProjectBody({
   project,
   name,
   ...sections
-}: BodyProps): React.ReactNode {
+}: BodyProps): React.JSX.Element {
   if (project.status !== 'loaded')
     return <UnloadedProject status={project.status} name={name} />;
 
-  return projectSections({ project: project.project, ...sections });
+  return <ProjectSections project={project.project} {...sections} />;
 }
 
 type UnloadedProps = { status: 'loading' | 'missing'; name: string };
@@ -81,19 +80,17 @@ const UnloadedProject = ({ status, name }: UnloadedProps): React.JSX.Element =>
   );
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
-function projectSections(props: SectionsProps): React.JSX.Element {
+function ProjectSections(props: SectionsProps): React.JSX.Element {
   const { project, otherDevice, renderPluginSlot, accounts } = props;
 
   return (
-    <View className="gap-2">
-      <FieldGroup>
-        {folderSection(project, otherDevice)}
-        {accountsSection(accounts)}
-        {renderPluginSlot?.(project)}
-        {newSessionsSections(project)}
-      </FieldGroup>
+    <FieldGroup>
+      {folderSection(project, otherDevice)}
+      {accountsSection(accounts)}
+      {renderPluginSlot?.(project)}
+      {newSessionsSections(project)}
       {removeSection()}
-    </View>
+    </FieldGroup>
   );
 }
 
