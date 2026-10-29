@@ -3,18 +3,15 @@ import { Icon } from '@repo/kit/primitives/content/icon';
 import { List } from '@repo/kit/primitives/lists/list';
 import { ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { ComposerPopover } from '../composer-popover/composer-popover';
+import { PhoneAttachChoices } from './composer-phone-attach-choices';
+import {
+  type AttachChoice,
+  slashCommandsChoice,
+} from './composer-slash-commands-choice';
 import type { AttachLayout } from './composer-toolbar-types';
-import type { ComposerProps } from './composer-types';
-
-interface AttachChoice {
-  label: string;
-  icon: IconName;
-  onPress?: () => void;
-}
 
 export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
   return (
@@ -45,6 +42,8 @@ interface AttachMenuProps {
 }
 
 function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
+  if (!menu.layout.wide) return <PhoneAttachChoices {...menu} />;
+
   return (
     <View className="native:flex-1 native:wide:p-3 bg-content web:wide:bg-card">
       {/* A phone's sheet fills its height, so the List scrolls in it; a web popover fits its rows. */}
@@ -61,7 +60,7 @@ function ComposerAttachItems({
   layout,
   close,
 }: AttachMenuProps): React.JSX.Element {
-  const choices = layout.wide ? wideChoices(layout) : phoneChoices(layout);
+  const choices = wideChoices(layout);
 
   return (
     <>
@@ -84,44 +83,6 @@ function wideChoices(layout: AttachLayout): AttachChoice[] {
     slashCommandsChoice(layout),
     { label: 'Goal', icon: 'goal', onPress: props.onCreateGoal },
   ];
-}
-
-// Chosen, it writes a `/` into the message field, which opens the field's menu; with no commands there is nothing to open.
-function slashCommandsChoice({ props, field }: AttachLayout): AttachChoice {
-  return {
-    label: 'Slash Commands',
-    icon: 'code',
-    onPress: props.slashCommands?.length
-      ? () => field.insertWord('/')
-      : undefined,
-  };
-}
-
-function phoneChoices(layout: AttachLayout): AttachChoice[] {
-  const { props } = layout;
-
-  return [
-    ...cameraChoice(props),
-    { label: 'Photos', icon: 'photos', onPress: props.onAttachImages },
-    ...fileChoice(props),
-    slashCommandsChoice(layout),
-  ];
-}
-
-function cameraChoice(
-  props: Pick<ComposerProps, 'onAttachCamera'>,
-): AttachChoice[] {
-  return props.onAttachCamera
-    ? [{ label: 'Camera', icon: 'camera', onPress: props.onAttachCamera }]
-    : [];
-}
-
-function fileChoice(
-  props: Pick<ComposerProps, 'onAttachFiles'>,
-): AttachChoice[] {
-  return props.onAttachFiles
-    ? [{ label: 'Files', icon: 'folder', onPress: props.onAttachFiles }]
-    : [];
 }
 
 interface AttachItemProps {

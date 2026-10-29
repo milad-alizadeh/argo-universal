@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "check-types": "node ../../../tools/plugin-typecheck.mts 'tsc --noEmit && tsc --noEmit -p tsconfig.test.json'",
     "test": "argo-plugin test .",
     "validate": "argo-plugin validate ."
   },

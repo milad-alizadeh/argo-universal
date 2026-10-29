@@ -71,7 +71,7 @@ function LabelledCheck(
   return (
     <>
       <Icon name={props.value ? 'passed' : 'pending'} />
-      <Text role="secondary" tone={props.value ? undefined : 'muted'}>
+      <Text role="control" tone={props.value ? undefined : 'muted'}>
         {props.label}
       </Text>
     </>
@@ -80,7 +80,7 @@ function LabelledCheck(
 
 const labelledClass = contentActionClass({
   variant: 'ghost',
-  className: 'h-7 gap-1.5 px-2',
+  className: 'h-7 gap-1.5 px-2 web:sm:px-0',
 });
 
 const markClass = (viewed: boolean): string =>
