@@ -1,64 +1,18 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import type { AnyMessage, SessionNotification } from '@agentclientprotocol/sdk';
+import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { ShellRecord } from '@repo/contracts';
 import { onTestFinished } from 'vitest';
 import { createActor } from 'xstate';
-import { createAgentClient } from '../src/agents';
-import {
-  createShells,
-  type SessionData,
-  type ShellCommand,
-  type ShellCommandInput,
-  type ShellLauncher,
-  type Shells,
-} from '../src/sessions';
+import { createShells, type SessionData, type Shells } from '../src/sessions';
 import { writerMachine, type WriterActorRef } from '../src/storage';
 import { resourceLaunch } from './acp-resource';
 import { openTestDatabase } from './database';
-import { createScriptedAgentWire } from './scripted-agent';
-
-type Exit = { exitCode: number | null; signal?: string };
-
-type MemoryShellCommand = ShellCommand & {
-  input: ShellCommandInput;
-  // Output the command prints, delivered to the Shell as a process would.
-  print: (text: string) => Promise<void>;
-  exit: (exitCode: number) => void;
-};
-
-// The in-memory adapter for how a Shell's command starts: nothing runs, and the test says what each command prints and when it exits.
-const memoryLauncher =
-  (commands: MemoryShellCommand[]): ShellLauncher =>
-  (input) => {
-    const exited = Promise.withResolvers<Exit>();
-    let running = true;
-
-    const end = (status: Exit): void => {
-      running = false;
-      exited.resolve(status);
-    };
-
-    const command: MemoryShellCommand = {
-      input,
-      exited: exited.promise,
-      isRunning: (): boolean => running,
-      kill: (): boolean => {
-        const wasRunning = running;
-
-        if (wasRunning) end({ exitCode: null, signal: 'SIGKILL' });
-
-        return wasRunning;
-      },
-      print: (text): Promise<void> =>
-        Promise.resolve(input.output(Buffer.from(text))),
-      exit: (exitCode): void => end({ exitCode }),
-    };
-
-    commands.push(command);
-
-    return Promise.resolve(command);
-  };
+import { agentSide, type TerminalCall } from './memory-shell-acp';
+import {
+  memoryLauncher,
+  type MemoryShellCommand,
+} from './memory-shell-launcher';
 
 const session: SessionData = {
   sessionId: 'session-1',
@@ -93,45 +47,6 @@ const startWriter = (database: Database, directory: string): WriterActorRef => {
   return writer;
 };
 
-type Destination = ReturnType<Shells['attach']>;
-
-// The Agent's side of ACP: sends terminal requests down a wire and reads the response.
-type TerminalCall = (
-  method: string,
-  params: Record<string, string>,
-) => Promise<AnyMessage>;
-
-const agentSide = (destination: Destination): TerminalCall => {
-  const wire = createScriptedAgentWire({ steps: [] });
-
-  const connection = createAgentClient({
-    stream: wire.stream,
-    terminalRequests: destination.terminalRequests,
-    acceptSessionUpdate: () => {},
-    requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
-    createElicitation: () => ({ action: 'cancel' }),
-  });
-
-  onTestFinished(async () => {
-    connection.close();
-    await connection.closed;
-  });
-  let requests = 0;
-
-  return async (method, params) => {
-    await wire.send([
-      {
-        jsonrpc: '2.0',
-        id: ++requests,
-        method,
-        params: { sessionId: 'acp-session', ...params },
-      },
-    ]);
-
-    return wire.receive();
-  };
-};
-
 // A Session's Shells with an in-memory launcher and a real database. `terminal` sends the Agent's terminal request and returns its response; `claim` is the Tool call that names a terminal.
 export type MemoryShells = {
   shells: Shells;
@@ -145,56 +60,94 @@ export type MemoryShells = {
 export const openMemoryShells = (): MemoryShells => {
   const { database, directory, remove } = openTestDatabase();
   onTestFinished(remove);
-  const commands: MemoryShellCommand[] = [];
-  const changes: ShellRecord[] = [];
-  let created = 0;
+  const observations: ShellObservations = { commands: [], changes: [] };
 
-  const shells = createShells(
-    {
-      sessionId: 'session-1',
-      runtimeDirectory: directory,
-      writer: startWriter(database, directory),
-      now: Date.now,
-      createId: () => `terminal-${++created}`,
-    },
-    {
-      changed: (record) => changes.push(record),
-      failed: (error) => {
-        throw error;
-      },
-      launch: memoryLauncher(commands),
-    },
+  const shells = fixtureShells(
+    directory,
+    startWriter(database, directory),
+    observations,
   );
 
   shells.configure(session, resourceLaunch);
 
-  const destination = shells.attach({
+  return memoryShells(database, shells, observations);
+};
+
+const memoryShells = (
+  database: Database,
+  shells: Shells,
+  observations: ShellObservations,
+): MemoryShells => {
+  const destination = attachShells(shells);
+
+  return {
+    shells,
+    ...observations,
+    database,
+    terminal: agentSide(destination),
+    claim: claimTerminal(destination),
+  };
+};
+
+type ShellObservations = {
+  commands: MemoryShellCommand[];
+  changes: ShellRecord[];
+};
+
+const fixtureShells = (
+  directory: string,
+  writer: WriterActorRef,
+  observations: ShellObservations,
+): Shells =>
+  createShells(shellInput(directory, writer), shellPorts(observations));
+
+const shellInput = (
+  directory: string,
+  writer: WriterActorRef,
+): Parameters<typeof createShells>[0] => {
+  let created = 0;
+
+  return {
+    sessionId: 'session-1',
+    runtimeDirectory: directory,
+    writer,
+    now: Date.now,
+    createId: () => `terminal-${++created}`,
+  };
+};
+
+const shellPorts = (
+  observations: ShellObservations,
+): Parameters<typeof createShells>[1] => ({
+  changed: (record) => observations.changes.push(record),
+  failed: (error) => {
+    throw error;
+  },
+  launch: memoryLauncher(observations.commands),
+});
+
+const attachShells = (shells: Shells): ReturnType<Shells['attach']> =>
+  shells.attach({
     update: () => {},
     failed: () => {},
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: () => ({ action: 'cancel' }),
   });
 
-  const claim = (terminalId: string, toolCallId: string): void => {
-    const notification: SessionNotification = {
-      sessionId: 'acp-session',
-      update: {
-        sessionUpdate: 'tool_call',
-        toolCallId,
-        title: 'Run',
-        content: [{ type: 'terminal', terminalId }],
-      },
-    };
+const claimTerminal =
+  (destination: ReturnType<Shells['attach']>): MemoryShells['claim'] =>
+  (terminalId, toolCallId): void =>
+    destination.update(terminalNotification(terminalId, toolCallId));
 
-    destination.update(notification);
-  };
-
-  return {
-    shells,
-    changes,
-    commands,
-    database,
-    terminal: agentSide(destination),
-    claim,
-  };
-};
+const terminalNotification = (
+  terminalId: string,
+  toolCallId: string,
+): SessionNotification => ({
+  sessionId: 'acp-session',
+  update: {
+    sessionUpdate: 'tool_call',
+    toolCallId,
+    title: 'Run',
+    content: [{ type: 'terminal', terminalId }],
+  },
+});
