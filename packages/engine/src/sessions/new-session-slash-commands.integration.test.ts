@@ -223,6 +223,20 @@ it('keeps each Agent’s commands apart in one Project', async () => {
   await again.return?.();
 });
 
+// Leaving waits for discovery to wind down, so a wait that ignored the reader would outlast the test's own timeout.
+it('stops waiting for a list when the reader leaves', async () => {
+  const host = await startAcpEngine({ steps: [], commandsWaitMs });
+
+  const stream = (await host.caller.session.agentOptions(owner))[
+    Symbol.asyncIterator
+  ]();
+
+  await nextReady(stream);
+  await stream.return?.();
+  await host.stop();
+  expect(await stream.next()).toMatchObject({ done: true });
+});
+
 it('saves a list that arrives well after the options were read', async () => {
   const host = await startAcpEngine({ steps: [], commandsWaitMs });
   const stream = await discoverWith(host, [review], { delayMs: 2500 });

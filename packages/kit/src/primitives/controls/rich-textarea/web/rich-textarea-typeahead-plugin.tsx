@@ -60,15 +60,23 @@ function useReferenceAdapter(
   );
 }
 
-// Lexical looks for a trigger only when the editor changes, so a new source list nudges the caret.
+/*
+ * Lexical looks for a trigger only when the editor changes, so a new source list nudges the caret.
+ * Only a focused editor is nudged, and without touching the DOM selection, so a list arriving while
+ * the person is in a picker or popover never pulls focus into the editor.
+ */
 function useRetriggerOnChange(adapters: TypeaheadAdapter[]): void {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
-    editor.update(() => {
-      const selection = $getSelection();
+    if (!editor.getRootElement()?.contains(document.activeElement)) return;
+    editor.update(
+      () => {
+        const selection = $getSelection();
 
-      if ($isRangeSelection(selection)) selection.dirty = true;
-    });
+        if ($isRangeSelection(selection)) selection.dirty = true;
+      },
+      { tag: 'skip-dom-selection' },
+    );
   }, [editor, adapters]);
 }
 

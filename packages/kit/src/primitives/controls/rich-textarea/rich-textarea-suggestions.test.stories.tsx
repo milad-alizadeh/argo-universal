@@ -61,12 +61,6 @@ export const SuggestionsArrivingAfterTheSlashOpenTheMenu: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    await expect(
-      screen.queryByRole('option', { name: firstOptionName }),
-    ).not.toBeInTheDocument();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Deliver suggestions' }),
-    );
     await screen.findByRole('option', { name: firstOptionName });
   },
 };

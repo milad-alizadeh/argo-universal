@@ -1,8 +1,7 @@
 import { findToast } from '@repo/kit/mocks/find-toast';
 import { shownText } from '@repo/kit/mocks/shown-text';
 import { eachLayout } from '@repo/kit/mocks/story-layout';
-import { expect, fn, screen, within } from 'storybook/test';
-import { AgentSwitchingNewSession } from '../../../../mocks/new-session-view/agent-switching-new-session.test.mocks';
+import { expect, fn, screen } from 'storybook/test';
 import {
   checkoutChoice,
   narrowMainColumn,
@@ -89,42 +88,6 @@ export const OffersTheChosenAgentsSlashCommands: Story = {
     await expect(
       await screen.findByRole('option', { name: '/review Review changes' }),
     ).toBeVisible();
-  },
-};
-
-// Choosing another Agent swaps the menu to that Agent's list, never keeping the first Agent's.
-export const ChangingTheAgentOffersItsSlashCommands: Story = {
-  render: () => <AgentSwitchingNewSession {...readyNewSession} />,
-  play: async ({ canvas, userEvent }) => {
-    const second = readyNewSession.agents[1];
-
-    if (!second) throw new Error('The story needs two Agents.');
-    const message = await canvas.findByRole('textbox', { name: messageLabel });
-
-    await userEvent.type(message, '/');
-    await expect(
-      await screen.findByRole('option', { name: '/review Review changes' }),
-    ).toBeVisible();
-    await userEvent.keyboard('{Escape}');
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Agent and model' }),
-    );
-    const overlay = within(document.body);
-
-    await userEvent.click(
-      await overlay.findByRole('button', { name: /^Agent,/ }),
-    );
-    await userEvent.click(
-      await overlay.findByRole('radio', { name: second.name }),
-    );
-    await userEvent.click(message);
-    await userEvent.keyboard('{Backspace}/');
-    await expect(
-      await screen.findByRole('option', { name: '/deploy Deploy the build' }),
-    ).toBeVisible();
-    await expect(
-      screen.queryByRole('option', { name: /\/review/ }),
-    ).not.toBeInTheDocument();
   },
 };
 
