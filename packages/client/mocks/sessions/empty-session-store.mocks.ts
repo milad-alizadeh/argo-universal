@@ -22,7 +22,7 @@ export const prompt = [
   { type: 'text' as const, text: 'Fix the flaky login test' },
 ];
 
-export const launchFailureMessage = 'The Agent did not start';
+const launchFailureMessage = 'The Agent did not start';
 
 // A rejected `session.new` whose Agent failed to launch.
 export const failure = openFailure({
@@ -34,7 +34,7 @@ export const failure = openFailure({
 export const authRequired = openFailure({ type: 'auth-required' });
 
 // Each open and prompt waits until the test settles it.
-export interface Calls {
+interface Calls {
   open: {
     input: SessionNewInput;
     call: PromiseWithResolvers<SessionNewOutput>;

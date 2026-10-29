@@ -22,7 +22,7 @@ export const retryDelayMs = (attemptIndex: number): number =>
 export type LinkValue = TRPCConnectionState<unknown>;
 
 // tRPC wsClient's `connectionState`, read only for whether the WebSocket opened or closed.
-export interface LinkState {
+interface LinkState {
   subscribe: (observer: { next: (value: LinkValue) => void }) => Unsubscribable;
 }
 

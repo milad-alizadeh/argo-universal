@@ -5,15 +5,9 @@ export {
   installedError,
 } from './hooks/use-installed-agents';
 
-export {
-  AgentLogo,
-  RegistryIcon,
-} from '@repo/kit/primitives/content/agent-logo';
+export { AgentLogo } from '@repo/kit/primitives/content/agent-logo';
 
-export {
-  agentRows,
-  AgentListItem,
-} from './components/agent-list-item/agent-list-item';
+export { agentRows } from './components/agent-list-item/agent-list-item';
 
 export {
   loadedAgents,

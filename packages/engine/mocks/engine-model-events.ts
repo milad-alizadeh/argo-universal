@@ -13,7 +13,7 @@ import {
 import { machine } from './engine-model-logic';
 import * as model from './engine-model-state';
 
-export const fixtures = [
+const fixtures = [
   {
     type: 'xstate.done.actor.openDatabase',
     actorId: 'openDatabase',
@@ -79,7 +79,7 @@ export const fixtures = [
 
 export type EngineEvent = (typeof fixtures)[number];
 
-export const eventTypes = (node: DirectedGraphNode): string[] => [
+const eventTypes = (node: DirectedGraphNode): string[] => [
   ...node.edges.map((edge): string => edge.label.text),
   ...node.children.flatMap(eventTypes),
 ];

@@ -32,7 +32,6 @@
     "oxc-parser": "catalog:",
     "parse5": "catalog:",
     "react": "catalog:",
-    "react-native": "catalog:",
     "react-reconciler": "catalog:",
     "semver": "catalog:",
     "tar": "catalog:",

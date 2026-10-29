@@ -31,7 +31,7 @@ export const readAddressErrorEvent = 'xstate.error.actor.readAddress';
 export const checkRunningDoneEvent = 'xstate.done.actor.checkRunning';
 
 // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
-export const fixtures = [
+const fixtures = [
   ...[runningAddress, null, startedAddress, staleAddress].map(
     (output) =>
       ({

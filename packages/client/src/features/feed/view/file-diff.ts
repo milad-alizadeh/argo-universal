@@ -7,8 +7,6 @@ import {
   toDiffHunk,
 } from './diff-hunks';
 
-export type { DiffLine } from './diff-hunks';
-
 export interface FileDiff
   extends
     Pick<DiffChange, 'path' | 'oldPath' | 'operation'>,

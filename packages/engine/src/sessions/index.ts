@@ -25,11 +25,7 @@ export {
 
 export { type SessionActorRef, sessionMachine } from './session-machine';
 
-export {
-  type InputRequestQueues,
-  type PendingInputRequest,
-  pendingInputRequest,
-} from './pending-input';
+export { pendingInputRequest } from './pending-input';
 
 export { createSessionSnapshotWatcher } from './snapshot';
 

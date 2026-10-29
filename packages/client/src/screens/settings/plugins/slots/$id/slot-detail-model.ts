@@ -15,7 +15,7 @@ export interface SlotPlugin {
 // The Single-owner Slot's two writers: Argo, or one Plugin by id.
 export type SlotOwner = string | null;
 
-export const argoOptionValue = 'argo';
+const argoOptionValue = 'argo';
 
 const pluginOptionPrefix = 'plugin:';
 
@@ -32,7 +32,7 @@ const listedPlugins = (plugins: readonly SlotPlugin[]): SlotPlugin[] =>
   plugins.filter((plugin) => plugin.fills || plugin.asks);
 
 // Only the Plugins that ask for the Single-owner Slot can write it.
-export const askingPlugins = (plugins: readonly SlotPlugin[]): SlotPlugin[] =>
+const askingPlugins = (plugins: readonly SlotPlugin[]): SlotPlugin[] =>
   plugins.filter((plugin) => plugin.asks);
 
 // What the Slot shows under the page's switches and choice, by the same rules the Slot itself follows.

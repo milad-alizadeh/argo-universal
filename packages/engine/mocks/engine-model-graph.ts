@@ -29,7 +29,7 @@ const eventStates = new Map<string, string>(
   }),
 );
 
-export const canGraphEvent = (
+const canGraphEvent = (
   snapshot: EngineSnapshot,
   event: EngineEvent,
 ): boolean => {

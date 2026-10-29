@@ -4,7 +4,7 @@ type ArgoMeta = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
 export const argoMeta = (row: ToolCallUpdate): ArgoMeta => row._meta?.argo;
 
-export const commandActions = (row: ToolCallUpdate): readonly CommandAction[] =>
+const commandActions = (row: ToolCallUpdate): readonly CommandAction[] =>
   argoMeta(row)?.commandActions ?? [];
 
 export const firstLocationPath = (row: ToolCallUpdate): string | undefined =>
