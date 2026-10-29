@@ -17,7 +17,6 @@
     "@repo/machine-log": "workspace:*",
     "@repo/server": "workspace:*",
     "@trpc/client": "catalog:",
-    "tsx": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -6,11 +6,7 @@ export const oneLine = (text: string): string =>
 
 export type Fallback = { pluginId: string; slotId: string; reason: string };
 
-export const renderFallbackLine = ({
-  pluginId,
-  slotId,
-  reason,
-}: Fallback): string =>
+const renderFallbackLine = ({ pluginId, slotId, reason }: Fallback): string =>
   `Plugin ${pluginId}: core fallback ${slotId}: ${oneLine(reason)}`;
 
 export const belowWireMinimum = 'App is below the wire minimum';

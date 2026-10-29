@@ -1,9 +1,4 @@
-export {
-  userMessageChange,
-  userMessageId,
-  promptMessageChange,
-  promptMessageId,
-} from './feed-change';
+export { promptMessageChange, promptMessageId } from './feed-change';
 
 export {
   type FeedActorRef,
@@ -17,7 +12,6 @@ export {
   highestFeedPosition,
   hydrateStoredFeedRow,
   newestRows,
-  payloadVersion,
   readWrittenRow,
   storedFeedColumns,
   toFeedRowWrite,

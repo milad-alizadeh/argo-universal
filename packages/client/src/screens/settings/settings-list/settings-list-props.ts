@@ -4,7 +4,7 @@ import type { Href } from 'expo-router';
 import type { ThemeChoice } from '#features/settings';
 
 // A page's path, one the router knows.
-export type SettingsHref = Extract<Href, string>;
+type SettingsHref = Extract<Href, string>;
 
 export interface SettingsListViewProps {
   // Undefined until the Server has answered: the row shows "…", or nothing while disconnected.

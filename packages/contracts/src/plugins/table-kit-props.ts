@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { handler } from './kit-component-props';
 import { pressHandler } from './kit-event-props';
 
-export const tableColumnProps = z.object({
+const tableColumnProps = z.object({
   id: z.string().min(1).describe('The column identity cells name.'),
   title: z.string().describe('The column header title.'),
   align: z

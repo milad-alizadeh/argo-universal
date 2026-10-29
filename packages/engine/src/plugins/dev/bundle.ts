@@ -16,7 +16,7 @@ type BundleCallbacks = {
   failed: (error: string) => void;
 };
 
-export const devBuildOptions: BuildOptions = {
+const devBuildOptions: BuildOptions = {
   bundle: true,
   write: false,
   format: 'esm',
@@ -56,7 +56,7 @@ function watchPlugins(directory: string, callbacks: BundleCallbacks): Plugin[] {
   ];
 }
 
-export const registrationSource = (path: string): string =>
+const registrationSource = (path: string): string =>
   `export { register } from ${JSON.stringify(path)};`;
 
 type Completion = { callbacks: BundleCallbacks; version: DevVersion };

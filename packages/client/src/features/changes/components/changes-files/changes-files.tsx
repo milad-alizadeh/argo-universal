@@ -11,9 +11,9 @@ import { noChangesDescription } from '../../view/changes-comparison';
 import type { ChangesViewProps } from '../../view/changes-view-props';
 import { FileList } from './changes-file-list';
 
-export const loadingChangesLabel = 'Loading changes';
+const loadingChangesLabel = 'Loading changes';
 
-export const loadErrorTitle = "Couldn't load changes";
+const loadErrorTitle = "Couldn't load changes";
 
 /*
  * The changed files for the comparison in force, each showing its diff in place and folded once marked Viewed. A

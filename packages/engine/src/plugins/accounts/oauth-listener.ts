@@ -6,7 +6,7 @@ import {
 } from 'node:http';
 import { requestHostAllowed } from '../../rpc/request-host';
 
-export const oauthPort = 51789;
+const oauthPort = 51789;
 
 // Naming the port is how a person learns what to free; the Plugin shows this message.
 export const portTakenMessage = `Port ${oauthPort} is already in use. Free the port, then try again.`;

@@ -3,9 +3,9 @@ import { runtimeError } from '../protocol/runtime';
 import { validateNumericAttribute } from '../svg/numeric-validation';
 import { visualPropsReason, visualSchemas } from './props';
 
-export const canvasElementLimit = 20_000;
+const canvasElementLimit = 20_000;
 
-export const canvasDepthLimit = 16;
+const canvasDepthLimit = 16;
 
 type Scene = { count: number };
 

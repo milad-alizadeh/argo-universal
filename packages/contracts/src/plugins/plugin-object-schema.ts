@@ -37,7 +37,7 @@ function requiredProperties(branches: JsonSchema[]): string[] {
 }
 
 // Tables list the union of accepted fields; a field is required only in every branch.
-export function pluginObjectSchema(schema: z.ZodType): JsonSchema {
+function pluginObjectSchema(schema: z.ZodType): JsonSchema {
   const json = kitJsonSchema(schema);
   const branches = objectSchemas(json);
 

@@ -21,7 +21,7 @@ export function rowFade(animate?: boolean): Partial<typeof fades> {
  */
 const flatRow = 'web:mr-1.5 web:overflow-hidden web:rounded-xl';
 
-export function rowClassName(closing?: boolean, endsSection?: boolean): string {
+function rowClassName(closing?: boolean, endsSection?: boolean): string {
   return cn(
     'web:transition-opacity web:duration-150',
     flatRow,

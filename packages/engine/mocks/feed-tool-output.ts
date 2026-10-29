@@ -10,7 +10,7 @@ import { waitForAcpSessionIdle } from './acp-feed';
 
 export const previewBytes = 64 * 1024;
 
-export const largeText = (label: string): string =>
+const largeText = (label: string): string =>
   `${label}-head ${'x'.repeat(200_000)} ${label}-tail`;
 
 export const output = largeText('output');
@@ -19,7 +19,7 @@ export const stdout = largeText('stdout');
 
 export const input = largeText('input');
 
-export const prompt = largeText('prompt');
+const prompt = largeText('prompt');
 
 const toolCall: Extract<SessionUpdate, { sessionUpdate: 'tool_call' }> = {
   sessionUpdate: 'tool_call',

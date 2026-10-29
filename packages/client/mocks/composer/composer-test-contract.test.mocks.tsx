@@ -26,8 +26,6 @@ export const readOnlyAttribute = 'aria-readonly';
 
 export const chooseModelLabel = /^Model,/;
 
-export const pressedAttribute = 'aria-pressed';
-
 export const expandedAttribute = 'aria-expanded';
 
 export const subagentCountLabel = 'Agents: 2';

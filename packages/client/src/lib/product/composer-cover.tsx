@@ -49,7 +49,7 @@ export function useFeedEndClearance(): FeedEndClearance {
 }
 
 // How deep the Feed fades out above the Composer.
-export function useComposerFadeDepth(atEnd: boolean): number {
+function useComposerFadeDepth(atEnd: boolean): number {
   return useSpacing(atEnd ? composerFadeDepth.atEnd : composerFadeDepth.away);
 }
 

@@ -103,7 +103,7 @@ function files(area: Area): Omit<Rect, 'tone'>[] {
   }));
 }
 
-export const sceneFrame = {
+const sceneFrame = {
   width: 360,
   height: 216,
   camera: 'pan-zoom',
@@ -141,7 +141,7 @@ export function dayProps(
   };
 }
 
-export function backgroundProps(area: Area): Rect {
+function backgroundProps(area: Area): Rect {
   const { key, x, y, width, height } = area;
 
   return { key, x, y, width, height, tone: 'muted', intensity: 0 };

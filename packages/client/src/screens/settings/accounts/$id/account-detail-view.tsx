@@ -26,7 +26,7 @@ export type AccountDetailLoad =
 
 type LoadedAccount = Extract<AccountDetailLoad, { status: 'loaded' }>;
 
-export const accountDetailTitle = 'Account detail';
+const accountDetailTitle = 'Account detail';
 
 export interface AccountDetailViewProps {
   // The Account's label, or its id until the Account loads; it heads the Account's first section.
