@@ -7,7 +7,9 @@ import type { WorkObservation } from './observation';
 import { onDisconnect, watchWork, type WatchInput } from './watching';
 
 // What admission answers: a result to return as it is, or the wait id of the work it started.
-export type Admitted = { answer: OperationRunResult } | { observe: string };
+export type Admitted =
+  | { kind: 'answer'; answer: OperationRunResult }
+  | { kind: 'observe'; id: string };
 
 // A user's admission runs under the wait's deadline, which aborts its signal and answers with what it last offered.
 export type WorkAdmission = {
@@ -24,7 +26,9 @@ export type WorkReader = {
 type Admit = (admission: WorkAdmission) => Promise<Admitted>;
 
 // A wait admits its Operation first, or reads work that already has a wait id at once.
-export type WaitStart = { admit: Admit } | { observe: string };
+export type WaitStart =
+  | { kind: 'admit'; admit: Admit }
+  | { kind: 'observe'; id: string };
 
 export type WaitInput = {
   start: WaitStart;
@@ -35,9 +39,9 @@ export type WaitInput = {
 };
 
 export type WaitOutcome =
-  | { answer: OperationRunResult }
-  | { observation: WorkObservation }
-  | { failure: unknown };
+  | { kind: 'answer'; answer: OperationRunResult }
+  | { kind: 'observation'; observation: WorkObservation }
+  | { kind: 'failure'; failure: unknown };
 
 type WaitContext = WaitInput & {
   expired?: () => OperationRunResult;
@@ -91,8 +95,8 @@ export const operationWaitMachine = setup({
       work: followedReader(context),
     })),
     admitted: assign(({ context }, admitted: Admitted): Partial<WaitContext> =>
-      'observe' in admitted
-        ? { work: context.reader(admitted.observe) }
+      admitted.kind === 'observe'
+        ? { work: context.reader(admitted.id) }
         : { outcome: admitted },
     ),
     expireAdmission: assign(({ context }): Pick<WaitContext, 'outcome'> => ({
@@ -106,16 +110,16 @@ export const operationWaitMachine = setup({
     })),
     fail: assign(
       (_, { cause }: { cause: unknown }): Pick<WaitContext, 'outcome'> => ({
-        outcome: { failure: cause },
+        outcome: { kind: 'failure', failure: cause },
       }),
     ),
     detach: assign((): Pick<WaitContext, 'outcome'> => ({
-      outcome: { failure: disconnected() },
+      outcome: { kind: 'failure', failure: disconnected() },
     })),
   },
   guards: {
-    observes: (_, admitted: Admitted): boolean => 'observe' in admitted,
-    following: ({ context }): boolean => 'observe' in context.start,
+    observes: (_, admitted: Admitted): boolean => admitted.kind === 'observe',
+    following: ({ context }): boolean => context.start.kind === 'observe',
     concluded: ({ context }): boolean => concluded(context),
     moved: ({ context }): boolean =>
       watchedSession(context.outcome) !== context.watched,
@@ -232,34 +236,37 @@ export const operationWaitMachine = setup({
     },
     done: { type: 'final' },
   },
-  output: ({ context }) => context.outcome ?? { failure: unfinished() },
+  output: ({ context }): WaitOutcome =>
+    context.outcome ?? { kind: 'failure', failure: unfinished() },
 });
 
 function followedReader({
   start,
   reader,
 }: WaitContext): WorkReader | undefined {
-  return 'observe' in start ? reader(start.observe) : undefined;
+  return start.kind === 'observe' ? reader(start.id) : undefined;
 }
 
 // Work that already has a wait id is followed from `starting`, so it never waits for an admission.
 function admission(start: WaitStart): Admit {
-  return 'admit' in start ? start.admit : async (): Promise<Admitted> => start;
+  return start.kind === 'admit'
+    ? start.admit
+    : async (): Promise<Admitted> => start;
 }
 
 function settle(answer: () => OperationRunResult): WaitOutcome {
   try {
-    return { answer: answer() };
+    return { kind: 'answer', answer: answer() };
   } catch (failure) {
-    return { failure };
+    return { kind: 'failure', failure };
   }
 }
 
 function readWork(work: WorkReader | undefined): WaitOutcome {
   try {
-    return { observation: requireReader(work).read() };
+    return { kind: 'observation', observation: requireReader(work).read() };
   } catch (failure) {
-    return { failure };
+    return { kind: 'failure', failure };
   }
 }
 
@@ -277,7 +284,7 @@ function watchInput({ work, outcome }: WaitContext): WatchInput {
 }
 
 function watchedSession(outcome: WaitOutcome | undefined): string | undefined {
-  return outcome && 'observation' in outcome
+  return outcome?.kind === 'observation'
     ? outcome.observation.work.sessionId
     : undefined;
 }
@@ -286,7 +293,7 @@ function watchedSession(outcome: WaitOutcome | undefined): string | undefined {
 function concluded({ outcome, stopOnInput }: WaitContext): boolean {
   if (!outcome) return false;
 
-  return 'observation' in outcome
+  return outcome.kind === 'observation'
     ? answers(outcome.observation, stopOnInput)
     : true;
 }

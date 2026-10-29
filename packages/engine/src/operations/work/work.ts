@@ -122,7 +122,7 @@ export class OperationWork {
     stopOnInput: boolean,
   ): Promise<WaitOutcome> {
     return this.follow({
-      start: { observe: id },
+      start: { kind: 'observe', id },
       reader: () => this.reading.reader(id, caller),
       stopOnInput,
       signal,

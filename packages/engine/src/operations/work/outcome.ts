@@ -18,6 +18,7 @@ export const unadmitted: WorkAdmission = {
 // A user who waits follows the wait id its admission returned; any other result answers at once.
 export function userAdmission(start: StartOperation, wait: boolean): WaitStart {
   return {
+    kind: 'admit',
     admit: async (admission) =>
       admittedResult(await start(admission).result, wait),
   };
@@ -26,7 +27,9 @@ export function userAdmission(start: StartOperation, wait: boolean): WaitStart {
 function admittedResult(result: OperationRunResult, wait: boolean): Admitted {
   const execution = executionOf(result);
 
-  return wait && execution ? { observe: execution.id } : { answer: result };
+  return wait && execution
+    ? { kind: 'observe', id: execution.id }
+    : { kind: 'answer', answer: result };
 }
 
 // Native work answers with its execution; every other answer is the Operation's own result.
@@ -39,15 +42,19 @@ export function executionOf(
 }
 
 export function answered(outcome: WaitOutcome): OperationRunResult {
-  if ('answer' in outcome) return outcome.answer;
+  if (outcome.kind === 'answer') return outcome.answer;
 
   return observed(outcome).execution;
 }
 
+// Observing work that already has a wait id admits nothing, so its outcome is an observation or a failure.
 export function observed(outcome: WaitOutcome): WorkObservation {
-  if ('failure' in outcome) throw outcome.failure;
-
-  if ('observation' in outcome) return outcome.observation;
-
-  throw new Error('An Operation wait answered without observing its work');
+  switch (outcome.kind) {
+    case 'observation':
+      return outcome.observation;
+    case 'failure':
+      throw outcome.failure;
+    case 'answer':
+      throw new Error('An Operation wait answered without observing its work');
+  }
 }
