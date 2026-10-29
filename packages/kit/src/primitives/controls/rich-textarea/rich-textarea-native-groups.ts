@@ -3,7 +3,7 @@ import { SuggestionRun } from './rich-textarea-suggestion-run';
 import {
   slashQueryAtCaret,
   type SuggestionGroup,
-  SuggestionSource,
+  type SuggestionSource,
 } from './rich-textarea-suggestions';
 
 const asksNothing = new SuggestionRun([], '');
