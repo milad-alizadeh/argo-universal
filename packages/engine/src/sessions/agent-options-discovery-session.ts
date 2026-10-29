@@ -7,6 +7,7 @@ import { TRPCError } from '@trpc/server';
 import {
   type AcpSessionDestination,
   type AcpSessionLease,
+  type DeferredAgentLaunch,
   cancelledElicitation,
   cancelledPermission,
   requireInstalledAgent,
@@ -35,37 +36,79 @@ const agentFailure = (cause: unknown): TRPCError => {
   });
 };
 
-export async function openOptionsSession(
+type DiscoveryOpening = {
+  launch: DeferredAgentLaunch;
+  cwd: string;
+  signal: AbortSignal;
+};
+
+type DiscoveryPreparation = {
+  installed: ReturnType<typeof requireInstalledAgent>;
+  cwd: string;
+};
+
+type DiscoverySetup = DiscoveryPreparation & { projectId: string };
+
+const withLoadingProgress = (
+  launch: DeferredAgentLaunch,
+  progress: Discovery['progress'],
+): DeferredAgentLaunch => ({
+  ...launch,
+  resolve: async (signal) => {
+    const resolved = await launch.resolve(signal);
+    progress('loading');
+
+    return resolved;
+  },
+});
+
+const openDiscoverySession = (
+  deps: OptionsDeps,
+  { launch, cwd, signal }: DiscoveryOpening,
+  progress: Discovery['progress'],
+): Promise<AcpSessionLease> =>
+  deps.sessions.getSnapshot().context.acpResources.open({
+    launch: withLoadingProgress(launch, progress),
+    opening: { method: 'session/new', params: { cwd, mcpServers: [] } },
+    destination: optionsDestination,
+    signal,
+  });
+
+function prepareDiscovery(
   deps: OptionsDeps,
   { agent, projectId }: SessionAgentOptionsInput,
-  { signal, progress }: Discovery,
-): Promise<AcpSessionLease> {
+): DiscoverySetup {
   const installed = requireInstalledAgent(deps.installedAgents, agent);
   const cwd = readProjectPath(deps.database, projectId);
   validateSessionCommandAdmission(deps);
 
+  return { installed, cwd, projectId };
+}
+
+async function startDiscovery(
+  deps: OptionsDeps,
+  { installed, cwd, projectId }: DiscoverySetup,
+  { signal, progress }: Discovery,
+): Promise<AcpSessionLease> {
+  const launch = await deps.installedAgents.launch(installed, projectId, {
+    signal,
+    onInstalling: (fraction) => progress('installing', fraction),
+  });
+
+  return openDiscoverySession(deps, { launch, cwd, signal }, progress);
+}
+
+export async function openOptionsSession(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+  discovery: Discovery,
+): Promise<AcpSessionLease> {
+  const prepared = prepareDiscovery(deps, input);
+
   try {
-    const launch = await deps.installedAgents.launch(installed, projectId, {
-      signal,
-      onInstalling: (fraction) => progress('installing', fraction),
-    });
-
-    return await deps.sessions.getSnapshot().context.acpResources.open({
-      launch: {
-        ...launch,
-        resolve: async (signal) => {
-          const resolved = await launch.resolve(signal);
-          progress('loading');
-
-          return resolved;
-        },
-      },
-      opening: { method: 'session/new', params: { cwd, mcpServers: [] } },
-      destination: optionsDestination,
-      signal,
-    });
+    return await startDiscovery(deps, prepared, discovery);
   } catch (cause) {
-    throw signal.aborted ? cause : agentFailure(cause);
+    throw discovery.signal.aborted ? cause : agentFailure(cause);
   }
 }
 

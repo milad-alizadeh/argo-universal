@@ -3,34 +3,19 @@ import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import {
+  checkCreationReceipt,
+  checkNativePermission,
+  checkModelPaths,
+  checkPermissionHook,
+} from '#mocks/acp-session-extra-assertions';
+import {
   acpModelEventKey,
   createAcpSessionModel,
   type AcpModelSnapshot,
 } from '#mocks/acp-session-model';
-import type { AcpSessionLease } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import { checkoutLimit, sessionMachine } from './session-machine';
 import { sessionActorId } from './session-system';
-
-const feedFlushDelayEvent =
-  'xstate.after.feedFlushLimit.session.open.acp.flushing';
-
-const expectAcpState = (
-  snapshot: AcpModelSnapshot,
-  lease: AcpSessionLease,
-): void => {
-  if (
-    snapshot.matches({ open: { acp: 'idle' } }) ||
-    snapshot.matches({ open: { acp: 'opening' } })
-  )
-    expect(snapshot.context.activeTurnId).toBeNull();
-
-  if (snapshot.matches({ open: { acp: 'idle' } })) {
-    expect(snapshot.context.acpLease).toBe(lease);
-    expect(snapshot.context.vendorSessionId).toBe(lease.sessionId);
-    expect(snapshot.context.stored).toBe(true);
-  }
-};
 
 const pathStates = (
   path: ReturnType<typeof createAcpSessionModel>['paths'][number],
@@ -58,31 +43,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         entry,
       );
 
-      for (const path of paths)
-        for (const step of path.steps) {
-          expectAcpState(step.state, lease);
-
-          if (step.event.type === 'session.storageFailing') {
-            expect(
-              step.state.matches({
-                open: { acp: { activeTurn: 'cancelling' } },
-              }),
-            ).toBe(true);
-            expect(step.state.context.activeTurnId).toBeNull();
-          }
-
-          if (
-            step.event.type === 'xstate.after.checkoutLimit.session.creating'
-          ) {
-            expect(step.state.status).toBe('done');
-            expect(step.state.output).toEqual({
-              failure: expect.stringContaining(`${checkoutLimit} ms`),
-            });
-          }
-
-          if (step.event.type === feedFlushDelayEvent)
-            expect(step.state.context.failure).not.toBeNull();
-        }
+      checkModelPaths(paths, lease, checkoutLimit);
 
       expect(
         unwalkedTransitions({
@@ -92,7 +53,13 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           eventKey: acpModelEventKey,
         }),
       ).toEqual([]);
+
       const states = paths.flatMap(pathStates);
+      checkNativePermission(states);
+      checkPermissionHook(states);
+
+      if (entry === 'new') checkCreationReceipt(states);
+
       expect(states.some((state) => state.matches('archived'))).toBe(true);
       expect(paths.length).toBeGreaterThan(0);
       await host.caller.session.close(created);
