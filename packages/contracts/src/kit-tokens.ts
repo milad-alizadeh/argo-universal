@@ -71,6 +71,8 @@ export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;
 
+export const pillDefaults = { variant: 'label' } as const;
+
 export const chartDefaults = { grid: false } as const;
 
 // How wide a Screen's content runs on a window: the centred reading column, or the whole region.

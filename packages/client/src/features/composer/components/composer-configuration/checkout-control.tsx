@@ -128,7 +128,6 @@ function checkoutTrigger(
 ): React.JSX.Element {
   return (
     <MenuTrigger
-      labelRole={{ compact: 'row', wide: 'body' }}
       tone={wide ? 'muted' : undefined}
       disabled={disabled}
       accessibilityLabel="Checkout"
