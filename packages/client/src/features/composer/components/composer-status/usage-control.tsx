@@ -1,22 +1,12 @@
-import { Icon } from '@repo/kit/primitives/content/icon';
 import { ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import type { ComposerStatusProps, UsageLimit } from '../../utils/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';
-import {
-  ControlLabel,
-  createStatusControlTrigger,
-} from './status-control-trigger';
+import { createStatusControlTrigger } from './status-control-trigger';
 import { Meter } from './status-meter';
-import {
-  mutedTextClassName,
-  phoneSheet,
-  StatusSheetList,
-  unselectableTextClassName,
-} from './status-surface';
+import { phoneSheet, StatusSheetList } from './status-surface';
 import { StatusText } from './status-text';
 
 interface UsageProps {
@@ -94,32 +84,12 @@ function UsageContent({ usage }: Pick<UsageProps, 'usage'>): JSX.Element {
   );
 }
 
-// A tablet's larger type leaves no room for the word on a medium window (#927).
-function UsageWord({ wide }: Pick<UsageProps, 'wide'>): JSX.Element {
-  return (
-    <ControlLabel label="Usage" wide={wide} className="hidden wide-type:flex" />
-  );
-}
-
-function UsageTriggerContent({ usage, wide }: UsageProps): JSX.Element {
-  const percentClass = cn(unselectableTextClassName, !wide && 'hidden');
-
-  return (
-    <>
-      <Icon name="usage" className={mutedTextClassName} />
-      <UsageWord wide={wide} />
-      <StatusText role="secondary" className={percentClass}>
-        {usage.limits[0]?.usedPercent}%
-      </StatusText>
-    </>
-  );
-}
-
 function createUsageTrigger(props: UsageProps): JSX.Element {
   return createStatusControlTrigger({
     ...props,
     label: 'Usage',
-    children: <UsageTriggerContent {...props} />,
+    icon: 'usage',
+    detail: `${props.usage.limits[0]?.usedPercent}%`,
   });
 }
 

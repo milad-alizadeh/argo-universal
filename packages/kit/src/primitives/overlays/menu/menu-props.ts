@@ -1,6 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { ActionShortcut } from '#primitives/content/kbd';
-import type { TextProps } from '#primitives/content/text';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
@@ -52,9 +51,9 @@ export type MenuOption<Value extends string> = Extract<
  * Argo draws it on desktop and the web; on phones it is the label of the SwiftUI Menu or the Compose DropdownMenu anchor.
  */
 export interface MenuTriggerProps {
-  labelRole?: TextProps['role'];
   // The current value, which names the trigger.
   label: string;
+  detail?: string;
   icon?: IconName;
   // Drawn in the icon's place where no symbol fits, such as an Agent's logo or a progress spinner.
   leading?: ReactElement;
@@ -64,8 +63,6 @@ export interface MenuTriggerProps {
   tone?: 'muted' | 'danger';
   // A narrow row, such as the phone Composer's: the label is hidden and read out as the trigger's name, and the chevron goes.
   iconOnly?: boolean;
-  // Desktop and the web only: `md` steps the height from 28 to 32, for a 20px logo.
-  size?: 'sm' | 'md';
   disabled?: boolean;
   accessibilityLabel?: string;
   testID?: string;

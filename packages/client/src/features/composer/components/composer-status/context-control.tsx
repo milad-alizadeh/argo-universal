@@ -1,17 +1,11 @@
-import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
-import { View } from 'react-native';
 import type { ComposerContext } from '../../utils/status';
 import { compactNumber, contextPercent } from '../../utils/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ContextContent } from './context-content';
 import { ContextRing } from './context-ring';
-import {
-  ControlLabel,
-  createStatusControlTrigger,
-} from './status-control-trigger';
-import { phoneSheet, unselectableTextClassName } from './status-surface';
-import { StatusText } from './status-text';
+import { createStatusControlTrigger } from './status-control-trigger';
+import { phoneSheet } from './status-surface';
 
 export interface ContextControlProps {
   // The Session's context window, and Compact when there is one to offer.
@@ -21,36 +15,14 @@ export interface ContextControlProps {
   wide: boolean;
 }
 
-type ContextTokenProps = Pick<ContextControlProps, 'context' | 'wide'>;
-
-function ContextTriggerTokens(props: ContextTokenProps): JSX.Element {
-  const { context, wide } = props;
-  const remainingClass = cn(unselectableTextClassName, !wide && 'hidden');
-
-  return (
-    <View className={cn('flex-row', !wide && 'hidden')}>
-      <StatusText role="secondary" className="select-none">
-        {compactNumber(context.used)}
-      </StatusText>
-      <StatusText role="secondary" className={remainingClass}>
-        {' '}
-        / {compactNumber(context.size)}
-      </StatusText>
-    </View>
-  );
-}
-
 function createContextTrigger(props: ContextControlProps): JSX.Element {
   return createStatusControlTrigger({
     ...props,
     label: 'Context',
-    children: (
-      <>
-        <ContextRing percent={contextPercent(props.context)} />
-        <ControlLabel label="Context" wide={props.wide} />
-        <ContextTriggerTokens context={props.context} wide={props.wide} />
-      </>
-    ),
+    leading: <ContextRing percent={contextPercent(props.context)} />,
+    detail: props.wide
+      ? `${compactNumber(props.context.used)} / ${compactNumber(props.context.size)}`
+      : undefined,
   });
 }
 

@@ -13,6 +13,7 @@ export const textRoles = [
   'title',
   'heading',
   'body',
+  'body-code',
   'secondary',
   'secondary-code',
   'control',
@@ -69,6 +70,8 @@ export type IconButtonSize = (typeof iconButtonSizes)[number];
 export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;
+
+export const pillDefaults = { variant: 'label', appearance: 'plain' } as const;
 
 export const chartDefaults = { grid: false } as const;
 

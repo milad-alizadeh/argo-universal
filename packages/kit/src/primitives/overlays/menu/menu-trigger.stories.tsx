@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { iconNames } from '#kit/symbols/icon-names';
-import { textRoles } from '#primitives/content/text';
 import { MenuTrigger } from './menu-trigger';
 import {
   dangerMenuTrigger,
@@ -18,13 +17,12 @@ const meta = {
   // No Contracts schema: the props MenuTriggerProps declares.
   argTypes: {
     label: { control: 'text' },
-    labelRole: { control: 'select', options: textRoles },
+    detail: { control: 'text' },
     icon: { control: 'select', options: iconNames },
     leading: { control: false },
     trailing: { control: false },
     tone: { control: 'select', options: ['muted', 'danger'] },
     iconOnly: { control: 'boolean' },
-    size: { control: 'select', options: ['sm', 'md'] },
     disabled: { control: 'boolean' },
     accessibilityLabel: { control: 'text' },
     testID: { control: 'text' },

@@ -5,8 +5,14 @@ import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
-import { type FeedEntry, entryKey, entryType } from './feed-entry';
+import { type FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
+import {
+  type FeedRowData,
+  rowKey,
+  rowType,
+  useFeedRowData,
+} from './feed-row-data';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
 
@@ -52,12 +58,14 @@ const keyboardProps = Platform.select({
 // What the Feed's list takes whatever the Session draws.
 const feedListProps = {
   testID: 'feed-scroll',
+  // SessionColumn owns each row's side gutter; the generic List adds none.
+  padding: 0,
   paddingBottom: 0,
   paddingTop: { compact: 4, wide: 6 },
-  keyExtractor: entryKey,
+  keyExtractor: rowKey,
   estimatedItemSize: estimatedRowHeight,
   // Each kind keeps its own average size, so a row not yet measured lands near its real place.
-  getItemType: entryType,
+  getItemType: rowType,
   // Each row keeps its own expanded state, which a recycled row would inherit.
   recycleItems: false,
   maintainScrollAtEndThreshold: endThreshold,
@@ -67,26 +75,28 @@ const feedListProps = {
   drawDistance: 800,
   endContent: <FeedEnd />,
   ...keyboardProps,
-} satisfies Partial<ListProps<FeedEntry>>;
+} satisfies Partial<ListProps<FeedRowData>>;
 
-type RenderEntry = (entry: FeedEntry, index: number) => React.JSX.Element;
+type RenderEntry = (row: FeedRowData) => React.JSX.Element;
 
 // What a row needs to draw itself: its content and the motion it reports.
 type RowDrawing = EntryDrawing & RowMotion;
 
-function useRenderEntry(
-  entries: FeedEntry[],
-  { imageUrl, now, onOpenSubagent, onMotionChange, onGrow }: RowDrawing,
-): RenderEntry {
+const drawRow = (row: FeedRowData, drawing: RowDrawing): React.JSX.Element => (
+  <FeedRow {...row} {...drawing} />
+);
+
+function useRenderEntry({
+  imageUrl,
+  now,
+  onOpenSubagent,
+  onMotionChange,
+  onGrow,
+}: RowDrawing): RenderEntry {
   return useCallback(
-    (item: FeedEntry, index: number) => (
-      <FeedRow
-        entry={item}
-        next={entries[index + 1]}
-        {...{ imageUrl, now, onOpenSubagent, onMotionChange, onGrow }}
-      />
-    ),
-    [entries, imageUrl, now, onOpenSubagent, onMotionChange, onGrow],
+    (row: FeedRowData) =>
+      drawRow(row, { imageUrl, now, onOpenSubagent, onMotionChange, onGrow }),
+    [imageUrl, now, onOpenSubagent, onMotionChange, onGrow],
   );
 }
 
@@ -106,7 +116,7 @@ export interface FeedScrollProps extends EntryDrawing {
 }
 
 type FeedListProps = Pick<
-  Extract<ListProps<FeedEntry>, { items: readonly FeedEntry[] }>,
+  Extract<ListProps<FeedRowData>, { items: readonly FeedRowData[] }>,
   | 'items'
   | 'renderItem'
   | 'initialScrollIndex'
@@ -123,8 +133,8 @@ function useFeedListProps(
   const { maintainScrollAtEnd, ...motion } = useCollapsibleMotion(list);
 
   return {
-    items: entries,
-    renderItem: useRenderEntry(entries, { ...props, ...motion }),
+    items: useFeedRowData(entries),
+    renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
     // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there. Aligned at the top, it stays where the reader is.
     maintainScrollAtEnd: props.alignAtTop ? false : maintainScrollAtEnd,
