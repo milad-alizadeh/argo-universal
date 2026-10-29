@@ -5,7 +5,7 @@ import type { OperationRunResult } from '../implementations';
 import type { SessionCaller, TokenCaller } from '../session-tokens';
 import { userAdmission, type UserAdmission } from './admission';
 import { operationWaitClock, type OperationWaitClock } from './clock';
-import { WaitIds } from './ids';
+import { WaitId, WaitIds } from './ids';
 import { admittedStart, answered, observed } from './outcome';
 import { WorkReading } from './reading';
 import {
@@ -96,13 +96,14 @@ export class OperationWork {
     signal?: AbortSignal,
   ): Promise<OperationExecution> {
     const following: Following = { caller: () => this.caller(token), signal };
+    const waitId = WaitId.parse(id);
 
-    return observed(await this.observe(id, following, false)).execution;
+    return observed(await this.observe(waitId, following, false)).execution;
   }
   private callId(
     caller: SessionCaller,
     { call }: RecordedOperation<OperationRunResult>,
-  ): string {
+  ): WaitId {
     return this.ids.issue(caller, {
       kind: 'call',
       sessionId: caller.sessionId,
@@ -110,7 +111,7 @@ export class OperationWork {
     });
   }
   private observe(
-    id: string,
+    id: WaitId,
     { caller, signal }: Following,
     stopOnInput: boolean,
   ): Promise<WaitOutcome> {
@@ -126,7 +127,7 @@ export class OperationWork {
 
     return waitForWork({ ...input, signal }, this.clock);
   }
-  private recordedCaller(input: SessionObservation, id: string): TokenCaller {
+  private recordedCaller(input: SessionObservation, id: WaitId): TokenCaller {
     return recordedCaller(
       input.caller,
       () => this.caller(input.token),

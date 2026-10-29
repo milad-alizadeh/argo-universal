@@ -21,11 +21,16 @@ const Parts = z.tuple([
 
 type WaitParts = z.infer<typeof Parts>;
 
+// A wait id this Engine signed: `issue` makes one, and a caller's id becomes one only once parsed at the edge.
+export const WaitId = OperationWaitId.brand<'WaitId'>();
+
+export type WaitId = z.infer<typeof WaitId>;
+
 // A wait id names one caller's native Session work, signed with the control token; a Session opening's id also names this Engine.
 export class WaitIds {
   private readonly epoch = randomUUID();
   public constructor(private readonly secret: string) {}
-  public issue(caller: TokenCaller, work: SessionWork): string {
+  public issue(caller: TokenCaller, work: SessionWork): WaitId {
     const owner = caller.kind === 'user' ? 'user' : caller.sessionId;
 
     const identity = [owner, work.sessionId, sessionWorkItem(work)];
@@ -35,10 +40,10 @@ export class WaitIds {
 
     const payload = `${work.kind}:${body}`;
 
-    return `${payload}:${this.signature(payload)}`;
+    return WaitId.parse(`${payload}:${this.signature(payload)}`);
   }
-  public require(caller: TokenCaller, value: string): SessionWork {
-    const parts = Parts.parse(OperationWaitId.parse(value).split(':'));
+  public require(caller: TokenCaller, value: WaitId): SessionWork {
+    const parts = Parts.parse(value.split(':'));
     this.requireSignature(parts);
     const [owner, sessionId, item, epoch] = decodeIdentity(parts[1]);
     this.requireEpoch(parts[0], epoch);

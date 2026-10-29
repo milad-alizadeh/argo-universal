@@ -1,7 +1,8 @@
-import type { OperationExecution } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
 import { OperationResponses, type OutputBlobs } from './responses';
+import type { WorkExecution } from './work';
+import { WaitId } from './work/ids';
 
 const fullResult = {
   blobId: 'b'.repeat(64),
@@ -9,9 +10,9 @@ const fullResult = {
   bytes: 9,
 };
 
-const execution: OperationExecution = {
+const execution: WorkExecution = {
   kind: 'operation_execution',
-  id: `call:session-1:${'a'.repeat(64)}`,
+  id: WaitId.parse(`call:session-1:${'a'.repeat(64)}`),
   status: 'settled',
   result: 'preview',
 };

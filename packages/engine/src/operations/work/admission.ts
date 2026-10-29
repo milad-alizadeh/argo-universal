@@ -1,9 +1,9 @@
-import type { OperationExecution } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 import type { SessionWorkSource } from '../../sessions';
 import { answer, type RunAnswer } from '../implementations';
 import type { StartedWork } from '../native-start';
 import { admissionTimedOut } from './clock';
+import type { WorkExecution } from './execution';
 import type { WaitIds } from './ids';
 import { nativeWork, readOperationWork } from './reader';
 import type { WorkAdmission } from './wait.machine';
@@ -53,7 +53,7 @@ async function admitted<Result>(
 function expired<Result>(
   context: AdmissionContext,
   started: StartedWork<Result>,
-): OperationExecution {
+): WorkExecution {
   try {
     return execution(context, started);
   } catch (cause) {
@@ -72,7 +72,7 @@ function missingAdmission(cause: unknown): never {
 function execution(
   { source, ids }: AdmissionContext,
   started: StartedWork<unknown>,
-): OperationExecution {
+): WorkExecution {
   const work = nativeWork(started);
 
   return readOperationWork(

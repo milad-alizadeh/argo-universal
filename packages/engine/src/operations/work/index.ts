@@ -5,6 +5,8 @@ export { OperationWork, type WorkDeps } from './work';
 
 export type { UserAdmission } from './admission';
 
+export type { WorkExecution } from './execution';
+
 export type { OperationWaitClock } from './clock';
 
 type LiveDeps = Pick<

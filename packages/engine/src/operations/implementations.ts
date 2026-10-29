@@ -1,8 +1,4 @@
-import type {
-  operations,
-  OperationId,
-  OperationExecution,
-} from '@repo/contracts/operations';
+import type { operations, OperationId } from '@repo/contracts/operations';
 import type { z } from 'zod';
 import type { NativeStartRequest } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
@@ -13,6 +9,7 @@ import { createProjectOperations } from './projects';
 import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
 import { sessionImplementations } from './sessions';
+import type { WorkExecution } from './work';
 
 type ParamsById = {
   [Id in OperationId]: z.output<(typeof operations)[Id]['params']>;
@@ -31,7 +28,7 @@ export type OperationResult<Id extends OperationId = OperationId> =
 // What a token caller is answered: the Operation's own result, or the native work it started.
 export type RunAnswer<Result> =
   | { kind: 'result'; result: Result }
-  | OperationExecution;
+  | WorkExecution;
 
 export type OperationRunResult = RunAnswer<OperationResult>;
 

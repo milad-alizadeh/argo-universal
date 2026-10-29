@@ -3,13 +3,14 @@ import { assign, fromCallback, fromPromise, raise, setup } from 'xstate';
 import type { SessionWorkWatcher } from '../../sessions';
 import type { OperationRunResult } from '../implementations';
 import { admissionTimedOut, operationWaitLimitMs } from './clock';
+import type { WaitId } from './ids';
 import type { WorkObservation } from './observation';
 import { onDisconnect, watchWork, type WatchInput } from './watching';
 
 // What admission answers: a result to return as it is, or the wait id of the work it started.
 export type Admitted =
   | { kind: 'answer'; answer: OperationRunResult }
-  | { kind: 'observe'; id: string };
+  | { kind: 'observe'; id: WaitId };
 
 // A user's admission runs under the wait's deadline, which aborts its signal and answers with what it last offered.
 export type WorkAdmission = {
@@ -28,11 +29,11 @@ type Admit = (admission: WorkAdmission) => Promise<Admitted>;
 // A wait admits its Operation first, or reads work that already has a wait id at once.
 export type WaitStart =
   | { kind: 'admit'; admit: Admit }
-  | { kind: 'observe'; id: string };
+  | { kind: 'observe'; id: WaitId };
 
 export type WaitInput = {
   start: WaitStart;
-  reader: (id: string) => WorkReader;
+  reader: (id: WaitId) => WorkReader;
   // Also stop once a Tool call reaches its native work or waits for the user.
   stopOnInput: boolean;
   signal?: AbortSignal;

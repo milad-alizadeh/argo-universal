@@ -1,5 +1,9 @@
 import type { OperationExecution } from '@repo/contracts/operations';
 import type { OperationCallRead } from '../../sessions';
+import type { WaitId } from './ids';
+
+// An execution this Engine built, so its id is a wait id it signed.
+export type WorkExecution = OperationExecution & { id: WaitId };
 
 // Everything an execution says beyond its kind and wait id.
 type ExecutionState = Omit<OperationExecution, 'kind' | 'id'>;
@@ -9,16 +13,13 @@ export type AnsweredCall = Exclude<OperationCallRead, { status: 'failed' }>;
 
 // The one place an execution is built: its wait id and what its work says now.
 export function workExecution(
-  id: string,
+  id: WaitId,
   state: ExecutionState,
-): OperationExecution {
+): WorkExecution {
   return { kind: 'operation_execution', id, ...state };
 }
 
-export function callExecution(
-  id: string,
-  call: AnsweredCall,
-): OperationExecution {
+export function callExecution(id: WaitId, call: AnsweredCall): WorkExecution {
   return workExecution(id, callState(call));
 }
 

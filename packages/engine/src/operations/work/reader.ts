@@ -10,8 +10,13 @@ import type {
   SessionWorkSource,
 } from '../../sessions';
 import type { TokenCaller } from '../session-tokens';
-import { callExecution, workExecution, type AnsweredCall } from './execution';
-import type { WaitIds } from './ids';
+import {
+  callExecution,
+  workExecution,
+  type AnsweredCall,
+  type WorkExecution,
+} from './execution';
+import type { WaitId, WaitIds } from './ids';
 import type { WorkObservation } from './observation';
 
 type Context = {
@@ -20,7 +25,7 @@ type Context = {
   caller: TokenCaller;
 };
 
-type Target = { id: string; work: SessionWork };
+type Target = { id: WaitId; work: SessionWork };
 
 type TurnRead = Extract<SessionWorkRead, { kind: 'turn' }>;
 
@@ -135,7 +140,7 @@ export const nativeWork = ({
 }: OperationWorkTarget): SessionWork => ({ kind, sessionId, turnId });
 
 function observation(
-  execution: OperationExecution,
+  execution: WorkExecution,
   work: SessionWork,
 ): WorkObservation {
   return { execution, work };
