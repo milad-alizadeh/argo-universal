@@ -43,7 +43,7 @@ const answerText = Array.from({ length: 16 }, (_unused, index) => {
   return `${mark}${sentence.repeat(2 + (index % 3)).trim()}${mark}`;
 }).join('\n\n');
 
-const charsPerChunk = 9;
+const charsPerChunk = 24;
 
 const msBetweenChunks = 24;
 
@@ -101,7 +101,7 @@ function useStreamedLength(): number {
   return length;
 }
 
-// The Long Feed, then a prompt and its answer streaming in a few characters at a time once the story sends it.
+// The Long Feed, then a prompt and its answer streaming in a few words at a time once the story sends it.
 function StreamingFeed(): React.JSX.Element {
   const length = useStreamedLength();
   const rows = [...longTail, ...sentRows(length)];
