@@ -4,8 +4,8 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import standaloneCode from 'ajv/dist/standalone/index.js';
 import { buildSync } from 'esbuild';
-import { registryAgentSchema } from '../../src/agents/upstream/schema';
 import { installedAgentSchema } from '../../src/agents/upstream/installed-agent-schema';
+import { registryAgentSchema } from '../../src/agents/upstream/schema';
 
 const validator = addFormats(
   new Ajv({ strict: false, code: { source: true, esm: true, lines: true } }),
