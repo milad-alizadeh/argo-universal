@@ -38,11 +38,11 @@ const openingEvents = (
   modelShellChanged(initial),
   modelSubagentUpdate(lease),
   modelCheckoutCreated(data),
-  ...modelCheckoutFailures,
+  ...cloneModelEvents(modelCheckoutFailures),
   modelSessionLoaded(data),
-  ...modelLifecycleEvents,
+  ...cloneModelEvents(modelLifecycleEvents),
   modelPromptCommitted(lease),
-  ...modelPromptEvents,
+  ...cloneModelEvents(modelPromptEvents),
 ];
 
 const turnEvents = (
@@ -52,7 +52,11 @@ const turnEvents = (
   modelUsageUpdate(lease),
   modelConfigurationUpdate(lease),
   modelAgentMessage(lease),
-  ...modelRequestEvents,
+  ...cloneModelEvents(modelRequestEvents),
   modelAcpOpened(initial, lease),
-  ...modelCloseEvents,
+  ...cloneModelEvents(modelCloseEvents),
 ];
+
+// Each model owns its event payloads, including error objects, just as it owns its paths.
+const cloneModelEvents = (events: AcpModelEvent[]): AcpModelEvent[] =>
+  structuredClone(events);
