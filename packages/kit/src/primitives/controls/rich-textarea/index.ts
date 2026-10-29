@@ -1,5 +1,7 @@
 export { RichTextarea } from './rich-textarea';
 
+export { SuggestionListHost } from './rich-textarea-suggestion-list';
+
 export { type RichTextareaProps } from './rich-textarea-props';
 
 export type {

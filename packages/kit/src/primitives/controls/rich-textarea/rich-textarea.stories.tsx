@@ -20,6 +20,7 @@ import {
   commandTokensRichTextarea,
   scrollingSuggestionsRichTextarea,
 } from './rich-textarea-fixtures';
+import { SuggestionListHost } from './rich-textarea-suggestion-list';
 
 const meta = {
   title: 'Design System/Primitives/Controls/RichTextarea',
@@ -76,6 +77,7 @@ export const Suggestions: Story = {
   parameters: { screenPreview: true },
   render: ({ value, ...props }) => (
     <View className="flex-1 justify-center">
+      <SuggestionListHost />
       <RichTextareaExample initialValue={value} {...props} />
     </View>
   ),
@@ -98,6 +100,7 @@ export const ScrollingSuggestions: Story = {
   parameters: { screenPreview: true },
   render: ({ value, ...props }) => (
     <View className="flex-1 justify-end">
+      <SuggestionListHost />
       <RichTextareaExample initialValue={value} {...props} />
     </View>
   ),
