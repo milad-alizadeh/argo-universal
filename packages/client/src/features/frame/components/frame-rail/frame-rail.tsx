@@ -35,7 +35,8 @@ type SectionButtonProps = Pick<FrameRailProps, 'onSectionChange'> & {
 
 const tileClass = (selected: boolean): string =>
   cn(
-    'items-center justify-center web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
+    'items-center justify-center web:transition-colors web:duration-150 web:active:bg-pressed web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
+    selected ? 'web:hover:ring-1 web:hover:ring-hover' : 'web:hover:bg-hover',
     railTiles.size,
     railTiles.corners,
     selected && railTiles.selected,
