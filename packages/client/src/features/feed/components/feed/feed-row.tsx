@@ -6,7 +6,7 @@ import { memo, useMemo } from 'react';
 import { SessionColumn } from '#lib/product/session-column';
 import { FeedItem } from '../feed-item';
 import { LiveHeader } from '../live-header/live-header';
-import { type FeedEntry, entryKey, spaceBelowEntry } from './feed-entry';
+import { type FeedEntry, entryKey } from './feed-entry';
 
 export interface RowMotion {
   onMotionChange: (itemKey: string, moving: boolean) => void;
@@ -22,8 +22,8 @@ export interface EntryDrawing {
 
 interface FeedRowProps extends RowMotion, EntryDrawing {
   entry: FeedEntry;
-  // The entry after this one, which sets the space below it.
-  next: FeedEntry | undefined;
+  // The gap travels with the row data so the virtualized cell observes changes.
+  spaceBelow: string;
 }
 
 type LayoutSync = NonNullable<
@@ -63,19 +63,16 @@ function entryContent(
 
 /*
  * A row's collapsibles resize it in the list each frame they move, so the rows below move in the
- * same frame. A streaming commit rebuilds the list's `renderItem`, and the view keeps the entries it
- * did not change, so a row only draws again when its own entry or the one after it changed.
+ * same frame. The list data keeps unchanged entries and their gap, so a row draws again only
+ * when its content or its space below changes.
  */
 export const FeedRow = memo(function FeedRow(props: FeedRowProps) {
-  const { entry, next } = props;
+  const { entry, spaceBelow } = props;
   const layoutSync = useLayoutSync(entryKey(entry), props);
 
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
-      <SessionColumn
-        testID="feed-column"
-        className={spaceBelowEntry(entry, next)}
-      >
+      <SessionColumn testID="feed-column" className={spaceBelow}>
         {entryContent(entry, props)}
       </SessionColumn>
     </CollapsibleLayoutSyncContext.Provider>
