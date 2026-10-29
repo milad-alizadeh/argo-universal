@@ -4,6 +4,7 @@ import type {
   ComposerSuggestion,
   SuggestionSource,
 } from '../rich-textarea-suggestions';
+import { $insertCommand } from './rich-textarea-command-tokens';
 import { suggestionTrigger } from './rich-textarea-suggestion-trigger';
 import {
   TypeaheadOption,
@@ -25,14 +26,27 @@ function SuggestionContent({
   );
 }
 
-function insertSuggestion(
-  node: TextNode | null,
-  suggestion: ComposerSuggestion,
-): void {
-  if (!node) return;
-  const inserted = $createTextNode(suggestion.insert);
+// A result that writes `/name ` is a Slash command, which the editor shows as a token.
+const commandInsert = /^\/(\S+) $/;
+
+function $insertText(node: TextNode, text: string): void {
+  const inserted = $createTextNode(text);
   node.replace(inserted);
   inserted.selectEnd();
+}
+
+function $insertResult(node: TextNode, insert: string): void {
+  const name = commandInsert.exec(insert)?.[1];
+
+  if (name) $insertCommand(node, name);
+  else $insertText(node, insert);
+}
+
+function insertSuggestion(
+  node: TextNode | null,
+  { insert }: ComposerSuggestion,
+): void {
+  if (node) $insertResult(node, insert);
 }
 
 function suggestionOption(

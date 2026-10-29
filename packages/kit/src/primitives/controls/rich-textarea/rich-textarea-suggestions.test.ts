@@ -1,5 +1,35 @@
 import { expect, it } from 'vitest';
-import { matchSuggestionTrigger } from './rich-textarea-suggestions';
+import {
+  findCommand,
+  matchSuggestionTrigger,
+  type SuggestionSource,
+} from './rich-textarea-suggestions';
+
+const sources: SuggestionSource[] = [
+  {
+    id: 'agent',
+    title: 'Agent',
+    query: (query) =>
+      [
+        {
+          id: 'review',
+          label: '/review',
+          insert: '/review ',
+          hint: 'a branch',
+        },
+        { id: 'revert', label: '/revert', insert: '/revert ' },
+        { id: 'ticket', label: 'Ticket 7', insert: 'Ticket 7 ' },
+      ].filter(({ id }) => id.startsWith(query)),
+  },
+];
+
+it('finds a command by its exact name, with its hint', () => {
+  expect(findCommand(sources, 'review')?.hint).toBe('a branch');
+});
+
+it.each(['rev', 'ticket', 'nothing'])('finds no command named %j', (name) => {
+  expect(findCommand(sources, name)).toBeUndefined();
+});
 
 it.each([
   ['/', { leadOffset: 0, matchingString: '', replaceableString: '/' }],

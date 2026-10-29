@@ -24,6 +24,25 @@ export interface SuggestionSource {
   query: (query: string) => readonly ComposerSuggestion[];
 }
 
+/*
+ * The result that writes exactly `/name `, which is how a source names a Slash command; a typed
+ * `/name` is a token only when a source has one.
+ */
+export function findCommand(
+  sources: readonly SuggestionSource[],
+  name: string,
+): ComposerSuggestion | undefined {
+  for (const source of sources) {
+    const found = source
+      .query(name)
+      .find(({ insert }) => insert === `/${name} `);
+
+    if (found) return found;
+  }
+
+  return undefined;
+}
+
 // The text before the caret ends in a `/` word at the start or after whitespace.
 export function matchSuggestionTrigger(text: string): {
   leadOffset: number;
