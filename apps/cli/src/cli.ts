@@ -1,5 +1,5 @@
 import { runPluginCommand } from '@argo/plugin-kit/cli';
-import { commandExitCode } from './command-error';
+import { commandExitCode, usageExitCode } from './command-error';
 import type { CommandIo } from './control-client';
 import { runOperations } from './operations-command';
 import { runOperation } from './run-command';
@@ -52,5 +52,5 @@ function dispatch([command, ...args]: string[], io: CliIo): Promise<number> {
 function showHelp(command: string | undefined, write: Write): number {
   write(help);
 
-  return command === undefined || command === '--help' ? 0 : 2;
+  return command === undefined || command === '--help' ? 0 : usageExitCode;
 }
