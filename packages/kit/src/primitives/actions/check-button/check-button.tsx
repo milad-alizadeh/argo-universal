@@ -71,7 +71,7 @@ function LabelledCheck(
   return (
     <>
       <Icon name={props.value ? 'passed' : 'pending'} />
-      <Text role="secondary" tone={props.value ? undefined : 'muted'}>
+      <Text role="control" tone={props.value ? undefined : 'muted'}>
         {props.label}
       </Text>
     </>

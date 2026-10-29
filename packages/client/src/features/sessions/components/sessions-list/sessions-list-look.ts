@@ -15,8 +15,8 @@ interface SidePadding {
   phone: Sides;
 }
 
-// Web rows sit 8 in from the sidebar's left, and each row's own margin takes the right to 14.
-const padded = { web: { compact: 4, wide: 2 }, phone: cardSides } as const;
+// Web rows keep the same inset on both sides of the sidebar.
+const padded = { web: { compact: 2, wide: 1 }, phone: cardSides } as const;
 
 const inset = { web: 0, phone: 0 } as const;
 
