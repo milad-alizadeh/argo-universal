@@ -1,4 +1,9 @@
-import { cloneElement, type ReactElement, useState } from 'react';
+import {
+  cloneElement,
+  type ComponentProps,
+  type ReactElement,
+  useState,
+} from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import type {
@@ -18,20 +23,25 @@ type TooltipProps = KitProps<'Tooltip'> & {
   children: TriggerElement;
   // A parent can keep the same trigger mounted while its label becomes truncated.
   active?: boolean;
+  frameless?: boolean;
 };
 
 type TooltipState = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  popover: TooltipPopoverProps;
   onDismiss: () => void;
   onPointerLeave: () => void;
 };
 
+type TooltipPopoverProps = Pick<
+  ComponentProps<typeof Popover>,
+  'open' | 'onOpenChange' | 'openOnHover' | 'frameless'
+>;
+
 export function Tooltip(props: TooltipProps): ReactElement {
-  const state = useTooltipState(props.active);
+  const state = useTooltipState(props);
 
   return (
-    <Popover open={state.open} onOpenChange={state.onOpenChange} openOnHover>
+    <Popover {...state.popover}>
       <TooltipTrigger
         onDismiss={state.onDismiss}
         onPointerLeave={state.onPointerLeave}
@@ -43,13 +53,17 @@ export function Tooltip(props: TooltipProps): ReactElement {
   );
 }
 
-function useTooltipState(active: boolean | undefined): TooltipState {
+function useTooltipState(props: TooltipProps): TooltipState {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   return {
-    open: active !== false && open && !dismissed,
-    onOpenChange: setOpen,
+    popover: {
+      open: props.active !== false && open && !dismissed,
+      onOpenChange: setOpen,
+      openOnHover: true,
+      frameless: props.frameless,
+    },
     onDismiss: (): void => setDismissed(true),
     onPointerLeave: (): void => setDismissed(false),
   };

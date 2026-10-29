@@ -83,13 +83,11 @@ function WidePathToggle(props: FileHeaderProps): React.JSX.Element {
   const path = props.file.path;
 
   return (
-    <View className="min-w-0 flex-1">
-      <Tooltip label={path} active={pathCut}>
-        <FileHeaderToggle {...toggleOf(props)}>
-          <PathText path={path} showTooltip={false} onCutChange={setPathCut} />
-        </FileHeaderToggle>
-      </Tooltip>
-    </View>
+    <Tooltip label={path} active={pathCut} frameless>
+      <FileHeaderToggle {...toggleOf(props)}>
+        <PathText path={path} showTooltip={false} onCutChange={setPathCut} />
+      </FileHeaderToggle>
+    </Tooltip>
   );
 }
 
