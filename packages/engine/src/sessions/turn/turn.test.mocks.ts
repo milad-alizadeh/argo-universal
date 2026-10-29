@@ -4,11 +4,9 @@ import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { writeJobs } from '../../storage';
-import { sessionTurn } from '.';
+import { sessionTurn, type TurnStep } from '.';
 
 export const turnId = 'turn-1';
-
-export type TurnStep = ReturnType<typeof sessionTurn.start>;
 
 type StartContext = Parameters<typeof sessionTurn.start>[0];
 

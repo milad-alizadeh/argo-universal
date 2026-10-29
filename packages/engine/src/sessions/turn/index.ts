@@ -15,11 +15,4 @@ export const sessionTurn = {
   connectionLost: connectionLostDuringTurn,
 };
 
-export type {
-  EndTurnParameters,
-  StartTurnParameters,
-  TurnStep,
-} from './values';
-
-// Whether any open Session has a Turn running, for keeping the Mac awake and for Plugins.
-export { watchTurnActivity } from './activity';
+export type { EndTurnParameters, StartTurnParameters, TurnStep } from './step';

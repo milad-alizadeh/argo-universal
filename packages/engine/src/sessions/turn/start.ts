@@ -1,19 +1,18 @@
 import { currentModel } from '../configuration';
 import type { SessionContext, SessionWrite } from '../session-context';
 import { TurnInsertJob } from '../session-storage/session-storage';
-import { turnStep, type TurnStep } from './values';
+import { turnStep, type TurnStep } from './step';
 
 type StartingSession = Pick<SessionContext, 'sessionId' | 'configOptions'> & {
   input: Pick<SessionContext['input'], 'now'>;
 };
 
-const startChange = (
-  turnId: string,
-  startedAt: number,
-): Pick<
+type StartChange = Pick<
   SessionContext,
   'activeTurnId' | 'activeTurnStartedAt' | 'turnEnding' | 'kept'
-> => ({
+>;
+
+const startChange = (turnId: string, startedAt: number): StartChange => ({
   activeTurnId: turnId,
   activeTurnStartedAt: startedAt,
   turnEnding: { kind: 'completion' },
@@ -40,7 +39,7 @@ const startWrite = (
 export const startTurn = (
   context: StartingSession,
   turnId: string,
-): TurnStep => {
+): TurnStep<StartChange> => {
   const startedAt = context.input.now();
 
   return turnStep({

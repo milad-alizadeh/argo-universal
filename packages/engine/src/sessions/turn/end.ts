@@ -2,7 +2,7 @@ import type { TurnEnd } from '@repo/contracts';
 import type { FeedEvent } from '../../feed';
 import type { SessionContext } from '../session-context';
 import { TurnUpdateJob } from '../session-storage/session-storage';
-import { turnStep, type EndTurnParameters, type TurnStep } from './values';
+import { turnStep, type EndTurnParameters, type TurnStep } from './step';
 
 type EndingSession = Pick<
   SessionContext,
@@ -16,7 +16,7 @@ const interruptedTurn = (message: string): EndTurnParameters => ({
   error: { code: 'interrupted', message },
 });
 
-const storageFailedTurn = interruptedTurn(
+const storageFailedEnding = interruptedTurn(
   'Storage is failing, so the Turn was cancelled',
 );
 
@@ -90,13 +90,14 @@ const finishTurn = (input: Ending): Pick<TurnStep, 'writes' | 'feed'> => {
 const endParameters = (
   context: EndingSession,
   ended: EndTurnParameters,
-): EndTurnParameters => (context.storageFailedTurn ? storageFailedTurn : ended);
+): EndTurnParameters =>
+  context.storageFailedTurn ? storageFailedEnding : ended;
 
 // A Turn ends: the Session clears it, and its Stop reason, usage and error are stored.
 export const endTurn = (
   context: EndingSession,
   ended: EndTurnParameters,
-): TurnStep => {
+): TurnStep<ClearedTurn> => {
   const change = clearedTurn();
 
   const turnId = context.activeTurnId;

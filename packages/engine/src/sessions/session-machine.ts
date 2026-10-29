@@ -199,15 +199,19 @@ type StepQueue = WriteQueue & {
   assign: (change: Partial<SessionContext>) => void;
 };
 
-// A Session configuration step: its change to the Session, then its writes.
-const enqueueStep = (
+type ChangeAndWrites = Pick<ConfigurationStep, 'writes'> & {
+  change?: Partial<SessionContext>;
+};
+
+// Any step's change to the Session, when it has one, then its writes.
+const enqueueChangeAndWrites = (
   enqueue: StepQueue,
   context: SessionContext,
-  step: ConfigurationStep | undefined,
+  step: ChangeAndWrites | undefined,
 ): void => {
   if (!step) return;
 
-  enqueue.assign(step.change);
+  if (step.change) enqueue.assign(step.change);
   enqueueWrites(enqueue, context, step.writes);
 };
 
@@ -215,17 +219,20 @@ type TurnQueue = StepQueue & {
   sendTo: (target: FeedActorRef | 'feed', event: FeedEvent) => void;
 };
 
-// A Turn step: its Session change and writes, then its events for the Feeds.
+// A Turn step: its change and writes, then its events for the Feeds; each Subagent's Feed hears its Turn end before its write, and the Session's own Feed after them.
 const enqueueTurnStep = (
   enqueue: TurnQueue,
   context: SessionContext,
   step: TurnStep,
 ): void => {
-  enqueueStep(enqueue, context, step);
+  enqueueChangeAndWrites(enqueue, context, step);
+
+  for (const { feed, event, write } of step.subagentTurns) {
+    enqueue.sendTo(feed, event);
+    enqueueWrites(enqueue, context, [write]);
+  }
 
   for (const event of step.feed) enqueue.sendTo('feed', event);
-
-  for (const { feed, event } of step.subagentFeeds) enqueue.sendTo(feed, event);
 };
 
 const crashDuringTurn = (params: CrashNoticeParameters): boolean =>
@@ -345,7 +352,7 @@ const sessionSetup = setup({
       context.acpLifetime.finishRegistration(),
     queueAcpConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, setConfigEvent);
-      enqueueStep(
+      enqueueChangeAndWrites(
         enqueue,
         context,
         sessionConfiguration.choose(context, event, 'now'),
@@ -353,20 +360,28 @@ const sessionSetup = setup({
     }),
     holdAcpConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, setConfigEvent);
-      enqueueStep(
+      enqueueChangeAndWrites(
         enqueue,
         context,
         sessionConfiguration.choose(context, event, 'nextTurn'),
       );
     }),
     releaseHeldConfig: enqueueActions(({ context, enqueue }) =>
-      enqueueStep(enqueue, context, sessionConfiguration.releaseHeld(context)),
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.releaseHeld(context),
+      ),
     ),
     takeAcpConfig: enqueueActions(({ context, enqueue }) =>
-      enqueueStep(enqueue, context, sessionConfiguration.begin(context)),
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.begin(context),
+      ),
     ),
     reportAcpConfig: enqueueActions(({ context, event, enqueue }) =>
-      enqueueStep(
+      enqueueChangeAndWrites(
         enqueue,
         context,
         sessionConfiguration.report(context, event),
@@ -377,14 +392,18 @@ const sessionSetup = setup({
         { context, enqueue },
         outcome: Parameters<typeof sessionConfiguration.settle>[1],
       ) =>
-        enqueueStep(
+        enqueueChangeAndWrites(
           enqueue,
           context,
           sessionConfiguration.settle(context, outcome),
         ),
     ),
     rejectPendingAcpConfig: enqueueActions(({ context, enqueue }) =>
-      enqueueStep(enqueue, context, sessionConfiguration.abandon(context)),
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.abandon(context),
+      ),
     ),
     rememberAcpUsage: assign(
       ({ context, event }): Pick<SessionContext, 'usage'> => {
@@ -469,7 +488,7 @@ const sessionSetup = setup({
     ),
     rememberRestoredConfiguration: enqueueActions(
       ({ context, enqueue }, restored: ConfigurationStep) =>
-        enqueueStep(enqueue, context, restored),
+        enqueueChangeAndWrites(enqueue, context, restored),
     ),
     rememberPromptFailure: assign(({ context }, params: FailureParameters) => ({
       failure:

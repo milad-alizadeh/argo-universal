@@ -1,6 +1,6 @@
-import type { OpenSessionsActorRef } from '../open-sessions-machine';
-import type { SessionActorRef } from '../session-machine';
-import { hasRunningSubagentTurn } from '../subagents';
+import type { OpenSessionsActorRef } from './open-sessions-machine';
+import type { SessionActorRef } from './session-machine';
+import { hasRunningSubagentTurn } from './subagents';
 
 /*
  * Whether any open Session has a Turn running, its own or a subagent's.

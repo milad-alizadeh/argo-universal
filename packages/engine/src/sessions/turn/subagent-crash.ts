@@ -1,9 +1,7 @@
-import type { FeedActorRef, FeedTurnEnding } from '../../feed';
+import type { FeedActorRef } from '../../feed';
 import { TurnUpdateJob } from '../session-storage/session-storage';
 import type { Subagents } from '../subagents';
-import type { TurnStep } from './values';
-
-type CrashEnding = Extract<FeedTurnEnding, { kind: 'agent_crash' }>;
+import type { CrashEnding, SubagentTurnEnd } from './step';
 
 type RunningTurn = { feed: FeedActorRef; turnId: string };
 
@@ -27,14 +25,9 @@ const runningTurns = (subagents: Subagents): RunningTurn[] =>
 export const crashedSubagentTurns = (
   subagents: Subagents,
   ending: CrashEnding,
-): Pick<TurnStep, 'writes' | 'subagentFeeds'> => {
-  const turns = runningTurns(subagents);
-
-  return {
-    writes: turns.map(({ turnId }) => ({ job: crashJob(turnId, ending) })),
-    subagentFeeds: turns.map(({ feed, turnId }) => ({
-      feed,
-      event: { type: 'feed.completeTurn', turnId, ending },
-    })),
-  };
-};
+): SubagentTurnEnd[] =>
+  runningTurns(subagents).map(({ feed, turnId }) => ({
+    feed,
+    event: { type: 'feed.completeTurn', turnId, ending },
+    write: { job: crashJob(turnId, ending) },
+  }));

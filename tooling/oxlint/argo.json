@@ -1829,6 +1829,14 @@
                 "message": "Import a Session's Turn module through its index.ts face."
               },
               {
+                "group": [
+                  "./stored-turn/**",
+                  "!./stored-turn/index",
+                  "!./stored-turn/index.ts"
+                ],
+                "message": "Import stored Turns through the stored-turn index.ts face."
+              },
+              {
                 "group": ["**/engine/**"],
                 "message": "A module sits below the Engine composition, so it never imports engine/."
               }
@@ -1896,6 +1904,14 @@
               {
                 "group": ["../turn/**", "!../turn/index", "!../turn/index.ts"],
                 "message": "Import a Session's Turn module through its index.ts face."
+              },
+              {
+                "group": [
+                  "../stored-turn/**",
+                  "!../stored-turn/index",
+                  "!../stored-turn/index.ts"
+                ],
+                "message": "Import stored Turns through the stored-turn index.ts face."
               },
               {
                 "group": ["**/engine/**"],

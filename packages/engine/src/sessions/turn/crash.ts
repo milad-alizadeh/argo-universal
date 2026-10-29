@@ -1,13 +1,11 @@
 import { AgentProcessExitError } from '../../agents';
-import { turnEndingEvent, type FeedTurnEnding } from '../../feed';
+import { turnEndingEvent } from '../../feed';
 import type { AcpLifetimeEvent } from '../acp/acp-lifetime';
 import type { SessionContext } from '../session-context';
+import { turnStep, type CrashEnding, type TurnStep } from './step';
 import { crashedSubagentTurns } from './subagent-crash';
-import { turnStep, type TurnStep } from './values';
 
 type AcpFailed = Extract<AcpLifetimeEvent, { type: 'acp.failed' }>;
-
-type CrashEnding = Extract<FeedTurnEnding, { kind: 'agent_crash' }>;
 
 type CrashedSession = Pick<
   SessionContext,
@@ -32,23 +30,21 @@ const crashEnding = (
   description: crashDescription(failed),
 });
 
-type CrashEffect = Pick<TurnStep, 'change' | 'feed'>;
+type CrashChange = Pick<SessionContext, 'turnEnding'>;
 
 // During a Turn the crash joins the Turn's ending, which the Feed settles.
 const joinTurn = (
   context: CrashedSession,
   ending: CrashEnding,
-): CrashEffect => ({
+): Pick<TurnStep<CrashChange>, 'change'> => ({
   change: { turnEnding: { ...context.turnEnding, ...ending } },
-  feed: [],
 });
 
 // Outside a Turn the Feed shows the crash at once.
 const announce = (
   context: CrashedSession,
   ending: CrashEnding,
-): CrashEffect => ({
-  change: {},
+): Pick<TurnStep<CrashChange>, 'feed'> => ({
   feed: [{ type: turnEndingEvent, turnId: context.activeTurnId, ending }],
 });
 
@@ -57,7 +53,7 @@ export const crashAgent = (
   context: CrashedSession,
   failed: AcpFailed,
   duringTurn: boolean,
-): TurnStep => {
+): TurnStep<CrashChange> => {
   const ending = crashEnding(context, failed);
 
   const effect =
@@ -66,7 +62,7 @@ export const crashAgent = (
       : announce(context, ending);
 
   return turnStep({
-    ...crashedSubagentTurns(context.subagents, ending),
     ...effect,
+    subagentTurns: crashedSubagentTurns(context.subagents, ending),
   });
 };

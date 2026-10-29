@@ -38,7 +38,7 @@ it('announces an Agent crash at once when no Turn is running', (): void => {
     false,
   );
 
-  expect(step.change).toEqual({});
+  expect(step.change).toBeUndefined();
   expect(step.feed).toEqual([
     expect.objectContaining({
       type: 'feed.turnEnding',
@@ -48,7 +48,7 @@ it('announces an Agent crash at once when no Turn is running', (): void => {
   ]);
 });
 
-it('ends the running Turn of each Subagent when the Agent crashes', (): void => {
+it('ends each Subagent Turn through its Feed, then stores it, before the Session announces', (): void => {
   const { route, state } = openMemorySubagents();
 
   route({
@@ -66,10 +66,12 @@ it('ends the running Turn of each Subagent when the Agent crashes', (): void => 
     false,
   );
 
-  expect(step.subagentFeeds).toHaveLength(1);
-  expect(step.subagentFeeds[0]?.event).toMatchObject({
+  expect(step.writes).toEqual([]);
+  expect(step.subagentTurns).toHaveLength(1);
+  expect(step.subagentTurns[0]?.event).toMatchObject({
     type: 'feed.completeTurn',
     ending: { kind: 'agent_crash', occurredAt: 200 },
   });
-  expect(step.writes).toHaveLength(1);
+  expect(step.subagentTurns[0]?.write.job.describe()).toContain('update Turn');
+  expect(step.feed).toHaveLength(1);
 });
