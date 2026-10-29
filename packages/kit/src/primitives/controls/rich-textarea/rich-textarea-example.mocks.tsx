@@ -58,3 +58,19 @@ export function RichTextareaExample({
     />
   );
 }
+
+// Suggestions that arrive after the person has typed, as an Agent's Slash commands do.
+export function LateSuggestionsExample(props: ExampleProps): React.JSX.Element {
+  const [arrived, setArrived] = useState(false);
+  const deliver = (): void => setArrived(true);
+  const suggestions = arrived ? props.suggestions : [];
+
+  return (
+    <>
+      <button type="button" onClick={deliver}>
+        Deliver suggestions
+      </button>
+      <RichTextareaExample {...props} suggestions={suggestions} />
+    </>
+  );
+}

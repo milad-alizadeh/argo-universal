@@ -42,9 +42,11 @@ const afterOpening = (
   context: Parameters<ScriptedMethodPlayer['turn']>[0],
   response: NewSessionResponse,
 ): NewSessionResponse => {
-  const turn = player.turn(context, response.sessionId, false);
-
-  runAfterResponse(scenario.afterOpening, turn);
+  if (scenario.afterOpening)
+    runAfterResponse(
+      scenario.afterOpening,
+      player.turn(context, response.sessionId, false),
+    );
 
   return response;
 };

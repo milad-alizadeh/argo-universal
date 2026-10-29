@@ -24,6 +24,7 @@ export type OptionsDeps = Pick<
   | 'installedAgents'
   | 'sessions'
   | 'sessionCommandSignal'
+  | 'commandsWaitMs'
   | 'findWriter'
 >;
 
@@ -84,22 +85,33 @@ async function saveDiscovery(
   discovery: Discovery,
   { saved, commands }: Discovered,
 ): Promise<SessionAgentOptionsOutput> {
-  discovery.configured(options);
-  // The Agent sends its Slash commands around when it opens; they are saved with the options.
-  await commands.seen(discovery.signal);
+  const owner = { agent: input.agent, projectId: input.projectId };
+  const early = commands.commands;
 
-  await writeDatabaseJobAndWaitForCommit(
-    writer,
-    new AgentOptionsJob(
-      { agent: input.agent, projectId: input.projectId },
-      options,
-      {
-        authoritative: true,
-        expectedRevision: saved?.revision ?? 0,
+  const job = new AgentOptionsJob(owner, options, {
+    authoritative: true,
+    expectedRevision: saved?.revision ?? 0,
+    commands: early,
+  });
+
+  discovery.configured(options);
+  await writeDatabaseJobAndWaitForCommit(writer, job);
+  /*
+   * The options are saved at once. The Agent may send its Slash commands later, so the session
+   * stays open for them and they follow in a second write that only the revision it started from may take.
+   */
+  await commands.seen(discovery.signal, deps.commandsWaitMs);
+  const { committedRevision } = job;
+
+  if (commands.commands && commands.commands !== early && committedRevision)
+    await writeDatabaseJobAndWaitForCommit(
+      writer,
+      new AgentOptionsJob(owner, undefined, {
+        authoritative: false,
+        expectedRevision: committedRevision,
         commands: commands.commands,
-      },
-    ),
-  );
+      }),
+    );
 
   return discoveryResult(deps, input, options);
 }

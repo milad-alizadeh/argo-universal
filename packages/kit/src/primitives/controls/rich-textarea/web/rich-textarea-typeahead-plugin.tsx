@@ -3,7 +3,7 @@ import {
   LexicalTypeaheadMenuPlugin,
   useBasicTypeaheadTriggerMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin';
-import type { TextNode } from 'lexical';
+import { $getSelection, $isRangeSelection, type TextNode } from 'lexical';
 import { useEffect, useMemo, useState } from 'react';
 import type * as React from 'react';
 import type {
@@ -60,16 +60,32 @@ function useReferenceAdapter(
   );
 }
 
+// Lexical looks for a trigger only when the editor changes, so a new source list nudges the caret.
+function useRetriggerOnChange(adapters: TypeaheadAdapter[]): void {
+  const [editor] = useLexicalComposerContext();
+  useEffect(() => {
+    editor.update(() => {
+      const selection = $getSelection();
+
+      if ($isRangeSelection(selection)) selection.dirty = true;
+    });
+  }, [editor, adapters]);
+}
+
 function useAdapters({
   references,
   suggestions = noSuggestions,
 }: Props): TypeaheadAdapter[] {
   const reference = useReferenceAdapter(references);
 
-  return useMemo(
+  const adapters = useMemo(
     () => [reference, suggestionAdapter(suggestions)],
     [reference, suggestions],
   );
+
+  useRetriggerOnChange(adapters);
+
+  return adapters;
 }
 
 function useSelectOption(): SelectOption {

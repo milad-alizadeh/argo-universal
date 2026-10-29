@@ -56,6 +56,9 @@ export function readAgentConfiguration(
 
 // Discovery preserves preferences and cannot overwrite an ACP update received while it opened.
 export class AgentOptionsJob implements WriterJob {
+  // The revision this job wrote, once committed; `undefined` when a newer write took precedence.
+  public committedRevision: number | undefined;
+
   public constructor(
     public readonly owner: SessionAgentOptionsInput,
     private readonly options: SessionConfigOption[] | undefined,
@@ -136,6 +139,7 @@ export class AgentOptionsJob implements WriterJob {
     const next = this.project(row && decode(row));
 
     if (!next || next.revision === row?.revision) return;
+    this.committedRevision = next.revision;
     transaction
       .insert(agentOptions)
       .values(next)

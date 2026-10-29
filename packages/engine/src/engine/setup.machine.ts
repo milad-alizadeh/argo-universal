@@ -79,6 +79,8 @@ export interface EngineInput extends Pick<
   pluginOAuth?: OAuthOptions;
   pluginClock?: PluginClock;
   operationWaitClock?: OperationWaitClock;
+  // How long New Session discovery waits for an Agent's Slash commands; the default suits real Agents.
+  commandsWaitMs?: number;
   startedAt: string;
   acp?: AcpResourceInput;
   fetchAgents?: FetchAgents;

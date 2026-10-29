@@ -2,11 +2,14 @@ import type { AgentOptionsUpdate } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+import { commandsWaitMs } from './discovered-commands';
 
 const owner = {
   agent: emptySessionInput.agent,
   projectId: emptySessionInput.projectId,
 };
+
+const deploy = { name: 'deploy', description: 'deploy' };
 
 const review = { name: 'review', description: 'Review changes' };
 
@@ -40,12 +43,14 @@ type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 async function discoverWith(
   host: Host,
   commands: readonly { name: string; description: string }[],
+  { agent = owner.agent, delayMs = 0, sessionId = 'owned-1' } = {},
 ): Promise<AsyncIterator<AgentOptionsUpdate>> {
-  const stream = (await host.caller.session.agentOptions(owner))[
+  const stream = (await host.caller.session.agentOptions({ ...owner, agent }))[
     Symbol.asyncIterator
   ]();
 
   await nextReady(stream);
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
   await requireScriptedProcessAt(host.agent.processes).play(
     [
       {
@@ -56,14 +61,14 @@ async function discoverWith(
         },
       },
     ],
-    'owned-1',
+    sessionId,
   );
 
   return stream;
 }
 
 it('streams commands an Agent reports after New Session selects it', async () => {
-  const host = await startAcpEngine({ steps: [] });
+  const host = await startAcpEngine({ steps: [], commandsWaitMs });
   const stream = await discoverWith(host, [review]);
 
   expect(await nextWithCommands(stream)).toMatchObject({ commands: [review] });
@@ -71,7 +76,7 @@ it('streams commands an Agent reports after New Session selects it', async () =>
 });
 
 it('streams the saved commands first when New Session opens again', async () => {
-  const host = await startAcpEngine({ steps: [] });
+  const host = await startAcpEngine({ steps: [], commandsWaitMs });
   const first = await discoverWith(host, [review]);
   await nextWithCommands(first);
   await first.return?.();
@@ -99,6 +104,7 @@ const commandsUpdate = (
 it('keeps a live Session’s commands when a discovery that started earlier reports others', async () => {
   const host = await startAcpEngine({
     steps: [],
+    commandsWaitMs,
     responses: {
       'session/new': [
         { result: { sessionId: 'actual' } },
@@ -131,7 +137,10 @@ it('keeps a live Session’s commands when a discovery that started earlier repo
 
   await process.play(commandsUpdate('live'), 'actual');
   await reported;
-  await process.play(commandsUpdate('discovered'), 'discovery');
+  await requireScriptedProcessAt(host.agent.processes, 1).play(
+    commandsUpdate('discovered'),
+    'discovery',
+  );
 
   expect((await nextWithCommands(stream)).commands).toEqual([
     { name: 'live', description: 'live' },
@@ -142,7 +151,7 @@ it('keeps a live Session’s commands when a discovery that started earlier repo
 });
 
 it('tells an Agent that reported nothing from an empty list', async () => {
-  const silent = await startAcpEngine({ steps: [] });
+  const silent = await startAcpEngine({ steps: [], commandsWaitMs });
 
   const silentStream = (await silent.caller.session.agentOptions(owner))[
     Symbol.asyncIterator
@@ -151,9 +160,80 @@ it('tells an Agent that reported nothing from an empty list', async () => {
   expect(await nextReady(silentStream)).toMatchObject({ commands: null });
   await silentStream.return?.();
 
-  const empty = await startAcpEngine({ steps: [] });
+  const empty = await startAcpEngine({ steps: [], commandsWaitMs });
   const emptyStream = await discoverWith(empty, []);
 
   expect(await nextWithCommands(emptyStream)).toMatchObject({ commands: [] });
   await emptyStream.return?.();
+});
+
+it('streams the saved commands first after the Engine restarts', async () => {
+  const before = await startAcpEngine({ steps: [], commandsWaitMs });
+  const stream = await discoverWith(before, [review]);
+
+  await nextWithCommands(stream);
+  await stream.return?.();
+  await before.stop();
+
+  const after = await startAcpEngine({
+    steps: [],
+    restartOver: before.home,
+    commandsWaitMs,
+  });
+
+  const again = (await after.caller.session.agentOptions(owner))[
+    Symbol.asyncIterator
+  ]();
+
+  const first = await again.next();
+
+  expect(first.value).toMatchObject({ commands: [review] });
+  expect(first.value?.stage).not.toBe('ready');
+  await again.return?.();
+});
+
+it('keeps each Agent’s commands apart in one Project', async () => {
+  const host = await startAcpEngine({ steps: [], commandsWaitMs }, undefined, [
+    'mock',
+    'other',
+  ]);
+
+  const a = await discoverWith(host, [review]);
+
+  await nextWithCommands(a);
+  await a.return?.();
+
+  const b = (
+    await host.caller.session.agentOptions({ ...owner, agent: 'other' })
+  )[Symbol.asyncIterator]();
+
+  expect(await nextReady(b)).toMatchObject({ commands: null });
+  await requireScriptedProcessAt(host.agent.processes, 1).play(
+    commandsUpdate('deploy'),
+    'owned-2',
+  );
+  expect(await nextWithCommands(b)).toMatchObject({ commands: [deploy] });
+  await b.return?.();
+
+  const again = (await host.caller.session.agentOptions(owner))[
+    Symbol.asyncIterator
+  ]();
+
+  expect((await again.next()).value).toMatchObject({ commands: [review] });
+  await again.return?.();
+});
+
+it('saves a list that arrives well after the options were read', async () => {
+  const host = await startAcpEngine({ steps: [], commandsWaitMs });
+  const stream = await discoverWith(host, [review], { delayMs: 2500 });
+
+  expect(await nextWithCommands(stream)).toMatchObject({ commands: [review] });
+  await stream.return?.();
+
+  const again = (await host.caller.session.agentOptions(owner))[
+    Symbol.asyncIterator
+  ]();
+
+  expect((await again.next()).value).toMatchObject({ commands: [review] });
+  await again.return?.();
 });

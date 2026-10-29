@@ -35,11 +35,13 @@ export const runTurn = async (
 
 // An Agent sends some updates only after a response has gone out, as with a Session's Slash commands.
 export const runAfterResponse = (
-  steps: readonly ScriptedStep[] | undefined,
+  steps: readonly ScriptedStep[],
   turn: ScriptedTurn,
 ): void => {
-  if (steps)
-    setImmediate(() => {
-      void runTurn(steps, turn).catch(() => {});
+  setImmediate(() => {
+    runTurn(steps, turn).catch((error: Error) => {
+      // A broken scenario must show up in the output, not as a test that waits for an update that never comes.
+      console.error('Scripted Agent steps after the response failed', error);
     });
+  });
 };
