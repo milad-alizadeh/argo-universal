@@ -24,7 +24,7 @@ const feedFadeEdges = (wide: boolean): PerEdge<ScrollFadeEdge> => ({
 
 // How far below the top of the view a row rests clear of the top fade.
 export function useFeedTopClearance(): number {
-  return useWide() ? headerFadeDepth : fadeDepth(undefined).top;
+  return useWide() ? headerFadeDepth : fadeDepth().top;
 }
 
 // The Feed fades out where the Composer's card begins, so nothing shows under it, and wide under the header. Where the Composer is not glass, its depth follows whether the reader is at the Feed's end.

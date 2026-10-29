@@ -135,23 +135,34 @@ type FeedListProps = Pick<
   | 'header'
 >;
 
+// With no Composer below, the Feed stays where the reader is and pins no prompt.
+function anchorsOf(
+  opensAtStart: boolean | undefined,
+  pinnedPrompt: FeedListProps['anchoredEndSpace'],
+): Pick<
+  FeedListProps,
+  'maintainScrollAtEnd' | 'alignItemsAtEnd' | 'anchoredEndSpace'
+> {
+  return {
+    maintainScrollAtEnd: opensAtStart ? false : followComposer,
+    // Rows start at the top of the view, never against the Composer.
+    alignItemsAtEnd: false,
+    anchoredEndSpace: opensAtStart ? undefined : pinnedPrompt,
+  };
+}
+
 function useFeedListProps(
   list: ListRef,
   { entries, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
 ): FeedListProps {
   const motion = useCollapsibleMotion(list);
   const items = useFeedRowData(entries);
-  const pinnedPrompt = usePinnedPrompt(list, items);
 
   return {
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    // With no Composer below, it stays where the reader is.
-    maintainScrollAtEnd: props.opensAtStart ? false : followComposer,
-    // Rows start at the top of the view, never against the Composer.
-    alignItemsAtEnd: false,
-    anchoredEndSpace: props.opensAtStart ? undefined : pinnedPrompt,
+    ...anchorsOf(props.opensAtStart, usePinnedPrompt(list, items)),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

@@ -47,6 +47,18 @@ function streamProps<Item>(
   props: ListProps<Item>,
 ): Partial<ScrollFadeListProps<Item>> {
   return {
+    ...anchorProps(props),
+    onStartReached: props.onStartReached,
+    onStartReachedThreshold: props.onStartReachedThreshold,
+    drawDistance: props.drawDistance,
+  };
+}
+
+// Where the list opens and which end it holds as its rows change.
+function anchorProps<Item>(
+  props: ListProps<Item>,
+): Partial<ScrollFadeListProps<Item>> {
+  return {
     initialScrollIndex: props.initialScrollIndex,
     initialScrollAtEnd: props.initialScrollAtEnd,
     alignItemsAtEnd: props.alignItemsAtEnd,
@@ -54,9 +66,6 @@ function streamProps<Item>(
     maintainScrollAtEnd: props.maintainScrollAtEnd,
     maintainScrollAtEndThreshold: props.maintainScrollAtEndThreshold,
     maintainVisibleContentPosition: props.maintainVisibleContentPosition,
-    onStartReached: props.onStartReached,
-    onStartReachedThreshold: props.onStartReachedThreshold,
-    drawDistance: props.drawDistance,
   };
 }
 

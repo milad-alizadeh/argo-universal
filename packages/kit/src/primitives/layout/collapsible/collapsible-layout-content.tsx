@@ -50,20 +50,28 @@ function useLayoutContent(
     layoutMotionOptions(open, measurement, layoutSync),
   );
 
-  // Closed content unmounts, and the rows inside it close with it, so it measures again before it next opens.
-  const hidden = !open && progress === 0;
-  const { forget } = measurement;
+  useForgetWhenHidden(!open && progress === 0, measurement.forget);
+  useSyncAtRest(progress, measurement.measured, layoutSync.syncLayout);
+
+  return { open, progress, measurement };
+}
+
+// Closed content unmounts, and the rows inside it close with it, so it measures again before it next opens.
+function useForgetWhenHidden(hidden: boolean, forget: () => void): void {
   useLayoutEffect(() => {
     if (hidden) forget();
   }, [hidden, forget]);
+}
 
+function useSyncAtRest(
+  progress: number,
+  measured: boolean,
+  syncLayout: () => void,
+): void {
   const stillAt = progress === 0 || progress === 1 ? progress : null;
-  const { syncLayout } = layoutSync;
   useLayoutEffect(() => {
     syncLayout();
-  }, [stillAt, measurement.measured, syncLayout]);
-
-  return { open, progress, measurement };
+  }, [stillAt, measured, syncLayout]);
 }
 
 type MeasuredContentProps = {

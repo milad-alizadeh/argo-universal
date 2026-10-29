@@ -94,7 +94,9 @@ function useStreamedLength(): number {
 
     return (): void => clearTimeout(timer);
   }, [length]);
-  streamed = length;
+  useEffect(() => {
+    streamed = length;
+  }, [length]);
 
   return length;
 }

@@ -188,9 +188,11 @@ async function openedEditsInGroup(
   const inGroup = within(group.parentElement);
   const edits = await inGroup.findByRole('button', { name: 'Edited 2 files' });
   await openRow(edits);
+
   const file = await inGroup.findByRole('button', {
     name: /^Edited .*large\.txt$/,
   });
+
   await openRow(file);
   await fullyOpenedRow(file);
   await fullyOpenedRow(edits);
@@ -211,9 +213,13 @@ function rowAndNextRow(
     if (!row) throw new Error('No Feed row around the element');
     const { top, height } = row.getBoundingClientRect();
 
-    const nextTop = [...within(scroll).queryAllByTestId(feedRowId)]
-      .map((other) => other.getBoundingClientRect().top)
-      .filter((otherTop) => otherTop > top)
+    const nextTop = within(scroll)
+      .queryAllByTestId(feedRowId)
+      .flatMap((other) => {
+        const otherTop = other.getBoundingClientRect().top;
+
+        return otherTop > top ? [otherTop] : [];
+      })
       .sort((a, b) => a - b)[0];
 
     return { height, nextRowAt: (nextTop ?? top + height) - top };

@@ -22,15 +22,21 @@ export function Code(props: CodeProps): ReactElement {
       testID={props.diff ? 'diff-view' : undefined}
       className={`${codeBlockGroup} ${trayClassName}`}
     >
-      {/* An inline patch sits under its edit row, which already shows the file's icon. */}
-      <CodeBlockHeader
-        title={codeTitle(props)}
-        copyValue={copyValue(props)}
-        icon={!props.diff}
-      />
+      <CodeBlockHeader {...headerOf(props)} />
       <CodeContent {...props} />
     </View>
   );
+}
+
+// An inline patch sits under its edit row, which already shows the file's icon.
+function headerOf(
+  props: CodeProps,
+): React.ComponentProps<typeof CodeBlockHeader> {
+  return {
+    title: codeTitle(props),
+    copyValue: copyValue(props),
+    icon: !props.diff,
+  };
 }
 
 function codeTitle(props: CodeProps): string {
