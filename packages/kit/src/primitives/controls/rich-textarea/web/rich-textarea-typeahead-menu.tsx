@@ -55,20 +55,46 @@ function rowAttributes(props: RowProps): React.ComponentProps<'button'> {
   };
 }
 
+const groupTitleClassName =
+  'shrink-0 px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground';
+
+function MenuRow(props: RowProps): React.JSX.Element {
+  return (
+    <button {...rowAttributes(props)}>{props.option.display.content}</button>
+  );
+}
+
+function startsGroup(props: MenuProps, index: number): boolean {
+  return (
+    props.options[index - 1]?.display.group !==
+    props.options[index]?.display.group
+  );
+}
+
+function rowsOf(
+  props: MenuProps,
+  option: TypeaheadOption,
+  index: number,
+): React.JSX.Element {
+  const selected = props.selectedIndex === index;
+
+  return (
+    <MenuRow key={option.key} {...props} {...{ option, index, selected }} />
+  );
+}
+
+// Each group's title heads its options, which sit together in the order the sources are given.
 function MenuRows(props: MenuProps): React.JSX.Element[] {
-  return props.options.map((option, index) => (
-    <button
-      key={option.key}
-      {...rowAttributes({
-        ...props,
-        option,
-        index,
-        selected: props.selectedIndex === index,
-      })}
-    >
-      {option.display.content}
-    </button>
-  ));
+  return props.options.flatMap((option, index) => [
+    ...(startsGroup(props, index)
+      ? [
+          <div key={`${option.key}-title`} className={groupTitleClassName}>
+            {option.display.title}
+          </div>,
+        ]
+      : []),
+    rowsOf(props, option, index),
+  ]);
 }
 
 function TypeaheadMenu(
@@ -80,9 +106,6 @@ function TypeaheadMenu(
 
   return (
     <div ref={menu} role="group" aria-label={title} className={menuClassName}>
-      <div className="shrink-0 px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground">
-        {title}
-      </div>
       {MenuRows(props)}
     </div>
   );

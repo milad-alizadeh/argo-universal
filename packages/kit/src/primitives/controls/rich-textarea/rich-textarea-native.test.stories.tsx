@@ -5,13 +5,24 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
-import { exampleLabel } from './rich-textarea-example.mocks';
+import {
+  exampleLabel,
+  follows,
+  lateItem,
+  lateName,
+  lateSource,
+} from './rich-textarea-example.mocks';
 import { suggestionsRichTextarea } from './rich-textarea-fixtures';
 import { iconlessSuggestionsRichTextarea } from './rich-textarea-iconless.mocks';
 import type {
   RichTextareaHandle,
   RichTextareaProps,
 } from './rich-textarea-props';
+import {
+  exampleItem,
+  optionsSource,
+  twoSourcesRichTextarea,
+} from './rich-textarea-sources-fixtures';
 import { SuggestionListHost } from './rich-textarea-suggestion-list';
 import { RichTextarea } from './rich-textarea.native';
 
@@ -48,6 +59,7 @@ const meta = {
   ),
   args: {
     onChangeText: fn(),
+    onResourcesChange: fn(),
     suggestions: suggestionsRichTextarea.suggestions,
   },
 } satisfies Meta<typeof NativeField>;
@@ -146,6 +158,109 @@ export const MovingTheCaretOutOfTheWordHidesTheList: Story = {
     await waitFor(() =>
       expect(canvas.queryByRole('button', firstOption)).not.toBeInTheDocument(),
     );
+  },
+};
+
+// The second-source fixtures carry no icon, so their rows keep the slash in the name.
+const sourceFirstOption = { name: /^\/first/ };
+
+const itemOption = { name: /^Item 7/ };
+
+export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
+  args: { suggestions: twoSourcesRichTextarea.suggestions },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    const first = await canvas.findByRole('button', sourceFirstOption);
+    const item = canvas.getByRole('button', itemOption);
+    await expect(follows(canvas.getByText('Suggestions'), first)).toBe(true);
+    await expect(follows(first, canvas.getByText('Items'))).toBe(true);
+    await expect(follows(canvas.getByText('Items'), item)).toBe(true);
+  },
+};
+
+// Each story owns its late source, so no answer reaches another story.
+const joining = lateSource('Late');
+
+export const ASourceThatAnswersLateJoinsWithoutHidingTheRest: Story = {
+  args: { suggestions: [optionsSource, joining.source] },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await canvas.findByRole('button', sourceFirstOption);
+    await expect(
+      canvas.queryByRole('button', { name: lateName('late-1') }),
+    ).not.toBeInTheDocument();
+    joining.answer('', [lateItem('late-1')]);
+    await canvas.findByRole('button', { name: lateName('late-1') });
+    await expect(
+      canvas.getByRole('button', sourceFirstOption),
+    ).toBeInTheDocument();
+  },
+};
+
+const changing = lateSource('Late');
+
+export const AnAnswerForAQueryThatHasChangedIsIgnored: Story = {
+  args: { suggestions: [changing.source] },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/a',
+    );
+    await userEvent.keyboard('b');
+    changing.answer('a', [lateItem('stale')]);
+    changing.answer('ab', [lateItem('fresh')]);
+    await canvas.findByRole('button', { name: lateName('fresh') });
+    await expect(
+      canvas.queryByRole('button', { name: lateName('stale') }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+export const AChosenResultWithAResourceSendsItsTextAndResource: Story = {
+  args: { suggestions: twoSourcesRichTextarea.suggestions },
+  play: async ({ canvas, args }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      'See /it',
+    );
+    await userEvent.click(await canvas.findByRole('button', itemOption));
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('See ITEM-7 '),
+    );
+    await waitFor(() =>
+      expect(args.onResourcesChange).toHaveBeenLastCalledWith([
+        exampleItem.resource,
+      ]),
+    );
+    await userEvent.clear(canvas.getByRole('textbox', { name: exampleLabel }));
+    await waitFor(() =>
+      expect(args.onResourcesChange).toHaveBeenLastCalledWith([]),
+    );
+  },
+};
+
+export const AnAnswerThatIsAlreadySettledStillShows: Story = {
+  args: {
+    suggestions: [
+      {
+        id: 'ready',
+        title: 'Ready',
+        query: () => Promise.resolve([lateItem('ready-1')]),
+      },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await canvas.findByRole('button', { name: 'Late ready-1' });
   },
 };
 

@@ -42,6 +42,7 @@ const deviceAttachment = (attachment: ComposerAttachment): ContentBlock =>
 
 const sentContent = (sent: ComposerDraft): ContentBlock[] => [
   ...(sent.text.trim() ? [{ type: 'text' as const, text: sent.text }] : []),
+  ...(sent.resources ?? []),
   ...sent.attachments.map(deviceAttachment),
 ];
 

@@ -2,21 +2,19 @@ import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
 import {
   RichTextarea,
   SuggestionListHost,
-  type SuggestionSource,
 } from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
-import { useMemo } from 'react';
 import { View, ScrollView } from 'react-native';
-import { slashCommandSource } from '../../utils/slash-command-suggestions';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,
   AttachmentLayout,
   TextLayout,
 } from './composer-card-types';
+import { draftChanges, useSuggestionSources } from './composer-text-draft';
 import { ComposerToolbar } from './composer-toolbar';
 import { ComposerBottomTray } from './composer-trays';
-import type { ComposerDraft, ComposerProps } from './composer-types';
+import type { ComposerDraft } from './composer-types';
 
 const cardGlass = {
   corners: 'sheet',
@@ -93,20 +91,11 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
   };
 }
 
-function useSlashSuggestions(
-  commands: ComposerProps['slashCommands'],
-): SuggestionSource[] {
-  return useMemo(
-    () => (commands?.length ? [slashCommandSource(commands)] : []),
-    [commands],
-  );
-}
-
 function ComposerText({
   field: { attach },
   ...layout
 }: TextLayout): React.JSX.Element {
-  const suggestions = useSlashSuggestions(layout.props.slashCommands);
+  const suggestions = useSuggestionSources(layout.props);
 
   return (
     <RichTextarea
@@ -134,7 +123,7 @@ function textInputProps({
     placeholder: props.placeholder ?? '',
     value: props.draft.text,
     disabled: inactive,
-    onChangeText: (text) => props.onDraftChange({ ...props.draft, text }),
+    ...draftChanges(props),
     onSubmit: send,
   };
 }

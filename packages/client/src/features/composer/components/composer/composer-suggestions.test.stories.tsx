@@ -5,7 +5,11 @@ import {
   meta as composerMeta,
   type Story,
 } from '../../../../../mocks/composer/composer-story-context.test.mocks';
-import { slashSuggestionsComposer } from './composer-fixtures';
+import {
+  secondSourceComposer,
+  seventhItem,
+  slashSuggestionsComposer,
+} from './composer-fixtures';
 import { SuggestionComposer } from './composer-suggestions.mocks';
 
 const inspectName = '/inspect Review changes';
@@ -90,5 +94,56 @@ export const NoCommandsLeavesSlashAsPlainText: Story = {
     await expect(
       screen.queryByRole('group', { name: 'Slash commands' }),
     ).not.toBeInTheDocument();
+  },
+};
+
+export const ChosenResultSendsItsTextAndResource: Story = {
+  args: secondSourceComposer,
+  render: (args) => <SuggestionComposer {...args} />,
+  play: async ({ canvas, args }) => {
+    await settleLayout('wide');
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: 'Message' }),
+      '/item',
+    );
+    await screen.findByRole('option', { name: 'Item 7 Seventh item' });
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(args.onDraftChange).toHaveBeenLastCalledWith({
+        text: 'ITEM-7 ',
+        attachments: [],
+        resources: [seventhItem.resource],
+      }),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+    await expect(args.onSend).toHaveBeenCalledWith({
+      text: 'ITEM-7 ',
+      attachments: [],
+      resources: [seventhItem.resource],
+    });
+  },
+};
+
+export const DeletingTheResultsTextDropsItsResource: Story = {
+  args: secondSourceComposer,
+  render: (args) => <SuggestionComposer {...args} />,
+  play: async ({ canvas, args }) => {
+    await settleLayout('wide');
+    const field = canvas.getByRole('textbox', { name: 'Message' });
+    await userEvent.type(field, '/item');
+    await screen.findByRole('option', { name: 'Item 7 Seventh item' });
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(args.onDraftChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ resources: [seventhItem.resource] }),
+      ),
+    );
+    await userEvent.keyboard('{Backspace>7/}');
+    await waitFor(() =>
+      expect(args.onDraftChange).toHaveBeenLastCalledWith({
+        text: '',
+        attachments: [],
+      }),
+    );
   },
 };

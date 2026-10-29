@@ -10,7 +10,10 @@ import type {
   ReferenceOption,
   RichTextareaProps,
 } from '../rich-textarea-props';
-import type { SuggestionSource } from '../rich-textarea-suggestions';
+import type {
+  ComposerSuggestion,
+  SuggestionSource,
+} from '../rich-textarea-suggestions';
 import { registerCommandTokens } from './rich-textarea-command-tokens';
 import { registerReturnToSubmit } from './rich-textarea-keys';
 import { registerReferenceTokens } from './rich-textarea-reference-tokens';
@@ -29,6 +32,8 @@ import { suggestionAdapter } from './rich-textarea-typeahead-suggestions';
 
 type Props = Pick<RichTextareaProps, 'suggestions' | 'onSubmit'> & {
   references: readonly ReferenceOption[];
+  // Called with a result chosen from a source, after its text is written.
+  onChooseSuggestion?: (suggestion: ComposerSuggestion) => void;
 };
 
 type SelectOption = (
@@ -83,6 +88,7 @@ function useRetriggerOnChange(adapters: TypeaheadAdapter[]): void {
 
 function useSuggestionAdapter(
   suggestions: readonly SuggestionSource[],
+  choose: Props['onChooseSuggestion'],
 ): TypeaheadAdapter {
   const [editor] = useLexicalComposerContext();
   useEffect(
@@ -90,15 +96,19 @@ function useSuggestionAdapter(
     [editor, suggestions],
   );
 
-  return useMemo(() => suggestionAdapter(suggestions), [suggestions]);
+  return useMemo(
+    () => suggestionAdapter(suggestions, choose),
+    [suggestions, choose],
+  );
 }
 
 function useAdapters({
   references,
   suggestions = noSuggestions,
+  onChooseSuggestion,
 }: Props): TypeaheadAdapter[] {
   const reference = useReferenceAdapter(references);
-  const suggestion = useSuggestionAdapter(suggestions);
+  const suggestion = useSuggestionAdapter(suggestions, onChooseSuggestion);
 
   const adapters = useMemo(
     () => [reference, suggestion],
@@ -119,11 +129,17 @@ function useSelectOption(): SelectOption {
   };
 }
 
+// The menu counts as open only while it shows options, and closes with the editor.
+function useMenuLifetime(menu: TypeaheadInteraction, options: number): void {
+  useEffect(() => menu.show(options), [menu, options]);
+  useEffect(() => (): void => menu.close(), [menu]);
+}
+
 function useTypeahead(props: Props): MenuProps {
   const query = useTypeaheadQuery(useAdapters(props));
   const [menuOpen] = useState(() => new TypeaheadInteraction());
   useTypeaheadKeyboard(menuOpen, props.onSubmit);
-  useEffect(() => (): void => menuOpen.close(), [menuOpen]);
+  useMenuLifetime(menuOpen, query.options.length);
 
   return {
     ...query,

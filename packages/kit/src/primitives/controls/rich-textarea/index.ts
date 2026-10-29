@@ -10,5 +10,6 @@ export {
 export type {
   ComposerSuggestion,
   SlashCommandEntry,
+  SuggestionResource,
   SuggestionSource,
 } from './rich-textarea-suggestions';

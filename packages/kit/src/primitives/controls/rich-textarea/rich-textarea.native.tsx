@@ -12,7 +12,6 @@ import {
   type RichTextareaProps,
 } from './rich-textarea-props';
 import { SuggestionPortal } from './rich-textarea-suggestion-list';
-import type { SuggestionSource } from './rich-textarea-suggestions';
 
 type TextInputInstance = React.ComponentRef<typeof TextInput>;
 
@@ -20,8 +19,6 @@ type TextInputInstance = React.ComponentRef<typeof TextInput>;
 const maximumVisibleLines = 6;
 
 const lineHeight = 20;
-
-const noSuggestions: readonly SuggestionSource[] = [];
 
 // What the text field takes: the drawing's own props stay out of it.
 function textFieldProps({
@@ -31,6 +28,7 @@ function textFieldProps({
   autoFocus: _autoFocus,
   references: _references,
   suggestions: _suggestions,
+  onResourcesChange: _onResourcesChange,
   ref: _ref,
   ...field
 }: RichTextareaProps): TextInputProps {
@@ -101,11 +99,8 @@ function useFieldHandle(
 }
 
 function RichTextarea(props: RichTextareaProps): React.JSX.Element {
-  const { groups, choose, fieldProps, insertWord } = useNativeSuggestions(
-    props.value,
-    props.onChangeText,
-    props.suggestions ?? noSuggestions,
-  );
+  const { groups, choose, fieldProps, insertWord } =
+    useNativeSuggestions(props);
 
   const inputRef = useFieldHandle(props, insertWord);
 

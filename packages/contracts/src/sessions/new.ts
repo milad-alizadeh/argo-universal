@@ -1,10 +1,6 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
-import {
-  ImageContent,
-  TextContent,
-  UploadedFileLink,
-} from '../feed/content-block';
+import { ImageContent, ResourceLink, TextContent } from '../feed/content-block';
 
 // Where a Session runs (ADR-0008).
 export const CheckoutChoice = z.enum(['worktree', 'main']);
@@ -38,11 +34,8 @@ export const SessionNewInput = z.strictObject({
   configOptions: z.array(InitialConfigOption),
   prompt: z
     .array(
-      z.discriminatedUnion('type', [
-        TextContent,
-        ImageContent,
-        UploadedFileLink,
-      ]),
+      // A link is an uploaded file (its blob set) or a chosen suggestion's resource (ADR-0023).
+      z.discriminatedUnion('type', [TextContent, ImageContent, ResourceLink]),
     )
     .default([]),
 });

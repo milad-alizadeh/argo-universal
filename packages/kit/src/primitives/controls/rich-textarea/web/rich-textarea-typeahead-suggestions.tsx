@@ -1,8 +1,9 @@
 import { $createTextNode, type TextNode } from 'lexical';
 import type * as React from 'react';
+import { Listeners } from '../rich-textarea-listeners';
+import { SuggestionRun } from '../rich-textarea-suggestion-run';
 import {
   findCommand,
-  querySuggestions,
   type ComposerSuggestion,
   type SuggestionGroup,
   type SuggestionSource,
@@ -46,68 +47,106 @@ function listedCommand(
 function insertSuggestion(
   node: TextNode | null,
   sources: readonly SuggestionSource[],
-  { insert, command }: ComposerSuggestion,
+  suggestion: ComposerSuggestion,
 ): void {
   if (!node) return;
+  const { insert, command } = suggestion;
   const name = listedCommand(sources, command);
 
   if (name) $insertCommand(node, name);
   else $insertText(node, insert);
 }
 
-function suggestionOption(
-  sources: readonly SuggestionSource[],
+type Choose = (suggestion: ComposerSuggestion) => void;
+
+// What choosing a result needs: the sources, to know its commands, and whom to tell.
+interface Menu {
+  sources: readonly SuggestionSource[];
+  choose: Choose | undefined;
+}
+
+function optionDisplay(
   source: SuggestionSource,
   suggestion: ComposerSuggestion,
-): TypeaheadOption {
-  const display = {
+): TypeaheadOption['display'] {
+  return {
+    group: source.id,
     title: source.title,
     content: <SuggestionContent suggestion={suggestion} />,
     className: 'flex-col gap-0.5',
   };
+}
 
-  return new TypeaheadOption(`${source.id}-${suggestion.id}`, display, (node) =>
-    insertSuggestion(node, sources, suggestion),
+function suggestionOption(
+  menu: Menu,
+  source: SuggestionSource,
+  suggestion: ComposerSuggestion,
+): TypeaheadOption {
+  return new TypeaheadOption(
+    `${source.id}-${suggestion.id}`,
+    optionDisplay(source, suggestion),
+    (node) => {
+      insertSuggestion(node, menu.sources, suggestion);
+      menu.choose?.(suggestion);
+    },
   );
 }
 
 const groupOptions =
-  (sources: readonly SuggestionSource[]) =>
+  (menu: Menu) =>
   ({ source, suggestions }: SuggestionGroup): TypeaheadOption[] =>
-    suggestions.map((suggestion) =>
-      suggestionOption(sources, source, suggestion),
-    );
+    suggestions.map((suggestion) => suggestionOption(menu, source, suggestion));
 
-interface Answers {
-  ask: (query: string) => SuggestionGroup[];
-  recall: (query: string) => SuggestionGroup[];
+interface Latest {
+  query: string;
+  run: SuggestionRun;
+  stop: () => void;
 }
 
-// `ask` queries the sources and keeps the answer; `recall` reuses it while the query is the same.
-function answers(sources: readonly SuggestionSource[]): Answers {
-  let latest: { query: string; groups: SuggestionGroup[] } | null = null;
+/*
+ * `ask` queries the sources once for a query and keeps the run; `recall` reuses it while the query is
+ * the same. Asking again drops the previous run, so a late answer to an earlier query is never heard.
+ */
+class SuggestionAnswers {
+  private latest: Latest | null = null;
+  private readonly listeners = new Listeners();
 
-  const ask = (query: string): SuggestionGroup[] => {
-    latest = { query, groups: querySuggestions(sources, query) };
+  constructor(private readonly sources: readonly SuggestionSource[]) {}
 
-    return latest.groups;
+  subscribe = this.listeners.add;
+
+  forget = (): void => {
+    this.latest?.stop();
+    this.latest = null;
   };
 
-  return {
-    ask,
-    recall: (query) => (latest?.query === query ? latest.groups : ask(query)),
+  ask = (query: string): SuggestionRun => {
+    if (this.latest?.query === query) return this.latest.run;
+    this.forget();
+    const run = new SuggestionRun(this.sources, query);
+    this.latest = { query, run, stop: run.subscribe(this.listeners.notify) };
+
+    return run;
   };
+
+  recall = (query: string): SuggestionRun =>
+    this.latest?.query === query ? this.latest.run : this.ask(query);
 }
 
 // The trigger asks the sources once per change and the options recall that answer.
 export function suggestionAdapter(
   sources: readonly SuggestionSource[],
+  choose?: Choose,
 ): TypeaheadAdapter {
-  const { ask, recall } = answers(sources);
+  const answers = new SuggestionAnswers(sources);
+  const menu = { sources, choose };
 
   return {
-    trigger: suggestionTrigger(ask),
-    options: (query) => recall(query).flatMap(groupOptions(sources)),
+    trigger: suggestionTrigger(answers.ask, answers.forget),
+    options: (query) =>
+      answers.recall(query).groups().flatMap(groupOptions(menu)),
+    pending: (query) => answers.recall(query).pending(),
+    subscribe: answers.subscribe,
   };
 }
 

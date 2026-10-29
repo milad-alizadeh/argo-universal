@@ -1,3 +1,4 @@
+import type { ComposerSuggestion } from '@repo/kit/primitives/controls/rich-textarea';
 import type { ComposerMockProps } from '../../../../../mocks/composer-mock';
 import {
   imageAttachment,
@@ -100,5 +101,32 @@ export const slashSuggestionsComposer = {
   slashCommands: [
     { name: 'inspect', description: 'Review changes' },
     { name: 'review', description: 'Review a file' },
+  ],
+} satisfies ComposerFixture;
+
+// A second source beside the Agent's Slash commands; its result carries a resource to send with the prompt.
+export const seventhItem = {
+  id: 'item-7',
+  label: 'Item 7',
+  detail: 'Seventh item',
+  insert: 'ITEM-7 ',
+  resource: {
+    type: 'resource_link',
+    name: 'ITEM-7',
+    uri: 'example://items/7',
+    title: 'Seventh item',
+  },
+} satisfies ComposerSuggestion;
+
+export const secondSourceComposer = {
+  draft: { text: '', attachments: [] },
+  slashCommands: [{ name: 'inspect', description: 'Review changes' }],
+  suggestionSources: [
+    {
+      id: 'items',
+      title: 'Items',
+      query: (query: string): ComposerSuggestion[] =>
+        'item'.startsWith(query.toLowerCase()) ? [seventhItem] : [],
+    },
   ],
 } satisfies ComposerFixture;

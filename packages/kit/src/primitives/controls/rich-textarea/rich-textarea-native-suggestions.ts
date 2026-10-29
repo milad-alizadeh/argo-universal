@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import type { TextInputProps } from 'react-native';
-import type { RichTextareaHandle } from './rich-textarea-props';
+import { queryAt, useSuggestionGroups } from './rich-textarea-native-groups';
+import type {
+  RichTextareaHandle,
+  RichTextareaProps,
+} from './rich-textarea-props';
+import { useChosenResources } from './rich-textarea-resources';
 import {
   insertSuggestion,
   insertWordAtCaret,
-  suggestionsAtCaret,
   type ComposerSuggestion,
   type SuggestionGroup,
   type SuggestionSource,
@@ -123,20 +127,36 @@ function fieldProps(
   };
 }
 
+// A choice that also tells the draft's resources.
+const choosing =
+  (
+    choose: NativeSuggestions['choose'],
+    track: NativeSuggestions['choose'],
+  ): NativeSuggestions['choose'] =>
+  (suggestion) => {
+    choose(suggestion);
+    track(suggestion);
+  };
+
+type NativeSuggestionProps = Pick<
+  RichTextareaProps,
+  'value' | 'onChangeText' | 'suggestions' | 'onResourcesChange'
+>;
+
+const noSources: readonly SuggestionSource[] = [];
+
 // The `/` list of the phone's plain field: the text and the caret decide when it shows (ADR-0023).
 export function useNativeSuggestions(
-  value: string,
-  onChangeText: (value: string) => void,
-  sources: readonly SuggestionSource[],
+  props: NativeSuggestionProps,
 ): NativeSuggestions {
+  const { value, onChangeText, suggestions = noSources } = props;
   const caret = useCaret(value);
+  const track = useChosenResources(value, props.onResourcesChange);
 
   return {
-    groups: caret.collapsed
-      ? suggestionsAtCaret(value, caret.position, sources)
-      : null,
+    groups: useSuggestionGroups(suggestions, queryAt(value, caret)),
     fieldProps: fieldProps(caret, onChangeText),
-    choose: chooser(value, caret, onChangeText),
+    choose: choosing(chooser(value, caret, onChangeText), track),
     insertWord: wordInserter(value, caret, onChangeText),
   };
 }

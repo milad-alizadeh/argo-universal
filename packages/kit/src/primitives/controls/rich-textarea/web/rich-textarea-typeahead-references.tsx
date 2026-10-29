@@ -35,6 +35,7 @@ function referenceOption(reference: ReferenceOption): TypeaheadOption {
   return new TypeaheadOption(
     `reference-${reference.number}`,
     {
+      group: 'references',
       title: 'Issues and pull requests',
       content: <ReferenceContent reference={reference} />,
       className: 'items-center gap-2',
