@@ -1,184 +1,84 @@
-import type { FeedSubscribeOutput, SessionSnapshot } from '@repo/contracts';
-import { useQueryClient } from '@tanstack/react-query';
-import { useSubscription } from '@trpc/tanstack-react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTRPC } from '#features/connection';
-import { closedFeedError } from '../utils/closed-feed-error';
-import { mergeHistoryPages } from '../view/feed-history';
-import {
-  applySubscriptionEvent,
-  type FeedState,
-  syncPointOf,
-} from '../view/feed-state';
 import { findLiveToolCall } from '../view/live-tool-call';
 import { toFeedView } from '../view/to-feed-view';
-import { useHeldFeedStart, useKeepHeldFeed } from './held-feed';
 import type { SessionFeed } from './session-feed';
 import { useFeedHistory } from './use-feed-history';
-import { useFeedSyncPoint } from './use-feed-sync-point';
+import { useFeedStore, type FeedStore } from './use-feed-store';
 import { useFeedView } from './use-feed-view';
-import { useFrameCommit } from './use-frame-commit';
-
-// A fetch the hook keeps in its own state, so the query cache never holds it.
-const uncached = { staleTime: 0, gcTime: 0 };
+import { useLiveFeed } from './use-live-feed';
 
 // A Session's held Feed view, paging and live changes (ADR 0007).
 export function useSessionFeed(
   sessionId: string | undefined,
   convert = toFeedView,
 ): SessionFeed {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const start = useHeldFeedStart(sessionId);
-  const [feed, setFeed] = useState<FeedState>(start.feed);
-  const history = useFeedHistory(sessionId, feed);
-  const feedRef = useRef(feed);
-  const activeSession = useRef(sessionId);
-  const commit = useFrameCommit(setFeed, activeSession);
+  const store = useFeedStore(sessionId);
+  const history = useFeedHistory(sessionId, store.feed);
+  const live = useLiveFeed(sessionId, store, history);
 
-  /*
-   * The rows held take the change at once, so the event after it reads the newest text; the commit
-   * that rebuilds the view and redraws the list is left to the frame.
-   */
-  const replaceFeed = useCallback(
-    (next: FeedState) => {
-      if (activeSession.current !== sessionId) return;
-      feedRef.current = next;
-      commit.schedule(next);
-    },
-    [sessionId, commit],
-  );
-
-  const closed = useRef(false);
-  useEffect(() => {
-    activeSession.current = sessionId;
-    feedRef.current = start.feed;
-    closed.current = false;
-  }, [sessionId, start.feed]);
-  const [closureError, setClosureError] = useState<Error | null>(null);
-
-  const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(
-    start.snapshot,
-  );
-
-  const { syncPoint, setSyncPoint } = useFeedSyncPoint(
-    sessionId,
-    start.syncPoint,
-    history.data?.pages[0],
-  );
-
-  useKeepHeldFeed(sessionId, { feed, snapshot });
-  useEffect(() => {
-    const pages = history.data?.pages;
-
-    if (pages) replaceFeed(mergeHistoryPages(feedRef.current, pages));
-  }, [history.data, replaceFeed]);
-
-  const fetchWholeRow = useCallback(
-    async (id: string) => {
-      try {
-        const row = await queryClient.fetchQuery({
-          ...trpc.feed.row.queryOptions({ sessionId: sessionId ?? '', id }),
-          ...uncached,
-        });
-
-        replaceFeed(
-          applySubscriptionEvent(feedRef.current, {
-            type: 'row.upsert',
-            rev: row.revision,
-            row,
-          }).feed,
-        );
-      } catch {
-        // The row keeps its last revision until a later change fetches it again.
-      }
-    },
-    [queryClient, trpc, sessionId, replaceFeed],
-  );
-
-  const { resetHistory } = history;
-
-  const onLiveData = useCallback(
-    (event: FeedSubscribeOutput): void => {
-      if (activeSession.current !== sessionId) return;
-
-      if (event.type === 'closed') {
-        closed.current = true;
-        setClosureError(closedFeedError(event));
-
-        return;
-      }
-
-      if (event.type === 'snapshot') {
-        setSnapshot(event.snapshot);
-
-        return;
-      }
-
-      const result = applySubscriptionEvent(feedRef.current, event);
-      replaceFeed(result.feed);
-
-      if (result.missingRowId) void fetchWholeRow(result.missingRowId);
-
-      if (result.reset) void resetHistory();
-    },
-    [replaceFeed, fetchWholeRow, resetHistory, sessionId],
-  );
-
-  const liveChanges = useSubscription({
-    ...trpc.feed.subscribe.subscriptionOptions({
-      sessionId: sessionId ?? '',
-      after: syncPoint,
-    }),
-    enabled: sessionId !== undefined && syncPoint !== null,
-    onData: onLiveData,
+  const view = useFeedView(sessionId, store.feed, {
+    snapshot: store.snapshot,
+    convert,
   });
 
-  const reset = liveChanges.reset;
+  return feedResult({ store, history, live, view });
+}
 
-  const retryOpen = useCallback(() => {
-    closed.current = false;
-    setClosureError(null);
-    const next = syncPointOf(feedRef.current);
+type FeedResultInput = {
+  store: FeedStore;
+  history: ReturnType<typeof useFeedHistory>;
+  live: ReturnType<typeof useLiveFeed>;
+  view: ReturnType<typeof useFeedView>;
+};
 
-    if (next === null) return;
+function feedResult({
+  store,
+  history,
+  live,
+  view,
+}: FeedResultInput): SessionFeed {
+  return {
+    ...feedDisplay(store, view),
+    ...feedPaging(history),
+    ...feedConnection(store, live),
+  };
+}
 
-    // A changed input resets useSubscription after it commits; the same input needs an explicit reset.
-    if (syncPoint?.epoch === next.epoch && syncPoint.revision === next.revision)
-      reset();
-    else setSyncPoint(next);
-  }, [syncPoint, reset, setSyncPoint]);
-
-  const view = useFeedView(sessionId, feed, { snapshot, convert });
-
-  const [shownSession, setShownSession] = useState(sessionId);
-
-  // Session identity changes reset the held read before any view can show another Session's data.
-  if (shownSession !== sessionId) {
-    setShownSession(sessionId);
-    // A commit held for the Session just left would otherwise land over this one's first page.
-    commit.cancel();
-    setFeed(start.feed);
-    setSnapshot(start.snapshot);
-    setClosureError(null);
-  }
-
+function feedDisplay(
+  store: FeedStore,
+  view: ReturnType<typeof useFeedView>,
+): Pick<
+  SessionFeed,
+  'view' | 'revision' | 'liveToolCall' | 'snapshot' | 'ready'
+> {
   return {
     view,
-    revision: feed.revision,
-    liveToolCall: findLiveToolCall(feed.rows, snapshot),
-    snapshot,
-    // The first page and the snapshot have both arrived.
-    ready: feed.epoch !== null && snapshot !== null,
+    revision: store.feed.revision,
+    liveToolCall: findLiveToolCall(store.feed.rows, store.snapshot),
+    snapshot: store.snapshot,
+    ready: store.feed.epoch !== null && store.snapshot !== null,
+  };
+}
+
+function feedPaging(
+  history: ReturnType<typeof useFeedHistory>,
+): Pick<SessionFeed, 'error' | 'retry' | 'loadingOlder' | 'loadOlder'> {
+  return {
     error: history.isFetchNextPageError ? null : history.error,
     retry: history.refetch,
-    // The Server refused to open the Session, such as when its Agent failed.
-    openError: closureError ?? liveChanges.error,
-    retryOpen,
-    resumeAfterCommand: () => {
-      if (closed.current) retryOpen();
-    },
     loadingOlder: history.isFetchingNextPage,
     loadOlder: history.loadOlder,
+  };
+}
+
+function feedConnection(
+  store: FeedStore,
+  live: ReturnType<typeof useLiveFeed>,
+): Pick<SessionFeed, 'openError' | 'retryOpen' | 'resumeAfterCommand'> {
+  return {
+    openError: store.closureError ?? live.error,
+    retryOpen: live.retryOpen,
+    resumeAfterCommand: () => {
+      if (store.closed.current) live.retryOpen();
+    },
   };
 }

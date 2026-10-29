@@ -10,28 +10,69 @@ export function useFeedView(
   feed: FeedState,
   options: { snapshot: SessionSnapshot | null; convert?: typeof toFeedView },
 ): FeedView | null {
-  const { snapshot, convert = toFeedView } = options;
-
-  const [held, setHeld] = useState(() => ({
+  return useHeldView({
     sessionId,
     rows: feed.rows,
-    snapshot,
-    view: snapshot ? convert(feed.rows, snapshot) : null,
-  }));
+    snapshot: options.snapshot,
+    convert: options.convert ?? toFeedView,
+  });
+}
 
-  let view = held.view;
+function useHeldView(
+  input: ViewInput & { convert: typeof toFeedView },
+): FeedView | null {
+  const [held, setHeld] = useState(() => initialView(input));
 
-  if (
-    held.sessionId !== sessionId ||
-    held.rows !== feed.rows ||
-    held.snapshot !== snapshot
-  ) {
-    const previous = held.sessionId === sessionId ? held.view : null;
-    view = snapshot
-      ? keepUnchangedItems(previous, convert(feed.rows, snapshot))
-      : null;
-    setHeld({ sessionId, rows: feed.rows, snapshot, view });
-  }
+  if (!changed(held, input)) return held.view;
+
+  const view = nextView(held, input);
+  setHeld({
+    sessionId: input.sessionId,
+    rows: input.rows,
+    snapshot: input.snapshot,
+    view,
+  });
 
   return view;
+}
+
+type HeldView = {
+  sessionId: string | undefined;
+  rows: FeedState['rows'];
+  snapshot: SessionSnapshot | null;
+  view: FeedView | null;
+};
+
+type ViewInput = Pick<HeldView, 'sessionId' | 'rows' | 'snapshot'>;
+
+function changed(held: HeldView, next: ViewInput): boolean {
+  return (
+    held.sessionId !== next.sessionId ||
+    held.rows !== next.rows ||
+    held.snapshot !== next.snapshot
+  );
+}
+
+function nextView(
+  held: HeldView,
+  next: ViewInput & { convert: typeof toFeedView },
+): FeedView | null {
+  if (!next.snapshot) return null;
+
+  const previous = held.sessionId === next.sessionId ? held.view : null;
+
+  return keepUnchangedItems(previous, next.convert(next.rows, next.snapshot));
+}
+
+function initialView(
+  input: ViewInput & { convert: typeof toFeedView },
+): HeldView {
+  const { sessionId, rows, snapshot, convert } = input;
+
+  return {
+    sessionId,
+    rows,
+    snapshot,
+    view: snapshot ? convert(rows, snapshot) : null,
+  };
 }
