@@ -29,6 +29,6 @@ export const notificationScenarios = {
     configOptions: acpConfiguration,
     steps: [question, question],
   },
-  'slash-commands': offeringCommand('review', 'Review changes'),
+  'slash-commands-review': offeringCommand('review', 'Review changes'),
   'slash-commands-deploy': offeringCommand('deploy', 'Deploy the build'),
 } satisfies Record<string, ScriptedScenario>;
