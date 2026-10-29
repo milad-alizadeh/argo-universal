@@ -1,14 +1,10 @@
 import type * as React from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import {
-  menuInsetClassName,
-  menuRowClassName,
-  menuRowsClassName,
-  menuSurfaceClassName,
-} from '#kit/menu-surface';
-import { cn } from '#kit/utils';
+import { View } from 'react-native';
+import { menuSurfaceClassName } from '#kit/menu-surface';
+import { Icon } from '#primitives/content/icon';
 import { LiquidGlass } from '#primitives/content/liquid-glass';
-import { Text } from '#primitives/content/text';
+import { List, ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import type {
   ComposerSuggestion,
   SuggestionGroup,
@@ -21,24 +17,17 @@ interface SuggestionListProps {
 
 // Placement only: glass and the plain card both keep it.
 const placementClassName =
-  'absolute bottom-full left-0 right-0 mb-2 overflow-hidden';
+  'absolute bottom-full left-0 right-0 mb-2';
 
-const listClassName = cn(menuInsetClassName, 'max-h-60');
+// Four rows show before the list scrolls.
+const listMaxHeight = 240;
 
-const rowClassName = cn(
-  menuRowClassName,
-  'flex-col items-stretch gap-0.5 active:bg-selected',
-);
-
-function SuggestionDetail({
-  detail,
-}: Pick<ComposerSuggestion, 'detail'>): React.JSX.Element | null {
-  return detail ? (
-    <Text role="secondary" dimmed>
-      {detail}
-    </Text>
-  ) : null;
-}
+const listProps = {
+  appearance: 'plain',
+  fit: true,
+  maxHeight: listMaxHeight,
+  keyboardShouldPersistTaps: 'always',
+} as const;
 
 interface RowProps {
   suggestion: ComposerSuggestion;
@@ -46,15 +35,17 @@ interface RowProps {
 }
 
 function SuggestionRow({ suggestion, onChoose }: RowProps): React.JSX.Element {
+  const { icon } = suggestion;
+
   return (
-    <Pressable
+    <ListItem
+      title={suggestion.label}
+      subtitle={suggestion.detail}
+      subtitleLines={2}
+      leading={icon ? <Icon name={icon} size="md" /> : undefined}
       accessibilityRole="button"
-      className={rowClassName}
       onPress={() => onChoose(suggestion)}
-    >
-      <Text role="control">{suggestion.label}</Text>
-      <SuggestionDetail detail={suggestion.detail} />
-    </Pressable>
+    />
   );
 }
 
@@ -73,25 +64,12 @@ function suggestionRows({
   );
 }
 
-function SuggestionRows(props: SuggestionListProps): React.JSX.Element {
+function SuggestionListBody(props: SuggestionListProps): React.JSX.Element {
   return (
-    <ScrollView
-      keyboardShouldPersistTaps="always"
-      contentContainerClassName={menuRowsClassName}
-    >
-      {suggestionRows(props)}
-    </ScrollView>
-  );
-}
-
-function SuggestionGroup(props: SuggestionListProps): React.JSX.Element {
-  return (
-    <View
-      accessibilityLabel={props.groups[0]?.source.title}
-      role="group"
-      className={listClassName}
-    >
-      <SuggestionRows {...props} />
+    <View accessibilityLabel={props.groups[0]?.source.title} role="group">
+      <List {...listProps}>
+        <ListSection>{suggestionRows(props)}</ListSection>
+      </List>
     </View>
   );
 }
@@ -99,12 +77,14 @@ function SuggestionGroup(props: SuggestionListProps): React.JSX.Element {
 // The phone's list of matches, drawn above the plain text field in the Composer's glass; a press chooses one.
 export function SuggestionList(props: SuggestionListProps): React.JSX.Element {
   return (
-    <LiquidGlass
-      corners="sheet"
-      className={placementClassName}
-      fallbackClassName={menuSurfaceClassName}
-    >
-      <SuggestionGroup {...props} />
-    </LiquidGlass>
+    <View className={placementClassName}>
+      <LiquidGlass
+        corners="sheet"
+        className="w-full overflow-hidden"
+        fallbackClassName={menuSurfaceClassName}
+      >
+        <SuggestionListBody {...props} />
+      </LiquidGlass>
+    </View>
   );
 }

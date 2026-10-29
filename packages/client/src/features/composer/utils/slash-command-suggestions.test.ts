@@ -13,14 +13,22 @@ it('offers name prefixes first, then descriptions, without duplicates', () => {
       id: 'review',
       label: '/review',
       detail: 'Review a file',
+      icon: 'code',
       insert: '/review ',
       hint: 'files',
     },
-    { id: 'reset', label: '/reset', detail: 'Start again', insert: '/reset ' },
+    {
+      id: 'reset',
+      label: '/reset',
+      detail: 'Start again',
+      icon: 'code',
+      insert: '/reset ',
+    },
     {
       id: 'inspect',
       label: '/inspect',
       detail: 'Review changes',
+      icon: 'code',
       insert: '/inspect ',
     },
   ]);

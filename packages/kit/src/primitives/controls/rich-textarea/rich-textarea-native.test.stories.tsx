@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
+import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { exampleLabel } from './rich-textarea-example.mocks';
@@ -31,6 +32,13 @@ function NativeField({
 const meta = {
   title: 'Tests/Design System/Primitives/Controls/RichTextarea/Native',
   component: NativeField,
+  parameters: { screenPreview: true },
+  // The Composer sits at the bottom, so the list opens upward into the room above the field.
+  render: (args): React.JSX.Element => (
+    <View className="flex-1 justify-end">
+      <NativeField {...args} />
+    </View>
+  ),
   args: {
     onChangeText: fn(),
     suggestions: suggestionsRichTextarea.suggestions,
@@ -41,9 +49,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const firstOption = { name: '/first First option' };
+const firstOption = { name: '/first' };
 
-const secondOption = { name: '/second Second option' };
+const secondOption = { name: '/second' };
 
 export const SlashShowsTheListAndTypingNarrowsIt: Story = {
   play: async ({ canvas }) => {
