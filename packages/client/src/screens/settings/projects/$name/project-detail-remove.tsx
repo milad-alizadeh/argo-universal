@@ -1,17 +1,23 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 
 // The Server cannot remove a Project yet, so the Button stays disabled.
 export const removeSection = (): ReactElement => (
-  <FieldGroup.Section footer="Argo forgets this Project and archives its Sessions. The folder and its files stay.">
+  <View className="gap-2">
     <Button
       label="Remove Project"
       variant="danger"
       disabled
       onPress={ignorePress}
+      fullWidth
     />
-  </FieldGroup.Section>
+    <Text role="secondary" tone="muted">
+      Argo forgets this Project and archives its Sessions. The folder and its
+      files stay.
+    </Text>
+  </View>
 );
 
 function ignorePress(): void {}

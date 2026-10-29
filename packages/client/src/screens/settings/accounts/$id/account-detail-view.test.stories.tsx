@@ -87,6 +87,9 @@ export const SaysWhenNoOtherPluginUsesIt: Story = {
 
 export const SignOutAsksFirstNamingWhoLosesAccess: Story = {
   play: async ({ args, canvas, userEvent }) => {
+    await expect(
+      canvas.getByText(/Sign out also removes access for/),
+    ).toBeVisible();
     await expect(body.queryByRole('dialog')).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: signOutName }));
 
