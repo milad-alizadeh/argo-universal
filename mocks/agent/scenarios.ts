@@ -81,6 +81,7 @@ export const scenarios = {
     ...feedWorkSteps,
     message('The greeting is updated.'),
   ]),
+  'completed-tool-held-turn': scenario([...feedWorkSteps, { type: 'hold' }]),
   'feed-interrupted': scenario([...unfinishedFeedWorkSteps, { type: 'hold' }]),
   'terminal-login': { ...scenario([reply]), ...terminalLogin },
   image: scenario([message(imageReply)]),
