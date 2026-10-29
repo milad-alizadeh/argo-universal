@@ -15,7 +15,6 @@ import {
   mutedTextClassName,
   phoneSheet,
   StatusSheetList,
-  unselectableTextClassName,
 } from './status-surface';
 import { StatusText } from './status-text';
 
@@ -102,7 +101,7 @@ function UsageWord({ wide }: Pick<UsageProps, 'wide'>): JSX.Element {
 }
 
 function UsageTriggerContent({ usage, wide }: UsageProps): JSX.Element {
-  const percentClass = cn(unselectableTextClassName, !wide && 'hidden');
+  const percentClass = cn('select-none wide-type:text-sm', !wide && 'hidden');
 
   return (
     <>

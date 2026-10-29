@@ -111,7 +111,7 @@ function FileKind({ name }: { name: string }): React.JSX.Element {
   return (
     <View aria-hidden className={cn(previewClass, kindClass)}>
       <Icon name={fileTypeIcon(name)} className={mutedClass} />
-      <Text role="badge" className={mutedClass}>
+      <Text role="badge" className={cn(mutedClass, 'wide-type:text-sm')}>
         {extensionOf(name)}
       </Text>
     </View>
@@ -125,7 +125,7 @@ function FileName({ name }: { name: string }): React.JSX.Element {
       <Text
         role="badge"
         numberOfLines={1}
-        className="min-w-0 flex-1 text-muted-foreground"
+        className="min-w-0 flex-1 text-muted-foreground wide-type:text-sm"
       >
         {name}
       </Text>

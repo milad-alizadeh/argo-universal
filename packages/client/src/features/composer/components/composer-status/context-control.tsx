@@ -10,7 +10,7 @@ import {
   ControlLabel,
   createStatusControlTrigger,
 } from './status-control-trigger';
-import { phoneSheet, unselectableTextClassName } from './status-surface';
+import { phoneSheet } from './status-surface';
 import { StatusText } from './status-text';
 
 export interface ContextControlProps {
@@ -21,15 +21,21 @@ export interface ContextControlProps {
   wide: boolean;
 }
 
+const triggerTokenTextProps = {
+  role: 'secondary',
+  className: 'select-none wide-type:text-sm',
+} as const;
+
 type ContextTokenProps = Pick<ContextControlProps, 'context' | 'wide'>;
 
 function ContextTriggerTokens(props: ContextTokenProps): JSX.Element {
   const { context, wide } = props;
-  const remainingClass = cn(unselectableTextClassName, !wide && 'hidden');
+
+  const remainingClass = cn('select-none wide-type:text-sm', !wide && 'hidden');
 
   return (
     <View className={cn('flex-row', !wide && 'hidden')}>
-      <StatusText role="secondary" className="select-none">
+      <StatusText {...triggerTokenTextProps}>
         {compactNumber(context.used)}
       </StatusText>
       <StatusText role="secondary" className={remainingClass}>

@@ -76,7 +76,7 @@ function PlanTriggerLabel({ entries, wide }: PlanEntriesProps): JSX.Element {
     <Text
       selectable={false}
       role={wide ? 'secondary' : 'badge'}
-      className={unselectableTextClassName}
+      className={cn(unselectableTextClassName, 'wide-type:text-sm')}
     >
       {wide ? `Plan ${completedSteps(entries)}/${entries.length}` : 'Plan'}
     </Text>
@@ -118,7 +118,7 @@ const currentStepTextProps = {
   selectable: false,
   numberOfLines: 1,
   role: 'secondary',
-  className: 'select-none flex-1 min-w-0 text-foreground',
+  className: 'select-none flex-1 min-w-0 text-foreground wide-type:text-sm',
 } as const;
 
 function CurrentStepLabel({ entries }: { entries: PlanEntry[] }): JSX.Element {

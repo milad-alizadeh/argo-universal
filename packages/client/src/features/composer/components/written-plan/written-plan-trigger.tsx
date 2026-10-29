@@ -19,9 +19,7 @@ export function WrittenPlanTrigger(
   return (
     <Pressable {...triggerProps(props)}>
       <Icon name="file-text" className="text-muted-foreground" />
-      <Text role="secondary" className={cn(!props.wide && 'text-foreground')}>
-        Written plan
-      </Text>
+      <WrittenPlanLabel wide={props.wide} />
       {props.wide && <WideTitle title={props.title} />}
     </Pressable>
   );
@@ -53,7 +51,7 @@ function writtenPlanTriggerClass(wide: boolean): string {
 const wideTitleTextProps = {
   numberOfLines: 1,
   role: 'secondary',
-  className: 'min-w-0 flex-1 text-foreground',
+  className: 'min-w-0 flex-1 text-foreground wide-type:text-sm',
 } as const;
 
 function WideTitle({
@@ -64,5 +62,18 @@ function WideTitle({
       <Text {...wideTitleTextProps}>{title}</Text>
       <Chevron direction="up" />
     </>
+  );
+}
+
+function WrittenPlanLabel({
+  wide,
+}: Pick<WrittenPlanTriggerProps, 'wide'>): React.JSX.Element {
+  return (
+    <Text
+      role="secondary"
+      className={cn('wide-type:text-sm', !wide && 'text-foreground')}
+    >
+      Written plan
+    </Text>
   );
 }

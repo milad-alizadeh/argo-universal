@@ -1,6 +1,7 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { Icon, SecondaryGlyphs } from '@repo/kit/primitives/content/icon';
+import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import type { ComposerStatusProps, ComposerWork } from '../../utils/status';
@@ -27,16 +28,24 @@ interface WorkCountProps {
   work: ComposerWork;
 }
 
+const workLabelTextProps = {
+  role: 'secondary',
+  className: 'text-foreground wide-type:text-sm',
+} as const;
+
+const workCountClass = (running: boolean): string =>
+  cn('wide-type:text-sm', running ? 'text-success' : mutedTextClassName);
+
 // The count and word in the Secondary role, as the Usage and Context controls' are, so the glyph beside them reads in proportion.
 function WorkCount({ label, singular, work }: WorkCountProps): JSX.Element {
-  const className = work.running ? 'text-success' : mutedTextClassName;
+  const className = workCountClass(work.running);
 
   return (
     <View className="flex-row items-center gap-1">
       <StatusText role="secondary" className={className}>
         {work.count}
       </StatusText>
-      <StatusText role="secondary" className="text-foreground">
+      <StatusText {...workLabelTextProps}>
         {work.count === 1 ? singular : label}
       </StatusText>
     </View>

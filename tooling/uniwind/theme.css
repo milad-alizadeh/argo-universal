@@ -581,6 +581,20 @@
   }
 }
 
+/* Code that shares the surrounding Body text's size. */
+@utility type-body-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--font-weight-body);
+  color: var(--color-foreground);
+
+  @variant wide-type {
+    font-size: var(--text-body-wide);
+    line-height: var(--leading-body-wide);
+  }
+}
+
 /* Roles that look the same on every width and keep the colour they are given. */
 @utility type-control {
   font-size: var(--text-control);

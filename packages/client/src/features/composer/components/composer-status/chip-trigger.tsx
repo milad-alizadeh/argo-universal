@@ -1,5 +1,6 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
+import { cn } from '@repo/kit/utils';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { StatusText } from './status-text';
 
@@ -36,7 +37,10 @@ export function ChipTrigger(props: TriggerProps): ReactElement {
   return (
     <Pressable {...chipPressableProps(props)} role="button">
       {leading}
-      <StatusText role="badge" className={toneClass(tone)}>
+      <StatusText
+        role="badge"
+        className={cn('wide-type:text-sm', toneClass(tone))}
+      >
         {label}
       </StatusText>
       {trailing}

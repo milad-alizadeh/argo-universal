@@ -151,8 +151,7 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
   return {
     label: triggerLabel(props),
     accessibilityLabel: 'Agent and model',
-    // The Composer's own size, the chips' above it: one scale across the envelope (owner, 2026-10-21).
-    labelRole: 'badge',
+    labelRole: 'control',
     size: 'md',
     disabled: props.disabled,
     leading: agentModelLeading(props),

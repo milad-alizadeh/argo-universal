@@ -30,6 +30,7 @@ const twMerge = extendTailwindMerge<'type-role' | 'type-face'>({
             'title',
             'heading',
             'body',
+            'body-code',
             'secondary',
             'secondary-code',
             'row',

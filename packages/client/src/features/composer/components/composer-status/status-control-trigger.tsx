@@ -62,7 +62,7 @@ export function ControlLabel({
   return (
     <StatusText
       role="secondary"
-      className={cn('select-none text-foreground', className)}
+      className={cn('select-none text-foreground wide-type:text-sm', className)}
     >
       {label}
     </StatusText>

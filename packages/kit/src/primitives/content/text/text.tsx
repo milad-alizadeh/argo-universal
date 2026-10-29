@@ -13,6 +13,7 @@ const textRoles = {
   title: 'type-title',
   heading: 'type-heading',
   body: 'type-body',
+  'body-code': 'type-body-code',
   secondary: 'type-secondary',
   'secondary-code': 'type-secondary-code',
   control: 'type-control',
