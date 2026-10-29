@@ -21,3 +21,13 @@ it('filters Operations by id, label and keywords, ignoring case', () => {
   );
   expect(listOperations('nothing matches this')).toEqual([]);
 });
+
+const describedSchemas = (): unknown[] =>
+  listOperations('').flatMap(({ params, result }) => [params, result]);
+
+it('describes each Operation once, not at every listing', () => {
+  const first = describedSchemas();
+
+  for (const [index, schema] of describedSchemas().entries())
+    expect(schema).toBe(first[index]);
+});
