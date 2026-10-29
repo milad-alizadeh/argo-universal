@@ -32,6 +32,7 @@ import {
   commitPrompt,
   configureAcp,
   openAcp,
+  restoreAcpConfiguration,
   promptAcp,
   publishTurn,
   type AcpOperationInput,
@@ -226,6 +227,9 @@ const sessionSetup = setup({
     openAcp: fromPromise<OpenedAcpSession, SessionContext>(({ input }) =>
       openAcp(input),
     ),
+    restoreAcpConfiguration: fromPromise<SessionConfigOption[], SessionContext>(
+      ({ input, signal }) => restoreAcpConfiguration(input, signal),
+    ),
     closeAcp: fromPromise<void, AcpOperationInput>(({ input }) =>
       closeAcp(input),
     ),
@@ -419,22 +423,23 @@ const sessionSetup = setup({
         { lease, configOptions }: OpenedAcpSession,
       ): Pick<
         SessionContext,
-        | 'acpLease'
-        | 'vendorSessionId'
-        | 'configOptions'
-        | 'configValues'
-        | 'usage'
+        'acpLease' | 'vendorSessionId' | 'configOptions' | 'usage'
       > => {
         return {
           acpLease: lease,
           vendorSessionId: lease.sessionId,
           configOptions,
-          configValues: toConfigValues(configOptions),
           usage: context.usage
             ? acpContextUsage(context.usage, lease.initialization)
             : null,
         };
       },
+    ),
+    rememberRestoredConfiguration: assign(
+      (_, options: SessionConfigOption[]) => ({
+        configOptions: options,
+        configValues: toConfigValues(options),
+      }),
     ),
     rememberPromptFailure: assign(({ context }, params: FailureParameters) => ({
       failure:
@@ -1065,13 +1070,49 @@ export const sessionMachine = sessionSetup.createMachine({
                 src: 'openAcp',
                 input: ({ context }): SessionContext => context,
                 onDone: {
-                  target: 'idle',
+                  target: 'restoring',
                   actions: [
                     {
                       type: 'rememberAcpLease',
                       params: ({ event }): OpenedAcpSession => event.output,
                     },
                     'finishAcpRegistration',
+                  ],
+                },
+                onError: {
+                  target: 'closing',
+                  actions: {
+                    type: 'rememberOpenFailure',
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
+                  },
+                },
+              },
+              on: {
+                'session.close': { target: 'closing' },
+                'acp.update': { guard: 'isReplayedHistory' },
+              },
+            },
+            restoring: {
+              invoke: {
+                id: 'restoreAcpConfiguration',
+                src: 'restoreAcpConfiguration',
+                input: ({ context }): SessionContext => ({
+                  ...context,
+                  configValues:
+                    context.input.kind === 'existing'
+                      ? context.configValues
+                      : [],
+                }),
+                onDone: {
+                  target: 'idle',
+                  actions: [
+                    {
+                      type: 'rememberRestoredConfiguration',
+                      params: ({ event }): SessionConfigOption[] =>
+                        event.output,
+                    },
                     'storeSession',
                     'storeAcpSession',
                     'storeAgentOptions',
@@ -1090,7 +1131,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
               on: {
                 'session.close': { target: 'closing' },
-                'acp.update': { guard: 'isReplayedHistory' },
+                'acp.update': { guard: 'isConfigUpdate' },
               },
             },
             idle: {
@@ -1464,7 +1505,10 @@ export const sessionMachine = sessionSetup.createMachine({
                   },
                 },
               ],
-              on: { 'session.close': {} },
+              on: {
+                'session.close': {},
+                'acp.update': { guard: 'isConfigUpdate' },
+              },
               invoke: {
                 id: 'closeAcp',
                 src: 'closeAcp',
