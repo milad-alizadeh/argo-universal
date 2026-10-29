@@ -126,7 +126,7 @@ export const secondSourceComposer = {
     {
       id: 'items',
       title: 'Items',
-      query: (query: string) =>
+      query: (query: string): ComposerSuggestion[] =>
         'item'.startsWith(query.toLowerCase()) ? [seventhItem] : [],
     },
   ],

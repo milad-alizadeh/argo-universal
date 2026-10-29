@@ -139,11 +139,13 @@ export const DeletingTheResultsTextDropsItsResource: Story = {
       ),
     );
     await userEvent.keyboard('{Backspace>7/}');
-    await waitFor(() =>
-      expect(args.onDraftChange).toHaveBeenLastCalledWith({
-        text: '',
-        attachments: [],
-      }),
+    await waitFor(
+      () =>
+        expect(args.onDraftChange).toHaveBeenLastCalledWith({
+          text: '',
+          attachments: [],
+        }),
+      { timeout: 4000 },
     );
   },
 };

@@ -7,7 +7,7 @@ import {
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { View, ScrollView } from 'react-native';
-import { slashCommandSource } from '../../utils/slash-command-suggestions';
+import { agentSources } from '../../utils/slash-command-suggestions';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,
@@ -101,14 +101,27 @@ function withResources(
   return resources.length > 0 ? { ...draft, resources } : draft;
 }
 
+type DraftChanges = Pick<
+  React.ComponentProps<typeof RichTextarea>,
+  'onChangeText' | 'onResourcesChange'
+>;
+
+function draftChanges({
+  draft,
+  onDraftChange,
+}: TextLayout['props']): DraftChanges {
+  return {
+    onChangeText: (text) => onDraftChange({ ...draft, text }),
+    onResourcesChange: (resources) =>
+      onDraftChange(withResources(draft, resources)),
+  };
+}
+
 function ComposerText(layout: TextLayout): React.JSX.Element {
   const { slashCommands, suggestionSources } = layout.props;
 
   const suggestions = useMemo(
-    () => [
-      ...(slashCommands?.length ? [slashCommandSource(slashCommands)] : []),
-      ...(suggestionSources ?? []),
-    ],
+    () => [...agentSources(slashCommands), ...(suggestionSources ?? [])],
     [slashCommands, suggestionSources],
   );
 
@@ -132,9 +145,7 @@ function textInputProps({
     placeholder: props.placeholder ?? '',
     value: props.draft.text,
     disabled: inactive,
-    onChangeText: (text) => props.onDraftChange({ ...props.draft, text }),
-    onResourcesChange: (resources) =>
-      props.onDraftChange(withResources(props.draft, resources)),
+    ...draftChanges(props),
     onSubmit: send,
   };
 }

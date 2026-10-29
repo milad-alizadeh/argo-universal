@@ -42,3 +42,15 @@ export function draftPrompt(
     ...uploads.map(attachmentBlock),
   ];
 }
+
+// Each upload paired with the Blob stored for it, in draft order.
+export function uploadedAttachments(
+  uploads: readonly { name: string }[],
+  blobs: readonly BlobRef[],
+): UploadedAttachment[] {
+  return uploads.flatMap(({ name }, index) => {
+    const blob = blobs[index];
+
+    return blob ? [{ name, blob }] : [];
+  });
+}
