@@ -8,7 +8,12 @@ import {
   openConfiguration,
 } from './new-session';
 
-Given('Agent {int} offers the {string} Slash command', expectListedAgent);
+// The step's text picks the Agent's scenario (scenario-agents.ts); here it only checks the Agent is listed.
+Given(
+  'Agent {int} offers the {string} Slash command',
+  async ({ page, server }, ordinal: number, _name: string): Promise<void> =>
+    expectListedAgent({ page, server }, ordinal),
+);
 
 const menuOption = (page: Page, name: string): Locator =>
   page.getByRole('option', { name: new RegExp(`^/${name}\\b`) });
