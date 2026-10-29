@@ -3,29 +3,15 @@ import type {
   ReplaceableInput,
   ReplaceableMessage,
 } from '@repo/contracts/plugins/replaceable';
-import {
-  createTRPCClient,
-  createWSClient,
-  wsLink,
-  type TRPCClient,
-} from '@trpc/client';
-import { onTestFinished } from 'vitest';
+import { createTRPCClient, wsLink, type TRPCClient } from '@trpc/client';
 import type { AppRouter } from '../src/engine/router';
+import { closePluginSubscription, pluginSocket } from './plugin-socket';
 
 interface RenderApp {
   client: TRPCClient<AppRouter>;
   messages: ReplaceableMessage[];
   stop: () => void;
 }
-
-const pluginSocket = (
-  url: string,
-  surface: Partial<PluginSurface>,
-): ReturnType<typeof createWSClient> =>
-  createWSClient({
-    url: url.replace('http:', 'ws:'),
-    connectionParams: { pluginSurface: JSON.stringify(surface) },
-  });
 
 export function renderApp(
   url: string,
@@ -47,17 +33,12 @@ export function renderApp(
 
 const subscribe = (
   client: TRPCClient<AppRouter>,
-  socket: ReturnType<typeof createWSClient>,
+  socket: ReturnType<typeof pluginSocket>,
   data: { input: ReplaceableInput; messages: ReplaceableMessage[] },
 ): (() => void) => {
   const subscription = client.plugins.render.subscribe(data.input, {
     onData: (message) => data.messages.push(message),
   });
 
-  onTestFinished(async () => {
-    subscription.unsubscribe();
-    await socket.close();
-  });
-
-  return (): void => subscription.unsubscribe();
+  return closePluginSubscription(socket, subscription);
 };
