@@ -35,12 +35,7 @@ export async function runProbe({
   const probe = await installed(probeSource(calls), { capabilities });
   const pluginNetwork = network ? await fixtureNetwork() : undefined;
 
-  const { caller } = await startEngineTestHost({
-    home: probe.home,
-    pluginNetwork,
-  });
-
-  await caller.plugin.activate({ pluginId: 'probe' });
+  await activateProbe(probe.home, pluginNetwork);
 
   return {
     results: await probeResult(probe.data),
@@ -49,6 +44,16 @@ export async function runProbe({
     code: probe.code,
   };
 }
+
+const activateProbe = async (
+  home: string,
+  pluginNetwork: NonNullable<
+    Parameters<typeof startEngineTestHost>[0]
+  >['pluginNetwork'],
+): Promise<void> => {
+  const { caller } = await startEngineTestHost({ home, pluginNetwork });
+  await caller.plugin.activate({ pluginId: 'probe' });
+};
 
 // The log lines that record a refusal; each refused call writes exactly one.
 export const refusedLines = (log: string): string[] =>

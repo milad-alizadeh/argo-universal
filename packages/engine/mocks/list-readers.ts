@@ -52,12 +52,7 @@ export async function startListReaders(): Promise<ListReaders> {
     ...scriptedEngineInput(),
   });
 
-  const watchers = {
-    firstWatcher: watchEngineList(host.createCaller),
-    secondWatcher: watchEngineList(host.createCaller),
-    countsWatcher: watchEngineList(host.createCaller),
-    resumedWatcher: watchEngineList(host.createCaller),
-  };
+  const watchers = createListWatchers(host);
 
   vi.useFakeTimers();
   onTestFinished((): void => {
@@ -66,6 +61,13 @@ export async function startListReaders(): Promise<ListReaders> {
 
   return subscribeReaders(host, watchers);
 }
+
+const createListWatchers = (host: EngineHost): ListWatchers => ({
+  firstWatcher: watchEngineList(host.createCaller),
+  secondWatcher: watchEngineList(host.createCaller),
+  countsWatcher: watchEngineList(host.createCaller),
+  resumedWatcher: watchEngineList(host.createCaller),
+});
 
 async function subscribeReaders(
   host: EngineHost,

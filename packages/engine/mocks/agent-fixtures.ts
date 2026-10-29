@@ -23,15 +23,19 @@ const registryEntry = (
     ? `data:image/svg+xml,${encodeURIComponent(identity.logo)}`
     : undefined,
   description: 'Scripted ACP Agent',
-  distribution: {
-    binary: {
-      [`${process.platform}-${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}`]:
-        {
-          archive: 'https://example.org/agent',
-          cmd: './agent',
-          env: environment,
-        },
-    },
+  distribution: registryDistribution(environment),
+});
+
+const registryDistribution = (
+  environment?: Record<string, string>,
+): ACPAgent['distribution'] => ({
+  binary: {
+    [`${process.platform}-${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}`]:
+      {
+        archive: 'https://example.org/agent',
+        cmd: './agent',
+        env: environment,
+      },
   },
 });
 

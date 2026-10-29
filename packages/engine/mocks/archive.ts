@@ -25,16 +25,20 @@ export async function promptedArchiveSession(
   await host.caller.session.prompt({ ...created, prompt });
   await waitForAcpSessionIdle(host, created.sessionId);
 
+  return { ...created, path: archiveSessionPath(host, created.sessionId) };
+}
+
+const archiveSessionPath = (host: Host, sessionId: string): string => {
   const row = host.database
     .select()
     .from(session)
-    .where(eq(session.id, created.sessionId))
+    .where(eq(session.id, sessionId))
     .get();
 
   if (!row) throw new Error('Missing Session');
 
-  return { ...created, path: row.checkoutPath };
-}
+  return row.checkoutPath;
+};
 
 // SQLite rejects this operation until the test removes the trigger; the Writer stays real.
 export function pauseArchiveWrite(

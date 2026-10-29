@@ -22,11 +22,29 @@ export async function delegatedTurnWaitHost(): Promise<DelegatedWaitHost> {
   const prompted = Promise.withResolvers<PromptRequest>();
   const release = releasingGate();
 
-  const first = createScriptedAgentProcess({
-    steps: [sessionIdentityStep(outputs)],
-  });
+  const first = firstAgent(outputs);
 
-  const delegated = createScriptedAgentProcess({
+  const delegated = delegatedAgent(prompted, release);
+  const host = await delegatedEngine(clock, first, delegated);
+
+  const caller = await openAccessSession(
+    { host, outputs },
+    'Delegating caller',
+  );
+
+  return { host, caller, clock, prompted: prompted.promise, release };
+}
+
+const firstAgent = (
+  outputs: TerminalOutputResponse[],
+): ReturnType<typeof createScriptedAgentProcess> =>
+  createScriptedAgentProcess({ steps: [sessionIdentityStep(outputs)] });
+
+const delegatedAgent = (
+  prompted: PromiseWithResolvers<PromptRequest>,
+  release: PromiseWithResolvers<void>,
+): ReturnType<typeof createScriptedAgentProcess> =>
+  createScriptedAgentProcess({
     steps: [],
     responses: {
       'session/prompt': [
@@ -38,22 +56,20 @@ export async function delegatedTurnWaitHost(): Promise<DelegatedWaitHost> {
     },
   });
 
+const delegatedEngine = (
+  clock: TestOperationWaitClock,
+  first: ReturnType<typeof createScriptedAgentProcess>,
+  delegated: ReturnType<typeof createScriptedAgentProcess>,
+): Promise<DelegatedWaitHost['host']> => {
   let launches = 0;
 
-  const host = await startAcpEngine({
+  return startAcpEngine({
     steps: [],
     operationWaitClock: clock,
     launchProcess: (launch) =>
       (launches++ === 0 ? first : delegated).launchProcess(launch),
   });
-
-  const caller = await openAccessSession(
-    { host, outputs },
-    'Delegating caller',
-  );
-
-  return { host, caller, clock, prompted: prompted.promise, release };
-}
+};
 
 function releasingGate(): PromiseWithResolvers<void> {
   const gate = Promise.withResolvers<void>();

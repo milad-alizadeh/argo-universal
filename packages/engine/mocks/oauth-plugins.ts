@@ -32,7 +32,19 @@ export async function oauthPlugins(ids = ['alice']): Promise<OAuthJourney> {
   const clock = new PluginTestClock(0);
   const opened: string[] = [];
 
-  const host = await startEngineTestHost({
+  const host = await oauthHost(home, clock, opened);
+
+  await openViews(host, ids);
+
+  return oauthJourney(host, home, { clock, opened });
+}
+
+const oauthHost = (
+  home: string,
+  clock: PluginTestClock,
+  opened: string[],
+): Promise<EngineHost> =>
+  startEngineTestHost({
     home,
     pluginClock: clock,
     pluginOAuth: {
@@ -42,17 +54,17 @@ export async function oauthPlugins(ids = ['alice']): Promise<OAuthJourney> {
     },
   });
 
-  await openViews(host, ids);
-
-  return {
-    ...host,
-    clock,
-    opened,
-    started: startReader(home),
-    result: resultReader(home),
-    failure: failureReader(home),
-  };
-}
+const oauthJourney = (
+  host: EngineHost,
+  home: string,
+  browser: { clock: PluginTestClock; opened: string[] },
+): OAuthJourney => ({
+  ...host,
+  ...browser,
+  started: startReader(home),
+  result: resultReader(home),
+  failure: failureReader(home),
+});
 
 async function writeOAuthPlugins(ids: string[]): Promise<string> {
   const home = await realpath(
@@ -62,7 +74,18 @@ async function writeOAuthPlugins(ids: string[]): Promise<string> {
   for (const id of ids)
     await writeFile(
       join(home, 'shipped', id, 'index.mjs'),
-      `
+      oauthSource(home, id),
+    );
+
+  return home;
+}
+
+const oauthSource = (home: string, id: string): string =>
+  oauthSourceTemplate
+    .replaceAll('$FIXTURE_HOME', home)
+    .replaceAll('$FIXTURE_ID', id);
+
+const oauthSourceTemplate = `
     import { useEffect, Text } from '@argo/plugin-kit';
     import { jsx } from '@argo/plugin-kit/jsx-runtime';
     export function register(argo) { argo.pages.register('/', function Page({ context }) {
@@ -70,17 +93,13 @@ async function writeOAuthPlugins(ids: string[]): Promise<string> {
         const unknown = await argo.oauth.await('unissued-state', 'https://authorize.example/');
         const failure = { message: null };
         const start = await argo.oauth.start().catch((error) => { failure.message = error.message; return null; });
-        await argo.fs.write('${home}/plugin-data/${id}/failure.json', JSON.stringify(failure.message));
-        await argo.fs.write('${home}/plugin-data/${id}/start.json', JSON.stringify({ ...start, unknown, serverDevice: context.serverDevice }));
+        await argo.fs.write('$FIXTURE_HOME/plugin-data/$FIXTURE_ID/failure.json', JSON.stringify(failure.message));
+        await argo.fs.write('$FIXTURE_HOME/plugin-data/$FIXTURE_ID/start.json', JSON.stringify({ ...start, unknown, serverDevice: context.serverDevice }));
         const result = start && await argo.oauth.await(start.state, 'https://authorize.example/?state=' + start.state);
-        await argo.fs.write('${home}/plugin-data/${id}/result.json', JSON.stringify(result));
+        await argo.fs.write('$FIXTURE_HOME/plugin-data/$FIXTURE_ID/result.json', JSON.stringify(result));
       })(); }, []); return jsx(Text, { children: 'Probe' });
     }); }
-  `,
-    );
-
-  return home;
-}
+  `;
 
 async function openViews(host: EngineHost, ids: string[]): Promise<void> {
   const controller = new AbortController();
