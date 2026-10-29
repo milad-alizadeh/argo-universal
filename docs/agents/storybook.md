@@ -6,12 +6,24 @@ Storybook is the source of truth for built UI: a component's states, its platfor
 
 For side-by-side previews, run `pnpm dev:storybook:all`. It starts web Storybook, opens it in the browser, then starts Expo and opens `/storybook` in the iOS Simulator and Android Emulator apps. Selecting a story in the browser selects the same shared story on the devices. The web addon serves a local WebSocket on port 7007; the launcher supplies Android Emulator's host address while iOS Simulator uses loopback. Interactions are exercised separately on each platform. A native development build must already be installed; rebuild it after native dependency changes. To run one platform manually, start `pnpm dev:storybook` first, then `pnpm --filter @repo/universal-app exec expo start --ios` or `EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST=10.0.2.2 pnpm --filter @repo/universal-app exec expo start --android`.
 
-Concurrent native QA sessions need a separate Storybook sync channel as well as separate web and Metro ports. Set `EXPO_PUBLIC_STORYBOOK_WS_PORT` to one free local port in both the web Storybook and Expo commands for each session; the shared default remains 7007. For example, a session can use:
+Concurrent native QA sessions need a separate Storybook sync channel as well as separate web and Metro ports. Set `EXPO_PUBLIC_STORYBOOK_WS_PORT` to one free local port in both the web Storybook and Expo commands for each session; the shared default remains 7007. Start Expo without a device flag so it starts Metro without selecting a booted device. For example, a session can use:
 
 ```sh
 EXPO_PUBLIC_STORYBOOK_WS_PORT=7011 pnpm --filter @repo/storybook exec storybook dev -p 6007 --no-open
-EXPO_PUBLIC_STORYBOOK_WS_PORT=7011 pnpm --filter @repo/universal-app exec expo start --ios --port 8082
-EXPO_PUBLIC_STORYBOOK_WS_PORT=7011 EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST=10.0.2.2 pnpm --filter @repo/universal-app exec expo start --android --port 8082
+EXPO_PUBLIC_STORYBOOK_WS_PORT=7011 pnpm --filter @repo/universal-app exec expo start --port 8082
+EXPO_PUBLIC_STORYBOOK_WS_PORT=7011 EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST=10.0.2.2 pnpm --filter @repo/universal-app exec expo start --port 8082
+```
+
+Copy the development-client URL printed by Expo and open it on a disposable device you selected by UDID or serial. After the bundle loads, open the Storybook route on that same device:
+
+```sh
+# iOS Simulator: set OWNED_UDID and EXPO_DEV_URL to the selected device and Expo's printed URL.
+xcrun simctl openurl "$OWNED_UDID" "$EXPO_DEV_URL"
+xcrun simctl openurl "$OWNED_UDID" argo://storybook
+
+# Android Emulator: set OWNED_SERIAL and EXPO_DEV_URL to the selected device and Expo's printed URL.
+adb -s "$OWNED_SERIAL" shell am start -a android.intent.action.VIEW -d "$EXPO_DEV_URL" dev.argo.app
+adb -s "$OWNED_SERIAL" shell am start -a android.intent.action.VIEW -d argo://storybook dev.argo.app
 ```
 
 Use a different sync, web and Metro port in the other checkout, such as 7012, 6008 and 8083. Keep each native app's host pointed at its own Storybook server: iOS Simulator uses `127.0.0.1`, and Android Emulator uses `10.0.2.2` via `EXPO_PUBLIC_STORYBOOK_ANDROID_WS_HOST`. The sync port must match between that session's web addon and native app; a dedicated Metro port alone still leaves both native apps on the default shared port 7007. Devices intentionally share story selection when they connect to the same sync port. `pnpm dev:storybook:all` keeps its default web and Metro ports, so use the separate web and Expo commands above when those ports are already in use.
