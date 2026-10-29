@@ -1,6 +1,6 @@
 import { readSessionCloseTarget } from './close-target';
 import { runningStartedSessions } from './delegation';
-import type { SessionRouterDeps } from './router-deps';
+import type { SessionRowSources } from './router-deps';
 import { createQueuedSessionReader } from './session-record';
 
 // What a Session caller's scope knows of a Session: its Project, and the Session that started it.
@@ -21,9 +21,9 @@ export type SessionDirectory = {
   title: (sessionId: string) => string;
 };
 
-type Sources = Pick<SessionRouterDeps, 'database' | 'findWriter' | 'sessions'>;
-
-export function createSessionDirectory(deps: Sources): SessionDirectory {
+export function createSessionDirectory(
+  deps: SessionRowSources,
+): SessionDirectory {
   const read = createQueuedSessionReader(deps);
 
   return {

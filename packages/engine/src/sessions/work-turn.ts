@@ -3,16 +3,14 @@ import { turn } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { pendingInputRequest } from './pending-input';
-import type { SessionRouterDeps } from './router-deps';
+import type { SessionRowSources } from './router-deps';
 import { readQueuedSessionRows } from './session-storage';
 import { readOpenSession } from './session-system';
 import { decodeStoredTurn, storedTurnColumns } from './turns';
 
-type Sources = Pick<SessionRouterDeps, 'database' | 'findWriter' | 'sessions'>;
-
 // Reads the exact admitted Turn, including updates the Writer has not committed yet.
 export function readSessionTurn(
-  deps: Sources,
+  deps: SessionRowSources,
   sessionId: string,
   turnId: string,
 ): Turn {
@@ -36,7 +34,7 @@ export function readSessionTurn(
 }
 
 export function sessionTurnRequiresInput(
-  deps: Sources,
+  deps: SessionRowSources,
   sessionId: string,
   turnId: string,
 ): boolean {

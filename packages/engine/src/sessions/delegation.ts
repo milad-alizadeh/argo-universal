@@ -1,11 +1,11 @@
 import type { SessionRecord } from '@repo/contracts';
-import type { SessionRouterDeps } from './router-deps';
+import type { SessionRowSources } from './router-deps';
 import { readLatestTurns } from './session-storage';
 import { readOpenSession } from './session-system';
 import { readChildSessions } from './subagents/children';
 
 export function runningStartedSessions(
-  deps: Pick<SessionRouterDeps, 'database' | 'findWriter' | 'sessions'>,
+  deps: SessionRowSources,
   callerId: string,
 ): string[] {
   const sources = { database: deps.database, writer: deps.findWriter() };

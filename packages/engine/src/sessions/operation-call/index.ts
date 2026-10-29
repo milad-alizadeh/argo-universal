@@ -1,13 +1,10 @@
 import { TRPCError } from '@trpc/server';
 import type { FeedActorRef } from '../../feed';
+import type { SessionWorkSources } from '../router-deps';
 import type { SessionActorRef } from '../session-machine';
 import { findSessionFeed, requireLiveSessionActor } from '../session-system';
 import { OperationCall, type SessionOperationCall } from './call';
-import {
-  readOperationCall,
-  type CallSources,
-  type OperationCallRead,
-} from './read';
+import { readOperationCall, type OperationCallRead } from './read';
 import type { CalledOperation } from './rows';
 
 export type { SessionOperationCall } from './call';
@@ -27,7 +24,7 @@ export type OperationCalls = {
   read: (sessionId: string, toolCallId: string) => OperationCallRead;
 };
 
-export function createOperationCalls(deps: CallSources): OperationCalls {
+export function createOperationCalls(deps: SessionWorkSources): OperationCalls {
   return {
     begin: (sessionId, operation) => beginCall(deps, sessionId, operation),
     read: (sessionId, toolCallId) =>
@@ -36,7 +33,7 @@ export function createOperationCalls(deps: CallSources): OperationCalls {
 }
 
 function beginCall(
-  { sessions }: CallSources,
+  { sessions }: SessionWorkSources,
   sessionId: string,
   operation: CalledOperation,
 ): SessionOperationCall {
@@ -52,7 +49,7 @@ function beginCall(
 }
 
 function requireOpenFeed(
-  sessions: CallSources['sessions'],
+  sessions: SessionWorkSources['sessions'],
   session: SessionActorRef,
   sessionId: string,
 ): FeedActorRef {

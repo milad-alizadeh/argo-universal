@@ -19,3 +19,13 @@ export interface SessionRouterDeps extends Pick<
   // Plugin Hooks on starting a Session and submitting a prompt (ADR-0027).
   hooks: CoreHooks;
 }
+
+// A Session's stored row with the Writer's queued jobs over it, and the open Sessions.
+export type SessionRowSources = Pick<
+  SessionRouterDeps,
+  'database' | 'findWriter' | 'sessions'
+>;
+
+// Those, with each Session's Feed and stored record: where Operation work is read.
+export type SessionWorkSources = SessionRowSources &
+  Pick<SessionRouterDeps, 'findFeed' | 'readSession'>;

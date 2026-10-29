@@ -1,9 +1,7 @@
 import { TRPCError } from '@trpc/server';
-import type { SessionRouterDeps } from './router-deps';
+import type { SessionRowSources } from './router-deps';
 import { createQueuedSessionReader } from './session-record';
 import { readOpenSession } from './session-system';
-
-type Sources = Pick<SessionRouterDeps, 'database' | 'findWriter' | 'sessions'>;
 
 type SessionCloseTarget = {
   projectId: string;
@@ -13,7 +11,7 @@ type SessionCloseTarget = {
 
 // A native opening can be closed before the Agent makes its first stored Session row.
 export function readSessionCloseTarget(
-  deps: Sources,
+  deps: SessionRowSources,
   sessionId: string,
 ): SessionCloseTarget {
   try {
@@ -24,7 +22,7 @@ export function readSessionCloseTarget(
 }
 
 function openingTarget(
-  deps: Sources,
+  deps: SessionRowSources,
   { sessionId, cause }: { sessionId: string; cause: unknown },
 ): SessionCloseTarget {
   requireMissingSession(cause);

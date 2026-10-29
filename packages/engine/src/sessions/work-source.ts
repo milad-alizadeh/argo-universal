@@ -6,7 +6,7 @@ import {
   type OperationCallRead,
   type OperationCalls,
 } from './operation-call';
-import type { SessionRouterDeps } from './router-deps';
+import type { SessionWorkSources } from './router-deps';
 import { readSessionTurn, sessionTurnRequiresInput } from './work-turn';
 import {
   createSessionWorkWatcher,
@@ -35,12 +35,9 @@ export type SessionWorkSource = {
   watch: SessionWorkWatcher;
 };
 
-type Sources = Pick<
-  SessionRouterDeps,
-  'database' | 'findWriter' | 'findFeed' | 'readSession' | 'sessions'
->;
-
-export function createSessionWorkSource(deps: Sources): SessionWorkSource {
+export function createSessionWorkSource(
+  deps: SessionWorkSources,
+): SessionWorkSource {
   const calls = createOperationCalls(deps);
 
   return {
@@ -49,7 +46,7 @@ export function createSessionWorkSource(deps: Sources): SessionWorkSource {
   };
 }
 
-type Readers = { deps: Sources; calls: OperationCalls };
+type Readers = { deps: SessionWorkSources; calls: OperationCalls };
 
 function readWork(
   { deps, calls }: Readers,
@@ -69,7 +66,11 @@ function readWork(
   return { kind: 'turn', ...readTurn(deps, sessionId, work.turnId) };
 }
 
-function readTurn(deps: Sources, sessionId: string, turnId: string): TurnRead {
+function readTurn(
+  deps: SessionWorkSources,
+  sessionId: string,
+  turnId: string,
+): TurnRead {
   const turn = readSessionTurn(deps, sessionId, turnId);
 
   const requiresInput =

@@ -4,14 +4,9 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { readFeedRow } from '../../feed';
-import type { SessionRouterDeps } from '../router-deps';
+import type { SessionWorkSources } from '../router-deps';
 import { requireLiveSessionActor } from '../session-system';
 import { operationRowId } from './rows';
-
-export type CallSources = Pick<
-  SessionRouterDeps,
-  'database' | 'findWriter' | 'findFeed' | 'readSession' | 'sessions'
->;
 
 // Where an Operation Tool call is: running, waiting for the user's answer, or settled one of three ways.
 type CallState =
@@ -27,7 +22,7 @@ export type OperationCallRead = CallState & { work?: OperationWorkTarget };
 type ArgoMeta = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
 export function readOperationCall(
-  deps: CallSources,
+  deps: SessionWorkSources,
   sessionId: string,
   toolCallId: string,
 ): OperationCallRead {
@@ -64,7 +59,7 @@ const startedWork = (row: ToolCallUpdate): OperationWorkTarget | undefined =>
   argoMeta(row)?.operationWork;
 
 function rowState(
-  deps: CallSources,
+  deps: SessionWorkSources,
   sessionId: string,
   row: ToolCallUpdate,
 ): CallState {
