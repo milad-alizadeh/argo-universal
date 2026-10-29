@@ -14,6 +14,13 @@ const largeHeader = { name: 'Diff for /repo/large.txt' };
 
 const expanded = 'aria-expanded';
 
+const longPath =
+  '/repo/assets/illustrations/a-very-long-binary-filename-for-the-inspector.png';
+
+const longHeader = { name: `Diff for ${longPath}` };
+
+const exampleFile = recordedFile('agent-2', 'edit-states');
+
 const meta = {
   title: 'Tests/Feed/DiffView',
   component: DiffView,
@@ -25,7 +32,7 @@ const meta = {
       </View>
     ),
   ],
-  args: { file: recordedFile('agent-2', 'edit-states') },
+  args: { file: exampleFile },
 } satisfies Meta<typeof DiffView>;
 
 export default meta;
@@ -168,5 +175,68 @@ export const FeedDiffHasNoViewedMark: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId('code-block-title')).toBeVisible();
     await expect(canvas.queryByRole('checkbox')).toBeNull();
+  },
+};
+
+export const CutPathKeepsOneInteractiveHeader: Story = {
+  args: {
+    file: { ...exampleFile, path: longPath },
+    viewed: false,
+    onViewedChange: fn(),
+  },
+  render: (args) => (
+    <View style={{ width: 320 }}>
+      <DiffView {...args} />
+    </View>
+  ),
+  play: async ({ args, canvas, userEvent }) => {
+    await settleLayout('wide');
+    const header = canvas.getByRole('button', longHeader);
+    await waitFor(() =>
+      expect(header.querySelector('button')).not.toBeInTheDocument(),
+    );
+
+    const basename = canvas.getByText(
+      'a-very-long-binary-filename-for-the-inspector.png',
+    );
+
+    await waitFor(() =>
+      expect(basename.scrollWidth).toBeGreaterThan(basename.clientWidth),
+    );
+    await expect(header).toHaveAttribute(expanded, 'true');
+    await expect(header).toHaveAccessibleName(`Diff for ${longPath}`);
+
+    await userEvent.hover(header);
+    await expect(
+      await within(document.body).findByRole('tooltip'),
+    ).toHaveTextContent(longPath);
+
+    await userEvent.click(header);
+    await expect(header).toHaveAttribute(expanded, 'false');
+    await expect(args.onViewedChange).not.toHaveBeenCalled();
+    header.focus();
+    await expect(header).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(header).toHaveAttribute(expanded, 'true');
+    await userEvent.keyboard(' ');
+    await expect(header).toHaveAttribute(expanded, 'false');
+    await expect(
+      canvas.getByRole('checkbox', { name: 'Viewed' }),
+    ).toHaveAttribute('aria-checked', 'false');
+  },
+};
+
+export const PhonePathStillFoldsWithoutPopup: Story = {
+  args: {
+    file: { ...exampleFile, path: longPath },
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('phone');
+    const header = canvas.getByRole('button', longHeader);
+    await expect(header.querySelector('button')).not.toBeInTheDocument();
+    await expect(header).toHaveAttribute(expanded, 'true');
+    await userEvent.click(header);
+    await expect(header).toHaveAttribute(expanded, 'false');
+    await expect(within(document.body).queryByRole('tooltip')).toBeNull();
   },
 };

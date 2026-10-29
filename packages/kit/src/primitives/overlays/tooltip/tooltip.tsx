@@ -14,23 +14,45 @@ import {
 import type { KitProps } from '../../kit-props';
 
 // Kit-only: the interactive trigger.
-type TooltipProps = KitProps<'Tooltip'> & { children: TriggerElement };
+type TooltipProps = KitProps<'Tooltip'> & {
+  children: TriggerElement;
+  // A parent can keep the same trigger mounted while its label becomes truncated.
+  active?: boolean;
+};
+
+type TooltipState = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDismiss: () => void;
+  onPointerLeave: () => void;
+};
 
 export function Tooltip(props: TooltipProps): ReactElement {
-  const [open, setOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const state = useTooltipState(props.active);
 
   return (
-    <Popover open={open && !dismissed} onOpenChange={setOpen} openOnHover>
+    <Popover open={state.open} onOpenChange={state.onOpenChange} openOnHover>
       <TooltipTrigger
-        onDismiss={() => setDismissed(true)}
-        onPointerLeave={() => setDismissed(false)}
+        onDismiss={state.onDismiss}
+        onPointerLeave={state.onPointerLeave}
       >
         {props.children}
       </TooltipTrigger>
       <TooltipContent label={props.label} />
     </Popover>
   );
+}
+
+function useTooltipState(active: boolean | undefined): TooltipState {
+  const [open, setOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  return {
+    open: active !== false && open && !dismissed,
+    onOpenChange: setOpen,
+    onDismiss: (): void => setDismissed(true),
+    onPointerLeave: (): void => setDismissed(false),
+  };
 }
 
 type TooltipTriggerProps = {

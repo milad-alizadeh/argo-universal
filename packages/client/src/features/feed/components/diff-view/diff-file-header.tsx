@@ -2,9 +2,10 @@ import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { PathText } from '@repo/kit/primitives/content/path-text';
 import { TextClassContext } from '@repo/kit/primitives/content/text';
+import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { SizeClass } from '@repo/kit/size-class/size-class';
-import type * as React from 'react';
+import * as React from 'react';
 import { View } from 'react-native';
 import type { FileDiff } from '../../view/file-diff';
 import { ChangeCounts } from './diff-change-counts';
@@ -68,14 +69,27 @@ function PathToggle(
 ): React.JSX.Element {
   const toggle = toggleOf(props);
 
-  return (
+  return props.scroll ? (
     <FileHeaderToggle {...toggle}>
-      <PathText
-        path={props.file.path}
-        scroll={props.scroll}
-        onPress={toggle.onPress}
-      />
+      <PathText path={props.file.path} scroll />
     </FileHeaderToggle>
+  ) : (
+    <WidePathToggle {...props} />
+  );
+}
+
+function WidePathToggle(props: FileHeaderProps): React.JSX.Element {
+  const [pathCut, setPathCut] = React.useState(false);
+  const path = props.file.path;
+
+  return (
+    <View className="min-w-0 flex-1">
+      <Tooltip label={path} active={pathCut}>
+        <FileHeaderToggle {...toggleOf(props)}>
+          <PathText path={path} showTooltip={false} onCutChange={setPathCut} />
+        </FileHeaderToggle>
+      </Tooltip>
+    </View>
   );
 }
 
